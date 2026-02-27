@@ -1,0 +1,21 @@
+{
+  "name": "The Bug Pit",
+  "description": "A cursed testing ground where software bugs have taken physical form. Developers who ventured too deep into the codebase now wander as monsters. Debug at your own risk.",
+  "version": "1.0.0",
+  "levelRange": {
+    "min": 1,
+    "max": 10
+  },
+  "mapConfig": {
+    "width": 10,
+    "height": 10,
+    "startPosition": [0, 0]
+  },
+  "dependencies": [],
+  "load": {
+    "effects": true,
+    "items": true,
+    "monsters": true,
+    "shops": true
+  }
+}

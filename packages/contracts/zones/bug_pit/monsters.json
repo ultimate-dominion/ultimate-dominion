@@ -1,0 +1,315 @@
+{
+  "monsters": [
+    {
+      "name": "Typo",
+      "metadataUri": "monster:typo",
+      "stats": {
+        "agility": 6,
+        "armor": 0,
+        "class": 1,
+        "experience": 225,
+        "hitPoints": 10,
+        "intelligence": 2,
+        "inventoryNames": [
+          "Syntax Error",
+          "Console.log Staff",
+          "Mouse Click Dagger",
+          "Duct Tape Patch",
+          "Trash Bag Poncho",
+          "Emergency Coffee",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Unused Import Statement",
+          "Expired SSL Certificate",
+          "Single node_module",
+          "Outdated README"
+        ],
+        "level": 1,
+        "strength": 3
+      }
+    },
+    {
+      "name": "Null Pointer",
+      "metadataUri": "monster:null_pointer",
+      "stats": {
+        "agility": 4,
+        "armor": 0,
+        "class": 2,
+        "experience": 400,
+        "hitPoints": 11,
+        "intelligence": 8,
+        "inventoryNames": [
+          "Null Reference",
+          "Console.log Staff",
+          "Rubber Duck Mace",
+          "Duct Tape Patch",
+          "Caffeine-Stained Hoodie",
+          "Trash Bag Poncho",
+          "Emergency Coffee",
+          "Focusing Rubber Duck",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Unused Import Statement",
+          "Expired SSL Certificate",
+          "Outdated README"
+        ],
+        "level": 2,
+        "strength": 3
+      }
+    },
+    {
+      "name": "Off-By-One",
+      "metadataUri": "monster:off_by_one",
+      "stats": {
+        "agility": 4,
+        "armor": 1,
+        "class": 0,
+        "experience": 550,
+        "hitPoints": 18,
+        "intelligence": 3,
+        "inventoryNames": [
+          "Index Out of Bounds",
+          "Rubber Duck Mace",
+          "Console.log Staff",
+          "Cardboard Box Armor",
+          "Duct Tape Patch",
+          "Trash Bag Poncho",
+          "Emergency Coffee",
+          "Fortifying Stress Ball",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Unused Import Statement",
+          "Single node_module",
+          "Expired SSL Certificate",
+          "Outdated README"
+        ],
+        "level": 3,
+        "strength": 9
+      }
+    },
+    {
+      "name": "Memory Leak",
+      "metadataUri": "monster:memory_leak",
+      "stats": {
+        "agility": 5,
+        "armor": 1,
+        "class": 2,
+        "experience": 800,
+        "hitPoints": 16,
+        "intelligence": 10,
+        "inventoryNames": [
+          "Heap Corruption",
+          "Keyboard Warrior Blade",
+          "Debugger's Breakpoint",
+          "Console.log Staff",
+          "Caffeine-Stained Hoodie",
+          "Cargo Shorts of Holding",
+          "Duct Tape Patch",
+          "Energy Drink of Haste",
+          "Focusing Rubber Duck",
+          "Emergency Coffee",
+          "Deprecated API Key",
+          "Unused Import Statement",
+          "Single node_module",
+          "Expired SSL Certificate",
+          "Outdated README"
+        ],
+        "level": 4,
+        "strength": 4
+      }
+    },
+    {
+      "name": "Race Condition",
+      "metadataUri": "monster:race_condition",
+      "stats": {
+        "agility": 12,
+        "armor": 1,
+        "class": 1,
+        "experience": 1200,
+        "hitPoints": 18,
+        "intelligence": 4,
+        "inventoryNames": [
+          "Thread Deadlock",
+          "Trackpad Shuriken",
+          "Mouse Click Dagger",
+          "Keyboard Warrior Blade",
+          "Cargo Shorts of Holding",
+          "Mechanical Keyboard Shield",
+          "Trash Bag Poncho",
+          "Energy Drink of Haste",
+          "Quickening Energy Drink",
+          "Emergency Coffee",
+          "Antidote.sh",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Single node_module",
+          "Outdated README"
+        ],
+        "level": 5,
+        "strength": 5
+      }
+    },
+    {
+      "name": "Stack Overflow",
+      "metadataUri": "monster:stack_overflow",
+      "stats": {
+        "agility": 6,
+        "armor": 2,
+        "class": 0,
+        "experience": 2000,
+        "hitPoints": 28,
+        "intelligence": 5,
+        "inventoryNames": [
+          "Recursive Call",
+          "Hotfix Hammer",
+          "Keyboard Warrior Blade",
+          "Rubber Duck Mace",
+          "Mechanical Keyboard Shield",
+          "Cardboard Box Armor",
+          "Cargo Shorts of Holding",
+          "Energy Drink of Haste",
+          "Fortifying Stress Ball",
+          "Emergency Coffee",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Single node_module",
+          "Expired SSL Certificate",
+          "Outdated README"
+        ],
+        "level": 6,
+        "strength": 14
+      }
+    },
+    {
+      "name": "Infinite Loop",
+      "metadataUri": "monster:infinite_loop",
+      "stats": {
+        "agility": 7,
+        "armor": 2,
+        "class": 2,
+        "experience": 3500,
+        "hitPoints": 25,
+        "intelligence": 16,
+        "inventoryNames": [
+          "While True",
+          "Stack Trace Scythe",
+          "Debugger's Breakpoint",
+          "Console.log Staff",
+          "Load-Bearing Comment Vest",
+          "Caffeine-Stained Hoodie",
+          "Duct Tape Patch",
+          "Energy Drink of Haste",
+          "Focusing Rubber Duck",
+          "Quickening Energy Drink",
+          "Emergency Coffee",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Single node_module",
+          "Outdated README"
+        ],
+        "level": 7,
+        "strength": 6
+      }
+    },
+    {
+      "name": "Merge Conflict",
+      "metadataUri": "monster:merge_conflict",
+      "stats": {
+        "agility": 8,
+        "armor": 3,
+        "class": 0,
+        "experience": 5500,
+        "hitPoints": 35,
+        "intelligence": 6,
+        "inventoryNames": [
+          "HEAD Detached",
+          "Hotfix Hammer",
+          "Refactor Blade",
+          "Keyboard Warrior Blade",
+          "Rubber Duck Mace",
+          "Server Rack Plate",
+          "Mechanical Keyboard Shield",
+          "Cardboard Box Armor",
+          "Pizza Slice of Vigor",
+          "Energy Drink of Haste",
+          "Fortifying Stress Ball",
+          "Antidote.sh",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Single node_module",
+          "Expired SSL Certificate",
+          "Outdated README"
+        ],
+        "level": 8,
+        "strength": 18
+      }
+    },
+    {
+      "name": "Segfault Serpent",
+      "metadataUri": "monster:segfault_serpent",
+      "stats": {
+        "agility": 20,
+        "armor": 3,
+        "class": 1,
+        "experience": 8000,
+        "hitPoints": 30,
+        "intelligence": 8,
+        "inventoryNames": [
+          "Core Dump",
+          "Git Blame Dagger",
+          "Refactor Blade",
+          "Trackpad Shuriken",
+          "Mouse Click Dagger",
+          "The Incognito Tab",
+          "Noise-Canceling Cloak",
+          "Cargo Shorts of Holding",
+          "Pizza Slice of Vigor",
+          "Energy Drink of Haste",
+          "Quickening Energy Drink",
+          "sudo rm -rf",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Single node_module",
+          "Outdated README"
+        ],
+        "level": 9,
+        "strength": 8
+      }
+    },
+    {
+      "name": "The Production Bug",
+      "metadataUri": "monster:the_production_bug",
+      "stats": {
+        "agility": 12,
+        "armor": 4,
+        "class": 2,
+        "experience": 12000,
+        "hitPoints": 48,
+        "intelligence": 22,
+        "inventoryNames": [
+          "Friday Deploy",
+          "LGTM Stamp of Doom",
+          "Rage Quit Greatsword",
+          "Code Review Crossbow",
+          "Stack Trace Scythe",
+          "Hotfix Hammer",
+          "Refactor Blade",
+          "Senior Dev's Bathrobe",
+          "Standing Desk Fortress",
+          "Server Rack Plate",
+          "Load-Bearing Comment Vest",
+          "Pizza Slice of Vigor",
+          "sudo rm -rf",
+          "Energy Drink of Haste",
+          "Deprecated API Key",
+          "Orphaned TODO Comment",
+          "Single node_module",
+          "Expired SSL Certificate",
+          "Outdated README"
+        ],
+        "level": 10,
+        "strength": 10
+      }
+    }
+  ]
+}

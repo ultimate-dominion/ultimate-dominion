@@ -1,0 +1,35 @@
+{
+  "shops": [
+    {
+      "name": "Jenkins",
+      "location": [2, 2],
+      "gold": 2000000000000000000000,
+      "maxGold": 2000000000000000000000,
+      "priceMarkdown": 5000,
+      "priceMarkup": 2000,
+      "restockTimestamp": 0,
+      "inventory": [
+        { "itemName": "Emergency Coffee", "stock": 20, "restock": 20 },
+        { "itemName": "Energy Drink of Haste", "stock": 10, "restock": 10 },
+        { "itemName": "Pizza Slice of Vigor", "stock": 5, "restock": 5 },
+        { "itemName": "Fortifying Stress Ball", "stock": 10, "restock": 10 },
+        { "itemName": "Quickening Energy Drink", "stock": 10, "restock": 10 },
+        { "itemName": "Focusing Rubber Duck", "stock": 10, "restock": 10 },
+        { "itemName": "Antidote.sh", "stock": 15, "restock": 15 },
+        { "itemName": "sudo rm -rf", "stock": 5, "restock": 5 },
+        { "itemName": "Duct Tape Patch", "stock": 3, "restock": 3 },
+        { "itemName": "Cardboard Box Armor", "stock": 3, "restock": 3 },
+        { "itemName": "Trash Bag Poncho", "stock": 3, "restock": 3 },
+        { "itemName": "Console.log Staff", "stock": 3, "restock": 3 },
+        { "itemName": "Rubber Duck Mace", "stock": 3, "restock": 3 },
+        { "itemName": "Mouse Click Dagger", "stock": 3, "restock": 3 },
+        { "itemName": "Deprecated API Key", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Orphaned TODO Comment", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Unused Import Statement", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Expired SSL Certificate", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Single node_module", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Outdated README", "stock": 0, "restock": 0, "buyOnly": true }
+      ]
+    }
+  ]
+}

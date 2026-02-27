@@ -1,0 +1,150 @@
+{
+  "magicDamage": [
+    {
+      "effectId": "0xeee09063621624b3000000000000000000000000000000000000000000000000",
+      "name": "basic magic attack",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
+    },
+    {
+      "effectId": "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000",
+      "name": "basic magic heal",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
+    }
+  ],
+  "physicalDamage": [
+    {
+      "effectId": "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
+      "name": "basic weapon attack",
+      "stats": {
+        "armorPenetration": 0,
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
+    }
+  ],
+  "statusEffects": [
+    {
+      "effectId": "0x940c7cad73f61cb6000000000000000000000000000000000000000000000000",
+      "name": "caffeinated",
+      "stats": {
+        "agiModifier": 5,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 600,
+        "validTurns": 0
+      }
+    },
+    {
+      "effectId": "0x54d076d5607dc751000000000000000000000000000000000000000000000000",
+      "name": "rubber duck insight",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 5,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 600,
+        "validTurns": 0
+      }
+    },
+    {
+      "effectId": "0x5b73694f86a16512000000000000000000000000000000000000000000000000",
+      "name": "stress ball squeeze",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 5
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 600,
+        "validTurns": 0
+      }
+    },
+    {
+      "effectId": "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000",
+      "name": "404 not found",
+      "stats": {
+        "agiModifier": -8,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 3,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 8
+      }
+    },
+    {
+      "effectId": "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000",
+      "name": "spaghetti code",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 2,
+        "maxStacks": 2,
+        "validTime": 0,
+        "validTurns": 8
+      }
+    },
+    {
+      "effectId": "0x98562f2b32aeb98f000000000000000000000000000000000000000000000000",
+      "name": "technical debt",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": -8
+      },
+      "validity": {
+        "cooldown": 3,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 8
+      }
+    }
+  ]
+}

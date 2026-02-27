@@ -792,6 +792,11 @@ contract PostDeploy is Script {
         // 300 basis points = 3%
         UltimateDominionConfig.setFeePercent(300);
         console.log("  Fee percent: 3% (300 basis points)");
+
+        // Drop multipliers (100 = 1x, fresh deploy defaults)
+        UltimateDominionConfig.setGlobalDropMultiplier(100);
+        UltimateDominionConfig.setGoldDropMultiplier(100);
+        console.log("  Drop multipliers: 1x (100)");
     }
 
     function _configureGasStation() internal {

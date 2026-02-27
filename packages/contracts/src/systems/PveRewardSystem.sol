@@ -14,7 +14,8 @@ import {
     Mobs,
     MobStats,
     EncounterEntity,
-    AdventureEscrow
+    AdventureEscrow,
+    UltimateDominionConfig
 } from "@codegen/index.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 import {InvalidRewardState} from "../Errors.sol";
@@ -107,6 +108,10 @@ contract PveRewardSystem is System {
         uint256 baseGold = BASE_GOLD_DROP;
         if (MobStats.getIsElite(entityId)) baseGold = baseGold * ELITE_REWARD_MULTIPLIER / 100;
         dropAmount = (randomNumber % (baseGold * mobLevel)) + 0.05 ether;
+        uint256 goldMult = UltimateDominionConfig.getGoldDropMultiplier();
+        if (goldMult > 0) {
+            dropAmount = (dropAmount * goldMult) / 100;
+        }
     }
 
     function _calculateItemDrop(uint256 randomNumber, bytes32 entityId, bytes32 characterId)
@@ -118,15 +123,19 @@ contract PveRewardSystem is System {
 
         // Roll each item independently — all winners drop
         bool _isElite = MobStats.getIsElite(entityId);
+        uint256 dropMult = UltimateDominionConfig.getGlobalDropMultiplier();
         uint256[] memory candidates = new uint256[](monsterStats.inventory.length);
         uint256 numCandidates;
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             uint256 tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
+            if (dropMult > 0) {
+                dropChance = (dropChance * dropMult) / 100;
+            }
             if (_isElite) {
                 dropChance = dropChance + ELITE_DROP_BONUS;
-                if (dropChance > 100) dropChance = 100;
             }
+            if (dropChance > 100) dropChance = 100;
             uint256 roll = uint256(keccak256(abi.encodePacked(randomNumber, i))) % 100;
             if (roll < dropChance) {
                 candidates[numCandidates] = tempItemId;

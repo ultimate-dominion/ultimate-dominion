@@ -30,6 +30,8 @@ struct UltimateDominionConfigData {
   uint256 feePercent;
   uint256 founderWindowEnd;
   address fragmentToken;
+  uint256 globalDropMultiplier;
+  uint256 goldDropMultiplier;
 }
 
 library UltimateDominionConfig {
@@ -37,12 +39,12 @@ library UltimateDominionConfig {
   ResourceId constant _tableId = ResourceId.wrap(0x74625544000000000000000000000000556c74696d617465446f6d696e696f6e);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x01150d0001141414141414142014202014000000000000000000000000000000);
+    FieldLayout.wrap(0x01550f0001141414141414142014202014202000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (bool, address, address, address, address, address, address, address, uint256, address, uint256, uint256, address)
-  Schema constant _valueSchema = Schema.wrap(0x01150d0060616161616161611f611f1f61000000000000000000000000000000);
+  // Hex-encoded value schema of (bool, address, address, address, address, address, address, address, uint256, address, uint256, uint256, address, uint256, uint256)
+  Schema constant _valueSchema = Schema.wrap(0x01550f0060616161616161611f611f1f611f1f00000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -57,7 +59,7 @@ library UltimateDominionConfig {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](13);
+    fieldNames = new string[](15);
     fieldNames[0] = "locked";
     fieldNames[1] = "goldToken";
     fieldNames[2] = "characterToken";
@@ -71,6 +73,8 @@ library UltimateDominionConfig {
     fieldNames[10] = "feePercent";
     fieldNames[11] = "founderWindowEnd";
     fieldNames[12] = "fragmentToken";
+    fieldNames[13] = "globalDropMultiplier";
+    fieldNames[14] = "goldDropMultiplier";
   }
 
   /**
@@ -582,6 +586,82 @@ library UltimateDominionConfig {
   }
 
   /**
+   * @notice Get globalDropMultiplier.
+   */
+  function getGlobalDropMultiplier() internal view returns (uint256 globalDropMultiplier) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 13, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get globalDropMultiplier.
+   */
+  function _getGlobalDropMultiplier() internal view returns (uint256 globalDropMultiplier) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 13, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set globalDropMultiplier.
+   */
+  function setGlobalDropMultiplier(uint256 globalDropMultiplier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 13, abi.encodePacked((globalDropMultiplier)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set globalDropMultiplier.
+   */
+  function _setGlobalDropMultiplier(uint256 globalDropMultiplier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 13, abi.encodePacked((globalDropMultiplier)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get goldDropMultiplier.
+   */
+  function getGoldDropMultiplier() internal view returns (uint256 goldDropMultiplier) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 14, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get goldDropMultiplier.
+   */
+  function _getGoldDropMultiplier() internal view returns (uint256 goldDropMultiplier) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 14, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set goldDropMultiplier.
+   */
+  function setGoldDropMultiplier(uint256 goldDropMultiplier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 14, abi.encodePacked((goldDropMultiplier)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set goldDropMultiplier.
+   */
+  function _setGoldDropMultiplier(uint256 goldDropMultiplier) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 14, abi.encodePacked((goldDropMultiplier)), _fieldLayout);
+  }
+
+  /**
    * @notice Get the full data.
    */
   function get() internal view returns (UltimateDominionConfigData memory _table) {
@@ -625,7 +705,9 @@ library UltimateDominionConfig {
     address feeRecipient,
     uint256 feePercent,
     uint256 founderWindowEnd,
-    address fragmentToken
+    address fragmentToken,
+    uint256 globalDropMultiplier,
+    uint256 goldDropMultiplier
   ) internal {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -640,7 +722,9 @@ library UltimateDominionConfig {
       feeRecipient,
       feePercent,
       founderWindowEnd,
-      fragmentToken
+      fragmentToken,
+      globalDropMultiplier,
+      goldDropMultiplier
     );
 
     EncodedLengths _encodedLengths;
@@ -667,7 +751,9 @@ library UltimateDominionConfig {
     address feeRecipient,
     uint256 feePercent,
     uint256 founderWindowEnd,
-    address fragmentToken
+    address fragmentToken,
+    uint256 globalDropMultiplier,
+    uint256 goldDropMultiplier
   ) internal {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -682,7 +768,9 @@ library UltimateDominionConfig {
       feeRecipient,
       feePercent,
       founderWindowEnd,
-      fragmentToken
+      fragmentToken,
+      globalDropMultiplier,
+      goldDropMultiplier
     );
 
     EncodedLengths _encodedLengths;
@@ -710,7 +798,9 @@ library UltimateDominionConfig {
       _table.feeRecipient,
       _table.feePercent,
       _table.founderWindowEnd,
-      _table.fragmentToken
+      _table.fragmentToken,
+      _table.globalDropMultiplier,
+      _table.goldDropMultiplier
     );
 
     EncodedLengths _encodedLengths;
@@ -738,7 +828,9 @@ library UltimateDominionConfig {
       _table.feeRecipient,
       _table.feePercent,
       _table.founderWindowEnd,
-      _table.fragmentToken
+      _table.fragmentToken,
+      _table.globalDropMultiplier,
+      _table.goldDropMultiplier
     );
 
     EncodedLengths _encodedLengths;
@@ -770,7 +862,9 @@ library UltimateDominionConfig {
       address feeRecipient,
       uint256 feePercent,
       uint256 founderWindowEnd,
-      address fragmentToken
+      address fragmentToken,
+      uint256 globalDropMultiplier,
+      uint256 goldDropMultiplier
     )
   {
     locked = (_toBool(uint8(Bytes.getBytes1(_blob, 0))));
@@ -798,6 +892,10 @@ library UltimateDominionConfig {
     founderWindowEnd = (uint256(Bytes.getBytes32(_blob, 225)));
 
     fragmentToken = (address(Bytes.getBytes20(_blob, 257)));
+
+    globalDropMultiplier = (uint256(Bytes.getBytes32(_blob, 277)));
+
+    goldDropMultiplier = (uint256(Bytes.getBytes32(_blob, 309)));
   }
 
   /**
@@ -824,7 +922,9 @@ library UltimateDominionConfig {
       _table.feeRecipient,
       _table.feePercent,
       _table.founderWindowEnd,
-      _table.fragmentToken
+      _table.fragmentToken,
+      _table.globalDropMultiplier,
+      _table.goldDropMultiplier
     ) = decodeStatic(_staticData);
   }
 
@@ -863,7 +963,9 @@ library UltimateDominionConfig {
     address feeRecipient,
     uint256 feePercent,
     uint256 founderWindowEnd,
-    address fragmentToken
+    address fragmentToken,
+    uint256 globalDropMultiplier,
+    uint256 goldDropMultiplier
   ) internal pure returns (bytes memory) {
     return
       abi.encodePacked(
@@ -879,7 +981,9 @@ library UltimateDominionConfig {
         feeRecipient,
         feePercent,
         founderWindowEnd,
-        fragmentToken
+        fragmentToken,
+        globalDropMultiplier,
+        goldDropMultiplier
       );
   }
 
@@ -902,7 +1006,9 @@ library UltimateDominionConfig {
     address feeRecipient,
     uint256 feePercent,
     uint256 founderWindowEnd,
-    address fragmentToken
+    address fragmentToken,
+    uint256 globalDropMultiplier,
+    uint256 goldDropMultiplier
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData = encodeStatic(
       locked,
@@ -917,7 +1023,9 @@ library UltimateDominionConfig {
       feeRecipient,
       feePercent,
       founderWindowEnd,
-      fragmentToken
+      fragmentToken,
+      globalDropMultiplier,
+      goldDropMultiplier
     );
 
     EncodedLengths _encodedLengths;
