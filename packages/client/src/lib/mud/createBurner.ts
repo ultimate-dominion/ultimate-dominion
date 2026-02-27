@@ -10,6 +10,7 @@ import { share, Subject } from 'rxjs';
 import {
   type Address,
   createWalletClient,
+  encodeFunctionData,
   getContract,
   type Hex,
   padHex,
@@ -81,20 +82,19 @@ export function createBurner(
             };
           }
 
-          // Fallback: read FunctionSelectors directly from the World contract.
-          // This handles cases where RECS sync hasn't loaded the table yet.
-          // Uses getStaticField (returns bytes32) instead of getRecord
-          // to avoid complex multi-value ABI decoding issues.
+          // Fallback: read FunctionSelectors directly from the World via
+          // raw eth_call to bypass any viem readContract decoding issues.
+          const worldAddr = network.worldContract.address as Hex;
           // eslint-disable-next-line no-console
           console.warn(
-            `[callFrom] FunctionSelectors not in RECS for ${worldFunctionSelector}, reading from chain`,
+            `[callFrom] FunctionSelectors not in RECS for ${worldFunctionSelector}, reading from chain (world=${worldAddr})`,
           );
 
-          const FUNCTION_SELECTORS_TABLE_ID =
+          const TABLE_ID =
             '0x7462776f726c6400000000000000000046756e6374696f6e53656c6563746f72' as Hex;
-          const FIELD_LAYOUT =
+          const LAYOUT =
             '0x0024020020040000000000000000000000000000000000000000000000000000' as Hex;
-          const getStaticFieldAbi = [
+          const GSF_ABI = [
             {
               name: 'getStaticField',
               type: 'function',
@@ -109,53 +109,68 @@ export function createBurner(
             },
           ] as const;
 
-          const keyTuple = [
-            padHex(worldFunctionSelector, { size: 32 }),
-          ] as readonly Hex[];
+          const paddedKey = padHex(worldFunctionSelector, { size: 32 });
 
-          const [systemId, rawSystemFunctionSel] = await Promise.all([
-            network.publicClient.readContract({
-              address: network.worldContract.address as Hex,
-              abi: getStaticFieldAbi,
-              functionName: 'getStaticField',
-              args: [
-                FUNCTION_SELECTORS_TABLE_ID,
-                keyTuple,
-                0,
-                FIELD_LAYOUT,
-              ],
-            }),
-            network.publicClient.readContract({
-              address: network.worldContract.address as Hex,
-              abi: getStaticFieldAbi,
-              functionName: 'getStaticField',
-              args: [
-                FUNCTION_SELECTORS_TABLE_ID,
-                keyTuple,
-                1,
-                FIELD_LAYOUT,
-              ],
-            }),
-          ]);
+          // Use viem's encodeFunctionData for correct ABI encoding
+          const field0Data = encodeFunctionData({
+            abi: GSF_ABI,
+            functionName: 'getStaticField',
+            args: [TABLE_ID, [paddedKey], 0, LAYOUT],
+          });
+
+          // eslint-disable-next-line no-console
+          console.info('[callFrom] field0 calldata:', field0Data);
+
+          const field0Result = await network.publicClient.call({
+            to: worldAddr,
+            data: field0Data,
+          });
+
+          // eslint-disable-next-line no-console
+          console.info(
+            '[callFrom] field0 raw response:',
+            field0Result.data,
+          );
+
+          const systemId = (field0Result.data ??
+            '0x0000000000000000000000000000000000000000000000000000000000000000') as Hex;
 
           if (
+            !systemId ||
+            systemId === '0x' ||
             systemId ===
-            '0x0000000000000000000000000000000000000000000000000000000000000000'
+              '0x0000000000000000000000000000000000000000000000000000000000000000'
           ) {
             throw new Error(
-              `Function selector ${worldFunctionSelector} not registered on World`,
+              `Function selector ${worldFunctionSelector} not registered on World (raw=${String(field0Result.data)})`,
             );
           }
 
-          // systemFunctionSelector is bytes4 stored in high bytes of bytes32
+          const field1Data = encodeFunctionData({
+            abi: GSF_ABI,
+            functionName: 'getStaticField',
+            args: [TABLE_ID, [paddedKey], 1, LAYOUT],
+          });
+
+          const field1Result = await network.publicClient.call({
+            to: worldAddr,
+            data: field1Data,
+          });
+
+          // eslint-disable-next-line no-console
+          console.info(
+            '[callFrom] resolved:',
+            { systemId, rawField1: field1Result.data },
+          );
+
           const systemFunctionSel = slice(
-            rawSystemFunctionSel,
+            field1Result.data as Hex,
             0,
             4,
           ) as Hex;
 
           return {
-            systemId: systemId as Hex,
+            systemId,
             systemFunctionSelector: systemFunctionSel,
           };
         },
