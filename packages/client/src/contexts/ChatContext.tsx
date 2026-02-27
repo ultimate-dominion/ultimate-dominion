@@ -417,7 +417,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     }
   }, [isOpen, messages]);
 
-  const onLogin = useCallback(async () => {
+  const onLogin = useCallback(async (options?: { silent?: boolean }) => {
     try {
       if (user) return;
       if (!data) return;
@@ -533,7 +533,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       stream.connect();
       streamRef.current = stream;
     } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to initialize chat.', e);
+      if (!options?.silent) {
+        renderError((e as Error)?.message ?? 'Failed to initialize chat.', e);
+      }
     } finally {
       setIsLoggingIn(false);
     }
@@ -541,10 +543,15 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   // Auto-login only when a cached PGP key exists (no MetaMask popup).
   // First-time users click the Login button manually.
+  // Failures are silent — chat is non-critical and Push backend can be flaky.
   useEffect(() => {
     const hasCachedKey = sessionStorage.getItem('push_pgp_key');
     if (hasCachedKey && isSpawned && data && !user && !isLoggingIn) {
-      onLogin();
+      onLogin({ silent: true }).catch(() => {
+        // Push backend unreachable — clear stale cached key so we don't retry
+        sessionStorage.removeItem('push_pgp_key');
+        sessionStorage.removeItem('push_account');
+      });
     }
   }, [isSpawned, data, user, isLoggingIn, onLogin]);
 
