@@ -355,7 +355,7 @@ const CharacterProviderInner = ({
       return false;
     }
     console.info('[Character] Found character:', {
-      name: hexToString(partialCharacter.name as `0x${string}` || '0x', { size: 32 }),
+      name: partialCharacter.name,
       owner: partialCharacter.owner,
       tokenId: partialCharacter.tokenId?.toString(),
       level: partialCharacter.level?.toString(),
