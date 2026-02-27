@@ -10,25 +10,25 @@ import { FragmentClaimModal } from './FragmentClaimModal';
 
 const pulseAnimation = keyframes`
   0%, 100% {
-    opacity: 0.6;
+    opacity: 0.7;
     transform: scale(1);
   }
   50% {
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.15);
   }
 `;
 
 const glowAnimation = keyframes`
   0%, 100% {
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5),
-                0 0 20px rgba(255, 215, 0, 0.3),
-                0 0 30px rgba(255, 215, 0, 0.1);
+    box-shadow: 0 0 6px rgba(120, 200, 255, 0.6),
+                0 0 14px rgba(120, 200, 255, 0.3),
+                0 0 24px rgba(120, 200, 255, 0.15);
   }
   50% {
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.7),
-                0 0 30px rgba(255, 215, 0, 0.5),
-                0 0 45px rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 10px rgba(120, 200, 255, 0.9),
+                0 0 22px rgba(120, 200, 255, 0.5),
+                0 0 40px rgba(120, 200, 255, 0.25);
   }
 `;
 
@@ -53,7 +53,7 @@ export const FragmentEchoOverlay = ({
         zIndex={10}
         cursor="pointer"
         onClick={onOpen}
-        bg="rgba(255, 215, 0, 0.2)"
+        bg="rgba(120, 200, 255, 0.15)"
         borderRadius="50%"
         w={`${tileSize * 0.8}px`}
         h={`${tileSize * 0.8}px`}
@@ -61,19 +61,18 @@ export const FragmentEchoOverlay = ({
         alignItems="center"
         justifyContent="center"
         animation={`${pulseAnimation} 2s ease-in-out infinite, ${glowAnimation} 2s ease-in-out infinite`}
-        border="2px solid"
-        borderColor="yellow.400"
+        border="1.5px solid rgba(120, 200, 255, 0.7)"
         _hover={{
-          bg: 'rgba(255, 215, 0, 0.4)',
-          transform: 'scale(1.1)',
+          bg: 'rgba(120, 200, 255, 0.3)',
+          transform: 'scale(1.15)',
         }}
-        transition="background 0.2s"
+        transition="all 0.2s"
       >
         <Text
           fontSize="xs"
           fontWeight="bold"
-          color="yellow.200"
-          textShadow="0 0 5px rgba(255, 215, 0, 0.8)"
+          color="#A8DEFF"
+          textShadow="0 0 6px rgba(120, 200, 255, 0.9)"
         >
           {getRomanNumeral(pendingEcho.fragmentType)}
         </Text>
@@ -114,4 +113,53 @@ export const FragmentEchoTile = ({
   }
 
   return <FragmentEchoOverlay tileSize={tileSize} />;
+};
+
+/**
+ * Compact fragment marker for the mini-map grid.
+ * Shows a small pulsing glow on the tile where a pending fragment echo exists.
+ */
+const mapMarkerPulse = keyframes`
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+`;
+
+const mapMarkerGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 4px rgba(120, 200, 255, 0.6), 0 0 8px rgba(120, 200, 255, 0.3); }
+  50% { box-shadow: 0 0 6px rgba(120, 200, 255, 0.9), 0 0 14px rgba(120, 200, 255, 0.5), 0 0 20px rgba(120, 200, 255, 0.2); }
+`;
+
+export const FragmentMapMarker = ({
+  x,
+  y,
+}: {
+  x: number;
+  y: number;
+}): JSX.Element | null => {
+  const { pendingEcho } = useFragments();
+
+  if (
+    !pendingEcho ||
+    pendingEcho.triggerTileX !== x ||
+    pendingEcho.triggerTileY !== y
+  ) {
+    return null;
+  }
+
+  return (
+    <Box
+      animation={`${mapMarkerPulse} 2s ease-in-out infinite, ${mapMarkerGlow} 2s ease-in-out infinite`}
+      bg="rgba(120, 200, 255, 0.35)"
+      border="1px solid rgba(120, 200, 255, 0.7)"
+      borderRadius="50%"
+      h="8px"
+      left="50%"
+      pointerEvents="none"
+      position="absolute"
+      top="50%"
+      transform="translate(-50%, -50%)"
+      w="8px"
+      zIndex={8}
+    />
+  );
 };

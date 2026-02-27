@@ -363,16 +363,18 @@ export const StatsPanel = (): JSX.Element => {
         px={2}
         w="100%"
       >
-        <Button
-          as={RouterLink}
-          flex={1}
-          leftIcon={<MarketplaceIconSvg size={3} theme="dark" />}
-          size="sm"
-          to={MARKETPLACE_PATH}
-          variant="dark"
-        >
-          Marketplace
-        </Button>
+        <Box flex={1} position="relative">
+          <Button
+            as={RouterLink}
+            leftIcon={<MarketplaceIconSvg size={3} theme="dark" />}
+            size="sm"
+            to={MARKETPLACE_PATH}
+            variant="dark"
+            w="100%"
+          >
+            Marketplace
+          </Button>
+        </Box>
         <Box flex={1} position="relative">
           <Button
             as={RouterLink}
