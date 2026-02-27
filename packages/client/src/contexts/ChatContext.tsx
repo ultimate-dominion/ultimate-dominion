@@ -268,8 +268,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
                 _hover={{ textDecoration: 'underline' }}
               >
                 {droppedItem.name}
-              </Text>{' '}
-              ({rarityName})!
+              </Text>!
             </Text>
           ),
           message: '',
