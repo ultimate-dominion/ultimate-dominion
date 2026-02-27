@@ -293,7 +293,8 @@ See [ECONOMICS.md](./ECONOMICS.md) for detailed economy design.
 - **Marketplace**: Player-to-player trading with fee (2.5–3%, under review)
 - **Shops**: NPC buy/sell with markup/markdown, 12-hour restock cycle
 - **Gold generation**: From mob kills, scales with mob level (exact formula TBD — needs game testing)
-- **Gold sinks**: Marketplace fees, shop purchases, more planned post-launch
+- **Gold sinks**: Marketplace fees, shop purchases, guild creation/upkeep, more planned post-launch
+- **Guilds**: See [GUILDS.md](./GUILDS.md) for full guild system design (tax, treasury, territory, wars, seasons)
 
 ---
 

@@ -66,7 +66,12 @@ Assuming 20 kills/hour, 2 hours/day average per player:
 | Item repairs | 5–10% of item value | Ongoing drain |
 | Respec | Flat fee (100–1,000 gold) | Occasional |
 | Cosmetics | Various | Pure sink, no resale |
-| Guild creation | 5,000+ gold | One-time |
+| Guild creation | 1,000 gold | One-time. See [GUILDS.md](./GUILDS.md) |
+| Guild territory upkeep | 100 gold/tile/week | Recurring sink for holding territory |
+| Guild buffs | 100–200 gold each, 24h | Recurring sink for active guilds |
+| Guild war declaration | 500 gold | Per war |
+| Guild territory claiming | 500 gold/tile | One-time per tile |
+| Guild dissolution | Treasury burned | Prevents gold recycling |
 | Death penalty | 10% of carried gold | PvE and PvP |
 | Crafting/Upgrading | Consumes gold + items | Removes both |
 
