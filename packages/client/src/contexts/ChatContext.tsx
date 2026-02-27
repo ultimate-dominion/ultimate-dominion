@@ -26,7 +26,7 @@ import { useToast } from '../hooks/useToast';
 import { CHARACTERS_PATH, ITEM_PATH } from '../Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 
-import { Character, OrderStatus, Rarity, RARITY_COLORS, RARITY_NAMES, TokenType } from '../utils/types';
+import { Character, CLASS_COLORS, OrderStatus, Rarity, RARITY_COLORS, RARITY_NAMES, TokenType } from '../utils/types';
 
 import { useAuth } from './AuthContext';
 import { useCharacter } from './CharacterContext';
@@ -223,9 +223,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         const defenderId = encounter.defenders[0];
 
         const winner = combatOutcome.attackersWin ? attackerId : defenderId;
-        const winnerName = allCharacters.find(c => c.id === winner)?.name;
+        const winnerCharacter = allCharacters.find(c => c.id === winner);
+        const winnerName = winnerCharacter?.name;
         console.info('[CHAT] Winner:', winner, 'Name:', winnerName);
         if (!winnerName) return null;
+        const winnerNameColor = winnerCharacter ? (CLASS_COLORS[winnerCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
 
         const rareDrops = itemsDropped
           .map(itemId => {
@@ -250,7 +252,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
             <Text fontWeight={500} size="xs" textAlign="center">
               <Text
                 as={RouterLink}
-                color="#E8DCC8"
+                color={winnerNameColor}
+                fontWeight={700}
                 to={`${CHARACTERS_PATH}/${winner}`}
                 _hover={{ textDecoration: 'underline' }}
               >
@@ -291,6 +294,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       if (!buyerCharacter?.name) return null;
 
       const rarityColor = RARITY_COLORS[item.rarity];
+      const buyerNameColor = CLASS_COLORS[buyerCharacter.entityClass] ?? '#E8DCC8';
 
       return {
         delivered: true,
@@ -299,7 +303,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           <Text fontWeight={500} size="xs" textAlign="center">
             <Text
               as={RouterLink}
-              color="#E8DCC8"
+              color={buyerNameColor}
+              fontWeight={700}
               to={`${CHARACTERS_PATH}/${buyerCharacter.id}`}
               _hover={{ textDecoration: 'underline' }}
             >
@@ -346,6 +351,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         const item = allItems.find(i => i.tokenId === order.consideration.identifier.toString())!;
         const offererCharacter = allCharacters.find(c => c.owner.toLowerCase() === order.offerer.toLowerCase());
         const playerName = offererCharacter?.name ?? 'Someone';
+        const offererNameColor = offererCharacter ? (CLASS_COLORS[offererCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
         const goldAmount = formatEther(order.offer.amount);
         const rarityColor = RARITY_COLORS[item.rarity!];
 
@@ -357,7 +363,8 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
               {offererCharacter ? (
                 <Text
                   as={RouterLink}
-                  color="#E8DCC8"
+                  color={offererNameColor}
+                  fontWeight={700}
                   to={`${CHARACTERS_PATH}/${offererCharacter.id}`}
                   _hover={{ textDecoration: 'underline' }}
                 >
