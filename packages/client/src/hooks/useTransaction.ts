@@ -44,7 +44,7 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
     showSuccessToast = false,
     successMessage,
     silent = false,
-    estimatedDurationMs,
+    estimatedDurationMs = 5000,
   } = options;
 
   const { renderError, renderSuccess } = useToast();
@@ -72,7 +72,7 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
       setStatusMessage(`${actionName}...`);
 
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-      if (estimatedDurationMs) startProgress(estimatedDurationMs);
+      startProgress(estimatedDurationMs);
 
       try {
         const result = await withRetry(fn, {
@@ -84,7 +84,7 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
           },
         });
 
-        if (estimatedDurationMs) completeProgress();
+        completeProgress();
 
         if (showSuccessToast && !silent && successMessage) {
           renderSuccess(successMessage);
@@ -98,7 +98,7 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
 
         return result;
       } catch (error) {
-        if (estimatedDurationMs) failProgress();
+        failProgress();
 
         if (!silent) {
           const friendlyMessage = getFriendlyError(error);

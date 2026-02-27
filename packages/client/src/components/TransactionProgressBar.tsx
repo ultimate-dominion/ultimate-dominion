@@ -34,7 +34,7 @@ export const TransactionProgressBar = ({
         bg={color}
         w={`${progress.percent}%`}
         opacity={opacity}
-        transition={`width ${progress.transitionMs}ms linear, opacity 400ms ease, background-color 200ms ease`}
+        transition={`width ${progress.transitionMs}ms ease-out, opacity 400ms ease, background-color 200ms ease`}
       />
     </Box>
   );
