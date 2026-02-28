@@ -3,11 +3,9 @@
  * for changes in the World state (using the System contracts).
  */
 
-// import { getComponentValue } from '@latticexyz/recs';
-// import { singletonEntity } from '@latticexyz/store-sync/recs';
-
 import {
   Entity,
+  getComponentValue,
 } from '@latticexyz/recs';
 import {
   Address,
@@ -134,8 +132,7 @@ export function createSystemCalls(
     waitForTransaction,
     worldContract,
   }: SetupNetworkResult & { delegatorAddress?: Address },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _clientComponents: ClientComponents,
+  clientComponents: ClientComponents,
 ) {
   const buy = async (
     amount: bigint,
@@ -448,11 +445,33 @@ export function createSystemCalls(
     }
   };
 
+  // Client-side movement cooldown (matches MOVE_COOLDOWN = 1s in contracts)
+  const MOVE_COOLDOWN_MS = 1000;
+  let lastMoveTimestamp = 0;
+
   const move = async (
     characterEntity: Entity,
     x: number,
     y: number,
   ): SystemCallReturn => {
+    // Cooldown check — mirrors contract's MoveTooFast revert
+    const now = Date.now();
+    if (now - lastMoveTimestamp < MOVE_COOLDOWN_MS) {
+      console.warn('[move] Movement on cooldown, ignoring request');
+      return { success: false, error: 'Moving too fast.' };
+    }
+
+    // Adjacency check — mirrors contract's InvalidMove revert (Manhattan distance == 1)
+    const pos = getComponentValue(clientComponents.Position, characterEntity);
+    if (pos) {
+      const dx = Math.abs(x - pos.x);
+      const dy = Math.abs(y - pos.y);
+      if (dx + dy !== 1) {
+        console.warn(`[move] Invalid move: (${pos.x},${pos.y}) → (${x},${y}), Manhattan distance = ${dx + dy}`);
+        return { success: false, error: 'Invalid move.' };
+      }
+    }
+
     try {
       const tx = await worldContract.write.UD__move(
         [characterEntity.toString() as `0x${string}`, x, y],
@@ -462,6 +481,7 @@ export function createSystemCalls(
       );
 
       await waitForTransaction(tx);
+      lastMoveTimestamp = Date.now();
       return { success: true };
     } catch (e) {
       return {
