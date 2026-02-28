@@ -1,4 +1,4 @@
-import { Box, Center, HStack, Image, Text, Tooltip, VStack, Wrap, WrapItem, useDisclosure } from '@chakra-ui/react';
+import { Box, Center, HStack, Image, Text, Tooltip, VStack, useDisclosure } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -78,46 +78,43 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
   const hpPercent = (Number(currentHp) / Number(character.maxHp)) * 100;
 
   return (
-    <VStack spacing={1.5} w="100%">
-      {/* HP bar */}
-      <HStack w="100%" spacing={2}>
-        <Text color="#8A7E6A" fontSize="2xs" fontWeight={700}>HP</Text>
-        <Box
-          bg="#14120F"
-          borderRadius="sm"
-          boxShadow={DARK_INSET_SHADOW}
-          flex={1}
-          h="6px"
-          overflow="hidden"
-        >
+    <VStack spacing={0} w="100%">
+      <HStack w="100%" spacing={3} align="center">
+        {/* HP bar — fills remaining space */}
+        <HStack flex={1} spacing={2} minW={0}>
+          <Text color="#8A7E6A" fontSize="2xs" fontWeight={700} flexShrink={0}>HP</Text>
           <Box
-            bg={hpPercent > 60 ? '#5A8A3E' : hpPercent > 30 ? '#C87A2A' : '#8B2020'}
+            bg="#14120F"
             borderRadius="sm"
-            h="100%"
-            transition="width 0.5s ease"
-            w={`${hpPercent}%`}
-          />
-        </Box>
-        <Text color="#8A7E6A" fontFamily="mono" fontSize="2xs" fontWeight={700}>
-          {currentHp.toString()}/{character.maxHp.toString()}
-        </Text>
-      </HStack>
+            boxShadow={DARK_INSET_SHADOW}
+            flex={1}
+            h="6px"
+            overflow="hidden"
+          >
+            <Box
+              bg={hpPercent > 60 ? '#5A8A3E' : hpPercent > 30 ? '#C87A2A' : '#8B2020'}
+              borderRadius="sm"
+              h="100%"
+              transition="width 0.5s ease"
+              w={`${hpPercent}%`}
+            />
+          </Box>
+          <Text color="#8A7E6A" fontFamily="mono" fontSize="2xs" fontWeight={700} flexShrink={0}>
+            {currentHp.toString()}/{character.maxHp.toString()}
+          </Text>
+        </HStack>
 
-      {usableConsumables.length === 0 ? (
-        <Text color="#5A5040" fontSize="xs" fontStyle="italic">
-          No consumables. Visit a shop to stock up.
-        </Text>
-      ) : (
-        <Wrap spacing={1.5} justify="center">
-          {usableConsumables.map(({ consumable, isEquipped }) => {
-            const name = removeEmoji(consumable.name);
-            const imageSrc = getItemImage(name);
-            const emoji = getConsumableEmoji(name);
-            const rarityColor = getRarityColor(consumable.rarity);
+        {/* Consumable icons — right side */}
+        {usableConsumables.length > 0 && (
+          <HStack spacing={1.5} flexShrink={0}>
+            {usableConsumables.map(({ consumable, isEquipped }) => {
+              const name = removeEmoji(consumable.name);
+              const imageSrc = getItemImage(name);
+              const emoji = getConsumableEmoji(name);
+              const rarityColor = getRarityColor(consumable.rarity);
 
-            return (
-              <WrapItem key={consumable.tokenId}>
-                <Tooltip hasArrow label={getTooltipLabel(consumable)} placement="top">
+              return (
+                <Tooltip key={consumable.tokenId} hasArrow label={getTooltipLabel(consumable)} placement="top">
                   <Box
                     cursor="pointer"
                     onClick={() => onUse(consumable, isEquipped)}
@@ -164,10 +161,16 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
                     </Center>
                   </Box>
                 </Tooltip>
-              </WrapItem>
-            );
-          })}
-        </Wrap>
+              );
+            })}
+          </HStack>
+        )}
+      </HStack>
+
+      {usableConsumables.length === 0 && (
+        <Text color="#5A5040" fontSize="xs" fontStyle="italic" mt={1}>
+          No consumables. Visit a shop to stock up.
+        </Text>
       )}
 
       {selectedConsumable && (

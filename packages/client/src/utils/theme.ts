@@ -320,7 +320,7 @@ const Progress = {
   variants: {
     filling: {
       filledTrack: {
-        bg: '#C87A2A',
+        bg: '#5A8A7A',
       },
     },
     filled: {
