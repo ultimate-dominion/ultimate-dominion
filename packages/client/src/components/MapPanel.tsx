@@ -325,15 +325,76 @@ const NavigationCompass = ({
   const btnSize = isDesktop ? '32px' : '44px';
   const arrowSize = isDesktop ? '14px' : '18px';
 
+  if (isDesktop) {
+    // Desktop: compact horizontal arrow bar — N W [coords] E S
+    return (
+      <HStack justify="center" py={1} spacing={1} w="100%">
+        {COMPASS_DIRECTIONS.map(({ label, direction, rotate }) => {
+          const isOob = adjacentTiles ? adjacentTiles[label] === null : false;
+          const info = adjacentTiles?.[label] ?? null;
+
+          return (
+            <Tooltip
+              key={label}
+              hasArrow
+              isDisabled={!info}
+              label={
+                info
+                  ? `${label}: ${info.monsters} monster${info.monsters !== 1 ? 's' : ''}, ${info.players} player${info.players !== 1 ? 's' : ''}`
+                  : undefined
+              }
+              placement="top"
+            >
+              <IconButton
+                aria-label={`Move ${label}`}
+                icon={
+                  <HStack spacing={0.5}>
+                    <Text color="#8A7E6A" fontSize="2xs" fontWeight={700} lineHeight={1}>
+                      {label}
+                    </Text>
+                    <Box transform={`rotate(${rotate})`} lineHeight={0}>
+                      <CompassArrowSvg boxSize="12px" />
+                    </Box>
+                  </HStack>
+                }
+                isDisabled={isDisabled || isOob}
+                onClick={() => onMove(direction)}
+                h="28px"
+                w="36px"
+                minW={0}
+                variant="ghost"
+                size="xs"
+                opacity={isDisabled ? 0.4 : 1}
+                _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.15)' }}
+              />
+            </Tooltip>
+          );
+        })}
+        {position && (
+          <Text
+            color="#E8DCC8"
+            fontFamily="mono"
+            fontSize="2xs"
+            fontWeight={700}
+            ml={1}
+          >
+            {position.x},{position.y}
+          </Text>
+        )}
+      </HStack>
+    );
+  }
+
+  // Mobile: full compass rose with scout pips
   return (
-    <Box py={{ base: 2, lg: 1 }} w="100%">
+    <Box py={2} w="100%">
       <Grid
         gap={0}
         mx="auto"
         templateColumns={`1fr ${btnSize} 1fr`}
         templateRows={`1fr ${btnSize} 1fr`}
-        w={{ base: '160px', lg: '120px' }}
-        h={{ base: '160px', lg: '120px' }}
+        w="160px"
+        h="160px"
         position="relative"
       >
         {/* Rose ornament behind everything */}
@@ -346,7 +407,7 @@ const NavigationCompass = ({
           pointerEvents="none"
         >
           <CompassRoseOrnamentSvg
-            boxSize={{ base: '130px', lg: '95px' }}
+            boxSize="130px"
             opacity={0.35}
           />
         </Box>
@@ -407,7 +468,6 @@ const NavigationCompass = ({
                   _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.15)' }}
                 />
               </Tooltip>
-              {/* Scout pips below/beside the button */}
               <Box position="absolute" top={label === 'S' ? undefined : '100%'} bottom={label === 'S' ? '100%' : undefined}>
                 <ScoutPips info={info} />
               </Box>
@@ -428,7 +488,7 @@ const NavigationCompass = ({
             <Text
               color="#E8DCC8"
               fontFamily="mono"
-              fontSize={{ base: 'xs', lg: '2xs' }}
+              fontSize="xs"
               fontWeight={700}
               lineHeight={1}
               textAlign="center"
