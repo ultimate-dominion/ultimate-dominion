@@ -16,3 +16,5 @@ packages/api/dev-storage/
 items.json
 monsters.json
 mprocs.log
+.claude/
+CODEBASE_ANALYSIS.md

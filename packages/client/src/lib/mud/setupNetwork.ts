@@ -23,6 +23,7 @@ import {
 } from 'viem';
 
 import { debug } from '../../utils/debug';
+import { trackSyncLag, trackTxRoundtrip } from '../../utils/metricsReporter';
 
 import { createViemClientConfig } from './createViemClientConfig';
 import { externalTables } from './externalTables';
@@ -143,6 +144,14 @@ export async function setupNetwork() {
       if (blockNum <= lastProcessedBlock) return;
       lastProcessedBlock = blockNum;
 
+      // Track sync lag: time between block timestamp and when we processed it
+      if (blockLogs.blocks?.length) {
+        const block = blockLogs.blocks[blockLogs.blocks.length - 1];
+        if (block?.timestamp) {
+          trackSyncLag(Number(block.timestamp), blockNum);
+        }
+      }
+
       // Save immediately on the first processed block (ensures cache exists
       // for next visit even if the user navigates away quickly).
       if (!hasSavedOnce) {
@@ -189,12 +198,15 @@ export async function setupNetwork() {
     });
   }
 
-  // Wrap waitForTransaction with retry logic to handle anvil receipt timing
+  // Wrap waitForTransaction with retry logic and metrics tracking
   const waitForTransaction = async (tx: Hex) => {
+    const startMs = Date.now();
     const maxRetries = 3;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        return await mudWaitForTransaction(tx);
+        const result = await mudWaitForTransaction(tx);
+        trackTxRoundtrip('waitForTransaction', startMs, true);
+        return result;
       } catch (e) {
         const isReceiptNotFound =
           e instanceof Error &&
@@ -206,6 +218,7 @@ export async function setupNetwork() {
           await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
           continue;
         }
+        trackTxRoundtrip('waitForTransaction', startMs, false);
         throw e;
       }
     }

@@ -21,10 +21,12 @@ import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 
 import { initErrorReporter } from './utils/errorReporter';
+import { initMetrics } from './utils/metricsReporter';
 import { globalStyles, theme } from './utils/theme';
 
-// Initialize error reporting before anything else
+// Initialize error reporting and metrics before anything else
 initErrorReporter();
+initMetrics();
 
 const rootElement = document.getElementById('react-root');
 if (!rootElement) throw new Error('React root not found');
