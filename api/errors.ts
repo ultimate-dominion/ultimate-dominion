@@ -22,8 +22,19 @@ export default function handler(req: any, res: any) {
       return res.status(400).json({ error: "Missing or empty errors array" });
     }
 
-    for (const entry of errors) {
-      console.log(JSON.stringify({ _tag: "CLIENT_ERROR", ...entry }));
+    const tagged = errors.map((entry: any) => ({ _tag: "CLIENT_ERROR", ...entry }));
+
+    for (const entry of tagged) {
+      console.log(JSON.stringify(entry));
+    }
+
+    const forwardUrl = process.env.TELEMETRY_FORWARD_URL;
+    if (forwardUrl) {
+      fetch(forwardUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ errors: tagged }),
+      }).catch(() => {});
     }
 
     return res.status(200).json({ ok: true });

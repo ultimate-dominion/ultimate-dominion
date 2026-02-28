@@ -22,8 +22,19 @@ export default function handler(req: any, res: any) {
       return res.status(400).json({ error: "Missing or empty metrics array" });
     }
 
-    for (const entry of metrics) {
-      console.log(JSON.stringify({ _tag: "CLIENT_METRIC", ...entry }));
+    const tagged = metrics.map((entry: any) => ({ _tag: "CLIENT_METRIC", ...entry }));
+
+    for (const entry of tagged) {
+      console.log(JSON.stringify(entry));
+    }
+
+    const forwardUrl = process.env.TELEMETRY_FORWARD_URL;
+    if (forwardUrl) {
+      fetch(forwardUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ metrics: tagged }),
+      }).catch(() => {});
     }
 
     return res.status(200).json({ ok: true });
