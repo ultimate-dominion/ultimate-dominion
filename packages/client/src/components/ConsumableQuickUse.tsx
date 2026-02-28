@@ -78,12 +78,8 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
   const hpPercent = (Number(currentHp) / Number(character.maxHp)) * 100;
 
   return (
-    <VStack spacing={2} w="100%">
-      <Text color="#5A5040" fontSize="2xs" fontWeight={700} letterSpacing="wider" textTransform="uppercase">
-        Consumables
-      </Text>
-
-      {/* Compact HP bar */}
+    <VStack spacing={1.5} w="100%">
+      {/* HP bar */}
       <HStack w="100%" spacing={2}>
         <Text color="#8A7E6A" fontSize="2xs" fontWeight={700}>HP</Text>
         <Box
