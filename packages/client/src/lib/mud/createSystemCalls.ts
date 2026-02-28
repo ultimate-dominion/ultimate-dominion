@@ -129,17 +129,50 @@ const getContractError = (error: unknown): string => {
 export function createSystemCalls(
   {
     publicClient,
+    walletClient,
     waitForTransaction,
     worldContract,
+    delegatorAddress,
   }: SetupNetworkResult & { delegatorAddress?: Address },
   clientComponents: ClientComponents,
 ) {
+  // Mirrors contract-side "not character owner" checks (e.g. RestSystem, EquipmentSystem).
+  // Returns an error result if the entity is not a valid character or is not owned
+  // by the current account; returns null when ownership is confirmed.
+  const validateCharacterOwnership = (
+    characterEntity: Entity | string,
+    fnName: string,
+  ): { success: false; error: string } | null => {
+    const entity = (typeof characterEntity === 'string'
+      ? characterEntity
+      : characterEntity.toString()) as Entity;
+
+    const character = getComponentValue(clientComponents.Characters, entity);
+    if (!character) {
+      const msg = `${fnName}: entity is not a valid character`;
+      console.warn(`[OWNERSHIP] ${msg}`);
+      return { success: false, error: msg };
+    }
+
+    const expectedOwner = delegatorAddress ?? walletClient?.account?.address;
+    if (expectedOwner && character.owner.toLowerCase() !== expectedOwner.toLowerCase()) {
+      const msg = `${fnName}: not character owner`;
+      console.warn(`[OWNERSHIP] ${msg}`);
+      return { success: false, error: msg };
+    }
+
+    return null;
+  };
+
   const buy = async (
     amount: bigint,
     shopId: string,
     itemIndex: string,
     characterId: string,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'buy');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__buy([
         amount,
@@ -216,6 +249,9 @@ export function createSystemCalls(
     previousAmount: bigint,
     amount: bigint,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'depositToEscrow');
+    if (ownershipError) return ownershipError;
+
     try {
       const characterId = characterEntity.toString() as `0x${string}`;
 
@@ -266,6 +302,9 @@ export function createSystemCalls(
     defenderId: Entity,
     itemId: string,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(playerId, 'endTurn');
+    if (ownershipError) return ownershipError;
+
     try {
       const actions = [
         {
@@ -301,6 +340,9 @@ export function createSystemCalls(
     starterWeaponId: bigint,
     starterArmorId: bigint,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'enterGame');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__enterGame([
         characterEntity.toString() as `0x${string}`,
@@ -326,6 +368,9 @@ export function createSystemCalls(
     characterEntity: Entity,
     itemIds: string[],
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'equipItems');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__equipItems([
         characterEntity.toString() as `0x${string}`,
@@ -343,6 +388,9 @@ export function createSystemCalls(
   };
 
   const fleePvp = async (characterId: string): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'fleePvp');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__fleePvp([
         characterId as `0x${string}`,
@@ -380,6 +428,9 @@ export function createSystemCalls(
       class: StatsClasses;
     },
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'levelCharacter');
+    if (ownershipError) return ownershipError;
+
     try {
       const formattedNewStats = {
         strength: BigInt(entityStats.strength),
@@ -454,6 +505,9 @@ export function createSystemCalls(
     x: number,
     y: number,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'move');
+    if (ownershipError) return ownershipError;
+
     // Cooldown check — mirrors contract's MoveTooFast revert
     const now = Date.now();
     if (now - lastMoveTimestamp < MOVE_COOLDOWN_MS) {
@@ -492,6 +546,9 @@ export function createSystemCalls(
   };
 
   const removeEntityFromBoard = async (entity: Entity): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(entity, 'removeEntityFromBoard');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__removeEntityFromBoard([
         entity.toString() as `0x${string}`,
@@ -536,6 +593,9 @@ export function createSystemCalls(
     characterEntity: Entity,
     characterClass: StatsClasses,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'rollStats');
+    if (ownershipError) return ownershipError;
+
     try {
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
@@ -579,6 +639,9 @@ export function createSystemCalls(
     itemIndex: string,
     characterId: string,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'sell');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__sell([
         amount,
@@ -598,6 +661,9 @@ export function createSystemCalls(
   };
 
   const spawn = async (characterEntity: Entity): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'spawn');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__spawn([
         characterEntity.toString() as `0x${string}`,
@@ -617,6 +683,9 @@ export function createSystemCalls(
     characterEntity: Entity,
     itemId: string,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'unequipItem');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__unequipItem([
         characterEntity.toString() as `0x${string}`,
@@ -638,6 +707,9 @@ export function createSystemCalls(
     characterMetadataCid: string,
     tokenId: string,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'updateTokenUri');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__updateTokenUri([
         characterId as `0x${string}`,
@@ -655,6 +727,9 @@ export function createSystemCalls(
   };
 
   const rest = async (entity: Entity): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(entity, 'rest');
+    if (ownershipError) return ownershipError;
+
     try {
       const characterId = entity.toString() as `0x${string}`;
 
@@ -674,6 +749,9 @@ export function createSystemCalls(
     entity: Entity,
     tokenId: string,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(entity, 'useWorldConsumableItem');
+    if (ownershipError) return ownershipError;
+
     try {
       const characterId = entity.toString() as `0x${string}`;
 
@@ -697,6 +775,9 @@ export function createSystemCalls(
     entity: Entity,
     tokenId: string,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(entity, 'useCombatConsumableItem');
+    if (ownershipError) return ownershipError;
+
     try {
       const characterId = entity.toString() as `0x${string}`;
 
@@ -720,6 +801,9 @@ export function createSystemCalls(
     previousAmount: bigint,
     amount: bigint,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'withdrawFromEscrow');
+    if (ownershipError) return ownershipError;
+
     try {
       const characterId = characterEntity.toString() as `0x${string}`;
 
@@ -754,6 +838,9 @@ export function createSystemCalls(
     characterEntity: Entity,
     race: Race,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'chooseRace');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__chooseRace([
         characterEntity.toString() as `0x${string}`,
@@ -778,6 +865,9 @@ export function createSystemCalls(
     characterEntity: Entity,
     powerSource: PowerSource,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'choosePowerSource');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__choosePowerSource([
         characterEntity.toString() as `0x${string}`,
@@ -801,6 +891,9 @@ export function createSystemCalls(
   const rollBaseStats = async (
     characterEntity: Entity,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'rollBaseStats');
+    if (ownershipError) return ownershipError;
+
     try {
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
@@ -840,6 +933,9 @@ export function createSystemCalls(
     characterEntity: Entity,
     advancedClass: AdvancedClass,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'selectAdvancedClass');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__selectAdvancedClass([
         characterEntity.toString() as `0x${string}`,
@@ -890,6 +986,9 @@ export function createSystemCalls(
     tileX: number,
     tileY: number,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'triggerFragment');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__triggerFragment([
         characterId as `0x${string}`,
@@ -912,6 +1011,9 @@ export function createSystemCalls(
     characterId: string,
     fragmentType: number,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'claimFragment');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__claimFragment([
         characterId as `0x${string}`,
@@ -932,6 +1034,9 @@ export function createSystemCalls(
     characterId: string,
     goldAmount: bigint,
   ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'buyGas');
+    if (ownershipError) return ownershipError;
+
     try {
       const tx = await worldContract.write.UD__buyGas([
         characterId as `0x${string}`,
