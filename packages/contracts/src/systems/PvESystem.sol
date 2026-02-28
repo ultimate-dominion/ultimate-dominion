@@ -8,12 +8,14 @@ import {
     Effects,
     CombatEncounter,
     CombatEncounterData,
+    CharacterEquipment,
     MobStats,
     Position,
     Spawned,
     ActionOutcome,
     ActionOutcomeData
 } from "@codegen/index.sol";
+import {NoWeaponsEquipped} from "../Errors.sol";
 import {Action} from "@interfaces/Structs.sol";
 
 import "forge-std/console.sol";
@@ -61,6 +63,16 @@ contract PvESystem is System {
                 }
                 {
                     i++;
+                }
+            }
+        }
+        // Require player characters to have at least 1 weapon or spell equipped
+        if (_isValidPvE) {
+            bytes32[] memory players = _attackersAreMobs ? defenders : attackers;
+            for (uint256 i; i < players.length; i++) {
+                if (CharacterEquipment.lengthEquippedWeapons(players[i])
+                    + CharacterEquipment.lengthEquippedSpells(players[i]) == 0) {
+                    revert NoWeaponsEquipped();
                 }
             }
         }

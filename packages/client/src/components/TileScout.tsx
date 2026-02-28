@@ -104,16 +104,11 @@ export const TileScout = (): JSX.Element | null => {
 
   return (
     <VStack spacing={1} w="100%" px={2}>
-      <Text color="#5A5040" fontSize="2xs" fontWeight={700} letterSpacing="wider" textTransform="uppercase">
-        Scout
-      </Text>
       <Grid
         gap={0}
         templateColumns="repeat(3, 1fr)"
-        templateRows="repeat(3, 1fr)"
+        templateRows="repeat(3, minmax(40px, auto))"
         w="100%"
-        maxW="180px"
-        mx="auto"
       >
         {/* Row 1: empty - N - empty */}
         <GridItem />

@@ -264,36 +264,36 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </VStack>
 
-      <Divider borderColor="grey300" mt={4} />
+      <Divider borderColor="grey300" mt={2} />
 
-      <HStack mt={4} px={4} w="100%">
+      <Box mt={2} px={4} w="100%">
         <Level
           currentLevel={character.level}
           levelPercent={levelPercent}
           maxed={maxed}
         />
-      </HStack>
-      <Text fontWeight={600} size="md" textAlign="center">
-        <Text
-          as="span"
-          color={
-            BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
-          }
-          fontFamily="mono"
-          fontWeight={700}
-        >
-          {experience.toString()}
-        </Text>
-        <Text as="span" color="grey500" fontFamily="mono">
-          {' / '}
-          {nextLevelXpRequirement.toString()}
-        </Text>{' '}
-        XP
-      </Text>
+        <HStack justifyContent="space-between" mt={1}>
+          <Text color="#8A7E6A" fontWeight={600} size="xs">XP</Text>
+          <Text fontFamily="mono" fontWeight={700} size="xs">
+            <Text
+              as="span"
+              color={
+                BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
+              }
+            >
+              {experience.toString()}
+            </Text>
+            <Text as="span" color="grey500">
+              {' / '}
+              {nextLevelXpRequirement.toString()}
+            </Text>
+          </Text>
+        </HStack>
+      </Box>
 
-      <Divider borderColor="grey300" mt={4} />
+      <Divider borderColor="grey300" mt={2} />
 
-      <VStack mt={4} px={2} spacing={1} w="100%">
+      <VStack mt={2} px={2} spacing={1} w="100%">
         <HStack justifyContent="space-between" w="100%">
           <Tooltip
             hasArrow
@@ -312,7 +312,7 @@ export const StatsPanel = (): JSX.Element => {
             color="yellow"
             fontFamily="mono"
             fontWeight={700}
-            fontSize="xl"
+            fontSize="lg"
           >
             {etherToFixedNumber(
               externalGoldBalance + character.escrowGoldBalance,
@@ -356,13 +356,12 @@ export const StatsPanel = (): JSX.Element => {
         </Button>
       )}
 
-      <Divider borderColor="grey300" mt={4} />
+      <Divider borderColor="grey300" mt={2} />
 
       <HStack
         justifyContent="center"
         gap={2}
-        pb={4}
-        pt={4}
+        py={2}
         px={2}
         w="100%"
       >
@@ -372,7 +371,7 @@ export const StatsPanel = (): JSX.Element => {
             leftIcon={<MarketplaceIconSvg size={3} theme="dark" />}
             size="sm"
             to={MARKETPLACE_PATH}
-            variant="dark"
+            variant="outline"
             w="100%"
           >
             Marketplace
@@ -384,7 +383,7 @@ export const StatsPanel = (): JSX.Element => {
             leftIcon={<LeaderboardIconSvg size={3} theme="dark" />}
             size="sm"
             to={LEADERBOARD_PATH}
-            variant="dark"
+            variant="outline"
             w="100%"
           >
             Leaderboard

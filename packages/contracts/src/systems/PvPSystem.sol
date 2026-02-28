@@ -7,6 +7,7 @@ import {IWorld} from "@world/IWorld.sol";
 import {
     EncounterEntity,
     Effects,
+    CharacterEquipment,
     CombatEncounter,
     CombatEncounterData,
     CombatOutcome,
@@ -20,6 +21,7 @@ import {
 import {EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {PVP_TIMER} from "../../constants.sol";
+import {NoWeaponsEquipped} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import "forge-std/console.sol";
 
@@ -82,6 +84,21 @@ contract PvPSystem is System {
                 }
                 {
                     i++;
+                }
+            }
+        }
+        // Require all combatants to have at least 1 weapon or spell equipped
+        if (_isValidPvP) {
+            for (uint256 i; i < attackers.length; i++) {
+                if (CharacterEquipment.lengthEquippedWeapons(attackers[i])
+                    + CharacterEquipment.lengthEquippedSpells(attackers[i]) == 0) {
+                    revert NoWeaponsEquipped();
+                }
+            }
+            for (uint256 i; i < defenders.length; i++) {
+                if (CharacterEquipment.lengthEquippedWeapons(defenders[i])
+                    + CharacterEquipment.lengthEquippedSpells(defenders[i]) == 0) {
+                    revert NoWeaponsEquipped();
                 }
             }
         }
