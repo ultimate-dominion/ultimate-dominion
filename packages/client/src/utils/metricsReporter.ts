@@ -21,7 +21,9 @@ interface MetricEntry {
 
 const FLUSH_INTERVAL = 60_000; // 60 seconds
 const MAX_BATCH = 100;
-const ENDPOINT = '/api/metrics';
+const ENDPOINT = import.meta.env.VITE_TELEMETRY_URL
+  ? `${import.meta.env.VITE_TELEMETRY_URL}/metrics`
+  : '/api/metrics';
 
 let buffer: MetricEntry[] = [];
 let flushTimer: ReturnType<typeof setInterval> | null = null;

@@ -17,7 +17,9 @@ interface ErrorEntry {
 
 const FLUSH_INTERVAL = 30_000; // 30 seconds
 const MAX_BATCH = 50; // prevent runaway
-const ENDPOINT = '/api/errors';
+const ENDPOINT = import.meta.env.VITE_TELEMETRY_URL
+  ? `${import.meta.env.VITE_TELEMETRY_URL}/errors`
+  : '/api/errors';
 
 let buffer: ErrorEntry[] = [];
 let flushTimer: ReturnType<typeof setInterval> | null = null;
