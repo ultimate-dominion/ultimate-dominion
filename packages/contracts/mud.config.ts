@@ -718,8 +718,8 @@ export default defineWorld({
         feePercent: "uint256", // Basis points (300 = 3%)
         founderWindowEnd: "uint256", // Timestamp when Founder badge minting ends
         fragmentToken: "address", // ERC721 fragment NFT contract
-        globalDropMultiplier: "uint256", // 100 = 1x, 300 = 3x, 50 = 0.5x
-        goldDropMultiplier: "uint256", // same scale as globalDropMultiplier
+        // NOTE: globalDropMultiplier and goldDropMultiplier removed — on-chain schema is immutable (13 fields).
+        // These need a separate DropConfig table. See SESSION.md pending items.
       },
     },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////

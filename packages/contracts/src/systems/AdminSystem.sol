@@ -148,11 +148,6 @@ contract AdminSystem is System {
         return IWorld(_world()).UD__createEffect(effectType, name, effectStats);
     }
 
-    function setGlobalDropMultiplier(uint256 newMult) public onlyAdmin {
-        UltimateDominionConfig.setGlobalDropMultiplier(newMult);
-    }
-
-    function setGoldDropMultiplier(uint256 newMult) public onlyAdmin {
-        UltimateDominionConfig.setGoldDropMultiplier(newMult);
-    }
+    // NOTE: setGlobalDropMultiplier and setGoldDropMultiplier removed —
+    // UltimateDominionConfig schema is immutable on-chain. Needs separate DropConfig table.
 }
