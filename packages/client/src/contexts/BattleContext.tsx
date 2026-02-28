@@ -108,6 +108,7 @@ export const BattleProvider = ({
   } = useTransactionProgress();
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
+  const [acknowledgeVersion, setAcknowledgeVersion] = useState(0);
   const attackOutcomeCountAtAttack = useRef<number | null>(null);
 
   const fleeTx = useTransaction({
@@ -149,6 +150,7 @@ export const BattleProvider = ({
 
   const onContinueToBattleOutcome = useCallback((cont: boolean) => {
     setContinueToBattleOutcome(cont);
+    if (!cont) setAcknowledgeVersion(v => v + 1);
   }, []);
 
   const currentBattle = useMemo(() => {
@@ -174,7 +176,8 @@ export const BattleProvider = ({
     if (latestBattleOutcomeSeen === latestBattle?.encounterId) return null;
 
     return latestBattle;
-  }, [allBattles, CombatOutcome]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allBattles, CombatOutcome, acknowledgeVersion]);
 
   const lastestBattleOutcome = useMemo(() => {
     const latestCompletedBattle = allBattles

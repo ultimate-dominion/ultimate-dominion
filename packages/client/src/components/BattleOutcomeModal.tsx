@@ -16,7 +16,6 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -37,6 +36,7 @@ import {
 
 import { ItemCard } from './ItemCard';
 import { ItemEquipModal } from './ItemEquipModal';
+import { LevelingPanel } from './LevelingPanel';
 import { PolygonalCard } from './PolygonalCard';
 
 type BattleOutcomeModalProps = {
@@ -72,6 +72,15 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const [selectedItem, setSelectedItem] = useState<
     Armor | Spell | Weapon | null
   >(null);
+  const [initialLevel] = useState(() => character?.level);
+
+  const hasLeveledUp = useMemo(
+    () =>
+      character != null &&
+      initialLevel != null &&
+      character.level > initialLevel,
+    [character, initialLevel],
+  );
 
   const {
     isOpen: isItemModalOpen,
@@ -344,11 +353,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 )}
               </VStack>
             )}
-            {canLevel && (
+            {hasLeveledUp && !canLevel && (
               <VStack
                 alignItems="center"
-                pb={8}
-                spacing={4}
+                pb={4}
+                spacing={2}
                 border="2px solid"
                 borderColor="yellow"
                 borderRadius="md"
@@ -357,29 +366,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 bg="rgba(239, 211, 28, 0.05)"
               >
                 <Text fontWeight="bold" color="yellow" fontSize="lg">
-                  Ready to Level Up!
+                  You reached Level {character.level.toString()}!
                 </Text>
-                <Text>
-                  You can reach{' '}
-                  <Text as="span" fontWeight="bold">
-                    Level {(Number(character.level) + 1).toString()}
-                  </Text>
-                  ! Spend{' '}
-                  <Text as="span" fontWeight="bold">
-                    2 ability points
-                  </Text>{' '}
-                  on your stats.
-                </Text>
-                <Button
-                  as={Link}
-                  to={`/characters/${character?.id}`}
-                  onClick={onAcknowledge}
-                  variant="gold"
-                  size="sm"
-                >
-                  Level Up Now
-                </Button>
               </VStack>
+            )}
+            {canLevel && (
+              <LevelingPanel canLevel character={character} compact />
             )}
           </ModalBody>
           <ModalFooter>

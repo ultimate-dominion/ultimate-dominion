@@ -1,6 +1,6 @@
 import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
 import { getComponentValue } from '@latticexyz/recs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -41,9 +41,11 @@ const getStatWithSymbol = (stat: bigint | string): JSX.Element => {
 export const LevelingPanel = ({
   canLevel,
   character,
+  compact = false,
 }: {
   canLevel: boolean;
   character: Character;
+  compact?: boolean;
 }): JSX.Element => {
   const { renderSuccess, renderWarning } = useToast();
   const {
@@ -307,28 +309,50 @@ export const LevelingPanel = ({
     };
   }, [character]);
 
+  const Wrapper = compact
+    ? ({ children }: { children: ReactNode }) => (
+        <VStack
+          border="2px solid"
+          borderColor="yellow"
+          borderRadius="md"
+          boxShadow="0 0 15px rgba(239, 211, 28, 0.3)"
+          bg="rgba(239, 211, 28, 0.05)"
+          py={4}
+          w="100%"
+        >
+          {children}
+        </VStack>
+      )
+    : ({ children }: { children: ReactNode }) => (
+        <PolygonalCard clipPath="none" py={6}>
+          {children}
+        </PolygonalCard>
+      );
+
   return (
-    <PolygonalCard clipPath="none" py={6}>
+    <Wrapper>
       <VStack>
         <HStack color="#D4A54A" justify="space-between" px={6} w="100%">
           <Text alignSelf="start" fontWeight={700}>
-            My Stats
+            {compact ? 'Level Up!' : 'My Stats'}
           </Text>
           <Text alignSelf="start" fontWeight={700}>
             Ability Points: {abilityPoints}
           </Text>
         </HStack>
-        <HealthBar
-          currentHp={character.currentHp}
-          maxHp={character.maxHp}
-          mt={2}
-          level={character.level}
-          px={6}
-          statusEffects={character?.worldStatusEffects
-            .filter(e => e.active)
-            .map(e => e.name)}
-          w="100%"
-        />
+        {!compact && (
+          <HealthBar
+            currentHp={character.currentHp}
+            maxHp={character.maxHp}
+            mt={2}
+            level={character.level}
+            px={6}
+            statusEffects={character?.worldStatusEffects
+              .filter(e => e.active)
+              .map(e => e.name)}
+            w="100%"
+          />
+        )}
         <HStack justifyContent="end" mt={4} px={6} w="100%">
           <HStack
             justifyContent={canLevel ? 'center' : 'end'}
@@ -613,6 +637,6 @@ export const LevelingPanel = ({
           </Button>
         )}
       </VStack>
-    </PolygonalCard>
+    </Wrapper>
   );
 };
