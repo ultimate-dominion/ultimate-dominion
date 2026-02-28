@@ -21,6 +21,7 @@ import {
 } from 'viem';
 
 import { INSUFFICIENT_FUNDS_MESSAGE } from '../../utils/errors';
+import { reportError } from '../utils/errorReporter';
 import {
   AdvancedClass,
   ArmorType,
@@ -120,6 +121,8 @@ const getContractError = (error: unknown): string => {
     const friendly = KNOWN_ERROR_SIGNATURES[sigMatch[1].toLowerCase()];
     if (friendly) return friendly;
   }
+
+  reportError("contract", error, { category: category, systemCall: "unknown" });
 
   return message || 'An error occurred calling the contract.';
 };
