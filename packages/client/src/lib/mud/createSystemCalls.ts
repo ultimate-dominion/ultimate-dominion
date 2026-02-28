@@ -21,7 +21,7 @@ import {
 } from 'viem';
 
 import { INSUFFICIENT_FUNDS_MESSAGE } from '../../utils/errors';
-import { reportError } from '../utils/errorReporter';
+import { reportError } from '../../utils/errorReporter';
 import {
   AdvancedClass,
   ArmorType,
