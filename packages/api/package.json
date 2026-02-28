@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "vercel-build": "echo Serverless functions - no build needed",
     "clean": "rimraf dist",
     "dev": "nodemon --watch 'api/**/*.ts' --watch 'lib/**/*.ts' --exec 'node --loader ts-node/esm' local.ts",
     "start": "node dist/server.js"
