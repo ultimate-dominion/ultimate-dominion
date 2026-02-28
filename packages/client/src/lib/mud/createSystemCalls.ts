@@ -514,6 +514,7 @@ export function createSystemCalls(
       console.warn('[move] Movement on cooldown, ignoring request');
       return { success: false, error: 'Moving too fast.' };
     }
+    lastMoveTimestamp = now;
 
     // Adjacency check — mirrors contract's InvalidMove revert (Manhattan distance == 1)
     const pos = getComponentValue(clientComponents.Position, characterEntity);
@@ -535,7 +536,6 @@ export function createSystemCalls(
       );
 
       await waitForTransaction(tx);
-      lastMoveTimestamp = Date.now();
       return { success: true };
     } catch (e) {
       return {
