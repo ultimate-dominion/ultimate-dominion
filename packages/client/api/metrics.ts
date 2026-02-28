@@ -1,47 +1,35 @@
-import { NextRequest } from 'next/server';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-export const config = {
-  runtime: 'edge',
-};
+function setCors(res: VercelResponse): void {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  setCors(res);
 
-export default async function handler(req: NextRequest): Promise<Response> {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
   }
 
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: CORS_HEADERS });
+  if (req.method !== "POST") {
+    return res.status(405).send("Method not allowed");
   }
 
   try {
-    const body = await req.json();
-    const metrics = body?.metrics;
+    const metrics = req.body?.metrics;
 
     if (!Array.isArray(metrics) || metrics.length === 0) {
-      return new Response(JSON.stringify({ error: 'Missing or empty metrics array' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-      });
+      return res.status(400).json({ error: "Missing or empty metrics array" });
     }
 
     for (const entry of metrics) {
-      console.log(JSON.stringify({ _tag: 'CLIENT_METRIC', ...entry }));
+      console.log(JSON.stringify({ _tag: "CLIENT_METRIC", ...entry }));
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-    });
+    return res.status(200).json({ ok: true });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Invalid request body' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-    });
+    return res.status(400).json({ error: "Invalid request body" });
   }
 }
