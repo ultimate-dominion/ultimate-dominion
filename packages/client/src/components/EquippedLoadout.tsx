@@ -4,7 +4,7 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
-import { getItemImage } from '../utils/itemImages';
+import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
 import { getRarityAnimation, getRarityColor } from '../utils/rarityHelpers';
 import {
   type Armor,
@@ -83,7 +83,11 @@ const FilledSlot = ({ item }: { item: SlotItem }): JSX.Element => {
             objectFit="contain"
           />
         ) : (
-          <Text fontSize="lg">{getEmoji(item.name)}</Text>
+          <Text fontSize="lg">
+            {item.itemType === ItemType.Consumable
+              ? getConsumableEmoji(removeEmoji(item.name))
+              : getEmoji(item.name)}
+          </Text>
         )}
       </Center>
     </Tooltip>

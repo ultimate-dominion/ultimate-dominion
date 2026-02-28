@@ -26,6 +26,25 @@ const ITEM_IMAGES: Record<string, string> = {
   'Dragonfire Scepter': '/images/items/dragonfire-scepter.png',
 };
 
+/**
+ * Fallback emojis for consumables whose names don't contain embedded emojis.
+ * Keyed by the plain name (no emoji prefix).
+ */
+const CONSUMABLE_EMOJIS: Record<string, string> = {
+  'Minor Health Potion': '\u2764\uFE0F',
+  'Health Potion': '\u2764\uFE0F',
+  'Greater Health Potion': '\u2764\uFE0F',
+  'Fortifying Stew': '\uD83C\uDF56',
+  'Quickening Berries': '\uD83C\uDF52',
+  'Focusing Tea': '\uD83C\uDF75',
+  'Antidote': '\uD83E\uDDEA',
+  'Smoke Bomb': '\uD83D\uDCA8',
+};
+
 export const getItemImage = (name: string): string | undefined => {
   return ITEM_IMAGES[name];
+};
+
+export const getConsumableEmoji = (name: string): string => {
+  return CONSUMABLE_EMOJIS[name] || '\uD83D\uDCE6';
 };

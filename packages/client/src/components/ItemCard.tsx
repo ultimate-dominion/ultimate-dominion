@@ -2,7 +2,7 @@ import { Box, Center, HStack, Image, keyframes, Stack, Text, Tooltip, VStack } f
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
-import { getItemImage } from '../utils/itemImages';
+import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
 import { getRarityAnimation, getRarityColor, getRarityGlow, getRarityName } from '../utils/rarityHelpers';
 import {
   type Armor,
@@ -243,7 +243,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 objectFit="contain"
               />
             ) : (
-              <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
+              <Text fontSize={{ base: 'xl', lg: '3xl' }}>
+                {item.itemType === ItemType.Consumable
+                  ? getConsumableEmoji(removeEmoji(name))
+                  : getEmoji(name)}
+              </Text>
             )}
           </Center>
           <VStack alignItems="start" className="data-dense" spacing={0}>
@@ -302,7 +306,9 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
             />
           ) : (
             <Text color="white" fontSize="2xl">
-              {getEmoji(item.name)}
+              {item.itemType === ItemType.Consumable
+                  ? getConsumableEmoji(removeEmoji(item.name))
+                  : getEmoji(item.name)}
             </Text>
           )}
         </Stack>
@@ -340,7 +346,9 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
           />
         ) : (
           <Text color="white" fontSize="2xl">
-            {getEmoji(item.name)}
+            {item.itemType === ItemType.Consumable
+                  ? getConsumableEmoji(removeEmoji(item.name))
+                  : getEmoji(item.name)}
           </Text>
         )}
       </Stack>
