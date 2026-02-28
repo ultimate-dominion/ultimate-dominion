@@ -137,7 +137,35 @@ contract PvPSystem is System {
             require(encounterData.currentTurn == 1, "can only flee on your first turn");
         }
         if (encounterData.encounterType == EncounterType.PvE) {
-            revert("cannot flee from pve");
+            // PvE flee — 5% escrow gold penalty (lighter than PvP's 25%)
+            uint256 escrowBalance = AdventureEscrow.get(entityId);
+            uint256 amountToLose;
+            if (escrowBalance > 20) {
+                amountToLose = escrowBalance / 20;
+                AdventureEscrow.set(entityId, escrowBalance - amountToLose);
+                // Gold is burned (goes to nobody — monsters don't collect gold)
+            }
+
+            CombatOutcomeData memory combatOutcome = CombatOutcomeData({
+                endTime: block.timestamp,
+                attackersWin: entityIsDefender,
+                playerFled: true,
+                expDropped: 0,
+                goldDropped: amountToLose,
+                itemsDropped: new uint256[](0)
+            });
+            CombatOutcome.set(encounterId, combatOutcome);
+            CombatEncounter.setEnd(encounterId, block.timestamp);
+
+            bytes32[] memory empty;
+            for (uint256 i; i < encounterData.attackers.length; i++) {
+                EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], empty);
+            }
+            for (uint256 i; i < encounterData.defenders.length; i++) {
+                EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+                EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], empty);
+            }
         } else if (encounterData.encounterType == EncounterType.PvP) {
             uint256 amountToDrop;
             bool attackersWin;

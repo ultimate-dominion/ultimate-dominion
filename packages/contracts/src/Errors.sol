@@ -54,6 +54,7 @@ error OutOfBounds();
 error InvalidMove();
 error MaxPlayers();
 error NoMonsters();
+error NoWeaponsEquipped();
 error EntityNotAtPosition();
 error UseFleeFunction();
 error SessionNotTimedOut();

@@ -53,6 +53,7 @@ const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0x442473f8': 'Invalid token URI.',
   '0x261fa6d6': 'Character is locked and cannot be modified.',
   '0x82b42900': 'You are not authorized to perform this action.',
+  '0x8fa2ffa1': 'You need at least one weapon or spell equipped to enter combat.',
 };
 
 const classifyError = (error: unknown): { category: ErrorCategory; message: string } => {

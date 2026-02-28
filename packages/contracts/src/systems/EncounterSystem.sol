@@ -12,6 +12,8 @@ import {
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
+    CharacterEquipment,
+    CharacterEquipmentData,
     Position,
     SessionTimer,
     WorldStatusEffects,
@@ -22,7 +24,7 @@ import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE} from "../../constants.sol";
-import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero} from "../Errors.sol";
+import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero, NoWeaponsEquipped} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {BoardCleanupLib} from "../libraries/BoardCleanupLib.sol";
 
@@ -42,6 +44,20 @@ contract EncounterSystem is System {
 
         if (encounterType == EncounterType.PvE || encounterType == EncounterType.PvP) {
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
+
+            // Require player characters to have at least 1 weapon or spell equipped
+            for (uint256 i; i < attackers.length; i++) {
+                if (IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
+                    CharacterEquipmentData memory eq = CharacterEquipment.get(attackers[i]);
+                    if (eq.equippedWeapons.length + eq.equippedSpells.length == 0) revert NoWeaponsEquipped();
+                }
+            }
+            for (uint256 i; i < defenders.length; i++) {
+                if (IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
+                    CharacterEquipmentData memory eq = CharacterEquipment.get(defenders[i]);
+                    if (eq.equippedWeapons.length + eq.equippedSpells.length == 0) revert NoWeaponsEquipped();
+                }
+            }
 
             bool attackersAreMobs;
             if (encounterType == EncounterType.PvE) {

@@ -296,10 +296,6 @@ export const ActionsPanel = (): JSX.Element => {
     if (!character) return false;
     if (!currentBattle) return false;
 
-    if (currentBattle.encounterType === EncounterType.PvE) {
-      return false;
-    }
-
     const isAttacker = currentBattle.attackers.includes(character.id);
 
     if (isAttacker && currentBattle.currentTurn === BigInt('1')) {
@@ -525,10 +521,17 @@ export const ActionsPanel = (): JSX.Element => {
                 <Text size="xs" textAlign="center">
                   You can only flee on your first turn.
                 </Text>
-                <Text size="xs" textAlign="center">
-                  By fleeing, you will lose 25% of the Gold in your Adventure
-                  Escrow.
-                </Text>
+                {currentBattle.encounterType === EncounterType.PvP && (
+                  <Text size="xs" textAlign="center">
+                    By fleeing, you will lose 25% of the Gold in your Adventure
+                    Escrow.
+                  </Text>
+                )}
+                {currentBattle.encounterType === EncounterType.PvE && (
+                  <Text size="xs" textAlign="center">
+                    Flee from this battle.
+                  </Text>
+                )}
               </VStack>
             )}
           </VStack>
