@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   HStack,
+  Image,
   Progress,
   Spinner,
   Stack,
@@ -26,6 +27,8 @@ import {
   STATUS_EFFECT_NAME_MAPPING,
   STATUS_EFFECT_DESCRIPTION_MAPPING,
 } from '../utils/constants';
+import { getItemImage } from '../utils/itemImages';
+import { removeEmoji } from '../utils/helpers';
 import { ConsumableQuickUse } from './ConsumableQuickUse';
 import { ItemConsumeModal } from './ItemConsumeModal';
 import { PotionSvg } from './SVGs/PotionSvg';
@@ -408,7 +411,9 @@ export const ActionsPanel = (): JSX.Element => {
                 w="100%"
               >
                 <HStack spacing={0} w="100%">
-                  {equippedSpellsAndWeapons.slice(0, 2).map((item, index) => (
+                  {equippedSpellsAndWeapons.slice(0, 2).map((item, index) => {
+                    const icon = getItemImage(removeEmoji(item.name));
+                    return (
                     <Button
                       borderLeft={index === 0 ? 'none' : '2px'}
                       borderRadius={0}
@@ -434,14 +439,18 @@ export const ActionsPanel = (): JSX.Element => {
                             [{index + 1}]
                           </Text>
                         )}
+                        {icon && <Image src={icon} boxSize="20px" mr={1} />}
                         {item.name}
                       </>
                     </Button>
-                  ))}
+                    );
+                  })}
                 </HStack>
                 {equippedSpellsAndWeapons.length > 2 && (
                   <HStack spacing={0} w="100%">
-                    {equippedSpellsAndWeapons.slice(2).map((item, index) => (
+                    {equippedSpellsAndWeapons.slice(2).map((item, index) => {
+                      const icon = getItemImage(removeEmoji(item.name));
+                      return (
                       <Button
                         borderLeft={index === 0 ? 'none' : '2px'}
                         borderRadius={0}
@@ -470,10 +479,12 @@ export const ActionsPanel = (): JSX.Element => {
                               [{index + 3}]
                             </Text>
                           )}
+                          {icon && <Image src={icon} boxSize="20px" mr={1} />}
                           {item.name}
                         </>
                       </Button>
-                    ))}
+                      );
+                    })}
                   </HStack>
                 )}
               </Stack>
@@ -485,7 +496,9 @@ export const ActionsPanel = (): JSX.Element => {
             )}
             {combatConsumables.length > 0 && (
               <HStack spacing={0} w="100%">
-                {combatConsumables.map((consumable, index) => (
+                {combatConsumables.map((consumable, index) => {
+                  const consumableIcon = getItemImage(removeEmoji(consumable.name));
+                  return (
                   <Button
                     borderLeft={index === 0 ? 'none' : '2px'}
                     borderRadius={0}
@@ -500,39 +513,36 @@ export const ActionsPanel = (): JSX.Element => {
                     variant="outline"
                     w="100%"
                   >
-                    <PotionSvg size={3} theme="dark" mr={1} />
+                    {consumableIcon ? (
+                      <Image src={consumableIcon} boxSize="20px" mr={1} />
+                    ) : (
+                      <PotionSvg size={3} theme="dark" mr={1} />
+                    )}
                     {consumable.name} (x{consumable.balance.toString()})
                   </Button>
-                ))}
+                  );
+                })}
               </HStack>
             )}
             {canFlee && (
-              <VStack>
+              <HStack justify="center" mt={2} mb={1} spacing={3}>
                 <Button
-                  alignSelf="center"
                   isLoading={isFleeing}
-                  mt={4}
                   size="sm"
                   onClick={onFleePvp}
                   variant="outline"
+                  color="#A0522D"
+                  borderColor="#A0522D"
+                  _hover={{ bg: 'rgba(160,82,45,0.15)' }}
                 >
                   Flee
                 </Button>
-                <Text size="xs" textAlign="center">
-                  You can only flee on your first turn.
+                <Text size="2xs" color="#8A7E6A" maxW="200px">
+                  {currentBattle.encounterType === EncounterType.PvP
+                    ? 'First turn only. Costs 25% escrow gold.'
+                    : 'First turn only.'}
                 </Text>
-                {currentBattle.encounterType === EncounterType.PvP && (
-                  <Text size="xs" textAlign="center">
-                    By fleeing, you will lose 25% of the Gold in your Adventure
-                    Escrow.
-                  </Text>
-                )}
-                {currentBattle.encounterType === EncounterType.PvE && (
-                  <Text size="xs" textAlign="center">
-                    Flee from this battle.
-                  </Text>
-                )}
-              </VStack>
+              </HStack>
             )}
           </VStack>
         )}
