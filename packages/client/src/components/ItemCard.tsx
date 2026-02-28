@@ -1,5 +1,5 @@
-import { Box, Center, HStack, Image, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
-import { useMemo } from 'react';
+import { Box, Center, HStack, Image, keyframes, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
 import { getItemImage } from '../utils/itemImages';
@@ -19,6 +19,12 @@ type ItemCardProps = (Armor | Consumable | Spell | Weapon) & {
   showBalance?: boolean;
 };
 
+const equipPulse = keyframes`
+  0% { box-shadow: 0 0 0 0 rgba(184,58,42,0.5); }
+  50% { box-shadow: 0 0 16px 4px rgba(184,58,42,0.3); }
+  100% { box-shadow: 0 0 0 0 rgba(184,58,42,0); }
+`;
+
 export const ItemCard: React.FC<ItemCardProps> = ({
   isEquipped = false,
   onClick,
@@ -30,6 +36,19 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const rarityName = getRarityName(rarity);
   const rarityGlow = getRarityGlow(rarity);
   const rarityAnimation = getRarityAnimation(rarity);
+
+  // Track equipped state changes for pulse animation
+  const prevEquipped = useRef(isEquipped);
+  const [showPulse, setShowPulse] = useState(false);
+
+  useEffect(() => {
+    if (prevEquipped.current !== isEquipped) {
+      setShowPulse(true);
+      const timer = setTimeout(() => setShowPulse(false), 600);
+      prevEquipped.current = isEquipped;
+      return () => clearTimeout(timer);
+    }
+  }, [isEquipped]);
 
   const itemStats = useMemo(() => {
     if (item.itemType === ItemType.Consumable) {
@@ -160,72 +179,96 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       placement="top"
       hasArrow
     >
-      <HStack
-        animation={rarityAnimation}
-        border={isEquipped ? '2px solid' : '2px solid'}
-        borderBottom="2px solid"
-        borderColor={isEquipped ? '#C87A2A' : rarityColor}
-        boxShadow={
-          isEquipped
-            ? '0 0 12px rgba(200,122,42,0.4), 0 0 4px rgba(200,122,42,0.2)'
-            : rarityGlow !== 'none'
-              ? rarityGlow
-              : '2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset'
-        }
-        cursor={onClick ? 'pointer' : 'default'}
-        direction="row"
-        minH="100px"
-        onClick={onClick}
-        py={4}
-        px={{ base: 4, sm: 8 }}
-        transition="all 0.3s"
-        w="100%"
-        _active={
-          onClick && {
-            bgColor: 'rgba(0, 0, 0, .04)',
-            borderColor: 'black',
+      <Box position="relative" w="100%">
+        {isEquipped && (
+          <Box
+            bg="#8B2020"
+            borderRadius="2px"
+            color="#E8DCC8"
+            fontFamily="'Cinzel', serif"
+            fontSize="9px"
+            fontWeight={700}
+            letterSpacing="0.12em"
+            lineHeight="1"
+            position="absolute"
+            px="6px"
+            py="3px"
+            right="8px"
+            textTransform="uppercase"
+            top="-1px"
+            transform="translateY(-50%)"
+            zIndex={2}
+          >
+            Equipped
+          </Box>
+        )}
+        <HStack
+          animation={showPulse ? `${equipPulse} 0.6s ease-out` : rarityAnimation}
+          border="2px solid"
+          borderBottom="2px solid"
+          borderColor={isEquipped ? '#8B2020' : rarityColor}
+          boxShadow={
+            isEquipped
+              ? '0 0 10px rgba(139,32,32,0.3), 0 0 4px rgba(139,32,32,0.15)'
+              : rarityGlow !== 'none'
+                ? rarityGlow
+                : '2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset'
           }
-        }
-        _hover={
-          onClick && {
-            borderColor: 'black',
+          cursor={onClick ? 'pointer' : 'default'}
+          direction="row"
+          minH="100px"
+          onClick={onClick}
+          py={4}
+          px={{ base: 4, sm: 8 }}
+          transition="all 0.3s"
+          w="100%"
+          _active={
+            onClick && {
+              bgColor: 'rgba(0, 0, 0, .04)',
+              borderColor: 'black',
+            }
           }
-        }
-      >
-        <Center h="100%" mr={{ base: 2, sm: 6 }}>
-          {getItemImage(removeEmoji(name)) ? (
-            <Image
-              src={getItemImage(removeEmoji(name))}
-              alt={removeEmoji(name)}
-              boxSize={{ base: '40px', lg: '56px' }}
-              objectFit="contain"
-            />
-          ) : (
-            <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
-          )}
-        </Center>
-        <VStack alignItems="start" className="data-dense" spacing={0}>
-          <HStack spacing={2} mb={1}>
-            <Text
-              fontWeight="bold"
-              size={{ base: 'xs', sm: 'md' }}
-              color={rarityColor}
-              textShadow={rarity && rarity >= Rarity.Rare ? `0 0 5px ${rarityColor}` : 'none'}
-            >
-              {removeEmoji(name)}
-            </Text>
-            {showBalance && (
-              <Text as="span" size="xs">
-                x {balance.toString()}
-              </Text>
+          _hover={
+            onClick && {
+              borderColor: 'black',
+            }
+          }
+        >
+          <Center h="100%" mr={{ base: 2, sm: 6 }}>
+            {getItemImage(removeEmoji(name)) ? (
+              <Image
+                src={getItemImage(removeEmoji(name))}
+                alt={removeEmoji(name)}
+                boxSize={{ base: '40px', lg: '56px' }}
+                objectFit="contain"
+              />
+            ) : (
+              <Text fontSize={{ base: 'xl', lg: '3xl' }}>{getEmoji(name)}</Text>
             )}
-          </HStack>
-          <Text size="2xs" color={rarityColor} fontStyle="italic" mb={1}>
-            {rarityName}
-          </Text>
-          {itemStats}
-        </VStack>
-      </HStack>
+          </Center>
+          <VStack alignItems="start" className="data-dense" spacing={0}>
+            <HStack spacing={2} mb={1}>
+              <Text
+                fontWeight="bold"
+                size={{ base: 'xs', sm: 'md' }}
+                color={rarityColor}
+                textShadow={rarity && rarity >= Rarity.Rare ? `0 0 5px ${rarityColor}` : 'none'}
+              >
+                {removeEmoji(name)}
+              </Text>
+              {showBalance && (
+                <Text as="span" size="xs">
+                  x {balance.toString()}
+                </Text>
+              )}
+            </HStack>
+            <Text size="2xs" color={rarityColor} fontStyle="italic" mb={1}>
+              {rarityName}
+            </Text>
+            {itemStats}
+          </VStack>
+        </HStack>
+      </Box>
     </Tooltip>
   );
 };

@@ -72,6 +72,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       return;
     }
 
+    // Close modal immediately for snappy feel
+    onClose();
+
     const result = await equipTx.execute(async () => {
       const { error, success } = await equipItems(character.id, [item.tokenId]);
       if (error && !success) throw new Error(error);
@@ -79,8 +82,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
     if (result !== undefined) {
       await refreshCharacter();
-      renderSuccess(`${item.name} equipped successfully!`);
-      onClose();
+      renderSuccess(`${item.name} equipped`);
     }
   }, [
     character,
@@ -104,6 +106,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       return;
     }
 
+    // Close modal immediately for snappy feel
+    onClose();
+
     const result = await unequipTx.execute(async () => {
       const { error, success } = await unequipItem(character.id, item.tokenId);
       if (error && !success) throw new Error(error);
@@ -111,8 +116,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
     if (result !== undefined) {
       await refreshCharacter();
-      renderSuccess(`${item.name} unequipped successfully!`);
-      onClose();
+      renderSuccess(`${item.name} unequipped`);
     }
   }, [
     character,
