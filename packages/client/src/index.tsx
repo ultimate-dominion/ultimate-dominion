@@ -20,7 +20,11 @@ import { Global } from '@emotion/react';
 import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 
+import { initErrorReporter } from './utils/errorReporter';
 import { globalStyles, theme } from './utils/theme';
+
+// Initialize error reporting before anything else
+initErrorReporter();
 
 const rootElement = document.getElementById('react-root');
 if (!rootElement) throw new Error('React root not found');
