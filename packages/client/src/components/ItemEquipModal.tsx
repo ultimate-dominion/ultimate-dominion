@@ -45,7 +45,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   ...item
 }): JSX.Element => {
   const navigate = useNavigate();
-  const { renderSuccess } = useToast();
+  const { renderError, renderSuccess } = useToast();
   const {
     delegatorAddress,
     systemCalls: { equipItems, unequipItem },
@@ -63,8 +63,14 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   }, [character, item.owner]);
 
   const onEquipItem = useCallback(async () => {
-    if (!character) return;
-    if (!delegatorAddress) return;
+    if (!character) {
+      renderError('No character found. Please select a character.');
+      return;
+    }
+    if (!delegatorAddress) {
+      renderError('Wallet not connected. Please reconnect your wallet.');
+      return;
+    }
 
     const result = await equipTx.execute(async () => {
       const { error, success } = await equipItems(character.id, [item.tokenId]);
@@ -84,12 +90,19 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     item,
     onClose,
     refreshCharacter,
+    renderError,
     renderSuccess,
   ]);
 
   const onUnequipItem = useCallback(async () => {
-    if (!character) return;
-    if (!delegatorAddress) return;
+    if (!character) {
+      renderError('No character found. Please select a character.');
+      return;
+    }
+    if (!delegatorAddress) {
+      renderError('Wallet not connected. Please reconnect your wallet.');
+      return;
+    }
 
     const result = await unequipTx.execute(async () => {
       const { error, success } = await unequipItem(character.id, item.tokenId);
@@ -107,6 +120,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     item,
     onClose,
     refreshCharacter,
+    renderError,
     renderSuccess,
     unequipTx,
     unequipItem,
