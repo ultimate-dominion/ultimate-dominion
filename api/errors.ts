@@ -30,7 +30,7 @@ export default function handler(req: any, res: any) {
 
     const forwardUrl = process.env.TELEMETRY_FORWARD_URL;
     if (forwardUrl) {
-      fetch(forwardUrl, {
+      fetch(forwardUrl + "/errors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ errors: tagged }),
