@@ -499,12 +499,18 @@ export function createSystemCalls(
   // Client-side movement cooldown (matches MOVE_COOLDOWN = 1s in contracts)
   const MOVE_COOLDOWN_MS = 1000;
   let lastMoveTimestamp = 0;
+  let isMovePending = false;
 
   const move = async (
     characterEntity: Entity,
     x: number,
     y: number,
   ): SystemCallReturn => {
+    if (isMovePending) {
+      console.warn('[move] Move already in progress, ignoring request');
+      return { success: false, error: 'Move in progress.' };
+    }
+
     const ownershipError = validateCharacterOwnership(characterEntity, 'move');
     if (ownershipError) return ownershipError;
 
@@ -517,16 +523,20 @@ export function createSystemCalls(
     lastMoveTimestamp = now;
 
     // Adjacency check — mirrors contract's InvalidMove revert (Manhattan distance == 1)
+    // Fail closed: if position is unknown, reject the move
     const pos = getComponentValue(clientComponents.Position, characterEntity);
-    if (pos) {
-      const dx = Math.abs(x - pos.x);
-      const dy = Math.abs(y - pos.y);
-      if (dx + dy !== 1) {
-        console.warn(`[move] Invalid move: (${pos.x},${pos.y}) → (${x},${y}), Manhattan distance = ${dx + dy}`);
-        return { success: false, error: 'Invalid move.' };
-      }
+    if (!pos) {
+      console.warn('[move] Position unknown for entity, rejecting move');
+      return { success: false, error: 'Position unknown.' };
+    }
+    const dx = Math.abs(x - pos.x);
+    const dy = Math.abs(y - pos.y);
+    if (dx + dy !== 1) {
+      console.warn(`[move] Invalid move: (${pos.x},${pos.y}) → (${x},${y}), Manhattan distance = ${dx + dy}`);
+      return { success: false, error: 'Invalid move.' };
     }
 
+    isMovePending = true;
     try {
       const tx = await worldContract.write.UD__move(
         [characterEntity.toString() as `0x${string}`, x, y],
@@ -542,6 +552,8 @@ export function createSystemCalls(
         error: getContractError(e),
         success: false,
       };
+    } finally {
+      isMovePending = false;
     }
   };
 
