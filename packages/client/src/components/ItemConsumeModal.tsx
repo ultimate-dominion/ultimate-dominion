@@ -54,7 +54,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     delegatorAddress,
     systemCalls: { equipItems, unequipItem, useCombatConsumableItem, useWorldConsumableItem },
   } = useMUD();
-  const { character, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
+  const { character, equippedConsumables, equippedWeapons, refreshCharacter } =
     useCharacter();
   const { isSpawned } = useMap();
   const { currentBattle } = useBattle();
@@ -79,11 +79,15 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   );
 
   const totalEquippedSlots = useMemo(
-    () => equippedWeapons.length + equippedSpells.length + equippedConsumables.length,
-    [equippedConsumables.length, equippedSpells.length, equippedWeapons.length],
+    () => equippedWeapons.length + equippedConsumables.length,
+    [equippedConsumables.length, equippedWeapons.length],
   );
 
   const maxSlotsReached = totalEquippedSlots >= MAX_EQUIPPED_WEAPONS;
+
+  // Buff items (non-heal) require equipping before the contract will accept them.
+  // Auto-equip transparently so the player just clicks "Consume" once.
+  const needsAutoEquip = !isEquipped && !isHealthRestore && !currentBattle;
 
   const onUseConsumable = useCallback(async () => {
     if (!character) return;
@@ -95,6 +99,12 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     }
 
     const result = await consumeTx.execute(async () => {
+      // Auto-equip buff items that aren't equipped yet
+      if (needsAutoEquip) {
+        const equipResult = await equipItems(character.id, [item.tokenId]);
+        if (equipResult.error && !equipResult.success) throw new Error(equipResult.error);
+      }
+
       const { error, success } = currentBattle
         ? await useCombatConsumableItem(character.id, item.tokenId)
         : await useWorldConsumableItem(character.id, item.tokenId);
@@ -112,8 +122,10 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     consumeTx,
     currentBattle,
     delegatorAddress,
+    equipItems,
     item,
     itemsLootManagerAllowance,
+    needsAutoEquip,
     onOpenAllowanceModal,
     refreshCharacter,
     renderSuccess,
@@ -230,9 +242,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     if (isHealthFull) return true;
     if (!isSpawned) return true;
     if (maxStacksReached) return true;
+    // Auto-equip would fail if slots are full
+    if (needsAutoEquip && maxSlotsReached) return true;
 
     return false;
-  }, [currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached]);
+  }, [currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached, maxSlotsReached, needsAutoEquip]);
 
   const isAnyLoading = consumeTx.isLoading || equipTx.isLoading || unequipTx.isLoading;
 

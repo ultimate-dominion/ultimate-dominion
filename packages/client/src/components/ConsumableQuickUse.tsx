@@ -13,12 +13,12 @@ import { ItemConsumeModal } from './ItemConsumeModal';
 
 const TILE_SIZE = '40px';
 
-const isVendorTrash = (c: Consumable): boolean =>
-  c.hpRestoreAmount === BigInt(0) &&
-  c.strModifier === BigInt(0) &&
-  c.agiModifier === BigInt(0) &&
-  c.intModifier === BigInt(0) &&
-  (!c.effects || c.effects.length === 0);
+/** Only show items that actually work from the world map:
+ *  - Health potions (hpRestoreAmount > 0)
+ *  - Stat buffs with time-based effects (validTime > 0)
+ *  Filters out: vendor trash, Smoke Bomb (combat-only), Antidote (broken) */
+const isWorldUsable = (c: Consumable): boolean =>
+  c.hpRestoreAmount > BigInt(0) || c.validTime > BigInt(0);
 
 const getTooltipLabel = (c: Consumable): string => {
   const name = removeEmoji(c.name);
@@ -49,13 +49,13 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
     const result: { consumable: Consumable; isEquipped: boolean }[] = [];
 
     for (const c of equippedConsumables) {
-      if (!seen.has(c.tokenId) && !isVendorTrash(c)) {
+      if (!seen.has(c.tokenId) && isWorldUsable(c)) {
         seen.add(c.tokenId);
         result.push({ consumable: c, isEquipped: true });
       }
     }
     for (const c of inventoryConsumables) {
-      if (!seen.has(c.tokenId) && !isVendorTrash(c)) {
+      if (!seen.has(c.tokenId) && isWorldUsable(c)) {
         seen.add(c.tokenId);
         result.push({ consumable: c, isEquipped: false });
       }

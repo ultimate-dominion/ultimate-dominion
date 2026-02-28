@@ -3,44 +3,47 @@
 > Future feature design document. Not for current implementation.
 > Covers three interconnected systems that should ship together.
 
-## Context
+## Vision
 
-Items represent ~60% of character power at level 50. They are the primary progression system. Currently, players can carry unlimited unique items with no constraint beyond 5 equipment slots (1 armor + 4 action). This creates no inventory pressure, no sell decisions, and no economy beyond "buy potions, sell nothing."
+Items are the primary progression system — representing ~60% of character power at endgame. These three systems transform items from simple stat sticks into an interconnected economy where every drop matters, every slot counts, and every discard is a bet on the future.
 
-Three systems need to ship together because they depend on each other:
-- **Inventory limits** create the pressure to sell or discard
-- **Crafting** gives "trash" items hidden long-term value, making inventory decisions strategic
-- **Consumable fixes** ensure the items players carry actually work
+- **Inventory limits** create pressure: you can't keep everything
+- **Crafting** gives "junk" hidden long-term value: today's Rat Tooth is tomorrow's crafting material
+- **Consumables** become tactical choices: pre-buff before a boss, carry healing into combat, throw a smoke bomb mid-fight
+
+The result: a player kills a Cave Spider, a Cracked Bone drops, their pack is full. Do they toss the Bent Nails (3 of 5 needed for Iron Scrap), leave the bone, or sell the spare Health Potion they can craft back later? That's a real decision — and it happens naturally, every session.
+
+---
 
 ## Part 1: Inventory System
 
 ### Design Goals
 
 - Force meaningful "what do I keep?" decisions
-- Drive gold circulation through shops (sell trash for gold)
+- Drive gold circulation through shops
 - Reward players who speculate on future crafting value
 - Feel like a natural part of the world, not a spreadsheet
 
 ### Carry Limit
 
-**Unit: unique item stacks.** A stack of 50 Rat Teeth takes 1 slot. A stack of 1 Runesword takes 1 slot. This penalizes item variety, not quantity — which is the right pressure for a game with vendor trash and crafting materials.
+**Unit: unique item stacks.** A stack of 50 Rat Teeth takes 1 slot. A stack of 1 Runesword takes 1 slot. This penalizes item variety, not quantity — the right pressure for a game with vendor trash and crafting materials.
 
 **Default cap: 15 stacks.**
 
-Typical inventory at level 5 with no upgrades:
-- 1 armor (equipped, still counts)
+Typical inventory at level 5:
+- 1 armor (equipped, still counts toward cap)
 - 2-3 weapons (1 equipped + spares)
 - 3 health potions (Minor, Health, Greater)
 - 2-3 buff consumables (Stew, Berries, Tea)
-- 4-6 trash types accumulated from farming
+- 4-6 material types from farming
 
-That's 12-16 items — right at the edge. The player has to decide what trash to keep and what to dump. Good drops force hard choices.
+That's 12-16 items — right at the edge. Good drops force hard choices.
 
-**Equipped items count toward the cap.** Your loadout is part of your pack. This prevents the "equip everything to bypass the cap" exploit and keeps the math simple.
+**Equipped items count toward the cap.** Your loadout is part of your pack. Simple math, no exploits.
 
 ### Bag Upgrades
 
-Tal Carden (the quartermaster NPC in the safe zone) already has a lore-defined skill: **"Efficient Packing — 150 gold, +2 inventory slots."** This is the expansion mechanic.
+Tal Carden (the quartermaster) has a lore-defined skill: **"Efficient Packing — +2 inventory slots."** This is the expansion mechanic.
 
 | Tier | Slots | Cost | Source |
 |------|-------|------|--------|
@@ -51,38 +54,26 @@ Tal Carden (the quartermaster NPC in the safe zone) already has a lore-defined s
 | Traveler's Pack | 24 | Rare drop or quest | Zone 2+ |
 | Adventurer's Pack | 28 | Epic drop or quest | Zone 3+ |
 
-Gold costs are significant gold sinks at each level range. The rare/epic packs from later zones give long-term progression goals beyond gear.
+Gold costs are significant sinks at each level range. Later zone packs give long-term goals beyond gear.
 
 ### Overflow on Monster Drop
 
-When a monster dies and drops loot but the player's inventory is full:
+When a monster drops loot but the player's inventory is full:
 
-**The drop goes to a pending claim.** The player sees "Runesword dropped! Your pack is full." and gets two choices:
-1. **Swap** — pick an item from inventory to discard, receive the drop
+**The drop goes to a pending claim.** The player sees "Crystal Blade dropped! Your pack is full." and gets two choices:
+1. **Swap** — pick an inventory item to discard, receive the drop
 2. **Leave** — the drop is lost
 
-On-chain this is a two-step flow:
-1. `PveRewardSystem` writes the pending drop to a `PendingDrop` table (characterId -> itemId, amount, expiry)
-2. Player calls `claimDrop(characterId, discardItemId)` or `abandonDrop(characterId)`
-3. If unclaimed after N blocks (~5 min), the drop expires automatically
+On-chain: a two-step flow via a `PendingDrop` table. If unclaimed after ~5 minutes, the drop expires. The swap modal shows your full inventory with discard buttons — one click to resolve.
 
-The key UX moment: you kill a Cavern Brute and a Crystal Blade drops, but your pack is full of Cracked Bones. Do you toss the bones (losing future crafting materials) or leave the blade? That's a real decision.
+The key moment: "A Runesword dropped but my pack is full of Cracked Bones I'm hoarding for crafting. Do I toss the bones or leave the sword?" That's emergent strategy.
 
-**Auto-sell shortcut:** If the dropped item is vendor trash (no effects, rarity 0), skip the pending flow and auto-convert to gold at the shop markdown rate. Trash shouldn't trigger the full modal for 1-2 gold. The player sees "Found 1 gold" instead.
+### Contract Design
 
-Wait — this conflicts with crafting value of trash. Better approach: **auto-discard the lowest-value item of the same type** if both the dropped item and the cheapest inventory item are vendor trash. If neither is trash, show the swap modal.
-
-Actually, simplest: **always show the swap modal when full.** Let the player decide. The modal is fast — it's a list of what you're carrying with a "discard" button next to each. One click. The small friction of managing your pack IS the gameplay.
-
-### Contract Changes
-
-New MUD table:
 ```
 InventoryCapacity: {
   key: [characterId: bytes32],
-  value: {
-    maxSlots: uint16,        // default 15, increases with bag upgrades
-  }
+  value: { maxSlots: uint16 }  // default 15
 }
 
 PendingDrop: {
@@ -90,22 +81,20 @@ PendingDrop: {
   value: {
     itemId: uint256,
     amount: uint256,
-    expiryBlock: uint256,    // auto-expire after ~5 minutes
+    expiryBlock: uint256
   }
 }
 ```
 
-Modified systems:
-- `PveRewardSystem.dropItem` — check inventory count before minting, write to PendingDrop if full
-- `LootManagerSystem` — add `claimDrop` and `abandonDrop` functions
-- `EquipmentSystem` — add Tal's bag upgrade purchase function
-- Need a view function: `getInventoryCount(characterId)` — count distinct itemIds with balance > 0 for that character's owner
+- Drop logic checks inventory count before minting; writes to PendingDrop if full
+- `claimDrop(characterId, discardItemId)` and `abandonDrop(characterId)` resolve overflow
+- Bag upgrades via Tal's skill system
 
-### Client Changes
+### Client
 
-- Inventory count display somewhere persistent (e.g., "Pack: 13/15" near the consumable panel or in the stats panel)
-- Full-pack modal when a drop triggers overflow
-- Tal Carden shop: "Efficient Packing" as a purchasable upgrade alongside existing skills
+- Pack counter ("13/15") in stats panel or near consumables
+- Full-pack modal on drop overflow
+- Tal's shop: bag upgrades alongside existing skills
 
 ---
 
@@ -113,35 +102,36 @@ Modified systems:
 
 ### Design Goals
 
-- Give vendor trash long-term value (Rat Tooth + Cave Moss + 50 gold = Minor Antidote)
+- Give every drop long-term value (vendor trash becomes crafting material)
 - Create item sinks to prevent inflation (sacrifice items to make better ones)
-- Drive meaningful farm loops (need 10 Cracked Bones for this recipe)
-- Integrate with existing NPCs (Bram the smith, Lira the alchemist)
+- Drive meaningful farm loops ("I need 10 more Cracked Bones for this recipe")
+- Integrate with lore NPCs (Bram the smith, Lira the alchemist)
 - Reward knowledge and planning, not just grinding
 
-### Crafting Model: Recipes
+### Crafting Model: Deterministic Recipes
 
-Recipes are fixed formulas: specific input items + gold = specific output item. No randomness in what you get (the item is deterministic), but recipes must be **discovered** before they can be used.
+Recipes are fixed formulas: specific input items + gold = specific output item. No randomness in what you get. Recipes must be **discovered** before they can be used.
 
-**Why fixed recipes, not random crafting:**
-- Deterministic outcomes let players plan and strategize
-- "I need 3 more Dull Crystals for my Channeling Rod upgrade" is a goal. Random crafting is a slot machine.
-- Aligns with manifesto: "stories are earned, not skipped"
+**Why deterministic:**
+- "I need 3 more Dull Crystals for my Channeling Rod upgrade" is a goal
+- Random crafting is a slot machine — antithetical to the manifesto
+- Players can plan, trade, and strategize around known recipes
 
 ### Recipe Discovery
 
-Recipes are learned from NPCs, found as loot, or unlocked by reaching crafting milestones. A character's known recipes are stored on-chain.
-
-Discovery sources:
+Sources:
 - **NPC teaching** — Bram and Lira sell basic recipes for gold
-- **Monster drops** — rare recipe scrolls drop from specific monsters
+- **Monster drops** — rare recipe scrolls from specific monsters
 - **Zone progression** — entering a new zone unlocks its base recipes
-- **Achievements** — craft N items to unlock advanced recipes
+- **Milestones** — craft N items to unlock advanced recipes
 
-### Recipe Categories
+Known recipes are stored on-chain per character.
+
+### Recipe Tiers
 
 **Tier 1: Material Refinement** (Lira the Alchemist)
-Combine vendor trash into crafting materials. This is where trash gets its value.
+
+Combine monster drops into crafting materials. This is where "trash" gets its value.
 
 | Recipe | Inputs | Output | Gold |
 |--------|--------|--------|------|
@@ -152,10 +142,11 @@ Combine vendor trash into crafting materials. This is where trash gets its value
 | Iron Scrap | 3 Bent Nail | 1 Iron Scrap | 10 |
 | Venom Sac | 5 Rat Tooth | 1 Venom Sac | 15 |
 
-These refined materials become inputs for Tier 2 and Tier 3 recipes. The conversion rate (5:1) means vendor trash is worth keeping but you need volume.
+The 3-5:1 conversion rate means drops are worth keeping but you need volume. Refined materials become inputs for higher tiers.
 
 **Tier 2: Consumable Crafting** (Lira the Alchemist)
-Craft potions and buff items from refined materials. Cheaper than buying from shops.
+
+Craft potions and buffs from refined materials. ~30-40% cheaper than shops, but requires farming.
 
 | Recipe | Inputs | Output | Gold |
 |--------|--------|--------|------|
@@ -164,254 +155,229 @@ Craft potions and buff items from refined materials. Cheaper than buying from sh
 | Quickening Berries | 1 Moss Extract, 1 Crystal Dust | 2 Quickening Berries | 8 |
 | Focusing Tea | 1 Crystal Dust, 1 Moss Extract | 2 Focusing Tea | 8 |
 | Antidote | 2 Moss Extract, 1 Venom Sac | 1 Antidote | 15 |
+| Smoke Bomb | 1 Crystal Dust, 1 Venom Sac, 1 Iron Scrap | 1 Smoke Bomb | 20 |
 
-Crafting consumables is ~30-40% cheaper than buying them from the shop, but requires farming materials. This gives a progression feel to self-sufficiency.
+Self-sufficiency through crafting is a progression milestone: "I don't need to buy potions anymore, I make my own."
 
 **Tier 3: Equipment Upgrade** (Bram the Smith)
-Sacrifice lower-tier gear + materials + gold to create higher-tier gear.
+
+Sacrifice lower-tier gear + materials + gold to forge higher-tier equipment.
 
 | Pattern | Inputs | Output |
 |---------|--------|--------|
-| Common -> Uncommon | 2 Common weapons (same type) + 3 Iron Scrap + 100 gold | 1 Uncommon weapon |
-| Uncommon -> Rare | 2 Uncommon weapons (same type) + 5 Crystal Dust + 300 gold | 1 Rare weapon |
-| Rare -> Epic | 3 Rare weapons (any type) + 10 mixed refined materials + 800 gold | 1 Epic weapon |
+| Common -> Uncommon | 2 Common (same type) + 3 Iron Scrap + 100 gold | 1 Uncommon |
+| Uncommon -> Rare | 2 Uncommon (same type) + 5 Crystal Dust + 300 gold | 1 Rare |
+| Rare -> Epic | 3 Rare (any type) + 10 mixed materials + 800 gold | 1 Epic |
 
-This is the primary item sink. It takes 12+ Common weapons to eventually produce 1 Epic. Combined with the carry limit, players must choose between hoarding upgrade materials and carrying useful gear.
+12+ Common weapons to eventually produce 1 Epic. This is the primary item sink — combined with the carry limit, players must choose between hoarding upgrade materials and carrying useful gear.
 
 **Tier 4: Unique Crafting** (Both NPCs, rare recipes)
-Special recipes that produce unique named items with lore. These require materials from multiple zones and significant investment.
 
-Design these per-zone as content is added. Dark Cave might have 2-3 unique craftable items that require rare drops + refined trash + substantial gold.
+Special recipes producing unique named items with lore provenance. Require materials from multiple zones and significant investment. Design per-zone as content expands.
 
 ### Salvage
 
-Any non-trash item can be salvaged at Bram's forge for a fraction of its crafting materials:
+Any non-material item can be salvaged at Bram's forge:
 - **Common**: 1 random refined material
 - **Uncommon**: 1-2 refined materials
 - **Rare**: 2-3 refined materials + small gold refund
 - **Epic+**: 3-5 refined materials + moderate gold refund
 
-This gives unwanted gear a floor value and provides another source of crafting materials. It's also an item sink.
+Gives unwanted gear a floor value. Another item sink.
 
-### Contract Changes
+### Contract Design
 
-New MUD tables:
 ```
 Recipes: {
   key: [recipeId: bytes32],
   value: {
     outputItemId: uint256,
     outputAmount: uint256,
-    inputItemIds: uint256[],    // dynamic array
-    inputAmounts: uint256[],    // dynamic array
+    inputItemIds: uint256[],
+    inputAmounts: uint256[],
     goldCost: uint256,
-    npcId: bytes32,             // which NPC offers this recipe
+    npcId: bytes32,
     requiredLevel: uint16,
   }
 }
 
 KnownRecipes: {
   key: [characterId: bytes32],
-  value: {
-    recipeIds: bytes32[],       // learned recipes
-  }
-}
-
-RefinedMaterials: {
-  // These are just new items in the Items table — no special table needed.
-  // Powdered Bone, Woven Hide, etc. are regular ERC1155 items.
+  value: { recipeIds: bytes32[] }
 }
 ```
 
-New system: `CraftingSystem.sol`
-- `craft(characterId, recipeId)` — validate inputs, burn input items, mint output, deduct gold
-- `learnRecipe(characterId, recipeId)` — called by NPC interaction or loot drop
-- `salvage(characterId, itemId)` — destroy item, mint random materials
+Refined materials are regular ERC1155 items in the existing Items table — no special handling.
 
-The existing `ItemCreationSystem` in the codebase appears to be an empty placeholder — this would replace it.
+`CraftingSystem.sol`:
+- `craft(characterId, recipeId)` — validate inputs, burn items, mint output, deduct gold
+- `learnRecipe(characterId, recipeId)` — from NPC interaction or loot drop
+- `salvage(characterId, itemId)` — destroy item, mint materials
 
-### Client Changes
+### Client
 
 - Crafting UI at Bram's and Lira's NPC locations
-- Recipe book (known recipes, with grayed-out undiscovered ones showing "???")
+- Recipe book (known recipes with grayed-out undiscovered ones showing "???")
 - Material counts visible when viewing a recipe
 - Salvage confirmation modal
 
 ---
 
-## Part 3: Consumable Pipeline Fixes
+## Part 3: Consumable System
 
-### Current Problems
+### Vision
 
-These are bugs that should be fixed before or alongside crafting, since crafting produces consumables.
+Consumables are tactical tools, not just health restores. Before a tough fight, you eat Fortifying Stew for +5 STR. Mid-combat, you throw a Smoke Bomb to blind the enemy. When poisoned, you drink an Antidote. After the fight, you chug a Health Potion.
 
-#### 1. Buff consumables require equipping to use
+Each type has different rules about when it can be used:
 
-**Problem:** Fortifying Stew, Quickening Berries, and Focusing Tea must be equipped (taking an action slot) before consuming. The item is destroyed on use, so the slot is freed — but the equip-consume-reequip dance is pure friction.
+| Category | World Use | Combat Use | Requires Equip | Example |
+|----------|-----------|------------|----------------|---------|
+| Health Potions | Yes | Yes (any time) | Only for combat | Minor Health Potion |
+| Stat Buffs | Yes (pre-combat) | No | No | Fortifying Stew, Quickening Berries |
+| Offensive | No | Yes (costs turn) | Yes (action slot) | Smoke Bomb |
+| Curative | Yes | Yes | No | Antidote |
 
-**Root cause:** `useWorldConsumableItem` routes buff consumables through `CombatSystem.executeAction`, which checks `isEquipped(attackerId, itemId)` on line 151.
+### Buff Consumables (World Use)
 
-**Fix:** Add a direct buff application path in `WorldActionSystem` that bypasses `executeAction` for consumables with `validTime > 0` and `maxDamage == 0`. Read the effect from `StatusEffectStats`, apply the stat modification to the `Stats` table, and push the applied effect to `WorldStatusEffects` — same result as today, but without the equip check.
+Stat buffs (+5 STR/AGI/INT) are used from inventory on the world map. No equipping required — you eat the stew, the buff applies, the item is consumed. Simple.
 
-```solidity
-// New path in useWorldConsumableItem for buff consumables:
-if (consumableStats.maxDamage == 0 && consumableStats.minDamage == 0) {
-    // Buff consumable — apply status effects directly
-    for (uint256 i; i < consumableStats.effects.length; i++) {
-        IWorld(_world()).UD__applyStatusEffect(receivingEntity, consumableStats.effects[i]);
-    }
-}
-```
+- Buff directly modifies character stats for a duration (e.g., 600 seconds)
+- Active buffs persist into combat (they're already on the Stats table)
+- Buffs expire by wall-clock time, even during combat
+- Max 1 stack per effect (can't double-eat Fortifying Stew)
 
-Client change: Remove equip requirement in `ItemConsumeModal` for buff consumables. The "Consume" button works directly from inventory.
+**Active buff display:** A buff strip showing icons + countdown timers so the player knows when effects expire.
 
-#### 2. Smoke Bomb is non-functional
+### Health Potions (World + Combat)
 
-**Problem:** The blind effect has `validTurns: 8, validTime: 0` (combat-only). But `useWorldConsumableItem` requires NOT being in combat, and `useCombatConsumableItem` only allows healing items.
+Health potions restore HP instantly. Usable anywhere.
 
-**Fix (short-term):** Remove Smoke Bomb from shop inventory until combat consumables are properly supported. Don't sell something that doesn't work.
+- **World:** use from inventory, no equip required
+- **Combat:** must be equipped in an action slot (meaningful tradeoff — carrying a potion means one fewer weapon)
+- Healing caps at max HP (no overhealing)
 
-**Fix (long-term):** Add `useCombatOffensiveConsumable(characterId, targetId, itemId)` to `WorldActionSystem`:
-- Requires active encounter
-- Applies turn-based status effects to the target
-- Consumes the item
-- Only allows items with `validTurns > 0` effects
+The equip requirement for combat potions is intentional design: "Do I fill all 4 slots with weapons for max damage, or sacrifice a slot for emergency healing?" That's a real tactical choice.
 
-This opens up the design space for future combat consumables: blinding powder, caltrops, throwing knives, etc.
+### Combat Consumables (Offensive)
 
-#### 3. Antidote does nothing
+Items like Smoke Bomb that affect enemies during combat. These take an action slot and cost a combat turn to use.
 
-**Problem:** Has the "basic magic heal" effect with 0/0 damage. Routes through magic damage calculation and does nothing.
+- Must be equipped (takes 1 of 4 action slots)
+- Using one costs your turn (like an attack)
+- Applies turn-based status effects (e.g., Blind: -8 AGI for 8 turns)
+- Opens design space for: caltrops, throwing knives, blinding powder, etc.
 
-**Fix:** Antidote should clear poison status effects. Add a new effect type `ClearStatusEffect` that, when applied, removes active instances of a specified debuff type. The Antidote's effect would target `poison` effects specifically.
+### Curative Consumables
 
-This requires:
-- New effect type in the `EffectType` enum
-- Handler in `EffectsSystem` that iterates active combat/world effects and removes matching debuffs
-- Update Antidote's effect reference to point to the new clear-poison effect
+Antidotes and similar items that clear debuffs. Usable both in and out of combat without equipping.
 
-Until implemented, remove Antidote from shop inventory (same as Smoke Bomb).
+- Clears specific status effect types (e.g., Antidote clears poison)
+- No equip requirement — panic button you always have access to
+- Consumes the item on use
 
-#### 4. No buff duration display
+### Contract Design
 
-**Problem:** After consuming a buff, there's no countdown. Player doesn't know when their +5 STR expires.
+Three distinct use functions:
+- `useWorldConsumable(characterId, itemId)` — buffs and healing out of combat. Applies effects directly, no equip check for buffs.
+- `useCombatHealingConsumable(characterId, itemId)` — healing potions during combat. Requires equipped.
+- `useCombatOffensiveConsumable(characterId, targetId, itemId)` — offensive items during combat. Requires equipped, costs a turn.
+- `useCurativeConsumable(characterId, itemId)` — clears debuffs. Works in or out of combat, no equip check.
 
-**Fix:** Add an "Active Buffs" strip to the StatsPanel (desktop) or below HP bar (mobile). Each active buff shows:
-- The consumable emoji/icon
-- A countdown timer (mm:ss remaining)
-- Tooltip with effect details
+### Client
 
-Data is already available: `character.worldStatusEffects` contains `timestampEnd` for each active effect. The client just needs to render it.
-
-#### 5. Slot counting mismatch
-
-**Problem:** Client counts `weapons + spells + consumables` toward the 4-slot limit. Contract only counts `weapons + consumables`. Client is stricter.
-
-**Fix:** Align them. Either add spells to the contract count, or remove spells from the client count. Since spells aren't currently implemented as a separate item type (they're weapon-type items), this is likely a client-side bug — remove spells from the `totalEquippedSlots` calculation in `ItemConsumeModal`.
-
----
-
-## Implementation Phases
-
-These systems are interconnected but can ship incrementally:
-
-### Phase 0: Consumable Fixes (no new features, just bug fixes)
-- Fix buff consumable equip requirement
-- Disable Smoke Bomb and Antidote in shops
-- Add buff duration display
-- Fix slot counting mismatch
-- **Scope:** 2 contract changes, 3 client changes
-
-### Phase 1: Inventory Limit
-- Add `InventoryCapacity` table and cap enforcement
-- Add `PendingDrop` escrow for overflow
-- Tal's "Efficient Packing" bag upgrades
-- Client: pack counter, full-pack modal
-- **Depends on:** Nothing. Ships standalone.
-
-### Phase 2: Basic Crafting (Tier 1-2)
-- Add `Recipes` and `KnownRecipes` tables
-- `CraftingSystem` with craft + learnRecipe
-- Refined materials as new items
-- Consumable recipes at Lira
-- Client: crafting UI, recipe book
-- **Depends on:** Phase 1 (inventory limit makes materials meaningful)
-
-### Phase 3: Equipment Crafting & Salvage (Tier 3-4)
-- Equipment upgrade recipes at Bram
-- Salvage system
-- Unique craftable items
-- Recipe discovery from monster drops
-- **Depends on:** Phase 2 (needs refined material pipeline)
-
-### Phase 4: Combat Consumables
-- `useCombatOffensiveConsumable` function
-- Fix Smoke Bomb, add new combat consumables
-- Fix Antidote with ClearStatusEffect
-- Combat consumable crafting recipes
-- **Depends on:** Phase 0 (consumable pipeline fixes)
+- Quick-use icon grid for consumables (current design — compact tiles with emoji, quantity badge, click to use)
+- Active buff strip with countdown timers
+- In-combat: equipped consumables appear as action buttons alongside weapons
+- Tooltip shows effect, duration, and use restrictions
 
 ---
 
 ## NPC Integration
 
-All three systems tie to existing lore NPCs:
+All three systems tie to existing lore NPCs from the Lore Bible:
 
-**Tal Carden (Quartermaster)** — Safe zone, position (0,0)
-- Sells bag upgrades (Efficient Packing I/II/III)
-- Teaches basic trade skills (future: Appraisal, Bartering)
-- General goods shop (existing)
+**Tal Carden (Quartermaster)** — Safe zone
+- Bag upgrades (Efficient Packing I/II/III)
+- Trade skills (Appraisal, Bartering, Haggling)
+- General goods shop
 
-**Lira Venn (Alchemist)** — Safe zone, position TBD
-- Consumable crafting station
-- Teaches potion recipes
-- Sells reagents and base materials
-- Personality: "Everything is chemistry."
+**Lira Venn (Alchemist)** — Safe zone
+- Consumable crafting (Tier 1-2 recipes)
+- Potion recipes and reagent sales
+- *"Everything is chemistry. Love, hate, courage, fear — just chemicals."*
 
-**Bram Ironhand (Smith)** — Safe zone, position TBD
-- Equipment crafting and upgrade station
+**Bram Ironhand (Smith)** — Safe zone
+- Equipment crafting and upgrades (Tier 3-4 recipes)
 - Salvage forge
-- Teaches equipment recipes
-- Personality: "A blade's only as good as the arm swinging it."
-
-These NPCs are already defined in the Lore Bible with full characterization, dialogue style, and skill trees. They just need game mechanics attached.
+- *"A blade's only as good as the arm swinging it."*
 
 ---
 
 ## Economic Impact
 
-### New Gold Sinks
-- Bag upgrades: 150 + 400 + 800 = 1,350 gold per character
+### Gold Sinks
+- Bag upgrades: 1,350 gold total per character (150 + 400 + 800)
 - Crafting costs: 5-800 gold per recipe
-- Salvage has no gold cost but destroys items (indirect sink via lost item value)
-
-### New Gold Faucets
-- None. Crafting consumes gold, it doesn't create it.
+- Recipe purchases from NPCs
 
 ### Item Sinks
-- Crafting consumes input items (5 trash -> 1 material, 2 weapons -> 1 upgrade)
+- Crafting consumes inputs (5 trash -> 1 material, 2 weapons -> 1 upgrade)
 - Salvage destroys items for materials
-- Inventory cap forces selling (gold enters from shop, items exit circulation)
+- Inventory cap forces selling (items exit circulation, gold enters)
+- 12+ Common weapons to forge 1 Epic = strong deflationary pressure
+
+### Gold Faucets
+- None added. Crafting consumes gold, it doesn't create it.
 
 ### Inflation Control
-- Every crafted item requires destroying multiple lower items
-- 12+ Common weapons to make 1 Epic = strong deflationary pressure
-- Trash items gain floor value (crafting material worth), preventing pure gold inflation from monster kills
+- Every crafted item destroys multiple lower items
+- Monster drop materials gain floor value (crafting worth > vendor price)
+- Inventory pressure drives constant shop transactions
 
-This addresses the economics doc's planned sinks: "Crafting/Upgrading — Consumes gold + items" and "Salvage — Destroy for crafting materials."
+---
+
+## Implementation Phases
+
+Ship incrementally. Each phase builds on the last.
+
+### Phase 1: Inventory Limit
+- `InventoryCapacity` table and cap enforcement in drop logic
+- `PendingDrop` escrow for overflow
+- Tal's bag upgrades
+- Client: pack counter, full-pack modal
+
+### Phase 2: Basic Crafting
+- `Recipes` and `KnownRecipes` tables
+- `CraftingSystem` with craft + learnRecipe
+- Refined materials as new items (Tier 1)
+- Consumable recipes at Lira (Tier 2)
+- Client: crafting UI, recipe book
+
+### Phase 3: Equipment Crafting & Salvage
+- Equipment upgrade recipes at Bram (Tier 3)
+- Salvage system
+- Unique craftable items (Tier 4)
+- Recipe discovery from monster drops
+
+### Phase 4: Advanced Consumables
+- Combat offensive consumable pipeline (Smoke Bomb, etc.)
+- Curative consumable pipeline (Antidote)
+- Combat consumable crafting recipes
+- Active buff duration display
 
 ---
 
 ## Open Questions
 
-1. **Stack quantity limits?** Should there be a max stack size (e.g., 99 Rat Teeth per stack)? Currently unlimited. Probably fine — the carry limit on unique stacks is sufficient pressure.
+1. **Stack quantity limits?** Should there be a max stack size (e.g., 99 per stack)? Probably fine unlimited — the carry limit on unique stacks is sufficient.
 
-2. **Recipe tradability?** Can players sell learned recipes to each other? Or are they character-bound? Character-bound feels right — it's knowledge, not an item.
+2. **Recipe tradability?** Character-bound feels right — knowledge, not an item. But recipe scrolls (the discovery items) could be tradeable.
 
-3. **Crafting failures?** The design above is deterministic (craft always succeeds). Should there be a fail chance that consumes materials? Probably not for Tier 1-2. Maybe for Tier 3-4 to create tension. But failing and losing a Rare weapon feels bad. Leaning toward deterministic for all tiers.
+3. **Crafting failures?** Deterministic for all tiers. Failing and losing a Rare weapon feels bad, not tense. Save RNG for drops, not crafting.
 
-4. **Crafting XP?** Should crafting grant character XP? Probably not — it would incentivize spam-crafting trash. Crafting is a means to better items, not a leveling path.
+4. **Crafting XP?** No. Crafting is a means to better items, not a leveling path. Spam-crafting trash for XP would be degenerate.
 
-5. **Multi-zone materials?** Tier 4 recipes should require materials from multiple zones (e.g., Dark Cave bones + Windy Peaks feathers). This creates cross-zone trading demand and makes the marketplace more interesting. Design these when Zone 2 is ready.
+5. **Multi-zone materials?** Tier 4 recipes should require materials from multiple zones. Creates cross-zone trading demand and marketplace activity. Design when Zone 2 is ready.
 
-6. **Guild crafting stations?** The guild design doc mentions shared resources. Guild halls could have upgraded crafting stations that reduce gold costs or unlock exclusive recipes. Tie into Phase 3+.
+6. **Guild crafting?** Guild halls could have upgraded stations that reduce costs or unlock exclusive recipes. Tie into guild design when ready.
