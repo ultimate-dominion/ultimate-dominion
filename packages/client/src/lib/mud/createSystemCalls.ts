@@ -53,6 +53,20 @@ const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0x261fa6d6': 'Character is locked and cannot be modified.',
   '0x82b42900': 'You are not authorized to perform this action.',
   '0x8fa2ffa1': 'You need at least one weapon or spell equipped to enter combat.',
+  // Combat errors
+  '0x39f609e8': 'Action not found.',
+  '0x54962c76': 'Item not equipped.',
+  '0xbb1f5f1e': 'Action type not recognized.',
+  '0x0f53fbcc': 'Invalid magic item type.',
+  '0x4a7f394f': 'Invalid action.',
+  '0xd7663649': 'Unrecognized resistance stat.',
+  // Mob errors
+  '0xecea39ab': 'Maximum mob types reached.',
+  '0xdd94cf19': 'Mob array length mismatch.',
+  '0x64b92770': 'Wrong mob type.',
+  '0x5ffeddff': 'Maximum mob spawns reached.',
+  // Stat errors
+  '0x72af8dba': 'Stats cannot be negative.',
 };
 
 const classifyError = (error: unknown): { category: ErrorCategory; message: string } => {

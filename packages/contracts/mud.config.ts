@@ -122,6 +122,10 @@ export default defineWorld({
       name: "MapSystem",
       openAccess: true,
     },
+    MapRemovalSystem: {
+      name: "MapRemovalSys",
+      openAccess: true,
+    },
     ShopSystem: {
       name: "ShopSystem",
       openAccess: true,
@@ -132,6 +136,10 @@ export default defineWorld({
     },
     EncounterSystem: {
       name: "EncounterSys",
+      openAccess: true,
+    },
+    EncounterResolveSystem: {
+      name: "EncounterResSys",
       openAccess: true,
     },
     EquipmentSystem: {

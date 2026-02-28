@@ -10,13 +10,8 @@ import {
     Stats,
     CombatEncounter,
     CombatEncounterData,
-    CombatOutcome,
-    CombatOutcomeData,
-    CharacterEquipment,
-    CharacterEquipmentData,
     Position,
     SessionTimer,
-    WorldStatusEffects,
     WorldEncounter,
     WorldEncounterData
 } from "@codegen/index.sol";
@@ -24,13 +19,12 @@ import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE} from "../../constants.sol";
-import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, EncounterAlreadyOver, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero, NoWeaponsEquipped} from "../Errors.sol";
+import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
-import {BoardCleanupLib} from "../libraries/BoardCleanupLib.sol";
 
 contract EncounterSystem is System {
-    function createEncounter(EncounterType encounterType, bytes32[] memory group1, bytes32[] memory group2)
-        public
+    function createEncounter(EncounterType encounterType, bytes32[] calldata group1, bytes32[] calldata group2)
+        external
         returns (bytes32 encounterId)
     {
         PauseLib.requireNotPaused();
@@ -44,20 +38,6 @@ contract EncounterSystem is System {
 
         if (encounterType == EncounterType.PvE || encounterType == EncounterType.PvP) {
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
-
-            // Require player characters to have at least 1 weapon or spell equipped
-            for (uint256 i; i < attackers.length; i++) {
-                if (IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
-                    CharacterEquipmentData memory eq = CharacterEquipment.get(attackers[i]);
-                    if (eq.equippedWeapons.length + eq.equippedSpells.length == 0) revert NoWeaponsEquipped();
-                }
-            }
-            for (uint256 i; i < defenders.length; i++) {
-                if (IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
-                    CharacterEquipmentData memory eq = CharacterEquipment.get(defenders[i]);
-                    if (eq.equippedWeapons.length + eq.equippedSpells.length == 0) revert NoWeaponsEquipped();
-                }
-            }
 
             bool attackersAreMobs;
             if (encounterType == EncounterType.PvE) {
@@ -130,7 +110,7 @@ contract EncounterSystem is System {
      * @param encounterId the bytes32 id of the encounter
      * @param attacks : for a pve the entity with the highest agi has their attacks calculated first
      */
-    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory attacks) public payable {
+    function endTurn(bytes32 encounterId, bytes32 playerId, Action[] calldata attacks) external payable {
         PauseLib.requireNotPaused();
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         address playerAddress = IWorld(_world()).UD__getOwnerAddress(playerId);
@@ -170,66 +150,6 @@ contract EncounterSystem is System {
         _queueActions(encounterId, attacks);
     }
 
-    function _endCombatEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) internal {
-        CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-        if (CombatEncounter.getEnd(encounterId) != 0) revert EncounterAlreadyOver();
-
-        CombatEncounter.setEnd(encounterId, block.timestamp);
-        encounterData.end = block.timestamp;
-
-        // NOTE: Fragment triggers disabled — Thirdweb bundler gas estimation is too tight
-        // for the ERC-4337 call depth. Fragment triggers add ~200K gas that pushes the
-        // UserOp over budget. Revisit when gas estimation is solved (client-side override
-        // or bundler config). See fragment-trigger-postmortem.md for full history.
-
-        uint256 expAmount;
-        uint256 goldAmount;
-        uint256[] memory itemsDropped;
-        CombatOutcomeData memory combatOutcome;
-
-        if (encounterData.encounterType == EncounterType.PvE) {
-            (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePveRewards(encounterId, randomNumber);
-        } else if (encounterData.encounterType == EncounterType.PvP) {
-            (expAmount, goldAmount, itemsDropped) = IWorld(_world()).UD__distributePvpRewards(encounterId, randomNumber);
-        } else {
-            revert InvalidEncounterType();
-        }
-
-        combatOutcome = CombatOutcomeData({
-            endTime: block.timestamp,
-            attackersWin: attackersWin,
-            playerFled: false,
-            expDropped: expAmount,
-            goldDropped: goldAmount,
-            itemsDropped: itemsDropped
-        });
-
-        CombatOutcome.set(encounterId, combatOutcome);
-
-        bool isPvE = encounterData.encounterType == EncounterType.PvE;
-        _cleanupEntities(encounterData.attackers, !isPvE || !encounterData.attackersAreMobs);
-        _cleanupEntities(encounterData.defenders, !isPvE || encounterData.attackersAreMobs);
-    }
-
-    function _endWorldEncounter(bytes32 encounterId) internal {
-        WorldEncounterData memory encounterData = WorldEncounter.get(encounterId);
-        if (encounterData.end != 0 || encounterData.start == 0) revert InvalidEncounter();
-
-        encounterData.end = block.timestamp;
-        EncounterEntity.setEncounterId(encounterData.character, bytes32(0));
-        WorldEncounter.set(encounterId, encounterData);
-    }
-
-    function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
-        // Note: Access check removed to allow inter-system calls from PvESystem/PvPSystem
-        EncounterType encounterType = IWorld(_world()).UD__getEncounterType(encounterId);
-        if (encounterType == EncounterType.PvP || encounterType == EncounterType.PvE) {
-            _endCombatEncounter(encounterId, randomNumber, attackersWin);
-        } else if (encounterType == EncounterType.World) {
-            _endWorldEncounter(encounterId);
-        }
-    }
-
     function _queueActions(bytes32 encounterId, Action[] memory attacks) internal {
         SessionTimer.set(attacks[0].attackerEntityId, block.timestamp);
         SystemSwitch.call(
@@ -243,20 +163,6 @@ contract EncounterSystem is System {
             if (data.encounterId != bytes32(0) || data.died) revert InvalidCombatEntity();
             data.encounterId = encounterId;
             EncounterEntity.set(group[i], data);
-        }
-    }
-
-    function _cleanupEntities(bytes32[] memory entities, bool areCharacters) internal {
-        bytes32[] memory emptyArray = new bytes32[](0);
-        for (uint256 i; i < entities.length; i++) {
-            bytes32 entityId = entities[i];
-            EncounterEntity.setEncounterId(entityId, bytes32(0));
-            EncounterEntity.setAppliedStatusEffects(entityId, emptyArray);
-            if (EncounterEntity.getDied(entityId)) {
-                BoardCleanupLib.removeFromBoard(entityId, areCharacters);
-                EncounterEntity.setDied(entityId, true);
-                WorldStatusEffects.setAppliedStatusEffects(entityId, emptyArray);
-            }
         }
     }
 

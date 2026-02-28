@@ -135,7 +135,7 @@ contract AdminSystem is System {
         return IWorld(_world()).UD__createMob(mobType, stats, mobMetadataUri);
     }
 
-    function adminCreateMobs(MobType[] memory mobTypes, bytes[] memory stats, string[] memory mobMetadataURIs) public onlyAdmin {
+    function adminCreateMobs(MobType[] calldata mobTypes, bytes[] calldata stats, string[] calldata mobMetadataURIs) external onlyAdmin {
         IWorld(_world()).UD__createMobs(mobTypes, stats, mobMetadataURIs);
     }
 

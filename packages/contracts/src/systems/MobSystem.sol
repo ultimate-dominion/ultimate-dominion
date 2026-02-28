@@ -17,6 +17,7 @@ import {MonsterStats, NPCStats, AdjustedCombatStats} from "@interfaces/Structs.s
 import {Stats, StatsData, Spawned, ShopsData, Shops} from "@codegen/index.sol";
 import {_requireOwner, _requireAccess, _requireAccessOrAdmin} from "../utils.sol";
 import {Math} from "@libraries/Math.sol";
+import {MaxMobTypes, MobArrayMismatch, WrongMobType, MaxMobSpawns} from "../Errors.sol";
 import {MAX_MONSTERS, ELITE_CHANCE, ELITE_STAT_MULTIPLIER, ELITE_HP_MULTIPLIER, ELITE_REWARD_MULTIPLIER} from "../../constants.sol";
 
 contract MobSystem is System {
@@ -30,7 +31,7 @@ contract MobSystem is System {
     function createMob(MobType mobType, bytes memory stats, string memory mobMetadataUri) public returns (uint256) {
         _requireAccessOrAdmin(address(this), _msgSender());
         uint256 mobId = _incrementMobId();
-        require(mobId < type(uint32).max, "MOB SYSTEM: Max Monster types reached");
+        if (mobId >= type(uint32).max) revert MaxMobTypes();
         Mobs.set(mobId, mobType, stats, mobMetadataUri);
         if (mobType == MobType.Monster) {
             MonsterStats memory newMob = abi.decode(stats, (MonsterStats));
@@ -39,15 +40,15 @@ contract MobSystem is System {
         return mobId;
     }
 
-    function createMobs(MobType[] memory mobTypes, bytes[] memory stats, string[] memory mobMetadataURIs) public {
+    function createMobs(MobType[] calldata mobTypes, bytes[] calldata stats, string[] calldata mobMetadataURIs) external {
         uint256 len = mobTypes.length;
-        require(mobMetadataURIs.length == len && stats.length == len, "MOB SYSTEM: Array length mismatch");
+        if (mobMetadataURIs.length != len || stats.length != len) revert MobArrayMismatch();
         for (uint256 i; i < len; i++) {
             createMob(mobTypes[i], stats[i], mobMetadataURIs[i]);
         }
     }
 
-    function spawnMobs(uint256[] memory mobIds, uint16 x, uint16 y) public {
+    function spawnMobs(uint256[] calldata mobIds, uint16 x, uint16 y) external {
         for (uint256 i; i < mobIds.length; i++) {
             spawnMob(mobIds[i], x, y);
         }
@@ -151,7 +152,7 @@ contract MobSystem is System {
 
     function getNpcStats(uint256 mobId) public view returns (NPCStats memory) {
         MobsData memory mobData = Mobs.get(mobId);
-        require(mobData.mobType == MobType.NPC, "MOB SYSTEM: Wrong Mob Type");
+        if (mobData.mobType != MobType.NPC) revert WrongMobType();
         NPCStats memory npcStats = abi.decode(mobData.mobStats, (NPCStats));
         return npcStats;
     }
@@ -159,14 +160,14 @@ contract MobSystem is System {
     function getNpcStats(bytes32 entityId) public view returns (NPCStats memory) {
         uint256 mobId = getMobId(entityId);
         MobsData memory mobData = Mobs.get(mobId);
-        require(mobData.mobType == MobType.NPC, "MOB SYSTEM: Wrong Mob Type");
+        if (mobData.mobType != MobType.NPC) revert WrongMobType();
         NPCStats memory npcStats = abi.decode(mobData.mobStats, (NPCStats));
         return npcStats;
     }
 
     function getMonsterStats(uint256 mobId) public view returns (MonsterStats memory) {
         MobsData memory mobData = Mobs.get(mobId);
-        require(mobData.mobType == MobType.Monster, "MOB SYSTEM: Wrong Mob Type");
+        if (mobData.mobType != MobType.Monster) revert WrongMobType();
 
         MonsterStats memory monsterStats = abi.decode(mobData.mobStats, (MonsterStats));
         return monsterStats;
@@ -178,7 +179,7 @@ contract MobSystem is System {
         returns (AdjustedCombatStats memory _spawnedMonsterStats)
     {
         MobsData memory mobData = Mobs.get(getMobId(entityId));
-        require(mobData.mobType == MobType.Monster, "MOB SYSTEM: Wrong Entity Type");
+        if (mobData.mobType != MobType.Monster) revert WrongMobType();
         StatsData memory statsData = Stats.get(entityId);
         _spawnedMonsterStats.agility = statsData.agility;
         _spawnedMonsterStats.armor = MobStats.getArmor(entityId);
@@ -212,7 +213,7 @@ contract MobSystem is System {
 
     function _incrementMobCounter(uint256 mobId) internal returns (uint256) {
         uint256 mobCounter = Counters.getCounter(address(this), mobId) + 1;
-        require(mobCounter < type(uint192).max, "MOB SYSTEM: Cannot spawn this monster any more");
+        if (mobCounter >= type(uint192).max) revert MaxMobSpawns();
         Counters.setCounter(address(this), mobId, mobCounter);
         return mobCounter;
     }

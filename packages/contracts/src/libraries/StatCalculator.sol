@@ -22,11 +22,12 @@ import {
     BASE_HP_GAIN_MID,
     BASE_HP_GAIN_LATE
 } from "../../constants.sol";
+import {NegativeStat} from "../Errors.sol";
 
 /**
  * @title StatCalculator
- * @notice Library containing all stat calculation functions extracted from various systems
- * @dev This library reduces contract size by moving stat calculations out of main systems
+ * @notice External library — deployed as a separate contract, called via DELEGATECALL.
+ * @dev Consuming systems get ~30-byte delegatecall stubs instead of inlining 400+ lines.
  */
 library StatCalculator {
     using Math for uint256;
@@ -39,7 +40,7 @@ library StatCalculator {
      * @return currentLevel The calculated level
      */
     function calculateLevelFromExperience(uint256 experience, uint256[] memory levelsTable)
-        internal
+        external
         pure
         returns (uint256 currentLevel)
     {
@@ -65,7 +66,7 @@ library StatCalculator {
      * @return stats Generated stats data
      */
     function generateRandomStats(uint256 randomNumber, Classes characterClass)
-        internal
+        external
         pure
         returns (StatsData memory stats)
     {
@@ -123,7 +124,7 @@ library StatCalculator {
      * @return stats Generated stats data with balanced distribution
      */
     function generateBalancedBaseStats(uint256 randomNumber, StatsData memory existingStats)
-        internal
+        external
         pure
         returns (StatsData memory stats)
     {
@@ -175,7 +176,7 @@ library StatCalculator {
      * @return hpBonus HP bonus to add
      */
     function calculateHpBonus(Classes characterClass, uint256 currentLevel)
-        internal
+        external
         pure
         returns (int256 hpBonus)
     {
@@ -188,26 +189,32 @@ library StatCalculator {
         }
     }
 
+    /// @dev Private helper so external functions can share the logic
+    function _calculateStatPointsForLevel(uint256 level)
+        private
+        pure
+        returns (int256 statPoints)
+    {
+        if (level <= EARLY_GAME_CAP) {
+            statPoints = STAT_POINTS_EARLY;
+        } else if (level <= MID_GAME_CAP) {
+            statPoints = (level % 2 == 0) ? STAT_POINTS_MID : int256(0);
+        } else {
+            statPoints = (level % 5 == 0) ? STAT_POINTS_LATE : int256(0);
+        }
+    }
+
     /**
      * @notice Calculate stat points gained for a specific level (diminishing returns)
      * @param level The level being gained
      * @return statPoints Number of stat points gained at this level
      */
     function calculateStatPointsForLevel(uint256 level)
-        internal
+        external
         pure
         returns (int256 statPoints)
     {
-        if (level <= EARLY_GAME_CAP) {
-            // Levels 1-10: +1 stat point every level
-            statPoints = STAT_POINTS_EARLY;
-        } else if (level <= MID_GAME_CAP) {
-            // Levels 11-50: +1 stat point every 2 levels
-            statPoints = (level % 2 == 0) ? STAT_POINTS_MID : int256(0);
-        } else {
-            // Levels 51-100: +1 stat point every 5 levels
-            statPoints = (level % 5 == 0) ? STAT_POINTS_LATE : int256(0);
-        }
+        return _calculateStatPointsForLevel(level);
     }
 
     /**
@@ -216,18 +223,15 @@ library StatCalculator {
      * @return hpGain HP gained at this level
      */
     function calculateHpForLevel(uint256 level)
-        internal
+        external
         pure
         returns (int256 hpGain)
     {
         if (level <= EARLY_GAME_CAP) {
-            // Levels 1-10: +2 HP every level
             hpGain = BASE_HP_GAIN_EARLY;
         } else if (level <= MID_GAME_CAP) {
-            // Levels 11-50: +1 HP every level
             hpGain = BASE_HP_GAIN_MID;
         } else {
-            // Levels 51-100: +1 HP every 2 levels
             hpGain = (level % 2 == 0) ? BASE_HP_GAIN_LATE : int256(0);
         }
     }
@@ -240,21 +244,21 @@ library StatCalculator {
      * @return isValid Whether the stat changes are valid
      */
     function validateStatChanges(StatsData memory currentStats, StatsData memory desiredStats, uint256 newLevel)
-        internal
+        external
         pure
         returns (bool isValid)
     {
         // Prevent negative stats
-        require(desiredStats.strength >= 0, "Negative stat");
-        require(desiredStats.agility >= 0, "Negative stat");
-        require(desiredStats.intelligence >= 0, "Negative stat");
+        if (desiredStats.strength < 0) revert NegativeStat();
+        if (desiredStats.agility < 0) revert NegativeStat();
+        if (desiredStats.intelligence < 0) revert NegativeStat();
 
         int256 strChange = desiredStats.strength - currentStats.strength;
         int256 agiChange = desiredStats.agility - currentStats.agility;
         int256 intChange = desiredStats.intelligence - currentStats.intelligence;
 
         // Total stat changes must equal the stat points for this level
-        int256 allowedPoints = calculateStatPointsForLevel(newLevel);
+        int256 allowedPoints = _calculateStatPointsForLevel(newLevel);
         isValid = (strChange + agiChange + intChange) == allowedPoints;
     }
 
@@ -265,7 +269,7 @@ library StatCalculator {
      * @return combatStats Adjusted combat stats with equipment bonuses
      */
     function calculateEquipmentBonuses(StatsData memory baseStats, CharacterEquipmentData memory equipmentStats)
-        internal
+        external
         pure
         returns (AdjustedCombatStats memory combatStats)
     {
@@ -283,7 +287,7 @@ library StatCalculator {
      * @return combatStats Base combat stats
      */
     function calculateBaseCombatStats(StatsData memory baseStats, int256 armor)
-        internal
+        external
         pure
         returns (AdjustedCombatStats memory combatStats)
     {
@@ -297,13 +301,6 @@ library StatCalculator {
 
     /**
      * @notice Apply status effect modifiers to combat stats
-     * @param baseStats Base combat stats
-     * @param strModifier Strength modifier
-     * @param agiModifier Agility modifier
-     * @param intModifier Intelligence modifier
-     * @param hpModifier HP modifier
-     * @param armorModifier Armor modifier
-     * @return adjustedStats Stats with status effect modifiers applied
      */
     function applyStatusEffectModifiers(
         AdjustedCombatStats memory baseStats,
@@ -312,25 +309,22 @@ library StatCalculator {
         int256 intModifier,
         int256 hpModifier,
         int256 armorModifier
-    ) internal pure returns (AdjustedCombatStats memory adjustedStats) {
+    ) external pure returns (AdjustedCombatStats memory adjustedStats) {
         adjustedStats.strength = baseStats.strength + strModifier;
         adjustedStats.agility = baseStats.agility + agiModifier;
         adjustedStats.intelligence = baseStats.intelligence + intModifier;
         adjustedStats.maxHp = baseStats.maxHp + hpModifier;
         adjustedStats.armor = baseStats.armor + armorModifier;
-        adjustedStats.currentHp = baseStats.currentHp; // Current HP typically not modified by status effects
+        adjustedStats.currentHp = baseStats.currentHp;
     }
 
     /**
      * @notice Calculate stat requirements for equipment
-     * @param itemStats Item stat requirements
-     * @param characterStats Character's current stats
-     * @return meetsRequirements Whether character meets item requirements
      */
     function checkStatRequirements(
         WeaponStatsData memory itemStats,
         StatsData memory characterStats
-    ) internal pure returns (bool meetsRequirements) {
+    ) external pure returns (bool meetsRequirements) {
         meetsRequirements = characterStats.strength >= itemStats.strModifier &&
             characterStats.agility >= itemStats.agiModifier &&
             characterStats.intelligence >= itemStats.intModifier;
@@ -338,14 +332,11 @@ library StatCalculator {
 
     /**
      * @notice Calculate stat requirements for armor
-     * @param itemStats Armor stat requirements
-     * @param characterStats Character's current stats
-     * @return meetsRequirements Whether character meets armor requirements
      */
     function checkArmorStatRequirements(
         ArmorStatsData memory itemStats,
         StatsData memory characterStats
-    ) internal pure returns (bool meetsRequirements) {
+    ) external pure returns (bool meetsRequirements) {
         meetsRequirements = characterStats.strength >= itemStats.strModifier &&
             characterStats.agility >= itemStats.agiModifier &&
             characterStats.intelligence >= itemStats.intModifier;
@@ -353,13 +344,9 @@ library StatCalculator {
 
     /**
      * @notice Calculate level-based stat scaling
-     * @param baseValue Base stat value
-     * @param level Character level
-     * @param scalingFactor Scaling factor per level
-     * @return scaledValue Scaled stat value
      */
     function calculateLevelScaling(int256 baseValue, uint256 level, int256 scalingFactor)
-        internal
+        external
         pure
         returns (int256 scaledValue)
     {
@@ -368,13 +355,9 @@ library StatCalculator {
 
     /**
      * @notice Calculate stat cap based on level
-     * @param level Character level
-     * @param baseCap Base stat cap
-     * @param capPerLevel Cap increase per level
-     * @return statCap Maximum allowed stat value
      */
     function calculateStatCap(uint256 level, int256 baseCap, int256 capPerLevel)
-        internal
+        external
         pure
         returns (int256 statCap)
     {
@@ -386,7 +369,7 @@ library StatCalculator {
      * @param level Character level
      * @return totalPoints Total stat points accumulated
      */
-    function calculateTotalStatPoints(uint256 level) internal pure returns (int256 totalPoints) {
+    function calculateTotalStatPoints(uint256 level) external pure returns (int256 totalPoints) {
         totalPoints = 0;
 
         // Early game: levels 1-10, +1 per level
@@ -411,7 +394,7 @@ library StatCalculator {
      * @param level Character level
      * @return totalHp Total HP accumulated from leveling
      */
-    function calculateTotalHpFromLeveling(uint256 level) internal pure returns (int256 totalHp) {
+    function calculateTotalHpFromLeveling(uint256 level) external pure returns (int256 totalHp) {
         totalHp = 0;
 
         // Early game: levels 1-10, +2 per level

@@ -49,6 +49,9 @@ contract FixAccessRootSystem is System {
         address fragmentSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "FragmentSystem"));
         address pveReward = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "PveRewardSystem"));
         address shopSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "ShopSystem"));
+        // New split systems — only write UD namespace tables, no cross-namespace grants needed
+        // address encounterResolve = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "EncounterResSys"));
+        // address mapRemoval = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MapRemovalSys"));
 
         // --- Step 3: Resource IDs for cross-namespace tables/systems ---
         ResourceId goldBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");

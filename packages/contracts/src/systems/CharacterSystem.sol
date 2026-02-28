@@ -33,7 +33,6 @@ import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {Math} from "@libraries/Math.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import "forge-std/console.sol";
 import {IEntropyConsumer} from "@pythnetwork/IEntropyConsumer.sol";
 import {IEntropy} from "@pythnetwork/IEntropy.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";

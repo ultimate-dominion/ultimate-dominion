@@ -81,6 +81,23 @@ error InvalidRewardState();
 error NotAtSpawn();
 error InsufficientBalance();
 
+// Combat
+error ActionNotFound();
+error ItemNotEquipped();
+error ActionTypeNotRecognized();
+error InvalidMagicItemType();
+error InvalidAction();
+error UnrecognizedResistanceStat();
+
+// Mob
+error MaxMobTypes();
+error MobArrayMismatch();
+error WrongMobType();
+error MaxMobSpawns();
+
+// Stats
+error NegativeStat();
+
 // GasStation
 error GasStationDisabled();
 error GasStationCooldownActive();

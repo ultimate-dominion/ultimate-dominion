@@ -44,7 +44,7 @@ import {
     DEFENDER_HIT_DAMPENER
 } from "../../constants.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
-import "forge-std/console.sol";
+import {ActionNotFound, ItemNotEquipped, ActionTypeNotRecognized, InvalidMagicItemType, InvalidAction, UnrecognizedResistanceStat} from "../Errors.sol";
 
 contract CombatSystem is System {
     using Math for uint256;
@@ -144,13 +144,12 @@ contract CombatSystem is System {
                 randomNumber = uint256(keccak256(abi.encode(randomNumber, i, actionOutcomeData.effectIds[i])));
 
                 EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
-                require(effectData.effectExists, "action does not exist");
+                if (!effectData.effectExists) revert ActionNotFound();
                 // if actor is a character, require item is equipped
                 if (IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId)) {
-                    require(
-                        IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId),
-                        "Item not equipped"
-                    );
+                    if (!IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId)) {
+                        revert ItemNotEquipped();
+                    }
                 }
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
@@ -209,7 +208,7 @@ contract CombatSystem is System {
                     // if combat consumable, consume the item
                     // IWorld(_world()).UD__consumeItem(actionOutcomeData.attackerId, actionOutcomeData.itemId);
                 } else {
-                    revert("action type not recognized");
+                    revert ActionTypeNotRecognized();
                 }
             }
             if (actionOutcomeData.defenderDied) {
@@ -244,7 +243,7 @@ contract CombatSystem is System {
         // get weapon stats
         WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
 
-        require(IWorld(_world()).UD__checkItemEffect(itemId, effectId), "INVALID ACTION");
+        if (!IWorld(_world()).UD__checkItemEffect(itemId, effectId)) revert InvalidAction();
 
         PhysicalDamageStatsData memory attackStats = IWorld(_world()).UD__getPhysicalDamageStats(effectId);
         if (Stats.getCurrentHp(defenderId) > 0) {
@@ -312,10 +311,10 @@ contract CombatSystem is System {
             // For consumables with magic effects
             magicItem = IWorld(_world()).UD__getConsumableStats(itemId);
         } else {
-            revert("COMBAT: Invalid magic item type");
+            revert InvalidMagicItemType();
         }
 
-        require(IWorld(_world()).UD__checkItemEffect(itemId, effectId), "INVALID ACTION");
+        if (!IWorld(_world()).UD__checkItemEffect(itemId, effectId)) revert InvalidAction();
 
         MagicDamageStatsData memory attackStats = IWorld(_world()).UD__getMagicDamageStats(effectId);
 
@@ -364,7 +363,7 @@ contract CombatSystem is System {
         // get weapon stats
         ResistanceStat resistanceStat = IWorld(_world()).UD__getStatusEffectStats(effectId).resistanceStat;
 
-        require(IWorld(_world()).UD__checkItemEffect(itemId, effectId), "INVALID EFFECT");
+        if (!IWorld(_world()).UD__checkItemEffect(itemId, effectId)) revert InvalidAction();
 
         PhysicalDamageStatsData memory attackStats;
 
@@ -400,7 +399,7 @@ contract CombatSystem is System {
                     resistanceStat
                 );
             } else {
-                revert("Unrecognized resistance stat");
+                revert UnrecognizedResistanceStat();
             }
 
             if (hit) {
