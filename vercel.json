@@ -10,7 +10,7 @@
       "destination": "https://ud-guide.vercel.app/guide/:path*"
     },
     {
-      "source": "/((?!guide|api).*)",
+      "source": "/((?!guide|api|_vercel).*)",
       "destination": "/index.html"
     }
   ]
