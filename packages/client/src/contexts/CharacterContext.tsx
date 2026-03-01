@@ -30,6 +30,7 @@ import {
 import {
   AdvancedClass,
   ArmorType,
+  ItemType,
   PowerSource,
   Race,
 } from '../utils/types';
@@ -44,6 +45,7 @@ import type {
   WorldStatusEffect,
 } from '../utils/types';
 
+import { clearRecsCache } from '../lib/mud/recsCache';
 import { useItems } from './ItemsContext';
 import { useMUD } from './MUDContext';
 
@@ -59,6 +61,8 @@ type CharacterContextType = {
   inventoryWeapons: Weapon[];
   isMoveEquipped: boolean;
   isRefreshing: boolean;
+  optimisticEquip: (item: Armor | Spell | Weapon) => void;
+  optimisticUnequip: (tokenId: string, itemType: ItemType) => void;
   refreshCharacter: () => Promise<void>;
 };
 
@@ -74,6 +78,8 @@ const CharacterContext = createContext<CharacterContextType>({
   inventoryWeapons: [],
   isMoveEquipped: false,
   isRefreshing: false,
+  optimisticEquip: () => {},
+  optimisticUnequip: () => {},
   refreshCharacter: async () => {},
 });
 
@@ -630,6 +636,43 @@ const CharacterProviderInner = ({
     userCharacter,
   ]);
 
+  // Optimistically update equipped state when RECS is stale.
+  // Bypasses RECS and directly sets useState, clearing the stale cache
+  // so the next page load does a full resync.
+  const optimisticEquip = useCallback((item: Armor | Spell | Weapon) => {
+    const { itemType, tokenId } = item;
+    if (itemType === ItemType.Weapon) {
+      setEquippedWeapons(prev => {
+        if (prev.some(w => w.tokenId === tokenId)) return prev;
+        return [...prev, item as Weapon];
+      });
+    } else if (itemType === ItemType.Armor) {
+      setEquippedArmor(prev => {
+        if (prev.some(a => a.tokenId === tokenId)) return prev;
+        return [...prev, item as Armor];
+      });
+    } else if (itemType === ItemType.Spell) {
+      setEquippedSpells(prev => {
+        if (prev.some(s => s.tokenId === tokenId)) return prev;
+        return [...prev, item as Spell];
+      });
+    }
+    const chainId = publicClient.chain?.id;
+    if (chainId) clearRecsCache(worldContract.address, chainId);
+  }, [publicClient, worldContract]);
+
+  const optimisticUnequip = useCallback((tokenId: string, itemType: ItemType) => {
+    if (itemType === ItemType.Weapon) {
+      setEquippedWeapons(prev => prev.filter(w => w.tokenId !== tokenId));
+    } else if (itemType === ItemType.Armor) {
+      setEquippedArmor(prev => prev.filter(a => a.tokenId !== tokenId));
+    } else if (itemType === ItemType.Spell) {
+      setEquippedSpells(prev => prev.filter(s => s.tokenId !== tokenId));
+    }
+    const chainId = publicClient.chain?.id;
+    if (chainId) clearRecsCache(worldContract.address, chainId);
+  }, [publicClient, worldContract]);
+
   const isMoveEquipped = useMemo(() => {
     return equippedSpells.length + equippedWeapons.length > 0;
   }, [equippedSpells, equippedWeapons]);
@@ -648,6 +691,8 @@ const CharacterProviderInner = ({
         inventoryWeapons,
         isMoveEquipped,
         isRefreshing,
+        optimisticEquip,
+        optimisticUnequip,
         refreshCharacter,
       }}
     >

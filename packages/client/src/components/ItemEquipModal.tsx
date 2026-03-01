@@ -56,6 +56,8 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     equippedArmor,
     equippedSpells,
     equippedWeapons,
+    optimisticEquip,
+    optimisticUnequip,
     refreshCharacter,
   } = useCharacter();
   const { inSafetyZone, isSpawned } = useMap();
@@ -112,10 +114,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       return;
     }
 
-    // Refresh character state first to avoid stale equipped-item data
-    setStatusText('Syncing...');
-    await refreshCharacter();
-
     // If swap needed, unequip the conflicting item first
     if (conflictingItem) {
       setStatusText(`Unequipping ${conflictingItem.name}...`);
@@ -145,16 +143,21 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         if (error.includes('Already equipped')) return 'already-equipped';
         throw new Error(error);
       }
+      return 'ok';
     });
 
     if (result !== undefined) {
-      await refreshCharacter();
       if (result === 'already-equipped') {
+        // RECS is stale — optimistically update UI and clear cache
+        optimisticEquip(item as Armor | Spell | Weapon);
         renderSuccess(`${item.name} is already equipped`);
-      } else if (conflictingItem) {
-        renderSuccess(`Swapped ${conflictingItem.name} for ${item.name}`);
       } else {
-        renderSuccess(`${item.name} equipped`);
+        await refreshCharacter();
+        if (conflictingItem) {
+          renderSuccess(`Swapped ${conflictingItem.name} for ${item.name}`);
+        } else {
+          renderSuccess(`${item.name} equipped`);
+        }
       }
       closeAndReset();
     } else {
@@ -168,6 +171,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     equipItems,
     equipTx,
     item,
+    optimisticEquip,
     refreshCharacter,
     renderError,
     renderSuccess,
@@ -193,13 +197,16 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         if (error.includes('NOT EQUIPPED')) return 'not-equipped';
         throw new Error(error);
       }
+      return 'ok';
     });
 
     if (result !== undefined) {
-      await refreshCharacter();
       if (result === 'not-equipped') {
+        // RECS is stale — optimistically update UI and clear cache
+        optimisticUnequip(item.tokenId, item.itemType);
         renderSuccess(`${item.name} is already unequipped`);
       } else {
+        await refreshCharacter();
         renderSuccess(`${item.name} unequipped`);
       }
       closeAndReset();
@@ -211,6 +218,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     closeAndReset,
     delegatorAddress,
     item,
+    optimisticUnequip,
     refreshCharacter,
     renderError,
     renderSuccess,
