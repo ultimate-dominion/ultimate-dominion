@@ -112,6 +112,10 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       return;
     }
 
+    // Refresh character state first to avoid stale equipped-item data
+    setStatusText('Syncing...');
+    await refreshCharacter();
+
     // If swap needed, unequip the conflicting item first
     if (conflictingItem) {
       setStatusText(`Unequipping ${conflictingItem.name}...`);
@@ -136,12 +140,18 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     setStatusText(`Equipping ${item.name}...`);
     const result = await equipTx.execute(async () => {
       const { error, success } = await equipItems(character.id, [item.tokenId]);
-      if (error && !success) throw new Error(error);
+      if (error && !success) {
+        // If item is already equipped on-chain (stale client state), treat as success
+        if (error.includes('Already equipped')) return 'already-equipped';
+        throw new Error(error);
+      }
     });
 
     if (result !== undefined) {
       await refreshCharacter();
-      if (conflictingItem) {
+      if (result === 'already-equipped') {
+        renderSuccess(`${item.name} is already equipped`);
+      } else if (conflictingItem) {
         renderSuccess(`Swapped ${conflictingItem.name} for ${item.name}`);
       } else {
         renderSuccess(`${item.name} equipped`);
@@ -178,12 +188,20 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     setStatusText(`Unequipping ${item.name}...`);
     const result = await unequipTx.execute(async () => {
       const { error, success } = await unequipItem(character.id, item.tokenId);
-      if (error && !success) throw new Error(error);
+      if (error && !success) {
+        // If item isn't actually equipped on-chain (stale client state), treat as success
+        if (error.includes('NOT EQUIPPED')) return 'not-equipped';
+        throw new Error(error);
+      }
     });
 
     if (result !== undefined) {
       await refreshCharacter();
-      renderSuccess(`${item.name} unequipped`);
+      if (result === 'not-equipped') {
+        renderSuccess(`${item.name} is already unequipped`);
+      } else {
+        renderSuccess(`${item.name} unequipped`);
+      }
       closeAndReset();
     } else {
       setStatusText('');
