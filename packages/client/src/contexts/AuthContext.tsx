@@ -71,7 +71,19 @@ export const AuthProvider = ({
     useState<WalletClient | null>(null);
   const [embeddedAddress, setEmbeddedAddress] = useState<Address | null>(null);
   const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
+  // Start as true when a persisted session exists — this prevents premature
+  // redirects in GameBoard/Welcome while auto-reconnect resolves. The
+  // tryReconnect effect below sets this to false in its finally block.
+  const [isConnecting, setIsConnecting] = useState(() => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('thirdweb')) return true;
+      }
+      if (localStorage.getItem('wagmi.connected')) return true;
+    } catch { /* localStorage unavailable */ }
+    return false;
+  });
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
 
   // Guard: when true, a manual Google sign-in is in progress and autoConnect
