@@ -15,7 +15,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
@@ -61,6 +61,19 @@ export const GameBoard = (): JSX.Element => {
 
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const navigate = useNavigate();
+
+  // Detect persisted session — don't redirect to home while auto-reconnect
+  // is still resolving. Without this, refresh on /game-board bounces to /.
+  const hasPersistedSession = useMemo(() => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('thirdweb')) return true;
+      }
+      if (localStorage.getItem('wagmi.connected')) return true;
+    } catch { /* localStorage unavailable */ }
+    return false;
+  }, []);
   const {
     delegatorAddress,
     isSynced,
@@ -77,6 +90,7 @@ export const GameBoard = (): JSX.Element => {
   useEffect(() => {
     // Phase 1: Wait for auth to resolve
     if (isConnecting) return;
+    if (hasPersistedSession && !isConnected) return; // Wait for auto-reconnect
     if (!isConnected) {
       navigate(HOME_PATH);
       return;
@@ -105,6 +119,7 @@ export const GameBoard = (): JSX.Element => {
   }, [
     character,
     delegatorAddress,
+    hasPersistedSession,
     isConnected,
     isConnecting,
     isRefreshing,
