@@ -36,6 +36,7 @@ import {
 
 import { ItemCard } from './ItemCard';
 import { ItemEquipModal } from './ItemEquipModal';
+import { LevelUpBanner } from './LevelUpBanner';
 import { LevelingPanel } from './LevelingPanel';
 import { PolygonalCard } from './PolygonalCard';
 
@@ -299,6 +300,13 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     Gold.
                   </Text>
                 )}
+                {/* Level-up banner — shown BEFORE loot for visibility */}
+                {(hasLeveledUp || canLevel) && (
+                  <LevelUpBanner level={character.level} />
+                )}
+                {canLevel && (
+                  <LevelingPanel canLevel character={character} compact />
+                )}
                 {isLoadingItems ? (
                   <Spinner />
                 ) : (
@@ -352,26 +360,6 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                   </>
                 )}
               </VStack>
-            )}
-            {hasLeveledUp && !canLevel && (
-              <VStack
-                alignItems="center"
-                pb={4}
-                spacing={2}
-                border="2px solid"
-                borderColor="yellow"
-                borderRadius="md"
-                p={4}
-                boxShadow="0 0 15px rgba(239, 211, 28, 0.3)"
-                bg="rgba(239, 211, 28, 0.05)"
-              >
-                <Text fontWeight="bold" color="yellow" fontSize="lg">
-                  You reached Level {character.level.toString()}!
-                </Text>
-              </VStack>
-            )}
-            {canLevel && (
-              <LevelingPanel canLevel character={character} compact />
             )}
           </ModalBody>
           <ModalFooter>
