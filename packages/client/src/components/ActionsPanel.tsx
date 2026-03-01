@@ -327,18 +327,40 @@ export const ActionsPanel = (): JSX.Element => {
   return (
     <Box fontWeight={500} maxH="100%" overflowY="auto" ref={parentDivRef}>
       {currentBattle && equippedSpellsAndWeapons.length === 0 && (
-        <Text color="red" fontWeight={700} p={{ base: 2, lg: 4 }}>
-          You have no equipped items. In order to attack, you must go to your{' '}
-          <Text
-            as={Link}
-            color="blue"
-            to={`/characters/${character?.id}`}
-            _hover={{ textDecoration: 'underline' }}
-          >
-            character page
-          </Text>{' '}
-          and equip at least 1 item.
-        </Text>
+        <VStack p={{ base: 2, lg: 4 }} spacing={3}>
+          <Text color="red" fontWeight={700}>
+            You have no equipped items. In order to attack, you must go to your{' '}
+            <Text
+              as={Link}
+              color="blue"
+              to={`/characters/${character?.id}`}
+              _hover={{ textDecoration: 'underline' }}
+            >
+              character page
+            </Text>{' '}
+            and equip at least 1 item.
+          </Text>
+          {canFlee && (
+            <HStack justify="center" spacing={3}>
+              <Button
+                isLoading={isFleeing}
+                size="sm"
+                onClick={onFleePvp}
+                variant="outline"
+                color="#A0522D"
+                borderColor="#A0522D"
+                _hover={{ bg: 'rgba(160,82,45,0.15)' }}
+              >
+                Flee
+              </Button>
+              <Text size="2xs" color="#8A7E6A" maxW="200px">
+                {currentBattle.encounterType === EncounterType.PvP
+                  ? 'First turn only. Costs 25% escrow gold.'
+                  : 'First turn only.'}
+              </Text>
+            </HStack>
+          )}
+        </VStack>
       )}
       {!battleOver &&
         currentBattle &&

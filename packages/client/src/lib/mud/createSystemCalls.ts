@@ -391,7 +391,7 @@ export function createSystemCalls(
         itemIds.map(itemId => BigInt(itemId)),
       ]);
 
-      waitForTransaction(tx).catch(() => {});
+      await waitForTransaction(tx);
       return { success: true };
     } catch (e) {
       return {
@@ -718,7 +718,7 @@ export function createSystemCalls(
         BigInt(itemId),
       ]);
 
-      waitForTransaction(tx).catch(() => {});
+      await waitForTransaction(tx);
       return { success: true };
     } catch (e) {
       return {

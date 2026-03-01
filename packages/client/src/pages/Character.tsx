@@ -932,14 +932,10 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
               <GridItem key={i}>
                 <ItemCard
                   isEquipped={isEquipped}
-                  onClick={
-                    maxArmorEquipped && !isEquipped
-                      ? undefined
-                      : () => {
-                          setSelectedItem(ar);
-                          onOpenItemModal();
-                        }
-                  }
+                  onClick={() => {
+                    setSelectedItem(ar);
+                    onOpenItemModal();
+                  }}
                   {...ar}
                 />
               </GridItem>
@@ -973,14 +969,10 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
               <GridItem key={i}>
                 <ItemCard
                   isEquipped={isEquipped}
-                  onClick={
-                    maxWeaponsEquipped && !isEquipped
-                      ? undefined
-                      : () => {
-                          setSelectedItem(item);
-                          onOpenItemModal();
-                        }
-                  }
+                  onClick={() => {
+                    setSelectedItem(item);
+                    onOpenItemModal();
+                  }}
                   {...item}
                 />
               </GridItem>

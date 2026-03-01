@@ -43,7 +43,7 @@ const shimmer = keyframes`
 `;
 
 type LevelUpBannerProps = {
-  level: number;
+  level: bigint;
 };
 
 export const LevelUpBanner: React.FC<LevelUpBannerProps> = ({ level }) => {
@@ -73,7 +73,7 @@ export const LevelUpBanner: React.FC<LevelUpBannerProps> = ({ level }) => {
           LEVEL UP!
         </Text>
         <Text color="#E8DCC8" fontFamily="heading" fontSize="lg">
-          You reached Level {level}
+          You reached Level {level.toString()}
         </Text>
       </VStack>
     </Box>

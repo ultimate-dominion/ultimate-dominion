@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Divider,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -179,13 +180,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     }
   }, [battleOutcome, fetchLootedItems, isOpen]);
 
-  const sortedArmor = useMemo(() => {
-    return [...armor].sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
-  }, [armor]);
-
-  const sortedSpellsAndWeapons = useMemo(() => {
-    return [...spells, ...weapons].sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
-  }, [spells, weapons]);
+  const sortedLoot = useMemo(() => {
+    return [...armor, ...spells, ...weapons].sort(
+      (a, b) => (b.rarity ?? 0) - (a.rarity ?? 0),
+    );
+  }, [armor, spells, weapons]);
 
   const battleDraw = useMemo(() => {
     return currentBattle?.maxTurns === currentBattle?.currentTurn;
@@ -244,7 +243,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onAcknowledge}>
+      <Modal isOpen={isOpen} onClose={onAcknowledge} scrollBehavior="inside">
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
@@ -307,43 +306,29 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {canLevel && (
                   <LevelingPanel canLevel character={character} compact />
                 )}
+                {(hasLeveledUp || canLevel) &&
+                  winner === character.id &&
+                  sortedLoot.length > 0 && (
+                    <Divider borderColor="rgba(196,184,158,0.15)" my={1} />
+                  )}
                 {isLoadingItems ? (
                   <Spinner />
                 ) : (
                   <>
-                    {sortedArmor.length > 0 && winner == character.id && (
-                      <Text fontWeight="bold">Looted Armor:</Text>
+                    {sortedLoot.length > 0 && winner === character.id && (
+                      <Text fontWeight="bold">Looted Items:</Text>
                     )}
-                    {winner == character.id &&
-                      sortedArmor.map(item => (
-                        <Box key={`armor-box-${item.tokenId}`}>
+                    {winner === character.id &&
+                      sortedLoot.map(item => (
+                        <Box key={`loot-${item.tokenId}`}>
                           <ItemCard
                             key={item.tokenId}
                             onClick={
-                              equippedArmor.some(
-                                equippedItem =>
-                                  equippedItem.tokenId === item.tokenId,
-                              )
-                                ? undefined
-                                : () => {
-                                    setSelectedItem(item);
-                                    onOpenItemModal();
-                                  }
-                            }
-                            {...item}
-                          />
-                        </Box>
-                      ))}
-                    {sortedSpellsAndWeapons.length > 0 && winner == character.id && (
-                      <Text fontWeight="bold">Looted Weapons:</Text>
-                    )}
-                    {winner == character.id &&
-                      sortedSpellsAndWeapons.map(item => (
-                        <Box key={`spell-weapon-box-${item.tokenId}`}>
-                          <ItemCard
-                            key={item.tokenId}
-                            onClick={
-                              [...equippedSpells, ...equippedWeapons].some(
+                              [
+                                ...equippedArmor,
+                                ...equippedSpells,
+                                ...equippedWeapons,
+                              ].some(
                                 equippedItem =>
                                   equippedItem.tokenId === item.tokenId,
                               )
