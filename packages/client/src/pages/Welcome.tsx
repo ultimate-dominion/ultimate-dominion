@@ -12,7 +12,7 @@ import {
 import { useComponentValue } from '@latticexyz/react';
 import { SyncStep } from '@latticexyz/store-sync';
 import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import Typist from 'react-typist';
@@ -50,6 +50,20 @@ export const Welcome = (): JSX.Element => {
   if (syncProgress?.step === SyncStep.LIVE) {
     wasLive.current = true;
   }
+
+  // Detect persisted session — if Thirdweb/wagmi data exists in localStorage
+  // but auth hasn't resolved yet, we're in the auto-reconnect window.
+  const hasPersistedSession = useMemo(() => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('thirdweb')) return true;
+      }
+      // wagmi persists connected wallet info
+      if (localStorage.getItem('wagmi.connected')) return true;
+    } catch { /* localStorage unavailable */ }
+    return false;
+  }, []);
 
   const [syncStalled, setSyncStalled] = useState(false);
 
@@ -92,6 +106,12 @@ export const Welcome = (): JSX.Element => {
     // Not authenticated (or stale session was cleared) — open sign-in modal
     onOpen();
   }, [character, isAuthenticated, navigate, onOpen]);
+
+  // While a persisted session is reconnecting, render nothing so the user
+  // doesn't see the landing page flash before being redirected to the game.
+  if (hasPersistedSession && !isAuthenticated) {
+    return <Box />;
+  }
 
   return (
     <Box
