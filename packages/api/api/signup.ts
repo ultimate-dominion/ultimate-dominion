@@ -29,12 +29,10 @@ export default async function signup(req: Request, res: Response) {
       return res.status(500).json({ success: false, error: "Failed to save signup" });
     }
 
-    // Fire-and-forget welcome email — don't block the response on it
-    sendWelcomeEmail(email).catch((err) => {
-      console.error('Welcome email failed (non-blocking):', err);
-    });
+    // Send welcome email (await so errors are visible in logs)
+    const emailOk = await sendWelcomeEmail(email);
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, emailSent: emailOk });
   } catch (error: unknown) {
     console.error('Error in signup:', error);
     return res.status(500).json({ success: false, error: "Signup failed" });
