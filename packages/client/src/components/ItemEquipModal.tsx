@@ -120,12 +120,16 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
           character.id,
           conflictingItem.tokenId,
         );
-        if (error && !success) throw new Error(error);
+        if (error && !success) {
+          // If item wasn't actually equipped (stale state), skip unequip
+          if (error.includes('NOT EQUIPPED')) return 'skip';
+          throw new Error(error);
+        }
       });
 
       if (unequipResult === undefined) {
         setStatusText('');
-        return; // unequip failed — useTransaction already showed error toast
+        return; // unequip failed for a real reason
       }
     }
 
