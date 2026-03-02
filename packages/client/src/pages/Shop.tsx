@@ -207,20 +207,75 @@ export const Shop = (): JSX.Element => {
     );
   }
 
+  const isTal = shop.position.x === 9 && shop.position.y === 9;
+  const talVisitKey = `ud-shop-visited-${shop.shopId}`;
+  const [showIntro, setShowIntro] = useState(() => {
+    if (!isTal) return false;
+    return !localStorage.getItem(talVisitKey);
+  });
+
+  useEffect(() => {
+    if (showIntro && isTal) {
+      localStorage.setItem(talVisitKey, '1');
+    }
+  }, [isTal, showIntro, talVisitKey]);
+
   return (
     <Box>
       <Helmet>
-        <title>Shop | Ultimate Dominion</title>
+        <title>{shop.name}&apos;s Shop | Ultimate Dominion</title>
       </Helmet>
       <HStack bgColor="#1C1814" color="#E8DCC8" h="68px" px={6}>
         <ShopSvg />
-        <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}</Heading>
+        <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}&apos;s Shop</Heading>
         <Spacer />
         <IoNavigate size={20} />
         <Text fontWeight={700} size={{ base: 'lg', md: 'xl' }}>
           {shop.position.x},{shop.position.y}
         </Text>
       </HStack>
+
+      {showIntro && isTal && (
+        <Box
+          bg="linear-gradient(180deg, #1C1814 0%, #14120F 100%)"
+          borderBottom="1px solid #2A2520"
+          px={6}
+          py={4}
+        >
+          <Text
+            color="#C4B89E"
+            fontFamily="Cinzel, serif"
+            fontSize={{ base: 'sm', md: 'md' }}
+            fontStyle="italic"
+            lineHeight="tall"
+          >
+            A weathered figure looks up from behind stacks of salvaged gear.
+            Scars run across his knuckles. He sizes you up with a glance that
+            has measured a thousand adventurers before you.
+          </Text>
+          <Text
+            color="#E8DCC8"
+            fontSize={{ base: 'sm', md: 'md' }}
+            fontWeight={600}
+            mt={2}
+          >
+            &ldquo;Name&apos;s Tal. I trade in what the cave spits out and what
+            fools leave behind. You need something, I probably have it. You want
+            a fair price &mdash; well, you&apos;ll find I&apos;m fairer than
+            most down here.&rdquo;
+          </Text>
+          <Text
+            as="button"
+            color="#8A7E6A"
+            fontSize="xs"
+            mt={2}
+            onClick={() => setShowIntro(false)}
+            _hover={{ color: '#C4B89E', textDecoration: 'underline' }}
+          >
+            [Continue]
+          </Text>
+        </Box>
+      )}
 
       <Grid
         gap={4}

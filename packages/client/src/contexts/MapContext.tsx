@@ -48,6 +48,10 @@ const SHOP_MOB_ID_TO_NAME: Record<string, string> = {
   '4': `Traveler's Wares`,
 };
 
+const SHOP_POSITION_TO_NAME: Record<string, string> = {
+  '9,9': 'Tal',
+};
+
 type MapContextType = {
   allCharacters: Character[];
   allMonsters: Monster[];
@@ -395,7 +399,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           }
 
           const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
-          const name = SHOP_MOB_ID_TO_NAME[mobId.toString()];
+          const x = toNumber(positionEntityData.x);
+          const y = toNumber(positionEntityData.y);
+          const name =
+            SHOP_MOB_ID_TO_NAME[mobId.toString()] ??
+            SHOP_POSITION_TO_NAME[`${x},${y}`] ??
+            'Unknown Shop';
 
           const buyableItems = Array.isArray(shopData.buyableItems)
             ? (shopData.buyableItems as unknown[]).map(item => item?.toString() ?? '')
@@ -403,22 +412,21 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           const sellableItems = Array.isArray(shopData.sellableItems)
             ? (shopData.sellableItems as unknown[]).map(item => item?.toString() ?? '')
             : [];
+          const stock = Array.isArray(shopData.stock)
+            ? (shopData.stock as unknown[]).map(v => toBigInt(v))
+            : [];
 
           return {
             buyableItems,
             gold: toBigInt(shopData.gold),
             maxGold: toBigInt(shopData.maxGold),
-            name: name ?? 'Unknown Shop',
-            position: {
-              x: toNumber(positionEntityData.x),
-              y: toNumber(positionEntityData.y),
-            },
+            name,
+            position: { x, y },
             priceMarkdown: toBigInt(shopData.priceMarkdown),
             priceMarkup: toBigInt(shopData.priceMarkup),
-            restock: toBigInt(shopData.stock),
             sellableItems,
             shopId: entity,
-            stock: toBigInt(shopData.stock),
+            stock,
           } as Shop;
         });
 

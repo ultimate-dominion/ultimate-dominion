@@ -68,6 +68,12 @@ export const STATUS_EFFECT_NAME_MAPPING: { [key: string]: string } = {
     'stupify',
   '0x98562f2b32aeb98f000000000000000000000000000000000000000000000000':
     'weaken',
+  '0x3cd2b6c95a03378f000000000000000000000000000000000000000000000000':
+    'Glass Cannon',
+  '0x482498246d2774f3000000000000000000000000000000000000000000000000':
+    'Iron Skin',
+  '0x3e2125b981b54b08000000000000000000000000000000000000000000000000':
+    "Berserker's Rage",
   // Class spell status effects
   '0x9aad548eddd4a76c000000000000000000000000000000000000000000000000':
     'Battle Cry',
@@ -94,6 +100,9 @@ export const STATUS_EFFECT_DESCRIPTION_MAPPING: Record<string, string> = {
   'STR boost': '+5 STR',
   stupify: '-8 INT',
   weaken: '-8 STR',
+  'Glass Cannon': '+6 STR, -4 Armor for 3 turns',
+  'Iron Skin': '+6 Armor, -4 AGI for 3 turns',
+  "Berserker's Rage": '+8 STR, -5 INT, -3 AGI for 3 turns',
   'Battle Cry': '+4 STR, +3 Armor for 3 turns',
   'Divine Shield': '+5 Armor, +3 STR for 3 turns',
   "Hunter's Mark": '-5 AGI, -2 Armor for 4 turns',
