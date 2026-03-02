@@ -40,7 +40,14 @@ import {
 } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getMonsterImage } from '../utils/monsterImages';
-import { type Character, EncounterType, type Monster } from '../utils/types';
+import {
+  ADVANCED_CLASS_COLORS,
+  ADVANCED_CLASS_NAMES,
+  AdvancedClass,
+  type Character,
+  EncounterType,
+  type Monster,
+} from '../utils/types';
 
 import { getRomanNumeral } from '../utils/fragmentNarratives';
 
@@ -501,6 +508,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     {userCharacterForBattleRendering.name}
                   </Text>
                   <ClassSymbol
+                    advancedClass={userCharacterForBattleRendering.advancedClass}
                     entityClass={userCharacterForBattleRendering.entityClass}
                     mb={1}
                     theme="dark"
@@ -632,6 +640,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                       {opponent.name}
                     </Text>
                     <ClassSymbol
+                      advancedClass={(opponent as Character).advancedClass}
                       entityClass={opponent.entityClass}
                       mb={1}
                       theme="dark"
@@ -1268,9 +1277,23 @@ const OpponentRow = ({
           </Text>
         </HStack>
         {!disableRow && !!level && (
-          <Text fontWeight={500} size={{ base: '3xs', sm: '2xs', md: 'sm' }}>
-            Level {level.toString()}
-          </Text>
+          <HStack spacing={1}>
+            <Text fontWeight={500} size={{ base: '3xs', sm: '2xs', md: 'sm' }}>
+              Level {level.toString()}
+            </Text>
+            {encounterType === EncounterType.PvP &&
+              (opponent as Character).advancedClass != null &&
+              (opponent as Character).advancedClass !== AdvancedClass.None && (
+                <Text
+                  color={ADVANCED_CLASS_COLORS[(opponent as Character).advancedClass]}
+                  fontFamily="'Fira Code', monospace"
+                  fontSize="2xs"
+                  fontWeight={700}
+                >
+                  {ADVANCED_CLASS_NAMES[(opponent as Character).advancedClass]}
+                </Text>
+              )}
+          </HStack>
         )}
         {!(opponent as Character).worldEncounter && inBattle && (
           <Text color="red" fontWeight={700} size={{ base: '3xs', sm: '2xs' }}>

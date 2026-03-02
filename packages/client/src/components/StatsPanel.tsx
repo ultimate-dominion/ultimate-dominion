@@ -178,6 +178,7 @@ export const StatsPanel = (): JSX.Element => {
               {name}
             </Text>
             <ClassSymbol
+              advancedClass={character.advancedClass}
               entityClass={character.entityClass}
               mb={0.5}
               theme="light"

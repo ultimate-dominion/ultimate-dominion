@@ -30,6 +30,7 @@ import {
   uriToHttp,
 } from '../utils/helpers';
 import {
+  AdvancedClass,
   type Character,
   type Monster,
   type Shop,
@@ -297,12 +298,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
             return {
               ...fetachedMetadata,
+              advancedClass: (toNumber(characterStats.advancedClass) as AdvancedClass) ?? AdvancedClass.None,
               agility: toBigInt(characterStats.agility),
               baseStats: decodedBaseStats,
               currentHp: toBigInt(characterStats.currentHp),
               entityClass: toNumber(characterStats.class),
               escrowGoldBalance,
               experience: toBigInt(characterStats.experience),
+              hasSelectedAdvancedClass: Boolean(characterStats.hasSelectedAdvancedClass),
               externalGoldBalance,
               id: entity,
               inBattle,

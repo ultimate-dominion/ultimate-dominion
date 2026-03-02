@@ -1,6 +1,11 @@
-import { Box, IconProps, Tooltip, useBreakpointValue } from '@chakra-ui/react';
+import { Box, HStack, IconProps, Text, Tooltip, useBreakpointValue } from '@chakra-ui/react';
 
-import { StatsClasses } from '../utils/types';
+import {
+  ADVANCED_CLASS_COLORS,
+  ADVANCED_CLASS_NAMES,
+  AdvancedClass,
+  StatsClasses,
+} from '../utils/types';
 
 import { MageSvg, RogueSvg, WarriorSvg } from './SVGs';
 
@@ -17,74 +22,76 @@ const ICON_SIZE = {
   },
 };
 
+const CLASS_LABELS: Record<StatsClasses, string> = {
+  [StatsClasses.Intelligence]: 'Intelligence',
+  [StatsClasses.Agility]: 'Agility',
+  [StatsClasses.Strength]: 'Strength',
+};
+
 export const ClassSymbol = ({
+  advancedClass,
   entityClass,
   responsive = false,
   theme = 'light',
   ...props
 }: {
+  advancedClass?: AdvancedClass;
   entityClass: StatsClasses;
   responsive?: boolean;
   theme?: 'light' | 'dark';
 } & IconProps): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
-  switch (entityClass) {
-    case StatsClasses.Intelligence:
-      return (
-        <Tooltip
-          aria-label="Intelligence"
-          bg="#14120F"
-          hasArrow
-          label="Intelligence"
-          shouldWrapChildren
-        >
-          <MageSvg
-            size={
-              ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].mage
-            }
-            theme={theme}
-            {...props}
-          />
-        </Tooltip>
-      );
-    case StatsClasses.Agility:
-      return (
-        <Tooltip
-          aria-label="Agility"
-          bg="#14120F"
-          hasArrow
-          label="Agility"
-          shouldWrapChildren
-        >
-          <RogueSvg
-            size={
-              ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].rogue
-            }
-            theme={theme}
-            {...props}
-          />
-        </Tooltip>
-      );
-    case StatsClasses.Strength:
-      return (
-        <Tooltip
-          aria-label="Strength"
-          bg="#14120F"
-          hasArrow
-          label="Strength"
-          shouldWrapChildren
-        >
-          <WarriorSvg
-            size={
-              ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'].warrior
-            }
-            theme={theme}
-            {...props}
-          />
-        </Tooltip>
-      );
-    default:
-      return <Box />;
-  }
+  const hasAdvancedClass = advancedClass != null && advancedClass !== AdvancedClass.None;
+  const tooltipLabel = hasAdvancedClass
+    ? `${ADVANCED_CLASS_NAMES[advancedClass]} (${CLASS_LABELS[entityClass]})`
+    : CLASS_LABELS[entityClass] ?? '';
+
+  const SvgComponent =
+    entityClass === StatsClasses.Intelligence
+      ? MageSvg
+      : entityClass === StatsClasses.Agility
+        ? RogueSvg
+        : entityClass === StatsClasses.Strength
+          ? WarriorSvg
+          : null;
+
+  if (!SvgComponent) return <Box />;
+
+  const sizeKey =
+    entityClass === StatsClasses.Intelligence
+      ? 'mage'
+      : entityClass === StatsClasses.Agility
+        ? 'rogue'
+        : 'warrior';
+
+  return (
+    <Tooltip
+      aria-label={tooltipLabel}
+      bg="#14120F"
+      hasArrow
+      label={tooltipLabel}
+      shouldWrapChildren
+    >
+      <HStack spacing={1}>
+        <SvgComponent
+          size={ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'][sizeKey]}
+          theme={theme}
+          {...props}
+        />
+        {hasAdvancedClass && (
+          <Text
+            color={ADVANCED_CLASS_COLORS[advancedClass]}
+            fontFamily="'Fira Code', monospace"
+            fontSize="2xs"
+            fontWeight={700}
+            letterSpacing="wider"
+            textTransform="uppercase"
+          >
+            {ADVANCED_CLASS_NAMES[advancedClass]}
+          </Text>
+        )}
+      </HStack>
+    </Tooltip>
+  );
 };

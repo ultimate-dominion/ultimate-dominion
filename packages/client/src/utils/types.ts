@@ -127,6 +127,32 @@ export const CLASS_COLORS: Record<StatsClasses, string> = {
   [StatsClasses.Intelligence]: '#4A7AB5', // steel blue
 };
 
+export const ADVANCED_CLASS_NAMES: Record<AdvancedClass, string> = {
+  [AdvancedClass.None]: '',
+  [AdvancedClass.Paladin]: 'Paladin',
+  [AdvancedClass.Sorcerer]: 'Sorcerer',
+  [AdvancedClass.Warrior]: 'Warrior',
+  [AdvancedClass.Druid]: 'Druid',
+  [AdvancedClass.Warlock]: 'Warlock',
+  [AdvancedClass.Ranger]: 'Ranger',
+  [AdvancedClass.Cleric]: 'Cleric',
+  [AdvancedClass.Wizard]: 'Wizard',
+  [AdvancedClass.Rogue]: 'Rogue',
+};
+
+export const ADVANCED_CLASS_COLORS: Record<AdvancedClass, string> = {
+  [AdvancedClass.None]: '#8A7E6A',
+  [AdvancedClass.Paladin]: '#D4A54A',    // gold
+  [AdvancedClass.Sorcerer]: '#C8872A',   // amber
+  [AdvancedClass.Warrior]: '#B85C3A',    // copper
+  [AdvancedClass.Druid]: '#5A8A3E',      // green
+  [AdvancedClass.Warlock]: '#7B4AB5',    // purple
+  [AdvancedClass.Ranger]: '#3A9A8A',     // teal
+  [AdvancedClass.Cleric]: '#C4B89E',     // parchment
+  [AdvancedClass.Wizard]: '#4A7AB5',     // blue
+  [AdvancedClass.Rogue]: '#6A6A6A',      // shadow-grey
+};
+
 export enum SystemToAllow {
   LootManager = 'LootManager',
   Marketplace = 'Marketplace',

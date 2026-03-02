@@ -18,6 +18,7 @@ import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const LeaderboardRow = ({
   character: {
+    advancedClass,
     baseStats: { agility, intelligence, strength },
     entityClass,
     externalGoldBalance,
@@ -95,7 +96,7 @@ export const LeaderboardRow = ({
             >
               {name}
             </Text>
-            <ClassSymbol entityClass={entityClass} responsive theme="dark" />
+            <ClassSymbol advancedClass={advancedClass} entityClass={entityClass} responsive theme="dark" />
           </HStack>
           <Text
             color="#8A7E6A"

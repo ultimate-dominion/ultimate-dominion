@@ -62,6 +62,7 @@ import {
   uriToHttp,
 } from '../utils/helpers';
 import {
+  AdvancedClass,
   type Armor,
   type Character,
   type Consumable,
@@ -217,6 +218,7 @@ export const CharacterPage = (): JSX.Element => {
 
       const _character = {
         ...fetachedMetadata,
+        advancedClass: (Number(characterStats.advancedClass) as AdvancedClass) ?? AdvancedClass.None,
         agility: toBigInt(characterStats.agility),
         baseStats: decodedBaseStats,
         currentHp: toBigInt(characterStats.currentHp),
@@ -224,6 +226,7 @@ export const CharacterPage = (): JSX.Element => {
         escrowGoldBalance,
         experience: toBigInt(characterStats.experience),
         externalGoldBalance,
+        hasSelectedAdvancedClass: Boolean(characterStats.hasSelectedAdvancedClass),
         id,
         inBattle,
         intelligence: toBigInt(characterStats.intelligence),
@@ -511,7 +514,7 @@ export const CharacterPage = (): JSX.Element => {
                     </Box>
                   </Tooltip>
                 )}
-                <ClassSymbol entityClass={character.entityClass} />
+                <ClassSymbol advancedClass={character.advancedClass} entityClass={character.entityClass} />
                 {isOwner && Number(character.level) >= 10 && !character.hasSelectedAdvancedClass && (
                   <Button size="xs" variant="outline" colorScheme="blue" onClick={onOpenClassModal}>
                     Choose Class
