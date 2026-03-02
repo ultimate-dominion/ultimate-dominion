@@ -26,7 +26,6 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { useTransaction } from '../hooks/useTransaction';
 import {
   CHARACTER_CREATION_PATH,
   CHARACTERS_PATH,
@@ -53,7 +52,6 @@ export const Header = (): JSX.Element => {
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
 
-  const exitShopTx = useTransaction({ actionName: 'exit shop' });
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   const onEndShopEncounter = useCallback(async () => {
@@ -61,23 +59,21 @@ export const Header = (): JSX.Element => {
     if (!character.worldEncounter) return true;
     if (!delegatorAddress) return false;
 
-    const result = await exitShopTx.execute(async () => {
-      const { error, success } = await endShopEncounter(
-        character.worldEncounter!.encounterId,
-      );
-      if (error && !success) throw new Error(error);
-    });
-
-    if (result !== undefined) {
-      await refreshCharacter();
-      return true;
+    // Try to end the shop encounter. If it fails (e.g. encounter already ended
+    // by moving away), treat it as success — the encounter is gone either way.
+    const { success } = await endShopEncounter(
+      character.worldEncounter!.encounterId,
+    );
+    if (!success) {
+      // Encounter likely already ended — still safe to navigate
+      console.warn('[Header] endShopEncounter failed, encounter likely already ended');
     }
-    return false;
+    await refreshCharacter();
+    return true;
   }, [
     character,
     delegatorAddress,
     endShopEncounter,
-    exitShopTx,
     refreshCharacter,
   ]);
 
@@ -170,8 +166,7 @@ export const Header = (): JSX.Element => {
             >
               {navItems.map(item => {
                 const active = item.isActive(pathname);
-                const isLoading =
-                  navigatingTo === item.path && exitShopTx.isLoading;
+                const isLoading = navigatingTo === item.path;
                 return (
                   <Box
                     key={item.label}
