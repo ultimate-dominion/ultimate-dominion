@@ -679,16 +679,16 @@ export const ActionsPanel = (): JSX.Element => {
                     ? `You are affected by ${possibleStatusEffectAttack.name}.`
                     : `${opponent.name} is affected by ${possibleStatusEffectAttack.name}.`;
                   return (
-                    <>
+                    <Box>
                       <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                         {critText}You cast {itemName}
                         {!isSelfBuff && (
-                          <>
+                          <Text as="span">
                             {' '}on{' '}
                             <Text as="span" color="green">
                               {opponent.name}
                             </Text>
-                          </>
+                          </Text>
                         )}
                         .{' '}
                         <Text as="span" color={effectColor}>
@@ -707,7 +707,7 @@ export const ActionsPanel = (): JSX.Element => {
                           ]}
                         </Text>
                       )}
-                    </>
+                    </Box>
                   );
                 })()}
                 {!isPlayerAttack && !!possibleStatusEffectAttack && (() => {
@@ -717,7 +717,7 @@ export const ActionsPanel = (): JSX.Element => {
                     ? `${opponent.name} is affected by ${possibleStatusEffectAttack.name}.`
                     : `You are affected by ${possibleStatusEffectAttack.name}.`;
                   return (
-                    <>
+                    <Box>
                       <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                         {critText}
                         <Text as="span" color="green">
@@ -740,7 +740,7 @@ export const ActionsPanel = (): JSX.Element => {
                           ]}
                         </Text>
                       )}
-                    </>
+                    </Box>
                   );
                 })()}
 
