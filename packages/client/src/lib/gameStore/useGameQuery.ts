@@ -1,6 +1,9 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useGameStore } from './store';
 import type { TableRow } from './types';
+
+/** Stable empty object to avoid infinite re-render loops in Zustand selectors */
+const EMPTY_TABLE: Record<string, TableRow> = {};
 
 type QueryResult = { keyBytes: string; data: TableRow };
 
@@ -18,7 +21,12 @@ export function useGameQuery(
   table: string,
   predicate?: (keyBytes: string, data: TableRow) => boolean
 ): QueryResult[] {
-  const tableData = useGameStore((state) => state.tables[table] || {});
+  const tableData = useGameStore(
+    useCallback(
+      (state) => state.tables[table] ?? EMPTY_TABLE,
+      [table]
+    )
+  );
 
   return useMemo(() => {
     const results: QueryResult[] = [];
@@ -40,7 +48,12 @@ export function useGameFind(
   table: string,
   predicate: (keyBytes: string, data: TableRow) => boolean
 ): QueryResult | undefined {
-  const tableData = useGameStore((state) => state.tables[table] || {});
+  const tableData = useGameStore(
+    useCallback(
+      (state) => state.tables[table] ?? EMPTY_TABLE,
+      [table]
+    )
+  );
 
   return useMemo(() => {
     for (const [keyBytes, data] of Object.entries(tableData)) {

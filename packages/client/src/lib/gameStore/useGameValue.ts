@@ -2,6 +2,9 @@ import { useCallback } from 'react';
 import { useGameStore } from './store';
 import type { TableRow } from './types';
 
+/** Stable empty object to avoid infinite re-render loops in Zustand selectors */
+const EMPTY_TABLE: Record<string, TableRow> = {};
+
 /**
  * Reactive hook that returns a single entity's row from a table.
  * Re-renders only when this specific entity's data changes.
@@ -34,7 +37,7 @@ export function useGameValue(table: string, keyBytes: string | undefined): Table
 export function useGameTable(table: string): Record<string, TableRow> {
   return useGameStore(
     useCallback(
-      (state) => state.tables[table] || {},
+      (state) => state.tables[table] ?? EMPTY_TABLE,
       [table]
     )
   );
