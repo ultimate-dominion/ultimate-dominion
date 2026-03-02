@@ -60,13 +60,13 @@ export const ItemsProvider = ({
   // Reactive table subscriptions — re-runs the effect when item data arrives
   const itemsTable = useGameTable('Items');
   const hydrated = useGameStore((s) => s.hydrated);
-  const baseURIRow = useGameConfig('ItemsBaseURI');
+  const baseURIRow = useGameConfig('ItemsMetadataURI');
 
   const fetchAllArmor = useCallback(
     async (armorIds: bigint[]): Promise<ArmorTemplate[]> => {
       const armorStatsTable = getTableEntries('ArmorStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
-      const tokenURITable = getTableEntries('ItemsTokenURI');
+      const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
       return Promise.all(
@@ -121,7 +121,7 @@ export const ItemsProvider = ({
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const statusEffectStatsTable = getTableEntries('StatusEffectStats');
       const statusEffectValidityTable = getTableEntries('StatusEffectValidity');
-      const tokenURITable = getTableEntries('ItemsTokenURI');
+      const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
       return Promise.all(
@@ -212,7 +212,7 @@ export const ItemsProvider = ({
     async (spellIds: bigint[]): Promise<SpellTemplate[]> => {
       const spellStatsTable = getTableEntries('SpellStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
-      const tokenURITable = getTableEntries('ItemsTokenURI');
+      const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
       return Promise.all(
@@ -268,7 +268,7 @@ export const ItemsProvider = ({
     async (weaponIds: bigint[]): Promise<WeaponTemplate[]> => {
       const weaponStatsTable = getTableEntries('WeaponStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
-      const tokenURITable = getTableEntries('ItemsTokenURI');
+      const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
       return Promise.all(

@@ -31,7 +31,7 @@ export function serializeRow(row: Record<string, unknown>): Record<string, unkno
   for (const [k, v] of Object.entries(row)) {
     // Skip MUD internal columns
     if (k === '__key_bytes' || k === '__last_updated_block_number') continue;
-    result[snakeToCamel(k)] = serializeValue(v);
+    result[fixAbbreviations(snakeToCamel(k))] = serializeValue(v);
   }
   return result;
 }
