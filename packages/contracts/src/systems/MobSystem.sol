@@ -55,7 +55,7 @@ contract MobSystem is System {
     }
 
     function spawnMob(uint256 mobId, uint16 x, uint16 y) public returns (bytes32 entityId) {
-        require(Counters.getCounter(address(this), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
+        require(Counters.getCounter(_world(), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
         MobsData memory stats = Mobs.get(mobId);
         if (stats.mobType == MobType.Monster) {
@@ -206,15 +206,15 @@ contract MobSystem is System {
     }
 
     function _incrementMobId() internal returns (uint256) {
-        uint256 mobId = Counters.getCounter(address(this), 0) + 1;
-        Counters.setCounter(address(this), 0, (mobId));
+        uint256 mobId = Counters.getCounter(_world(), 0) + 1;
+        Counters.setCounter(_world(), 0, (mobId));
         return mobId;
     }
 
     function _incrementMobCounter(uint256 mobId) internal returns (uint256) {
-        uint256 mobCounter = Counters.getCounter(address(this), mobId) + 1;
+        uint256 mobCounter = Counters.getCounter(_world(), mobId) + 1;
         if (mobCounter >= type(uint192).max) revert MaxMobSpawns();
-        Counters.setCounter(address(this), mobId, mobCounter);
+        Counters.setCounter(_world(), mobId, mobCounter);
         return mobCounter;
     }
 }

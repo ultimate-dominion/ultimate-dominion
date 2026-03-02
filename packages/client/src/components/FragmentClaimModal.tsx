@@ -66,25 +66,25 @@ export const FragmentClaimModal = ({
           <VStack spacing={6} align="stretch">
             {!isClaimed ? (
               <>
-                {/* Pre-claim: artwork + title + narrative preview */}
+                {/* Pre-claim: artwork + title only */}
                 <Box
                   bg="whiteAlpha.100"
                   borderRadius="md"
-                  h="150px"
+                  h="200px"
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
                   border="1px solid"
                   borderColor="whiteAlpha.200"
                 >
-                  <Text color="gray.500" fontSize="sm">
+                  <Text color="gray.500" fontSize="md">
                     Fragment {getRomanNumeral(fragment.fragmentType)} Artwork
                   </Text>
                 </Box>
 
                 <Text
                   textAlign="center"
-                  fontSize="xl"
+                  fontSize="2xl"
                   fontWeight="bold"
                   color="yellow.400"
                   fontFamily="mono"
@@ -94,43 +94,16 @@ export const FragmentClaimModal = ({
                   {' >>'}
                 </Text>
 
-                <Box
-                  maxH="250px"
-                  overflowY="auto"
-                  px={2}
-                  css={{
-                    '&::-webkit-scrollbar': {
-                      width: '4px',
-                    },
-                    '&::-webkit-scrollbar-track': {
-                      background: 'transparent',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      borderRadius: '2px',
-                    },
-                  }}
-                >
-                  <Text
-                    fontSize="sm"
-                    lineHeight="tall"
-                    whiteSpace="pre-line"
-                    color="gray.200"
-                  >
-                    {fragment.narrative}
-                  </Text>
-                </Box>
-
-                <Text fontSize="xs" color="gray.500" textAlign="center">
+                <Text fontSize="sm" color="gray.500" textAlign="center">
                   Discovered at ({fragment.triggerTileX}, {fragment.triggerTileY})
                 </Text>
               </>
             ) : (
               <>
-                {/* Post-claim: lore reveal cinematic */}
+                {/* Post-claim: narrative reveal */}
                 <Text
                   textAlign="center"
-                  fontSize="xl"
+                  fontSize="2xl"
                   fontWeight="bold"
                   color="yellow.400"
                   fontFamily="mono"
@@ -142,7 +115,7 @@ export const FragmentClaimModal = ({
 
                 <Text
                   textAlign="center"
-                  fontSize="lg"
+                  fontSize="xl"
                   fontWeight="bold"
                   fontFamily="mono"
                   color="#A8DEFF"
@@ -151,7 +124,7 @@ export const FragmentClaimModal = ({
                 </Text>
 
                 <Box
-                  maxH="250px"
+                  maxH="300px"
                   overflowY="auto"
                   px={2}
                   css={{
@@ -173,7 +146,7 @@ export const FragmentClaimModal = ({
                     stdTypingDelay={10}
                   >
                     <Text
-                      fontSize="sm"
+                      fontSize="md"
                       lineHeight="tall"
                       whiteSpace="pre-line"
                       color="gray.200"
@@ -201,7 +174,7 @@ export const FragmentClaimModal = ({
                     <Text fontWeight="bold" color="#A8DEFF" fontSize="lg">
                       Depths Relic Hunter
                     </Text>
-                    <Text fontSize="sm" textAlign="center" color="gray.300">
+                    <Text fontSize="md" textAlign="center" color="gray.300">
                       All {TOTAL_FRAGMENTS} fragments collected. The fallen speak
                       through you now. A badge has been forged in your name.
                     </Text>
