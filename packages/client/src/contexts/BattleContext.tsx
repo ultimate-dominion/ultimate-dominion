@@ -133,7 +133,8 @@ export const BattleProvider = ({
           character &&
           (encounter.attackers.includes(character.id) ||
             encounter.defenders.includes(character.id)),
-      );
+      )
+      .sort((a, b) => Number(a.start - b.start));
   }, [combatEncounterTable, character]);
 
   const onContinueToBattleOutcome = useCallback((cont: boolean) => {
@@ -142,17 +143,16 @@ export const BattleProvider = ({
   }, []);
 
   const currentBattle = useMemo(() => {
-    const latestBattle = allBattles[allBattles.length - 1];
+    // Prefer an active (ongoing) battle; fall back to most recent completed
+    const activeBattle = allBattles.filter(b => b.end === BigInt(0)).pop();
+    const latestBattle = activeBattle ?? allBattles[allBattles.length - 1];
     if (!latestBattle) return null;
 
-    const latestCompletedBattle =
-      allBattles
-        .filter(b => b.end !== BigInt(0))
-        .sort((a, b) => Number(b.end - a.end))[0] ?? null;
-
-    if (latestCompletedBattle) {
-      const combatOutcome = combatOutcomeTable[latestCompletedBattle.encounterId];
-      if (latestBattle.end !== BigInt(0) && !combatOutcome) return null;
+    // If the most recent battle ended but outcome hasn't arrived yet, hide it
+    // (the reactive combatOutcomeTable dep will re-trigger when outcome arrives)
+    if (latestBattle.end !== BigInt(0)) {
+      const combatOutcome = combatOutcomeTable[latestBattle.encounterId];
+      if (!combatOutcome) return null;
     }
 
     const latestBattleOutcomeSeen = localStorage.getItem(
