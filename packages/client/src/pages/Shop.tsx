@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Grid,
   GridItem,
   Heading,
@@ -8,7 +9,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -35,7 +36,11 @@ export const Shop = (): JSX.Element => {
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
-  const { delegatorAddress, isSynced } = useMUD();
+  const {
+    delegatorAddress,
+    isSynced,
+    systemCalls: { endShopEncounter },
+  } = useMUD();
   const {
     armorTemplates,
     consumableTemplates,
@@ -60,6 +65,19 @@ export const Shop = (): JSX.Element => {
     if (!(shopId && allShops)) return null;
     return allShops.find(shop => shop.shopId === shopId) ?? null;
   }, [allShops, shopId]);
+
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const onLeaveShop = useCallback(async () => {
+    if (!userCharacter?.worldEncounter) {
+      navigate(GAME_BOARD_PATH);
+      return;
+    }
+    setIsLeaving(true);
+    await endShopEncounter(userCharacter.worldEncounter.encounterId);
+    setIsLeaving(false);
+    navigate(GAME_BOARD_PATH);
+  }, [endShopEncounter, navigate, userCharacter]);
 
   const [sellable, setSellable] = useState<
     Array<{
@@ -229,10 +247,31 @@ export const Shop = (): JSX.Element => {
         <ShopSvg />
         <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}&apos;s Shop</Heading>
         <Spacer />
-        <IoNavigate size={20} />
-        <Text fontWeight={700} size={{ base: 'lg', md: 'xl' }}>
-          {shop.position.x},{shop.position.y}
-        </Text>
+        <HStack spacing={4}>
+          <HStack spacing={1}>
+            <IoNavigate size={20} />
+            <Text fontWeight={700} size={{ base: 'lg', md: 'xl' }}>
+              {shop.position.x},{shop.position.y}
+            </Text>
+          </HStack>
+          <Button
+            bg="#2A2520"
+            border="1px solid #3A3228"
+            color="#C4B89E"
+            fontFamily="Cinzel, serif"
+            fontSize="xs"
+            fontWeight={600}
+            isLoading={isLeaving}
+            letterSpacing="0.05em"
+            onClick={onLeaveShop}
+            px={4}
+            size="sm"
+            textTransform="uppercase"
+            _hover={{ bg: '#3A3228', color: '#E8DCC8' }}
+          >
+            Leave Shop
+          </Button>
+        </HStack>
       </HStack>
 
       {showIntro && isTal && (

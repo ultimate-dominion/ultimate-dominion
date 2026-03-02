@@ -60,6 +60,7 @@ const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0x64b92770': 'Wrong mob type.',
   '0x5ffeddff': 'Maximum mob spawns reached.',
   '0x72af8dba': 'Stats cannot be negative.',
+  '0x03dee4c5': 'You don\'t have enough of this item to sell.',
 };
 
 const classifyError = (error: unknown): { category: ErrorCategory; message: string } => {
@@ -287,6 +288,13 @@ export function createSystemCalls(
   };
 
   const endShopEncounter = async (encounterId: string): SystemCallReturn => {
+    // Check the store first — if the encounter is already ended (e.g. by moving
+    // away), skip the chain call entirely to avoid noisy relayer errors.
+    const encounter = getTableValue('WorldEncounter', encounterId);
+    if (!encounter || BigInt(encounter.end as string | number) !== BigInt(0)) {
+      return { success: true };
+    }
+
     try {
       const tx = await worldContract.write.UD__endShopEncounter([
         encounterId as `0x${string}`,
