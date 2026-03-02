@@ -49,7 +49,7 @@ contract FixAccessRootSystem is System {
         address fragmentSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "FragmentSystem"));
         address pveReward = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "PveRewardSystem"));
         address shopSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "ShopSystem"));
-        address marketplace = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MarketplaceSyste"));
+        address marketplace = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MarketplaceSys"));
         // New split systems — only write UD namespace tables, no cross-namespace grants needed
         // address encounterResolve = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "EncounterResSys"));
         // address mapRemoval = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MapRemovalSys"));
@@ -88,8 +88,9 @@ contract FixAccessRootSystem is System {
         // PveRewardSystem needs Gold:Balances + TotalSupply for combat rewards
         ResourceAccess.set(goldBalances, pveReward, true);
         ResourceAccess.set(goldTotalSupply, pveReward, true);
-        // MarketplaceSystem needs Gold namespace for gold transfers during purchases
+        // MarketplaceSystem needs Gold namespace + table-level access for direct writes
         ResourceAccess.set(goldNs, marketplace, true);
+        ResourceAccess.set(goldBalances, marketplace, true);
         // World needs namespace access (for delegatecall systems)
         ResourceAccess.set(goldNs, worldAddress, true);
         ResourceAccess.set(goldBalances, worldAddress, true);
@@ -106,9 +107,10 @@ contract FixAccessRootSystem is System {
         ResourceAccess.set(itemsNs, itemCreation, true);
         ResourceAccess.set(itemsNs, adminSystem, true);
         ResourceAccess.set(itemsErc1155System, itemsSystem, true);
-        // MarketplaceSystem needs Items namespace + ERC1155 for listing/buying items
+        // MarketplaceSystem needs Items namespace + ERC1155 + table-level access for direct writes
         ResourceAccess.set(itemsNs, marketplace, true);
         ResourceAccess.set(itemsErc1155System, marketplace, true);
+        ResourceAccess.set(itemsOwners, marketplace, true);
         // World needs namespace access
         ResourceAccess.set(itemsNs, worldAddress, true);
         ResourceAccess.set(itemsOwners, worldAddress, true);

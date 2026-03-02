@@ -734,8 +734,8 @@ contract PostDeploy is Script {
         console.log("  ItemCreationSystem added to Admin table");
 
         // Grant MarketplaceSystem access to Items namespace (for listing items)
-        // Note: MUD truncates "MarketplaceSystem" (17 chars) to "MarketplaceSyste" (16 chars)
-        ResourceId marketplaceSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MarketplaceSyste");
+        // mud.config uses name: "MarketplaceSys"
+        ResourceId marketplaceSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "MarketplaceSys");
         address marketplaceSystemAddress = Systems.getSystem(marketplaceSystemId);
         console.log("  MarketplaceSystem address:", marketplaceSystemAddress);
 
@@ -751,12 +751,27 @@ contract PostDeploy is Script {
             console.log("  ERC1155System access grant to MarketplaceSystem failed");
         }
 
+        // Grant MarketplaceSystem table-level access for direct writes
+        // _transferItemDirect writes Items:Owners, _transferGoldDirect writes Gold:Balances
+        try world.grantAccess(itemsOwnersTableId, marketplaceSystemAddress) {
+            console.log("  Granted Items:Owners table access to MarketplaceSystem");
+        } catch {
+            console.log("  Items:Owners table access grant to MarketplaceSystem failed");
+        }
+
         // Grant MarketplaceSystem access to Gold namespace (for gold transfers)
         ResourceId goldNamespaceId = WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE);
         try world.grantAccess(goldNamespaceId, marketplaceSystemAddress) {
             console.log("  Granted Gold namespace access to MarketplaceSystem");
         } catch {
             console.log("  Gold namespace access grant to MarketplaceSystem failed");
+        }
+
+        ResourceId goldBalancesTableId2 = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
+        try world.grantAccess(goldBalancesTableId2, marketplaceSystemAddress) {
+            console.log("  Granted Gold:Balances table access to MarketplaceSystem");
+        } catch {
+            console.log("  Gold:Balances table access grant to MarketplaceSystem failed");
         }
 
         // Grant MobSystem access to Admin table (for post-deployment mob creation)
