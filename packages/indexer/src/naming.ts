@@ -54,6 +54,11 @@ export function serializeValue(v: unknown): unknown {
   if (typeof v === 'bigint') {
     return v.toString();
   }
+  // Postgres jsonb columns (MUD dynamic arrays like bytes32[], address[])
+  // are returned by the postgres package as {json: [...]} objects — unwrap them
+  if (typeof v === 'object' && v !== null && !Array.isArray(v) && 'json' in v) {
+    return serializeValue((v as Record<string, unknown>).json);
+  }
   if (Array.isArray(v)) {
     return v.map(serializeValue);
   }
