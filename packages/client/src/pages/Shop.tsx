@@ -9,7 +9,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -58,6 +58,7 @@ export const Shop = (): JSX.Element => {
     inventorySpells,
     inventoryWeapons,
     isRefreshing,
+    refreshCharacter,
   } = useCharacter();
   const { allShops, refreshEntities } = useMap();
 
@@ -112,6 +113,60 @@ export const Shop = (): JSX.Element => {
       stock: bigint | null;
     }>
   >([]);
+
+  const [goldAdjustment, setGoldAdjustment] = useState(0n);
+  const [shopGoldAdjustment, setShopGoldAdjustment] = useState(0n);
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const onTradeComplete = useCallback(
+    (tokenId: string, amount: number, goldDelta: bigint, orderType: OrderType) => {
+      if (orderType === OrderType.Selling) {
+        setGoldAdjustment(prev => prev + goldDelta);
+        setShopGoldAdjustment(prev => prev - goldDelta);
+        setSellable(prev =>
+          prev
+            .map(entry =>
+              entry.item.tokenId === tokenId
+                ? { ...entry, balance: (entry.balance ?? 0n) - BigInt(amount) }
+                : entry,
+            )
+            .filter(entry => (entry.balance ?? 0n) > 0n),
+        );
+        setBuyable(prev =>
+          prev.map(entry =>
+            entry.item.tokenId === tokenId
+              ? { ...entry, stock: (entry.stock ?? 0n) + BigInt(amount) }
+              : entry,
+          ),
+        );
+      } else {
+        setGoldAdjustment(prev => prev - goldDelta);
+        setShopGoldAdjustment(prev => prev + goldDelta);
+        setBuyable(prev =>
+          prev.map(entry =>
+            entry.item.tokenId === tokenId
+              ? { ...entry, stock: (entry.stock ?? 0n) - BigInt(amount) }
+              : entry,
+          ),
+        );
+      }
+
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = setTimeout(() => {
+        refreshCharacter();
+        refreshEntities();
+        setGoldAdjustment(0n);
+        setShopGoldAdjustment(0n);
+      }, 3000);
+    },
+    [refreshCharacter, refreshEntities],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    };
+  }, []);
 
   const items = useMemo(
     () => [
@@ -346,16 +401,17 @@ export const Shop = (): JSX.Element => {
               fontWeight={700}
               size={{ base: 'lg', md: 'xl' }}
             >
-              {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
+              {etherToFixedNumber(BigInt(userCharacter.externalGoldBalance) + goldAdjustment)} $GOLD
             </Text>
           </HStack>
           <PolygonalCard clipPath="none" h="calc(100% - 68px)">
             {userCharacter && shopId && sellable && sellable.length ? (
               <ShopHalf
                 characterId={userCharacter.id}
-                shop={shop}
                 items={sellable}
+                onTradeComplete={onTradeComplete}
                 orderType={OrderType.Selling}
+                shop={shop}
               />
             ) : (
               <VStack p={6}>
@@ -375,7 +431,7 @@ export const Shop = (): JSX.Element => {
               fontWeight={700}
               size={{ base: 'lg', md: 'xl' }}
             >
-              {etherToFixedNumber(BigInt(shop.gold)).toString()} $GOLD
+              {etherToFixedNumber(BigInt(shop.gold) + shopGoldAdjustment).toString()} $GOLD
             </Text>
           </HStack>
           <PolygonalCard clipPath="none" h="calc(100% - 68px)">
@@ -383,8 +439,9 @@ export const Shop = (): JSX.Element => {
               <ShopHalf
                 characterId={userCharacter.id}
                 items={buyable}
-                shop={shop}
+                onTradeComplete={onTradeComplete}
                 orderType={OrderType.Buying}
+                shop={shop}
               />
             ) : (
               <VStack p={6}>

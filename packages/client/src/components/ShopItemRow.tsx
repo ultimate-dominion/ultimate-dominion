@@ -58,6 +58,7 @@ export const ShopItemRow = ({
   isEquipped,
   item,
   itemIndex,
+  onTradeComplete,
   orderType,
   stock,
   shop,
@@ -68,6 +69,7 @@ export const ShopItemRow = ({
   isEquipped: boolean;
   item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;
+  onTradeComplete?: (tokenId: string, amount: number, goldDelta: bigint, orderType: OrderType) => void;
   orderType: OrderType;
   shop: Shop;
   stock: bigint | null;
@@ -84,7 +86,7 @@ export const ShopItemRow = ({
     isApprovingGold,
     isApprovingItems,
   } = useAllowance();
-  const { character: userCharacter, refreshCharacter } = useCharacter();
+  const { character: userCharacter } = useCharacter();
 
   const {
     isOpen: isAllowanceOpen,
@@ -186,14 +188,15 @@ export const ShopItemRow = ({
       });
 
       if (result !== undefined) {
+        const itemName = name ? removeEmoji(name.toString()) : 'Item';
         renderSuccess(
           orderType == OrderType.Buying
-            ? 'Item purchased successfully!'
-            : 'Item sold successfully!',
+            ? `Bought ${amount}x ${itemName}`
+            : `Sold ${amount}x ${itemName} for ${etherToFixedNumber(price)} $GOLD`,
         );
+        onTradeComplete?.(item.tokenId, amount, price, orderType);
         onAllowanceClose();
         onClose();
-        refreshCharacter();
       }
     },
     [
@@ -203,14 +206,16 @@ export const ShopItemRow = ({
       goldShopAllowance,
       insufficientGold,
       insufficientStock,
+      item.tokenId,
       itemIndex,
       itemsShopAllowance,
+      name,
       onAllowanceClose,
       onAllowanceOpen,
       onClose,
+      onTradeComplete,
       orderType,
       price,
-      refreshCharacter,
       renderSuccess,
       sell,
       shop.shopId,

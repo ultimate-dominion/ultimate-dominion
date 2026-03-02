@@ -40,6 +40,7 @@ const PER_PAGE = 5;
 export const ShopHalf = ({
   characterId,
   items,
+  onTradeComplete,
   orderType,
   shop,
 }: {
@@ -51,6 +52,7 @@ export const ShopHalf = ({
     item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
     stock: bigint | null;
   }>;
+  onTradeComplete?: (tokenId: string, amount: number, goldDelta: bigint, orderType: OrderType) => void;
   shop: Shop;
   orderType: OrderType;
 }): JSX.Element => {
@@ -255,6 +257,7 @@ export const ShopHalf = ({
                 item={entry.item}
                 itemIndex={entry.index}
                 key={`shop-row-${i}`}
+                onTradeComplete={onTradeComplete}
                 orderType={orderType}
                 shop={shop}
                 stock={entry.stock}
