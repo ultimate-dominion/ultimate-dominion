@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Badge,
   Box,
   Button,
   FormControl,
@@ -10,7 +11,6 @@ import {
   Input,
   InputGroup,
   InputLeftAddon,
-  Spacer,
   Spinner,
   Stack,
   Tab,
@@ -32,6 +32,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FaCheckCircle } from 'react-icons/fa';
+import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, parseEther } from 'viem';
 import { InfoModal } from '../components/InfoModal';
@@ -39,7 +40,6 @@ import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceMod
 import { OrderRow } from '../components/OrderRow';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
-import { MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,7 +47,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
-import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
+import { CHARACTER_CREATION_PATH, HOME_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getItemImage } from '../utils/itemImages';
 import {
@@ -55,6 +55,9 @@ import {
   ItemType,
   MarketplaceFilter,
   OrderType,
+  Rarity,
+  RARITY_COLORS,
+  RARITY_NAMES,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
@@ -413,250 +416,306 @@ export const MarketplaceItem = (): JSX.Element => {
     );
   }
 
+  const itemName = removeEmoji(selectedItem.name);
+  const itemImage = getItemImage(itemName);
+  const itemRarity = selectedItem.rarity;
+  const rarityColor = itemRarity !== undefined ? RARITY_COLORS[itemRarity] : undefined;
+  const rarityName = itemRarity !== undefined ? RARITY_NAMES[itemRarity] : undefined;
+  const itemTypeLabel =
+    selectedItem.itemType === ItemType.Weapon
+      ? 'Weapon'
+      : selectedItem.itemType === ItemType.Armor
+        ? 'Armor'
+        : selectedItem.itemType === ItemType.Spell
+          ? 'Spell'
+          : 'Consumable';
+
+  // Build stat entries, filtering out zeros for cleaner display
+  const statEntries: { label: string; value: string; isPositive: boolean }[] = [];
+  if (selectedItem.itemType !== ItemType.Spell) {
+    const typed = selectedItem as ArmorTemplate | WeaponTemplate;
+    if (Number(typed.strModifier) !== 0)
+      statEntries.push({ label: 'STR', value: `${Number(typed.strModifier) >= 0 ? '+' : ''}${typed.strModifier}`, isPositive: Number(typed.strModifier) > 0 });
+    if (Number(typed.agiModifier) !== 0)
+      statEntries.push({ label: 'AGI', value: `${Number(typed.agiModifier) >= 0 ? '+' : ''}${typed.agiModifier}`, isPositive: Number(typed.agiModifier) > 0 });
+    if (Number(typed.intModifier) !== 0)
+      statEntries.push({ label: 'INT', value: `${Number(typed.intModifier) >= 0 ? '+' : ''}${typed.intModifier}`, isPositive: Number(typed.intModifier) > 0 });
+    if (Number(typed.hpModifier) !== 0)
+      statEntries.push({ label: 'HP', value: `${Number(typed.hpModifier) >= 0 ? '+' : ''}${typed.hpModifier}`, isPositive: Number(typed.hpModifier) > 0 });
+  }
+  if (selectedItem.itemType === ItemType.Armor && Number((selectedItem as ArmorTemplate).armorModifier) !== 0)
+    statEntries.push({ label: 'Armor', value: `+${(selectedItem as ArmorTemplate).armorModifier}`, isPositive: true });
+  if (selectedItem.itemType !== ItemType.Armor && selectedItem.itemType !== ItemType.Consumable) {
+    const typed = selectedItem as SpellTemplate | WeaponTemplate;
+    statEntries.push({ label: 'Damage', value: `${typed.minDamage}–${typed.maxDamage}`, isPositive: true });
+  }
+
+  // Build requirement entries, filtering out zeros
+  const reqEntries: { label: string; value: string }[] = [];
+  if (Number(selectedItem.minLevel) > 0)
+    reqEntries.push({ label: 'Level', value: selectedItem.minLevel.toString() });
+  if (Number(selectedItem.statRestrictions.minStrength) > 0)
+    reqEntries.push({ label: 'STR', value: selectedItem.statRestrictions.minStrength.toString() });
+  if (Number(selectedItem.statRestrictions.minAgility) > 0)
+    reqEntries.push({ label: 'AGI', value: selectedItem.statRestrictions.minAgility.toString() });
+  if (Number(selectedItem.statRestrictions.minIntelligence) > 0)
+    reqEntries.push({ label: 'INT', value: selectedItem.statRestrictions.minIntelligence.toString() });
+
+  const lowestPrice = lowestPrices[selectedItem.tokenId.toString()];
+  const highestOffer = highestOffers[selectedItem.tokenId.toString()];
+
   return (
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
       <Helmet>
-        <title>{`${removeEmoji(selectedItem.name)} | Ultimate Dominion`}</title>
+        <title>{`${itemName} | Ultimate Dominion`}</title>
       </Helmet>
-      <VStack>
-        <HStack
-          bgColor="blue500"
-          h={{ base: '100px', md: '66px' }}
-          px="20px"
-          width="100%"
-        >
-          <Stack
-            alignItems="center"
-            direction={{ base: 'column', md: 'row' }}
-            spacing={{ base: 2, md: 4 }}
+      <VStack spacing={0}>
+        {/* Back navigation */}
+        <HStack w="100%" px={4} pt={3} pb={1}>
+          <HStack
+            as="button"
+            color="#8A7E6A"
+            cursor="pointer"
+            onClick={() => navigate(MARKETPLACE_PATH)}
+            spacing={1}
+            _hover={{ color: '#E8DCC8' }}
           >
-            <HStack>
-              <MarketplaceIconSvg />
-              <Heading color="white">{removeEmoji(selectedItem.name)}</Heading>
-            </HStack>
-            <Text color="yellow">
-              <Text
-                as="span"
-                display={{ base: 'none', md: 'inline-block' }}
-                mr={2}
-              >
-                -{' '}
-              </Text>
-              $GOLD Balance:{' '}
-              {etherToFixedNumber(userCharacter.externalGoldBalance)}
-            </Text>
-          </Stack>
+            <IoIosArrowBack size={14} />
+            <Text size="sm">Marketplace</Text>
+          </HStack>
         </HStack>
-        {getItemImage(removeEmoji(selectedItem.name)) ? (
-          <Image
-            src={getItemImage(removeEmoji(selectedItem.name))}
-            alt={removeEmoji(selectedItem.name)}
-            boxSize="112px"
-            objectFit="contain"
-            display={{ base: 'flex', lg: 'none' }}
-            mt={4}
-          />
-        ) : (
-          <Avatar
-            backgroundColor="transparent"
-            borderRadius={0}
-            display={{ base: 'flex', lg: 'none' }}
-            h={14}
-            mt={4}
-            name={' '}
-            size="2xl"
-          >
-            {getEmoji(selectedItem.name)}
-          </Avatar>
-        )}
+
+        {/* ── ITEM HERO ── */}
         <Stack
-          alignItems="start"
-          direction={{ base: 'column-reverse', lg: 'row' }}
-          mt={{ base: 4, lg: 12 }}
-          px={{ base: 0, sm: 6 }}
-          spacing={12}
+          align="center"
+          direction={{ base: 'column', md: 'row' }}
+          px={{ base: 4, md: 8 }}
+          py={{ base: 4, md: 6 }}
+          spacing={{ base: 4, md: 8 }}
           w="100%"
         >
-          <Stack p={{ base: 4, sm: 0 }} w={{ base: '100%', lg: '50%' }}>
-            <Text fontWeight="bold" mb={2} textAlign="center">
-              Description
-            </Text>
-            <HStack align="center">
-              {getItemImage(removeEmoji(selectedItem.name)) ? (
-                <Image
-                  src={getItemImage(removeEmoji(selectedItem.name))}
-                  alt={removeEmoji(selectedItem.name)}
-                  boxSize="112px"
-                  objectFit="contain"
-                  display={{ base: 'none', lg: 'flex' }}
-                />
-              ) : (
-                <Avatar
-                  backgroundColor="transparent"
-                  borderRadius={0}
-                  display={{ base: 'none', lg: 'flex' }}
-                  h={14}
-                  name={' '}
-                  size="2xl"
-                >
+          {/* Item Image */}
+          <Box
+            alignItems="center"
+            bg="rgba(196,184,158,0.04)"
+            border="1px solid"
+            borderColor={rarityColor ?? '#3A3228'}
+            borderRadius="12px"
+            boxShadow={rarityColor ? `0 0 20px ${rarityColor}15, inset 0 0 30px rgba(0,0,0,0.3)` : 'inset 0 0 30px rgba(0,0,0,0.3)'}
+            display="flex"
+            flexShrink={0}
+            h={{ base: '140px', md: '160px' }}
+            justifyContent="center"
+            w={{ base: '140px', md: '160px' }}
+          >
+            {itemImage ? (
+              <Image
+                src={itemImage}
+                alt={itemName}
+                boxSize={{ base: '100px', md: '120px' }}
+                objectFit="contain"
+                filter="drop-shadow(0 2px 8px rgba(0,0,0,0.4))"
+              />
+            ) : (
+              <Avatar
+                backgroundColor="transparent"
+                borderRadius={0}
+                h={{ base: '80px', md: '100px' }}
+                name={' '}
+                size="2xl"
+                w={{ base: '80px', md: '100px' }}
+              >
+                <Text fontSize={{ base: '48px', md: '60px' }}>
                   {getEmoji(selectedItem.name)}
-                </Avatar>
+                </Text>
+              </Avatar>
+            )}
+          </Box>
+
+          {/* Item Info */}
+          <VStack align={{ base: 'center', md: 'start' }} spacing={2} flex={1}>
+            <Heading
+              color="#E8DCC8"
+              fontSize={{ base: '22px', md: '28px' }}
+              letterSpacing="0.5px"
+            >
+              {itemName}
+            </Heading>
+
+            <HStack spacing={3} flexWrap="wrap" justify={{ base: 'center', md: 'start' }}>
+              {rarityName && (
+                <Badge
+                  bg={`${rarityColor}20`}
+                  border="1px solid"
+                  borderColor={`${rarityColor}60`}
+                  borderRadius="4px"
+                  color={rarityColor}
+                  fontSize="11px"
+                  fontWeight={600}
+                  letterSpacing="0.8px"
+                  px={2}
+                  py={0.5}
+                  textTransform="uppercase"
+                >
+                  {rarityName}
+                </Badge>
               )}
-              <Text size="sm" textAlign={{ base: 'center', lg: 'start' }}>
+              <Text color="#8A7E6A" size="sm">{itemTypeLabel}</Text>
+              {Number(userItemBalance) > 0 && (
+                <Text color="#5A8A3E" size="sm" fontWeight={600}>
+                  Owned: {userItemBalance}
+                </Text>
+              )}
+            </HStack>
+
+            {selectedItem.description && (
+              <Text color="#8A7E6A" size="sm" mt={1} maxW="500px" textAlign={{ base: 'center', md: 'start' }}>
                 {selectedItem.description}
               </Text>
-            </HStack>
-            <Stack
-              alignItems="start"
-              direction={{ base: 'column', sm: 'row' }}
-              mt={8}
-              spacing={8}
-            >
-              <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
-                <Text fontWeight="bold" mb={2} textAlign="center">
-                  Stats
-                </Text>
-                {selectedItem.itemType !== ItemType.Spell && (
-                  <>
-                    <HStack w="100%">
-                      <Text size="sm">Agility Modifier</Text>
-                      <Spacer />
-                      <Text>
-                        {(
-                          selectedItem as ArmorTemplate | WeaponTemplate
-                        ).agiModifier.toString()}
-                      </Text>
-                    </HStack>
-                    <HStack w="100%">
-                      <Text size="sm">Intelligence Modifier</Text>
-                      <Spacer />
-                      <Text>
-                        {(
-                          selectedItem as ArmorTemplate | WeaponTemplate
-                        ).intModifier.toString()}
-                      </Text>
-                    </HStack>
-                    <HStack w="100%">
-                      <Text size="sm">Strength Modifier</Text>
-                      <Spacer />
-                      <Text>
-                        {(
-                          selectedItem as ArmorTemplate | WeaponTemplate
-                        ).strModifier.toString()}
-                      </Text>
-                    </HStack>
-                    <HStack w="100%">
-                      <Text size="sm">HP Modifier</Text>
-                      <Spacer />
-                      <Text>
-                        {(
-                          selectedItem as ArmorTemplate | WeaponTemplate
-                        ).hpModifier.toString()}
-                      </Text>
-                    </HStack>
-                  </>
-                )}
-                {selectedItem.itemType === ItemType.Armor && (
-                  <HStack w="100%">
-                    <Text size="sm">Armor Modifier</Text>
-                    <Spacer />
-                    <Text>
-                      {(selectedItem as ArmorTemplate).armorModifier.toString()}
-                    </Text>
-                  </HStack>
-                )}
-                {selectedItem.itemType !== ItemType.Armor &&
-                  selectedItem.itemType !== ItemType.Consumable && (
-                    <>
-                      <HStack w="100%">
-                        <Text size="sm">Min Damage</Text>
-                        <Spacer />
-                        <Text>
-                          {(
-                            selectedItem as SpellTemplate | WeaponTemplate
-                          ).minDamage.toString()}
-                        </Text>
-                      </HStack>
-                      <HStack w="100%">
-                        <Text size="sm">Max Damage</Text>
-                        <Spacer />
-                        <Text>
-                          {(
-                            selectedItem as SpellTemplate | WeaponTemplate
-                          ).maxDamage.toString()}
-                        </Text>
-                      </HStack>
-                    </>
-                  )}
-              </VStack>
+            )}
 
-              <VStack spacing={1} w={{ base: '100%', sm: '50%' }}>
-                <Text fontWeight="bold" mb={2} textAlign="center">
-                  Requirements
-                </Text>
-                <HStack w="100%">
-                  <Text size="sm">Min Level</Text>
-                  <Spacer />
-                  <Text>{selectedItem.minLevel.toString()}</Text>
-                </HStack>
-                <HStack w="100%">
-                  <Text size="sm">Min Agility</Text>
-                  <Spacer />
-                  <Text>
-                    {selectedItem.statRestrictions.minAgility.toString()}
+            {/* Inline stat chips */}
+            {statEntries.length > 0 && (
+              <HStack spacing={2} mt={2} flexWrap="wrap" justify={{ base: 'center', md: 'start' }}>
+                {statEntries.map(stat => (
+                  <Box
+                    key={stat.label}
+                    bg="rgba(196,184,158,0.06)"
+                    border="1px solid #3A3228"
+                    borderRadius="6px"
+                    px={3}
+                    py={1}
+                  >
+                    <Text size="sm">
+                      <Text as="span" color="#8A7E6A">{stat.label} </Text>
+                      <Text
+                        as="span"
+                        color={stat.isPositive ? '#5A8A3E' : '#B83A2A'}
+                        fontWeight={700}
+                        fontFamily="'Fira Code', monospace"
+                      >
+                        {stat.value}
+                      </Text>
+                    </Text>
+                  </Box>
+                ))}
+              </HStack>
+            )}
+
+            {/* Requirement chips */}
+            {reqEntries.length > 0 && (
+              <HStack spacing={2} mt={1} flexWrap="wrap" justify={{ base: 'center', md: 'start' }}>
+                <Text color="#8A7E6A" size="xs">Requires:</Text>
+                {reqEntries.map(req => (
+                  <Text key={req.label} size="xs" color="#C87A2A" fontFamily="'Fira Code', monospace">
+                    {req.label} {req.value}
                   </Text>
-                </HStack>
-                <HStack w="100%">
-                  <Text size="sm">Min Intelligence</Text>
-                  <Spacer />
-                  <Text>
-                    {selectedItem.statRestrictions.minIntelligence.toString()}
-                  </Text>
-                </HStack>
-                <HStack w="100%">
-                  <Text size="sm">Min Strength</Text>
-                  <Spacer />
-                  <Text>
-                    {selectedItem.statRestrictions.minStrength.toString()}
-                  </Text>
-                </HStack>
-              </VStack>
-            </Stack>
-          </Stack>
-          <Stack p={{ base: 4, sm: 0 }} w={{ base: '100%', lg: '50%' }}>
-            <Text fontWeight="bold" mb={2} textAlign="center">
-              Create a request
+                ))}
+              </HStack>
+            )}
+          </VStack>
+
+          {/* Gold balance pill — desktop only */}
+          <VStack
+            align="end"
+            display={{ base: 'none', lg: 'flex' }}
+            flexShrink={0}
+            spacing={1}
+          >
+            <Text color="#8A7E6A" size="xs" textTransform="uppercase" letterSpacing="1px">
+              Your Balance
             </Text>
-            <HStack w="100%">
-              <Text size="sm">Lowest Item Price</Text>
-              <Spacer />
-              <Text>
-                {lowestPrices[selectedItem.tokenId.toString()]
-                  ? `${etherToFixedNumber(lowestPrices[selectedItem.tokenId.toString()])} $GOLD`
-                  : 'N/A'}
+            <Text color="yellow" fontFamily="'Fira Code', monospace" fontWeight={700} fontSize="18px">
+              {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
+            </Text>
+          </VStack>
+        </Stack>
+
+        {/* Gold balance — mobile only */}
+        <HStack
+          display={{ base: 'flex', lg: 'none' }}
+          justify="center"
+          pb={2}
+        >
+          <Text color="#8A7E6A" size="sm">Balance: </Text>
+          <Text color="yellow" fontFamily="'Fira Code', monospace" fontWeight={600} size="sm">
+            {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
+          </Text>
+        </HStack>
+
+        {/* Divider */}
+        <Box
+          bgColor="rgba(196,184,158,0.08)"
+          boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+          h="4px"
+          w="100%"
+        />
+
+        {/* ── TRADE PANEL ── */}
+        <Stack
+          direction={{ base: 'column', lg: 'row' }}
+          px={{ base: 4, md: 8 }}
+          py={6}
+          spacing={{ base: 6, lg: 10 }}
+          w="100%"
+        >
+          {/* Market price context */}
+          <HStack spacing={6} flexWrap="wrap" justify={{ base: 'center', lg: 'start' }}>
+            <VStack spacing={0} align={{ base: 'center', lg: 'start' }}>
+              <Text color="#8A7E6A" size="xs" textTransform="uppercase" letterSpacing="0.5px">
+                Lowest Price
               </Text>
-            </HStack>
-            <HStack w="100%">
-              <Text size="sm">Highest $GOLD Offer</Text>
-              <Spacer />
-              <Text>
-                {highestOffers[selectedItem.tokenId.toString()]
-                  ? `${etherToFixedNumber(highestOffers[selectedItem.tokenId.toString()])} $GOLD`
-                  : 'N/A'}
+              <Text
+                color={lowestPrice ? '#E8DCC8' : '#8A7E6A'}
+                fontFamily="'Fira Code', monospace"
+                fontWeight={600}
+              >
+                {lowestPrice ? `${etherToFixedNumber(lowestPrice)} $GOLD` : '—'}
               </Text>
-            </HStack>
+            </VStack>
             <Box
-              backgroundColor="rgba(196,184,158,0.08)"
-              boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-              h="6px"
-              my={4}
-              w="100%"
+              bg="#3A3228"
+              display={{ base: 'none', lg: 'block' }}
+              h="36px"
+              w="1px"
             />
-            <Text>Buying or selling?</Text>
-            <HStack>
+            <VStack spacing={0} align={{ base: 'center', lg: 'start' }}>
+              <Text color="#8A7E6A" size="xs" textTransform="uppercase" letterSpacing="0.5px">
+                Best Offer
+              </Text>
+              <Text
+                color={highestOffer ? '#E8DCC8' : '#8A7E6A'}
+                fontFamily="'Fira Code', monospace"
+                fontWeight={600}
+              >
+                {highestOffer ? `${etherToFixedNumber(highestOffer)} $GOLD` : '—'}
+              </Text>
+            </VStack>
+          </HStack>
+
+          {/* Spacer on desktop */}
+          <Box flex={1} display={{ base: 'none', lg: 'block' }} />
+
+          {/* Order form */}
+          <VStack
+            align={{ base: 'center', lg: 'end' }}
+            spacing={3}
+            w={{ base: '100%', lg: 'auto' }}
+            minW={{ lg: '360px' }}
+          >
+            {/* Buy/Sell toggle */}
+            <HStack
+              bg="#14120F"
+              border="1px solid #3A3228"
+              borderRadius="8px"
+              p="3px"
+              w={{ base: '100%', lg: 'auto' }}
+            >
               <Button
-                bgColor={orderType === OrderType.Buying ? 'grey500' : undefined}
-                color={orderType === OrderType.Buying ? 'white' : undefined}
+                bg={orderType === OrderType.Buying ? '#C87A2A' : 'transparent'}
+                borderRadius="6px"
+                color={orderType === OrderType.Buying ? '#E8DCC8' : '#8A7E6A'}
+                flex={1}
                 onClick={() => {
                   const newSearchParams = new URLSearchParams();
                   newSearchParams.set('orderType', OrderType.Buying);
@@ -664,15 +723,22 @@ export const MarketplaceItem = (): JSX.Element => {
                   setOrderType(OrderType.Buying);
                 }}
                 size="sm"
-                variant="white"
+                variant="unstyled"
+                px={6}
+                py={2}
+                h="auto"
+                _hover={{
+                  bg: orderType === OrderType.Buying ? '#E8A840' : '#2E2820',
+                  color: '#E8DCC8',
+                }}
               >
-                Buying
+                Buy
               </Button>
               <Button
-                bgColor={
-                  orderType === OrderType.Selling ? 'grey500' : undefined
-                }
-                color={orderType === OrderType.Selling ? 'white' : undefined}
+                bg={orderType === OrderType.Selling ? '#C87A2A' : 'transparent'}
+                borderRadius="6px"
+                color={orderType === OrderType.Selling ? '#E8DCC8' : '#8A7E6A'}
+                flex={1}
                 onClick={() => {
                   const newSearchParams = new URLSearchParams();
                   newSearchParams.set('orderType', OrderType.Selling);
@@ -680,37 +746,47 @@ export const MarketplaceItem = (): JSX.Element => {
                   setOrderType(OrderType.Selling);
                 }}
                 size="sm"
-                variant="white"
+                variant="unstyled"
+                px={6}
+                py={2}
+                h="auto"
+                _hover={{
+                  bg: orderType === OrderType.Selling ? '#E8A840' : '#2E2820',
+                  color: '#E8DCC8',
+                }}
               >
-                Selling
+                Sell
               </Button>
             </HStack>
+
+            {/* Buy flow */}
             {orderType === OrderType.Buying &&
               (userCharacter.externalGoldBalance === BigInt(0) ? (
-                <Text mt={4} size="sm">
-                  You don&apos;t have any $GOLD in your inventory.
+                <Text size="sm" color="#8A7E6A" textAlign="center">
+                  You don&apos;t have any $GOLD to place an offer.
                 </Text>
               ) : (
-                <VStack alignItems="start" as="form" onSubmit={onCreateOrder}>
+                <VStack
+                  align="stretch"
+                  as="form"
+                  onSubmit={onCreateOrder}
+                  spacing={3}
+                  w="100%"
+                >
                   {forSaleItems.length > 0 && (
-                    <Text mt={4} size="sm">
-                      Are you sure you want to make an offer for this item?
-                      There are already items for sale, which you can{' '}
+                    <Text size="sm" color="#8A7E6A">
+                      Items are already listed for sale.{' '}
                       <Text
                         as="span"
-                        color="blue"
+                        color="#C87A2A"
                         cursor="pointer"
                         onClick={onScrollToTabs}
-                        _hover={{
-                          textDecoration: 'underline',
-                        }}
+                        _hover={{ textDecoration: 'underline' }}
                       >
-                        view below
+                        View listings
                       </Text>
-                      .
                     </Text>
                   )}
-                  <Text mt={4}>How much $GOLD are you offering?</Text>
                   <FormControl isInvalid={showError && invalidOrderPrice}>
                     <InputGroup>
                       <InputLeftAddon>$GOLD</InputLeftAddon>
@@ -741,36 +817,39 @@ export const MarketplaceItem = (): JSX.Element => {
                     type="submit"
                     w="100%"
                   >
-                    Make an Offer for {selectedItem.name}
+                    Place Buy Offer
                   </Button>
                 </VStack>
               ))}
+
+            {/* Sell flow */}
             {orderType === OrderType.Selling &&
               (userItemBalance === '0' ? (
-                <Text mt={4} size="sm">
-                  You don&apos;t have any {selectedItem.name} in your inventory.
+                <Text size="sm" color="#8A7E6A" textAlign="center">
+                  You don&apos;t own this item.
                 </Text>
               ) : (
-                <VStack alignItems="start" as="form" onSubmit={onCreateOrder}>
+                <VStack
+                  align="stretch"
+                  as="form"
+                  onSubmit={onCreateOrder}
+                  spacing={3}
+                  w="100%"
+                >
                   {goldOfferItems.length > 0 && (
-                    <Text mt={4} size="sm">
-                      Are you sure you want to put your item up for sale? There
-                      are already offers for this item, which you can{' '}
+                    <Text size="sm" color="#8A7E6A">
+                      There are existing buy offers.{' '}
                       <Text
                         as="span"
-                        color="blue"
+                        color="#C87A2A"
                         cursor="pointer"
                         onClick={onScrollToTabs}
-                        _hover={{
-                          textDecoration: 'underline',
-                        }}
+                        _hover={{ textDecoration: 'underline' }}
                       >
-                        view below
+                        View offers
                       </Text>
-                      .
                     </Text>
                   )}
-                  <Text mt={4}>How much $GOLD are you asking for?</Text>
                   <FormControl isInvalid={showError && invalidOrderPrice}>
                     <InputGroup>
                       <InputLeftAddon>$GOLD</InputLeftAddon>
@@ -796,32 +875,82 @@ export const MarketplaceItem = (): JSX.Element => {
                     type="submit"
                     w="100%"
                   >
-                    List {selectedItem.name} for sale
+                    List for Sale
                   </Button>
                 </VStack>
               ))}
-          </Stack>
+
+            {/* Prompt to select buy/sell if neither chosen */}
+            {orderType === OrderType.None && (
+              <Text size="sm" color="#8A7E6A" textAlign="center">
+                Select Buy or Sell to get started.
+              </Text>
+            )}
+          </VStack>
         </Stack>
 
-        <Tabs index={tabIndex} mt={12} ref={tabsRef} variant="line" w="100%">
-          <TabList justifyContent={{ base: 'center', lg: 'start' }}>
+        {/* ── MARKET ACTIVITY ── */}
+        <Tabs index={tabIndex} ref={tabsRef} variant="line" w="100%">
+          <Box
+            bgColor="rgba(196,184,158,0.08)"
+            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+            h="4px"
+            w="100%"
+          />
+          <TabList justifyContent={{ base: 'center', lg: 'start' }} px={{ base: 0, md: 4 }}>
             <Tab
               fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
               onClick={() => setTabIndex(0)}
             >
               {MarketplaceFilter.ForSale}
+              {forSaleItems.length > 0 && (
+                <Badge
+                  bg="rgba(200,122,42,0.15)"
+                  borderRadius="full"
+                  color="#C87A2A"
+                  fontSize="10px"
+                  ml={2}
+                  px={2}
+                >
+                  {forSaleItems.length}
+                </Badge>
+              )}
             </Tab>
             <Tab
               fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
               onClick={() => setTabIndex(1)}
             >
               {MarketplaceFilter.GoldOffers}
+              {goldOfferItems.length > 0 && (
+                <Badge
+                  bg="rgba(200,122,42,0.15)"
+                  borderRadius="full"
+                  color="#C87A2A"
+                  fontSize="10px"
+                  ml={2}
+                  px={2}
+                >
+                  {goldOfferItems.length}
+                </Badge>
+              )}
             </Tab>
             <Tab
               fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
               onClick={() => setTabIndex(2)}
             >
               {MarketplaceFilter.MyListings}
+              {myListings.length > 0 && (
+                <Badge
+                  bg="rgba(200,122,42,0.15)"
+                  borderRadius="full"
+                  color="#C87A2A"
+                  fontSize="10px"
+                  ml={2}
+                  px={2}
+                >
+                  {myListings.length}
+                </Badge>
+              )}
             </Tab>
           </TabList>
           <TabPanels>
@@ -836,9 +965,8 @@ export const MarketplaceItem = (): JSX.Element => {
                 {forSaleItems
                   .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
                   .map((order, i) => (
-                    <>
+                    <Box key={`order-${i}`}>
                       <OrderRow
-                        key={`order-${i}`}
                         item={selectedItem}
                         order={order}
                         refreshOrders={refreshOrders}
@@ -849,12 +977,31 @@ export const MarketplaceItem = (): JSX.Element => {
                         h="5px"
                         w="100%"
                       />
-                    </>
+                    </Box>
                   ))}
                 {forSaleItems.length === 0 && (
-                  <Text mt={8} textAlign="center" w="100%">
-                    No items for sale.
-                  </Text>
+                  <VStack py={10} spacing={2}>
+                    <Text color="#8A7E6A" textAlign="center">
+                      No one is selling this item yet.
+                    </Text>
+                    {Number(userItemBalance) > 0 && orderType !== OrderType.Selling && (
+                      <Text
+                        as="span"
+                        color="#C87A2A"
+                        cursor="pointer"
+                        size="sm"
+                        onClick={() => {
+                          const newSearchParams = new URLSearchParams();
+                          newSearchParams.set('orderType', OrderType.Selling);
+                          navigate(`?${newSearchParams}`);
+                          setOrderType(OrderType.Selling);
+                        }}
+                        _hover={{ textDecoration: 'underline' }}
+                      >
+                        Be the first to list yours
+                      </Text>
+                    )}
+                  </VStack>
                 )}
               </Stack>
             </TabPanel>
@@ -869,9 +1016,8 @@ export const MarketplaceItem = (): JSX.Element => {
                 {goldOfferItems
                   .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
                   .map((order, i) => (
-                    <>
+                    <Box key={`order-${i}`}>
                       <OrderRow
-                        key={`order-${i}`}
                         item={selectedItem}
                         order={order}
                         refreshOrders={refreshOrders}
@@ -882,12 +1028,31 @@ export const MarketplaceItem = (): JSX.Element => {
                         h="5px"
                         w="100%"
                       />
-                    </>
+                    </Box>
                   ))}
                 {goldOfferItems.length === 0 && (
-                  <Text mt={8} textAlign="center" w="100%">
-                    No offers for this item.
-                  </Text>
+                  <VStack py={10} spacing={2}>
+                    <Text color="#8A7E6A" textAlign="center">
+                      No buy offers for this item yet.
+                    </Text>
+                    {orderType !== OrderType.Buying && (
+                      <Text
+                        as="span"
+                        color="#C87A2A"
+                        cursor="pointer"
+                        size="sm"
+                        onClick={() => {
+                          const newSearchParams = new URLSearchParams();
+                          newSearchParams.set('orderType', OrderType.Buying);
+                          navigate(`?${newSearchParams}`);
+                          setOrderType(OrderType.Buying);
+                        }}
+                        _hover={{ textDecoration: 'underline' }}
+                      >
+                        Place the first offer
+                      </Text>
+                    )}
+                  </VStack>
                 )}
               </Stack>
             </TabPanel>
@@ -902,9 +1067,8 @@ export const MarketplaceItem = (): JSX.Element => {
                 {myListings
                   .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
                   .map((order, i) => (
-                    <>
+                    <Box key={`order-${i}`}>
                       <OrderRow
-                        key={`order-${i}`}
                         item={selectedItem}
                         order={order}
                         refreshOrders={refreshOrders}
@@ -915,12 +1079,14 @@ export const MarketplaceItem = (): JSX.Element => {
                         h="5px"
                         w="100%"
                       />
-                    </>
+                    </Box>
                   ))}
                 {myListings.length === 0 && (
-                  <Text mt={8} textAlign="center" w="100%">
-                    You have no listings for this item.
-                  </Text>
+                  <VStack py={10}>
+                    <Text color="#8A7E6A" textAlign="center">
+                      You have no active listings for this item.
+                    </Text>
+                  </VStack>
                 )}
               </Stack>
             </TabPanel>
@@ -929,7 +1095,11 @@ export const MarketplaceItem = (): JSX.Element => {
               justify="center"
               mt={{ base: 0, lg: 5 }}
               mb={5}
-              visibility={forSaleItems.length > 0 ? 'visible' : 'hidden'}
+              visibility={
+                (tabIndex === 0 ? forSaleItems.length : tabIndex === 1 ? goldOfferItems.length : myListings.length) > 0
+                  ? 'visible'
+                  : 'hidden'
+              }
               w="100%"
             >
               <Pagination
