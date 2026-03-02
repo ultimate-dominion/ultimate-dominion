@@ -141,9 +141,9 @@ export const FragmentClaimModal = ({
                   }}
                 >
                   <Typist
-                    avgTypingDelay={10}
+                    avgTypingDelay={30}
                     cursor={{ show: false }}
-                    stdTypingDelay={10}
+                    stdTypingDelay={15}
                   >
                     <Text
                       fontSize="md"

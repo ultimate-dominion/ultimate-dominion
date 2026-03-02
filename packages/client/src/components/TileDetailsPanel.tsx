@@ -19,7 +19,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
@@ -97,6 +97,23 @@ export const TileDetailsPanel = (): JSX.Element => {
     systemCalls: { createEncounter, rest },
   } = useMUD();
   const { pendingEcho } = useFragments();
+
+  // Hold fragment data while modal is open — pendingEcho goes null after
+  // claim (RECS updates reactively), which would unmount the modal mid-read.
+  const fragmentClaimRef = useRef(pendingEcho);
+  useEffect(() => {
+    if (pendingEcho) {
+      fragmentClaimRef.current = pendingEcho;
+    }
+  }, [pendingEcho]);
+  const fragmentForModal = pendingEcho ?? fragmentClaimRef.current;
+  const handleCloseFragmentClaim = () => {
+    onCloseFragmentClaimModal();
+    if (!pendingEcho) {
+      fragmentClaimRef.current = null;
+    }
+  };
+
   const {
     character,
     isMoveEquipped,
@@ -1202,11 +1219,11 @@ export const TileDetailsPanel = (): JSX.Element => {
         </VStack>
       </InfoModal>
 
-      {pendingEcho && (
+      {fragmentForModal && (
         <FragmentClaimModal
-          fragment={pendingEcho}
+          fragment={fragmentForModal}
           isOpen={isFragmentClaimModalOpen}
-          onClose={onCloseFragmentClaimModal}
+          onClose={handleCloseFragmentClaim}
         />
       )}
     </Box>
