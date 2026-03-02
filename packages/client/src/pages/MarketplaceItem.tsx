@@ -40,7 +40,6 @@ import { OrderRow } from '../components/OrderRow';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
 import { MarketplaceIconSvg } from '../components/SVGs';
-import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -97,9 +96,6 @@ export const MarketplaceItem = (): JSX.Element => {
     isRefreshing,
     refreshCharacter,
   } = useCharacter();
-  const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
-    useAllowance();
-
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const createOrderTx = useTransaction({
@@ -257,19 +253,6 @@ export const MarketplaceItem = (): JSX.Element => {
         return;
       }
 
-      if (
-        orderType === OrderType.Buying &&
-        goldMarketplaceAllowance < parseEther(orderPrice)
-      ) {
-        onOpenAllowanceModal();
-        return;
-      }
-
-      if (orderType === OrderType.Selling && !itemsMarketplaceAllowance) {
-        onOpenAllowanceModal();
-        return;
-      }
-
       if (orderType === OrderType.Selling && Number(userItemBalance) < 1) {
         return;
       }
@@ -332,14 +315,10 @@ export const MarketplaceItem = (): JSX.Element => {
       equippedArmor,
       equippedSpells,
       equippedWeapons,
-      goldMarketplaceAllowance,
       goldTokenAddress,
       insufficientGold,
       invalidOrderPrice,
       itemsAddress,
-      itemsMarketplaceAllowance,
-      onCloseAllowanceModal,
-      onOpenAllowanceModal,
       onOpenConfirmationModal,
       orderPrice,
       orderType,

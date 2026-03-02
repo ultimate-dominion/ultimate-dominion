@@ -6,7 +6,6 @@ import {
   Image,
   Text,
   Tooltip,
-  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useMemo } from 'react';
@@ -14,7 +13,6 @@ import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
 import { hexToString } from 'viem';
 
-import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useTransaction } from '../hooks/useTransaction';
@@ -30,13 +28,11 @@ import {
   type ArmorTemplate,
   type ConsumableTemplate,
   type Order,
-  OrderType,
   type SpellTemplate,
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
 
-import { MarketplaceAllowanceModal } from './MarketplaceAllowanceModal';
 
 type OrderRowProps = {
   item: ArmorTemplate | ConsumableTemplate | WeaponTemplate | SpellTemplate;
@@ -54,17 +50,9 @@ export const OrderRow = ({
   } = useMUD();
   const charactersTable = useGameTable('Characters');
   const { character, refreshCharacter } = useCharacter();
-  const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
-    useAllowance();
 
   const cancelTx = useTransaction({ actionName: 'cancel listing', showSuccessToast: true, successMessage: 'Listing removed successfully!' });
   const fillTx = useTransaction({ actionName: 'fill order', showSuccessToast: true, successMessage: 'Order filled successfully!' });
-
-  const {
-    isOpen: isAllowanceModalOpen,
-    onClose: onCloseAllowanceModal,
-    onOpen: onOpenAllowanceModal,
-  } = useDisclosure();
 
   const ownerCharacterName = useMemo(() => {
     if (!charactersTable) return undefined;
@@ -97,40 +85,19 @@ export const OrderRow = ({
   const onFulfillOrder = useCallback(async () => {
     if (insufficientGold) return;
 
-    if (
-      order.consideration.tokenType === TokenType.ERC20 &&
-      goldMarketplaceAllowance < order.consideration.amount
-    ) {
-      onOpenAllowanceModal();
-      return;
-    }
-
-    if (
-      order.offer.tokenType === TokenType.ERC20 &&
-      !itemsMarketplaceAllowance
-    ) {
-      onOpenAllowanceModal();
-      return;
-    }
-
     const result = await fillTx.execute(async () => {
       const { error, success } = await fulfillOrder(order.orderHash);
       if (error && !success) throw new Error(error);
     });
 
     if (result !== undefined) {
-      onCloseAllowanceModal();
       refreshCharacter();
       refreshOrders();
     }
   }, [
     fillTx,
     fulfillOrder,
-    goldMarketplaceAllowance,
     insufficientGold,
-    itemsMarketplaceAllowance,
-    onCloseAllowanceModal,
-    onOpenAllowanceModal,
     order,
     refreshCharacter,
     refreshOrders,
@@ -238,25 +205,6 @@ export const OrderRow = ({
           </Tooltip>
         )}
       </HStack>
-
-      <MarketplaceAllowanceModal
-        completeMessage="Allowance was successful! You can now complete the order."
-        isCompleting={fillTx.isLoading}
-        isOpen={isAllowanceModalOpen}
-        itemName={item.name}
-        onClose={onCloseAllowanceModal}
-        onComplete={onFulfillOrder}
-        orderPrice={
-          consideration.tokenType === TokenType.ERC20
-            ? consideration.amount
-            : offer.amount
-        }
-        orderType={
-          consideration.tokenType === TokenType.ERC20
-            ? OrderType.Buying
-            : OrderType.Selling
-        }
-      />
     </Flex>
   );
 };

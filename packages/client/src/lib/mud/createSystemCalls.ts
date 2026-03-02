@@ -194,9 +194,12 @@ export function createSystemCalls(
   const cancelOrder = async (orderHash: string): SystemCallReturn => {
     try {
       const tx = await worldContract.write.UD__cancelOrder([orderHash as Hash]);
+      const txResult = await waitForTransaction(tx);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to cancel order.',
+        success: txResult.status === 'success',
+      };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -411,9 +414,12 @@ export function createSystemCalls(
       const tx = await worldContract.write.UD__fulfillOrder([
         orderHash as Hash,
       ]);
+      const txResult = await waitForTransaction(tx);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to fulfill order.',
+        success: txResult.status === 'success',
+      };
     } catch (e) {
       return {
         error: getContractError(e),
