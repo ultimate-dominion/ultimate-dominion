@@ -504,8 +504,9 @@ export function createSystemCalls(
     }
   };
 
-  // Client-side movement cooldown (matches MOVE_COOLDOWN = 1s in contracts)
-  const MOVE_COOLDOWN_MS = 1000;
+  // Client-side movement cooldown — must exceed Base's 2s block time to avoid
+  // MoveTooFast reverts when the relayer simulates against the same block.
+  const MOVE_COOLDOWN_MS = 2500;
   let lastMoveTimestamp = 0;
   let isMovePending = false;
 

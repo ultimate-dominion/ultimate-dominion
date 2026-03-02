@@ -157,7 +157,7 @@ export const MovementProvider = ({
 
       setPendingTarget({ x: newX, y: newY });
       const result = await moveTx.execute(() => move(character.id, newX, newY));
-      if (!result) {
+      if (!result || !result.success) {
         setPendingTarget(null);
       }
     },
