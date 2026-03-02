@@ -1,6 +1,7 @@
 import {
   Box,
   HStack,
+  Image,
   Input,
   keyframes,
   Link,
@@ -66,9 +67,21 @@ export const LandingPage = (): JSX.Element => {
   return (
     <Box
       minH="100vh"
+      position="relative"
       px={{ base: 2, sm: 12, md: 20 }}
       py={{ base: 4, lg: 12 }}
     >
+    {/* Logo — top right */}
+    <Image
+      alt="Ultimate Dominion Logo"
+      position="absolute"
+      right={{ base: 4, sm: 14, md: 24 }}
+      src="/images/ultimate-dominion-logo.svg"
+      top={{ base: 2, lg: 6 }}
+      width={{ base: '160px', sm: '200px' }}
+      zIndex={10}
+    />
+
     <Box
       border="6px solid #3A3228"
       display="flex"
