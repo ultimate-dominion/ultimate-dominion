@@ -48,7 +48,7 @@ export const Header = (): JSX.Element => {
   const {
     delegatorAddress,
     onOpenWalletDetailsModal,
-    systemCalls: { endShopEncounter },
+    systemCalls: { endWorldEncounter },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
 
@@ -59,21 +59,21 @@ export const Header = (): JSX.Element => {
     if (!character.worldEncounter) return true;
     if (!delegatorAddress) return false;
 
-    // Try to end the shop encounter. If it fails (e.g. encounter already ended
-    // by moving away), treat it as success — the encounter is gone either way.
-    const { success } = await endShopEncounter(
+    // Use endWorldEncounter (EncounterResolveSystem.endEncounter) instead of
+    // endShopEncounter (ShopSystem) because the ShopSystem path calls
+    // triggerFragment via World which hits MUD's prohibitDirectCallback.
+    const { success } = await endWorldEncounter(
       character.worldEncounter!.encounterId,
     );
     if (!success) {
-      // Encounter likely already ended — still safe to navigate
-      console.warn('[Header] endShopEncounter failed, encounter likely already ended');
+      console.warn('[Header] endWorldEncounter failed, encounter likely already ended');
     }
     await refreshCharacter();
     return true;
   }, [
     character,
     delegatorAddress,
-    endShopEncounter,
+    endWorldEncounter,
     refreshCharacter,
   ]);
 

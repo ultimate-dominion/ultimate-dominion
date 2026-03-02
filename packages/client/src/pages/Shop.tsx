@@ -39,7 +39,7 @@ export const Shop = (): JSX.Element => {
   const {
     delegatorAddress,
     isSynced,
-    systemCalls: { triggerFragment },
+    systemCalls: { endWorldEncounter, triggerFragment },
   } = useMUD();
   const {
     armorTemplates,
@@ -66,18 +66,32 @@ export const Shop = (): JSX.Element => {
     return allShops.find(shop => shop.shopId === shopId) ?? null;
   }, [allShops, shopId]);
 
-  const onLeaveShop = useCallback(() => {
-    // Fire Fragment II ("The Quartermaster") for Tal's shop at (9,9).
-    // This must be called from the client because the on-chain
-    // ShopSystem.endShopEncounter → triggerFragment path hits MUD's
-    // prohibitDirectCallback (system calling World calling system).
-    if (shop && userCharacter?.id && shop.position.x === 9 && shop.position.y === 9) {
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const onLeaveShop = useCallback(async () => {
+    if (!userCharacter?.worldEncounter) {
+      navigate(GAME_BOARD_PATH);
+      return;
+    }
+
+    setIsLeaving(true);
+
+    // Fire Fragment II for Tal's shop (9,9) from the client.
+    // The on-chain ShopSystem.endShopEncounter path is broken — it calls
+    // triggerFragment via World which hits MUD's prohibitDirectCallback.
+    // External → World → system calls bypass that check.
+    if (shop && userCharacter.id && shop.position.x === 9 && shop.position.y === 9) {
       triggerFragment(userCharacter.id, 2, 9, 9).catch(() => {});
     }
-    // Navigate directly — the encounter auto-ends on the next move
-    // (MapSystem calls endEncounter before every move).
+
+    // End the encounter directly via EncounterResolveSystem (same path
+    // MapSystem uses). This bypasses ShopSystem.endShopEncounter which
+    // reverts due to the triggerFragment prohibitDirectCallback issue.
+    await endWorldEncounter(userCharacter.worldEncounter.encounterId);
+
+    setIsLeaving(false);
     navigate(GAME_BOARD_PATH);
-  }, [navigate, shop, triggerFragment, userCharacter?.id]);
+  }, [endWorldEncounter, navigate, shop, triggerFragment, userCharacter]);
 
   const [sellable, setSellable] = useState<
     Array<{
@@ -261,6 +275,7 @@ export const Shop = (): JSX.Element => {
             fontFamily="Cinzel, serif"
             fontSize="xs"
             fontWeight={600}
+            isLoading={isLeaving}
             letterSpacing="0.05em"
             onClick={onLeaveShop}
             px={4}

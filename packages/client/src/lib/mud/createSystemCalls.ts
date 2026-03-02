@@ -310,6 +310,29 @@ export function createSystemCalls(
     }
   };
 
+  const endWorldEncounter = async (encounterId: string): SystemCallReturn => {
+    // Check the store first — if already ended, skip the chain call.
+    const encounter = getTableValue('WorldEncounter', encounterId);
+    if (!encounter || BigInt(encounter.end as string | number) !== BigInt(0)) {
+      return { success: true };
+    }
+
+    try {
+      const tx = await worldContract.write.UD__endEncounter([
+        encounterId as `0x${string}`,
+        BigInt(0),
+        false,
+      ]);
+      await waitForTransaction(tx);
+      return { success: true };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   const endTurn = async (
     encounterId: string,
     playerId: string,
@@ -1117,6 +1140,7 @@ export function createSystemCalls(
     createOrder,
     depositToEscrow,
     endShopEncounter,
+    endWorldEncounter,
     endTurn,
     enterGame,
     equipItems,
