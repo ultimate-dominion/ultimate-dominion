@@ -45,23 +45,17 @@ export const Header = (): JSX.Element => {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
-    delegatorAddress,
     onOpenWalletDetailsModal,
-    systemCalls: { endWorldEncounter },
   } = useMUD();
   const { character } = useCharacter();
 
   const shopGuardedNavigate = useCallback(
     (to: string) => {
-      if (character?.worldEncounter) {
-        // Fire-and-forget: try to end encounter, but navigate immediately.
-        // GameBoard skips the shop redirect when fromShop state is set.
-        // The encounter auto-ends on the next move via MapSystem.
-        endWorldEncounter(character.worldEncounter.encounterId).catch(() => {});
-      }
+      // Don't call endWorldEncounter — it always reverts for shop encounters
+      // (prohibitDirectCallback). The encounter auto-ends on next move via MapSystem.
       navigate(to, character?.worldEncounter ? { state: { fromShop: true } } : undefined);
     },
-    [character, endWorldEncounter, navigate],
+    [character, navigate],
   );
 
   const logoLink = useMemo(() => {

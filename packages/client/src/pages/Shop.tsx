@@ -39,7 +39,7 @@ export const Shop = (): JSX.Element => {
   const {
     delegatorAddress,
     isSynced,
-    systemCalls: { endWorldEncounter, triggerFragment },
+    systemCalls: { triggerFragment },
   } = useMUD();
   const {
     armorTemplates,
@@ -74,16 +74,11 @@ export const Shop = (): JSX.Element => {
       triggerFragment(userCharacter.id, 2, 9, 9).catch(() => {});
     }
 
-    // Try to end the encounter (fire-and-forget). If it fails, the encounter
-    // auto-ends on the next move via MapSystem.
-    if (userCharacter?.worldEncounter) {
-      endWorldEncounter(userCharacter.worldEncounter.encounterId).catch(() => {});
-    }
-
-    // Navigate immediately. Pass fromShop state so GameBoard skips
-    // the shop redirect while the encounter is still being ended.
+    // Don't call endWorldEncounter — it always reverts with 0x data for shop
+    // encounters (EncounterResolveSystem hits prohibitDirectCallback internally).
+    // The encounter auto-ends on the player's next move via MapSystem.
     navigate(GAME_BOARD_PATH, { state: { fromShop: true } });
-  }, [endWorldEncounter, navigate, shop, triggerFragment, userCharacter]);
+  }, [navigate, shop, triggerFragment, userCharacter]);
 
   const [sellable, setSellable] = useState<
     Array<{
