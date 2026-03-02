@@ -8,6 +8,7 @@ import {
   Grid,
   GridItem,
   HStack,
+  IconButton,
   Spinner,
   Text,
   Tooltip,
@@ -40,14 +41,13 @@ import { ItemEquipModal } from '../components/ItemEquipModal';
 import { Level } from '../components/Level';
 import { LevelingPanel } from '../components/LevelingPanel';
 import { PolygonalCard } from '../components/PolygonalCard';
-import { LeaderboardIconSvg, MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useChat } from '../contexts/ChatContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
-import { HOME_PATH, LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
+import { HOME_PATH } from '../Routes';
 import {
   MAX_EQUIPPED_ARMOR,
   MAX_EQUIPPED_WEAPONS,
@@ -440,43 +440,6 @@ export const CharacterPage = (): JSX.Element => {
                 mt={10}
               />
 
-              <VStack
-                bottom={6}
-                mt={{ base: 12, sm: 20 }}
-                left={0}
-                position={{ base: 'static', lg: 'absolute' }}
-                px={{ base: 0, lg: 6 }}
-                spacing={3}
-                w="100%"
-              >
-                {isOwner ? (
-                  <Button
-                    leftIcon={<MarketplaceIconSvg theme="dark" />}
-                    onClick={() => navigate(MARKETPLACE_PATH)}
-                    variant="white"
-                    w="100%"
-                  >
-                    Marketplace
-                  </Button>
-                ) : (
-                  <Button
-                    leftIcon={<IoChatbubble />}
-                    onClick={onOpenChat}
-                    variant="white"
-                    w="100%"
-                  >
-                    Chat
-                  </Button>
-                )}
-                <Button
-                  leftIcon={<LeaderboardIconSvg theme="dark" />}
-                  onClick={() => navigate(LEADERBOARD_PATH)}
-                  variant="white"
-                  w="100%"
-                >
-                  Leaderboard
-                </Button>
-              </VStack>
             </PolygonalCard>
           </GridItem>
           <GridItem
@@ -524,7 +487,7 @@ export const CharacterPage = (): JSX.Element => {
               <Text fontWeight={500} my={12} size={{ base: 'sm', sm: 'md' }}>
                 {character.description}
               </Text>
-              {isOwner && (
+              {isOwner ? (
                 <Button
                   borderRadius="4px"
                   bottom={6}
@@ -536,6 +499,17 @@ export const CharacterPage = (): JSX.Element => {
                 >
                   Edit Character
                 </Button>
+              ) : (
+                <IconButton
+                  aria-label="Chat"
+                  bottom={6}
+                  icon={<IoChatbubble />}
+                  left={6}
+                  onClick={onOpenChat}
+                  position="absolute"
+                  size="sm"
+                  variant="white"
+                />
               )}
             </PolygonalCard>
           </GridItem>

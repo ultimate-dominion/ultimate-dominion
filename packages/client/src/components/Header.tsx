@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Drawer,
   DrawerBody,
@@ -10,15 +11,17 @@ import {
   Grid,
   GridItem,
   HStack,
+  IconButton,
   Image,
   Link,
+  Spinner,
   Stack,
+  Text,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useCallback, useMemo } from 'react';
-// import { FaDiscord } from 'react-icons/fa';
-// import { FaXTwitter } from 'react-icons/fa6';
+import { useCallback, useMemo, useState } from 'react';
 import { IoMdMenu } from 'react-icons/io';
+import { IoSettingsOutline } from 'react-icons/io5';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -29,41 +32,34 @@ import {
   CHARACTERS_PATH,
   GAME_BOARD_PATH,
   HOME_PATH,
-  ITEM_PATH,
   LEADERBOARD_PATH,
   MARKETPLACE_PATH,
-  SHOP_PATH,
 } from '../Routes';
 
-import { BackCaretSvg } from './SVGs';
+type NavItem = {
+  label: string;
+  path: string;
+  isActive: (pathname: string) => boolean;
+};
 
-const PAGES_WITH_BACK_BUTTON = [
-  CHARACTERS_PATH,
-  LEADERBOARD_PATH,
-  MARKETPLACE_PATH,
-  SHOP_PATH,
-];
-
-export const Header = ({
-  onOpenWalletDetailsModal,
-}: {
-  onOpenWalletDetailsModal: () => void;
-}): JSX.Element => {
+export const Header = (): JSX.Element => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     delegatorAddress,
+    onOpenWalletDetailsModal,
     systemCalls: { endShopEncounter },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
 
   const exitShopTx = useTransaction({ actionName: 'exit shop' });
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   const onEndShopEncounter = useCallback(async () => {
-    if (!character) return;
-    if (!character.worldEncounter) return;
-    if (!delegatorAddress) return;
+    if (!character) return false;
+    if (!character.worldEncounter) return true;
+    if (!delegatorAddress) return false;
 
     const result = await exitShopTx.execute(async () => {
       const { error, success } = await endShopEncounter(
@@ -74,34 +70,29 @@ export const Header = ({
 
     if (result !== undefined) {
       await refreshCharacter();
-      onClose();
+      return true;
     }
+    return false;
   }, [
     character,
     delegatorAddress,
     endShopEncounter,
     exitShopTx,
-    onClose,
     refreshCharacter,
   ]);
 
-  const onBack = useCallback(async () => {
-    if (pathname.includes(ITEM_PATH)) {
-      navigate(-1);
-      return;
-    }
-
-    if (pathname === MARKETPLACE_PATH) {
-      navigate(GAME_BOARD_PATH);
-      return;
-    }
-
-    if (character?.worldEncounter) {
-      await onEndShopEncounter();
-    }
-
-    navigate(-1);
-  }, [character, navigate, onEndShopEncounter, pathname]);
+  const shopGuardedNavigate = useCallback(
+    async (to: string) => {
+      if (character?.worldEncounter) {
+        setNavigatingTo(to);
+        const exited = await onEndShopEncounter();
+        setNavigatingTo(null);
+        if (!exited) return;
+      }
+      navigate(to);
+    },
+    [character, navigate, onEndShopEncounter],
+  );
 
   const logoLink = useMemo(() => {
     if (pathname === HOME_PATH) {
@@ -112,16 +103,48 @@ export const Header = ({
       : GAME_BOARD_PATH;
   }, [pathname]);
 
-  const showWalletDetails = useMemo(() => {
+  // Show nav only when character is loaded (past Welcome/CharacterCreation)
+  const showNav = useMemo(() => {
     return (
       pathname !== HOME_PATH &&
-      !PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`)
+      pathname !== CHARACTER_CREATION_PATH &&
+      !!character?.id
     );
-  }, [pathname]);
+  }, [character?.id, pathname]);
 
-  const showBackButton = useMemo(() => {
-    return PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`);
-  }, [pathname]);
+  const navItems: NavItem[] = useMemo(() => {
+    if (!character?.id) return [];
+    return [
+      {
+        label: 'Game',
+        path: GAME_BOARD_PATH,
+        isActive: (p: string) => p === GAME_BOARD_PATH,
+      },
+      {
+        label: 'Character',
+        path: `${CHARACTERS_PATH}/${character.id}`,
+        isActive: (p: string) => p.startsWith(CHARACTERS_PATH),
+      },
+      {
+        label: 'Marketplace',
+        path: MARKETPLACE_PATH,
+        isActive: (p: string) => p.startsWith(MARKETPLACE_PATH),
+      },
+      {
+        label: 'Leaderboard',
+        path: LEADERBOARD_PATH,
+        isActive: (p: string) => p === LEADERBOARD_PATH,
+      },
+    ];
+  }, [character?.id]);
+
+  const handleDrawerNav = useCallback(
+    async (to: string) => {
+      onClose();
+      await shopGuardedNavigate(to);
+    },
+    [onClose, shopGuardedNavigate],
+  );
 
   return (
     <Grid
@@ -135,41 +158,50 @@ export const Header = ({
     >
       <GridItem colSpan={1}>
         <Stack
+          align="center"
           direction={{ base: 'column-reverse', lg: 'row' }}
-          justify={
-            pathname === GAME_BOARD_PATH ||
-            pathname === CHARACTER_CREATION_PATH ||
-            PAGES_WITH_BACK_BUTTON.includes(`/${pathname.split('/')[1]}`)
-              ? 'space-between'
-              : 'end'
-          }
+          justify="space-between"
         >
-          <HStack spacing={4}>
-            {showWalletDetails && (
-              <Button
-                alignSelf={{ base: 'start', lg: 'center' }}
-                onClick={onOpenWalletDetailsModal}
-                fontSize="xs"
-                p={4}
-                size="sm"
-                variant="dark"
-              >
-                Account
-              </Button>
-            )}
-            {showBackButton && (
-              <Button
-                fontSize="xs"
-                isLoading={exitShopTx.isLoading}
-                leftIcon={<BackCaretSvg />}
-                onClick={onBack}
-                p={4}
-                size="sm"
-              >
-                {character?.worldEncounter ? 'Exit Shop' : 'Back'}
-              </Button>
-            )}
-          </HStack>
+          {/* Desktop nav items */}
+          {showNav && (
+            <HStack
+              display={{ base: 'none', lg: 'flex' }}
+              spacing={6}
+            >
+              {navItems.map(item => {
+                const active = item.isActive(pathname);
+                const isLoading =
+                  navigatingTo === item.path && exitShopTx.isLoading;
+                return (
+                  <Box
+                    key={item.label}
+                    as="button"
+                    borderBottom="2px solid"
+                    borderColor={active ? '#C87A2A' : 'transparent'}
+                    color={active ? '#E8DCC8' : '#8A7E6A'}
+                    cursor="pointer"
+                    fontFamily="Cinzel, serif"
+                    fontSize="13px"
+                    fontWeight={600}
+                    letterSpacing="0.05em"
+                    onClick={() => shopGuardedNavigate(item.path)}
+                    pb={1}
+                    textTransform="uppercase"
+                    transition="color 0.2s ease, border-color 0.2s ease"
+                    _hover={{ color: '#C4B89E' }}
+                  >
+                    {isLoading ? (
+                      <Spinner size="xs" />
+                    ) : (
+                      item.label
+                    )}
+                  </Box>
+                );
+              })}
+            </HStack>
+          )}
+
+          {/* Logo */}
           <Button
             mb={{ base: pathname !== HOME_PATH ? 2 : 0, sm: 2 }}
             mt={{ base: pathname !== HOME_PATH ? -1 : 0, sm: -1 }}
@@ -182,8 +214,24 @@ export const Header = ({
               width={{ base: '200px', sm: '225px' }}
             />
           </Button>
+
+          {/* Desktop settings gear */}
+          {showNav && (
+            <IconButton
+              aria-label="Settings"
+              color="#8A7E6A"
+              display={{ base: 'none', lg: 'flex' }}
+              icon={<IoSettingsOutline size={20} />}
+              onClick={onOpenWalletDetailsModal}
+              size="sm"
+              variant="unstyled"
+              _hover={{ color: '#C4B89E' }}
+            />
+          )}
         </Stack>
       </GridItem>
+
+      {/* Mobile hamburger + drawer */}
       <GridItem
         alignContent="center"
         display={{ lg: 'none' }}
@@ -206,45 +254,55 @@ export const Header = ({
             <DrawerHeader color="#D4A54A">Menu</DrawerHeader>
 
             <DrawerBody>
-              <Stack
-                direction={{ base: 'column' }}
-                spacing={{ base: 4, md: 10 }}
-              >
+              <Stack direction="column" spacing={4}>
+                {showNav ? (
+                  <>
+                    {navItems.map(item => {
+                      const active = item.isActive(pathname);
+                      return (
+                        <Text
+                          key={item.label}
+                          as="button"
+                          alignSelf="start"
+                          color={active ? '#E8DCC8' : '#8A7E6A'}
+                          fontFamily="Cinzel, serif"
+                          fontSize="sm"
+                          fontWeight={active ? 700 : 500}
+                          onClick={() => handleDrawerNav(item.path)}
+                          textAlign="left"
+                          textTransform="uppercase"
+                          _hover={{ color: '#C4B89E' }}
+                        >
+                          {item.label}
+                        </Text>
+                      );
+                    })}
+                    <Text
+                      as="button"
+                      alignSelf="start"
+                      color="#8A7E6A"
+                      fontSize="sm"
+                      fontWeight={500}
+                      onClick={() => {
+                        onClose();
+                        onOpenWalletDetailsModal();
+                      }}
+                      textAlign="left"
+                      _hover={{ color: '#C4B89E' }}
+                    >
+                      Settings
+                    </Text>
+                  </>
+                ) : null}
                 <Link
                   alignSelf="start"
-                  fontSize={{ base: 'xs', sm: 'sm' }}
+                  color="#8A7E6A"
+                  fontSize="sm"
                   href="https://www.ultimatedominion.com/"
                   isExternal
                 >
                   About
                 </Link>
-                <Link
-                  alignSelf="start"
-                  as={RouterLink}
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                  onClick={onClose}
-                  to={MARKETPLACE_PATH}
-                >
-                  Marketplace
-                </Link>
-                <Link
-                  alignSelf="start"
-                  as={RouterLink}
-                  fontSize={{ base: 'xs', sm: 'sm' }}
-                  onClick={onClose}
-                  to={LEADERBOARD_PATH}
-                >
-                  Leaderboard
-                </Link>
-                {/* <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
-                  Guild Info
-                </Link>
-                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
-                  Map Info
-                </Link>
-                <Link alignSelf="start" fontSize={{ base: 'xs', sm: 'sm' }}>
-                  Create Map
-                </Link> */}
               </Stack>
             </DrawerBody>
 

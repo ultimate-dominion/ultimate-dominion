@@ -9,33 +9,22 @@ import {
   Tooltip,
   useBreakpointValue,
   VStack,
-  keyframes,
 } from '@chakra-ui/react';
 import { DARK_INSET_SHADOW } from '../utils/theme';
 import { useGameValue, getTableEntries, encodeUint256Key, toBigInt } from '../lib/gameStore';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import {
   IoIosArrowForward,
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
-import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
-import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
-
-const fadeSlideIn = keyframes`
-  0% { opacity: 0; transform: translateY(4px); }
-  20% { opacity: 1; transform: translateY(0); }
-  80% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-2px); }
-`;
 
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
-import { LeaderboardIconSvg, MarketplaceIconSvg } from './SVGs';
 import { TileScout } from './TileScout';
 
 export const StatsPanel = (): JSX.Element => {
@@ -45,16 +34,6 @@ export const StatsPanel = (): JSX.Element => {
 
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const { delta: rankDelta, rank: goldRank } = useLeaderboardRank();
-
-  const [showDelta, setShowDelta] = useState(false);
-  useEffect(() => {
-    if (rankDelta !== 0) {
-      setShowDelta(true);
-      const timer = setTimeout(() => setShowDelta(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [rankDelta]);
 
   const maxLevelXpRequirement = useMemo(() => {
     const levelsEntries = getTableEntries('Levels');
@@ -345,71 +324,6 @@ export const StatsPanel = (): JSX.Element => {
           Level Up!
         </Button>
       )}
-
-      <Divider borderColor="grey300" mt={2} />
-
-      <HStack
-        justifyContent="center"
-        gap={2}
-        py={2}
-        px={2}
-        w="100%"
-      >
-        <Box flex={1} position="relative">
-          <Button
-            as={RouterLink}
-            leftIcon={<MarketplaceIconSvg size={3} theme="dark" />}
-            size="sm"
-            to={MARKETPLACE_PATH}
-            variant="outline"
-            w="100%"
-          >
-            Marketplace
-          </Button>
-        </Box>
-        <Box flex={1} position="relative">
-          <Button
-            as={RouterLink}
-            leftIcon={<LeaderboardIconSvg size={3} theme="dark" />}
-            size="sm"
-            to={LEADERBOARD_PATH}
-            variant="outline"
-            w="100%"
-          >
-            Leaderboard
-            {goldRank > 0 && (
-              <Text
-                as="span"
-                bg="rgba(212,165,74,0.2)"
-                borderRadius="sm"
-                color="yellow"
-                fontFamily="mono"
-                fontSize="2xs"
-                fontWeight={700}
-                ml={1.5}
-                px={1}
-              >
-                #{goldRank}
-              </Text>
-            )}
-          </Button>
-          {showDelta && rankDelta !== 0 && (
-            <Text
-              animation={`${fadeSlideIn} 5s ease-in-out forwards`}
-              color={rankDelta > 0 ? '#5A8A3E' : '#C84040'}
-              fontSize="2xs"
-              fontWeight={700}
-              left="50%"
-              position="absolute"
-              top="-14px"
-              transform="translateX(-50%)"
-              whiteSpace="nowrap"
-            >
-              {rankDelta > 0 ? '▲' : '▼'} {Math.abs(rankDelta)}
-            </Text>
-          )}
-        </Box>
-      </HStack>
 
       {isDesktop && (
         <>

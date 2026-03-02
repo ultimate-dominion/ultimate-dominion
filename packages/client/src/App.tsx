@@ -191,7 +191,7 @@ const AppInner = (): JSX.Element => {
       templateRows="auto 1fr auto"
       w="100%"
     >
-      <Header onOpenWalletDetailsModal={onOpenWalletDetailsModal} />
+      <Header />
       <Box
         m="0 auto"
         maxW="1800px"
