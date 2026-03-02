@@ -4,7 +4,7 @@ function setCors(res: any): void {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
-export default function handler(req: any, res: any) {
+export default async function handler(req: any, res: any) {
   setCors(res);
 
   if (req.method === "OPTIONS") {
@@ -30,11 +30,20 @@ export default function handler(req: any, res: any) {
 
     const forwardUrl = process.env.TELEMETRY_FORWARD_URL;
     if (forwardUrl) {
-      fetch(forwardUrl + "/metrics", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metrics: tagged }),
-      }).catch(() => {});
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      try {
+        await fetch(forwardUrl + "/metrics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ metrics: tagged }),
+          signal: controller.signal,
+        });
+      } catch {
+        // Forward failed or timed out — non-fatal
+      } finally {
+        clearTimeout(timeout);
+      }
     }
 
     return res.status(200).json({ ok: true });
