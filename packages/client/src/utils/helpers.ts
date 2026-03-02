@@ -16,6 +16,7 @@ import {
   PowerSource,
   Race,
 } from '../utils/types';
+import { ITEM_DESCRIPTIONS } from './itemDescriptions';
 
 export const etherToFixedNumber = (
   value: bigint | string,
@@ -239,7 +240,7 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
     const name = parseTextUri(uri);
     return {
       name,
-      description: '',
+      description: ITEM_DESCRIPTIONS[uri] ?? '',
       image: '',
     };
   }
