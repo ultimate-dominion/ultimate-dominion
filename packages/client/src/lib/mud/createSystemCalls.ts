@@ -181,8 +181,11 @@ export function createSystemCalls(
         characterId as `0x${string}`,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const txResult = await waitForTransaction(tx);
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to buy item.',
+        success: txResult.status === 'success',
+      };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -596,8 +599,11 @@ export function createSystemCalls(
         shopId as `0x${string}`,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const txResult = await waitForTransaction(tx);
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to restock shop.',
+        success: txResult.status === 'success',
+      };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -666,8 +672,11 @@ export function createSystemCalls(
         characterId as `0x${string}`,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const txResult = await waitForTransaction(tx);
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to sell item.',
+        success: txResult.status === 'success',
+      };
     } catch (e) {
       return {
         error: getContractError(e),

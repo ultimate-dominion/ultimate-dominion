@@ -86,55 +86,65 @@ export const AllowanceProvider = ({
 
   const fetchAllowances = useCallback(async () => {
     if (!character) return;
-    if (!goldTokenAddress || !itemsAddress || !marketplaceAddress || !lootManagerAddress || !shopAddress) return;
+    if (!goldTokenAddress || !itemsAddress) return;
 
     try {
-      const _goldMarketplaceAllowance = await publicClient.readContract({
-        address: goldTokenAddress as Address,
-        abi: erc20Abi,
-        functionName: 'allowance',
-        args: [character.owner as Address, marketplaceAddress as Address],
-      });
+      if (marketplaceAddress) {
+        const [goldAllowance, itemsApproval] = await Promise.all([
+          publicClient.readContract({
+            address: goldTokenAddress as Address,
+            abi: erc20Abi,
+            functionName: 'allowance',
+            args: [character.owner as Address, marketplaceAddress as Address],
+          }),
+          publicClient.readContract({
+            address: itemsAddress as Address,
+            abi: ERC_1155_ABI,
+            functionName: 'isApprovedForAll',
+            args: [character.owner as Address, marketplaceAddress as Address],
+          }) as Promise<boolean>,
+        ]);
+        setGoldMarketplaceAllowance(goldAllowance);
+        setItemsMarketplaceAllowance(itemsApproval);
+      }
 
-      const _itemsMarketplaceAllowance = (await publicClient.readContract({
-        address: itemsAddress as Address,
-        abi: ERC_1155_ABI,
-        functionName: 'isApprovedForAll',
-        args: [character.owner as Address, marketplaceAddress as Address],
-      })) as boolean;
+      if (lootManagerAddress) {
+        const [goldAllowance, itemsApproval] = await Promise.all([
+          publicClient.readContract({
+            address: goldTokenAddress as Address,
+            abi: erc20Abi,
+            functionName: 'allowance',
+            args: [character.owner as Address, lootManagerAddress as Address],
+          }),
+          publicClient.readContract({
+            address: itemsAddress as Address,
+            abi: ERC_1155_ABI,
+            functionName: 'isApprovedForAll',
+            args: [character.owner as Address, lootManagerAddress as Address],
+          }) as Promise<boolean>,
+        ]);
+        setGoldLootManagerAllowance(goldAllowance);
+        setItemsLootManagerAllowance(itemsApproval);
+      }
 
-      const _goldLootManagerAllowance = await publicClient.readContract({
-        address: goldTokenAddress as Address,
-        abi: erc20Abi,
-        functionName: 'allowance',
-        args: [character.owner as Address, lootManagerAddress as Address],
-      });
-      const _itemsLootManagerAllowance = (await publicClient.readContract({
-        address: itemsAddress as Address,
-        abi: ERC_1155_ABI,
-        functionName: 'isApprovedForAll',
-        args: [character.owner as Address, lootManagerAddress as Address],
-      })) as boolean;
-
-      const _goldShopAllowance = await publicClient.readContract({
-        address: goldTokenAddress as Address,
-        abi: erc20Abi,
-        functionName: 'allowance',
-        args: [character.owner as Address, shopAddress as Address],
-      });
-      const _itemsShopAllowance = (await publicClient.readContract({
-        address: itemsAddress as Address,
-        abi: ERC_1155_ABI,
-        functionName: 'isApprovedForAll',
-        args: [character.owner as Address, shopAddress as Address],
-      })) as boolean;
-
-      setGoldMarketplaceAllowance(_goldMarketplaceAllowance);
-      setItemsMarketplaceAllowance(_itemsMarketplaceAllowance);
-      setGoldLootManagerAllowance(_goldLootManagerAllowance);
-      setItemsLootManagerAllowance(_itemsLootManagerAllowance);
-      setGoldShopAllowance(_goldShopAllowance);
-      setItemsShopAllowance(_itemsShopAllowance);
+      if (shopAddress) {
+        const [goldAllowance, itemsApproval] = await Promise.all([
+          publicClient.readContract({
+            address: goldTokenAddress as Address,
+            abi: erc20Abi,
+            functionName: 'allowance',
+            args: [character.owner as Address, shopAddress as Address],
+          }),
+          publicClient.readContract({
+            address: itemsAddress as Address,
+            abi: ERC_1155_ABI,
+            functionName: 'isApprovedForAll',
+            args: [character.owner as Address, shopAddress as Address],
+          }) as Promise<boolean>,
+        ]);
+        setGoldShopAllowance(goldAllowance);
+        setItemsShopAllowance(itemsApproval);
+      }
     } catch (e) {
       renderError((e as Error)?.message ?? 'Could not get allowances', e);
     }
