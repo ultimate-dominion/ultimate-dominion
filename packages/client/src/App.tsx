@@ -101,19 +101,8 @@ const AppInner = (): JSX.Element => {
     if (!burnerBalanceFetched || !isSynced) return;
     if (DEFAULT_CHAIN_ID === garnet.id) return;
 
-    // Embedded users: gas is sponsored (EIP-7702) — don't show wallet modal
-    if (authMethod === 'embedded') {
-      // Check if level 3+ with 0 ETH and 0 Gold → show OutOfResources
-      if (
-        character &&
-        character.level >= 3n &&
-        burnerBalance === '0' &&
-        character.externalGoldBalance === 0n
-      ) {
-        onOpenOutOfResources();
-      }
-      return;
-    }
+    // Embedded users: gas is fully sponsored (EIP-7702) — never show modals
+    if (authMethod === 'embedded') return;
 
     // External users: show wallet modal if balance is 0
     if (burnerBalance === '0') {
