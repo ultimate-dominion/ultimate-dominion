@@ -1,7 +1,7 @@
 import { Box, Center, HStack, Image, keyframes, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
+import { getEmoji, removeEmoji } from '../utils/helpers';
 import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
 import { getRarityAnimation, getRarityColor, getRarityGlow, getRarityName } from '../utils/rarityHelpers';
 import {
@@ -51,37 +51,69 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   }, [isEquipped]);
 
   const itemStats = useMemo(() => {
+    // Helper to format a stat modifier: returns "LABEL +N" or null if zero
+    const fmtMod = (label: string, val: bigint) => {
+      const n = Number(val);
+      if (n === 0) return null;
+      return { label, value: `${n >= 0 ? '+' : ''}${n}`, positive: n > 0 };
+    };
+
+    // Helper to render stat chips (non-zero mods only)
+    const renderMods = (mods: { label: string; value: string; positive: boolean }[]) => {
+      if (mods.length === 0) return null;
+      return (
+        <HStack spacing={1} flexWrap="wrap">
+          {mods.map(m => (
+            <Text
+              key={m.label}
+              as="span"
+              size={{ base: '2xs', sm: 'xs' }}
+              fontFamily="'Fira Code', monospace"
+            >
+              <Text as="span" color="#8A7E6A">{m.label}</Text>{' '}
+              <Text as="span" color={m.positive ? '#5A8A3E' : '#B83A2A'} fontWeight={600}>
+                {m.value}
+              </Text>
+            </Text>
+          ))}
+        </HStack>
+      );
+    };
+
+    // Helper to render requirements (non-zero only)
+    const renderReqs = (minLevel: bigint, reqs: { minStrength: bigint; minAgility: bigint; minIntelligence: bigint }) => {
+      const parts: string[] = [];
+      if (Number(minLevel) > 0) parts.push(`LVL ${minLevel}`);
+      if (Number(reqs.minStrength) > 0) parts.push(`STR ${reqs.minStrength}`);
+      if (Number(reqs.minAgility) > 0) parts.push(`AGI ${reqs.minAgility}`);
+      if (Number(reqs.minIntelligence) > 0) parts.push(`INT ${reqs.minIntelligence}`);
+      if (parts.length === 0) return null;
+      return (
+        <Text size="2xs" color="#C87A2A" fontFamily="'Fira Code', monospace">
+          Requires: {parts.join(' ')}
+        </Text>
+      );
+    };
+
     if (item.itemType === ItemType.Consumable) {
       const { agiModifier, hpRestoreAmount, intModifier, strModifier } =
         item as Consumable;
 
-      if (hpRestoreAmount === BigInt(0)) {
+      if (hpRestoreAmount > BigInt(0)) {
         return (
-          <Stack
-            alignItems="start"
-            direction={{ base: 'column', lg: 'row' }}
-            spacing={{ base: 0, lg: 2 }}
-          >
-            <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
-              Mods:
-            </Text>
-            <Text size={{ base: '2xs', sm: 'xs' }}>
-              STR {getStatSymbol(strModifier.toString())}
-              {strModifier.toString()} AGI{' '}
-              {getStatSymbol(agiModifier.toString())}
-              {agiModifier.toString()} INT{' '}
-              {getStatSymbol(intModifier.toString())}
-              {intModifier.toString()}
-            </Text>
-          </Stack>
+          <Text size={{ base: '2xs', sm: 'xs' }} color="#5A8A3E" fontWeight={600}>
+            Restores {hpRestoreAmount.toString()} HP
+          </Text>
         );
       }
 
-      return (
-        <Text size={{ base: '2xs', sm: 'xs' }}>
-          Restores {hpRestoreAmount.toString()} HP
-        </Text>
-      );
+      const mods = [
+        fmtMod('STR', strModifier),
+        fmtMod('AGI', agiModifier),
+        fmtMod('INT', intModifier),
+      ].filter(Boolean) as { label: string; value: string; positive: boolean }[];
+
+      return renderMods(mods);
     }
 
     if (item.itemType === ItemType.Spell || item.itemType === ItemType.Weapon) {
@@ -89,38 +121,17 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         item as Spell;
 
       return (
-        <VStack alignItems="start" spacing={0}>
-          <Stack
-            alignItems="start"
-            direction={{ base: 'column', lg: 'row' }}
-            spacing={{ base: 0, lg: 2 }}
-          >
-            <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
-              Damage Range:
-            </Text>
-            <Text size="2xs">
-              {minDamage.toString()} - {maxDamage.toString()}
-            </Text>
-          </Stack>
-          <Stack
-            alignItems="start"
-            direction={{ base: 'column', lg: 'row' }}
-            spacing={{ base: 0, lg: 2 }}
-          >
-            <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
-              Requirements:
-            </Text>
-            <Text size="2xs">
-              LVL {minLevel.toString()} STR{' '}
-              {statRestrictions.minStrength.toString()} AGI{' '}
-              {statRestrictions.minAgility.toString()} INT{' '}
-              {statRestrictions.minIntelligence.toString()}
-            </Text>
-          </Stack>
+        <VStack alignItems="start" spacing={0.5}>
+          <Text size={{ base: '2xs', sm: 'xs' }} fontFamily="'Fira Code', monospace">
+            <Text as="span" color="#8A7E6A">DMG</Text>{' '}
+            <Text as="span" color="#E8DCC8" fontWeight={600}>{minDamage.toString()}–{maxDamage.toString()}</Text>
+          </Text>
+          {renderReqs(minLevel, statRestrictions)}
         </VStack>
       );
     }
 
+    // Armor and Weapon (non-spell)
     const {
       minLevel,
       statRestrictions,
@@ -129,41 +140,18 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       intModifier,
     } = item as Armor;
 
+    const mods = [
+      fmtMod('STR', strModifier),
+      fmtMod('AGI', agiModifier),
+      fmtMod('INT', intModifier),
+      fmtMod('HP', (item as Armor).hpModifier),
+      fmtMod('ARM', (item as Armor).armorModifier),
+    ].filter(Boolean) as { label: string; value: string; positive: boolean }[];
+
     return (
-      <VStack alignItems="start" spacing={0}>
-        <Stack
-          alignItems="start"
-          direction={{ base: 'column', lg: 'row' }}
-          spacing={{ base: 0, lg: 2 }}
-        >
-          <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
-            Mods:
-          </Text>
-          <Text size="2xs">
-            STR {getStatSymbol(strModifier.toString())}
-            {strModifier.toString()} AGI {getStatSymbol(agiModifier.toString())}
-            {agiModifier.toString()} INT {getStatSymbol(intModifier.toString())}
-            {intModifier.toString()}{' '}
-            {(item as Armor).armorModifier
-              ? `ARM ${getStatSymbol((item as Armor).armorModifier.toString())}${(item as Armor).armorModifier}`
-              : ''}
-          </Text>
-        </Stack>
-        <Stack
-          alignItems="start"
-          direction={{ base: 'column', lg: 'row' }}
-          spacing={{ base: 0, lg: 2 }}
-        >
-          <Text fontWeight="bold" size={{ base: '2xs', sm: 'xs' }}>
-            Requirements:
-          </Text>
-          <Text size="2xs">
-            LVL {minLevel.toString()} STR{' '}
-            {statRestrictions.minStrength.toString()} AGI{' '}
-            {statRestrictions.minAgility.toString()} INT{' '}
-            {statRestrictions.minIntelligence.toString()}
-          </Text>
-        </Stack>
+      <VStack alignItems="start" spacing={0.5}>
+        {renderMods(mods)}
+        {renderReqs(minLevel, statRestrictions)}
       </VStack>
     );
   }, [item]);
@@ -356,15 +344,23 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
         <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }} color={rarityColor}>
           {removeEmoji(name)}
         </Text>
-        <Text fontWeight={500} size={{ base: 'xs', sm: 'sm' }}>
-          STR{getStatSymbol(strModifier.toString())}
-          {strModifier.toString()} AGI{getStatSymbol(agiModifier.toString())}
-          {agiModifier.toString()} INT{getStatSymbol(intModifier.toString())}
-          {intModifier.toString()}{' '}
-          {(item as Armor).armorModifier
-            ? `ARM${getStatSymbol((item as Armor).armorModifier.toString())}${(item as Armor).armorModifier}`
-            : ''}
-        </Text>
+        <HStack spacing={1} flexWrap="wrap">
+          {[
+            { label: 'STR', val: strModifier },
+            { label: 'AGI', val: agiModifier },
+            { label: 'INT', val: intModifier },
+            { label: 'ARM', val: (item as Armor).armorModifier },
+          ]
+            .filter(s => s.val && Number(s.val) !== 0)
+            .map(s => (
+              <Text key={s.label} fontWeight={500} size={{ base: 'xs', sm: 'sm' }} fontFamily="'Fira Code', monospace">
+                <Text as="span" color="#8A7E6A">{s.label}</Text>{' '}
+                <Text as="span" color={Number(s.val) > 0 ? '#5A8A3E' : '#B83A2A'}>
+                  {Number(s.val) >= 0 ? '+' : ''}{s.val?.toString()}
+                </Text>
+              </Text>
+            ))}
+        </HStack>
       </Box>
     </HStack>
   );

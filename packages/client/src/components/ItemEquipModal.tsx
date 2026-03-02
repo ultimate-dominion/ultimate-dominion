@@ -268,6 +268,12 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     return searchParams;
   }, []);
 
+  const sellingSearchParams = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set('orderType', OrderType.Selling);
+    return searchParams;
+  }, []);
+
   if (isEquipped) {
     return (
       <Modal isOpen={isOpen} onClose={isLoading ? () => {} : onClose}>
@@ -303,7 +309,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               </Text>
             )}
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter gap={3} flexWrap="wrap" justifyContent="center">
             <Button isDisabled={isLoading} onClick={onClose} variant="ghost">
               No
             </Button>
@@ -315,7 +321,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               }
               isLoading={unequipTx.isLoading}
               loadingText="Unequipping..."
-              mr={3}
               onClick={() =>
                 isOwner
                   ? onUnequipItem()
@@ -324,8 +329,18 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                     )
               }
             >
-              Yes
+              {isOwner ? 'Unequip' : 'Yes'}
             </Button>
+            {isOwner && (
+              <Button
+                isDisabled={isLoading}
+                onClick={() => navigate(`${ITEM_PATH}/${item.tokenId}?${sellingSearchParams}`)}
+                variant="outline"
+                size="sm"
+              >
+                Sell on Marketplace
+              </Button>
+            )}
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -408,7 +423,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
             </Text>
           )}
         </ModalBody>
-        <ModalFooter gap={3}>
+        <ModalFooter gap={3} flexWrap="wrap" justifyContent="center">
           <Button isDisabled={isLoading} onClick={onClose} variant="ghost">
             No
           </Button>
@@ -426,8 +441,18 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                 : navigate(`${ITEM_PATH}/${item.tokenId}?${buyingSearchParams}`)
             }
           >
-            {needsSwap ? 'Swap' : 'Yes'}
+            {needsSwap ? 'Swap' : isOwner ? 'Equip' : 'Yes'}
           </Button>
+          {isOwner && (
+            <Button
+              isDisabled={isLoading}
+              onClick={() => navigate(`${ITEM_PATH}/${item.tokenId}?${sellingSearchParams}`)}
+              variant="outline"
+              size="sm"
+            >
+              Sell on Marketplace
+            </Button>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>
