@@ -23,14 +23,7 @@
     "@fontsource/fira-code": "^5.1.0",
     "@fontsource/inter": "^5.2.8",
     "@latticexyz/common": "2.2.23",
-    "@latticexyz/dev-tools": "2.2.23",
     "@latticexyz/faucet": "2.2.23",
-    "@latticexyz/protocol-parser": "2.2.23",
-    "@latticexyz/react": "2.2.23",
-    "@latticexyz/recs": "2.2.23",
-    "@latticexyz/schema-type": "2.2.23",
-    "@latticexyz/store-sync": "2.2.23",
-    "@latticexyz/utils": "2.2.23",
     "@latticexyz/world": "2.2.23",
     "@pushprotocol/restapi": "^1.7.25",
     "@rainbow-me/rainbowkit": "^2.1.1",
@@ -50,7 +43,8 @@
     "rxjs": "7.5.5",
     "thirdweb": "^5.115.0",
     "viem": "2.35.1",
-    "wagmi": "^2.9.6"
+    "wagmi": "^2.9.6",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/react": "18.2.22",

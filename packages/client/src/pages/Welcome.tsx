@@ -4,15 +4,11 @@ import {
   HStack,
   keyframes,
   Link,
-  Progress,
   Text,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import { SyncStep } from '@latticexyz/store-sync';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import Typist from 'react-typist';
@@ -36,35 +32,8 @@ export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { authMethod, isAuthenticated, isConnecting } = useAuth();
-  const {
-    components: { SyncProgress },
-    delegatorAddress,
-  } = useMUD();
+  const { delegatorAddress } = useMUD();
   const { character, isRefreshing } = useCharacter();
-
-  const syncProgress = useComponentValue(SyncProgress, singletonEntity);
-
-  // Sticky LIVE: once sync reaches LIVE (including cache restore), don't
-  // re-show loading bar if background delta sync briefly goes non-LIVE.
-  const wasLive = useRef(false);
-  if (syncProgress?.step === SyncStep.LIVE) {
-    wasLive.current = true;
-  }
-
-  const [syncStalled, setSyncStalled] = useState(false);
-
-  useEffect(() => {
-    if (syncProgress && syncProgress.step === SyncStep.LIVE) {
-      setSyncStalled(false);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setSyncStalled(true);
-    }, 30000);
-
-    return () => clearTimeout(timer);
-  }, [syncProgress]);
 
   // Auto-navigate when fully set up (returning players, or just signed in)
   useEffect(() => {
@@ -200,37 +169,16 @@ export const Welcome = (): JSX.Element => {
             </Typist>
           </VStack>
 
-          {syncProgress && syncProgress.step !== SyncStep.LIVE && syncProgress.percentage < 100 && !wasLive.current ? (
-            <VStack justify="center" w={{ base: '80%', sm: '50%' }}>
-              <Text>Loading {Math.round(syncProgress.percentage)}%</Text>
-              <Progress value={Math.round(syncProgress.percentage)} w="100%" />
-              {syncStalled && (
-                <VStack spacing={2} mt={2}>
-                  <Text size="xs" color="grey500" textAlign="center">
-                    Taking longer than expected...
-                  </Text>
-                  <Button
-                    onClick={() => window.location.reload()}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Retry
-                  </Button>
-                </VStack>
-              )}
-            </VStack>
-          ) : (
-            <Button
-              animation={`${torchGlow} 4s ease-in-out infinite`}
-              color="#12100E"
-              letterSpacing="0.15em"
-              onClick={onPlay}
-              px={{ base: 16, sm: 24 }}
-              textTransform="uppercase"
-            >
-              Enter
-            </Button>
-          )}
+          <Button
+            animation={`${torchGlow} 4s ease-in-out infinite`}
+            color="#12100E"
+            letterSpacing="0.15em"
+            onClick={onPlay}
+            px={{ base: 16, sm: 24 }}
+            textTransform="uppercase"
+          >
+            Enter
+          </Button>
 
           <HStack
             fontFamily="'Cinzel', serif"

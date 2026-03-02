@@ -12,8 +12,6 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
 import { useMemo } from 'react';
 import { FaStoreAlt } from 'react-icons/fa';
 import { GiDeathSkull, GiPerson } from 'react-icons/gi';
@@ -22,6 +20,7 @@ import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useGameConfig } from '../lib/gameStore';
 import { ChatBox } from './ChatBox';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
@@ -55,18 +54,7 @@ const COMPASS_DIRECTIONS: {
   { label: 'S', direction: 'down', rotate: '180deg', dx: 0, dy: -1, gridRow: 3, gridCol: 2 },
 ];
 
-// Wrapper component that handles undefined MUD components
 export const MapPanel = (): JSX.Element => {
-  const { components } = useMUD();
-
-  if (!components?.UltimateDominionConfig) {
-    return <Box />;
-  }
-
-  return <MapPanelInner UltimateDominionConfig={components.UltimateDominionConfig} />;
-};
-
-const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any }): JSX.Element => {
   const { allCharacters, allMonsters, allShops, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { currentBattle } = useBattle();
   const { isRefreshing, onMove } = useMovement();
@@ -78,11 +66,8 @@ const MapPanelInner = ({ UltimateDominionConfig }: { UltimateDominionConfig: any
     return allCharacters.filter(character => character.isSpawned).length;
   }, [allCharacters]);
 
-  const configValue = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  );
-  const maxPlayers = configValue?.maxPlayers ?? BigInt(0);
+  const configValue = useGameConfig('UltimateDominionConfig');
+  const maxPlayers = configValue?.maxPlayers ? BigInt(configValue.maxPlayers as string) : BigInt(0);
 
   const adjacentTiles = useMemo(() => {
     if (!position) return null;

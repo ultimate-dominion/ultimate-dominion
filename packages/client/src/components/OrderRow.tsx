@@ -9,8 +9,6 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useEntityQuery } from '@latticexyz/react';
-import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
 import { useCallback, useMemo } from 'react';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
@@ -20,6 +18,7 @@ import { useAllowance } from '../contexts/AllowanceContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useTransaction } from '../hooks/useTransaction';
+import { useGameTable } from '../lib/gameStore';
 import {
   etherToFixedNumber,
   getEmoji,
@@ -51,9 +50,9 @@ export const OrderRow = ({
   refreshOrders,
 }: OrderRowProps): JSX.Element => {
   const {
-    components: { Characters },
     systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
+  const charactersTable = useGameTable('Characters');
   const { character, refreshCharacter } = useCharacter();
   const { goldMarketplaceAllowance, itemsMarketplaceAllowance } =
     useAllowance();
@@ -67,13 +66,15 @@ export const OrderRow = ({
     onOpen: onOpenAllowanceModal,
   } = useDisclosure();
 
-  const ownerCharacterName = useEntityQuery([
-    Has(Characters),
-    HasValue(Characters, { owner: order.offerer }),
-  ]).map(entity => {
-    const { name: nameBytes } = getComponentValueStrict(Characters, entity);
-    return hexToString(nameBytes as `0x${string}`, { size: 32 });
-  })[0];
+  const ownerCharacterName = useMemo(() => {
+    if (!charactersTable) return undefined;
+    for (const [, row] of Object.entries(charactersTable)) {
+      if ((row.owner as string)?.toLowerCase() === order.offerer?.toLowerCase()) {
+        return hexToString((row.name as string) as `0x${string}`, { size: 32 });
+      }
+    }
+    return undefined;
+  }, [charactersTable, order.offerer]);
 
   const onCancelOrder = useCallback(async () => {
     const result = await cancelTx.execute(async () => {

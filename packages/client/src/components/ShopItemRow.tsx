@@ -21,7 +21,6 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { Entity } from '@latticexyz/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
@@ -65,7 +64,7 @@ export const ShopItemRow = ({
   theme,
 }: {
   balance: bigint | null;
-  characterId: Entity;
+  characterId: string;
   isEquipped: boolean;
   item: ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate;
   itemIndex: string;

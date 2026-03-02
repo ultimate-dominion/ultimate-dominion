@@ -16,7 +16,6 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { Entity } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useMemo, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
@@ -109,7 +108,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       return {
         ...item,
         balance: BigInt(0),
-        itemId: zeroHash as Entity,
+        itemId: zeroHash as string,
         owner: zeroAddress,
       };
     });

@@ -1,10 +1,6 @@
 import { useDisclosure } from '@chakra-ui/react';
 import { type ContractWrite } from '@latticexyz/common';
 import { writeObserver } from '@latticexyz/common/actions';
-import { useComponentValue } from '@latticexyz/react';
-import { getComponentValue, overridableComponent } from '@latticexyz/recs';
-import { SyncStep } from '@latticexyz/store-sync';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import {
   createContext,
@@ -22,6 +18,8 @@ import {
   formatEther,
   getContract,
   type Hex,
+  padHex,
+  slice,
 } from 'viem';
 import { useWalletClient } from 'wagmi';
 
@@ -33,12 +31,10 @@ import {
   revokeDelegation,
 } from '../lib/mud/delegation';
 import {
-  ComponentsResult,
   NetworkResult,
   SystemCallsResult,
 } from '../lib/mud/setup';
 
-import { applyReceiptLogs } from '../lib/mud/applyReceiptLogs';
 import { useAuth } from './AuthContext';
 
 type AuthMethod = 'embedded' | 'external' | null;
@@ -48,7 +44,6 @@ type MUDContextType = {
   burnerAddress: Address;
   burnerBalance: string;
   burnerBalanceFetched: boolean;
-  components: ComponentsResult;
   delegatorAddress: Address | null;
   delegatorEntity: string | null;
   getBurner: () => void;
@@ -66,7 +61,6 @@ type MUDContextType = {
 const MUDContext = createContext<MUDContextType | null>(null);
 
 type SetupResult = {
-  components: ComponentsResult;
   network: NetworkResult;
   systemCalls: SystemCallsResult;
 };
@@ -77,7 +71,6 @@ type Props = {
 };
 
 // Outer component: resolves setupPromise, shows loading/error states.
-// No hooks that depend on setupResult live here — they're all in MUDProviderInner.
 export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
   const [setupResult, setSetupResult] = useState<SetupResult | null>(null);
   const [setupError, setSetupError] = useState<Error | null>(null);
@@ -112,8 +105,6 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
     );
   }
 
-  // setupResult is guaranteed non-null from here — hand off to inner component
-  // where ALL hooks are called unconditionally on every render.
   return <MUDProviderInner setupResult={setupResult}>{children}</MUDProviderInner>;
 };
 
@@ -144,27 +135,21 @@ const MUDProviderInner = ({
 
   // --- Embedded path state ---
   const [embeddedSetup, setEmbeddedSetup] = useState<{
-    components: ComponentsResult;
     network: NetworkResult;
     systemCalls: SystemCallsResult;
     walletAddress: Address;
   } | null>(null);
   const embeddedSetupDone = useRef(false);
 
-  const syncProgress = useComponentValue(
-    setupResult.components.SyncProgress,
-    singletonEntity,
-  );
-
   // =============================================
   // EMBEDDED PATH: Set up when embedded wallet is connected
+  // No longer waits for RECS SyncStep.LIVE — game store handles data readiness.
   // =============================================
   useEffect(() => {
     if (authMethod !== 'embedded') return;
     if (!embeddedWalletClient) return;
     if (!ownerAddress) return;
     if (embeddedSetupDone.current) return;
-    if (syncProgress?.step !== SyncStep.LIVE) return;
 
     embeddedSetupDone.current = true;
 
@@ -181,10 +166,8 @@ const MUDProviderInner = ({
     }
 
     // Use the Thirdweb wallet client directly — it has its own signing transport.
-    // Skip transactionQueue(): even with EIP-7702, Thirdweb manages its own
-    // nonce sequencing; layering MUD's queue on top causes receipt-polling conflicts.
     const walletClient = (embeddedWalletClient as any)
-      .extend(writeObserver({ onWrite: write => write$.next(write) }));
+      .extend(writeObserver({ onWrite: (write: ContractWrite) => write$.next(write) }));
 
     const rawWorldContract = getContract({
       address: setupResult.network.worldContract.address,
@@ -193,7 +176,6 @@ const MUDProviderInner = ({
     });
 
     // Proxy: adds gas buffer (Thirdweb relayer underestimates for deep MUD call chains)
-    // and logs every contract write call for diagnostics.
     const worldContract = new Proxy(rawWorldContract, {
       get(target, prop) {
         if (prop === 'write') {
@@ -204,10 +186,6 @@ const MUDProviderInner = ({
               return async (...args: unknown[]) => {
                 const t0 = performance.now();
 
-                // Inject a 2x gas buffer to prevent out-of-gas reverts in the
-                // relayer's executeWithSig wrapper. The Thirdweb relayer estimates
-                // gas for the outer tx but the deep MUD delegatecall chain
-                // (7702 wallet → World → System → NFT checks) exceeds the estimate.
                 try {
                   const fnArgs = Array.isArray(args[0]) ? args[0] : [];
                   const opts = (args.length > 1 && args[1] && typeof args[1] === 'object')
@@ -228,8 +206,6 @@ const MUDProviderInner = ({
                     console.info(`[TX][SEND] ${String(fnName)}`, args);
                   }
                 } catch (estErr) {
-                  // If estimation fails, let it through without override — the
-                  // origFn will likely fail too with a better error message.
                   console.warn(`[TX][EST_FAIL] ${String(fnName)}`, estErr);
                 }
 
@@ -249,15 +225,8 @@ const MUDProviderInner = ({
       },
     });
 
-    const embeddedComponents = {
-      ...setupResult.components,
-      Position: overridableComponent(setupResult.components.Position),
-    };
-
-    // MUD's waitForTransaction relies on RECS block sync (storedBlockLogs$),
-    // which races with the Thirdweb transport's receipt availability — even
-    // with EIP-7702. Use viem's standard polling instead, then feed the
-    // receipt's MUD store events directly into RECS for instant UI updates.
+    // Simple waitForTransaction — no RECS log injection, just confirm on-chain.
+    // WebSocket will deliver the indexed state update to Zustand.
     const embeddedWaitForTransaction = async (tx: Hex) => {
       const receipt = await setupResult.network.publicClient.waitForTransactionReceipt({
         hash: tx,
@@ -267,7 +236,6 @@ const MUDProviderInner = ({
       if (receipt.status === 'reverted') {
         console.error(`[TX][RECEIPT] REVERTED on-chain tx=${tx} gasUsed=${receipt.gasUsed}`);
 
-        // Try to extract the revert reason by replaying the call
         try {
           const txData = await setupResult.network.publicClient.getTransaction({ hash: tx });
           console.error(`[TX][REVERT-DEBUG] from=${txData.from} to=${txData.to} input=${txData.input.slice(0, 10)}... block=${receipt.blockNumber}`);
@@ -278,11 +246,9 @@ const MUDProviderInner = ({
             data: txData.input,
             blockNumber: receipt.blockNumber,
           });
-          // If call succeeds, state changed between submission and now
           console.warn('[TX][REVERT-DEBUG] Replay succeeded — revert was state-dependent');
         } catch (revertErr: unknown) {
           const errMsg = revertErr instanceof Error ? revertErr.message : String(revertErr);
-          // Extract hex revert data if present (viem includes it in the error)
           const hexMatch = errMsg.match(/data:\s*(0x[0-9a-fA-F]+)/);
           if (hexMatch) {
             console.error(`[TX][REVERT-REASON] ${hexMatch[1]}`);
@@ -291,38 +257,19 @@ const MUDProviderInner = ({
         }
       } else {
         console.info(`[TX][RECEIPT] confirmed tx=${tx} block=${receipt.blockNumber}`);
-
-        // Apply receipt logs directly to RECS — bypasses independent block
-        // polling, giving instant UI updates with confirmed on-chain state.
-        try {
-          const applied = applyReceiptLogs(
-            setupResult.network.world,
-            receipt.logs,
-          );
-          if (applied > 0) {
-            console.info(`[TX][RECS] Applied ${applied} store events from tx=${tx}`);
-          }
-        } catch (recsErr) {
-          // Non-fatal — the polling loop will eventually pick up the state
-          console.warn('[TX][RECS] Failed to apply receipt logs', recsErr);
-        }
       }
 
       return receipt;
     };
 
-    const systemCalls = createSystemCalls(
-      {
-        ...setupResult.network,
-        waitForTransaction: embeddedWaitForTransaction,
-        delegatorAddress: ownerAddress,
-        worldContract,
-      },
-      embeddedComponents,
-    );
+    const systemCalls = createSystemCalls({
+      ...setupResult.network,
+      waitForTransaction: embeddedWaitForTransaction,
+      delegatorAddress: ownerAddress,
+      worldContract,
+    });
 
     setEmbeddedSetup({
-      components: embeddedComponents,
       network: {
         ...setupResult.network,
         walletClient,
@@ -339,13 +286,9 @@ const MUDProviderInner = ({
     embeddedWalletClient,
     ownerAddress,
     setupResult,
-    syncProgress,
   ]);
 
-  // Reset embedded setup if wallet disconnects OR a different user signs in.
-  // Without this, signing in as User B while User A's session was autoConnected
-  // keeps embeddedSetup (and delegatorAddress) locked to User A's address,
-  // because authMethod stays 'embedded' and embeddedSetupDone.current is true.
+  // Reset embedded setup if wallet disconnects or user changes
   useEffect(() => {
     if (authMethod !== 'embedded' && embeddedSetupDone.current) {
       embeddedSetupDone.current = false;
@@ -367,72 +310,75 @@ const MUDProviderInner = ({
   }, [authMethod, ownerAddress, embeddedSetup]);
 
   // =============================================
-  // EXTERNAL PATH: Existing delegation + burner flow (unchanged)
+  // EXTERNAL PATH: Delegation check via direct chain read (replaces RECS)
   // =============================================
 
-  // Reactively watch the delegation component so we detect delegation
-  // even if it syncs after getBurner was called
-  const delegationEntity = useMemo(() => {
-    if (!externalWalletClient) return undefined;
-    return encodeEntity(
-      { delegator: 'address', delegatee: 'address' },
-      {
-        delegator: externalWalletClient.account.address,
-        delegatee: setupResult.network.walletClient.account.address,
-      },
-    );
-  }, [externalWalletClient, setupResult.network]);
+  const checkDelegation = useCallback(async (): Promise<boolean> => {
+    if (!externalWalletClient || !setupResult.network) return false;
 
-  const delegationValue = useComponentValue(
-    setupResult.components.UserDelegationControl,
-    delegationEntity,
-  );
+    // Read delegation directly from the World contract's UserDelegationControl table
+    // This replaces the RECS-based delegation check
+    const DELEGATION_TABLE_ID =
+      '0x74620000000000000000000000000000557365724465706174696f6e436f6e74' as Hex;
+    const GSF_ABI = [
+      {
+        name: 'getStaticField',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [
+          { name: 'tableId', type: 'bytes32' },
+          { name: 'keyTuple', type: 'bytes32[]' },
+          { name: 'fieldIndex', type: 'uint8' },
+          { name: 'fieldLayout', type: 'bytes32' },
+        ],
+        outputs: [{ name: 'data', type: 'bytes32' }],
+      },
+    ] as const;
+
+    try {
+      const delegatorPadded = padHex(externalWalletClient.account.address, { size: 32 });
+      const delegateePadded = padHex(setupResult.network.walletClient.account.address, { size: 32 });
+
+      const delegationControlId = await setupResult.network.publicClient.readContract({
+        address: setupResult.network.worldContract.address as Hex,
+        abi: GSF_ABI,
+        functionName: 'getStaticField',
+        args: [
+          DELEGATION_TABLE_ID,
+          [delegatorPadded, delegateePadded],
+          0,
+          '0x0020000000000000000000000000000000000000000000000000000000000000' as Hex,
+        ],
+      });
+
+      return isDelegated({ delegationControlId } as { delegationControlId: Hex });
+    } catch {
+      return false;
+    }
+  }, [externalWalletClient, setupResult.network]);
 
   const getBurner = useCallback(async () => {
     if (!(externalWalletClient && setupResult.network)) return;
 
-    const delegation = getComponentValue(
-      setupResult.components.UserDelegationControl,
-      encodeEntity(
-        { delegator: 'address', delegatee: 'address' },
-        {
-          delegator: externalWalletClient.account.address,
-          delegatee: setupResult.network.walletClient.account.address,
-        },
-      ),
-    );
+    const hasDelegation = await checkDelegation();
 
     if (burner) return;
-    if (isDelegated(delegation as { delegationControlId: Hex })) {
+    if (hasDelegation) {
       burnerCreated.current = true;
       setBurner(
         createBurner(setupResult.network, externalWalletClient.account.address),
       );
     }
     setIsSynced(true);
-  }, [burner, externalWalletClient, setupResult]);
+  }, [burner, checkDelegation, externalWalletClient, setupResult]);
 
+  // Auto-check delegation on mount for external path
   useEffect(() => {
-    if (authMethod === 'embedded') return; // Skip for embedded path
-    if (syncProgress?.step !== SyncStep.LIVE) return;
+    if (authMethod === 'embedded') return;
     if (isSynced) return;
 
     getBurner();
-  }, [authMethod, getBurner, isSynced, syncProgress]);
-
-  // Reactively create burner when delegation appears in the RECS store
-  // This handles the race condition where getBurner runs before MUD syncs the delegation
-  useEffect(() => {
-    if (authMethod === 'embedded') return; // Skip for embedded path
-    if (burnerCreated.current || burner) return;
-    if (!(externalWalletClient && setupResult.network)) return;
-    if (!isDelegated(delegationValue as { delegationControlId: Hex })) return;
-
-    burnerCreated.current = true;
-    setBurner(
-      createBurner(setupResult.network, externalWalletClient.account.address),
-    );
-  }, [authMethod, burner, delegationValue, externalWalletClient, setupResult]);
+  }, [authMethod, getBurner, isSynced]);
 
   // =============================================
   // Burner balance polling (shared, works for both paths)
@@ -479,10 +425,6 @@ const MUDProviderInner = ({
         externalWalletClient,
         setupResult.network.walletClient.account.address,
       );
-      // RECS will sync the delegation removal automatically,
-      // causing delegationValue to become undefined and the UI
-      // to transition back to "pre-delegation" state.
-      // Reset burner state so the UI shows the pre-delegation view.
       burnerCreated.current = false;
       setBurner(null);
     } finally {
@@ -493,7 +435,6 @@ const MUDProviderInner = ({
   const handleLogoutRevoke = useCallback(async () => {
     if (authMethod !== 'external' || !externalWalletClient) return;
 
-    // Best-effort revoke — if it fails, still proceed with logout
     try {
       await revokeDelegation(
         setupResult.network,
@@ -511,37 +452,27 @@ const MUDProviderInner = ({
   // Build context value
   // =============================================
 
-  // isSynced means "delegation ready" but consumers also need RECS data.
-  // Gate on SyncStep.LIVE so Items/StarterItemPool are available.
-  // Sticky: once true, stays true (background delta sync can briefly drop LIVE).
-  const [isFullySynced, setIsFullySynced] = useState(false);
-  useEffect(() => {
-    if (!isFullySynced && isSynced && syncProgress?.step === SyncStep.LIVE) {
-      setIsFullySynced(true);
-    }
-  }, [isFullySynced, isSynced, syncProgress?.step]);
-
   const value = useMemo(() => {
     const noopRevoke = async () => {};
 
-    // EMBEDDED PATH: use embedded wallet directly, no delegation needed
+    // Helper to create a delegator entity string (matches the Zustand keyBytes format)
+    const makeDelegatorEntity = (addr: Address): string =>
+      ('0x' + addr.slice(2).toLowerCase().padStart(64, '0'));
+
+    // EMBEDDED PATH
     if (authMethod === 'embedded' && embeddedSetup) {
       return {
         authMethod: 'embedded' as AuthMethod,
         burnerAddress: embeddedSetup.walletAddress,
         burnerBalance,
         burnerBalanceFetched,
-        components: embeddedSetup.components,
-        delegatorAddress: embeddedSetup.walletAddress, // Same address — IS the signer
-        delegatorEntity: encodeEntity(
-          { address: 'address' },
-          { address: embeddedSetup.walletAddress },
-        ),
+        delegatorAddress: embeddedSetup.walletAddress,
+        delegatorEntity: makeDelegatorEntity(embeddedSetup.walletAddress),
         getBurner,
         handleLogoutRevoke: noopRevoke,
         handleRevokeDelegation: noopRevoke,
         isRevokingDelegation: false,
-        isSynced: isFullySynced,
+        isSynced,
         isWalletDetailsModalOpen,
         network: embeddedSetup.network,
         onCloseWalletDetailsModal,
@@ -557,14 +488,13 @@ const MUDProviderInner = ({
         burnerAddress: setupResult.network.walletClient.account.address,
         burnerBalance,
         burnerBalanceFetched,
-        components: setupResult.components,
         delegatorAddress: null,
         delegatorEntity: null,
         getBurner,
         handleLogoutRevoke,
         handleRevokeDelegation,
         isRevokingDelegation,
-        isSynced: isFullySynced,
+        isSynced,
         isWalletDetailsModalOpen,
         network: setupResult.network,
         onCloseWalletDetailsModal,
@@ -578,17 +508,15 @@ const MUDProviderInner = ({
       burnerAddress: burner.walletClient.account.address,
       burnerBalance,
       burnerBalanceFetched,
-      components: burner.components,
       delegatorAddress: burner.delegatorAddress,
-      delegatorEntity: encodeEntity(
-        { address: 'address' },
-        { address: burner.delegatorAddress },
-      ),
+      delegatorEntity: burner.delegatorAddress
+        ? makeDelegatorEntity(burner.delegatorAddress)
+        : null,
       getBurner,
       handleLogoutRevoke,
       handleRevokeDelegation,
       isRevokingDelegation,
-      isSynced: isFullySynced,
+      isSynced,
       isWalletDetailsModalOpen,
       network: burner.network,
       onCloseWalletDetailsModal,
@@ -604,7 +532,7 @@ const MUDProviderInner = ({
     getBurner,
     handleLogoutRevoke,
     handleRevokeDelegation,
-    isFullySynced,
+    isSynced,
     isRevokingDelegation,
     isWalletDetailsModalOpen,
     onCloseWalletDetailsModal,

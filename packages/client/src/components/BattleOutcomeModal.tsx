@@ -14,8 +14,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { zeroAddress, zeroHash } from 'viem';
 
@@ -23,7 +22,6 @@ import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
-import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
@@ -53,9 +51,6 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   battleOutcome,
 }): JSX.Element => {
   const { renderError } = useToast();
-  const {
-    components: { Levels },
-  } = useMUD();
   const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
   const {
     character,
@@ -107,13 +102,13 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     refreshEntities,
   ]);
 
-  const nextLevelXpRequirement =
-    useComponentValue(
-      Levels,
-      character
-        ? encodeEntity({ level: 'uint256' }, { level: BigInt(character.level) })
-        : undefined,
-    )?.experience ?? BigInt(0);
+  const nextLevelRow = useGameValue(
+    'Levels',
+    character
+      ? encodeUint256Key(BigInt(character.level))
+      : undefined,
+  );
+  const nextLevelXpRequirement = toBigInt(nextLevelRow?.experience);
 
   const canLevel = useMemo(() => {
     if (!character) return false;

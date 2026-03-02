@@ -1,13 +1,3 @@
-import { useEntityQuery } from '@latticexyz/react';
-import {
-  Entity,
-  getComponentValue,
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
-import { decodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -19,6 +9,13 @@ import {
   useState,
 } from 'react';
 
+import {
+  getTableEntries,
+  getTableValue,
+  toBigInt,
+  toNumber,
+  useGameTable,
+} from '../lib/gameStore';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { useTransactionProgress, type TransactionProgress } from '../hooks/useTransactionProgress';
@@ -86,13 +83,6 @@ export const BattleProvider = ({
 }: BattleProviderProps): JSX.Element => {
   const {
     authMethod,
-    components: {
-      ActionOutcome,
-      CombatEncounter,
-      CombatOutcome,
-      EncounterEntity,
-      StatusEffectValidity,
-    },
     delegatorAddress,
     systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp },
   } = useMUD();
@@ -119,34 +109,29 @@ export const BattleProvider = ({
     successMessage: 'Successfully fled the battle.',
   });
 
-  const battleEntities = useEntityQuery([Has(CombatEncounter)]);
+  // Reactive: re-renders when any CombatEncounter row changes
+  const combatEncounterTable = useGameTable('CombatEncounter');
 
-  const allBattles = useMemo(
-    () =>
-      battleEntities
-        .map(entity => {
-          const encounter = getComponentValueStrict(CombatEncounter, entity);
-
-          return {
-            attackers: encounter.attackers as Entity[],
-            currentTurn: encounter.currentTurn,
-            currentTurnTimer: encounter.currentTurnTimer,
-            defenders: encounter.defenders as Entity[],
-            encounterId: entity,
-            encounterType: encounter.encounterType,
-            end: encounter.end,
-            maxTurns: encounter.maxTurns,
-            start: encounter.start,
-          };
-        })
-        .filter(
-          encounter =>
-            character &&
-            (encounter?.attackers.includes(character.id) ||
-              encounter?.defenders.includes(character.id)),
-        ),
-    [battleEntities, CombatEncounter, character],
-  );
+  const allBattles = useMemo(() => {
+    return Object.entries(combatEncounterTable)
+      .map(([keyBytes, encounter]) => ({
+        attackers: (encounter.attackers as string[]) ?? [],
+        currentTurn: toBigInt(encounter.currentTurn),
+        currentTurnTimer: toBigInt(encounter.currentTurnTimer),
+        defenders: (encounter.defenders as string[]) ?? [],
+        encounterId: keyBytes,
+        encounterType: toNumber(encounter.encounterType),
+        end: toBigInt(encounter.end),
+        maxTurns: toBigInt(encounter.maxTurns),
+        start: toBigInt(encounter.start),
+      }))
+      .filter(
+        encounter =>
+          character &&
+          (encounter.attackers.includes(character.id) ||
+            encounter.defenders.includes(character.id)),
+      );
+  }, [combatEncounterTable, character]);
 
   const onContinueToBattleOutcome = useCallback((cont: boolean) => {
     setContinueToBattleOutcome(cont);
@@ -157,13 +142,14 @@ export const BattleProvider = ({
     const latestBattle = allBattles[allBattles.length - 1];
     if (!latestBattle) return null;
 
-    const latestCompletedBattle = allBattles
-      .filter(b => b.end !== BigInt(0))
-      .sort((a, b) => Number(b.end - a.end))[0] ?? null;
+    const latestCompletedBattle =
+      allBattles
+        .filter(b => b.end !== BigInt(0))
+        .sort((a, b) => Number(b.end - a.end))[0] ?? null;
 
     if (latestCompletedBattle) {
-      const combatOutcome = getComponentValue(
-        CombatOutcome,
+      const combatOutcome = getTableValue(
+        'CombatOutcome',
         latestCompletedBattle.encounterId,
       );
       if (latestBattle.end !== BigInt(0) && !combatOutcome) return null;
@@ -177,21 +163,23 @@ export const BattleProvider = ({
 
     return latestBattle;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allBattles, CombatOutcome, acknowledgeVersion]);
+  }, [allBattles, acknowledgeVersion]);
 
   const lastestBattleOutcome = useMemo(() => {
-    const latestCompletedBattle = allBattles
-      .filter(b => b.end !== BigInt(0))
-      .sort((a, b) => Number(b.end - a.end))[0] ?? null;
+    const latestCompletedBattle =
+      allBattles
+        .filter(b => b.end !== BigInt(0))
+        .sort((a, b) => Number(b.end - a.end))[0] ?? null;
     if (!latestCompletedBattle) return null;
 
-    const combatOutcome = getComponentValue(
-      CombatOutcome,
+    const combatOutcome = getTableValue(
+      'CombatOutcome',
       latestCompletedBattle.encounterId,
     );
     if (!combatOutcome) return null;
 
-    const winner = combatOutcome.attackersWin
+    const attackersWin = Boolean(combatOutcome.attackersWin);
+    const winner = attackersWin
       ? latestCompletedBattle.attackers[0]
       : latestCompletedBattle.defenders[0];
     if (!winner) return null;
@@ -200,20 +188,25 @@ export const BattleProvider = ({
       attackers: latestCompletedBattle.attackers,
       defenders: latestCompletedBattle.defenders,
       encounterId: latestCompletedBattle.encounterId,
-      endTime: combatOutcome.endTime,
-      expDropped: combatOutcome.expDropped,
-      goldDropped: combatOutcome.goldDropped,
-      itemsDropped: combatOutcome.itemsDropped.map(i => i.toString()),
-      playerFled: combatOutcome.playerFled,
+      endTime: toBigInt(combatOutcome.endTime),
+      expDropped: toBigInt(combatOutcome.expDropped),
+      goldDropped: toBigInt(combatOutcome.goldDropped),
+      itemsDropped: ((combatOutcome.itemsDropped as unknown[]) ?? []).map(i =>
+        i!.toString(),
+      ),
+      playerFled: Boolean(combatOutcome.playerFled),
       winner,
-    };
-  }, [allBattles, CombatOutcome]);
+    } as CombatOutcomeType;
+  }, [allBattles, combatEncounterTable]); // combatEncounterTable in deps so CombatOutcome reads re-fire when store updates
 
   const lastProcessedEncounterRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!lastestBattleOutcome || !character || !position) return;
-    if (lastProcessedEncounterRef.current === lastestBattleOutcome.encounterId) return;
+    if (
+      lastProcessedEncounterRef.current === lastestBattleOutcome.encounterId
+    )
+      return;
 
     lastProcessedEncounterRef.current = lastestBattleOutcome.encounterId;
 
@@ -224,36 +217,42 @@ export const BattleProvider = ({
 
     if (!winners.includes(character.id)) return;
 
-    const battle = allBattles.find(b => b.encounterId === lastestBattleOutcome.encounterId);
+    const battle = allBattles.find(
+      b => b.encounterId === lastestBattleOutcome.encounterId,
+    );
     const defeatedAreMobs = battle?.encounterType === EncounterType.PvE;
 
     checkCombatFragmentTriggers(
-      winners as string[],
-      defeated as string[],
+      winners,
+      defeated,
       position.x,
       position.y,
       defeatedAreMobs,
     ).catch(() => {});
-  }, [lastestBattleOutcome, character, position, allBattles, checkCombatFragmentTriggers]);
+  }, [
+    lastestBattleOutcome,
+    character,
+    position,
+    allBattles,
+    checkCombatFragmentTriggers,
+  ]);
 
   const opponent = useMemo(() => {
     if (!(character && currentBattle)) return null;
 
+    const participants = [
+      ...currentBattle.attackers,
+      ...currentBattle.defenders,
+    ];
+
     let possibleOpponent: Character | Monster | undefined = allMonsters.find(
-      monster =>
-        [...currentBattle.attackers, ...currentBattle.defenders].includes(
-          monster.id,
-        ),
+      monster => participants.includes(monster.id),
     );
 
     if (!possibleOpponent) {
       possibleOpponent = allCharacters
         .filter(c => c.id !== character.id)
-        .find(char =>
-          [...currentBattle.attackers, ...currentBattle.defenders].includes(
-            char.id,
-          ),
-        );
+        .find(char => participants.includes(char.id));
     }
 
     return possibleOpponent ?? null;
@@ -261,54 +260,47 @@ export const BattleProvider = ({
 
   const userCharacterForBattleRendering = useMemo(() => {
     if (!character) return null;
-
     return allCharacters.find(char => char.id === character.id) ?? null;
   }, [allCharacters, character]);
 
-  const attackOutcomeEntities = useEntityQuery([Has(ActionOutcome)]);
+  // Reactive: re-renders when any ActionOutcome row changes
+  const actionOutcomeTable = useGameTable('ActionOutcome');
 
-  const allAttackOutcomes = useMemo(
-    () =>
-      attackOutcomeEntities
-        .map(entity => {
-          const _attackOutcome = getComponentValueStrict(ActionOutcome, entity);
+  const allAttackOutcomes = useMemo(() => {
+    return Object.entries(actionOutcomeTable)
+      .map(([keyBytes, outcome]) => {
+        // keyBytes = 0x + encounterId(64 hex) + currentTurn(64 hex) + attackNumber(64 hex)
+        const clean = keyBytes.startsWith('0x') ? keyBytes.slice(2) : keyBytes;
+        const encounterId = '0x' + clean.slice(0, 64);
+        const currentTurn = BigInt('0x' + (clean.slice(64, 128) || '0'));
+        const attackNumber = BigInt('0x' + (clean.slice(128, 192) || '0'));
 
-          const { encounterId, currentTurn, attackNumber } = decodeEntity(
-            {
-              encounterId: 'bytes32',
-              currentTurn: 'uint256',
-              attackNumber: 'uint256',
-            },
-            entity,
-          );
-
-          return {
-            attackerDamageDelt: _attackOutcome.attackerDamageDelt,
-            attackerDied: _attackOutcome.attackerDied,
-            attackerId: _attackOutcome.attackerId,
-            attackNumber: attackNumber,
-            blockNumber: _attackOutcome.blockNumber,
-            crit: _attackOutcome.crit,
-            currentTurn: currentTurn,
-            damagePerHit: _attackOutcome.damagePerHit,
-            defenderDamageDelt: _attackOutcome.defenderDamageDelt,
-            defenderDied: _attackOutcome.defenderDied,
-            defenderId: _attackOutcome.defenderId,
-            effectIds: _attackOutcome.effectIds,
-            encounterId: encounterId,
-            hit: _attackOutcome.hit,
-            itemId: _attackOutcome.itemId.toString(),
-            miss: _attackOutcome.miss,
-            timestamp: _attackOutcome.timestamp,
-          } as AttackOutcomeType;
-        })
-        .filter(
-          attack =>
-            attack.attackerId === character?.id ||
-            attack.defenderId === character?.id,
-        ),
-    [attackOutcomeEntities, ActionOutcome, character],
-  );
+        return {
+          attackerDamageDelt: toBigInt(outcome.attackerDamageDelt),
+          attackerDied: Boolean(outcome.attackerDied),
+          attackerId: outcome.attackerId as string,
+          attackNumber,
+          blockNumber: toBigInt(outcome.blockNumber),
+          crit: Boolean(outcome.crit),
+          currentTurn,
+          damagePerHit: toBigInt(outcome.damagePerHit),
+          defenderDamageDelt: toBigInt(outcome.defenderDamageDelt),
+          defenderDied: Boolean(outcome.defenderDied),
+          defenderId: outcome.defenderId as string,
+          effectIds: (outcome.effectIds as string[]) ?? [],
+          encounterId,
+          hit: Boolean(outcome.hit),
+          itemId: outcome.itemId != null ? outcome.itemId.toString() : '0',
+          miss: Boolean(outcome.miss),
+          timestamp: toBigInt(outcome.timestamp),
+        } as AttackOutcomeType;
+      })
+      .filter(
+        attack =>
+          attack.attackerId === character?.id ||
+          attack.defenderId === character?.id,
+      );
+  }, [actionOutcomeTable, character]);
 
   const currentBattleAttackOutcomes = useMemo(
     () =>
@@ -319,35 +311,38 @@ export const BattleProvider = ({
   );
 
   const statusEffectActions: StatusAction[] = useMemo(() => {
-    if (!currentBattle || !StatusEffectValidity) return [];
+    if (!currentBattle) return [];
 
-    const encounterEntities = Array.from(
-      runQuery([
-        Has(EncounterEntity),
-        HasValue(EncounterEntity, { encounterId: currentBattle?.encounterId }),
-      ]),
+    const encounterEntityTable = getTableEntries('EncounterEntity');
+
+    const matchingEntries = Object.entries(encounterEntityTable).filter(
+      ([, row]) => {
+        const rowEncounterId = row.encounterId as string | undefined;
+        if (!rowEncounterId) return false;
+        // Compare normalised lowercase hex strings
+        return (
+          rowEncounterId.toLowerCase() ===
+          currentBattle.encounterId.toLowerCase()
+        );
+      },
     );
 
-    return encounterEntities
-      .map(entity => {
-        const encounter = getComponentValueStrict(EncounterEntity, entity);
-
-        const { appliedStatusEffects } = encounter;
+    return matchingEntries
+      .flatMap(([entityKeyBytes, encounter]) => {
+        const appliedStatusEffects =
+          (encounter.appliedStatusEffects as string[]) ?? [];
         const statusEffects = appliedStatusEffects.map(
           decodeAppliedStatusEffectId,
         );
 
-        const _statusEffectActions = statusEffects.map(effect => {
-          const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
-          const validity = getComponentValue(
-            StatusEffectValidity,
-            paddedEffectId,
-          );
+        return statusEffects.map(effect => {
+          const paddedEffectId = effect.effectId.padEnd(66, '0');
+          const validity = getTableValue('StatusEffectValidity', paddedEffectId);
           if (!validity) return null;
 
           const isActive =
-            BigInt(currentBattle.currentTurn) <=
-            effect.turnApplied + validity.validTurns;
+            toBigInt(currentBattle.currentTurn) <=
+            effect.turnApplied + toBigInt(validity.validTurns);
 
           const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
 
@@ -356,20 +351,18 @@ export const BattleProvider = ({
             effectId: paddedEffectId,
             name,
             turnStart: effect.turnApplied.toString(),
-            validTurns: validity.validTurns.toString(),
-            victimId: entity,
-          };
+            validTurns: toBigInt(validity.validTurns).toString(),
+            victimId: entityKeyBytes,
+          } as StatusAction;
         });
-
-        return _statusEffectActions;
       })
-      .flat()
       .filter((action): action is StatusAction => action !== null);
-  }, [currentBattle, EncounterEntity, StatusEffectValidity]);
+  }, [currentBattle, combatEncounterTable]); // combatEncounterTable triggers re-derive when store updates
 
   const onAttack = useCallback(
     async (itemId: string) => {
-      if (!delegatorAddress || !character || !currentBattle || !opponent) return;
+      if (!delegatorAddress || !character || !currentBattle || !opponent)
+        return;
       if (attackingItemId !== null) return; // prevent double-submit
 
       setAttackingItemId(itemId);
@@ -387,7 +380,6 @@ export const BattleProvider = ({
         localStorage.removeItem(CURRENT_BATTLE_OPPONENT_TURN_KEY);
         localStorage.removeItem(CURRENT_BATTLE_USER_TURN_KEY);
         // Don't clear attackingItemId — effect below clears when outcome arrives
-        // Don't call refreshCharacter — RECS sync handles it
       } else {
         renderError(result.error || 'Attack failed');
         failAttackProgress();
@@ -410,7 +402,7 @@ export const BattleProvider = ({
     ],
   );
 
-  // Clear attack loading state when new outcome data arrives from RECS sync
+  // Clear attack loading state when new outcome data arrives from store sync
   useEffect(() => {
     if (
       attackOutcomeCountAtAttack.current !== null &&
@@ -431,20 +423,14 @@ export const BattleProvider = ({
       attackOutcomeCountAtAttack.current = null;
     }, 10000);
     return () => clearTimeout(timeout);
-  }, [attackingItemId]);
+  }, [attackingItemId, failAttackProgress]);
 
   const onFleePvp = useCallback(async () => {
     if (!character || !delegatorAddress || !currentBattle) return;
     if (currentBattle.encounterType !== EncounterType.PvP) return;
 
     await fleeTx.execute(() => fleePvp(character.id));
-  }, [
-    character,
-    currentBattle,
-    delegatorAddress,
-    fleePvp,
-    fleeTx,
-  ]);
+  }, [character, currentBattle, delegatorAddress, fleePvp, fleeTx]);
 
   const contextValue = useMemo(
     () => ({

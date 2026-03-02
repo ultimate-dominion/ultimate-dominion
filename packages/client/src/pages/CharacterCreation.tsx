@@ -23,13 +23,6 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue, useEntityQuery } from '@latticexyz/react';
-import {
-  Entity,
-  getComponentValueStrict,
-  Has,
-} from '@latticexyz/recs';
-import { decodeEntity, encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FaLock } from 'react-icons/fa';
@@ -46,6 +39,14 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { useUploadFile } from '../hooks/useUploadFile';
+import {
+  decodeUint256FromKey,
+  encodeUint256Key,
+  toBigInt,
+  useGameConfig,
+  useGameTable,
+  useGameValue,
+} from '../lib/gameStore';
 import { DEFAULT_CHAIN_ID, EXPLORER_URLS } from '../lib/web3';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
@@ -112,13 +113,14 @@ const POWER_SOURCE_INFO = {
 };
 
 
-// Wrapper component that checks if MUD components are ready
+// Wrapper component that checks if store data is ready
 export const CharacterCreation = (): JSX.Element => {
-  const { components, isSynced } = useMUD();
+  const { isSynced } = useMUD();
+  const config = useGameConfig('UltimateDominionConfig');
 
-  // If components aren't ready, show loading
-  if (!components?.UltimateDominionConfig) {
-    console.info('[CharacterCreation] Wrapper: components not ready, isSynced:', isSynced);
+  // If config data isn't ready, show loading
+  if (!config) {
+    console.info('[CharacterCreation] Wrapper: config not ready, isSynced:', isSynced);
     return (
       <Center h="100vh">
         <Spinner size="xl" />
@@ -137,7 +139,6 @@ const CharacterCreationInner = (): JSX.Element => {
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const chainId = DEFAULT_CHAIN_ID;
   const {
-    components,
     delegatorAddress,
     isSynced,
     systemCalls: {
@@ -148,9 +149,6 @@ const CharacterCreationInner = (): JSX.Element => {
       rollBaseStats,
     },
   } = useMUD();
-  const Levels = components?.Levels;
-  const StarterItemPool = components?.StarterItemPool;
-  const UltimateDominionConfig = components?.UltimateDominionConfig;
   const {
     armorTemplates,
     isLoading: isLoadingItemTemplates,
@@ -167,8 +165,8 @@ const CharacterCreationInner = (): JSX.Element => {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  // Reactive query: re-renders when StarterItemPool records arrive via RECS sync
-  const starterPoolEntities = useEntityQuery(StarterItemPool ? [Has(StarterItemPool)] : []);
+  // Reactive query: re-renders when StarterItemPool records arrive via store sync
+  const starterItemPoolTable = useGameTable('StarterItemPool');
 
   // Implicit class system state
   const [selectedRace, setSelectedRace] = useState<Race>(Race.None);
@@ -207,31 +205,29 @@ const CharacterCreationInner = (): JSX.Element => {
     successMessage: 'Your character has awakened!',
   });
 
-  const { characterToken } = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  ) ?? { characterToken: null };
+  const configData = useGameConfig('UltimateDominionConfig');
+  const characterToken = configData?.characterToken as string | undefined ?? null;
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
     setShowError(false);
   }, [avatar, description, name]);
 
-  // Derive starter items reactively from RECS query (re-computes when records arrive)
+  // Derive starter items reactively from store query (re-computes when records arrive)
   const { availableStarterWeapons, availableStarterArmors } = useMemo(() => {
-    console.info('[StarterItems] StarterItemPool:', !!StarterItemPool, 'isLoadingTemplates:', isLoadingItemTemplates, 'entities:', starterPoolEntities.length, 'weapons:', weaponTemplates.length, 'armors:', armorTemplates.length);
-    if (!StarterItemPool || isLoadingItemTemplates) {
+    const starterPoolEntries = Object.entries(starterItemPoolTable);
+    console.info('[StarterItems] StarterItemPool entries:', starterPoolEntries.length, 'isLoadingTemplates:', isLoadingItemTemplates, 'weapons:', weaponTemplates.length, 'armors:', armorTemplates.length);
+    if (starterPoolEntries.length === 0 || isLoadingItemTemplates) {
       return { availableStarterWeapons: [] as Weapon[], availableStarterArmors: [] as Armor[] };
     }
 
     const starterWeapons: Weapon[] = [];
     const starterArmors: Armor[] = [];
 
-    starterPoolEntities.forEach(entity => {
-      const poolData = getComponentValueStrict(StarterItemPool, entity);
+    starterPoolEntries.forEach(([keyBytes, poolData]) => {
       if (!poolData.isStarter) return;
 
-      const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
+      const itemId = decodeUint256FromKey(keyBytes);
       const itemIdStr = itemId.toString();
       console.info('[StarterItems] Checking itemId:', itemIdStr, 'weaponMatch:', weaponTemplates.some(w => w.tokenId === itemIdStr), 'armorMatch:', armorTemplates.some(a => a.tokenId === itemIdStr));
 
@@ -240,7 +236,7 @@ const CharacterCreationInner = (): JSX.Element => {
         starterWeapons.push({
           ...weapon,
           balance: BigInt(1),
-          itemId: zeroHash as Entity,
+          itemId: zeroHash,
           owner: zeroAddress,
         });
         return;
@@ -251,7 +247,7 @@ const CharacterCreationInner = (): JSX.Element => {
         starterArmors.push({
           ...armor,
           balance: BigInt(1),
-          itemId: zeroHash as Entity,
+          itemId: zeroHash,
           owner: zeroAddress,
         });
       }
@@ -259,10 +255,9 @@ const CharacterCreationInner = (): JSX.Element => {
 
     return { availableStarterWeapons: starterWeapons, availableStarterArmors: starterArmors };
   }, [
-    StarterItemPool,
     armorTemplates,
     isLoadingItemTemplates,
-    starterPoolEntities,
+    starterItemPoolTable,
     weaponTemplates,
   ]);
 
@@ -546,11 +541,8 @@ const CharacterCreationInner = (): JSX.Element => {
     rolledOnce,
   ]);
 
-  const nextLevelXpRequirement =
-    useComponentValue(
-      Levels,
-      encodeEntity({ level: 'uint256' }, { level: BigInt('1') }),
-    )?.experience ?? BigInt(0);
+  const levelsRow = useGameValue('Levels', encodeUint256Key(BigInt(1)));
+  const nextLevelXpRequirement = levelsRow ? toBigInt(levelsRow.experience) : BigInt(0);
 
   const UploadedAvatar = useMemo(() => {
     return (

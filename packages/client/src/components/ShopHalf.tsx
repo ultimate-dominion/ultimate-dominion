@@ -12,7 +12,6 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { Entity } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
@@ -44,7 +43,7 @@ export const ShopHalf = ({
   orderType,
   shop,
 }: {
-  characterId: Entity;
+  characterId: string;
   items: Array<{
     balance: bigint | null;
     index: string;

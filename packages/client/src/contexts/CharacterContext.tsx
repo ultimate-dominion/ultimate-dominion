@@ -1,13 +1,4 @@
 import {
-  Entity,
-  getComponentValue,
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
-import {
   createContext,
   ReactNode,
   useCallback,
@@ -19,6 +10,16 @@ import {
 import { hexToString, zeroHash } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import {
+  encodeAddressKey,
+  encodeCompositeKey,
+  encodeUint256Key,
+  getTableValue,
+  toBigInt,
+  toNumber,
+  useGameTable,
+  useGameValue,
+} from '../lib/gameStore';
 import { STATUS_EFFECT_NAME_MAPPING } from '../utils/constants';
 import {
   decodeAppliedStatusEffectId,
@@ -37,15 +38,12 @@ import {
 import type {
   Armor,
   Character,
-  CharacterData,
   Consumable,
-  EntityStats,
   Spell,
   Weapon,
   WorldStatusEffect,
 } from '../utils/types';
 
-import { clearRecsCache } from '../lib/mud/recsCache';
 import { useItems } from './ItemsContext';
 import { useMUD } from './MUDContext';
 
@@ -87,78 +85,17 @@ export type CharacterProviderProps = {
   children: ReactNode;
 };
 
-// Wrapper component that checks if MUD components are ready
 export const CharacterProvider = ({
   children,
 }: CharacterProviderProps): JSX.Element => {
-  const { components, isSynced } = useMUD();
-
-  // Check if the essential components for character lookup are available
-  // Only require the minimum components needed to find and display a character
-  // Other components (for equipment, encounters, effects) may be empty tables
-  const componentsReady = !!(
-    components?.Characters &&
-    components?.CharactersTokenURI &&
-    components?.Stats
-  );
-
-  // If components aren't ready, render with default context
-  if (!componentsReady) {
-    return (
-      <CharacterContext.Provider
-        value={{
-          character: null,
-          equippedArmor: [],
-          equippedConsumables: [],
-          equippedSpells: [],
-          equippedWeapons: [],
-          inventoryArmor: [],
-          inventoryConsumables: [],
-          inventorySpells: [],
-          inventoryWeapons: [],
-          isMoveEquipped: false,
-          isRefreshing: true,
-          refreshCharacter: async () => {},
-        }}
-      >
-        {children}
-      </CharacterContext.Provider>
-    );
-  }
-
-  return (
-    <CharacterProviderInner components={components} isSynced={isSynced}>
-      {children}
-    </CharacterProviderInner>
-  );
+  return <CharacterProviderInner>{children}</CharacterProviderInner>;
 };
 
-// Inner component that uses the hooks - only rendered when components are ready
 const CharacterProviderInner = ({
   children,
-  components,
-  isSynced,
 }: {
   children: ReactNode;
-  components: any;
-  isSynced: boolean;
 }): JSX.Element => {
-  console.log('[CharacterProviderInner] Mounted with isSynced:', isSynced);
-
-  const {
-    AdventureEscrow,
-    CharacterEquipment,
-    Characters,
-    CharactersTokenURI,
-    EncounterEntity,
-    GoldBalances,
-    ItemsOwners,
-    Stats,
-    StatusEffectStats,
-    StatusEffectValidity,
-    WorldEncounter,
-    WorldStatusEffects,
-  } = components;
   const {
     delegatorAddress,
     network: { publicClient, worldContract },
@@ -173,82 +110,60 @@ const CharacterProviderInner = ({
     weaponTemplates,
   } = useItems();
 
-  const [userCharacter, setUserCharacter] = useState<Character | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(true);
-  const [itemsRefreshCounter, setItemsRefreshCounter] = useState(0);
-  const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
-  const [inventoryConsumables, setInventoryConsumables] = useState<
-    Consumable[]
-  >([]);
-  const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
-  const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
-  const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
-  const [equippedConsumables, setEquippedConsumables] = useState<Consumable[]>([]);
-  const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
-  const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
+  // ============================================================
+  // Reactive table reads
+  // ============================================================
 
-  const fetchCharacterData = useCallback(async (): Promise<boolean> => {
-    if (!(delegatorAddress && publicClient && worldContract)) return false;
+  const charactersTable = useGameTable('Characters');
+  const worldEncounterTable = useGameTable('WorldEncounter');
 
-    console.info('[Character] Looking up character for delegatorAddress:', delegatorAddress);
-
-    // Find character by owner - try exact match first, then lowercase match
-    // MUD may store addresses in different cases depending on how they were set
-    let characterEntities = Array.from(
-      runQuery([
-        HasValue(Characters, {
-          owner: delegatorAddress as `0x${string}`,
-        }),
-      ]),
-    );
-
-    console.info('[Character] Exact match results:', characterEntities.length);
-
-    // If no match, try lowercase (some contracts store addresses in lowercase)
-    if (characterEntities.length === 0) {
-      characterEntities = Array.from(
-        runQuery([
-          HasValue(Characters, {
-            owner: delegatorAddress.toLowerCase() as `0x${string}`,
-          }),
-        ]),
-      );
-      console.info('[Character] Lowercase match results:', characterEntities.length);
+  // Find the character owned by the current delegator
+  const characterEntry = useMemo(() => {
+    if (!delegatorAddress) return null;
+    const ownerLower = delegatorAddress.toLowerCase();
+    for (const [keyBytes, data] of Object.entries(charactersTable)) {
+      if (String(data.owner).toLowerCase() === ownerLower) {
+        return { keyBytes, data };
+      }
     }
+    return null;
+  }, [charactersTable, delegatorAddress]);
 
-    // If still no match, manually find by comparing lowercase addresses
-    if (characterEntities.length === 0) {
-      const allChars = Array.from(runQuery([Has(Characters)]));
-      characterEntities = allChars.filter(entity => {
-        const data = getComponentValue(Characters, entity);
-        return data?.owner?.toLowerCase() === delegatorAddress.toLowerCase();
-      });
-      console.info('[Character] Manual scan results:', characterEntities.length, 'out of', allChars.length, 'total characters');
-    }
+  const characterKeyBytes = characterEntry?.keyBytes;
 
-    const partialCharacter: CharacterData & EntityStats = characterEntities.map(entity => {
-      const characterData = getComponentValueStrict(Characters, entity);
-      const characterStats = getComponentValue(Stats, entity);
-      const { tokenId } = characterData;
+  // Per-character reactive reads
+  const statsData = useGameValue('Stats', characterKeyBytes);
+  const encounterData = useGameValue('EncounterEntity', characterKeyBytes);
+  const escrowData = useGameValue('AdventureEscrow', characterKeyBytes);
+  const effectsData = useGameValue('WorldStatusEffects', characterKeyBytes);
+  const equipmentData = useGameValue('CharacterEquipment', characterKeyBytes);
 
-      const ownerEntity = encodeEntity(
-        { address: 'address' },
-        { address: characterData.owner as `0x${string}` },
-      );
-      // These components may be undefined if tables are empty
-      const externalGoldBalance = GoldBalances
-        ? (getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0))
-        : BigInt(0);
-      const escrowGoldBalance = AdventureEscrow
-        ? (getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0))
-        : BigInt(0);
+  // GoldBalances is keyed by owner address
+  const ownerAddressKey = characterEntry
+    ? encodeAddressKey(String(characterEntry.data.owner))
+    : undefined;
+  const goldData = useGameValue('GoldBalances', ownerAddressKey);
 
-      const { encounterId, pvpTimer } = EncounterEntity
-        ? (getComponentValue(EncounterEntity, entity) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) })
-        : { encounterId: zeroHash, pvpTimer: BigInt(0) };
-      const inBattle = !!encounterId && encounterId !== zeroHash;
+  // CharactersTokenURI is keyed by tokenId (uint256)
+  const tokenIdStr = characterEntry ? String(characterEntry.data.tokenId) : undefined;
+  const tokenIdKey = tokenIdStr ? encodeUint256Key(BigInt(tokenIdStr)) : undefined;
+  const tokenURIData = useGameValue('CharactersTokenURI', tokenIdKey);
 
-      let decodedBaseStats = {
+  // ============================================================
+  // Derive character stats and encounter
+  // ============================================================
+
+  const encounterId: string = String(encounterData?.encounterId ?? zeroHash);
+  const inBattle = !!encounterId && encounterId !== zeroHash;
+  const pvpCooldownTimer = toBigInt(encounterData?.pvpTimer);
+
+  const externalGoldBalance = toBigInt(goldData?.value);
+  const escrowGoldBalance = toBigInt(escrowData?.balance);
+
+  // Decode base stats from the Characters table bytes field
+  const decodedBaseStats = useMemo(() => {
+    if (!characterEntry) {
+      return {
         agility: BigInt(0),
         currentHp: BigInt(0),
         entityClass: 0,
@@ -257,323 +172,304 @@ const CharacterProviderInner = ({
         level: BigInt(0),
         maxHp: BigInt(0),
         strength: BigInt(0),
+        race: Race.None,
+        powerSource: PowerSource.None,
+        startingArmor: ArmorType.None,
+        advancedClass: AdvancedClass.None,
+        hasSelectedAdvancedClass: false,
       };
-
-      if (characterData.baseStats !== '0x') {
-        decodedBaseStats = decodeBaseStats(characterData.baseStats);
-      }
-
-      // WorldStatusEffects and related components may be undefined
-      const worldStatusEffectsComponent = WorldStatusEffects
-        ? getComponentValue(WorldStatusEffects, entity)
-        : undefined;
-
-      const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
-        appliedStatusEffects: [],
-      };
-
-      const decodedStatusEffects = appliedStatusEffects.map(
-        decodeAppliedStatusEffectId,
-      );
-
-      // Only process status effects if the required components exist
-      const worldStatusEffects: WorldStatusEffect[] = (StatusEffectStats && StatusEffectValidity)
-        ? decodedStatusEffects.map(effect => {
-            const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
-
-            const effectStats = getComponentValue(StatusEffectStats, paddedEffectId);
-            const validity = getComponentValue(StatusEffectValidity, paddedEffectId);
-
-            if (!effectStats || !validity) {
-              return null;
-            }
-
-            const timestampEnd = effect.timestamp + validity.validTime;
-            const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
-
-            const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
-
-            return {
-              active: isActive,
-              agiModifier: effectStats.agiModifier,
-              effectId: paddedEffectId,
-              intModifier: effectStats.intModifier,
-              maxStacks: validity.maxStacks,
-              name,
-              strModifier: effectStats.strModifier,
-              timestampEnd,
-              timestampStart: effect.timestamp,
-            };
-          }).filter((effect): effect is WorldStatusEffect => effect !== null)
-        : [];
-
-      // WorldEncounter may be undefined if table is empty
-      const worldEncounter = WorldEncounter
-        ? Array.from(
-            runQuery([
-              Has(WorldEncounter),
-              HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
-            ]),
-          ).map(worldEncounterEntity => ({
-            encounterId: worldEncounterEntity,
-            ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
-          }))[0]
-        : undefined;
-
+    }
+    const baseStatsRaw = String(characterEntry.data.baseStats ?? '0x');
+    if (baseStatsRaw === '0x' || baseStatsRaw === '') {
       return {
-        agility: characterStats?.agility ?? BigInt(0),
-        baseStats: decodedBaseStats,
-        currentHp: characterStats?.currentHp ?? BigInt(0),
-        entityClass: characterStats?.class ?? 0,
-        escrowGoldBalance,
-        experience: characterStats?.experience ?? BigInt(0),
-        externalGoldBalance,
-        id: entity,
-        inBattle,
-        intelligence: characterStats?.intelligence ?? BigInt(0),
-        level: characterStats?.level ?? BigInt(0),
-        locked: characterData.locked,
-        maxHp: characterStats?.maxHp ?? BigInt(0),
-        name: hexToString(characterData.name as `0x${string}`, { size: 32 }),
-        owner: characterData.owner,
-        pvpCooldownTimer: pvpTimer,
-        strength: characterStats?.strength ?? BigInt(0),
-        tokenId: tokenId.toString(),
-        worldEncounter: worldEncounter
-          ? {
-              characterId: worldEncounter.character as Entity,
-              encounterId: worldEncounter.encounterId as Entity,
-              shopId: worldEncounter.entity as Entity,
-            }
-          : undefined,
-        worldStatusEffects,
-        // Implicit class system fields
-        race: (characterStats?.race as Race) ?? Race.None,
-        powerSource: (characterStats?.powerSource as PowerSource) ?? PowerSource.None,
-        startingArmor: (characterStats?.startingArmor as ArmorType) ?? ArmorType.None,
-        advancedClass: (characterStats?.advancedClass as AdvancedClass) ?? AdvancedClass.None,
-        hasSelectedAdvancedClass: characterStats?.hasSelectedAdvancedClass ?? false,
+        agility: BigInt(0),
+        currentHp: BigInt(0),
+        entityClass: 0,
+        experience: BigInt(0),
+        intelligence: BigInt(0),
+        level: BigInt(0),
+        maxHp: BigInt(0),
+        strength: BigInt(0),
+        race: Race.None,
+        powerSource: PowerSource.None,
+        startingArmor: ArmorType.None,
+        advancedClass: AdvancedClass.None,
+        hasSelectedAdvancedClass: false,
       };
-    })[0];
-
-    if (!partialCharacter) {
-      console.info('[Character] No character found for', delegatorAddress);
-      return false;
     }
-    console.info('[Character] Found character:', {
-      name: partialCharacter.name,
-      owner: partialCharacter.owner,
-      tokenId: partialCharacter.tokenId?.toString(),
-      level: partialCharacter.level?.toString(),
-    });
-    const { tokenId } = partialCharacter;
+    return decodeBaseStats(baseStatsRaw);
+  }, [characterEntry]);
 
-    const tokenIdEntity = encodeEntity(
-      { tokenId: 'uint256' },
-      { tokenId: BigInt(tokenId) },
-    );
+  // Decode status effects
+  const worldStatusEffects = useMemo((): WorldStatusEffect[] => {
+    const appliedRaw = effectsData?.appliedStatusEffects;
+    const appliedStatusEffects = Array.isArray(appliedRaw)
+      ? (appliedRaw as string[])
+      : [];
 
-    const metadataURI = getComponentValueStrict(
-      CharactersTokenURI,
-      tokenIdEntity,
-    ).tokenURI;
+    const decodedEffects = appliedStatusEffects.map(decodeAppliedStatusEffectId);
 
-    // Try to fetch metadata, but use defaults if it fails (e.g., test URIs)
-    let fetchedMetadata = {
-      name: '',
-      description: '',
-      image: '',
-    };
+    return decodedEffects
+      .map(effect => {
+        // Pad effectId to full 32-byte hex (64 hex chars + 0x prefix = 66 chars)
+        const paddedEffectId = effect.effectId.padEnd(66, '0');
 
-    try {
-      // Handle text-only URIs directly (no HTTP fetch needed)
-      if (metadataURI && isTextOnlyUri(metadataURI)) {
-        fetchedMetadata = await fetchMetadataFromUri(metadataURI);
-      } else if (metadataURI && !metadataURI.startsWith('test') && metadataURI.length > 10) {
-        // Handle IPFS/HTTP URIs
-        const urls = metadataURI.startsWith('ipfs://')
-          ? uriToHttp(metadataURI)
-          : uriToHttp(`ipfs://${metadataURI}`);
-        fetchedMetadata = await fetchMetadataFromUri(urls[0]);
-      }
-    } catch (error) {
-      console.warn('Failed to fetch character metadata, using defaults:', error);
-    }
+        const effectStats = getTableValue('StatusEffectStats', paddedEffectId);
+        const validity = getTableValue('StatusEffectValidity', paddedEffectId);
 
-    // Only override partialCharacter fields if fetchedMetadata has non-empty values
-    setUserCharacter({
-      ...partialCharacter,
-      // Keep decoded bytes32 name if fetched name is empty
-      name: fetchedMetadata.name || partialCharacter.name,
-      description: fetchedMetadata.description || '',
-      image: fetchedMetadata.image || '',
-    });
-    return true;
-  }, [
-    AdventureEscrow,
-    Characters,
-    CharactersTokenURI,
-    delegatorAddress,
-    EncounterEntity,
-    GoldBalances,
-    publicClient,
-    Stats,
-    StatusEffectStats,
-    StatusEffectValidity,
-    worldContract,
-    WorldEncounter,
-    WorldStatusEffects,
-  ]);
-
-  const refreshCharacter = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      // Retry fetching character data - MUD sync can take time after a transaction
-      let retries = 0;
-      const maxRetries = 15;
-      const baseDelay = 500;
-
-      while (retries < maxRetries) {
-        const found = await fetchCharacterData();
-
-        if (found) {
-          break;
+        if (!effectStats || !validity) {
+          return null;
         }
 
-        retries++;
-        await new Promise(resolve => setTimeout(resolve, baseDelay));
+        const validTime = toBigInt(validity.validTime);
+        const timestampEnd = effect.timestamp + validTime;
+        const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
+
+        const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+
+        return {
+          active: isActive,
+          agiModifier: toBigInt(effectStats.agiModifier),
+          effectId: paddedEffectId,
+          intModifier: toBigInt(effectStats.intModifier),
+          maxStacks: toBigInt(validity.maxStacks),
+          name,
+          strModifier: toBigInt(effectStats.strModifier),
+          timestampEnd,
+          timestampStart: effect.timestamp,
+        } as WorldStatusEffect;
+      })
+      .filter((e): e is WorldStatusEffect => e !== null);
+  }, [effectsData]);
+
+  // Find the active WorldEncounter for this character
+  const worldEncounterEntry = useMemo(() => {
+    if (!characterKeyBytes) return undefined;
+    for (const [key, data] of Object.entries(worldEncounterTable)) {
+      if (
+        String(data.character).toLowerCase() === characterKeyBytes.toLowerCase() &&
+        toBigInt(data.end) === BigInt(0)
+      ) {
+        return { encounterId: key, ...data };
       }
-
-      // Small additional delay then refresh items
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setItemsRefreshCounter(c => c + 1);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error refreshing character.', e);
-    } finally {
-      setIsRefreshing(false);
     }
-  }, [fetchCharacterData, renderError]);
+    return undefined;
+  }, [worldEncounterTable, characterKeyBytes]);
 
+  // ============================================================
+  // Character metadata (async: fetched from tokenURI)
+  // ============================================================
+
+  const [metadataName, setMetadataName] = useState('');
+  const [metadataDescription, setMetadataDescription] = useState('');
+  const [metadataImage, setMetadataImage] = useState('');
+  const [metadataFetched, setMetadataFetched] = useState(false);
+
+  // Fetch character metadata whenever the tokenURI changes
   useEffect(() => {
-    if (!(delegatorAddress && isSynced && publicClient && worldContract))
-      return;
-    refreshCharacter();
+    const metadataURI = String(tokenURIData?.tokenURI ?? '');
+    if (!metadataURI) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        let fetched = { name: '', description: '', image: '' };
+        if (isTextOnlyUri(metadataURI)) {
+          fetched = await fetchMetadataFromUri(metadataURI);
+        } else if (!metadataURI.startsWith('test') && metadataURI.length > 10) {
+          const urls = metadataURI.startsWith('ipfs://')
+            ? uriToHttp(metadataURI)
+            : uriToHttp(`ipfs://${metadataURI}`);
+          if (urls.length > 0) {
+            fetched = await fetchMetadataFromUri(urls[0]);
+          }
+        }
+        if (!cancelled) {
+          setMetadataName(fetched.name);
+          setMetadataDescription(fetched.description);
+          setMetadataImage(fetched.image);
+          setMetadataFetched(true);
+        }
+      } catch (error) {
+        console.warn('[CharacterProvider] Failed to fetch character metadata:', error);
+        if (!cancelled) {
+          setMetadataFetched(true);
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [tokenURIData]);
+
+  // ============================================================
+  // Build the Character object reactively
+  // ============================================================
+
+  const character = useMemo((): Character | null => {
+    if (!characterEntry) return null;
+
+    const { keyBytes, data } = characterEntry;
+
+    const rawName = String(data.name ?? '0x');
+    const decodedName = hexToString(rawName as `0x${string}`, { size: 32 });
+
+    return {
+      // CharacterData fields
+      baseStats: decodedBaseStats,
+      escrowGoldBalance,
+      externalGoldBalance,
+      id: keyBytes as any,
+      inBattle,
+      isSpawned: true,
+      locked: Boolean(data.locked),
+      owner: String(data.owner),
+      position: { x: 0, y: 0 },
+      pvpCooldownTimer,
+      tokenId: String(data.tokenId),
+      worldEncounter: worldEncounterEntry
+        ? {
+            characterId: String(worldEncounterEntry.character) as any,
+            encounterId: worldEncounterEntry.encounterId as any,
+            shopId: String(worldEncounterEntry.entity) as any,
+          }
+        : undefined,
+      worldStatusEffects,
+
+      // EntityStats fields
+      agility: toBigInt(statsData?.agility),
+      currentHp: toBigInt(statsData?.currentHp),
+      entityClass: toNumber(statsData?.class),
+      experience: toBigInt(statsData?.experience),
+      intelligence: toBigInt(statsData?.intelligence),
+      level: toBigInt(statsData?.level),
+      maxHp: toBigInt(statsData?.maxHp),
+      strength: toBigInt(statsData?.strength),
+      race: (toNumber(statsData?.race) as Race) ?? Race.None,
+      powerSource: (toNumber(statsData?.powerSource) as PowerSource) ?? PowerSource.None,
+      startingArmor: (toNumber(statsData?.startingArmor) as ArmorType) ?? ArmorType.None,
+      advancedClass: (toNumber(statsData?.advancedClass) as AdvancedClass) ?? AdvancedClass.None,
+      hasSelectedAdvancedClass: Boolean(statsData?.hasSelectedAdvancedClass),
+
+      // Metadata fields
+      name: (metadataFetched && metadataName) ? metadataName : decodedName,
+      description: metadataDescription,
+      image: metadataImage,
+    };
   }, [
-    delegatorAddress,
-    refreshCharacter,
-    isSynced,
-    publicClient,
-    worldContract,
+    characterEntry,
+    decodedBaseStats,
+    escrowGoldBalance,
+    externalGoldBalance,
+    inBattle,
+    pvpCooldownTimer,
+    worldEncounterEntry,
+    worldStatusEffects,
+    statsData,
+    metadataFetched,
+    metadataName,
+    metadataDescription,
+    metadataImage,
   ]);
+
+  // ============================================================
+  // Items (inventory + equipped)
+  // ============================================================
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [itemsRefreshCounter, setItemsRefreshCounter] = useState(0);
+  const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
+  const [inventoryConsumables, setInventoryConsumables] = useState<Consumable[]>([]);
+  const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
+  const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
+  const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
+  const [equippedConsumables, setEquippedConsumables] = useState<Consumable[]>([]);
+  const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
+  const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
 
   const fetchCharacterItems = useCallback(
     (
-      _character: Character,
-      _equippedArmorIds: bigint[],
-      _equippedSpellsIds: bigint[],
-      _equippedWeaponsIds: bigint[],
-      _equippedConsumableIds: bigint[],
+      characterOwner: string,
+      equippedArmorIds: bigint[],
+      equippedSpellIds: bigint[],
+      equippedWeaponIds: bigint[],
+      equippedConsumableIds: bigint[],
     ) => {
       try {
-        // If ItemsOwners component doesn't exist, skip item fetching
-        if (!ItemsOwners) {
-          return;
-        }
-
         const _armor = armorTemplates
           .map(armor => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(armor.tokenId),
-              },
+            const itemOwnerKey = encodeCompositeKey(
+              encodeAddressKey(characterOwner),
+              encodeUint256Key(BigInt(armor.tokenId)),
             );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
+            const itemOwner = getTableValue('ItemsOwners', itemOwnerKey);
             return {
               ...armor,
-              balance: itemOwner ? itemOwner.balance : BigInt(0),
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
+              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+              itemId: itemOwnerKey as any,
+              owner: characterOwner,
             } as Armor;
           })
           .filter(a => a.balance !== BigInt(0));
 
         const _consumables = consumableTemplates
           .map(consumable => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(consumable.tokenId),
-              },
+            const itemOwnerKey = encodeCompositeKey(
+              encodeAddressKey(characterOwner),
+              encodeUint256Key(BigInt(consumable.tokenId)),
             );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
+            const itemOwner = getTableValue('ItemsOwners', itemOwnerKey);
             return {
               ...consumable,
-              balance: itemOwner ? itemOwner.balance : BigInt(0),
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
+              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+              itemId: itemOwnerKey as any,
+              owner: characterOwner,
             } as Consumable;
           })
           .filter(c => c.balance !== BigInt(0));
 
         const _spells = spellTemplates
           .map(spell => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(spell.tokenId),
-              },
+            const itemOwnerKey = encodeCompositeKey(
+              encodeAddressKey(characterOwner),
+              encodeUint256Key(BigInt(spell.tokenId)),
             );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
+            const itemOwner = getTableValue('ItemsOwners', itemOwnerKey);
             return {
               ...spell,
-              balance: itemOwner ? itemOwner.balance : BigInt(0),
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
+              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+              itemId: itemOwnerKey as any,
+              owner: characterOwner,
             } as Spell;
           })
           .filter(s => s.balance !== BigInt(0));
 
         const _weapons = weaponTemplates
           .map(weapon => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(weapon.tokenId),
-              },
+            const itemOwnerKey = encodeCompositeKey(
+              encodeAddressKey(characterOwner),
+              encodeUint256Key(BigInt(weapon.tokenId)),
             );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
-
+            const itemOwner = getTableValue('ItemsOwners', itemOwnerKey);
             return {
               ...weapon,
-              balance: itemOwner ? itemOwner.balance : BigInt(0),
-              itemId: tokenOwnersEntity,
-              owner: _character.owner,
+              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+              itemId: itemOwnerKey as any,
+              owner: characterOwner,
             } as Weapon;
           })
           .filter(w => w.balance !== BigInt(0));
 
-        const _equippedArmor = _equippedArmorIds
+        const _equippedArmor = equippedArmorIds
           .map(id => _armor.find(a => a.tokenId === id.toString()))
           .filter(Boolean) as Armor[];
-        const _equippedConsumablesList = _equippedConsumableIds
+        const _equippedConsumablesList = equippedConsumableIds
           .map(id => _consumables.find(c => c.tokenId === id.toString()))
           .filter(Boolean) as Consumable[];
-        const _equippedSpells = _equippedSpellsIds
+        const _equippedSpells = equippedSpellIds
           .map(id => _spells.find(s => s.tokenId === id.toString()))
           .filter(Boolean) as Spell[];
-        const _equippedWeapons = _equippedWeaponsIds
+        const _equippedWeapons = equippedWeaponIds
           .map(id => _weapons.find(w => w.tokenId === id.toString()))
           .filter(Boolean) as Weapon[];
 
@@ -588,7 +484,7 @@ const CharacterProviderInner = ({
         setEquippedWeapons(_equippedWeapons);
       } catch (e) {
         renderError(
-          (e as Error)?.message ?? 'Failed to fetch character data.',
+          (e as Error)?.message ?? 'Failed to fetch character items.',
           e,
         );
       }
@@ -596,49 +492,64 @@ const CharacterProviderInner = ({
     [
       armorTemplates,
       consumableTemplates,
-      ItemsOwners,
       renderError,
       spellTemplates,
       weaponTemplates,
     ],
   );
 
+  // Re-fetch items whenever character, equipment data, or item templates change
   useEffect(() => {
-    if (!(isSynced && userCharacter) || isLoadingItemTemplates) return;
+    if (!character || isLoadingItemTemplates) return;
 
-    // CharacterEquipment may be undefined if the table is empty
-    const equipmentData = CharacterEquipment
-      ? getComponentValue(CharacterEquipment, userCharacter.id)
-      : undefined;
-
-    const { equippedArmor, equippedConsumables: eqConsumables, equippedSpells, equippedWeapons } =
-      equipmentData ??
-      ({ equippedArmor: [], equippedConsumables: [], equippedSpells: [], equippedWeapons: [] } as {
-        equippedArmor: bigint[];
-        equippedConsumables: bigint[];
-        equippedSpells: bigint[];
-        equippedWeapons: bigint[];
-      });
+    const equippedArmorRaw = Array.isArray(equipmentData?.equippedArmor)
+      ? (equipmentData!.equippedArmor as unknown[]).map(toBigInt)
+      : [];
+    const equippedConsumablesRaw = Array.isArray(equipmentData?.equippedConsumables)
+      ? (equipmentData!.equippedConsumables as unknown[]).map(toBigInt)
+      : [];
+    const equippedSpellsRaw = Array.isArray(equipmentData?.equippedSpells)
+      ? (equipmentData!.equippedSpells as unknown[]).map(toBigInt)
+      : [];
+    const equippedWeaponsRaw = Array.isArray(equipmentData?.equippedWeapons)
+      ? (equipmentData!.equippedWeapons as unknown[]).map(toBigInt)
+      : [];
 
     fetchCharacterItems(
-      userCharacter,
-      equippedArmor,
-      equippedSpells,
-      equippedWeapons,
-      eqConsumables,
+      character.owner,
+      equippedArmorRaw,
+      equippedSpellsRaw,
+      equippedWeaponsRaw,
+      equippedConsumablesRaw,
     );
   }, [
-    CharacterEquipment,
+    character,
+    equipmentData,
     fetchCharacterItems,
     isLoadingItemTemplates,
-    isSynced,
     itemsRefreshCounter,
-    userCharacter,
   ]);
 
-  // Optimistically update equipped state when RECS is stale.
-  // Bypasses RECS and directly sets useState, clearing the stale cache
-  // so the next page load does a full resync.
+  // ============================================================
+  // refreshCharacter: reactive data means no retry loop needed.
+  // Just trigger a re-read of items.
+  // ============================================================
+
+  const refreshCharacter = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      setItemsRefreshCounter(c => c + 1);
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Error refreshing character.', e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [renderError]);
+
+  // ============================================================
+  // Optimistic equip/unequip (no clearRecsCache needed)
+  // ============================================================
+
   const optimisticEquip = useCallback((item: Armor | Spell | Weapon) => {
     const { itemType, tokenId } = item;
     if (itemType === ItemType.Weapon) {
@@ -657,9 +568,7 @@ const CharacterProviderInner = ({
         return [...prev, item as Spell];
       });
     }
-    const chainId = publicClient.chain?.id;
-    if (chainId) clearRecsCache(worldContract.address, chainId);
-  }, [publicClient, worldContract]);
+  }, []);
 
   const optimisticUnequip = useCallback((tokenId: string, itemType: ItemType) => {
     if (itemType === ItemType.Weapon) {
@@ -669,18 +578,20 @@ const CharacterProviderInner = ({
     } else if (itemType === ItemType.Spell) {
       setEquippedSpells(prev => prev.filter(s => s.tokenId !== tokenId));
     }
-    const chainId = publicClient.chain?.id;
-    if (chainId) clearRecsCache(worldContract.address, chainId);
-  }, [publicClient, worldContract]);
+  }, []);
 
   const isMoveEquipped = useMemo(() => {
     return equippedSpells.length + equippedWeapons.length > 0;
   }, [equippedSpells, equippedWeapons]);
 
+  // Suppress unused variable warnings for publicClient and worldContract
+  void publicClient;
+  void worldContract;
+
   return (
     <CharacterContext.Provider
       value={{
-        character: userCharacter,
+        character,
         equippedArmor,
         equippedConsumables,
         equippedSpells,

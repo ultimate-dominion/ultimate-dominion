@@ -1,11 +1,3 @@
-import { useComponentValue } from '@latticexyz/react';
-import {
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -17,6 +9,7 @@ import {
 } from 'react';
 
 import { useToast } from '../hooks/useToast';
+import { toBigInt, useGameConfig, useGameTable } from '../lib/gameStore';
 import {
   type ConsiderationData,
   type OfferData,
@@ -42,73 +35,58 @@ const OrdersContext = createContext<OrdersContextType>({
   refreshOrders: () => {},
 });
 
-// Inner component that uses the hooks - only rendered when components are ready
-const OrdersProviderInner = ({
+export const OrdersProvider = ({
   children,
-  components,
-  isSynced,
 }: {
   children: ReactNode;
-  components: any;
-  isSynced: boolean;
 }): JSX.Element => {
+  const { isSynced } = useMUD();
   const { renderError } = useToast();
-
-  const { Considerations, Offers, Orders, UltimateDominionConfig } = components;
 
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const configValue = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  );
-  const goldToken = configValue?.goldToken ?? null;
+  const ordersTable = useGameTable('Orders');
+  const offersTable = useGameTable('Offers');
+  const considerationsTable = useGameTable('Considerations');
+  const configRow = useGameConfig('UltimateDominionConfig');
+
+  const goldToken = configRow?.goldToken as string | undefined ?? null;
 
   const fetchOrders = useCallback(() => {
-    if (!Considerations || !Offers || !Orders) return;
-
     try {
       setIsLoading(true);
 
-      const _activeOrders = Array.from(
-        runQuery([
-          Has(Considerations),
-          Has(Offers),
-          Has(Orders),
-          HasValue(Orders, { orderStatus: OrderStatus.Active }),
-        ]),
-      ).map(orderHash => {
-        const considerationData = getComponentValueStrict(
-          Considerations,
-          orderHash,
-        );
-        const orderData = getComponentValueStrict(Orders, orderHash);
-        const offerData = getComponentValueStrict(Offers, orderHash);
-        const orderStatus = getComponentValueStrict(
-          Orders,
-          orderHash,
-        ).orderStatus;
+      const _activeOrders: Order[] = Object.entries(ordersTable)
+        .filter(([, orderRow]) => {
+          return Number(orderRow.orderStatus) === OrderStatus.Active;
+        })
+        .filter(([orderHash]) => {
+          return orderHash in offersTable && orderHash in considerationsTable;
+        })
+        .map(([orderHash, orderRow]) => {
+          const offerRow = offersTable[orderHash];
+          const considerationRow = considerationsTable[orderHash];
 
-        return {
-          consideration: {
-            amount: considerationData.amount,
-            identifier: considerationData.identifier.toString(),
-            token: considerationData.token,
-            tokenType: considerationData.tokenType,
-            recipient: considerationData.recipient,
-          } as ConsiderationData,
-          offer: {
-            amount: offerData.amount,
-            identifier: offerData.identifier.toString(),
-            token: offerData.token,
-            tokenType: offerData.tokenType,
-          } as OfferData,
-          offerer: orderData.offerer.toString(),
-          orderHash: orderHash.toString(),
-          orderStatus: orderStatus.toString(),
-        } as Order;
-      });
+          return {
+            consideration: {
+              amount: toBigInt(considerationRow.amount),
+              identifier: String(considerationRow.identifier),
+              token: String(considerationRow.token),
+              tokenType: Number(considerationRow.tokenType),
+              recipient: String(considerationRow.recipient),
+            } as ConsiderationData,
+            offer: {
+              amount: toBigInt(offerRow.amount),
+              identifier: String(offerRow.identifier),
+              token: String(offerRow.token),
+              tokenType: Number(offerRow.tokenType),
+            } as OfferData,
+            offerer: String(orderRow.offerer),
+            orderHash,
+            orderStatus: String(orderRow.orderStatus),
+          } as Order;
+        });
 
       setActiveOrders(_activeOrders);
     } catch (e) {
@@ -116,7 +94,7 @@ const OrdersProviderInner = ({
     } finally {
       setIsLoading(false);
     }
-  }, [Considerations, Offers, Orders, renderError]);
+  }, [ordersTable, offersTable, considerationsTable, renderError]);
 
   useEffect(() => {
     if (!isSynced) return;
@@ -124,33 +102,31 @@ const OrdersProviderInner = ({
   }, [fetchOrders, isSynced]);
 
   const lowestPrices = useMemo(() => {
-    const lowestPrices: { [key: string]: bigint } = {};
+    const result: { [key: string]: bigint } = {};
 
     activeOrders.forEach(order => {
-      const price = lowestPrices[order.offer.identifier.toString()];
+      const price = result[order.offer.identifier.toString()];
       if (order.consideration.token !== goldToken) return;
-      if (!price || order.consideration.amount < BigInt(price)) {
-        lowestPrices[order.offer.identifier.toString()] =
-          order.consideration.amount;
+      if (!price || order.consideration.amount < price) {
+        result[order.offer.identifier.toString()] = order.consideration.amount;
       }
     });
 
-    return lowestPrices;
+    return result;
   }, [activeOrders, goldToken]);
 
   const highestOffers = useMemo(() => {
-    const highestOffers: { [key: string]: bigint } = {};
+    const result: { [key: string]: bigint } = {};
 
     activeOrders.forEach(order => {
-      const offer = highestOffers[order.consideration.identifier.toString()];
+      const offer = result[order.consideration.identifier.toString()];
       if (order.offer.token !== goldToken) return;
-      if (!offer || order.offer.amount > BigInt(offer)) {
-        highestOffers[order.consideration.identifier.toString()] =
-          order.offer.amount;
+      if (!offer || order.offer.amount > offer) {
+        result[order.consideration.identifier.toString()] = order.offer.amount;
       }
     });
 
-    return highestOffers;
+    return result;
   }, [activeOrders, goldToken]);
 
   return (
@@ -165,45 +141,6 @@ const OrdersProviderInner = ({
     >
       {children}
     </OrdersContext.Provider>
-  );
-};
-
-export const OrdersProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}): JSX.Element => {
-  const { components, isSynced } = useMUD();
-
-  // Check if required components are available
-  const componentsReady = !!(
-    components?.Considerations &&
-    components?.Offers &&
-    components?.Orders &&
-    components?.UltimateDominionConfig
-  );
-
-  // If components aren't ready, render with default context
-  if (!componentsReady) {
-    return (
-      <OrdersContext.Provider
-        value={{
-          activeOrders: [],
-          highestOffers: {},
-          isLoading: true,
-          lowestPrices: {},
-          refreshOrders: () => {},
-        }}
-      >
-        {children}
-      </OrdersContext.Provider>
-    );
-  }
-
-  return (
-    <OrdersProviderInner components={components} isSynced={isSynced}>
-      {children}
-    </OrdersProviderInner>
   );
 };
 

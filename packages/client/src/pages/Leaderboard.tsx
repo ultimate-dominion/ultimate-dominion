@@ -16,8 +16,6 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useEntityQuery } from '@latticexyz/react';
-import { getComponentValueStrict, Has } from '@latticexyz/recs';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -35,7 +33,7 @@ import {
 } from '../components/SVGs';
 import { useAuth } from '../contexts/AuthContext';
 import { useMap } from '../contexts/MapContext';
-import { useMUD } from '../contexts/MUDContext';
+import { useGameTable } from '../lib/gameStore';
 import { CHARACTERS_PATH, HOME_PATH } from '../Routes';
 import { Character, StatsClasses } from '../utils/types';
 
@@ -57,7 +55,7 @@ export const Leaderboard = (): JSX.Element => {
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const { allCharacters, isFetchingEntities, refreshEntities } = useMap();
-  const { components } = useMUD();
+  const zoneCompletionTable = useGameTable('CharacterZoneCompletion');
 
   const [tab, setTab] = useState<LeaderboardTab>('rankings');
   const [entries, setEntries] = useState<Character[]>([]);
@@ -70,19 +68,14 @@ export const Leaderboard = (): JSX.Element => {
   const [length, setLength] = useState(1);
 
   // Zone completion data for Race to Max tab
-  const zoneCompletionEntities = useEntityQuery(
-    components?.CharacterZoneCompletion ? [Has(components.CharacterZoneCompletion)] : [],
-  );
-
   const zoneCompletions: ZoneCompletionEntry[] = useMemo(() => {
-    if (!components?.CharacterZoneCompletion) return [];
+    if (!zoneCompletionTable) return [];
 
-    return zoneCompletionEntities
-      .map(entity => {
-        const data = getComponentValueStrict(components.CharacterZoneCompletion, entity);
+    return Object.entries(zoneCompletionTable)
+      .map(([keyBytes, data]) => {
         if (!data.completed) return null;
 
-        const character = allCharacters.find(c => c.id === data.characterId);
+        const character = allCharacters.find(c => c.id === (data.characterId as string));
 
         return {
           characterId: data.characterId as string,
@@ -95,7 +88,7 @@ export const Leaderboard = (): JSX.Element => {
       })
       .filter((e): e is ZoneCompletionEntry => e !== null)
       .sort((a, b) => a.rank - b.rank);
-  }, [zoneCompletionEntities, allCharacters, components?.CharacterZoneCompletion]);
+  }, [zoneCompletionTable, allCharacters]);
 
   useEffect(() => {
     if (isConnecting) return;

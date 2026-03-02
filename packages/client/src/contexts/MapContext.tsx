@@ -1,14 +1,3 @@
-import { useComponentValue, useEntityQuery } from '@latticexyz/react';
-import {
-  Entity,
-  getComponentValue,
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  Not,
-  runQuery,
-} from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -20,6 +9,16 @@ import {
 } from 'react';
 import { hexToString, zeroHash } from 'viem';
 
+import {
+  encodeAddressKey,
+  encodeUint256Key,
+  getTableEntries,
+  getTableValue,
+  toBigInt,
+  toNumber,
+  useGameTable,
+  useGameValue,
+} from '../lib/gameStore';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { STATUS_EFFECT_NAME_MAPPING } from '../utils/constants';
@@ -89,22 +88,6 @@ export type MapProviderProps = {
 export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: {
-      AdventureEscrow,
-      Characters,
-      CharactersTokenURI,
-      EncounterEntity,
-      GoldBalances,
-      MobStats: MobStatsComponent,
-      Position,
-      Shops,
-      Spawned,
-      Stats,
-      StatusEffectStats,
-      StatusEffectValidity,
-      WorldEncounter,
-      WorldStatusEffects,
-    },
     delegatorAddress,
     isSynced,
     network: { publicClient, worldContract },
@@ -126,60 +109,61 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [optimisticPosition, setOptimisticPosition] = useState<{ x: number; y: number } | null>(null);
 
-  const recsPosition = useComponentValue(
-    Position,
-    encodeEntity(
-      { characterId: 'uint256' },
-      { characterId: BigInt(character?.id ?? 0) },
-    ),
-  );
+  // Reactive table subscriptions for entity queries
+  const positionTable = useGameTable('Position');
+  const spawnedTable = useGameTable('Spawned');
+  const statsTable = useGameTable('Stats');
+  const charactersTable = useGameTable('Characters');
+  const shopsTable = useGameTable('Shops');
 
-  // Clear optimistic position once RECS catches up
+  // Player's position from the store
+  const posData = useGameValue('Position', character?.id);
+
+  // Clear optimistic position once store catches up
   useEffect(() => {
     if (
       optimisticPosition &&
-      recsPosition &&
-      recsPosition.x === optimisticPosition.x &&
-      recsPosition.y === optimisticPosition.y
+      posData &&
+      toNumber(posData.x) === optimisticPosition.x &&
+      toNumber(posData.y) === optimisticPosition.y
     ) {
       setOptimisticPosition(null);
     }
-  }, [recsPosition, optimisticPosition]);
+  }, [posData, optimisticPosition]);
 
-  // Use optimistic position if set, otherwise fall back to RECS
-  const position = optimisticPosition ?? (recsPosition ? { x: recsPosition.x, y: recsPosition.y } : null);
+  // Use optimistic position if set, otherwise fall back to store value
+  const position = optimisticPosition ?? (
+    posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null
+  );
 
   const inSafetyZone = useMemo(() => {
     if (!position) return false;
     return position.x < 5 && position.y < 5;
   }, [position]);
 
-  const isSpawned = !!useComponentValue(
-    Spawned,
-    encodeEntity(
-      { characterId: 'uint256' },
-      { characterId: BigInt(character?.id ?? 0) },
-    ),
-  )?.spawned;
+  const spawnedData = useGameValue('Spawned', character?.id);
+  const isSpawned = Boolean(spawnedData?.spawned);
 
-  const allShopEntities = useEntityQuery([
-    Has(Position),
-    Has(Spawned),
-    Has(Shops),
-  ]);
+  // Filtered entity lists computed from reactive tables
+  const allShopEntities = useMemo(() => {
+    return Object.keys(positionTable).filter(key =>
+      spawnedTable[key] && shopsTable[key]
+    );
+  }, [positionTable, spawnedTable, shopsTable]);
 
-  const allMonsterEntities = useEntityQuery([
-    Has(Spawned),
-    Has(Stats),
-    Not(Characters),
-    Has(Position),
-  ]);
+  const allMonsterEntities = useMemo(() => {
+    return Object.keys(spawnedTable).filter(key =>
+      statsTable[key] && !charactersTable[key] && positionTable[key]
+    );
+  }, [spawnedTable, statsTable, charactersTable, positionTable]);
 
-  const allCharacterEntities = useEntityQuery([Has(Characters), Has(Stats)]);
+  const allCharacterEntities = useMemo(() => {
+    return Object.keys(charactersTable).filter(key => statsTable[key]);
+  }, [charactersTable, statsTable]);
 
   const getAllCharacters = useCallback(
     async (
-      entities: Entity[],
+      entities: string[],
     ): Promise<
       (Character & { isSpawned: boolean; position: { x: number; y: number } })[]
     > => {
@@ -190,32 +174,31 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           isSpawned: boolean;
           position: { x: number; y: number };
         })[] = await Promise.all(
-          entities.map(async (entity: Entity) => {
-            const characterData = getComponentValueStrict(Characters, entity);
-            const characterStats = getComponentValueStrict(Stats, entity);
+          entities.map(async (entity: string) => {
+            const characterData = getTableValue('Characters', entity);
+            const characterStats = getTableValue('Stats', entity);
+
+            if (!characterData || !characterStats) {
+              throw new Error(`Missing data for character entity ${entity}`);
+            }
+
             const { tokenId } = characterData;
 
-            const ownerEntity = encodeEntity(
-              { address: 'address' },
-              { address: characterData.owner as `0x${string}` },
-            );
-            const tokenIdEntity = encodeEntity(
-              { tokenId: 'uint256' },
-              { tokenId: BigInt(tokenId) },
-            );
+            const ownerKey = encodeAddressKey(characterData.owner as string);
+            const tokenIdKey = encodeUint256Key(toBigInt(tokenId));
 
-            // These components may be undefined if tables are empty
-            const externalGoldBalance = GoldBalances
-              ? (getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0))
-              : BigInt(0);
-            const escrowGoldBalance = AdventureEscrow
-              ? (getComponentValue(AdventureEscrow, entity)?.balance ?? BigInt(0))
+            const externalGoldBalanceData = getTableValue('GoldBalances', ownerKey);
+            const externalGoldBalance = externalGoldBalanceData
+              ? toBigInt(externalGoldBalanceData.value)
               : BigInt(0);
 
-            const metadataURI = getComponentValueStrict(
-              CharactersTokenURI,
-              tokenIdEntity,
-            ).tokenURI;
+            const escrowData = getTableValue('AdventureEscrow', entity);
+            const escrowGoldBalance = escrowData
+              ? toBigInt(escrowData.balance)
+              : BigInt(0);
+
+            const tokenURIData = getTableValue('CharactersTokenURI', tokenIdKey);
+            const metadataURI = tokenURIData?.tokenURI as string | undefined;
 
             // Try to fetch metadata, but use defaults if it fails (e.g., test URIs)
             let fetachedMetadata = {
@@ -235,17 +218,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               console.warn('Failed to fetch character metadata in MapContext, using defaults:', error);
             }
 
-            const { encounterId, pvpTimer } = EncounterEntity
-              ? (getComponentValue(EncounterEntity, entity) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) })
-              : { encounterId: zeroHash, pvpTimer: BigInt(0) };
+            const encounterData = getTableValue('EncounterEntity', entity);
+            const encounterId = encounterData?.encounterId ?? zeroHash;
+            const pvpTimer = encounterData?.pvpTimer ?? BigInt(0);
             const inBattle = !!encounterId && encounterId !== zeroHash;
 
-            const isSpawned =
-              getComponentValue(Spawned, entity)?.spawned ?? false;
-            const _position = getComponentValue(Position, entity) ?? {
-              x: 0,
-              y: 0,
-            };
+            const isEntitySpawned =
+              getTableValue('Spawned', entity)?.spawned ?? false;
+            const positionData = getTableValue('Position', entity) ?? { x: 0, y: 0 };
 
             let decodedBaseStats = {
               agility: BigInt(0),
@@ -258,105 +238,95 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
               strength: BigInt(0),
             };
 
-            if (characterData.baseStats !== '0x') {
-              decodedBaseStats = decodeBaseStats(characterData.baseStats);
+            const baseStatsRaw = characterData.baseStats as string | undefined;
+            if (baseStatsRaw && baseStatsRaw !== '0x') {
+              decodedBaseStats = decodeBaseStats(baseStatsRaw);
             }
 
-            // WorldStatusEffects and related components may be undefined
-            const worldStatusEffectsComponent = WorldStatusEffects
-              ? getComponentValue(WorldStatusEffects, entity)
-              : undefined;
-
-            const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
+            const worldStatusEffectsData = getTableValue('WorldStatusEffects', entity);
+            const { appliedStatusEffects } = worldStatusEffectsData ?? {
               appliedStatusEffects: [],
             };
 
-            const decodedStatusEffects = appliedStatusEffects.map(
-              decodeAppliedStatusEffectId,
-            );
+            const rawEffects = Array.isArray(appliedStatusEffects)
+              ? (appliedStatusEffects as string[])
+              : [];
+            const decodedStatusEffects = rawEffects.map(decodeAppliedStatusEffectId);
 
-            // Only process status effects if the required components exist
-            const worldStatusEffects: WorldStatusEffect[] =
-              (StatusEffectStats && StatusEffectValidity)
-                ? decodedStatusEffects.map(effect => {
-                    const paddedEffectId = effect.effectId.padEnd(
-                      66,
-                      '0',
-                    ) as Entity;
-                    const effectStats = getComponentValue(
-                      StatusEffectStats,
-                      paddedEffectId,
-                    );
-                    const validity = getComponentValue(
-                      StatusEffectValidity,
-                      paddedEffectId,
-                    );
+            const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects
+              .map(effect => {
+                const paddedEffectId = effect.effectId.padEnd(66, '0');
+                const effectStats = getTableValue('StatusEffectStats', paddedEffectId);
+                const validity = getTableValue('StatusEffectValidity', paddedEffectId);
 
-                    if (!effectStats || !validity) return null;
+                if (!effectStats || !validity) return null;
 
-                    const timestampEnd = effect.timestamp + validity.validTime;
-                    const isActive =
-                      timestampEnd > BigInt(Date.now()) / BigInt(1000);
+                const timestampEnd = toBigInt(effect.timestamp) + toBigInt(validity.validTime);
+                const isActive =
+                  timestampEnd > BigInt(Date.now()) / BigInt(1000);
 
-                    const name =
+                const name =
                   STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
 
-                    return {
-                      active: isActive,
-                      agiModifier: effectStats.agiModifier,
-                      effectId: paddedEffectId,
-                      intModifier: effectStats.intModifier,
-                      maxStacks: validity.maxStacks,
-                      name,
-                      strModifier: effectStats.strModifier,
-                      timestampEnd,
-                      timestampStart: effect.timestamp,
-                    };
-                  }).filter((effect): effect is WorldStatusEffect => effect !== null)
-                : [];
+                return {
+                  active: isActive,
+                  agiModifier: toBigInt(effectStats.agiModifier),
+                  effectId: paddedEffectId,
+                  intModifier: toBigInt(effectStats.intModifier),
+                  maxStacks: toBigInt(validity.maxStacks),
+                  name,
+                  strModifier: toBigInt(effectStats.strModifier),
+                  timestampEnd,
+                  timestampStart: toBigInt(effect.timestamp),
+                };
+              })
+              .filter((effect): effect is WorldStatusEffect => effect !== null);
 
-            // WorldEncounter may be undefined if table is empty
-            const worldEncounter = WorldEncounter
-              ? Array.from(
-                  runQuery([
-                    Has(WorldEncounter),
-                    HasValue(WorldEncounter, { character: entity, end: BigInt(0) }),
-                  ]),
-                ).map(worldEncounterEntity => ({
-                  encounterId: worldEncounterEntity,
-                  ...getComponentValueStrict(WorldEncounter, worldEncounterEntity),
-                }))[0]
-              : undefined;
+            // Scan WorldEncounter entries for this character
+            const worldEncounterEntries = getTableEntries('WorldEncounter');
+            const worldEncounter = Object.entries(worldEncounterEntries)
+              .map(([encKey, encData]) => ({
+                encounterId: encKey,
+                ...encData,
+              }))
+              .find(
+                enc =>
+                  enc.character === entity &&
+                  toBigInt(enc.end) === BigInt(0),
+              );
 
             return {
               ...fetachedMetadata,
-              agility: characterStats.agility,
+              agility: toBigInt(characterStats.agility),
               baseStats: decodedBaseStats,
-              currentHp: characterStats.currentHp,
-              entityClass: characterStats.class,
+              currentHp: toBigInt(characterStats.currentHp),
+              entityClass: toNumber(characterStats.class),
               escrowGoldBalance,
-              experience: characterStats.experience,
+              experience: toBigInt(characterStats.experience),
               externalGoldBalance,
               id: entity,
               inBattle,
-              intelligence: characterStats.intelligence,
-              isSpawned,
-              level: characterStats.level,
-              locked: characterData.locked,
-              maxHp: characterStats.maxHp,
+              intelligence: toBigInt(characterStats.intelligence),
+              isSpawned: Boolean(isEntitySpawned),
+              level: toBigInt(characterStats.level),
+              locked: Boolean(characterData.locked),
+              maxHp: toBigInt(characterStats.maxHp),
               name: hexToString(characterData.name as `0x${string}`, {
                 size: 32,
               }),
-              owner: characterData.owner,
-              position: { x: _position.x, y: _position.y },
-              pvpCooldownTimer: pvpTimer,
-              strength: characterStats.strength,
-              tokenId: tokenId.toString(),
+              owner: characterData.owner as string,
+              position: {
+                x: toNumber(positionData.x),
+                y: toNumber(positionData.y),
+              },
+              pvpCooldownTimer: toBigInt(pvpTimer),
+              strength: toBigInt(characterStats.strength),
+              tokenId: tokenId?.toString() ?? '0',
               worldEncounter: worldEncounter
                 ? {
-                    characterId: worldEncounter.character as Entity,
-                    encounterId: worldEncounter.encounterId as Entity,
-                    shopId: worldEncounter.entity as Entity,
+                    characterId: worldEncounter.character as string,
+                    encounterId: worldEncounter.encounterId as string,
+                    shopId: worldEncounter.entity as string,
                   }
                 : undefined,
               worldStatusEffects,
@@ -374,41 +344,35 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       }
     },
     [
-      AdventureEscrow,
-      Characters,
-      CharactersTokenURI,
       delegatorAddress,
-      EncounterEntity,
-      GoldBalances,
-      Position,
       publicClient,
       renderError,
-      Spawned,
-      Stats,
-      StatusEffectStats,
-      StatusEffectValidity,
       worldContract,
-      WorldEncounter,
-      WorldStatusEffects,
     ],
   );
 
   const getMonsters = useCallback(
-    (entities: Entity[]): Monster[] => {
+    (entities: string[]): Monster[] => {
       try {
         const _monsters: Monster[] = entities.map(entity => {
           const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
-          const encounterId = getComponentValue(
-            EncounterEntity,
-            entity,
-          )?.encounterId;
 
-          const currentHp = getComponentValueStrict(Stats, entity).currentHp;
+          const encounterData = getTableValue('EncounterEntity', entity);
+          const encounterId = encounterData?.encounterId;
+
+          const statsData = getTableValue('Stats', entity);
+          const currentHp = toBigInt(statsData?.currentHp);
           const inBattle = !!encounterId && encounterId !== zeroHash;
-          const isSpawned = getComponentValueStrict(Spawned, entity).spawned;
-          const _position = getComponentValueStrict(Position, entity);
-          const mobStatsData = getComponentValue(MobStatsComponent, entity);
-          const isElite = mobStatsData?.isElite ?? false;
+
+          const spawnedEntityData = getTableValue('Spawned', entity);
+          const isEntitySpawned = Boolean(spawnedEntityData?.spawned ?? false);
+
+          const positionEntityData = getTableValue('Position', entity);
+          const posX = toNumber(positionEntityData?.x ?? 0);
+          const posY = toNumber(positionEntityData?.y ?? 0);
+
+          const mobStatsData = getTableValue('MobStats', entity);
+          const isElite = Boolean(mobStatsData?.isElite ?? false);
 
           const monsterTemplate = monsterTemplates.find(
             m => m.mobId === mobId.toString(),
@@ -421,8 +385,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
             id: entity,
             inBattle,
             isElite,
-            isSpawned,
-            position: { x: _position.x, y: _position.y },
+            isSpawned: isEntitySpawned,
+            position: { x: posX, y: posY },
           } as Monster;
         });
 
@@ -432,31 +396,45 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         return [];
       }
     },
-    [EncounterEntity, MobStatsComponent, monsterTemplates, Position, renderError, Spawned, Stats],
+    [monsterTemplates, renderError],
   );
 
   const getShops = useCallback(
-    (entities: Entity[]): Shop[] => {
+    (entities: string[]): Shop[] => {
       try {
         const _shops: Shop[] = entities.map(entity => {
-          const _position = getComponentValueStrict(Position, entity);
-          const shopData = getComponentValueStrict(Shops, entity);
+          const positionEntityData = getTableValue('Position', entity);
+          const shopData = getTableValue('Shops', entity);
+
+          if (!positionEntityData || !shopData) {
+            throw new Error(`Missing data for shop entity ${entity}`);
+          }
 
           const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
           const name = SHOP_MOB_ID_TO_NAME[mobId.toString()];
 
+          const buyableItems = Array.isArray(shopData.buyableItems)
+            ? (shopData.buyableItems as unknown[]).map(item => item?.toString() ?? '')
+            : [];
+          const sellableItems = Array.isArray(shopData.sellableItems)
+            ? (shopData.sellableItems as unknown[]).map(item => item?.toString() ?? '')
+            : [];
+
           return {
-            buyableItems: shopData.buyableItems.map(item => item.toString()),
-            gold: shopData.gold,
-            maxGold: shopData.maxGold,
+            buyableItems,
+            gold: toBigInt(shopData.gold),
+            maxGold: toBigInt(shopData.maxGold),
             name: name ?? 'Unknown Shop',
-            position: { x: _position.x, y: _position.y },
-            priceMarkdown: shopData.priceMarkdown,
-            priceMarkup: shopData.priceMarkup,
-            restock: shopData.stock,
-            sellableItems: shopData.sellableItems.map(item => item.toString()),
+            position: {
+              x: toNumber(positionEntityData.x),
+              y: toNumber(positionEntityData.y),
+            },
+            priceMarkdown: toBigInt(shopData.priceMarkdown),
+            priceMarkup: toBigInt(shopData.priceMarkup),
+            restock: toBigInt(shopData.stock),
+            sellableItems,
             shopId: entity,
-            stock: shopData.stock,
+            stock: toBigInt(shopData.stock),
           } as Shop;
         });
 
@@ -466,7 +444,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         return [];
       }
     },
-    [Position, Shops, renderError],
+    [renderError],
   );
 
   const refreshEntities = useCallback(() => {
@@ -475,7 +453,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   // Sync effect: Monsters and shops update immediately (no async fetches)
   useEffect(() => {
-    if (!(allMonsterEntities && isSynced)) return;
+    if (!isSynced) return;
 
     const _monsters = getMonsters(allMonsterEntities);
     const _shops = getShops(allShopEntities);
@@ -487,7 +465,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   // Async effect: Characters load in background (IPFS metadata fetches can be slow)
   useEffect(() => {
-    if (!(allCharacterEntities && isSynced)) return;
+    if (!isSynced) return;
 
     let cancelled = false;
     (async () => {
@@ -528,7 +506,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     ) as Character[];
   }, [allCharacters, delegatorAddress, position]);
 
-  // Clear spawn waiting state when Spawned component updates from RECS sync
+  // Clear spawn waiting state when Spawned value updates from store sync
   useEffect(() => {
     if (isSpawned && isWaitingForSpawn) {
       setIsWaitingForSpawn(false);

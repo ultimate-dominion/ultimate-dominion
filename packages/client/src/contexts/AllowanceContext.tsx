@@ -1,5 +1,3 @@
-import { useComponentValue } from '@latticexyz/react';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -11,6 +9,7 @@ import {
 import { Address, erc20Abi, maxUint256 } from 'viem';
 
 import { useToast } from '../hooks/useToast';
+import { useGameConfig } from '../lib/gameStore';
 import { ERC_1155_ABI } from '../utils/constants';
 import { SystemToAllow } from '../utils/types';
 
@@ -56,46 +55,34 @@ const defaultContextValue: AllowanceContextType = {
 
 const AllowanceContext = createContext<AllowanceContextType>(defaultContextValue);
 
-// Inner component that uses hooks - only rendered when components are ready
-const AllowanceProviderInner = ({
+export const AllowanceProvider = ({
   children,
-  UltimateDominionConfig,
-  publicClient,
-  isSynced,
 }: {
   children: ReactNode;
-  UltimateDominionConfig: any;
-  publicClient: any;
-  isSynced: boolean;
 }): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
   const { authMethod, embeddedWalletClient, externalWalletClient } = useAuth();
   const approvalClient = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
+  const { network, isSynced } = useMUD();
+  const { publicClient } = network;
   const { character, isRefreshing } = useCharacter();
 
-  const [goldMarketplaceAllowance, setGoldMarketplaceAllowance] =
-    useState<bigint>(0n);
-  const [itemsMarketplaceAllowance, setItemsMarketplaceAllowance] =
-    useState<boolean>(false);
-  const [goldLootManagerAllowance, setGoldLootManagerAllowance] =
-    useState<bigint>(0n);
-  const [itemsLootManagerAllowance, setItemsLootManagerAllowance] =
-    useState<boolean>(false);
+  const configValue = useGameConfig('UltimateDominionConfig');
+  const goldTokenAddress = (configValue?.goldToken as string) ?? null;
+  const itemsAddress = (configValue?.items as string) ?? null;
+  const lootManagerAddress = (configValue?.lootManager as string) ?? null;
+  const marketplaceAddress = (configValue?.marketplace as string) ?? null;
+  const shopAddress = (configValue?.shop as string) ?? null;
+
+  const [goldMarketplaceAllowance, setGoldMarketplaceAllowance] = useState<bigint>(0n);
+  const [itemsMarketplaceAllowance, setItemsMarketplaceAllowance] = useState<boolean>(false);
+  const [goldLootManagerAllowance, setGoldLootManagerAllowance] = useState<bigint>(0n);
+  const [itemsLootManagerAllowance, setItemsLootManagerAllowance] = useState<boolean>(false);
   const [goldShopAllowance, setGoldShopAllowance] = useState<bigint>(0n);
   const [itemsShopAllowance, setItemsShopAllowance] = useState<boolean>(false);
 
   const [isApprovingGold, setIsApprovingGold] = useState(false);
   const [isApprovingItems, setIsApprovingItems] = useState(false);
-
-  const configValue = useComponentValue(
-    UltimateDominionConfig,
-    singletonEntity,
-  );
-  const goldTokenAddress = configValue?.goldToken ?? null;
-  const itemsAddress = configValue?.items ?? null;
-  const lootManagerAddress = configValue?.lootManager ?? null;
-  const marketplaceAddress = configValue?.marketplace ?? null;
-  const shopAddress = configValue?.shop ?? null;
 
   const fetchAllowances = useCallback(async () => {
     if (!character) return;
@@ -322,35 +309,6 @@ const AllowanceProviderInner = ({
     >
       {children}
     </AllowanceContext.Provider>
-  );
-};
-
-export const AllowanceProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}): JSX.Element => {
-  const { components, isSynced, network } = useMUD();
-  const { publicClient } = network;
-  const UltimateDominionConfig = components?.UltimateDominionConfig;
-
-  // If component isn't ready, render with default context
-  if (!UltimateDominionConfig) {
-    return (
-      <AllowanceContext.Provider value={defaultContextValue}>
-        {children}
-      </AllowanceContext.Provider>
-    );
-  }
-
-  return (
-    <AllowanceProviderInner
-      UltimateDominionConfig={UltimateDominionConfig}
-      publicClient={publicClient}
-      isSynced={isSynced}
-    >
-      {children}
-    </AllowanceProviderInner>
   );
 };
 

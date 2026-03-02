@@ -1,12 +1,10 @@
 /*
  * Create the system calls that the client can use to ask
  * for changes in the World state (using the System contracts).
+ *
+ * Reads game state from the Zustand store instead of RECS.
  */
 
-import {
-  Entity,
-  getComponentValue,
-} from '@latticexyz/recs';
 import {
   Address,
   BaseError,
@@ -23,15 +21,15 @@ import { reportError } from '../../utils/errorReporter';
 import {
   AdvancedClass,
   ArmorType,
-  EncounterType,
   type EntityStats,
+  EncounterType,
   type NewOrder,
   PowerSource,
   Race,
   StatsClasses,
 } from '../../utils/types';
 
-import { ClientComponents } from './createClientComponents';
+import { getTableValue } from '../gameStore';
 import { SetupNetworkResult } from './setupNetwork';
 
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
@@ -44,8 +42,6 @@ type SystemCallReturn = Promise<{
 type ErrorCategory = 'REVERT' | 'FUNDS' | 'RPC' | 'GAS' | 'NONCE' | 'SPONSOR' | 'UNKNOWN';
 
 // Map known custom error signatures to user-friendly messages.
-// When viem can't decode a revert (error not on ABI), it reports the raw
-// selector. We match these to provide clear feedback.
 const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0x9e4b2685': 'That name is already taken. Please choose a different name.',
   '0x6d187b28': 'Invalid account.',
@@ -53,26 +49,22 @@ const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0x261fa6d6': 'Character is locked and cannot be modified.',
   '0x82b42900': 'You are not authorized to perform this action.',
   '0x8fa2ffa1': 'You need at least one weapon or spell equipped to enter combat.',
-  // Combat errors
   '0x39f609e8': 'Action not found.',
   '0x54962c76': 'Item not equipped.',
   '0xbb1f5f1e': 'Action type not recognized.',
   '0x0f53fbcc': 'Invalid magic item type.',
   '0x4a7f394f': 'Invalid action.',
   '0xd7663649': 'Unrecognized resistance stat.',
-  // Mob errors
   '0xecea39ab': 'Maximum mob types reached.',
   '0xdd94cf19': 'Mob array length mismatch.',
   '0x64b92770': 'Wrong mob type.',
   '0x5ffeddff': 'Maximum mob spawns reached.',
-  // Stat errors
   '0x72af8dba': 'Stats cannot be negative.',
 };
 
 const classifyError = (error: unknown): { category: ErrorCategory; message: string } => {
   const raw = ((error as Error)?.message ?? '').toLowerCase();
 
-  // Viem structured errors — walk the chain for specific types
   if (error && typeof error === 'object' && 'walk' in error) {
     const baseError = error as BaseError;
 
@@ -93,7 +85,6 @@ const classifyError = (error: unknown): { category: ErrorCategory; message: stri
     }
   }
 
-  // Pattern-based classification for non-viem or wrapped errors
   if (/gas required exceeds|out of gas|gas estimation/i.test(raw)) {
     return { category: 'GAS', message: raw };
   }
@@ -119,7 +110,6 @@ const classifyError = (error: unknown): { category: ErrorCategory; message: stri
 const getContractError = (error: unknown): string => {
   const { category, message } = classifyError(error);
 
-  // Structured diagnostic log — scan browser console for [TX_ERROR] to filter
   console.error(
     `[TX_ERROR][${category}] ${message}`,
     category === 'UNKNOWN' ? error : '',
@@ -127,7 +117,6 @@ const getContractError = (error: unknown): string => {
 
   if (category === 'FUNDS') return INSUFFICIENT_FUNDS_MESSAGE;
 
-  // Check for known error signatures that viem couldn't decode
   const sigMatch = message.match(/signature\s+"(0x[0-9a-f]{8})"/i);
   if (sigMatch) {
     const friendly = KNOWN_ERROR_SIGNATURES[sigMatch[1].toLowerCase()];
@@ -148,20 +137,17 @@ export function createSystemCalls(
     worldContract,
     delegatorAddress,
   }: SetupNetworkResult & { delegatorAddress?: Address },
-  clientComponents: ClientComponents,
 ) {
-  // Mirrors contract-side "not character owner" checks (e.g. RestSystem, EquipmentSystem).
-  // Returns an error result if the entity is not a valid character or is not owned
-  // by the current account; returns null when ownership is confirmed.
+  // Validates character ownership by reading from the Zustand game store.
   const validateCharacterOwnership = (
-    characterEntity: Entity | string,
+    characterEntity: string,
     fnName: string,
   ): { success: false; error: string } | null => {
-    const entity = (typeof characterEntity === 'string'
-      ? characterEntity
-      : characterEntity.toString()) as Entity;
+    const entity = characterEntity.toString();
 
-    const character = getComponentValue(clientComponents.Characters, entity);
+    // Read from Zustand store instead of RECS
+    const character = getTableValue('Characters', entity) as
+      | { owner: string } | undefined;
     if (!character) {
       const msg = `${fnName}: entity is not a valid character`;
       console.warn(`[OWNERSHIP] ${msg}`);
@@ -259,7 +245,7 @@ export function createSystemCalls(
   };
 
   const depositToEscrow = async (
-    characterEntity: Entity,
+    characterEntity: string,
     previousAmount: bigint,
     amount: bigint,
   ): SystemCallReturn => {
@@ -267,7 +253,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const characterId = characterEntity.toString() as `0x${string}`;
+      const characterId = characterEntity as `0x${string}`;
 
       const tx = await worldContract.write.UD__depositToEscrow([
         characterId,
@@ -294,10 +280,10 @@ export function createSystemCalls(
     }
   };
 
-  const endShopEncounter = async (encounterId: Entity): SystemCallReturn => {
+  const endShopEncounter = async (encounterId: string): SystemCallReturn => {
     try {
       const tx = await worldContract.write.UD__endShopEncounter([
-        encounterId.toString() as `0x${string}`,
+        encounterId as `0x${string}`,
       ]);
 
       waitForTransaction(tx).catch(() => {});
@@ -311,9 +297,9 @@ export function createSystemCalls(
   };
 
   const endTurn = async (
-    encounterId: Entity,
-    playerId: Entity,
-    defenderId: Entity,
+    encounterId: string,
+    playerId: string,
+    defenderId: string,
     itemId: string,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(playerId, 'endTurn');
@@ -322,16 +308,16 @@ export function createSystemCalls(
     try {
       const actions = [
         {
-          attackerEntityId: playerId.toString() as `0x${string}`,
-          defenderEntityId: defenderId.toString() as `0x${string}`,
+          attackerEntityId: playerId as `0x${string}`,
+          defenderEntityId: defenderId as `0x${string}`,
           itemId: BigInt(itemId),
         },
       ];
 
       const tx = await worldContract.write.UD__endTurn(
         [
-          encounterId.toString() as `0x${string}`,
-          playerId.toString() as `0x${string}`,
+          encounterId as `0x${string}`,
+          playerId as `0x${string}`,
           actions,
         ],
         {
@@ -350,7 +336,7 @@ export function createSystemCalls(
   };
 
   const enterGame = async (
-    characterEntity: Entity,
+    characterEntity: string,
     starterWeaponId: bigint,
     starterArmorId: bigint,
   ): SystemCallReturn => {
@@ -359,7 +345,7 @@ export function createSystemCalls(
 
     try {
       const tx = await worldContract.write.UD__enterGame([
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
         starterWeaponId,
         starterArmorId,
       ]);
@@ -379,7 +365,7 @@ export function createSystemCalls(
   };
 
   const equipItems = async (
-    characterEntity: Entity,
+    characterEntity: string,
     itemIds: string[],
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'equipItems');
@@ -387,7 +373,7 @@ export function createSystemCalls(
 
     try {
       const tx = await worldContract.write.UD__equipItems([
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
         itemIds.map(itemId => BigInt(itemId)),
       ]);
 
@@ -437,7 +423,7 @@ export function createSystemCalls(
   };
 
   const levelCharacter = async (
-    characterId: Entity,
+    characterId: string,
     entityStats: Omit<EntityStats, 'entityClass'> & {
       class: StatsClasses;
     },
@@ -455,7 +441,6 @@ export function createSystemCalls(
         currentHp: BigInt(entityStats.currentHp),
         experience: BigInt(entityStats.experience),
         level: BigInt(entityStats.level) + BigInt(1),
-        // Implicit class system fields - preserve existing values
         powerSource: entityStats.powerSource ?? PowerSource.None,
         race: entityStats.race ?? Race.None,
         startingArmor: entityStats.startingArmor ?? ArmorType.None,
@@ -516,7 +501,7 @@ export function createSystemCalls(
   let isMovePending = false;
 
   const move = async (
-    characterEntity: Entity,
+    characterEntity: string,
     x: number,
     y: number,
   ): SystemCallReturn => {
@@ -528,7 +513,7 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'move');
     if (ownershipError) return ownershipError;
 
-    // Cooldown check — mirrors contract's MoveTooFast revert
+    // Cooldown check
     const now = Date.now();
     if (now - lastMoveTimestamp < MOVE_COOLDOWN_MS) {
       console.warn('[move] Movement on cooldown, ignoring request');
@@ -536,9 +521,9 @@ export function createSystemCalls(
     }
     lastMoveTimestamp = now;
 
-    // Adjacency check — mirrors contract's InvalidMove revert (Manhattan distance == 1)
-    // Fail closed: if position is unknown, reject the move
-    const pos = getComponentValue(clientComponents.Position, characterEntity);
+    // Adjacency check — read position from Zustand store
+    const pos = getTableValue('Position', characterEntity) as
+      | { x: number; y: number } | undefined;
     if (!pos) {
       console.warn('[move] Position unknown for entity, rejecting move');
       return { success: false, error: 'Position unknown.' };
@@ -553,7 +538,7 @@ export function createSystemCalls(
     isMovePending = true;
     try {
       const tx = await worldContract.write.UD__move(
-        [characterEntity.toString() as `0x${string}`, x, y],
+        [characterEntity as `0x${string}`, x, y],
         {
           gas: BigInt('10000000'),
         },
@@ -571,13 +556,13 @@ export function createSystemCalls(
     }
   };
 
-  const removeEntityFromBoard = async (entity: Entity): SystemCallReturn => {
+  const removeEntityFromBoard = async (entity: string): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(entity, 'removeEntityFromBoard');
     if (ownershipError) return ownershipError;
 
     try {
       const tx = await worldContract.write.UD__removeEntityFromBoard([
-        entity.toString() as `0x${string}`,
+        entity as `0x${string}`,
       ]);
 
       waitForTransaction(tx).catch(() => {});
@@ -616,7 +601,7 @@ export function createSystemCalls(
   };
 
   const rollStats = async (
-    characterEntity: Entity,
+    characterEntity: string,
     characterClass: StatsClasses,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'rollStats');
@@ -628,14 +613,13 @@ export function createSystemCalls(
 
       const tx = await worldContract.write.UD__rollStats([
         userRandomNumber,
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
         characterClass,
       ]);
 
-      const { blockNumber } = await waitForTransaction(tx);
+      const receipt = await waitForTransaction(tx);
+      const blockNumber = receipt.blockNumber;
 
-      // On real networks, wait for additional blocks for finality
-      // On local Anvil (chainId 31337), skip this as blocks only mine on transactions
       const chainId = await publicClient.getChainId();
       if (chainId !== 31337) {
         const blockToWaitFor = blockNumber + BigInt(2);
@@ -686,13 +670,13 @@ export function createSystemCalls(
     }
   };
 
-  const spawn = async (characterEntity: Entity): SystemCallReturn => {
+  const spawn = async (characterEntity: string): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'spawn');
     if (ownershipError) return ownershipError;
 
     try {
       const tx = await worldContract.write.UD__spawn([
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
       ]);
 
       waitForTransaction(tx).catch(() => {});
@@ -706,7 +690,7 @@ export function createSystemCalls(
   };
 
   const unequipItem = async (
-    characterEntity: Entity,
+    characterEntity: string,
     itemId: string,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'unequipItem');
@@ -714,7 +698,7 @@ export function createSystemCalls(
 
     try {
       const tx = await worldContract.write.UD__unequipItem([
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
         BigInt(itemId),
       ]);
 
@@ -752,12 +736,12 @@ export function createSystemCalls(
     }
   };
 
-  const rest = async (entity: Entity): SystemCallReturn => {
+  const rest = async (entity: string): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(entity, 'rest');
     if (ownershipError) return ownershipError;
 
     try {
-      const characterId = entity.toString() as `0x${string}`;
+      const characterId = entity as `0x${string}`;
 
       const tx = await worldContract.write.UD__rest([characterId]);
 
@@ -772,14 +756,14 @@ export function createSystemCalls(
   };
 
   const useWorldConsumableItem = async (
-    entity: Entity,
+    entity: string,
     tokenId: string,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(entity, 'useWorldConsumableItem');
     if (ownershipError) return ownershipError;
 
     try {
-      const characterId = entity.toString() as `0x${string}`;
+      const characterId = entity as `0x${string}`;
 
       const tx = await worldContract.write.UD__useWorldConsumableItem([
         characterId,
@@ -798,14 +782,14 @@ export function createSystemCalls(
   };
 
   const useCombatConsumableItem = async (
-    entity: Entity,
+    entity: string,
     tokenId: string,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(entity, 'useCombatConsumableItem');
     if (ownershipError) return ownershipError;
 
     try {
-      const characterId = entity.toString() as `0x${string}`;
+      const characterId = entity as `0x${string}`;
 
       const tx = await worldContract.write.UD__useCombatConsumableItem([
         characterId,
@@ -823,7 +807,7 @@ export function createSystemCalls(
   };
 
   const withdrawFromEscrow = async (
-    characterEntity: Entity,
+    characterEntity: string,
     previousAmount: bigint,
     amount: bigint,
   ): SystemCallReturn => {
@@ -831,7 +815,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const characterId = characterEntity.toString() as `0x${string}`;
+      const characterId = characterEntity as `0x${string}`;
 
       const tx = await worldContract.write.UD__withdrawFromEscrow([
         characterId,
@@ -861,7 +845,7 @@ export function createSystemCalls(
   // === Implicit Class System Functions ===
 
   const chooseRace = async (
-    characterEntity: Entity,
+    characterEntity: string,
     race: Race,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'chooseRace');
@@ -869,7 +853,7 @@ export function createSystemCalls(
 
     try {
       const tx = await worldContract.write.UD__chooseRace([
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
         race,
       ]);
 
@@ -888,7 +872,7 @@ export function createSystemCalls(
   };
 
   const choosePowerSource = async (
-    characterEntity: Entity,
+    characterEntity: string,
     powerSource: PowerSource,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'choosePowerSource');
@@ -896,7 +880,7 @@ export function createSystemCalls(
 
     try {
       const tx = await worldContract.write.UD__choosePowerSource([
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
         powerSource,
       ]);
 
@@ -915,7 +899,7 @@ export function createSystemCalls(
   };
 
   const rollBaseStats = async (
-    characterEntity: Entity,
+    characterEntity: string,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'rollBaseStats');
     if (ownershipError) return ownershipError;
@@ -926,12 +910,12 @@ export function createSystemCalls(
 
       const tx = await worldContract.write.UD__rollBaseStats([
         userRandomNumber,
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
       ]);
 
-      const { blockNumber } = await waitForTransaction(tx);
+      const receipt = await waitForTransaction(tx);
+      const blockNumber = receipt.blockNumber;
 
-      // On real networks, wait for additional blocks for finality
       const chainId = await publicClient.getChainId();
       if (chainId !== 31337) {
         const blockToWaitFor = blockNumber + BigInt(2);
@@ -956,7 +940,7 @@ export function createSystemCalls(
   };
 
   const selectAdvancedClass = async (
-    characterEntity: Entity,
+    characterEntity: string,
     advancedClass: AdvancedClass,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'selectAdvancedClass');
@@ -964,7 +948,7 @@ export function createSystemCalls(
 
     try {
       const tx = await worldContract.write.UD__selectAdvancedClass([
-        characterEntity.toString() as `0x${string}`,
+        characterEntity as `0x${string}`,
         advancedClass,
       ]);
 
@@ -1005,7 +989,6 @@ export function createSystemCalls(
     }
   };
 
-  // Manual trigger for testing - normally called by contract systems
   const triggerFragment = async (
     characterId: string,
     fragmentType: number,

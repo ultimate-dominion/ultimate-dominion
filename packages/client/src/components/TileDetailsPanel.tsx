@@ -24,7 +24,7 @@ import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { getComponentValue } from '@latticexyz/recs';
+import { getTableValue, toBigInt } from '../lib/gameStore';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -86,7 +86,6 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useDisclosure();
 
   const {
-    components: { Stats },
     delegatorAddress,
     systemCalls: { createEncounter, rest },
   } = useMUD();
@@ -135,14 +134,14 @@ export const TileDetailsPanel = (): JSX.Element => {
     });
     if (result !== undefined) {
       for (let i = 0; i < 30; i++) {
-        const stats = getComponentValue(Stats, character.id);
-        if (stats && stats.currentHp !== prevHp) break;
+        const stats = getTableValue('Stats', character.id);
+        if (stats && toBigInt(stats.currentHp) !== prevHp) break;
         await new Promise(r => setTimeout(r, 500));
       }
       await refreshCharacter();
       renderSuccess(REST_FLAVOR[Math.floor(Math.random() * REST_FLAVOR.length)]);
     }
-  }, [character, rest, restTx, Stats, refreshCharacter, renderSuccess]);
+  }, [character, rest, restTx, refreshCharacter, renderSuccess]);
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
   const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);

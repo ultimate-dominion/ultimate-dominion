@@ -1,19 +1,12 @@
 import {
-  getComponentValueStrict,
-  Has,
-  HasValue,
-  runQuery,
-} from '@latticexyz/recs';
-import { decodeEntity, encodeEntity } from '@latticexyz/store-sync/recs';
-import {
   createContext,
   ReactNode,
-  useCallback,
   useContext,
   useEffect,
   useState,
 } from 'react';
 
+import { useGameTable, decodeUint256FromKey, toNumber } from '../lib/gameStore';
 import { useToast } from '../hooks/useToast';
 import {
   decodeMonsterStats,
@@ -22,8 +15,6 @@ import {
   uriToHttp,
 } from '../utils/helpers';
 import { MobType, type MonsterTemplate } from '../utils/types';
-
-import { useMUD } from './MUDContext';
 
 type MonstersContextType = {
   monsterTemplates: MonsterTemplate[];
@@ -41,84 +32,71 @@ export const MonstersProvider = ({
   children: ReactNode;
 }): JSX.Element => {
   const { renderError } = useToast();
-  const {
-    components: { Mobs },
-    isSynced,
-  } = useMUD();
+  const mobsTable = useGameTable('Mobs');
 
   const [monsterTemplates, setMonsterTemplates] = useState<MonsterTemplate[]>(
     [],
   );
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchMonsterTemplates = useCallback(
-    async (allMonsterMobIds: bigint[]): Promise<MonsterTemplate[]> => {
-      const _monsterTemplates: MonsterTemplate[] = await Promise.all(
-        allMonsterMobIds.map(async mobId => {
-          const mobData = getComponentValueStrict(
-            Mobs,
-            encodeEntity({ mobId: 'uint256' }, { mobId: BigInt(mobId) }),
-          );
+  useEffect(() => {
+    const entries = Object.entries(mobsTable);
 
-          const { mobMetadata: metadataURI, mobStats } = mobData;
+    // Wait until the store has data before processing
+    if (entries.length === 0) return;
 
-          const monsterStats = decodeMonsterStats(mobStats);
+    (async () => {
+      try {
+        const monsterEntries = entries.filter(
+          ([, row]) => toNumber(row.mobType) === MobType.Monster,
+        );
 
-          // Handle text-only URIs directly
-          let fetachedMetadata = { name: `Monster #${mobId}`, description: '', image: '' };
-          try {
-            if (metadataURI && metadataURI.trim() !== '') {
-              if (isTextOnlyUri(metadataURI)) {
-                fetachedMetadata = await fetchMetadataFromUri(metadataURI);
-              } else {
-                const urls = uriToHttp(metadataURI);
-                if (urls.length > 0) {
-                  fetachedMetadata = await fetchMetadataFromUri(urls[0]);
+        const templates: MonsterTemplate[] = await Promise.all(
+          monsterEntries.map(async ([keyBytes, row]) => {
+            const mobId = decodeUint256FromKey(keyBytes, 0);
+
+            const metadataURI = typeof row.mobMetadata === 'string' ? row.mobMetadata : '';
+            const mobStatsBytes = typeof row.mobStats === 'string' ? row.mobStats : '0x';
+
+            const monsterStats = decodeMonsterStats(mobStatsBytes);
+
+            let fetchedMetadata = {
+              name: `Monster #${mobId}`,
+              description: '',
+              image: '',
+            };
+            try {
+              if (metadataURI && metadataURI.trim() !== '') {
+                if (isTextOnlyUri(metadataURI)) {
+                  fetchedMetadata = await fetchMetadataFromUri(metadataURI);
+                } else {
+                  const urls = uriToHttp(metadataURI);
+                  if (urls.length > 0) {
+                    fetchedMetadata = await fetchMetadataFromUri(urls[0]);
+                  }
                 }
               }
+            } catch (e) {
+              console.warn(`Failed to fetch metadata for monster ${mobId}:`, e);
             }
-          } catch (e) {
-            console.warn(`Failed to fetch metadata for monster ${mobId}:`, e);
-          }
 
-          return {
-            agility: monsterStats.agility,
-            armor: monsterStats.armor,
-            entityClass: monsterStats.entityClass,
-            experience: monsterStats.experience,
-            hitPoints: monsterStats.hitPoints,
-            intelligence: monsterStats.intelligence,
-            inventory: monsterStats.inventory,
-            level: monsterStats.level,
-            mobId: mobId.toString(),
-            strength: monsterStats.strength,
-            ...fetachedMetadata,
-          } as MonsterTemplate;
-        }),
-      );
+            return {
+              agility: monsterStats.agility,
+              armor: monsterStats.armor,
+              entityClass: monsterStats.entityClass,
+              experience: monsterStats.experience,
+              hitPoints: monsterStats.hitPoints,
+              intelligence: monsterStats.intelligence,
+              inventory: monsterStats.inventory,
+              level: monsterStats.level,
+              mobId: mobId.toString(),
+              strength: monsterStats.strength,
+              ...fetchedMetadata,
+            } as MonsterTemplate;
+          }),
+        );
 
-      return _monsterTemplates;
-    },
-    [Mobs],
-  );
-
-  useEffect(() => {
-    (async () => {
-      if (!isSynced) return;
-
-      try {
-        const allMonsterMobIds = Array.from(
-          runQuery([Has(Mobs), HasValue(Mobs, { mobType: MobType.Monster })]),
-        ).map(entity => {
-          const { mobId } = decodeEntity({ mobId: 'uint256' }, entity);
-          return mobId;
-        });
-
-        if (allMonsterMobIds.length > 0) {
-          const _monsterTemplates =
-            await fetchMonsterTemplates(allMonsterMobIds);
-          setMonsterTemplates(_monsterTemplates);
-        }
+        setMonsterTemplates(templates);
       } catch (e) {
         renderError(
           (e as Error)?.message ?? 'Failed to fetch monster templates.',
@@ -128,7 +106,12 @@ export const MonstersProvider = ({
         setIsLoading(false);
       }
     })();
-  }, [fetchMonsterTemplates, isSynced, Mobs, renderError]);
+    // mobsTable reference changes when data arrives; we only want to run once
+    // when the table is populated. Using entries.length as a proxy isn't
+    // reactive-safe here because we depend on mobsTable, but we don't want to
+    // re-run on every subsequent live update (monsters are seed data).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mobsTable]);
 
   return (
     <MonstersContext.Provider

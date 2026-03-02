@@ -12,7 +12,6 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { Entity } from '@latticexyz/recs';
 import { useCallback, useState } from 'react';
 
 import { useMUD } from '../contexts/MUDContext';
@@ -120,7 +119,7 @@ const ALL_CLASSES: AdvancedClass[] = [
 type AdvancedClassModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  characterId: Entity;
+  characterId: string;
   onClassSelected: () => void;
 };
 

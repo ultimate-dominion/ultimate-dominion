@@ -1,14 +1,3 @@
-import { useEntityQuery } from '@latticexyz/react';
-import {
-  getComponentValue,
-  getComponentValueStrict,
-  Has,
-} from '@latticexyz/recs';
-import {
-  decodeEntity,
-  encodeEntity,
-  singletonEntity,
-} from '@latticexyz/store-sync/recs';
 import {
   createContext,
   ReactNode,
@@ -19,6 +8,16 @@ import {
 } from 'react';
 
 import { useToast } from '../hooks/useToast';
+import {
+  encodeBytes32Key,
+  encodeUint256Key,
+  getTableEntries,
+  toBigInt,
+  toNumber,
+  useGameConfig,
+  useGameStore,
+  useGameTable,
+} from '../lib/gameStore';
 import { fetchMetadataFromUri, isTextOnlyUri, uriToHttp } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -28,8 +27,6 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
-
-import { useMUD } from './MUDContext';
 
 type ItemsContextType = {
   armorTemplates: ArmorTemplate[];
@@ -53,66 +50,35 @@ export const ItemsProvider = ({
   children: ReactNode;
 }): JSX.Element => {
   const { renderError } = useToast();
-  const {
-    components: {
-      ArmorStats,
-      ConsumableStats,
-      Items,
-      ItemsBaseURI,
-      ItemsTokenURI,
-      SpellStats,
-      StatRestrictions,
-      StatusEffectStats,
-      StatusEffectValidity,
-      WeaponStats,
-    },
-    isSynced,
-  } = useMUD();
 
   const [armorTemplates, setArmorTemplates] = useState<ArmorTemplate[]>([]);
-  const [consumableTemplates, setConsumableTemplates] = useState<
-    ConsumableTemplate[]
-  >([]);
+  const [consumableTemplates, setConsumableTemplates] = useState<ConsumableTemplate[]>([]);
   const [spellTemplates, setSpellTemplates] = useState<SpellTemplate[]>([]);
   const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Reactive query: re-triggers when background sync adds Items records
-  // (fixes stale cache issue where LIVE fires before items arrive)
-  const allItemEntities = useEntityQuery(Items ? [Has(Items)] : []);
+  // Reactive table subscriptions — re-runs the effect when item data arrives
+  const itemsTable = useGameTable('Items');
+  const hydrated = useGameStore((s) => s.hydrated);
+  const baseURIRow = useGameConfig('ItemsBaseURI');
 
   const fetchAllArmor = useCallback(
-    async (allArmorIds: bigint[]) => {
-      const allArmorTemplates = await Promise.all(
-        allArmorIds.map(async armorId => {
-          const itemIdEntity = encodeEntity(
-            { itemId: 'uint256' },
-            { itemId: armorId },
-          );
+    async (armorIds: bigint[]): Promise<ArmorTemplate[]> => {
+      const armorStatsTable = getTableEntries('ArmorStats');
+      const statRestrictionsTable = getTableEntries('StatRestrictions');
+      const tokenURITable = getTableEntries('ItemsTokenURI');
+      const baseURI = String(baseURIRow?.uri ?? '');
 
-          const statRestrictions = getComponentValueStrict(
-            StatRestrictions,
-            itemIdEntity,
-          );
-          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
-          const armorStats = getComponentValueStrict(ArmorStats, itemIdEntity);
+      return Promise.all(
+        armorIds.map(async (armorId) => {
+          const keyBytes = encodeUint256Key(armorId);
 
-          const baseURI = getComponentValueStrict(
-            ItemsBaseURI,
-            singletonEntity,
-          ).uri;
+          const armorRow = armorStatsTable[keyBytes];
+          const restrictionsRow = statRestrictionsTable[keyBytes];
+          const itemRow = itemsTable[keyBytes];
+          const tokenURIRow = tokenURITable[keyBytes];
+          const tokenURI = String(tokenURIRow?.uri ?? '');
 
-          // ERC1155 tables use tokenId as key (same numeric value, different key name)
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: armorId },
-          );
-          const tokenURI = getComponentValueStrict(
-            ItemsTokenURI,
-            tokenIdEntity,
-          ).uri;
-
-          // Try to fetch metadata, but don't fail if it's unavailable
           let metadata = { name: `Armor #${armorId}`, description: '', image: '' };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
@@ -122,101 +88,73 @@ export const ItemsProvider = ({
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
           } catch (e) {
-            console.warn(`Failed to fetch metadata for armor ${armorId}:`, e);
+            console.warn(`[ItemsContext] Failed to fetch metadata for armor ${armorId}:`, e);
           }
 
           return {
             ...metadata,
-            agiModifier: armorStats.agiModifier,
-            armorModifier: armorStats.armorModifier,
-            hpModifier: armorStats.hpModifier,
-            intModifier: armorStats.intModifier,
-            itemType: itemTemplate.itemType,
-            minLevel: armorStats.minLevel,
-            price: itemTemplate.price,
-            rarity: Number(itemTemplate.rarity) as Rarity,
+            agiModifier: toBigInt(armorRow?.agiModifier),
+            armorModifier: toBigInt(armorRow?.armorModifier),
+            hpModifier: toBigInt(armorRow?.hpModifier),
+            intModifier: toBigInt(armorRow?.intModifier),
+            itemType: toNumber(itemRow?.itemType) as ItemType,
+            minLevel: toBigInt(armorRow?.minLevel),
+            price: toBigInt(itemRow?.price),
+            rarity: toNumber(itemRow?.rarity) as Rarity,
             statRestrictions: {
-              minAgility: statRestrictions.minAgility,
-              minIntelligence: statRestrictions.minIntelligence,
-              minStrength: statRestrictions.minStrength,
+              minAgility: toBigInt(restrictionsRow?.minAgility),
+              minIntelligence: toBigInt(restrictionsRow?.minIntelligence),
+              minStrength: toBigInt(restrictionsRow?.minStrength),
             },
-            strModifier: armorStats.strModifier,
+            strModifier: toBigInt(armorRow?.strModifier),
             tokenId: armorId.toString(),
           } as ArmorTemplate;
         }),
       );
-
-      return allArmorTemplates;
     },
-    [ArmorStats, Items, ItemsBaseURI, ItemsTokenURI, StatRestrictions],
+    [baseURIRow, itemsTable],
   );
 
   const fetchAllConsumables = useCallback(
-    async (allConsumableIds: bigint[]) => {
-      const allConsumableTemplates = await Promise.all(
-        allConsumableIds.map(async consumableId => {
-          const itemIdEntity = encodeEntity(
-            { itemId: 'uint256' },
-            { itemId: consumableId },
-          );
+    async (consumableIds: bigint[]): Promise<ConsumableTemplate[]> => {
+      const consumableStatsTable = getTableEntries('ConsumableStats');
+      const statRestrictionsTable = getTableEntries('StatRestrictions');
+      const statusEffectStatsTable = getTableEntries('StatusEffectStats');
+      const statusEffectValidityTable = getTableEntries('StatusEffectValidity');
+      const tokenURITable = getTableEntries('ItemsTokenURI');
+      const baseURI = String(baseURIRow?.uri ?? '');
 
-          const statRestrictions = getComponentValueStrict(
-            StatRestrictions,
-            itemIdEntity,
-          );
-          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
-          const consumableStats = getComponentValueStrict(
-            ConsumableStats,
-            itemIdEntity,
-          );
-          const statusEffectStats = StatusEffectStats ? consumableStats.effects
-            .map(effect => {
-              const effectEntity = encodeEntity(
-                { effectId: 'bytes32' },
-                { effectId: effect as `0x${string}` },
-              );
-              return getComponentValue(StatusEffectStats, effectEntity);
+      return Promise.all(
+        consumableIds.map(async (consumableId) => {
+          const keyBytes = encodeUint256Key(consumableId);
+
+          const consumableRow = consumableStatsTable[keyBytes];
+          const restrictionsRow = statRestrictionsTable[keyBytes];
+          const itemRow = itemsTable[keyBytes];
+          const tokenURIRow = tokenURITable[keyBytes];
+          const tokenURI = String(tokenURIRow?.uri ?? '');
+
+          // effects is a bytes32[] stored as string[]
+          const effects = Array.isArray(consumableRow?.effects)
+            ? (consumableRow.effects as string[])
+            : [];
+
+          const statusEffectStats = effects
+            .map((effectId) => {
+              const effectKey = encodeBytes32Key(effectId);
+              return statusEffectStatsTable[effectKey];
             })
-            .filter(Boolean) as {
-            agiModifier: bigint;
-            hpModifier: bigint;
-            intModifier: bigint;
-            strModifier: bigint;
-          }[] : [];
+            .filter(Boolean);
 
-          const statusEffectValidities = StatusEffectValidity ? consumableStats.effects
-            .map(effect => {
-              const effectEntity = encodeEntity(
-                { effectId: 'bytes32' },
-                { effectId: effect as `0x${string}` },
-              );
-              return getComponentValue(StatusEffectValidity, effectEntity);
+          const statusEffectValidities = effects
+            .map((effectId) => {
+              const effectKey = encodeBytes32Key(effectId);
+              return statusEffectValidityTable[effectKey];
             })
-            .filter(Boolean) as {
-            cooldown: bigint;
-            maxStacks: bigint;
-            validTime: bigint;
-            validTurns: bigint;
-          }[] : [];
+            .filter(Boolean);
 
-          const hpRestoreAmount = BigInt(consumableStats.maxDamage) * -1n;
+          const hpRestoreAmount = toBigInt(consumableRow?.maxDamage) * -1n;
 
-          const baseURI = getComponentValueStrict(
-            ItemsBaseURI,
-            singletonEntity,
-          ).uri;
-
-          // ERC1155 tables use tokenId as key (same numeric value, different key name)
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: consumableId },
-          );
-          const tokenURI = getComponentValueStrict(
-            ItemsTokenURI,
-            tokenIdEntity,
-          ).uri;
-
-          // Try to fetch metadata, but don't fail if it's unavailable
           let metadata = { name: `Consumable #${consumableId}`, description: '', image: '' };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
@@ -226,93 +164,71 @@ export const ItemsProvider = ({
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
           } catch (e) {
-            console.warn(`Failed to fetch metadata for consumable ${consumableId}:`, e);
+            console.warn(`[ItemsContext] Failed to fetch metadata for consumable ${consumableId}:`, e);
           }
 
           return {
             ...metadata,
             agiModifier: statusEffectStats.reduce(
-              (acc, curr) => acc + BigInt(curr.agiModifier),
+              (acc, row) => acc + toBigInt(row?.agiModifier),
               0n,
             ),
-            cooldown: statusEffectValidities[0]?.cooldown ?? 0n,
-            effects: consumableStats.effects,
+            cooldown: toBigInt(statusEffectValidities[0]?.cooldown),
+            effects,
             hpModifier: statusEffectStats.reduce(
-              (acc, curr) => acc + BigInt(curr.hpModifier),
+              (acc, row) => acc + toBigInt(row?.hpModifier),
               0n,
             ),
-            hpRestoreAmount: hpRestoreAmount,
+            hpRestoreAmount,
             intModifier: statusEffectStats.reduce(
-              (acc, curr) => acc + BigInt(curr.intModifier),
+              (acc, row) => acc + toBigInt(row?.intModifier),
               0n,
             ),
-            itemType: itemTemplate.itemType,
-            maxStacks: statusEffectValidities[0]?.maxStacks ?? 0n,
-            minLevel: consumableStats.minLevel,
-            price: itemTemplate.price,
-            rarity: Number(itemTemplate.rarity) as Rarity,
-            tokenId: consumableId.toString(),
+            itemType: toNumber(itemRow?.itemType) as ItemType,
+            maxStacks: toBigInt(statusEffectValidities[0]?.maxStacks),
+            minLevel: toBigInt(consumableRow?.minLevel),
+            price: toBigInt(itemRow?.price),
+            rarity: toNumber(itemRow?.rarity) as Rarity,
             statRestrictions: {
-              minAgility: statRestrictions.minAgility,
-              minIntelligence: statRestrictions.minIntelligence,
-              minStrength: statRestrictions.minStrength,
+              minAgility: toBigInt(restrictionsRow?.minAgility),
+              minIntelligence: toBigInt(restrictionsRow?.minIntelligence),
+              minStrength: toBigInt(restrictionsRow?.minStrength),
             },
             strModifier: statusEffectStats.reduce(
-              (acc, curr) => acc + BigInt(curr.strModifier),
+              (acc, row) => acc + toBigInt(row?.strModifier),
               0n,
             ),
-            validTime: statusEffectValidities[0]?.validTime ?? 0n,
-            validTurns: statusEffectValidities[0]?.validTurns ?? 0n,
+            tokenId: consumableId.toString(),
+            validTime: toBigInt(statusEffectValidities[0]?.validTime),
+            validTurns: toBigInt(statusEffectValidities[0]?.validTurns),
           } as ConsumableTemplate;
         }),
       );
-
-      return allConsumableTemplates;
     },
-    [
-      ConsumableStats,
-      Items,
-      ItemsBaseURI,
-      ItemsTokenURI,
-      StatRestrictions,
-      StatusEffectStats,
-      StatusEffectValidity,
-    ],
+    [baseURIRow, itemsTable],
   );
 
   const fetchAllSpells = useCallback(
-    async (allSpellIds: bigint[]) => {
-      const allSpellTemplates = await Promise.all(
-        allSpellIds.map(async spellId => {
-          const itemIdEntity = encodeEntity(
-            { itemId: 'uint256' },
-            { itemId: spellId },
-          );
+    async (spellIds: bigint[]): Promise<SpellTemplate[]> => {
+      const spellStatsTable = getTableEntries('SpellStats');
+      const statRestrictionsTable = getTableEntries('StatRestrictions');
+      const tokenURITable = getTableEntries('ItemsTokenURI');
+      const baseURI = String(baseURIRow?.uri ?? '');
 
-          const statRestrictions = getComponentValue(
-            StatRestrictions,
-            itemIdEntity,
-          ) ?? { minAgility: 0, minIntelligence: 0, minStrength: 0 };
-          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
+      return Promise.all(
+        spellIds.map(async (spellId) => {
+          const keyBytes = encodeUint256Key(spellId);
 
-          const spellStats = getComponentValueStrict(SpellStats, itemIdEntity);
+          const spellRow = spellStatsTable[keyBytes];
+          const restrictionsRow = statRestrictionsTable[keyBytes];
+          const itemRow = itemsTable[keyBytes];
+          const tokenURIRow = tokenURITable[keyBytes];
+          const tokenURI = String(tokenURIRow?.uri ?? '');
 
-          const baseURI = getComponentValueStrict(
-            ItemsBaseURI,
-            singletonEntity,
-          ).uri;
+          const effects = Array.isArray(spellRow?.effects)
+            ? (spellRow.effects as string[])
+            : [];
 
-          // ERC1155 tables use tokenId as key (same numeric value, different key name)
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: spellId },
-          );
-          const tokenURI = getComponentValueStrict(
-            ItemsTokenURI,
-            tokenIdEntity,
-          ).uri;
-
-          // Try to fetch metadata, but don't fail if it's unavailable
           let metadata = { name: `Spell #${spellId}`, description: '', image: '' };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
@@ -322,68 +238,53 @@ export const ItemsProvider = ({
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
           } catch (e) {
-            console.warn(`Failed to fetch metadata for spell ${spellId}:`, e);
+            console.warn(`[ItemsContext] Failed to fetch metadata for spell ${spellId}:`, e);
           }
 
           return {
             ...metadata,
-            effects: spellStats.effects,
-            itemType: itemTemplate.itemType,
-            maxDamage: spellStats.maxDamage,
-            minDamage: spellStats.minDamage,
-            minLevel: spellStats.minLevel,
-            price: itemTemplate.price,
-            rarity: Number(itemTemplate.rarity) as Rarity,
-            tokenId: spellId.toString(),
+            effects,
+            itemId: spellId.toString(),
+            itemType: toNumber(itemRow?.itemType) as ItemType,
+            maxDamage: toBigInt(spellRow?.maxDamage),
+            minDamage: toBigInt(spellRow?.minDamage),
+            minLevel: toBigInt(spellRow?.minLevel),
+            price: toBigInt(itemRow?.price),
+            rarity: toNumber(itemRow?.rarity) as Rarity,
             statRestrictions: {
-              minAgility: statRestrictions.minAgility,
-              minIntelligence: statRestrictions.minIntelligence,
-              minStrength: statRestrictions.minStrength,
+              minAgility: toBigInt(restrictionsRow?.minAgility),
+              minIntelligence: toBigInt(restrictionsRow?.minIntelligence),
+              minStrength: toBigInt(restrictionsRow?.minStrength),
             },
+            tokenId: spellId.toString(),
           } as SpellTemplate;
         }),
       );
-
-      return allSpellTemplates;
     },
-    [Items, ItemsBaseURI, ItemsTokenURI, SpellStats, StatRestrictions],
+    [baseURIRow, itemsTable],
   );
 
   const fetchAllWeapons = useCallback(
-    async (allWeaponIds: bigint[]) => {
-      const allWeaponTemplates = await Promise.all(
-        allWeaponIds.map(async weaponId => {
-          const itemIdEntity = encodeEntity(
-            { itemId: 'uint256' },
-            { itemId: weaponId },
-          );
+    async (weaponIds: bigint[]): Promise<WeaponTemplate[]> => {
+      const weaponStatsTable = getTableEntries('WeaponStats');
+      const statRestrictionsTable = getTableEntries('StatRestrictions');
+      const tokenURITable = getTableEntries('ItemsTokenURI');
+      const baseURI = String(baseURIRow?.uri ?? '');
 
-          const statRestrictions = getComponentValueStrict(
-            StatRestrictions,
-            itemIdEntity,
-          );
-          const itemTemplate = getComponentValueStrict(Items, itemIdEntity);
-          const weaponStats = getComponentValueStrict(
-            WeaponStats,
-            itemIdEntity,
-          );
+      return Promise.all(
+        weaponIds.map(async (weaponId) => {
+          const keyBytes = encodeUint256Key(weaponId);
 
-          const baseURI = getComponentValueStrict(
-            ItemsBaseURI,
-            singletonEntity,
-          ).uri;
+          const weaponRow = weaponStatsTable[keyBytes];
+          const restrictionsRow = statRestrictionsTable[keyBytes];
+          const itemRow = itemsTable[keyBytes];
+          const tokenURIRow = tokenURITable[keyBytes];
+          const tokenURI = String(tokenURIRow?.uri ?? '');
 
-          // ERC1155 tables use tokenId as key (same numeric value, different key name)
-          const tokenIdEntity = encodeEntity(
-            { tokenId: 'uint256' },
-            { tokenId: weaponId },
-          );
-          const tokenURI = getComponentValueStrict(
-            ItemsTokenURI,
-            tokenIdEntity,
-          ).uri;
+          const effects = Array.isArray(weaponRow?.effects)
+            ? (weaponRow.effects as string[])
+            : [];
 
-          // Try to fetch metadata, but don't fail if it's unavailable
           let metadata = { name: `Weapon #${weaponId}`, description: '', image: '' };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
@@ -393,42 +294,43 @@ export const ItemsProvider = ({
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
           } catch (e) {
-            console.warn(`Failed to fetch metadata for weapon ${weaponId}:`, e);
+            console.warn(`[ItemsContext] Failed to fetch metadata for weapon ${weaponId}:`, e);
           }
 
           return {
             ...metadata,
-            agiModifier: weaponStats.agiModifier,
-            effects: weaponStats.effects,
-            hpModifier: weaponStats.hpModifier,
-            itemType: itemTemplate.itemType,
-            intModifier: weaponStats.intModifier,
-            maxDamage: weaponStats.maxDamage,
-            minDamage: weaponStats.minDamage,
-            minLevel: weaponStats.minLevel,
-            price: itemTemplate.price,
-            rarity: Number(itemTemplate.rarity) as Rarity,
+            agiModifier: toBigInt(weaponRow?.agiModifier),
+            effects,
+            hpModifier: toBigInt(weaponRow?.hpModifier),
+            intModifier: toBigInt(weaponRow?.intModifier),
+            itemType: toNumber(itemRow?.itemType) as ItemType,
+            maxDamage: toBigInt(weaponRow?.maxDamage),
+            minDamage: toBigInt(weaponRow?.minDamage),
+            minLevel: toBigInt(weaponRow?.minLevel),
+            price: toBigInt(itemRow?.price),
+            rarity: toNumber(itemRow?.rarity) as Rarity,
             statRestrictions: {
-              minAgility: statRestrictions.minAgility,
-              minIntelligence: statRestrictions.minIntelligence,
-              minStrength: statRestrictions.minStrength,
+              minAgility: toBigInt(restrictionsRow?.minAgility),
+              minIntelligence: toBigInt(restrictionsRow?.minIntelligence),
+              minStrength: toBigInt(restrictionsRow?.minStrength),
             },
-            strModifier: weaponStats.strModifier,
+            strModifier: toBigInt(weaponRow?.strModifier),
             tokenId: weaponId.toString(),
           } as WeaponTemplate;
         }),
       );
-
-      return allWeaponTemplates;
     },
-    [Items, ItemsBaseURI, ItemsTokenURI, StatRestrictions, WeaponStats],
+    [baseURIRow, itemsTable],
   );
 
   useEffect(() => {
-    console.info('[ItemsContext] effect fired — isSynced:', isSynced, 'entities:', allItemEntities.length);
+    const itemEntryCount = Object.keys(itemsTable).length;
+    console.info('[ItemsContext] effect fired — hydrated:', hydrated, 'items:', itemEntryCount);
+
     (async () => {
-      if (!isSynced) return;
-      if (allItemEntities.length === 0) {
+      if (!hydrated) return;
+
+      if (itemEntryCount === 0) {
         // No items in the world — stop loading so downstream components aren't
         // permanently blocked waiting for items that don't exist.
         setIsLoading(false);
@@ -436,64 +338,59 @@ export const ItemsProvider = ({
       }
 
       try {
-        const allItemIds = allItemEntities
-          .map(entity => {
-            const itemTemplate = getComponentValue(Items, entity);
-            if (!itemTemplate) return null;
-            const { itemId } = decodeEntity({ itemId: 'uint256' }, entity);
-            const itemTypeNum = Number(itemTemplate.itemType);
-            return {
-              itemType: itemTypeNum,
-              itemId,
-            };
-          })
-          .filter((item): item is NonNullable<typeof item> => item !== null);
+        const allItemIds = Object.entries(itemsTable).map(([keyBytes, itemRow]) => {
+          // keyBytes is a 32-byte uint256 — decode back to bigint
+          const clean = keyBytes.startsWith('0x') ? keyBytes.slice(2) : keyBytes;
+          const itemId = BigInt('0x' + clean.slice(0, 64));
+          return {
+            itemType: toNumber(itemRow.itemType),
+            itemId,
+          };
+        });
 
-        if (allItemIds.length > 0) {
-          const allArmorIds = allItemIds
-            .filter(({ itemType }) => itemType === ItemType.Armor)
-            .map(({ itemId }) => itemId);
-          const allWeaponIds = allItemIds
-            .filter(({ itemType }) => itemType === ItemType.Weapon)
-            .map(({ itemId }) => itemId);
-          const allConsumableIds = allItemIds
-            .filter(({ itemType }) => itemType === ItemType.Consumable)
-            .map(({ itemId }) => itemId);
-          const allSpellIds = allItemIds
-            .filter(({ itemType }) => itemType === ItemType.Spell)
-            .map(({ itemId }) => itemId);
+        const armorIds = allItemIds
+          .filter(({ itemType }) => itemType === ItemType.Armor)
+          .map(({ itemId }) => itemId);
+        const weaponIds = allItemIds
+          .filter(({ itemType }) => itemType === ItemType.Weapon)
+          .map(({ itemId }) => itemId);
+        const consumableIds = allItemIds
+          .filter(({ itemType }) => itemType === ItemType.Consumable)
+          .map(({ itemId }) => itemId);
+        const spellIds = allItemIds
+          .filter(({ itemType }) => itemType === ItemType.Spell)
+          .map(({ itemId }) => itemId);
 
-          const [armorResult, weaponResult, consumableResult, spellResult] =
-            await Promise.allSettled([
-              fetchAllArmor(allArmorIds),
-              fetchAllWeapons(allWeaponIds),
-              fetchAllConsumables(allConsumableIds),
-              fetchAllSpells(allSpellIds),
-            ]);
+        const [armorResult, weaponResult, consumableResult, spellResult] =
+          await Promise.allSettled([
+            fetchAllArmor(armorIds),
+            fetchAllWeapons(weaponIds),
+            fetchAllConsumables(consumableIds),
+            fetchAllSpells(spellIds),
+          ]);
 
-          if (armorResult.status === 'fulfilled') {
-            setArmorTemplates(armorResult.value);
-          } else {
-            console.error('[ItemsContext] Error fetching armor:', armorResult.reason);
-          }
+        if (armorResult.status === 'fulfilled') {
+          setArmorTemplates(armorResult.value);
+        } else {
+          console.error('[ItemsContext] Error fetching armor:', armorResult.reason);
+        }
 
-          if (weaponResult.status === 'fulfilled') {
-            setWeaponTemplates(weaponResult.value);
-          } else {
-            console.error('[ItemsContext] Error fetching weapons:', weaponResult.reason);
-          }
+        if (weaponResult.status === 'fulfilled') {
+          setWeaponTemplates(weaponResult.value);
+        } else {
+          console.error('[ItemsContext] Error fetching weapons:', weaponResult.reason);
+        }
 
-          if (consumableResult.status === 'fulfilled') {
-            setConsumableTemplates(consumableResult.value);
-          } else {
-            console.error('[ItemsContext] Error fetching consumables:', consumableResult.reason);
-          }
+        if (consumableResult.status === 'fulfilled') {
+          setConsumableTemplates(consumableResult.value);
+        } else {
+          console.error('[ItemsContext] Error fetching consumables:', consumableResult.reason);
+        }
 
-          if (spellResult.status === 'fulfilled') {
-            setSpellTemplates(spellResult.value);
-          } else {
-            console.error('[ItemsContext] Error fetching spells:', spellResult.reason);
-          }
+        if (spellResult.status === 'fulfilled') {
+          setSpellTemplates(spellResult.value);
+        } else {
+          console.error('[ItemsContext] Error fetching spells:', spellResult.reason);
         }
       } catch (e) {
         renderError(
@@ -505,13 +402,12 @@ export const ItemsProvider = ({
       }
     })();
   }, [
-    allItemEntities,
+    hydrated,
+    itemsTable,
     fetchAllArmor,
     fetchAllConsumables,
     fetchAllSpells,
     fetchAllWeapons,
-    isSynced,
-    Items,
     renderError,
   ]);
 

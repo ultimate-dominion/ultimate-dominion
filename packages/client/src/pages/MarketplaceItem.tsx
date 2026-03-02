@@ -22,9 +22,13 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import { getComponentValue } from '@latticexyz/recs';
-import { encodeEntity, singletonEntity } from '@latticexyz/store-sync/recs';
+import {
+  encodeAddressKey,
+  encodeCompositeKey,
+  encodeUint256Key,
+  getTableValue,
+  useGameConfig,
+} from '../lib/gameStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -59,23 +63,7 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 
-// Wrapper component that checks if MUD components are ready
 export const MarketplaceItem = (): JSX.Element => {
-  const { components } = useMUD();
-  const navigate = useNavigate();
-
-  if (!components?.UltimateDominionConfig) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" h="100vh">
-        <Spinner size="xl" />
-      </Box>
-    );
-  }
-
-  return <MarketplaceItemInner />;
-};
-
-const MarketplaceItemInner = (): JSX.Element => {
   const { renderWarning } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
@@ -83,13 +71,10 @@ const MarketplaceItemInner = (): JSX.Element => {
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const {
-    components,
     delegatorAddress,
     isSynced,
     systemCalls: { createOrder },
   } = useMUD();
-  const ItemsOwners = components?.ItemsOwners;
-  const UltimateDominionConfig = components?.UltimateDominionConfig;
   const {
     armorTemplates,
     consumableTemplates,
@@ -142,10 +127,7 @@ const MarketplaceItemInner = (): JSX.Element => {
     onOpen: onOpenConfirmationModal,
   } = useDisclosure();
 
-  const configValue = useComponentValue(
-    UltimateDominionConfig!,
-    singletonEntity,
-  );
+  const configValue = useGameConfig('UltimateDominionConfig');
   const goldTokenAddress = configValue?.goldToken ?? null;
   const itemsAddress = configValue?.items ?? null;
 
@@ -217,17 +199,14 @@ const MarketplaceItemInner = (): JSX.Element => {
   const userItemBalance = useMemo(() => {
     if (!(userCharacter && selectedItem)) return '0';
 
-    const tokenOwnersEntity = encodeEntity(
-      { owner: 'address', tokenId: 'uint256' },
-      {
-        owner: userCharacter.owner as `0x${string}`,
-        tokenId: BigInt(selectedItem.tokenId),
-      },
+    const compositeKey = encodeCompositeKey(
+      encodeAddressKey(userCharacter.owner as `0x${string}`),
+      encodeUint256Key(BigInt(selectedItem.tokenId)),
     );
 
-    const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+    const itemOwner = getTableValue('ItemsOwners', compositeKey);
     return itemOwner ? itemOwner.balance.toString() : '0';
-  }, [ItemsOwners, selectedItem, userCharacter]);
+  }, [selectedItem, userCharacter]);
 
   const invalidOrderPrice = useMemo(() => {
     return !(parseEther(orderPrice) > BigInt('0'));

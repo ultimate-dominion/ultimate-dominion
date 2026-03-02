@@ -1,11 +1,11 @@
 import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
-import { getComponentValue } from '@latticexyz/recs';
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { getTableValue } from '../lib/gameStore';
 import { getStatSymbol } from '../utils/helpers';
 import { type Character } from '../utils/types';
 
@@ -49,7 +49,6 @@ export const LevelingPanel = ({
 }): JSX.Element => {
   const { renderSuccess, renderWarning } = useToast();
   const {
-    components: { Stats },
     delegatorAddress,
     systemCalls: { levelCharacter },
   } = useMUD();
@@ -239,11 +238,11 @@ export const LevelingPanel = ({
     });
 
     if (result !== undefined) {
-      // Poll MUD Stats component until level reflects the change
+      // Poll Zustand store until level reflects the change
       const prevLevel = character.level;
       for (let i = 0; i < 30; i++) {
-        const stats = getComponentValue(Stats, character.id);
-        if (stats && stats.level !== prevLevel) break;
+        const stats = getTableValue('Stats', character.id);
+        if (stats && stats.level !== prevLevel.toString()) break;
         await new Promise(r => setTimeout(r, 500));
       }
       await refreshCharacter();
@@ -267,7 +266,6 @@ export const LevelingPanel = ({
     refreshCharacter,
     renderSuccess,
     renderWarning,
-    Stats,
   ]);
 
   const expiredEffectModifications: {

@@ -1,7 +1,4 @@
 import { Text, useDisclosure } from '@chakra-ui/react';
-import { useComponentValue, useEntityQuery } from '@latticexyz/react';
-import { getComponentValueStrict, Has, HasValue } from '@latticexyz/recs';
-import { singletonEntity } from '@latticexyz/store-sync/recs';
 
 import type {
   GroupDTO,
@@ -23,6 +20,7 @@ import { formatEther, zeroAddress, erc721Abi } from 'viem';
 import { usePublicClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
+import { useGameConfig, useGameTable, getTableValue, toNumber } from '../lib/gameStore';
 import { CHARACTERS_PATH, ITEM_PATH } from '../Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 
@@ -33,7 +31,6 @@ import { useCharacter } from './CharacterContext';
 import { useItems } from './ItemsContext';
 import { useMap } from './MapContext';
 
-import { useMUD } from './MUDContext';
 import { useOrders } from './OrdersContext';
 
 // Push Protocol environment: 'prod' for deployed sites, 'staging' for localhost
@@ -126,9 +123,6 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Use the appropriate wallet client for Push Protocol
   const data = authMethod === 'embedded' ? embeddedWalletClient : externalWalletClient;
   const {
-    components: { CombatEncounter, CombatOutcome, MarketplaceSale, UltimateDominionConfig },
-  } = useMUD();
-  const {
     armorTemplates,
     consumableTemplates,
     spellTemplates,
@@ -138,8 +132,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { character: currentCharacter } = useCharacter();
   const { activeOrders } = useOrders();
 
-  const configValue = useComponentValue(UltimateDominionConfig, singletonEntity);
-  const goldToken = configValue?.goldToken ?? null;
+  const configValue = useGameConfig('UltimateDominionConfig');
+  const goldToken = configValue ? String(configValue.goldToken) : null;
+
+  const combatOutcomeRows = useGameTable('CombatOutcome');
+  const marketplaceSaleRows = useGameTable('MarketplaceSale');
 
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [user, setUser] = useState<PushAPI | null>(null);
@@ -208,27 +205,29 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   ], [armorTemplates, consumableTemplates, spellTemplates, weaponTemplates]);
 
   // Rare+ item drop announcements from battle outcomes
-  const battleOutcomeEntities = useEntityQuery([Has(CombatOutcome)]);
   const rareDropAnnouncements: Message[] = useMemo(() => {
-    return battleOutcomeEntities
-      .map(entity => {
-        const combatOutcome = getComponentValueStrict(CombatOutcome, entity);
-        const { itemsDropped } = combatOutcome;
-        if (!itemsDropped || itemsDropped.length === 0) return null;
+    return Object.entries(combatOutcomeRows)
+      .map(([keyBytes, data]) => {
+        const { itemsDropped } = data;
+        if (!itemsDropped || (itemsDropped as unknown[]).length === 0) return null;
 
-        const encounter = getComponentValueStrict(CombatEncounter, entity);
-        const attackerId = encounter.attackers[0];
-        const defenderId = encounter.defenders[0];
+        const encounterData = getTableValue('CombatEncounter', keyBytes);
+        if (!encounterData) return null;
 
-        const winner = combatOutcome.attackersWin ? attackerId : defenderId;
+        const attackers = encounterData.attackers as string[];
+        const defenders = encounterData.defenders as string[];
+        const attackerId = attackers[0];
+        const defenderId = defenders[0];
+
+        const winner = Boolean(data.attackersWin) ? attackerId : defenderId;
         const winnerCharacter = allCharacters.find(c => c.id === winner);
         const winnerName = winnerCharacter?.name;
         if (!winnerName) return null;
         const winnerNameColor = winnerCharacter ? (CLASS_COLORS[winnerCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
 
-        const rareDrops = itemsDropped
+        const rareDrops = (itemsDropped as unknown[])
           .map(itemId => {
-            const found = allItems.find(item => item.tokenId === itemId.toString());
+            const found = allItems.find(item => item.tokenId === itemId!.toString());
             return found;
           })
           .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Rare);
@@ -266,20 +265,18 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           ),
           message: '',
           rarityColor,
-          timestamp: Number(combatOutcome.endTime) * 1000,
+          timestamp: toNumber(data.endTime) * 1000,
         };
       })
       .filter((m): m is Message => m !== null);
-  }, [battleOutcomeEntities, allCharacters, allItems]);
+  }, [combatOutcomeRows, allCharacters, allItems]);
 
   // Rare+ marketplace transactions only
-  const marketplaceSaleEntities = useEntityQuery([Has(MarketplaceSale)]);
-  const rareMarketplaceSales: Message[] = useMemo(() => marketplaceSaleEntities
-    .map(entity => {
-      const marketplaceSale = getComponentValueStrict(MarketplaceSale, entity);
-      const { buyer, itemId, timestamp } = marketplaceSale;
+  const rareMarketplaceSales: Message[] = useMemo(() => Object.values(marketplaceSaleRows)
+    .map(data => {
+      const { buyer, itemId, timestamp } = data;
 
-      const item = allItems.find(i => i.tokenId === itemId.toString());
+      const item = allItems.find(i => i.tokenId === itemId!.toString());
       if (!item || item.rarity === undefined || item.rarity < Rarity.Rare) return null;
 
       const buyerCharacter = allCharacters.find(character => character.owner === buyer);
@@ -317,11 +314,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         ),
         message: '',
         rarityColor,
-        timestamp: Number(timestamp) * 1000,
+        timestamp: toNumber(timestamp) * 1000,
       };
     })
     .filter((m): m is Message => m !== null),
-  [marketplaceSaleEntities, allCharacters, allItems]);
+  [marketplaceSaleRows, allCharacters, allItems]);
 
   // Gold offer broadcasts for Rare+ items (buy orders)
   const goldOfferAnnouncements: Message[] = useMemo(() => {

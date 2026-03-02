@@ -14,22 +14,22 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useComponentValue } from '@latticexyz/react';
-import {
-  Entity,
-  getComponentValue,
-  getComponentValueStrict,
-  Has,
-  runQuery,
-} from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FaMedal } from 'react-icons/fa';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
-import { erc721Abi, hexToBigInt, hexToString, zeroHash } from 'viem';
+import { erc721Abi, hexToString, zeroHash } from 'viem';
+import {
+  encodeAddressKey,
+  encodeCompositeKey,
+  encodeUint256Key,
+  getTableEntries,
+  getTableValue,
+  toBigInt,
+  useGameValue,
+} from '../lib/gameStore';
 import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
@@ -81,18 +81,6 @@ export const CharacterPage = (): JSX.Element => {
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const {
-    components: {
-      AdventureEscrow,
-      Characters,
-      CharactersTokenURI,
-      EncounterEntity,
-      GoldBalances,
-      Levels,
-      Stats,
-      StatusEffectStats,
-      StatusEffectValidity,
-      WorldStatusEffects,
-    },
     isSynced,
     network: { publicClient, worldContract },
   } = useMUD();
@@ -158,109 +146,99 @@ export const CharacterPage = (): JSX.Element => {
       if (!(id && publicClient && worldContract)) return null;
       setIsLoadingCharacter(true);
 
-      const characterData = getComponentValue(Characters, id as Entity);
-      const characterStats = getComponentValue(Stats, id as Entity);
+      const characterData = getTableValue('Characters', id);
+      const characterStats = getTableValue('Stats', id);
 
       if (!(characterData && characterStats)) return null;
 
-      const ownerEntity = encodeEntity(
-        { address: 'address' },
-        { address: characterData.owner as `0x${string}` },
+      const owner = String(characterData.owner) as `0x${string}`;
+      const tokenId = toBigInt(characterData.tokenId);
+      const ownerKey = encodeAddressKey(owner);
+      const tokenIdKey = encodeUint256Key(tokenId);
+
+      const externalGoldBalance = toBigInt(
+        getTableValue('GoldBalances', ownerKey)?.value,
       );
-      const tokenIdEntity = encodeEntity(
-        { tokenId: 'uint256' },
-        { tokenId: characterData.tokenId },
+      const escrowGoldBalance = toBigInt(
+        getTableValue('AdventureEscrow', id)?.balance,
       );
 
-      // These components may be undefined if tables are empty
-      const externalGoldBalance = GoldBalances
-        ? (getComponentValue(GoldBalances, ownerEntity)?.value ?? BigInt(0))
-        : BigInt(0);
-      const escrowGoldBalance = AdventureEscrow
-        ? (getComponentValue(AdventureEscrow, id as Entity)?.balance ?? BigInt(0))
-        : BigInt(0);
-
-      const metadataURI = getComponentValueStrict(
-        CharactersTokenURI,
-        tokenIdEntity,
-      ).tokenURI;
+      const tokenURIData = getTableValue('CharactersTokenURI', tokenIdKey);
+      const metadataURI = tokenURIData?.tokenURI as string;
 
       const fetachedMetadata = await fetchMetadataFromUri(
         uriToHttp(`ipfs://${metadataURI}`)[0],
       );
 
-      const { encounterId, pvpTimer } = EncounterEntity
-        ? (getComponentValue(EncounterEntity, id as Entity) ?? { encounterId: zeroHash, pvpTimer: BigInt(0) })
-        : { encounterId: zeroHash, pvpTimer: BigInt(0) };
+      const encounterData = getTableValue('EncounterEntity', id);
+      const encounterId = (encounterData?.encounterId as string) ?? zeroHash;
+      const pvpTimer = toBigInt(encounterData?.pvpTimer);
       const inBattle = !!encounterId && encounterId !== zeroHash;
 
-      const decodedBaseStats = decodeBaseStats(characterData.baseStats);
+      const decodedBaseStats = decodeBaseStats(characterData.baseStats as `0x${string}`);
 
-      // WorldStatusEffects and related components may be undefined
-      const worldStatusEffectsComponent = WorldStatusEffects
-        ? getComponentValue(WorldStatusEffects, id as Entity)
-        : undefined;
+      const worldStatusEffectsComponent = getTableValue('WorldStatusEffects', id);
 
       const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
         appliedStatusEffects: [],
       };
 
-      const decodedStatusEffects = appliedStatusEffects.map(
+      const decodedStatusEffects = (appliedStatusEffects as string[]).map(
         decodeAppliedStatusEffectId,
       );
 
-      // Only process status effects if the required components exist
-      const worldStatusEffects: WorldStatusEffect[] = (StatusEffectStats && StatusEffectValidity)
-        ? decodedStatusEffects.map(effect => {
-            const paddedEffectId = effect.effectId.padEnd(66, '0') as Entity;
-            const effectStats = getComponentValue(StatusEffectStats, paddedEffectId);
-            const validity = getComponentValue(StatusEffectValidity, paddedEffectId);
+      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects
+        .map(effect => {
+          const paddedEffectId = effect.effectId.padEnd(66, '0');
+          const effectStats = getTableValue('StatusEffectStats', paddedEffectId);
+          const validity = getTableValue('StatusEffectValidity', paddedEffectId);
 
-            if (!effectStats || !validity) return null;
+          if (!effectStats || !validity) return null;
 
-            const timestampEnd = effect.timestamp + validity.validTime;
-            const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
+          const validTime = toBigInt(validity.validTime);
+          const timestampEnd = effect.timestamp + validTime;
+          const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
 
-            const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
 
-              return {
-                active: isActive,
-                agiModifier: effectStats.agiModifier,
-                effectId: paddedEffectId,
-                intModifier: effectStats.intModifier,
-                maxStacks: validity.maxStacks,
-                name,
-                strModifier: effectStats.strModifier,
-                timestampEnd,
-                timestampStart: effect.timestamp,
-              };
-          }).filter((effect): effect is WorldStatusEffect => effect !== null)
-        : [];
+          return {
+            active: isActive,
+            agiModifier: toBigInt(effectStats.agiModifier),
+            effectId: paddedEffectId,
+            intModifier: toBigInt(effectStats.intModifier),
+            maxStacks: toBigInt(validity.maxStacks),
+            name,
+            strModifier: toBigInt(effectStats.strModifier),
+            timestampEnd,
+            timestampStart: effect.timestamp,
+          };
+        })
+        .filter((effect): effect is WorldStatusEffect => effect !== null);
 
       const _character = {
         ...fetachedMetadata,
-        agility: characterStats.agility,
+        agility: toBigInt(characterStats.agility),
         baseStats: decodedBaseStats,
-        currentHp: characterStats.currentHp,
+        currentHp: toBigInt(characterStats.currentHp),
         entityClass: characterStats.class,
         escrowGoldBalance,
-        experience: characterStats.experience,
+        experience: toBigInt(characterStats.experience),
         externalGoldBalance,
-        id: id as Entity,
+        id,
         inBattle,
-        intelligence: characterStats.intelligence,
+        intelligence: toBigInt(characterStats.intelligence),
         isSpawned: false,
-        level: characterStats.level,
+        level: toBigInt(characterStats.level),
         locked: characterData.locked,
-        maxHp: characterStats.maxHp,
+        maxHp: toBigInt(characterStats.maxHp),
         name: hexToString(characterData.name as `0x${string}`, {
           size: 32,
         }),
-        owner: characterData.owner,
+        owner,
         position: { x: 0, y: 0 },
         pvpCooldownTimer: pvpTimer,
-        strength: characterStats.strength,
-        tokenId: characterData.tokenId.toString(),
+        strength: toBigInt(characterStats.strength),
+        tokenId: tokenId.toString(),
         worldStatusEffects,
       };
 
@@ -275,21 +253,7 @@ export const CharacterPage = (): JSX.Element => {
     } finally {
       setIsLoadingCharacter(false);
     }
-  }, [
-    AdventureEscrow,
-    Characters,
-    CharactersTokenURI,
-    EncounterEntity,
-    GoldBalances,
-    id,
-    publicClient,
-    renderError,
-    Stats,
-    StatusEffectStats,
-    StatusEffectValidity,
-    worldContract,
-    WorldStatusEffects,
-  ]);
+  }, [id, publicClient, renderError, worldContract]);
 
   const isOwner = useMemo(() => {
     if (!(id && userCharacter)) return false;
@@ -325,24 +289,18 @@ export const CharacterPage = (): JSX.Element => {
     refreshCharacter();
   }, [refreshCharacter]);
 
-  const currentLevelXpRequirement =
-    useComponentValue(
-      Levels,
-      character && Number(character.level) > 0
-        ? encodeEntity(
-            { level: 'uint256' },
-            { level: BigInt(Math.max(0, Number(character.level) - 1)) },
-          )
-        : undefined,
-    )?.experience ?? BigInt(0);
+  const currentLevelKey =
+    character && Number(character.level) > 0
+      ? encodeUint256Key(BigInt(Math.max(0, Number(character.level) - 1)))
+      : undefined;
+  const currentLevelData = useGameValue('Levels', currentLevelKey);
+  const currentLevelXpRequirement = toBigInt(currentLevelData?.experience);
 
-  const nextLevelXpRequirement =
-    useComponentValue(
-      Levels,
-      character
-        ? encodeEntity({ level: 'uint256' }, { level: BigInt(character.level) })
-        : undefined,
-    )?.experience ?? BigInt(0);
+  const nextLevelKey = character
+    ? encodeUint256Key(BigInt(character.level))
+    : undefined;
+  const nextLevelData = useGameValue('Levels', nextLevelKey);
+  const nextLevelXpRequirement = toBigInt(nextLevelData?.experience);
 
   const levelPercent = useMemo(() => {
     if (!character) return 0;
@@ -357,13 +315,16 @@ export const CharacterPage = (): JSX.Element => {
     return percent > 100 ? 100 : percent;
   }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
 
-  const maxLevelXpRequirement = useMemo(
-    () =>
-      hexToBigInt(
-        Array.from(runQuery([Has(Levels)])).slice(-1)[0] as `0x${string}`,
-      ),
-    [Levels],
-  );
+  const maxLevelXpRequirement = useMemo(() => {
+    const entries = getTableEntries('Levels');
+    const keys = Object.keys(entries);
+    if (keys.length === 0) return BigInt(0);
+    // Keys are hex-encoded uint256 level values; find the highest
+    return keys.reduce((max, key) => {
+      const level = BigInt(key);
+      return level > max ? level : max;
+    }, BigInt(0));
+  }, []);
 
   const maxed = useMemo(() => {
     if (!character) return false;
@@ -634,9 +595,6 @@ export const CharacterPage = (): JSX.Element => {
 const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   const { renderError } = useToast();
   const {
-    components: { CharacterEquipment, ItemsOwners },
-  } = useMUD();
-  const {
     armorTemplates,
     consumableTemplates,
     isLoading: isLoadingItemTemplates,
@@ -678,28 +636,20 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       _equippedWeaponsIds: bigint[],
     ) => {
       try {
-        // If ItemsOwners component doesn't exist, skip item fetching
-        if (!ItemsOwners) {
-          console.log('[Character] ItemsOwners component not available, skipping items');
-          return;
-        }
+        const ownerKey = encodeAddressKey(_character.owner);
 
         const _armor = armorTemplates
           .map(armor => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(armor.tokenId),
-              },
+            const compositeKey = encodeCompositeKey(
+              ownerKey,
+              encodeUint256Key(BigInt(armor.tokenId)),
             );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+            const itemOwner = getTableValue('ItemsOwners', compositeKey);
 
             return {
               ...armor,
-              balance: itemOwner ? itemOwner.balance : BigInt(0),
-              itemId: tokenOwnersEntity,
+              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+              itemId: compositeKey,
               owner: _character.owner,
             } as Armor;
           })
@@ -707,20 +657,16 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
         const _consumables = consumableTemplates
           .map(consumable => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(consumable.tokenId),
-              },
+            const compositeKey = encodeCompositeKey(
+              ownerKey,
+              encodeUint256Key(BigInt(consumable.tokenId)),
             );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+            const itemOwner = getTableValue('ItemsOwners', compositeKey);
 
             return {
               ...consumable,
-              balance: itemOwner ? itemOwner.balance : BigInt(0),
-              itemId: tokenOwnersEntity,
+              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+              itemId: compositeKey,
               owner: _character.owner,
             } as Consumable;
           })
@@ -728,20 +674,16 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
         const _spells = spellTemplates
           .map(spell => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(spell.tokenId),
-              },
+            const compositeKey = encodeCompositeKey(
+              ownerKey,
+              encodeUint256Key(BigInt(spell.tokenId)),
             );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+            const itemOwner = getTableValue('ItemsOwners', compositeKey);
 
             return {
               ...spell,
-              balance: itemOwner ? itemOwner.balance : BigInt(0),
-              itemId: tokenOwnersEntity,
+              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+              itemId: compositeKey,
               owner: _character.owner,
             } as Spell;
           })
@@ -749,20 +691,16 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
 
         const _weapons = weaponTemplates
           .map(weapon => {
-            const tokenOwnersEntity = encodeEntity(
-              { owner: 'address', tokenId: 'uint256' },
-              {
-                owner: _character.owner as `0x${string}`,
-                tokenId: BigInt(weapon.tokenId),
-              },
+            const compositeKey = encodeCompositeKey(
+              ownerKey,
+              encodeUint256Key(BigInt(weapon.tokenId)),
             );
-
-            const itemOwner = getComponentValue(ItemsOwners, tokenOwnersEntity);
+            const itemOwner = getTableValue('ItemsOwners', compositeKey);
 
             return {
               ...weapon,
-              balance: itemOwner ? itemOwner.balance : BigInt(0),
-              itemId: tokenOwnersEntity,
+              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+              itemId: compositeKey,
               owner: _character.owner,
             } as Weapon;
           })
@@ -796,35 +734,30 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     [
       armorTemplates,
       consumableTemplates,
-      ItemsOwners,
       renderError,
       spellTemplates,
       weaponTemplates,
     ],
   );
 
-  // Use useComponentValue to subscribe to equipment data changes
-  // CharacterEquipment may be undefined if table is empty/not synced yet
-  const equipmentData = useComponentValue(
-    CharacterEquipment ?? undefined,
-    CharacterEquipment ? character.id : undefined,
-  );
+  // Subscribe to equipment data changes via Zustand game store
+  const equipmentData = useGameValue('CharacterEquipment', character.id);
 
   useEffect(() => {
     if (isLoadingItemTemplates) return;
 
     // Destructure with default values to handle undefined fields
     const {
-      equippedArmor: equippedArmorIds = [],
-      equippedSpells: equippedSpellsIds = [],
-      equippedWeapons: equippedWeaponsIds = [],
+      equippedArmor: rawArmorIds = [],
+      equippedSpells: rawSpellsIds = [],
+      equippedWeapons: rawWeaponsIds = [],
     } = equipmentData ?? {};
 
     fetchCharacterItems(
       character,
-      equippedArmorIds as bigint[],
-      equippedSpellsIds as bigint[],
-      equippedWeaponsIds as bigint[],
+      (rawArmorIds as unknown[]).map(toBigInt),
+      (rawSpellsIds as unknown[]).map(toBigInt),
+      (rawWeaponsIds as unknown[]).map(toBigInt),
     );
   }, [
     character,
@@ -850,8 +783,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   }, [equippedSpellsAndWeapons]);
 
   const equippedConsumableIds = useMemo(() => {
-    const ids = (equipmentData?.equippedConsumables ?? []) as bigint[];
-    return ids.map(id => BigInt(id));
+    const ids = (equipmentData?.equippedConsumables ?? []) as unknown[];
+    return ids.map(toBigInt);
   }, [equipmentData?.equippedConsumables]);
 
   const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;

@@ -12,9 +12,7 @@ import {
   keyframes,
 } from '@chakra-ui/react';
 import { DARK_INSET_SHADOW } from '../utils/theme';
-import { useComponentValue } from '@latticexyz/react';
-import { Has, runQuery } from '@latticexyz/recs';
-import { encodeEntity } from '@latticexyz/store-sync/recs';
+import { useGameValue, getTableEntries, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useEffect, useMemo, useState } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import {
@@ -22,10 +20,7 @@ import {
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { hexToBigInt } from 'viem';
-
 import { useCharacter } from '../contexts/CharacterContext';
-import { useMUD } from '../contexts/MUDContext';
 import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
@@ -44,9 +39,6 @@ import { TileScout } from './TileScout';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
-  const {
-    components: { Levels },
-  } = useMUD();
   const { character } = useCharacter();
 
 
@@ -62,37 +54,32 @@ export const StatsPanel = (): JSX.Element => {
     }
   }, [rankDelta]);
 
-  const maxLevelXpRequirement = useMemo(
-    () =>
-      hexToBigInt(
-        Array.from(runQuery([Has(Levels)])).slice(-1)[0] as `0x${string}`,
-      ),
-    [Levels],
-  );
+  const maxLevelXpRequirement = useMemo(() => {
+    const levelsEntries = getTableEntries('Levels');
+    const maxLevelKey = Object.keys(levelsEntries).sort().slice(-1)[0];
+    return maxLevelKey ? BigInt(maxLevelKey) : BigInt(0);
+  }, []);
 
   const maxed = useMemo(() => {
     if (!character) return false;
     return maxLevelXpRequirement <= BigInt(character.level);
   }, [character, maxLevelXpRequirement]);
 
-  const currentLevelXpRequirement =
-    useComponentValue(
-      Levels,
-      character && Number(character.level) > 0
-        ? encodeEntity(
-            { level: 'uint256' },
-            { level: BigInt(Math.max(0, Number(character.level) - 1)) },
-          )
-        : undefined,
-    )?.experience ?? BigInt(0);
+  const currentLevelRow = useGameValue(
+    'Levels',
+    character && Number(character.level) > 0
+      ? encodeUint256Key(BigInt(Math.max(0, Number(character.level) - 1)))
+      : undefined,
+  );
+  const currentLevelXpRequirement = toBigInt(currentLevelRow?.experience);
 
-  const nextLevelXpRequirement =
-    useComponentValue(
-      Levels,
-      character
-        ? encodeEntity({ level: 'uint256' }, { level: BigInt(character.level) })
-        : undefined,
-    )?.experience ?? BigInt(0);
+  const nextLevelRow = useGameValue(
+    'Levels',
+    character
+      ? encodeUint256Key(BigInt(character.level))
+      : undefined,
+  );
+  const nextLevelXpRequirement = toBigInt(nextLevelRow?.experience);
 
   const levelPercent = useMemo(() => {
     if (!character) return 0;

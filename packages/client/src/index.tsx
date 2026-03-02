@@ -46,6 +46,7 @@ if (isGameLive) {
     import('./contexts/MUDContext'),
     import('./contexts/OrdersContext'),
     import('./contexts/Web3Provider'),
+    import('./lib/gameStore'),
     import('./lib/mud/setup'),
   ]).then(([
     { App },
@@ -57,6 +58,7 @@ if (isGameLive) {
     { MUDProvider },
     { OrdersProvider },
     { Web3Provider },
+    { GameStoreProvider },
     { setup },
   ]) => {
     const setupPromise = setup();
@@ -67,6 +69,7 @@ if (isGameLive) {
           <Global styles={globalStyles} />
           <Web3Provider>
           <AuthProvider>
+          <GameStoreProvider>
             <MUDProvider setupPromise={setupPromise}>
               <ItemsProvider>
                 <MonstersProvider>
@@ -80,6 +83,7 @@ if (isGameLive) {
                 </MonstersProvider>
               </ItemsProvider>
             </MUDProvider>
+          </GameStoreProvider>
           </AuthProvider>
         </Web3Provider>
       </ChakraProvider>

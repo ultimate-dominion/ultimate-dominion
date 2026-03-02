@@ -1,4 +1,3 @@
-import { Entity } from '@latticexyz/recs';
 import { Address, Hash } from 'viem';
 
 export enum AttackType {
@@ -143,7 +142,7 @@ export enum TokenType {
 
 export type Armor = ArmorTemplate & {
   balance: bigint;
-  itemId: Entity;
+  itemId: string;
   owner: string;
 };
 
@@ -191,7 +190,7 @@ export type CharacterData = {
   baseStats: EntityStats;
   escrowGoldBalance: bigint;
   externalGoldBalance: bigint;
-  id: Entity;
+  id: string;
   inBattle: boolean;
   isSpawned: boolean;
   locked: boolean;
@@ -204,15 +203,15 @@ export type CharacterData = {
 };
 
 export type CombatOutcomeType = {
-  attackers: Entity[];
-  defenders: Entity[];
-  encounterId: Entity;
+  attackers: string[];
+  defenders: string[];
+  encounterId: string;
   endTime: bigint;
   expDropped: bigint;
   goldDropped: bigint;
   itemsDropped: string[];
   playerFled: boolean;
-  winner: Entity;
+  winner: string;
 };
 
 export type ConsiderationData = {
@@ -225,7 +224,7 @@ export type ConsiderationData = {
 
 export type Consumable = ConsumableTemplate & {
   balance: bigint;
-  itemId: Entity;
+  itemId: string;
   owner: string;
 };
 
@@ -274,11 +273,11 @@ export type EntityStats = {
 };
 
 export type CombatDetails = {
-  attackers: Entity[];
+  attackers: string[];
   currentTurn: bigint;
   currentTurnTimer: bigint;
-  defenders: Entity[];
-  encounterId: Entity;
+  defenders: string[];
+  encounterId: string;
   encounterType: EncounterType;
   end: bigint;
   maxTurns: bigint;
@@ -293,7 +292,7 @@ export type Metadata = {
 
 export type Monster = MonsterTemplate & {
   currentHp: bigint;
-  id: Entity;
+  id: string;
   inBattle: boolean;
   isElite: boolean;
   isSpawned: boolean;
@@ -370,7 +369,7 @@ export type Shop = {
 
 export type Spell = SpellTemplate & {
   balance: bigint;
-  itemId: Entity;
+  itemId: string;
   owner: string;
 };
 
@@ -399,16 +398,16 @@ export type StatRestrictions = {
 
 export type StatusAction = {
   active: boolean;
-  effectId: Entity;
+  effectId: string;
   name: string;
   turnStart: string;
   validTurns: string;
-  victimId: Entity;
+  victimId: string;
 };
 
 export type Weapon = WeaponTemplate & {
   balance: bigint;
-  itemId: Entity;
+  itemId: string;
   owner: string;
 };
 
@@ -433,9 +432,9 @@ export type WeaponTemplate = WeaponStats &
   };
 
 export type WorldEncounter = {
-  characterId: Entity;
-  encounterId: Entity;
-  shopId: Entity;
+  characterId: string;
+  encounterId: string;
+  shopId: string;
 };
 
 export type WorldStatusEffect = {
