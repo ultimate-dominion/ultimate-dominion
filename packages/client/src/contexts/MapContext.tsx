@@ -133,9 +133,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // Filtered entity lists computed from reactive tables
   const allShopEntities = useMemo(() => {
     return Object.keys(positionTable).filter(key =>
-      spawnedTable[key] && shopsTable[key]
+      spawnedTable[key] && shopsTable[key] && !charactersTable[key]
     );
-  }, [positionTable, spawnedTable, shopsTable]);
+  }, [positionTable, spawnedTable, shopsTable, charactersTable]);
 
   const allMonsterEntities = useMemo(() => {
     return Object.keys(spawnedTable).filter(key =>
@@ -430,7 +430,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           } as Shop;
         });
 
-        return _shops;
+        // Deduplicate by position — re-seeding can create multiple shop entities
+        // at the same coordinates. Keep the last one (most recently created).
+        const seen = new Set<string>();
+        const dedupedShops: Shop[] = [];
+        for (let i = _shops.length - 1; i >= 0; i--) {
+          const key = `${_shops[i].position.x},${_shops[i].position.y}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            dedupedShops.push(_shops[i]);
+          }
+        }
+        return dedupedShops;
       } catch (e) {
         renderError((e as Error)?.message ?? 'Failed to fetch shops.', e);
         return [];
