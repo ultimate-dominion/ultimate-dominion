@@ -25,7 +25,14 @@ import {PauseLib} from "../libraries/PauseLib.sol";
  * @dev Each fragment is triggered by in-game actions and can be claimed as an NFT
  */
 contract FragmentSystem is System {
-    // Events
+    error InvalidFragmentType();
+    error InvalidCharacter();
+    error NotCharacterOwner();
+    error FragmentNotTriggered();
+    error FragmentAlreadyClaimed();
+    error TokenAlreadyMinted();
+    error NotAdmin();
+
     event FragmentTriggered(bytes32 indexed characterId, uint8 fragmentType, uint16 tileX, uint16 tileY);
     event FragmentClaimed(bytes32 indexed characterId, uint8 fragmentType, uint256 tokenId);
 
@@ -39,8 +46,8 @@ contract FragmentSystem is System {
      */
     function triggerFragment(bytes32 characterId, uint8 fragmentType, uint16 tileX, uint16 tileY) public {
         PauseLib.requireNotPaused();
-        require(fragmentType >= 1 && fragmentType <= 8, "Invalid fragment type");
-        require(_isCharacter(characterId), "Invalid character");
+        if (fragmentType < 1 || fragmentType > 8) revert InvalidFragmentType();
+        if (!_isCharacter(characterId)) revert InvalidCharacter();
 
         _triggerFragment(characterId, fragmentType, tileX, tileY);
     }
@@ -94,26 +101,24 @@ contract FragmentSystem is System {
      */
     function claimFragment(bytes32 characterId, uint8 fragmentType) public returns (uint256 tokenId) {
         PauseLib.requireNotPaused();
-        require(fragmentType >= 1 && fragmentType <= 8, "Invalid fragment type");
-        require(_isCharacter(characterId), "Invalid character");
+        if (fragmentType < 1 || fragmentType > 8) revert InvalidFragmentType();
+        if (!_isCharacter(characterId)) revert InvalidCharacter();
 
         address owner = Characters.getOwner(characterId);
-        require(owner == _msgSender(), "Only character owner can claim");
+        if (owner != _msgSender()) revert NotCharacterOwner();
 
         FragmentType fType = FragmentType(fragmentType);
 
         // Must be triggered but not claimed
-        require(FragmentProgress.getTriggered(characterId, fType), "Fragment not triggered");
-        require(!FragmentProgress.getClaimed(characterId, fType), "Fragment already claimed");
+        if (!FragmentProgress.getTriggered(characterId, fType)) revert FragmentNotTriggered();
+        if (FragmentProgress.getClaimed(characterId, fType)) revert FragmentAlreadyClaimed();
 
         // Calculate token ID: fragmentType * 1_000_000 + characterTokenId
         uint256 characterTokenId = Characters.getTokenId(characterId);
         tokenId = uint256(fragmentType) * 1_000_000 + characterTokenId;
 
         // Mint the NFT by writing directly to ERC721 tables.
-        // Bypasses the puppet's callFrom flow which has access control issues
-        // when called from within a system's delegatecall context.
-        require(Owners.get(_ownersTableId(FRAGMENTS_NAMESPACE), tokenId) == address(0), "Token already minted");
+        if (Owners.get(_ownersTableId(FRAGMENTS_NAMESPACE), tokenId) != address(0)) revert TokenAlreadyMinted();
         Owners.set(_ownersTableId(FRAGMENTS_NAMESPACE), tokenId, owner);
         uint256 currentBalance = Balances.get(_balancesTableId(FRAGMENTS_NAMESPACE), owner);
         Balances.set(_balancesTableId(FRAGMENTS_NAMESPACE), owner, currentBalance + 1);
@@ -198,8 +203,8 @@ contract FragmentSystem is System {
         string memory narrative,
         string memory hint
     ) public {
-        require(Admin.getIsAdmin(_msgSender()), "Only admin can set metadata");
-        require(fragmentType >= 1 && fragmentType <= 8, "Invalid fragment type");
+        if (!Admin.getIsAdmin(_msgSender())) revert NotAdmin();
+        if (fragmentType < 1 || fragmentType > 8) revert InvalidFragmentType();
 
         FragmentType fType = FragmentType(fragmentType);
         FragmentMetadata.setName(fType, name);
