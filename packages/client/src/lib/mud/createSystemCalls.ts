@@ -518,7 +518,9 @@ export function createSystemCalls(
 
   const isMoveTooFastError = (e: unknown): boolean => {
     const msg = String(e).toLowerCase();
-    return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
+    return msg.includes(MOVE_TOO_FAST_SELECTOR)
+      || msg.includes('movetoofast')
+      || msg.includes('reverted on-chain');
   };
 
   const move = async (
@@ -556,7 +558,10 @@ export function createSystemCalls(
             },
           );
 
-          await waitForTransaction(tx);
+          const receipt = await waitForTransaction(tx);
+          if (receipt.status === 'reverted') {
+            throw new Error('Move transaction reverted on-chain');
+          }
           return { success: true };
         } catch (e) {
           if (isMoveTooFastError(e) && attempt < 2) {
