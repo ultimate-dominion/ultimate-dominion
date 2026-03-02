@@ -1322,16 +1322,16 @@
       }
     },
     {
-      "name": "Antidote",
-      "description": "Burns going down. Burns worse coming up. But the poison stops.",
+      "name": "Bloodrage Tonic",
+      "description": "Thick and red. Your muscles swell but the world feels fragile.",
       "rarity": 1,
       "dropChance": 3,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "consumable:antidote",
-      "price": 15000000000000000000,
+      "metadataUri": "consumable:bloodrage_tonic",
+      "price": 25000000000000000000,
       "stats": {
         "effects": [
-          "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
+          "0x3cd2b6c95a03378f000000000000000000000000000000000000000000000000"
         ],
         "maxDamage": 0,
         "minDamage": 0,
@@ -1344,16 +1344,104 @@
       }
     },
     {
-      "name": "Smoke Bomb",
-      "description": "Wrapped in oilcloth. One sharp throw and the room goes blind.",
+      "name": "Stoneskin Salve",
+      "description": "Hardens your skin to stone. Moving gets harder. Getting hit gets easier.",
       "rarity": 1,
       "dropChance": 3,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "consumable:smoke_bomb",
+      "metadataUri": "consumable:stoneskin_salve",
+      "price": 25000000000000000000,
+      "stats": {
+        "effects": [
+          "0x482498246d2774f3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Trollblood Ale",
+      "description": "Brewed from something best not named. Strength surges. Thought retreats.",
+      "rarity": 1,
+      "dropChance": 3,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:trollblood_ale",
+      "price": 25000000000000000000,
+      "stats": {
+        "effects": [
+          "0x3e2125b981b54b08000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Venom Vial",
+      "description": "Sealed with wax. The glass is already corroding from the inside.",
+      "rarity": 2,
+      "dropChance": 2,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:venom_vial",
       "price": 35000000000000000000,
       "stats": {
         "effects": [
-          "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000"
+          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Spore Cloud",
+      "description": "Crushed cave fungus in a thin pouch. One squeeze and the mind goes foggy.",
+      "rarity": 2,
+      "dropChance": 2,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:spore_cloud",
+      "price": 35000000000000000000,
+      "stats": {
+        "effects": [
+          "0x54a7e38986f19669000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Sapping Poison",
+      "description": "Soak a blade or throw the bottle. Either way, they swing softer.",
+      "rarity": 2,
+      "dropChance": 2,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:sapping_poison",
+      "price": 35000000000000000000,
+      "stats": {
+        "effects": [
+          "0x98562f2b32aeb98f000000000000000000000000000000000000000000000000"
         ],
         "maxDamage": 0,
         "minDamage": 0,

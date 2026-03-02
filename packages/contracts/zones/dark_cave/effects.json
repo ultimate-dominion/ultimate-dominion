@@ -145,6 +145,86 @@
         "validTime": 0,
         "validTurns": 8
       }
+    },
+    {
+      "effectId": "0x3cd2b6c95a03378f000000000000000000000000000000000000000000000000",
+      "name": "glass_cannon",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": -4,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 6
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      },
+      "targetsSelf": true
+    },
+    {
+      "effectId": "0x482498246d2774f3000000000000000000000000000000000000000000000000",
+      "name": "iron_skin",
+      "stats": {
+        "agiModifier": -4,
+        "armorModifier": 6,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      },
+      "targetsSelf": true
+    },
+    {
+      "effectId": "0x3e2125b981b54b08000000000000000000000000000000000000000000000000",
+      "name": "berserkers_rage",
+      "stats": {
+        "agiModifier": -3,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": -5,
+        "resistanceStat": 0,
+        "strModifier": 8
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      },
+      "targetsSelf": true
+    },
+    {
+      "effectId": "0x54a7e38986f19669000000000000000000000000000000000000000000000000",
+      "name": "stupify",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": -8,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 3,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 8
+      },
+      "targetsSelf": false
     }
   ]
 }

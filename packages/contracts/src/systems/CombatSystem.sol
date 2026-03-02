@@ -206,7 +206,9 @@ contract CombatSystem is System {
                         randomNumber
                     );
                     // if combat consumable, consume the item
-                    // IWorld(_world()).UD__consumeItem(actionOutcomeData.attackerId, actionOutcomeData.itemId);
+                    if (Items.getItemType(actionOutcomeData.itemId) == ItemType.Consumable) {
+                        IWorld(_world()).UD__consumeItem(actionOutcomeData.attackerId, actionOutcomeData.itemId);
+                    }
                 } else {
                     revert ActionTypeNotRecognized();
                 }
