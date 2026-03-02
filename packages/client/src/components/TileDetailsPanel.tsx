@@ -369,6 +369,35 @@ export const TileDetailsPanel = (): JSX.Element => {
     };
   }, [opponent]);
 
+  // Active battle status effect modifiers on the opponent (e.g. Entangle: -5 AGI, -3 STR)
+  const activeBattleEffectModifications: {
+    agiModifier: bigint;
+    intModifier: bigint;
+    strModifier: bigint;
+  } = useMemo(() => {
+    const zero = { agiModifier: BigInt(0), intModifier: BigInt(0), strModifier: BigInt(0) };
+    if (!opponent) return zero;
+
+    const activeOpponentEffects = statusEffectActions.filter(
+      action => action.active && action.victimId === opponent.id,
+    );
+    if (activeOpponentEffects.length === 0) return zero;
+
+    let agi = BigInt(0);
+    let int = BigInt(0);
+    let str = BigInt(0);
+
+    for (const effect of activeOpponentEffects) {
+      const stats = getTableValue('StatusEffectStats', effect.effectId);
+      if (!stats) continue;
+      agi += toBigInt(stats.agiModifier);
+      int += toBigInt(stats.intModifier);
+      str += toBigInt(stats.strModifier);
+    }
+
+    return { agiModifier: agi, intModifier: int, strModifier: str };
+  }, [opponent, statusEffectActions]);
+
   const expiredUserEffectModifications: {
     agiModifier: bigint;
     intModifier: bigint;
@@ -408,6 +437,35 @@ export const TileDetailsPanel = (): JSX.Element => {
       strModifier,
     };
   }, [userCharacterForBattleRendering]);
+
+  // Active battle status effect modifiers on the user (buffs like Battle Cry, or enemy debuffs)
+  const activeUserBattleEffectModifications: {
+    agiModifier: bigint;
+    intModifier: bigint;
+    strModifier: bigint;
+  } = useMemo(() => {
+    const zero = { agiModifier: BigInt(0), intModifier: BigInt(0), strModifier: BigInt(0) };
+    if (!userCharacterForBattleRendering) return zero;
+
+    const activeUserEffects = statusEffectActions.filter(
+      action => action.active && action.victimId === userCharacterForBattleRendering.id,
+    );
+    if (activeUserEffects.length === 0) return zero;
+
+    let agi = BigInt(0);
+    let int = BigInt(0);
+    let str = BigInt(0);
+
+    for (const effect of activeUserEffects) {
+      const stats = getTableValue('StatusEffectStats', effect.effectId);
+      if (!stats) continue;
+      agi += toBigInt(stats.agiModifier);
+      int += toBigInt(stats.intModifier);
+      str += toBigInt(stats.strModifier);
+    }
+
+    return { agiModifier: agi, intModifier: int, strModifier: str };
+  }, [userCharacterForBattleRendering, statusEffectActions]);
 
   if (!character) {
     return (
@@ -536,12 +594,17 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
                     <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
-                    <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
-                      {(
-                        userCharacterForBattleRendering.agility -
-                        expiredUserEffectModifications.agiModifier
-                      ).toString()}
-                    </Text>
+                    {(() => {
+                      const base = userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier;
+                      const mod = activeUserBattleEffectModifications.agiModifier;
+                      const effective = base + mod;
+                      const color = mod > 0n ? 'cyan.300' : mod < 0n ? 'orange.300' : undefined;
+                      return (
+                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
+                          {effective.toString()}{mod > 0n && ` (+${mod.toString()})`}{mod < 0n && ` (${mod.toString()})`}
+                        </Text>
+                      );
+                    })()}
                   </HStack>
                   <Box
                     backgroundColor="rgba(196,184,158,0.08)"
@@ -551,12 +614,17 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
                     <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>INT</Text>
-                    <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
-                      {(
-                        userCharacterForBattleRendering.intelligence -
-                        expiredUserEffectModifications.intModifier
-                      ).toString()}
-                    </Text>
+                    {(() => {
+                      const base = userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier;
+                      const mod = activeUserBattleEffectModifications.intModifier;
+                      const effective = base + mod;
+                      const color = mod > 0n ? 'cyan.300' : mod < 0n ? 'orange.300' : undefined;
+                      return (
+                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
+                          {effective.toString()}{mod > 0n && ` (+${mod.toString()})`}{mod < 0n && ` (${mod.toString()})`}
+                        </Text>
+                      );
+                    })()}
                   </HStack>
                   <Box
                     backgroundColor="rgba(196,184,158,0.08)"
@@ -566,12 +634,17 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
                     <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>STR</Text>
-                    <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
-                      {(
-                        userCharacterForBattleRendering.strength -
-                        expiredUserEffectModifications.strModifier
-                      ).toString()}
-                    </Text>
+                    {(() => {
+                      const base = userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier;
+                      const mod = activeUserBattleEffectModifications.strModifier;
+                      const effective = base + mod;
+                      const color = mod > 0n ? 'cyan.300' : mod < 0n ? 'orange.300' : undefined;
+                      return (
+                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
+                          {effective.toString()}{mod > 0n && ` (+${mod.toString()})`}{mod < 0n && ` (${mod.toString()})`}
+                        </Text>
+                      );
+                    })()}
                   </HStack>
                   <Box
                     backgroundColor="rgba(196,184,158,0.08)"
@@ -669,14 +742,17 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
                     <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
-                    {!!opponent.agility && (
-                      <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
-                        {(
-                          opponent.agility -
-                          expiredOpponentEffectModifications.agiModifier
-                        ).toString()}
-                      </Text>
-                    )}
+                    {!!opponent.agility && (() => {
+                      const base = opponent.agility - expiredOpponentEffectModifications.agiModifier;
+                      const mod = activeBattleEffectModifications.agiModifier;
+                      const effective = base + mod;
+                      const color = mod < 0n ? 'orange.300' : mod > 0n ? 'cyan.300' : undefined;
+                      return (
+                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
+                          {effective.toString()}{mod !== 0n && ` (${mod > 0n ? '+' : ''}${mod.toString()})`}
+                        </Text>
+                      );
+                    })()}
                   </HStack>
                   <Box
                     backgroundColor="rgba(196,184,158,0.08)"
@@ -686,14 +762,17 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
                     <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>INT</Text>
-                    {!!opponent.intelligence && (
-                      <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
-                        {(
-                          opponent.intelligence -
-                          expiredOpponentEffectModifications.intModifier
-                        ).toString()}
-                      </Text>
-                    )}
+                    {!!opponent.intelligence && (() => {
+                      const base = opponent.intelligence - expiredOpponentEffectModifications.intModifier;
+                      const mod = activeBattleEffectModifications.intModifier;
+                      const effective = base + mod;
+                      const color = mod < 0n ? 'orange.300' : mod > 0n ? 'cyan.300' : undefined;
+                      return (
+                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
+                          {effective.toString()}{mod !== 0n && ` (${mod > 0n ? '+' : ''}${mod.toString()})`}
+                        </Text>
+                      );
+                    })()}
                   </HStack>
                   <Box
                     backgroundColor="rgba(196,184,158,0.08)"
@@ -703,14 +782,17 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
                     <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>STR</Text>
-                    {!!opponent.strength && (
-                      <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }}>
-                        {(
-                          opponent.strength -
-                          expiredOpponentEffectModifications.strModifier
-                        ).toString()}
-                      </Text>
-                    )}
+                    {!!opponent.strength && (() => {
+                      const base = opponent.strength - expiredOpponentEffectModifications.strModifier;
+                      const mod = activeBattleEffectModifications.strModifier;
+                      const effective = base + mod;
+                      const color = mod < 0n ? 'orange.300' : mod > 0n ? 'cyan.300' : undefined;
+                      return (
+                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
+                          {effective.toString()}{mod !== 0n && ` (${mod > 0n ? '+' : ''}${mod.toString()})`}
+                        </Text>
+                      );
+                    })()}
                   </HStack>
                   <Box
                     backgroundColor="rgba(196,184,158,0.08)"
