@@ -61,7 +61,6 @@ type MapContextType = {
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
   refreshEntities: () => void;
-  setOptimisticPosition: (pos: { x: number; y: number } | null) => void;
   shopsOnTile: Shop[];
 };
 
@@ -78,7 +77,6 @@ const MapContext = createContext<MapContextType>({
   otherCharactersOnTile: [],
   position: null,
   refreshEntities: () => {},
-  setOptimisticPosition: () => {},
   shopsOnTile: [],
 });
 
@@ -108,7 +106,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [allShops, setAllShops] = useState<Shop[]>([]);
 
   const [refreshCounter, setRefreshCounter] = useState(0);
-  const [optimisticPosition, setOptimisticPosition] = useState<{ x: number; y: number } | null>(null);
 
   // Reactive table subscriptions for entity queries
   const positionTable = useGameTable('Position');
@@ -117,25 +114,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const charactersTable = useGameTable('Characters');
   const shopsTable = useGameTable('Shops');
 
-  // Player's position from the store
+  // Player's position from the store (canonical — no optimistic updates)
   const posData = useGameValue('Position', character?.id);
-
-  // Clear optimistic position once store catches up
-  useEffect(() => {
-    if (
-      optimisticPosition &&
-      posData &&
-      toNumber(posData.x) === optimisticPosition.x &&
-      toNumber(posData.y) === optimisticPosition.y
-    ) {
-      setOptimisticPosition(null);
-    }
-  }, [posData, optimisticPosition]);
-
-  // Use optimistic position if set, otherwise fall back to store value
-  const position = optimisticPosition ?? (
-    posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null
-  );
+  const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
 
   const inSafetyZone = useMemo(() => {
     if (!position) return false;
@@ -558,7 +539,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         otherCharactersOnTile,
         position,
         refreshEntities,
-        setOptimisticPosition,
         shopsOnTile,
       }}
     >

@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { IoIosWarning } from 'react-icons/io';
@@ -60,11 +61,14 @@ export const MovementProvider = ({
   } = useDisclosure();
 
   const { character, isMoveEquipped } = useCharacter();
-  const { isFetchingEntities, isSpawned, position, setOptimisticPosition } = useMap();
+  const { isFetchingEntities, isSpawned, position } = useMap();
   const { currentBattle } = useBattle();
   const { isMessageInputFocused } = useChat();
 
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
+  // Track the target position we're waiting for the store to sync to
+  const [pendingTarget, setPendingTarget] = useState<{ x: number; y: number } | null>(null);
+  const pendingTargetTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const moveTx = useTransaction({
     actionName: 'moving',
@@ -72,6 +76,26 @@ export const MovementProvider = ({
     maxAttempts: 2,
     estimatedDurationMs: authMethod === 'embedded' ? 6000 : 500,
   });
+
+  // Clear pendingTarget once the store position matches
+  useEffect(() => {
+    if (
+      pendingTarget &&
+      position &&
+      position.x === pendingTarget.x &&
+      position.y === pendingTarget.y
+    ) {
+      setPendingTarget(null);
+      if (pendingTargetTimeoutRef.current) clearTimeout(pendingTargetTimeoutRef.current);
+    }
+  }, [position, pendingTarget]);
+
+  // Safety timeout: clear pendingTarget after 15s if store never syncs
+  useEffect(() => {
+    if (!pendingTarget) return;
+    pendingTargetTimeoutRef.current = setTimeout(() => setPendingTarget(null), 15000);
+    return () => { if (pendingTargetTimeoutRef.current) clearTimeout(pendingTargetTimeoutRef.current); };
+  }, [pendingTarget]);
 
   const onSetIsMovementDisabled = useCallback((isDisabled: boolean) => {
     setIsMovementDisabled(isDisabled);
@@ -81,6 +105,7 @@ export const MovementProvider = ({
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       if (isMovementDisabled) return;
       if (moveTx.isLoading) return;
+      if (pendingTarget) return;
       if (!isSpawned) return;
       if (currentBattle) return;
       if (isMessageInputFocused) return;
@@ -130,14 +155,10 @@ export const MovementProvider = ({
           break;
       }
 
-      // Optimistic update: show new tile content immediately
-      setOptimisticPosition({ x: newX, y: newY });
-
+      setPendingTarget({ x: newX, y: newY });
       const result = await moveTx.execute(() => move(character.id, newX, newY));
-
-      // If tx failed, revert optimistic position
       if (!result) {
-        setOptimisticPosition(null);
+        setPendingTarget(null);
       }
     },
     [
@@ -151,8 +172,8 @@ export const MovementProvider = ({
       move,
       moveTx,
       onOpenNoMoveEquippedModal,
+      pendingTarget,
       position,
-      setOptimisticPosition,
     ],
   );
 
@@ -166,6 +187,7 @@ export const MovementProvider = ({
 
       if (isMovementDisabled) return;
       if (moveTx.isLoading) return;
+      if (pendingTarget) return;
       if (!isSpawned) return;
       if (currentBattle) return;
       if (isMessageInputFocused) return;
@@ -208,6 +230,7 @@ export const MovementProvider = ({
     isMessageInputFocused,
     isMovementDisabled,
     moveTx.isLoading,
+    pendingTarget,
     isSpawned,
     onMove,
     pathname,
@@ -216,7 +239,7 @@ export const MovementProvider = ({
   return (
     <MovementContext.Provider
       value={{
-        isRefreshing: isFetchingEntities || moveTx.isLoading,
+        isRefreshing: isFetchingEntities || moveTx.isLoading || pendingTarget !== null,
         moveProgress: moveTx.progress,
         moveStatusMessage: moveTx.statusMessage || 'Moving...',
         onMove,
