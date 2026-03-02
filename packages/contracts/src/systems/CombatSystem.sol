@@ -29,7 +29,9 @@ import {
     MagicDamageStats,
     MagicDamageStatsData,
     StatusEffectStats,
-    StatusEffectTargeting
+    StatusEffectTargeting,
+    WeaponScaling,
+    ClassMultipliers
 } from "@codegen/index.sol";
 import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
 import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
@@ -41,7 +43,9 @@ import {
     PROFICIENCY_DENOMINATOR,
     STARTING_HIT_PROBABILITY,
     ATTACKER_HIT_DAMPENER,
-    DEFENDER_HIT_DAMPENER
+    DEFENDER_HIT_DAMPENER,
+    AGI_ATTACK_MODIFIER,
+    CLASS_MULTIPLIER_BASE
 } from "../../constants.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
 import {ActionNotFound, ItemNotEquipped, ActionTypeNotRecognized, InvalidMagicItemType, InvalidAction, UnrecognizedResistanceStat} from "../Errors.sol";
@@ -51,7 +55,8 @@ contract CombatSystem is System {
     using Math for int256;
 
     // Combat triangle constants
-    uint256 constant COMBAT_TRIANGLE_BONUS_PER_STAT = WAD / 50; // 2% per stat point difference
+    uint256 constant COMBAT_TRIANGLE_BONUS_PER_STAT = WAD / 25; // 4% per stat point difference
+    uint256 constant COMBAT_TRIANGLE_MAX_BONUS = WAD * 40 / 100; // 40% cap
 
     /**
      * @notice Determine the dominant stat for an entity
@@ -77,7 +82,7 @@ contract CombatSystem is System {
     /**
      * @notice Calculate combat triangle advantage modifier
      * @dev Combat Triangle: STR > AGI > INT > STR
-     *      When attacker has advantage, applies: 1 + (attackerDominant - defenderDominant) * 0.05
+     *      When attacker has advantage, applies: 1 + (attackerDominant - defenderDominant) * 0.04, capped at 40%
      * @param attacker Attacker's combat stats
      * @param defender Defender's combat stats
      * @return damageModifier The damage modifier in WAD format (1e18 = 100%)
@@ -101,11 +106,12 @@ contract CombatSystem is System {
         }
 
         if (hasAdvantage) {
-            // Calculate advantage bonus: 1 + (attackerStat - defenderStat) * 0.05
+            // Calculate advantage bonus: 1 + (attackerStat - defenderStat) * 0.04, capped at 40%
             int256 statDifference = attackerValue - defenderValue;
             if (statDifference < 0) statDifference = 0; // Floor at 0 to prevent penalty
 
             uint256 bonus = uint256(statDifference) * COMBAT_TRIANGLE_BONUS_PER_STAT;
+            if (bonus > COMBAT_TRIANGLE_MAX_BONUS) bonus = COMBAT_TRIANGLE_MAX_BONUS;
             return WAD + bonus;
         }
 
@@ -250,24 +256,56 @@ contract CombatSystem is System {
         PhysicalDamageStatsData memory attackStats = IWorld(_world()).UD__getPhysicalDamageStats(effectId);
         if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
+
+            // AGI crit bonus
+            int256 agiCritBonus = CombatMath.calculateAgiCritBonus(attacker.agility);
             (hit, crit) = CombatMath.calculateToHit(
                 uint256(rnChunks[0]),
                 attackStats.attackModifierBonus,
-                attackStats.critChanceBonus,
+                attackStats.critChanceBonus + agiCritBonus,
                 attacker.agility,
                 defender.agility
             );
             if (hit) {
-                damage = CombatMath.calculateWeaponDamage(
-                    attackStats, attacker.strength, defender.strength, weapon, rnChunks[2], crit
-                ) - CombatMath.calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
+                // Weapon stat routing
+                bool usesAgi = WeaponScaling.getUsesAgi(itemId);
+                int256 attackerPrimary = usesAgi ? attacker.agility : attacker.strength;
+                int256 defenderPrimary = usesAgi ? defender.agility : defender.strength;
+                uint256 scalingMod = usesAgi ? AGI_ATTACK_MODIFIER : ATTACK_MODIFIER;
 
+                // Base damage with parameterized scaling
+                damage = CombatMath.calculateWeaponDamage(
+                    attackStats, attackerPrimary, defenderPrimary, weapon, rnChunks[2], crit, scalingMod
+                ) - CombatMath.calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
                 damage = damage < int256(0) ? int256(0) : damage;
 
+                // Crit multiplier
                 damage = CombatMath.applyCriticalHit(damage, crit);
 
-                // Apply combat triangle modifier (STR > AGI > INT > STR)
+                // Class multipliers (FIX: was dead code)
+                uint256 physMult = ClassMultipliers.getPhysicalDamageMultiplier(attackerId);
+                if (physMult == 0) physMult = CLASS_MULTIPLIER_BASE;
+                damage = (damage * int256(physMult)) / int256(CLASS_MULTIPLIER_BASE);
+                if (crit) {
+                    uint256 critMult = ClassMultipliers.getCritDamageMultiplier(attackerId);
+                    if (critMult > CLASS_MULTIPLIER_BASE) {
+                        damage = (damage * int256(critMult)) / int256(CLASS_MULTIPLIER_BASE);
+                    }
+                }
+
+                // Combat triangle
                 damage = _applyCombatTriangle(damage, attacker, defender);
+
+                // Evasion (all physical attacks — AGI dodge check)
+                if (CombatMath.calculateEvasionDodge(defender.agility, attacker.agility, rnChunks[3])) {
+                    damage = 0;
+                    hit = false;
+                }
+
+                // Double strike (AGI weapons only)
+                if (hit && usesAgi && CombatMath.calculateDoubleStrike(attacker.agility, defender.agility, rnChunks[1])) {
+                    damage = damage + damage / 2;
+                }
             } else {
                 damage = 0;
                 hit = false;
@@ -278,11 +316,6 @@ contract CombatSystem is System {
             crit = false;
         }
     }
-
-
-
-
-
 
     function _calculateMagicEffect(
         bytes32 effectId,
@@ -322,20 +355,45 @@ contract CombatSystem is System {
 
         if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
+
+            // AGI crit bonus
+            int256 agiCritBonus = CombatMath.calculateAgiCritBonus(attacker.agility);
             (hit, crit) = CombatMath.calculateToHit(
                 uint256(rnChunks[0]),
                 attackStats.attackModifierBonus,
-                attackStats.critChanceBonus,
+                attackStats.critChanceBonus + agiCritBonus,
                 attacker.intelligence,
                 defender.intelligence
             );
             if (hit) {
                 damage = CombatMath.calculateMagicDamage(
-                    attackStats, magicItem, rnChunks[2], attacker.intelligence, defender.intelligence, crit
+                    attackStats, magicItem, rnChunks[2], attacker.intelligence, defender.intelligence, crit, ATTACK_MODIFIER
                 );
                 int256 currentHp = Stats.getCurrentHp(defenderId);
                 int256 maxHp = Stats.getMaxHp(defenderId);
                 damage = CombatMath.calculateFinalMagicDamage(damage, currentHp, maxHp, crit);
+
+                // Magic resistance
+                if (damage > 0) {
+                    damage -= CombatMath.calculateMagicResistance(defender.intelligence, damage);
+                }
+
+                // Class multipliers (FIX: was dead code)
+                if (damage > 0) {
+                    uint256 spellMult = ClassMultipliers.getSpellDamageMultiplier(attackerId);
+                    if (spellMult == 0) spellMult = CLASS_MULTIPLIER_BASE;
+                    damage = (damage * int256(spellMult)) / int256(CLASS_MULTIPLIER_BASE);
+                } else if (damage < 0) {
+                    uint256 healMult = ClassMultipliers.getHealingMultiplier(attackerId);
+                    if (healMult == 0) healMult = CLASS_MULTIPLIER_BASE;
+                    damage = (damage * int256(healMult)) / int256(CLASS_MULTIPLIER_BASE);
+                }
+                if (crit) {
+                    uint256 critMult = ClassMultipliers.getCritDamageMultiplier(attackerId);
+                    if (critMult > CLASS_MULTIPLIER_BASE) {
+                        damage = (damage * int256(critMult)) / int256(CLASS_MULTIPLIER_BASE);
+                    }
+                }
 
                 // Apply combat triangle modifier (STR > AGI > INT > STR)
                 damage = _applyCombatTriangle(damage, attacker, defender);

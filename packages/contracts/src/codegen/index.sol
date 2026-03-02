@@ -22,6 +22,7 @@ import { CharacterEquipment, CharacterEquipmentData } from "./tables/CharacterEq
 import { Items, ItemsData } from "./tables/Items.sol";
 import { StatRestrictions, StatRestrictionsData } from "./tables/StatRestrictions.sol";
 import { WeaponStats, WeaponStatsData } from "./tables/WeaponStats.sol";
+import { WeaponScaling } from "./tables/WeaponScaling.sol";
 import { ArmorStats, ArmorStatsData } from "./tables/ArmorStats.sol";
 import { AccessoryStats, AccessoryStatsData } from "./tables/AccessoryStats.sol";
 import { SpellStats, SpellStatsData } from "./tables/SpellStats.sol";

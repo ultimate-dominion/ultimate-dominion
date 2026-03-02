@@ -281,13 +281,13 @@ contract ImplicitClassSystem is System {
             spell = 1050; // 105%
             maxHp = 1050; // 105%
         } else if (advancedClass == AdvancedClass.Warlock) {
-            spell = 1100; // 110%
+            spell = 1200; // 120%
         } else if (advancedClass == AdvancedClass.Wizard) {
-            spell = 1150; // 115%
+            spell = 1250; // 125%
         } else if (advancedClass == AdvancedClass.Cleric) {
             healing = 1100; // 110%
         } else if (advancedClass == AdvancedClass.Sorcerer) {
-            spell = 1080; // 108%
+            spell = 1150; // 115%
             maxHp = 1050; // 105%
         }
 

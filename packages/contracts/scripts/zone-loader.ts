@@ -131,6 +131,7 @@ interface WeaponTemplate {
   metadataUri: string;
   price: string | number;
   isStarter?: boolean;
+  scalingStat?: "STR" | "AGI";
   stats: {
     agiModifier: number;
     effects: Hex[];
@@ -271,6 +272,7 @@ const worldAbi = parseAbi([
   'function UD__setStarterItems(uint8 class, uint256[] itemIds, uint256[] amounts)',
   'function UD__setStarterItemPool(uint256 itemId, bool isStarter)',
   'function UD__setStarterConsumables(uint256[] itemIds, uint256[] amounts)',
+  'function UD__adminSetWeaponScaling(uint256 itemId, bool usesAgi)',
 ]);
 
 // ============ ABI Encoding Helpers ============
@@ -806,6 +808,17 @@ Available zones:
               args: [itemId, true],
             });
             console.log(`    -> Added to StarterItemPool`);
+          }
+
+          // Set weapon scaling (AGI weapons like bows)
+          if (weapon.scalingStat === 'AGI') {
+            await sendTx({
+              address: worldAddress,
+              abi: worldAbi,
+              functionName: 'UD__adminSetWeaponScaling',
+              args: [itemId, true],
+            });
+            console.log(`    -> Set AGI scaling`);
           }
         }
       }

@@ -8,6 +8,7 @@ import {Items, WeaponStats, WeaponStatsData, PhysicalDamageStats, PhysicalDamage
 import { ItemType } from "@codegen/common.sol";
 import {CombatMath} from "@libraries/CombatMath.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
+import {ATTACK_MODIFIER} from "../../../constants.sol";
 
 /**
  * @title PhysicalCombat
@@ -51,7 +52,7 @@ contract PhysicalCombat is System {
 
         if (hit) {
             int256 base = CombatMath.calculateWeaponDamage(
-                attackStats, attacker.strength, defender.strength, weapon, rnChunks[2], crit
+                attackStats, attacker.strength, defender.strength, weapon, rnChunks[2], crit, ATTACK_MODIFIER
             );
             damage = CombatMath.calculateFinalPhysicalDamage(base, defender.armor, attackStats.armorPenetration, crit);
 

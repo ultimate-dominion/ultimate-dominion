@@ -31,6 +31,9 @@ string constant TOKEN_URI = "ipfs://";
 uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1.2 ether;
+uint256 constant AGI_ATTACK_MODIFIER = 0.9 ether;
+uint256 constant EVASION_CAP = 25;
+uint256 constant DOUBLE_STRIKE_CAP = 25;
 // the amount crits damage is multiplied by
 uint256 constant CRIT_MULTIPLIER = 2;
 // the character's stats are divided by PROFICIENCY_DENOMINATOR when applying stat bonuses

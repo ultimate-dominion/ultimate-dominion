@@ -422,6 +422,7 @@
       "metadataUri": "weapon:worn_shortbow",
       "price": 5000000000000000000,
       "isStarter": true,
+      "scalingStat": "AGI",
       "stats": {
         "agiModifier": 1,
         "effects": [
@@ -503,6 +504,7 @@
       "metadataUri": "weapon:hunting_bow",
       "price": 15000000000000000000,
       "isStarter": false,
+      "scalingStat": "AGI",
       "stats": {
         "agiModifier": 1,
         "effects": [
@@ -535,7 +537,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 2,
         "intModifier": 1,
         "maxDamage": 6,
         "minDamage": 3,
@@ -582,6 +584,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:recurve_bow",
       "price": 40000000000000000000,
+      "scalingStat": "AGI",
       "stats": {
         "agiModifier": 2,
         "effects": [
@@ -613,7 +616,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 2,
         "intModifier": 2,
         "maxDamage": 10,
         "minDamage": 6,
@@ -686,6 +689,7 @@
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:longbow",
       "price": 100000000000000000000,
+      "scalingStat": "AGI",
       "stats": {
         "agiModifier": 3,
         "effects": [
@@ -717,7 +721,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 5,
         "intModifier": 3,
         "maxDamage": 18,
         "minDamage": 12,
@@ -773,7 +777,7 @@
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 3,
         "intModifier": 2,
         "maxDamage": 8,
         "minDamage": 4,
@@ -827,7 +831,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 3,
         "intModifier": 2,
         "maxDamage": 12,
         "minDamage": 7,
@@ -876,6 +880,7 @@
       "metadataUri": "weapon:webspinner_bow",
       "price": 90000000000000000000,
       "isStarter": false,
+      "scalingStat": "AGI",
       "stats": {
         "agiModifier": 3,
         "effects": [
@@ -909,7 +914,7 @@
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 3,
         "intModifier": 3,
         "maxDamage": 18,
         "minDamage": 12,
@@ -958,6 +963,7 @@
       "metadataUri": "weapon:darkwood_bow",
       "price": 220000000000000000000,
       "isStarter": false,
+      "scalingStat": "AGI",
       "stats": {
         "agiModifier": 4,
         "effects": [
@@ -990,7 +996,7 @@
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 5,
         "intModifier": 4,
         "maxDamage": 20,
         "minDamage": 14,

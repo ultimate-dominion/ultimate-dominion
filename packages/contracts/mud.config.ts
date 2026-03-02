@@ -450,6 +450,13 @@ export default defineWorld({
       },
       key: ["itemId"],
     },
+    WeaponScaling: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        usesAgi: "bool",
+      },
+    },
     ArmorStats: {
       schema: {
         itemId: "uint256",

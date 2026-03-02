@@ -18,7 +18,9 @@ import {
     PROFICIENCY_DENOMINATOR,
     STARTING_HIT_PROBABILITY,
     ATTACKER_HIT_DAMPENER,
-    DEFENDER_HIT_DAMPENER
+    DEFENDER_HIT_DAMPENER,
+    EVASION_CAP,
+    DOUBLE_STRIKE_CAP
 } from "../../constants.sol";
 
 /**
@@ -95,20 +97,22 @@ library CombatMath {
     /**
      * @notice Calculate weapon damage for physical attacks
      * @param attackStats Physical damage stats for the attack
-     * @param attackerStrength Attacker's strength stat
-     * @param defenderStrength Defender's strength stat
+     * @param attackerStat Attacker's primary stat (STR or AGI)
+     * @param defenderStat Defender's primary stat (STR or AGI)
      * @param weapon Weapon stats
      * @param randomNumber Random number for damage variation
      * @param crit Whether this is a critical hit
+     * @param attackModifier Scaling modifier (ATTACK_MODIFIER for STR, AGI_ATTACK_MODIFIER for AGI)
      * @return damage Calculated weapon damage
      */
     function calculateWeaponDamage(
         PhysicalDamageStatsData memory attackStats,
-        int256 attackerStrength,
-        int256 defenderStrength,
+        int256 attackerStat,
+        int256 defenderStat,
         WeaponStatsData memory weapon,
         uint64 randomNumber,
-        bool crit
+        bool crit,
+        uint256 attackModifier
     ) internal pure returns (int256 damage) {
         if (!crit) {
             int256 randomness = Math.toInt(randomNumber ^ 4);
@@ -119,10 +123,10 @@ library CombatMath {
                             ? weapon.minDamage
                             : randomness % weapon.maxDamage + 1
                     )
-            ) * int256(ATTACK_MODIFIER);
-            damage = addStatBonus(attackerStrength, defenderStrength, baseDamage);
+            ) * int256(attackModifier);
+            damage = addStatBonus(attackerStat, defenderStat, baseDamage, attackModifier);
         } else {
-            damage = addStatBonus(attackerStrength, defenderStrength, weapon.maxDamage * int256(ATTACK_MODIFIER));
+            damage = addStatBonus(attackerStat, defenderStat, weapon.maxDamage * int256(attackModifier), attackModifier);
         }
     }
 
@@ -134,6 +138,7 @@ library CombatMath {
      * @param attackerIntelligence Attacker's intelligence stat
      * @param defenderIntelligence Defender's intelligence stat
      * @param crit Whether this is a critical hit
+     * @param attackModifier Scaling modifier (always ATTACK_MODIFIER for magic)
      * @return damage Calculated magic damage
      */
     function calculateMagicDamage(
@@ -142,7 +147,8 @@ library CombatMath {
         uint64 rnChunk,
         int256 attackerIntelligence,
         int256 defenderIntelligence,
-        bool crit
+        bool crit,
+        uint256 attackModifier
     ) internal pure returns (int256 damage) {
         int256 baseDamage;
         if (!crit) {
@@ -153,11 +159,11 @@ library CombatMath {
                             ? consumable.minDamage
                             : int256(uint256(rnChunk) % uint256(consumable.maxDamage) + 1)
                     )
-            ) * int256(ATTACK_MODIFIER);
+            ) * int256(attackModifier);
         } else {
-            baseDamage = (consumable.maxDamage + attackStats.bonusDamage) * int256(ATTACK_MODIFIER);
+            baseDamage = (consumable.maxDamage + attackStats.bonusDamage) * int256(attackModifier);
         }
-        damage = addStatBonus(attackerIntelligence, defenderIntelligence, baseDamage);
+        damage = addStatBonus(attackerIntelligence, defenderIntelligence, baseDamage, attackModifier);
 
         if (damage < int256(0) && consumable.maxDamage > int256(0)) {
             damage = int256(0);
@@ -175,7 +181,7 @@ library CombatMath {
         int256 defenderIntelligence,
         bool crit
     ) internal pure returns (int256 damage) {
-        return calculateMagicDamage(attackStats, consumable, rnChunk, attackerIntelligence, defenderIntelligence, crit);
+        return calculateMagicDamage(attackStats, consumable, rnChunk, attackerIntelligence, defenderIntelligence, crit, ATTACK_MODIFIER);
     }
 
     /**
@@ -183,14 +189,15 @@ library CombatMath {
      * @param attackerStat Attacker's relevant stat
      * @param defenderStat Defender's relevant stat
      * @param baseDamage Base damage before stat modifications
+     * @param attackModifier The attack scaling modifier
      * @return totalDamage Final damage after stat calculations
      */
-    function addStatBonus(int256 attackerStat, int256 defenderStat, int256 baseDamage)
+    function addStatBonus(int256 attackerStat, int256 defenderStat, int256 baseDamage, uint256 attackModifier)
         internal
         pure
         returns (int256 totalDamage)
     {
-        int256 baseDifference = (attackerStat * int256(ATTACK_MODIFIER)) - (defenderStat * int256(WAD));
+        int256 baseDifference = (attackerStat * int256(attackModifier)) - (defenderStat * int256(WAD));
         if (baseDifference > 0) {
             int256 _unroundedDamage = baseDifference + baseDamage;
             totalDamage = Math.roundInt(_unroundedDamage, int256(WAD)) / int256(WAD);
@@ -248,6 +255,69 @@ library CombatMath {
     }
 
     /**
+     * @notice Calculate AGI-based crit bonus
+     * @param attackerAgi Attacker's agility stat
+     * @return bonus Additional crit chance from AGI
+     */
+    function calculateAgiCritBonus(int256 attackerAgi) internal pure returns (int256) {
+        return attackerAgi > 0 ? attackerAgi / 4 : int256(0);
+    }
+
+    /**
+     * @notice Calculate evasion dodge chance based on AGI differential
+     * @param defenderAgi Defender's agility stat
+     * @param attackerAgi Attacker's agility stat
+     * @param rnChunk Random number chunk for roll
+     * @return dodged Whether the attack was evaded
+     */
+    function calculateEvasionDodge(int256 defenderAgi, int256 attackerAgi, uint64 rnChunk)
+        internal
+        pure
+        returns (bool)
+    {
+        if (defenderAgi <= attackerAgi) return false;
+        uint256 dodgeChance = uint256(defenderAgi - attackerAgi) / 3;
+        if (dodgeChance > EVASION_CAP) dodgeChance = EVASION_CAP;
+        return (uint256(rnChunk) % 100) < dodgeChance;
+    }
+
+    /**
+     * @notice Calculate double strike chance for AGI weapons
+     * @param attackerAgi Attacker's agility stat
+     * @param defenderAgi Defender's agility stat
+     * @param rnChunk Random number chunk for roll
+     * @return triggered Whether double strike triggers
+     */
+    function calculateDoubleStrike(int256 attackerAgi, int256 defenderAgi, uint64 rnChunk)
+        internal
+        pure
+        returns (bool)
+    {
+        if (attackerAgi <= defenderAgi) return false;
+        uint256 chance = uint256(attackerAgi - defenderAgi) * 2;
+        if (chance > DOUBLE_STRIKE_CAP) chance = DOUBLE_STRIKE_CAP;
+        return (uint256(rnChunk) % 100) < chance;
+    }
+
+    /**
+     * @notice Calculate magic resistance from INT
+     * @param defenderIntelligence Defender's intelligence stat
+     * @param damage Incoming magic damage
+     * @return resist Amount of damage resisted
+     */
+    function calculateMagicResistance(int256 defenderIntelligence, int256 damage)
+        internal
+        pure
+        returns (int256)
+    {
+        if (damage <= 0) return int256(0);
+        int256 resist = defenderIntelligence / 5;
+        if (resist < 0) resist = 0;
+        if (resist >= damage) resist = damage - 1;
+        return resist;
+    }
+
+    /**
      * @notice Apply critical hit multiplier to damage
      * @param damage Base damage
      * @param crit Whether this is a critical hit
@@ -295,18 +365,18 @@ library CombatMath {
         bool crit
     ) internal pure returns (int256 finalDamage) {
         finalDamage = baseDamage;
-        
+
         // Handle healing (negative damage)
         if (finalDamage < 0) {
             if (currentHp - finalDamage > maxHp) {
                 finalDamage = -(maxHp - currentHp);
             }
         }
-        
+
         // Apply critical hit
         if (crit) {
             finalDamage = applyCriticalHit(finalDamage, true);
-            
+
             // Re-apply healing cap after crit
             if (finalDamage < 0) {
                 if (currentHp - finalDamage > maxHp) {

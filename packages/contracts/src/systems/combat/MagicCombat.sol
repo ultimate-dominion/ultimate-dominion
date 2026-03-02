@@ -8,6 +8,7 @@ import {Items, ConsumableStats, ConsumableStatsData, MagicDamageStats, MagicDama
 import { ItemType } from "@codegen/common.sol";
 import {CombatMath} from "@libraries/CombatMath.sol";
 import {LibChunks} from "@libraries/LibChunks.sol";
+import {ATTACK_MODIFIER} from "../../../constants.sol";
 
 /**
  * @title MagicCombat
