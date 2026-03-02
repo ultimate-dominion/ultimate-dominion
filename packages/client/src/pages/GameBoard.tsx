@@ -18,7 +18,7 @@ import {
 import { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { IoIosWarning } from 'react-icons/io';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 import { ActionsPanel } from '../components/ActionsPanel';
@@ -60,6 +60,7 @@ export const GameBoard = (): JSX.Element => {
   } = useDisclosure();
 
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const {
     delegatorAddress,
@@ -100,7 +101,12 @@ export const GameBoard = (): JSX.Element => {
     }
 
     if (character?.worldEncounter) {
-      navigate(`/shops/${character.worldEncounter.shopId}`);
+      // Skip shop redirect when player explicitly left the shop.
+      // The encounter auto-ends on the next move via MapSystem.
+      const fromShop = (location.state as { fromShop?: boolean })?.fromShop;
+      if (!fromShop) {
+        navigate(`/shops/${character.worldEncounter.shopId}`);
+      }
     }
   }, [
     character,
@@ -109,6 +115,7 @@ export const GameBoard = (): JSX.Element => {
     isConnecting,
     isRefreshing,
     isSynced,
+    location.state,
     navigate,
   ]);
 

@@ -67,31 +67,22 @@ export const Shop = (): JSX.Element => {
     return allShops.find(shop => shop.shopId === shopId) ?? null;
   }, [allShops, shopId]);
 
-  const [isLeaving, setIsLeaving] = useState(false);
-
-  const onLeaveShop = useCallback(async () => {
-    if (!userCharacter?.worldEncounter) {
-      navigate(GAME_BOARD_PATH);
-      return;
-    }
-
-    setIsLeaving(true);
-
-    // Fire Fragment II for Tal's shop (9,9) from the client.
-    // The on-chain ShopSystem.endShopEncounter path is broken — it calls
-    // triggerFragment via World which hits MUD's prohibitDirectCallback.
-    // External → World → system calls bypass that check.
-    if (shop && userCharacter.id && shop.position.x === 9 && shop.position.y === 9) {
+  const onLeaveShop = useCallback(() => {
+    // Fire Fragment II for Tal's shop (9,9) from the client (fire-and-forget).
+    // The on-chain ShopSystem path is broken (prohibitDirectCallback).
+    if (shop && userCharacter?.id && shop.position.x === 9 && shop.position.y === 9) {
       triggerFragment(userCharacter.id, 2, 9, 9).catch(() => {});
     }
 
-    // End the encounter directly via EncounterResolveSystem (same path
-    // MapSystem uses). This bypasses ShopSystem.endShopEncounter which
-    // reverts due to the triggerFragment prohibitDirectCallback issue.
-    await endWorldEncounter(userCharacter.worldEncounter.encounterId);
+    // Try to end the encounter (fire-and-forget). If it fails, the encounter
+    // auto-ends on the next move via MapSystem.
+    if (userCharacter?.worldEncounter) {
+      endWorldEncounter(userCharacter.worldEncounter.encounterId).catch(() => {});
+    }
 
-    setIsLeaving(false);
-    navigate(GAME_BOARD_PATH);
+    // Navigate immediately. Pass fromShop state so GameBoard skips
+    // the shop redirect while the encounter is still being ended.
+    navigate(GAME_BOARD_PATH, { state: { fromShop: true } });
   }, [endWorldEncounter, navigate, shop, triggerFragment, userCharacter]);
 
   const [sellable, setSellable] = useState<
@@ -330,7 +321,6 @@ export const Shop = (): JSX.Element => {
             fontFamily="Cinzel, serif"
             fontSize="xs"
             fontWeight={600}
-            isLoading={isLeaving}
             letterSpacing="0.05em"
             onClick={onLeaveShop}
             px={4}

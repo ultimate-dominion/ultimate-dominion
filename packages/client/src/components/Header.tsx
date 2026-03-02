@@ -14,12 +14,11 @@ import {
   IconButton,
   Image,
   Link,
-  Spinner,
   Stack,
   Text,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { IoMdMenu } from 'react-icons/io';
 import { IoSettingsOutline } from 'react-icons/io5';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
@@ -50,44 +49,19 @@ export const Header = (): JSX.Element => {
     onOpenWalletDetailsModal,
     systemCalls: { endWorldEncounter },
   } = useMUD();
-  const { character, refreshCharacter } = useCharacter();
-
-  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
-
-  const onEndShopEncounter = useCallback(async () => {
-    if (!character) return false;
-    if (!character.worldEncounter) return true;
-    if (!delegatorAddress) return false;
-
-    // Use endWorldEncounter (EncounterResolveSystem.endEncounter) instead of
-    // endShopEncounter (ShopSystem) because the ShopSystem path calls
-    // triggerFragment via World which hits MUD's prohibitDirectCallback.
-    const { success } = await endWorldEncounter(
-      character.worldEncounter!.encounterId,
-    );
-    if (!success) {
-      console.warn('[Header] endWorldEncounter failed, encounter likely already ended');
-    }
-    await refreshCharacter();
-    return true;
-  }, [
-    character,
-    delegatorAddress,
-    endWorldEncounter,
-    refreshCharacter,
-  ]);
+  const { character } = useCharacter();
 
   const shopGuardedNavigate = useCallback(
-    async (to: string) => {
+    (to: string) => {
       if (character?.worldEncounter) {
-        setNavigatingTo(to);
-        const exited = await onEndShopEncounter();
-        setNavigatingTo(null);
-        if (!exited) return;
+        // Fire-and-forget: try to end encounter, but navigate immediately.
+        // GameBoard skips the shop redirect when fromShop state is set.
+        // The encounter auto-ends on the next move via MapSystem.
+        endWorldEncounter(character.worldEncounter.encounterId).catch(() => {});
       }
-      navigate(to);
+      navigate(to, character?.worldEncounter ? { state: { fromShop: true } } : undefined);
     },
-    [character, navigate, onEndShopEncounter],
+    [character, endWorldEncounter, navigate],
   );
 
   const logoLink = useMemo(() => {
@@ -166,7 +140,6 @@ export const Header = (): JSX.Element => {
             >
               {navItems.map(item => {
                 const active = item.isActive(pathname);
-                const isLoading = navigatingTo === item.path;
                 return (
                   <Box
                     key={item.label}
@@ -185,11 +158,7 @@ export const Header = (): JSX.Element => {
                     transition="color 0.2s ease, border-color 0.2s ease"
                     _hover={{ color: '#C4B89E' }}
                   >
-                    {isLoading ? (
-                      <Spinner size="xs" />
-                    ) : (
-                      item.label
-                    )}
+                    {item.label}
                   </Box>
                 );
               })}
