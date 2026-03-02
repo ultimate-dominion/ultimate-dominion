@@ -59,6 +59,15 @@ export function serializeValue(v: unknown): unknown {
   if (typeof v === 'object' && v !== null && !Array.isArray(v) && 'json' in v) {
     return serializeValue((v as Record<string, unknown>).json);
   }
+  // Also handle string-serialized jsonb (postgres may return jsonb as text)
+  if (typeof v === 'string' && v.startsWith('{"json":')) {
+    try {
+      const parsed = JSON.parse(v);
+      if (parsed && typeof parsed === 'object' && 'json' in parsed) {
+        return serializeValue(parsed.json);
+      }
+    } catch { /* not valid JSON, return as-is */ }
+  }
   if (Array.isArray(v)) {
     return v.map(serializeValue);
   }
