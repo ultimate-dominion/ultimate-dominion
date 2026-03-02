@@ -175,8 +175,8 @@ export const Header = (): JSX.Element => {
             />
           </Button>
 
-          {/* Desktop settings gear */}
-          {showNav && (
+          {/* Desktop settings gear — show on all authenticated pages */}
+          {pathname !== HOME_PATH && (
             <IconButton
               aria-label="Settings"
               color="#8A7E6A"
@@ -215,45 +215,43 @@ export const Header = (): JSX.Element => {
 
             <DrawerBody>
               <Stack direction="column" spacing={4}>
-                {showNav ? (
-                  <>
-                    {navItems.map(item => {
-                      const active = item.isActive(pathname);
-                      return (
-                        <Text
-                          key={item.label}
-                          as="button"
-                          alignSelf="start"
-                          color={active ? '#E8DCC8' : '#8A7E6A'}
-                          fontFamily="Cinzel, serif"
-                          fontSize="sm"
-                          fontWeight={active ? 700 : 500}
-                          onClick={() => handleDrawerNav(item.path)}
-                          textAlign="left"
-                          textTransform="uppercase"
-                          _hover={{ color: '#C4B89E' }}
-                        >
-                          {item.label}
-                        </Text>
-                      );
-                    })}
+                {showNav && navItems.map(item => {
+                  const active = item.isActive(pathname);
+                  return (
                     <Text
+                      key={item.label}
                       as="button"
                       alignSelf="start"
-                      color="#8A7E6A"
+                      color={active ? '#E8DCC8' : '#8A7E6A'}
+                      fontFamily="Cinzel, serif"
                       fontSize="sm"
-                      fontWeight={500}
-                      onClick={() => {
-                        onClose();
-                        onOpenWalletDetailsModal();
-                      }}
+                      fontWeight={active ? 700 : 500}
+                      onClick={() => handleDrawerNav(item.path)}
                       textAlign="left"
+                      textTransform="uppercase"
                       _hover={{ color: '#C4B89E' }}
                     >
-                      Settings
+                      {item.label}
                     </Text>
-                  </>
-                ) : null}
+                  );
+                })}
+                {pathname !== HOME_PATH && (
+                  <Text
+                    as="button"
+                    alignSelf="start"
+                    color="#8A7E6A"
+                    fontSize="sm"
+                    fontWeight={500}
+                    onClick={() => {
+                      onClose();
+                      onOpenWalletDetailsModal();
+                    }}
+                    textAlign="left"
+                    _hover={{ color: '#C4B89E' }}
+                  >
+                    Settings
+                  </Text>
+                )}
                 <Link
                   alignSelf="start"
                   color="#8A7E6A"
