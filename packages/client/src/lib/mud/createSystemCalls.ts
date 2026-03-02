@@ -504,11 +504,22 @@ export function createSystemCalls(
     }
   };
 
-  // Client-side movement cooldown — must exceed Base's 2s block time to avoid
-  // MoveTooFast reverts when the relayer simulates against the same block.
-  const MOVE_COOLDOWN_MS = 2500;
+  // Client-side debounce to prevent accidental double-taps.
+  // Kept short because the real safeguard is isMovePending serialization
+  // and the contract's on-chain MOVE_COOLDOWN (1s).
+  const MOVE_DEBOUNCE_MS = 300;
   let lastMoveTimestamp = 0;
   let isMovePending = false;
+
+  // Auto-retry delay for MoveTooFast — must exceed Base's 2s block time
+  // so the next simulation runs against a new block.
+  const MOVE_RETRY_DELAY_MS = 2500;
+  const MOVE_TOO_FAST_SELECTOR = '326f4b4f';
+
+  const isMoveTooFastError = (e: unknown): boolean => {
+    const msg = String(e).toLowerCase();
+    return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
+  };
 
   const move = async (
     characterEntity: string,
@@ -523,39 +534,41 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'move');
     if (ownershipError) return ownershipError;
 
-    // Cooldown check
+    // Debounce check
     const now = Date.now();
-    if (now - lastMoveTimestamp < MOVE_COOLDOWN_MS) {
-      console.warn('[move] Movement on cooldown, ignoring request');
+    if (now - lastMoveTimestamp < MOVE_DEBOUNCE_MS) {
+      console.warn('[move] Movement debounced, ignoring request');
       return { success: false, error: 'Moving too fast.' };
     }
     lastMoveTimestamp = now;
 
-    // Adjacency check — read position from Zustand store
-    const pos = getTableValue('Position', characterEntity) as
-      | { x: number; y: number } | undefined;
-    if (!pos) {
-      console.warn('[move] Position unknown for entity, rejecting move');
-      return { success: false, error: 'Position unknown.' };
-    }
-    const dx = Math.abs(x - pos.x);
-    const dy = Math.abs(y - pos.y);
-    if (dx + dy !== 1) {
-      console.warn(`[move] Invalid move: (${pos.x},${pos.y}) → (${x},${y}), Manhattan distance = ${dx + dy}`);
-      return { success: false, error: 'Invalid move.' };
-    }
-
     isMovePending = true;
     try {
-      const tx = await worldContract.write.UD__move(
-        [characterEntity as `0x${string}`, x, y],
-        {
-          gas: BigInt('10000000'),
-        },
-      );
+      // Try up to 3 times — first attempt + 2 retries on MoveTooFast.
+      // MoveTooFast happens when the relayer simulates against the same block
+      // that included the previous move (Base has 2s block times).
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const tx = await worldContract.write.UD__move(
+            [characterEntity as `0x${string}`, x, y],
+            {
+              gas: BigInt('10000000'),
+            },
+          );
 
-      await waitForTransaction(tx);
-      return { success: true };
+          await waitForTransaction(tx);
+          return { success: true };
+        } catch (e) {
+          if (isMoveTooFastError(e) && attempt < 2) {
+            console.warn(`[move] MoveTooFast on attempt ${attempt + 1}, retrying in ${MOVE_RETRY_DELAY_MS}ms...`);
+            await new Promise(r => setTimeout(r, MOVE_RETRY_DELAY_MS));
+            continue;
+          }
+          throw e;
+        }
+      }
+      // Should not reach here, but just in case
+      return { success: false, error: 'Move failed after retries.' };
     } catch (e) {
       return {
         error: getContractError(e),

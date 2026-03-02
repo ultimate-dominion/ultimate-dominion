@@ -66,9 +66,20 @@ export const MovementProvider = ({
   const { isMessageInputFocused } = useChat();
 
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
-  // Track the target position we're waiting for the store to sync to
-  const [pendingTarget, setPendingTarget] = useState<{ x: number; y: number } | null>(null);
-  const pendingTargetTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const [isMoving, setIsMoving] = useState(false);
+
+  // Optimistic position: tracks where the character logically IS after confirmed
+  // moves, even before the MUD store syncs. This allows rapid sequential moves
+  // without waiting for store sync between each one.
+  const optimisticPositionRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Sync optimistic position back to store position when store catches up
+  // or when we don't have an optimistic position yet
+  useEffect(() => {
+    if (position && !optimisticPositionRef.current) {
+      optimisticPositionRef.current = { x: position.x, y: position.y };
+    }
+  }, [position]);
 
   const moveTx = useTransaction({
     actionName: 'moving',
@@ -77,26 +88,6 @@ export const MovementProvider = ({
     estimatedDurationMs: authMethod === 'embedded' ? 6000 : 500,
   });
 
-  // Clear pendingTarget once the store position matches
-  useEffect(() => {
-    if (
-      pendingTarget &&
-      position &&
-      position.x === pendingTarget.x &&
-      position.y === pendingTarget.y
-    ) {
-      setPendingTarget(null);
-      if (pendingTargetTimeoutRef.current) clearTimeout(pendingTargetTimeoutRef.current);
-    }
-  }, [position, pendingTarget]);
-
-  // Safety timeout: clear pendingTarget after 15s if store never syncs
-  useEffect(() => {
-    if (!pendingTarget) return;
-    pendingTargetTimeoutRef.current = setTimeout(() => setPendingTarget(null), 15000);
-    return () => { if (pendingTargetTimeoutRef.current) clearTimeout(pendingTargetTimeoutRef.current); };
-  }, [pendingTarget]);
-
   const onSetIsMovementDisabled = useCallback((isDisabled: boolean) => {
     setIsMovementDisabled(isDisabled);
   }, []);
@@ -104,31 +95,33 @@ export const MovementProvider = ({
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       if (isMovementDisabled) return;
-      if (moveTx.isLoading) return;
-      if (pendingTarget) return;
+      if (isMoving) return;
       if (!isSpawned) return;
       if (currentBattle) return;
       if (isMessageInputFocused) return;
 
       if (!delegatorAddress) return;
-      if (!position) return;
       if (!character) return;
 
-      const { x, y } = position;
+      // Use optimistic position (tracks confirmed moves ahead of store sync)
+      const currentPos = optimisticPositionRef.current || position;
+      if (!currentPos) return;
+
+      const { x, y } = currentPos;
 
       if (
-        (direction === 'up' && position.y === 9) ||
-        (direction === 'down' && position.y === 0) ||
-        (direction === 'left' && position.x === 0) ||
-        (direction === 'right' && position.x === 9)
+        (direction === 'up' && y === 9) ||
+        (direction === 'down' && y === 0) ||
+        (direction === 'left' && x === 0) ||
+        (direction === 'right' && x === 9)
       ) {
         return;
       }
 
       if (!isMoveEquipped) {
         if (
-          (direction === 'up' && position.y === 4) ||
-          (direction === 'right' && position.x === 4)
+          (direction === 'up' && y === 4) ||
+          (direction === 'right' && x === 4)
         ) {
           onOpenNoMoveEquippedModal();
           return;
@@ -155,11 +148,17 @@ export const MovementProvider = ({
           break;
       }
 
-      setPendingTarget({ x: newX, y: newY });
+      setIsMoving(true);
       const result = await moveTx.execute(() => move(character.id, newX, newY));
-      if (!result || !result.success) {
-        setPendingTarget(null);
+      if (result?.success) {
+        // Update optimistic position immediately — don't wait for store sync.
+        // This allows the next move to start from the correct position.
+        optimisticPositionRef.current = { x: newX, y: newY };
+      } else {
+        // Move failed — reset optimistic position to store truth
+        optimisticPositionRef.current = position ? { x: position.x, y: position.y } : null;
       }
+      setIsMoving(false);
     },
     [
       character,
@@ -168,11 +167,11 @@ export const MovementProvider = ({
       isMessageInputFocused,
       isMoveEquipped,
       isMovementDisabled,
+      isMoving,
       isSpawned,
       move,
       moveTx,
       onOpenNoMoveEquippedModal,
-      pendingTarget,
       position,
     ],
   );
@@ -186,8 +185,7 @@ export const MovementProvider = ({
       }
 
       if (isMovementDisabled) return;
-      if (moveTx.isLoading) return;
-      if (pendingTarget) return;
+      if (isMoving) return;
       if (!isSpawned) return;
       if (currentBattle) return;
       if (isMessageInputFocused) return;
@@ -229,8 +227,7 @@ export const MovementProvider = ({
     currentBattle,
     isMessageInputFocused,
     isMovementDisabled,
-    moveTx.isLoading,
-    pendingTarget,
+    isMoving,
     isSpawned,
     onMove,
     pathname,
@@ -239,7 +236,7 @@ export const MovementProvider = ({
   return (
     <MovementContext.Provider
       value={{
-        isRefreshing: isFetchingEntities || moveTx.isLoading || pendingTarget !== null,
+        isRefreshing: isFetchingEntities || isMoving,
         moveProgress: moveTx.progress,
         moveStatusMessage: moveTx.statusMessage || 'Moving...',
         onMove,
