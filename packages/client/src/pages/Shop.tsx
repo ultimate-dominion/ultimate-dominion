@@ -39,7 +39,7 @@ export const Shop = (): JSX.Element => {
   const {
     delegatorAddress,
     isSynced,
-    systemCalls: { triggerFragment },
+    systemCalls: { endShopEncounter },
   } = useMUD();
   const {
     armorTemplates,
@@ -68,17 +68,16 @@ export const Shop = (): JSX.Element => {
   }, [allShops, shopId]);
 
   const onLeaveShop = useCallback(() => {
-    // Fire Fragment II for Tal's shop (9,9) from the client (fire-and-forget).
-    // The on-chain ShopSystem path is broken (prohibitDirectCallback).
-    if (shop && userCharacter?.id && shop.position.x === 9 && shop.position.y === 9) {
-      triggerFragment(userCharacter.id, 2, 9, 9).catch(() => {});
+    // Call endShopEncounter to properly end the encounter on-chain.
+    // Fragment II trigger for Tal's shop is handled on-chain by ShopSystem.
+    if (userCharacter?.worldEncounter?.encounterId) {
+      endShopEncounter(userCharacter.worldEncounter.encounterId).catch(() => {});
     }
 
-    // Don't call endWorldEncounter — it always reverts with 0x data for shop
-    // encounters (EncounterResolveSystem hits prohibitDirectCallback internally).
-    // The encounter auto-ends on the player's next move via MapSystem.
+    // Navigate immediately — keep fromShop fallback so GameBoard doesn't
+    // redirect back to shop while the on-chain state propagates.
     navigate(GAME_BOARD_PATH, { state: { fromShop: true } });
-  }, [navigate, shop, triggerFragment, userCharacter]);
+  }, [endShopEncounter, navigate, userCharacter]);
 
   const [sellable, setSellable] = useState<
     Array<{

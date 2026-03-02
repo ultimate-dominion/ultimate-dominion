@@ -3,8 +3,12 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
+import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
+import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
+import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 
 import {
+    Characters,
     Shops,
     ShopsData,
     ShopSale,
@@ -18,7 +22,7 @@ import {
 import {IWorld} from "@world/IWorld.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {_lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
+import {WORLD_NAMESPACE, CHARACTERS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
 import {Position} from "@codegen/index.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
@@ -27,6 +31,9 @@ import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
+import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
+import {IFragmentSystem} from "@world/IFragmentSystem.sol";
 import "forge-std/console.sol";
 
 contract ShopSystem is System, ReentrancyGuard {
@@ -187,8 +194,7 @@ contract ShopSystem is System, ReentrancyGuard {
         PauseLib.requireNotPaused();
         bytes32 characterId = WorldEncounter.getCharacter(encounterId);
         require(
-            IWorld(_world()).UD__isValidCharacterId(characterId)
-                && IWorld(_world()).UD__isValidOwner(characterId, _msgSender()),
+            _isValidCharacterId(characterId) && Characters.getOwner(characterId) == _msgSender(),
             "can only exit your own shop"
         );
 
@@ -196,10 +202,17 @@ contract ShopSystem is System, ReentrancyGuard {
         bytes32 shopEntityId = WorldEncounter.getEntity(encounterId);
         (uint16 shopX, uint16 shopY) = Position.get(shopEntityId);
         if (shopX == TAL_SHOP_X && shopY == TAL_SHOP_Y) {
-            IWorld(_world()).UD__triggerFragment(characterId, 2, shopX, shopY);
+            SystemSwitch.call(
+                abi.encodeCall(IFragmentSystem.UD__triggerFragment, (characterId, 2, shopX, shopY))
+            );
         }
 
-        IWorld(_world()).UD__endEncounter(encounterId, 0, false);
+        // Inline _endWorldEncounter logic to avoid cross-system IWorld call
+        WorldEncounterData memory encounterData = WorldEncounter.get(encounterId);
+        require(encounterData.end == 0 && encounterData.start != 0, "invalid encounter");
+        encounterData.end = block.timestamp;
+        EncounterEntity.setEncounterId(encounterData.character, bytes32(0));
+        WorldEncounter.set(encounterId, encounterData);
     }
 
     function itemStock(bytes32 shopId, uint256 itemIndex) external view returns (uint256) {
@@ -237,5 +250,15 @@ contract ShopSystem is System, ReentrancyGuard {
 
     function _lootManagerAddress() internal view returns (address) {
         return Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
+    }
+
+    function _isValidCharacterId(bytes32 characterId) private view returns (bool) {
+        address ownerAddress = address(uint160(uint256(characterId) >> 96));
+        uint256 tokenId = uint256(uint96(uint256(characterId)));
+        return ERC721Owners.get(_charsOwnersTableId(), tokenId) == ownerAddress;
+    }
+
+    function _charsOwnersTableId() private pure returns (ResourceId) {
+        return WorldResourceIdLib.encode(RESOURCE_TABLE, CHARACTERS_NAMESPACE, "Owners");
     }
 }

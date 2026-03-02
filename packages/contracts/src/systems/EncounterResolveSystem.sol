@@ -19,7 +19,16 @@ import {BoardCleanupLib} from "../libraries/BoardCleanupLib.sol";
 
 contract EncounterResolveSystem is System {
     function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
-        EncounterType encounterType = IWorld(_world()).UD__getEncounterType(encounterId);
+        // Inline getEncounterType to avoid cross-system IWorld call
+        EncounterType encounterType;
+        if (CombatEncounter.getStart(encounterId) > 0) {
+            encounterType = CombatEncounter.getEncounterType(encounterId);
+        } else if (WorldEncounter.getStart(encounterId) > 0) {
+            encounterType = EncounterType.World;
+        } else {
+            revert InvalidEncounter();
+        }
+
         if (encounterType == EncounterType.PvP || encounterType == EncounterType.PvE) {
             _endCombatEncounter(encounterId, randomNumber, attackersWin);
         } else if (encounterType == EncounterType.World) {

@@ -46,16 +46,18 @@ export const Header = (): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     onOpenWalletDetailsModal,
+    systemCalls: { endShopEncounter },
   } = useMUD();
   const { character } = useCharacter();
 
   const shopGuardedNavigate = useCallback(
     (to: string) => {
-      // Don't call endWorldEncounter — it always reverts for shop encounters
-      // (prohibitDirectCallback). The encounter auto-ends on next move via MapSystem.
+      if (character?.worldEncounter?.encounterId) {
+        endShopEncounter(character.worldEncounter.encounterId).catch(() => {});
+      }
       navigate(to, character?.worldEncounter ? { state: { fromShop: true } } : undefined);
     },
-    [character, navigate],
+    [character, endShopEncounter, navigate],
   );
 
   const logoLink = useMemo(() => {
