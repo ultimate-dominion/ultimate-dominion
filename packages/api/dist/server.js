@@ -1,4 +1,6 @@
 import express from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import { setupRoutes } from './api/index.js';
 // Load environment variables based on NODE_ENV
@@ -6,16 +8,17 @@ const environment = process.env.NODE_ENV || 'development';
 config({ path: `.env.${environment}` });
 const app = express();
 const port = process.env.PORT || 8080;
-// CORS middleware
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
+// CORS - restrict to allowed origins
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000').split(',');
+app.use(cors({ origin: allowedOrigins }));
+// Rate limiting
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
 });
+app.use('/api/', apiLimiter);
 // Body parser middleware
 app.use(express.json());
 // Setup API routes

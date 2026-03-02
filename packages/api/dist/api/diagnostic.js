@@ -80,7 +80,6 @@ export default async function handler(req, res) {
         diagnosticResults.error = {
             step: diagnosticResults.step,
             message: error.message,
-            stack: error.stack
         };
         res.status(500).json(diagnosticResults);
     }

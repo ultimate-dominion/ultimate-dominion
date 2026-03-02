@@ -1,19 +1,20 @@
 import { uploadJsonToPinata } from "../lib/fileStorage.js";
 export default async function uploadMetadata(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    if (!(req.method === "POST" || req.method == "OPTIONS")) {
-        return res.status(405).json({ error: "Method not allowed" });
-    }
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     if (req.method === "OPTIONS") {
         return res.status(200).end();
     }
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+    }
     try {
         const jsonData = req.body;
-        console.log('Received metadata:', jsonData);
-        console.log('Environment:', process.env.NODE_ENV);
-        console.log('Using PINATA_JWT:', process.env.PINATA_JWT ? 'Yes (length: ' + process.env.PINATA_JWT.length + ')' : 'No');
+        // Validate metadata schema
+        if (!jsonData || typeof jsonData !== 'object' || !jsonData.name) {
+            return res.status(400).json({ error: "Invalid metadata: 'name' field is required" });
+        }
         // Generate a filename based on character name or timestamp
         const fileName = jsonData.name ?
             `character-${jsonData.name}-${Date.now()}.json` :

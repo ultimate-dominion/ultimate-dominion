@@ -12,6 +12,28 @@ if (!WORLD_ADDRESS) {
 if (!INITIAL_BLOCK_NUMBER) {
     throw new Error(`Invalid/Missing environment variable: "INITIAL_BLOCK_NUMBER"`);
 }
+// Define Base mainnet chain
+const base = {
+    name: "Base",
+    id: 8453,
+    nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
+    rpcUrls: {
+        default: {
+            http: [(process.env.RPC_HTTP_URL || "https://mainnet.base.org")],
+            webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://base-rpc.publicnode.com"],
+        },
+        public: {
+            http: [(process.env.RPC_HTTP_URL || "https://mainnet.base.org")],
+            webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://base-rpc.publicnode.com"],
+        },
+    },
+    blockExplorers: {
+        default: {
+            name: "BaseScan",
+            url: "https://basescan.org",
+        },
+    },
+};
 // Define Pyrope chain
 const pyrope = {
     name: "Pyrope",
@@ -36,14 +58,14 @@ const pyrope = {
     // Add indexer URL for MUD sync
     indexerUrl: process.env.INDEXER_URL || "https://indexer.mud.pyropechain.com",
 };
-const SUPPORTED_CHAINS = [mudFoundry, pyrope];
+const SUPPORTED_CHAINS = [mudFoundry, pyrope, base];
 export async function getNetworkConfig() {
-    // Always use Pyrope in production, regardless of CHAIN_ID
+    // In production, use CHAIN_ID env var (defaults to Base mainnet)
     // In development, use CHAIN_ID if set, otherwise use local Foundry chain
     let chainId;
     if (process.env.NODE_ENV === "production") {
-        chainId = Number(pyrope.id);
-        console.log("[getNetworkConfig] Using Pyrope chain in production");
+        chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : Number(base.id);
+        console.log(`[getNetworkConfig] Using chain ${chainId} in production`);
     }
     else {
         chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : Number(mudFoundry.id);
