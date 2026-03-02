@@ -36,7 +36,11 @@ export const Shop = (): JSX.Element => {
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
-  const { delegatorAddress, isSynced } = useMUD();
+  const {
+    delegatorAddress,
+    isSynced,
+    systemCalls: { triggerFragment },
+  } = useMUD();
   const {
     armorTemplates,
     consumableTemplates,
@@ -63,10 +67,17 @@ export const Shop = (): JSX.Element => {
   }, [allShops, shopId]);
 
   const onLeaveShop = useCallback(() => {
+    // Fire Fragment II ("The Quartermaster") for Tal's shop at (9,9).
+    // This must be called from the client because the on-chain
+    // ShopSystem.endShopEncounter → triggerFragment path hits MUD's
+    // prohibitDirectCallback (system calling World calling system).
+    if (shop && userCharacter?.id && shop.position.x === 9 && shop.position.y === 9) {
+      triggerFragment(userCharacter.id, 2, 9, 9).catch(() => {});
+    }
     // Navigate directly — the encounter auto-ends on the next move
     // (MapSystem calls endEncounter before every move).
     navigate(GAME_BOARD_PATH);
-  }, [navigate]);
+  }, [navigate, shop, triggerFragment, userCharacter?.id]);
 
   const [sellable, setSellable] = useState<
     Array<{
