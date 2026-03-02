@@ -87,7 +87,12 @@ export const Header = ({
 
   const onBack = useCallback(async () => {
     if (pathname.includes(ITEM_PATH)) {
-      navigate(MARKETPLACE_PATH);
+      navigate(-1);
+      return;
+    }
+
+    if (pathname === MARKETPLACE_PATH) {
+      navigate(GAME_BOARD_PATH);
       return;
     }
 
