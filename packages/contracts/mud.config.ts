@@ -113,6 +113,10 @@ export default defineWorld({
       name: "AdminSystem",
       openAccess: false,
     },
+    AdminTuningSystem: {
+      name: "AdminTuningSys",
+      openAccess: false,
+    },
     UltimateDominionConfigSystem: {
       name: "UDConfigSys",
       openAccess: false,

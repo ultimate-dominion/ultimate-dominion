@@ -17,9 +17,7 @@ import {
     Admin,
     EntitiesAtPosition,
     Position,
-    UltimateDominionConfig,
-    WeaponScaling,
-    ClassMultipliers
+    UltimateDominionConfig
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {ItemType, MobType, EffectType} from "@codegen/common.sol";
@@ -148,17 +146,6 @@ contract AdminSystem is System {
         bytes memory effectStats
     ) public onlyAdmin returns (bytes32) {
         return IWorld(_world()).UD__createEffect(effectType, name, effectStats);
-    }
-
-    function adminSetWeaponScaling(uint256 itemId, bool usesAgi) public onlyAdmin {
-        WeaponScaling.set(itemId, usesAgi);
-    }
-
-    function adminSetClassMultipliers(
-        bytes32 characterId, uint256 physical, uint256 spell,
-        uint256 healing, uint256 critDmg, uint256 maxHp
-    ) public onlyAdmin {
-        ClassMultipliers.set(characterId, physical, spell, healing, critDmg, maxHp);
     }
 
     // NOTE: setGlobalDropMultiplier and setGoldDropMultiplier removed —
