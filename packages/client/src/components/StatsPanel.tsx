@@ -21,6 +21,7 @@ import {
 } from 'react-icons/io';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useFragments } from '../contexts/FragmentContext';
 import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
 import { LEADERBOARD_PATH, MARKETPLACE_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
@@ -40,6 +41,7 @@ import { TileScout } from './TileScout';
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
   const { character } = useCharacter();
+  const { fragments } = useFragments();
 
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
@@ -415,6 +417,30 @@ export const StatsPanel = (): JSX.Element => {
           <Box pb={4} pt={2} w="100%">
             <TileScout />
           </Box>
+
+          {/* Fragment progress dots */}
+          <Divider borderColor="grey300" />
+          <VStack px={4} py={3} spacing={1.5} w="100%">
+            <Text color="#8A7E6A" fontSize="xs" fontWeight={600}>
+              Fragments
+            </Text>
+            <HStack spacing={1.5}>
+              {Array.from({ length: 8 }, (_, i) => {
+                const frag = fragments.find(f => f.fragmentType === i + 1);
+                const claimed = frag?.claimed ?? false;
+                return (
+                  <Box
+                    key={i}
+                    w="10px"
+                    h="10px"
+                    borderRadius="2px"
+                    bg={claimed ? '#A8DEFF' : '#2A2520'}
+                    transition="background-color 0.3s ease"
+                  />
+                );
+              })}
+            </HStack>
+          </VStack>
         </>
       )}
     </VStack>

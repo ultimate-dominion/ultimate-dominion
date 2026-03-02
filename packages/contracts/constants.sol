@@ -12,6 +12,10 @@ bytes14 constant WORLD_NAMESPACE = "UD";
 uint256 constant BADGE_ADVENTURER = 1;  // Unlocks chat at level 3
 uint256 constant BADGE_FOUNDER = 50;    // Limited time launch badge
 uint256 constant BADGE_ZONE_CONQUEROR_BASE = 100; // Base for zone conqueror badges
+uint256 constant BADGE_ZONE_FRAGMENT_BASE = 200;  // +zoneId → Dark Cave = 201, Zone 2 = 202, etc.
+
+// Fragment rewards
+uint256 constant FRAGMENT_XP_REWARD = 100;
 
 // Badge requirements
 uint256 constant ADVENTURER_BADGE_LEVEL = 3;

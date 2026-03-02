@@ -7,13 +7,16 @@ import {
     FragmentMetadata,
     CharacterFirstActions,
     Characters,
-    Admin
+    Admin,
+    Stats,
+    StatsData,
+    UltimateDominionConfig
 } from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {_ownersTableId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
-import {CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID, FRAGMENTS_NAMESPACE} from "../../constants.sol";
+import {CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID, FRAGMENTS_NAMESPACE, BADGES_NAMESPACE, ZONE_DARK_CAVE, BADGE_ZONE_FRAGMENT_BASE, FRAGMENT_XP_REWARD} from "../../constants.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 /**
@@ -63,6 +66,27 @@ contract FragmentSystem is System {
     }
 
     /**
+     * @dev Check if all 8 fragments are claimed and mint zone fragment badge
+     * @param characterId The character to check
+     * @param zoneId The zone ID for the badge (e.g. ZONE_DARK_CAVE = 1)
+     */
+    function _checkZoneFragmentBadge(bytes32 characterId, uint256 zoneId) private {
+        for (uint8 i = 1; i <= 8; i++) {
+            if (!FragmentProgress.getClaimed(characterId, FragmentType(i))) return;
+        }
+        address badgeToken = UltimateDominionConfig.getBadgeToken();
+        if (badgeToken == address(0)) return;
+        address owner = Characters.getOwner(characterId);
+        uint256 tokenId = Characters.getTokenId(characterId);
+        uint256 badgeBase = BADGE_ZONE_FRAGMENT_BASE + zoneId;
+        uint256 badgeId = (badgeBase * 1_000_000) + tokenId;
+        if (Owners.get(_ownersTableId(BADGES_NAMESPACE), badgeId) != address(0)) return;
+        Owners.set(_ownersTableId(BADGES_NAMESPACE), badgeId, owner);
+        uint256 bal = Balances.get(_balancesTableId(BADGES_NAMESPACE), owner);
+        Balances.set(_balancesTableId(BADGES_NAMESPACE), owner, bal + 1);
+    }
+
+    /**
      * @notice Claim a triggered fragment and mint the NFT
      * @param characterId The character ID
      * @param fragmentType The fragment type (1-8)
@@ -98,6 +122,14 @@ contract FragmentSystem is System {
         FragmentProgress.setClaimed(characterId, fType, true);
         FragmentProgress.setClaimedAt(characterId, fType, block.timestamp);
         FragmentProgress.setTokenId(characterId, fType, tokenId);
+
+        // Award XP
+        StatsData memory stats = Stats.get(characterId);
+        stats.experience += FRAGMENT_XP_REWARD;
+        Stats.set(characterId, stats);
+
+        // Check 8/8 completion → mint zone fragment badge
+        _checkZoneFragmentBadge(characterId, ZONE_DARK_CAVE);
 
         emit FragmentClaimed(characterId, fragmentType, tokenId);
 
