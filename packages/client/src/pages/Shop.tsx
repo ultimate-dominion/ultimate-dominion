@@ -36,11 +36,7 @@ export const Shop = (): JSX.Element => {
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
-  const {
-    delegatorAddress,
-    isSynced,
-    systemCalls: { endShopEncounter },
-  } = useMUD();
+  const { delegatorAddress, isSynced } = useMUD();
   const {
     armorTemplates,
     consumableTemplates,
@@ -66,18 +62,11 @@ export const Shop = (): JSX.Element => {
     return allShops.find(shop => shop.shopId === shopId) ?? null;
   }, [allShops, shopId]);
 
-  const [isLeaving, setIsLeaving] = useState(false);
-
-  const onLeaveShop = useCallback(async () => {
-    if (!userCharacter?.worldEncounter) {
-      navigate(GAME_BOARD_PATH);
-      return;
-    }
-    setIsLeaving(true);
-    await endShopEncounter(userCharacter.worldEncounter.encounterId);
-    setIsLeaving(false);
+  const onLeaveShop = useCallback(() => {
+    // Navigate directly — the encounter auto-ends on the next move
+    // (MapSystem calls endEncounter before every move).
     navigate(GAME_BOARD_PATH);
-  }, [endShopEncounter, navigate, userCharacter]);
+  }, [navigate]);
 
   const [sellable, setSellable] = useState<
     Array<{
@@ -261,7 +250,6 @@ export const Shop = (): JSX.Element => {
             fontFamily="Cinzel, serif"
             fontSize="xs"
             fontWeight={600}
-            isLoading={isLeaving}
             letterSpacing="0.05em"
             onClick={onLeaveShop}
             px={4}
