@@ -211,6 +211,15 @@ export const Welcome = (): JSX.Element => {
             >
               Tavern
             </Link>
+            <Text color="#3A3228" userSelect="none">|</Text>
+            <Link
+              color="#8A7E6A"
+              href="https://x.com/DominionMMO"
+              isExternal
+              _hover={{ color: '#D4A54A', textDecoration: 'none' }}
+            >
+              X
+            </Link>
           </HStack>
 
           <ConnectWalletModal isOpen={isOpen} onClose={onClose} />

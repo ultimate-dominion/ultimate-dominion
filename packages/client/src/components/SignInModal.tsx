@@ -14,6 +14,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
+import { FcGoogle } from 'react-icons/fc';
 import { IoClose } from 'react-icons/io5';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -69,6 +70,7 @@ export const SignInModal = ({
           <VStack spacing={6}>
             <Button
               isLoading={isConnecting}
+              leftIcon={<FcGoogle size={20} />}
               onClick={handleGoogle}
               variant="outline"
               w="100%"
