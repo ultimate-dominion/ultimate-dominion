@@ -172,6 +172,7 @@ export const ShopItemRow = ({
             characterId,
           );
           if (error && !success) throw new Error(error);
+          return success;
         } else {
           const { error, success } = await sell(
             BigInt(amount),
@@ -180,6 +181,7 @@ export const ShopItemRow = ({
             characterId,
           );
           if (error && !success) throw new Error(error);
+          return success;
         }
       });
 
