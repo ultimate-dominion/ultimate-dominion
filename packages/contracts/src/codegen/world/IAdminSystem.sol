@@ -66,9 +66,9 @@ interface IAdminSystem {
   ) external returns (uint256);
 
   function UD__adminCreateMobs(
-    MobType[] memory mobTypes,
-    bytes[] memory stats,
-    string[] memory mobMetadataURIs
+    MobType[] calldata mobTypes,
+    bytes[] calldata stats,
+    string[] calldata mobMetadataURIs
   ) external;
 
   function UD__adminCreateEffect(
@@ -76,8 +76,4 @@ interface IAdminSystem {
     string memory name,
     bytes memory effectStats
   ) external returns (bytes32);
-
-  function UD__setGlobalDropMultiplier(uint256 newMult) external;
-
-  function UD__setGoldDropMultiplier(uint256 newMult) external;
 }

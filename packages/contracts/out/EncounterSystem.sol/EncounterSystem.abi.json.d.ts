@@ -69,29 +69,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "endEncounter",
-    "inputs": [
-      {
-        "name": "encounterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "randomNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "attackersWin",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "endTurn",
     "inputs": [
       {
@@ -188,55 +165,6 @@ declare const abi: [
   },
   {
     "type": "event",
-    "name": "Store_SpliceDynamicData",
-    "inputs": [
-      {
-        "name": "tableId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "keyTuple",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "dynamicFieldIndex",
-        "type": "uint8",
-        "indexed": false,
-        "internalType": "uint8"
-      },
-      {
-        "name": "start",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
-      },
-      {
-        "name": "deleteCount",
-        "type": "uint40",
-        "indexed": false,
-        "internalType": "uint40"
-      },
-      {
-        "name": "encodedLengths",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "EncodedLengths"
-      },
-      {
-        "name": "data",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Store_SpliceStaticData",
     "inputs": [
       {
@@ -279,22 +207,6 @@ declare const abi: [
   {
     "type": "error",
     "name": "CombatantHpZero",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "EncodedLengths_InvalidLength",
-    "inputs": [
-      {
-        "name": "length",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "EncounterAlreadyOver",
     "inputs": []
   },
   {
@@ -375,64 +287,6 @@ declare const abi: [
         "name": "end",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "Store_IndexOutOfBounds",
-    "inputs": [
-      {
-        "name": "length",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "accessedIndex",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "Store_InvalidResourceType",
-    "inputs": [
-      {
-        "name": "expected",
-        "type": "bytes2",
-        "internalType": "bytes2"
-      },
-      {
-        "name": "resourceId",
-        "type": "bytes32",
-        "internalType": "ResourceId"
-      },
-      {
-        "name": "resourceIdString",
-        "type": "string",
-        "internalType": "string"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "Store_InvalidSplice",
-    "inputs": [
-      {
-        "name": "startWithinField",
-        "type": "uint40",
-        "internalType": "uint40"
-      },
-      {
-        "name": "deleteCount",
-        "type": "uint40",
-        "internalType": "uint40"
-      },
-      {
-        "name": "fieldLength",
-        "type": "uint40",
-        "internalType": "uint40"
       }
     ]
   },

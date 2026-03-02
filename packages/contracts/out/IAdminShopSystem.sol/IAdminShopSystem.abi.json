@@ -1,0 +1,177 @@
+[
+  {
+    "type": "function",
+    "name": "UD__adminCreateShop",
+    "inputs": [
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "shopData",
+        "type": "tuple",
+        "internalType": "struct ShopsData",
+        "components": [
+          {
+            "name": "gold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxGold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "priceMarkup",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "priceMarkdown",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "restockTimestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "sellableItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "buyableItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "restock",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "stock",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          }
+        ]
+      },
+      {
+        "name": "shopMetadataUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminSpawnMob",
+    "inputs": [
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__adminUpdateShop",
+    "inputs": [
+      {
+        "name": "shopEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "shopData",
+        "type": "tuple",
+        "internalType": "struct ShopsData",
+        "components": [
+          {
+            "name": "gold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxGold",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "priceMarkup",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "priceMarkdown",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "restockTimestamp",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "sellableItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "buyableItems",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "restock",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "stock",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]

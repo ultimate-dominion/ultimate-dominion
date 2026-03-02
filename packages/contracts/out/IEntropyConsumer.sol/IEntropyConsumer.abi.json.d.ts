@@ -1,0 +1,27 @@
+declare const abi: [
+  {
+    "type": "function",
+    "name": "_entropyCallback",
+    "inputs": [
+      {
+        "name": "sequence",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "randomNumber",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+];
+
+export default abi;

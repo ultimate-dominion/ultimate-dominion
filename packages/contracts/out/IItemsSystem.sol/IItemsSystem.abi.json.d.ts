@@ -1,0 +1,375 @@
+declare const abi: [
+  {
+    "type": "function",
+    "name": "UD__getArmorStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_ArmorStats",
+        "type": "tuple",
+        "internalType": "struct ArmorStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorType",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getConsumableStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_consumableStats",
+        "type": "tuple",
+        "internalType": "struct ConsumableStatsData",
+        "components": [
+          {
+            "name": "minDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getItemBalance",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_balance",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getItemType",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum ItemType"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getStarterConsumables",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getStarterItems",
+    "inputs": [
+      {
+        "name": "class",
+        "type": "uint8",
+        "internalType": "enum Classes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "data",
+        "type": "tuple",
+        "internalType": "struct StarterItemsData",
+        "components": [
+          {
+            "name": "itemIds",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "amounts",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getTotalSupply",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_supply",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getWeaponStats",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_weaponStats",
+        "type": "tuple",
+        "internalType": "struct WeaponStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isItemOwner",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isStarterItem",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__setStarterConsumables",
+    "inputs": [
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setStarterItemPool",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "isStarter",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setStarterItems",
+    "inputs": [
+      {
+        "name": "class",
+        "type": "uint8",
+        "internalType": "enum Classes"
+      },
+      {
+        "name": "itemIds",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "amounts",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+];
+
+export default abi;

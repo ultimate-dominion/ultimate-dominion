@@ -14,11 +14,9 @@ import { Action } from "@interfaces/Structs.sol";
 interface IEncounterSystem {
   function UD__createEncounter(
     EncounterType encounterType,
-    bytes32[] memory group1,
-    bytes32[] memory group2
+    bytes32[] calldata group1,
+    bytes32[] calldata group2
   ) external returns (bytes32 encounterId);
 
-  function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] memory attacks) external payable;
-
-  function UD__endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) external;
+  function UD__endTurn(bytes32 encounterId, bytes32 playerId, Action[] calldata attacks) external payable;
 }

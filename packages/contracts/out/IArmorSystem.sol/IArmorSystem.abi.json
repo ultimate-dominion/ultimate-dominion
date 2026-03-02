@@ -1,0 +1,246 @@
+[
+  {
+    "type": "function",
+    "name": "UD__calculateArmorBonuses",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "armorBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "strBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "agiBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "intBonus",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "hpBonus",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__checkArmorRequirements",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "canEquip",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__equipArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__getArmorStatsData",
+    "inputs": [
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "armorStats",
+        "type": "tuple",
+        "internalType": "struct ArmorStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorType",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEquippedArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "equippedArmor",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isArmorEquippedExt",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isEquipped",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__unequipArmor",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "armorId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_AlreadyEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_CharacterNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_ItemNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_LevelTooLow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_NoArmorSlot",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_NotArmor",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_NotEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorSystem_RequirementsNotMet",
+    "inputs": []
+  }
+]

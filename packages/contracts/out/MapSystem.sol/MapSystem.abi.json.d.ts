@@ -140,32 +140,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "removeEntitiesFromBoard",
-    "inputs": [
-      {
-        "name": "entityIds",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "removeEntityFromBoard",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "spawn",
     "inputs": [
       {
@@ -376,11 +350,6 @@ declare const abi: [
   },
   {
     "type": "error",
-    "name": "SessionNotTimedOut",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {
@@ -461,11 +430,6 @@ declare const abi: [
   {
     "type": "error",
     "name": "Unauthorized",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UseFleeFunction",
     "inputs": []
   }
 ];

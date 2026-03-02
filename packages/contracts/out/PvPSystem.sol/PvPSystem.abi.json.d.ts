@@ -279,6 +279,11 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "NoWeaponsEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {

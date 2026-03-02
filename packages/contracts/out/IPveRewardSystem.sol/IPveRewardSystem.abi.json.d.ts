@@ -1,0 +1,57 @@
+declare const abi: [
+  {
+    "type": "function",
+    "name": "UD__calculateExpMultiplier",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_expMultiplier",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__distributePveRewards",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_expAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_goldAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_itemIdsDropped",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+];
+
+export default abi;

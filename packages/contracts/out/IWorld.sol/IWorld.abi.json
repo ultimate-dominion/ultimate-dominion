@@ -8725,6 +8725,26 @@
   },
   {
     "type": "error",
+    "name": "FragmentAlreadyClaimed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FragmentNotTriggered",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidCharacter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidFragmentType",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "LevelSystem_CharacterInCombat",
     "inputs": []
   },
@@ -8777,6 +8797,16 @@
   {
     "type": "error",
     "name": "Module_RootInstallNotSupported",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAdmin",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotCharacterOwner",
     "inputs": []
   },
   {
@@ -9017,6 +9047,11 @@
         "internalType": "string"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "TokenAlreadyMinted",
+    "inputs": []
   },
   {
     "type": "error",

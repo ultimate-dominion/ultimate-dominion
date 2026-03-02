@@ -1,0 +1,274 @@
+[
+  {
+    "type": "function",
+    "name": "UD__createEffect",
+    "inputs": [
+      {
+        "name": "effectType",
+        "type": "uint8",
+        "internalType": "enum EffectType"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "effectStats",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "effectStatsId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__getAppliedEffectInfo",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_effectStatsId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "_timestampApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_effectExpiredTime",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_turnApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEffectExpired",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_effectExpiredTimestamp",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEffectStatId",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_effectStatsId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEffectTimestamp",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_timestampApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEffectTurnApplied",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_turnApplied",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__getMagicDamageStats",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_magicDamageStats",
+        "type": "tuple",
+        "internalType": "struct MagicDamageStatsData",
+        "components": [
+          {
+            "name": "attackModifierBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "bonusDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "critChanceBonus",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getPhysicalDamageStats",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_physicalDamageStats",
+        "type": "tuple",
+        "internalType": "struct PhysicalDamageStatsData",
+        "components": [
+          {
+            "name": "armorPenetration",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "attackModifierBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "bonusDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "critChanceBonus",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getStatusEffectStats",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_statusEffectStats",
+        "type": "tuple",
+        "internalType": "struct StatusEffectStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "damagePerTick",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "resistanceStat",
+            "type": "uint8",
+            "internalType": "enum ResistanceStat"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  }
+]

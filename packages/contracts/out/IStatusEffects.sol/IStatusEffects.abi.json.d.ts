@@ -1,0 +1,66 @@
+declare const abi: [
+  {
+    "type": "function",
+    "name": "UD__isNotExpired",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "UD__previewAppliedEffectId",
+    "inputs": [
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "currentTurn",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__previewExpire",
+    "inputs": [
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "expiredId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  }
+];
+
+export default abi;

@@ -348,7 +348,32 @@ declare const abi: [
   },
   {
     "type": "error",
+    "name": "ActionNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ActionTypeNotRecognized",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "IntOverflow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidAction",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMagicItemType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ItemNotEquipped",
     "inputs": []
   },
   {
@@ -376,6 +401,11 @@ declare const abi: [
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "UnrecognizedResistanceStat",
+    "inputs": []
   }
 ];
 

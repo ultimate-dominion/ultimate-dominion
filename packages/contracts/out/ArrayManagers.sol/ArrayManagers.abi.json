@@ -1,0 +1,40 @@
+[
+  {
+    "type": "function",
+    "name": "trimBytes32Array",
+    "inputs": [
+      {
+        "name": "arrayToTrim",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "trimmedArray",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "trimUint256Array",
+    "inputs": [
+      {
+        "name": "arrayToTrim",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "trimmedArray",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "pure"
+  }
+]

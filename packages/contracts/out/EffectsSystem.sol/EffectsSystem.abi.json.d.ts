@@ -1,0 +1,687 @@
+declare const abi: [
+  {
+    "type": "function",
+    "name": "_msgSender",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "sender",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_msgValue",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "value",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "_world",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "applyDamageOverTime",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "applyStatusEffect",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "applyWorldEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "calculateAllStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "calculateCombatStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "_incomingStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "checkWorldStatusEffects",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "cullExpiredWorldEffect",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "index",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "currentStacks",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "effectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_appliedStack",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "expireIfInvalid",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isValidEffect",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "appliedEffectId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "supportsInterface",
+    "inputs": [
+      {
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "event",
+    "name": "Store_SetRecord",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "staticData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      },
+      {
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "EncodedLengths"
+      },
+      {
+        "name": "dynamicData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Store_SpliceDynamicData",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "dynamicFieldIndex",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "start",
+        "type": "uint48",
+        "indexed": false,
+        "internalType": "uint48"
+      },
+      {
+        "name": "deleteCount",
+        "type": "uint40",
+        "indexed": false,
+        "internalType": "uint40"
+      },
+      {
+        "name": "encodedLengths",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "EncodedLengths"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Store_SpliceStaticData",
+    "inputs": [
+      {
+        "name": "tableId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "keyTuple",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "start",
+        "type": "uint48",
+        "indexed": false,
+        "internalType": "uint48"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "EffectNotApplied",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EncodedLengths_InvalidLength",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidEffect",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidEffectApplication",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidEffectType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NonExistentIndex",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotEffectType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Slice_OutOfBounds",
+    "inputs": [
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "start",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "end",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Store_IndexOutOfBounds",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "accessedIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Store_InvalidBounds",
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "end",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Store_InvalidResourceType",
+    "inputs": [
+      {
+        "name": "expected",
+        "type": "bytes2",
+        "internalType": "bytes2"
+      },
+      {
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Store_InvalidSplice",
+    "inputs": [
+      {
+        "name": "startWithinField",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "deleteCount",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "fieldLength",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ]
+  }
+];
+
+export default abi;

@@ -1,0 +1,214 @@
+declare const abi: [
+  {
+    "type": "function",
+    "name": "UD__checkForEncounterEnd",
+    "inputs": [
+      {
+        "name": "encounterData",
+        "type": "tuple",
+        "internalType": "struct CombatEncounterData",
+        "components": [
+          {
+            "name": "encounterType",
+            "type": "uint8",
+            "internalType": "enum EncounterType"
+          },
+          {
+            "name": "start",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "end",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "rewardsDistributed",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "currentTurn",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentTurnTimer",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxTurns",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "attackersAreMobs",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "defenders",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "attackers",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_encounterEnded",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "_attackersWin",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getEncounterType",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_encounterType",
+        "type": "uint8",
+        "internalType": "enum EncounterType"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isAttacker",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isAttacker",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isDefender",
+    "inputs": [
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isDefender",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isInEncounter",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isParticipant",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "participants",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isParticipant",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isParticipant",
+    "inputs": [
+      {
+        "name": "playerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "_isParticipant",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  }
+];
+
+export default abi;

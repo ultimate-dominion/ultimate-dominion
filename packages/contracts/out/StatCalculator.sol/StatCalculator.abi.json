@@ -1,0 +1,1268 @@
+[
+  {
+    "type": "function",
+    "name": "applyStatusEffectModifiers",
+    "inputs": [
+      {
+        "name": "baseStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      },
+      {
+        "name": "strModifier",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "agiModifier",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "intModifier",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "hpModifier",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "armorModifier",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "adjustedStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateBaseCombatStats",
+    "inputs": [
+      {
+        "name": "baseStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "armor",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "combatStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateEquipmentBonuses",
+    "inputs": [
+      {
+        "name": "baseStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "equipmentStats",
+        "type": "tuple",
+        "internalType": "struct CharacterEquipmentData",
+        "components": [
+          {
+            "name": "strBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agiBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpBonus",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "equippedArmor",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "equippedWeapons",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "equippedSpells",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "equippedConsumables",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "equippedAccessories",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "combatStats",
+        "type": "tuple",
+        "internalType": "struct AdjustedCombatStats",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armor",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateHpBonus",
+    "inputs": [
+      {
+        "name": "characterClass",
+        "type": "Classes",
+        "internalType": "enum Classes"
+      },
+      {
+        "name": "currentLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hpBonus",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateHpForLevel",
+    "inputs": [
+      {
+        "name": "level",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "hpGain",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateLevelFromExperience",
+    "inputs": [
+      {
+        "name": "experience",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "levelsTable",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "currentLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateLevelScaling",
+    "inputs": [
+      {
+        "name": "baseValue",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "level",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "scalingFactor",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "scaledValue",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateStatCap",
+    "inputs": [
+      {
+        "name": "level",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "baseCap",
+        "type": "int256",
+        "internalType": "int256"
+      },
+      {
+        "name": "capPerLevel",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "statCap",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateStatPointsForLevel",
+    "inputs": [
+      {
+        "name": "level",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "statPoints",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateTotalHpFromLeveling",
+    "inputs": [
+      {
+        "name": "level",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "totalHp",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "calculateTotalStatPoints",
+    "inputs": [
+      {
+        "name": "level",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "totalPoints",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "checkArmorStatRequirements",
+    "inputs": [
+      {
+        "name": "itemStats",
+        "type": "tuple",
+        "internalType": "struct ArmorStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "armorType",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          }
+        ]
+      },
+      {
+        "name": "characterStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "meetsRequirements",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "checkStatRequirements",
+    "inputs": [
+      {
+        "name": "itemStats",
+        "type": "tuple",
+        "internalType": "struct WeaponStatsData",
+        "components": [
+          {
+            "name": "agiModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "intModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "hpModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minDamage",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "minLevel",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "strModifier",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "effects",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          }
+        ]
+      },
+      {
+        "name": "characterStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "meetsRequirements",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "generateBalancedBaseStats",
+    "inputs": [
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "existingStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "stats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "generateRandomStats",
+    "inputs": [
+      {
+        "name": "randomNumber",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "characterClass",
+        "type": "Classes",
+        "internalType": "enum Classes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "stats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "validateStatChanges",
+    "inputs": [
+      {
+        "name": "currentStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "desiredStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "Classes",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "PowerSource",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "Race",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "ArmorType",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "AdvancedClass",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "newLevel",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "isValid",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "error",
+    "name": "NegativeStat",
+    "inputs": []
+  }
+]
