@@ -111,6 +111,9 @@ export const BattleProvider = ({
 
   // Reactive: re-renders when any CombatEncounter row changes
   const combatEncounterTable = useGameTable('CombatEncounter');
+  // Reactive: re-renders when any CombatOutcome row changes
+  // (fixes race condition where CombatOutcome arrives after CombatEncounter)
+  const combatOutcomeTable = useGameTable('CombatOutcome');
 
   const allBattles = useMemo(() => {
     return Object.entries(combatEncounterTable)
@@ -148,10 +151,7 @@ export const BattleProvider = ({
         .sort((a, b) => Number(b.end - a.end))[0] ?? null;
 
     if (latestCompletedBattle) {
-      const combatOutcome = getTableValue(
-        'CombatOutcome',
-        latestCompletedBattle.encounterId,
-      );
+      const combatOutcome = combatOutcomeTable[latestCompletedBattle.encounterId];
       if (latestBattle.end !== BigInt(0) && !combatOutcome) return null;
     }
 
@@ -163,7 +163,7 @@ export const BattleProvider = ({
 
     return latestBattle;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allBattles, acknowledgeVersion]);
+  }, [allBattles, combatOutcomeTable, acknowledgeVersion]);
 
   const lastestBattleOutcome = useMemo(() => {
     const latestCompletedBattle =
@@ -172,10 +172,7 @@ export const BattleProvider = ({
         .sort((a, b) => Number(b.end - a.end))[0] ?? null;
     if (!latestCompletedBattle) return null;
 
-    const combatOutcome = getTableValue(
-      'CombatOutcome',
-      latestCompletedBattle.encounterId,
-    );
+    const combatOutcome = combatOutcomeTable[latestCompletedBattle.encounterId];
     if (!combatOutcome) return null;
 
     const attackersWin = Boolean(combatOutcome.attackersWin);
@@ -197,7 +194,7 @@ export const BattleProvider = ({
       playerFled: Boolean(combatOutcome.playerFled),
       winner,
     } as CombatOutcomeType;
-  }, [allBattles, combatEncounterTable]); // combatEncounterTable in deps so CombatOutcome reads re-fire when store updates
+  }, [allBattles, combatOutcomeTable]);
 
   const lastProcessedEncounterRef = useRef<string | null>(null);
 
