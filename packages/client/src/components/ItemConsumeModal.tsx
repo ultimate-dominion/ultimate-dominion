@@ -393,18 +393,17 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
           )}
         </ModalBody>
         {isConsumed ? (
-          <ModalFooter>
+          <ModalFooter flexWrap="wrap" justifyContent="center">
             <Button
               isDisabled={isAnyLoading}
               onClick={onClose}
-              size="sm"
               variant="ghost"
             >
               Close
             </Button>
           </ModalFooter>
         ) : (
-          <ModalFooter gap={3}>
+          <ModalFooter gap={3} flexWrap="wrap" justifyContent="center">
             <Button isDisabled={isAnyLoading} onClick={onClose} variant="ghost">
               Cancel
             </Button>

@@ -598,6 +598,12 @@ export function createSystemCalls(
     }
   };
 
+  // Retry delay for on-chain reverts (state-dependent, e.g. relayer nonce
+  // collision within the same block). Wait ~1 block time so state settles.
+  const ON_CHAIN_RETRY_DELAY_MS = 2500;
+  const MAX_ON_CHAIN_RETRIES = 2;
+  const MAX_SIMULATION_RETRIES = 2;
+
   const move = async (
     characterEntity: string,
     x: number,
@@ -615,29 +621,48 @@ export function createSystemCalls(
     try {
       await waitForMoveCooldown(characterEntity);
 
-      // Retry loop for PRE-SUBMISSION failures only (estimation/simulation).
-      // When the error occurs before we get a tx hash, no tx was sent
-      // on-chain, so retrying is safe. Once we have a tx hash, the tx is
-      // on-chain — we NEVER retry (risk of duplicate txs → InvalidMove).
-      for (let attempt = 0; attempt < 3; attempt++) {
+      // Retry budget covers both simulation and on-chain failures.
+      // - Simulation failures (MoveTooFast before tx hash): safe to retry,
+      //   no tx was sent. Up to MAX_SIMULATION_RETRIES.
+      // - On-chain reverts (tx mined but reverted): the move did NOT modify
+      //   state (SessionTimer, Position unchanged), so retrying with the same
+      //   coordinates is safe. Up to MAX_ON_CHAIN_RETRIES.
+      let simulationRetries = 0;
+      let onChainRetries = 0;
+
+      for (let attempt = 0; attempt < 7; attempt++) {
         try {
           const tx = await worldContract.write.UD__move(
             [characterEntity as `0x${string}`, x, y],
           );
 
-          // ---- tx is now on-chain, no more retries ----
+          // tx is now on-chain — wait for receipt
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
-            console.warn('[move] On-chain revert — state changed between estimation and mining');
+            // Move reverted on-chain — position and SessionTimer are unchanged.
+            // This typically happens when the Thirdweb relayer pool submits
+            // against stale state (e.g. another tx in the same block, or
+            // block.prevrandao changed the spawnOnTileEnter gas profile).
+            // Safe to retry since no on-chain state was modified.
+            if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
+              onChainRetries++;
+              console.warn(`[move] On-chain revert (retry ${onChainRetries}/${MAX_ON_CHAIN_RETRIES}), retrying in ${ON_CHAIN_RETRY_DELAY_MS}ms`);
+              await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
+              // Don't update lastMoveCompletedMs — SessionTimer wasn't set
+              continue;
+            }
+            console.warn('[move] On-chain revert — max retries reached');
             lastMoveCompletedMs = Date.now();
-            return { success: false, error: 'Position changed — tap again to continue.' };
+            return { success: false, error: 'Move failed — tap again to continue.' };
           }
           lastMoveCompletedMs = Date.now();
           return { success: true };
         } catch (e) {
-          if (isMoveTooFastError(e) && attempt < 2) {
-            console.warn(`[move] MoveTooFast at simulation (attempt ${attempt + 1}), retrying in ${MOVE_RETRY_DELAY_MS}ms`);
+          if (isMoveTooFastError(e) && simulationRetries < MAX_SIMULATION_RETRIES) {
+            simulationRetries++;
+            console.warn(`[move] MoveTooFast at simulation (attempt ${simulationRetries}/${MAX_SIMULATION_RETRIES}), retrying in ${MOVE_RETRY_DELAY_MS}ms`);
             await new Promise(r => setTimeout(r, MOVE_RETRY_DELAY_MS));
+            // Don't update lastMoveCompletedMs — no tx was sent
             continue;
           }
           throw e;
