@@ -132,7 +132,9 @@ export const CharacterCreation = (): JSX.Element => {
 };
 
 const CharacterCreationInner = (): JSX.Element => {
-  console.info('[CharacterCreation] Inner component mounted');
+  useEffect(() => {
+    console.info('[CharacterCreation] Inner component mounted');
+  }, []);
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });

@@ -592,25 +592,40 @@ const CharacterProviderInner = ({
   void publicClient;
   void worldContract;
 
+  const contextValue = useMemo(() => ({
+    character,
+    equippedArmor,
+    equippedConsumables,
+    equippedSpells,
+    equippedWeapons,
+    inventoryArmor,
+    inventoryConsumables,
+    inventorySpells,
+    inventoryWeapons,
+    isMoveEquipped,
+    isRefreshing,
+    optimisticEquip,
+    optimisticUnequip,
+    refreshCharacter,
+  }), [
+    character,
+    equippedArmor,
+    equippedConsumables,
+    equippedSpells,
+    equippedWeapons,
+    inventoryArmor,
+    inventoryConsumables,
+    inventorySpells,
+    inventoryWeapons,
+    isMoveEquipped,
+    isRefreshing,
+    optimisticEquip,
+    optimisticUnequip,
+    refreshCharacter,
+  ]);
+
   return (
-    <CharacterContext.Provider
-      value={{
-        character,
-        equippedArmor,
-        equippedConsumables,
-        equippedSpells,
-        equippedWeapons,
-        inventoryArmor,
-        inventoryConsumables,
-        inventorySpells,
-        inventoryWeapons,
-        isMoveEquipped,
-        isRefreshing,
-        optimisticEquip,
-        optimisticUnequip,
-        refreshCharacter,
-      }}
-    >
+    <CharacterContext.Provider value={contextValue}>
       {children}
     </CharacterContext.Provider>
   );

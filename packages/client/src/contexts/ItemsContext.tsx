@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -411,16 +412,16 @@ export const ItemsProvider = ({
     renderError,
   ]);
 
+  const contextValue = useMemo(() => ({
+    armorTemplates,
+    consumableTemplates,
+    isLoading,
+    spellTemplates,
+    weaponTemplates,
+  }), [armorTemplates, consumableTemplates, isLoading, spellTemplates, weaponTemplates]);
+
   return (
-    <ItemsContext.Provider
-      value={{
-        armorTemplates,
-        consumableTemplates,
-        isLoading,
-        spellTemplates,
-        weaponTemplates,
-      }}
-    >
+    <ItemsContext.Provider value={contextValue}>
       {children}
     </ItemsContext.Provider>
   );
