@@ -81,7 +81,7 @@ export async function startSync(broadcaster) {
     return handle;
 }
 /** The main game namespace — tables here get simple names (e.g., "Characters") */
-const GAME_NAMESPACE = 'ud';
+export const GAME_NAMESPACE = 'ud';
 /**
  * Build a mapping from logical table names (e.g., "Characters") to
  * physical Postgres table names (e.g., "ud__characters").

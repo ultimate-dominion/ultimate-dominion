@@ -54,7 +54,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     delegatorAddress,
     systemCalls: { equipItems, unequipItem, useCombatConsumableItem, useWorldConsumableItem },
   } = useMUD();
-  const { character, equippedConsumables, equippedWeapons, refreshCharacter } =
+  const { character, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
   const { isSpawned } = useMap();
   const { currentBattle } = useBattle();
@@ -79,11 +79,24 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   );
 
   const totalEquippedSlots = useMemo(
-    () => equippedWeapons.length + equippedConsumables.length,
-    [equippedConsumables.length, equippedWeapons.length],
+    () => equippedWeapons.length + equippedSpells.length + equippedConsumables.length,
+    [equippedConsumables.length, equippedSpells.length, equippedWeapons.length],
   );
 
   const maxSlotsReached = totalEquippedSlots >= MAX_EQUIPPED_WEAPONS;
+
+  // Determine if equipping this consumable requires swapping out an existing item
+  const conflictingItem = useMemo(() => {
+    if (isEquipped) return null;
+    if (!maxSlotsReached) return null;
+    // Pick the lowest-rarity equipped weapon/spell/consumable to auto-swap
+    const allEquipped = [...equippedWeapons, ...equippedSpells, ...equippedConsumables].sort(
+      (a, b) => (a.rarity ?? 0) - (b.rarity ?? 0),
+    );
+    return allEquipped[0] ?? null;
+  }, [equippedConsumables, equippedSpells, equippedWeapons, isEquipped, maxSlotsReached]);
+
+  const needsSwap = conflictingItem != null;
 
   // Buff items (non-heal) require equipping before the contract will accept them.
   // Auto-equip transparently so the player just clicks "Consume" once.
@@ -98,6 +111,23 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
       return;
     }
 
+    // If auto-equip needed and slots full, swap out conflicting item first
+    if (needsAutoEquip && conflictingItem) {
+      setStatusText(`Unequipping ${conflictingItem.name}...`);
+      const unequipResult = await unequipTx.execute(async () => {
+        const { error, success } = await unequipItem(character.id, conflictingItem.tokenId);
+        if (error && !success) {
+          if (error.includes('NOT EQUIPPED')) return 'skip';
+          throw new Error(error);
+        }
+      });
+      if (unequipResult === undefined) {
+        setStatusText('');
+        return;
+      }
+    }
+
+    setStatusText(`Consuming ${item.name}...`);
     const result = await consumeTx.execute(async () => {
       // Auto-equip buff items that aren't equipped yet
       if (needsAutoEquip) {
@@ -117,8 +147,10 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
       setItemBalance(prev => prev - BigInt(1));
       setIsConsumed(true);
     }
+    setStatusText('');
   }, [
     character,
+    conflictingItem,
     consumeTx,
     currentBattle,
     delegatorAddress,
@@ -129,26 +161,61 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     onOpenAllowanceModal,
     refreshCharacter,
     renderSuccess,
+    unequipItem,
+    unequipTx,
     useCombatConsumableItem,
     useWorldConsumableItem,
   ]);
+
+  const [statusText, setStatusText] = useState('');
 
   const onEquipItem = useCallback(async () => {
     if (!character) return;
     if (!delegatorAddress) return;
 
+    // If swap needed, unequip the conflicting item first
+    if (conflictingItem) {
+      setStatusText(`Unequipping ${conflictingItem.name}...`);
+      const unequipResult = await unequipTx.execute(async () => {
+        const { error, success } = await unequipItem(character.id, conflictingItem.tokenId);
+        if (error && !success) {
+          if (error.includes('NOT EQUIPPED')) return 'skip';
+          throw new Error(error);
+        }
+      });
+      if (unequipResult === undefined) {
+        setStatusText('');
+        return;
+      }
+    }
+
+    setStatusText(`Equipping ${item.name}...`);
     const result = await equipTx.execute(async () => {
       const { error, success } = await equipItems(character.id, [item.tokenId]);
-      if (error && !success) throw new Error(error);
+      if (error && !success) {
+        if (error.includes('Already equipped')) return 'already-equipped';
+        throw new Error(error);
+      }
+      return 'ok';
     });
 
     if (result !== undefined) {
       await refreshCharacter();
-      renderSuccess(`${item.name} equipped successfully!`);
+      if (result === 'already-equipped') {
+        renderSuccess(`${item.name} is already equipped`);
+      } else if (conflictingItem) {
+        renderSuccess(`Swapped ${conflictingItem.name} for ${item.name}`);
+      } else {
+        renderSuccess(`${item.name} equipped successfully!`);
+      }
+      setStatusText('');
       onClose();
+    } else {
+      setStatusText('');
     }
   }, [
     character,
+    conflictingItem,
     delegatorAddress,
     equipItems,
     equipTx,
@@ -156,6 +223,8 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     onClose,
     refreshCharacter,
     renderSuccess,
+    unequipItem,
+    unequipTx,
   ]);
 
   const onUnequipItem = useCallback(async () => {
@@ -242,11 +311,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     if (isHealthFull) return true;
     if (!isSpawned) return true;
     if (maxStacksReached) return true;
-    // Auto-equip would fail if slots are full
-    if (needsAutoEquip && maxSlotsReached) return true;
+    // Auto-equip would fail if slots are full and no swap candidate available
+    if (needsAutoEquip && maxSlotsReached && !conflictingItem) return true;
 
     return false;
-  }, [currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached, maxSlotsReached, needsAutoEquip]);
+  }, [conflictingItem, currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached, maxSlotsReached, needsAutoEquip]);
 
   const isAnyLoading = consumeTx.isLoading || equipTx.isLoading || unequipTx.isLoading;
 
@@ -284,7 +353,17 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
           <ItemCard {...item} balance={itemBalance} isEquipped={isEquipped} />
           {isOwner && (
             <Text color="gray.500" fontSize="xs" mt={2}>
-              Slot {totalEquippedSlots}/{MAX_EQUIPPED_WEAPONS} (weapons + consumables)
+              Slot {totalEquippedSlots}/{MAX_EQUIPPED_WEAPONS} equipped
+            </Text>
+          )}
+          {needsSwap && isOwner && !isEquipped && (
+            <Text color="#D4A54A" fontWeight="bold" fontSize="sm" mt={2}>
+              Equipping will swap out {conflictingItem?.name}
+            </Text>
+          )}
+          {statusText && (
+            <Text color="#D4A54A" fontWeight="bold" mt={4} size="sm" textAlign="center">
+              {statusText}
             </Text>
           )}
           {!!currentBattle && isOwner && !isInstantHeal && (
@@ -331,13 +410,13 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
             </Button>
             {isOwner && !isEquipped && (
               <Button
-                isDisabled={!!currentBattle || maxSlotsReached}
-                isLoading={equipTx.isLoading}
-                loadingText="Equipping..."
+                isDisabled={!!currentBattle || (maxSlotsReached && !conflictingItem)}
+                isLoading={equipTx.isLoading || unequipTx.isLoading}
+                loadingText={needsSwap ? 'Swapping...' : 'Equipping...'}
                 onClick={onEquipItem}
                 variant="outline"
               >
-                Equip
+                {needsSwap ? 'Swap' : 'Equip'}
               </Button>
             )}
             {isOwner && isEquipped && (

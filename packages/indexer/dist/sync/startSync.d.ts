@@ -13,3 +13,5 @@ export type SyncHandle = {
  * Returns the sync handle with observables and table metadata.
  */
 export declare function startSync(broadcaster: Broadcaster): Promise<SyncHandle>;
+/** The main game namespace — tables here get simple names (e.g., "Characters") */
+export declare const GAME_NAMESPACE = "ud";

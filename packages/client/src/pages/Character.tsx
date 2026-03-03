@@ -770,8 +770,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   }, [equipmentData?.equippedConsumables]);
 
   const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;
-  const maxWeaponsEquipped =
-    equippedSpellsAndWeaponsIds.length === MAX_EQUIPPED_WEAPONS;
+  const totalMoveSlots = equippedSpellsAndWeaponsIds.length + equippedConsumableIds.length;
+  const maxWeaponsEquipped = totalMoveSlots >= MAX_EQUIPPED_WEAPONS;
 
   const armorInInventory = useMemo(() => {
     return inventoryArmor
@@ -859,7 +859,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         </Grid>
         <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
           Weapons & Spells ({spellsAndWeaponsInInventory}) -{' '}
-          {equippedSpellsAndWeaponsIds.length}/{MAX_EQUIPPED_WEAPONS} equipped{' '}
+          {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} slots used{' '}
         </Text>
         {maxWeaponsEquipped && (
           <Text fontSize="sm">(Max weapons equipped)</Text>

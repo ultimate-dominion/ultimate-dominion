@@ -105,7 +105,7 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
 }
 
 /** The main game namespace — tables here get simple names (e.g., "Characters") */
-const GAME_NAMESPACE = 'ud';
+export const GAME_NAMESPACE = 'ud';
 
 /**
  * Build a mapping from logical table names (e.g., "Characters") to

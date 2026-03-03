@@ -54,6 +54,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   const {
     character,
     equippedArmor,
+    equippedConsumables,
     equippedSpells,
     equippedWeapons,
     optimisticEquip,
@@ -85,17 +86,17 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       item.itemType === ItemType.Weapon ||
       item.itemType === ItemType.Spell
     ) {
-      const totalEquipped = equippedWeapons.length + equippedSpells.length;
+      const totalEquipped = equippedWeapons.length + equippedSpells.length + equippedConsumables.length;
       if (totalEquipped >= MAX_EQUIPPED_WEAPONS) {
-        // Pick the lowest-rarity equipped weapon/spell to auto-swap
-        const allEquipped = [...equippedWeapons, ...equippedSpells].sort(
+        // Pick the lowest-rarity equipped weapon/spell/consumable to auto-swap
+        const allEquipped = [...equippedWeapons, ...equippedSpells, ...equippedConsumables].sort(
           (a, b) => (a.rarity ?? 0) - (b.rarity ?? 0),
         );
         return allEquipped[0] ?? null;
       }
     }
     return null;
-  }, [equippedArmor, equippedSpells, equippedWeapons, isEquipped, item.itemType]);
+  }, [equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, isEquipped, item.itemType]);
 
   const needsSwap = conflictingItem != null;
 

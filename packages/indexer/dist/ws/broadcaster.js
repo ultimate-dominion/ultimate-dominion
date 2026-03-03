@@ -1,7 +1,8 @@
 import { hexToResource } from '@latticexyz/common';
 import { encodeMessage, decodeClientMessage } from './protocol.js';
 import { queryUpdatedRows } from '../db/connection.js';
-import { extractKeyBytes, serializeRow, resolveResourceName } from '../naming.js';
+import { extractKeyBytes, serializeRow, resolveResourceName, snakeToPascal, fixAbbreviations } from '../naming.js';
+import { GAME_NAMESPACE } from '../sync/startSync.js';
 export class Broadcaster {
     clients = new Set();
     /** Logical table name → Postgres table name */
@@ -61,8 +62,15 @@ export class Broadcaster {
             if (!logicalName) {
                 try {
                     const resource = hexToResource(tableId);
-                    // Resolve truncated resource names to full PascalCase
-                    logicalName = resolveResourceName(resource.name);
+                    if (resource.namespace === GAME_NAMESPACE) {
+                        // Game namespace: just the table name with truncation resolution
+                        logicalName = resolveResourceName(resource.name);
+                    }
+                    else {
+                        // Other namespaces: include namespace prefix to match snapshot naming
+                        // e.g., Items + Owners → ItemsOwners, Gold + Balances → GoldBalances
+                        logicalName = fixAbbreviations(snakeToPascal(resource.namespace) + resolveResourceName(resource.name));
+                    }
                     this.tableIdMap.set(tableId, logicalName);
                 }
                 catch {
