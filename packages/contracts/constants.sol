@@ -105,3 +105,10 @@ uint256 constant DEFAULT_ETH_PER_GOLD = 1e12;         // 0.000001 ETH per Gold (
 uint256 constant DEFAULT_MAX_GOLD_PER_SWAP = 500e18;   // 500 Gold max per swap
 uint256 constant DEFAULT_GAS_COOLDOWN = 60;            // 60 seconds between swaps
 uint256 constant GAS_STATION_MIN_LEVEL = 3;            // Must be level 3+ to use GasStation
+
+// Uniswap / WETH constants (Base Mainnet)
+address constant BASE_WETH = 0x4200000000000000000000000000000000000006;
+address constant BASE_SWAP_ROUTER = 0x2626664c2603336E57B271c5C0b26F421741e481;
+uint24 constant DEFAULT_POOL_FEE = 10000;              // 1% fee tier for exotic pairs
+uint256 constant DEFAULT_GOLD_PER_GAS_CHARGE = 1e18;   // 1 gold per relayer gas charge
+uint256 constant UNISWAP_MIN_OUTPUT = 1;               // Accept any output — gas swaps are tiny

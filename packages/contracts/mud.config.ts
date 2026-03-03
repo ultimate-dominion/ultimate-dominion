@@ -927,6 +927,20 @@ export default defineWorld({
         lastSwap: "uint256",
       },
     },
+    /**
+     * Singleton config for GasStation Uniswap V3 swap integration.
+     * Separate from GasStationConfig to avoid schema migration.
+     */
+    GasStationSwapConfig: {
+      key: [],
+      schema: {
+        swapRouter: "address",       // Uniswap V3 SwapRouter02
+        weth: "address",             // WETH on Base (0x4200...0006)
+        poolFee: "uint24",           // Pool fee tier (10000 = 1%)
+        relayerAddress: "address",   // Self-hosted relayer EOA
+        goldPerGasCharge: "uint256", // Gold charged per relayer tx
+      },
+    },
     ///////////////////////////////////// FRAGMENTS (Lore NFTs) ///////////////////////////////////
     // Track trigger progress and claims per character
     FragmentProgress: {

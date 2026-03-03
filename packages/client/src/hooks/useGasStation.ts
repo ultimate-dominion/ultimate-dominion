@@ -9,6 +9,7 @@ import { useToast } from './useToast';
 const GAS_THRESHOLD = parseEther('0.0001'); // 0.0001 ETH
 const DEFAULT_GOLD_PER_SWAP = parseEther('50'); // 50 Gold per auto-swap
 const MIN_SWAP_INTERVAL_MS = 60_000; // 60 seconds client-side rate limit
+const EMBEDDED_LOW_GOLD_THRESHOLD = parseEther('10'); // Warn if gold drops below 10
 
 /**
  * Auto-swaps Gold for ETH when the player's balance drops below a threshold.
@@ -66,10 +67,28 @@ export const useGasStation = (): void => {
   }, [character, renderSuccess, systemCalls]);
 
   useEffect(() => {
-    // Gas is sponsored for all embedded users (EIP-7702 + sponsorGas)
-    if (authMethod === 'embedded') return;
+    // Embedded wallets: relayer handles gas charging. Only warn if gold is critically low.
+    if (authMethod === 'embedded') {
+      if (
+        character &&
+        character.level >= 3n &&
+        character.externalGoldBalance < EMBEDDED_LOW_GOLD_THRESHOLD
+      ) {
+        try {
+          const balanceWei = parseEther(burnerBalance);
+          if (balanceWei < GAS_THRESHOLD) {
+            renderWarning(
+              'Your gold and gas are both low. The relayer may not be able to cover your transactions.',
+            );
+          }
+        } catch {
+          // Invalid balance string — ignore
+        }
+      }
+      return;
+    }
 
-    // Check if ETH balance is below threshold
+    // MetaMask wallets: auto-swap gold→ETH via on-chain Uniswap
     try {
       const balanceWei = parseEther(burnerBalance);
       if (balanceWei < GAS_THRESHOLD && balanceWei >= 0n) {
@@ -78,5 +97,5 @@ export const useGasStation = (): void => {
     } catch {
       // Invalid balance string — ignore
     }
-  }, [authMethod, attemptSwap, burnerBalance, character]);
+  }, [authMethod, attemptSwap, burnerBalance, character, renderWarning]);
 };

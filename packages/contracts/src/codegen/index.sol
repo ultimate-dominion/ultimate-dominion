@@ -61,6 +61,7 @@ import { CombatOutcome, CombatOutcomeData } from "./tables/CombatOutcome.sol";
 import { AllowedGameSystems } from "./tables/AllowedGameSystems.sol";
 import { GasStationConfig, GasStationConfigData } from "./tables/GasStationConfig.sol";
 import { GasStationCooldown } from "./tables/GasStationCooldown.sol";
+import { GasStationSwapConfig, GasStationSwapConfigData } from "./tables/GasStationSwapConfig.sol";
 import { FragmentProgress, FragmentProgressData } from "./tables/FragmentProgress.sol";
 import { CharacterFirstActions, CharacterFirstActionsData } from "./tables/CharacterFirstActions.sol";
 import { FragmentMetadata, FragmentMetadataData } from "./tables/FragmentMetadata.sol";

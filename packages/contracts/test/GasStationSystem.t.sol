@@ -11,15 +11,19 @@ import {
     StatsData,
     Stats,
     GasStationConfig,
-    GasStationCooldown
+    GasStationCooldown,
+    GasStationSwapConfig
 } from "@codegen/index.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
+import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
+import {_balancesTableId as _goldBalancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {
     DEFAULT_ETH_PER_GOLD,
     DEFAULT_MAX_GOLD_PER_SWAP,
     DEFAULT_GAS_COOLDOWN,
-    GAS_STATION_MIN_LEVEL
+    GAS_STATION_MIN_LEVEL,
+    GOLD_NAMESPACE
 } from "../constants.sol";
 import {
     GasStationDisabled,
@@ -29,6 +33,8 @@ import {
     GasStationBelowMinLevel,
     GasStationTransferFailed,
     GasStationZeroAmount,
+    GasStationNotRelayer,
+    GasStationArrayMismatch,
     InsufficientBalance
 } from "../src/Errors.sol";
 
@@ -38,6 +44,7 @@ contract Test_GasStationSystem is Test {
     address deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
     address payable public alice;
     address payable public bob;
+    address payable public relayer;
     uint256 public userNonce = 0;
 
     IWorld public world;
@@ -62,8 +69,10 @@ contract Test_GasStationSystem is Test {
         // Create users
         alice = _getUser();
         bob = _getUser();
+        relayer = _getUser();
         vm.label(alice, "alice");
         vm.label(bob, "bob");
+        vm.label(relayer, "relayer");
 
         // Get gold token (requires deployer access since UDConfigSys is restricted)
         goldToken = IERC20Mintable(world.UD__getGoldToken());
@@ -71,6 +80,9 @@ contract Test_GasStationSystem is Test {
         // Look up GasStation system address (PostDeploy already granted Gold table access + set config)
         ResourceId gasStationSystemId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "GasStationSys");
         gasStationAddress = Systems.getSystem(gasStationSystemId);
+
+        // Force fallback mode — no Uniswap on local anvil
+        GasStationSwapConfig.set(address(0), address(0), 0, address(0), 0);
 
         // Fund the GasStation treasury with ETH (PostDeploy doesn't fund it)
         (bool sent,) = gasStationAddress.call{value: 10 ether}("");
@@ -105,7 +117,7 @@ contract Test_GasStationSystem is Test {
         world.UD__adminDropGold(characterId, amount);
     }
 
-    // ==================== buyGas Tests ====================
+    // ==================== buyGas Tests (Fallback/Treasury Path) ====================
 
     function test_buyGas_succeedsAtLevel3() public {
         _setLevel(bobCharacterId, 3);
@@ -123,7 +135,7 @@ contract Test_GasStationSystem is Test {
         uint256 goldAfter = goldToken.balanceOf(bob);
         uint256 ethAfter = bob.balance;
 
-        assertEq(goldBefore - goldAfter, goldToSwap, "Gold not burned correctly");
+        assertEq(goldBefore - goldAfter, goldToSwap, "Gold not deducted correctly");
         assertEq(ethAfter - ethBefore, expectedEth, "ETH not received correctly");
     }
 
@@ -318,6 +330,130 @@ contract Test_GasStationSystem is Test {
         assertEq(bob.balance - ethBefore, expectedEth, "Updated rate not applied");
     }
 
+    // ==================== Swap Config Tests ====================
+
+    function test_setSwapConfig_onlyAdmin() public {
+        vm.prank(bob);
+        vm.expectRevert();
+        world.UD__setGasStationSwapConfig(address(1), address(2), 3000, address(3), 1e18);
+    }
+
+    function test_setSwapConfig_updatesValues() public {
+        vm.prank(deployer);
+        world.UD__setGasStationSwapConfig(address(1), address(2), 3000, relayer, 5e18);
+
+        assertEq(GasStationSwapConfig.getSwapRouter(), address(1), "swapRouter not updated");
+        assertEq(GasStationSwapConfig.getWeth(), address(2), "weth not updated");
+        assertEq(GasStationSwapConfig.getPoolFee(), 3000, "poolFee not updated");
+        assertEq(GasStationSwapConfig.getRelayerAddress(), relayer, "relayerAddress not updated");
+        assertEq(GasStationSwapConfig.getGoldPerGasCharge(), 5e18, "goldPerGasCharge not updated");
+    }
+
+    // ==================== chargeGasGold Tests ====================
+
+    function test_chargeGasGold_succeeds() public {
+        // Configure relayer
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        _setLevel(bobCharacterId, 3);
+        _giveGold(bobCharacterId, 100 ether);
+
+        uint256 playerGoldBefore = goldToken.balanceOf(bob);
+        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
+        uint256 supplyBefore = goldToken.totalSupply();
+
+        vm.prank(relayer);
+        world.UD__chargeGasGold(bob, bobCharacterId);
+
+        assertEq(playerGoldBefore - goldToken.balanceOf(bob), 1 ether, "Player gold not deducted");
+        assertEq(goldToken.balanceOf(relayer) - relayerGoldBefore, 1 ether, "Relayer gold not credited");
+        assertEq(goldToken.totalSupply(), supplyBefore, "Total supply should not change");
+    }
+
+    function test_chargeGasGold_revertsIfNotRelayer() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        _setLevel(bobCharacterId, 3);
+        _giveGold(bobCharacterId, 100 ether);
+
+        // Alice is not the relayer
+        vm.prank(alice);
+        vm.expectRevert(GasStationNotRelayer.selector);
+        world.UD__chargeGasGold(bob, bobCharacterId);
+    }
+
+    function test_chargeGasGold_revertsIfBelowLevel3() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        _setLevel(bobCharacterId, 2);
+        _giveGold(bobCharacterId, 100 ether);
+
+        vm.prank(relayer);
+        vm.expectRevert(GasStationBelowMinLevel.selector);
+        world.UD__chargeGasGold(bob, bobCharacterId);
+    }
+
+    function test_chargeGasGold_revertsIfInsufficientGold() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 100 ether);
+
+        _setLevel(bobCharacterId, 3);
+        _giveGold(bobCharacterId, 10 ether); // Less than chargeAmount
+
+        vm.prank(relayer);
+        vm.expectRevert(InsufficientBalance.selector);
+        world.UD__chargeGasGold(bob, bobCharacterId);
+    }
+
+    // ==================== batchChargeGasGold Tests ====================
+
+    function test_batchChargeGasGold_succeeds() public {
+        // Mint alice a character with level 3+
+        _setLevel(aliceCharacterId, 5);
+        _giveGold(aliceCharacterId, 100 ether);
+        _setLevel(bobCharacterId, 3);
+        _giveGold(bobCharacterId, 100 ether);
+
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 2 ether);
+
+        uint256 aliceGoldBefore = goldToken.balanceOf(alice);
+        uint256 bobGoldBefore = goldToken.balanceOf(bob);
+        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
+
+        address[] memory players = new address[](2);
+        players[0] = alice;
+        players[1] = bob;
+        bytes32[] memory characterIds = new bytes32[](2);
+        characterIds[0] = aliceCharacterId;
+        characterIds[1] = bobCharacterId;
+
+        vm.prank(relayer);
+        world.UD__batchChargeGasGold(players, characterIds);
+
+        assertEq(aliceGoldBefore - goldToken.balanceOf(alice), 2 ether, "Alice gold not deducted");
+        assertEq(bobGoldBefore - goldToken.balanceOf(bob), 2 ether, "Bob gold not deducted");
+        assertEq(goldToken.balanceOf(relayer) - relayerGoldBefore, 4 ether, "Relayer gold not credited for both");
+    }
+
+    function test_batchChargeGasGold_revertsIfArrayMismatch() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        address[] memory players = new address[](2);
+        players[0] = alice;
+        players[1] = bob;
+        bytes32[] memory characterIds = new bytes32[](1);
+        characterIds[0] = aliceCharacterId;
+
+        vm.prank(relayer);
+        vm.expectRevert(GasStationArrayMismatch.selector);
+        world.UD__batchChargeGasGold(players, characterIds);
+    }
+
     // ==================== Treasury Tests ====================
 
     function test_fundTreasury() public {
@@ -374,7 +510,8 @@ contract Test_GasStationSystem is Test {
         world.UD__buyGas(bobCharacterId, 10 ether);
     }
 
-    function test_buyGas_burnsTotalSupply() public {
+    function test_buyGas_fallback_burnsTotalSupply() public {
+        // In fallback mode (swapRouter == address(0)), gold is burned
         _setLevel(bobCharacterId, 3);
         _giveGold(bobCharacterId, 100 ether);
 
@@ -384,7 +521,7 @@ contract Test_GasStationSystem is Test {
         world.UD__buyGas(bobCharacterId, 50 ether);
 
         uint256 supplyAfter = goldToken.totalSupply();
-        assertEq(supplyBefore - supplyAfter, 50 ether, "Total supply not reduced");
+        assertEq(supplyBefore - supplyAfter, 50 ether, "Total supply not reduced in fallback mode");
     }
 
     function test_buyGas_treasuryReducedByExactAmount() public {

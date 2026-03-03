@@ -128,3 +128,6 @@ error GasStationInsufficientTreasury();
 error GasStationBelowMinLevel();
 error GasStationTransferFailed();
 error GasStationZeroAmount();
+error GasStationSwapFailed();
+error GasStationNotRelayer();
+error GasStationArrayMismatch();

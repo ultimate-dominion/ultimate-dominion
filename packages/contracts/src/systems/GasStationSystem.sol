@@ -10,14 +10,19 @@ import {WORLD_NAMESPACE} from "../../constants.sol";
 import {
     GasStationConfig,
     GasStationCooldown,
+    GasStationSwapConfig,
     Stats,
     CharacterOwner,
-    CharacterOwnerData
+    CharacterOwnerData,
+    UltimateDominionConfig
 } from "@codegen/index.sol";
 import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {TotalSupply as ERC20TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
 import {_balancesTableId as _goldBalancesTableId, _totalSupplyTableId as _goldTotalSupplyTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
-import {GOLD_NAMESPACE, GAS_STATION_MIN_LEVEL} from "../../constants.sol";
+import {GOLD_NAMESPACE, GAS_STATION_MIN_LEVEL, UNISWAP_MIN_OUTPUT} from "../../constants.sol";
+import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
+import {ISwapRouter} from "@interfaces/ISwapRouter.sol";
+import {IWETH} from "@interfaces/IWETH.sol";
 import {
     GasStationDisabled,
     GasStationCooldownActive,
@@ -26,6 +31,9 @@ import {
     GasStationBelowMinLevel,
     GasStationTransferFailed,
     GasStationZeroAmount,
+    GasStationSwapFailed,
+    GasStationNotRelayer,
+    GasStationArrayMismatch,
     InsufficientBalance
 } from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
@@ -33,16 +41,21 @@ import {_requireOwner} from "../utils.sol";
 
 /**
  * @title GasStationSystem
- * @notice Allows players (level 3+) to burn Gold in exchange for ETH to cover gas.
- * @dev Namespaced (non-root) system — address(this) is the system contract address.
- *      ETH treasury lives at this system's address.
- *      Gold is burned via direct table writes (same pattern as LootManagerSystem).
+ * @notice Allows players (level 3+) to swap Gold for ETH to cover gas.
+ * @dev Two modes:
+ *      1. Uniswap V3 swap: Gold is sold on GOLD/WETH pool → ETH to player (when swapRouter configured)
+ *      2. Fallback: Gold burned from supply, ETH from pre-funded treasury (when swapRouter == address(0))
+ *
+ *      Also provides chargeGasGold() for the self-hosted relayer to charge embedded wallet players.
+ *
+ *      Namespaced (non-root) system — address(this) is the system contract address.
+ *      ETH treasury lives at this system's address (for fallback mode and received WETH unwraps).
  */
 contract GasStationSystem is System {
     /**
-     * @notice Burn gold and receive ETH at the configured exchange rate.
+     * @notice Swap gold for ETH. Uses Uniswap V3 if configured, otherwise falls back to burn+treasury.
      * @param characterId The player's character ID
-     * @param goldAmount Amount of gold to burn (in 1e18 units)
+     * @param goldAmount Amount of gold to swap (in 1e18 units)
      */
     function buyGas(bytes32 characterId, uint256 goldAmount) public {
         PauseLib.requireNotPaused();
@@ -76,26 +89,154 @@ contract GasStationSystem is System {
         uint256 currentGold = ERC20Balances.get(balancesTableId, caller);
         if (currentGold < goldAmount) revert InsufficientBalance();
 
-        // Calculate ETH output
+        // Update cooldown
+        GasStationCooldown.setLastSwap(caller, block.timestamp);
+
+        // Route to Uniswap swap or fallback
+        address swapRouter = GasStationSwapConfig.getSwapRouter();
+        if (swapRouter != address(0)) {
+            _buyGasViaUniswap(caller, goldAmount, currentGold, balancesTableId, swapRouter);
+        } else {
+            _buyGasViaTreasury(caller, goldAmount, currentGold, balancesTableId);
+        }
+    }
+
+    /**
+     * @dev Uniswap V3 path: transfer gold to system, swap on DEX, unwrap WETH, send ETH to player.
+     *      Gold is NOT burned — total supply unchanged. Gold re-enters circulation via DEX buyers.
+     */
+    function _buyGasViaUniswap(
+        address caller,
+        uint256 goldAmount,
+        uint256 currentGold,
+        ResourceId balancesTableId,
+        address swapRouter
+    ) internal {
+        // 1. Deduct gold from player
+        ERC20Balances.set(balancesTableId, caller, currentGold - goldAmount);
+
+        // 2. Credit gold to system address (transfer, NOT burn — total supply unchanged)
+        uint256 systemGold = ERC20Balances.get(balancesTableId, address(this));
+        ERC20Balances.set(balancesTableId, address(this), systemGold + goldAmount);
+
+        // 3. Approve Uniswap router to spend gold from system address
+        address goldTokenAddr = UltimateDominionConfig.getGoldToken();
+        IERC20Mintable(goldTokenAddr).approve(swapRouter, goldAmount);
+
+        // 4. Swap gold → WETH via Uniswap V3
+        address weth = GasStationSwapConfig.getWeth();
+        uint24 poolFee = GasStationSwapConfig.getPoolFee();
+
+        uint256 wethAmount = ISwapRouter(swapRouter).exactInputSingle(
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: goldTokenAddr,
+                tokenOut: weth,
+                fee: poolFee,
+                recipient: address(this),
+                amountIn: goldAmount,
+                amountOutMinimum: UNISWAP_MIN_OUTPUT,
+                sqrtPriceLimitX96: 0
+            })
+        );
+
+        if (wethAmount == 0) revert GasStationSwapFailed();
+
+        // 5. Unwrap WETH to ETH
+        IWETH(weth).withdraw(wethAmount);
+
+        // 6. Send ETH to player
+        (bool success,) = caller.call{value: wethAmount}("");
+        if (!success) revert GasStationTransferFailed();
+    }
+
+    /**
+     * @dev Fallback path: burn gold from supply, send ETH from pre-funded treasury.
+     *      Used when Uniswap swap is not configured (swapRouter == address(0)).
+     */
+    function _buyGasViaTreasury(
+        address caller,
+        uint256 goldAmount,
+        uint256 currentGold,
+        ResourceId balancesTableId
+    ) internal {
+        // Calculate ETH output at fixed rate
         uint256 ethPerGold = GasStationConfig.getEthPerGold();
         uint256 ethOutput = (goldAmount * ethPerGold) / 1e18;
 
         // Check treasury has sufficient ETH
         if (address(this).balance < ethOutput) revert GasStationInsufficientTreasury();
 
-        // Burn gold (direct table writes — same pattern as LootManagerSystem._burnGoldDirect)
+        // Burn gold (deduct balance + reduce total supply)
         ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
         ERC20Balances.set(balancesTableId, caller, currentGold - goldAmount);
         uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
         ERC20TotalSupply.set(totalSupplyTableId, currentSupply - goldAmount);
 
-        // Update cooldown
-        GasStationCooldown.setLastSwap(caller, block.timestamp);
-
         // Send ETH to caller
         (bool success,) = caller.call{value: ethOutput}("");
         if (!success) revert GasStationTransferFailed();
     }
+
+    // ==================== Relayer Gas Charging ====================
+
+    /**
+     * @notice Charge gold from an embedded wallet player on behalf of the relayer.
+     * @dev Only callable by the configured relayer address.
+     *      Transfers gold from player → relayer (direct table writes, total supply unchanged).
+     * @param player The player's wallet address
+     * @param characterId The player's character ID
+     */
+    function chargeGasGold(address player, bytes32 characterId) public {
+        address relayer = GasStationSwapConfig.getRelayerAddress();
+        if (_msgSender() != relayer) revert GasStationNotRelayer();
+
+        _chargeGasGoldSingle(player, characterId, relayer);
+    }
+
+    /**
+     * @notice Batch charge gold from multiple embedded wallet players.
+     * @dev Single tx — amortizes gas across N players.
+     * @param players Array of player wallet addresses
+     * @param characterIds Array of corresponding character IDs
+     */
+    function batchChargeGasGold(address[] calldata players, bytes32[] calldata characterIds) public {
+        if (players.length != characterIds.length) revert GasStationArrayMismatch();
+
+        address relayer = GasStationSwapConfig.getRelayerAddress();
+        if (_msgSender() != relayer) revert GasStationNotRelayer();
+
+        for (uint256 i = 0; i < players.length; i++) {
+            _chargeGasGoldSingle(players[i], characterIds[i], relayer);
+        }
+    }
+
+    /**
+     * @dev Internal: charge gold from a single player → relayer.
+     */
+    function _chargeGasGoldSingle(address player, bytes32 characterId, address relayer) internal {
+        // Verify ownership
+        CharacterOwnerData memory ownerData = CharacterOwner.get(player);
+        require(ownerData.characterId == characterId, "Not character owner");
+
+        // Check level >= 3
+        uint256 level = Stats.getLevel(characterId);
+        if (level < GAS_STATION_MIN_LEVEL) revert GasStationBelowMinLevel();
+
+        // Get charge amount
+        uint256 chargeAmount = GasStationSwapConfig.getGoldPerGasCharge();
+
+        // Check player has sufficient gold
+        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
+        uint256 playerGold = ERC20Balances.get(balancesTableId, player);
+        if (playerGold < chargeAmount) revert InsufficientBalance();
+
+        // Transfer gold: player → relayer (total supply unchanged)
+        ERC20Balances.set(balancesTableId, player, playerGold - chargeAmount);
+        uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
+        ERC20Balances.set(balancesTableId, relayer, relayerGold + chargeAmount);
+    }
+
+    // ==================== Admin Functions ====================
 
     /**
      * @notice Update gas station configuration. Admin only.
@@ -108,6 +249,20 @@ contract GasStationSystem is System {
     ) public {
         _requireOwner(address(this), _msgSender());
         GasStationConfig.set(ethPerGold, maxGoldPerSwap, cooldownSeconds, enabled);
+    }
+
+    /**
+     * @notice Update swap configuration (Uniswap V3 + relayer). Admin only.
+     */
+    function setGasStationSwapConfig(
+        address swapRouter,
+        address weth,
+        uint24 poolFee,
+        address relayerAddress,
+        uint256 goldPerGasCharge
+    ) public {
+        _requireOwner(address(this), _msgSender());
+        GasStationSwapConfig.set(swapRouter, weth, poolFee, relayerAddress, goldPerGasCharge);
     }
 
     /**
@@ -139,6 +294,6 @@ contract GasStationSystem is System {
         return address(this).balance;
     }
 
-    // Allow the system to receive ETH
+    // Allow the system to receive ETH (from WETH unwrap and treasury funding)
     receive() external payable {}
 }

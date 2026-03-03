@@ -20,8 +20,8 @@ import {_erc721SystemId} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {_erc20SystemId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {_erc1155SystemId} from "../src/utils.sol";
 import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
-import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, FRAGMENTS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI, WORLD_NAMESPACE, DEFAULT_ETH_PER_GOLD, DEFAULT_MAX_GOLD_PER_SWAP, DEFAULT_GAS_COOLDOWN, GAME_DELEGATION_NAME} from "../constants.sol";
-import {GasStationConfig, AllowedGameSystems} from "@codegen/index.sol";
+import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, FRAGMENTS_NAMESPACE, ERC721_NAME, ERC721_SYMBOL, TOKEN_URI, WORLD_NAMESPACE, DEFAULT_ETH_PER_GOLD, DEFAULT_MAX_GOLD_PER_SWAP, DEFAULT_GAS_COOLDOWN, GAME_DELEGATION_NAME, BASE_SWAP_ROUTER, BASE_WETH, DEFAULT_POOL_FEE, DEFAULT_GOLD_PER_GAS_CHARGE} from "../constants.sol";
+import {GasStationConfig, GasStationSwapConfig, AllowedGameSystems} from "@codegen/index.sol";
 import {PuppetModule} from "@latticexyz/world-modules/src/modules/puppet/PuppetModule.sol";
 import {StandardDelegationsModule} from "@latticexyz/world-modules/src/modules/std-delegations/StandardDelegationsModule.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
@@ -797,6 +797,13 @@ contract PostDeploy is Script {
         require(shopSysAddr != address(0), "ShopSystem not registered");
         UltimateDominionConfig.setShop(shopSysAddr);
         console.log("  Shop address:", shopSysAddr);
+
+        // Grant ShopSystem access to Items:Owners table for direct writes in sell()
+        try world.grantAccess(itemsOwnersTableId, shopSysAddr) {
+            console.log("  Granted Items:Owners table access to ShopSystem");
+        } catch {
+            console.log("  Items:Owners table access grant to ShopSystem failed");
+        }
         UltimateDominionConfig.setMarketplace(address(world));
         console.log("  Marketplace address:", address(world));
 
@@ -846,6 +853,13 @@ contract PostDeploy is Script {
         // Set default configuration
         GasStationConfig.set(DEFAULT_ETH_PER_GOLD, DEFAULT_MAX_GOLD_PER_SWAP, DEFAULT_GAS_COOLDOWN, true);
         console.log("  GasStation config set (ethPerGold:", DEFAULT_ETH_PER_GOLD, ")");
+
+        // Set swap config (Uniswap V3 + relayer)
+        // relayerAddress defaults to address(0) — set via admin call after relayer is provisioned
+        address relayerAddress = vm.envOr("RELAYER_ADDRESS", address(0));
+        GasStationSwapConfig.set(BASE_SWAP_ROUTER, BASE_WETH, DEFAULT_POOL_FEE, relayerAddress, DEFAULT_GOLD_PER_GAS_CHARGE);
+        console.log("  GasStationSwapConfig set (swapRouter:", BASE_SWAP_ROUTER, ")");
+        console.log("  Relayer address:", relayerAddress);
 
         // NOTE: Fund the treasury post-deployment by calling UD__fundGasTreasury() with ETH value
         console.log("  Remember to fund the GasStation treasury with ETH!");
