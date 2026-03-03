@@ -3,6 +3,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "../SetUp.sol";
 import {CharacterCore} from "../../src/systems/character/CharacterCore.sol";
+import {CharacterEnterSystem} from "../../src/systems/character/CharacterEnterSystem.sol";
 import {
     Characters,
     CharactersData,
@@ -17,6 +18,7 @@ import "forge-std/console.sol";
 
 contract CharacterCoreTest is SetUp {
     CharacterCore characterCore;
+    CharacterEnterSystem characterEnterSystem;
     address player;
     bytes32 characterId;
 
@@ -31,6 +33,15 @@ contract CharacterCoreTest is SetUp {
             name: "CharacterCore"
         });
         world.registerSystem(characterCoreId, characterCore, true);
+
+        // Deploy and register CharacterEnterSystem
+        characterEnterSystem = new CharacterEnterSystem();
+        ResourceId characterEnterId = WorldResourceIdLib.encode({
+            typeId: RESOURCE_SYSTEM,
+            namespace: "UD",
+            name: "CharEnterSys"
+        });
+        world.registerSystem(characterEnterId, characterEnterSystem, true);
 
         // Create test player
         player = address(0x1);
@@ -74,7 +85,7 @@ contract CharacterCoreTest is SetUp {
         characterId = characterCore.mintCharacter(player, name, tokenUri);
 
         // Enter game
-        characterCore.enterGame(characterId, newWeaponId, newArmorId);
+        characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
 
         // Verify character is locked
         assertTrue(Characters.getLocked(characterId));
@@ -112,7 +123,7 @@ contract CharacterCoreTest is SetUp {
         // Try to enter game as other player
         vm.startPrank(otherPlayer);
         vm.expectRevert();
-        characterCore.enterGame(characterId, newWeaponId, newArmorId);
+        characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
         vm.stopPrank();
 
         vm.stopPrank();
@@ -124,11 +135,11 @@ contract CharacterCoreTest is SetUp {
         characterId = characterCore.mintCharacter(player, name, tokenUri);
 
         // Enter game first time
-        characterCore.enterGame(characterId, newWeaponId, newArmorId);
+        characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
 
         // Try to enter game again
         vm.expectRevert();
-        characterCore.enterGame(characterId, newWeaponId, newArmorId);
+        characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
 
         vm.stopPrank();
     }

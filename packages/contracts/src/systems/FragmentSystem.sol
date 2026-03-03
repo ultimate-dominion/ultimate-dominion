@@ -5,7 +5,6 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {
     FragmentProgress,
     FragmentMetadata,
-    CharacterFirstActions,
     Characters,
     Admin,
     Stats,
@@ -16,7 +15,7 @@ import {FragmentType} from "@codegen/common.sol";
 import {Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {_ownersTableId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
-import {CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID, FRAGMENTS_NAMESPACE, BADGES_NAMESPACE, ZONE_DARK_CAVE, BADGE_ZONE_FRAGMENT_BASE, FRAGMENT_XP_REWARD} from "../../constants.sol";
+import {FRAGMENTS_NAMESPACE, BADGES_NAMESPACE, ZONE_DARK_CAVE, BADGE_ZONE_FRAGMENT_BASE, FRAGMENT_XP_REWARD} from "../../constants.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 /**
@@ -234,61 +233,4 @@ contract FragmentSystem is System {
         hint = FragmentMetadata.getHint(fType);
     }
 
-    function checkCombatFragmentTriggersForGroup(
-        bytes32[] memory winners,
-        bytes32[] memory defeated,
-        uint16 tileX,
-        uint16 tileY,
-        bool defeatedAreMobs
-    ) public {
-        for (uint256 i = 0; i < winners.length; i++) {
-            if (_isCharacter(winners[i])) {
-                checkCombatFragmentTriggers(winners[i], defeated, tileX, tileY, defeatedAreMobs);
-            }
-        }
-    }
-
-    function checkCombatFragmentTriggers(
-        bytes32 characterId,
-        bytes32[] memory defeated,
-        uint16 tileX,
-        uint16 tileY,
-        bool defeatedAreMobs
-    ) public {
-        // Fragment III: The Restless - first monster kill
-        if (defeatedAreMobs && !CharacterFirstActions.getHasKilledMonster(characterId)) {
-            CharacterFirstActions.setHasKilledMonster(characterId, true);
-            _triggerFragment(characterId, 3, tileX, tileY);
-        }
-
-        for (uint256 i = 0; i < defeated.length; i++) {
-            bytes32 defeatedId = defeated[i];
-
-            if (defeatedAreMobs) {
-                // Inline getMobId: upper 32 bits of entityId encode the mob template ID
-                uint256 mobId = uint256(uint256(defeatedId) >> 224);
-
-                // Fragment IV: Souls That Linger - kill Crystal Elemental
-                if (mobId == CRYSTAL_ELEMENTAL_MOB_ID) {
-                    _triggerFragment(characterId, 4, tileX, tileY);
-                }
-                // Fragment VI: Death of the Death God - kill Lich Acolyte
-                else if (mobId == LICH_ACOLYTE_MOB_ID) {
-                    _triggerFragment(characterId, 6, tileX, tileY);
-                }
-                // Fragment VII: Betrayer's Truth - kill Shadow Stalker
-                else if (mobId == SHADOW_STALKER_MOB_ID) {
-                    _triggerFragment(characterId, 7, tileX, tileY);
-                }
-            } else {
-                // PvP kill
-                if (_isCharacter(defeatedId)) {
-                    if (!CharacterFirstActions.getHasKilledPlayer(characterId)) {
-                        CharacterFirstActions.setHasKilledPlayer(characterId, true);
-                        _triggerFragment(characterId, 8, tileX, tileY);
-                    }
-                }
-            }
-        }
-    }
 }

@@ -29,6 +29,10 @@ export default defineWorld({
       name: "CharacterCore",
       openAccess: true,
     },
+    CharacterEnterSystem: {
+      name: "CharEnterSys",
+      openAccess: true,
+    },
     StatSystem: {
       name: "StatSystem", 
       openAccess: true,
@@ -80,6 +84,10 @@ export default defineWorld({
       name: "FragmentSystem",
       openAccess: true,
     },
+    FragmentCombatSystem: {
+      name: "FragCombatSys",
+      openAccess: true,
+    },
     AdminShopSystem: {
       name: "AdminShopSys",
       openAccess: false,
@@ -111,6 +119,14 @@ export default defineWorld({
     // Admin systems (not previously listed)
     AdminSystem: {
       name: "AdminSystem",
+      openAccess: false,
+    },
+    AdminEntitySystem: {
+      name: "AdminEntSys",
+      openAccess: false,
+    },
+    AdminContentSystem: {
+      name: "AdminContSys",
       openAccess: false,
     },
     AdminTuningSystem: {

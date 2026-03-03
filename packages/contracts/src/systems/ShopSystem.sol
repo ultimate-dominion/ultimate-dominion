@@ -12,7 +12,6 @@ import {
     Shops,
     ShopsData,
     ShopSale,
-    ShopSaleData,
     Items,
     EncounterEntity,
     WorldEncounter,
@@ -20,119 +19,83 @@ import {
     UltimateDominionConfig
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {_lootManagerSystemId} from "../utils.sol";
 import {WORLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
 import {Position} from "@codegen/index.sol";
-import {IERC1155} from "@erc1155/IERC1155.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
-import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {Owners as ERC1155Owners} from "@erc1155/tables/Owners.sol";
 import {_ownersTableId} from "@erc1155/utils.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IFragmentSystem} from "@world/IFragmentSystem.sol";
-import "forge-std/console.sol";
+import {
+    InvalidShopEncounter,
+    Unauthorized,
+    NotAtShopPosition,
+    OutOfStock,
+    InsufficientItemBalance,
+    ShopInsufficientGold,
+    NotOwnShopEncounter,
+    InvalidEncounter
+} from "../Errors.sol";
 
 contract ShopSystem is System, ReentrancyGuard {
-    /**
-     * Buys an item from the shop
-     * @param amount amount of the item to buy
-     * @param shopId the shopId
-     * @param itemIndex the index of the item in the buyableItems array
-     * @param characterId the id of the character buying
-     */
-    function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
-        PauseLib.requireNotPaused();
+    function _validateShopEncounter(bytes32 characterId, bytes32 shopId) internal view {
         bytes32 encounterId = EncounterEntity.getEncounterId(characterId);
         WorldEncounterData memory worldData = WorldEncounter.get(encounterId);
-        // check that player is in encounter with the shop
-        require(
-            encounterId != bytes32(0) && worldData.start != 0 && worldData.end == 0 && worldData.entity == shopId
-                && worldData.character == characterId,
-            "invalid shop encounter"
-        );
-        // check that the character is the player
-        require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot buy an item for someone else");
-
-        // check that the players position is the same as the shop's position
-        // Tried "isAtPosition", did not pass tests
+        if (
+            encounterId == bytes32(0) || worldData.start == 0 || worldData.end != 0
+                || worldData.entity != shopId || worldData.character != characterId
+        ) revert InvalidShopEncounter();
+        if (!IWorld(_world()).UD__isValidOwner(characterId, _msgSender())) revert Unauthorized();
         (uint16 characterX, uint16 characterY) = IWorld(_world()).UD__getEntityPosition(characterId);
-        require(
-            IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY) == true,
-            "Cannot buy from a shop at a distance"
-        );
+        if (!IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY)) revert NotAtShopPosition();
+    }
 
-        // check if the shop has enough stock
+    function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
+        PauseLib.requireNotPaused();
+        _validateShopEncounter(characterId, shopId);
+
         uint256[] memory buyable = Shops.getBuyableItems(shopId);
         uint256[] memory stock = Shops.getStock(shopId);
-        require(stock[itemIndex] >= amount, "insufficient stock");
+        if (stock[itemIndex] < amount) revert OutOfStock();
 
-        // decrease stock by [amount]
         stock[itemIndex] = stock[itemIndex] - amount;
         Shops.setStock(shopId, stock);
 
         uint256 price = amount * itemMarkup(shopId, buyable[itemIndex]);
 
-        // increase gold by [amount*price]
         Shops.setGold(shopId, Shops.getGold(shopId) + price);
 
-        // take [amount*price] of the users' gold
         IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), _lootManagerAddress(), price);
 
-        // give [amount] items
         IWorld(_world()).UD__dropItem(characterId, buyable[itemIndex], amount);
 
         ShopSale.set(
             shopId,
-            characterId, // customerId
-            buyable[itemIndex], // itemId
-            block.timestamp, // timestamp
-            true, // buyer
+            characterId,
+            buyable[itemIndex],
+            block.timestamp,
+            true,
             price
         );
     }
 
-    /**
-     * Sells an item to the shop
-     * @param amount amount of the item to sell
-     * @param shopId the shopId
-     * @param itemIndex the index of the item in the sellableItems array
-     * @param characterId the characterId of the character selling
-     */
     function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId) public nonReentrant {
         PauseLib.requireNotPaused();
-        bytes32 encounterId = EncounterEntity.getEncounterId(characterId);
-        WorldEncounterData memory worldData = WorldEncounter.get(encounterId);
-        ShopSellTemps memory sellTemps;
-        // check that player is in encounter with the shop
-        require(
-            encounterId != bytes32(0) && worldData.start != 0 && worldData.end == 0 && worldData.entity == shopId
-                && worldData.character == characterId,
-            "invalid shop encounter"
-        );
-        // check that the character is the player
-        require(IWorld(_world()).UD__isValidOwner(characterId, _msgSender()), "Cannot sell an item for someone else");
-        (uint16 characterX, uint16 characterY) = IWorld(_world()).UD__getEntityPosition(characterId);
-        require(
-            IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY) == true,
-            "Cannot sell to a shop at a distance"
-        );
+        _validateShopEncounter(characterId, shopId);
 
-        // check if the shop has enough gold
+        ShopSellTemps memory sellTemps;
         sellTemps.stock = Shops.getStock(shopId);
         sellTemps.sellable = Shops.getSellableItems(shopId);
-        require(
-            Shops.getGold(shopId) >= amount * itemMarkdown(shopId, sellTemps.sellable[itemIndex]),
-            "Shop does not have enough gold"
-        );
+        if (Shops.getGold(shopId) < amount * itemMarkdown(shopId, sellTemps.sellable[itemIndex])) {
+            revert ShopInsufficientGold();
+        }
 
-        // increase stock by [amount]
-        // decrease gold by [amount * price]
         sellTemps.stock[itemIndex] = sellTemps.stock[itemIndex] + amount;
         Shops.setStock(shopId, sellTemps.stock);
 
@@ -140,7 +103,6 @@ contract ShopSystem is System, ReentrancyGuard {
         Shops.setGold(shopId, Shops.getGold(shopId) - sellTemps.price);
 
         // Transfer item: write directly to ERC1155 tables to bypass puppet authorization issues
-        // (Puppet.fallback uses callFrom(msg.sender) which resolves to World address, not the user)
         sellTemps.sellableItems = Shops.getSellableItems(shopId);
         {
             address seller = _msgSender();
@@ -149,22 +111,21 @@ contract ShopSystem is System, ReentrancyGuard {
             bytes14 ns = ITEMS_NAMESPACE;
 
             uint256 sellerBalance = ERC1155Owners.getBalance(_ownersTableId(ns), seller, itemId);
-            require(sellerBalance >= amount, "Insufficient item balance");
+            if (sellerBalance < amount) revert InsufficientItemBalance();
             ERC1155Owners.setBalance(_ownersTableId(ns), seller, itemId, sellerBalance - amount);
 
             uint256 lmBalance = ERC1155Owners.getBalance(_ownersTableId(ns), lootManager, itemId);
             ERC1155Owners.setBalance(_ownersTableId(ns), lootManager, itemId, lmBalance + amount);
         }
 
-        // give [amount*price] gold
         IWorld(_world()).UD__dropGoldToPlayer(characterId, sellTemps.price);
 
         ShopSale.set(
             shopId,
-            characterId, // customerId
-            sellTemps.sellable[itemIndex], // itemId
-            block.timestamp, // timestamp
-            false, // buyer
+            characterId,
+            sellTemps.sellable[itemIndex],
+            block.timestamp,
+            false,
             sellTemps.price
         );
     }
@@ -177,10 +138,6 @@ contract ShopSystem is System, ReentrancyGuard {
         }
     }
 
-    /**
-     * Resets the shop inventory after 12 hours
-     * @param shopId the shop Id
-     */
     function restock(bytes32 shopId) public returns (bool) {
         PauseLib.requireNotPaused();
         if (canRestock(shopId)) {
@@ -197,19 +154,12 @@ contract ShopSystem is System, ReentrancyGuard {
         return false;
     }
 
-    /**
-     * @dev this is a function to end the encounter with the shop, this is sent by the player when they exit the shop.
-     * @dev there is no createShopEncounter function.  to start the encounter use the createEncounter function in the
-     * encounter system.
-     * @param encounterId the encounter ID you wish to end (must be an encounter with the shop)
-     */
     function endShopEncounter(bytes32 encounterId) public {
         PauseLib.requireNotPaused();
         bytes32 characterId = WorldEncounter.getCharacter(encounterId);
-        require(
-            _isValidCharacterId(characterId) && Characters.getOwner(characterId) == _msgSender(),
-            "can only exit your own shop"
-        );
+        if (!_isValidCharacterId(characterId) || Characters.getOwner(characterId) != _msgSender()) {
+            revert NotOwnShopEncounter();
+        }
 
         // Fragment II: The Quartermaster - talk to Tal at (9,9)
         bytes32 shopEntityId = WorldEncounter.getEntity(encounterId);
@@ -222,7 +172,7 @@ contract ShopSystem is System, ReentrancyGuard {
 
         // Inline _endWorldEncounter logic to avoid cross-system IWorld call
         WorldEncounterData memory encounterData = WorldEncounter.get(encounterId);
-        require(encounterData.end == 0 && encounterData.start != 0, "invalid encounter");
+        if (encounterData.end != 0 || encounterData.start == 0) revert InvalidEncounter();
         encounterData.end = block.timestamp;
         EncounterEntity.setEncounterId(encounterData.character, bytes32(0));
         WorldEncounter.set(encounterId, encounterData);

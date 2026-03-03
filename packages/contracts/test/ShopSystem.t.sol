@@ -3,6 +3,12 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, ItemType, TokenType, MobType, EncounterType} from "@codegen/common.sol";
+import {
+    InvalidShopEncounter,
+    Unauthorized,
+    OutOfStock,
+    ShopInsufficientGold
+} from "../src/Errors.sol";
 
 import {
     StatsData,
@@ -179,7 +185,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         // have userA buy from the shop for user B
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
-        vm.expectRevert(bytes("Cannot buy an item for someone else"));
+        vm.expectRevert(Unauthorized.selector);
         world.UD__buy(amount, shopId, itemIndex, userACharacterID);
 
         endGasReport();
@@ -213,7 +219,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         // set the stock to 0
         // have userA buy from the shop
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
-        vm.expectRevert(bytes("insufficient stock"));
+        vm.expectRevert(OutOfStock.selector);
         world.UD__buy(amount, shopId, itemIndex, userACharacterID);
         endGasReport();
     }
@@ -346,7 +352,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
 
         // have userA buy from the shop for user B
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
-        vm.expectRevert(bytes("Cannot sell an item for someone else"));
+        vm.expectRevert(Unauthorized.selector);
         world.UD__sell(amount, shopId, itemIndex, userACharacterID);
 
         endGasReport();
@@ -378,7 +384,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         // set the stock to 0
         // have userA buy from the shop
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
-        vm.expectRevert(bytes("Shop does not have enough gold"));
+        vm.expectRevert(ShopInsufficientGold.selector);
         world.UD__sell(amount, shopId, itemIndex, userACharacterID);
         endGasReport();
     }
@@ -480,7 +486,7 @@ contract Test_ShopSystem is SetUp, GasReporter {
         goldToken.approve(shops, MAX_INT);
         // have userA sell to the shop
         // uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId
-        vm.expectRevert(bytes("invalid shop encounter"));
+        vm.expectRevert(InvalidShopEncounter.selector);
         world.UD__sell(amount, shopId, itemIndex, userACharacterID);
 
         endGasReport();

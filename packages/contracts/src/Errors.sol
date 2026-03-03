@@ -28,6 +28,13 @@ error InvalidStarterItem();
 error InsufficientStat();
 error InvalidItemType();
 
+// Shop
+error NotAtShopPosition();
+error OutOfStock();
+error InsufficientItemBalance();
+error ShopInsufficientGold();
+error NotOwnShopEncounter();
+
 // Encounter
 error InvalidPvE();
 error InvalidPvP();
