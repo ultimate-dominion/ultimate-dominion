@@ -20,7 +20,7 @@ import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
-import { GAME_BOARD_PATH, ITEM_PATH } from '../Routes';
+import { CHARACTERS_PATH, GAME_BOARD_PATH, ITEM_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   type Armor,
@@ -412,6 +412,24 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                 </HStack>
               )}
             </VStack>
+          )}
+          {needsSwap && isOwner && (
+            <Text color="#9A9080" fontSize="sm" mt={4}>
+              All equipment slots are full. Go to your{' '}
+              <Text
+                as="span"
+                color="#D4A54A"
+                cursor="pointer"
+                textDecoration="underline"
+                onClick={() => {
+                  closeAndReset();
+                  navigate(`${CHARACTERS_PATH}/${character?.id}`);
+                }}
+              >
+                Character page
+              </Text>{' '}
+              to manage your loadout.
+            </Text>
           )}
           {!!currentBattle && isNotGameBoard && isOwner && (
             <Text color="red" fontWeight="bold" mt={4} size="sm">
