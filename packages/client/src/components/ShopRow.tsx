@@ -52,9 +52,11 @@ export const ShopRow = ({
       const { error: encounterError, success: encounterSuccess } =
         await createEncounter(EncounterType.World, [character.id], [shopId]);
       if (encounterError && !encounterSuccess) throw new Error(encounterError);
+
+      return true;
     });
 
-    if (result !== undefined) {
+    if (result) {
       await refreshCharacter();
       navigate(`/shops/${shopId}`);
     }
