@@ -1,4 +1,4 @@
-import { type Hex, type Address } from 'viem';
+import { type Hex, type Address, numberToHex } from 'viem';
 import { encodeExecuteWithSig, sendRelayerTx, txQueue } from '../tx.js';
 
 export async function handleExecute(params: unknown[]): Promise<{ queueId: string }> {
@@ -38,13 +38,20 @@ export async function handleExecute(params: unknown[]): Promise<{ queueId: strin
   }> | undefined;
 
   if (rawAuthorization) {
+    // Thirdweb's enclave wallet returns r/s as BigInt, which gets JSON-serialized
+    // to decimal strings (e.g. "68066441064328..."). viem expects 0x-prefixed hex.
+    const toHexSig = (val: string): Hex => {
+      if (val.startsWith('0x')) return val as Hex;
+      return numberToHex(BigInt(val));
+    };
+
     authorizationList = [
       {
         address: rawAuthorization.address as Address,
         chainId: Number(rawAuthorization.chainId),
         nonce: Number(rawAuthorization.nonce),
-        r: rawAuthorization.r as Hex,
-        s: rawAuthorization.s as Hex,
+        r: toHexSig(rawAuthorization.r),
+        s: toHexSig(rawAuthorization.s),
         yParity: Number(rawAuthorization.yParity),
       },
     ];
