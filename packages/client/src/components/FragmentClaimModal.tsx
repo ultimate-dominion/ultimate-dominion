@@ -12,8 +12,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-// eslint-disable-next-line import/no-named-as-default
-import Typist from 'react-typist';
+import SafeTypist from './SafeTypist';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments, type FragmentStatus } from '../contexts/FragmentContext';
@@ -140,7 +139,7 @@ export const FragmentClaimModal = ({
                     },
                   }}
                 >
-                  <Typist
+                  <SafeTypist
                     avgTypingDelay={30}
                     cursor={{ show: false }}
                     stdTypingDelay={15}
@@ -153,7 +152,7 @@ export const FragmentClaimModal = ({
                     >
                       {fragment.narrative}
                     </Text>
-                  </Typist>
+                  </SafeTypist>
                 </Box>
 
                 <Text fontSize="xs" color="gray.500" textAlign="center">

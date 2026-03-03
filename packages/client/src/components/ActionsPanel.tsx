@@ -13,8 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-// eslint-disable-next-line import/no-named-as-default
-import Typist from 'react-typist';
+import SafeTypist from './SafeTypist';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -584,7 +583,7 @@ export const ActionsPanel = (): JSX.Element => {
         )}
       <Stack p={{ base: 2, lg: 4 }}>
         {!currentBattle && !(isSpawned && position) && (
-          <Typist
+          <SafeTypist
             avgTypingDelay={10}
             cursor={{ show: false }}
             stdTypingDelay={10}
@@ -596,7 +595,7 @@ export const ActionsPanel = (): JSX.Element => {
               </Text>{' '}
               your character.
             </Text>
-          </Typist>
+          </SafeTypist>
         )}
         {!currentBattle && isSpawned && position && (
           <VStack spacing={3} w="100%">
@@ -650,7 +649,7 @@ export const ActionsPanel = (): JSX.Element => {
 
             if (attack.miss[0]) {
               return (
-                <Typist
+                <SafeTypist
                   avgTypingDelay={10}
                   cursor={{ show: false }}
                   key={`battle-attack-${i}`}
@@ -672,7 +671,7 @@ export const ActionsPanel = (): JSX.Element => {
                       missed you with {itemName}.
                     </Text>
                   )}
-                </Typist>
+                </SafeTypist>
               );
             }
 
@@ -703,7 +702,7 @@ export const ActionsPanel = (): JSX.Element => {
                   <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                     {critText}
                     {isPlayerAttack ? (
-                      <>
+                      <Text as="span">
                         You cast {itemName}
                         {!isSelfBuff && (
                           <Text as="span">
@@ -713,14 +712,14 @@ export const ActionsPanel = (): JSX.Element => {
                             </Text>
                           </Text>
                         )}
-                      </>
+                      </Text>
                     ) : (
-                      <>
+                      <Text as="span">
                         <Text as="span" color="green">
                           {opponent.name}
                         </Text>{' '}
                         cast {itemName}
-                      </>
+                      </Text>
                     )}
                     .{' '}
                     <Text as="span" color={effectColor}>
@@ -810,14 +809,14 @@ export const ActionsPanel = (): JSX.Element => {
             }
 
             return (
-              <Typist
+              <SafeTypist
                 avgTypingDelay={10}
                 cursor={{ show: false }}
                 key={`battle-attack-${i}`}
                 stdTypingDelay={10}
               >
                 {attackContent}
-              </Typist>
+              </SafeTypist>
             );
           })}
       </Stack>
@@ -830,7 +829,7 @@ export const ActionsPanel = (): JSX.Element => {
             w="100%"
           />
           <HStack justifyContent="space-between" px={{ base: 2, lg: 4 }}>
-            <Typist
+            <SafeTypist
               avgTypingDelay={10}
               cursor={{ show: false }}
               stdTypingDelay={10}
@@ -867,7 +866,7 @@ export const ActionsPanel = (): JSX.Element => {
                     : ''}
                 </Text>
               )}
-            </Typist>
+            </SafeTypist>
             <HStack justifyContent="center">
               <Button
                 onClick={() => onContinueToBattleOutcome(true)}
