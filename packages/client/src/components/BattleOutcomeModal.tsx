@@ -70,6 +70,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     Armor | Spell | Weapon | null
   >(null);
   const [initialLevel] = useState(() => character?.level);
+  const [initialExperience] = useState(() => character?.experience);
 
   const hasLeveledUp = useMemo(
     () =>
@@ -115,6 +116,14 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     if (nextLevelXpRequirement === BigInt(0)) return false;
     return BigInt(character.experience) >= nextLevelXpRequirement;
   }, [character, nextLevelXpRequirement]);
+
+  // Did THIS battle's XP gain push the player over the level-up threshold?
+  // False if they were already eligible before this battle started.
+  const justBecameEligible = useMemo(() => {
+    if (!character || initialExperience == null) return false;
+    return initialExperience < nextLevelXpRequirement &&
+      BigInt(character.experience) >= nextLevelXpRequirement;
+  }, [character, initialExperience, nextLevelXpRequirement]);
 
   const fetchLootedItems = useCallback(
     (_lootedItemIds: string[]) => {
@@ -294,14 +303,14 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     Gold.
                   </Text>
                 )}
-                {/* Level-up banner — shown BEFORE loot for visibility */}
-                {(hasLeveledUp || canLevel) && (
-                  <LevelUpBanner level={character.level} />
+                {/* Level-up banner — only when this battle triggered eligibility */}
+                {(hasLeveledUp || justBecameEligible) && (
+                  <LevelUpBanner level={canLevel ? BigInt(character.level) + 1n : character.level} />
                 )}
                 {canLevel && (
                   <LevelingPanel canLevel character={character} compact />
                 )}
-                {(hasLeveledUp || canLevel) &&
+                {(hasLeveledUp || justBecameEligible || canLevel) &&
                   winner === character.id &&
                   sortedLoot.length > 0 && (
                     <Divider borderColor="rgba(196,184,158,0.15)" my={1} />
