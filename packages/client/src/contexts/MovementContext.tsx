@@ -85,7 +85,7 @@ export const MovementProvider = ({
     actionName: 'moving',
     silent: true,
     maxAttempts: 2,
-    estimatedDurationMs: authMethod === 'embedded' ? 6000 : 500,
+    estimatedDurationMs: 1000,
   });
 
   const onSetIsMovementDisabled = useCallback((isDisabled: boolean) => {

@@ -14,6 +14,7 @@ import {
   Hex,
 } from 'viem';
 
+import { applyReceiptToStore } from '../gameStore/applyReceiptToStore';
 import { debug } from '../../utils/debug';
 import { trackTxRoundtrip } from '../../utils/metricsReporter';
 
@@ -56,7 +57,8 @@ export async function setupNetwork() {
     client: { public: publicClient, wallet: burnerWalletClient },
   });
 
-  // Simple waitForTransaction with retry logic — no RECS integration.
+  // Wait for receipt, then inject MUD Store events into Zustand immediately.
+  // WebSocket delivers the same updates later as an idempotent overwrite.
   const waitForTransaction = async (tx: Hex) => {
     const startMs = Date.now();
     const maxRetries = 3;
@@ -64,8 +66,11 @@ export async function setupNetwork() {
       try {
         const receipt = await publicClient.waitForTransactionReceipt({
           hash: tx,
-          pollingInterval: 250,
+          pollingInterval: 150,
         });
+        if (receipt.status !== 'reverted') {
+          applyReceiptToStore(receipt);
+        }
         trackTxRoundtrip('waitForTransaction', startMs, true);
         return receipt;
       } catch (e) {
@@ -76,7 +81,7 @@ export async function setupNetwork() {
           debug.log(
             `waitForTransaction retry ${attempt + 1}/${maxRetries} for ${tx}`,
           );
-          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+          await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
           continue;
         }
         trackTxRoundtrip('waitForTransaction', startMs, false);

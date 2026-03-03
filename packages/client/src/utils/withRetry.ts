@@ -1,10 +1,10 @@
 /**
  * Pure retry utility with exponential backoff and error classification.
  *
- * - Classifies errors as retryable (network, nonce, timeout) vs non-retryable (user denied, revert)
- * - Exponential backoff: 1s, 2s, 4s...
+ * - Classifies errors as retryable (network, timeout, RPC failures) vs non-retryable (user denied, revert)
+ * - Exponential backoff: 500ms, 1s, 2s...
  * - Status callbacks for progressive UI feedback
- * - "Confirming..." transition after 3s on final attempt
+ * - "Confirming..." transition after 2s on final attempt
  */
 
 const RETRYABLE_PATTERNS = [
@@ -22,8 +22,6 @@ const RETRYABLE_PATTERNS = [
   '503',
   '504',
   'internal json-rpc error',
-  'replacement transaction underpriced',
-  'already known',
 ];
 
 const NON_RETRYABLE_PATTERNS = [
@@ -101,7 +99,7 @@ export async function withRetry<T>(
       if (attempt === maxAttempts || maxAttempts === 1) {
         confirmingTimer = setTimeout(() => {
           onStatusChange?.('confirming', `Confirming ${actionName}...`);
-        }, 3000);
+        }, 2000);
       }
 
       const result = await fn();
@@ -119,7 +117,7 @@ export async function withRetry<T>(
       );
 
       if (willRetry) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+        const delay = Math.min(500 * Math.pow(2, attempt - 1), 4000);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }

@@ -544,15 +544,15 @@ export function createSystemCalls(
   let isMovePending = false;
 
   // Minimum gap (ms) between consecutive moves. Must exceed:
-  //   on-chain MOVE_COOLDOWN (1s) + Base block time (2s) + relayer latency (2-3s)
+  //   on-chain MOVE_COOLDOWN (1s) + block.timestamp advance interval (~2s)
   // The relayer simulates against the latest block it knows. If we move in
   // block N, the relayer must simulate at block N+1 or later for the cooldown
   // to appear expired. Using ms precision avoids integer-second rounding bugs.
-  const MIN_MOVE_GAP_MS = 5000;
+  const MIN_MOVE_GAP_MS = 2500;
 
   // Retry delay for pre-submission failures (simulation/estimation).
   // Safe to retry because no tx was submitted on-chain.
-  const MOVE_RETRY_DELAY_MS = 2500;
+  const MOVE_RETRY_DELAY_MS = 500;
 
   // Local timestamp (ms) of the last move completion (success or revert).
   let lastMoveCompletedMs = 0;
@@ -598,10 +598,10 @@ export function createSystemCalls(
     }
   };
 
-  // Retry delay for on-chain reverts (state-dependent, e.g. relayer nonce
-  // collision within the same block). Wait ~1 block time so state settles.
-  const ON_CHAIN_RETRY_DELAY_MS = 2500;
-  const MAX_ON_CHAIN_RETRIES = 2;
+  // Retry delay for on-chain reverts (state-dependent failures,
+  // e.g. state changed between simulation and inclusion). Wait ~1 block for state to settle.
+  const ON_CHAIN_RETRY_DELAY_MS = 500;
+  const MAX_ON_CHAIN_RETRIES = 1;
   const MAX_SIMULATION_RETRIES = 2;
 
   const move = async (
@@ -630,7 +630,7 @@ export function createSystemCalls(
       let simulationRetries = 0;
       let onChainRetries = 0;
 
-      for (let attempt = 0; attempt < 7; attempt++) {
+      for (let attempt = 0; attempt < 5; attempt++) {
         try {
           const tx = await worldContract.write.UD__move(
             [characterEntity as `0x${string}`, x, y],
@@ -640,9 +640,8 @@ export function createSystemCalls(
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
             // Move reverted on-chain — position and SessionTimer are unchanged.
-            // This typically happens when the Thirdweb relayer pool submits
-            // against stale state (e.g. another tx in the same block, or
-            // block.prevrandao changed the spawnOnTileEnter gas profile).
+            // This typically happens when state changed between simulation and
+            // inclusion (e.g. block.prevrandao changed the spawnOnTileEnter gas profile).
             // Safe to retry since no on-chain state was modified.
             if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
               onChainRetries++;

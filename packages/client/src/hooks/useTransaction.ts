@@ -35,7 +35,7 @@ type UseTransactionReturn = {
  * - Auto-retry with exponential backoff
  * - Progressive status messages
  * - Toast integration (error toasts auto, success toasts optional)
- * - Auto-reset after 2s
+ * - Auto-reset after 1.5s
  */
 export function useTransaction(options: UseTransactionOptions): UseTransactionReturn {
   const {
@@ -44,7 +44,7 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
     showSuccessToast = false,
     successMessage,
     silent = false,
-    estimatedDurationMs = 5000,
+    estimatedDurationMs = 2000,
   } = options;
 
   const { renderError, renderSuccess } = useToast();
@@ -90,11 +90,11 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
           renderSuccess(successMessage);
         }
 
-        // Auto-reset after 2s
+        // Auto-reset after 1.5s
         resetTimerRef.current = setTimeout(() => {
           setStatus('idle');
           setStatusMessage('');
-        }, 2000);
+        }, 1500);
 
         return result;
       } catch (error) {
@@ -107,11 +107,11 @@ export function useTransaction(options: UseTransactionOptions): UseTransactionRe
           }
         }
 
-        // Auto-reset after 2s
+        // Auto-reset after 1.5s
         resetTimerRef.current = setTimeout(() => {
           setStatus('idle');
           setStatusMessage('');
-        }, 2000);
+        }, 1500);
 
         return undefined;
       } finally {

@@ -23,6 +23,7 @@ import {
 } from 'viem';
 import { useWalletClient } from 'wagmi';
 
+import { applyReceiptToStore } from '../lib/gameStore/applyReceiptToStore';
 import { type Burner, createBurner } from '../lib/mud/createBurner';
 import { createSystemCalls } from '../lib/mud/createSystemCalls';
 import {
@@ -175,7 +176,7 @@ const MUDProviderInner = ({
       client: { public: setupResult.network.publicClient, wallet: walletClient },
     });
 
-    // Proxy: adds gas buffer (Thirdweb relayer underestimates for deep MUD call chains)
+    // Proxy: adds gas buffer (relayer applies 1.5x on outer tx; client adds 1.5x on inner call)
     const worldContract = new Proxy(rawWorldContract, {
       get(target, prop) {
         if (prop === 'write') {
@@ -199,7 +200,7 @@ const MUDProviderInner = ({
                       args: fnArgs,
                       account: embeddedWalletClient!.account!,
                     });
-                    opts.gas = estimated * 2n;
+                    opts.gas = estimated * 3n / 2n;
                     args = [args[0], opts];
                     console.info(`[TX][SEND] ${String(fnName)} est=${estimated} gas=${opts.gas}`, fnArgs);
                   } else {
@@ -225,13 +226,17 @@ const MUDProviderInner = ({
       },
     });
 
-    // Simple waitForTransaction — no RECS log injection, just confirm on-chain.
-    // WebSocket will deliver the indexed state update to Zustand.
+    // Wait for receipt, then inject MUD Store events into Zustand immediately.
+    // WebSocket delivers the same updates later as an idempotent overwrite.
     const embeddedWaitForTransaction = async (tx: Hex) => {
       const receipt = await setupResult.network.publicClient.waitForTransactionReceipt({
         hash: tx,
-        pollingInterval: 250,
+        pollingInterval: 150,
       });
+
+      if (receipt.status === 'success') {
+        applyReceiptToStore(receipt);
+      }
 
       if (receipt.status === 'reverted') {
         console.error(`[TX][RECEIPT] REVERTED on-chain tx=${tx} gasUsed=${receipt.gasUsed}`);

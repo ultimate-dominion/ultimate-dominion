@@ -21,11 +21,11 @@ type UseTransactionProgressReturn = {
  * Optimistic progress bar that fills quickly at first, then decelerates
  * asymptotically — never reaching 100% until the actual request completes.
  *
- * Phase timeline (for a 6000ms estimated duration):
+ * Phase timeline (for a 2000ms estimated duration):
  *   0→60%  in ~30% of estimated time (fast burst — feels responsive)
  *   60→85% in ~40% of estimated time (steady progress)
  *   85→95% in ~30% of estimated time (slowing down)
- *   95→98% over 10s extra crawl   (asymptotic — request taking longer)
+ *   95→98% over 5s extra crawl    (asymptotic — request taking longer)
  *
  * When complete() is called, snaps to 100% instantly.
  */
@@ -50,7 +50,7 @@ export function useTransactionProgress(): UseTransactionProgressReturn {
       const phase1Duration = estimatedMs * 0.3;  // Fast burst
       const phase2Duration = estimatedMs * 0.4;  // Steady
       const phase3Duration = estimatedMs * 0.3;  // Decelerating
-      const phase4Duration = 10000;               // Asymptotic crawl
+      const phase4Duration = 5000;                // Asymptotic crawl
 
       // Start at 0
       setProgress({ phase: 'filling', percent: 0, transitionMs: 0 });
