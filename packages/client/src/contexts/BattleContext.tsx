@@ -272,23 +272,26 @@ export const BattleProvider = ({
         const currentTurn = BigInt('0x' + (clean.slice(64, 128) || '0'));
         const attackNumber = BigInt('0x' + (clean.slice(128, 192) || '0'));
 
+        const toArray = <T,>(val: unknown, map: (v: unknown) => T): T[] =>
+          Array.isArray(val) ? val.map(map) : [map(val)];
+
         return {
           attackerDamageDelt: toBigInt(outcome.attackerDamageDelt),
           attackerDied: Boolean(outcome.attackerDied),
           attackerId: outcome.attackerId as string,
           attackNumber,
           blockNumber: toBigInt(outcome.blockNumber),
-          crit: Boolean(outcome.crit),
+          crit: toArray(outcome.crit, Boolean),
           currentTurn,
-          damagePerHit: toBigInt(outcome.damagePerHit),
+          damagePerHit: toArray(outcome.damagePerHit, toBigInt),
           defenderDamageDelt: toBigInt(outcome.defenderDamageDelt),
           defenderDied: Boolean(outcome.defenderDied),
           defenderId: outcome.defenderId as string,
           effectIds: (outcome.effectIds as string[]) ?? [],
           encounterId,
-          hit: Boolean(outcome.hit),
+          hit: toArray(outcome.hit, Boolean),
           itemId: outcome.itemId != null ? outcome.itemId.toString() : '0',
-          miss: Boolean(outcome.miss),
+          miss: toArray(outcome.miss, Boolean),
           timestamp: toBigInt(outcome.timestamp),
         } as AttackOutcomeType;
       })

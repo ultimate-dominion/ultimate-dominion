@@ -1,5 +1,5 @@
 diff --git a/dist/commands-IDBOJLTZ.js b/dist/commands-IDBOJLTZ.js
-index 24ec71911e60c024feb9e831b0ba3de2b857f228..50651a4d6c9ca4c8912b264775c811db6bc0afd3 100644
+index 24ec719..49d9887 100644
 --- a/dist/commands-IDBOJLTZ.js
 +++ b/dist/commands-IDBOJLTZ.js
 @@ -585,24 +585,39 @@ async function ensureTables({
@@ -81,7 +81,78 @@ index 24ec71911e60c024feb9e831b0ba3de2b857f228..50651a4d6c9ca4c8912b264775c811db
    deploys.set(address, deploy2);
    debug2("found world deploy for", address, "at block", deploy2.deployBlock);
    return deploy2;
-@@ -966,15 +989,30 @@ async function ensureFunctions({
+@@ -941,11 +964,68 @@ async function ensureFunctions({
+     const wrongSystem = toSkip.filter((func) => func.systemId !== worldSelectorToFunction[func.selector]?.systemId);
+     if (wrongSystem.length) {
+       console.warn(
+-        "found",
++        "PATCHED: found",
+         wrongSystem.length,
+-        "functions already registered but pointing at a different system ID:",
++        "functions pointing at wrong system, deploying fixer:",
+         wrongSystem.map((func) => func.signature).join(", ")
+       );
++      // Deploy a temporary root system that can directly write to FunctionSelectors table
++      // via StoreCore internal writes (bypasses namespace access control).
++      // This is needed because MUD World has no API to update existing function selectors.
++      const fixerBytecode = "0x60808060405234610016576108b2908161001b8239f35b5f80fdfe60806040526004361015610011575f80fd5b5f3560e01c806301ffc9a714610064578063119df25f1461005f57806345ec93541461005a57806380446c97146100555763e1af802c14610050575f80fd5b6101be565b610136565b610117565b6100db565b346100b65760203660031901126100b6576001600160e01b03196100866100ba565b1663b5dee12760e01b81149081156100a5575b50151560805260206080f35b6301ffc9a760e01b14905081610099565b5f80fd5b600435906001600160e01b0319821682036100b657565b5f9103126100b657565b346100b6575f3660031901126100b65736603319013560601c8015610110575b6040516001600160a01b039091168152602090f35b50336100fb565b346100b6575f3660031901126100b6576020604051601f193601358152f35b346100b65760603660031901126100b65761014f6100ba565b60443563ffffffff60e01b8082168092036100b65760408051602480356020830152918101939093528252606082016001600160401b038111838210176101b95760405261019b610234565b908151156101b4576101b2931660208201526103ed565b005b61025e565b6101ea565b346100b6575f3660031901126100b65760206101d86105ac565b6040516001600160a01b039091168152f35b634e487b7160e01b5f52604160045260245ffd5b6001600160401b0381116101b957604052565b601f909101601f19168101906001600160401b038211908210176101b957604052565b60408051919082016001600160401b038111838210176101b9576040526001825260203681840137565b634e487b7160e01b5f52603260045260245ffd5b80518210156101b45760209160051b010190565b9081518082526020808093019301915f5b8281106102a5575050505090565b835185529381019392810192600101610297565b90606051918281525f5b8381106102e25750825f602080949584010152601f8019910116010190565b8060806020920151828285010152016102c3565b91908251928382525f5b848110610320575050825f602080949584010152601f8019910116010190565b602081830181015184830182015201610300565b906103709261034e61035c92608085526080850190610286565b9083820360208501526102f6565b905f604082015260608183039101526102b9565b90565b92916103be906103b06103d1936f46756e6374696f6e53656c6563746f72661d189ddbdc9b1960ca1b01875260c0602088015260c0870190610286565b9085820360408701526102f6565b5f606085015283810360808501526102b9565b9160a064090080080160d21b910152565b6040513d5f823e3d90fd5b9190916103f86105e1565b5f5b81518110156104a95761042e6104216104138385610272565b516001600160581b03191690565b6001600160581b03191690565b6001808260581c1614610445575b506001016103fa565b60601c90813b156100b6575f60405180936315c19b2760e21b82528183816104718c8b60048401610373565b03925af19182156104a45760019261048b575b509061043c565b8061049861049e926101fe565b806100d1565b5f610484565b6103e2565b5090926040916040517f8dbb3a9672eebfd3773e72dd9c102393436816d832c7ba9e1e1ac8fcadcac7a96f46756e6374696f6e53656c6563746f72661d189ddbdc9b1960ca1b0191806104fd868a83610334565b0390a261051861050c86610739565b835160208501916107cd565b5f5b81518110156105a4576105336104216104138385610272565b6002808260581c161461054a575b5060010161051a565b60601c90813b156100b6578451635b28cdaf60e01b8152915f9083908183816105778a8e60048401610373565b03925af19182156104a457600192610591575b5090610541565b8061049861059e926101fe565b5f61058a565b505050509050565b7f629a4c26e296b22a8e0856e9f6ecb2d1008d7e00081111962cd175fa7488e175546001600160a01b03168061037057503390565b6105e9610234565b8051156101b457610370906f46756e6374696f6e53656c6563746f72661d189ddbdc9b1960ca1b0160208201526040516106da6106bc7f3b4102da22e32d82fc925482184f16c09fd4281692720b87d124aef6da48a0f1602084018461064f87836106ee565b0394610663601f1996878101835282610211565b51902018936040516106898161067d6020820194856106ee565b03868101835282610211565b5190207f14e2fcc58e58e68ec7edc30c8d50dccc3ce2714a623ec81f46b6a63922d76569185460381c64ffffffffff1690565b916040519260208401948592603f8387010116604052818552610868565b60018060801b039051169060801b17610816565b6953746f7265486f6f6b7360301b66746273746f726560c81b01815281516020918201928201915f5b828110610725575050505090565b835185529381019392810192600101610717565b60405160208160208101936f46756e6374696f6e53656c6563746f72661d189ddbdc9b1960ca1b0185526040820160208251919201935f5b8281106107b65750505061078e925003601f198101835282610211565b5190207f86425bff6b57326c7859e89024fe4f238ca327a1ae4a230180dd2f0e88aaa7d91890565b855184529481019486945092810192600101610771565b9291925b6020908183106107f15784518155930192601f19909101906001016107d1565b92939190508061080057505050565b5f199060031b1c90818354169119905116179055565b8060801c906015809160018060801b031604604051926020906020850160208460051b8701016040528386525f5b8481106108545750505050505090565b825182529185019190830190600101610844565b9291925b60209081831061088c5780548552930192601f199091019060010161086c565b9190509291928061089c57505050565b5f199060031b1c9081835116911990541617905256";
++      const deployHash = await sendTransaction(client, {
++        chain: client.chain ?? null,
++        data: fixerBytecode
++      });
++      const deployReceipt = await waitForTransactionReceipt(client, { hash: deployHash });
++      if (deployReceipt.status !== "success" || !deployReceipt.contractAddress) {
++        throw new Error("Failed to deploy SelectorFixSystem for function selector fix");
++      }
++      const fixerAddress = deployReceipt.contractAddress;
++      debug2("PATCHED: deployed SelectorFixSystem to", fixerAddress);
++      // Register as root system (root namespace = empty string)
++      const fixerSystemId = "0x7379000000000000000000000000000053656c6563746f724669780000000000";
++      try {
++        const regHash = await writeContract4(client, {
++          chain: client.chain ?? null,
++          address: worldDeploy.address,
++          abi: worldAbi,
++          functionName: "registerSystem",
++          args: [fixerSystemId, fixerAddress, true]
++        });
++        await waitForTransactionReceipt(client, { hash: regHash });
++      } catch (e) {
++        if (!e.message?.includes("AlreadyExists")) throw e;
++        debug2("PATCHED: SelectorFix system already registered, reusing");
++      }
++      // Register root function selector
++      try {
++        const regFnHash = await writeContract4(client, {
++          chain: client.chain ?? null,
++          address: worldDeploy.address,
++          abi: worldAbi,
++          functionName: "registerRootFunctionSelector",
++          args: [fixerSystemId, "fixSelector(bytes4,bytes32,bytes4)", "fixSelector(bytes4,bytes32,bytes4)"]
++        });
++        await waitForTransactionReceipt(client, { hash: regFnHash });
++      } catch (e) {
++        if (!e.message?.includes("FunctionSelectorAlreadyExists")) throw e;
++        debug2("PATCHED: fixSelector already registered, reusing");
++      }
++      // Fix each wrong-system function selector
++      const fixerAbi = [{ type: "function", name: "fixSelector", inputs: [{ name: "worldSelector", type: "bytes4" }, { name: "newSystemId", type: "bytes32" }, { name: "newSystemSelector", type: "bytes4" }], outputs: [], stateMutability: "nonpayable" }];
++      for (const func of wrongSystem) {
++        const fixHash = await writeContract4(client, {
++          chain: client.chain ?? null,
++          address: worldDeploy.address,
++          abi: fixerAbi,
++          functionName: "fixSelector",
++          args: [func.selector, func.systemId, func.systemFunctionSelector]
++        });
++        await waitForTransactionReceipt(client, { hash: fixHash });
++        debug2(`PATCHED: fixed selector for ${func.signature} -> system ${func.systemId}`);
++      }
++      console.log("PATCHED: fixed", wrongSystem.length, "stale function selectors");
+     }
+   }
+   if (!toAdd.length) return [];
+@@ -966,15 +1046,30 @@ async function ensureFunctions({
          args: [func.systemId, func.systemFunctionSignature]
        };
        return pRetry3(
@@ -119,7 +190,7 @@ index 24ec71911e60c024feb9e831b0ba3de2b857f228..50651a4d6c9ca4c8912b264775c811db
          }
        );
      })
-@@ -1181,13 +1219,23 @@ async function ensureNamespaceOwner({
+@@ -1181,13 +1276,23 @@ async function ensureNamespaceOwner({
    }
    const registrationTxs = Promise.all(
      missingNamespaces.map(
@@ -150,7 +221,7 @@ index 24ec71911e60c024feb9e831b0ba3de2b857f228..50651a4d6c9ca4c8912b264775c811db
      )
    );
    return registrationTxs;
-@@ -1553,7 +1601,7 @@ async function deploy({
+@@ -1553,7 +1658,7 @@ async function deploy({
      ...commonDeployOptions,
      resourceIds: [...tables.map(({ tableId }) => tableId), ...systems.map(({ systemId }) => systemId)]
    });
@@ -159,7 +230,7 @@ index 24ec71911e60c024feb9e831b0ba3de2b857f228..50651a4d6c9ca4c8912b264775c811db
    const tableTxs = await ensureTables({
      ...commonDeployOptions,
      tables
-@@ -1566,7 +1614,7 @@ async function deploy({
+@@ -1566,7 +1671,7 @@ async function deploy({
    });
    await waitForTransactions3({
      client,
@@ -168,7 +239,7 @@ index 24ec71911e60c024feb9e831b0ba3de2b857f228..50651a4d6c9ca4c8912b264775c811db
      debugLabel: "table and system registrations"
    });
    const functionTxs = await ensureFunctions({
-@@ -1603,7 +1651,7 @@ async function deploy({
+@@ -1603,7 +1708,7 @@ async function deploy({
    });
    await waitForTransactions3({
      client,

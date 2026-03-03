@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@latticexyz/cli@2.2.23':
-    hash: igpswuko4bldxugqfy2mysxj6e
+    hash: 7sdpa76qxofxw4ta4ulbvmdmni
     path: patches/@latticexyz__cli@2.2.23.patch
 
 importers:
@@ -257,7 +257,7 @@ importers:
     dependencies:
       '@latticexyz/cli':
         specifier: ^2.2.23
-        version: 2.2.23(patch_hash=igpswuko4bldxugqfy2mysxj6e)(@tanstack/react-query@5.81.5(react@18.3.1))(bufferutil@4.0.8)(immer@10.1.1)(react@18.3.1)(typescript@5.4.2)(utf-8-validate@6.0.4)(wagmi@2.19.5(@tanstack/query-core@5.81.5)(@tanstack/react-query@5.81.5(react@18.3.1))(bufferutil@4.0.8)(immer@10.1.1)(react@18.3.1)(typescript@5.4.2)(utf-8-validate@6.0.4)(viem@2.9.20(bufferutil@4.0.8)(typescript@5.4.2)(utf-8-validate@6.0.4)(zod@3.23.8))(zod@3.23.8))
+        version: 2.2.23(patch_hash=7sdpa76qxofxw4ta4ulbvmdmni)(@tanstack/react-query@5.81.5(react@18.3.1))(bufferutil@4.0.8)(immer@10.1.1)(react@18.3.1)(typescript@5.4.2)(utf-8-validate@6.0.4)(wagmi@2.19.5(@tanstack/query-core@5.81.5)(@tanstack/react-query@5.81.5(react@18.3.1))(bufferutil@4.0.8)(immer@10.1.1)(react@18.3.1)(typescript@5.4.2)(utf-8-validate@6.0.4)(viem@2.9.20(bufferutil@4.0.8)(typescript@5.4.2)(utf-8-validate@6.0.4)(zod@3.23.8))(zod@3.23.8))
       '@latticexyz/gas-report':
         specifier: ^2.0.12
         version: 2.0.12
@@ -12317,8 +12317,8 @@ snapshots:
     dependencies:
       '@aws-crypto/sha256-browser': 3.0.0
       '@aws-crypto/sha256-js': 3.0.0
-      '@aws-sdk/client-sso-oidc': 3.582.0
-      '@aws-sdk/client-sts': 3.582.0(@aws-sdk/client-sso-oidc@3.582.0)
+      '@aws-sdk/client-sso-oidc': 3.582.0(@aws-sdk/client-sts@3.582.0)
+      '@aws-sdk/client-sts': 3.582.0
       '@aws-sdk/core': 3.582.0
       '@aws-sdk/credential-provider-node': 3.582.0(@aws-sdk/client-sso-oidc@3.582.0)(@aws-sdk/client-sts@3.582.0)
       '@aws-sdk/middleware-host-header': 3.577.0
@@ -12359,11 +12359,11 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-sso-oidc@3.582.0':
+  '@aws-sdk/client-sso-oidc@3.582.0(@aws-sdk/client-sts@3.582.0)':
     dependencies:
       '@aws-crypto/sha256-browser': 3.0.0
       '@aws-crypto/sha256-js': 3.0.0
-      '@aws-sdk/client-sts': 3.582.0(@aws-sdk/client-sso-oidc@3.582.0)
+      '@aws-sdk/client-sts': 3.582.0
       '@aws-sdk/core': 3.582.0
       '@aws-sdk/credential-provider-node': 3.582.0(@aws-sdk/client-sso-oidc@3.582.0)(@aws-sdk/client-sts@3.582.0)
       '@aws-sdk/middleware-host-header': 3.577.0
@@ -12402,6 +12402,7 @@ snapshots:
       '@smithy/util-utf8': 3.0.0
       tslib: 2.6.2
     transitivePeerDependencies:
+      - '@aws-sdk/client-sts'
       - aws-crt
 
   '@aws-sdk/client-sso@3.582.0':
@@ -12447,11 +12448,11 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-sts@3.582.0(@aws-sdk/client-sso-oidc@3.582.0)':
+  '@aws-sdk/client-sts@3.582.0':
     dependencies:
       '@aws-crypto/sha256-browser': 3.0.0
       '@aws-crypto/sha256-js': 3.0.0
-      '@aws-sdk/client-sso-oidc': 3.582.0
+      '@aws-sdk/client-sso-oidc': 3.582.0(@aws-sdk/client-sts@3.582.0)
       '@aws-sdk/core': 3.582.0
       '@aws-sdk/credential-provider-node': 3.582.0(@aws-sdk/client-sso-oidc@3.582.0)(@aws-sdk/client-sts@3.582.0)
       '@aws-sdk/middleware-host-header': 3.577.0
@@ -12490,7 +12491,6 @@ snapshots:
       '@smithy/util-utf8': 3.0.0
       tslib: 2.6.2
     transitivePeerDependencies:
-      - '@aws-sdk/client-sso-oidc'
       - aws-crt
 
   '@aws-sdk/core@3.582.0':
@@ -12524,7 +12524,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-ini@3.582.0(@aws-sdk/client-sso-oidc@3.582.0)(@aws-sdk/client-sts@3.582.0)':
     dependencies:
-      '@aws-sdk/client-sts': 3.582.0(@aws-sdk/client-sso-oidc@3.582.0)
+      '@aws-sdk/client-sts': 3.582.0
       '@aws-sdk/credential-provider-env': 3.577.0
       '@aws-sdk/credential-provider-process': 3.577.0
       '@aws-sdk/credential-provider-sso': 3.582.0(@aws-sdk/client-sso-oidc@3.582.0)
@@ -12581,7 +12581,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-web-identity@3.577.0(@aws-sdk/client-sts@3.582.0)':
     dependencies:
-      '@aws-sdk/client-sts': 3.582.0(@aws-sdk/client-sso-oidc@3.582.0)
+      '@aws-sdk/client-sts': 3.582.0
       '@aws-sdk/types': 3.577.0
       '@smithy/property-provider': 3.0.0
       '@smithy/types': 3.0.0
@@ -12626,7 +12626,7 @@ snapshots:
 
   '@aws-sdk/token-providers@3.577.0(@aws-sdk/client-sso-oidc@3.582.0)':
     dependencies:
-      '@aws-sdk/client-sso-oidc': 3.582.0
+      '@aws-sdk/client-sso-oidc': 3.582.0(@aws-sdk/client-sts@3.582.0)
       '@aws-sdk/types': 3.577.0
       '@smithy/property-provider': 3.0.0
       '@smithy/shared-ini-file-loader': 3.0.0
@@ -15974,7 +15974,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@latticexyz/cli@2.2.23(patch_hash=igpswuko4bldxugqfy2mysxj6e)(@tanstack/react-query@5.81.5(react@18.3.1))(bufferutil@4.0.8)(immer@10.1.1)(react@18.3.1)(typescript@5.4.2)(utf-8-validate@6.0.4)(wagmi@2.19.5(@tanstack/query-core@5.81.5)(@tanstack/react-query@5.81.5(react@18.3.1))(bufferutil@4.0.8)(immer@10.1.1)(react@18.3.1)(typescript@5.4.2)(utf-8-validate@6.0.4)(viem@2.9.20(bufferutil@4.0.8)(typescript@5.4.2)(utf-8-validate@6.0.4)(zod@3.23.8))(zod@3.23.8))':
+  '@latticexyz/cli@2.2.23(patch_hash=7sdpa76qxofxw4ta4ulbvmdmni)(@tanstack/react-query@5.81.5(react@18.3.1))(bufferutil@4.0.8)(immer@10.1.1)(react@18.3.1)(typescript@5.4.2)(utf-8-validate@6.0.4)(wagmi@2.19.5(@tanstack/query-core@5.81.5)(@tanstack/react-query@5.81.5(react@18.3.1))(bufferutil@4.0.8)(immer@10.1.1)(react@18.3.1)(typescript@5.4.2)(utf-8-validate@6.0.4)(viem@2.9.20(bufferutil@4.0.8)(typescript@5.4.2)(utf-8-validate@6.0.4)(zod@3.23.8))(zod@3.23.8))':
     dependencies:
       '@ark/util': 0.2.2
       '@aws-sdk/client-kms': 3.582.0
