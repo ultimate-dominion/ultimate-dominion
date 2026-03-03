@@ -21,12 +21,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { formatEther, parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { etherToFixedNumber } from '../utils/helpers';
+import { SystemToAllow } from '../utils/types';
 
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
 import { PolygonalCard } from './PolygonalCard';
@@ -46,7 +48,8 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
     systemCalls: { depositToEscrow, withdrawFromEscrow },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
-  const { goldLootManagerAllowance } = useAllowance();
+  const { authMethod } = useAuth();
+  const { ensureGoldAllowance, goldLootManagerAllowance } = useAllowance();
   const { onSetIsMovementDisabled } = useMovement();
 
   const {
@@ -101,8 +104,13 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
     }
 
     if (parseEther(depositAmount) > goldLootManagerAllowance) {
-      onOpenAllowanceModal();
-      return;
+      if (authMethod === 'embedded') {
+        const ok = await ensureGoldAllowance(SystemToAllow.LootManager, parseEther(depositAmount));
+        if (!ok) return;
+      } else {
+        onOpenAllowanceModal();
+        return;
+      }
     }
 
     const result = await depositTx.execute(async () => {
@@ -120,11 +128,13 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       onClose();
     }
   }, [
+    authMethod,
     character,
     delegatorAddress,
     depositAmount,
     depositToEscrow,
     depositTx,
+    ensureGoldAllowance,
     goldLootManagerAllowance,
     onClose,
     onOpenAllowanceModal,
@@ -326,14 +336,16 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           </Button>
         </ModalFooter>
       </ModalContent>
-      <LootManagerAllowanceModal
-        amount={depositAmount}
-        heading="Allow Adventure Escrow"
-        isOpen={isAllowanceModalOpen}
-        message="In order to deposit Gold to your Adventure Escrow, you need to give permission to spend your Gold."
-        onClose={onCloseAllowanceModal}
-        successMessage="You can now deposit Gold to your Adventure Escrow."
-      />
+      {authMethod !== 'embedded' && (
+        <LootManagerAllowanceModal
+          amount={depositAmount}
+          heading="Allow Adventure Escrow"
+          isOpen={isAllowanceModalOpen}
+          message="In order to deposit Gold to your Adventure Escrow, you need to give permission to spend your Gold."
+          onClose={onCloseAllowanceModal}
+          successMessage="You can now deposit Gold to your Adventure Escrow."
+        />
+      )}
     </Modal>
   );
 };

@@ -25,6 +25,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
 import { useAllowance } from '../contexts/AllowanceContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -45,6 +46,7 @@ import {
   RARITY_COLORS,
   Shop,
   type SpellTemplate,
+  SystemToAllow,
   type WeaponTemplate,
 } from '../utils/types';
 
@@ -81,11 +83,14 @@ export const ShopItemRow = ({
   const { renderSuccess, renderError } = useToast();
 
   const {
+    ensureGoldAllowance,
+    ensureItemsAllowance,
     goldShopAllowance,
     itemsShopAllowance,
     isApprovingGold,
     isApprovingItems,
   } = useAllowance();
+  const { authMethod } = useAuth();
   const { character: userCharacter } = useCharacter();
 
   const {
@@ -157,12 +162,22 @@ export const ShopItemRow = ({
       }
 
       if (orderType == OrderType.Buying && goldShopAllowance < price) {
-        onAllowanceOpen();
-        return;
+        if (authMethod === 'embedded') {
+          const ok = await ensureGoldAllowance(SystemToAllow.Shop, price);
+          if (!ok) return;
+        } else {
+          onAllowanceOpen();
+          return;
+        }
       }
       if (orderType == OrderType.Selling && !itemsShopAllowance) {
-        onAllowanceOpen();
-        return;
+        if (authMethod === 'embedded') {
+          const ok = await ensureItemsAllowance(SystemToAllow.Shop);
+          if (!ok) return;
+        } else {
+          onAllowanceOpen();
+          return;
+        }
       }
 
       const result = await shopTx.execute(async () => {
@@ -201,8 +216,11 @@ export const ShopItemRow = ({
     },
     [
       amount,
+      authMethod,
       buy,
       characterId,
+      ensureGoldAllowance,
+      ensureItemsAllowance,
       goldShopAllowance,
       insufficientGold,
       insufficientStock,
@@ -316,20 +334,22 @@ export const ShopItemRow = ({
         </Box>
       </HStack>
 
-      <ShopAllowanceModal
-        completeMessage={
-          orderType === OrderType.Buying
-            ? `Allowance was successful! You can now buy ${name}`
-            : `Allowance was successful! You can now sell ${name}`
-        }
-        isCompleting={shopTx.isLoading}
-        isOpen={isAllowanceOpen}
-        itemName={name}
-        onClose={onAllowanceClose}
-        onComplete={onBuyOrSell}
-        orderPrice={price}
-        orderType={orderType}
-      />
+      {authMethod !== 'embedded' && (
+        <ShopAllowanceModal
+          completeMessage={
+            orderType === OrderType.Buying
+              ? `Allowance was successful! You can now buy ${name}`
+              : `Allowance was successful! You can now sell ${name}`
+          }
+          isCompleting={shopTx.isLoading}
+          isOpen={isAllowanceOpen}
+          itemName={name}
+          onClose={onAllowanceClose}
+          onComplete={onBuyOrSell}
+          orderPrice={price}
+          orderType={orderType}
+        />
+      )}
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -594,7 +614,7 @@ export const ShopItemRow = ({
                 <Button onClick={onClose} variant="ghost">
                   Cancel
                 </Button>
-                {orderType == OrderType.Buying && goldShopAllowance < price && (
+                {authMethod !== 'embedded' && orderType == OrderType.Buying && goldShopAllowance < price && (
                   <Button
                     type="submit"
                     isLoading={
@@ -604,7 +624,7 @@ export const ShopItemRow = ({
                     Approve
                   </Button>
                 )}
-                {orderType == OrderType.Selling && !itemsShopAllowance && (
+                {authMethod !== 'embedded' && orderType == OrderType.Selling && !itemsShopAllowance && (
                   <Button
                     type="submit"
                     isLoading={
@@ -615,7 +635,7 @@ export const ShopItemRow = ({
                   </Button>
                 )}
                 {orderType == OrderType.Buying &&
-                  goldShopAllowance >= price && (
+                  (authMethod === 'embedded' || goldShopAllowance >= price) && (
                     <Button
                       type="submit"
                       isLoading={
@@ -625,16 +645,17 @@ export const ShopItemRow = ({
                       Buy
                     </Button>
                   )}
-                {orderType == OrderType.Selling && itemsShopAllowance && (
-                  <Button
-                    type="submit"
-                    isLoading={
-                      isApprovingGold || isApprovingItems || shopTx.isLoading
-                    }
-                  >
-                    Sell
-                  </Button>
-                )}
+                {orderType == OrderType.Selling &&
+                  (authMethod === 'embedded' || itemsShopAllowance) && (
+                    <Button
+                      type="submit"
+                      isLoading={
+                        isApprovingGold || isApprovingItems || shopTx.isLoading
+                      }
+                    >
+                      Sell
+                    </Button>
+                  )}
               </HStack>
             </FormControl>
           </ModalFooter>

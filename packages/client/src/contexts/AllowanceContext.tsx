@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { Address, erc20Abi, maxUint256 } from 'viem';
@@ -18,11 +19,14 @@ import { useCharacter } from './CharacterContext';
 import { useMUD } from './MUDContext';
 
 type AllowanceContextType = {
+  ensureGoldAllowance: (system: SystemToAllow, amount: bigint) => Promise<boolean>;
+  ensureItemsAllowance: (system: SystemToAllow) => Promise<boolean>;
   goldLootManagerAllowance: bigint;
   goldMarketplaceAllowance: bigint;
   goldShopAllowance: bigint;
   isApprovingGold: boolean;
   isApprovingItems: boolean;
+  isAutoApproving: boolean;
   itemsLootManagerAllowance: boolean;
   itemsMarketplaceAllowance: boolean;
   itemsShopAllowance: boolean;
@@ -39,11 +43,14 @@ type AllowanceContextType = {
 };
 
 const defaultContextValue: AllowanceContextType = {
+  ensureGoldAllowance: async () => false,
+  ensureItemsAllowance: async () => false,
   goldLootManagerAllowance: 0n,
   goldMarketplaceAllowance: 0n,
   goldShopAllowance: 0n,
   isApprovingGold: false,
   isApprovingItems: false,
+  isAutoApproving: false,
   itemsLootManagerAllowance: false,
   itemsMarketplaceAllowance: false,
   itemsShopAllowance: false,
@@ -83,6 +90,8 @@ export const AllowanceProvider = ({
 
   const [isApprovingGold, setIsApprovingGold] = useState(false);
   const [isApprovingItems, setIsApprovingItems] = useState(false);
+  const [isAutoApproving, setIsAutoApproving] = useState(false);
+  const hasAutoApprovedRef = useRef(false);
 
   const fetchAllowances = useCallback(async () => {
     if (!character) return;
@@ -164,8 +173,93 @@ export const AllowanceProvider = ({
     if (isRefreshing) return;
     if (!character) return;
 
-    fetchAllowances();
-  }, [character, fetchAllowances, isRefreshing, isSynced]);
+    const init = async () => {
+      await fetchAllowances();
+
+      // Auto-approve all allowances for embedded wallet users on first load
+      if (authMethod !== 'embedded') return;
+      if (!approvalClient) return;
+      if (hasAutoApprovedRef.current) return;
+      if (!goldTokenAddress || !itemsAddress) return;
+      hasAutoApprovedRef.current = true;
+      setIsAutoApproving(true);
+
+      try {
+        const approvals: Promise<void>[] = [];
+
+        const approveGoldIfNeeded = async (spender: string) => {
+          const current = await publicClient.readContract({
+            address: goldTokenAddress as Address,
+            abi: erc20Abi,
+            functionName: 'allowance',
+            args: [character.owner as Address, spender as Address],
+          });
+          if (current > 0n) return;
+          const { request } = await publicClient.simulateContract({
+            address: goldTokenAddress as Address,
+            abi: erc20Abi,
+            functionName: 'approve',
+            args: [spender as Address, maxUint256],
+          });
+          const txHash = await approvalClient.writeContract(request);
+          await publicClient.waitForTransactionReceipt({ hash: txHash });
+        };
+
+        const approveItemsIfNeeded = async (spender: string) => {
+          const current = await publicClient.readContract({
+            address: itemsAddress as Address,
+            abi: ERC_1155_ABI,
+            functionName: 'isApprovedForAll',
+            args: [character.owner as Address, spender as Address],
+          }) as boolean;
+          if (current) return;
+          const { request } = await publicClient.simulateContract({
+            address: itemsAddress as Address,
+            abi: ERC_1155_ABI,
+            functionName: 'setApprovalForAll',
+            args: [spender as Address, true],
+          });
+          const txHash = await approvalClient.writeContract(request);
+          await publicClient.waitForTransactionReceipt({ hash: txHash });
+        };
+
+        if (shopAddress) {
+          approvals.push(approveGoldIfNeeded(shopAddress));
+          approvals.push(approveItemsIfNeeded(shopAddress));
+        }
+        if (lootManagerAddress) {
+          approvals.push(approveGoldIfNeeded(lootManagerAddress));
+          approvals.push(approveItemsIfNeeded(lootManagerAddress));
+        }
+        if (marketplaceAddress) {
+          approvals.push(approveGoldIfNeeded(marketplaceAddress));
+          approvals.push(approveItemsIfNeeded(marketplaceAddress));
+        }
+
+        await Promise.allSettled(approvals);
+        await fetchAllowances();
+      } catch {
+        // Silent — auto-approve is best-effort
+      } finally {
+        setIsAutoApproving(false);
+      }
+    };
+
+    init();
+  }, [
+    approvalClient,
+    authMethod,
+    character,
+    fetchAllowances,
+    goldTokenAddress,
+    isRefreshing,
+    isSynced,
+    itemsAddress,
+    lootManagerAddress,
+    marketplaceAddress,
+    publicClient,
+    shopAddress,
+  ]);
 
   const getSystemAddress = useCallback(
     (systemToAllow: SystemToAllow) => {
@@ -181,6 +275,80 @@ export const AllowanceProvider = ({
       }
     },
     [lootManagerAddress, marketplaceAddress, shopAddress],
+  );
+
+  const ensureGoldAllowance = useCallback(
+    async (system: SystemToAllow, _amount: bigint): Promise<boolean> => {
+      if (authMethod !== 'embedded') return false;
+      const systemAddress = getSystemAddress(system);
+      if (!systemAddress || !approvalClient || !goldTokenAddress) return false;
+
+      setIsApprovingGold(true);
+      try {
+        const { request } = await publicClient.simulateContract({
+          address: goldTokenAddress as Address,
+          abi: erc20Abi,
+          functionName: 'approve',
+          args: [systemAddress as Address, maxUint256],
+        });
+        const txHash = await approvalClient.writeContract(request);
+        const { status } = await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+        if (status !== 'success') return false;
+        await fetchAllowances();
+        return true;
+      } catch {
+        return false;
+      } finally {
+        setIsApprovingGold(false);
+      }
+    },
+    [
+      approvalClient,
+      authMethod,
+      fetchAllowances,
+      getSystemAddress,
+      goldTokenAddress,
+      publicClient,
+    ],
+  );
+
+  const ensureItemsAllowance = useCallback(
+    async (system: SystemToAllow): Promise<boolean> => {
+      if (authMethod !== 'embedded') return false;
+      const systemAddress = getSystemAddress(system);
+      if (!systemAddress || !approvalClient || !itemsAddress) return false;
+
+      setIsApprovingItems(true);
+      try {
+        const { request } = await publicClient.simulateContract({
+          address: itemsAddress as Address,
+          abi: ERC_1155_ABI,
+          functionName: 'setApprovalForAll',
+          args: [systemAddress as Address, true],
+        });
+        const txHash = await approvalClient.writeContract(request);
+        const { status } = await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+        if (status !== 'success') return false;
+        await fetchAllowances();
+        return true;
+      } catch {
+        return false;
+      } finally {
+        setIsApprovingItems(false);
+      }
+    },
+    [
+      approvalClient,
+      authMethod,
+      fetchAllowances,
+      getSystemAddress,
+      itemsAddress,
+      publicClient,
+    ],
   );
 
   const onApproveGoldAllowance = useCallback(
@@ -303,11 +471,14 @@ export const AllowanceProvider = ({
   return (
     <AllowanceContext.Provider
       value={{
+        ensureGoldAllowance,
+        ensureItemsAllowance,
         goldLootManagerAllowance,
         goldMarketplaceAllowance,
         goldShopAllowance,
         isApprovingGold,
         isApprovingItems,
+        isAutoApproving,
         itemsLootManagerAllowance,
         itemsMarketplaceAllowance,
         itemsShopAllowance,

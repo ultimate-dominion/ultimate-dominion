@@ -40,9 +40,10 @@ import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceMod
 import { OrderRow } from '../components/OrderRow';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
+import { useAllowance } from '../contexts/AllowanceContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
@@ -59,6 +60,7 @@ import {
   RARITY_COLORS,
   RARITY_NAMES,
   type SpellTemplate,
+  SystemToAllow,
   TokenType,
   type WeaponTemplate,
 } from '../utils/types';
@@ -70,7 +72,13 @@ export const MarketplaceItem = (): JSX.Element => {
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated: isConnected, isConnecting } = useAuth();
+  const { authMethod, isAuthenticated: isConnected, isConnecting } = useAuth();
+  const {
+    ensureGoldAllowance,
+    ensureItemsAllowance,
+    goldMarketplaceAllowance,
+    itemsMarketplaceAllowance,
+  } = useAllowance();
 
   const {
     delegatorAddress,
@@ -260,6 +268,26 @@ export const MarketplaceItem = (): JSX.Element => {
         return;
       }
 
+      // Allowance check
+      if (orderType === OrderType.Buying && goldMarketplaceAllowance < parseEther(orderPrice)) {
+        if (authMethod === 'embedded') {
+          const ok = await ensureGoldAllowance(SystemToAllow.Marketplace, parseEther(orderPrice));
+          if (!ok) return;
+        } else {
+          onOpenAllowanceModal();
+          return;
+        }
+      }
+      if (orderType === OrderType.Selling && !itemsMarketplaceAllowance) {
+        if (authMethod === 'embedded') {
+          const ok = await ensureItemsAllowance(SystemToAllow.Marketplace);
+          if (!ok) return;
+        } else {
+          onOpenAllowanceModal();
+          return;
+        }
+      }
+
       const _order = {
         consideration: {
           amount:
@@ -313,15 +341,22 @@ export const MarketplaceItem = (): JSX.Element => {
       }
     },
     [
+      authMethod,
       createOrder,
       createOrderTx,
+      ensureGoldAllowance,
+      ensureItemsAllowance,
       equippedArmor,
       equippedSpells,
       equippedWeapons,
+      goldMarketplaceAllowance,
       goldTokenAddress,
       insufficientGold,
       invalidOrderPrice,
       itemsAddress,
+      itemsMarketplaceAllowance,
+      onCloseAllowanceModal,
+      onOpenAllowanceModal,
       onOpenConfirmationModal,
       orderPrice,
       orderType,
@@ -1120,16 +1155,18 @@ export const MarketplaceItem = (): JSX.Element => {
           </TabPanels>
         </Tabs>
 
-        <MarketplaceAllowanceModal
-          completeMessage="Allowance was successful! You can now complete your listing."
-          isCompleting={createOrderTx.isLoading}
-          isOpen={isAllowanceModalOpen}
-          itemName={selectedItem.name}
-          onClose={onCloseAllowanceModal}
-          onComplete={onCreateOrder}
-          orderPrice={orderPrice ? parseEther(orderPrice) : BigInt(0)}
-          orderType={orderType}
-        />
+        {authMethod !== 'embedded' && (
+          <MarketplaceAllowanceModal
+            completeMessage="Allowance was successful! You can now complete your listing."
+            isCompleting={createOrderTx.isLoading}
+            isOpen={isAllowanceModalOpen}
+            itemName={selectedItem.name}
+            onClose={onCloseAllowanceModal}
+            onComplete={onCreateOrder}
+            orderPrice={orderPrice ? parseEther(orderPrice) : BigInt(0)}
+            orderType={orderType}
+          />
+        )}
 
         <InfoModal
           heading="Listing created!"

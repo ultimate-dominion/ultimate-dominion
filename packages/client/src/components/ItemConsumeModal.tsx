@@ -14,6 +14,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAllowance } from '../contexts/AllowanceContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
@@ -22,7 +23,7 @@ import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { ITEM_PATH } from '../Routes';
 import { MAX_EQUIPPED_WEAPONS } from '../utils/constants';
-import { type Consumable, OrderType } from '../utils/types';
+import { type Consumable, OrderType, SystemToAllow } from '../utils/types';
 
 import { HealthBar } from './HealthBar';
 import { ItemCard } from './ItemCard';
@@ -56,9 +57,10 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   } = useMUD();
   const { character, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
+  const { authMethod } = useAuth();
   const { isSpawned } = useMap();
   const { currentBattle } = useBattle();
-  const { itemsLootManagerAllowance } = useAllowance();
+  const { ensureItemsAllowance, itemsLootManagerAllowance } = useAllowance();
 
   const {
     isOpen: isAllowanceModalOpen,
@@ -107,8 +109,13 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     if (!delegatorAddress) return;
 
     if (!itemsLootManagerAllowance) {
-      onOpenAllowanceModal();
-      return;
+      if (authMethod === 'embedded') {
+        const ok = await ensureItemsAllowance(SystemToAllow.LootManager);
+        if (!ok) return;
+      } else {
+        onOpenAllowanceModal();
+        return;
+      }
     }
 
     // If auto-equip needed and slots full, swap out conflicting item first
@@ -149,11 +156,13 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     }
     setStatusText('');
   }, [
+    authMethod,
     character,
     conflictingItem,
     consumeTx,
     currentBattle,
     delegatorAddress,
+    ensureItemsAllowance,
     equipItems,
     item,
     itemsLootManagerAllowance,
@@ -447,13 +456,15 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
         )}
       </ModalContent>
 
-      <LootManagerAllowanceModal
-        heading="Allow Consumables"
-        isOpen={isAllowanceModalOpen}
-        message="In order to consume items, you must allow the game to use your items."
-        onClose={onCloseAllowanceModal}
-        successMessage="You can now consume your item."
-      />
+      {authMethod !== 'embedded' && (
+        <LootManagerAllowanceModal
+          heading="Allow Consumables"
+          isOpen={isAllowanceModalOpen}
+          message="In order to consume items, you must allow the game to use your items."
+          onClose={onCloseAllowanceModal}
+          successMessage="You can now consume your item."
+        />
+      )}
     </Modal>
   );
 };
