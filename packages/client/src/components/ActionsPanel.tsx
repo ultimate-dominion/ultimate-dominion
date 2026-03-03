@@ -687,8 +687,8 @@ export const ActionsPanel = (): JSX.Element => {
                 ? possibleStatusEffectAttack.victimId === character?.id
                 : possibleStatusEffectAttack.victimId === opponent?.id;
               const effectColor = isPlayerAttack
-                ? (isSelfBuff ? 'cyan.300' : 'orange.300')
-                : (isSelfBuff ? 'orange.300' : 'cyan.300');
+                ? (isSelfBuff ? '#A8DEFF' : '#D08040')
+                : (isSelfBuff ? '#D08040' : '#A8DEFF');
               const affectedText = isPlayerAttack
                 ? (isSelfBuff
                     ? `You are affected by ${possibleStatusEffectAttack.name}.`
@@ -754,7 +754,7 @@ export const ActionsPanel = (): JSX.Element => {
                     STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]] && (
                       <Text
                         as="span"
-                        color="orange.300"
+                        color="#D08040"
                       >
                         {' '}
                         {effectNames[0]}.{' '}

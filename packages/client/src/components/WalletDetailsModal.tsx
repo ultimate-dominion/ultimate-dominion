@@ -254,7 +254,7 @@ export const WalletDetailsModal = ({
               {signedInEmail && (
                 <Box>
                   <Text
-                    color="gray.400"
+                    color="#8A7E6A"
                     fontSize="xs"
                     letterSpacing="wide"
                     textTransform="uppercase"
@@ -268,7 +268,7 @@ export const WalletDetailsModal = ({
               )}
               <Box>
                 <Text
-                  color="gray.400"
+                  color="#8A7E6A"
                   fontSize="xs"
                   letterSpacing="wide"
                   textTransform="uppercase"
@@ -292,7 +292,7 @@ export const WalletDetailsModal = ({
               Sign Out
             </Button>
             {character?.inBattle && (
-              <Text color="orange" fontSize="xs" fontWeight={700}>
+              <Text color="#C87A2A" fontSize="xs" fontWeight={700}>
                 Cannot sign out during battle.
               </Text>
             )}
@@ -333,7 +333,7 @@ export const WalletDetailsModal = ({
                 {!needsFunding && (
                   <Box>
                     <Text
-                      color="gray.400"
+                      color="#8A7E6A"
                       fontSize="xs"
                       letterSpacing="wide"
                       textTransform="uppercase"
@@ -349,7 +349,7 @@ export const WalletDetailsModal = ({
                 {/* Deposit */}
                 <Box>
                   {!needsFunding && (
-                    <Text color="gray.400" fontSize="xs" mb={2}>
+                    <Text color="#8A7E6A" fontSize="xs" mb={2}>
                       Add funds
                     </Text>
                   )}
@@ -375,7 +375,7 @@ export const WalletDetailsModal = ({
                         Deposit
                       </Button>
                     </HStack>
-                    <Text color="gray.500" fontSize="xs" mt={1}>
+                    <Text color="#8A7E6A" fontSize="xs" mt={1}>
                       Wallet balance:{' '}
                       {externalWalletBalance
                         ? formatBalance(externalWalletBalance.value)
@@ -388,7 +388,7 @@ export const WalletDetailsModal = ({
                 {/* Advanced options (withdraw, reset) */}
                 <Box>
                   <Button
-                    color="gray.500"
+                    color="#8A7E6A"
                     onClick={() => setShowAdvanced(!showAdvanced)}
                     size="xs"
                     variant="link"
@@ -398,12 +398,12 @@ export const WalletDetailsModal = ({
                   <Collapse in={showAdvanced}>
                     <VStack align="stretch" mt={4} spacing={4}>
                       <FormControl isInvalid={!!withdrawErrorMessage}>
-                        <Text color="gray.400" fontSize="xs" mb={1}>
+                        <Text color="#8A7E6A" fontSize="xs" mb={1}>
                           Withdraw to wallet
                         </Text>
                         {character && character.level < 3n && (
                           <FormHelperText
-                            color="orange"
+                            color="#C87A2A"
                             fontSize="xs"
                             mb={2}
                           >
@@ -438,7 +438,8 @@ export const WalletDetailsModal = ({
                       </FormControl>
                       <Divider />
                       <Button
-                        colorScheme="red"
+                        borderColor="#B83A2A"
+                        color="#B83A2A"
                         isDisabled={
                           character?.inBattle || isRevokingDelegation
                         }
@@ -447,6 +448,7 @@ export const WalletDetailsModal = ({
                         onClick={() => setIsRevokeDialogOpen(true)}
                         size="sm"
                         variant="outline"
+                        _hover={{ bg: 'rgba(184,58,42,0.12)' }}
                       >
                         Reset Session
                       </Button>
@@ -471,7 +473,7 @@ export const WalletDetailsModal = ({
               Disconnect
             </Button>
             {character?.inBattle && (
-              <Text color="orange" fontSize="xs" fontWeight={700}>
+              <Text color="#C87A2A" fontSize="xs" fontWeight={700}>
                 Cannot disconnect during battle.
               </Text>
             )}
@@ -503,7 +505,14 @@ export const WalletDetailsModal = ({
               >
                 Cancel
               </Button>
-              <Button colorScheme="red" ml={3} onClick={onConfirmRevoke}>
+              <Button
+                borderColor="#B83A2A"
+                color="#B83A2A"
+                ml={3}
+                onClick={onConfirmRevoke}
+                variant="outline"
+                _hover={{ bg: 'rgba(184,58,42,0.12)' }}
+              >
                 Reset
               </Button>
             </AlertDialogFooter>

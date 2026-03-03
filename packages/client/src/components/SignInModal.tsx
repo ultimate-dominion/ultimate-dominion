@@ -79,7 +79,7 @@ export const SignInModal = ({
             </Button>
 
             {error && (
-              <Text color="red.400" size="xs">
+              <Text color="red" size="xs">
                 {error}
               </Text>
             )}
@@ -89,7 +89,7 @@ export const SignInModal = ({
                 <VStack spacing={6}>
                   <HStack spacing={4} w="100%">
                     <Divider />
-                    <Text color="gray.400" fontSize="xs" whiteSpace="nowrap">
+                    <Text color="#8A7E6A" fontSize="xs" whiteSpace="nowrap">
                       OR
                     </Text>
                     <Divider />

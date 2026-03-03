@@ -90,7 +90,7 @@ export const ShopRow = ({
             }
           : {
               bg: 'grey300',
-              borderBottom: '2px solid white',
+              borderBottom: '2px solid #C87A2A',
               cursor: 'pointer',
             }
       }
@@ -100,7 +100,7 @@ export const ShopRow = ({
               cursor: 'not-allowed',
             }
           : {
-              borderBottom: '2px solid white',
+              borderBottom: '2px solid #C87A2A',
               cursor: 'pointer',
             }
       }

@@ -120,12 +120,22 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       const { minDamage, minLevel, maxDamage, statRestrictions } =
         item as Spell;
 
+      const weaponMods = item.itemType === ItemType.Weapon
+        ? [
+            fmtMod('STR', (item as Weapon).strModifier),
+            fmtMod('AGI', (item as Weapon).agiModifier),
+            fmtMod('INT', (item as Weapon).intModifier),
+            fmtMod('HP', (item as Weapon).hpModifier),
+          ].filter(Boolean) as { label: string; value: string; positive: boolean }[]
+        : [];
+
       return (
         <VStack alignItems="start" spacing={0.5}>
           <Text size={{ base: '2xs', sm: 'xs' }} fontFamily="'Fira Code', monospace">
             <Text as="span" color="#8A7E6A">DMG</Text>{' '}
             <Text as="span" color="#E8DCC8" fontWeight={600}>{minDamage.toString()}–{maxDamage.toString()}</Text>
           </Text>
+          {weaponMods.length > 0 && renderMods(weaponMods)}
           {renderReqs(minLevel, statRestrictions)}
         </VStack>
       );
@@ -213,12 +223,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           _active={
             onClick && {
               bgColor: 'rgba(0, 0, 0, .04)',
-              borderColor: 'black',
+              borderColor: '#3A3228',
             }
           }
           _hover={
             onClick && {
-              borderColor: 'black',
+              borderColor: '#3A3228',
             }
           }
         >
@@ -293,7 +303,7 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
               objectFit="contain"
             />
           ) : (
-            <Text color="white" fontSize="2xl">
+            <Text color="#E8DCC8" fontSize="2xl">
               {item.itemType === ItemType.Consumable
                   ? getConsumableEmoji(removeEmoji(item.name))
                   : getEmoji(item.name)}
@@ -333,7 +343,7 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
             objectFit="contain"
           />
         ) : (
-          <Text color="white" fontSize="2xl">
+          <Text color="#E8DCC8" fontSize="2xl">
             {item.itemType === ItemType.Consumable
                   ? getConsumableEmoji(removeEmoji(item.name))
                   : getEmoji(item.name)}
