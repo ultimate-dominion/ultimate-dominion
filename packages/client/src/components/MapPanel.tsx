@@ -49,8 +49,8 @@ const COMPASS_DIRECTIONS: {
   gridCol: number;
 }[] = [
   { label: 'N', direction: 'up', rotate: '0deg', dx: 0, dy: 1, gridRow: 1, gridCol: 2 },
-  { label: 'W', direction: 'left', rotate: '90deg', dx: -1, dy: 0, gridRow: 2, gridCol: 1 },
-  { label: 'E', direction: 'right', rotate: '-90deg', dx: 1, dy: 0, gridRow: 2, gridCol: 3 },
+  { label: 'W', direction: 'left', rotate: '-90deg', dx: -1, dy: 0, gridRow: 2, gridCol: 1 },
+  { label: 'E', direction: 'right', rotate: '90deg', dx: 1, dy: 0, gridRow: 2, gridCol: 3 },
   { label: 'S', direction: 'down', rotate: '180deg', dx: 0, dy: -1, gridRow: 3, gridCol: 2 },
 ];
 
@@ -313,60 +313,65 @@ const NavigationCompass = ({
   if (isDesktop) {
     // Desktop: compact horizontal arrow bar — N W [coords] E S
     return (
-      <HStack justify="center" py={1} spacing={1} w="100%">
-        {COMPASS_DIRECTIONS.map(({ label, direction, rotate }) => {
-          const isOob = adjacentTiles ? adjacentTiles[label] === null : false;
-          const info = adjacentTiles?.[label] ?? null;
+      <VStack spacing={0} w="100%">
+        <HStack justify="center" py={1} spacing={1} w="100%">
+          {COMPASS_DIRECTIONS.map(({ label, direction, rotate }) => {
+            const isOob = adjacentTiles ? adjacentTiles[label] === null : false;
+            const info = adjacentTiles?.[label] ?? null;
 
-          return (
-            <Tooltip
-              key={label}
-              hasArrow
-              isDisabled={!info}
-              label={
-                info
-                  ? `${label}: ${info.monsters} monster${info.monsters !== 1 ? 's' : ''}, ${info.players} player${info.players !== 1 ? 's' : ''}`
-                  : undefined
-              }
-              placement="top"
-            >
-              <IconButton
-                aria-label={`Move ${label}`}
-                icon={
-                  <HStack spacing={0.5}>
-                    <Text color="#8A7E6A" fontSize="2xs" fontWeight={700} lineHeight={1}>
-                      {label}
-                    </Text>
-                    <Box transform={`rotate(${rotate})`} lineHeight={0}>
-                      <CompassArrowSvg boxSize="12px" />
-                    </Box>
-                  </HStack>
+            return (
+              <Tooltip
+                key={label}
+                hasArrow
+                isDisabled={!info}
+                label={
+                  info
+                    ? `${label}: ${info.monsters} monster${info.monsters !== 1 ? 's' : ''}, ${info.players} player${info.players !== 1 ? 's' : ''}`
+                    : undefined
                 }
-                isDisabled={isDisabled || isOob}
-                onClick={() => onMove(direction)}
-                h="28px"
-                w="36px"
-                minW={0}
-                variant="ghost"
-                size="xs"
-                opacity={isDisabled ? 0.4 : 1}
-                _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.15)' }}
-              />
-            </Tooltip>
-          );
-        })}
-        {position && (
-          <Text
-            color="#E8DCC8"
-            fontFamily="mono"
-            fontSize="2xs"
-            fontWeight={700}
-            ml={1}
-          >
-            {position.x},{position.y}
-          </Text>
-        )}
-      </HStack>
+                placement="top"
+              >
+                <IconButton
+                  aria-label={`Move ${label}`}
+                  icon={
+                    <HStack spacing={0.5}>
+                      <Text color="#8A7E6A" fontSize="2xs" fontWeight={700} lineHeight={1}>
+                        {label}
+                      </Text>
+                      <Box transform={`rotate(${rotate})`} lineHeight={0}>
+                        <CompassArrowSvg boxSize="12px" />
+                      </Box>
+                    </HStack>
+                  }
+                  isDisabled={isDisabled || isOob}
+                  onClick={() => onMove(direction)}
+                  h="28px"
+                  w="36px"
+                  minW={0}
+                  variant="ghost"
+                  size="xs"
+                  opacity={isDisabled ? 0.4 : 1}
+                  _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.15)' }}
+                />
+              </Tooltip>
+            );
+          })}
+          {position && (
+            <Text
+              color="#E8DCC8"
+              fontFamily="mono"
+              fontSize="2xs"
+              fontWeight={700}
+              ml={1}
+            >
+              {position.x},{position.y}
+            </Text>
+          )}
+        </HStack>
+        <Text color="#5A5040" fontSize="2xs" lineHeight={1} pb={1}>
+          WASD or Arrow Keys to move
+        </Text>
+      </VStack>
     );
   }
 
