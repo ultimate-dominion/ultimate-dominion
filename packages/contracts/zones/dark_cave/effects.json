@@ -227,7 +227,7 @@
       "targetsSelf": false
     },
     {
-      "effectId": "0xdfa45ef6a4eb9b3a000000000000000000000000000000000000000000000000",
+      "effectId": "0x5db83b18b4d1bdc3000000000000000000000000000000000000000000000000",
       "name": "smoke_cloak",
       "stats": {
         "agiModifier": 0,
