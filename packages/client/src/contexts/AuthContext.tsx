@@ -15,11 +15,18 @@ import {
   defineChain as defineThirdwebChain,
   type ThirdwebClient,
 } from 'thirdweb';
+import { setThirdwebDomains } from 'thirdweb/utils';
 import { type Wallet } from 'thirdweb/wallets';
 
 import { DEFAULT_CHAIN_ID, SUPPORTED_CHAINS } from '../lib/web3';
 
 const THIRDWEB_CLIENT_ID = import.meta.env.VITE_THIRDWEB_CLIENT_ID || '';
+const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
+
+// Override bundler domain to route through self-hosted relayer
+if (RELAYER_URL) {
+  setThirdwebDomains({ bundler: RELAYER_URL });
+}
 
 type AuthMethod = 'embedded' | 'external' | null;
 
