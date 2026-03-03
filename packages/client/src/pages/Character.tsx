@@ -29,6 +29,7 @@ import {
   getTableEntries,
   getTableValue,
   toBigInt,
+  useGameTable,
   useGameValue,
 } from '../lib/gameStore';
 import { AdvancedClassModal } from '../components/AdvancedClassModal';
@@ -579,6 +580,9 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     weaponTemplates,
   } = useItems();
 
+  // Subscribe to ItemsOwners table so item balance changes (drops, trades) trigger re-fetch
+  const itemsOwnersTable = useGameTable('ItemsOwners');
+
   const {
     isOpen: isItemModalOpen,
     onClose: onCloseItemModal,
@@ -741,6 +745,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     equipmentData,
     fetchCharacterItems,
     isLoadingItemTemplates,
+    itemsOwnersTable,
   ]);
 
   const spellsAndWeapons = useMemo(() => {

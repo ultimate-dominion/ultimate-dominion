@@ -376,6 +376,9 @@ const CharacterProviderInner = ({
   // Items (inventory + equipped)
   // ============================================================
 
+  // Subscribe to ItemsOwners table so item balance changes (drops, trades, consumes) trigger re-fetch
+  const itemsOwnersTable = useGameTable('ItemsOwners');
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [itemsRefreshCounter, setItemsRefreshCounter] = useState(0);
   const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
@@ -528,6 +531,7 @@ const CharacterProviderInner = ({
     fetchCharacterItems,
     isLoadingItemTemplates,
     itemsRefreshCounter,
+    itemsOwnersTable,
   ]);
 
   // ============================================================
