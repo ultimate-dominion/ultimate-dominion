@@ -537,9 +537,15 @@ export function createSystemCalls(
 
   let isMovePending = false;
 
-  // On-chain MOVE_COOLDOWN is 1s, Base blocks are 2s. We add 3s margin so the
-  // next move lands in a block whose timestamp exceeds lastAction + 1.
-  const MOVE_COOLDOWN_MARGIN_SEC = 3;
+  // On-chain MOVE_COOLDOWN is 1s, Base blocks are 2s. The Thirdweb EIP-7702
+  // relayer adds 2-3s of latency between our submission and its simulation.
+  // 5s margin ensures the cooldown has expired by the time the relayer
+  // simulates the tx.
+  const MOVE_COOLDOWN_MARGIN_SEC = 5;
+
+  // Retry delay for pre-submission failures (simulation/estimation).
+  // These are safe to retry because no tx was submitted on-chain.
+  const MOVE_RETRY_DELAY_MS = 2500;
 
   // Local timestamp (ms) of the last confirmed move. The game store's
   // SessionTimer syncs via WebSocket and can lag several seconds behind the
@@ -548,11 +554,18 @@ export function createSystemCalls(
   let lastMoveConfirmedMs = 0;
 
   const INVALID_MOVE_SELECTOR = '87822d34';
+  const MOVE_TOO_FAST_SELECTOR = '326f4b4f';
 
   /** Check if an error is an InvalidMove revert (position mismatch). */
   const isInvalidMoveError = (e: unknown): boolean => {
     const msg = String(e).toLowerCase();
     return msg.includes(INVALID_MOVE_SELECTOR) || msg.includes('invalid move') || msg.includes('invalidmove');
+  };
+
+  /** Check if an error is a MoveTooFast revert. */
+  const isMoveTooFastError = (e: unknown): boolean => {
+    const msg = String(e).toLowerCase();
+    return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
   };
 
   /**
@@ -593,33 +606,44 @@ export function createSystemCalls(
       // Wait for on-chain cooldown before attempting the move.
       await waitForMoveCooldown(characterEntity);
 
-      // No hard-coded gas — let the proxy's estimateContractGas run.
-      // If the cooldown hasn't expired, estimation fails before hitting
-      // the chain, saving gas.
+      // Retry loop for PRE-SUBMISSION failures only (estimation/simulation).
+      // When the error occurs before we get a tx hash, no tx was sent
+      // on-chain, so retrying is safe. The Thirdweb relayer's simulation
+      // can fail with MoveTooFast despite our cooldown wait due to relayer
+      // latency.
       //
-      // No retry loop: the Thirdweb relayer may submit the tx even when it
-      // reports a simulation failure, so retrying the same move can result
-      // in duplicate txs — the first succeeds (position changes) and the
-      // retry reverts with InvalidMove.
-      const tx = await worldContract.write.UD__move(
-        [characterEntity as `0x${string}`, x, y],
-      );
+      // Once we have a tx hash, the tx is on-chain — we NEVER retry after
+      // that point (risk of duplicate txs causing InvalidMove).
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const tx = await worldContract.write.UD__move(
+            [characterEntity as `0x${string}`, x, y],
+          );
 
-      const receipt = await waitForTransaction(tx);
-      if (receipt.status === 'reverted') {
-        // On-chain move reverts are almost always state-dependent
-        // (InvalidMove, MoveTooFast, InEncounter). A previous tx may have
-        // already moved the character. Update cooldown tracking and let
-        // the user retry naturally.
-        console.warn('[move] On-chain revert — state changed between estimation and mining');
-        lastMoveConfirmedMs = Date.now();
-        return { success: false, error: 'Position changed — tap again to continue.' };
+          // ---- tx is now on-chain, no more retries ----
+          const receipt = await waitForTransaction(tx);
+          if (receipt.status === 'reverted') {
+            console.warn('[move] On-chain revert — state changed between estimation and mining');
+            lastMoveConfirmedMs = Date.now();
+            return { success: false, error: 'Position changed — tap again to continue.' };
+          }
+          lastMoveConfirmedMs = Date.now();
+          return { success: true };
+        } catch (e) {
+          // Only retry pre-submission MoveTooFast (simulation failed, no
+          // tx submitted). Other errors are not retryable.
+          if (isMoveTooFastError(e) && attempt < 2) {
+            console.warn(`[move] MoveTooFast at simulation (attempt ${attempt + 1}), retrying in ${MOVE_RETRY_DELAY_MS}ms`);
+            await new Promise(r => setTimeout(r, MOVE_RETRY_DELAY_MS));
+            continue;
+          }
+          throw e;
+        }
       }
-      lastMoveConfirmedMs = Date.now();
-      return { success: true };
+      return { success: false, error: 'Move failed after retries.' };
     } catch (e) {
-      // InvalidMove at estimation time means position already changed
-      // (a relayer-retried tx landed first). Treat as soft failure.
+      // InvalidMove at estimation = position already changed (relayer retry
+      // or stale optimistic position). Soft failure.
       if (isInvalidMoveError(e)) {
         console.warn('[move] InvalidMove at estimation — position already changed');
         lastMoveConfirmedMs = Date.now();
