@@ -19,7 +19,7 @@ export const ShopRow = ({
   const navigate = useNavigate();
   const {
     delegatorAddress,
-    systemCalls: { createEncounter, restock },
+    systemCalls: { createEncounter, endShopEncounter, restock },
   } = useMUD();
   const { character, refreshCharacter } = useCharacter();
 
@@ -28,6 +28,24 @@ export const ShopRow = ({
   const onRestockAndEnter = useCallback(async () => {
     if (!delegatorAddress) return;
     if (!character) return;
+
+    // If already in an encounter with THIS shop, just navigate directly
+    if (character.worldEncounter?.shopId === shopId) {
+      navigate(`/shops/${shopId}`);
+      return;
+    }
+
+    // If stuck in an encounter (same or different entity), end it first.
+    // endShopEncounter now awaits the receipt, so the encounter is truly
+    // cleared on-chain before we proceed to create a new one.
+    if (character.worldEncounter?.encounterId) {
+      const endResult = await endShopEncounter(character.worldEncounter.encounterId);
+      if (!endResult.success) {
+        console.error('[ShopRow] Cannot clear existing encounter:', endResult.error);
+        return;
+      }
+      await refreshCharacter();
+    }
 
     const result = await restockTx.execute(async () => {
       const { error: restockError, success: restockSuccess } =
@@ -47,6 +65,7 @@ export const ShopRow = ({
     character,
     createEncounter,
     delegatorAddress,
+    endShopEncounter,
     navigate,
     refreshCharacter,
     restock,

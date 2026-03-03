@@ -224,8 +224,11 @@ export function createSystemCalls(
         group2 as `0x${string}`[],
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return {
+        error: receipt.status === 'reverted' ? 'Failed to create encounter.' : undefined,
+        success: receipt.status !== 'reverted',
+      };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -300,8 +303,11 @@ export function createSystemCalls(
         encounterId as `0x${string}`,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return {
+        error: receipt.status === 'reverted' ? 'Failed to end shop encounter.' : undefined,
+        success: receipt.status !== 'reverted',
+      };
     } catch (e) {
       return {
         error: getContractError(e),
