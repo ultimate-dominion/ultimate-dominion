@@ -535,10 +535,11 @@ export function createSystemCalls(
     }
   };
 
-  // Client-side debounce to prevent accidental double-taps.
-  // Kept short because the real safeguard is isMovePending serialization
-  // and the contract's on-chain MOVE_COOLDOWN (1s).
-  const MOVE_DEBOUNCE_MS = 300;
+  // Client-side debounce must exceed on-chain MOVE_COOLDOWN (1s) + Base block
+  // time (2s) to prevent submitting moves that will revert with MoveTooFast.
+  // The relayer simulates against the current block, which may be the same block
+  // the previous move landed in, so we need to wait for a fresh block.
+  const MOVE_DEBOUNCE_MS = 2500;
   let lastMoveTimestamp = 0;
   let isMovePending = false;
 
@@ -567,13 +568,13 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'move');
     if (ownershipError) return ownershipError;
 
-    // Debounce check
+    // Debounce check — timestamp is set after receipt confirmation, so this
+    // prevents submitting before the on-chain cooldown has definitely expired.
     const now = Date.now();
     if (now - lastMoveTimestamp < MOVE_DEBOUNCE_MS) {
       console.warn('[move] Movement debounced, ignoring request');
       return { success: false, error: 'Moving too fast.' };
     }
-    lastMoveTimestamp = now;
 
     isMovePending = true;
     try {
@@ -593,6 +594,7 @@ export function createSystemCalls(
           if (receipt.status === 'reverted') {
             throw new Error('Move transaction reverted on-chain');
           }
+          lastMoveTimestamp = Date.now();
           return { success: true };
         } catch (e) {
           if (isMoveTooFastError(e) && attempt < 2) {
