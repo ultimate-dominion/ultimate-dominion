@@ -585,8 +585,11 @@ const CharacterProviderInner = ({
   }, []);
 
   const isMoveEquipped = useMemo(() => {
+    // Equipment data hasn't loaded from store yet — assume equipped
+    // (all characters are minted with starter weapons)
+    if (!equipmentData) return true;
     return equippedSpells.length + equippedWeapons.length > 0;
-  }, [equippedSpells, equippedWeapons]);
+  }, [equipmentData, equippedSpells, equippedWeapons]);
 
   // Suppress unused variable warnings for publicClient and worldContract
   void publicClient;
