@@ -210,21 +210,21 @@ export const StatsPanel = (): JSX.Element => {
           spacing={2}
           w="100%"
         >
-          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+          <Text color="#5A8A3E" fontFamily="mono" size="sm">
             AGI{' '}
             <Text as="span" color="#E8DCC8" fontWeight={700}>
               {(agility - expiredEffectModifications.agiModifier).toString()}
             </Text>
           </Text>
           <Text color="#5A5040" size="sm">·</Text>
-          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+          <Text color="#4A7AB5" fontFamily="mono" size="sm">
             INT{' '}
             <Text as="span" color="#E8DCC8" fontWeight={700}>
               {(intelligence - expiredEffectModifications.intModifier).toString()}
             </Text>
           </Text>
           <Text color="#5A5040" size="sm">·</Text>
-          <Text color="#8A7E6A" fontFamily="mono" size="sm">
+          <Text color="#B85C3A" fontFamily="mono" size="sm">
             STR{' '}
             <Text as="span" color="#E8DCC8" fontWeight={700}>
               {(strength - expiredEffectModifications.strModifier).toString()}

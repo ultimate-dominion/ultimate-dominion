@@ -424,7 +424,7 @@ export const LevelingPanel = ({
         />
         <HStack px={6} w="100%">
           <Text
-            color="blue400"
+            color="#5A8A3E"
             fontWeight={700}
             size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
             w="50%"
@@ -505,7 +505,7 @@ export const LevelingPanel = ({
         />
         <HStack px={6} w="100%">
           <Text
-            color="blue400"
+            color="#4A7AB5"
             fontWeight={700}
             size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
             w="50%"
@@ -587,7 +587,7 @@ export const LevelingPanel = ({
         />
         <HStack px={6} w="100%">
           <Text
-            color="blue400"
+            color="#B85C3A"
             fontWeight={700}
             size={{ base: 'xs', md: 'sm', lg: 'md', xl: 'lg' }}
             w="50%"

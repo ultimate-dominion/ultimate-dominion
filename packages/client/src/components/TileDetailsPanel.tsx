@@ -32,6 +32,7 @@ import { useFragments } from '../contexts/FragmentContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useBattleHpAnimation } from '../hooks/useBattleHpAnimation';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import {
@@ -131,6 +132,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   const {
     attackOutcomes,
     currentBattle,
+    dotActions,
     opponent,
     statusEffectActions,
     userCharacterForBattleRendering,
@@ -487,6 +489,49 @@ export const TileDetailsPanel = (): JSX.Element => {
     return { agiModifier: agi, intModifier: int, strModifier: str };
   }, [userCharacterForBattleRendering, statusEffectActions]);
 
+  // Find latest DoT data for each entity in the current battle
+  const latestUserDot = useMemo(() => {
+    if (!userCharacterForBattleRendering) return null;
+    return dotActions
+      .filter(
+        d =>
+          d.entityId.toLowerCase() ===
+          userCharacterForBattleRendering.id.toLowerCase(),
+      )
+      .sort((a, b) => (a.turnNumber > b.turnNumber ? 1 : -1))
+      .pop() ?? null;
+  }, [dotActions, userCharacterForBattleRendering]);
+
+  const latestOpponentDot = useMemo(() => {
+    if (!opponent) return null;
+    return dotActions
+      .filter(
+        d => d.entityId.toLowerCase() === opponent.id.toLowerCase(),
+      )
+      .sort((a, b) => (a.turnNumber > b.turnNumber ? 1 : -1))
+      .pop() ?? null;
+  }, [dotActions, opponent]);
+
+  const {
+    displayedHp: userDisplayedHp,
+    isDotTicking: isUserDotTicking,
+  } = useBattleHpAnimation({
+    actualHp: userCharacterForBattleRendering?.currentHp ?? 0n,
+    dotDamage: latestUserDot?.totalDamage ?? 0n,
+    dotTurnNumber: latestUserDot?.turnNumber ?? 0n,
+    isInBattle: !!currentBattle,
+  });
+
+  const {
+    displayedHp: opponentDisplayedHp,
+    isDotTicking: isOpponentDotTicking,
+  } = useBattleHpAnimation({
+    actualHp: opponent?.currentHp ?? 0n,
+    dotDamage: latestOpponentDot?.totalDamage ?? 0n,
+    dotTurnNumber: latestOpponentDot?.turnNumber ?? 0n,
+    isInBattle: !!currentBattle,
+  });
+
   if (!character) {
     return (
       <Box>
@@ -597,7 +642,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                 {userCharacterForBattleRendering.maxHp > BigInt(0) && (
                   <HealthBar
                     maxHp={userCharacterForBattleRendering.maxHp}
-                    currentHp={userCharacterForBattleRendering.currentHp}
+                    currentHp={userDisplayedHp}
+                    isDotTicking={isUserDotTicking}
                     level={userCharacterForBattleRendering.level}
                     px={8}
                     statusEffects={userCharacterStatusEffects}
@@ -613,7 +659,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#5A8A3E">AGI</Text>
                     {(() => {
                       const base = userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier;
                       const mod = activeUserBattleEffectModifications.agiModifier;
@@ -633,7 +679,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>INT</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#4A7AB5">INT</Text>
                     {(() => {
                       const base = userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier;
                       const mod = activeUserBattleEffectModifications.intModifier;
@@ -653,7 +699,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>STR</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#B85C3A">STR</Text>
                     {(() => {
                       const base = userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier;
                       const mod = activeUserBattleEffectModifications.strModifier;
@@ -745,7 +791,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                 {opponent.maxHp > BigInt(0) && (
                   <HealthBar
                     maxHp={opponent.maxHp}
-                    currentHp={opponent.currentHp}
+                    currentHp={opponentDisplayedHp}
+                    isDotTicking={isOpponentDotTicking}
                     level={opponent.level}
                     px={8}
                     statusEffects={opponentStatusEffects}
@@ -761,7 +808,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>AGI</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#5A8A3E">AGI</Text>
                     {!!opponent.agility && (() => {
                       const base = opponent.agility - expiredOpponentEffectModifications.agiModifier;
                       const mod = activeBattleEffectModifications.agiModifier;
@@ -781,7 +828,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>INT</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#4A7AB5">INT</Text>
                     {!!opponent.intelligence && (() => {
                       const base = opponent.intelligence - expiredOpponentEffectModifications.intModifier;
                       const mod = activeBattleEffectModifications.intModifier;
@@ -801,7 +848,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     w="100%"
                   />
                   <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }}>STR</Text>
+                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#B85C3A">STR</Text>
                     {!!opponent.strength && (() => {
                       const base = opponent.strength - expiredOpponentEffectModifications.strModifier;
                       const mod = activeBattleEffectModifications.strModifier;

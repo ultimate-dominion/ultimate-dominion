@@ -1015,7 +1015,7 @@ const CharacterCreationInner = (): JSX.Element => {
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#D4A54A" fontSize="md">STR - Strength</Text>
+                <Text color="#B85C3A" fontSize="md">STR - Strength</Text>
                 <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
                   {rolledOnce ? character?.strength.toString() : '—'}
                 </Text>
@@ -1027,7 +1027,7 @@ const CharacterCreationInner = (): JSX.Element => {
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#D4A54A" fontSize="md">AGI - Agility</Text>
+                <Text color="#5A8A3E" fontSize="md">AGI - Agility</Text>
                 <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
                   {rolledOnce ? character?.agility.toString() : '—'}
                 </Text>
@@ -1039,7 +1039,7 @@ const CharacterCreationInner = (): JSX.Element => {
                 w="100%"
               />
               <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#D4A54A" fontSize="md">INT - Intelligence</Text>
+                <Text color="#4A7AB5" fontSize="md">INT - Intelligence</Text>
                 <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
                   {rolledOnce ? character?.intelligence.toString() : '—'}
                 </Text>
