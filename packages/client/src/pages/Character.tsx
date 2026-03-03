@@ -62,6 +62,7 @@ import {
   fetchMetadataFromUri,
   uriToHttp,
 } from '../utils/helpers';
+import { DARK_DIVIDER_SHADOW } from '../utils/theme';
 import {
   AdvancedClass,
   type Armor,
@@ -748,21 +749,17 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     itemsOwnersTable,
   ]);
 
-  const spellsAndWeapons = useMemo(() => {
-    return [...inventorySpells, ...inventoryWeapons];
-  }, [inventorySpells, inventoryWeapons]);
-
-  const equippedSpellsAndWeapons = useMemo(() => {
-    return [...equippedSpells, ...equippedWeapons];
-  }, [equippedSpells, equippedWeapons]);
-
   const equippedArmorIds = useMemo(() => {
     return equippedArmor.map(a => BigInt(a.tokenId));
   }, [equippedArmor]);
 
-  const equippedSpellsAndWeaponsIds = useMemo(() => {
-    return equippedSpellsAndWeapons.map(sow => BigInt(sow.tokenId));
-  }, [equippedSpellsAndWeapons]);
+  const equippedWeaponIds = useMemo(() => {
+    return equippedWeapons.map(w => BigInt(w.tokenId));
+  }, [equippedWeapons]);
+
+  const equippedSpellIds = useMemo(() => {
+    return equippedSpells.map(s => BigInt(s.tokenId));
+  }, [equippedSpells]);
 
   const equippedConsumableIds = useMemo(() => {
     const ids = (equipmentData?.equippedConsumables ?? []) as unknown[];
@@ -770,7 +767,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   }, [equipmentData?.equippedConsumables]);
 
   const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;
-  const totalMoveSlots = equippedSpellsAndWeaponsIds.length + equippedConsumableIds.length;
+  const totalMoveSlots = equippedWeaponIds.length + equippedSpellIds.length + equippedConsumableIds.length;
   const maxWeaponsEquipped = totalMoveSlots >= MAX_EQUIPPED_WEAPONS;
 
   const armorInInventory = useMemo(() => {
@@ -781,13 +778,13 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       .toString();
   }, [inventoryArmor]);
 
-  const spellsAndWeaponsInInventory = useMemo(() => {
-    return spellsAndWeapons
-      .reduce((acc, item) => {
-        return acc + item.balance;
-      }, BigInt(0))
-      .toString();
-  }, [spellsAndWeapons]);
+  const weaponsInInventory = useMemo(() =>
+    inventoryWeapons.reduce((acc, item) => acc + item.balance, BigInt(0)).toString(),
+    [inventoryWeapons]);
+
+  const spellsInInventory = useMemo(() =>
+    inventorySpells.reduce((acc, item) => acc + item.balance, BigInt(0)).toString(),
+    [inventorySpells]);
 
   const consumablesInInventory = useMemo(() => {
     return inventoryConsumables
@@ -808,26 +805,29 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   return (
     <Box>
       <HStack
-        color="white"
+        color="#E8DCC8"
         bgColor="#1C1814"
         h="68px"
         justifyContent="space-between"
         px={6}
       >
-        <Text color="white" fontWeight={700} size={{ base: 'lg', sm: 'xl' }}>
+        <Text color="#E8DCC8" fontWeight={700} size={{ base: 'lg', sm: 'xl' }}>
           Items Inventory
         </Text>
-        <Text color="white" fontWeight={500} size={{ base: 'md', sm: 'lg' }}>
+        <Text color="#E8DCC8" fontWeight={500} size={{ base: 'md', sm: 'lg' }}>
           Total:{' '}
           {inventoryArmor.length +
-            spellsAndWeapons.length +
+            inventoryWeapons.length +
+            inventorySpells.length +
             inventoryConsumables.length}
         </Text>
       </HStack>
       <PolygonalCard clipPath="none" p={6}>
-        <Text fontWeight="bold" mt={{ base: 8, lg: 0 }} size="lg">
-          Armor ({armorInInventory}) - {equippedArmor.length}/
-          {MAX_EQUIPPED_ARMOR} equipped{' '}
+        <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 0 }} size="lg">
+          Armor ({armorInInventory})
+          <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
+            {equippedArmor.length}/{MAX_EQUIPPED_ARMOR} equipped
+          </Text>
         </Text>
         {maxArmorEquipped && <Text fontSize="sm">(Max armor equipped)</Text>}
         <Grid
@@ -840,7 +840,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryArmor.length === 0 && <Text>No armor</Text>}
+          {inventoryArmor.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No armor</Text>}
           {inventoryArmor.map((ar, i) => {
             const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
             return (
@@ -857,9 +857,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
             );
           })}
         </Grid>
-        <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-          Weapons & Spells ({spellsAndWeaponsInInventory}) -{' '}
-          {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} slots used{' '}
+        <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
+        <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+          Weapons ({weaponsInInventory})
+          <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
+            {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} slots used
+          </Text>
         </Text>
         {maxWeaponsEquipped && (
           <Text fontSize="sm">(Max weapons equipped)</Text>
@@ -874,12 +877,11 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {spellsAndWeapons.length === 0 && <Text>No weapons</Text>}
-          {spellsAndWeapons.map((item, i) => {
-            const isEquipped = equippedSpellsAndWeaponsIds.includes(
+          {inventoryWeapons.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No weapons</Text>}
+          {inventoryWeapons.map((item, i) => {
+            const isEquipped = equippedWeaponIds.includes(
               BigInt(item.tokenId),
             );
-
             return (
               <GridItem key={i}>
                 <ItemCard
@@ -894,9 +896,9 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
             );
           })}
         </Grid>
-        <Text fontWeight="bold" mt={{ base: 8, lg: 12 }} size="lg">
-          Consumables ({consumablesInInventory}) -{' '}
-          {equippedConsumableIds.length} equipped
+        <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
+        <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+          Spells ({spellsInInventory})
         </Text>
         <Grid
           templateColumns={{
@@ -908,7 +910,43 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryConsumables.length === 0 && <Text>No consumables</Text>}
+          {inventorySpells.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No spells</Text>}
+          {inventorySpells.map((item, i) => {
+            const isEquipped = equippedSpellIds.includes(
+              BigInt(item.tokenId),
+            );
+            return (
+              <GridItem key={i}>
+                <ItemCard
+                  isEquipped={isEquipped}
+                  onClick={() => {
+                    setSelectedItem(item);
+                    onOpenItemModal();
+                  }}
+                  {...item}
+                />
+              </GridItem>
+            );
+          })}
+        </Grid>
+        <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
+        <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+          Consumables ({consumablesInInventory})
+          <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
+            {equippedConsumableIds.length} equipped
+          </Text>
+        </Text>
+        <Grid
+          templateColumns={{
+            base: 'repeat(1, 1fr)',
+            sm: 'repeat(1, 1fr)',
+            md: 'repeat(2, 1fr)',
+            xl: 'repeat(3, 1fr)',
+          }}
+          gap={2}
+          mt={4}
+        >
+          {inventoryConsumables.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No consumables</Text>}
           {inventoryConsumables.map((consumable, i) => {
             const isEquipped = equippedConsumableIds.includes(
               BigInt(consumable.tokenId),
@@ -931,9 +969,8 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           <ItemEquipModal
             isEquipped={
               equippedArmorIds.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
-              equippedSpellsAndWeaponsIds.includes(
-                BigInt(selectedItem?.tokenId ?? 0),
-              )
+              equippedWeaponIds.includes(BigInt(selectedItem?.tokenId ?? 0)) ||
+              equippedSpellIds.includes(BigInt(selectedItem?.tokenId ?? 0))
             }
             isOpen={isItemModalOpen}
             onClose={() => {
