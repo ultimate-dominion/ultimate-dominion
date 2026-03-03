@@ -279,6 +279,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           [opponent.id],
         );
         if (error && !success) throw new Error(error);
+        return true;
       });
 
       if (result !== undefined) {

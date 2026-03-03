@@ -535,24 +535,35 @@ export function createSystemCalls(
     }
   };
 
-  // Client-side debounce must exceed on-chain MOVE_COOLDOWN (1s) + Base block
-  // time (2s) to prevent submitting moves that will revert with MoveTooFast.
-  // The relayer simulates against the current block, which may be the same block
-  // the previous move landed in, so we need to wait for a fresh block.
-  const MOVE_DEBOUNCE_MS = 2500;
-  let lastMoveTimestamp = 0;
   let isMovePending = false;
 
-  // Auto-retry delay for MoveTooFast — must exceed Base's 2s block time
-  // so the next simulation runs against a new block.
+  // On-chain MOVE_COOLDOWN is 1s, Base blocks are 2s. We need the next move
+  // to land in a block whose timestamp exceeds lastAction + 1. Adding 2s of
+  // margin ensures we're past the next block boundary.
+  const MOVE_COOLDOWN_MARGIN_SEC = 3;
+
+  // Auto-retry delay for MoveTooFast — must exceed Base's 2s block time.
   const MOVE_RETRY_DELAY_MS = 2500;
   const MOVE_TOO_FAST_SELECTOR = '326f4b4f';
 
   const isMoveTooFastError = (e: unknown): boolean => {
     const msg = String(e).toLowerCase();
-    return msg.includes(MOVE_TOO_FAST_SELECTOR)
-      || msg.includes('movetoofast')
-      || msg.includes('reverted on-chain');
+    return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
+  };
+
+  /** Wait for the on-chain move cooldown to expire based on game store state. */
+  const waitForMoveCooldown = async (characterEntity: string) => {
+    const session = getTableValue('SessionTimer', characterEntity);
+    if (!session) return;
+    const lastAction = Number(session.lastAction ?? 0);
+    if (lastAction === 0) return;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const readyAt = lastAction + MOVE_COOLDOWN_MARGIN_SEC;
+    if (nowSec < readyAt) {
+      const delayMs = (readyAt - nowSec) * 1000;
+      console.info(`[move] Cooldown: waiting ${delayMs}ms for SessionTimer to expire`);
+      await new Promise(r => setTimeout(r, delayMs));
+    }
   };
 
   const move = async (
@@ -568,33 +579,27 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'move');
     if (ownershipError) return ownershipError;
 
-    // Debounce check — timestamp is set after receipt confirmation, so this
-    // prevents submitting before the on-chain cooldown has definitely expired.
-    const now = Date.now();
-    if (now - lastMoveTimestamp < MOVE_DEBOUNCE_MS) {
-      console.warn('[move] Movement debounced, ignoring request');
-      return { success: false, error: 'Moving too fast.' };
-    }
-
     isMovePending = true;
     try {
+      // Wait for on-chain cooldown before attempting the move.
+      await waitForMoveCooldown(characterEntity);
+
       // Try up to 3 times — first attempt + 2 retries on MoveTooFast.
-      // MoveTooFast happens when the relayer simulates against the same block
-      // that included the previous move (Base has 2s block times).
+      // MoveTooFast can still occur if the game store's SessionTimer
+      // hasn't synced the latest block yet.
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
+          // No hard-coded gas — let the proxy's estimateContractGas run.
+          // If the cooldown hasn't expired, estimation fails before hitting
+          // the chain, saving gas.
           const tx = await worldContract.write.UD__move(
             [characterEntity as `0x${string}`, x, y],
-            {
-              gas: BigInt('10000000'),
-            },
           );
 
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
             throw new Error('Move transaction reverted on-chain');
           }
-          lastMoveTimestamp = Date.now();
           return { success: true };
         } catch (e) {
           if (isMoveTooFastError(e) && attempt < 2) {
@@ -605,7 +610,6 @@ export function createSystemCalls(
           throw e;
         }
       }
-      // Should not reach here, but just in case
       return { success: false, error: 'Move failed after retries.' };
     } catch (e) {
       return {
