@@ -537,31 +537,40 @@ export function createSystemCalls(
 
   let isMovePending = false;
 
-  // On-chain MOVE_COOLDOWN is 1s, Base blocks are 2s. We need the next move
-  // to land in a block whose timestamp exceeds lastAction + 1. Adding 2s of
-  // margin ensures we're past the next block boundary.
+  // On-chain MOVE_COOLDOWN is 1s, Base blocks are 2s. We add 3s margin so the
+  // next move lands in a block whose timestamp exceeds lastAction + 1.
   const MOVE_COOLDOWN_MARGIN_SEC = 3;
 
-  // Auto-retry delay for MoveTooFast — must exceed Base's 2s block time.
-  const MOVE_RETRY_DELAY_MS = 2500;
-  const MOVE_TOO_FAST_SELECTOR = '326f4b4f';
+  // Local timestamp (ms) of the last confirmed move. The game store's
+  // SessionTimer syncs via WebSocket and can lag several seconds behind the
+  // chain — using it alone causes premature move submissions that revert with
+  // MoveTooFast. Tracking locally ensures the cooldown is always respected.
+  let lastMoveConfirmedMs = 0;
 
-  const isMoveTooFastError = (e: unknown): boolean => {
+  const INVALID_MOVE_SELECTOR = '87822d34';
+
+  /** Check if an error is an InvalidMove revert (position mismatch). */
+  const isInvalidMoveError = (e: unknown): boolean => {
     const msg = String(e).toLowerCase();
-    return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
+    return msg.includes(INVALID_MOVE_SELECTOR) || msg.includes('invalid move') || msg.includes('invalidmove');
   };
 
-  /** Wait for the on-chain move cooldown to expire based on game store state. */
+  /**
+   * Wait for the on-chain move cooldown to expire.
+   * Uses the greater of the chain's SessionTimer and local tracking to avoid
+   * relying on a stale game store that hasn't synced the latest block yet.
+   */
   const waitForMoveCooldown = async (characterEntity: string) => {
     const session = getTableValue('SessionTimer', characterEntity);
-    if (!session) return;
-    const lastAction = Number(session.lastAction ?? 0);
+    const chainLastAction = Number(session?.lastAction ?? 0);
+    const localLastActionSec = Math.floor(lastMoveConfirmedMs / 1000);
+    const lastAction = Math.max(chainLastAction, localLastActionSec);
     if (lastAction === 0) return;
     const nowSec = Math.floor(Date.now() / 1000);
     const readyAt = lastAction + MOVE_COOLDOWN_MARGIN_SEC;
     if (nowSec < readyAt) {
       const delayMs = (readyAt - nowSec) * 1000;
-      console.info(`[move] Cooldown: waiting ${delayMs}ms for SessionTimer to expire`);
+      console.info(`[move] Cooldown: waiting ${delayMs}ms (chain=${chainLastAction}, local=${localLastActionSec})`);
       await new Promise(r => setTimeout(r, delayMs));
     }
   };
@@ -584,34 +593,38 @@ export function createSystemCalls(
       // Wait for on-chain cooldown before attempting the move.
       await waitForMoveCooldown(characterEntity);
 
-      // Try up to 3 times — first attempt + 2 retries on MoveTooFast.
-      // MoveTooFast can still occur if the game store's SessionTimer
-      // hasn't synced the latest block yet.
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          // No hard-coded gas — let the proxy's estimateContractGas run.
-          // If the cooldown hasn't expired, estimation fails before hitting
-          // the chain, saving gas.
-          const tx = await worldContract.write.UD__move(
-            [characterEntity as `0x${string}`, x, y],
-          );
+      // No hard-coded gas — let the proxy's estimateContractGas run.
+      // If the cooldown hasn't expired, estimation fails before hitting
+      // the chain, saving gas.
+      //
+      // No retry loop: the Thirdweb relayer may submit the tx even when it
+      // reports a simulation failure, so retrying the same move can result
+      // in duplicate txs — the first succeeds (position changes) and the
+      // retry reverts with InvalidMove.
+      const tx = await worldContract.write.UD__move(
+        [characterEntity as `0x${string}`, x, y],
+      );
 
-          const receipt = await waitForTransaction(tx);
-          if (receipt.status === 'reverted') {
-            throw new Error('Move transaction reverted on-chain');
-          }
-          return { success: true };
-        } catch (e) {
-          if (isMoveTooFastError(e) && attempt < 2) {
-            console.warn(`[move] MoveTooFast on attempt ${attempt + 1}, retrying in ${MOVE_RETRY_DELAY_MS}ms...`);
-            await new Promise(r => setTimeout(r, MOVE_RETRY_DELAY_MS));
-            continue;
-          }
-          throw e;
-        }
+      const receipt = await waitForTransaction(tx);
+      if (receipt.status === 'reverted') {
+        // On-chain move reverts are almost always state-dependent
+        // (InvalidMove, MoveTooFast, InEncounter). A previous tx may have
+        // already moved the character. Update cooldown tracking and let
+        // the user retry naturally.
+        console.warn('[move] On-chain revert — state changed between estimation and mining');
+        lastMoveConfirmedMs = Date.now();
+        return { success: false, error: 'Position changed — tap again to continue.' };
       }
-      return { success: false, error: 'Move failed after retries.' };
+      lastMoveConfirmedMs = Date.now();
+      return { success: true };
     } catch (e) {
+      // InvalidMove at estimation time means position already changed
+      // (a relayer-retried tx landed first). Treat as soft failure.
+      if (isInvalidMoveError(e)) {
+        console.warn('[move] InvalidMove at estimation — position already changed');
+        lastMoveConfirmedMs = Date.now();
+        return { success: false, error: 'Position changed — tap again to continue.' };
+      }
       return {
         error: getContractError(e),
         success: false,
