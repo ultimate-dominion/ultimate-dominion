@@ -1578,6 +1578,28 @@
         "minIntelligence": 0,
         "minStrength": 0
       }
+    },
+    {
+      "name": "Flashpowder",
+      "description": "A handful of blinding dust. Throw it and run — they won't see which way you went.",
+      "rarity": 2,
+      "dropChance": 2,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:flashpowder",
+      "price": 50000000000000000000,
+      "stats": {
+        "effects": [
+          "0xdfa45ef6a4eb9b3a000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 3
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
     }
   ],
   "metadataUriPrefix": "ipfs://dark_cave/"

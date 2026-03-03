@@ -20,7 +20,7 @@ import {
 } from "@codegen/index.sol";
 import {EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
-import {PVP_TIMER} from "../../constants.sol";
+import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID} from "../../constants.sol";
 import {NoWeaponsEquipped} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import "forge-std/console.sol";
@@ -153,11 +153,13 @@ contract PvPSystem is System {
             require(IWorld(_world()).UD__isAttacker(encounterId, entityId), "invalid fleeing");
             require(encounterData.currentTurn == 1, "can only flee on your first turn");
         }
+        bool hasSmokeCover = _hasStatusEffect(entityId, SMOKE_CLOAK_EFFECT_STAT_ID);
         if (encounterData.encounterType == EncounterType.PvE) {
             // PvE flee — 5% escrow gold penalty (lighter than PvP's 25%)
+            // Smoke Cloak (Flashpowder) negates the penalty entirely
             uint256 escrowBalance = AdventureEscrow.get(entityId);
             uint256 amountToLose;
-            if (escrowBalance > 20) {
+            if (!hasSmokeCover && escrowBalance > 20) {
                 amountToLose = escrowBalance / 20;
                 AdventureEscrow.set(entityId, escrowBalance - amountToLose);
                 // Gold is burned (goes to nobody — monsters don't collect gold)
@@ -186,9 +188,9 @@ contract PvPSystem is System {
         } else if (encounterData.encounterType == EncounterType.PvP) {
             uint256 amountToDrop;
             bool attackersWin;
-            // take 25% of escrow gold
+            // take 25% of escrow gold — Smoke Cloak negates the penalty
             uint256 escrowBalance = AdventureEscrow.get(entityId);
-            if (escrowBalance > 4) {
+            if (!hasSmokeCover && escrowBalance > 4) {
                 amountToDrop = escrowBalance / 4;
                 AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
                 // if quitter is attacker
@@ -260,6 +262,14 @@ contract PvPSystem is System {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             Spawned.set(entityId, spawned);
         }
+    }
+
+    function _hasStatusEffect(bytes32 entityId, bytes8 targetEffectStatId) internal view returns (bool) {
+        bytes32[] memory effects = EncounterEntity.getAppliedStatusEffects(entityId);
+        for (uint256 i; i < effects.length; i++) {
+            if (bytes8(effects[i]) == targetEffectStatId) return true;
+        }
+        return false;
     }
 
     function _getCurrentActionData(Action memory currentAction)

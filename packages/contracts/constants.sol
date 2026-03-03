@@ -97,6 +97,9 @@ uint256 constant ELITE_REWARD_MULTIPLIER = 150; // 1.5x XP/gold
 uint256 constant ELITE_DROP_BONUS = 15;       // +15% additive drop chance
 uint256 constant STAT_VARIANCE_PCT = 10;      // ±10% variance on all spawns
 
+// Flashpowder / Smoke Cloak — flee without gold penalty
+bytes8 constant SMOKE_CLOAK_EFFECT_STAT_ID = 0xdfa45ef6a4eb9b3a; // keccak("smoke_cloak")[:8]
+
 // GasStation constants
 uint256 constant DEFAULT_ETH_PER_GOLD = 1e12;         // 0.000001 ETH per Gold (1 Gold = 1e18 units)
 uint256 constant DEFAULT_MAX_GOLD_PER_SWAP = 500e18;   // 500 Gold max per swap

@@ -312,6 +312,16 @@ export const ActionsPanel = (): JSX.Element => {
     return false;
   }, [character, currentBattle]);
 
+  const hasSmokeCover = useMemo(() => {
+    if (!character) return false;
+    return statusEffectActions.some(
+      effect =>
+        effect.name === 'Smoke Cloak' &&
+        effect.active &&
+        effect.victimId.toLowerCase() === character.id.toLowerCase(),
+    );
+  }, [character, statusEffectActions]);
+
   const battleDraw = useMemo(() => {
     return currentBattle?.maxTurns === currentBattle?.currentTurn;
   }, [currentBattle]);
@@ -353,10 +363,12 @@ export const ActionsPanel = (): JSX.Element => {
               >
                 Flee
               </Button>
-              <Text size="2xs" color="#8A7E6A" maxW="200px">
-                {currentBattle.encounterType === EncounterType.PvP
-                  ? 'First turn only. Costs 25% escrow gold.'
-                  : 'First turn only.'}
+              <Text size="2xs" color={hasSmokeCover ? '#6B8E6B' : '#8A7E6A'} maxW="200px">
+                {hasSmokeCover
+                  ? 'Smoke Cloak active — flee without gold penalty!'
+                  : currentBattle.encounterType === EncounterType.PvP
+                    ? 'First turn only. Costs 25% escrow gold.'
+                    : 'First turn only.'}
               </Text>
             </HStack>
           )}
@@ -559,10 +571,12 @@ export const ActionsPanel = (): JSX.Element => {
                 >
                   Flee
                 </Button>
-                <Text size="2xs" color="#8A7E6A" maxW="200px">
-                  {currentBattle.encounterType === EncounterType.PvP
-                    ? 'First turn only. Costs 25% escrow gold.'
-                    : 'First turn only.'}
+                <Text size="2xs" color={hasSmokeCover ? '#6B8E6B' : '#8A7E6A'} maxW="200px">
+                  {hasSmokeCover
+                    ? 'Smoke Cloak active — flee without gold penalty!'
+                    : currentBattle.encounterType === EncounterType.PvP
+                      ? 'First turn only. Costs 25% escrow gold.'
+                      : 'First turn only.'}
                 </Text>
               </HStack>
             )}

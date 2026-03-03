@@ -89,6 +89,8 @@ export const STATUS_EFFECT_NAME_MAPPING: { [key: string]: string } = {
     'Soul Drain',
   '0xd5547c9c5217a7bc000000000000000000000000000000000000000000000000':
     'Blessing',
+  '0xdfa45ef6a4eb9b3a000000000000000000000000000000000000000000000000':
+    'Smoke Cloak',
 };
 
 export const STATUS_EFFECT_DESCRIPTION_MAPPING: Record<string, string> = {
@@ -110,4 +112,5 @@ export const STATUS_EFFECT_DESCRIPTION_MAPPING: Record<string, string> = {
   Entangle: '-5 AGI, -3 STR for 3 turns',
   'Soul Drain': '-3 STR, -3 INT for 3 turns',
   Blessing: '+3 INT, +5 Armor, +5 HP for 3 turns',
+  'Smoke Cloak': 'Flee without gold penalty',
 };
