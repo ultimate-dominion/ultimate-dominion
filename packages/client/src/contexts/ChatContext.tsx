@@ -51,6 +51,9 @@ const BADGE_CONTRACT_ADDRESS = import.meta.env.VITE_BADGE_CONTRACT_ADDRESS || ''
 // Adventurer badge token ID base (actual ID = 1_000_000 + characterTokenId)
 const ADVENTURER_BADGE_BASE = 1;
 
+// Announcements (drops, sales, offers) older than this are filtered out of chat
+const ANNOUNCEMENT_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
+
 type Message = {
   delivered: boolean;
   from: string;
@@ -206,10 +209,15 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   // Rare+ item drop announcements from battle outcomes
   const rareDropAnnouncements: Message[] = useMemo(() => {
+    const cutoff = Date.now() - ANNOUNCEMENT_MAX_AGE_MS;
     return Object.entries(combatOutcomeRows)
       .map(([keyBytes, data]) => {
         const { itemsDropped } = data;
         if (!itemsDropped || (itemsDropped as unknown[]).length === 0) return null;
+
+        // Filter out old announcements
+        const ts = toNumber(data.endTime) * 1000;
+        if (ts < cutoff) return null;
 
         const encounterData = getTableValue('CombatEncounter', keyBytes);
         if (!encounterData) return null;
@@ -272,9 +280,15 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   }, [combatOutcomeRows, allCharacters, allItems]);
 
   // Rare+ marketplace transactions only
-  const rareMarketplaceSales: Message[] = useMemo(() => Object.values(marketplaceSaleRows)
+  const rareMarketplaceSales: Message[] = useMemo(() => {
+    const cutoff = Date.now() - ANNOUNCEMENT_MAX_AGE_MS;
+    return Object.values(marketplaceSaleRows)
     .map(data => {
       const { buyer, itemId, timestamp } = data;
+
+      // Filter out old announcements
+      const ts = toNumber(timestamp) * 1000;
+      if (ts < cutoff) return null;
 
       const item = allItems.find(i => i.tokenId === itemId!.toString());
       if (!item || item.rarity === undefined || item.rarity < Rarity.Rare) return null;
@@ -317,14 +331,19 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         timestamp: toNumber(timestamp) * 1000,
       };
     })
-    .filter((m): m is Message => m !== null),
-  [marketplaceSaleRows, allCharacters, allItems]);
+    .filter((m): m is Message => m !== null);
+  }, [marketplaceSaleRows, allCharacters, allItems]);
+
+  // Stable "first seen" timestamps for gold offers so they age out naturally
+  const offerTimestamps = useRef<Map<string, number>>(new Map());
 
   // Gold offer broadcasts for Rare+ items (buy orders)
   const goldOfferAnnouncements: Message[] = useMemo(() => {
     if (!goldToken) return [];
+    const now = Date.now();
+    const cutoff = now - ANNOUNCEMENT_MAX_AGE_MS;
 
-    return activeOrders
+    const result = activeOrders
       .filter(order => {
         // Offer side is Gold (ERC20)
         if (order.offer.tokenType !== TokenType.ERC20) return false;
@@ -334,13 +353,23 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         // Check item rarity >= Rare
         const item = allItems.find(i => i.tokenId === order.consideration.identifier.toString());
         if (!item || item.rarity === undefined || item.rarity < Rarity.Rare) return false;
+        // Offerer must have a character in the current world
+        const offerer = allCharacters.find(c => c.owner.toLowerCase() === order.offerer.toLowerCase());
+        if (!offerer?.name) return false;
         return true;
       })
       .map(order => {
+        // Assign a stable "first seen" timestamp so offers age out
+        if (!offerTimestamps.current.has(order.orderHash)) {
+          offerTimestamps.current.set(order.orderHash, now);
+        }
+        const ts = offerTimestamps.current.get(order.orderHash)!;
+        if (ts < cutoff) return null;
+
         const item = allItems.find(i => i.tokenId === order.consideration.identifier.toString())!;
-        const offererCharacter = allCharacters.find(c => c.owner.toLowerCase() === order.offerer.toLowerCase());
-        const playerName = offererCharacter?.name ?? 'Someone';
-        const offererNameColor = offererCharacter ? (CLASS_COLORS[offererCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
+        const offererCharacter = allCharacters.find(c => c.owner.toLowerCase() === order.offerer.toLowerCase())!;
+        const playerName = offererCharacter.name;
+        const offererNameColor = CLASS_COLORS[offererCharacter.entityClass] ?? '#E8DCC8';
         const goldAmount = formatEther(order.offer.amount);
         const rarityColor = RARITY_COLORS[item.rarity!];
 
@@ -349,19 +378,15 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           from: zeroAddress,
           jsx: (
             <Text fontWeight={500} size="xs" textAlign="center">
-              {offererCharacter ? (
-                <Text
-                  as={RouterLink}
-                  color={offererNameColor}
-                  fontWeight={700}
-                  to={`${CHARACTERS_PATH}/${offererCharacter.id}`}
-                  _hover={{ textDecoration: 'underline' }}
-                >
-                  {playerName}
-                </Text>
-              ) : (
-                playerName
-              )}{' '}
+              <Text
+                as={RouterLink}
+                color={offererNameColor}
+                fontWeight={700}
+                to={`${CHARACTERS_PATH}/${offererCharacter.id}`}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                {playerName}
+              </Text>{' '}
               is offering{' '}
               <Text as="span" color="#D4A54A" fontWeight={700}>
                 {goldAmount} Gold
@@ -381,9 +406,20 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           ),
           message: '',
           rarityColor,
-          timestamp: Date.now(),
+          timestamp: ts,
         };
-      });
+      })
+      .filter((m): m is Message => m !== null);
+
+    // Clean up stale entries from the ref (cancelled/expired orders)
+    const activeHashes = new Set(activeOrders.map(o => o.orderHash));
+    for (const hash of offerTimestamps.current.keys()) {
+      if (!activeHashes.has(hash) || offerTimestamps.current.get(hash)! < cutoff) {
+        offerTimestamps.current.delete(hash);
+      }
+    }
+
+    return result;
   }, [activeOrders, allCharacters, allItems, goldToken]);
 
   const messagesAndEvents = useMemo(() => {
