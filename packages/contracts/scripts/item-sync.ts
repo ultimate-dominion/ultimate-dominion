@@ -68,7 +68,6 @@ const worldAbi = parseAbi([
   'function getRecord(bytes32 tableId, bytes32[] keyTuple) view returns (bytes staticData, bytes32 encodedLengths, bytes dynamicData)',
 
   // System functions
-  'function UD__getCurrentItemsCounter() view returns (uint256)',
   'function UD__adminUpdateItemStats(uint256 itemId, uint256 dropChance, uint256 price, uint256 rarity, bytes stats)',
 ]);
 
@@ -347,22 +346,17 @@ Modes:
   console.log(`Mode: ${doUpdate ? 'UPDATE' : 'VERIFY ONLY'}`);
   console.log('');
 
-  // Read on-chain item count
-  const itemCount = await publicClient.readContract({
-    address: worldAddress,
-    abi: worldAbi,
-    functionName: 'UD__getCurrentItemsCounter',
-  });
-  console.log(`On-chain item count: ${itemCount}`);
-
-  // Build metadataUri → itemId map by reading all on-chain URIs
-  console.log('\nReading on-chain metadata URIs...');
+  // Discover on-chain items by scanning URIs (avoids dependency on getCurrentItemsCounter
+  // which requires ItemCreationSystem to be registered — may be missing due to MUD nonce skips)
+  console.log('Scanning on-chain item URIs...');
   const uriToId: Map<string, bigint> = new Map();
   const idToUri: Map<bigint, string> = new Map();
 
-  for (let id = 1n; id <= itemCount; id++) {
+  let consecutiveEmpty = 0;
+  const MAX_EMPTY_GAP = 20; // stop after 20 consecutive items with no URI
+  for (let id = 1n; consecutiveEmpty < MAX_EMPTY_GAP; id++) {
     try {
-      const [staticData, , dynamicData] = await publicClient.readContract({
+      const [, , dynamicData] = await publicClient.readContract({
         address: worldAddress,
         abi: worldAbi,
         functionName: 'getRecord',
@@ -372,12 +366,15 @@ Modes:
       if (uri) {
         uriToId.set(uri, id);
         idToUri.set(id, uri);
+        consecutiveEmpty = 0;
+      } else {
+        consecutiveEmpty++;
       }
     } catch {
-      // Item might not have a URI (e.g. deleted or special items)
+      consecutiveEmpty++;
     }
   }
-  console.log(`Found ${uriToId.size} items with metadata URIs`);
+  console.log(`Found ${uriToId.size} items with metadata URIs (scanned up to ID ${uriToId.size > 0 ? Math.max(...[...idToUri.keys()].map(Number)) : 0})`);
 
   // Compare items
   let totalItems = 0;
