@@ -1,6 +1,4 @@
 import { Grid, GridItem, HStack, Link, Stack, VStack } from '@chakra-ui/react';
-// import { FaDiscord } from 'react-icons/fa';
-// import { FaXTwitter } from 'react-icons/fa6';
 
 export const Footer = (): JSX.Element => {
   return (
@@ -45,32 +43,6 @@ export const Footer = (): JSX.Element => {
               >
                 Privacy
               </Link>
-              {/* <Link
-                alignSelf="start"
-                borderColor="grey400"
-                fontSize={{ base: 'xs', sm: 'sm' }}
-              >
-                Guild Info
-              </Link>
-            </Stack>
-            <Stack
-              direction={{ base: 'column', md: 'row' }}
-              spacing={{ base: 4, md: 10 }}
-            >
-              <Link
-                alignSelf="start"
-                borderColor="grey400"
-                fontSize={{ base: 'xs', sm: 'sm' }}
-              >
-                Map Info
-              </Link>
-              <Link
-                alignSelf="start"
-                borderColor="grey400"
-                fontSize={{ base: 'xs', sm: 'sm' }}
-              >
-                Create Map
-              </Link> */}
             </Stack>
           </HStack>
         </GridItem>
@@ -85,12 +57,6 @@ export const Footer = (): JSX.Element => {
               direction={{ base: 'column', sm: 'row' }}
               spacing={{ base: 3, md: 8 }}
             >
-              {/* <Link bgColor="black" borderRadius="50%" p={1.5}>
-                <FaDiscord color="white" />
-              </Link>
-              <Link bgColor="black" borderRadius="50%" p={1.5}>
-                <FaXTwitter color="white" />
-              </Link> */}
             </Stack>
           </VStack>
         </GridItem>

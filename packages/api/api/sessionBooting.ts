@@ -10,10 +10,8 @@ import {
 import { defineWorld } from "@latticexyz/world";
 import { SyncStep } from "@latticexyz/store-sync";
 import { syncToRecs, singletonEntity } from "@latticexyz/store-sync/recs";
-import { ContractWrite, transportObserver } from "@latticexyz/common";
-import { transactionQueue, writeObserver } from "@latticexyz/common/actions";
+import { transportObserver } from "@latticexyz/common";
 import { type MUDChain } from "@latticexyz/common/chains";
-import { Subject } from "rxjs";
 import {
   type ClientConfig,
   fallback,
@@ -67,14 +65,6 @@ export default async function sessionBooting(
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // if (!(req.method === "POST" || req.method == "OPTIONS")) {
-  //   return res.status(405).json({ error: "Method not allowed" });
-  // }
-
-  // if (req.method === "OPTIONS") {
-  //   return res.status(200).end();
-  // }
-
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -119,14 +109,11 @@ export default async function sessionBooting(
       pollingInterval: 500, // Reduced from 1000ms to 500ms for faster polling
     });
 
-    const write$ = new Subject<ContractWrite>();
     const serverAccount = privateKeyToAccount(networkConfig.privateKey as Hex);
     const serverWalletClient = createWalletClient({
       ...clientOptions,
       account: serverAccount,
-    })
-      .extend(transactionQueue())
-      .extend(writeObserver({ onWrite: (write) => write$.next(write) }));
+    });
 
     const worldContract = getContract({
       address: networkConfig.worldAddress as Hex,

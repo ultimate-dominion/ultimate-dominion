@@ -23,15 +23,23 @@ import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {_requireAccess} from "../utils.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
-import "forge-std/console.sol";
+import {
+    NotItemOwner,
+    InEncounter,
+    InsufficientItemBalance,
+    Unauthorized,
+    CharacterDead,
+    NotAtRestPosition,
+    OnlyHealingInCombat
+} from "../Errors.sol";
 
 contract WorldActionSystem is System {
     function useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId) public {
         PauseLib.requireNotPaused();
         // Items are owned by the character owner (delegator), not the caller (session wallet)
         address characterOwner = IWorld(_world()).UD__getOwner(givingEntity);
-        require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "you do not own this item");
-        require(EncounterEntity.getEncounterId(givingEntity) == bytes32(0), "cannot use in an encounter");
+        if (!IWorld(_world()).UD__isItemOwner(itemId, characterOwner)) revert NotItemOwner();
+        if (EncounterEntity.getEncounterId(givingEntity) != bytes32(0)) revert InEncounter();
         ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
         Action[] memory actions = new Action[](consumableStats.effects.length);
         Action memory tempAction;
@@ -105,7 +113,7 @@ contract WorldActionSystem is System {
         internal
         returns (int256 _heal)
     {
-        require(IWorld(_world()).UD__getItemBalance(givingEntity, itemId) > 0, "You do not own a healing potion.");
+        if (IWorld(_world()).UD__getItemBalance(givingEntity, itemId) == 0) revert InsufficientItemBalance();
         StatsData memory stats = Stats.get(receivingEntity);
         _heal = IWorld(_world()).UD__getConsumableStats(itemId).maxDamage;
         if (stats.currentHp - _heal > int256(stats.maxHp)) {
@@ -124,12 +132,12 @@ contract WorldActionSystem is System {
     function rest(bytes32 characterId) public {
         PauseLib.requireNotPaused();
         address owner = IWorld(_world()).UD__getOwner(characterId);
-        require(_isOwnerOrDelegated(owner), "not character owner");
-        require(EncounterEntity.getEncounterId(characterId) == bytes32(0), "cannot rest during combat");
-        require(Stats.getCurrentHp(characterId) > 0, "character is dead");
+        if (!_isOwnerOrDelegated(owner)) revert Unauthorized();
+        if (EncounterEntity.getEncounterId(characterId) != bytes32(0)) revert InEncounter();
+        if (Stats.getCurrentHp(characterId) <= 0) revert CharacterDead();
 
         (uint16 x, uint16 y) = IWorld(_world()).UD__getEntityPosition(characterId);
-        require(x == 0 && y == 0, "you must return to the fire to rest");
+        if (x != 0 || y != 0) revert NotAtRestPosition();
 
         int256 maxHp = Stats.getMaxHp(characterId) + CharacterEquipment.getHpBonus(characterId);
         if (maxHp < 1) maxHp = 1;
@@ -151,23 +159,20 @@ contract WorldActionSystem is System {
         PauseLib.requireNotPaused();
         // Items are owned by the character owner (delegator), not the caller (session wallet)
         address characterOwner = IWorld(_world()).UD__getOwner(characterId);
-        require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "you do not own this item");
+        if (!IWorld(_world()).UD__isItemOwner(itemId, characterOwner)) revert NotItemOwner();
 
         // Get consumable stats
         ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
 
         // Only allow instant healing items during combat (negative maxDamage = healing)
-        require(
-            consumableStats.maxDamage == consumableStats.minDamage && consumableStats.maxDamage < 0,
-            "Only instant healing items can be used in combat"
-        );
+        if (consumableStats.maxDamage != consumableStats.minDamage || consumableStats.maxDamage >= 0) {
+            revert OnlyHealingInCombat();
+        }
 
         // Apply the healing
         _applyHealingPotion(characterId, characterId, itemId);
 
         // Consume the item
         IWorld(_world()).UD__consumeItem(characterId, itemId);
-
-        console.log("WorldActionSystem: Used combat consumable", itemId);
     }
 }

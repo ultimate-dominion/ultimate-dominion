@@ -5,7 +5,7 @@ import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {SystemHook} from "@latticexyz/world/src/SystemHook.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
-import "forge-std/console.sol";
+import {MustUnequipItem} from "./Errors.sol";
 
 contract NoTransferLastEquippedItemHook is SystemHook {
     address worldAddress;
@@ -30,7 +30,7 @@ contract NoTransferLastEquippedItemHook is SystemHook {
 
             if (IWorld(worldAddress).UD__isEquipped(characterId, tokenId)) {
                 uint256 balance = IERC1155System(IWorld(worldAddress).UD__getItemsContract()).balanceOf(from, tokenId);
-                require(balance - amount >= 1, "Transfer Bytes: Must Unequip item to transfer.");
+                if (balance - amount < 1) revert MustUnequipItem();
             }
         } else if (selector == transferFromSelector || selector == safeTransferFromSelector) {
             //safe transfer check
@@ -41,7 +41,7 @@ contract NoTransferLastEquippedItemHook is SystemHook {
 
             if (IWorld(worldAddress).UD__isEquipped(characterId, tokenId)) {
                 uint256 balance = IERC1155System(IWorld(worldAddress).UD__getItemsContract()).balanceOf(from, tokenId);
-                require(balance - amount >= 1, "Transfer: Must Unequip item to transfer.");
+                if (balance - amount < 1) revert MustUnequipItem();
             }
         } else if (selector == safeBatchTransferSelector) {
             // batch transfer check
@@ -53,7 +53,7 @@ contract NoTransferLastEquippedItemHook is SystemHook {
                 if (IWorld(worldAddress).UD__isEquipped(characterId, tokenId[i])) {
                     uint256 balance =
                         IERC1155System(IWorld(worldAddress).UD__getItemsContract()).balanceOf(from, tokenId[i]);
-                    require(balance - amount[i] >= 1, "Batch: Must Unequip item to transfer.");
+                    if (balance - amount[i] < 1) revert MustUnequipItem();
                 }
             }
         }

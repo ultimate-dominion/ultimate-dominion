@@ -247,6 +247,11 @@
   },
   {
     "type": "error",
+    "name": "InvalidMoves",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "Slice_OutOfBounds",
     "inputs": [
       {
@@ -265,6 +270,16 @@
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "UnrecognizedCombatType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnrecognizedRequestType",
+    "inputs": []
   },
   {
     "type": "error",

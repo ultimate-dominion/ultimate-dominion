@@ -993,5 +993,5 @@ export default defineWorld({
       },
     },
   },
-  excludeSystems: ["RngSystem", "CharacterSystem"],
+  excludeSystems: ["RngSystem"],
 });

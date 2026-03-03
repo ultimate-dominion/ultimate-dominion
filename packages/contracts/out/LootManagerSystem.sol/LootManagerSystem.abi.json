@@ -225,19 +225,6 @@
   },
   {
     "type": "function",
-    "name": "issueStarterItems",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "onERC1155BatchReceived",
     "inputs": [
       {

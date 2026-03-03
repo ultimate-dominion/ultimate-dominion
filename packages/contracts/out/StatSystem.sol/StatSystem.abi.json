@@ -782,6 +782,16 @@
   },
   {
     "type": "error",
+    "name": "CannotLevelInCombat",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CharacterLocked",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
       {
@@ -794,6 +804,21 @@
   {
     "type": "error",
     "name": "GamePaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidCharacter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidCombatEntity",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidStatChange",
     "inputs": []
   },
   {
@@ -874,6 +899,11 @@
         "internalType": "uint40"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
   },
   {
     "type": "error",

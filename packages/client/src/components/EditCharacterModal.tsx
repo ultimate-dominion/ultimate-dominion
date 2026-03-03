@@ -160,7 +160,6 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
           const { error, success } = await updateTokenUri(
             id,
             characterMetadataCid,
-            tokenId,
           );
           if (error && !success) throw new Error(error);
         });

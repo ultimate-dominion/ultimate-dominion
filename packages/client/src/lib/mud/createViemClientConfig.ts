@@ -18,7 +18,7 @@ import {
 export function createViemClientConfig(chain: MUDChain): {
   readonly chain: MUDChain;
   readonly transport: FallbackTransport;
-  readonly pollingInterval: 500;
+  readonly pollingInterval: 200;
 } {
   const wsUrls = chain.rpcUrls?.default?.webSocket ?? [];
   const httpUrls = chain.rpcUrls?.default?.http ?? [];

@@ -3,7 +3,7 @@ pragma solidity >=0.8.24;
 
 import "forge-std/Test.sol";
 import {StatCalculator} from "../src/libraries/StatCalculator.sol";
-import {StatsData, WeaponStatsData, ArmorStatsData, CharacterEquipmentData} from "@codegen/index.sol";
+import {StatsData, CharacterEquipmentData} from "@codegen/index.sol";
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 
@@ -259,71 +259,6 @@ contract StatCalculatorTest is Test {
         assertEq(adjustedStats.intelligence, 9); // 6 + 3
         assertEq(adjustedStats.maxHp, 25);    // 20 + 5
         assertEq(adjustedStats.armor, 13);    // 15 - 2
-    }
-
-    function testCheckStatRequirements() public {
-        WeaponStatsData memory itemStats = WeaponStatsData({
-            agiModifier: 0,
-            intModifier: 0,
-            hpModifier: 0,
-            maxDamage: 20,
-            minDamage: 10,
-            minLevel: 1,
-            strModifier: 5, // Requires 5 strength
-            effects: new bytes32[](0)
-        });
-
-        StatsData memory characterStats = _createDefaultStatsData();
-
-        // Character meets requirements
-        bool meetsRequirements = StatCalculator.checkStatRequirements(itemStats, characterStats);
-        assertTrue(meetsRequirements);
-
-        // Character doesn't meet requirements
-        characterStats.strength = 3;
-        meetsRequirements = StatCalculator.checkStatRequirements(itemStats, characterStats);
-        assertFalse(meetsRequirements);
-    }
-
-    function testCheckArmorStatRequirements() public {
-        ArmorStatsData memory itemStats = ArmorStatsData({
-            agiModifier: 0,
-            armorModifier: 0,
-            hpModifier: 0,
-            intModifier: 0,
-            minLevel: 1,
-            strModifier: 8, // Requires 8 strength
-            armorType: ArmorType.Cloth
-        });
-
-        StatsData memory characterStats = _createDefaultStatsData();
-
-        // Character meets requirements
-        bool meetsRequirements = StatCalculator.checkArmorStatRequirements(itemStats, characterStats);
-        assertTrue(meetsRequirements);
-
-        // Character doesn't meet requirements
-        characterStats.strength = 5;
-        meetsRequirements = StatCalculator.checkArmorStatRequirements(itemStats, characterStats);
-        assertFalse(meetsRequirements);
-    }
-
-    function testCalculateLevelScaling() public {
-        int256 baseValue = 10;
-        uint256 level = 5;
-        int256 scalingFactor = 2;
-
-        int256 scaledValue = StatCalculator.calculateLevelScaling(baseValue, level, scalingFactor);
-        assertEq(scaledValue, 20); // 10 + (5 * 2)
-    }
-
-    function testCalculateStatCap() public {
-        uint256 level = 5;
-        int256 baseCap = 50;
-        int256 capPerLevel = 5;
-
-        int256 statCap = StatCalculator.calculateStatCap(level, baseCap, capPerLevel);
-        assertEq(statCap, 75); // 50 + (5 * 5)
     }
 
     function testCalculateTotalStatPoints() public {

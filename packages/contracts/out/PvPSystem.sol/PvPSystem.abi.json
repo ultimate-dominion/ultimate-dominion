@@ -263,6 +263,11 @@
   },
   {
     "type": "error",
+    "name": "CanOnlyFleeFirstTurn",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
       {
@@ -279,7 +284,17 @@
   },
   {
     "type": "error",
+    "name": "InvalidFlee",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NoWeaponsEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotInEncounter",
     "inputs": []
   },
   {
@@ -360,5 +375,15 @@
         "internalType": "uint40"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnrecognizedEncounterType",
+    "inputs": []
   }
 ]

@@ -14,6 +14,22 @@ import {Race, PowerSource, ArmorType, AdvancedClass, RngRequestType} from "@code
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {CLASS_MULTIPLIER_BASE} from "../../constants.sol";
+import {
+    Unauthorized,
+    CharacterLocked,
+    InvalidRace,
+    RaceAlreadySet,
+    InvalidPowerSource,
+    PowerSourceAlreadySet,
+    InvalidArmorType,
+    ArmorAlreadySet,
+    RequiresLevel10,
+    AdvancedClassAlreadySet,
+    InvalidAdvancedClass,
+    MustChooseRaceFirst,
+    MustChoosePowerSourceFirst
+} from "../Errors.sol";
 
 /**
  * @title ImplicitClassSystem
@@ -27,7 +43,7 @@ contract ImplicitClassSystem is System {
     event AdvancedClassSelected(bytes32 indexed characterId, AdvancedClass advancedClass);
 
     modifier onlyOwner(bytes32 characterId) {
-        require(Characters.getOwner(characterId) == _msgSender(), "IMPLICIT CLASS: INVALID OPERATOR");
+        if (Characters.getOwner(characterId) != _msgSender()) revert Unauthorized();
         _;
     }
 
@@ -42,9 +58,9 @@ contract ImplicitClassSystem is System {
      */
     function chooseRace(bytes32 characterId, Race race) public onlyOwner(characterId) {
         PauseLib.requireNotPaused();
-        require(!Characters.getLocked(characterId), "IMPLICIT CLASS: character already in game world");
-        require(race != Race.None, "IMPLICIT CLASS: invalid race");
-        require(Stats.getRace(characterId) == Race.None, "IMPLICIT CLASS: race already selected");
+        if (Characters.getLocked(characterId)) revert CharacterLocked();
+        if (race == Race.None) revert InvalidRace();
+        if (Stats.getRace(characterId) != Race.None) revert RaceAlreadySet();
 
         StatsData memory stats = Stats.get(characterId);
         stats.race = race;
@@ -77,9 +93,9 @@ contract ImplicitClassSystem is System {
      */
     function choosePowerSource(bytes32 characterId, PowerSource powerSource) public onlyOwner(characterId) {
         PauseLib.requireNotPaused();
-        require(!Characters.getLocked(characterId), "IMPLICIT CLASS: character already in game world");
-        require(powerSource != PowerSource.None, "IMPLICIT CLASS: invalid power source");
-        require(Stats.getPowerSource(characterId) == PowerSource.None, "IMPLICIT CLASS: power source already selected");
+        if (Characters.getLocked(characterId)) revert CharacterLocked();
+        if (powerSource == PowerSource.None) revert InvalidPowerSource();
+        if (Stats.getPowerSource(characterId) != PowerSource.None) revert PowerSourceAlreadySet();
 
         Stats.setPowerSource(characterId, powerSource);
         emit PowerSourceSelected(characterId, powerSource);
@@ -95,9 +111,9 @@ contract ImplicitClassSystem is System {
      *      - Plate: STR +2, HP +1, AGI -1
      */
     function chooseStartingArmor(bytes32 characterId, ArmorType armorType) public onlyOwner(characterId) {
-        require(!Characters.getLocked(characterId), "IMPLICIT CLASS: character already in game world");
-        require(armorType != ArmorType.None, "IMPLICIT CLASS: invalid armor type");
-        require(Stats.getStartingArmor(characterId) == ArmorType.None, "IMPLICIT CLASS: armor already selected");
+        if (Characters.getLocked(characterId)) revert CharacterLocked();
+        if (armorType == ArmorType.None) revert InvalidArmorType();
+        if (Stats.getStartingArmor(characterId) != ArmorType.None) revert ArmorAlreadySet();
 
         StatsData memory stats = Stats.get(characterId);
         stats.startingArmor = armorType;
@@ -128,9 +144,9 @@ contract ImplicitClassSystem is System {
      */
     function rollBaseStats(bytes32 userRandomNumber, bytes32 characterId) public payable onlyOwner(characterId) {
         PauseLib.requireNotPaused();
-        require(!Characters.getLocked(characterId), "IMPLICIT CLASS: character already in game world");
-        require(Stats.getRace(characterId) != Race.None, "IMPLICIT CLASS: must choose race first");
-        require(Stats.getPowerSource(characterId) != PowerSource.None, "IMPLICIT CLASS: must choose power source first");
+        if (Characters.getLocked(characterId)) revert CharacterLocked();
+        if (Stats.getRace(characterId) == Race.None) revert MustChooseRaceFirst();
+        if (Stats.getPowerSource(characterId) == PowerSource.None) revert MustChoosePowerSourceFirst();
         // Note: startingArmor is now set via enterGame when player selects their starter armor
 
         RngRequestType requestType = RngRequestType.CharacterStats;
@@ -167,9 +183,6 @@ contract ImplicitClassSystem is System {
         return Stats.getAdvancedClass(characterId);
     }
 
-    // Multiplier constants (basis points: 1000 = 100%, 1100 = 110%)
-    uint256 constant MULTIPLIER_BASE = 1000;
-
     /**
      * @notice Select advanced class at level 10 (class crystallization)
      * @dev Players can choose ANY class regardless of stats or power source
@@ -181,9 +194,9 @@ contract ImplicitClassSystem is System {
         StatsData memory stats = Stats.get(characterId);
 
         // Check requirements
-        require(stats.level >= 10, "IMPLICIT CLASS: Must be level 10 to select advanced class");
-        require(!stats.hasSelectedAdvancedClass, "IMPLICIT CLASS: Advanced class already selected");
-        require(advancedClass != AdvancedClass.None, "IMPLICIT CLASS: Invalid advanced class");
+        if (stats.level < 10) revert RequiresLevel10();
+        if (stats.hasSelectedAdvancedClass) revert AdvancedClassAlreadySet();
+        if (advancedClass == AdvancedClass.None) revert InvalidAdvancedClass();
 
         // Apply class-specific flat stat bonuses
         stats = _applyAdvancedClassStatBonuses(stats, advancedClass);
@@ -261,11 +274,11 @@ contract ImplicitClassSystem is System {
      * - Sorcerer: +8% spell damage, +5% max HP
      */
     function _setClassMultipliers(bytes32 characterId, AdvancedClass advancedClass) internal {
-        uint256 physical = MULTIPLIER_BASE;
-        uint256 spell = MULTIPLIER_BASE;
-        uint256 healing = MULTIPLIER_BASE;
-        uint256 crit = MULTIPLIER_BASE;
-        uint256 maxHp = MULTIPLIER_BASE;
+        uint256 physical = CLASS_MULTIPLIER_BASE;
+        uint256 spell = CLASS_MULTIPLIER_BASE;
+        uint256 healing = CLASS_MULTIPLIER_BASE;
+        uint256 crit = CLASS_MULTIPLIER_BASE;
+        uint256 maxHp = CLASS_MULTIPLIER_BASE;
 
         if (advancedClass == AdvancedClass.Warrior) {
             physical = 1100; // 110%

@@ -1,50 +1,29 @@
-// Third-party imports
-import { garnet } from '@latticexyz/common/chains';
-import { anvil, Chain } from 'wagmi/chains';
-
 // Local imports
-import { base, pyrope } from '../mud/supportedChains';
+import { base } from '../mud/supportedChains';
+
+import { Chain } from 'wagmi/chains';
 
 export const WALLET_CONNECT_PROJECT_ID = import.meta.env
   .VITE_WALLET_CONNECT_PROJECT_ID;
 
 export const CHAIN_NAME_TO_ID: { [key: string]: number } = {
-  Anvil: anvil.id,
   Base: base.id,
-  'Garnet Holesky': garnet.id,
-  Pyrope: pyrope.id,
 };
 
 export const CHAIN_ID_TO_LABEL: { [key: number]: string } = {
-  [anvil.id]: 'Anvil',
   [base.id]: 'Base',
-  [garnet.id]: 'Garnet Holesky',
-  [pyrope.id]: 'Pyrope',
 };
 
 export const EXPLORER_URLS: { [key: number]: string } = {
   [base.id]: base.blockExplorers.default.url,
-  [garnet.id]: garnet.blockExplorers.default.url,
-  [pyrope.id]: pyrope.blockExplorers.default.url,
 };
-
-const POSSIBLE_SUPPORTED_CHAINS = [base, garnet, anvil, pyrope];
 
 export const DEFAULT_CHAIN_ID = import.meta.env.VITE_CHAIN_ID
   ? Number(import.meta.env.VITE_CHAIN_ID)
-  : 31337;
+  : 8453;
 
 const getSupportedChains = (): readonly [Chain, ...Chain[]] => {
-  if (import.meta.env.DEV) {
-    return POSSIBLE_SUPPORTED_CHAINS.filter(
-      chain => chain.id === DEFAULT_CHAIN_ID,
-    ) as unknown as [Chain];
-  }
-
-  const prodChainId = Number(import.meta.env.VITE_CHAIN_ID);
-  if (prodChainId === base.id) return [base as unknown as Chain] as const;
-  if (prodChainId === pyrope.id) return [pyrope as unknown as Chain] as const;
-  return [garnet] as const;
+  return [base as unknown as Chain] as const;
 };
 
 export const SUPPORTED_CHAINS: readonly [Chain, ...Chain[]] =

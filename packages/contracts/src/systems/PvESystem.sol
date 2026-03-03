@@ -18,8 +18,6 @@ import {
 import {NoWeaponsEquipped} from "../Errors.sol";
 import {Action} from "@interfaces/Structs.sol";
 
-import "forge-std/console.sol";
-
 contract PvESystem is System {
     function isValidPvE(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
         public
@@ -113,7 +111,6 @@ contract PvESystem is System {
         } else {
             encounterData.currentTurn++;
             CombatEncounter.setCurrentTurn(encounterId, encounterData.currentTurn);
-            // set encounter data
 
             // if not execute defender attack
             if (encounterData.attackersAreMobs) {

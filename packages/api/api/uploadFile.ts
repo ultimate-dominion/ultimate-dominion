@@ -34,8 +34,7 @@ export default async function uploadFile(
 
   try {
     const [fields, files] = await form.parse(req);
-    console.log('Received files:', Object.keys(files));
-    
+
     // Get the first file from the files object
     const fileArray = Object.values(files)[0];
     if (!fileArray || !fileArray[0]) {

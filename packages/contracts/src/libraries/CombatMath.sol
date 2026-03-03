@@ -224,9 +224,8 @@ library CombatMath {
      * @return multiplier Calculated stat multiplier
      */
     function getStatModifier(int256 stat, int256 modifierBonus) internal pure returns (uint256 multiplier) {
-        multiplier = (((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR)) > 0
-            ? uint256(((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR))
-            : WAD;
+        int256 scaled = ((stat + modifierBonus) * int256(WAD)) / int256(PROFICIENCY_DENOMINATOR);
+        multiplier = scaled > 0 ? uint256(scaled) : WAD;
     }
 
     /**

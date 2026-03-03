@@ -23,7 +23,6 @@
     "@fontsource/fira-code": "^5.1.0",
     "@fontsource/inter": "^5.2.8",
     "@latticexyz/common": "2.2.23",
-    "@latticexyz/faucet": "2.2.23",
     "@latticexyz/world": "2.2.23",
     "@pushprotocol/restapi": "^1.7.25",
     "@rainbow-me/rainbowkit": "^2.1.1",

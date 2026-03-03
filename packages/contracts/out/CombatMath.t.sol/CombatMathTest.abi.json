@@ -162,6 +162,13 @@
   },
   {
     "type": "function",
+    "name": "testAgiCritBonus",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "testApplyCriticalHit",
     "inputs": [],
     "outputs": [],
@@ -218,7 +225,35 @@
   },
   {
     "type": "function",
+    "name": "testDoubleStrike",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testEvasionDodge",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "testGetStatModifier",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testMagicResistance",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testWeaponDamageAgiScaling",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"

@@ -37,12 +37,6 @@ export async function setupDelegation(
   externalWalletClient: WalletClient<Transport, Chain, Account>,
   delegateeAddress: Hex,
 ): Promise<void> {
-  console.log('Setting up delegation with:', {
-    delegateeAddress,
-    worldAddress: network.worldContract.address,
-    gameDelegation: GAME_DELEGATION,
-  });
-
   try {
     const delegationControlId = GAME_DELEGATION;
 
@@ -52,8 +46,6 @@ export async function setupDelegation(
       functionName: 'initDelegation',
       args: [delegateeAddress as Address],
     });
-
-    console.log('Using delegation control ID:', delegationControlId);
 
     // Check if we're on a local chain (chainId 31337)
     const chainId = externalWalletClient.chain?.id;
@@ -86,9 +78,7 @@ export async function setupDelegation(
       ...gasConfig,
     });
 
-    console.log('Delegation transaction sent:', delegationTx);
     await network.waitForTransaction(delegationTx);
-    console.log('Delegation transaction confirmed');
   } catch (error) {
     console.error('Delegation failed with error:', error);
     throw error;

@@ -22,7 +22,7 @@
     "version": "0.3.0"
   },
   "devDependencies": {
-    "@latticexyz/cli": "2.0.11",
+    "@latticexyz/cli": "2.2.23",
     "@types/debug": "4.1.7",
     "@typescript-eslint/eslint-plugin": "7.1.1",
     "@typescript-eslint/parser": "7.1.1",

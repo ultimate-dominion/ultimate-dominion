@@ -68,6 +68,9 @@ contract PveRewardSystem is System {
             }
         }
 
+        // Cache max level exp threshold once (saves 4-6K gas/player)
+        uint256 maxLevelExp = Levels.get(MAX_LEVEL);
+
         for (uint256 i; i < distTemps.players.length; i++) {
             distTemps.entityIdTemp = distTemps.players[i];
             if (IWorld(_world()).UD__isValidCharacterId(distTemps.entityIdTemp)) {
@@ -76,18 +79,19 @@ contract PveRewardSystem is System {
                     if (_goldAmount > uint256(0)) {
                         IWorld(_world()).UD__dropGoldToEscrow(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
                     }
+                    uint256 currentExp = statsTemp.experience;
                     uint256 _calculatedExp =
                         ((_baseExp / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)) / WAD;
                     if (
-                        Stats.getExperience(distTemps.entityIdTemp) >= Levels.get(MAX_LEVEL) || _baseExp == uint256(0)
+                        currentExp >= maxLevelExp || _baseExp == uint256(0)
                             || distTemps.livingPlayers == uint256(0)
                     ) {
                         //do nothing
-                    } else if (_calculatedExp + Stats.getExperience(distTemps.entityIdTemp) <= Levels.get(MAX_LEVEL)) {
+                    } else if (_calculatedExp + currentExp <= maxLevelExp) {
                         statsTemp.experience += _calculatedExp;
                         _expAmount += _calculatedExp;
-                    } else if (_calculatedExp + Stats.getExperience(distTemps.entityIdTemp) > Levels.get(MAX_LEVEL)) {
-                        uint256 _expToGive = Levels.get(MAX_LEVEL) - Stats.getExperience(distTemps.entityIdTemp);
+                    } else {
+                        uint256 _expToGive = maxLevelExp - currentExp;
                         statsTemp.experience += _expToGive;
                         _expAmount += _expToGive;
                     }
@@ -108,8 +112,6 @@ contract PveRewardSystem is System {
         uint256 baseGold = BASE_GOLD_DROP;
         if (MobStats.getIsElite(entityId)) baseGold = baseGold * ELITE_REWARD_MULTIPLIER / 100;
         dropAmount = (randomNumber % (baseGold * mobLevel)) + 0.05 ether;
-        // NOTE: goldDropMultiplier removed — UltimateDominionConfig schema is immutable.
-        // Restore when DropConfig table is created.
     }
 
     function _calculateItemDrop(uint256 randomNumber, bytes32 entityId, bytes32 characterId)
@@ -121,8 +123,6 @@ contract PveRewardSystem is System {
 
         // Roll each item independently — all winners drop
         bool _isElite = MobStats.getIsElite(entityId);
-        // NOTE: globalDropMultiplier removed — UltimateDominionConfig schema is immutable.
-        // Restore when DropConfig table is created.
         uint256[] memory candidates = new uint256[](monsterStats.inventory.length);
         uint256 numCandidates;
         for (uint256 i; i < monsterStats.inventory.length; i++) {

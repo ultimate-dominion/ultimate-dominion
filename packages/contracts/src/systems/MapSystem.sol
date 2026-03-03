@@ -67,7 +67,8 @@ contract MapSystem is System {
         if (spawnedPlayers > UltimateDominionConfig.getMaxPlayers()) revert MaxPlayers();
         if (Spawned.getSpawned(entityId)) revert AlreadySpawned();
         int256 maxHp = Stats.getMaxHp(entityId);
-        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+        bool isCharacter = IWorld(_world()).UD__isValidCharacterId(entityId);
+        if (isCharacter) {
             int256 currentHp = maxHp + CharacterEquipment.getHpBonus(entityId);
             if (currentHp > 0) {
                 Stats.setCurrentHp(entityId, currentHp);
@@ -82,7 +83,7 @@ contract MapSystem is System {
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, true);
 
-        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+        if (isCharacter) {
             SessionTimer.set(entityId, block.timestamp);
             // re-calculate equipment bonuses
             IWorld(_world()).UD__setStats(entityId, IWorld(_world()).UD__calculateEquipmentBonuses(entityId));
@@ -93,7 +94,7 @@ contract MapSystem is System {
         Counters.set(address(this), 0, (spawnedPlayers + 1));
 
         // Fragment I: The Awakening - triggers on first spawn
-        if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
+        if (isCharacter) {
             IWorld(_world()).UD__triggerFragment(entityId, 1, 0, 0);
         }
     }

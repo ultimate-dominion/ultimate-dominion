@@ -40,29 +40,6 @@
   },
   {
     "type": "function",
-    "name": "enterGame",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "starterWeaponId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "starterArmorId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "getCharacterIdFromOwnerAddress",
     "inputs": [
       {
@@ -328,11 +305,6 @@
   },
   {
     "type": "error",
-    "name": "CharacterLocked",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
       {
@@ -349,27 +321,7 @@
   },
   {
     "type": "error",
-    "name": "InsufficientStat",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidAccount",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidArmorType",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidItemType",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidStarterItem",
     "inputs": []
   },
   {
@@ -460,10 +412,5 @@
         "internalType": "uint40"
       }
     ]
-  },
-  {
-    "type": "error",
-    "name": "Unauthorized",
-    "inputs": []
   }
 ]

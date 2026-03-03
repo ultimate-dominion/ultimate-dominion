@@ -1,10 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/api/proxy",
-      "destination": "/api/proxy"
-    },
-    {
       "source": "/api/errors",
       "destination": "/api/errors"
     },

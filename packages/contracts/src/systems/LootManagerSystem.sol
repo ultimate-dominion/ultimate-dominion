@@ -8,11 +8,8 @@ import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {WorldContextConsumer} from "@latticexyz/world/src/WorldContext.sol";
 import {
     UltimateDominionConfig,
-    StarterItems,
-    StarterItemsData,
     AdvancedClassItems,
     AdvancedClassItemsData,
-    Stats,
     AdventureEscrow,
     CharacterEquipment,
     Items
@@ -46,19 +43,6 @@ contract LootManagerSystem is ERC1155Holder, System {
 
     function _goldToken() internal view returns (IERC20Mintable goldToken) {
         goldToken = IERC20Mintable(UltimateDominionConfig.getGoldToken());
-    }
-
-    function issueStarterItems(bytes32 characterId) public {
-        _requireSystemOrAdmin(_msgSender());
-        // This function is called from CharacterSystem.enterGame which validates ownership
-        StarterItemsData memory starterItems = IWorld(_world()).UD__getStarterItems(Stats.getClass(characterId));
-
-        address owner = IWorld(_world()).UD__getOwner(characterId);
-
-        // Mint items directly via table writes (bypasses cross-namespace access issues)
-        for (uint256 i; i < starterItems.itemIds.length; i++) {
-            _mintItemDirect(owner, starterItems.itemIds[i], starterItems.amounts[i]);
-        }
     }
 
     /**

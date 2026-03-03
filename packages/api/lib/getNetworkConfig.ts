@@ -43,32 +43,7 @@ const base: MUDChain = {
   },
 };
 
-// Define Pyrope chain
-const pyrope: MUDChain = {
-  name: "Pyrope",
-  id: 695569,
-  nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
-  rpcUrls: {
-    default: {
-      http: [(process.env.RPC_HTTP_URL || "https://rpc.pyropechain.com") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://ws.pyropechain.com"],
-    },
-    public: {
-      http: [(process.env.RPC_HTTP_URL || "https://rpc.pyropechain.com") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://ws.pyropechain.com"],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "Pyrope Explorer",
-      url: "https://explorer.pyropechain.com",
-    },
-  },
-  // Add indexer URL for MUD sync
-  indexerUrl: process.env.INDEXER_URL || "https://indexer.mud.pyropechain.com",
-};
-
-const SUPPORTED_CHAINS = [mudFoundry, pyrope, base];
+const SUPPORTED_CHAINS = [mudFoundry, base];
 
 export async function getNetworkConfig(): Promise<{
   privateKey: `0x${string}`;

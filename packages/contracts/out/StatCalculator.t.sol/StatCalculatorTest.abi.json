@@ -190,20 +190,6 @@
   },
   {
     "type": "function",
-    "name": "testCalculateLevelScaling",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "testCalculateStatCap",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "testCalculateStatPointsForLevel",
     "inputs": [],
     "outputs": [],
@@ -225,20 +211,6 @@
   },
   {
     "type": "function",
-    "name": "testCheckArmorStatRequirements",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "testCheckStatRequirements",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "testGenerateRandomStats",
     "inputs": [],
     "outputs": [],
@@ -247,6 +219,27 @@
   {
     "type": "function",
     "name": "testValidateStatChanges",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testValidateStatChanges_NonPhysicalNoBonusAtLevel5",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testValidateStatChanges_PhysicalBonusAtLevel5",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testValidateStatChanges_PhysicalNoBonusAtOtherLevels",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"

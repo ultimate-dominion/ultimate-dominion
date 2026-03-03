@@ -13,8 +13,6 @@ import {
     EncounterEntity,
     Stats,
     StatsData,
-    Effects,
-    EffectsData,
     CombatEncounter,
     CombatEncounterData,
     ActionOutcome,
@@ -144,6 +142,18 @@ contract CombatSystem is System {
 
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
+            // Cache character validation and equip check before the loop (saves 5-10K gas/extra effect)
+            bool attackerIsCharacter = IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId);
+            if (attackerIsCharacter) {
+                if (!IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId)) {
+                    revert ItemNotEquipped();
+                }
+            }
+
+            // Cache attacker/defender stats once before effects loop (saves 5-20K gas/extra effect)
+            AdjustedCombatStats memory cachedAttacker = IWorld(_world()).UD__calculateAllStatusEffects(actionOutcomeData.attackerId);
+            AdjustedCombatStats memory cachedDefender = IWorld(_world()).UD__calculateAllStatusEffects(actionOutcomeData.defenderId);
+
             // executeEffects
             for (uint256 i; i < actionOutcomeData.effectIds.length; i++) {
                 // hash the random number with the attack number and the effectId to allow different attack outcomes in the same block
@@ -151,12 +161,6 @@ contract CombatSystem is System {
 
                 EffectsData memory effectData = Effects.get(actionOutcomeData.effectIds[i]);
                 if (!effectData.effectExists) revert ActionNotFound();
-                // if actor is a character, require item is equipped
-                if (IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId)) {
-                    if (!IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId)) {
-                        revert ItemNotEquipped();
-                    }
-                }
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
                     // calculate damage
@@ -166,7 +170,9 @@ contract CombatSystem is System {
                         actionOutcomeData.attackerId,
                         actionOutcomeData.defenderId,
                         actionOutcomeData.itemId,
-                        randomNumber
+                        randomNumber,
+                        cachedAttacker,
+                        cachedDefender
                     );
                     actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
@@ -187,7 +193,9 @@ contract CombatSystem is System {
                         actionOutcomeData.attackerId,
                         actionOutcomeData.defenderId,
                         actionOutcomeData.itemId,
-                        randomNumber
+                        randomNumber,
+                        cachedAttacker,
+                        cachedDefender
                     );
                     actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
@@ -209,7 +217,9 @@ contract CombatSystem is System {
                         actionOutcomeData.attackerId,
                         actionOutcomeData.defenderId,
                         actionOutcomeData.itemId,
-                        randomNumber
+                        randomNumber,
+                        cachedAttacker,
+                        cachedDefender
                     );
                     // if combat consumable, consume the item
                     if (Items.getItemType(actionOutcomeData.itemId) == ItemType.Consumable) {
@@ -242,12 +252,10 @@ contract CombatSystem is System {
         bytes32 attackerId,
         bytes32 defenderId,
         uint256 itemId,
-        uint256 randomNumber
-    ) internal returns (int256 damage, bool hit, bool crit) {
-        // get attacker
-        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
-        //get defender
-        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
+        uint256 randomNumber,
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
+    ) internal view returns (int256 damage, bool hit, bool crit) {
         // get weapon stats
         WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
 
@@ -282,7 +290,7 @@ contract CombatSystem is System {
                 // Crit multiplier
                 damage = CombatMath.applyCriticalHit(damage, crit);
 
-                // Class multipliers (FIX: was dead code)
+                // Class multipliers
                 uint256 physMult = ClassMultipliers.getPhysicalDamageMultiplier(attackerId);
                 if (physMult == 0) physMult = CLASS_MULTIPLIER_BASE;
                 damage = (damage * int256(physMult)) / int256(CLASS_MULTIPLIER_BASE);
@@ -322,12 +330,10 @@ contract CombatSystem is System {
         bytes32 attackerId,
         bytes32 defenderId,
         uint256 itemId,
-        uint256 randomNumber
-    ) internal returns (int256 damage, bool hit, bool crit) {
-        // get attacker
-        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
-        //get defender
-        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
+        uint256 randomNumber,
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
+    ) internal view returns (int256 damage, bool hit, bool crit) {
 
         // Check item type - weapons with magic effects need different handling
         ItemType itemType = Items.getItemType(itemId);
@@ -378,7 +384,7 @@ contract CombatSystem is System {
                     damage -= CombatMath.calculateMagicResistance(defender.intelligence, damage);
                 }
 
-                // Class multipliers (FIX: was dead code)
+                // Class multipliers
                 if (damage > 0) {
                     uint256 spellMult = ClassMultipliers.getSpellDamageMultiplier(attackerId);
                     if (spellMult == 0) spellMult = CLASS_MULTIPLIER_BASE;
@@ -414,12 +420,10 @@ contract CombatSystem is System {
         bytes32 attackerId,
         bytes32 defenderId,
         uint256 itemId,
-        uint256 randomNumber
+        uint256 randomNumber,
+        AdjustedCombatStats memory attacker,
+        AdjustedCombatStats memory defender
     ) internal returns (bool hit) {
-        // get attacker
-        AdjustedCombatStats memory attacker = IWorld(_world()).UD__calculateAllStatusEffects(attackerId);
-        //get defender
-        AdjustedCombatStats memory defender = IWorld(_world()).UD__calculateAllStatusEffects(defenderId);
         // get weapon stats
         ResistanceStat resistanceStat = IWorld(_world()).UD__getStatusEffectStats(effectId).resistanceStat;
 

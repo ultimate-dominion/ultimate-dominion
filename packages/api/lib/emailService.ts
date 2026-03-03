@@ -280,32 +280,3 @@ export async function listContacts(): Promise<Array<{ id: string; email: string;
   }
 }
 
-/**
- * List sent emails filtered by a tag, to check what's already been sent.
- */
-export async function listEmailsByTag(tag: string): Promise<Set<string>> {
-  if (IS_DEV_MODE) {
-    return new Set();
-  }
-  if (!resend) {
-    return new Set();
-  }
-
-  try {
-    // Resend doesn't have a direct "list by tag" filter on the emails.list endpoint.
-    // We track sent drips by storing the tag in the email's tags and querying.
-    // For now, we'll use a pragmatic approach: the drip cron will track sent emails
-    // via Resend's contacts metadata or a simple tag-based dedup.
-    // The Resend API emails.list doesn't filter by tag, so we'll use contact
-    // unsubscribed_at as a signal and rely on the tag on the email itself
-    // to avoid re-sends (Resend won't double-send to the same address with same tag
-    // in a short window, but we need our own dedup).
-    //
-    // Practical approach: we'll store sent drip stages in contact data field.
-    // For MVP, we accept that a server restart might re-attempt, but Resend's
-    // idempotency on recent sends + daily cron means minimal duplication risk.
-    return new Set();
-  } catch {
-    return new Set();
-  }
-}

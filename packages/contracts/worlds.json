@@ -1,17 +1,9 @@
 {
   "8453": {
-    "address": "0x7e7C68c9a3E03c9C3242138CD19053c86ddEEc37",
-    "blockNumber": 42671406
-  },
-  "17069": {
-    "address": "0x5a503a72e7664002f8d1c817d1db220e5e0e79db",
-    "blockNumber": 13867872
+    "address": "0xDd8692cf4C0A20569D8e78D9015d1e44D5E0b662",
+    "blockNumber": 42850036
   },
   "31337": {
     "address": "0x6057528C75A4Ff7a9297e73347b42eCcdbd862Ed"
-  },
-  "695569": {
-    "address": "0x48d3dece08254d30719f4d35877cbb9d787e43d9",
-    "blockNumber": 388364
   }
 }

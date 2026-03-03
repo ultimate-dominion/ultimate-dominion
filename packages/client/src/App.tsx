@@ -6,12 +6,9 @@ import {
   useBreakpointValue,
   useDisclosure,
 } from '@chakra-ui/react';
-import { garnet } from '@latticexyz/common/chains';
-import { createClient as createFaucetClient } from '@latticexyz/faucet';
 import { useEffect } from 'react';
 import { IoChatbubble } from 'react-icons/io5';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
-import { parseEther } from 'viem';
 
 import { ChatBox } from './components/ChatBox';
 import { Footer } from './components/Footer';
@@ -27,27 +24,10 @@ import { MapProvider, useMap } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
 import { useGasStation } from './hooks/useGasStation';
-import { DEFAULT_CHAIN_ID } from './lib/web3';
 import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
 
 export const App = (): JSX.Element => {
-  // Memory check disabled - was causing unexpected page refreshes
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //     // @ts-ignore
-  //     const memoryUsage = window.performance?.memory?.usedJSHeapSize;
-  //
-  //     // TODO: Handle memory usage more gracefully
-  //     // If more than 2GB of memory usage, reload the page
-  //     if (memoryUsage && memoryUsage > 2000 * 1024 * 1024) {
-  //       window.location.reload();
-  //     }
-  //   }, 20000);
-  //   return () => clearInterval(interval);
-  // }, []);
-
   return (
     <Router>
       <MapProvider>
@@ -72,13 +52,12 @@ const CHAT_NOT_ALLOWED_PATHS = [CHARACTER_CREATION_PATH, HOME_PATH];
 const AppInner = (): JSX.Element => {
   const { pathname } = useLocation();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const { authMethod, ownerAddress } = useAuth();
+  const { authMethod } = useAuth();
   const {
     burnerBalance,
     burnerBalanceFetched,
     isSynced,
     isWalletDetailsModalOpen,
-    network,
     onCloseWalletDetailsModal,
     onOpenWalletDetailsModal,
   } = useMUD();
@@ -99,7 +78,6 @@ const AppInner = (): JSX.Element => {
   useEffect(() => {
     if (pathname === HOME_PATH) return;
     if (!burnerBalanceFetched || !isSynced) return;
-    if (DEFAULT_CHAIN_ID === garnet.id) return;
 
     // Embedded users: gas is fully sponsored (EIP-7702) — never show modals
     if (authMethod === 'embedded') return;
@@ -127,37 +105,6 @@ const AppInner = (): JSX.Element => {
     onOpenWalletDetailsModal,
     pathname,
   ]);
-
-  useEffect(() => {
-    if (DEFAULT_CHAIN_ID === garnet.id && ownerAddress) {
-      // eslint-disable-next-line no-console
-      console.info('[Dev Faucet]: Owner address -> ', ownerAddress);
-      const faucetClient = createFaucetClient({
-        url: 'https://ultimate-dominion-faucet.onrender.com/trpc',
-      });
-      const requestDrip = async () => {
-        const balance = await network.publicClient.getBalance({
-          address: ownerAddress,
-        });
-        // eslint-disable-next-line no-console
-        console.info(`[Dev Faucet]: Owner balance -> ${balance}`);
-        const lowBalance = balance < parseEther('0.00001');
-        if (lowBalance) {
-          // eslint-disable-next-line no-console
-          console.info(
-            '[Dev Faucet]: Balance is low, dripping funds to owner wallet',
-          );
-          await faucetClient.drip.mutate({
-            address: ownerAddress,
-          });
-        }
-      };
-      requestDrip();
-      // Request a drip every 20 seconds
-      const intervalId = setInterval(requestDrip, 20000);
-      return () => clearInterval(intervalId);
-    }
-  }, [ownerAddress, network]);
 
   useEffect(() => {
     if (!isSpawned) return;

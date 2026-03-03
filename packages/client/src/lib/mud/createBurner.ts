@@ -1,7 +1,5 @@
 import { type ContractWrite } from '@latticexyz/common';
 import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
-import { garnet } from '@latticexyz/common/chains';
-import { createClient as createFaucetClient } from '@latticexyz/faucet';
 import { callFrom } from '@latticexyz/world/internal';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import { share, Subject } from 'rxjs';
@@ -11,13 +9,11 @@ import {
   getContract,
   type Hex,
   padHex,
-  parseEther,
   slice,
 } from 'viem';
 
 import { createSystemCalls } from '../mud/createSystemCalls';
 import { type SetupNetworkResult } from '../mud/setupNetwork';
-import { DEFAULT_CHAIN_ID } from '../web3';
 
 import { createViemClientConfig } from './createViemClientConfig';
 import { getBurnerAccount } from './getBurnerAccount';
@@ -106,32 +102,6 @@ export function createBurner(
         },
       }),
     );
-
-    if (DEFAULT_CHAIN_ID === garnet.id) {
-      const address = walletClient.account.address;
-      console.info('[Dev Faucet]: Player address -> ', address);
-
-      const faucetClient = createFaucetClient({
-        url: 'https://ultimate-dominion-faucet.vercel.app/trpc',
-      });
-
-      const requestDrip = async () => {
-        const balance = await network.publicClient.getBalance({ address });
-        console.info(`[Dev Faucet]: Player balance -> ${balance}`);
-        const lowBalance = balance < parseEther('0.00001');
-        if (lowBalance) {
-          console.info(
-            '[Dev Faucet]: Balance is low, dripping funds to player',
-          );
-
-          await faucetClient.drip.mutate({
-            address,
-          });
-        }
-      };
-
-      requestDrip();
-    }
   }
 
   const worldContract = getContract({

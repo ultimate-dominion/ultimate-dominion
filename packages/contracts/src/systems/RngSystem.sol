@@ -20,7 +20,7 @@ import {Action} from "@interfaces/Structs.sol";
 import {IWorld, IPvESystem, IPvPSystem, IWorldActionSystem} from "@world/IWorld.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import "forge-std/console.sol";
+import {InvalidMoves, UnrecognizedCombatType, UnrecognizedRequestType} from "../Errors.sol";
 
 contract RngSystem is System {
     using LibChunks for uint256;
@@ -90,20 +90,20 @@ contract RngSystem is System {
             }
         } else if (requestType == RngRequestType.Combat) {
             (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
-            require(moves.length > 0, "RNG: Invalid moves");
+            if (moves.length == 0) revert InvalidMoves();
             EncounterType encounterType = CombatEncounter.getEncounterType(encounterId);
             if (encounterType == EncounterType.PvE) {
                 _executePvECombat(randomNumber, encounterId, moves);
             } else if (encounterType == EncounterType.PvP) {
                 _executePvPCombat(randomNumber, encounterId, moves);
             } else {
-                revert("RNG: Unrecognized Combat Type");
+                revert UnrecognizedCombatType();
             }
         } else if (requestType == RngRequestType.World) {
             (bytes32 encounterId, Action[] memory moves) = abi.decode(_data, (bytes32, Action[]));
             _executeWorldActions(randomNumber, encounterId, moves);
         } else {
-            revert("RNG: Unrecognized request type");
+            revert UnrecognizedRequestType();
         }
     }
 

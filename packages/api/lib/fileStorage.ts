@@ -10,7 +10,6 @@ const IS_DEV_MODE = !PINATA_JWT || process.env.NODE_ENV === 'development';
 const LOCAL_STORAGE_DIR = path.join(process.cwd(), 'dev-storage');
 if (IS_DEV_MODE && !fs.existsSync(LOCAL_STORAGE_DIR)) {
   fs.mkdirSync(LOCAL_STORAGE_DIR, { recursive: true });
-  console.log(`Created local storage directory: ${LOCAL_STORAGE_DIR}`);
 }
 
 // Define a type for Pinata client to avoid 'any'
@@ -30,7 +29,7 @@ if (!IS_DEV_MODE) {
     // Test Pinata connection on startup
     if (pinata) {
       pinata.testAuthentication().then(() => {
-        console.log('Successfully connected to Pinata');
+        // connected
       }).catch((error: unknown) => {
         console.error('Failed to connect to Pinata:', error);
         if (error instanceof Error) {
@@ -45,8 +44,6 @@ if (!IS_DEV_MODE) {
   } catch (error) {
     console.error('Failed to initialize Pinata:', error);
   }
-} else {
-  console.log('Running in development mode with local file storage (Pinata not required)');
 }
 
 /**
@@ -73,8 +70,7 @@ export async function uploadJsonToPinata(jsonData: Record<string, unknown>, file
       };
       
       await fs.promises.writeFile(filePath, JSON.stringify(jsonWithMetadata, null, 2));
-      console.log(`Development mode: Saved JSON to ${filePath}`);
-      
+
       // Return a local identifier
       return `local-${timestamp}-${safeFileName}`;
     } catch (error) {
@@ -90,7 +86,6 @@ export async function uploadJsonToPinata(jsonData: Record<string, unknown>, file
   }
 
   try {
-    console.log('Uploading JSON to Pinata...');
     const result = await pinata.pinJSONToIPFS(jsonData, {
       pinataMetadata: {
         name: fileName || 'character-metadata.json',
@@ -100,7 +95,6 @@ export async function uploadJsonToPinata(jsonData: Record<string, unknown>, file
         }
       }
     });
-    console.log('Pinata result:', result);
 
     return result.IpfsHash;
   } catch (error: unknown) {
@@ -132,8 +126,7 @@ export async function uploadFileToPinata(filePath: string, fileName: string): Pr
       
       // Copy the file to local storage
       await fs.promises.copyFile(filePath, destPath);
-      console.log(`Development mode: Copied file to ${destPath}`);
-      
+
       // Return a local identifier
       return `local-${timestamp}-${safeFileName}`;
     } catch (error) {
@@ -149,14 +142,12 @@ export async function uploadFileToPinata(filePath: string, fileName: string): Pr
   }
   
   try {
-    console.log('Uploading file to Pinata...');
     const readStream = createReadStream(filePath);
     const result = await pinata.pinFileToIPFS(readStream, {
       pinataMetadata: {
         name: fileName
       }
     });
-    console.log('Pinata result:', result);
 
     return result.IpfsHash;
   } catch (error: unknown) {

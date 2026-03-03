@@ -422,7 +422,42 @@
   },
   {
     "type": "error",
+    "name": "InsufficientItemBalance",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidShopEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAtShopPosition",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotOwnShopEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OutOfStock",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ShopInsufficientGold",
     "inputs": []
   },
   {
@@ -501,6 +536,54 @@
         "name": "fieldLength",
         "type": "uint40",
         "internalType": "uint40"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "World_AccessDenied",
+    "inputs": [
+      {
+        "name": "resource",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "caller",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "World_FunctionSelectorNotFound",
+    "inputs": [
+      {
+        "name": "functionSelector",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "World_ResourceNotFound",
+    "inputs": [
+      {
+        "name": "resourceId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "resourceIdString",
+        "type": "string",
+        "internalType": "string"
       }
     ]
   }

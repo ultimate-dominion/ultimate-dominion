@@ -16,9 +16,7 @@ import {
     CharacterEquipment,
     CharacterEquipmentData,
     WeaponStats,
-    WeaponStatsData,
     ArmorStats,
-    ArmorStatsData,
     ConsumableStats,
     AccessoryStats,
     StatRestrictions,
@@ -171,38 +169,6 @@ contract EquipmentSystem is System {
                 CharacterEquipment.pushEquippedConsumables(characterId, itemId);
             }
         }
-    }
-
-    function _setEquipmentBonuses(bytes32 characterId) internal returns (CharacterEquipmentData memory _charEquip) {
-        CharacterEquipmentData memory equipmentData = CharacterEquipment.get(characterId);
-        ArmorStatsData memory armorStats;
-        WeaponStatsData memory weaponStats;
-        if (equipmentData.equippedArmor.length > 0) {
-            for (uint256 i; i < equipmentData.equippedArmor.length; i++) {
-                armorStats = IWorld(_world()).UD__getArmorStats(equipmentData.equippedArmor[i]);
-                _charEquip.armor += armorStats.armorModifier;
-                _charEquip.strBonus += armorStats.strModifier;
-                _charEquip.agiBonus += armorStats.agiModifier;
-                _charEquip.intBonus += armorStats.intModifier;
-                _charEquip.hpBonus += armorStats.hpModifier;
-            }
-        }
-        if (equipmentData.equippedWeapons.length > 0) {
-            for (uint256 i; i < equipmentData.equippedWeapons.length; i++) {
-                weaponStats = IWorld(_world()).UD__getWeaponStats(equipmentData.equippedWeapons[i]);
-                _charEquip.strBonus += weaponStats.strModifier;
-                _charEquip.agiBonus += weaponStats.agiModifier;
-                _charEquip.intBonus += weaponStats.intModifier;
-                _charEquip.hpBonus += weaponStats.hpModifier;
-            }
-        }
-        equipmentData.strBonus = _charEquip.strBonus;
-        equipmentData.agiBonus = _charEquip.agiBonus;
-        equipmentData.intBonus = _charEquip.intBonus;
-        equipmentData.hpBonus = _charEquip.hpBonus;
-        equipmentData.armor = _charEquip.armor;
-
-        CharacterEquipment.set(characterId, equipmentData);
     }
 
     function unequipItem(bytes32 characterId, uint256 itemId) public inGame(characterId) returns (bool success) {

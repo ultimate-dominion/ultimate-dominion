@@ -20,18 +20,25 @@ import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {_requireAccess} from "../../utils.sol";
 import {MAX_LEVEL} from "../../../constants.sol";
 import {PauseLib} from "../../libraries/PauseLib.sol";
-import "forge-std/console.sol";
+import {
+    Unauthorized,
+    InvalidCharacter,
+    CharacterLocked,
+    CannotLevelInCombat,
+    InvalidStatChange,
+    InvalidCombatEntity
+} from "../../Errors.sol";
 
 contract StatSystem is System {
     using StatCalculator for *;
 
     modifier onlyOwner(bytes32 characterId) {
-        require(Characters.getOwner(characterId) == _msgSender(), "STAT SYSTEM: INVALID OPERATOR");
+        if (Characters.getOwner(characterId) != _msgSender()) revert Unauthorized();
         _;
     }
 
     modifier validCharacter(bytes32 characterId) {
-        require(Characters.get(characterId).tokenId != 0, "STAT SYSTEM: INVALID CHARACTER");
+        if (Characters.get(characterId).tokenId == 0) revert InvalidCharacter();
         _;
     }
 
@@ -48,14 +55,12 @@ contract StatSystem is System {
         validCharacter(characterId)
     {
         PauseLib.requireNotPaused();
-        require(!Characters.getLocked(characterId), "STAT SYSTEM: character already in game world");
+        if (Characters.getLocked(characterId)) revert CharacterLocked();
         RngRequestType requestType = RngRequestType.CharacterStats;
         Stats.setClass(characterId, class);
         
         // Use systemSwitch to call rng system
         SystemSwitch.call(abi.encodeCall(IRngSystem.getRng, (userRandomNumber, requestType, abi.encode(characterId))));
-        
-        console.log("StatSystem: Rolled stats for character", uint256(characterId), "class", uint256(class));
     }
 
     /**
@@ -68,11 +73,9 @@ contract StatSystem is System {
         onlyOwner(characterId) 
         validCharacter(characterId) 
     {
-        require(!Characters.getLocked(characterId), "STAT SYSTEM: cannot update stats in game");
+        if (Characters.getLocked(characterId)) revert CharacterLocked();
         
         Stats.set(characterId, newStats);
-        
-        console.log("StatSystem: Updated stats for character", uint256(characterId));
     }
 
     /**
@@ -94,8 +97,6 @@ contract StatSystem is System {
 
         // Calculate HP gain for next level using diminishing returns
         hpGain = StatCalculator.calculateHpForLevel(nextLevel);
-
-        console.log("StatSystem: Calculated bonuses for character", uint256(characterId));
     }
 
     /**
@@ -141,7 +142,7 @@ contract StatSystem is System {
         validCharacter(characterId)
     {
         PauseLib.requireNotPaused();
-        require(!IWorld(_world()).UD__isInEncounter(characterId), "STAT SYSTEM: cannot level in combat");
+        if (IWorld(_world()).UD__isInEncounter(characterId)) revert CannotLevelInCombat();
 
         // Get baseStats, falling back to Stats table if empty
         bytes memory encodedBaseStats = Characters.getBaseStats(characterId);
@@ -160,7 +161,7 @@ contract StatSystem is System {
         uint256 newLevel = stats.level + 1;
 
         // Validate stat changes using new diminishing returns system
-        require(StatCalculator.validateStatChanges(stats, desiredStats, newLevel), "STAT SYSTEM: INVALID STAT CHANGE");
+        if (!StatCalculator.validateStatChanges(stats, desiredStats, newLevel)) revert InvalidStatChange();
 
         // Calculate HP gain using diminishing returns
         int256 hpGain = StatCalculator.calculateHpForLevel(newLevel);
@@ -179,8 +180,6 @@ contract StatSystem is System {
 
         // Re-apply world effects
         IWorld(_world()).UD__applyWorldEffects(characterId);
-
-        console.log("StatSystem: Leveled character", uint256(characterId), "to level", stats.level);
     }
 
     /**
@@ -206,7 +205,7 @@ contract StatSystem is System {
             statsData.maxHp = stats.maxHp;
             MobStats.setArmor(entityId, stats.armor);
         } else {
-            revert("STAT SYSTEM: unrecognized entity id");
+            revert InvalidCombatEntity();
         }
         Stats.set(entityId, statsData);
     }

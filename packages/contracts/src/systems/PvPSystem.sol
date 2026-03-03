@@ -21,10 +21,15 @@ import {
 import {EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID} from "../../constants.sol";
-import {NoWeaponsEquipped} from "../Errors.sol";
+import {
+    NoWeaponsEquipped,
+    Unauthorized,
+    NotInEncounter,
+    CanOnlyFleeFirstTurn,
+    InvalidFlee,
+    UnrecognizedEncounterType
+} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
-import "forge-std/console.sol";
-
 contract PvPSystem is System {
     function isValidPvP(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
         public
@@ -44,10 +49,7 @@ contract PvPSystem is System {
                 _isValidPvP = false;
                 break;
             }
-            if (entityX >= 5 || entityY >= 5) {
-                // intentionally left empty
-            }
-            else {
+            if (entityX < 5 && entityY < 5) {
                 _isValidPvP = false;
                 break;
             }
@@ -71,10 +73,7 @@ contract PvPSystem is System {
                     _isValidPvP = false;
                     break;
                 }
-                if (entityX >= 5 || entityY >= 5) {
-                    // intentionally left empty
-                }
-                else {
+                if (entityX < 5 && entityY < 5) {
                     _isValidPvP = false;
                     break;
                 }
@@ -142,16 +141,16 @@ contract PvPSystem is System {
 
     function fleePvp(bytes32 entityId) public {
         PauseLib.requireNotPaused();
-        require(IWorld(_world()).UD__isValidOwner(entityId, _msgSender()), "Cannot flee another's character");
+        if (!IWorld(_world()).UD__isValidOwner(entityId, _msgSender())) revert Unauthorized();
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
-        require(encounterId != bytes32(0), "use removeEntityFromMap to logout");
+        if (encounterId == bytes32(0)) revert NotInEncounter();
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
         bool entityIsDefender = IWorld(_world()).UD__isDefender(encounterId, entityId);
         if (entityIsDefender) {
-            require(encounterData.currentTurn == 2, "can only flee on your first turn");
+            if (encounterData.currentTurn != 2) revert CanOnlyFleeFirstTurn();
         } else {
-            require(IWorld(_world()).UD__isAttacker(encounterId, entityId), "invalid fleeing");
-            require(encounterData.currentTurn == 1, "can only flee on your first turn");
+            if (!IWorld(_world()).UD__isAttacker(encounterId, entityId)) revert InvalidFlee();
+            if (encounterData.currentTurn != 1) revert CanOnlyFleeFirstTurn();
         }
         bool hasSmokeCover = _hasStatusEffect(entityId, SMOKE_CLOAK_EFFECT_STAT_ID);
         if (encounterData.encounterType == EncounterType.PvE) {
@@ -238,7 +237,7 @@ contract PvPSystem is System {
                 EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], empty);
             }
         } else {
-            revert("Unrecognized encounter type");
+            revert UnrecognizedEncounterType();
         }
     }
 

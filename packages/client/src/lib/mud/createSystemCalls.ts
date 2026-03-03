@@ -849,7 +849,6 @@ export function createSystemCalls(
   const updateTokenUri = async (
     characterId: string,
     characterMetadataCid: string,
-    tokenId: string,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterId, 'updateTokenUri');
     if (ownershipError) return ownershipError;

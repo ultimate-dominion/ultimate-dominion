@@ -221,7 +221,37 @@
   },
   {
     "type": "error",
+    "name": "CharacterDead",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "GamePaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InEncounter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InsufficientItemBalance",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAtRestPosition",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotItemOwner",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyHealingInCombat",
     "inputs": []
   },
   {
@@ -244,6 +274,11 @@
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
   },
   {
     "type": "error",

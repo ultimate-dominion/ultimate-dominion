@@ -9,6 +9,7 @@ error InvalidShopEntity();
 
 // Character
 error CharacterLocked();
+error InvalidCharacter();
 error InvalidRace();
 error RaceAlreadySet();
 error InvalidPowerSource();
@@ -19,14 +20,17 @@ error InvalidAdvancedClass();
 error AdvancedClassAlreadySet();
 error RequiresLevel10();
 error InvalidStatChange();
+error CannotLevelInCombat();
 error MaxCharacters();
 error NameTaken();
-error CannotLevelInCombat();
 error InvalidAccount();
 error InvalidTokenUri();
 error InvalidStarterItem();
 error InsufficientStat();
 error InvalidItemType();
+error MustChooseRaceFirst();
+error MustChoosePowerSourceFirst();
+error CharacterDead();
 
 // Shop
 error NotAtShopPosition();
@@ -51,6 +55,10 @@ error AlreadyInEncounter();
 error InvalidCombatEntity();
 error InvalidGroupSize();
 error CombatantHpZero();
+error NotInEncounter();
+error CanOnlyFleeFirstTurn();
+error InvalidFlee();
+error UnrecognizedEncounterType();
 
 // Map
 error OnlyCharacters();
@@ -66,6 +74,7 @@ error EntityNotAtPosition();
 error UseFleeFunction();
 error SessionNotTimedOut();
 error MoveTooFast();
+error NotAtRestPosition();
 
 // Items
 error ArrayMismatch();
@@ -73,6 +82,9 @@ error NotWeapon();
 error NotArmor();
 error NotConsumable();
 error NoSupply();
+error NotItemOwner();
+error MustUnequipItem();
+error OnlyHealingInCombat();
 
 // Effects
 error InvalidEffectConfig();
@@ -95,6 +107,9 @@ error ActionTypeNotRecognized();
 error InvalidMagicItemType();
 error InvalidAction();
 error UnrecognizedResistanceStat();
+error InvalidMoves();
+error UnrecognizedCombatType();
+error UnrecognizedRequestType();
 
 // Mob
 error MaxMobTypes();

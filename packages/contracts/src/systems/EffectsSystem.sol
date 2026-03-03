@@ -44,13 +44,14 @@ contract EffectsSystem is System {
             }
         }
 
-        // cull expired effects
-        for (uint256 i; i < numberOfExpiredEffects; i++) {
+        // Cull expired effects — single pass instead of O(n²) re-reads
+        // We pop from the end, so iterate backwards to avoid index shifting
+        if (numberOfExpiredEffects > 0) {
             bytes32[] memory cullingEffects = WorldStatusEffects.get(entityId);
-            for (uint256 j; j < cullingEffects.length; j++) {
+            for (uint256 j = cullingEffects.length; j > 0;) {
+                j--;
                 if (!_isNotExpired(cullingEffects[j])) {
                     cullExpiredWorldEffect(entityId, cullingEffects[j], j);
-                    break;
                 }
             }
         }
@@ -63,6 +64,13 @@ contract EffectsSystem is System {
         returns (AdjustedCombatStats memory _adjustedStats)
     {
         checkWorldStatusEffects(entityId);
+        _adjustedStats = _calculateCombatStatusEffectsInternal(entityId, _incomingStats);
+    }
+
+    function _calculateCombatStatusEffectsInternal(bytes32 entityId, AdjustedCombatStats memory _incomingStats)
+        internal
+        returns (AdjustedCombatStats memory _adjustedStats)
+    {
         StatusEffectStatsData memory statsData;
         bytes32 effectId;
 
@@ -85,11 +93,13 @@ contract EffectsSystem is System {
     }
 
     function calculateAllStatusEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
+        // checkWorldStatusEffects is called once here; calculateCombatStatusEffects
+        // uses the internal variant that skips the duplicate call (saves 3-8K gas/action)
         checkWorldStatusEffects(entityId);
 
         _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
 
-        _adjustedStats = calculateCombatStatusEffects(entityId, _adjustedStats);
+        _adjustedStats = _calculateCombatStatusEffectsInternal(entityId, _adjustedStats);
     }
 
     function cullExpiredWorldEffect(bytes32 entityId, bytes32 effectId, uint256 index) public {
@@ -193,7 +203,6 @@ contract EffectsSystem is System {
     }
 
     function expireIfInvalid(bytes32 entityId, bytes32 appliedEffectId) public view returns (bytes32) {
-        this;
         if (_isNotExpired(appliedEffectId)) {
             (bytes32 effectStatId, uint256 timestampApplied, uint256 expiredTime, uint256 turnApplied) =
                 EffectProcessor.getAppliedEffectInfo(appliedEffectId);

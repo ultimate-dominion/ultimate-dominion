@@ -37,21 +37,6 @@ export default defineConfig(({ command }) => {
       fs: {
         strict: false,
       },
-      proxy: {
-        '/mud-indexer': {
-          target: 'https://indexer.mud.garnetchain.com',
-          changeOrigin: true,
-          rewrite: path => path.replace(/^\/mud-indexer/, ''),
-          configure: proxy => {
-            proxy.on('proxyReq', proxyReq => {
-              proxyReq.setHeader(
-                'Origin',
-                'https://indexer.mud.garnetchain.com',
-              );
-            });
-          },
-        },
-      },
     },
     build: {
       target: 'es2022',

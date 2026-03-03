@@ -470,6 +470,21 @@
   },
   {
     "type": "error",
+    "name": "AdvancedClassAlreadySet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ArmorAlreadySet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CharacterLocked",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EncodedLengths_InvalidLength",
     "inputs": [
       {
@@ -482,6 +497,51 @@
   {
     "type": "error",
     "name": "GamePaused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidAdvancedClass",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidArmorType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidPowerSource",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRace",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MustChoosePowerSourceFirst",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MustChooseRaceFirst",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PowerSourceAlreadySet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RaceAlreadySet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RequiresLevel10",
     "inputs": []
   },
   {
@@ -562,6 +622,11 @@
         "internalType": "uint40"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
   },
   {
     "type": "error",

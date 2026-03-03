@@ -5,11 +5,9 @@ import {Math, WAD} from "./Math.sol";
 import {LibChunks} from "./LibChunks.sol";
 import {
     StatsData,
-    WeaponStatsData,
-    ArmorStatsData,
     CharacterEquipmentData
 } from "@codegen/index.sol";
-import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
+import {Classes, PowerSource} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {
     MAX_LEVEL,
@@ -170,26 +168,6 @@ library StatCalculator {
         stats.maxHp = int256(18);
     }
 
-    /**
-     * @notice Calculate HP bonus for leveling up
-     * @param characterClass Character's class
-     * @param currentLevel Current character level
-     * @return hpBonus HP bonus to add
-     */
-    function calculateHpBonus(Classes characterClass, uint256 currentLevel)
-        external
-        pure
-        returns (int256 hpBonus)
-    {
-        // Base HP increase per level
-        hpBonus = 3;
-
-        // Warrior gets extra HP every 3 levels
-        if (uint8(characterClass) == 0 && currentLevel % 3 == 0) {
-            hpBonus += 3;
-        }
-    }
-
     /// @dev Private helper so external functions can share the logic
     function _calculateStatPointsForLevel(uint256 level)
         private
@@ -323,52 +301,6 @@ library StatCalculator {
         adjustedStats.maxHp = baseStats.maxHp + hpModifier;
         adjustedStats.armor = baseStats.armor + armorModifier;
         adjustedStats.currentHp = baseStats.currentHp;
-    }
-
-    /**
-     * @notice Calculate stat requirements for equipment
-     */
-    function checkStatRequirements(
-        WeaponStatsData memory itemStats,
-        StatsData memory characterStats
-    ) external pure returns (bool meetsRequirements) {
-        meetsRequirements = characterStats.strength >= itemStats.strModifier &&
-            characterStats.agility >= itemStats.agiModifier &&
-            characterStats.intelligence >= itemStats.intModifier;
-    }
-
-    /**
-     * @notice Calculate stat requirements for armor
-     */
-    function checkArmorStatRequirements(
-        ArmorStatsData memory itemStats,
-        StatsData memory characterStats
-    ) external pure returns (bool meetsRequirements) {
-        meetsRequirements = characterStats.strength >= itemStats.strModifier &&
-            characterStats.agility >= itemStats.agiModifier &&
-            characterStats.intelligence >= itemStats.intModifier;
-    }
-
-    /**
-     * @notice Calculate level-based stat scaling
-     */
-    function calculateLevelScaling(int256 baseValue, uint256 level, int256 scalingFactor)
-        external
-        pure
-        returns (int256 scaledValue)
-    {
-        scaledValue = baseValue + (int256(level) * scalingFactor);
-    }
-
-    /**
-     * @notice Calculate stat cap based on level
-     */
-    function calculateStatCap(uint256 level, int256 baseCap, int256 capPerLevel)
-        external
-        pure
-        returns (int256 statCap)
-    {
-        statCap = baseCap + (int256(level) * capPerLevel);
     }
 
     /**
