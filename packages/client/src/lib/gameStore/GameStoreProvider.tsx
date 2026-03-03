@@ -40,7 +40,7 @@ export function GameStoreProvider({ children }: Props) {
 
         // 2. Connect WebSocket
         const store = useGameStore.getState();
-        const ws = new WSClient(INDEXER_WS_URL, store);
+        const ws = new WSClient(INDEXER_WS_URL, store, snapshot.block);
         wsRef.current = ws;
         ws.connect();
       } catch (err) {

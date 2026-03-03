@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import type { TableRow, TableData, FullSnapshot } from './types';
 
+export type BatchUpdate = {
+  type: 'set' | 'delete';
+  table: string;
+  keyBytes: string;
+  data?: TableRow;
+};
+
 export type GameStore = {
   /** Table data: tableName → entityKeyBytes → row data */
   tables: TableData;
@@ -14,6 +21,7 @@ export type GameStore = {
   // Actions
   setRow: (table: string, keyBytes: string, data: TableRow) => void;
   deleteRow: (table: string, keyBytes: string) => void;
+  applyBatch: (updates: BatchUpdate[]) => void;
   hydrate: (snapshot: FullSnapshot) => void;
   setConnected: (connected: boolean) => void;
   setCurrentBlock: (block: number) => void;
@@ -46,6 +54,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
           [table]: tableData,
         },
       };
+    }),
+
+  applyBatch: (updates) =>
+    set((state) => {
+      const newTables = { ...state.tables };
+      for (const update of updates) {
+        if (update.type === 'set') {
+          newTables[update.table] = {
+            ...(newTables[update.table] || {}),
+            [update.keyBytes]: update.data!,
+          };
+        } else {
+          const copy = { ...(newTables[update.table] || {}) };
+          delete copy[update.keyBytes];
+          newTables[update.table] = copy;
+        }
+      }
+      return { tables: newTables };
     }),
 
   hydrate: (snapshot) =>

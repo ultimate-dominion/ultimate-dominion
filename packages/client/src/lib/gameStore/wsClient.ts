@@ -1,5 +1,5 @@
 import type { ServerMessage, ClientMessage } from './types';
-import type { GameStore } from './store';
+import type { GameStore, BatchUpdate } from './store';
 
 const RECONNECT_BASE_DELAY = 1000;
 const RECONNECT_MAX_DELAY = 30000;
@@ -12,12 +12,15 @@ export class WSClient {
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
-  private lastBlock = 0;
+  private lastBlock: number;
   private disposed = false;
+  private pendingUpdates: BatchUpdate[] = [];
+  private flushScheduled = false;
 
-  constructor(url: string, store: GameStore) {
+  constructor(url: string, store: GameStore, initialBlock = 0) {
     this.url = url;
     this.store = store;
+    this.lastBlock = initialBlock;
   }
 
   connect() {
@@ -42,6 +45,7 @@ export class WSClient {
 
       // Resume from last known block if we have one
       if (this.lastBlock > 0) {
+        console.log(`[ws] resume from block ${this.lastBlock}`);
         this.send({ type: 'resume', lastBlock: this.lastBlock });
       }
     };
@@ -88,7 +92,7 @@ export class WSClient {
         break;
 
       case 'update':
-        this.store.setRow(msg.table, msg.keyBytes, msg.value);
+        this.queueUpdate({ type: 'set', table: msg.table, keyBytes: msg.keyBytes, data: msg.value });
         if (msg.block > this.lastBlock) {
           this.lastBlock = msg.block;
           this.store.setCurrentBlock(msg.block);
@@ -96,7 +100,7 @@ export class WSClient {
         break;
 
       case 'delete':
-        this.store.deleteRow(msg.table, msg.keyBytes);
+        this.queueUpdate({ type: 'delete', table: msg.table, keyBytes: msg.keyBytes });
         if (msg.block > this.lastBlock) {
           this.lastBlock = msg.block;
           this.store.setCurrentBlock(msg.block);
@@ -106,6 +110,21 @@ export class WSClient {
       case 'pong':
         // Heartbeat response received
         break;
+    }
+  }
+
+  private queueUpdate(update: BatchUpdate) {
+    this.pendingUpdates.push(update);
+    if (!this.flushScheduled) {
+      this.flushScheduled = true;
+      requestAnimationFrame(() => {
+        this.flushScheduled = false;
+        const batch = this.pendingUpdates;
+        this.pendingUpdates = [];
+        if (batch.length > 0) {
+          this.store.applyBatch(batch);
+        }
+      });
     }
   }
 

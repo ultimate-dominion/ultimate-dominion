@@ -325,6 +325,7 @@ export const ItemsProvider = ({
   );
 
   useEffect(() => {
+    let cancelled = false;
     const itemEntryCount = Object.keys(itemsTable).length;
     console.info('[ItemsContext] effect fired — hydrated:', hydrated, 'items:', itemEntryCount);
 
@@ -332,9 +333,7 @@ export const ItemsProvider = ({
       if (!hydrated) return;
 
       if (itemEntryCount === 0) {
-        // No items in the world — stop loading so downstream components aren't
-        // permanently blocked waiting for items that don't exist.
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
         return;
       }
 
@@ -370,6 +369,8 @@ export const ItemsProvider = ({
             fetchAllSpells(spellIds),
           ]);
 
+        if (cancelled) return;
+
         if (armorResult.status === 'fulfilled') {
           setArmorTemplates(armorResult.value);
         } else {
@@ -394,14 +395,18 @@ export const ItemsProvider = ({
           console.error('[ItemsContext] Error fetching spells:', spellResult.reason);
         }
       } catch (e) {
-        renderError(
-          (e as Error)?.message ?? 'Failed to fetch item templates.',
-          e,
-        );
+        if (!cancelled) {
+          renderError(
+            (e as Error)?.message ?? 'Failed to fetch item templates.',
+            e,
+          );
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     })();
+
+    return () => { cancelled = true; };
   }, [
     hydrated,
     itemsTable,
