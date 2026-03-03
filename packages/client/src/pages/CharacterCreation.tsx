@@ -941,20 +941,23 @@ const CharacterCreationInner = (): JSX.Element => {
                   </Text>
                 </Box>
               )}
-              {!rolledOnce && (
-                <Box px={{ base: 4, sm: 10 }} w="100%">
-                  <Button
-                    isDisabled={isDisabled || !hasCompletedChoices}
-                    isLoading={rollStatsTx.isLoading}
-                    loadingText="Rolling..."
-                    onClick={onRollStats}
-                    size="lg"
-                    width="100%"
-                  >
-                    Roll
-                  </Button>
-                </Box>
-              )}
+              <Box px={{ base: 4, sm: 10 }} w="100%">
+                <Button
+                  isDisabled={isDisabled || !hasCompletedChoices}
+                  isLoading={rollStatsTx.isLoading}
+                  loadingText="Rolling..."
+                  onClick={onRollStats}
+                  size="lg"
+                  width="100%"
+                >
+                  {rolledOnce ? 'Re-Roll Stats' : 'Roll Stats'}
+                </Button>
+                {rolledOnce && (
+                  <Text fontSize="xs" color="#9A9080" textAlign="center" mt={2}>
+                    Re-roll as many times as you like — it's free.
+                  </Text>
+                )}
+              </Box>
             </VStack>
           )}
 
@@ -974,18 +977,6 @@ const CharacterCreationInner = (): JSX.Element => {
               <Heading size="sm" textAlign="left">
                 Stats
               </Heading>
-              {creationStep === 'stats' && rolledOnce && (
-                <Button
-                  isDisabled={isDisabled || !hasCompletedChoices}
-                  isLoading={rollStatsTx.isLoading}
-                  loadingText="Rolling..."
-                  onClick={onRollStats}
-                  size="sm"
-                  variant="outline"
-                >
-                  Re-roll
-                </Button>
-              )}
             </HStack>
             <VStack fontWeight={700} spacing={1.5} w="100%" opacity={rolledOnce ? 1 : 0.5}>
               <Box
