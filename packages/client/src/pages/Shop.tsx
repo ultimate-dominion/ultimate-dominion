@@ -190,6 +190,7 @@ export const Shop = (): JSX.Element => {
     }
 
     refreshEntities();
+    refreshCharacter();
   }, [
     delegatorAddress,
     isConnected,
@@ -197,6 +198,7 @@ export const Shop = (): JSX.Element => {
     isRefreshing,
     isSynced,
     navigate,
+    refreshCharacter,
     refreshEntities,
     userCharacter,
   ]);

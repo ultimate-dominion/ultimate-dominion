@@ -22,7 +22,7 @@ import {
 import {IWorld} from "@world/IWorld.sol";
 import {ERC1155System} from "@erc1155/ERC1155System.sol";
 import {_lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE, CHARACTERS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
+import {WORLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
 import {Position} from "@codegen/index.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
@@ -32,6 +32,8 @@ import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 import {IERC1155System} from "@erc1155/IERC1155System.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
+import {Owners as ERC1155Owners} from "@erc1155/tables/Owners.sol";
+import {_ownersTableId} from "@erc1155/utils.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IFragmentSystem} from "@world/IFragmentSystem.sol";
 import "forge-std/console.sol";
@@ -137,11 +139,22 @@ contract ShopSystem is System, ReentrancyGuard {
         sellTemps.price = amount * itemMarkdown(shopId, sellTemps.sellable[itemIndex]);
         Shops.setGold(shopId, Shops.getGold(shopId) - sellTemps.price);
 
-        // take [amount] of the users' item
+        // Transfer item: write directly to ERC1155 tables to bypass puppet authorization issues
+        // (Puppet.fallback uses callFrom(msg.sender) which resolves to World address, not the user)
         sellTemps.sellableItems = Shops.getSellableItems(shopId);
-        IERC1155System(UltimateDominionConfig.getItems()).transferFrom(
-            _msgSender(), _lootManagerAddress(), sellTemps.sellableItems[itemIndex], amount
-        );
+        {
+            address seller = _msgSender();
+            address lootManager = _lootManagerAddress();
+            uint256 itemId = sellTemps.sellableItems[itemIndex];
+            bytes14 ns = ITEMS_NAMESPACE;
+
+            uint256 sellerBalance = ERC1155Owners.getBalance(_ownersTableId(ns), seller, itemId);
+            require(sellerBalance >= amount, "Insufficient item balance");
+            ERC1155Owners.setBalance(_ownersTableId(ns), seller, itemId, sellerBalance - amount);
+
+            uint256 lmBalance = ERC1155Owners.getBalance(_ownersTableId(ns), lootManager, itemId);
+            ERC1155Owners.setBalance(_ownersTableId(ns), lootManager, itemId, lmBalance + amount);
+        }
 
         // give [amount*price] gold
         IWorld(_world()).UD__dropGoldToPlayer(characterId, sellTemps.price);
