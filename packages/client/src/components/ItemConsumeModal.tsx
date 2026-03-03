@@ -100,6 +100,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
 
   const needsSwap = conflictingItem != null;
 
+  const isHealthRestore = useMemo(
+    () => item.hpRestoreAmount !== BigInt(0),
+    [item.hpRestoreAmount],
+  );
+
   // Buff items (non-heal) require equipping before the contract will accept them.
   // Auto-equip transparently so the player just clicks "Consume" once.
   const needsAutoEquip = !isEquipped && !isHealthRestore && !currentBattle;
@@ -260,11 +265,6 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     unequipTx,
     unequipItem,
   ]);
-
-  const isHealthRestore = useMemo(
-    () => item.hpRestoreAmount !== BigInt(0),
-    [item.hpRestoreAmount],
-  );
 
   const isHealthFull = useMemo(() => {
     if (!character) return false;
