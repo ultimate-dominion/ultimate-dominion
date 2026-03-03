@@ -427,7 +427,6 @@ export const BattleProvider = ({
 
   const onFleePvp = useCallback(async () => {
     if (!character || !delegatorAddress || !currentBattle) return;
-    if (currentBattle.encounterType !== EncounterType.PvP) return;
 
     await fleeTx.execute(() => fleePvp(character.id));
   }, [character, currentBattle, delegatorAddress, fleePvp, fleeTx]);
