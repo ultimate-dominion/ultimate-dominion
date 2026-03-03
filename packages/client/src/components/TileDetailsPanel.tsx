@@ -313,13 +313,14 @@ export const TileDetailsPanel = (): JSX.Element => {
       action => action.victimId === opponent?.id,
     );
 
-    return _opponentStatusEffects
+    const names = _opponentStatusEffects
       .map(action => action.name)
       .concat(
         (opponent as Character)?.worldStatusEffects
           ?.filter(effect => effect.active)
           .map(effect => effect.name) ?? [],
       );
+    return [...new Set(names)];
   }, [opponent, statusEffectActions]);
 
   const userCharacterStatusEffects = useMemo(() => {
@@ -331,13 +332,14 @@ export const TileDetailsPanel = (): JSX.Element => {
       action => action.victimId === userCharacterForBattleRendering?.id,
     );
 
-    return _userCharacterStatusEffects
+    const names = _userCharacterStatusEffects
       .map(action => action.name)
       .concat(
         userCharacterForBattleRendering?.worldStatusEffects
           ?.filter(effect => effect.active)
           .map(effect => effect.name) ?? [],
       );
+    return [...new Set(names)];
   }, [statusEffectActions, userCharacterForBattleRendering]);
 
   const expiredOpponentEffectModifications: {
