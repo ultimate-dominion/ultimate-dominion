@@ -137,6 +137,66 @@ contract StatCalculatorTest is Test {
         assertFalse(isValid);
     }
 
+    function testValidateStatChanges_PhysicalBonusAtLevel5() public {
+        StatsData memory currentStats = _createDefaultStatsData();
+        currentStats.powerSource = PowerSource.Physical;
+
+        // Physical at level 5 gets 3 points (2 base + 1 bonus)
+        StatsData memory desiredStats = _createDefaultStatsData();
+        desiredStats.powerSource = PowerSource.Physical;
+        desiredStats.strength = 13; // +3 point change
+
+        bool isValid = StatCalculator.validateStatChanges(currentStats, desiredStats, 5);
+        assertTrue(isValid);
+
+        // 2 points should be invalid for Physical at level 5 (needs exactly 3)
+        StatsData memory twoPointStats = _createDefaultStatsData();
+        twoPointStats.powerSource = PowerSource.Physical;
+        twoPointStats.strength = 12; // +2 point change
+        isValid = StatCalculator.validateStatChanges(currentStats, twoPointStats, 5);
+        assertFalse(isValid);
+    }
+
+    function testValidateStatChanges_NonPhysicalNoBonusAtLevel5() public {
+        // Divine at level 5 should NOT get the extra point
+        StatsData memory divineStats = _createDefaultStatsData();
+        divineStats.powerSource = PowerSource.Divine;
+
+        StatsData memory desiredStats = _createDefaultStatsData();
+        desiredStats.powerSource = PowerSource.Divine;
+        desiredStats.strength = 12; // +2 points (normal)
+
+        bool isValid = StatCalculator.validateStatChanges(divineStats, desiredStats, 5);
+        assertTrue(isValid);
+
+        // 3 points should be invalid for Divine at level 5
+        StatsData memory threePointStats = _createDefaultStatsData();
+        threePointStats.powerSource = PowerSource.Divine;
+        threePointStats.strength = 13; // +3 points
+        isValid = StatCalculator.validateStatChanges(divineStats, threePointStats, 5);
+        assertFalse(isValid);
+    }
+
+    function testValidateStatChanges_PhysicalNoBonusAtOtherLevels() public {
+        // Physical at level 4 should NOT get the extra point
+        StatsData memory currentStats = _createDefaultStatsData();
+        currentStats.powerSource = PowerSource.Physical;
+
+        StatsData memory desiredStats = _createDefaultStatsData();
+        desiredStats.powerSource = PowerSource.Physical;
+        desiredStats.strength = 12; // +2 points (normal)
+
+        bool isValid = StatCalculator.validateStatChanges(currentStats, desiredStats, 4);
+        assertTrue(isValid);
+
+        // 3 points should be invalid at level 4
+        StatsData memory threePointStats = _createDefaultStatsData();
+        threePointStats.powerSource = PowerSource.Physical;
+        threePointStats.strength = 13; // +3 points
+        isValid = StatCalculator.validateStatChanges(currentStats, threePointStats, 4);
+        assertFalse(isValid);
+    }
+
     function testCalculateEquipmentBonuses() public {
         StatsData memory baseStats = _createDefaultStatsData();
 

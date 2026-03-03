@@ -97,17 +97,17 @@ const RACE_INFO = {
 const POWER_SOURCE_INFO = {
   [PowerSource.Divine]: {
     name: 'Divine',
-    description: 'Channel holy or natural power. Healing and protection.',
+    description: 'Something answers when you call. The gods are dead, but the channels they carved still carry power.',
     icon: '✨',
   },
   [PowerSource.Weave]: {
     name: 'Weave',
-    description: 'Tap into arcane magic. Raw magical power.',
+    description: 'The fabric of reality has threads. Most people can\'t see them. You can. Pull the right one and fire blooms.',
     icon: '🔮',
   },
   [PowerSource.Physical]: {
     name: 'Physical',
-    description: 'Master of martial skills. Weapon mastery.',
+    description: 'No magic. No prayers. Just you \u2014 your body, your weapon, your will.',
     icon: '⚔️',
   },
 };

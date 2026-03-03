@@ -7,7 +7,7 @@ import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { getTableValue } from '../lib/gameStore';
 import { getStatSymbol } from '../utils/helpers';
-import { type Character } from '../utils/types';
+import { type Character, PowerSource } from '../utils/types';
 
 import { HealthBar } from './HealthBar';
 import { PolygonalCard } from './PolygonalCard';
@@ -68,21 +68,30 @@ export const LevelingPanel = ({
   // Levels 1-10: +2 stat points per level (STAT_POINTS_EARLY)
   // Levels 11-50: +1 stat point every 2 levels (STAT_POINTS_MID)
   // Levels 51-100: +1 stat point every 5 levels (STAT_POINTS_LATE)
-  const calculateAbilityPointsForLevel = useCallback((nextLevel: bigint): number => {
-    const level = Number(nextLevel);
-    if (level <= 10) {
-      return 2; // Early game: +2 per level
-    } else if (level <= 50) {
-      return level % 2 === 0 ? 1 : 0; // Mid game: +1 every 2 levels
-    } else {
-      return level % 5 === 0 ? 1 : 0; // Late game: +1 every 5 levels
-    }
-  }, []);
+  const calculateAbilityPointsForLevel = useCallback(
+    (nextLevel: bigint, powerSource: PowerSource): number => {
+      const level = Number(nextLevel);
+      let points: number;
+      if (level <= 10) {
+        points = 2; // Early game: +2 per level
+      } else if (level <= 50) {
+        points = level % 2 === 0 ? 1 : 0; // Mid game: +1 every 2 levels
+      } else {
+        points = level % 5 === 0 ? 1 : 0; // Late game: +1 every 5 levels
+      }
+      // Physical power source bonus at level 5
+      if (level === 5 && powerSource === PowerSource.Physical) {
+        points += 1;
+      }
+      return points;
+    },
+    [],
+  );
 
   useEffect(() => {
     if (canLevel) {
       const nextLevel = character.level + BigInt(1);
-      setAbilityPoints(calculateAbilityPointsForLevel(nextLevel));
+      setAbilityPoints(calculateAbilityPointsForLevel(nextLevel, character.baseStats.powerSource));
     } else {
       setAbilityPoints(0);
     }
@@ -94,6 +103,7 @@ export const LevelingPanel = ({
     canLevel,
     character.baseStats.agility,
     character.baseStats.intelligence,
+    character.baseStats.powerSource,
     character.baseStats.strength,
     character.level,
   ]);
@@ -248,7 +258,15 @@ export const LevelingPanel = ({
       await refreshCharacter();
 
       const newLevel = Number(character.level) + 1;
-      if (newLevel === 3) {
+      if (newLevel === 5) {
+        const bonusMsg: Record<number, string> = {
+          [PowerSource.Divine]: '+2 HP from your Divine power',
+          [PowerSource.Weave]: '+1 INT from the Weave',
+          [PowerSource.Physical]: 'Physical bonus point allocated',
+        };
+        const msg = bonusMsg[character.baseStats.powerSource];
+        renderSuccess(`Level 5!${msg ? ` ${msg}.` : ''}`);
+      } else if (newLevel === 3) {
         renderSuccess('Level 3! You earned the Adventurer Badge!');
       } else {
         renderSuccess('Character leveled up!');
@@ -307,6 +325,16 @@ export const LevelingPanel = ({
     };
   }, [character]);
 
+  const nextLevel = character.level + BigInt(1);
+
+  const powerSourceBonusText = useMemo(() => {
+    const ps = character.baseStats.powerSource;
+    if (ps === PowerSource.Divine) return 'Your faith stirs \u2014 +2 HP';
+    if (ps === PowerSource.Weave) return 'The Weave responds \u2014 +1 Intelligence';
+    if (ps === PowerSource.Physical) return 'Your discipline sharpens \u2014 +1 bonus ability point';
+    return '';
+  }, [character.baseStats.powerSource]);
+
   const Wrapper = compact
     ? ({ children }: { children: ReactNode }) => (
         <VStack
@@ -338,6 +366,22 @@ export const LevelingPanel = ({
             Ability Points: {abilityPoints}
           </Text>
         </HStack>
+        {canLevel && nextLevel === BigInt(5) && character.baseStats.powerSource !== PowerSource.None && (
+          <Box
+            bg="rgba(212, 165, 74, 0.08)"
+            border="1px solid"
+            borderColor="rgba(200, 122, 42, 0.4)"
+            borderRadius="md"
+            mx={6}
+            px={4}
+            py={3}
+            w="calc(100% - 48px)"
+          >
+            <Text color="#D4A54A" fontFamily="Cinzel, serif" fontSize="xs" fontWeight={700} textAlign="center">
+              {powerSourceBonusText}
+            </Text>
+          </Box>
+        )}
         {!compact && (
           <HealthBar
             currentHp={character.currentHp}

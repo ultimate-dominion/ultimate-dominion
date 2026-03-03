@@ -20,7 +20,8 @@ import {
     STAT_POINTS_LATE,
     BASE_HP_GAIN_EARLY,
     BASE_HP_GAIN_MID,
-    BASE_HP_GAIN_LATE
+    BASE_HP_GAIN_LATE,
+    POWER_SOURCE_BONUS_LEVEL
 } from "../../constants.sol";
 import {NegativeStat} from "../Errors.sol";
 
@@ -259,6 +260,12 @@ library StatCalculator {
 
         // Total stat changes must equal the stat points for this level
         int256 allowedPoints = _calculateStatPointsForLevel(newLevel);
+
+        // Power source bonus: Physical gets +1 extra stat point at milestone
+        if (newLevel == POWER_SOURCE_BONUS_LEVEL && currentStats.powerSource == PowerSource.Physical) {
+            allowedPoints += 1;
+        }
+
         isValid = (strChange + agiChange + intChange) == allowedPoints;
     }
 

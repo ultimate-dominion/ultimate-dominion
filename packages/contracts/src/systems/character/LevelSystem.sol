@@ -15,7 +15,7 @@ import {
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE} from "../../../constants.sol";
+import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE, POWER_SOURCE_BONUS_LEVEL} from "../../../constants.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {_requireAccess} from "../../utils.sol";
@@ -145,6 +145,16 @@ contract LevelSystem is System {
         currentStats.agility = desiredStats.agility;
         currentStats.intelligence = desiredStats.intelligence;
         currentStats.level = newLevel;
+
+        // Power source milestone bonus at level 5
+        if (newLevel == POWER_SOURCE_BONUS_LEVEL) {
+            if (currentStats.powerSource == PowerSource.Divine) {
+                currentStats.maxHp += 2;
+            } else if (currentStats.powerSource == PowerSource.Weave) {
+                currentStats.intelligence += 1;
+            }
+            // Physical: extra ability point handled in validateStatChanges
+        }
 
         // Update character base stats
         Characters.setBaseStats(characterId, abi.encode(currentStats));

@@ -59,6 +59,7 @@ uint256 constant EARLY_GAME_CAP = 10;
 uint256 constant MID_GAME_CAP = 50;
 uint256 constant EXP_MODIFIER = 2;
 uint256 constant MAX_LEVEL = 100;
+uint256 constant POWER_SOURCE_BONUS_LEVEL = 5;
 
 // Class multipliers (stored as basis points: 1000 = 100%, 1100 = 110%)
 uint256 constant CLASS_MULTIPLIER_BASE = 1000;  // 100% base
