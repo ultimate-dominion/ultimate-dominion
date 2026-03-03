@@ -29,20 +29,17 @@ export const ShopRow = ({
     if (!delegatorAddress) return;
     if (!character) return;
 
-    // If already in an encounter with THIS shop, just navigate directly
-    if (character.worldEncounter?.shopId === shopId) {
-      navigate(`/shops/${shopId}`);
-      return;
-    }
-
-    // If stuck in an encounter (same or different entity), end it first.
-    // endShopEncounter now awaits the receipt, so the encounter is truly
-    // cleared on-chain before we proceed to create a new one.
+    // If there's any existing world encounter (valid or stale), end it first.
+    // This handles ghost encounters where EncounterEntity was cleared but
+    // WorldEncounter wasn't, as well as encounters with different entities.
+    // Always create a fresh encounter to ensure consistent on-chain state.
     if (character.worldEncounter?.encounterId) {
       const endResult = await endShopEncounter(character.worldEncounter.encounterId);
       if (!endResult.success) {
         console.error('[ShopRow] Cannot clear existing encounter:', endResult.error);
-        return;
+        // Don't return — the encounter may already be ended on-chain.
+        // Proceed to create a fresh encounter; createEncounter will fail
+        // with AlreadyInEncounter if it truly can't be created.
       }
       await refreshCharacter();
     }
