@@ -8,7 +8,8 @@ import {
     CharactersData,
     Stats,
     StatsData,
-    ClassMultipliers
+    ClassMultipliers,
+    StatRollCount
 } from "@codegen/index.sol";
 import {Race, PowerSource, ArmorType, AdvancedClass, RngRequestType} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
@@ -28,8 +29,10 @@ import {
     AdvancedClassAlreadySet,
     InvalidAdvancedClass,
     MustChooseRaceFirst,
-    MustChoosePowerSourceFirst
+    MustChoosePowerSourceFirst,
+    MaxStatRollsExceeded
 } from "../Errors.sol";
+import {MAX_STAT_ROLLS} from "../../constants.sol";
 
 /**
  * @title ImplicitClassSystem
@@ -147,7 +150,11 @@ contract ImplicitClassSystem is System {
         if (Characters.getLocked(characterId)) revert CharacterLocked();
         if (Stats.getRace(characterId) == Race.None) revert MustChooseRaceFirst();
         if (Stats.getPowerSource(characterId) == PowerSource.None) revert MustChoosePowerSourceFirst();
-        // Note: startingArmor is now set via enterGame when player selects their starter armor
+
+        // Enforce re-roll limit (MAX_STAT_ROLLS total rolls allowed)
+        uint32 currentRolls = StatRollCount.getRollCount(characterId);
+        if (currentRolls >= MAX_STAT_ROLLS) revert MaxStatRollsExceeded();
+        StatRollCount.setRollCount(characterId, currentRolls + 1);
 
         RngRequestType requestType = RngRequestType.CharacterStats;
         // Encode characterId with a flag indicating this is for balanced stats

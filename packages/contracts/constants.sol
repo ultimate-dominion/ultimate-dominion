@@ -100,6 +100,9 @@ uint256 constant STAT_VARIANCE_PCT = 10;      // ±10% variance on all spawns
 // Flashpowder / Smoke Cloak — flee without gold penalty
 bytes8 constant SMOKE_CLOAK_EFFECT_STAT_ID = 0x5db83b18b4d1bdc3; // keccak256(abi.encode("smoke_cloak"))[:8]
 
+// Character creation
+uint256 constant MAX_STAT_ROLLS = 4; // 1 initial roll + 3 re-rolls
+
 // GasStation constants
 uint256 constant DEFAULT_ETH_PER_GOLD = 1e12;         // 0.000001 ETH per Gold (1 Gold = 1e18 units)
 uint256 constant DEFAULT_MAX_GOLD_PER_SWAP = 500e18;   // 500 Gold max per swap

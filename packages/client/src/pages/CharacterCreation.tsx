@@ -41,8 +41,10 @@ import { useTransaction } from '../hooks/useTransaction';
 import { useUploadFile } from '../hooks/useUploadFile';
 import {
   decodeUint256FromKey,
+  encodeBytes32Key,
   encodeUint256Key,
   toBigInt,
+  toNumber,
   useGameConfig,
   useGameTable,
   useGameValue,
@@ -59,6 +61,9 @@ import {
   Race,
   type Weapon,
 } from '../utils/types';
+
+// Must match MAX_STAT_ROLLS in contracts/constants.sol
+const MAX_STAT_ROLLS = 4; // 1 initial roll + 3 re-rolls
 
 // Helper to determine dominant stat for display purposes
 const getDominantStat = (
@@ -169,6 +174,13 @@ const CharacterCreationInner = (): JSX.Element => {
   const [description, setDescription] = useState('');
   // Reactive query: re-renders when StarterItemPool records arrive via store sync
   const starterItemPoolTable = useGameTable('StarterItemPool');
+
+  // Track stat roll count (reactive — updates when StatRollCount table changes)
+  const rollCountKey = character?.id ? encodeBytes32Key(character.id) : undefined;
+  const rollCountRow = useGameValue('StatRollCount', rollCountKey);
+  const rollCount = toNumber(rollCountRow?.rollCount);
+  const rollsRemaining = MAX_STAT_ROLLS - rollCount;
+  const rollsExhausted = rollsRemaining <= 0;
 
   // Implicit class system state
   const [selectedRace, setSelectedRace] = useState<Race>(Race.None);
@@ -943,7 +955,7 @@ const CharacterCreationInner = (): JSX.Element => {
               )}
               <Box px={{ base: 4, sm: 10 }} w="100%">
                 <Button
-                  isDisabled={isDisabled || !hasCompletedChoices}
+                  isDisabled={isDisabled || !hasCompletedChoices || rollsExhausted}
                   isLoading={rollStatsTx.isLoading}
                   loadingText="Rolling..."
                   onClick={onRollStats}
@@ -952,9 +964,14 @@ const CharacterCreationInner = (): JSX.Element => {
                 >
                   {rolledOnce ? 'Re-Roll Stats' : 'Roll Stats'}
                 </Button>
-                {rolledOnce && (
+                {rolledOnce && !rollsExhausted && (
                   <Text fontSize="xs" color="#9A9080" textAlign="center" mt={2}>
-                    Re-roll as many times as you like — it's free.
+                    {rollsRemaining} re-roll{rollsRemaining !== 1 ? 's' : ''} remaining — it's free.
+                  </Text>
+                )}
+                {rollsExhausted && (
+                  <Text fontSize="xs" color="#D4A54A" textAlign="center" mt={2}>
+                    No re-rolls remaining. These are your final stats.
                   </Text>
                 )}
               </Box>

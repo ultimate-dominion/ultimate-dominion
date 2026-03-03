@@ -30,6 +30,7 @@ error InsufficientStat();
 error InvalidItemType();
 error MustChooseRaceFirst();
 error MustChoosePowerSourceFirst();
+error MaxStatRollsExceeded();
 error CharacterDead();
 
 // Shop

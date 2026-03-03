@@ -957,6 +957,14 @@ export default defineWorld({
         tokenId: "uint256",
       },
     },
+    // Track how many times a character has rolled stats (capped at MAX_STAT_ROLLS)
+    StatRollCount: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        rollCount: "uint32",
+      },
+    },
     // Track first-time actions for triggers
     CharacterFirstActions: {
       key: ["characterId"],

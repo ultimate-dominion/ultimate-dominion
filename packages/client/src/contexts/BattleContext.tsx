@@ -10,7 +10,6 @@ import {
 } from 'react';
 
 import {
-  getTableEntries,
   getTableValue,
   toBigInt,
   toNumber,
@@ -310,10 +309,11 @@ export const BattleProvider = ({
     [allAttackOutcomes, currentBattle],
   );
 
+  // Reactive: re-renders when any EncounterEntity row changes (status effects applied)
+  const encounterEntityTable = useGameTable('EncounterEntity');
+
   const statusEffectActions: StatusAction[] = useMemo(() => {
     if (!currentBattle) return [];
-
-    const encounterEntityTable = getTableEntries('EncounterEntity');
 
     const matchingEntries = Object.entries(encounterEntityTable).filter(
       ([, row]) => {
@@ -357,7 +357,7 @@ export const BattleProvider = ({
         });
       })
       .filter((action): action is StatusAction => action !== null);
-  }, [currentBattle, combatEncounterTable]); // combatEncounterTable triggers re-derive when store updates
+  }, [currentBattle, encounterEntityTable, combatEncounterTable]);
 
   const onAttack = useCallback(
     async (itemId: string) => {

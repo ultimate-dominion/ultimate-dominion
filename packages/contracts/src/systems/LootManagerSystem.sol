@@ -104,18 +104,6 @@ contract LootManagerSystem is ERC1155Holder, System {
         // Update total supply
         uint256 currentSupply = TotalSupply.getTotalSupply(_totalSupplyTableId(namespace), itemId);
         TotalSupply.setTotalSupply(_totalSupplyTableId(namespace), itemId, currentSupply + amount);
-
-        // Auto-equip consumables if there's room in the shared weapon+consumable slots
-        if (gasleft() > 80_000) {
-            ItemType itemType = Items.getItemType(itemId);
-            if (itemType == ItemType.Consumable) {
-                uint256 totalEquipped = CharacterEquipment.lengthEquippedWeapons(characterId)
-                    + CharacterEquipment.lengthEquippedConsumables(characterId);
-                if (totalEquipped < 4 && !IWorld(_world()).UD__isEquipped(characterId, itemId)) {
-                    CharacterEquipment.pushEquippedConsumables(characterId, itemId);
-                }
-            }
-        }
     }
 
     function dropItems(bytes32[] memory characterIds, uint256[] memory itemIds, uint256[] memory amounts) public {
