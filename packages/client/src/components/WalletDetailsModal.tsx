@@ -119,12 +119,16 @@ export const WalletDetailsModal = ({
   }, [handleRevokeDelegation, renderError, renderSuccess]);
 
   const onLogout = useCallback(async () => {
+    // Best-effort despawn — don't block logout if it fails
     if (character?.locked && isSpawned) {
-      const result = await logoutTx.execute(async () => {
-        const { error, success } = await removeEntityFromBoard(character.id);
-        if (error && !success) throw new Error(error);
-      });
-      if (result === undefined) return;
+      try {
+        await logoutTx.execute(async () => {
+          const { error, success } = await removeEntityFromBoard(character.id);
+          if (error && !success) throw new Error(error);
+        });
+      } catch (e) {
+        console.warn('[Logout] removeEntityFromBoard failed, proceeding with disconnect:', e);
+      }
     }
 
     try {

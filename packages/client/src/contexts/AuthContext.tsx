@@ -267,6 +267,28 @@ export const AuthProvider = ({
     } catch {
       // ignore — best-effort cleanup
     }
+
+    // Also clear sessionStorage and IndexedDB for Thirdweb
+    try {
+      const sessionKeysToRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && (key.startsWith('thirdweb') || key.startsWith('walletConnect'))) {
+          sessionKeysToRemove.push(key);
+        }
+      }
+      sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+    } catch { /* best-effort */ }
+
+    try {
+      const databases = await indexedDB.databases();
+      for (const db of databases) {
+        if (db.name && (db.name.includes('thirdweb') || db.name.includes('walletconnect'))) {
+          indexedDB.deleteDatabase(db.name);
+          console.info('[Auth] Deleted IndexedDB:', db.name);
+        }
+      }
+    } catch { /* best-effort */ }
   }, [embeddedWallet, wagmiConnected, wagmiDisconnect]);
 
   const value = useMemo((): AuthContextType => {

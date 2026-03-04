@@ -22,6 +22,10 @@ import {PauseLib} from "../libraries/PauseLib.sol";
 contract MapRemovalSystem is System {
     function removeEntityFromBoard(bytes32 entityId) public {
         PauseLib.requireNotPaused();
+
+        // If entity is not spawned, nothing to remove
+        if (!Spawned.getSpawned(entityId)) return;
+
         bytes32 encounterId = EncounterEntity.getEncounterId(entityId);
 
         // if entity is a character
@@ -32,15 +36,15 @@ contract MapRemovalSystem is System {
             if (senderIsOwner) {
                 // if character is in combat use the combat flee function
                 if (encounterId != bytes32(0)) revert UseFleeFunction();
-                Counters.set(address(this), 0, (spawnedPlayers - 1));
+                if (spawnedPlayers > 0) Counters.set(address(this), 0, (spawnedPlayers - 1));
                 // if caller is not a system
             } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 if ((SessionTimer.get(entityId) + SESSION_TIMEOUT) >= block.timestamp) revert SessionNotTimedOut();
-                Counters.set(address(this), 0, (spawnedPlayers - 1));
+                if (spawnedPlayers > 0) Counters.set(address(this), 0, (spawnedPlayers - 1));
                 // Note: Access check removed to allow inter-system calls
             } else {
                 // Inter-system call (e.g., from EncounterSystem)
-                Counters.set(address(this), 0, (spawnedPlayers - 1));
+                if (spawnedPlayers > 0) Counters.set(address(this), 0, (spawnedPlayers - 1));
             }
         } else {
             // Non-character entity (e.g., monster) - allow inter-system calls
