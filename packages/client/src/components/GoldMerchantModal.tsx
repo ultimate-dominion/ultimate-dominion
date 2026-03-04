@@ -41,45 +41,15 @@ const merchantTheme = darkTheme({
 });
 
 /**
- * Aggressive CSS overrides to strip crypto UI from BuyWidget.
- * Hides: PAY label + token/chain selector, TO label + address,
- * the directional arrow, and any wallet address displays.
- * These target the widget's internal DOM structure.
+ * Targeted CSS overrides to hide crypto jargon from BuyWidget.
+ * Only hides specific text/elements, not structural containers.
  */
 const WIDGET_CSS_OVERRIDES = `
-  /* Hide the "PAY" section header and token/chain selector */
-  .gold-merchant-widget > div > div > div:first-child > div:first-child {
-    display: none !important;
-  }
-
-  /* Hide the arrow between PAY and TO */
-  .gold-merchant-widget > div > div > div:nth-child(2) {
-    display: none !important;
-  }
-
-  /* Hide the "TO" section entirely (address display) */
-  .gold-merchant-widget > div > div > div:nth-child(3) {
-    display: none !important;
-  }
-
-  /* Fallback: hide anything with wallet/address data attributes */
+  /* Hide wallet address displays */
   .gold-merchant-widget [data-testid="receiver-address"],
   .gold-merchant-widget [class*="receiverAddress"],
   .gold-merchant-widget [class*="walletAddress"] {
     display: none !important;
-  }
-
-  /* Make preset buttons more prominent */
-  .gold-merchant-widget button[data-variant="outline"] {
-    border: 1px solid #C87A2A !important;
-    color: #E8DCC8 !important;
-    font-weight: 600 !important;
-    padding: 6px 16px !important;
-    font-size: 14px !important;
-  }
-  .gold-merchant-widget button[data-variant="outline"]:hover {
-    background: #C87A2A !important;
-    color: #1C1814 !important;
   }
 `;
 
