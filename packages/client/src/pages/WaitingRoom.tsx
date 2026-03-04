@@ -378,8 +378,8 @@ export const WaitingRoom = (): JSX.Element => {
             <Box
               border="1px solid"
               borderColor="#3A3228"
-              h="fit-content"
-              maxH="calc(100vh - 200px)"
+              maxH="calc(100vh - 120px)"
+              minH="500px"
               overflowY="auto"
               position="sticky"
               top="80px"

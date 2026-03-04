@@ -11,6 +11,7 @@ import { IoChatbubble } from 'react-icons/io5';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
 import { ChatBox } from './components/ChatBox';
+import { FeedbackButton } from './components/FeedbackButton';
 import { Footer } from './components/Footer';
 import { GoldMerchantModal } from './components/GoldMerchantModal';
 import { Header } from './components/Header';
@@ -218,6 +219,8 @@ const AppInner = (): JSX.Element => {
         isOpen={isGoldMerchantOpen}
         onClose={onCloseGoldMerchant}
       />
+
+      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && <FeedbackButton />}
     </Grid>
   );
 };

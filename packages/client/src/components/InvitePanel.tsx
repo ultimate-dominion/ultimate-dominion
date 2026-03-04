@@ -37,14 +37,14 @@ export const InvitePanel = (): JSX.Element => {
         </Text>
         {availableCodes.length === 0 ? (
           <VStack spacing={2}>
-            <Text color="#8A7E6A" size="sm">
-              No invite codes yet. Earn codes by reaching milestones:
+            <Text color="#8A7E6A" fontSize="sm">
+              No invite codes available. Earn more by reaching milestones:
             </Text>
             <VStack align="start" spacing={1}>
-              <Text color="#8A7E6A" size="sm">Level 3 — 1 invite code</Text>
-              <Text color="#8A7E6A" size="sm">Level 10 — 1 invite code</Text>
-              <Text color="#8A7E6A" size="sm">Level 20 — 1 invite code</Text>
-              <Text color="#8A7E6A" size="sm">Activated referral — bonus code</Text>
+              <Text color="#8A7E6A" fontSize="sm">Level 3 — 1 invite code</Text>
+              <Text color="#8A7E6A" fontSize="sm">Level 10 — 1 invite code</Text>
+              <Text color="#8A7E6A" fontSize="sm">Level 20 — 1 invite code</Text>
+              <Text color="#8A7E6A" fontSize="sm">Invited friend reaches Level 5 — bonus code</Text>
             </VStack>
           </VStack>
         ) : (
@@ -108,7 +108,11 @@ const InviteCodeRow = ({ code, milestone }: { code: string; milestone: string })
     );
   }, [inviteUrl]);
 
-  const milestoneLabel = milestone === 'activation_bonus' ? 'Bonus' : milestone.replace('_', ' ');
+  const milestoneLabel = milestone === 'activation_bonus'
+    ? 'Bonus'
+    : milestone.startsWith('starter')
+      ? 'Starter'
+      : milestone.replace('_', ' ');
 
   return (
     <Box border="1px solid" borderColor="#2A2520" p={3}>

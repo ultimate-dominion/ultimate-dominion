@@ -30,11 +30,14 @@ import {
   CHARACTER_CREATION_PATH,
   CHARACTERS_PATH,
   GAME_BOARD_PATH,
+  GUIDE_PATH,
   HOME_PATH,
   LEADERBOARD_PATH,
   MARKETPLACE_PATH,
   WAITING_ROOM_PATH,
 } from '../Routes';
+
+const TAVERN_URL = 'https://tavern.ultimatedominion.com';
 
 type NavItem = {
   label: string;
@@ -171,6 +174,41 @@ export const Header = (): JSX.Element => {
                   </Box>
                 );
               })}
+              <Box h="16px" borderLeft="1px solid #2A2218" mx={1} />
+              <Box
+                as="button"
+                borderBottom="2px solid"
+                borderColor={pathname.startsWith(GUIDE_PATH) ? '#C87A2A' : 'transparent'}
+                color={pathname.startsWith(GUIDE_PATH) ? '#E8DCC8' : '#6A6050'}
+                cursor="pointer"
+                fontFamily="Cinzel, serif"
+                fontSize="13px"
+                fontWeight={600}
+                letterSpacing="0.05em"
+                onClick={() => shopGuardedNavigate(GUIDE_PATH)}
+                pb={1}
+                textTransform="uppercase"
+                transition="color 0.2s ease, border-color 0.2s ease"
+                _hover={{ color: '#C4B89E' }}
+              >
+                Guide
+              </Box>
+              <Link
+                borderBottom="2px solid transparent"
+                color="#6A6050"
+                fontFamily="Cinzel, serif"
+                fontSize="13px"
+                fontWeight={600}
+                href={TAVERN_URL}
+                isExternal
+                letterSpacing="0.05em"
+                pb={1}
+                textTransform="uppercase"
+                transition="color 0.2s ease"
+                _hover={{ color: '#C4B89E', textDecoration: 'none' }}
+              >
+                Tavern
+              </Link>
             </HStack>
           )}
 
@@ -248,6 +286,37 @@ export const Header = (): JSX.Element => {
                     </Text>
                   );
                 })}
+                <Box borderTop="1px solid #2A2218" mt={2} pt={2}>
+                  <Stack direction="column" spacing={4}>
+                    <Text
+                      as="button"
+                      alignSelf="start"
+                      color={pathname.startsWith(GUIDE_PATH) ? '#E8DCC8' : '#8A7E6A'}
+                      fontFamily="Cinzel, serif"
+                      fontSize="sm"
+                      fontWeight={pathname.startsWith(GUIDE_PATH) ? 700 : 500}
+                      onClick={() => handleDrawerNav(GUIDE_PATH)}
+                      textAlign="left"
+                      textTransform="uppercase"
+                      _hover={{ color: '#C4B89E' }}
+                    >
+                      Guide
+                    </Text>
+                    <Link
+                      alignSelf="start"
+                      color="#8A7E6A"
+                      fontFamily="Cinzel, serif"
+                      fontSize="sm"
+                      fontWeight={500}
+                      href={TAVERN_URL}
+                      isExternal
+                      textTransform="uppercase"
+                      _hover={{ color: '#C4B89E', textDecoration: 'none' }}
+                    >
+                      Tavern
+                    </Link>
+                  </Stack>
+                </Box>
                 {pathname !== HOME_PATH && (
                   <Text
                     as="button"
@@ -255,6 +324,7 @@ export const Header = (): JSX.Element => {
                     color="#8A7E6A"
                     fontSize="sm"
                     fontWeight={500}
+                    mt={4}
                     onClick={() => {
                       onClose();
                       onOpenWalletDetailsModal();

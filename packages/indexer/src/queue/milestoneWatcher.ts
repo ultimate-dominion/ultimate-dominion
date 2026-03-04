@@ -15,7 +15,7 @@ function generateCode(): string {
 }
 
 /** Generate an invite code for a wallet at a given milestone */
-async function generateInviteCode(wallet: string, milestone: string): Promise<string> {
+export async function generateInviteCode(wallet: string, milestone: string): Promise<string> {
   const code = generateCode();
   await sql`
     INSERT INTO queue.invite_codes (code, creator_wallet, milestone)

@@ -113,6 +113,8 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reconnectAttempts = useRef(0);
   const disposedRef = useRef(false);
+  const titleFlashRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const originalTitleRef = useRef(document.title);
 
   const isMapFull = useMemo(() => currentPlayers >= maxPlayers, [currentPlayers, maxPlayers]);
 
@@ -406,6 +408,89 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
       refreshInviteCodes();
     }
   }, [wallet, isAuthenticated, refreshInviteCodes]);
+
+  // Request notification permission when joining queue
+  useEffect(() => {
+    if (queueStatus === 'waiting' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, [queueStatus]);
+
+  // Slot-open notifications: browser push, audio chime, tab title flash
+  useEffect(() => {
+    if (queueStatus !== 'ready') {
+      // Clean up title flash when leaving ready state
+      if (titleFlashRef.current) {
+        clearInterval(titleFlashRef.current);
+        titleFlashRef.current = null;
+        document.title = originalTitleRef.current;
+      }
+      return;
+    }
+
+    // 1. Browser push notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('A slot has opened!', {
+          body: 'Your turn to enter Ultimate Dominion. You have 2 minutes.',
+          icon: '/favicon.ico',
+          tag: 'ud-slot-open',
+        });
+      } catch {
+        // Mobile Safari doesn't support Notification constructor
+      }
+    }
+
+    // 2. Audio chime (Web Audio API — two-tone medieval bell)
+    try {
+      const ctx = new AudioContext();
+      const now = ctx.currentTime;
+
+      // First tone — warm mid frequency
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(523.25, now); // C5
+      gain1.gain.setValueAtTime(0.3, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      osc1.connect(gain1).connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 1.2);
+
+      // Second tone — perfect fifth above, slightly delayed
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(783.99, now + 0.15); // G5
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.setValueAtTime(0.25, now + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+      osc2.connect(gain2).connect(ctx.destination);
+      osc2.start(now + 0.15);
+      osc2.stop(now + 1.5);
+
+      // Clean up after sounds finish
+      setTimeout(() => ctx.close(), 2000);
+    } catch {
+      // Web Audio not available
+    }
+
+    // 3. Tab title flash
+    originalTitleRef.current = document.title;
+    let showAlert = true;
+    titleFlashRef.current = setInterval(() => {
+      document.title = showAlert ? 'A Slot Has Opened!' : originalTitleRef.current;
+      showAlert = !showAlert;
+    }, 1000);
+
+    return () => {
+      if (titleFlashRef.current) {
+        clearInterval(titleFlashRef.current);
+        titleFlashRef.current = null;
+        document.title = originalTitleRef.current;
+      }
+    };
+  }, [queueStatus]);
 
   const value = useMemo<QueueContextType>(() => ({
     queuePosition,

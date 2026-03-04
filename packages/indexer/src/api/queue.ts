@@ -11,6 +11,7 @@ import {
 } from '../db/queueSchema.js';
 import { verifyCaptcha } from './captcha.js';
 import { getRecentEvents } from '../queue/eventFeed.js';
+import { generateInviteCode } from '../queue/milestoneWatcher.js';
 
 /** Simple rate limiter: max requests per window per IP */
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
@@ -83,6 +84,25 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
       }
 
       const result = await joinQueue(wallet, priority, inviteCode);
+
+      // Seed 3 starter invite codes for first-time players
+      try {
+        const existingCodes = await sql`
+          SELECT 1 FROM queue.invite_codes
+          WHERE creator_wallet = ${wallet.toLowerCase()}
+          LIMIT 1
+        `;
+        if (existingCodes.length === 0) {
+          await Promise.all([
+            generateInviteCode(wallet, 'starter_1'),
+            generateInviteCode(wallet, 'starter_2'),
+            generateInviteCode(wallet, 'starter_3'),
+          ]);
+          console.log(`[queue] Seeded 3 starter invite codes for ${wallet}`);
+        }
+      } catch (seedErr) {
+        console.error('[queue] Starter code seed error:', seedErr);
+      }
 
       // Broadcast updated stats
       const stats = await getQueueStats();
