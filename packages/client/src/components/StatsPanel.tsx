@@ -312,28 +312,25 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </VStack>
 
-      <Button
-        alignSelf="center"
-        leftIcon={<GiTwoCoins />}
-        mt={2}
-        onClick={onOpenGoldMerchant}
-        size="xs"
-        variant="gold"
-      >
-        Get Gold
-      </Button>
-
-      {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
+      <HStack justifyContent="center" mt={2} spacing={2}>
         <Button
-          alignSelf="center"
-          mt={2}
-          onClick={() => navigate(`/characters/${character.id}`)}
+          leftIcon={<GiTwoCoins />}
+          onClick={onOpenGoldMerchant}
           size="xs"
           variant="gold"
         >
-          Level Up!
+          Get Gold
         </Button>
-      )}
+        {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
+          <Button
+            onClick={() => navigate(`/characters/${character.id}`)}
+            size="xs"
+            variant="gold"
+          >
+            Level Up!
+          </Button>
+        )}
+      </HStack>
 
       {isDesktop && (
         <>
