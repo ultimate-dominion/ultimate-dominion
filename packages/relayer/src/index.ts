@@ -4,25 +4,31 @@ import { config } from './config.js';
 import {
   relayerAddress,
   publicClient,
-  nonceManager,
   getRelayerBalance,
   txQueue,
 } from './tx.js';
+import { initializePool, getPoolStatus, allAddresses } from './walletPool.js';
 import { handleExecute } from './methods/tw_execute.js';
 import { handleGetTransactionHash } from './methods/tw_getTransactionHash.js';
 import { handleGetDelegationContract } from './methods/tw_getDelegationContract.js';
+import { startSchedulers, stopSchedulers, getPendingChargeCount, getTotalPendingTxs } from './gasCharge.js';
+import { gasChargingEnabled } from './config.js';
 
 async function main() {
   console.log('=== Ultimate Dominion Relayer ===');
-  console.log(`Relayer: ${relayerAddress}`);
+  console.log(`Primary: ${relayerAddress}`);
+  console.log(`Pool:    ${allAddresses.length} EOA(s)`);
   console.log(`Chain:   ${config.chainId}`);
   console.log(`Port:    ${config.port}`);
 
-  // Initialize nonce from chain
-  await nonceManager.initialize(publicClient, relayerAddress);
+  // Initialize all wallet nonces from chain
+  await initializePool(publicClient);
 
   const balance = await getRelayerBalance();
-  console.log(`Balance: ${balance} ETH`);
+  console.log(`Primary balance: ${balance} ETH`);
+
+  // Start gas charge schedulers (no-op if WORLD_ADDRESS/GOLD_TOKEN not set)
+  startSchedulers();
 
   const app = express();
   app.use(cors({ origin: config.corsOrigins }));
@@ -31,15 +37,19 @@ async function main() {
   // Health check
   app.get('/', async (_req, res) => {
     try {
-      const bal = await getRelayerBalance();
+      const poolStatus = await getPoolStatus(publicClient);
       res.json({
         status: 'ok',
         service: 'ud-relayer',
         relayer: relayerAddress,
-        balance: `${bal} ETH`,
-        nonce: nonceManager.pending,
+        poolSize: poolStatus.poolSize,
+        wallets: poolStatus.wallets,
+        totalInflight: poolStatus.totalInflight,
         queueSize: txQueue.size,
         chainId: config.chainId,
+        gasCharging: gasChargingEnabled,
+        pendingCharges: getPendingChargeCount(),
+        pendingChargeTxs: getTotalPendingTxs(),
       });
     } catch (err) {
       res.status(500).json({ status: 'error', error: String(err) });
@@ -104,6 +114,7 @@ async function main() {
   // Graceful shutdown
   const shutdown = () => {
     console.log('\n[server] Shutting down...');
+    stopSchedulers();
     server.close();
     process.exit(0);
   };

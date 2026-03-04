@@ -1,5 +1,6 @@
 import { type Hex, type Address, numberToHex } from 'viem';
 import { encodeExecuteWithSig, sendRelayerTx, txQueue } from '../tx.js';
+import { recordRelay } from '../gasCharge.js';
 
 export async function handleExecute(params: unknown[]): Promise<{ queueId: string }> {
   const [eoaAddress, rawWrappedCalls, signature, rawAuthorization] = params as [
@@ -75,6 +76,7 @@ export async function handleExecute(params: unknown[]): Promise<{ queueId: strin
     });
 
     txQueue.set(queueId, { txHash, error: null });
+    recordRelay(eoaAddress);
     console.log(`[tw_execute] ${queueId} → ${txHash}`);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);

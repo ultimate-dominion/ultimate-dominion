@@ -1,43 +1,22 @@
 import {
   createPublicClient,
-  createWalletClient,
   http,
   encodeFunctionData,
   formatEther,
-  defineChain,
   type Hex,
   type Address,
 } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
 import { config } from './config.js';
-import { NonceManager } from './nonce.js';
+import { acquireWallet, releaseWallet, resyncWallet, primaryAddress, chain } from './walletPool.js';
 
-// Chain definition from config
-const chain = defineChain({
-  id: config.chainId,
-  name: 'Base',
-  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  rpcUrls: { default: { http: [config.rpcUrl] } },
-});
+// Backward compat alias — gasCharge.ts and others import this
+export const relayerAddress: Address = primaryAddress;
 
-// Relayer account
-const account = privateKeyToAccount(config.relayerPrivateKey);
-export const relayerAddress: Address = account.address;
-
-// Clients
+// Public client (shared, no wallet-specific state)
 export const publicClient = createPublicClient({
   chain,
   transport: http(config.rpcUrl),
 });
-
-const walletClient = createWalletClient({
-  account,
-  chain,
-  transport: http(config.rpcUrl),
-});
-
-// Nonce manager
-export const nonceManager = new NonceManager();
 
 // Transaction queue: queueId -> txHash
 export const txQueue = new Map<
@@ -106,13 +85,13 @@ export async function sendRelayerTx(params: {
 }): Promise<Hex> {
   const { to, calldata, authorizationList } = params;
 
-  const nonce = await nonceManager.acquire();
+  const { wallet, nonce } = await acquireWallet();
   try {
     // Estimate gas
     const gasEstimate = await publicClient.estimateGas({
       to,
       data: calldata,
-      account: account.address,
+      account: wallet.address,
       ...(authorizationList ? { authorizationList } : {}),
     });
 
@@ -120,11 +99,13 @@ export async function sendRelayerTx(params: {
     const gas = (gasEstimate * 150n) / 100n;
 
     console.log(
-      `[tx] Sending to ${to} | nonce=${nonce} | gas=${gas} | auth=${!!authorizationList}`,
+      `[tx] Sending via ${wallet.address.slice(0, 10)} | nonce=${nonce} | gas=${gas} | auth=${!!authorizationList}`,
     );
 
     // Send transaction
-    const hash = await walletClient.sendTransaction({
+    const hash = await wallet.walletClient.sendTransaction({
+      account: wallet.account,
+      chain,
       to,
       data: calldata,
       gas,
@@ -133,12 +114,12 @@ export async function sendRelayerTx(params: {
     });
 
     console.log(`[tx] Broadcast: ${hash}`);
-    nonceManager.confirm();
+    releaseWallet(wallet, true);
     return hash;
   } catch (err) {
-    console.error(`[tx] Failed:`, err);
-    nonceManager.reject();
-    await nonceManager.resync(publicClient, relayerAddress);
+    console.error(`[tx] Failed on ${wallet.address.slice(0, 10)}:`, err);
+    releaseWallet(wallet, false);
+    await resyncWallet(wallet, publicClient);
     throw err;
   }
 }
