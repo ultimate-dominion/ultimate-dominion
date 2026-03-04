@@ -12,6 +12,7 @@ import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
 import { ChatBox } from './components/ChatBox';
 import { Footer } from './components/Footer';
+import { GoldMerchantModal } from './components/GoldMerchantModal';
 import { Header } from './components/Header';
 import { OutOfResourcesModal } from './components/OutOfResourcesModal';
 import { WalletDetailsModal } from './components/WalletDetailsModal';
@@ -20,6 +21,10 @@ import { BattleProvider } from './contexts/BattleContext';
 import { useCharacter } from './contexts/CharacterContext';
 import { ChatProvider, useChat } from './contexts/ChatContext';
 import { FragmentProvider } from './contexts/FragmentContext';
+import {
+  GoldMerchantProvider,
+  useGoldMerchant,
+} from './contexts/GoldMerchantContext';
 import { MapProvider, useMap } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
@@ -35,7 +40,9 @@ export const App = (): JSX.Element => {
           <ChatProvider>
             <MovementProvider>
               <FragmentProvider>
-                <AppInner />
+                <GoldMerchantProvider>
+                  <AppInner />
+                </GoldMerchantProvider>
               </FragmentProvider>
             </MovementProvider>
           </ChatProvider>
@@ -64,6 +71,10 @@ const AppInner = (): JSX.Element => {
   const { isSpawned } = useMap();
   const { isOpen: isChatBoxOpen, onOpen: onOpenChatBox, unreadCount } = useChat();
   const { character } = useCharacter();
+  const {
+    isOpen: isGoldMerchantOpen,
+    onClose: onCloseGoldMerchant,
+  } = useGoldMerchant();
 
   // Activate GasStation auto-swap hook
   useGasStation();
@@ -198,6 +209,11 @@ const AppInner = (): JSX.Element => {
         isOpen={isOutOfResourcesOpen}
         onClose={onCloseOutOfResources}
         onOpenWalletDetails={onOpenWalletDetailsModal}
+      />
+
+      <GoldMerchantModal
+        isOpen={isGoldMerchantOpen}
+        onClose={onCloseGoldMerchant}
       />
     </Grid>
   );

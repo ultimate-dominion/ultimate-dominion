@@ -11,12 +11,14 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { GiTwoCoins } from 'react-icons/gi';
 import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PolygonalCard } from '../components/PolygonalCard';
 import { ShopHalf } from '../components/ShopHalf';
 import { ShopSvg } from '../components/SVGs/ShopSvg';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useGoldMerchant } from '../contexts/GoldMerchantContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,6 +37,7 @@ export const Shop = (): JSX.Element => {
   const { shopId } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
+  const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
 
   const {
     delegatorAddress,
@@ -389,6 +392,15 @@ export const Shop = (): JSX.Element => {
             >
               {etherToFixedNumber(BigInt(userCharacter.externalGoldBalance) + goldAdjustment)} $GOLD
             </Text>
+            <Button
+              leftIcon={<GiTwoCoins />}
+              ml={2}
+              onClick={onOpenGoldMerchant}
+              size="xs"
+              variant="gold"
+            >
+              Get Gold
+            </Button>
           </HStack>
           <PolygonalCard clipPath="none" h="calc(100% - 68px)">
             {userCharacter && shopId && sellable && sellable.length ? (

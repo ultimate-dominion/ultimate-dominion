@@ -19,6 +19,7 @@ import FuzzySearch from 'fuzzy-search';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
+import { GiTwoCoins } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { CreateListingModal } from '../components/CreateListingModal';
@@ -28,6 +29,7 @@ import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
 import { MarketplaceIconSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
+import { useGoldMerchant } from '../contexts/GoldMerchantContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -58,6 +60,7 @@ const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 export const Marketplace = (): JSX.Element => {
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
+  const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
 
   const { delegatorAddress, isSynced } = useMUD();
   const {
@@ -328,6 +331,14 @@ export const Marketplace = (): JSX.Element => {
               </Text>
               $GOLD Balance: {etherToFixedNumber(character.externalGoldBalance)}
             </Text>
+            <Button
+              leftIcon={<GiTwoCoins />}
+              onClick={onOpenGoldMerchant}
+              size="xs"
+              variant="gold"
+            >
+              Get Gold
+            </Button>
           </Stack>
         </HStack>
 

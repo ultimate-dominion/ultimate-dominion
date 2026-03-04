@@ -21,6 +21,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
+import { useGoldMerchant } from '../contexts/GoldMerchantContext';
 import { etherToFixedNumber } from '../utils/helpers';
 
 import { ClassSymbol } from './ClassSymbol';
@@ -31,7 +32,7 @@ export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
   const { character } = useCharacter();
   const { fragments } = useFragments();
-
+  const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
@@ -312,6 +313,16 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </VStack>
 
+      <Button
+        alignSelf="center"
+        leftIcon={<GiTwoCoins />}
+        mt={2}
+        onClick={onOpenGoldMerchant}
+        size="xs"
+        variant="gold"
+      >
+        Get Gold
+      </Button>
 
       {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
         <Button
