@@ -18,6 +18,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import { ConnectWalletModal } from '../components/ConnectWalletModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useQueue } from '../contexts/QueueContext';
 import { useMap } from '../contexts/MapContext';
@@ -64,6 +65,7 @@ export const WaitingRoom = (): JSX.Element => {
   } = useQueue();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const { isOpen: isFeedOpen, onOpen: onOpenFeed, onClose: onCloseFeed } = useDisclosure();
+  const { isOpen: isAuthOpen, onOpen: onOpenAuth, onClose: onCloseAuth } = useDisclosure();
 
   // Countdown timer for ready state
   const [countdown, setCountdown] = useState('');
@@ -88,13 +90,6 @@ export const WaitingRoom = (): JSX.Element => {
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, [readyUntil, queueStatus]);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate(HOME_PATH);
-    }
-  }, [isAuthenticated, navigate]);
 
   // Redirect to game board if spawned
   // TODO: re-enable after testing
@@ -275,6 +270,17 @@ export const WaitingRoom = (): JSX.Element => {
                     : 'Join the queue to be notified when a slot opens'
                   }
                 </Text>
+                {!isAuthenticated && (
+                  <Button
+                    fontSize="lg"
+                    onClick={onOpenAuth}
+                    px={10}
+                    py={5}
+                    variant="amber"
+                  >
+                    Log in to Join Queue
+                  </Button>
+                )}
               </>
             )}
           </Box>
@@ -414,6 +420,8 @@ export const WaitingRoom = (): JSX.Element => {
           )}
         </Box>
       </Box>
+
+      <ConnectWalletModal isOpen={isAuthOpen} onClose={onCloseAuth} suppressNavigate />
 
       {/* Mobile: Live Feed drawer */}
       <Drawer isOpen={isFeedOpen} onClose={onCloseFeed} placement="bottom">

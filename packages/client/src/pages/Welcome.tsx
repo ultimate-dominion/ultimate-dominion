@@ -17,7 +17,8 @@ import { ConnectWalletModal } from '../components/ConnectWalletModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, GUIDE_PATH, MANIFESTO_PATH } from '../Routes';
+import { useQueue } from '../contexts/QueueContext';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, GUIDE_PATH, MANIFESTO_PATH, WAITING_ROOM_PATH } from '../Routes';
 
 const torchGlow = keyframes`
   0%, 100% {
@@ -35,6 +36,7 @@ export const Welcome = (): JSX.Element => {
   const { authMethod, isAuthenticated, isConnecting } = useAuth();
   const { delegatorAddress } = useMUD();
   const { character, isRefreshing } = useCharacter();
+  const { isMapFull } = useQueue();
 
   // Capture invite code from URL params
   useEffect(() => {
@@ -54,11 +56,12 @@ export const Welcome = (): JSX.Element => {
     if (!embeddedReady && !externalReady) return;
 
     if (character?.locked) {
-      navigate(GAME_BOARD_PATH);
+      // If map is full, send returning players to waiting room instead of game board
+      navigate(isMapFull ? WAITING_ROOM_PATH : GAME_BOARD_PATH);
     } else {
       navigate(CHARACTER_CREATION_PATH);
     }
-  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isRefreshing, navigate]);
+  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isMapFull, isRefreshing, navigate]);
 
   const onPlay = useCallback(() => {
     // Authenticated with a character — go to game
@@ -67,9 +70,15 @@ export const Welcome = (): JSX.Element => {
       return;
     }
 
+    // If map is full and not authenticated, go to waiting room first
+    if (isMapFull && !isAuthenticated) {
+      navigate(WAITING_ROOM_PATH);
+      return;
+    }
+
     // Not authenticated (or stale session was cleared) — open sign-in modal
     onOpen();
-  }, [character, isAuthenticated, navigate, onOpen]);
+  }, [character, isAuthenticated, isMapFull, navigate, onOpen]);
 
   // While auto-reconnect is resolving, render nothing so returning users
   // don't see the landing page flash before being redirected to the game.

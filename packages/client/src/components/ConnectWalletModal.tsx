@@ -24,9 +24,11 @@ import { SignInModal } from './SignInModal';
 export const ConnectWalletModal = ({
   isOpen,
   onClose,
+  suppressNavigate = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  suppressNavigate?: boolean;
 }): JSX.Element => {
   const navigate = useNavigate();
   const { data: externalWalletClient } = useWalletClient();
@@ -54,8 +56,10 @@ export const ConnectWalletModal = ({
     if (!ready) return;
 
     handleClose();
-    navigate(character?.locked ? GAME_BOARD_PATH : CHARACTER_CREATION_PATH);
-  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isOpen, handleClose, navigate]);
+    if (!suppressNavigate) {
+      navigate(character?.locked ? GAME_BOARD_PATH : CHARACTER_CREATION_PATH);
+    }
+  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isOpen, handleClose, navigate, suppressNavigate]);
 
   // Show SignInModal if:
   // - Not authenticated at all, OR

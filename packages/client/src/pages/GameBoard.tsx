@@ -81,7 +81,7 @@ export const GameBoard = (): JSX.Element => {
     // Phase 1: Wait for auth to resolve (isConnecting is true during auto-reconnect)
     if (isConnecting) return;
     if (!isConnected) {
-      navigate(HOME_PATH);
+      navigate(isMapFull ? WAITING_ROOM_PATH : HOME_PATH);
       return;
     }
 
