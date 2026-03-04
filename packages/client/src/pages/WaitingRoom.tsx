@@ -71,7 +71,6 @@ export const WaitingRoom = (): JSX.Element => {
     priority,
     joinQueue,
     leaveQueue,
-    reportSpawned,
     isMapFull,
     gameEvents,
   } = useQueue();
@@ -109,21 +108,12 @@ export const WaitingRoom = (): JSX.Element => {
     return () => clearInterval(interval);
   }, [readyUntil, queueStatus]);
 
-  // Redirect to game board if spawned
-  // TODO: re-enable after testing
-  // useEffect(() => {
-  //   if (isSpawned) {
-  //     navigate(GAME_BOARD_PATH);
-  //   }
-  // }, [isSpawned, navigate]);
-
-  // If map is no longer full, redirect to game board
-  // TODO: re-enable after testing
-  // useEffect(() => {
-  //   if (!isMapFull && queueStatus !== 'ready') {
-  //     navigate(GAME_BOARD_PATH);
-  //   }
-  // }, [isMapFull, queueStatus, navigate]);
+  // Redirect to game board if already spawned
+  useEffect(() => {
+    if (isSpawned) {
+      navigate(GAME_BOARD_PATH);
+    }
+  }, [isSpawned, navigate]);
 
   const handleLeaveQueue = useCallback(async () => {
     await leaveQueue();
@@ -131,9 +121,9 @@ export const WaitingRoom = (): JSX.Element => {
   }, [leaveQueue, navigate]);
 
   const handleSpawnNow = useCallback(() => {
-    reportSpawned();
+    // Navigate to game board — MapContext handles spawn TX + reportSpawned
     navigate(GAME_BOARD_PATH);
-  }, [navigate, reportSpawned]);
+  }, [navigate]);
 
   const shareQueuePosition = useCallback(() => {
     const text = `I'm #${queuePosition} in line for Ultimate Dominion! ${totalInQueue} players waiting.\n\nultimatedominion.com\n\n#UltimateDominion`;

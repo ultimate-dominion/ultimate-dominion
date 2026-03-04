@@ -12,11 +12,13 @@ type CaptchaGateProps = {
 export const CaptchaGate = ({ onVerified, isLoading }: CaptchaGateProps): JSX.Element => {
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [expired, setExpired] = useState(false);
   const turnstileRef = useRef<{ reset: () => void } | null>(null);
 
   const handleSuccess = useCallback((t: string) => {
     setToken(t);
     setError(false);
+    setExpired(false);
   }, []);
 
   const handleError = useCallback(() => {
@@ -38,7 +40,7 @@ export const CaptchaGate = ({ onVerified, isLoading }: CaptchaGateProps): JSX.El
           siteKey={SITE_KEY}
           onSuccess={handleSuccess}
           onError={handleError}
-          onExpire={() => setToken(null)}
+          onExpire={() => { setToken(null); setExpired(true); }}
           options={{
             theme: 'dark',
             size: 'compact',
@@ -49,6 +51,12 @@ export const CaptchaGate = ({ onVerified, isLoading }: CaptchaGateProps): JSX.El
       {error && (
         <Text color="red.400" size="sm">
           Verification failed. Please try again.
+        </Text>
+      )}
+
+      {expired && !error && (
+        <Text color="orange.300" fontSize="sm">
+          Verification expired. Please verify again.
         </Text>
       )}
 

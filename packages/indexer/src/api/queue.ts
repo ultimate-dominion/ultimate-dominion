@@ -38,6 +38,13 @@ setInterval(() => {
   }
 }, 5 * 60_000);
 
+const WALLET_RE = /^0x[0-9a-fA-F]{40}$/;
+const INVITE_CODE_RE = /^[A-Z2-9]{8}$/;
+
+function isValidWallet(w: unknown): w is string {
+  return typeof w === 'string' && WALLET_RE.test(w);
+}
+
 export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcaster): Router {
   const router = Router();
 
@@ -54,11 +61,14 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
       }
 
       const { wallet, captchaToken, inviteCode } = req.body;
-      if (!wallet || typeof wallet !== 'string') {
-        return res.status(400).json({ error: 'wallet is required' });
+      if (!isValidWallet(wallet)) {
+        return res.status(400).json({ error: 'Invalid wallet address' });
       }
       if (!captchaToken || typeof captchaToken !== 'string') {
         return res.status(400).json({ error: 'captchaToken is required' });
+      }
+      if (inviteCode && (typeof inviteCode !== 'string' || !INVITE_CODE_RE.test(inviteCode.toUpperCase()))) {
+        return res.status(400).json({ error: 'Invalid invite code format' });
       }
 
       // Verify CAPTCHA
@@ -133,6 +143,9 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
   router.get('/position/:wallet', async (req, res) => {
     try {
       const { wallet } = req.params;
+      if (!isValidWallet(wallet)) {
+        return res.status(400).json({ error: 'Invalid wallet address' });
+      }
       const pos = await getQueuePosition(wallet);
       const playerInfo = await getCurrentPlayerInfo(syncHandle);
       const stats = await getQueueStats();
@@ -198,6 +211,9 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
   router.delete('/leave/:wallet', async (req, res) => {
     try {
       const { wallet } = req.params;
+      if (!isValidWallet(wallet)) {
+        return res.status(400).json({ error: 'Invalid wallet address' });
+      }
       const left = await leaveQueue(wallet);
 
       if (left) {
@@ -252,6 +268,9 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
   router.post('/spawned/:wallet', async (req, res) => {
     try {
       const { wallet } = req.params;
+      if (!isValidWallet(wallet)) {
+        return res.status(400).json({ error: 'Invalid wallet address' });
+      }
       const spawned = await markSpawned(wallet);
 
       if (spawned) {

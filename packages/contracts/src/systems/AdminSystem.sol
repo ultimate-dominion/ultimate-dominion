@@ -6,6 +6,7 @@ import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {NotAdmin} from "../Errors.sol";
 import {
+    Counters,
     EncounterEntity,
     EncounterEntityData,
     CombatEncounter,
@@ -45,6 +46,15 @@ contract AdminSystem is System {
         onlyAdmin
     {
         EncounterEntity.set(entityId, encounterEntityData);
+    }
+
+    /**
+     * @notice Correct the spawned player counter after system upgrades.
+     * @param systemAddr The address of MapSystem whose counter to fix.
+     * @param count The correct player count.
+     */
+    function adminSetPlayerCount(address systemAddr, uint256 count) public onlyAdmin {
+        Counters.set(systemAddr, 0, count);
     }
 
     function getSystemAddress(ResourceId systemId) public view returns (address) {

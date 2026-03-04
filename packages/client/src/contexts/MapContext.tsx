@@ -21,6 +21,7 @@ import {
 } from '../lib/gameStore';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { useQueue } from './QueueContext';
 import { STATUS_EFFECT_NAME_MAPPING } from '../utils/constants';
 import {
   decodeAppliedStatusEffectId,
@@ -98,6 +99,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   } = useMUD();
   const { monsterTemplates } = useMonsters();
   const { character, refreshCharacter } = useCharacter();
+  const { reportSpawned } = useQueue();
 
   const spawnTx = useTransaction({
     actionName: 'spawn',
@@ -531,7 +533,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
     const result = await spawnTx.execute(() => spawn(character.id));
 
-    if (!result) {
+    if (result) {
+      // TX succeeded — notify queue that this player spawned
+      reportSpawned().catch(() => {});
+    } else {
       // TX failed, clear immediately
       setIsWaitingForSpawn(false);
     }
@@ -539,6 +544,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   }, [
     character,
     delegatorAddress,
+    reportSpawned,
     spawn,
     spawnTx,
   ]);

@@ -70,7 +70,7 @@ contract MapSystem is System {
         // Only count player characters against maxPlayers cap (not mobs)
         uint256 spawnedPlayers = Counters.get(address(this), 0);
         if (isCharacter) {
-            if (spawnedPlayers > UltimateDominionConfig.getMaxPlayers()) revert MaxPlayers();
+            if (spawnedPlayers >= UltimateDominionConfig.getMaxPlayers()) revert MaxPlayers();
             int256 currentHp = maxHp + CharacterEquipment.getHpBonus(entityId);
             if (currentHp > 0) {
                 Stats.setCurrentHp(entityId, currentHp);

@@ -77,38 +77,39 @@ async function main() {
         console.log(`[cron] Expired ${expired.length} ready entries back to waiting`);
       }
 
-      // 3. If slots available, advance the queue
-      if (slotsFreed > 0 || expired.length > 0) {
-        // Get current player count from MUD tables
-        const { getCurrentPlayerInfo } = await import('./api/queue.js');
-        const playerInfo = await getCurrentPlayerInfo(syncHandle);
-        const slotsAvailable = Math.max(0, playerInfo.maxPlayers - playerInfo.currentPlayers);
+      // 3. Always check actual player count from MUD tables (don't trust cleanup response)
+      const { getCurrentPlayerInfo } = await import('./api/queue.js');
+      const playerInfo = await getCurrentPlayerInfo(syncHandle);
+      const slotsAvailable = Math.max(0, playerInfo.maxPlayers - playerInfo.currentPlayers);
 
-        if (slotsAvailable > 0) {
-          const notified = await advanceQueue(slotsAvailable);
-          for (const { wallet, readyUntil } of notified) {
-            console.log(`[cron] Slot open for ${wallet}, ready until ${readyUntil.toISOString()}`);
-            broadcaster.broadcastSlotOpen(wallet, readyUntil);
+      // Account for 'ready' players who haven't spawned yet (they hold a slot)
+      const stats = await getQueueStats();
+      const effectiveSlots = Math.max(0, slotsAvailable - stats.ready);
 
-            // Send email notification if we have one on file
-            getPlayerEmail(wallet).then((email) => {
-              if (email) {
-                sendSlotOpenEmail(email).catch((err) =>
-                  console.error(`[cron] Failed to send slot email to ${wallet}:`, err)
-                );
-              }
-            }).catch(() => {});
-          }
+      if (effectiveSlots > 0) {
+        const notified = await advanceQueue(effectiveSlots);
+        for (const { wallet, readyUntil } of notified) {
+          console.log(`[cron] Slot open for ${wallet}, ready until ${readyUntil.toISOString()}`);
+          broadcaster.broadcastSlotOpen(wallet, readyUntil);
+
+          // Send email notification if we have one on file
+          getPlayerEmail(wallet).then((email) => {
+            if (email) {
+              sendSlotOpenEmail(email).catch((err) =>
+                console.error(`[cron] Failed to send slot email to ${wallet}:`, err)
+              );
+            }
+          }).catch(() => {});
         }
-
-        // Broadcast updated stats
-        const stats = await getQueueStats();
-        broadcaster.broadcastQueueStats({
-          totalInQueue: stats.totalInQueue,
-          slotsAvailable,
-          currentPlayers: playerInfo.currentPlayers,
-        });
       }
+
+      // Broadcast updated stats every tick
+      const updatedStats = await getQueueStats();
+      broadcaster.broadcastQueueStats({
+        totalInQueue: updatedStats.totalInQueue,
+        slotsAvailable,
+        currentPlayers: playerInfo.currentPlayers,
+      });
     } catch (err) {
       console.error('[cron] Queue cleanup error:', err);
     }

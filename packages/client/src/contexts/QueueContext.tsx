@@ -262,6 +262,10 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
           if (data.status === 'ready') {
             setQueueStatus('ready');
             setReadyUntil(data.readyUntil ? new Date(data.readyUntil) : null);
+          } else if (data.status === 'waiting') {
+            // Slot expired — bumped back to waiting
+            setQueueStatus('waiting');
+            setReadyUntil(null);
           }
         } else {
           // Not in queue anymore (spawned or removed)

@@ -52,6 +52,9 @@ export async function initQueueTables() {
   await sql`CREATE INDEX IF NOT EXISTS idx_invite_codes_unused ON queue.invite_codes(used_by) WHERE used_by IS NULL`;
   await sql`CREATE INDEX IF NOT EXISTS idx_referral_activations_invitee ON queue.referral_activations(invitee_wallet)`;
 
+  // Prevent duplicate invite codes for same wallet+milestone (race condition guard)
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_invite_codes_wallet_milestone ON queue.invite_codes(creator_wallet, milestone)`;
+
   // Player email mapping for queue notifications
   await sql`
     CREATE TABLE IF NOT EXISTS queue.player_emails (
@@ -89,33 +92,38 @@ export async function getQueuePosition(wallet: string): Promise<{
   status: string;
   readyUntil: Date | null;
 } | null> {
-  const rows = await sql`
-    WITH ranked AS (
-      SELECT
-        wallet,
-        priority,
-        status,
-        ready_until,
-        ROW_NUMBER() OVER (ORDER BY priority_rank ASC, joined_at ASC) as position
-      FROM queue.queue_entries
-      WHERE status = 'waiting' OR status = 'ready'
-    )
-    SELECT * FROM ranked WHERE wallet = ${wallet.toLowerCase()}
+  // First check if the player is in the queue at all (waiting or ready)
+  const entryRows = await sql`
+    SELECT wallet, priority, status, ready_until
+    FROM queue.queue_entries
+    WHERE wallet = ${wallet.toLowerCase()} AND status IN ('waiting', 'ready')
   `;
 
-  if (rows.length === 0) return null;
+  if (entryRows.length === 0) return null;
+
+  const entry = entryRows[0];
+
+  // Position only counts 'waiting' entries ahead of this player
+  // 'ready' players are out of the queue (they have a slot)
+  const posRows = await sql`
+    SELECT COUNT(*) + 1 as position FROM queue.queue_entries
+    WHERE status = 'waiting'
+      AND (priority_rank < (SELECT priority_rank FROM queue.queue_entries WHERE wallet = ${wallet.toLowerCase()})
+        OR (priority_rank = (SELECT priority_rank FROM queue.queue_entries WHERE wallet = ${wallet.toLowerCase()})
+            AND joined_at < (SELECT joined_at FROM queue.queue_entries WHERE wallet = ${wallet.toLowerCase()})))
+  `;
 
   const totalRows = await sql`
     SELECT COUNT(*) as count FROM queue.queue_entries
-    WHERE status = 'waiting' OR status = 'ready'
+    WHERE status IN ('waiting', 'ready')
   `;
 
   return {
-    position: Number(rows[0].position),
+    position: entry.status === 'ready' ? 0 : Number(posRows[0].position),
     totalInQueue: Number(totalRows[0].count),
-    priority: rows[0].priority as string,
-    status: rows[0].status as string,
-    readyUntil: rows[0].ready_until ? new Date(rows[0].ready_until as string) : null,
+    priority: entry.priority as string,
+    status: entry.status as string,
+    readyUntil: entry.ready_until ? new Date(entry.ready_until as string) : null,
   };
 }
 
@@ -197,12 +205,12 @@ export async function acknowledgeSlot(wallet: string): Promise<boolean> {
   return result.length > 0;
 }
 
-/** Mark a player as having successfully spawned */
+/** Mark a player as having successfully spawned (only valid for 'ready' players) */
 export async function markSpawned(wallet: string): Promise<boolean> {
   const result = await sql`
     UPDATE queue.queue_entries
     SET status = 'spawned'
-    WHERE wallet = ${wallet.toLowerCase()} AND status IN ('ready', 'waiting')
+    WHERE wallet = ${wallet.toLowerCase()} AND status = 'ready'
     RETURNING wallet
   `;
   return result.length > 0;

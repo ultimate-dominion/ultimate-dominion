@@ -36,15 +36,19 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
       if (currentBlock <= lastScannedBlock) return;
 
       const scanFrom = lastScannedBlock > 0 ? lastScannedBlock + 1 : currentBlock;
-      lastScannedBlock = currentBlock;
 
       // Skip initial scan (would flood with old events)
-      if (scanFrom === currentBlock && lastScannedBlock === currentBlock) return;
+      if (lastScannedBlock === 0) {
+        lastScannedBlock = currentBlock;
+        return;
+      }
 
       await scanLevelUps(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanCombatOutcomes(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanLootDrops(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanMarketplaceSales(syncHandle, scanFrom, currentBlock, broadcaster);
+
+      lastScannedBlock = currentBlock;
     } catch (err) {
       console.error('[eventFeed] Scan error:', err);
     }
