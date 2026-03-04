@@ -7,7 +7,8 @@ import { createWSServer } from './ws/server.js';
 import { startSync } from './sync/startSync.js';
 import { createApiRouter } from './api/router.js';
 import { closeDb } from './db/connection.js';
-import { initQueueTables, advanceQueue, expireReadyEntries, getQueueStats } from './db/queueSchema.js';
+import { initQueueTables, advanceQueue, expireReadyEntries, getQueueStats, getPlayerEmail } from './db/queueSchema.js';
+import { sendSlotOpenEmail } from './lib/slotEmail.js';
 import { startMilestoneWatcher } from './queue/milestoneWatcher.js';
 import { startEventFeed } from './queue/eventFeed.js';
 
@@ -88,6 +89,15 @@ async function main() {
           for (const { wallet, readyUntil } of notified) {
             console.log(`[cron] Slot open for ${wallet}, ready until ${readyUntil.toISOString()}`);
             broadcaster.broadcastSlotOpen(wallet, readyUntil);
+
+            // Send email notification if we have one on file
+            getPlayerEmail(wallet).then((email) => {
+              if (email) {
+                sendSlotOpenEmail(email).catch((err) =>
+                  console.error(`[cron] Failed to send slot email to ${wallet}:`, err)
+                );
+              }
+            }).catch(() => {});
           }
         }
 

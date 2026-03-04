@@ -291,6 +291,31 @@ export const AuthProvider = ({
     } catch { /* best-effort */ }
   }, [embeddedWallet, wagmiConnected, wagmiDisconnect]);
 
+  // Auto-register email with backend on Google auth
+  useEffect(() => {
+    if (!signedInEmail || !embeddedAddress) return;
+    const key = `ud:emailRegistered:${embeddedAddress}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const indexerUrl = (import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api').replace(/\/api\/?$/, '');
+
+    // Add to Resend audience + welcome email
+    fetch(`${apiUrl}/api/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: signedInEmail }),
+    }).catch(() => {});
+
+    // Store wallet→email for queue notifications
+    fetch(`${indexerUrl}/api/player/email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet: embeddedAddress.toLowerCase(), email: signedInEmail }),
+    }).catch(() => {});
+  }, [signedInEmail, embeddedAddress]);
+
   const value = useMemo((): AuthContextType => {
     // Embedded wallet takes priority if connected
     if (embeddedAddress && embeddedWalletClient) {

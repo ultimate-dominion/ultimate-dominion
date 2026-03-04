@@ -8,6 +8,7 @@ import {
   joinQueue,
   leaveQueue,
   markSpawned,
+  setPlayerEmail,
 } from '../db/queueSchema.js';
 import { verifyCaptcha } from './captcha.js';
 import { getRecentEvents } from '../queue/eventFeed.js';
@@ -270,6 +271,29 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
     }
   });
 
+  /**
+   * POST /player/email
+   * Store a wallet→email mapping for queue slot notifications.
+   * Body: { wallet, email }
+   */
+  router.post('/player/email', async (req, res) => {
+    try {
+      const { wallet, email } = req.body;
+      if (!wallet || typeof wallet !== 'string') {
+        return res.status(400).json({ error: 'wallet is required' });
+      }
+      if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'valid email is required' });
+      }
+
+      await setPlayerEmail(wallet, email);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('[queue] Player email error:', err);
+      res.status(500).json({ error: 'Failed to store email' });
+    }
+  });
+
   return router;
 }
 
@@ -341,9 +365,47 @@ async function getCurrentPlayerInfo(syncHandle: SyncHandle): Promise<{
   try {
     const spawnedTable = syncHandle.tableNameMap.get('Spawned');
     const configTable = syncHandle.tableNameMap.get('UltimateDominionConfig');
+    const charactersTable = syncHandle.tableNameMap.get('Characters');
+    const sessionTable = syncHandle.tableNameMap.get('SessionTimer');
+
+    // Read session timeout from on-chain SessionConfig table
+    let SESSION_TIMEOUT = 300;
+    const sessionConfigTable = syncHandle.tableNameMap.get('SessionConfig');
+    if (sessionConfigTable) {
+      const configRows = await sql.unsafe(
+        `SELECT "session_timeout" FROM "${mudSchema}"."${sessionConfigTable}" LIMIT 1`
+      );
+      if (configRows.length > 0 && configRows[0].session_timeout !== undefined) {
+        SESSION_TIMEOUT = Number(configRows[0].session_timeout);
+      }
+    }
+    const now = Math.floor(Date.now() / 1000);
 
     let currentPlayers = 0;
-    if (spawnedTable) {
+    if (spawnedTable && charactersTable && sessionTable) {
+      // Count only active player characters (not mobs, not idle beyond session timeout)
+      const rows = await sql.unsafe(
+        `SELECT COUNT(*) as count
+         FROM "${mudSchema}"."${spawnedTable}" sp
+         JOIN "${mudSchema}"."${charactersTable}" c
+           ON sp."__key_bytes" = c."__key_bytes"
+         JOIN "${mudSchema}"."${sessionTable}" st
+           ON sp."__key_bytes" = st."__key_bytes"
+         WHERE sp."spawned" = true
+           AND st."last_action" + ${SESSION_TIMEOUT} >= ${now}`
+      );
+      currentPlayers = Number(rows[0].count);
+    } else if (spawnedTable && charactersTable) {
+      // Fallback without session timer
+      const rows = await sql.unsafe(
+        `SELECT COUNT(*) as count
+         FROM "${mudSchema}"."${spawnedTable}" sp
+         JOIN "${mudSchema}"."${charactersTable}" c
+           ON sp."__key_bytes" = c."__key_bytes"
+         WHERE sp."spawned" = true`
+      );
+      currentPlayers = Number(rows[0].count);
+    } else if (spawnedTable) {
       const rows = await sql.unsafe(
         `SELECT COUNT(*) as count FROM "${mudSchema}"."${spawnedTable}" WHERE "spawned" = true`
       );

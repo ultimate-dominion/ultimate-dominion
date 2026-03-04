@@ -20,6 +20,7 @@
     "express": "^4.19.0",
     "postgres": "^3.4.0",
     "viem": "2.35.1",
+    "resend": "^4.1.2",
     "ws": "^8.16.0"
   },
   "devDependencies": {

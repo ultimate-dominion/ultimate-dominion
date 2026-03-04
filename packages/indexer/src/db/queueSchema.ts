@@ -52,7 +52,33 @@ export async function initQueueTables() {
   await sql`CREATE INDEX IF NOT EXISTS idx_invite_codes_unused ON queue.invite_codes(used_by) WHERE used_by IS NULL`;
   await sql`CREATE INDEX IF NOT EXISTS idx_referral_activations_invitee ON queue.referral_activations(invitee_wallet)`;
 
+  // Player email mapping for queue notifications
+  await sql`
+    CREATE TABLE IF NOT EXISTS queue.player_emails (
+      wallet TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
   console.log('[queue] Queue tables ready');
+}
+
+/** Upsert a wallet→email mapping for queue notifications */
+export async function setPlayerEmail(wallet: string, email: string): Promise<void> {
+  await sql`
+    INSERT INTO queue.player_emails (wallet, email, updated_at)
+    VALUES (${wallet.toLowerCase()}, ${email}, NOW())
+    ON CONFLICT (wallet) DO UPDATE SET email = EXCLUDED.email, updated_at = NOW()
+  `;
+}
+
+/** Get the stored email for a wallet, or null */
+export async function getPlayerEmail(wallet: string): Promise<string | null> {
+  const rows = await sql`
+    SELECT email FROM queue.player_emails WHERE wallet = ${wallet.toLowerCase()}
+  `;
+  return rows.length > 0 ? (rows[0].email as string) : null;
 }
 
 /** Get current queue position for a wallet (1-based, computed dynamically) */
