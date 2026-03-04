@@ -18,7 +18,6 @@ import {
   type PublicClient,
   type TransactionReceipt,
   decodeEventLog,
-  parseAbi,
 } from 'viem';
 
 import { useGameStore } from './store';
@@ -37,9 +36,22 @@ for (const table of Object.values(mudConfig.tables)) {
 // ---------------------------------------------------------------------------
 // ABI for reading full records from the World contract
 // ---------------------------------------------------------------------------
-const getRecordAbi = parseAbi([
-  'function getRecord(bytes32 tableId, bytes32[] keyTuple) view returns (bytes staticData, bytes32 encodedLengths, bytes dynamicData)',
-]);
+const getRecordAbi = [
+  {
+    type: 'function' as const,
+    name: 'getRecord' as const,
+    stateMutability: 'view' as const,
+    inputs: [
+      { name: 'tableId', type: 'bytes32' as const },
+      { name: 'keyTuple', type: 'bytes32[]' as const },
+    ],
+    outputs: [
+      { name: 'staticData', type: 'bytes' as const },
+      { name: 'encodedLengths', type: 'bytes32' as const },
+      { name: 'dynamicData', type: 'bytes' as const },
+    ],
+  },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Value serialization (match indexer's Postgres → JSON format)
