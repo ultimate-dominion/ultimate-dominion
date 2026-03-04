@@ -18,13 +18,14 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import { CaptchaGate } from '../components/CaptchaGate';
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
-import { useAuth } from '../contexts/AuthContext';
-import { useQueue } from '../contexts/QueueContext';
-import { useMap } from '../contexts/MapContext';
-import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { GameEventFeed } from '../components/GameEventFeed';
 import { InvitePanel } from '../components/InvitePanel';
+import { useAuth } from '../contexts/AuthContext';
+import { useMap } from '../contexts/MapContext';
+import { useQueue } from '../contexts/QueueContext';
+import { GAME_BOARD_PATH, WAITING_ROOM_PATH } from '../Routes';
 
 // Pulsing amber glow for the queue position number
 const positionPulse = keyframes`
@@ -45,6 +46,16 @@ const slotGlow = keyframes`
   }
 `;
 
+// Slow breathing border pulse for the idle hero
+const borderPulse = keyframes`
+  0%, 100% {
+    border-color: rgba(200,122,42,0.15);
+  }
+  50% {
+    border-color: rgba(200,122,42,0.35);
+  }
+`;
+
 export const WaitingRoom = (): JSX.Element => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -58,6 +69,7 @@ export const WaitingRoom = (): JSX.Element => {
     readyUntil,
     estimatedWaitMinutes,
     priority,
+    joinQueue,
     leaveQueue,
     reportSpawned,
     isMapFull,
@@ -66,6 +78,12 @@ export const WaitingRoom = (): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const { isOpen: isFeedOpen, onOpen: onOpenFeed, onClose: onCloseFeed } = useDisclosure();
   const { isOpen: isAuthOpen, onOpen: onOpenAuth, onClose: onCloseAuth } = useDisclosure();
+  const [showCaptcha, setShowCaptcha] = useState(false);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Countdown timer for ready state
   const [countdown, setCountdown] = useState('');
@@ -126,6 +144,11 @@ export const WaitingRoom = (): JSX.Element => {
     );
   }, [queuePosition, totalInQueue]);
 
+  // Rough wait estimate for players not yet in queue
+  const preQueueEstimate = totalInQueue > 0
+    ? Math.ceil((totalInQueue + 1) * 8)
+    : 8;
+
   const isReady = queueStatus === 'ready';
   const isWaiting = queueStatus === 'waiting';
 
@@ -170,136 +193,236 @@ export const WaitingRoom = (): JSX.Element => {
               Enter the World
             </Button>
           </Box>
-        ) : (
-          // ── QUEUE POSITION ──
+        ) : isWaiting ? (
+          // ── IN QUEUE ──
           <Box mb={8} textAlign="center">
-            {isWaiting ? (
-              <>
-                <Text
-                  color="#8A7E6A"
-                  fontFamily="Cinzel, serif"
-                  fontSize={{ base: 'sm', md: 'md' }}
-                  letterSpacing="0.2em"
-                  mb={2}
-                  textTransform="uppercase"
+            <Text
+              color="#8A7E6A"
+              fontFamily="Cinzel, serif"
+              fontSize={{ base: 'sm', md: 'md' }}
+              letterSpacing="0.2em"
+              mb={2}
+              textTransform="uppercase"
+            >
+              Your Position in Line
+            </Text>
+            <Text
+              animation={`${positionPulse} 3s ease-in-out infinite`}
+              color="#C87A2A"
+              fontFamily="Cinzel, serif"
+              fontSize={{ base: '72px', md: '108px' }}
+              fontWeight={700}
+              lineHeight={1}
+              mb={2}
+            >
+              #{queuePosition}
+            </Text>
+            <HStack justify="center" mb={3} spacing={3}>
+              {priority !== 'normal' && (
+                <Badge
+                  bg={priority === 'founder' ? 'rgba(212,165,74,0.15)' : 'rgba(106,138,176,0.15)'}
+                  border="1px solid"
+                  borderColor={priority === 'founder' ? '#D4A54A' : '#6A8AB0'}
+                  borderRadius="2px"
+                  color={priority === 'founder' ? '#D4A54A' : '#6A8AB0'}
+                  fontSize="xs"
+                  px={2}
+                  py={0.5}
+                  textTransform="capitalize"
                 >
-                  Your Position in Line
+                  {priority} Priority
+                </Badge>
+              )}
+            </HStack>
+            <Text color="#8A7E6A" fontSize="sm" mb={4}>
+              ~{estimatedWaitMinutes} min estimated
+              {' · '}
+              {currentPlayers}/{maxPlayers} adventurers in-world
+              {' · '}
+              {totalInQueue} waiting
+            </Text>
+            <HStack justify="center" spacing={3}>
+              <Button
+                onClick={shareQueuePosition}
+                size="sm"
+                variant="outline"
+              >
+                Share Position
+              </Button>
+              <Button
+                color="#B83A2A"
+                onClick={handleLeaveQueue}
+                size="sm"
+                variant="ghost"
+              >
+                Leave Queue
+              </Button>
+            </HStack>
+          </Box>
+        ) : (
+          // ── IDLE (not yet in queue) ──
+          <Box
+            animation={`${borderPulse} 4s ease-in-out infinite`}
+            border="1px solid"
+            borderColor="rgba(200,122,42,0.15)"
+            mb={8}
+            p={{ base: 6, md: 10 }}
+            position="relative"
+            textAlign="center"
+          >
+            {/* Decorative corner marks */}
+            <Box
+              borderColor="rgba(200,122,42,0.25)"
+              borderLeft="2px solid"
+              borderTop="2px solid"
+              h="16px"
+              left={-0.5}
+              position="absolute"
+              top={-0.5}
+              w="16px"
+            />
+            <Box
+              borderColor="rgba(200,122,42,0.25)"
+              borderRight="2px solid"
+              borderTop="2px solid"
+              h="16px"
+              position="absolute"
+              right={-0.5}
+              top={-0.5}
+              w="16px"
+            />
+            <Box
+              borderBottom="2px solid"
+              borderColor="rgba(200,122,42,0.25)"
+              borderLeft="2px solid"
+              bottom={-0.5}
+              h="16px"
+              left={-0.5}
+              position="absolute"
+              w="16px"
+            />
+            <Box
+              borderBottom="2px solid"
+              borderColor="rgba(200,122,42,0.25)"
+              borderRight="2px solid"
+              bottom={-0.5}
+              h="16px"
+              position="absolute"
+              right={-0.5}
+              w="16px"
+            />
+
+            <Text
+              color="#8A7E6A"
+              fontFamily="Cinzel, serif"
+              fontSize={{ base: 'xs', md: 'sm' }}
+              letterSpacing="0.3em"
+              mb={4}
+              textTransform="uppercase"
+            >
+              The World is Full
+            </Text>
+            <Text
+              color="#C87A2A"
+              fontFamily="Cinzel, serif"
+              fontSize={{ base: '64px', md: '96px' }}
+              fontWeight={700}
+              lineHeight={1}
+              mb={1}
+            >
+              {currentPlayers}/{maxPlayers}
+            </Text>
+            <Text
+              color="#C4B89E"
+              fontFamily="Cinzel, serif"
+              fontSize={{ base: 'sm', md: 'md' }}
+              letterSpacing="0.05em"
+              mb={5}
+            >
+              adventurers are currently in the world
+            </Text>
+
+            {/* Queue stats bar */}
+            <HStack
+              borderColor="rgba(196,184,158,0.08)"
+              borderTop="1px solid"
+              justify="center"
+              mb={6}
+              mx="auto"
+              pt={5}
+              spacing={{ base: 4, md: 8 }}
+              w={{ base: '100%', md: '80%' }}
+            >
+              <VStack spacing={0}>
+                <Text color="#C87A2A" fontFamily="Cinzel, serif" fontSize={{ base: 'lg', md: 'xl' }} fontWeight={700}>
+                  {totalInQueue}
                 </Text>
-                <Text
-                  animation={`${positionPulse} 3s ease-in-out infinite`}
-                  color="#C87A2A"
-                  fontFamily="Cinzel, serif"
-                  fontSize={{ base: '72px', md: '108px' }}
-                  fontWeight={700}
-                  lineHeight={1}
-                  mb={2}
-                >
-                  #{queuePosition}
+                <Text color="#5A5040" fontSize="xs" textTransform="uppercase">
+                  in queue
                 </Text>
-                <HStack justify="center" mb={3} spacing={3}>
-                  {priority !== 'normal' && (
-                    <Badge
-                      bg={priority === 'founder' ? 'rgba(212,165,74,0.15)' : 'rgba(106,138,176,0.15)'}
-                      border="1px solid"
-                      borderColor={priority === 'founder' ? '#D4A54A' : '#6A8AB0'}
-                      borderRadius="2px"
-                      color={priority === 'founder' ? '#D4A54A' : '#6A8AB0'}
-                      fontSize="xs"
-                      px={2}
-                      py={0.5}
-                      textTransform="capitalize"
-                    >
-                      {priority} Priority
-                    </Badge>
-                  )}
-                </HStack>
-                <Text color="#8A7E6A" fontSize="sm" mb={4}>
-                  ~{estimatedWaitMinutes} min estimated
-                  {' · '}
-                  {currentPlayers}/{maxPlayers} adventurers in-world
-                  {' · '}
-                  {totalInQueue} waiting
+              </VStack>
+              <Box bg="rgba(196,184,158,0.12)" h="30px" w="1px" />
+              <VStack spacing={0}>
+                <Text color="#C87A2A" fontFamily="Cinzel, serif" fontSize={{ base: 'lg', md: 'xl' }} fontWeight={700}>
+                  ~{preQueueEstimate}m
                 </Text>
-                <HStack justify="center" spacing={3}>
-                  <Button
-                    onClick={shareQueuePosition}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Share Position
-                  </Button>
-                  <Button
-                    color="#B83A2A"
-                    onClick={handleLeaveQueue}
-                    size="sm"
-                    variant="ghost"
-                  >
-                    Leave Queue
-                  </Button>
-                </HStack>
-              </>
+                <Text color="#5A5040" fontSize="xs" textTransform="uppercase">
+                  est. wait
+                </Text>
+              </VStack>
+              <Box bg="rgba(196,184,158,0.12)" h="30px" w="1px" />
+              <VStack spacing={0}>
+                <Text color="#C87A2A" fontFamily="Cinzel, serif" fontSize={{ base: 'lg', md: 'xl' }} fontWeight={700}>
+                  5m
+                </Text>
+                <Text color="#5A5040" fontSize="xs" textTransform="uppercase">
+                  avg. session
+                </Text>
+              </VStack>
+            </HStack>
+
+            {/* CTA: Join Queue or Log In */}
+            {!isAuthenticated ? (
+              <Button
+                fontSize="lg"
+                onClick={onOpenAuth}
+                px={10}
+                py={5}
+                variant="amber"
+              >
+                Log in to Join Queue
+              </Button>
+            ) : showCaptcha ? (
+              <CaptchaGate
+                isLoading={queueStatus === ('joining' as any)}
+                onVerified={async (token) => {
+                  await joinQueue(token);
+                }}
+              />
             ) : (
-              // ── IDLE (not yet in queue) ──
-              <>
-                <Text
-                  color="#8A7E6A"
-                  fontFamily="Cinzel, serif"
-                  fontSize={{ base: 'sm', md: 'md' }}
-                  letterSpacing="0.2em"
-                  mb={3}
-                  textTransform="uppercase"
+              <VStack spacing={3}>
+                <Button
+                  fontSize="lg"
+                  onClick={() => setShowCaptcha(true)}
+                  px={10}
+                  py={5}
+                  variant="amber"
                 >
-                  The World is Full
+                  Join Queue
+                </Button>
+                <Text color="#5A5040" fontSize="xs">
+                  You'll be notified when a slot opens
                 </Text>
-                <Text
-                  color="#C87A2A"
-                  fontFamily="Cinzel, serif"
-                  fontSize={{ base: '48px', md: '72px' }}
-                  fontWeight={700}
-                  lineHeight={1}
-                  mb={3}
-                >
-                  {currentPlayers}/{maxPlayers}
-                </Text>
-                <Text color="#8A7E6A" fontSize="sm" mb={1}>
-                  adventurers are currently in the world
-                </Text>
-                <Text color="#5A5040" fontSize="xs" mb={4}>
-                  {totalInQueue > 0
-                    ? `${totalInQueue} ${totalInQueue === 1 ? 'player' : 'players'} waiting in queue`
-                    : 'Join the queue to be notified when a slot opens'
-                  }
-                </Text>
-                {!isAuthenticated && (
-                  <Button
-                    fontSize="lg"
-                    onClick={onOpenAuth}
-                    px={10}
-                    py={5}
-                    variant="amber"
-                  >
-                    Log in to Join Queue
-                  </Button>
-                )}
-              </>
+              </VStack>
             )}
           </Box>
         )}
-
-        {/* ═══ Divider ═══ */}
-        <Box
-          borderBottom="1px solid"
-          borderColor="rgba(196,184,158,0.08)"
-          mb={8}
-          mx="auto"
-          w={{ base: '80%', md: '60%' }}
-        />
 
         {/* ═══ MAIN CONTENT: Two columns on desktop ═══ */}
         <Box
           display={{ base: 'block', lg: 'grid' }}
           gap={8}
-          gridTemplateColumns={{ lg: '1fr 340px' }}
+          gridTemplateColumns={{ lg: '1fr 380px' }}
         >
           {/* ── Left Column: Game Pitch + Invite ── */}
           <VStack align="stretch" spacing={8}>
@@ -316,8 +439,8 @@ export const WaitingRoom = (): JSX.Element => {
                 While You Wait
               </Text>
               <Box
-                borderLeft="2px solid"
                 borderColor="rgba(200,122,42,0.3)"
+                borderLeft="2px solid"
                 pl={5}
               >
                 <Text

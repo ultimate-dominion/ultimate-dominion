@@ -63,12 +63,14 @@ contract MapSystem is System {
         PauseLib.requireNotPaused();
         address owner = Characters.getOwner(entityId);
         if (!_isOwnerOrDelegated(owner)) revert Unauthorized();
-        uint256 spawnedPlayers = Counters.get(address(this), 0);
-        if (spawnedPlayers > UltimateDominionConfig.getMaxPlayers()) revert MaxPlayers();
         if (Spawned.getSpawned(entityId)) revert AlreadySpawned();
         int256 maxHp = Stats.getMaxHp(entityId);
         bool isCharacter = IWorld(_world()).UD__isValidCharacterId(entityId);
+
+        // Only count player characters against maxPlayers cap (not mobs)
+        uint256 spawnedPlayers = Counters.get(address(this), 0);
         if (isCharacter) {
+            if (spawnedPlayers > UltimateDominionConfig.getMaxPlayers()) revert MaxPlayers();
             int256 currentHp = maxHp + CharacterEquipment.getHpBonus(entityId);
             if (currentHp > 0) {
                 Stats.setCurrentHp(entityId, currentHp);
@@ -87,16 +89,21 @@ contract MapSystem is System {
             SessionTimer.set(entityId, block.timestamp);
             // re-calculate equipment bonuses
             IWorld(_world()).UD__setStats(entityId, IWorld(_world()).UD__calculateEquipmentBonuses(entityId));
+            // increment player counter (only for characters)
+            Counters.set(address(this), 0, (spawnedPlayers + 1));
         }
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
-        // add 1 to spawned players
-        Counters.set(address(this), 0, (spawnedPlayers + 1));
 
         // Fragment I: The Awakening - triggers on first spawn
         if (isCharacter) {
             IWorld(_world()).UD__triggerFragment(entityId, 1, 0, 0);
         }
+    }
+
+    /// @notice Returns the number of spawned player characters (not mobs).
+    function getSpawnedPlayerCount() public view returns (uint256) {
+        return Counters.get(address(this), 0);
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {

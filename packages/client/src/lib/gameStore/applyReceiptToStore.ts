@@ -49,6 +49,7 @@ function serializeRecord(record: Record<string, unknown>): TableRow {
 // ---------------------------------------------------------------------------
 export function applyReceiptToStore(receipt: TransactionReceipt): void {
   let applied = 0;
+  let skippedEvents = 0;
 
   for (const log of receipt.logs) {
     let decoded;
@@ -63,10 +64,20 @@ export function applyReceiptToStore(receipt: TransactionReceipt): void {
       continue;
     }
 
-    if (decoded.eventName === 'Store_SetRecord') {
+    // Handle both SetRecord and SpliceStaticData (which is how MUD v2.2 emits full-row writes)
+    if (decoded.eventName === 'Store_SetRecord' || decoded.eventName === 'Store_SpliceStaticData') {
       const { tableId, keyTuple } = decoded.args;
       const table = tableRegistry.get(tableId as Hex);
-      if (!table) continue;
+      if (!table) {
+        skippedEvents++;
+        continue;
+      }
+
+      // SpliceStaticData doesn't carry the full record — only SetRecord does
+      if (decoded.eventName !== 'Store_SetRecord') {
+        skippedEvents++;
+        continue;
+      }
 
       try {
         const record = logToRecord({
@@ -79,8 +90,8 @@ export function applyReceiptToStore(receipt: TransactionReceipt): void {
 
         useGameStore.getState().setRow(table.label, keyBytes, serialized);
         applied++;
-      } catch {
-        // Schema decode failure — fall back to WebSocket delivery
+      } catch (err) {
+        console.warn(`[TX][RECEIPT] Failed to decode record for ${table.label}:`, err);
         continue;
       }
     }
@@ -96,7 +107,7 @@ export function applyReceiptToStore(receipt: TransactionReceipt): void {
     }
   }
 
-  if (applied > 0) {
-    console.info(`[TX][RECEIPT] Injected ${applied} store update(s) from receipt logs`);
+  if (applied > 0 || skippedEvents > 0) {
+    console.info(`[TX][RECEIPT] Injected ${applied} store update(s) from receipt logs (${skippedEvents} skipped splice/unknown)`);
   }
 }
