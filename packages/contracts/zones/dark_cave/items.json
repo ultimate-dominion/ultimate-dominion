@@ -1600,6 +1600,28 @@
         "minIntelligence": 0,
         "minStrength": 0
       }
+    },
+    {
+      "name": "Antidote",
+      "description": "A bitter herbal tincture that purges venom from the blood. Drink fast.",
+      "rarity": 1,
+      "dropChance": 3,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:antidote",
+      "price": 15000000000000000000,
+      "stats": {
+        "effects": [
+          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
     }
   ],
   "metadataUriPrefix": "ipfs://dark_cave/"

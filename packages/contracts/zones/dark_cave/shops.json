@@ -21,6 +21,7 @@
         { "itemName": "Venom Vial", "stock": 5, "restock": 5 },
         { "itemName": "Spore Cloud", "stock": 5, "restock": 5 },
         { "itemName": "Sapping Poison", "stock": 5, "restock": 5 },
+        { "itemName": "Antidote", "stock": 10, "restock": 10 },
         { "itemName": "Padded Armor", "stock": 3, "restock": 3 },
         { "itemName": "Leather Jerkin", "stock": 3, "restock": 3 },
         { "itemName": "Apprentice Robes", "stock": 3, "restock": 3 },

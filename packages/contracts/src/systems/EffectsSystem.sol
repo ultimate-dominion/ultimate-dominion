@@ -241,24 +241,50 @@ contract EffectsSystem is System {
         int256 totalDamage;
         bytes32[] memory appliedStatusEffects = EncounterEntity.getAppliedStatusEffects(entityId);
 
-        int256[] memory damages = new int256[](appliedStatusEffects.length);
+        if (appliedStatusEffects.length == 0) return;
 
-        if (appliedStatusEffects.length > 0) {
-            for (uint256 i; i < appliedStatusEffects.length; i++) {
-                StatusEffectStatsData memory effectStats = _getStatusEffectStats(EffectProcessor.getEffectStatId(appliedStatusEffects[i]));
-                uint256 stacks = EffectProcessor.calculateEffectStacks(EffectProcessor.getEffectStatId(appliedStatusEffects[i]), appliedStatusEffects);
-                int256 damageToApply = EffectProcessor.calculateDamageOverTime(effectStats, stacks);
-                damages[i] = damageToApply;
-                totalDamage += damageToApply;
+        // Deduplicate effectStatIds to avoid quadratic damage (stacks^2 bug).
+        // Each unique DoT effect should only be calculated once, with its stack count.
+        bytes32[] memory processedIds = new bytes32[](appliedStatusEffects.length);
+        int256[] memory damages = new int256[](appliedStatusEffects.length);
+        uint256 processedCount;
+
+        for (uint256 i; i < appliedStatusEffects.length; i++) {
+            bytes32 effectStatId = EffectProcessor.getEffectStatId(appliedStatusEffects[i]);
+
+            // Skip if already processed this effectStatId
+            bool skip;
+            for (uint256 j; j < processedCount; j++) {
+                if (processedIds[j] == effectStatId) { skip = true; break; }
             }
+            if (skip) continue;
+            processedIds[processedCount] = effectStatId;
+
+            StatusEffectStatsData memory effectStats = _getStatusEffectStats(effectStatId);
+            uint256 stacks = EffectProcessor.calculateEffectStacks(effectStatId, appliedStatusEffects);
+            int256 damageToApply = EffectProcessor.calculateDamageOverTime(effectStats, stacks);
+            damages[processedCount] = damageToApply;
+            totalDamage += damageToApply;
+            processedCount++;
         }
 
         if (totalDamage != 0) {
             int256 currentHp = Stats.getCurrentHp(entityId) - totalDamage;
+            if (currentHp < 0) currentHp = 0;
             Stats.setCurrentHp(entityId, currentHp);
-            
+
+            if (currentHp == 0) {
+                EncounterEntity.setDied(entityId, true);
+            }
+
+            // Trim damages array to actual size
+            int256[] memory trimmedDamages = new int256[](processedCount);
+            for (uint256 k; k < processedCount; k++) {
+                trimmedDamages[k] = damages[k];
+            }
+
             DamageOverTimeAppliedData memory dotDamage =
-                DamageOverTimeAppliedData({entityId: entityId, totalDamage: totalDamage, individualDamages: damages});
+                DamageOverTimeAppliedData({entityId: entityId, totalDamage: totalDamage, individualDamages: trimmedDamages});
             DamageOverTimeApplied.set(encounterId, currentTurn, dotDamage);
         }
     }

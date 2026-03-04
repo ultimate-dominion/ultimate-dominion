@@ -23,6 +23,7 @@ import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {_requireAccess} from "../utils.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {EffectProcessor} from "@libraries/EffectProcessor.sol";
 import {
     NotItemOwner,
     InEncounter,
@@ -151,7 +152,9 @@ contract WorldActionSystem is System {
     }
 
     /**
-     * @dev Use a healing consumable during combat. Only works for instant healing items (negative maxDamage).
+     * @dev Use a healing or antidote consumable during combat.
+     *      Healing: maxDamage == minDamage && maxDamage < 0
+     *      Antidote: maxDamage == 0 && minDamage == 0 && effects.length > 0
      * @param characterId The character using the consumable
      * @param itemId The consumable item ID
      */
@@ -164,15 +167,52 @@ contract WorldActionSystem is System {
         // Get consumable stats
         ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
 
-        // Only allow instant healing items during combat (negative maxDamage = healing)
-        if (consumableStats.maxDamage != consumableStats.minDamage || consumableStats.maxDamage >= 0) {
+        if (consumableStats.maxDamage == consumableStats.minDamage && consumableStats.maxDamage < 0) {
+            // Instant healing
+            _applyHealingPotion(characterId, characterId, itemId);
+        } else if (consumableStats.maxDamage == 0 && consumableStats.minDamage == 0
+                   && consumableStats.effects.length > 0) {
+            // Antidote — cleanse matching effects
+            _cleanseEffects(characterId, consumableStats.effects);
+        } else {
             revert OnlyHealingInCombat();
         }
 
-        // Apply the healing
-        _applyHealingPotion(characterId, characterId, itemId);
-
         // Consume the item
         IWorld(_world()).UD__consumeItem(characterId, itemId);
+    }
+
+    /**
+     * @dev Remove applied status effects matching any of the given effectStatIds.
+     * @param entityId The entity to cleanse
+     * @param effectsToCleanse Array of effectStatIds to remove
+     */
+    function _cleanseEffects(bytes32 entityId, bytes32[] memory effectsToCleanse) internal {
+        bytes32[] memory applied = EncounterEntity.getAppliedStatusEffects(entityId);
+        if (applied.length == 0) return;
+
+        // Build filtered array excluding matching effectStatIds
+        bytes32[] memory remaining = new bytes32[](applied.length);
+        uint256 count;
+        for (uint256 i; i < applied.length; i++) {
+            bytes32 effectStatId = EffectProcessor.getEffectStatId(applied[i]);
+            bool shouldRemove;
+            for (uint256 j; j < effectsToCleanse.length; j++) {
+                if (effectStatId == effectsToCleanse[j]) {
+                    shouldRemove = true;
+                    break;
+                }
+            }
+            if (!shouldRemove) {
+                remaining[count++] = applied[i];
+            }
+        }
+
+        // Resize and write back
+        bytes32[] memory trimmed = new bytes32[](count);
+        for (uint256 i; i < count; i++) {
+            trimmed[i] = remaining[i];
+        }
+        EncounterEntity.setAppliedStatusEffects(entityId, trimmed);
     }
 }
