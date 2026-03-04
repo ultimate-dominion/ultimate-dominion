@@ -1,6 +1,5 @@
 import { Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { Account, Chain, Transport, WalletClient } from 'viem';
 import { useAccount, useSwitchChain } from 'wagmi';
 
@@ -8,7 +7,6 @@ import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { setupDelegation } from '../lib/mud/delegation';
 import { getChainNameFromId, isSupportedChain } from '../lib/web3';
-import { CHARACTER_CREATION_PATH } from '../Routes';
 
 export const DelegationButton = ({
   externalWalletClient,
@@ -17,7 +15,6 @@ export const DelegationButton = ({
   externalWalletClient: WalletClient<Transport, Chain, Account>;
   onClose?: () => void;
 }): JSX.Element => {
-  const navigate = useNavigate();
   const { chains, switchChain } = useSwitchChain();
   const { chainId } = useAccount();
   const { burnerAddress, getBurner, network } = useMUD();
@@ -44,8 +41,7 @@ export const DelegationButton = ({
         onClose();
       }
 
-      getBurner();
-      navigate(CHARACTER_CREATION_PATH);
+      await getBurner();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to delegate.', e);
     } finally {
@@ -55,7 +51,6 @@ export const DelegationButton = ({
     burnerAddress,
     externalWalletClient,
     getBurner,
-    navigate,
     network,
     onClose,
     renderError,

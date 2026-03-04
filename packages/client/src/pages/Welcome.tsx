@@ -34,7 +34,7 @@ export const Welcome = (): JSX.Element => {
   const [searchParams] = useSearchParams();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { authMethod, isAuthenticated, isConnecting } = useAuth();
-  const { delegatorAddress } = useMUD();
+  const { delegatorAddress, isSynced } = useMUD();
   const { character, isRefreshing } = useCharacter();
   const { isMapFull, statsLoaded } = useQueue();
 
@@ -62,6 +62,13 @@ export const Welcome = (): JSX.Element => {
       navigate(CHARACTER_CREATION_PATH);
     }
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isMapFull, isRefreshing, navigate, statsLoaded]);
+
+  // Auto-open delegation modal for external wallets that haven't delegated yet
+  useEffect(() => {
+    if (authMethod === 'external' && isAuthenticated && !delegatorAddress && isSynced && !isOpen) {
+      onOpen();
+    }
+  }, [authMethod, delegatorAddress, isAuthenticated, isOpen, isSynced, onOpen]);
 
   const onPlay = useCallback(() => {
     // If map is full, go to waiting room (auth or not)

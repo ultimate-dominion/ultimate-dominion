@@ -24,8 +24,9 @@ import { GameEventFeed } from '../components/GameEventFeed';
 import { InvitePanel } from '../components/InvitePanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useMap } from '../contexts/MapContext';
+import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
-import { GAME_BOARD_PATH, WAITING_ROOM_PATH } from '../Routes';
+import { GAME_BOARD_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
 
 // Pulsing amber glow for the queue position number
 const positionPulse = keyframes`
@@ -58,7 +59,8 @@ const borderPulse = keyframes`
 
 export const WaitingRoom = (): JSX.Element => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { authMethod, isAuthenticated } = useAuth();
+  const { delegatorAddress } = useMUD();
   const { isSpawned } = useMap();
   const {
     queuePosition,
@@ -119,13 +121,16 @@ export const WaitingRoom = (): JSX.Element => {
 
   const handleLeaveQueue = useCallback(async () => {
     await leaveQueue();
-    navigate(GAME_BOARD_PATH);
+    navigate(HOME_PATH);
   }, [leaveQueue, navigate]);
 
   const handleSpawnNow = useCallback(() => {
-    // Navigate to game board — MapContext handles spawn TX + reportSpawned
+    if (authMethod === 'external' && !delegatorAddress) {
+      onOpenAuth();
+      return;
+    }
     navigate(GAME_BOARD_PATH);
-  }, [navigate]);
+  }, [authMethod, delegatorAddress, navigate, onOpenAuth]);
 
   const shareQueuePosition = useCallback(() => {
     const text = `I'm #${queuePosition} in line for Ultimate Dominion! ${totalInQueue} players waiting.\n\nultimatedominion.com\n\n#UltimateDominion`;
@@ -175,15 +180,32 @@ export const WaitingRoom = (): JSX.Element => {
             <Text color="#C4B89E" fontSize={{ base: 'md', md: 'lg' }} mb={6}>
               You have {countdown || '2:00'} to enter the world before your place is given away.
             </Text>
-            <Button
-              fontSize="lg"
-              onClick={handleSpawnNow}
-              px={12}
-              py={6}
-              variant="amber"
-            >
-              Enter the World
-            </Button>
+            {authMethod === 'external' && isAuthenticated && !delegatorAddress ? (
+              <VStack spacing={3}>
+                <Text color="#C4B89E" fontSize="sm">
+                  Authorize your session to enter the world.
+                </Text>
+                <Button
+                  fontSize="lg"
+                  onClick={onOpenAuth}
+                  px={12}
+                  py={6}
+                  variant="amber"
+                >
+                  Authorize & Enter
+                </Button>
+              </VStack>
+            ) : (
+              <Button
+                fontSize="lg"
+                onClick={handleSpawnNow}
+                px={12}
+                py={6}
+                variant="amber"
+              >
+                Enter the World
+              </Button>
+            )}
           </Box>
         ) : isWaiting ? (
           // ── IN QUEUE ──
@@ -233,6 +255,16 @@ export const WaitingRoom = (): JSX.Element => {
               {' · '}
               {totalInQueue} waiting
             </Text>
+            {authMethod === 'external' && isAuthenticated && !delegatorAddress && (
+              <Box mb={4} p={4} border="1px solid" borderColor="rgba(200,122,42,0.3)" textAlign="center">
+                <Text color="#C4B89E" fontSize="sm" mb={3}>
+                  Authorize your session while you wait so you're ready when a slot opens.
+                </Text>
+                <Button onClick={onOpenAuth} size="sm" variant="outline">
+                  Authorize Session
+                </Button>
+              </Box>
+            )}
             <HStack justify="center" spacing={3}>
               <Button
                 onClick={shareQueuePosition}
@@ -372,6 +404,18 @@ export const WaitingRoom = (): JSX.Element => {
                 </Text>
               </VStack>
             </HStack>
+
+            {/* Delegation prompt for external wallets */}
+            {authMethod === 'external' && isAuthenticated && !delegatorAddress && (
+              <Box mb={4} p={4} border="1px solid" borderColor="rgba(200,122,42,0.3)" textAlign="center">
+                <Text color="#C4B89E" fontSize="sm" mb={3}>
+                  Authorize your session so you're ready when a slot opens.
+                </Text>
+                <Button onClick={onOpenAuth} size="sm" variant="outline">
+                  Authorize Session
+                </Button>
+              </Box>
+            )}
 
             {/* CTA: Join Queue or Log In */}
             {!isAuthenticated ? (

@@ -8,7 +8,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useWalletClient } from 'wagmi';
@@ -36,12 +36,7 @@ export const ConnectWalletModal = ({
   const { delegatorAddress } = useMUD();
   const { character } = useCharacter();
 
-  // Track whether user explicitly chose the wallet path this modal session.
-  // Resets when modal closes so next open shows sign-in options again.
-  const [choseWallet, setChoseWallet] = useState(false);
-
   const handleClose = useCallback(() => {
-    setChoseWallet(false);
     onClose();
   }, [onClose]);
 
@@ -61,12 +56,9 @@ export const ConnectWalletModal = ({
     }
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isOpen, handleClose, navigate, suppressNavigate]);
 
-  // Show SignInModal if:
-  // - Not authenticated at all, OR
-  // - External wallet auto-connected but user hasn't explicitly chosen wallet path
-  //   (lets them pick Google instead of being forced into MetaMask delegation)
-  if (!isAuthenticated || (authMethod === 'external' && !delegatorAddress && !choseWallet)) {
-    return <SignInModal isOpen={isOpen} onClose={handleClose} onChooseWallet={() => setChoseWallet(true)} />;
+  // Show SignInModal only if not authenticated yet
+  if (!isAuthenticated) {
+    return <SignInModal isOpen={isOpen} onClose={handleClose} />;
   }
 
   // Embedded path — authenticated, auto-closing above
