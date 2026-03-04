@@ -324,7 +324,7 @@ const MUDProviderInner = ({
     // Read delegation directly from the World contract's UserDelegationControl table
     // This replaces the RECS-based delegation check
     const DELEGATION_TABLE_ID =
-      '0x74620000000000000000000000000000557365724465706174696f6e436f6e74' as Hex;
+      '0x7462776f726c640000000000000000005573657244656c65676174696f6e436f' as Hex;
     const GSF_ABI = [
       {
         name: 'getStaticField',
