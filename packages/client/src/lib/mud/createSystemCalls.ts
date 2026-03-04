@@ -812,8 +812,11 @@ export function createSystemCalls(
         characterEntity as `0x${string}`,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const txResult = await waitForTransaction(tx);
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to spawn.',
+        success: txResult.status === 'success',
+      };
     } catch (e) {
       return {
         error: getContractError(e),
