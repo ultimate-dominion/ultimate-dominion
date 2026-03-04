@@ -7,7 +7,7 @@ import {
   ModalOverlay,
   Text,
 } from '@chakra-ui/react';
-import { BuyWidget, darkTheme } from 'thirdweb/react';
+import { BuyWidget, darkTheme, ThirdwebProvider } from 'thirdweb/react';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useGameConfig } from '../lib/gameStore';
@@ -65,14 +65,16 @@ export const GoldMerchantModal = ({
         <ModalCloseButton color="#8A7E6A" />
         <ModalBody p={0}>
           {goldTokenAddress && ownerAddress ? (
-            <BuyWidget
-              client={thirdwebClient}
-              chain={thirdwebChain}
-              tokenAddress={goldTokenAddress}
-              receiverAddress={ownerAddress}
-              activeWallet={embeddedWallet ?? undefined}
-              theme={merchantTheme}
-            />
+            <ThirdwebProvider>
+              <BuyWidget
+                client={thirdwebClient}
+                chain={thirdwebChain}
+                tokenAddress={goldTokenAddress}
+                receiverAddress={ownerAddress}
+                activeWallet={embeddedWallet ?? undefined}
+                theme={merchantTheme}
+              />
+            </ThirdwebProvider>
           ) : (
             <Text color="#8A7E6A" p={6} textAlign="center">
               Loading...
