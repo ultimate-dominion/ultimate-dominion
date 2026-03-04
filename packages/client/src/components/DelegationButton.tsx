@@ -37,10 +37,10 @@ export const DelegationButton = ({
 
       renderSuccess('Game account ready!');
 
-      if (onClose) {
-        onClose();
-      }
-
+      // getBurner() must complete before onClose() — it sets delegatorAddress,
+      // which triggers ConnectWalletModal's navigation effect. If the modal
+      // closes first (isOpen=false), the effect short-circuits and navigation
+      // never happens.
       await getBurner();
     } catch (e) {
       renderError((e as Error)?.message ?? 'Failed to delegate.', e);
@@ -52,7 +52,6 @@ export const DelegationButton = ({
     externalWalletClient,
     getBurner,
     network,
-    onClose,
     renderError,
     renderSuccess,
   ]);
