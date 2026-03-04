@@ -10,7 +10,8 @@ import {
 import type { ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useMUD } from './MUDContext';
-import { API_URL } from '../utils/constants';
+
+const INDEXER_URL = (import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api').replace(/\/api\/?$/, '');
 
 type QueueStatus = 'idle' | 'joining' | 'waiting' | 'ready' | 'spawned';
 
@@ -133,7 +134,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
       }
     }
 
-    const wsUrl = API_URL.replace(/^http/, 'ws') + '/ws';
+    const wsUrl = INDEXER_URL.replace(/^http/, 'ws') + '/ws';
     try {
       wsRef.current = new WebSocket(wsUrl);
     } catch {
@@ -247,7 +248,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     const poll = async () => {
       if (document.hidden) return;
       try {
-        const resp = await fetch(`${API_URL}/api/queue/position/${wallet}`);
+        const resp = await fetch(`${INDEXER_URL}/api/queue/position/${wallet}`);
         const data = await resp.json();
         if (data.inQueue) {
           setQueuePosition(data.position);
@@ -296,7 +297,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const resp = await fetch(`${API_URL}/api/queue/stats`);
+        const resp = await fetch(`${INDEXER_URL}/api/queue/stats`);
         const data = await resp.json();
         setTotalInQueue(data.totalInQueue);
         setSlotsAvailable(data.slotsAvailable);
@@ -313,7 +314,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const resp = await fetch(`${API_URL}/api/queue/feed`);
+        const resp = await fetch(`${INDEXER_URL}/api/queue/feed`);
         const data = await resp.json();
         if (data.events) setGameEvents(data.events);
       } catch {
@@ -327,7 +328,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     if (!wallet) return;
     setQueueStatus('joining');
     try {
-      const resp = await fetch(`${API_URL}/api/queue/join`, {
+      const resp = await fetch(`${INDEXER_URL}/api/queue/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -357,7 +358,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   const leaveQueue = useCallback(async () => {
     if (!wallet) return;
     try {
-      await fetch(`${API_URL}/api/queue/leave/${wallet}`, { method: 'DELETE' });
+      await fetch(`${INDEXER_URL}/api/queue/leave/${wallet}`, { method: 'DELETE' });
       setQueueStatus('idle');
       setQueuePosition(0);
       setReadyUntil(null);
@@ -369,7 +370,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   const acknowledgeSlot = useCallback(async () => {
     if (!wallet) return;
     try {
-      await fetch(`${API_URL}/api/queue/ready-ack/${wallet}`, { method: 'POST' });
+      await fetch(`${INDEXER_URL}/api/queue/ready-ack/${wallet}`, { method: 'POST' });
     } catch (err) {
       console.error('[queue] Ack error:', err);
     }
@@ -378,7 +379,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   const reportSpawned = useCallback(async () => {
     if (!wallet) return;
     try {
-      await fetch(`${API_URL}/api/queue/spawned/${wallet}`, { method: 'POST' });
+      await fetch(`${INDEXER_URL}/api/queue/spawned/${wallet}`, { method: 'POST' });
       setQueueStatus('spawned');
       setReadyUntil(null);
     } catch (err) {
@@ -390,8 +391,8 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     if (!wallet) return;
     try {
       const [codesResp, statsResp] = await Promise.all([
-        fetch(`${API_URL}/api/invite/codes/${wallet}`),
-        fetch(`${API_URL}/api/invite/stats/${wallet}`),
+        fetch(`${INDEXER_URL}/api/invite/codes/${wallet}`),
+        fetch(`${INDEXER_URL}/api/invite/stats/${wallet}`),
       ]);
       const codesData = await codesResp.json();
       const statsData = await statsResp.json();
