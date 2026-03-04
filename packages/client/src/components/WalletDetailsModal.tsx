@@ -24,6 +24,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { GiTwoCoins } from 'react-icons/gi';
 import { formatEther, parseEther } from 'viem';
 import { useBalance, useWalletClient } from 'wagmi';
 
@@ -33,6 +34,7 @@ import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { etherToFixedNumber } from '../utils/helpers';
 
 import { PolygonalCard } from './PolygonalCard';
 import { SignInModal } from './SignInModal';
@@ -270,19 +272,40 @@ export const WalletDetailsModal = ({
                   </Text>
                 </Box>
               )}
-              <Box>
-                <Text
-                  color="#8A7E6A"
-                  fontSize="xs"
-                  letterSpacing="wide"
-                  textTransform="uppercase"
-                >
-                  Balance
-                </Text>
-                <Text fontSize="2xl" fontWeight={700}>
-                  {formatBalance(burnerBalance)} ETH
-                </Text>
-              </Box>
+              {character && (
+                <Box>
+                  <HStack spacing={2} mb={1}>
+                    <GiTwoCoins color="#D4A54A" size={16} />
+                    <Text
+                      color="#8A7E6A"
+                      fontSize="xs"
+                      letterSpacing="wide"
+                      textTransform="uppercase"
+                    >
+                      Gold
+                    </Text>
+                  </HStack>
+                  <Text color="#D4A54A" fontFamily="mono" fontSize="2xl" fontWeight={700}>
+                    {Number(etherToFixedNumber(
+                      character.externalGoldBalance + character.escrowGoldBalance,
+                    )).toLocaleString()}
+                  </Text>
+                  <HStack fontSize="xs" mt={1} spacing={4}>
+                    <Text color="#6A6050">
+                      Spendable:{' '}
+                      <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
+                        {Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()}
+                      </Text>
+                    </Text>
+                    <Text color="#6A6050">
+                      Escrow:{' '}
+                      <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
+                        {Number(etherToFixedNumber(character.escrowGoldBalance)).toLocaleString()}
+                      </Text>
+                    </Text>
+                  </HStack>
+                </Box>
+              )}
             </VStack>
           </ModalBody>
           <ModalFooter justifyContent="space-between">
@@ -331,6 +354,42 @@ export const WalletDetailsModal = ({
                     A small ETH deposit is needed to cover gameplay transaction
                     fees. This stays in your session and can be withdrawn later.
                   </Text>
+                )}
+
+                {/* Gold balance */}
+                {character && !needsFunding && (
+                  <Box>
+                    <HStack spacing={2} mb={1}>
+                      <GiTwoCoins color="#D4A54A" size={16} />
+                      <Text
+                        color="#8A7E6A"
+                        fontSize="xs"
+                        letterSpacing="wide"
+                        textTransform="uppercase"
+                      >
+                        Gold
+                      </Text>
+                    </HStack>
+                    <Text color="#D4A54A" fontFamily="mono" fontSize="2xl" fontWeight={700}>
+                      {Number(etherToFixedNumber(
+                        character.externalGoldBalance + character.escrowGoldBalance,
+                      )).toLocaleString()}
+                    </Text>
+                    <HStack fontSize="xs" mt={1} spacing={4}>
+                      <Text color="#6A6050">
+                        Spendable:{' '}
+                        <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
+                          {Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()}
+                        </Text>
+                      </Text>
+                      <Text color="#6A6050">
+                        Escrow:{' '}
+                        <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
+                          {Number(etherToFixedNumber(character.escrowGoldBalance)).toLocaleString()}
+                        </Text>
+                      </Text>
+                    </HStack>
+                  </Box>
                 )}
 
                 {/* Session balance when funded */}
