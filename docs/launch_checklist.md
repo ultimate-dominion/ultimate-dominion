@@ -21,7 +21,7 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] Embedded wallet MUD integration ✓ EIP-7702 migration (`3886dada`), custom waitForTransaction using viem polling
 - [x] Delegation flow ✓ "Authorize & Play" with crypto-free language
 - [x] Delegation revoke ✓ "Reset Game Account" button, logout also revokes
-- [x] Auth edge cases ✓ Stale session clearing (`6ecda63f`), wrong-account detection (`2e5cba03`), auto-navigate after sign-in (`c3cf4115`)
+- [x] Auth edge cases ✓ Stale session clearing (`6ecda63f`), wrong-account detection (`2e5cba03`), auto-navigate after sign-in (`c3cf4115`), logout no longer blocks on despawn failure (`60817b93`)
 
 **Gasless Transactions (Onboarding Blocker)**
 - [x] Gas onboarding system designed ✓ GasStationSystem (Gold→ETH swap for level 3+), Thirdweb paymaster (levels 1-3)
@@ -32,7 +32,7 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] HP/damage scaling by level ✓ Weapon scalingStat (STR/AGI/INT)
 - [x] Combat rebalance ✓ AGI/INT scaling, class multipliers, combat triangle (`014d0ae6`), stat growth rebalance (`82699a7e`)
 - [x] PvP bug fixes ✓ Missing currentHp, incomplete getItemEffects, HP validation (`fe65eb35`)
-- [ ] PvP end-to-end validation — verify 2-player PvP completes without errors (bugs fixed, not tested live)
+- [~] PvP end-to-end validation — works on beta, needs mainnet verification with 2 players
 - [ ] Edge case testing (disconnects, timeouts during combat)
 
 **Survivability**
@@ -159,7 +159,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Smart contract audit (external or internal review)
 - [x] Access control verification ✓ 6 admin systems locked, _requireSystemOrAdmin() on critical systems
 - [x] Reentrancy protection ✓ PvpRewardSystem double-claim fix, ShopSystem nonReentrant
-- [x] Integer overflow/underflow checks ✓ CombatMath clamping, division-by-zero guards
+- [x] Integer overflow/underflow checks ✓ CombatMath clamping, division-by-zero guards, MapRemovalSystem counter underflow guard (`60817b93`)
 - [x] Input validation ✓ Negative stat validation, HP clamping, entity ownership validation (`479ff421`)
 - [x] Rate limiting and anti-griefing ✓ 1s move cooldown, one character per account, MAX_PARTY_SIZE=10, movement mutex (`52869919`)
 - [x] Private key management ✓ No hardcoded keys, vm.envUint("PRIVATE_KEY"), env file separation (`ad04edee`)
@@ -266,9 +266,13 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Post on r/IndieGaming, r/playmygame
 
 **Launch Mechanics**
-- [ ] Queue/invite system implementation (see LAUNCH_STRATEGY.md)
+- [~] Queue/invite system implementation (see LAUNCH_STRATEGY.md) — code complete, needs deploy + env vars
 - [ ] Human verification system (see LAUNCH_STRATEGY.md)
 - [ ] DEX liquidity setup for $GOLD token (see ECONOMICS.md)
+- [ ] Set `founderWindowEnd` timestamp via `cast send` on production world (decides how long founder badges are available)
+- [ ] Set `maxPlayers = 10` via `cast send` on production world
+- [ ] Set `sessionTimeout = 300` in SessionConfig via `cast send` on production world
+- [ ] Set up Cloudflare Turnstile site + add `TURNSTILE_SECRET_KEY` to Railway, `VITE_TURNSTILE_SITE_KEY` to Vercel
 
 ### 2.6 Mainnet Smoke Test
 

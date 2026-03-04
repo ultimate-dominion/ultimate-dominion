@@ -26,6 +26,7 @@
     "@latticexyz/protocol-parser": "2.2.23",
     "@latticexyz/store": "2.2.23",
     "@latticexyz/world": "2.2.23",
+    "@marsidev/react-turnstile": "^1.4.2",
     "@pushprotocol/restapi": "^1.7.25",
     "@rainbow-me/rainbowkit": "^2.1.1",
     "@tanstack/react-query": "^5.37.1",

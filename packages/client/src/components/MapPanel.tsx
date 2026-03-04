@@ -12,15 +12,19 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FaStoreAlt } from 'react-icons/fa';
 import { GiDeathSkull, GiPerson } from 'react-icons/gi';
 
+import { useNavigate } from 'react-router-dom';
 import { useBattle } from '../contexts/BattleContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useQueue } from '../contexts/QueueContext';
 import { useGameConfig } from '../lib/gameStore';
+import { WAITING_ROOM_PATH } from '../Routes';
+import { CaptchaGate } from './CaptchaGate';
 import { ChatBox } from './ChatBox';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
@@ -59,6 +63,16 @@ export const MapPanel = (): JSX.Element => {
   const { currentBattle } = useBattle();
   const { isRefreshing, onMove } = useMovement();
   const { delegatorAddress } = useMUD();
+  const navigate = useNavigate();
+  const {
+    queuePosition,
+    queueStatus,
+    isMapFull,
+    estimatedWaitMinutes,
+    joinQueue,
+    reportSpawned,
+  } = useQueue();
+  const [showCaptcha, setShowCaptcha] = useState(false);
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
@@ -112,22 +126,75 @@ export const MapPanel = (): JSX.Element => {
           />
         ) : (
           <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
-            {currentPlayersSpawned >= Number(maxPlayers) && (
-              <Text color="red" fontWeight={500} size="sm">
-                Max players reached
-              </Text>
+            {isMapFull && queueStatus === 'idle' && !showCaptcha && (
+              <>
+                <Text color="red" fontWeight={500} size="sm">
+                  Server Full ({currentPlayersSpawned}/{Number(maxPlayers)})
+                </Text>
+                <Button
+                  onClick={() => setShowCaptcha(true)}
+                  size="sm"
+                >
+                  Join Queue
+                </Button>
+              </>
             )}
-            <Button
-              isDisabled={
-                !!currentBattle || currentPlayersSpawned >= Number(maxPlayers)
-              }
-              isLoading={isSpawning}
-              loadingText="Spawning..."
-              onClick={onSpawn}
-              size="sm"
-            >
-              Spawn
-            </Button>
+            {isMapFull && queueStatus === 'idle' && showCaptcha && (
+              <CaptchaGate
+                isLoading={queueStatus === 'joining' as any}
+                onVerified={async (token) => {
+                  await joinQueue(token);
+                  navigate(WAITING_ROOM_PATH);
+                }}
+              />
+            )}
+            {isMapFull && (queueStatus === 'waiting' || queueStatus === 'joining') && (
+              <>
+                <Text color="#D4A54A" fontWeight={500} size="sm">
+                  Queue Position: #{queuePosition}
+                </Text>
+                <Text color="#8A7E6A" size="xs">
+                  ~{estimatedWaitMinutes} min wait
+                </Text>
+                <Button
+                  onClick={() => navigate(WAITING_ROOM_PATH)}
+                  size="sm"
+                  variant="outline"
+                >
+                  View Waiting Room
+                </Button>
+              </>
+            )}
+            {isMapFull && queueStatus === 'ready' && (
+              <>
+                <Text color="green.300" fontWeight={700} size="sm">
+                  A slot opened!
+                </Text>
+                <Button
+                  isLoading={isSpawning}
+                  loadingText="Spawning..."
+                  onClick={() => {
+                    reportSpawned();
+                    onSpawn();
+                  }}
+                  size="sm"
+                  colorScheme="green"
+                >
+                  Spawn Now
+                </Button>
+              </>
+            )}
+            {!isMapFull && (
+              <Button
+                isDisabled={!!currentBattle}
+                isLoading={isSpawning}
+                loadingText="Spawning..."
+                onClick={onSpawn}
+                size="sm"
+              >
+                Spawn
+              </Button>
+            )}
           </VStack>
         )}
       </Box>

@@ -25,6 +25,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useQueue } from '../contexts/QueueContext';
 import {
   CHARACTER_CREATION_PATH,
   CHARACTERS_PATH,
@@ -32,6 +33,7 @@ import {
   HOME_PATH,
   LEADERBOARD_PATH,
   MARKETPLACE_PATH,
+  WAITING_ROOM_PATH,
 } from '../Routes';
 
 type NavItem = {
@@ -49,6 +51,7 @@ export const Header = (): JSX.Element => {
     systemCalls: { endShopEncounter },
   } = useMUD();
   const { character } = useCharacter();
+  const { queuePosition, queueStatus } = useQueue();
 
   const shopGuardedNavigate = useCallback(
     (to: string) => {
@@ -78,9 +81,11 @@ export const Header = (): JSX.Element => {
     );
   }, [character?.id, pathname]);
 
+  const inQueue = queueStatus === 'waiting' || queueStatus === 'ready';
+
   const navItems: NavItem[] = useMemo(() => {
     if (!character?.id) return [];
-    return [
+    const items: NavItem[] = [
       {
         label: 'Game',
         path: GAME_BOARD_PATH,
@@ -102,7 +107,15 @@ export const Header = (): JSX.Element => {
         isActive: (p: string) => p === LEADERBOARD_PATH,
       },
     ];
-  }, [character?.id]);
+    if (inQueue) {
+      items.push({
+        label: `Queue (#${queuePosition})`,
+        path: WAITING_ROOM_PATH,
+        isActive: (p: string) => p === WAITING_ROOM_PATH,
+      });
+    }
+    return items;
+  }, [character?.id, inQueue, queuePosition]);
 
   const handleDrawerNav = useCallback(
     async (to: string) => {

@@ -34,7 +34,8 @@ import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
-import { CHARACTER_CREATION_PATH, HOME_PATH } from '../Routes';
+import { useQueue } from '../contexts/QueueContext';
+import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 
 export const GameBoard = (): JSX.Element => {
@@ -70,6 +71,7 @@ export const GameBoard = (): JSX.Element => {
   const { character, isMoveEquipped, isRefreshing } = useCharacter();
   const { inSafetyZone, isSpawned, position } = useMap();
   const { continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
+  const { isMapFull, queueStatus } = useQueue();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   // Redirect to home if synced, but missing other requirements.
@@ -100,6 +102,12 @@ export const GameBoard = (): JSX.Element => {
       return;
     }
 
+    // If map is full and player is in queue (not ready to spawn), redirect to waiting room
+    if (isMapFull && !isSpawned && queueStatus === 'waiting') {
+      navigate(WAITING_ROOM_PATH);
+      return;
+    }
+
     if (character?.worldEncounter) {
       // Skip shop redirect when player explicitly left the shop.
       // The encounter auto-ends on the next move via MapSystem.
@@ -113,10 +121,13 @@ export const GameBoard = (): JSX.Element => {
     delegatorAddress,
     isConnected,
     isConnecting,
+    isMapFull,
     isRefreshing,
+    isSpawned,
     isSynced,
     location.state,
     navigate,
+    queueStatus,
   ]);
 
   // Open equip info modal if character has no experience and no equipped items

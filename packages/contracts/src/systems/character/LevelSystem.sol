@@ -15,7 +15,7 @@ import {
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE, POWER_SOURCE_BONUS_LEVEL} from "../../../constants.sol";
+import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGE_FOUNDER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE, POWER_SOURCE_BONUS_LEVEL} from "../../../constants.sol";
 import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 import {UltimateDominionConfig} from "@codegen/index.sol";
 import {_requireAccess} from "../../utils.sol";
@@ -169,6 +169,7 @@ contract LevelSystem is System {
         // Mint Adventurer badge at level 3 (unlocks chat)
         if (newLevel == ADVENTURER_BADGE_LEVEL) {
             _mintAdventurerBadge(characterId);
+            _tryMintFounderBadge(characterId);
         }
 
         // Check for zone completion (Zone Conqueror badge)
@@ -203,6 +204,25 @@ contract LevelSystem is System {
         uint256 badgeId = (BADGE_ADVENTURER * 1_000_000) + tokenId;
 
         badges.mint(owner, badgeId);
+    }
+
+    /**
+     * @dev Mints a Founder badge if the current timestamp is before founderWindowEnd.
+     * Triggered at the same level as Adventurer badge (level 3) — requires actual gameplay.
+     * @param characterId The character that reached the badge level
+     */
+    function _tryMintFounderBadge(bytes32 characterId) internal {
+        uint256 founderWindowEnd = UltimateDominionConfig.getFounderWindowEnd();
+        if (founderWindowEnd == 0 || block.timestamp >= founderWindowEnd) return;
+
+        address badgeToken = UltimateDominionConfig.getBadgeToken();
+        if (badgeToken == address(0)) return;
+
+        address owner = Characters.getOwner(characterId);
+        uint256 tokenId = Characters.getTokenId(characterId);
+        uint256 badgeId = (BADGE_FOUNDER * 1_000_000) + tokenId;
+
+        try IERC721Mintable(badgeToken).mint(owner, badgeId) {} catch {}
     }
 
     /**

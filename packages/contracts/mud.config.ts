@@ -757,6 +757,16 @@ export default defineWorld({
         // These need a separate DropConfig table. See SESSION.md pending items.
       },
     },
+    /**
+     * Session & queue configuration — separate from UltimateDominionConfig
+     * because the main config table's on-chain schema is immutable at 13 fields.
+     */
+    SessionConfig: {
+      key: [],
+      schema: {
+        sessionTimeout: "uint256", // Seconds before idle players are removed (default: 300)
+      },
+    },
     ///////////////////////////////////// MARKETPLACE ///////////////////////////////////
     Orders: {
       key: ["orderHash"],

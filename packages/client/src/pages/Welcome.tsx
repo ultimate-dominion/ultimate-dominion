@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import SafeTypist from '../components/SafeTypist';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
@@ -30,10 +30,19 @@ const torchGlow = keyframes`
 
 export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { authMethod, isAuthenticated, isConnecting } = useAuth();
   const { delegatorAddress } = useMUD();
   const { character, isRefreshing } = useCharacter();
+
+  // Capture invite code from URL params
+  useEffect(() => {
+    const inviteCode = searchParams.get('invite');
+    if (inviteCode) {
+      sessionStorage.setItem('ud:inviteCode', inviteCode);
+    }
+  }, [searchParams]);
 
   // Auto-navigate when fully set up (returning players, or just signed in)
   useEffect(() => {

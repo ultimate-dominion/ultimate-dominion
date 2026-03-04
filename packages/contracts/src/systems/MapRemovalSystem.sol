@@ -12,6 +12,7 @@ import {
     EntitiesAtPosition,
     EncounterEntity,
     Position,
+    SessionConfig,
     SessionTimer,
     Spawned
 } from "../codegen/index.sol";
@@ -39,7 +40,10 @@ contract MapRemovalSystem is System {
                 if (spawnedPlayers > 0) Counters.set(address(this), 0, (spawnedPlayers - 1));
                 // if caller is not a system
             } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
-                if ((SessionTimer.get(entityId) + SESSION_TIMEOUT) >= block.timestamp) revert SessionNotTimedOut();
+                // Use configurable timeout, falling back to constant if not set
+                uint256 timeout = SessionConfig.getSessionTimeout();
+                if (timeout == 0) timeout = SESSION_TIMEOUT;
+                if ((SessionTimer.get(entityId) + timeout) >= block.timestamp) revert SessionNotTimedOut();
                 if (spawnedPlayers > 0) Counters.set(address(this), 0, (spawnedPlayers - 1));
                 // Note: Access check removed to allow inter-system calls
             } else {

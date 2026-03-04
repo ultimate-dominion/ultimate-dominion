@@ -28,6 +28,7 @@ import {
 import { MapProvider, useMap } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
+import { QueueProvider } from './contexts/QueueContext';
 import { useGasStation } from './hooks/useGasStation';
 import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
@@ -35,19 +36,21 @@ import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
 export const App = (): JSX.Element => {
   return (
     <Router>
-      <MapProvider>
-        <BattleProvider>
-          <ChatProvider>
-            <MovementProvider>
-              <FragmentProvider>
-                <GoldMerchantProvider>
-                  <AppInner />
-                </GoldMerchantProvider>
-              </FragmentProvider>
-            </MovementProvider>
-          </ChatProvider>
-        </BattleProvider>
-      </MapProvider>
+      <QueueProvider>
+        <MapProvider>
+          <BattleProvider>
+            <ChatProvider>
+              <MovementProvider>
+                <FragmentProvider>
+                  <GoldMerchantProvider>
+                    <AppInner />
+                  </GoldMerchantProvider>
+                </FragmentProvider>
+              </MovementProvider>
+            </ChatProvider>
+          </BattleProvider>
+        </MapProvider>
+      </QueueProvider>
     </Router>
   );
 };

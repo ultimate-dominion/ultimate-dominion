@@ -11,6 +11,8 @@ import { createConfigRouter } from './config.js';
 import { createSessionRouter } from './session.js';
 import { createHealthRouter } from './health.js';
 import { createSnapshotRouter } from './snapshot.js';
+import { createQueueRouter } from './queue.js';
+import { createInviteRouter } from './invite.js';
 
 export function createApiRouter(syncHandle: SyncHandle, broadcaster: Broadcaster): Router {
   const router = Router();
@@ -25,6 +27,8 @@ export function createApiRouter(syncHandle: SyncHandle, broadcaster: Broadcaster
   router.use('/session', createSessionRouter(syncHandle));
   router.use('/health', createHealthRouter(syncHandle, broadcaster));
   router.use('/snapshot', createSnapshotRouter(syncHandle));
+  router.use('/queue', createQueueRouter(syncHandle, broadcaster));
+  router.use('/invite', createInviteRouter());
 
   return router;
 }

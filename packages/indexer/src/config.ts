@@ -27,4 +27,7 @@ export const config = {
   cleanup: {
     privateKey: (process.env.PRIVATE_KEY || '') as Hex,
   },
+  captcha: {
+    turnstileSecret: process.env.TURNSTILE_SECRET_KEY || '',
+  },
 } as const;

@@ -1,7 +1,7 @@
 import { type WebSocket } from 'ws';
 import { type Hex } from 'viem';
 import { hexToResource } from '@latticexyz/common';
-import { encodeMessage, decodeClientMessage, type ServerMessage } from './protocol.js';
+import { encodeMessage, decodeClientMessage, type ServerMessage, type QueueStats, type GameEvent } from './protocol.js';
 import { queryUpdatedRows, sql, mudSchema } from '../db/connection.js';
 import { extractKeyBytes, serializeRow, resolveResourceName, snakeToPascal, fixAbbreviations } from '../naming.js';
 import { GAME_NAMESPACE } from '../sync/startSync.js';
@@ -145,6 +145,34 @@ export class Broadcaster {
       }
     } catch {
       this.clients.delete(client);
+    }
+  }
+
+  /** Broadcast queue stats to all connected clients */
+  broadcastQueueStats(stats: QueueStats) {
+    const msg: ServerMessage = { type: 'queue:stats', stats };
+    this.broadcastToAll(msg);
+  }
+
+  /** Broadcast slot open notification to all clients (client filters by own wallet) */
+  broadcastSlotOpen(wallet: string, readyUntil: Date) {
+    const msg: ServerMessage = {
+      type: 'queue:slot_open',
+      wallet: wallet.toLowerCase(),
+      readyUntil: readyUntil.toISOString(),
+    };
+    this.broadcastToAll(msg);
+  }
+
+  /** Broadcast a game event to all connected clients */
+  broadcastGameEvent(event: GameEvent) {
+    const msg: ServerMessage = { type: 'game:event', event };
+    this.broadcastToAll(msg);
+  }
+
+  private broadcastToAll(msg: ServerMessage) {
+    for (const client of this.clients) {
+      this.send(client, msg);
     }
   }
 
