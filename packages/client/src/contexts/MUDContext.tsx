@@ -48,6 +48,7 @@ type MUDContextType = {
   delegatorAddress: Address | null;
   delegatorEntity: string | null;
   getBurner: () => void;
+  getBurnerBalance: () => void;
   handleLogoutRevoke: () => Promise<void>;
   handleRevokeDelegation: () => Promise<void>;
   isRevokingDelegation: boolean;
@@ -480,6 +481,7 @@ const MUDProviderInner = ({
         delegatorAddress: embeddedSetup.walletAddress,
         delegatorEntity: makeDelegatorEntity(embeddedSetup.walletAddress),
         getBurner,
+        getBurnerBalance,
         handleLogoutRevoke: noopRevoke,
         handleRevokeDelegation: noopRevoke,
         isRevokingDelegation: false,
@@ -502,6 +504,7 @@ const MUDProviderInner = ({
         delegatorAddress: null,
         delegatorEntity: null,
         getBurner,
+        getBurnerBalance,
         handleLogoutRevoke,
         handleRevokeDelegation,
         isRevokingDelegation,
@@ -541,6 +544,7 @@ const MUDProviderInner = ({
     burnerBalanceFetched,
     embeddedSetup,
     getBurner,
+    getBurnerBalance,
     handleLogoutRevoke,
     handleRevokeDelegation,
     isSynced,
