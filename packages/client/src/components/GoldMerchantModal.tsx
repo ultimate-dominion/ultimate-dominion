@@ -1,4 +1,6 @@
 import {
+  Box,
+  HStack,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -7,10 +9,13 @@ import {
   ModalOverlay,
   Text,
 } from '@chakra-ui/react';
+import { GiTwoCoins } from 'react-icons/gi';
 import { BuyWidget, darkTheme, ThirdwebProvider } from 'thirdweb/react';
 
 import { useAuth } from '../contexts/AuthContext';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useGameConfig } from '../lib/gameStore';
+import { etherToFixedNumber } from '../utils/helpers';
 
 const merchantTheme = darkTheme({
   colors: {
@@ -33,6 +38,18 @@ const merchantTheme = darkTheme({
   fontFamily: "'Cormorant Garamond', Georgia, serif",
 });
 
+/**
+ * CSS overrides to hide crypto jargon from the Thirdweb BuyWidget.
+ * Targets are fragile (class-based) but there's no prop-level control.
+ */
+const WIDGET_CSS_OVERRIDES = `
+  .gold-merchant-widget [data-testid="receiver-address"],
+  .gold-merchant-widget [class*="receiverAddress"],
+  .gold-merchant-widget [class*="walletAddress"] {
+    display: none !important;
+  }
+`;
+
 export const GoldMerchantModal = ({
   isOpen,
   onClose,
@@ -42,6 +59,7 @@ export const GoldMerchantModal = ({
 }): JSX.Element => {
   const { thirdwebClient, thirdwebChain, ownerAddress, embeddedWallet } =
     useAuth();
+  const { character } = useCharacter();
   const configValue = useGameConfig('UltimateDominionConfig');
   const goldTokenAddress = (configValue?.goldToken as string) ?? undefined;
 
@@ -54,26 +72,78 @@ export const GoldMerchantModal = ({
         clipPath="none"
         overflow="hidden"
       >
+        <style>{WIDGET_CSS_OVERRIDES}</style>
         <ModalHeader
           borderBottom="1px solid #3A3228"
           color="#E8DCC8"
           fontFamily="'Cormorant Garamond', Georgia, serif"
           fontSize="xl"
+          pb={2}
         >
           Gold Merchant
         </ModalHeader>
         <ModalCloseButton color="#8A7E6A" />
+
+        {/* Custom info bar — replaces the widget's "TO" / address section */}
+        {character && (
+          <Box
+            bg="#221E18"
+            borderBottom="1px solid #3A3228"
+            px={6}
+            py={3}
+          >
+            <HStack justifyContent="space-between">
+              <Text color="#8A7E6A" fontSize="xs">
+                Delivering to
+              </Text>
+              <Text
+                color="#E8DCC8"
+                fontFamily="'Cormorant Garamond', Georgia, serif"
+                fontSize="sm"
+                fontWeight={600}
+              >
+                {character.name}
+              </Text>
+            </HStack>
+            <HStack justifyContent="space-between" mt={1}>
+              <Text color="#8A7E6A" fontSize="xs">
+                Current balance
+              </Text>
+              <HStack spacing={1}>
+                <GiTwoCoins color="#D4A54A" size={12} />
+                <Text
+                  color="yellow"
+                  fontFamily="mono"
+                  fontSize="sm"
+                  fontWeight={600}
+                >
+                  {Number(
+                    etherToFixedNumber(character.externalGoldBalance),
+                  ).toLocaleString()}
+                </Text>
+              </HStack>
+            </HStack>
+          </Box>
+        )}
+
         <ModalBody p={0}>
           {goldTokenAddress && ownerAddress ? (
             <ThirdwebProvider>
-              <BuyWidget
-                client={thirdwebClient}
-                chain={thirdwebChain}
-                tokenAddress={goldTokenAddress}
-                receiverAddress={ownerAddress}
-                activeWallet={embeddedWallet ?? undefined}
-                theme={merchantTheme}
-              />
+              <Box className="gold-merchant-widget">
+                <BuyWidget
+                  client={thirdwebClient}
+                  chain={thirdwebChain}
+                  tokenAddress={goldTokenAddress}
+                  receiverAddress={ownerAddress}
+                  activeWallet={embeddedWallet ?? undefined}
+                  theme={merchantTheme}
+                  title=""
+                  buttonLabel="Purchase Gold"
+                  showThirdwebBranding={false}
+                  paymentMethods={['card']}
+                  tokenEditable={false}
+                />
+              </Box>
             </ThirdwebProvider>
           ) : (
             <Text color="#8A7E6A" p={6} textAlign="center">
