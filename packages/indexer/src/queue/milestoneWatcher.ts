@@ -76,7 +76,13 @@ export function startMilestoneWatcher(syncHandle: SyncHandle, broadcaster: Broad
         const keyBytes = row.__key_bytes;
         const key = Buffer.isBuffer(keyBytes) ? keyBytes.toString('hex') : String(keyBytes);
         const level = Number(row.level);
-        const owner = (row.owner as string)?.toLowerCase();
+        const rawOwner = row.owner;
+        const owner = rawOwner
+          ? (Buffer.isBuffer(rawOwner) || rawOwner instanceof Uint8Array
+              ? '0x' + Buffer.from(rawOwner).toString('hex')
+              : String(rawOwner)
+            ).toLowerCase()
+          : null;
         if (!owner || level <= 0) continue;
 
         const prevLevel = previousLevels.get(key) ?? 0;
