@@ -79,9 +79,11 @@ export const WaitingRoom = (): JSX.Element => {
   const { isOpen: isAuthOpen, onOpen: onOpenAuth, onClose: onCloseAuth } = useDisclosure();
   const [showCaptcha, setShowCaptcha] = useState(false);
 
-  // Scroll to top on mount
+  // Scroll to top on mount (delayed to beat async content layout shifts)
   useEffect(() => {
     window.scrollTo(0, 0);
+    const timer = setTimeout(() => window.scrollTo(0, 0), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Countdown timer for ready state
