@@ -354,11 +354,13 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
       setQueueStatus('waiting');
       // Clear stored invite code after use
       sessionStorage.removeItem('ud:inviteCode');
+      // Refresh invite codes — server seeds starter codes on first join
+      refreshInviteCodes();
     } catch (err) {
       console.error('[queue] Join error:', err);
       setQueueStatus('idle');
     }
-  }, [wallet]);
+  }, [wallet, refreshInviteCodes]);
 
   const leaveQueue = useCallback(async () => {
     if (!wallet) return;
