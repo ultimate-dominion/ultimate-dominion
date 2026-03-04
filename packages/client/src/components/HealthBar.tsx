@@ -29,12 +29,14 @@ const STATUS_EFFECT_COLOR_MAPPING: { [key: string]: string } = {
 export const HealthBar = ({
   maxHp,
   currentHp,
+  isDotTicking,
   level,
   statusEffects,
   ...stackProps
 }: {
   maxHp: bigint;
   currentHp: bigint;
+  isDotTicking?: boolean;
   level?: bigint;
   statusEffects?: string[];
 } & StackProps): JSX.Element => {
@@ -54,9 +56,14 @@ export const HealthBar = ({
       <Flex
         bgColor="grey100"
         borderRadius="10px"
-        boxShadow="-2px 2px 3px 0px #00000040"
+        boxShadow={
+          isDotTicking
+            ? '0 0 8px 2px rgba(128,0,128,0.6), -2px 2px 3px 0px #00000040'
+            : '-2px 2px 3px 0px #00000040'
+        }
         h={{ base: '14px', md: '16px' }}
         position="relative"
+        transition="box-shadow 0.3s"
         width="100%"
       >
         <Box

@@ -422,6 +422,14 @@ export type StatRestrictions = {
   minStrength: bigint;
 };
 
+export type DotAction = {
+  encounterId: string;
+  turnNumber: bigint;
+  entityId: string;
+  totalDamage: bigint;
+  individualDamages: bigint[];
+};
+
 export type StatusAction = {
   active: boolean;
   effectId: string;

@@ -30,6 +30,7 @@ import {
   type Character,
   type CombatDetails,
   type CombatOutcomeType,
+  type DotAction,
   EncounterType,
   type Monster,
   type StatusAction,
@@ -46,6 +47,7 @@ type BattleContextType = {
   attackStatusMessage: string;
   continueToBattleOutcome: boolean;
   currentBattle: CombatDetails | null;
+  dotActions: DotAction[];
   isFleeing: boolean;
   lastestBattleOutcome: CombatOutcomeType | null;
   onAttack: (itemId: string) => void;
@@ -63,6 +65,7 @@ const BattleContext = createContext<BattleContextType>({
   attackStatusMessage: '',
   continueToBattleOutcome: false,
   currentBattle: null,
+  dotActions: [],
   isFleeing: false,
   lastestBattleOutcome: null,
   onAttack: () => {},
@@ -259,6 +262,38 @@ export const BattleProvider = ({
     return allCharacters.find(char => char.id === character.id) ?? null;
   }, [allCharacters, character]);
 
+  // Reactive: re-renders when any DamageOverTimeApplied row changes
+  const dotTable = useGameTable('DamageOverTimeApplied');
+
+  const dotActions: DotAction[] = useMemo(() => {
+    if (!currentBattle) return [];
+
+    return Object.entries(dotTable)
+      .map(([keyBytes, row]) => {
+        // keyBytes = 0x + encounterId(64 hex) + turnNumber(64 hex)
+        const clean = keyBytes.startsWith('0x') ? keyBytes.slice(2) : keyBytes;
+        const encounterId = '0x' + clean.slice(0, 64);
+        const turnNumber = BigInt('0x' + (clean.slice(64, 128) || '0'));
+
+        const individualDamages = Array.isArray(row.individualDamages)
+          ? (row.individualDamages as unknown[]).map(v => toBigInt(v))
+          : [];
+
+        return {
+          encounterId,
+          entityId: row.entityId as string,
+          individualDamages,
+          totalDamage: toBigInt(row.totalDamage),
+          turnNumber,
+        } as DotAction;
+      })
+      .filter(
+        dot =>
+          dot.encounterId.toLowerCase() ===
+          currentBattle.encounterId.toLowerCase(),
+      );
+  }, [currentBattle, dotTable]);
+
   // Reactive: re-renders when any ActionOutcome row changes
   const actionOutcomeTable = useGameTable('ActionOutcome');
 
@@ -439,6 +474,7 @@ export const BattleProvider = ({
       attackStatusMessage: attackingItemId ? 'Attacking...' : '',
       continueToBattleOutcome,
       currentBattle,
+      dotActions,
       isFleeing: fleeTx.isLoading,
       lastestBattleOutcome,
       onAttack,
@@ -454,6 +490,7 @@ export const BattleProvider = ({
       attackingItemId,
       continueToBattleOutcome,
       currentBattle,
+      dotActions,
       fleeTx.isLoading,
       lastestBattleOutcome,
       onAttack,

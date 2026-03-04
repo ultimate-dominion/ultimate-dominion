@@ -76,6 +76,7 @@ export const ActionsPanel = (): JSX.Element => {
     attackProgress,
     attackStatusMessage,
     currentBattle,
+    dotActions,
     isFleeing,
     lastestBattleOutcome,
     onAttack,
@@ -611,7 +612,9 @@ export const ActionsPanel = (): JSX.Element => {
         )}
 
         {opponent &&
-          [...attackOutcomes].reverse().map((attack, reverseIndex) => {
+          (() => {
+            const seenDotTurns = new Set<string>();
+            return [...attackOutcomes].reverse().map((attack, reverseIndex) => {
             const i = attackOutcomes.length - 1 - reverseIndex;
             const attackItem = spellAndWeaponTemplates.find(
               item => item.tokenId === attack.itemId,
@@ -647,31 +650,61 @@ export const ActionsPanel = (): JSX.Element => {
               attack.effectIds.length > 0 &&
               !possibleStatusEffectAttack;
 
+            // Check if there's a DoT message for this turn (show once per turn)
+            const turnKey = attack.currentTurn.toString();
+            const dotForTurn = !seenDotTurns.has(turnKey)
+              ? dotActions.find(d => d.turnNumber === attack.currentTurn && d.totalDamage > 0n)
+              : null;
+            if (dotForTurn) seenDotTurns.add(turnKey);
+
+            const dotMessageElement = dotForTurn ? (
+              <SafeTypist
+                avgTypingDelay={10}
+                cursor={{ show: false }}
+                key={`battle-dot-${i}`}
+                stdTypingDelay={10}
+              >
+                <Text color="purple.300" size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                  Poison deals{' '}
+                  <Text as="span" fontFamily="mono">
+                    {dotForTurn.totalDamage.toString()}
+                  </Text>{' '}
+                  damage to{' '}
+                  {dotForTurn.entityId.toLowerCase() === character?.id.toLowerCase()
+                    ? 'you'
+                    : opponent.name}
+                  .
+                </Text>
+              </SafeTypist>
+            ) : null;
+
             if (attack.miss[0]) {
               return (
-                <SafeTypist
-                  avgTypingDelay={10}
-                  cursor={{ show: false }}
-                  key={`battle-attack-${i}`}
-                  stdTypingDelay={10}
-                >
-                  {isPlayerAttack ? (
-                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                      You missed{' '}
-                      <Text as="span" color="green">
-                        {opponent.name}
-                      </Text>{' '}
-                      with {itemName}.
-                    </Text>
-                  ) : (
-                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                      <Text as="span" color="green">
-                        {opponent.name}
-                      </Text>{' '}
-                      missed you with {itemName}.
-                    </Text>
-                  )}
-                </SafeTypist>
+                <Box key={`battle-attack-${i}`}>
+                  <SafeTypist
+                    avgTypingDelay={10}
+                    cursor={{ show: false }}
+                    stdTypingDelay={10}
+                  >
+                    {isPlayerAttack ? (
+                      <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                        You missed{' '}
+                        <Text as="span" color="green">
+                          {opponent.name}
+                        </Text>{' '}
+                        with {itemName}.
+                      </Text>
+                    ) : (
+                      <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                        <Text as="span" color="green">
+                          {opponent.name}
+                        </Text>{' '}
+                        missed you with {itemName}.
+                      </Text>
+                    )}
+                  </SafeTypist>
+                  {dotMessageElement}
+                </Box>
               );
             }
 
@@ -809,16 +842,19 @@ export const ActionsPanel = (): JSX.Element => {
             }
 
             return (
-              <SafeTypist
-                avgTypingDelay={10}
-                cursor={{ show: false }}
-                key={`battle-attack-${i}`}
-                stdTypingDelay={10}
-              >
-                {attackContent}
-              </SafeTypist>
+              <Box key={`battle-attack-${i}`}>
+                <SafeTypist
+                  avgTypingDelay={10}
+                  cursor={{ show: false }}
+                  stdTypingDelay={10}
+                >
+                  {attackContent}
+                </SafeTypist>
+                {dotMessageElement}
+              </Box>
             );
-          })}
+          });
+          })()}
       </Stack>
       {battleOver && currentBattle && (
         <Stack py={4} spacing={4}>
