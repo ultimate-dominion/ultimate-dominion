@@ -26,7 +26,6 @@ import { etherToFixedNumber } from '../utils/helpers';
 
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
-import { TileScout } from './TileScout';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
@@ -338,13 +337,8 @@ export const StatsPanel = (): JSX.Element => {
 
       {isDesktop && (
         <>
-          <Divider borderColor="grey300" />
-          <Box pb={4} pt={2} w="100%">
-            <TileScout />
-          </Box>
-
           {/* Fragment progress dots */}
-          <Divider borderColor="grey300" />
+          <Divider borderColor="grey300" mt={1} />
           <VStack px={4} py={3} spacing={1.5} w="100%">
             <Text color="#8A7E6A" fontSize="xs" fontWeight={600}>
               Fragments

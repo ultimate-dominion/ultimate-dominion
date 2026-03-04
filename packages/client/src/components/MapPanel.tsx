@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 import { FaStoreAlt } from 'react-icons/fa';
-import { GiDeathSkull, GiPerson } from 'react-icons/gi';
+
 
 import { useNavigate } from 'react-router-dom';
 import { useBattle } from '../contexts/BattleContext';
@@ -336,31 +336,6 @@ export const MapPanel = (): JSX.Element => {
   );
 };
 
-const ScoutPips = ({ info }: { info: TileInfo }): JSX.Element | null => {
-  if (!info) return null;
-  if (info.monsters === 0 && info.players === 0) return null;
-
-  return (
-    <HStack spacing={1} mt={0.5}>
-      {info.monsters > 0 && (
-        <HStack spacing={0.5}>
-          <GiDeathSkull size={8} color="#8B4040" />
-          <Text color="#8B4040" fontFamily="mono" fontSize="2xs" fontWeight={700} lineHeight={1}>
-            {info.monsters}
-          </Text>
-        </HStack>
-      )}
-      {info.players > 0 && (
-        <HStack spacing={0.5}>
-          <GiPerson size={8} color="#D4A54A" />
-          <Text color="#D4A54A" fontFamily="mono" fontSize="2xs" fontWeight={700} lineHeight={1}>
-            {info.players}
-          </Text>
-        </HStack>
-      )}
-    </HStack>
-  );
-};
 
 const NavigationCompass = ({
   adjacentTiles,
@@ -525,9 +500,6 @@ const NavigationCompass = ({
                   _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.15)' }}
                 />
               </Tooltip>
-              <Box position="absolute" top={label === 'S' ? undefined : '100%'} bottom={label === 'S' ? '100%' : undefined}>
-                <ScoutPips info={info} />
-              </Box>
             </GridItem>
           );
         })}
