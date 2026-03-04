@@ -298,8 +298,40 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     };
   }, [wallet, queueStatus]);
 
-  // Fetch initial stats (for non-queued users to see if map is full)
+  // Restore queue state on mount/wallet change (survives page refresh)
   useEffect(() => {
+    if (!wallet) return;
+    const restore = async () => {
+      try {
+        const resp = await fetch(`${INDEXER_URL}/api/queue/position/${wallet}`);
+        const data = await resp.json();
+        setMaxPlayers(data.maxPlayers ?? 10);
+        setCurrentPlayers(data.currentPlayers ?? 0);
+        setSlotsAvailable(data.slotsAvailable ?? 0);
+        setTotalInQueue(data.totalInQueue ?? 0);
+        if (data.inQueue) {
+          setQueuePosition(data.position);
+          setEstimatedWaitMinutes(data.estimatedWaitMinutes);
+          setPriority(data.priority);
+          if (data.status === 'ready') {
+            setQueueStatus('ready');
+            setReadyUntil(data.readyUntil ? new Date(data.readyUntil) : null);
+          } else if (data.status === 'waiting') {
+            setQueueStatus('waiting');
+          }
+        }
+      } catch {
+        // ignore
+      } finally {
+        setStatsLoaded(true);
+      }
+    };
+    restore();
+  }, [wallet]);
+
+  // Fetch initial stats (for non-queued/unauthenticated users to see if map is full)
+  useEffect(() => {
+    if (wallet) return; // skip if wallet exists — restore effect handles it
     const fetchStats = async () => {
       try {
         const resp = await fetch(`${INDEXER_URL}/api/queue/stats`);
@@ -315,7 +347,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
       }
     };
     fetchStats();
-  }, []);
+  }, [wallet]);
 
   // Fetch initial game events
   useEffect(() => {
