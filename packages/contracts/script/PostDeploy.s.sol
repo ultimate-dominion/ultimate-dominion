@@ -907,8 +907,9 @@ contract PostDeploy is Script {
         AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "WorldActionSys"), true);
         AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "FragmentSystem"), true);
         AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "UtilsSystem"), true);
+        AllowedGameSystems.setAllowed(WorldResourceIdLib.encode(RESOURCE_SYSTEM, ns, "CharEnterSys"), true);
 
-        console.log("  25 gameplay systems whitelisted");
+        console.log("  26 gameplay systems whitelisted");
         console.log("  Blocked: AdminSystem, AdminShopSys, PauseSystem, UDConfigSys, ItemCreationSys, etc.");
     }
 
