@@ -411,8 +411,14 @@ const MUDProviderInner = ({
     if (!activeWalletAddress) return () => {};
     getBurnerBalance();
 
-    const interval = setInterval(getBurnerBalance, 30000);
-    return () => clearInterval(interval);
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const start = () => { if (!interval) interval = setInterval(getBurnerBalance, 30000); };
+    const stop = () => { if (interval) { clearInterval(interval); interval = null; } };
+    const onVisibility = () => { if (document.hidden) stop(); else { getBurnerBalance(); start(); } };
+
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { stop(); document.removeEventListener('visibilitychange', onVisibility); };
   }, [activeWalletAddress, getBurnerBalance]);
 
   // =============================================

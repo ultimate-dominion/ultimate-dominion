@@ -108,11 +108,16 @@ export function initErrorReporter() {
     );
   });
 
-  // Flush periodically
+  // Flush periodically (pauses when tab hidden)
   flushTimer = setInterval(flush, FLUSH_INTERVAL);
 
-  // Flush on page unload
+  // Pause/resume on visibility; flush when hiding
   window.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flush();
+    if (document.hidden) {
+      flush();
+      if (flushTimer) { clearInterval(flushTimer); flushTimer = null; }
+    } else if (!flushTimer) {
+      flushTimer = setInterval(flush, FLUSH_INTERVAL);
+    }
   });
 }

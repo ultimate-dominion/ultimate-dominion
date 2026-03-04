@@ -27,6 +27,7 @@ const ENDPOINT = import.meta.env.VITE_TELEMETRY_URL
 
 let buffer: MetricEntry[] = [];
 let flushTimer: ReturnType<typeof setInterval> | null = null;
+let memoryTimer: ReturnType<typeof setInterval> | null = null;
 
 function flush() {
   if (buffer.length === 0) return;
@@ -161,23 +162,36 @@ function trackPageLoad() {
   }
 }
 
+function startTimers() {
+  if (!flushTimer) flushTimer = setInterval(flush, FLUSH_INTERVAL);
+  if (!memoryTimer) memoryTimer = setInterval(snapshotMemory, 30_000);
+}
+
+function stopTimers() {
+  if (flushTimer) { clearInterval(flushTimer); flushTimer = null; }
+  if (memoryTimer) { clearInterval(memoryTimer); memoryTimer = null; }
+}
+
 /**
  * Initialize metrics collection. Call once at app startup.
+ * Timers automatically pause when the tab is hidden.
  */
 export function initMetrics() {
   if (flushTimer) return;
 
-  // Flush periodically
-  flushTimer = setInterval(flush, FLUSH_INTERVAL);
+  // Start timers only if tab is visible
+  if (!document.hidden) startTimers();
 
-  // Flush on page unload
+  // Pause/resume on visibility change; flush when hiding
   window.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flush();
+    if (document.hidden) {
+      flush();
+      stopTimers();
+    } else {
+      startTimers();
+    }
   });
 
   // Track page load
   trackPageLoad();
-
-  // Memory snapshots every 30s
-  setInterval(snapshotMemory, 30_000);
 }

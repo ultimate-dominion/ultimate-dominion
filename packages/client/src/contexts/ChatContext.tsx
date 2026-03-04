@@ -599,10 +599,13 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   }, []);
 
   // Poll for new messages as fallback (Push streams are unreliable)
+  // Pauses when tab is hidden to save resources
   useEffect(() => {
     if (!user || !isGroupMember) return;
 
-    const pollInterval = setInterval(async () => {
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    const poll = async () => {
+      if (document.hidden) return;
       try {
         // Only fetch last 5 messages to minimize API load
         const recent = await user.chat.history(GROUP_CHAT_ID, { limit: 5 });
@@ -640,9 +643,24 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       } catch {
         // Silently ignore poll failures
       }
-    }, 5000);
+    };
+    const startPoll = () => {
+      if (pollInterval) return;
+      pollInterval = setInterval(poll, 5000);
+    };
+    const stopPoll = () => {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    };
+    const onVisibility = () => {
+      if (document.hidden) stopPoll(); else startPoll();
+    };
 
-    return () => clearInterval(pollInterval);
+    if (!document.hidden) startPoll();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      stopPoll();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [user, isGroupMember]);
 
   const onJoinGroupChat = useCallback(async () => {

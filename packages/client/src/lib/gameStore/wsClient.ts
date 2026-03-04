@@ -16,6 +16,7 @@ export class WSClient {
   private disposed = false;
   private pendingUpdates: BatchUpdate[] = [];
   private flushScheduled = false;
+  private visibilityHandler: (() => void) | null = null;
 
   constructor(url: string, store: GameStore, initialBlock = 0) {
     this.url = url;
@@ -26,6 +27,7 @@ export class WSClient {
   connect() {
     if (this.disposed) return;
     this.cleanup();
+    this.setupVisibilityHandler();
 
     try {
       this.ws = new WebSocket(this.url);
@@ -74,6 +76,10 @@ export class WSClient {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
     }
   }
 
@@ -136,7 +142,12 @@ export class WSClient {
 
   private startHeartbeat() {
     this.stopHeartbeat();
+    if (document.hidden) return; // don't start if tab is hidden
     this.heartbeatTimer = setInterval(() => {
+      if (document.hidden) {
+        this.stopHeartbeat();
+        return;
+      }
       this.send({ type: 'ping' });
     }, HEARTBEAT_INTERVAL);
   }
@@ -146,6 +157,18 @@ export class WSClient {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
     }
+  }
+
+  private setupVisibilityHandler() {
+    if (this.visibilityHandler) return;
+    this.visibilityHandler = () => {
+      if (document.hidden) {
+        this.stopHeartbeat();
+      } else if (this.ws?.readyState === WebSocket.OPEN) {
+        this.startHeartbeat();
+      }
+    };
+    document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
   private scheduleReconnect() {
