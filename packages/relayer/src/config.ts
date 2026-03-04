@@ -24,6 +24,7 @@ export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
   corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:3000').split(','),
   chainId: parseInt(process.env.CHAIN_ID || '8453', 10),
+  rpcAuthToken: process.env.RPC_AUTH_TOKEN || '',  // Bearer token for self-hosted RPC (optional)
 
   // Gas charging & Gold swap (optional — disabled if WORLD_ADDRESS or GOLD_TOKEN not set)
   worldAddress: (process.env.WORLD_ADDRESS || '') as Address,

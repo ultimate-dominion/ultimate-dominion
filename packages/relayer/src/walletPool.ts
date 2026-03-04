@@ -26,6 +26,13 @@ export const chain = defineChain({
   rpcUrls: { default: { http: [config.rpcUrl] } },
 });
 
+// Auth headers for self-hosted RPC (optional — set RPC_AUTH_TOKEN env var)
+const rpcFetchOptions = config.rpcAuthToken
+  ? { headers: { Authorization: `Bearer ${config.rpcAuthToken}` } }
+  : undefined;
+
+export const rpcTransport = () => http(config.rpcUrl, { fetchOptions: rpcFetchOptions });
+
 const pool: PooledWallet[] = [];
 
 // Build pool from config keys
@@ -34,7 +41,7 @@ for (const key of config.relayerPrivateKeys) {
   const walletClient = createWalletClient({
     account,
     chain,
-    transport: http(config.rpcUrl),
+    transport: rpcTransport(),
   });
   pool.push({
     account,

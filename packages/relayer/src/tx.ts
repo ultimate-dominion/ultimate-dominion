@@ -1,13 +1,11 @@
 import {
   createPublicClient,
-  http,
   encodeFunctionData,
   formatEther,
   type Hex,
   type Address,
 } from 'viem';
-import { config } from './config.js';
-import { acquireWallet, releaseWallet, resyncWallet, primaryAddress, chain } from './walletPool.js';
+import { acquireWallet, releaseWallet, resyncWallet, primaryAddress, chain, rpcTransport } from './walletPool.js';
 
 // Backward compat alias — gasCharge.ts and others import this
 export const relayerAddress: Address = primaryAddress;
@@ -15,7 +13,7 @@ export const relayerAddress: Address = primaryAddress;
 // Public client (shared, no wallet-specific state)
 export const publicClient = createPublicClient({
   chain,
-  transport: http(config.rpcUrl),
+  transport: rpcTransport(),
 });
 
 // Transaction queue: queueId -> txHash
