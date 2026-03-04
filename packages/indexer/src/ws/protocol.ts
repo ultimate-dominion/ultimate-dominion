@@ -8,7 +8,7 @@ export type QueueStats = {
 /** Game event for the live feed */
 export type GameEvent = {
   id: string;
-  eventType: 'loot_drop' | 'pvp_kill' | 'level_up' | 'marketplace_sale' | 'rare_find';
+  eventType: 'loot_drop' | 'pvp_kill' | 'level_up' | 'marketplace_sale' | 'rare_find' | 'death';
   playerName: string;
   description: string;
   timestamp: number;

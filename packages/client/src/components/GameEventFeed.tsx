@@ -5,9 +5,14 @@ import { useQueue } from '../contexts/QueueContext';
 export const GameEventFeed = (): JSX.Element => {
   const { gameEvents } = useQueue();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const initialLoadRef = useRef(true);
 
-  // Auto-scroll to bottom when new events arrive
+  // Auto-scroll to bottom when NEW events arrive (skip initial load to avoid page jump)
   useEffect(() => {
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false;
+      return;
+    }
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [gameEvents.length]);
 
@@ -47,10 +52,13 @@ export const GameEventFeed = (): JSX.Element => {
 function getEventColor(eventType: string): string {
   switch (eventType) {
     case 'loot_drop':
+      return '#C4B89E'; // parchment
     case 'rare_find':
-      return '#D4A54A'; // gold
+      return '#D4A54A'; // gold — stands out for rare+ items
     case 'pvp_kill':
-      return '#8B4040'; // red
+      return '#B85C3A'; // burnt orange — victory
+    case 'death':
+      return '#8B4040'; // dark red — defeat
     case 'level_up':
       return '#4A8B4A'; // green
     case 'marketplace_sale':

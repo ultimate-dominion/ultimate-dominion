@@ -41,8 +41,10 @@ export const HealthBar = ({
   statusEffects?: string[];
 } & StackProps): JSX.Element => {
   const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
-  const health =
-    (Number(currentHpWithFloor.toString()) / Number(maxHp.toString())) * 100;
+  const health = Math.min(
+    (Number(currentHpWithFloor.toString()) / Number(maxHp.toString())) * 100,
+    100,
+  );
 
   const barColor = health > 50 ? 'green' : health > 15 ? 'yellow' : 'red';
 
@@ -62,6 +64,7 @@ export const HealthBar = ({
             : '-2px 2px 3px 0px #00000040'
         }
         h={{ base: '14px', md: '16px' }}
+        overflow="hidden"
         position="relative"
         transition="box-shadow 0.3s"
         width="100%"

@@ -2,7 +2,7 @@ import { Box, Button, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useRef, useState } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 
-const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'; // test key fallback
+const SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA').trim(); // test key fallback
 
 type CaptchaGateProps = {
   onVerified: (token: string) => void;
