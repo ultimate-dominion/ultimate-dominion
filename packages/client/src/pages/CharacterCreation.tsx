@@ -143,11 +143,14 @@ const CharacterCreationInner = (): JSX.Element => {
   const navigate = useNavigate();
   const { renderError, renderSuccess, renderWarning } = useToast();
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
-  const { isAuthenticated: isConnected, isConnecting } = useAuth();
+  const { authMethod, isAuthenticated: isConnected, isConnecting } = useAuth();
   const chainId = DEFAULT_CHAIN_ID;
   const {
+    burnerBalance,
+    burnerBalanceFetched,
     delegatorAddress,
     isSynced,
+    onOpenWalletDetailsModal,
     systemCalls: {
       chooseRace,
       choosePowerSource,
@@ -579,6 +582,8 @@ const CharacterCreationInner = (): JSX.Element => {
     );
   }, [avatar, delegatorAddress]);
 
+  const needsFunding = authMethod === 'external' && burnerBalanceFetched && burnerBalance === '0';
+
   // Only block on sync — items load in background and are needed at the
   // starterItems step, not for race/powerSource/stats steps
   if (!isSynced) {
@@ -586,6 +591,23 @@ const CharacterCreationInner = (): JSX.Element => {
     return (
       <Center h="100vh">
         <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  if (needsFunding) {
+    return (
+      <Center h="100vh" flexDirection="column" gap={4} px={4}>
+        <Text color="#D4A54A" fontFamily="Cinzel, serif" fontSize="xl" fontWeight={600}>
+          Fund Your Session
+        </Text>
+        <Text color="#C4B89E" fontSize="sm" textAlign="center" maxW="400px">
+          Your session account needs a small ETH deposit to cover gameplay fees on Base.
+          Your funds stay in your session and can be withdrawn anytime.
+        </Text>
+        <Button onClick={onOpenWalletDetailsModal} variant="amber" px={10} py={5}>
+          Deposit ETH
+        </Button>
       </Center>
     );
   }
