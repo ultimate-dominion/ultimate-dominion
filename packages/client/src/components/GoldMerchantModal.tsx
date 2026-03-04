@@ -52,6 +52,88 @@ function hide(el: HTMLElement) {
   el.style.setProperty('display', 'none', 'important');
 }
 
+/** Large number pattern: 5+ digits, optional decimals, no $ prefix */
+const LARGE_NUM_RE = /^\d{5,}(\.\d+)?$/;
+
+/** Format a number with commas and 2 decimal places */
+function fmtNum(n: number): string {
+  return n.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * Find and format large numbers anywhere in the widget DOM.
+ * Checks: text nodes, input values, leaf element textContent.
+ * Uses an overlay for inputs so the widget's internal value stays numeric.
+ */
+function formatLargeNumbers(root: HTMLElement) {
+  // 1. Text nodes via TreeWalker
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let tNode: Node | null;
+  while ((tNode = walker.nextNode())) {
+    const text = tNode.textContent?.trim() ?? '';
+    if (!LARGE_NUM_RE.test(text)) continue;
+    if (tNode.parentElement?.closest('button')) continue;
+    const num = parseFloat(text);
+    if (isNaN(num)) continue;
+    const formatted = fmtNum(num);
+    if (tNode.textContent !== formatted) {
+      tNode.textContent = formatted;
+    }
+  }
+
+  // 2. Input elements — overlay formatted display
+  root.querySelectorAll<HTMLInputElement>('input').forEach(input => {
+    const val = input.value?.trim() ?? '';
+    if (!LARGE_NUM_RE.test(val)) return;
+    const num = parseFloat(val);
+    if (isNaN(num)) return;
+    const formatted = fmtNum(num);
+    const parent = input.parentElement;
+    if (!parent) return;
+    let overlay = parent.querySelector('[data-gm-fmt]') as HTMLElement | null;
+    if (!overlay) {
+      overlay = document.createElement('span');
+      overlay.setAttribute('data-gm-fmt', '');
+      Object.assign(overlay.style, {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        right: '0',
+        bottom: '0',
+        display: 'flex',
+        alignItems: 'center',
+        pointerEvents: 'none',
+        font: 'inherit',
+        color: 'inherit',
+        zIndex: '1',
+      });
+      parent.style.position = 'relative';
+      input.style.setProperty('color', 'transparent', 'important');
+      parent.appendChild(overlay);
+    }
+    overlay.textContent = formatted;
+  });
+
+  // 3. Leaf elements — elements with no child elements whose text looks numeric
+  root.querySelectorAll<HTMLElement>('*').forEach(el => {
+    if (el.children.length > 0) return; // not a leaf
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return; // handled above
+    if (el.closest('button')) return; // skip preset buttons
+    if (el.hasAttribute('data-gm-fmt')) return; // skip our overlays
+    const text = el.textContent?.trim() ?? '';
+    if (!LARGE_NUM_RE.test(text)) return;
+    const num = parseFloat(text);
+    if (isNaN(num)) return;
+    const formatted = fmtNum(num);
+    if (el.textContent !== formatted) {
+      el.textContent = formatted;
+    }
+  });
+}
+
 /**
  * Walk the widget DOM and surgically hide crypto-facing UI, then
  * format large token amounts with commas and 2 decimal places.
@@ -119,59 +201,10 @@ function hideCryptoElements(root: HTMLElement) {
       continue;
     }
 
-    // Format large token amounts in text nodes: add commas, 2dp
-    // Skip text inside buttons (presets like "$10", "$1000")
-    if (/^\d{5,}(\.\d+)?$/.test(text) && !node.parentElement?.closest('button')) {
-      const num = parseFloat(text);
-      if (!isNaN(num)) {
-        const formatted = num.toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        if (node.textContent !== formatted) {
-          node.textContent = formatted;
-        }
-      }
-      continue;
-    }
   }
 
-  // Format large numbers inside input elements (BuyWidget uses inputs for amounts)
-  root.querySelectorAll('input').forEach(input => {
-    const val = input.value?.trim() ?? '';
-    if (!/^\d{5,}(\.\d+)?$/.test(val)) return;
-    const num = parseFloat(val);
-    if (isNaN(num)) return;
-    const formatted = num.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    // Use a CSS overlay so the input value stays numeric for the widget
-    const parent = input.parentElement;
-    if (!parent) return;
-    let overlay = parent.querySelector('[data-gm-fmt]') as HTMLElement | null;
-    if (!overlay) {
-      overlay = document.createElement('span');
-      overlay.setAttribute('data-gm-fmt', '');
-      Object.assign(overlay.style, {
-        position: 'absolute',
-        top: '0',
-        left: '0',
-        right: '0',
-        bottom: '0',
-        display: 'flex',
-        alignItems: 'center',
-        pointerEvents: 'none',
-        font: 'inherit',
-        color: 'inherit',
-        zIndex: '1',
-      });
-      parent.style.position = 'relative';
-      input.style.setProperty('color', 'transparent', 'important');
-      parent.appendChild(overlay);
-    }
-    overlay.textContent = formatted;
-  });
+  // Format large numbers — search ALL elements, not just TreeWalker text nodes
+  formatLargeNumbers(root);
 
   // Find the arrow SVG between PAY and TO sections, then hide it + the TO section
   root.querySelectorAll('svg').forEach(svg => {
