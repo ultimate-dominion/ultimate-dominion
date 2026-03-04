@@ -87,11 +87,12 @@ export const WaitingRoom = (): JSX.Element => {
   }, [isAuthenticated, navigate]);
 
   // Redirect to game board if spawned
-  useEffect(() => {
-    if (isSpawned) {
-      navigate(GAME_BOARD_PATH);
-    }
-  }, [isSpawned, navigate]);
+  // TODO: re-enable after testing
+  // useEffect(() => {
+  //   if (isSpawned) {
+  //     navigate(GAME_BOARD_PATH);
+  //   }
+  // }, [isSpawned, navigate]);
 
   // If map is no longer full, redirect to game board
   // TODO: re-enable after testing
