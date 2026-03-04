@@ -119,9 +119,9 @@ function hideCryptoElements(root: HTMLElement) {
       continue;
     }
 
-    // Format large token amounts: add commas, limit to 2 decimal places
-    // Matches numbers like "112513.7220089849" but not "$100" or "$10"
-    if (/^\d{4,}(\.\d+)?$/.test(text)) {
+    // Format large token amounts in text nodes: add commas, 2dp
+    // Skip text inside buttons (presets like "$10", "$1000")
+    if (/^\d{5,}(\.\d+)?$/.test(text) && !node.parentElement?.closest('button')) {
       const num = parseFloat(text);
       if (!isNaN(num)) {
         const formatted = num.toLocaleString('en-US', {
@@ -135,6 +135,43 @@ function hideCryptoElements(root: HTMLElement) {
       continue;
     }
   }
+
+  // Format large numbers inside input elements (BuyWidget uses inputs for amounts)
+  root.querySelectorAll('input').forEach(input => {
+    const val = input.value?.trim() ?? '';
+    if (!/^\d{5,}(\.\d+)?$/.test(val)) return;
+    const num = parseFloat(val);
+    if (isNaN(num)) return;
+    const formatted = num.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    // Use a CSS overlay so the input value stays numeric for the widget
+    const parent = input.parentElement;
+    if (!parent) return;
+    let overlay = parent.querySelector('[data-gm-fmt]') as HTMLElement | null;
+    if (!overlay) {
+      overlay = document.createElement('span');
+      overlay.setAttribute('data-gm-fmt', '');
+      Object.assign(overlay.style, {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        right: '0',
+        bottom: '0',
+        display: 'flex',
+        alignItems: 'center',
+        pointerEvents: 'none',
+        font: 'inherit',
+        color: 'inherit',
+        zIndex: '1',
+      });
+      parent.style.position = 'relative';
+      input.style.setProperty('color', 'transparent', 'important');
+      parent.appendChild(overlay);
+    }
+    overlay.textContent = formatted;
+  });
 
   // Find the arrow SVG between PAY and TO sections, then hide it + the TO section
   root.querySelectorAll('svg').forEach(svg => {
