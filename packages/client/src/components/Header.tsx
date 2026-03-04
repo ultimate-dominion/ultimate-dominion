@@ -212,33 +212,33 @@ export const Header = (): JSX.Element => {
             </HStack>
           )}
 
-          {/* Logo */}
-          <Button
-            mb={{ base: pathname !== HOME_PATH ? 2 : 0, sm: 2 }}
-            mt={{ base: pathname !== HOME_PATH ? -1 : 0, sm: -1 }}
-            onClick={() => navigate(logoLink)}
-            variant="unstyled"
-          >
-            <Image
-              alt="Ultimate Dominion Logo"
-              src="/images/ultimate-dominion-logo.svg"
-              width={{ base: '200px', sm: '225px' }}
-            />
-          </Button>
-
-          {/* Desktop settings gear — show on all authenticated pages */}
-          {pathname !== HOME_PATH && (
-            <IconButton
-              aria-label="Settings"
-              color="#8A7E6A"
-              display={{ base: 'none', lg: 'flex' }}
-              icon={<IoSettingsOutline size={20} />}
-              onClick={onOpenWalletDetailsModal}
-              size="sm"
+          {/* Logo + settings gear — right-aligned on desktop */}
+          <HStack spacing={2}>
+            <Button
+              mb={{ base: pathname !== HOME_PATH ? 2 : 0, sm: 2 }}
+              mt={{ base: pathname !== HOME_PATH ? -1 : 0, sm: -1 }}
+              onClick={() => navigate(logoLink)}
               variant="unstyled"
-              _hover={{ color: '#C4B89E' }}
-            />
-          )}
+            >
+              <Image
+                alt="Ultimate Dominion Logo"
+                src="/images/ultimate-dominion-logo.svg"
+                width={{ base: '200px', sm: '225px' }}
+              />
+            </Button>
+            {pathname !== HOME_PATH && (
+              <IconButton
+                aria-label="Settings"
+                color="#8A7E6A"
+                display={{ base: 'none', lg: 'flex' }}
+                icon={<IoSettingsOutline size={20} />}
+                onClick={onOpenWalletDetailsModal}
+                size="sm"
+                variant="unstyled"
+                _hover={{ color: '#C4B89E' }}
+              />
+            )}
+          </HStack>
         </Stack>
       </GridItem>
 

@@ -49,18 +49,19 @@ export const FeedbackButton = (): JSX.Element => {
     >
       <IconButton
         aria-label="Send feedback"
-        bg="#2A2218"
-        border="1px solid #3A3228"
+        bg="linear-gradient(135deg, #3A2E1A 0%, #2A2218 100%)"
+        border="1px solid #C87A2A"
         borderRadius="lg"
         bottom={4}
-        color="#8A7E6A"
-        icon={<GiQuillInk size={18} />}
+        boxShadow="0 0 8px rgba(200, 122, 42, 0.3)"
+        color="#D4A54A"
+        icon={<GiQuillInk size={20} />}
         left={4}
         onClick={openFeedback}
         position="fixed"
-        size="sm"
+        size="md"
         zIndex={10}
-        _hover={{ bg: '#3A3228', color: '#D4A54A', borderColor: '#C87A2A' }}
+        _hover={{ bg: '#3A3228', color: '#E8DCC8', borderColor: '#D4A54A', boxShadow: '0 0 12px rgba(212, 165, 74, 0.5)' }}
       />
     </Tooltip>
   );
