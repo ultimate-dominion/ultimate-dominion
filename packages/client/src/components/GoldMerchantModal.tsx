@@ -52,15 +52,15 @@ function hide(el: HTMLElement) {
   el.style.setProperty('display', 'none', 'important');
 }
 
-/** Known chain names BuyWidget might display */
-const CHAIN_NAMES = ['Base', 'Ethereum', 'Polygon', 'Arbitrum', 'Optimism'];
-
 /**
  * Walk the widget DOM and surgically hide crypto-facing UI.
  *
- * Hides: "PAY" label, chain selector, entire "TO" section,
- *        wallet addresses, and the directional arrow between sections.
- * Keeps: amount input, preset buttons, Purchase Gold button.
+ * Strategy:
+ * 1. Hide "PAY" label text
+ * 2. Hide chain selector by matching chain name text ("Base") and walking up
+ * 3. Find the arrow SVG, then hide it + all siblings after it (the TO section)
+ *    — stops before the Purchase button so that stays visible
+ * 4. Hide any remaining wallet addresses
  */
 function hideCryptoElements(root: HTMLElement) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -70,100 +70,76 @@ function hideCryptoElements(root: HTMLElement) {
     const text = node.textContent?.trim() ?? '';
     if (!text) continue;
 
-    // "PAY" label — hide the label and walk up to hide its row container
-    if (text === 'PAY') {
-      let el: HTMLElement | null = node.parentElement;
+    // "PAY" label — hide the label element
+    if (text === 'PAY' || text === 'Pay' || text === 'pay') {
+      const el = node.parentElement;
       if (el) hide(el);
-      // Also hide the parent row (PAY label is usually in a wrapper div)
-      if (el?.parentElement && el.parentElement !== root) {
-        // Only hide if this row doesn't contain the amount input
-        if (!el.parentElement.querySelector('input')) {
-          hide(el.parentElement);
-        }
-      }
       continue;
     }
 
-    // "TO" label — hide the entire section by walking up to root's direct child
-    if (text === 'TO') {
+    // Chain name — hide the chain selector row (walk up a few levels)
+    if (text === 'Base' || text === 'Ethereum' || text === 'Polygon' ||
+        text === 'Arbitrum' || text === 'Optimism') {
       let el: HTMLElement | null = node.parentElement;
-      for (let i = 0; i < 10 && el && el !== root; i++) {
-        if (el.parentElement === root) {
-          hide(el);
-          break;
-        }
-        // Also try border-radius as a section boundary
-        const cs = getComputedStyle(el);
-        if (cs.borderRadius && cs.borderRadius !== '0px' && el.offsetHeight > 30) {
-          hide(el);
-          break;
-        }
+      // Walk up 3 levels to get the chain selector row container
+      for (let i = 0; i < 3 && el && el !== root; i++) {
         el = el.parentElement;
       }
+      if (el && el !== root) hide(el);
       continue;
     }
 
-    // Wallet address (0x…) — hide container
+    // Wallet address (0x…) — hide the immediate container
     if (/^0x[a-fA-F0-9]/.test(text)) {
-      let el: HTMLElement | null = node.parentElement;
-      for (let i = 0; i < 6 && el && el !== root; i++) {
-        if (el.parentElement === root) {
-          hide(el);
-          break;
-        }
-        const cs = getComputedStyle(el);
-        if (cs.borderRadius && cs.borderRadius !== '0px') {
-          hide(el);
-          break;
-        }
-        el = el.parentElement;
-      }
-      continue;
-    }
-
-    // Chain name (e.g. "Base") — hide the chain selector container
-    if (CHAIN_NAMES.includes(text)) {
-      let el: HTMLElement | null = node.parentElement;
-      for (let i = 0; i < 6 && el && el !== root; i++) {
-        const cs = getComputedStyle(el);
-        // Look for the bordered/dashed selector container
-        if (
-          (cs.borderStyle?.includes('dashed') || cs.borderStyle?.includes('dotted')) ||
-          (cs.borderRadius && cs.borderRadius !== '0px' && el.offsetHeight < 80 && el.offsetHeight > 20)
-        ) {
-          hide(el);
-          break;
-        }
-        el = el.parentElement;
-      }
+      const el = node.parentElement;
+      if (el) hide(el);
       continue;
     }
   }
 
-  // Fallback: hide any remaining dashed/dotted border containers (chain selectors)
-  root.querySelectorAll<HTMLElement>('div, span').forEach(el => {
-    try {
-      const cs = getComputedStyle(el);
-      if (
-        (cs.borderStyle?.includes('dashed') || cs.borderStyle?.includes('dotted')) &&
-        el.offsetHeight > 0 &&
-        el.offsetHeight < 80
-      ) {
-        hide(el);
-      }
-    } catch { /* skip */ }
-  });
-
-  // Hide the directional arrow SVG between sections
+  // Find the arrow SVG between PAY and TO sections, then hide it + the TO section
   root.querySelectorAll('svg').forEach(svg => {
     const parent = svg.parentElement;
     if (!parent || parent === root) return;
     const rect = parent.getBoundingClientRect();
-    if (rect.height < 50 && rect.height > 10) {
-      const t = parent.textContent?.trim() ?? '';
-      if (!t || t.length < 3) {
-        hide(parent);
+    // Arrow is a small container (< 50px tall) with minimal/no text
+    if (rect.height >= 50 || rect.height <= 5) return;
+    const t = parent.textContent?.trim() ?? '';
+    if (t.length > 3) return;
+
+    // Walk up from the arrow to find its section-level container
+    // (a direct child or grandchild of root that's a sibling of other sections)
+    let arrowContainer: HTMLElement | null = parent;
+    for (let i = 0; i < 10 && arrowContainer && arrowContainer.parentElement !== root; i++) {
+      if (!arrowContainer.parentElement) break;
+      arrowContainer = arrowContainer.parentElement;
+    }
+    // Now arrowContainer is a direct child of root (or close to it)
+    // But root might have a single child (BuyWidget wrapper) containing the sections
+    // So let's find the right level: the container whose nextSibling is the TO section
+    // Walk back down if needed
+    let sectionParent = parent;
+    while (sectionParent && sectionParent !== root) {
+      if (sectionParent.nextElementSibling || sectionParent.previousElementSibling) {
+        // This level has siblings — it's the section level
+        break;
       }
+      sectionParent = sectionParent.parentElement!;
+    }
+
+    if (!sectionParent || sectionParent === root) return;
+
+    // Hide the arrow container
+    hide(sectionParent);
+
+    // Hide all siblings after the arrow (TO section, etc.) — but keep buttons
+    let sibling = sectionParent.nextElementSibling;
+    while (sibling) {
+      const tag = sibling.tagName?.toLowerCase() ?? '';
+      // Keep the purchase button
+      if (tag === 'button' || sibling.querySelector('button')) break;
+      hide(sibling as HTMLElement);
+      sibling = sibling.nextElementSibling;
     }
   });
 }
@@ -284,27 +260,25 @@ export const GoldMerchantModal = ({
             py={5}
             spacing={2}
           >
-            <HStack spacing={3}>
-              <VStack align="center" spacing={0}>
-                <Text
-                  color="#E8DCC8"
-                  fontFamily="'Cormorant Garamond', Georgia, serif"
-                  fontSize="xl"
-                  fontWeight={700}
-                >
-                  {character.name}
-                </Text>
-                <Text
-                  color="#6A6050"
-                  fontFamily="'Cormorant Garamond', Georgia, serif"
-                  fontSize="2xs"
-                  letterSpacing="0.1em"
-                  textTransform="uppercase"
-                >
-                  Adventurer
-                </Text>
-              </VStack>
-            </HStack>
+            <VStack align="center" spacing={0}>
+              <Text
+                color="#E8DCC8"
+                fontFamily="'Cormorant Garamond', Georgia, serif"
+                fontSize="xl"
+                fontWeight={700}
+              >
+                {character.name}
+              </Text>
+              <Text
+                color="#6A6050"
+                fontFamily="'Cormorant Garamond', Georgia, serif"
+                fontSize="2xs"
+                letterSpacing="0.1em"
+                textTransform="uppercase"
+              >
+                Adventurer
+              </Text>
+            </VStack>
             <HStack
               bg="#1A1610"
               border="1px solid #2A2218"
