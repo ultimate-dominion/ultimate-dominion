@@ -141,6 +141,7 @@ export const GoldMerchantModal = ({
                   buttonLabel="Purchase Gold"
                   showThirdwebBranding={false}
                   paymentMethods={['card']}
+                  presetOptions={[10, 100, 1000]}
                   tokenEditable={false}
                 />
               </Box>
