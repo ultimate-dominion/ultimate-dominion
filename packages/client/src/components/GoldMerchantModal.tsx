@@ -16,7 +16,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useRef,
+  useState,
 } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import { BuyWidget, darkTheme, ThirdwebProvider } from 'thirdweb/react';
@@ -47,73 +47,113 @@ const merchantTheme = darkTheme({
   fontFamily: "'Cormorant Garamond', Georgia, serif",
 });
 
-/** Text content that identifies crypto UI sections to hide */
-const HIDE_TEXTS = ['PAY', 'TO'];
-const HIDE_PATTERNS = [/^0x[a-fA-F0-9]/]; // wallet addresses
-
 /**
- * Walk the widget DOM and hide sections containing crypto jargon.
- * Hides the closest container div for matched elements.
+ * Walk the widget DOM and surgically hide crypto-facing UI.
+ *
+ * Hides: "PAY" label, chain selector (dashed border), entire "TO" section,
+ *        wallet addresses, and the directional arrow between sections.
+ * Keeps: amount input, preset buttons, Purchase Gold button.
  */
 function hideCryptoElements(root: HTMLElement) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node: Node | null;
+
   while ((node = walker.nextNode())) {
     const text = node.textContent?.trim() ?? '';
-    const shouldHide =
-      HIDE_TEXTS.includes(text) ||
-      HIDE_PATTERNS.some(p => p.test(text));
-    if (!shouldHide) continue;
+    if (!text) continue;
 
-    // Walk up to find the nearest section container (a div with padding)
-    let el: HTMLElement | null = node.parentElement;
-    // For "PAY"/"TO" labels, hide the grandparent container (the whole section)
-    if (HIDE_TEXTS.includes(text)) {
-      // Go up to the bordered section container
-      for (let i = 0; i < 4 && el; i++) {
-        if (el.style.borderRadius || el.style.border) break;
+    // "PAY" label — hide just the label, keep the rest of the section
+    if (text === 'PAY') {
+      const el = node.parentElement;
+      if (el) el.style.display = 'none';
+      continue;
+    }
+
+    // "TO" label — hide the entire bordered section
+    if (text === 'TO') {
+      let el: HTMLElement | null = node.parentElement;
+      for (let i = 0; i < 8 && el && el !== root; i++) {
+        const cs = getComputedStyle(el);
+        if (cs.borderRadius && cs.borderRadius !== '0px' && el.offsetHeight > 30) {
+          el.style.display = 'none';
+          break;
+        }
         el = el.parentElement;
       }
+      continue;
     }
-    if (el && el !== root) {
-      el.style.display = 'none';
+
+    // Wallet address (0x…) — walk up to bordered container and hide
+    if (/^0x[a-fA-F0-9]/.test(text)) {
+      let el: HTMLElement | null = node.parentElement;
+      for (let i = 0; i < 6 && el && el !== root; i++) {
+        const cs = getComputedStyle(el);
+        if (cs.borderRadius && cs.borderRadius !== '0px') {
+          el.style.display = 'none';
+          break;
+        }
+        el = el.parentElement;
+      }
+      continue;
     }
   }
 
-  // Also hide the directional arrow (svg inside a standalone div between sections)
+  // Hide chain selector — containers with dashed/dotted border (holds chain icon)
+  const allEls = root.querySelectorAll<HTMLElement>('div, span');
+  for (const el of allEls) {
+    try {
+      const cs = getComputedStyle(el);
+      if (
+        (cs.borderStyle?.includes('dashed') || cs.borderStyle?.includes('dotted')) &&
+        el.offsetHeight > 0 &&
+        el.offsetHeight < 80
+      ) {
+        el.style.display = 'none';
+      }
+    } catch { /* skip */ }
+  }
+
+  // Hide the directional arrow SVG between sections
   root.querySelectorAll('svg').forEach(svg => {
     const parent = svg.parentElement;
-    if (!parent) return;
-    // The arrow is in a small centered container between PAY and TO sections
+    if (!parent || parent === root) return;
     const rect = parent.getBoundingClientRect();
     if (rect.height < 50 && rect.height > 10) {
-      const text = parent.textContent?.trim() ?? '';
-      if (!text || text.length < 3) {
+      const t = parent.textContent?.trim() ?? '';
+      if (!t || t.length < 3) {
         parent.style.display = 'none';
       }
     }
   });
 }
 
-/** Hook to observe and clean up BuyWidget DOM as it renders */
-function useHideCryptoUI(containerRef: React.RefObject<HTMLElement | null>) {
-  const cleanup = useCallback(() => {
-    if (!containerRef.current) return;
-    hideCryptoElements(containerRef.current);
-  }, [containerRef]);
+/**
+ * Hook to observe and hide crypto UI from BuyWidget.
+ * Uses callback ref + state so the effect re-runs when the container mounts.
+ */
+function useHideCryptoUI(isOpen: boolean) {
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    // Run immediately
-    cleanup();
-    // Re-run whenever the widget re-renders (async data loads)
-    const observer = new MutationObserver(cleanup);
-    observer.observe(containerRef.current, {
-      childList: true,
-      subtree: true,
-    });
-    return () => observer.disconnect();
-  }, [cleanup, containerRef]);
+    if (!isOpen || !container) return;
+
+    const run = () => hideCryptoElements(container);
+
+    // Run immediately + on delayed schedule (BuyWidget loads data async)
+    run();
+    const timers = [200, 500, 1000, 2000, 4000].map(ms => setTimeout(run, ms));
+
+    // Also observe DOM mutations for dynamic content updates
+    const observer = new MutationObserver(run);
+    observer.observe(container, { childList: true, subtree: true });
+
+    return () => {
+      timers.forEach(clearTimeout);
+      observer.disconnect();
+    };
+  }, [isOpen, container]);
+
+  return useCallback((node: HTMLDivElement | null) => setContainer(node), []);
 }
 
 /** Error boundary to catch Thirdweb BuyWidget render crashes */
@@ -160,8 +200,7 @@ export const GoldMerchantModal = ({
   const { character } = useCharacter();
   const configValue = useGameConfig('UltimateDominionConfig');
   const goldTokenAddress = (configValue?.goldToken as string) ?? undefined;
-  const widgetRef = useRef<HTMLDivElement>(null);
-  useHideCryptoUI(widgetRef);
+  const widgetRef = useHideCryptoUI(isOpen);
 
   const formattedBalance = character
     ? Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()
