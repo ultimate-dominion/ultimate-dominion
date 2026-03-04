@@ -94,11 +94,12 @@ export const WaitingRoom = (): JSX.Element => {
   }, [isSpawned, navigate]);
 
   // If map is no longer full, redirect to game board
-  useEffect(() => {
-    if (!isMapFull && queueStatus !== 'ready') {
-      navigate(GAME_BOARD_PATH);
-    }
-  }, [isMapFull, queueStatus, navigate]);
+  // TODO: re-enable after testing
+  // useEffect(() => {
+  //   if (!isMapFull && queueStatus !== 'ready') {
+  //     navigate(GAME_BOARD_PATH);
+  //   }
+  // }, [isMapFull, queueStatus, navigate]);
 
   const handleLeaveQueue = useCallback(async () => {
     await leaveQueue();
