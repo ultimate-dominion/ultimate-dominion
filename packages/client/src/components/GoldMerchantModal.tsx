@@ -41,14 +41,45 @@ const merchantTheme = darkTheme({
 });
 
 /**
- * CSS overrides to hide crypto jargon from the Thirdweb BuyWidget.
- * Targets are fragile (class-based) but there's no prop-level control.
+ * Aggressive CSS overrides to strip crypto UI from BuyWidget.
+ * Hides: PAY label + token/chain selector, TO label + address,
+ * the directional arrow, and any wallet address displays.
+ * These target the widget's internal DOM structure.
  */
 const WIDGET_CSS_OVERRIDES = `
+  /* Hide the "PAY" section header and token/chain selector */
+  .gold-merchant-widget > div > div > div:first-child > div:first-child {
+    display: none !important;
+  }
+
+  /* Hide the arrow between PAY and TO */
+  .gold-merchant-widget > div > div > div:nth-child(2) {
+    display: none !important;
+  }
+
+  /* Hide the "TO" section entirely (address display) */
+  .gold-merchant-widget > div > div > div:nth-child(3) {
+    display: none !important;
+  }
+
+  /* Fallback: hide anything with wallet/address data attributes */
   .gold-merchant-widget [data-testid="receiver-address"],
   .gold-merchant-widget [class*="receiverAddress"],
   .gold-merchant-widget [class*="walletAddress"] {
     display: none !important;
+  }
+
+  /* Make preset buttons more prominent */
+  .gold-merchant-widget button[data-variant="outline"] {
+    border: 1px solid #C87A2A !important;
+    color: #E8DCC8 !important;
+    font-weight: 600 !important;
+    padding: 6px 16px !important;
+    font-size: 14px !important;
+  }
+  .gold-merchant-widget button[data-variant="outline"]:hover {
+    background: #C87A2A !important;
+    color: #1C1814 !important;
   }
 `;
 
@@ -97,6 +128,10 @@ export const GoldMerchantModal = ({
   const configValue = useGameConfig('UltimateDominionConfig');
   const goldTokenAddress = (configValue?.goldToken as string) ?? undefined;
 
+  const formattedBalance = character
+    ? Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()
+    : '0';
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
       <ModalOverlay />
@@ -112,52 +147,50 @@ export const GoldMerchantModal = ({
           color="#E8DCC8"
           fontFamily="'Cormorant Garamond', Georgia, serif"
           fontSize="xl"
-          pb={2}
+          pb={3}
+          textAlign="center"
         >
           Gold Merchant
         </ModalHeader>
         <ModalCloseButton color="#8A7E6A" />
 
-        {/* Custom info bar — replaces the widget's "TO" / address section */}
+        {/* Player info card */}
         {character && (
-          <Box
+          <VStack
             bg="#221E18"
             borderBottom="1px solid #3A3228"
             px={6}
-            py={3}
+            py={4}
+            spacing={3}
           >
-            <HStack justifyContent="space-between">
-              <Text color="#8A7E6A" fontSize="xs">
-                Delivering to
-              </Text>
+            <VStack spacing={0}>
               <Text
                 color="#E8DCC8"
                 fontFamily="'Cormorant Garamond', Georgia, serif"
-                fontSize="sm"
-                fontWeight={600}
+                fontSize="lg"
+                fontWeight={700}
               >
                 {character.name}
               </Text>
-            </HStack>
-            <HStack justifyContent="space-between" mt={1}>
-              <Text color="#8A7E6A" fontSize="xs">
-                Current balance
+              <Text color="#6A6050" fontSize="2xs" letterSpacing="0.05em" textTransform="uppercase">
+                Adventurer
               </Text>
-              <HStack spacing={1}>
-                <GiTwoCoins color="#D4A54A" size={12} />
-                <Text
-                  color="yellow"
-                  fontFamily="mono"
-                  fontSize="sm"
-                  fontWeight={600}
-                >
-                  {Number(
-                    etherToFixedNumber(character.externalGoldBalance),
-                  ).toLocaleString()}
-                </Text>
-              </HStack>
+            </VStack>
+            <HStack spacing={2}>
+              <GiTwoCoins color="#D4A54A" size={16} />
+              <Text
+                color="yellow"
+                fontFamily="mono"
+                fontSize="md"
+                fontWeight={700}
+              >
+                {formattedBalance}
+              </Text>
+              <Text color="#6A6050" fontSize="xs">
+                gold
+              </Text>
             </HStack>
-          </Box>
+          </VStack>
         )}
 
         <ModalBody p={0}>
