@@ -309,7 +309,7 @@ export const AuthProvider = ({
     }).catch(() => {});
 
     // Store wallet→email for queue notifications
-    fetch(`${indexerUrl}/api/player/email`, {
+    fetch(`${indexerUrl}/api/queue/player/email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet: embeddedAddress.toLowerCase(), email: signedInEmail }),
