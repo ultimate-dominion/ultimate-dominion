@@ -36,7 +36,7 @@ export const Welcome = (): JSX.Element => {
   const { authMethod, isAuthenticated, isConnecting } = useAuth();
   const { delegatorAddress } = useMUD();
   const { character, isRefreshing } = useCharacter();
-  const { isMapFull } = useQueue();
+  const { isMapFull, statsLoaded } = useQueue();
 
   // Capture invite code from URL params
   useEffect(() => {
@@ -50,29 +50,29 @@ export const Welcome = (): JSX.Element => {
   useEffect(() => {
     if (isRefreshing) return;
     if (!isAuthenticated) return;
+    if (!statsLoaded) return; // Wait for queue stats before deciding
 
     const embeddedReady = authMethod === 'embedded';
     const externalReady = authMethod === 'external' && !!delegatorAddress;
     if (!embeddedReady && !externalReady) return;
 
     if (character?.locked) {
-      // If map is full, send returning players to waiting room instead of game board
       navigate(isMapFull ? WAITING_ROOM_PATH : GAME_BOARD_PATH);
     } else {
       navigate(CHARACTER_CREATION_PATH);
     }
-  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isMapFull, isRefreshing, navigate]);
+  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isMapFull, isRefreshing, navigate, statsLoaded]);
 
   const onPlay = useCallback(() => {
-    // Authenticated with a character — go to game
-    if (isAuthenticated && character?.locked) {
-      navigate(GAME_BOARD_PATH);
+    // If map is full, go to waiting room (auth or not)
+    if (isMapFull) {
+      navigate(WAITING_ROOM_PATH);
       return;
     }
 
-    // If map is full and not authenticated, go to waiting room first
-    if (isMapFull && !isAuthenticated) {
-      navigate(WAITING_ROOM_PATH);
+    // Authenticated with a character — go to game
+    if (isAuthenticated && character?.locked) {
+      navigate(GAME_BOARD_PATH);
       return;
     }
 

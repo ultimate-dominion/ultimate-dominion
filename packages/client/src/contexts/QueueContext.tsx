@@ -50,6 +50,7 @@ type QueueContextType = {
   inviteStats: InviteStats;
   gameEvents: GameEvent[];
   isMapFull: boolean;
+  statsLoaded: boolean;
   joinQueue: (captchaToken: string, inviteCode?: string) => Promise<void>;
   leaveQueue: () => Promise<void>;
   acknowledgeSlot: () => Promise<void>;
@@ -78,6 +79,7 @@ const QueueContext = createContext<QueueContextType>({
   inviteStats: defaultInviteStats,
   gameEvents: [],
   isMapFull: false,
+  statsLoaded: false,
   joinQueue: async () => {},
   leaveQueue: async () => {},
   acknowledgeSlot: async () => {},
@@ -108,6 +110,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
   const [inviteStats, setInviteStats] = useState<InviteStats>(defaultInviteStats);
   const [gameEvents, setGameEvents] = useState<GameEvent[]>([]);
+  const [statsLoaded, setStatsLoaded] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -301,10 +304,12 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
         const data = await resp.json();
         setTotalInQueue(data.totalInQueue);
         setSlotsAvailable(data.slotsAvailable);
-        setMaxPlayers(data.maxPlayers);
-        setCurrentPlayers(data.currentPlayers);
+        setMaxPlayers(data.maxPlayers ?? 10);
+        setCurrentPlayers(data.currentPlayers ?? 0);
       } catch {
         // ignore
+      } finally {
+        setStatsLoaded(true);
       }
     };
     fetchStats();
@@ -507,6 +512,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     inviteStats,
     gameEvents,
     isMapFull,
+    statsLoaded,
     joinQueue,
     leaveQueue,
     acknowledgeSlot,
@@ -526,6 +532,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     inviteStats,
     gameEvents,
     isMapFull,
+    statsLoaded,
     joinQueue,
     leaveQueue,
     acknowledgeSlot,
