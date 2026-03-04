@@ -8,7 +8,9 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
+  VStack,
 } from '@chakra-ui/react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import { BuyWidget, darkTheme, ThirdwebProvider } from 'thirdweb/react';
 
@@ -49,6 +51,38 @@ const WIDGET_CSS_OVERRIDES = `
     display: none !important;
   }
 `;
+
+/** Error boundary to catch Thirdweb BuyWidget render crashes */
+class WidgetErrorBoundary extends Component<
+  { children: ReactNode; onClose: () => void },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; onClose: () => void }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[GoldMerchant] BuyWidget crashed:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <VStack p={6} spacing={3}>
+          <Text color="#E8DCC8" fontSize="sm" textAlign="center">
+            The Gold Merchant is temporarily unavailable.
+          </Text>
+          <Text color="#8A7E6A" fontSize="xs" textAlign="center">
+            Please try again in a moment.
+          </Text>
+        </VStack>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export const GoldMerchantModal = ({
   isOpen,
@@ -129,22 +163,23 @@ export const GoldMerchantModal = ({
         <ModalBody p={0}>
           {goldTokenAddress && ownerAddress ? (
             <ThirdwebProvider>
-              <Box className="gold-merchant-widget">
-                <BuyWidget
-                  client={thirdwebClient}
-                  chain={thirdwebChain}
-                  tokenAddress={goldTokenAddress}
-                  receiverAddress={ownerAddress}
-                  activeWallet={embeddedWallet ?? undefined}
-                  theme={merchantTheme}
-                  title=""
-                  buttonLabel="Purchase Gold"
-                  showThirdwebBranding={false}
-                  paymentMethods={['card']}
-                  presetOptions={[10, 100, 1000]}
-                  tokenEditable={false}
-                />
-              </Box>
+              <WidgetErrorBoundary onClose={onClose}>
+                <Box className="gold-merchant-widget">
+                  <BuyWidget
+                    client={thirdwebClient}
+                    chain={thirdwebChain}
+                    tokenAddress={goldTokenAddress}
+                    receiverAddress={ownerAddress}
+                    activeWallet={embeddedWallet ?? undefined}
+                    theme={merchantTheme}
+                    title=""
+                    buttonLabel="Purchase Gold"
+                    showThirdwebBranding={false}
+                    presetOptions={[10, 100, 1000]}
+                    tokenEditable={false}
+                  />
+                </Box>
+              </WidgetErrorBoundary>
             </ThirdwebProvider>
           ) : (
             <Text color="#8A7E6A" p={6} textAlign="center">
