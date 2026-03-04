@@ -9,7 +9,6 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { useMUD } from './MUDContext';
 
 const INDEXER_URL = (import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api').replace(/\/api\/?$/, '');
 
@@ -94,9 +93,8 @@ const RECONNECT_MAX_DELAY = 30000;
 const HEARTBEAT_INTERVAL = 25000;
 
 export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Element => {
-  const { isAuthenticated } = useAuth();
-  const { delegatorAddress } = useMUD();
-  const wallet = delegatorAddress?.toLowerCase() ?? '';
+  const { isAuthenticated, ownerAddress } = useAuth();
+  const wallet = ownerAddress?.toLowerCase() ?? '';
 
   const [queuePosition, setQueuePosition] = useState(0);
   const [totalInQueue, setTotalInQueue] = useState(0);
@@ -330,23 +328,31 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   }, []);
 
   const refreshInviteCodes = useCallback(async () => {
-    if (!wallet) return;
+    if (!wallet) {
+      console.warn('[queue] Cannot refresh invite codes — no wallet');
+      return;
+    }
     try {
+      console.info('[queue] Refreshing invite codes for', wallet);
       const [codesResp, statsResp] = await Promise.all([
         fetch(`${INDEXER_URL}/api/invite/codes/${wallet}`),
         fetch(`${INDEXER_URL}/api/invite/stats/${wallet}`),
       ]);
       const codesData = await codesResp.json();
       const statsData = await statsResp.json();
+      console.info('[queue] Invite codes response:', codesData);
       setInviteCodes(codesData.codes ?? []);
       setInviteStats(statsData);
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('[queue] Failed to refresh invite codes:', err);
     }
   }, [wallet]);
 
   const joinQueue = useCallback(async (captchaToken: string, inviteCode?: string) => {
-    if (!wallet) return;
+    if (!wallet) {
+      console.error('[queue] Cannot join queue — wallet address not available. isAuthenticated:', isAuthenticated);
+      return;
+    }
     setQueueStatus('joining');
     try {
       const resp = await fetch(`${INDEXER_URL}/api/queue/join`, {
@@ -376,7 +382,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
       console.error('[queue] Join error:', err);
       setQueueStatus('idle');
     }
-  }, [wallet, refreshInviteCodes]);
+  }, [wallet, isAuthenticated, refreshInviteCodes]);
 
   const leaveQueue = useCallback(async () => {
     if (!wallet) return;

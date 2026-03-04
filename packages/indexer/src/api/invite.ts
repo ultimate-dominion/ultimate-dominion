@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { sql } from '../db/connection.js';
+import { generateInviteCode } from '../queue/milestoneWatcher.js';
 
 export function createInviteRouter(): Router {
   const router = Router();
@@ -7,16 +8,39 @@ export function createInviteRouter(): Router {
   /**
    * GET /codes/:wallet
    * All invite codes for this wallet (used + unused).
+   * Auto-seeds 3 starter codes on first access.
    */
   router.get('/codes/:wallet', async (req, res) => {
     try {
       const { wallet } = req.params;
-      const rows = await sql`
+      const w = wallet.toLowerCase();
+
+      let rows = await sql`
         SELECT code, milestone, created_at, used_by, used_at
         FROM queue.invite_codes
-        WHERE creator_wallet = ${wallet.toLowerCase()}
+        WHERE creator_wallet = ${w}
         ORDER BY created_at DESC
       `;
+
+      // Auto-seed 3 starter codes on first access
+      if (rows.length === 0) {
+        try {
+          await Promise.all([
+            generateInviteCode(w, 'starter_1'),
+            generateInviteCode(w, 'starter_2'),
+            generateInviteCode(w, 'starter_3'),
+          ]);
+          console.log(`[invite] Auto-seeded 3 starter codes for ${w}`);
+          rows = await sql`
+            SELECT code, milestone, created_at, used_by, used_at
+            FROM queue.invite_codes
+            WHERE creator_wallet = ${w}
+            ORDER BY created_at DESC
+          `;
+        } catch (seedErr) {
+          console.error('[invite] Auto-seed error:', seedErr);
+        }
+      }
 
       res.json({
         codes: rows.map((r) => ({

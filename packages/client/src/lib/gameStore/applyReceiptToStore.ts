@@ -109,6 +109,7 @@ async function resolveSpliceEvents(
       });
 
       const serialized = serializeRecord(record as Record<string, unknown>);
+      console.debug(`[TX][RECEIPT] splice setRow: ${table.label} key=${keyBytes}`, serialized);
       useGameStore.getState().setRow(table.label, keyBytes, serialized);
       return table.label;
     }),
