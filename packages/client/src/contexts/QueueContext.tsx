@@ -329,6 +329,22 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     fetchEvents();
   }, []);
 
+  const refreshInviteCodes = useCallback(async () => {
+    if (!wallet) return;
+    try {
+      const [codesResp, statsResp] = await Promise.all([
+        fetch(`${INDEXER_URL}/api/invite/codes/${wallet}`),
+        fetch(`${INDEXER_URL}/api/invite/stats/${wallet}`),
+      ]);
+      const codesData = await codesResp.json();
+      const statsData = await statsResp.json();
+      setInviteCodes(codesData.codes ?? []);
+      setInviteStats(statsData);
+    } catch {
+      // ignore
+    }
+  }, [wallet]);
+
   const joinQueue = useCallback(async (captchaToken: string, inviteCode?: string) => {
     if (!wallet) return;
     setQueueStatus('joining');
@@ -391,22 +407,6 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
       setReadyUntil(null);
     } catch (err) {
       console.error('[queue] Spawned report error:', err);
-    }
-  }, [wallet]);
-
-  const refreshInviteCodes = useCallback(async () => {
-    if (!wallet) return;
-    try {
-      const [codesResp, statsResp] = await Promise.all([
-        fetch(`${INDEXER_URL}/api/invite/codes/${wallet}`),
-        fetch(`${INDEXER_URL}/api/invite/stats/${wallet}`),
-      ]);
-      const codesData = await codesResp.json();
-      const statsData = await statsResp.json();
-      setInviteCodes(codesData.codes ?? []);
-      setInviteStats(statsData);
-    } catch {
-      // ignore
     }
   }, [wallet]);
 
