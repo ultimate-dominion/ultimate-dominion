@@ -10,7 +10,14 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import {
+  Component,
+  type ErrorInfo,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import { BuyWidget, darkTheme, ThirdwebProvider } from 'thirdweb/react';
 
@@ -40,18 +47,74 @@ const merchantTheme = darkTheme({
   fontFamily: "'Cormorant Garamond', Georgia, serif",
 });
 
+/** Text content that identifies crypto UI sections to hide */
+const HIDE_TEXTS = ['PAY', 'TO'];
+const HIDE_PATTERNS = [/^0x[a-fA-F0-9]/]; // wallet addresses
+
 /**
- * Targeted CSS overrides to hide crypto jargon from BuyWidget.
- * Only hides specific text/elements, not structural containers.
+ * Walk the widget DOM and hide sections containing crypto jargon.
+ * Hides the closest container div for matched elements.
  */
-const WIDGET_CSS_OVERRIDES = `
-  /* Hide wallet address displays */
-  .gold-merchant-widget [data-testid="receiver-address"],
-  .gold-merchant-widget [class*="receiverAddress"],
-  .gold-merchant-widget [class*="walletAddress"] {
-    display: none !important;
+function hideCryptoElements(root: HTMLElement) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node: Node | null;
+  while ((node = walker.nextNode())) {
+    const text = node.textContent?.trim() ?? '';
+    const shouldHide =
+      HIDE_TEXTS.includes(text) ||
+      HIDE_PATTERNS.some(p => p.test(text));
+    if (!shouldHide) continue;
+
+    // Walk up to find the nearest section container (a div with padding)
+    let el: HTMLElement | null = node.parentElement;
+    // For "PAY"/"TO" labels, hide the grandparent container (the whole section)
+    if (HIDE_TEXTS.includes(text)) {
+      // Go up to the bordered section container
+      for (let i = 0; i < 4 && el; i++) {
+        if (el.style.borderRadius || el.style.border) break;
+        el = el.parentElement;
+      }
+    }
+    if (el && el !== root) {
+      el.style.display = 'none';
+    }
   }
-`;
+
+  // Also hide the directional arrow (svg inside a standalone div between sections)
+  root.querySelectorAll('svg').forEach(svg => {
+    const parent = svg.parentElement;
+    if (!parent) return;
+    // The arrow is in a small centered container between PAY and TO sections
+    const rect = parent.getBoundingClientRect();
+    if (rect.height < 50 && rect.height > 10) {
+      const text = parent.textContent?.trim() ?? '';
+      if (!text || text.length < 3) {
+        parent.style.display = 'none';
+      }
+    }
+  });
+}
+
+/** Hook to observe and clean up BuyWidget DOM as it renders */
+function useHideCryptoUI(containerRef: React.RefObject<HTMLElement | null>) {
+  const cleanup = useCallback(() => {
+    if (!containerRef.current) return;
+    hideCryptoElements(containerRef.current);
+  }, [containerRef]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    // Run immediately
+    cleanup();
+    // Re-run whenever the widget re-renders (async data loads)
+    const observer = new MutationObserver(cleanup);
+    observer.observe(containerRef.current, {
+      childList: true,
+      subtree: true,
+    });
+    return () => observer.disconnect();
+  }, [cleanup, containerRef]);
+}
 
 /** Error boundary to catch Thirdweb BuyWidget render crashes */
 class WidgetErrorBoundary extends Component<
@@ -97,6 +160,8 @@ export const GoldMerchantModal = ({
   const { character } = useCharacter();
   const configValue = useGameConfig('UltimateDominionConfig');
   const goldTokenAddress = (configValue?.goldToken as string) ?? undefined;
+  const widgetRef = useRef<HTMLDivElement>(null);
+  useHideCryptoUI(widgetRef);
 
   const formattedBalance = character
     ? Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()
@@ -111,7 +176,6 @@ export const GoldMerchantModal = ({
         clipPath="none"
         overflow="hidden"
       >
-        <style>{WIDGET_CSS_OVERRIDES}</style>
         <ModalHeader
           borderBottom="1px solid #3A3228"
           color="#E8DCC8"
@@ -167,7 +231,7 @@ export const GoldMerchantModal = ({
           {goldTokenAddress && ownerAddress ? (
             <ThirdwebProvider>
               <WidgetErrorBoundary onClose={onClose}>
-                <Box className="gold-merchant-widget">
+                <Box ref={widgetRef}>
                   <BuyWidget
                     client={thirdwebClient}
                     chain={thirdwebChain}
