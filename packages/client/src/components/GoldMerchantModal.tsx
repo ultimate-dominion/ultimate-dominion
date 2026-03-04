@@ -53,14 +53,16 @@ function hide(el: HTMLElement) {
 }
 
 /**
- * Walk the widget DOM and surgically hide crypto-facing UI.
+ * Walk the widget DOM and surgically hide crypto-facing UI, then
+ * format large token amounts with commas and 2 decimal places.
  *
  * Strategy:
  * 1. Hide "PAY" label text
  * 2. Hide chain selector by matching chain name text ("Base") and walking up
  * 3. Find the arrow SVG, then hide it + all siblings after it (the TO section)
- *    — stops before the Purchase button so that stays visible
+ *    — only stops at the main Purchase button (not small copy/icon buttons)
  * 4. Hide any remaining wallet addresses
+ * 5. Format large numbers (token amounts) with commas + 2dp
  */
 function hideCryptoElements(root: HTMLElement) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -74,6 +76,27 @@ function hideCryptoElements(root: HTMLElement) {
     if (text === 'PAY' || text === 'Pay' || text === 'pay') {
       const el = node.parentElement;
       if (el) hide(el);
+      continue;
+    }
+
+    // "TO" label — directly hide its container and walk up to section
+    if (text === 'TO' || text === 'To') {
+      let el: HTMLElement | null = node.parentElement;
+      if (el) hide(el);
+      // Also walk up to hide the entire TO section container
+      for (let i = 0; i < 8 && el && el !== root; i++) {
+        el = el.parentElement;
+        if (el && el !== root && el.nextElementSibling) {
+          // Check if this is a section-level element (has siblings)
+          // and the next sibling is the purchase button area
+          const nextTag = el.nextElementSibling?.tagName?.toLowerCase();
+          const nextText = el.nextElementSibling?.textContent ?? '';
+          if (nextTag === 'button' || nextText.includes('Purchase')) {
+            hide(el);
+            break;
+          }
+        }
+      }
       continue;
     }
 
@@ -95,6 +118,22 @@ function hideCryptoElements(root: HTMLElement) {
       if (el) hide(el);
       continue;
     }
+
+    // Format large token amounts: add commas, limit to 2 decimal places
+    // Matches numbers like "112513.7220089849" but not "$100" or "$10"
+    if (/^\d{4,}(\.\d+)?$/.test(text)) {
+      const num = parseFloat(text);
+      if (!isNaN(num)) {
+        const formatted = num.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        if (node.textContent !== formatted) {
+          node.textContent = formatted;
+        }
+      }
+      continue;
+    }
   }
 
   // Find the arrow SVG between PAY and TO sections, then hide it + the TO section
@@ -107,21 +146,10 @@ function hideCryptoElements(root: HTMLElement) {
     const t = parent.textContent?.trim() ?? '';
     if (t.length > 3) return;
 
-    // Walk up from the arrow to find its section-level container
-    // (a direct child or grandchild of root that's a sibling of other sections)
-    let arrowContainer: HTMLElement | null = parent;
-    for (let i = 0; i < 10 && arrowContainer && arrowContainer.parentElement !== root; i++) {
-      if (!arrowContainer.parentElement) break;
-      arrowContainer = arrowContainer.parentElement;
-    }
-    // Now arrowContainer is a direct child of root (or close to it)
-    // But root might have a single child (BuyWidget wrapper) containing the sections
-    // So let's find the right level: the container whose nextSibling is the TO section
-    // Walk back down if needed
-    let sectionParent = parent;
+    // Walk up to find the section level (where element has siblings)
+    let sectionParent: HTMLElement | null = parent;
     while (sectionParent && sectionParent !== root) {
       if (sectionParent.nextElementSibling || sectionParent.previousElementSibling) {
-        // This level has siblings — it's the section level
         break;
       }
       sectionParent = sectionParent.parentElement!;
@@ -132,13 +160,18 @@ function hideCryptoElements(root: HTMLElement) {
     // Hide the arrow container
     hide(sectionParent);
 
-    // Hide all siblings after the arrow (TO section, etc.) — but keep buttons
+    // Hide all siblings after the arrow (TO section, etc.)
+    // Only stop at the MAIN purchase button (large button with "Purchase" text)
     let sibling = sectionParent.nextElementSibling;
     while (sibling) {
-      const tag = sibling.tagName?.toLowerCase() ?? '';
-      // Keep the purchase button
-      if (tag === 'button' || sibling.querySelector('button')) break;
-      hide(sibling as HTMLElement);
+      const el = sibling as HTMLElement;
+      const isPurchaseButton =
+        (el.tagName?.toLowerCase() === 'button' &&
+          (el.textContent?.includes('Purchase') || el.offsetHeight > 40)) ||
+        (el.querySelector('button') &&
+          el.textContent?.includes('Purchase'));
+      if (isPurchaseButton) break;
+      hide(el);
       sibling = sibling.nextElementSibling;
     }
   });
