@@ -130,7 +130,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   }, [position]);
 
   const spawnedData = useGameValue('Spawned', character?.id);
-  const isSpawned = Boolean(spawnedData?.spawned);
+  const [spawnConfirmed, setSpawnConfirmed] = useState(false);
+  const isSpawned = Boolean(spawnedData?.spawned) || spawnConfirmed;
+
+  // Reset spawnConfirmed when character changes (e.g. death/despawn)
+  useEffect(() => {
+    if (!spawnedData?.spawned) setSpawnConfirmed(false);
+  }, [spawnedData?.spawned]);
 
   // Filtered entity lists computed from reactive tables
   const allShopEntities = useMemo(() => {
@@ -536,6 +542,23 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     if (result) {
       // TX succeeded — notify queue that this player spawned
       reportSpawned().catch(() => {});
+
+      // Fallback: poll the store for the Spawned update in case the
+      // reactive subscription doesn't fire (stale tab, re-hydration race).
+      const entityId = character.id;
+      let attempts = 0;
+      const poll = setInterval(() => {
+        attempts++;
+        const val = getTableValue('Spawned', entityId);
+        if (val?.spawned || attempts >= 20) {
+          clearInterval(poll);
+          if (val?.spawned) {
+            setSpawnConfirmed(true);
+            setIsWaitingForSpawn(false);
+            refreshCharacter();
+          }
+        }
+      }, 500);
     } else {
       // TX failed, clear immediately
       setIsWaitingForSpawn(false);
@@ -544,6 +567,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   }, [
     character,
     delegatorAddress,
+    refreshCharacter,
     reportSpawned,
     spawn,
     spawnTx,
