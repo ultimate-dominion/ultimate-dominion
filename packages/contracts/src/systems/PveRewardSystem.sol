@@ -57,7 +57,7 @@ contract PveRewardSystem is System {
                 : (distTemps.cumulativePlayerLevels - distTemps.defenderLevelTemp) <= 5;
             if (EncounterEntity.getDied(distTemps.monsterTemp) && correctLevelSpread) {
                 _baseExp += Stats.getExperience(distTemps.monsterTemp);
-                _goldAmount += _calculateGoldDrop(statsTemp.level, randomNumber, distTemps.monsterTemp);
+                _goldAmount += _calculateGoldDrop(distTemps.defenderLevelTemp, randomNumber, distTemps.monsterTemp);
                 EncounterEntity.setEncounterId(distTemps.monsterTemp, bytes32(0));
 
                 bytes32 playerToDropTo = distTemps.players[randomNumber % distTemps.players.length];
@@ -94,6 +94,13 @@ contract PveRewardSystem is System {
                         uint256 _expToGive = maxLevelExp - currentExp;
                         statsTemp.experience += _expToGive;
                         _expAmount += _expToGive;
+                    }
+                } else {
+                    // PvE death penalty: burn 5% of escrow (permanent gold sink)
+                    uint256 deathEscrow = AdventureEscrow.get(distTemps.entityIdTemp);
+                    if (deathEscrow > 20) {
+                        uint256 deathPenalty = deathEscrow / 20;
+                        AdventureEscrow.set(distTemps.entityIdTemp, deathEscrow - deathPenalty);
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);

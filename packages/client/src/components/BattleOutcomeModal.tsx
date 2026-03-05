@@ -227,12 +227,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 </Text>
               ) : (
                 <Text>
-                  Fleeing causes you to drop 25% of the Gold in your Adventure
-                  Escrow. You lost{' '}
+                  Fleeing cost you{' '}
                   <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
-                  Gold.
+                  Gold from your Adventure Escrow.
                 </Text>
               )}
             </VStack>
@@ -273,17 +272,15 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     ? `You defeated ${opponent?.name}!`
                     : `You were killed by ${opponent?.name}.`}
                 </Text>
-                {winner !== character.id &&
-                  currentBattle &&
-                  currentBattle.encounterType === EncounterType.PvP && (
-                    <Text>
-                      You lost{' '}
-                      <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
-                        {etherToFixedNumber(goldDropped)}
-                      </Text>{' '}
-                      Gold from your Adventure Escrow.
-                    </Text>
-                  )}
+                {winner !== character.id && goldDropped > 0n && (
+                  <Text>
+                    You lost{' '}
+                    <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
+                      {etherToFixedNumber(goldDropped)}
+                    </Text>{' '}
+                    Gold from your Adventure Escrow.
+                  </Text>
+                )}
                 {winner !== character.id && (
                   <Text>
                     When you die, your health is restored, but you are forced to

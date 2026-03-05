@@ -194,7 +194,7 @@ export const ShopItemRow = ({
           const { error, success } = await sell(
             BigInt(amount),
             shop.shopId,
-            itemIndex,
+            item.tokenId,
             characterId,
           );
           if (error && !success) throw new Error(error);

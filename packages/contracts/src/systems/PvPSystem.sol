@@ -187,26 +187,29 @@ contract PvPSystem is System {
         } else if (encounterData.encounterType == EncounterType.PvP) {
             uint256 amountToDrop;
             bool attackersWin;
-            // take 25% of escrow gold — Smoke Cloak negates the penalty
+            // take 10% of escrow gold — 5% burned (permanent sink), 5% to opponent
+            // Smoke Cloak negates the penalty entirely
             uint256 escrowBalance = AdventureEscrow.get(entityId);
-            if (!hasSmokeCover && escrowBalance > 4) {
-                amountToDrop = escrowBalance / 4;
+            if (!hasSmokeCover && escrowBalance > 10) {
+                amountToDrop = escrowBalance / 10;
                 AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
+                // Half to opponents, half burned (stays unallocated)
+                uint256 toOpponents = amountToDrop / 2;
                 // if quitter is attacker
                 if (!entityIsDefender) {
-                    // split the money up amongst the defenders
+                    // split the opponent share amongst the defenders
                     for (uint256 i; i < encounterData.defenders.length; i++) {
                         IWorld(_world()).UD__increaseEscrowBalance(
-                            encounterData.defenders[i], amountToDrop / encounterData.defenders.length
+                            encounterData.defenders[i], toOpponents / encounterData.defenders.length
                         );
                     }
                     // if quitter is defender
                 } else if (entityIsDefender) {
                     attackersWin = true;
-                    // split the money up amongst the attackers
+                    // split the opponent share amongst the attackers
                     for (uint256 i; i < encounterData.attackers.length; i++) {
                         IWorld(_world()).UD__increaseEscrowBalance(
-                            encounterData.attackers[i], amountToDrop / encounterData.attackers.length
+                            encounterData.attackers[i], toOpponents / encounterData.attackers.length
                         );
                     }
                 }

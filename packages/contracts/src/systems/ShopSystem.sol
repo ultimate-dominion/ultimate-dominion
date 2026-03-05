@@ -71,7 +71,9 @@ contract ShopSystem is System, ReentrancyGuard {
 
         Shops.setGold(shopId, Shops.getGold(shopId) + price);
 
-        IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), _lootManagerAddress(), price);
+        address recipient = UltimateDominionConfig.getFeeRecipient();
+        if (recipient == address(0)) recipient = _lootManagerAddress();
+        IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), recipient, price);
 
         IWorld(_world()).UD__dropItem(characterId, buyable[itemIndex], amount);
 
@@ -128,6 +130,36 @@ contract ShopSystem is System, ReentrancyGuard {
             false,
             sellTemps.price
         );
+    }
+
+    /// @notice Sell any item to the shop by itemId (no sellable list restriction)
+    function sellAny(uint256 amount, bytes32 shopId, uint256 itemId, bytes32 characterId) public nonReentrant {
+        PauseLib.requireNotPaused();
+        _validateShopEncounter(characterId, shopId);
+
+        uint256 price = amount * itemMarkdown(shopId, itemId);
+        if (Shops.getGold(shopId) < price) {
+            revert ShopInsufficientGold();
+        }
+
+        Shops.setGold(shopId, Shops.getGold(shopId) - price);
+
+        {
+            address seller = _msgSender();
+            address lootManager = _lootManagerAddress();
+            bytes14 ns = ITEMS_NAMESPACE;
+
+            uint256 sellerBalance = ERC1155Owners.getBalance(_ownersTableId(ns), seller, itemId);
+            if (sellerBalance < amount) revert InsufficientItemBalance();
+            ERC1155Owners.setBalance(_ownersTableId(ns), seller, itemId, sellerBalance - amount);
+
+            uint256 lmBalance = ERC1155Owners.getBalance(_ownersTableId(ns), lootManager, itemId);
+            ERC1155Owners.setBalance(_ownersTableId(ns), lootManager, itemId, lmBalance + amount);
+        }
+
+        IWorld(_world()).UD__dropGoldToPlayer(characterId, price);
+
+        ShopSale.set(shopId, characterId, itemId, block.timestamp, false, price);
     }
 
     function canRestock(bytes32 shopId) public view returns (bool) {

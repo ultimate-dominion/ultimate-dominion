@@ -776,17 +776,17 @@ export function createSystemCalls(
   const sell = async (
     amount: bigint,
     shopId: string,
-    itemIndex: string,
+    itemId: string,
     characterId: string,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterId, 'sell');
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__sell([
+      const tx = await worldContract.write.UD__sellAny([
         amount,
         shopId as `0x${string}`,
-        BigInt(itemIndex),
+        BigInt(itemId),
         characterId as `0x${string}`,
       ]);
 

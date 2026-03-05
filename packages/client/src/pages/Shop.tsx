@@ -217,17 +217,13 @@ export const Shop = (): JSX.Element => {
     ];
 
     const sellableInventory = items
-      // filter out the items this shop does not sell
-      .filter(item => shop.sellableItems.includes(item.tokenId))
-      // add back the balances of the item and itemIndexes
       .map(item => {
-        const index = shop?.sellableItems.indexOf(item.tokenId).toString();
         const isEquipped = equippedItems.some(
           equippedItem => equippedItem.tokenId === item.tokenId,
         );
         return {
           balance: item.balance,
-          index: index,
+          index: item.tokenId,
           isEquipped,
           item: item,
           stock: null,
