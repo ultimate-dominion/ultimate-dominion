@@ -278,6 +278,38 @@ export default defineWorld({
       "BetrayersTruth",    // 7
       "BloodPrice",        // 8
     ],
+    GuildRank: [
+      "None",     // 0
+      "Member",   // 1
+      "Officer",  // 2
+      "Leader",   // 3
+    ],
+    BoostType: [
+      "None",       // 0
+      "DropRate",   // 1
+      "Experience", // 2
+      "GoldFind",   // 3
+    ],
+    SocialLinkType: [
+      "None",    // 0
+      "Friend",  // 1
+      "Rival",   // 2
+      "Blocked", // 3
+    ],
+    TradeStatus: [
+      "None",      // 0
+      "Pending",   // 1
+      "Accepted",  // 2
+      "Cancelled", // 3
+      "Expired",   // 4
+    ],
+    QuestStatus: [
+      "None",      // 0
+      "Available", // 1
+      "Active",    // 2
+      "Completed", // 3
+      "Failed",    // 4
+    ],
   },
   tables: {
     /**
@@ -521,6 +553,14 @@ export default defineWorld({
         maxDamage: "int256",
         minLevel: "uint256",
         effects: "bytes32[]",
+      },
+    },
+    ItemDurability: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        maxDurability: "uint256",
+        currentDurability: "uint256",
       },
     },
     StarterItems: {
@@ -1023,6 +1063,1328 @@ export default defineWorld({
         maxLevel: "uint256",
         badgeBase: "uint256",
       },
+    },
+    ///////////////////////////////////// GUILDS ///////////////////////////////////
+    Guild: {
+      key: ["guildId"],
+      schema: {
+        guildId: "uint256",
+        leader: "bytes32",       // characterId of guild leader
+        taxRate: "uint256",      // basis points (0–5000 = 0–50%)
+        treasury: "uint256",     // gold held by guild
+        memberCount: "uint256",
+        isOpen: "bool",          // open = anyone can join, closed = invite only
+        createdAt: "uint256",
+        lifetimeGoldEarned: "uint256", // total gold ever taxed, for lore fragment triggers
+        name: "string",          // dynamic fields must come last
+        tag: "string",           // 2-5 char tag displayed next to member names
+      },
+    },
+    GuildMember: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        guildId: "uint256",
+        rank: "GuildRank",
+        joinedAt: "uint256",
+        lastActive: "uint256",       // for auto-succession logic (14-day inactivity)
+        seasonJoinedAt: "uint256",   // must be in guild 75% of season for rewards
+      },
+    },
+    ///////////////////////////////////// CRAFTING ///////////////////////////////////
+    CraftingRecipe: {
+      key: ["recipeId"],
+      schema: {
+        recipeId: "uint256",
+        resultItemId: "uint256",
+        resultAmount: "uint256",
+        goldCost: "uint256",
+        requiredItems: "uint256[]",
+        requiredAmounts: "uint256[]",
+      },
+    },
+    ///////////////////////////////////// BOOSTS & COOLDOWNS ///////////////////////////////////
+    // Temporary buffs from shrines, consumables, etc.
+    ActiveBoost: {
+      key: ["characterId", "boostType"],
+      schema: {
+        characterId: "bytes32",
+        boostType: "BoostType",
+        multiplier: "uint256",   // basis points (15000 = 1.5x)
+        expiresAt: "uint256",    // block timestamp
+      },
+    },
+    // Generic cooldown table for any entity + any action
+    Cooldown: {
+      key: ["entityId", "actionId"],
+      schema: {
+        entityId: "bytes32",
+        actionId: "bytes32",     // keccak256 of action name
+        readyAt: "uint256",
+      },
+    },
+    // Anti-flip: tracks when a buyer can relist an item on marketplace
+    ListingCooldown: {
+      key: ["owner", "itemId"],
+      schema: {
+        owner: "bytes32",        // characterId of the buyer
+        itemId: "uint256",
+        relistableAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// TITLES ///////////////////////////////////
+    TitleDefinition: {
+      key: ["titleId"],
+      schema: {
+        titleId: "uint256",
+        name: "string",
+      },
+    },
+    // Which titles a character has unlocked
+    TitleUnlocked: {
+      key: ["characterId", "titleId"],
+      schema: {
+        characterId: "bytes32",
+        titleId: "uint256",
+        unlockedAt: "uint256",
+      },
+    },
+    // Which title a character is currently displaying
+    ActiveTitle: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        titleId: "uint256",
+      },
+    },
+    ///////////////////////////////////// REPUTATION & FACTIONS ///////////////////////////////////
+    Faction: {
+      key: ["factionId"],
+      schema: {
+        factionId: "uint256",
+        name: "string",
+      },
+    },
+    PlayerReputation: {
+      key: ["characterId", "factionId"],
+      schema: {
+        characterId: "bytes32",
+        factionId: "uint256",
+        reputation: "int256",    // can go negative (hostile)
+      },
+    },
+    ///////////////////////////////////// PLAYER STATS (Leaderboards) ///////////////////////////////////
+    // Lifetime aggregate stats per character — used for rankings
+    PlayerLifetimeStats: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        totalKills: "uint256",
+        totalDeaths: "uint256",
+        pvpKills: "uint256",
+        pvpDeaths: "uint256",
+        goldEarned: "uint256",
+        goldSpent: "uint256",
+      },
+    },
+    ///////////////////////////////////// PVP RANKINGS ///////////////////////////////////
+    PvpRating: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        rating: "int256",        // ELO/MMR — starts at 1000
+        wins: "uint256",
+        losses: "uint256",
+        season: "uint256",
+      },
+    },
+    PvpSeason: {
+      key: [],
+      schema: {
+        currentSeason: "uint256",
+        seasonStart: "uint256",
+        seasonEnd: "uint256",
+      },
+    },
+    // Archived final rating at end of each season
+    PvpRatingHistory: {
+      key: ["characterId", "seasonId"],
+      schema: {
+        characterId: "bytes32",
+        seasonId: "uint256",
+        finalRating: "int256",
+        wins: "uint256",
+        losses: "uint256",
+      },
+    },
+    ///////////////////////////////////// SOCIAL ///////////////////////////////////
+    SocialLink: {
+      key: ["characterId", "targetId"],
+      schema: {
+        characterId: "bytes32",
+        targetId: "bytes32",
+        linkType: "SocialLinkType",
+        createdAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// MAIL ///////////////////////////////////
+    Mail: {
+      key: ["mailId"],
+      schema: {
+        mailId: "uint256",
+        sender: "bytes32",       // characterId
+        recipient: "bytes32",    // characterId
+        goldAmount: "uint256",
+        itemId: "uint256",
+        itemAmount: "uint256",
+        sentAt: "uint256",
+        claimed: "bool",
+        message: "string",       // dynamic field must come last
+      },
+    },
+    ///////////////////////////////////// BANK STORAGE ///////////////////////////////////
+    // Extra inventory beyond equipped items
+    BankSlot: {
+      key: ["characterId", "itemId"],
+      schema: {
+        characterId: "bytes32",
+        itemId: "uint256",
+        amount: "uint256",
+      },
+    },
+    ///////////////////////////////////// BOUNTIES / DAILY QUESTS ///////////////////////////////////
+    Bounty: {
+      key: ["bountyId"],
+      schema: {
+        bountyId: "uint256",
+        targetMobId: "uint256",
+        requiredKills: "uint256",
+        goldReward: "uint256",
+        xpReward: "uint256",
+        active: "bool",
+      },
+    },
+    BountyProgress: {
+      key: ["characterId", "bountyId"],
+      schema: {
+        characterId: "bytes32",
+        bountyId: "uint256",
+        killCount: "uint256",
+        completed: "bool",
+        claimedAt: "uint256",
+      },
+    },
+    // Tracks daily reset for repeatable content
+    DailyReset: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        lastResetAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// ENCHANTMENTS ///////////////////////////////////
+    EnchantmentDefinition: {
+      key: ["enchantmentId"],
+      schema: {
+        enchantmentId: "uint256",
+        name: "string",
+        effects: "bytes32[]",
+      },
+    },
+    // Enchantment applied to a specific item instance
+    ItemEnchantment: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        enchantmentId: "uint256",
+        tier: "uint256",
+      },
+    },
+    ///////////////////////////////////// TALENTS ///////////////////////////////////
+    TalentPoints: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        availablePoints: "uint256",
+        totalEarned: "uint256",
+      },
+    },
+    TalentChoice: {
+      key: ["characterId", "talentId"],
+      schema: {
+        characterId: "bytes32",
+        talentId: "uint256",
+        level: "uint256",        // points invested in this talent
+      },
+    },
+    ///////////////////////////////////// DEATH PENALTY ///////////////////////////////////
+    DeathPenaltyConfig: {
+      key: [],
+      schema: {
+        goldLossPercent: "uint256",  // basis points (1000 = 10%)
+        enabled: "bool",
+      },
+    },
+    ///////////////////////////////////// PARTIES ///////////////////////////////////
+    Party: {
+      key: ["partyId"],
+      schema: {
+        partyId: "uint256",
+        leader: "bytes32",       // characterId
+        maxSize: "uint256",
+        createdAt: "uint256",
+      },
+    },
+    PartyMember: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        partyId: "uint256",
+        joinedAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// WORLD BOSSES / RAIDS ///////////////////////////////////
+    WorldBoss: {
+      key: ["bossId"],
+      schema: {
+        bossId: "uint256",
+        mobId: "uint256",        // references Mobs table for stats
+        currentHp: "int256",
+        maxHp: "int256",
+        spawnX: "uint16",
+        spawnY: "uint16",
+        spawnedAt: "uint256",
+        active: "bool",
+        goldReward: "uint256",
+        xpReward: "uint256",
+      },
+    },
+    // Tracks each player's contribution to a boss fight for proportional rewards
+    WorldBossContribution: {
+      key: ["bossId", "characterId"],
+      schema: {
+        bossId: "uint256",
+        characterId: "bytes32",
+        damageDealt: "uint256",
+      },
+    },
+    ///////////////////////////////////// WORLD EVENTS / SEASONS ///////////////////////////////////
+    // Global events — double XP weekends, invasions, seasonal competitions
+    WorldEvent: {
+      key: ["eventId"],
+      schema: {
+        eventId: "uint256",
+        eventType: "uint256",    // uint256 for flexibility (types TBD)
+        startAt: "uint256",
+        endAt: "uint256",
+        active: "bool",
+        name: "string",          // dynamic field last
+      },
+    },
+    EventParticipation: {
+      key: ["eventId", "characterId"],
+      schema: {
+        eventId: "uint256",
+        characterId: "bytes32",
+        score: "uint256",
+        completed: "bool",
+      },
+    },
+    ///////////////////////////////////// MAP EVENTS ///////////////////////////////////
+    // Individual events that pop up on the map — treasure chests, wandering merchants,
+    // mini-bosses, portals, ambushes, resource nodes, etc.
+    MapEvent: {
+      key: ["mapEventId"],
+      schema: {
+        mapEventId: "uint256",
+        eventType: "uint256",    // uint256 for flexibility (treasure, merchant, ambush, etc.)
+        x: "uint16",
+        y: "uint16",
+        spawnedAt: "uint256",
+        expiresAt: "uint256",    // 0 = no expiry
+        active: "bool",
+        goldReward: "uint256",
+        xpReward: "uint256",
+        itemReward: "uint256",   // itemId, 0 = no item
+        data: "bytes",           // dynamic field last — flexible payload per event type
+      },
+    },
+    // Tracks which players interacted with a map event
+    MapEventParticipation: {
+      key: ["mapEventId", "characterId"],
+      schema: {
+        mapEventId: "uint256",
+        characterId: "bytes32",
+        completedAt: "uint256",
+        rewarded: "bool",
+      },
+    },
+    ///////////////////////////////////// DIRECT TRADING ///////////////////////////////////
+    TradeSession: {
+      key: ["tradeId"],
+      schema: {
+        tradeId: "uint256",
+        initiator: "bytes32",    // characterId
+        target: "bytes32",       // characterId
+        status: "TradeStatus",
+        createdAt: "uint256",
+      },
+    },
+    // Each side can offer up to N item slots + gold
+    TradeOffer: {
+      key: ["tradeId", "slot"],
+      schema: {
+        tradeId: "uint256",
+        slot: "uint256",
+        offeredBy: "bytes32",    // characterId
+        itemId: "uint256",
+        amount: "uint256",
+        goldAmount: "uint256",
+      },
+    },
+    ///////////////////////////////////// ACHIEVEMENTS ///////////////////////////////////
+    AchievementDefinition: {
+      key: ["achievementId"],
+      schema: {
+        achievementId: "uint256",
+        points: "uint256",
+        name: "string",          // dynamic field last
+      },
+    },
+    AchievementUnlocked: {
+      key: ["characterId", "achievementId"],
+      schema: {
+        characterId: "bytes32",
+        achievementId: "uint256",
+        unlockedAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// QUESTS ///////////////////////////////////
+    Quest: {
+      key: ["questId"],
+      schema: {
+        questId: "uint256",
+        prereqQuestId: "uint256", // 0 = no prereq
+        xpReward: "uint256",
+        goldReward: "uint256",
+        itemReward: "uint256",    // itemId, 0 = no item
+        repeatable: "bool",
+        name: "string",           // dynamic field last
+      },
+    },
+    QuestProgress: {
+      key: ["characterId", "questId"],
+      schema: {
+        characterId: "bytes32",
+        questId: "uint256",
+        status: "QuestStatus",
+        startedAt: "uint256",
+        completedAt: "uint256",
+      },
+    },
+    // Individual objectives within a quest (kill X, collect Y, visit Z)
+    QuestObjective: {
+      key: ["questId", "objectiveId"],
+      schema: {
+        questId: "uint256",
+        objectiveId: "uint256",
+        targetType: "uint256",    // uint256 for flexibility (kill, collect, visit, etc.)
+        targetId: "uint256",      // mobId, itemId, tileId, etc.
+        requiredCount: "uint256",
+      },
+    },
+    QuestObjectiveProgress: {
+      key: ["characterId", "questId", "objectiveId"],
+      schema: {
+        characterId: "bytes32",
+        questId: "uint256",
+        objectiveId: "uint256",
+        currentCount: "uint256",
+      },
+    },
+    ///////////////////////////////////// PETS / COMPANIONS ///////////////////////////////////
+    Pet: {
+      key: ["petId"],
+      schema: {
+        petId: "uint256",
+        owner: "bytes32",        // characterId
+        petType: "uint256",      // uint256 for flexibility (types TBD)
+        level: "uint256",
+        xp: "uint256",
+        name: "string",          // dynamic field last
+      },
+    },
+    PetEquipped: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        petId: "uint256",
+      },
+    },
+    ///////////////////////////////////// TERRITORY / GUILD WARS ///////////////////////////////////
+    Territory: {
+      key: ["tileX", "tileY"],
+      schema: {
+        tileX: "uint16",
+        tileY: "uint16",
+        ownerGuildId: "uint256",
+        claimedAt: "uint256",
+        contested: "bool",
+        contestingGuildId: "uint256",
+        contestStartedAt: "uint256",
+      },
+    },
+    GuildWar: {
+      key: ["warId"],
+      schema: {
+        warId: "uint256",
+        attackerGuildId: "uint256",
+        defenderGuildId: "uint256",
+        startedAt: "uint256",
+        endedAt: "uint256",
+        kills1: "uint256",      // attacker kill count
+        kills2: "uint256",      // defender kill count
+        resolved: "bool",
+        winnerId: "uint256",    // guildId of winner, 0 = ongoing/draw
+      },
+    },
+    // Bonuses granted to guild members when guild owns territory
+    // e.g., +10% XP in owned tiles, +5% gold find, etc.
+    TerritoryBonus: {
+      key: ["tileX", "tileY"],
+      schema: {
+        tileX: "uint16",
+        tileY: "uint16",
+        xpBonusBps: "uint256",      // basis points (1000 = 10%)
+        goldBonusBps: "uint256",
+        dropRateBonusBps: "uint256",
+      },
+    },
+    // Guild-wide buffs purchased/activated by guild leader from treasury
+    // e.g., +5% XP for all members for 24h, costs 200 gold from treasury
+    GuildBuff: {
+      key: ["guildId", "boostType"],
+      schema: {
+        guildId: "uint256",
+        boostType: "BoostType",
+        multiplierBps: "uint256",    // basis points bonus (500 = 5%)
+        expiresAt: "uint256",
+        activatedBy: "bytes32",      // characterId of leader/officer who activated
+      },
+    },
+    // Configurable gold tax — guild leader sets % of member gold earnings sent to treasury
+    // Weekly cooperative objectives — leader picks 1 of 3 random contracts
+    GuildContract: {
+      key: ["guildId", "weekId"],
+      schema: {
+        guildId: "uint256",
+        weekId: "uint256",
+        contractType: "uint256",     // type of objective (kill, collect, trade, etc.)
+        target: "uint256",           // target count to complete
+        progress: "uint256",         // current progress
+        completed: "bool",
+        rewardClaimed: "bool",
+      },
+    },
+    // Seasonal competition scoring — 12-week seasons
+    GuildSeason: {
+      key: ["seasonId", "guildId"],
+      schema: {
+        seasonId: "uint256",
+        guildId: "uint256",
+        points: "uint256",
+        pveKills: "uint256",
+        pvpWins: "uint256",
+        tilesHeldAtEnd: "uint256",
+        warsWon: "uint256",
+        contractsCompleted: "uint256",
+      },
+    },
+    // Regear fund — member requests treasury gold after PvP death
+    RegearRequest: {
+      key: ["requestId"],
+      schema: {
+        requestId: "uint256",
+        guildId: "uint256",
+        requester: "bytes32",        // characterId
+        goldRequested: "uint256",
+        approved: "bool",
+        approvedBy: "bytes32",       // characterId of leader/officer
+        paidOut: "bool",
+        requestedAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// CHARACTER ABILITIES ///////////////////////////////////
+    AbilityDefinition: {
+      key: ["abilityId"],
+      schema: {
+        abilityId: "uint256",
+        cooldownSeconds: "uint256",
+        manaCost: "uint256",
+        minLevel: "uint256",
+        name: "string",          // dynamic field last
+        effects: "bytes32[]",    // dynamic field last
+      },
+    },
+    CharacterAbility: {
+      key: ["characterId", "abilityId"],
+      schema: {
+        characterId: "bytes32",
+        abilityId: "uint256",
+        level: "uint256",
+        lastUsed: "uint256",
+      },
+    },
+    ///////////////////////////////////// PRICE HISTORY (offchain) ///////////////////////////////////
+    PriceHistory: {
+      key: ["itemId", "timestamp"],
+      schema: {
+        itemId: "uint256",
+        timestamp: "uint256",
+        avgPrice: "uint256",
+        volume: "uint256",
+      },
+      type: "offchainTable",
+    },
+    ///////////////////////////////////// ITEM PROVENANCE & HISTORY ///////////////////////////////////
+    // Permanently records who crafted/forged an item
+    ItemProvenance: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        crafter: "bytes32",          // characterId who forged it (0 = monster drop)
+        forgedAt: "uint256",
+        method: "uint256",           // how it was created (drop, craft, quest reward, etc.)
+      },
+    },
+    // Full ownership/event chain — items accumulate story over time
+    ItemEvent: {
+      key: ["itemId", "eventIndex"],
+      schema: {
+        itemId: "uint256",
+        eventIndex: "uint256",
+        eventType: "uint256",        // traded, dropped, looted, equipped, enchanted, etc.
+        fromEntity: "bytes32",       // characterId or 0 (world/monster)
+        toEntity: "bytes32",         // characterId or 0
+        timestamp: "uint256",
+        goldValue: "uint256",        // price if traded, 0 otherwise
+      },
+    },
+    ///////////////////////////////////// PLAYER BOUNTIES ///////////////////////////////////
+    // Trustless assassination contracts — gold escrowed in contract
+    PlayerBounty: {
+      key: ["bountyId"],
+      schema: {
+        bountyId: "uint256",
+        placer: "bytes32",           // characterId who placed the bounty
+        target: "bytes32",           // characterId of the target
+        goldReward: "uint256",       // escrowed gold amount
+        claimedBy: "bytes32",       // characterId who killed the target (0 = unclaimed)
+        active: "bool",
+        placedAt: "uint256",
+        claimedAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// PLAYER CONTRACTS ///////////////////////////////////
+    // Player-created quests with escrowed gold rewards
+    PlayerContract: {
+      key: ["contractId"],
+      schema: {
+        contractId: "uint256",
+        creator: "bytes32",          // characterId
+        goldReward: "uint256",       // escrowed
+        fulfilled: "bool",
+        fulfilledBy: "bytes32",      // characterId
+        createdAt: "uint256",
+        expiresAt: "uint256",        // 0 = no expiry
+        description: "string",       // dynamic field last
+      },
+    },
+    // Requirements for a player contract (bring X of item Y, kill Z monsters, etc.)
+    ContractRequirement: {
+      key: ["contractId", "requirementIndex"],
+      schema: {
+        contractId: "uint256",
+        requirementIndex: "uint256",
+        requirementType: "uint256",  // item delivery, kill count, visit tile, etc.
+        targetId: "uint256",         // itemId, mobId, etc.
+        requiredAmount: "uint256",
+        currentAmount: "uint256",
+      },
+    },
+    ///////////////////////////////////// OATHS / BLOOD PACTS ///////////////////////////////////
+    // Sworn player-to-player commitments — breaking has permanent consequences
+    Oath: {
+      key: ["oathId"],
+      schema: {
+        oathId: "uint256",
+        player1: "bytes32",          // characterId
+        player2: "bytes32",          // characterId
+        oathType: "uint256",         // non-aggression, alliance, duel pact, etc.
+        createdAt: "uint256",
+        broken: "bool",
+        brokenBy: "bytes32",         // characterId of the oathbreaker
+        brokenAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// TIME-LOCKED VAULTS ///////////////////////////////////
+    // Provable scarcity — lock items/gold until a specific timestamp
+    TimeVault: {
+      key: ["vaultId"],
+      schema: {
+        vaultId: "uint256",
+        owner: "bytes32",            // characterId
+        unlockAt: "uint256",         // block timestamp when vault can be opened
+        goldAmount: "uint256",
+        itemId: "uint256",           // 0 = gold only
+        itemAmount: "uint256",
+        locked: "bool",
+        createdAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// GRAVESITES ///////////////////////////////////
+    // Permanent death markers on the map — the world remembers
+    Gravesite: {
+      key: ["gravesiteId"],
+      schema: {
+        gravesiteId: "uint256",
+        x: "uint16",
+        y: "uint16",
+        characterId: "bytes32",      // who died
+        killedBy: "bytes32",         // characterId or mobId
+        diedAt: "uint256",
+        isPvp: "bool",
+      },
+    },
+    ///////////////////////////////////// INSCRIPTIONS ///////////////////////////////////
+    // Permanent player marks on the world — first-to-arrive, memorials, graffiti
+    Inscription: {
+      key: ["inscriptionId"],
+      schema: {
+        inscriptionId: "uint256",
+        x: "uint16",
+        y: "uint16",
+        author: "bytes32",          // characterId
+        createdAt: "uint256",
+        message: "string",          // dynamic field last
+      },
+    },
+    ///////////////////////////////////// RUNE SOCKETS ///////////////////////////////////
+    // Runes are separate tokens that socket into items for composable modification
+    RuneDefinition: {
+      key: ["runeId"],
+      schema: {
+        runeId: "uint256",
+        rarity: "uint256",
+        name: "string",             // dynamic fields last
+        effects: "bytes32[]",
+      },
+    },
+    // Which rune is socketed into which item slot
+    ItemSocket: {
+      key: ["itemId", "socketIndex"],
+      schema: {
+        itemId: "uint256",
+        socketIndex: "uint256",
+        runeId: "uint256",           // 0 = empty socket
+      },
+    },
+    ///////////////////////////////////// WILLS / INHERITANCE ///////////////////////////////////
+    // Trustless transfer of assets after prolonged inactivity
+    CharacterWill: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        beneficiary: "bytes32",      // characterId who inherits
+        inactivityDays: "uint256",   // days of inactivity before will executes
+        executed: "bool",
+        executedAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// CHARACTER LEGACY ///////////////////////////////////
+    // Permanent record when a character dies or is retired
+    CharacterLegacy: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        diedAt: "uint256",           // 0 = still alive
+        killedBy: "bytes32",         // characterId or mobId
+        totalKills: "uint256",
+        totalDeaths: "uint256",
+        goldEarned: "uint256",
+        playTime: "uint256",         // total seconds played
+      },
+    },
+    ///////////////////////////////////// BUY ORDERS (Two-Sided Marketplace) ///////////////////////////////////
+    // Players post "I want X of item Y at Z gold each" with escrowed gold
+    BuyOrder: {
+      key: ["orderId"],
+      schema: {
+        orderId: "uint256",
+        buyer: "bytes32",            // characterId
+        itemId: "uint256",
+        pricePerUnit: "uint256",
+        quantity: "uint256",
+        filled: "uint256",
+        goldEscrowed: "uint256",
+        active: "bool",
+        createdAt: "uint256",
+        expiresAt: "uint256",        // 0 = no expiry
+      },
+    },
+    ///////////////////////////////////// PLAYER VENDOR STALLS ///////////////////////////////////
+    // Persistent player shops on the map — sell items while offline
+    PlayerVendor: {
+      key: ["vendorId"],
+      schema: {
+        vendorId: "uint256",
+        owner: "bytes32",            // characterId
+        x: "uint16",
+        y: "uint16",
+        active: "bool",
+        createdAt: "uint256",
+        maintenancePaidUntil: "uint256", // gold sink: daily upkeep
+        name: "string",             // dynamic field last
+      },
+    },
+    VendorListing: {
+      key: ["vendorId", "slot"],
+      schema: {
+        vendorId: "uint256",
+        slot: "uint256",
+        itemId: "uint256",
+        amount: "uint256",
+        pricePerUnit: "uint256",
+      },
+    },
+    VendorSale: {
+      key: ["vendorId", "saleIndex"],
+      schema: {
+        vendorId: "uint256",
+        saleIndex: "uint256",
+        buyer: "bytes32",
+        itemId: "uint256",
+        amount: "uint256",
+        totalPrice: "uint256",
+        timestamp: "uint256",
+      },
+      type: "offchainTable",
+    },
+    ///////////////////////////////////// LIFE SKILLS / GATHERING ///////////////////////////////////
+    LifeSkillDefinition: {
+      key: ["skillId"],
+      schema: {
+        skillId: "uint256",
+        maxLevel: "uint256",
+        name: "string",             // dynamic field last
+      },
+    },
+    CharacterLifeSkill: {
+      key: ["characterId", "skillId"],
+      schema: {
+        characterId: "bytes32",
+        skillId: "uint256",
+        level: "uint256",
+        xp: "uint256",
+      },
+    },
+    ResourceNode: {
+      key: ["nodeId"],
+      schema: {
+        nodeId: "uint256",
+        x: "uint16",
+        y: "uint16",
+        resourceItemId: "uint256",   // what it yields
+        requiredSkillId: "uint256",
+        requiredLevel: "uint256",
+        respawnSeconds: "uint256",
+        lastHarvestedAt: "uint256",
+        depleted: "bool",
+      },
+    },
+    // Links crafting recipes to life skill requirements
+    CraftingSkillRequirement: {
+      key: ["recipeId"],
+      schema: {
+        recipeId: "uint256",
+        requiredSkillId: "uint256",
+        requiredLevel: "uint256",
+        xpReward: "uint256",         // life skill XP from crafting
+      },
+    },
+    ///////////////////////////////////// PLAYER HOUSING ///////////////////////////////////
+    HousingPlot: {
+      key: ["plotId"],
+      schema: {
+        plotId: "uint256",
+        x: "uint16",
+        y: "uint16",
+        owner: "bytes32",            // characterId (0 = unclaimed)
+        tier: "uint256",
+        claimedAt: "uint256",
+        lastMaintenancePaid: "uint256",
+        maintenanceCostPerDay: "uint256", // gold sink
+      },
+    },
+    HousingFurniture: {
+      key: ["plotId", "slot"],
+      schema: {
+        plotId: "uint256",
+        slot: "uint256",
+        furnitureItemId: "uint256",
+        bonusType: "uint256",        // 0 = cosmetic only
+        bonusValue: "uint256",
+      },
+    },
+    ///////////////////////////////////// MOUNTS ///////////////////////////////////
+    MountDefinition: {
+      key: ["mountTypeId"],
+      schema: {
+        mountTypeId: "uint256",
+        speedBonus: "uint256",       // basis points
+        rarity: "uint256",
+        name: "string",             // dynamic field last
+      },
+    },
+    CharacterMount: {
+      key: ["mountId"],
+      schema: {
+        mountId: "uint256",
+        owner: "bytes32",            // characterId
+        mountTypeId: "uint256",
+        level: "uint256",
+        xp: "uint256",
+        name: "string",             // dynamic field last
+      },
+    },
+    MountEquipped: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        mountId: "uint256",          // 0 = no mount
+      },
+    },
+    MountLineage: {
+      key: ["mountId"],
+      schema: {
+        mountId: "uint256",
+        parent1: "uint256",          // mountId (0 = wild-caught)
+        parent2: "uint256",
+        generation: "uint256",
+        bornAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// TRANSMOG / APPEARANCE ///////////////////////////////////
+    AppearanceUnlocked: {
+      key: ["characterId", "itemId"],
+      schema: {
+        characterId: "bytes32",
+        itemId: "uint256",
+        unlockedAt: "uint256",
+      },
+    },
+    TransmogSlot: {
+      key: ["characterId", "slot"],
+      schema: {
+        characterId: "bytes32",
+        slot: "uint256",             // equipment slot (head, chest, weapon, etc.)
+        appearanceItemId: "uint256", // 0 = show real gear
+      },
+    },
+    DyeColor: {
+      key: ["characterId", "slot", "channel"],
+      schema: {
+        characterId: "bytes32",
+        slot: "uint256",
+        channel: "uint256",          // dye channel within equipment piece
+        colorId: "uint256",
+      },
+    },
+    ///////////////////////////////////// BESTIARY / COLLECTION LOG ///////////////////////////////////
+    BestiaryEntry: {
+      key: ["characterId", "mobId"],
+      schema: {
+        characterId: "bytes32",
+        mobId: "uint256",
+        killCount: "uint256",
+        firstKilledAt: "uint256",
+        knowledgeRank: "uint256",    // higher rank = small damage bonus vs this mob
+      },
+    },
+    DiscoveryLog: {
+      key: ["characterId", "discoveryType", "discoveryId"],
+      schema: {
+        characterId: "bytes32",
+        discoveryType: "uint256",    // monster, item, location, NPC, recipe
+        discoveryId: "uint256",      // mobId, itemId, tileId, etc.
+        discoveredAt: "uint256",
+      },
+    },
+    CollectionProgress: {
+      key: ["characterId", "categoryId"],
+      schema: {
+        characterId: "bytes32",
+        categoryId: "uint256",       // bestiary, items, locations, etc.
+        discovered: "uint256",
+        total: "uint256",
+      },
+    },
+    ///////////////////////////////////// MENTORING ///////////////////////////////////
+    Mentorship: {
+      key: ["mentorshipId"],
+      schema: {
+        mentorshipId: "uint256",
+        mentor: "bytes32",           // characterId
+        apprentice: "bytes32",       // characterId
+        startedAt: "uint256",
+        completedAt: "uint256",      // 0 = ongoing
+        apprenticeLevelAtStart: "uint256",
+        apprenticeLevelAtEnd: "uint256",
+        active: "bool",
+      },
+    },
+    MentorStats: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        totalMentored: "uint256",
+        activeMentees: "uint256",
+        mentorRank: "uint256",
+      },
+    },
+    ///////////////////////////////////// INSURANCE ///////////////////////////////////
+    InsurancePolicy: {
+      key: ["policyId"],
+      schema: {
+        policyId: "uint256",
+        owner: "bytes32",            // characterId
+        itemId: "uint256",
+        premiumPaid: "uint256",
+        payoutAmount: "uint256",
+        payoutPercentBps: "uint256",
+        expiresAt: "uint256",
+        claimed: "bool",
+        active: "bool",
+      },
+    },
+    InsuranceConfig: {
+      key: [],
+      schema: {
+        basePremiumRateBps: "uint256",
+        maxPayoutPercentBps: "uint256",
+        enabled: "bool",
+      },
+    },
+    ///////////////////////////////////// WORKERS / OFFLINE PROGRESSION ///////////////////////////////////
+    Worker: {
+      key: ["workerId"],
+      schema: {
+        workerId: "uint256",
+        owner: "bytes32",            // characterId
+        workerType: "uint256",       // miner, herbalist, craftsman, etc.
+        tier: "uint256",
+        level: "uint256",
+        xp: "uint256",
+        hiredAt: "uint256",
+        name: "string",             // dynamic field last
+      },
+    },
+    WorkerAssignment: {
+      key: ["workerId"],
+      schema: {
+        workerId: "uint256",
+        taskType: "uint256",         // gather, craft, sell
+        targetId: "uint256",         // nodeId, recipeId, etc.
+        startedAt: "uint256",
+        completesAt: "uint256",
+        claimed: "bool",
+        resultItemId: "uint256",
+        resultAmount: "uint256",
+      },
+    },
+    WorkerCapacity: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        maxWorkers: "uint256",
+        activeWorkers: "uint256",
+      },
+    },
+    ///////////////////////////////////// BLUEPRINTS / RECIPE DISCOVERY ///////////////////////////////////
+    BlueprintDefinition: {
+      key: ["blueprintId"],
+      schema: {
+        blueprintId: "uint256",
+        recipeId: "uint256",
+        isOriginal: "bool",          // true = infinite use, false = consumable copy
+        maxUses: "uint256",          // for copies (0 = infinite for originals)
+        rarity: "uint256",
+      },
+    },
+    CharacterBlueprint: {
+      key: ["characterId", "blueprintId"],
+      schema: {
+        characterId: "bytes32",
+        blueprintId: "uint256",
+        usesRemaining: "uint256",
+        discoveredAt: "uint256",
+      },
+    },
+    ///////////////////////////////////// COURIER / HAULING CONTRACTS ///////////////////////////////////
+    // Transport items from A to B — hauler puts up collateral
+    CourierContract: {
+      key: ["courierId"],
+      schema: {
+        courierId: "uint256",
+        creator: "bytes32",          // characterId
+        hauler: "bytes32",           // characterId (0 = open)
+        pickupX: "uint16",
+        pickupY: "uint16",
+        deliveryX: "uint16",
+        deliveryY: "uint16",
+        reward: "uint256",
+        collateral: "uint256",       // hauler escrow
+        createdAt: "uint256",
+        expiresAt: "uint256",
+        completedAt: "uint256",
+        failed: "bool",
+        active: "bool",
+        itemIds: "uint256[]",        // dynamic fields last
+        itemAmounts: "uint256[]",
+      },
+    },
+    ///////////////////////////////////// ARENA / STRUCTURED PVP ///////////////////////////////////
+    ArenaQueue: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        queueType: "uint256",        // 1v1, 2v2, 3v3
+        queuedAt: "uint256",
+        rating: "int256",
+      },
+    },
+    ArenaMatch: {
+      key: ["matchId"],
+      schema: {
+        matchId: "uint256",
+        matchType: "uint256",
+        startedAt: "uint256",
+        endedAt: "uint256",
+        winnerId: "bytes32",
+        seasonId: "uint256",
+        equalized: "bool",
+      },
+    },
+    ArenaMatchParticipant: {
+      key: ["matchId", "characterId"],
+      schema: {
+        matchId: "uint256",
+        characterId: "bytes32",
+        team: "uint256",
+        ratingBefore: "int256",
+        ratingAfter: "int256",
+        damageDealt: "uint256",
+      },
+    },
+    ArenaSeasonReward: {
+      key: ["seasonId", "tier"],
+      schema: {
+        seasonId: "uint256",
+        tier: "uint256",
+        minRating: "int256",
+        titleReward: "uint256",
+        itemReward: "uint256",
+        goldReward: "uint256",
+      },
+    },
+    ///////////////////////////////////// CRAFTING SPECIALIZATION ///////////////////////////////////
+    CraftingSpecialization: {
+      key: ["characterId", "specializationId"],
+      schema: {
+        characterId: "bytes32",
+        specializationId: "uint256",
+        level: "uint256",
+        xp: "uint256",
+        bonusYieldBps: "uint256",
+        materialReductionBps: "uint256",
+      },
+    },
+    CraftingSpecConfig: {
+      key: [],
+      schema: {
+        maxSpecializations: "uint256",
+        xpPerCraft: "uint256",
+      },
+    },
+    ///////////////////////////////////// ITEM SETS ///////////////////////////////////
+    ItemSetDefinition: {
+      key: ["setId"],
+      schema: {
+        setId: "uint256",
+        name: "string",              // dynamic field last
+        itemIds: "uint256[]",        // dynamic field last
+      },
+    },
+    ItemSetBonus: {
+      key: ["setId", "piecesRequired"],
+      schema: {
+        setId: "uint256",
+        piecesRequired: "uint256",   // 2-piece, 4-piece, etc.
+        bonusType: "uint256",
+        bonusValue: "int256",
+        bonusEffectId: "bytes32",    // 0 = pure stat, otherwise Effects reference
+      },
+    },
+    ItemSetMembership: {
+      key: ["itemId"],
+      schema: {
+        itemId: "uint256",
+        setId: "uint256",
+      },
+    },
+    ///////////////////////////////////// WAGERED DUELS ///////////////////////////////////
+    // Trustless PvP stakes — both sides escrow gold/items
+    Wager: {
+      key: ["wagerId"],
+      schema: {
+        wagerId: "uint256",
+        challenger: "bytes32",
+        opponent: "bytes32",
+        challengerGold: "uint256",
+        opponentGold: "uint256",
+        accepted: "bool",
+        resolved: "bool",
+        winner: "bytes32",
+        encounterId: "bytes32",      // links to CombatEncounter
+        createdAt: "uint256",
+        challengerItems: "uint256[]", // dynamic fields last
+        opponentItems: "uint256[]",
+      },
+    },
+    ///////////////////////////////////// KARMA / ALIGNMENT ///////////////////////////////////
+    Karma: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        score: "int256",             // negative = outlaw, positive = hero
+        lifetimePkKills: "uint256",
+        lifetimeHelpActions: "uint256",
+        alignment: "uint256",        // derived tier
+        lastMurderAt: "uint256",
+      },
+    },
+    KarmaThreshold: {
+      key: ["tier"],
+      schema: {
+        tier: "uint256",
+        minScore: "int256",
+        maxScore: "int256",
+        shopAccess: "bool",
+        guardProtection: "bool",
+        bountyMultiplierBps: "uint256",
+      },
+    },
+    ///////////////////////////////////// STRONGHOLD / PERSONAL BASE ///////////////////////////////////
+    Stronghold: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        level: "uint256",
+        xp: "uint256",
+        maxWorkers: "uint256",
+        maxCraftingStations: "uint256",
+        createdAt: "uint256",
+      },
+    },
+    StrongholdResearch: {
+      key: ["characterId", "researchId"],
+      schema: {
+        characterId: "bytes32",
+        researchId: "uint256",
+        startedAt: "uint256",
+        completesAt: "uint256",
+        completed: "bool",
+      },
+    },
+    ResearchDefinition: {
+      key: ["researchId"],
+      schema: {
+        researchId: "uint256",
+        prereqResearchId: "uint256",
+        durationSeconds: "uint256",
+        goldCost: "uint256",
+        levelRequired: "uint256",
+        name: "string",             // dynamic fields last
+        effects: "bytes32[]",
+      },
+    },
+    ///////////////////////////////////// SEASON PASS / BATTLE PASS ///////////////////////////////////
+    SeasonPass: {
+      key: ["seasonId"],
+      schema: {
+        seasonId: "uint256",
+        startAt: "uint256",
+        endAt: "uint256",
+        maxTier: "uint256",
+        active: "bool",
+        name: "string",             // dynamic field last
+      },
+    },
+    SeasonPassTier: {
+      key: ["seasonId", "tier"],
+      schema: {
+        seasonId: "uint256",
+        tier: "uint256",
+        xpRequired: "uint256",
+        rewardItemId: "uint256",
+        rewardGold: "uint256",
+        rewardTitleId: "uint256",
+      },
+    },
+    SeasonPassProgress: {
+      key: ["characterId", "seasonId"],
+      schema: {
+        characterId: "bytes32",
+        seasonId: "uint256",
+        currentXp: "uint256",
+        currentTier: "uint256",
+        claimedUpToTier: "uint256",
+      },
+    },
+    SeasonChallenge: {
+      key: ["seasonId", "challengeId"],
+      schema: {
+        seasonId: "uint256",
+        challengeId: "uint256",
+        challengeType: "uint256",
+        targetId: "uint256",
+        requiredCount: "uint256",
+        xpReward: "uint256",        // season XP, not character XP
+      },
+    },
+    SeasonChallengeProgress: {
+      key: ["characterId", "seasonId", "challengeId"],
+      schema: {
+        characterId: "bytes32",
+        seasonId: "uint256",
+        challengeId: "uint256",
+        currentCount: "uint256",
+        completed: "bool",
+      },
+    },
+    ///////////////////////////////////// PRICE ALERTS (offchain) ///////////////////////////////////
+    PriceAlert: {
+      key: ["alertId"],
+      schema: {
+        alertId: "uint256",
+        owner: "bytes32",            // characterId
+        itemId: "uint256",
+        targetPrice: "uint256",
+        isBelow: "bool",             // true = alert when below target
+        triggered: "bool",
+        createdAt: "uint256",
+      },
+      type: "offchainTable",
     },
   },
   excludeSystems: ["RngSystem"],

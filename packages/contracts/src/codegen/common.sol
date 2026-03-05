@@ -124,3 +124,40 @@ enum FragmentType {
   BetrayersTruth,
   BloodPrice
 }
+
+enum GuildRank {
+  None,
+  Member,
+  Officer,
+  Leader
+}
+
+enum BoostType {
+  None,
+  DropRate,
+  Experience,
+  GoldFind
+}
+
+enum SocialLinkType {
+  None,
+  Friend,
+  Rival,
+  Blocked
+}
+
+enum TradeStatus {
+  None,
+  Pending,
+  Accepted,
+  Cancelled,
+  Expired
+}
+
+enum QuestStatus {
+  None,
+  Available,
+  Active,
+  Completed,
+  Failed
+}
