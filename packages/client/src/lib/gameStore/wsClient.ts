@@ -166,6 +166,15 @@ export class WSClient {
         this.stopHeartbeat();
       } else if (this.ws?.readyState === WebSocket.OPEN) {
         this.startHeartbeat();
+      } else if (!this.disposed) {
+        // WS died while tab was hidden — reconnect immediately
+        console.log('[ws] Tab visible, connection dead — reconnecting');
+        this.reconnectAttempts = 0;
+        if (this.reconnectTimer) {
+          clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = null;
+        }
+        this.connect();
       }
     };
     document.addEventListener('visibilitychange', this.visibilityHandler);
