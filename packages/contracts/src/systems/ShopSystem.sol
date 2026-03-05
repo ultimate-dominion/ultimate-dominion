@@ -20,7 +20,9 @@ import {
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {_lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
+import {WORLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, GOLD_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
+import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
+import {_balancesTableId as _goldBalancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {Position} from "@codegen/index.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
@@ -71,9 +73,9 @@ contract ShopSystem is System, ReentrancyGuard {
 
         Shops.setGold(shopId, Shops.getGold(shopId) + price);
 
-        address recipient = UltimateDominionConfig.getFeeRecipient();
-        if (recipient == address(0)) recipient = _lootManagerAddress();
-        IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), recipient, price);
+        // Gold goes to loot manager as shop reserve (sells draw from this pool)
+        address lootManager = _lootManagerAddress();
+        IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), lootManager, price);
 
         IWorld(_world()).UD__dropItem(characterId, buyable[itemIndex], amount);
 
@@ -120,7 +122,8 @@ contract ShopSystem is System, ReentrancyGuard {
             ERC1155Owners.setBalance(_ownersTableId(ns), lootManager, itemId, lmBalance + amount);
         }
 
-        IWorld(_world()).UD__dropGoldToPlayer(characterId, sellTemps.price);
+        // Transfer gold from loot manager reserve (no minting)
+        _transferGoldFromReserve(Characters.getOwner(characterId), sellTemps.price);
 
         ShopSale.set(
             shopId,
@@ -157,7 +160,8 @@ contract ShopSystem is System, ReentrancyGuard {
             ERC1155Owners.setBalance(_ownersTableId(ns), lootManager, itemId, lmBalance + amount);
         }
 
-        IWorld(_world()).UD__dropGoldToPlayer(characterId, price);
+        // Transfer gold from loot manager reserve (no minting)
+        _transferGoldFromReserve(Characters.getOwner(characterId), price);
 
         ShopSale.set(shopId, characterId, itemId, block.timestamp, false, price);
     }
@@ -241,6 +245,19 @@ contract ShopSystem is System, ReentrancyGuard {
 
     function shopSystemAddress() external view returns (address) {
         return address(this);
+    }
+
+    /// @dev Transfer gold from loot manager reserve to player (no minting, no supply change)
+    function _transferGoldFromReserve(address to, uint256 amount) internal {
+        address lootManager = _lootManagerAddress();
+        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
+
+        uint256 reserveBalance = ERC20Balances.get(balancesTableId, lootManager);
+        if (reserveBalance < amount) revert ShopInsufficientGold();
+        ERC20Balances.set(balancesTableId, lootManager, reserveBalance - amount);
+
+        uint256 playerBalance = ERC20Balances.get(balancesTableId, to);
+        ERC20Balances.set(balancesTableId, to, playerBalance + amount);
     }
 
     function _lootManagerAddress() internal view returns (address) {
