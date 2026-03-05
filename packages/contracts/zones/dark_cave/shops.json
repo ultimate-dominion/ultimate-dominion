@@ -21,6 +21,7 @@
         { "itemName": "Venom Vial", "stock": 3, "restock": 3 },
         { "itemName": "Spore Cloud", "stock": 3, "restock": 3 },
         { "itemName": "Sapping Poison", "stock": 3, "restock": 3 },
+        { "itemName": "Flashpowder", "stock": 3, "restock": 3 },
         { "itemName": "Antidote", "stock": 5, "restock": 5 },
         { "itemName": "Padded Armor", "stock": 0, "restock": 0, "buyOnly": true },
         { "itemName": "Leather Jerkin", "stock": 0, "restock": 0, "buyOnly": true },
