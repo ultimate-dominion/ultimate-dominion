@@ -134,6 +134,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     currentBattle,
     dotActions,
     opponent,
+    opponentPredictedHp,
     statusEffectActions,
     userCharacterForBattleRendering,
   } = useBattle();
@@ -152,22 +153,15 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const onRest = useCallback(async () => {
     if (!character) return;
-    const prevHp = character.currentHp;
     const result = await restTx.execute(async () => {
       const { error, success } = await rest(character.id);
       if (error && !success) throw new Error(error);
       return true;
     });
     if (result !== undefined) {
-      for (let i = 0; i < 30; i++) {
-        const stats = getTableValue('Stats', character.id);
-        if (stats && toBigInt(stats.currentHp) !== prevHp) break;
-        await new Promise(r => setTimeout(r, 500));
-      }
-      await refreshCharacter();
       renderSuccess(REST_FLAVOR[Math.floor(Math.random() * REST_FLAVOR.length)]);
     }
-  }, [character, rest, restTx, refreshCharacter, renderSuccess]);
+  }, [character, rest, restTx, renderSuccess]);
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
   const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);
@@ -526,7 +520,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     displayedHp: opponentDisplayedHp,
     isDotTicking: isOpponentDotTicking,
   } = useBattleHpAnimation({
-    actualHp: opponent?.currentHp ?? 0n,
+    actualHp: currentBattle ? opponentPredictedHp : (opponent?.currentHp ?? 0n),
     dotDamage: latestOpponentDot?.totalDamage ?? 0n,
     dotTurnNumber: latestOpponentDot?.turnNumber ?? 0n,
     isInBattle: !!currentBattle,

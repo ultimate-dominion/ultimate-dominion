@@ -54,6 +54,7 @@ type BattleContextType = {
   onContinueToBattleOutcome: (cont: boolean) => void;
   onFleePvp: () => void;
   opponent: Character | Monster | null;
+  opponentPredictedHp: bigint;
   statusEffectActions: StatusAction[];
   userCharacterForBattleRendering: Character | null;
 };
@@ -72,6 +73,7 @@ const BattleContext = createContext<BattleContextType>({
   onContinueToBattleOutcome: () => {},
   onFleePvp: () => {},
   opponent: null,
+  opponentPredictedHp: 0n,
   statusEffectActions: [],
   userCharacterForBattleRendering: null,
 });
@@ -344,6 +346,18 @@ export const BattleProvider = ({
     [allAttackOutcomes, currentBattle],
   );
 
+  const opponentPredictedHp = useMemo(() => {
+    if (!opponent) return 0n;
+    let totalDamage = 0n;
+    for (const outcome of currentBattleAttackOutcomes) {
+      if (outcome.defenderId.toLowerCase() === opponent.id.toLowerCase()) {
+        totalDamage += outcome.attackerDamageDelt;
+      }
+    }
+    const predicted = opponent.maxHp - totalDamage;
+    return predicted > 0n ? predicted : 0n;
+  }, [currentBattleAttackOutcomes, opponent]);
+
   // Reactive: re-renders when any EncounterEntity row changes (status effects applied)
   const encounterEntityTable = useGameTable('EncounterEntity');
 
@@ -481,6 +495,7 @@ export const BattleProvider = ({
       onContinueToBattleOutcome,
       onFleePvp,
       opponent,
+      opponentPredictedHp,
       statusEffectActions,
       userCharacterForBattleRendering,
     }),
@@ -497,6 +512,7 @@ export const BattleProvider = ({
       onContinueToBattleOutcome,
       onFleePvp,
       opponent,
+      opponentPredictedHp,
       statusEffectActions,
       userCharacterForBattleRendering,
     ],
