@@ -89,16 +89,40 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
     },
   });
 
-  // Wait a moment for initial sync to populate tables, then discover schema
+  // Initial table discovery — wait for sync to populate some tables
   console.log('[sync] Waiting for initial table discovery...');
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  handle.tables = await discoverTables();
-  handle.tableNameMap = buildTableNameMap(handle.tables);
+  const refreshTableMap = async (label: string) => {
+    handle.tables = await discoverTables();
+    handle.tableNameMap = buildTableNameMap(handle.tables);
+    broadcaster.setTableNameMap(handle.tableNameMap);
+    console.log(`[sync] ${label}: discovered ${handle.tables.size} tables`);
+    for (const [logical, physical] of handle.tableNameMap) {
+      console.log(`  ${logical} → ${physical}`);
+    }
+  };
 
-  console.log(`[sync] Discovered ${handle.tables.size} tables in schema "${config.world.address.toLowerCase()}"`);
-  for (const [logical, physical] of handle.tableNameMap) {
-    console.log(`  ${logical} → ${physical}`);
+  await refreshTableMap('Initial discovery');
+
+  // Re-discover tables once sync catches up to chain head.
+  // On fresh deploys the initial 5s may not be enough to sync all table
+  // creation events, causing tables like items__owners to be missed.
+  const chainHead = await publicClient.getBlockNumber();
+  if (BigInt(handle.latestBlockNumber) < chainHead) {
+    console.log(`[sync] Sync at block ${handle.latestBlockNumber}, chain head ${chainHead} — scheduling rediscovery`);
+    const checkInterval = setInterval(async () => {
+      if (BigInt(handle.latestBlockNumber) >= chainHead) {
+        clearInterval(checkInterval);
+        const prevCount = handle.tables.size;
+        await refreshTableMap('Post-catchup rediscovery');
+        if (handle.tables.size > prevCount) {
+          console.log(`[sync] Found ${handle.tables.size - prevCount} new tables after catchup`);
+        }
+      }
+    }, 2000);
+    // Safety: don't poll forever if something goes wrong
+    setTimeout(() => clearInterval(checkInterval), 120_000);
   }
 
   return handle;
