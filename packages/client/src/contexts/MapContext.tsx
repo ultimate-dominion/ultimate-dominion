@@ -539,31 +539,17 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
     const result = await spawnTx.execute(() => spawn(character.id));
 
-    if (result) {
-      // TX succeeded — notify queue that this player spawned
+    if (result?.success) {
+      // TX receipt confirmed on-chain success — update UI immediately.
+      // The store's reactive path (useGameValue → Spawned) will also
+      // fire once the splice resolves, but don't wait for it.
+      setSpawnConfirmed(true);
+      setIsWaitingForSpawn(false);
+      refreshCharacter();
       reportSpawned().catch(() => {});
-
-      // Fallback: poll the store for the Spawned update in case the
-      // reactive subscription doesn't fire (stale tab, re-hydration race).
-      const entityId = character.id;
-      let attempts = 0;
-      const poll = setInterval(() => {
-        attempts++;
-        const val = getTableValue('Spawned', entityId);
-        if (val?.spawned || attempts >= 20) {
-          clearInterval(poll);
-          if (val?.spawned) {
-            setSpawnConfirmed(true);
-            setIsWaitingForSpawn(false);
-            refreshCharacter();
-          }
-        }
-      }, 500);
     } else {
-      // TX failed, clear immediately
       setIsWaitingForSpawn(false);
     }
-    // Don't clear — effect clears when isSpawned becomes true
   }, [
     character,
     delegatorAddress,
