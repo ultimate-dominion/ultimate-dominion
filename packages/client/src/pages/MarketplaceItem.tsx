@@ -28,6 +28,7 @@ import {
   encodeUint256Key,
   getTableValue,
   useGameConfig,
+  useGameTable,
 } from '../lib/gameStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -107,6 +108,7 @@ export const MarketplaceItem = (): JSX.Element => {
     isRefreshing,
     refreshCharacter,
   } = useCharacter();
+  const itemsOwnersTable = useGameTable('ItemsOwners');
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const createOrderTx = useTransaction({
@@ -213,7 +215,8 @@ export const MarketplaceItem = (): JSX.Element => {
 
     const itemOwner = getTableValue('ItemsOwners', compositeKey);
     return itemOwner ? itemOwner.balance.toString() : '0';
-  }, [selectedItem, userCharacter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItem, userCharacter, itemsOwnersTable]);
 
   const invalidOrderPrice = useMemo(() => {
     return !(parseEther(orderPrice) > BigInt('0'));
