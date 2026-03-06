@@ -130,25 +130,23 @@ export const GameBoard = (): JSX.Element => {
     queueStatus,
   ]);
 
-  // Open equip info modal if character has no experience and no equipped items
+  // Show welcome modal for brand-new characters
   useEffect(() => {
     if (!character) return;
 
-    const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.id}`;
+    const welcomeSeenKey = `welcome-seen-${worldContract.address}-${character.id}`;
+    if (localStorage.getItem(welcomeSeenKey)) return;
 
-    const hasSeenEquipInfo = localStorage.getItem(equipInfoSeenKey);
-    if (hasSeenEquipInfo) return;
-
-    if (character.experience === BigInt(0) && !isMoveEquipped) {
+    if (character.experience === BigInt(0)) {
       onOpenEquipInfoModal();
     }
-  }, [character, isMoveEquipped, onOpenEquipInfoModal, worldContract]);
+  }, [character, onOpenEquipInfoModal, worldContract]);
 
   const onAcknowledgeEquipInfo = useCallback(() => {
     if (!character) return;
 
-    const equipInfoSeenKey = `equip-info-seen-${worldContract.address}-${character.id}`;
-    localStorage.setItem(equipInfoSeenKey, 'true');
+    const welcomeSeenKey = `welcome-seen-${worldContract.address}-${character.id}`;
+    localStorage.setItem(welcomeSeenKey, 'true');
     onCloseEquipInfoModal();
   }, [character, onCloseEquipInfoModal, worldContract]);
 
@@ -282,25 +280,14 @@ export const GameBoard = (): JSX.Element => {
       </Box>
 
       <InfoModal
-        heading="Welcome to the game board!"
+        heading="Welcome to Ultimate Dominion"
         isOpen={isEquipInfoModalOpen}
         onClose={onAcknowledgeEquipInfo}
       >
         <Text>
-          In order to start battling, you must have at least 1 weapon or spell
-          equipped. Go to your{' '}
-          <Text
-            as={Link}
-            color="blue"
-            onClick={onAcknowledgeEquipInfo}
-            to={`/characters/${character?.id}`}
-            _hover={{
-              textDecoration: 'underline',
-            }}
-          >
-            character page
-          </Text>{' '}
-          to equip a move.
+          Your character is ready. Spawn onto the map to begin exploring the
+          Dark Cave. Move carefully — monsters lurk beyond the safety zone, and
+          death has consequences.
         </Text>
       </InfoModal>
       <InfoModal

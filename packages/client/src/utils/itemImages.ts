@@ -24,6 +24,17 @@ const ITEM_IMAGES: Record<string, string> = {
   'Necrotic Staff': '/images/items/necrotic-staff.png',
   'Earthshaker Maul': '/images/items/earthshaker-maul.png',
   'Dragonfire Scepter': '/images/items/dragonfire-scepter.png',
+  // Dark Cave armor
+  'Tattered Cloth': '/images/items/tattered-cloth.png',
+  'Worn Leather Vest': '/images/items/worn-leather-vest.png',
+  'Rusty Chainmail': '/images/items/rusty-chainmail.png',
+  'Padded Armor': '/images/items/padded-armor.png',
+  'Leather Jerkin': '/images/items/leather-jerkin.png',
+  'Apprentice Robes': '/images/items/apprentice-robes.png',
+  'Studded Leather': '/images/items/studded-leather.png',
+  'Scout Armor': '/images/items/scout-armor.png',
+  'Acolyte Vestments': '/images/items/acolyte-vestments.png',
+  'Ranger Leathers': '/images/items/ranger-leathers.png',
 };
 
 /**

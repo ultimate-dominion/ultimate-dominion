@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { usePublicClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import {
@@ -28,6 +29,14 @@ import {
   type SpellTemplate,
   type WeaponTemplate,
 } from '../utils/types';
+
+const erc1155UriAbi = [{
+  name: 'uri',
+  type: 'function',
+  stateMutability: 'view',
+  inputs: [{ name: 'tokenId', type: 'uint256' }],
+  outputs: [{ name: '', type: 'string' }],
+}] as const;
 
 type ItemsContextType = {
   armorTemplates: ArmorTemplate[];
@@ -62,9 +71,11 @@ export const ItemsProvider = ({
   const itemsTable = useGameTable('Items');
   const hydrated = useGameStore((s) => s.hydrated);
   const baseURIRow = useGameConfig('ItemsMetadataURI');
+  const configRow = useGameConfig('UltimateDominionConfig');
+  const publicClient = usePublicClient();
 
   const fetchAllArmor = useCallback(
-    async (armorIds: bigint[]): Promise<ArmorTemplate[]> => {
+    async (armorIds: bigint[], uriOverrides?: Record<string, string>): Promise<ArmorTemplate[]> => {
       const armorStatsTable = getTableEntries('ArmorStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const tokenURITable = getTableEntries('ItemsURIStorage');
@@ -78,7 +89,7 @@ export const ItemsProvider = ({
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? '');
+          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
 
           let metadata = { name: `Armor #${armorId}`, description: '', image: '' };
           try {
@@ -117,7 +128,7 @@ export const ItemsProvider = ({
   );
 
   const fetchAllConsumables = useCallback(
-    async (consumableIds: bigint[]): Promise<ConsumableTemplate[]> => {
+    async (consumableIds: bigint[], uriOverrides?: Record<string, string>): Promise<ConsumableTemplate[]> => {
       const consumableStatsTable = getTableEntries('ConsumableStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const statusEffectStatsTable = getTableEntries('StatusEffectStats');
@@ -133,7 +144,7 @@ export const ItemsProvider = ({
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? '');
+          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
 
           // effects is a bytes32[] stored as string[]
           const effects = Array.isArray(consumableRow?.effects)
@@ -210,7 +221,7 @@ export const ItemsProvider = ({
   );
 
   const fetchAllSpells = useCallback(
-    async (spellIds: bigint[]): Promise<SpellTemplate[]> => {
+    async (spellIds: bigint[], uriOverrides?: Record<string, string>): Promise<SpellTemplate[]> => {
       const spellStatsTable = getTableEntries('SpellStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const tokenURITable = getTableEntries('ItemsURIStorage');
@@ -224,7 +235,7 @@ export const ItemsProvider = ({
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? '');
+          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
 
           const effects = Array.isArray(spellRow?.effects)
             ? (spellRow.effects as string[])
@@ -266,7 +277,7 @@ export const ItemsProvider = ({
   );
 
   const fetchAllWeapons = useCallback(
-    async (weaponIds: bigint[]): Promise<WeaponTemplate[]> => {
+    async (weaponIds: bigint[], uriOverrides?: Record<string, string>): Promise<WeaponTemplate[]> => {
       const weaponStatsTable = getTableEntries('WeaponStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const tokenURITable = getTableEntries('ItemsURIStorage');
@@ -280,7 +291,7 @@ export const ItemsProvider = ({
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? '');
+          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
 
           const effects = Array.isArray(weaponRow?.effects)
             ? (weaponRow.effects as string[])
@@ -348,6 +359,41 @@ export const ItemsProvider = ({
           };
         });
 
+        // Fallback: read URIs directly from chain if ItemsURIStorage is empty
+        // (MUD's syncToPostgres doesn't sync tables with only dynamic fields)
+        let uriOverrides: Record<string, string> | undefined;
+        const tokenURITableSize = Object.keys(getTableEntries('ItemsURIStorage')).length;
+        if (tokenURITableSize === 0 && publicClient && configRow?.items) {
+          try {
+            console.info('[ItemsContext] ItemsURIStorage empty, reading URIs from chain...');
+            const itemsAddress = configRow.items as `0x${string}`;
+            const baseURI = String(baseURIRow?.uri ?? '');
+            const results = await publicClient.multicall({
+              contracts: allItemIds.map(({ itemId }) => ({
+                address: itemsAddress,
+                abi: erc1155UriAbi,
+                functionName: 'uri' as const,
+                args: [itemId],
+              })),
+            });
+            uriOverrides = {};
+            for (let i = 0; i < results.length; i++) {
+              if (results[i].status === 'success') {
+                let uri = results[i].result as string;
+                // Strip baseURI prefix to get raw tokenURI (e.g. "armor:tattered_cloth")
+                if (baseURI && uri.startsWith(baseURI)) {
+                  uri = uri.slice(baseURI.length);
+                }
+                const keyBytes = encodeUint256Key(allItemIds[i].itemId);
+                uriOverrides[keyBytes] = uri;
+              }
+            }
+            console.info(`[ItemsContext] Read ${Object.keys(uriOverrides).length} URIs from chain`);
+          } catch (e) {
+            console.warn('[ItemsContext] Failed to read URIs from chain:', e);
+          }
+        }
+
         const armorIds = allItemIds
           .filter(({ itemType }) => itemType === ItemType.Armor)
           .map(({ itemId }) => itemId);
@@ -363,10 +409,10 @@ export const ItemsProvider = ({
 
         const [armorResult, weaponResult, consumableResult, spellResult] =
           await Promise.allSettled([
-            fetchAllArmor(armorIds),
-            fetchAllWeapons(weaponIds),
-            fetchAllConsumables(consumableIds),
-            fetchAllSpells(spellIds),
+            fetchAllArmor(armorIds, uriOverrides),
+            fetchAllWeapons(weaponIds, uriOverrides),
+            fetchAllConsumables(consumableIds, uriOverrides),
+            fetchAllSpells(spellIds, uriOverrides),
           ]);
 
         if (cancelled) return;
@@ -408,12 +454,15 @@ export const ItemsProvider = ({
 
     return () => { cancelled = true; };
   }, [
+    baseURIRow,
+    configRow,
     hydrated,
     itemsTable,
     fetchAllArmor,
     fetchAllConsumables,
     fetchAllSpells,
     fetchAllWeapons,
+    publicClient,
     renderError,
   ]);
 

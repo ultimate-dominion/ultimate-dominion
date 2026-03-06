@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { hexToString, zeroHash } from 'viem';
@@ -131,11 +132,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   const spawnedData = useGameValue('Spawned', character?.id);
   const [spawnConfirmed, setSpawnConfirmed] = useState(false);
+  const wasSpawnedRef = useRef(false);
   const isSpawned = Boolean(spawnedData?.spawned) || spawnConfirmed;
 
-  // Reset spawnConfirmed when character changes (e.g. death/despawn)
+  // Track when store confirms spawn, and reset only on actual despawn
   useEffect(() => {
-    if (!spawnedData?.spawned) setSpawnConfirmed(false);
+    if (spawnedData?.spawned) {
+      wasSpawnedRef.current = true;
+    } else if (wasSpawnedRef.current) {
+      // Was spawned, now isn't — real despawn (death/logout)
+      setSpawnConfirmed(false);
+      wasSpawnedRef.current = false;
+    }
   }, [spawnedData?.spawned]);
 
   // Filtered entity lists computed from reactive tables
