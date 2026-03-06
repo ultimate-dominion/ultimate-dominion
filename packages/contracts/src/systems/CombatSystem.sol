@@ -284,7 +284,8 @@ contract CombatSystem is System {
                 // Base damage with parameterized scaling
                 damage = CombatMath.calculateWeaponDamage(
                     attackStats, attackerPrimary, defenderPrimary, weapon, rnChunks[2], crit, scalingMod
-                ) - CombatMath.calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
+                );
+                damage = damage - CombatMath.calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
                 damage = damage < int256(0) ? int256(0) : damage;
 
                 // Crit multiplier

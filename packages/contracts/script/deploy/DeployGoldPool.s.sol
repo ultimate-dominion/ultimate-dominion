@@ -70,7 +70,11 @@ contract DeployGoldPool is Script {
     address constant UNISWAP_V3_FACTORY = 0x33128a8fC17869897dcE68Ed026d694621f6FDfD;
     address constant POSITION_MANAGER = 0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1;
     address constant WETH = BASE_WETH;
-    uint24 constant POOL_FEE = DEFAULT_POOL_FEE; // 1% fee tier
+    uint24 immutable POOL_FEE;
+
+    constructor() {
+        POOL_FEE = uint24(vm.envOr("POOL_FEE", uint256(DEFAULT_POOL_FEE)));
+    }
 
     function run(address worldAddress) external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -129,8 +133,8 @@ contract DeployGoldPool is Script {
             uint160 sqrtPriceX96;
             if (goldIsToken0) {
                 // price = WETH/GOLD = 1/250000 (very small number, gold is cheap vs WETH)
-                // sqrt(1/250000) * 2^96 ≈ 158456325028528675187 (much smaller than 2^96)
-                sqrtPriceX96 = uint160(vm.envOr("SQRT_PRICE_X96", uint256(158456325028528675187)));
+                // sqrt(1/250000) * 2^96 ≈ 158456325028528678485622784
+                sqrtPriceX96 = uint160(vm.envOr("SQRT_PRICE_X96", uint256(158456325028528678485622784)));
             } else {
                 // price = GOLD/WETH = 250000 (large number)
                 // sqrt(250000) * 2^96 ≈ 39614081257132168796771975168000
@@ -151,12 +155,11 @@ contract DeployGoldPool is Script {
 
         // 6. Mint liquidity position
         // ±20% range around initial price for concentrated liquidity
-        // For 1% fee tier, tick spacing = 200
-        // We use a wide range: tickLower = -887200, tickUpper = 887200 (full range for safety)
-        // Production should use tighter range for capital efficiency
-        int24 tickSpacing = 200; // 1% fee tier tick spacing
-        int24 tickLower = (-887200 / tickSpacing) * tickSpacing; // Round to tick spacing
-        int24 tickUpper = (887200 / tickSpacing) * tickSpacing;
+        // Tick spacing depends on fee tier: 100→1, 500→10, 3000→60, 10000→200
+        int24 tickSpacing = POOL_FEE == 10000 ? int24(200) : POOL_FEE == 3000 ? int24(60) : POOL_FEE == 500 ? int24(10) : int24(1);
+        // Full range for initial seeding; production should use tighter range for capital efficiency
+        int24 tickLower = (-887272 / tickSpacing) * tickSpacing;
+        int24 tickUpper = (887272 / tickSpacing) * tickSpacing;
 
         (uint256 amount0Desired, uint256 amount1Desired) = goldIsToken0
             ? (goldAmount, ethAmount)

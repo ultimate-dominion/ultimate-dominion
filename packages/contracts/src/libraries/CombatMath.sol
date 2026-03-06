@@ -199,7 +199,8 @@ library CombatMath {
     {
         int256 baseDifference = (attackerStat * int256(attackModifier)) - (defenderStat * int256(WAD));
         if (baseDifference > 0) {
-            int256 _unroundedDamage = baseDifference + baseDamage;
+            // Halve the stat bonus to prevent one-shot kills at high stat advantages
+            int256 _unroundedDamage = (baseDifference / 2) + baseDamage;
             totalDamage = Math.roundInt(_unroundedDamage, int256(WAD)) / int256(WAD);
         } else if (
             baseDamage > int256(0) && baseDifference < int256(0)
@@ -310,8 +311,11 @@ library CombatMath {
         returns (int256)
     {
         if (damage <= 0) return int256(0);
-        int256 resist = defenderIntelligence / 5;
-        if (resist < 0) resist = 0;
+        // 2% damage reduction per INT point, capped at 40%
+        int256 resistPct = defenderIntelligence * 2;
+        if (resistPct > 40) resistPct = 40;
+        if (resistPct < 0) resistPct = 0;
+        int256 resist = (damage * resistPct) / 100;
         if (resist >= damage) resist = damage - 1;
         return resist;
     }

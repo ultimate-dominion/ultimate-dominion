@@ -974,28 +974,29 @@ contract PostDeploy is Script {
     }
 
     function _setLevels() internal {
-        // Early game (1-10): Fast progression
-        Levels.setExperience(1, 300);
-        Levels.setExperience(2, 900);
-        Levels.setExperience(3, 2700);
-        Levels.setExperience(4, 6500);
-        Levels.setExperience(5, 14000);
-        Levels.setExperience(6, 23000);
-        Levels.setExperience(7, 34000);
-        Levels.setExperience(8, 48000);
-        Levels.setExperience(9, 64000);
-        Levels.setExperience(10, 85000);
+        // Early game (1-10): Fast to chat (L3), steep grind to class select (L10)
+        // ~29 gameplay hours to L10, hardcore ~1 week, medium ~3 weeks, casual ~8 weeks
+        Levels.setExperience(1, 500);
+        Levels.setExperience(2, 2000);
+        Levels.setExperience(3, 5500);
+        Levels.setExperience(4, 25000);
+        Levels.setExperience(5, 85000);
+        Levels.setExperience(6, 200000);
+        Levels.setExperience(7, 450000);
+        Levels.setExperience(8, 900000);
+        Levels.setExperience(9, 1600000);
+        Levels.setExperience(10, 2500000);
 
-        // Mid game (11-50): Moderate progression
-        uint256 baseExp = 85000;
+        // Mid game (11-50): Moderate progression (scaled ~30x from old curve)
+        uint256 baseExp = 2500000;
         for (uint256 level = 11; level <= 50; level++) {
-            baseExp = baseExp + (level * 5000);
+            baseExp = baseExp + (level * 150000);
             Levels.setExperience(level, baseExp);
         }
 
-        // Late game (51-100): Slow progression
+        // Late game (51-100): Slow progression (scaled ~30x from old curve)
         for (uint256 level = 51; level <= 100; level++) {
-            baseExp = baseExp + (level * 15000);
+            baseExp = baseExp + (level * 450000);
             Levels.setExperience(level, baseExp);
         }
     }

@@ -277,11 +277,12 @@ contract CombatMathTest is Test {
     }
 
     function testMagicResistance() public {
-        // Normal case: defINT=25, damage=10 -> resist = 25/5 = 5
-        assertEq(CombatMath.calculateMagicResistance(25, 10), 5);
+        // New formula: 2% per INT point, capped at 40%
+        // defINT=25, damage=10 -> resistPct=min(50,40)=40 -> resist=10*40/100=4
+        assertEq(CombatMath.calculateMagicResistance(25, 10), 4);
 
-        // Resist can't exceed damage-1: defINT=100, damage=5 -> resist=20 but capped to 4
-        assertEq(CombatMath.calculateMagicResistance(100, 5), 4);
+        // High INT, low damage -> capped at damage-1: defINT=100, damage=5 -> resistPct=40 -> resist=5*40/100=2
+        assertEq(CombatMath.calculateMagicResistance(100, 5), 2);
 
         // No resistance on zero/negative damage
         assertEq(CombatMath.calculateMagicResistance(20, 0), 0);

@@ -4,12 +4,12 @@
       "name": "Cave Rat",
       "metadataUri": "monster:cave_rat",
       "stats": {
-        "agility": 6,
+        "agility": 7,
         "armor": 0,
         "class": 1,
         "experience": 225,
-        "hitPoints": 10,
-        "intelligence": 2,
+        "hitPoints": 12,
+        "intelligence": 3,
         "inventoryNames": [
           "Razor Claws",
           "Broken Sword",
@@ -26,19 +26,19 @@
           "Bent Nail"
         ],
         "level": 1,
-        "strength": 3
+        "strength": 4
       }
     },
     {
       "name": "Fungal Shaman",
       "metadataUri": "monster:fungal_shaman",
       "stats": {
-        "agility": 4,
+        "agility": 5,
         "armor": 0,
         "class": 2,
         "experience": 400,
-        "hitPoints": 11,
-        "intelligence": 8,
+        "hitPoints": 14,
+        "intelligence": 9,
         "inventoryNames": [
           "Elemental Burst",
           "Cracked Wand",
@@ -56,19 +56,19 @@
           "Bent Nail"
         ],
         "level": 2,
-        "strength": 3
+        "strength": 4
       }
     },
     {
       "name": "Cavern Brute",
       "metadataUri": "monster:cavern_brute",
       "stats": {
-        "agility": 4,
+        "agility": 5,
         "armor": 1,
         "class": 0,
         "experience": 550,
-        "hitPoints": 18,
-        "intelligence": 3,
+        "hitPoints": 22,
+        "intelligence": 4,
         "inventoryNames": [
           "Stone Fist",
           "Iron Axe",
@@ -87,19 +87,19 @@
           "Tattered Hide"
         ],
         "level": 3,
-        "strength": 9
+        "strength": 11
       }
     },
     {
       "name": "Crystal Elemental",
       "metadataUri": "monster:crystal_elemental",
       "stats": {
-        "agility": 5,
+        "agility": 6,
         "armor": 1,
         "class": 2,
         "experience": 800,
-        "hitPoints": 16,
-        "intelligence": 10,
+        "hitPoints": 20,
+        "intelligence": 12,
         "inventoryNames": [
           "Elemental Burst",
           "Channeling Rod",
@@ -120,19 +120,19 @@
           "Tattered Hide"
         ],
         "level": 4,
-        "strength": 4
+        "strength": 5
       }
     },
     {
       "name": "Cave Troll",
       "metadataUri": "monster:cave_troll",
       "stats": {
-        "agility": 6,
-        "armor": 2,
+        "agility": 8,
+        "armor": 3,
         "class": 0,
         "experience": 1000,
-        "hitPoints": 26,
-        "intelligence": 5,
+        "hitPoints": 32,
+        "intelligence": 6,
         "inventoryNames": [
           "Crushing Slam",
           "Steel Mace",
@@ -154,19 +154,19 @@
           "Cave Moss"
         ],
         "level": 5,
-        "strength": 11
+        "strength": 14
       }
     },
     {
       "name": "Phase Spider",
       "metadataUri": "monster:phase_spider",
       "stats": {
-        "agility": 13,
+        "agility": 15,
         "armor": 0,
         "class": 1,
         "experience": 1325,
-        "hitPoints": 23,
-        "intelligence": 6,
+        "hitPoints": 28,
+        "intelligence": 7,
         "inventoryNames": [
           "Venomous Bite",
           "Recurve Bow",
@@ -188,19 +188,19 @@
           "Cave Moss"
         ],
         "level": 6,
-        "strength": 8
+        "strength": 10
       }
     },
     {
       "name": "Lich Acolyte",
       "metadataUri": "monster:lich_acolyte",
       "stats": {
-        "agility": 7,
+        "agility": 9,
         "armor": 0,
         "class": 2,
         "experience": 2000,
-        "hitPoints": 25,
-        "intelligence": 15,
+        "hitPoints": 32,
+        "intelligence": 17,
         "inventoryNames": [
           "Dark Magic",
           "Mage Staff",
@@ -223,19 +223,19 @@
           "Rat Tooth"
         ],
         "level": 7,
-        "strength": 6
+        "strength": 8
       }
     },
     {
       "name": "Stone Giant",
       "metadataUri": "monster:stone_giant",
       "stats": {
-        "agility": 8,
-        "armor": 3,
+        "agility": 10,
+        "armor": 4,
         "class": 0,
         "experience": 2500,
-        "hitPoints": 40,
-        "intelligence": 7,
+        "hitPoints": 48,
+        "intelligence": 9,
         "inventoryNames": [
           "Crushing Slam",
           "Warhammer",
@@ -261,19 +261,19 @@
           "Rat Tooth"
         ],
         "level": 8,
-        "strength": 16
+        "strength": 18
       }
     },
     {
       "name": "Shadow Stalker",
       "metadataUri": "monster:shadow_stalker",
       "stats": {
-        "agility": 18,
+        "agility": 20,
         "armor": 0,
         "class": 1,
         "experience": 3250,
-        "hitPoints": 34,
-        "intelligence": 8,
+        "hitPoints": 42,
+        "intelligence": 10,
         "inventoryNames": [
           "Shadow Strike",
           "Longbow",
@@ -297,18 +297,18 @@
           "Cave Moss"
         ],
         "level": 9,
-        "strength": 11
+        "strength": 14
       }
     },
     {
       "name": "Shadow Dragon",
       "metadataUri": "monster:shadow_dragon",
       "stats": {
-        "agility": 12,
-        "armor": 2,
+        "agility": 18,
+        "armor": 3,
         "class": 2,
         "experience": 6500,
-        "hitPoints": 48,
+        "hitPoints": 70,
         "intelligence": 20,
         "inventoryNames": [
           "Elemental Burst",
@@ -339,7 +339,7 @@
           "Rat Tooth"
         ],
         "level": 10,
-        "strength": 12
+        "strength": 18
       }
     }
   ]

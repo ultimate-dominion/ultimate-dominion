@@ -499,6 +499,193 @@ contract Test_GasStationSystem is Test {
         assertEq(balance, gasStationAddress.balance, "Treasury balance mismatch");
     }
 
+    // ==================== batchChargeGasGoldWithCounts Tests ====================
+
+    function test_batchChargeWithCounts_normalBatch() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        _setLevel(aliceCharacterId, 5);
+        _giveGold(aliceCharacterId, 100 ether);
+        _setLevel(bobCharacterId, 3);
+        _giveGold(bobCharacterId, 100 ether);
+
+        address[] memory players = new address[](2);
+        players[0] = alice;
+        players[1] = bob;
+        bytes32[] memory characterIds = new bytes32[](2);
+        characterIds[0] = aliceCharacterId;
+        characterIds[1] = bobCharacterId;
+        uint256[] memory counts = new uint256[](2);
+        counts[0] = 3; // 3 Gold
+        counts[1] = 5; // 5 Gold
+
+        uint256 aliceGoldBefore = goldToken.balanceOf(alice);
+        uint256 bobGoldBefore = goldToken.balanceOf(bob);
+
+        vm.prank(relayer);
+        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
+
+        assertEq(charged[0], 3 ether, "Alice charged wrong amount");
+        assertEq(charged[1], 5 ether, "Bob charged wrong amount");
+        assertEq(aliceGoldBefore - goldToken.balanceOf(alice), 3 ether, "Alice gold not deducted");
+        assertEq(bobGoldBefore - goldToken.balanceOf(bob), 5 ether, "Bob gold not deducted");
+        assertEq(goldToken.balanceOf(relayer), 8 ether, "Relayer total incorrect");
+    }
+
+    function test_batchChargeWithCounts_skipLowLevel() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        _setLevel(aliceCharacterId, 5);
+        _giveGold(aliceCharacterId, 100 ether);
+        _setLevel(bobCharacterId, 2); // Below min level
+        _giveGold(bobCharacterId, 100 ether);
+
+        address[] memory players = new address[](2);
+        players[0] = alice;
+        players[1] = bob;
+        bytes32[] memory characterIds = new bytes32[](2);
+        characterIds[0] = aliceCharacterId;
+        characterIds[1] = bobCharacterId;
+        uint256[] memory counts = new uint256[](2);
+        counts[0] = 2;
+        counts[1] = 3;
+
+        uint256 bobGoldBefore = goldToken.balanceOf(bob);
+
+        vm.prank(relayer);
+        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
+
+        assertEq(charged[0], 2 ether, "Alice should be charged");
+        assertEq(charged[1], 0, "Bob should be skipped (low level)");
+        assertEq(goldToken.balanceOf(bob), bobGoldBefore, "Bob gold should be unchanged");
+    }
+
+    function test_batchChargeWithCounts_skipNoCharacter() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        _setLevel(aliceCharacterId, 5);
+        _giveGold(aliceCharacterId, 100 ether);
+
+        address noCharAddr = address(0xdead);
+
+        address[] memory players = new address[](2);
+        players[0] = alice;
+        players[1] = noCharAddr;
+        bytes32[] memory characterIds = new bytes32[](2);
+        characterIds[0] = aliceCharacterId;
+        characterIds[1] = bytes32("fake");
+        uint256[] memory counts = new uint256[](2);
+        counts[0] = 1;
+        counts[1] = 1;
+
+        vm.prank(relayer);
+        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
+
+        assertEq(charged[0], 1 ether, "Alice should be charged");
+        assertEq(charged[1], 0, "No-character address should be skipped");
+    }
+
+    function test_batchChargeWithCounts_partialCharge() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        _setLevel(bobCharacterId, 3);
+        _giveGold(bobCharacterId, 3 ether); // Only 3 Gold, but owes 5
+
+        address[] memory players = new address[](1);
+        players[0] = bob;
+        bytes32[] memory characterIds = new bytes32[](1);
+        characterIds[0] = bobCharacterId;
+        uint256[] memory counts = new uint256[](1);
+        counts[0] = 5;
+
+        vm.prank(relayer);
+        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
+
+        assertEq(charged[0], 3 ether, "Should charge partial (what they can afford)");
+        assertEq(goldToken.balanceOf(bob), 0, "Bob should have 0 Gold left");
+        assertEq(goldToken.balanceOf(relayer), 3 ether, "Relayer should get 3 Gold");
+    }
+
+    function test_batchChargeWithCounts_singleRelayerWrite() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        _setLevel(aliceCharacterId, 5);
+        _giveGold(aliceCharacterId, 100 ether);
+        _setLevel(bobCharacterId, 5);
+        _giveGold(bobCharacterId, 100 ether);
+
+        address[] memory players = new address[](2);
+        players[0] = alice;
+        players[1] = bob;
+        bytes32[] memory characterIds = new bytes32[](2);
+        characterIds[0] = aliceCharacterId;
+        characterIds[1] = bobCharacterId;
+        uint256[] memory counts = new uint256[](2);
+        counts[0] = 4;
+        counts[1] = 6;
+
+        vm.prank(relayer);
+        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
+
+        // Relayer should have the sum of all charges
+        uint256 totalCharged = charged[0] + charged[1];
+        assertEq(goldToken.balanceOf(relayer), totalCharged, "Relayer total = sum of all charges");
+        assertEq(totalCharged, 10 ether, "Total should be 4 + 6 = 10 Gold");
+    }
+
+    function test_batchChargeWithCounts_emptyArrays() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        address[] memory players = new address[](0);
+        bytes32[] memory characterIds = new bytes32[](0);
+        uint256[] memory counts = new uint256[](0);
+
+        vm.prank(relayer);
+        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
+
+        assertEq(charged.length, 0, "Empty arrays should return empty result");
+    }
+
+    function test_batchChargeWithCounts_revertsIfArrayMismatch() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        address[] memory players = new address[](2);
+        players[0] = alice;
+        players[1] = bob;
+        bytes32[] memory characterIds = new bytes32[](2);
+        characterIds[0] = aliceCharacterId;
+        characterIds[1] = bobCharacterId;
+        uint256[] memory counts = new uint256[](1); // Mismatch!
+        counts[0] = 1;
+
+        vm.prank(relayer);
+        vm.expectRevert(GasStationArrayMismatch.selector);
+        world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
+    }
+
+    function test_batchChargeWithCounts_revertsIfNotRelayer() public {
+        vm.prank(deployer);
+        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
+
+        address[] memory players = new address[](1);
+        players[0] = alice;
+        bytes32[] memory characterIds = new bytes32[](1);
+        characterIds[0] = aliceCharacterId;
+        uint256[] memory counts = new uint256[](1);
+        counts[0] = 1;
+
+        vm.prank(alice); // Not the relayer
+        vm.expectRevert(GasStationNotRelayer.selector);
+        world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
+    }
+
     // ==================== Edge Cases ====================
 
     function test_buyGas_exactlyAtLevel3() public {

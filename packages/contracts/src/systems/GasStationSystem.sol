@@ -236,6 +236,62 @@ contract GasStationSystem is System {
         ERC20Balances.set(balancesTableId, relayer, relayerGold + chargeAmount);
     }
 
+    /**
+     * @notice Fault-tolerant batch charge: skips ineligible players, supports per-player tx counts.
+     * @dev Accumulates relayer credit in memory, writes once at end (gas efficient).
+     * @param players Array of player wallet addresses
+     * @param characterIds Array of corresponding character IDs
+     * @param counts Array of tx counts per player (each tx = goldPerGasCharge)
+     * @return charged Actual gold amounts charged per player (0 if skipped)
+     */
+    function batchChargeGasGoldWithCounts(
+        address[] calldata players,
+        bytes32[] calldata characterIds,
+        uint256[] calldata counts
+    ) public returns (uint256[] memory charged) {
+        if (players.length != characterIds.length || players.length != counts.length) {
+            revert GasStationArrayMismatch();
+        }
+
+        address relayer = GasStationSwapConfig.getRelayerAddress();
+        if (_msgSender() != relayer) revert GasStationNotRelayer();
+
+        uint256 chargePerTx = GasStationSwapConfig.getGoldPerGasCharge();
+        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
+
+        charged = new uint256[](players.length);
+        uint256 totalRelayerCredit;
+
+        for (uint256 i = 0; i < players.length; i++) {
+            // Skip: no character or wrong characterId
+            CharacterOwnerData memory ownerData = CharacterOwner.get(players[i]);
+            if (ownerData.characterId != characterIds[i] || ownerData.characterId == bytes32(0)) {
+                continue;
+            }
+
+            // Skip: below level 3
+            uint256 level = Stats.getLevel(characterIds[i]);
+            if (level < GAS_STATION_MIN_LEVEL) continue;
+
+            // Calculate max charge for this player
+            uint256 fullCharge = counts[i] * chargePerTx;
+            uint256 playerGold = ERC20Balances.get(balancesTableId, players[i]);
+            if (playerGold == 0) continue;
+
+            // Partial charge: take what they can afford
+            uint256 actual = playerGold < fullCharge ? playerGold : fullCharge;
+            ERC20Balances.set(balancesTableId, players[i], playerGold - actual);
+            charged[i] = actual;
+            totalRelayerCredit += actual;
+        }
+
+        // Single relayer balance write
+        if (totalRelayerCredit > 0) {
+            uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
+            ERC20Balances.set(balancesTableId, relayer, relayerGold + totalRelayerCredit);
+        }
+    }
+
     // ==================== Admin Functions ====================
 
     /**

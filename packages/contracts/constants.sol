@@ -44,7 +44,7 @@ uint256 constant DEFENDER_HIT_DAMPENER = 30;
 uint256 constant ATTACKER_HIT_DAMPENER = 95;
 
 //Gold Drop constants
-uint256 constant BASE_GOLD_DROP = 5 ether; //
+uint256 constant BASE_GOLD_DROP = 3 ether;
 
 // LEVELING - Diminishing returns system
 // Stat points: +2/level (1-10), +1/2 levels (11-50), +1/5 levels (51-100)
@@ -65,6 +65,7 @@ uint256 constant POWER_SOURCE_BONUS_LEVEL = 5;
 uint256 constant CLASS_MULTIPLIER_BASE = 1000;  // 100% base
 uint256 constant SESSION_TIMEOUT = 10 minutes;
 uint256 constant PVP_GOLD_DENOMINATOR = 2;
+uint256 constant PVP_BASE_XP = 75; // PvP XP = level^2 * 75 (~1.5-2x same-level monster XP)
 
 uint256 constant PVP_TIMER = 30 seconds;
 uint256 constant MAX_MONSTERS = 20;

@@ -22,5 +22,7 @@ interface IAdminSystem {
 
   function UD__adminSetEncounterEntity(bytes32 entityId, EncounterEntityData memory encounterEntityData) external;
 
+  function UD__adminSetPlayerCount(address systemAddr, uint256 count) external;
+
   function UD__getSystemAddress(ResourceId systemId) external view returns (address);
 }

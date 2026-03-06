@@ -227,16 +227,17 @@ contract MinimalPostDeploy is Script {
         console.log("  Map config: 10x10");
 
         // Set level experience requirements
-        Levels.setExperience(1, 300);
-        Levels.setExperience(2, 900);
-        Levels.setExperience(3, 2700);
-        Levels.setExperience(4, 6500);
-        Levels.setExperience(5, 14000);
-        Levels.setExperience(6, 23000);
-        Levels.setExperience(7, 34000);
-        Levels.setExperience(8, 48000);
-        Levels.setExperience(9, 64000);
-        Levels.setExperience(10, 85000);
+        // ~29 gameplay hours to L10, hardcore ~1 week, medium ~3 weeks
+        Levels.setExperience(1, 500);
+        Levels.setExperience(2, 2000);
+        Levels.setExperience(3, 5500);
+        Levels.setExperience(4, 25000);
+        Levels.setExperience(5, 85000);
+        Levels.setExperience(6, 200000);
+        Levels.setExperience(7, 450000);
+        Levels.setExperience(8, 900000);
+        Levels.setExperience(9, 1600000);
+        Levels.setExperience(10, 2500000);
         console.log("  Level requirements set (1-10)");
     }
 
