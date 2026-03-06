@@ -356,9 +356,15 @@ export const BattleProvider = ({
         totalDamage += outcome.attackerDamageDelt;
       }
     }
+    // Include DoT damage (entityId = victim)
+    for (const dot of dotActions) {
+      if (dot.entityId.toLowerCase() === opponent.id.toLowerCase()) {
+        totalDamage += dot.totalDamage;
+      }
+    }
     const predicted = opponent.maxHp - totalDamage;
     return predicted > 0n ? predicted : 0n;
-  }, [currentBattleAttackOutcomes, opponent]);
+  }, [currentBattleAttackOutcomes, dotActions, opponent]);
 
   const userPredictedHp = useMemo(() => {
     if (!character) return 0n;
@@ -368,9 +374,15 @@ export const BattleProvider = ({
         totalDamage += outcome.attackerDamageDelt;
       }
     }
+    // Include DoT damage (entityId = victim)
+    for (const dot of dotActions) {
+      if (dot.entityId.toLowerCase() === character.id.toLowerCase()) {
+        totalDamage += dot.totalDamage;
+      }
+    }
     const predicted = character.maxHp - totalDamage;
     return predicted > 0n ? predicted : 0n;
-  }, [currentBattleAttackOutcomes, character]);
+  }, [currentBattleAttackOutcomes, dotActions, character]);
 
   // Reactive: re-renders when any EncounterEntity row changes (status effects applied)
   const encounterEntityTable = useGameTable('EncounterEntity');
