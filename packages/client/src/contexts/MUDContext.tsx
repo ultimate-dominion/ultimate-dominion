@@ -236,7 +236,7 @@ const MUDProviderInner = ({
       });
 
       if (receipt.status === 'success') {
-        applyReceiptToStore(receipt, setupResult.network.publicClient, setupResult.network.worldContract.address as Hex);
+        await applyReceiptToStore(receipt, setupResult.network.publicClient, setupResult.network.worldContract.address as Hex);
       }
 
       if (receipt.status === 'reverted') {

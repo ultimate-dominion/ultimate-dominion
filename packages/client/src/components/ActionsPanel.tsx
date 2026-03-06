@@ -385,9 +385,6 @@ export const ActionsPanel = (): JSX.Element => {
             top={0}
             w="100%"
           >
-            <Box position="relative" w="100%">
-              <TransactionProgressBar progress={attackProgress} />
-            </Box>
             {currentBattle.encounterType === EncounterType.PvE && (
               <Text
                 fontWeight="bold"
@@ -529,6 +526,9 @@ export const ActionsPanel = (): JSX.Element => {
                 )}
               </HStack>
             )}
+            <Box position="relative" w="100%">
+              <TransactionProgressBar progress={attackProgress} />
+            </Box>
           </VStack>
         )}
       <Stack p={{ base: 2, lg: 4 }}>

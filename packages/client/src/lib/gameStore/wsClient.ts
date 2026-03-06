@@ -123,7 +123,7 @@ export class WSClient {
     this.pendingUpdates.push(update);
     if (!this.flushScheduled) {
       this.flushScheduled = true;
-      requestAnimationFrame(() => {
+      queueMicrotask(() => {
         this.flushScheduled = false;
         const batch = this.pendingUpdates;
         this.pendingUpdates = [];
