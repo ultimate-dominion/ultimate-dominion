@@ -17,7 +17,7 @@ import {
     SessionTimer,
     UltimateDominionConfig
 } from "../codegen/index.sol";
-import {FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y, MOVE_COOLDOWN} from "../../constants.sol";
+import {FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y, MOVE_COOLDOWN, PLAYER_COUNTER_KEY} from "../../constants.sol";
 import {FragmentProgress} from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
@@ -68,7 +68,7 @@ contract MapSystem is System {
         bool isCharacter = IWorld(_world()).UD__isValidCharacterId(entityId);
 
         // Only count player characters against maxPlayers cap (not mobs)
-        uint256 spawnedPlayers = Counters.get(address(this), 0);
+        uint256 spawnedPlayers = Counters.get(PLAYER_COUNTER_KEY, 0);
         if (isCharacter) {
             if (spawnedPlayers >= UltimateDominionConfig.getMaxPlayers()) revert MaxPlayers();
             int256 currentHp = maxHp + CharacterEquipment.getHpBonus(entityId);
@@ -90,7 +90,7 @@ contract MapSystem is System {
             // re-calculate equipment bonuses
             IWorld(_world()).UD__setStats(entityId, IWorld(_world()).UD__calculateEquipmentBonuses(entityId));
             // increment player counter (only for characters)
-            Counters.set(address(this), 0, (spawnedPlayers + 1));
+            Counters.set(PLAYER_COUNTER_KEY, 0, (spawnedPlayers + 1));
         }
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
@@ -103,7 +103,12 @@ contract MapSystem is System {
 
     /// @notice Returns the number of spawned player characters (not mobs).
     function getSpawnedPlayerCount() public view returns (uint256) {
-        return Counters.get(address(this), 0);
+        return Counters.get(PLAYER_COUNTER_KEY, 0);
+    }
+
+    /// @notice Returns the player counter key used for spawn tracking.
+    function getPlayerCounterKey() public pure returns (address) {
+        return PLAYER_COUNTER_KEY;
     }
 
     function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {

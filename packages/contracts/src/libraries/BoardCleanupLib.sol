@@ -2,6 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {Counters, EntitiesAtPosition, Position, Spawned} from "@codegen/index.sol";
+import {PLAYER_COUNTER_KEY} from "../../constants.sol";
 
 /// @dev External library — deploys as a separate contract, called via DELEGATECALL.
 ///      Inlines the essential board-removal logic from MapSystem.removeEntityFromBoard
@@ -23,8 +24,8 @@ library BoardCleanupLib {
         Position.set(entityId, 0, 0);
         Spawned.setSpawned(entityId, false);
         if (isCharacter) {
-            uint256 count = Counters.get(address(this), 0);
-            if (count > 0) Counters.set(address(this), 0, count - 1);
+            uint256 count = Counters.get(PLAYER_COUNTER_KEY, 0);
+            if (count > 0) Counters.set(PLAYER_COUNTER_KEY, 0, count - 1);
         }
     }
 }

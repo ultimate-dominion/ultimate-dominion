@@ -16,7 +16,7 @@ import {
     SessionTimer,
     Spawned
 } from "../codegen/index.sol";
-import {SESSION_TIMEOUT} from "../../constants.sol";
+import {SESSION_TIMEOUT, PLAYER_COUNTER_KEY} from "../../constants.sol";
 import {UseFleeFunction, SessionNotTimedOut} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
@@ -31,24 +31,24 @@ contract MapRemovalSystem is System {
 
         // if entity is a character
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
-            uint256 spawnedPlayers = Counters.get(address(this), 0);
+            uint256 spawnedPlayers = Counters.get(PLAYER_COUNTER_KEY, 0);
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             // if sender is owner
             if (senderIsOwner) {
                 // if character is in combat use the combat flee function
                 if (encounterId != bytes32(0)) revert UseFleeFunction();
-                if (spawnedPlayers > 0) Counters.set(address(this), 0, (spawnedPlayers - 1));
+                if (spawnedPlayers > 0) Counters.set(PLAYER_COUNTER_KEY, 0, (spawnedPlayers - 1));
                 // if caller is not a system
             } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
                 // Use configurable timeout, falling back to constant if not set
                 uint256 timeout = SessionConfig.getSessionTimeout();
                 if (timeout == 0) timeout = SESSION_TIMEOUT;
                 if ((SessionTimer.get(entityId) + timeout) >= block.timestamp) revert SessionNotTimedOut();
-                if (spawnedPlayers > 0) Counters.set(address(this), 0, (spawnedPlayers - 1));
+                if (spawnedPlayers > 0) Counters.set(PLAYER_COUNTER_KEY, 0, (spawnedPlayers - 1));
                 // Note: Access check removed to allow inter-system calls
             } else {
                 // Inter-system call (e.g., from EncounterSystem)
-                if (spawnedPlayers > 0) Counters.set(address(this), 0, (spawnedPlayers - 1));
+                if (spawnedPlayers > 0) Counters.set(PLAYER_COUNTER_KEY, 0, (spawnedPlayers - 1));
             }
         } else {
             // Non-character entity (e.g., monster) - allow inter-system calls

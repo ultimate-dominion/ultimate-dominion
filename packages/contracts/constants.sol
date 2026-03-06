@@ -28,6 +28,9 @@ string constant ERC721_NAME = "UDCharacters";
 string constant ERC721_SYMBOL = "UDC";
 string constant TOKEN_URI = "ipfs://";
 
+// Shared key for the spawned-player counter (all systems must use the same key)
+address constant PLAYER_COUNTER_KEY = address(1);
+
 uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1.2 ether;
