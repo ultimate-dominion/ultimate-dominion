@@ -86,7 +86,7 @@ library CombatMath {
         returns (int256 totalArmorModifier)
     {
         if (armor - armorPenetration > 0) {
-            totalArmorModifier = (armor - armorPenetration) * int256(DEFENSE_MODIFIER);
+            totalArmorModifier = ((armor - armorPenetration) * int256(DEFENSE_MODIFIER)) / int256(WAD);
         }
         // if total armor is greater than damage then overall damage should be 0
         if (damage - (int256(armor) - armorPenetration) < 0) {

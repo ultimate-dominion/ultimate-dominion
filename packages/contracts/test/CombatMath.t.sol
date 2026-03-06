@@ -29,8 +29,8 @@ contract CombatMathTest is Test {
 
         int256 armorModifier = CombatMath.calculateArmorModifier(armor, armorPenetration, damage);
 
-        // Should reduce damage by (10-2) * 1 ether = 8 ether (in WAD units)
-        assertEq(armorModifier, 8 ether);
+        // Should reduce damage by (10-2) = 8
+        assertEq(armorModifier, 8);
     }
 
     function testCalculateWeaponDamage() public {

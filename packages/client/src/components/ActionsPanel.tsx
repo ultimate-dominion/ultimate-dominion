@@ -437,17 +437,10 @@ export const ActionsPanel = (): JSX.Element => {
                   w="100%"
                 />
               )}
-              <Stack
-                direction={
-                  equippedSpellsAndWeapons.length > 2 ? 'column' : 'row'
-                }
-                spacing={0}
-                w="100%"
-              >
-                <HStack spacing={0} w="100%">
-                  {equippedSpellsAndWeapons.slice(0, 2).map((item, index) => {
-                    const icon = getItemImage(removeEmoji(item.name));
-                    return (
+              <HStack spacing={0} w="100%">
+                {equippedSpellsAndWeapons.map((item, index) => {
+                  const icon = getItemImage(removeEmoji(item.name));
+                  return (
                     <Button
                       borderLeft={index === 0 ? 'none' : '2px'}
                       borderRadius={0}
@@ -457,11 +450,11 @@ export const ActionsPanel = (): JSX.Element => {
                       }
                       isLoading={attackingItemId === item.tokenId}
                       key={`equipped-item-${index}`}
-                      loadingText={attackStatusMessage}
+                      loadingText=""
                       onClick={() => onAttack(item.tokenId)}
                       ref={getButtonRef(index)}
                       fontSize={
-                        equippedSpellsAndWeapons.length > 3 ? 'xs' : 'md'
+                        equippedSpellsAndWeapons.length > 2 ? '2xs' : 'xs'
                       }
                       size={{ base: 'xs', sm: 'sm', lg: 'md' }}
                       variant="outline"
@@ -474,110 +467,66 @@ export const ActionsPanel = (): JSX.Element => {
                           </Text>
                         )}
                         {icon && <Image src={icon} boxSize="20px" mr={1} />}
-                        {item.name}
+                        {removeEmoji(item.name)}
                       </>
                     </Button>
-                    );
-                  })}
-                </HStack>
-                {equippedSpellsAndWeapons.length > 2 && (
-                  <HStack spacing={0} w="100%">
-                    {equippedSpellsAndWeapons.slice(2).map((item, index) => {
-                      const icon = getItemImage(removeEmoji(item.name));
-                      return (
-                      <Button
-                        borderLeft={index === 0 ? 'none' : '2px'}
-                        borderRadius={0}
-                        borderRight="none"
-                        borderTop={
-                          equippedSpellsAndWeapons.length > 2 ? 'none' : '2px'
-                        }
-                        isDisabled={
-                          attackingItemId !== null || !canAttack || isFleeing
-                        }
-                        isLoading={attackingItemId === item.tokenId}
-                        key={`equipped-item-${index + 2}`}
-                        loadingText={attackStatusMessage}
-                        onClick={() => onAttack(item.tokenId)}
-                        ref={getButtonRef(index + 2)}
-                        size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                        fontSize={
-                          equippedSpellsAndWeapons.length > 3 ? 'xs' : 'md'
-                        }
-                        variant="outline"
-                        w="100%"
-                      >
-                        <>
-                          {isDesktop && (
-                            <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.6} mr={1}>
-                              [{index + 3}]
-                            </Text>
-                          )}
-                          {icon && <Image src={icon} boxSize="20px" mr={1} />}
-                          {item.name}
-                        </>
-                      </Button>
-                      );
-                    })}
-                  </HStack>
-                )}
-              </Stack>
+                  );
+                })}
+              </HStack>
             </HStack>
             {isDesktop && equippedSpellsAndWeapons.length > 0 && (
               <Text fontSize="2xs" color="grey400" textAlign="center" mt={1}>
                 Use 1-{Math.min(equippedSpellsAndWeapons.length, 4)} keys to attack
               </Text>
             )}
-            {combatConsumables.length > 0 && (
+            {(combatConsumables.length > 0 || canFlee) && (
               <HStack spacing={0} w="100%">
                 {combatConsumables.map((consumable, index) => {
                   const consumableIcon = getItemImage(removeEmoji(consumable.name));
                   return (
+                    <Button
+                      borderLeft={index === 0 ? 'none' : '2px'}
+                      borderRadius={0}
+                      borderRight="none"
+                      borderTop="none"
+                      isDisabled={
+                        attackingItemId !== null || !canAttack || isFleeing
+                      }
+                      key={`consumable-${index}`}
+                      onClick={() => onUsePotion(consumable)}
+                      fontSize="xs"
+                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                      variant="outline"
+                      w="100%"
+                    >
+                      {consumableIcon ? (
+                        <Image src={consumableIcon} boxSize="20px" mr={1} />
+                      ) : (
+                        <PotionSvg size={3} theme="dark" mr={1} />
+                      )}
+                      {removeEmoji(consumable.name)} (x{consumable.balance.toString()})
+                    </Button>
+                  );
+                })}
+                {canFlee && (
                   <Button
-                    borderLeft={index === 0 ? 'none' : '2px'}
+                    borderLeft={combatConsumables.length > 0 ? '2px' : 'none'}
                     borderRadius={0}
                     borderRight="none"
                     borderTop="none"
-                    isDisabled={
-                      attackingItemId !== null || !canAttack || isFleeing
-                    }
-                    key={`consumable-${index}`}
-                    onClick={() => onUsePotion(consumable)}
+                    isLoading={isFleeing}
+                    fontSize="xs"
                     size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                    onClick={onFleePvp}
                     variant="outline"
+                    color="#A0522D"
+                    borderColor="#A0522D"
+                    _hover={{ bg: 'rgba(160,82,45,0.15)' }}
                     w="100%"
                   >
-                    {consumableIcon ? (
-                      <Image src={consumableIcon} boxSize="20px" mr={1} />
-                    ) : (
-                      <PotionSvg size={3} theme="dark" mr={1} />
-                    )}
-                    {consumable.name} (x{consumable.balance.toString()})
+                    Flee
                   </Button>
-                  );
-                })}
-              </HStack>
-            )}
-            {canFlee && (
-              <HStack justify="center" mt={2} mb={1} spacing={3}>
-                <Button
-                  isLoading={isFleeing}
-                  size="sm"
-                  onClick={onFleePvp}
-                  variant="outline"
-                  color="#A0522D"
-                  borderColor="#A0522D"
-                  _hover={{ bg: 'rgba(160,82,45,0.15)' }}
-                >
-                  Flee
-                </Button>
-                <Text size="2xs" color={hasSmokeCover ? '#6B8E6B' : '#8A7E6A'} maxW="200px">
-                  {hasSmokeCover
-                    ? 'Smoke Cloak active — flee without gold penalty!'
-                    : currentBattle.encounterType === EncounterType.PvP
-                      ? 'First turn only. Costs 25% escrow gold.'
-                      : 'First turn only.'}
-                </Text>
+                )}
               </HStack>
             )}
           </VStack>

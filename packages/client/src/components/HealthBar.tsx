@@ -46,7 +46,7 @@ export const HealthBar = ({
     100,
   );
 
-  const barColor = health > 50 ? 'green' : health > 15 ? 'yellow' : 'red';
+  const barColor = health > 60 ? '#5A8A3E' : health > 30 ? '#C87A2A' : '#8B2020';
 
   return (
     <VStack spacing={0.5} {...stackProps}>
