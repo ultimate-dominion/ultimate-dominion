@@ -137,6 +137,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     opponentPredictedHp,
     statusEffectActions,
     userCharacterForBattleRendering,
+    userPredictedHp,
   } = useBattle();
   const { isRefreshing, moveProgress } = useMovement();
 
@@ -510,7 +511,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     displayedHp: userDisplayedHp,
     isDotTicking: isUserDotTicking,
   } = useBattleHpAnimation({
-    actualHp: userCharacterForBattleRendering?.currentHp ?? 0n,
+    actualHp: currentBattle ? userPredictedHp : (userCharacterForBattleRendering?.currentHp ?? 0n),
     dotDamage: latestUserDot?.totalDamage ?? 0n,
     dotTurnNumber: latestUserDot?.turnNumber ?? 0n,
     isInBattle: !!currentBattle,

@@ -134,11 +134,11 @@ async function resolveSpliceEvents(
 // ---------------------------------------------------------------------------
 // Main entry point
 // ---------------------------------------------------------------------------
-export function applyReceiptToStore(
+export async function applyReceiptToStore(
   receipt: TransactionReceipt,
   publicClient?: PublicClient,
   worldAddress?: Hex,
-): void {
+): Promise<void> {
   let applied = 0;
   let skippedSplice = 0;
 
@@ -225,11 +225,11 @@ export function applyReceiptToStore(
     );
   }
 
-  // Fire-and-forget: resolve splice events by reading full records from chain.
-  // This is async but non-blocking — the caller gets the receipt back immediately,
-  // and splice-affected rows update in the store ~100-500ms later.
+  // Await splice resolution so the store is fully up-to-date when the caller
+  // gets the receipt back. Adds ~100-300ms (parallel getRecord RPCs) but
+  // prevents stale-data bugs (HP not updating, double-attack, etc).
   if (spliceReads.length > 0 && publicClient && worldAddress) {
-    resolveSpliceEvents(spliceReads, publicClient, worldAddress).catch(err => {
+    await resolveSpliceEvents(spliceReads, publicClient, worldAddress).catch(err => {
       console.warn('[TX][RECEIPT] Splice resolution failed:', err);
     });
   }

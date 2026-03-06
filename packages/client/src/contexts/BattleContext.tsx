@@ -56,6 +56,7 @@ type BattleContextType = {
   opponent: Character | Monster | null;
   opponentPredictedHp: bigint;
   statusEffectActions: StatusAction[];
+  userPredictedHp: bigint;
   userCharacterForBattleRendering: Character | null;
 };
 
@@ -75,6 +76,7 @@ const BattleContext = createContext<BattleContextType>({
   opponent: null,
   opponentPredictedHp: 0n,
   statusEffectActions: [],
+  userPredictedHp: 0n,
   userCharacterForBattleRendering: null,
 });
 
@@ -358,6 +360,18 @@ export const BattleProvider = ({
     return predicted > 0n ? predicted : 0n;
   }, [currentBattleAttackOutcomes, opponent]);
 
+  const userPredictedHp = useMemo(() => {
+    if (!character) return 0n;
+    let totalDamage = 0n;
+    for (const outcome of currentBattleAttackOutcomes) {
+      if (outcome.defenderId.toLowerCase() === character.id.toLowerCase()) {
+        totalDamage += outcome.attackerDamageDelt;
+      }
+    }
+    const predicted = character.maxHp - totalDamage;
+    return predicted > 0n ? predicted : 0n;
+  }, [currentBattleAttackOutcomes, character]);
+
   // Reactive: re-renders when any EncounterEntity row changes (status effects applied)
   const encounterEntityTable = useGameTable('EncounterEntity');
 
@@ -498,6 +512,7 @@ export const BattleProvider = ({
       opponentPredictedHp,
       statusEffectActions,
       userCharacterForBattleRendering,
+      userPredictedHp,
     }),
     [
       attackProgress,
@@ -515,6 +530,7 @@ export const BattleProvider = ({
       opponentPredictedHp,
       statusEffectActions,
       userCharacterForBattleRendering,
+      userPredictedHp,
     ],
   );
 
