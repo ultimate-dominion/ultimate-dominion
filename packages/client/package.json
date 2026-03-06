@@ -12,7 +12,9 @@
     "format": "prettier --write \"{*,**/*}.{ts,tsx,js,jsx,json,yml,yaml,md}\"",
     "lint": "eslint --ext .ts,.tsx src",
     "lint:fix": "eslint --ext .ts,.tsx src --fix",
-    "test": "tsc --noEmit"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
@@ -63,6 +65,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.0",
     "prettier": "3.2.5",
     "vite": "^4.2.1",
+    "vitest": "^3.0.0",
     "wait-port": "^1.0.4"
   }
 }
