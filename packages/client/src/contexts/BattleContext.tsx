@@ -350,6 +350,7 @@ export const BattleProvider = ({
 
   const opponentPredictedHp = useMemo(() => {
     if (!opponent) return 0n;
+    const storeHp = opponent.currentHp ?? 0n;
     let totalDamage = 0n;
     for (const outcome of currentBattleAttackOutcomes) {
       if (outcome.defenderId.toLowerCase() === opponent.id.toLowerCase()) {
@@ -363,11 +364,14 @@ export const BattleProvider = ({
       }
     }
     const predicted = opponent.maxHp - totalDamage;
-    return predicted > 0n ? predicted : 0n;
+    const clamped = predicted > 0n ? predicted : 0n;
+    // Use whichever is lower: prediction or store value
+    return clamped < storeHp ? clamped : storeHp;
   }, [currentBattleAttackOutcomes, dotActions, opponent]);
 
   const userPredictedHp = useMemo(() => {
     if (!character) return 0n;
+    const storeHp = character.currentHp ?? 0n;
     let totalDamage = 0n;
     for (const outcome of currentBattleAttackOutcomes) {
       if (outcome.defenderId.toLowerCase() === character.id.toLowerCase()) {
@@ -381,7 +385,9 @@ export const BattleProvider = ({
       }
     }
     const predicted = character.maxHp - totalDamage;
-    return predicted > 0n ? predicted : 0n;
+    const clamped = predicted > 0n ? predicted : 0n;
+    // Use whichever is lower: prediction or store value
+    return clamped < storeHp ? clamped : storeHp;
   }, [currentBattleAttackOutcomes, dotActions, character]);
 
   // Reactive: re-renders when any EncounterEntity row changes (status effects applied)
