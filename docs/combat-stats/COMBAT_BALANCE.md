@@ -26,18 +26,15 @@ ALL attackers (players AND mobs) get 20% inherent damage bonus. Mobs hitting pla
 - No percentage-based mitigation cap
 - Armor penetration can completely negate defensive investment
 
-### 4. Combat Triangle Uncapped
+### 4. ~~Combat Triangle Uncapped~~ `[RESOLVED]`
 
-- 5% per stat point with no ceiling
-- 20-point stat difference = 100% damage bonus (potentially excessive)
+- ~~5% per stat point with no ceiling~~
+- **Fixed**: Changed to 4% per stat point with 40% cap (commit `014d0ae6`)
 
-**Proposed fix**: Cap at 30–50% maximum bonus.
+### 5. ~~PvE Flee Not Implemented~~ `[RESOLVED]`
 
-### 5. PvE Flee Not Implemented
-
-Players cannot flee PvE encounters. Must fight all 15 turns or die.
-
-**Proposed fix**: Allow flee on turn 1 (attacker) / turn 2 (defender) with no gold penalty.
+- ~~Players cannot flee PvE encounters. Must fight all 15 turns or die.~~
+- **Fixed**: PvE flee implemented with 5% escrow gold penalty (burned). Attacker flees turn 1, defender turn 2.
 
 ---
 
@@ -70,22 +67,33 @@ Players cannot flee PvE encounters. Must fight all 15 turns or die.
 
 | Level | Cumulative |
 |-------|-----------|
-| 10 | 10 |
-| 50 | 30 |
-| 100 | 40 |
+| 10 | 20 |
+| 50 | 40 |
+| 100 | 50 |
 
 ---
 
 ## Implementation Priority
 
-If pursuing balance changes, recommended order:
+Remaining balance changes, recommended order:
 
-1. ATTACK_MODIFIER reduction (highest impact, simplest)
-2. CRIT_MULTIPLIER reduction (reduces variance)
-3. PvE flee implementation (quality of life)
-4. Combat triangle cap (prevents runaway bonuses)
+1. ATTACK_MODIFIER reduction (highest impact, simplest — currently 1.2, consider 1.0–1.1)
+2. CRIT_MULTIPLIER reduction (reduces variance — currently 2×, consider 1.5–1.75)
+3. ~~PvE flee implementation~~ `[DONE]` — 5% gold penalty
+4. ~~Combat triangle cap~~ `[DONE]` — 40% cap at 4% per stat
 5. Separate PvE/PvP modifiers (independent tuning)
 6. Armor scaling rework (longer-term)
+
+### Completed Balance Changes (March 2026)
+
+- **Weapon damage reduction**: All player weapons significantly reduced (weapons are now "stat vehicles" with modest base damage; power comes from stats flowing through the formula). Example: Giant's Club 18-28 → 5-9, Warhammer 15-25 → 4-7.
+- **HP normalization**: All weapon archetypes now provide HP bonuses. AGI/INT weapons were previously disadvantaged.
+- **Monster HP increase**: Levels 6-10 monsters received HP increases (e.g., Shadow Dragon 48 → 65, Stone Giant 40 → 52).
+- **AGI weapon scaling**: Bows now scale with AGI instead of STR (via WeaponScaling table).
+- **AGI combat mechanics**: Evasion dodge (25% cap), double strike (+50% damage, 25% cap), AGI crit bonus (+AGI/4%).
+- **Magic resistance**: Defender INT/5 subtracted from incoming spell damage.
+- **Caster class multiplier buffs**: Warlock 110→120%, Wizard 115→125%, Sorcerer 108→115%.
+- **Combat triangle retuning**: 5% → 4% per stat, added 40% cap.
 
 ---
 
@@ -99,4 +107,4 @@ If pursuing balance changes, recommended order:
 
 ---
 
-*Last updated: February 2026*
+*Last updated: March 2026*

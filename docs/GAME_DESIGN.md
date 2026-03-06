@@ -44,13 +44,13 @@ Character creation uses an **implicit class system**. Players make thematic choi
 
 ### Step 2: Choose Power Source
 
-Thematic choice affecting flavor and future abilities. Does **NOT** restrict class selection.
+Thematic choice affecting flavor and providing a **Level 5 milestone bonus**. Does **NOT** restrict class selection.
 
-| Power Source | Theme | Typical Playstyle |
-|-------------|-------|-------------------|
-| Divine | Holy/Nature magic | Healing, buffs, smiting |
-| Weave | Arcane magic | Raw damage, control |
-| Physical | Martial prowess | Weapons, tactics |
+| Power Source | Theme | Typical Playstyle | Level 5 Bonus |
+|-------------|-------|-------------------|---------------|
+| Divine | Holy/Nature magic | Healing, buffs, smiting | +2 HP (auto) |
+| Weave | Arcane magic | Raw damage, control | +1 INT (auto) |
+| Physical | Martial prowess | Weapons, tactics | +1 ability point (player allocates) |
 
 ### Step 3: Choose Starting Armor
 
@@ -92,11 +92,11 @@ Stat gains diminish as you level, encouraging reliance on items.
 
 | Level Range | Stat Points | Rate |
 |-------------|-------------|------|
-| 1–10 | +1 per level | Every level |
+| 1–10 | +2 per level | Every level |
 | 11–50 | +1 every 2 levels | Even levels only |
 | 51–100 | +1 every 5 levels | Levels divisible by 5 |
 
-**Total stat points (Level 1 → 100):** ~40 points
+**Total stat points (Level 1 → 100):** ~50 points
 
 ### HP Per Level
 
@@ -110,15 +110,22 @@ Stat gains diminish as you level, encouraging reliance on items.
 
 ### XP Requirements
 
+Shaped curve: fast to chat (L3), steep grind to class select (L10). ~29 gameplay hours to L10.
+
 | Level | XP Required | Notes |
 |-------|-------------|-------|
-| 1 | 300 | |
-| 2 | 900 | |
-| 3 | 2,700 | Badge unlock (Adventurer) |
-| 5 | 14,000 | |
-| 10 | 85,000 | Advanced class selection |
-| 11+ | prev + (level × 5,000) | Mid-game scaling |
-| 51+ | prev + (level × 15,000) | Late-game scaling |
+| 1 | 500 | |
+| 2 | 2,000 | |
+| 3 | 5,500 | Badge unlock (Adventurer / chat) |
+| 4 | 25,000 | |
+| 5 | 85,000 | Power source bonus |
+| 6 | 200,000 | |
+| 7 | 450,000 | |
+| 8 | 900,000 | |
+| 9 | 1,600,000 | |
+| 10 | 2,500,000 | Advanced class selection |
+| 11+ | prev + (level × 150,000) | Mid-game scaling |
+| 51+ | prev + (level × 450,000) | Late-game scaling |
 
 ### Level Unlocks
 
@@ -145,10 +152,10 @@ Each class provides flat stat bonuses (one-time) and percentage multipliers (sca
 | **Ranger** | +3 AGI | 110% | 100% | 100% | 100% | 100% |
 | **Rogue** | +2 AGI, +1 INT | 100% | 100% | 100% | 115% | 100% |
 | **Druid** | +2 AGI, +2 STR | 105% | 105% | 100% | 100% | 105% |
-| **Warlock** | +2 AGI, +2 INT | 100% | 110% | 100% | 100% | 100% |
-| **Wizard** | +3 INT | 100% | 115% | 100% | 100% | 100% |
+| **Warlock** | +2 AGI, +2 INT | 100% | 120% | 100% | 100% | 100% |
+| **Wizard** | +3 INT | 100% | 125% | 100% | 100% | 100% |
 | **Cleric** | +2 INT, +10 HP | 100% | 100% | 110% | 100% | 100% |
-| **Sorcerer** | +2 STR, +2 INT | 100% | 108% | 100% | 100% | 105% |
+| **Sorcerer** | +2 STR, +2 INT | 100% | 115% | 100% | 100% | 105% |
 
 ### How Multipliers Work
 
@@ -194,10 +201,12 @@ Turn-based combat with a max of **15 turns** per encounter. Both PvE and PvP use
 ```
 weaponDamage = random(minDamage, maxDamage)
 statBonus = primaryStat / 20
-rawDamage = (weaponDamage + statBonus) × 1.2 (attack modifier)
+rawDamage = (weaponDamage + statBonus) × attackModifier
 defense = armorValue × 1.0 (defense modifier)
 damage = (rawDamage - defense) × classMultiplier × triangleBonus
 ```
+
+**Attack modifiers**: STR weapons use 1.2× (120%), AGI weapons use 0.9× (90%).
 
 On critical hit: damage × 2
 
@@ -205,8 +214,33 @@ On critical hit: damage × 2
 
 STR beats AGI beats INT beats STR.
 
-- **Bonus**: +5% damage per stat point difference when you have advantage
-- Encourages diverse builds and creates natural counters in PvP
+- **Bonus**: +4% damage per stat point difference when you have advantage
+- **Cap**: 40% maximum bonus
+- Based on each entity's dominant stat (highest of STR/AGI/INT)
+- Only the advantaged side gets a bonus; no penalty for disadvantage
+
+### AGI Combat Mechanics
+
+AGI-focused builds gain several combat advantages to compensate for lower base damage:
+
+| Mechanic | Formula | Cap |
+|----------|---------|-----|
+| **Evasion dodge** | (defenderAGI - attackerAGI) / 3 = dodge % | 25% |
+| **Double strike** | (attackerAGI - defenderAGI) × 2 = chance % | 25% |
+| **AGI crit bonus** | AGI / 4 = bonus crit % | — |
+
+- **Evasion**: When defender AGI > attacker AGI, chance to completely dodge physical attacks
+- **Double strike**: AGI weapon users deal +50% bonus damage on proc (AGI weapons only)
+- **AGI crit bonus**: Additional crit chance based on attacker's AGI stat
+
+### Magic Resistance
+
+Defender's INT provides passive magic damage reduction:
+
+```
+resist = defenderINT / 5
+damage = magicDamage - resist (min 1)
+```
 
 ### Status Effects
 
@@ -223,7 +257,8 @@ STR beats AGI beats INT beats STR.
 
 - Attacker can flee on **turn 1**
 - Defender can flee on **turn 2**
-- PvP flee incurs **25% gold penalty** from escrow
+- **PvE flee**: 5% gold penalty from escrow (burned)
+- **PvP flee**: 25% gold penalty from escrow (goes to opponent)
 
 ---
 
@@ -310,16 +345,16 @@ See [ECONOMICS.md](./ECONOMICS.md) for detailed economy design.
 
 | Area | Coordinates | Content |
 |------|------------|---------|
-| Safe zone | x < 5 or y < 5 | PvE only, lower-level mobs |
-| Danger zone | x ≥ 5 and y ≥ 5 | PvP enabled, higher-level mobs |
+| Safe zone | x < 5 and y < 5 | PvE only, lower-level mobs |
+| Danger zone | x ≥ 5 or y ≥ 5 | PvP enabled, higher-level mobs |
 | Shop (Tal) | (9, 9) | NPC shop |
 | Fragment center | (5, 5) | Lore trigger location |
 
 ### Mob Spawning
 
-- **Near home** (distance < 5 tiles): Level 1–6 mobs
-- **Far from home** (distance ≥ 5 tiles): Level 6–11 mobs
-- **Spawn count**: 0–5 mobs per tile (random)
+- **Near home** (distance < 5 tiles): Level 1–5 mobs
+- **Far from home** (distance ≥ 5 tiles): Level 6–10 mobs
+- **Spawn count**: 0–3 mobs per tile (random)
 - Distance calculated using Chebyshev distance from (0, 0)
 
 ---
@@ -328,10 +363,11 @@ See [ECONOMICS.md](./ECONOMICS.md) for detailed economy design.
 
 ### Rules
 
-- **Location**: Only in danger zone (x ≥ 5, y ≥ 5)
+- **Location**: Only in danger zone (x ≥ 5 or y ≥ 5)
 - **Cooldown**: 30 seconds between PvP engagements
 - **Escrow**: Portion of player's gold held during combat
-- **Flee penalty**: 25% of escrow gold (minimum 4 gold to trigger)
+- **PvP flee penalty**: 25% of escrow gold (minimum 4 gold to trigger)
+- **PvE flee penalty**: 5% of escrow gold (burned)
 - **Rewards**: Winner gets loser's escrow gold, split among team members
 - **Group PvP**: Supports multiple attackers vs multiple defenders
 
@@ -361,10 +397,10 @@ Turn-based combat (same system as PvE)
 | 1 | The Awakening | First spawn | `[IMPLEMENTED]` |
 | 2 | The Quartermaster | Visit shop at (9,9) | `[IMPLEMENTED]` |
 | 3 | The Restless | First monster kill | `[IMPLEMENTED]` |
-| 4 | Souls That Linger | Kill Dark Wisp (mob #13) | `[IMPLEMENTED]` |
+| 4 | Souls That Linger | Kill Crystal Elemental (mob #4) | `[IMPLEMENTED]` |
 | 5 | The Wound | Reach center tile (5,5) | `[IMPLEMENTED]` |
-| 6 | Death of Death God | Kill Lich Acolyte (mob #25) | `[IMPLEMENTED]` |
-| 7 | Betrayer's Truth | Kill Void Whisper (mob #22) | `[IMPLEMENTED]` |
+| 6 | Death of Death God | Kill Lich Acolyte (mob #7) | `[IMPLEMENTED]` |
+| 7 | Betrayer's Truth | Kill Shadow Stalker (mob #9) | `[IMPLEMENTED]` |
 | 8 | Blood Price | First PvP kill | `[IMPLEMENTED]` |
 
 Each fragment mints as an ERC721 NFT with unique token ID per character.
@@ -398,4 +434,4 @@ This section will be expanded once the ability system is designed.
 
 ---
 
-*Last updated: February 2026*
+*Last updated: March 2026*

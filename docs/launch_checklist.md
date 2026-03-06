@@ -43,6 +43,9 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] Shop inventory and pricing ✓ Uncommon gear + consumables, updated prices (`92a520da`), 6 combat consumables added (`e6114fe5`)
 - [x] Shop UI/UX ✓ Leave Shop button (`498b93bd`), friendly sell errors, Tal narrative intro (`bf411a69`)
 - [x] Marketplace working ✓ List/buy/cancel flows, access grants (`fdb25190`), await tx receipts (`e7496147`), redesigned item page (`cf82490c`), sell action (`f7223baf`)
+- [~] Gold Merchant (fiat-to-GOLD onramp) ✓ UI complete (`872495f0`→`fc743455`), needs: enable Thirdweb Pay in dashboard, register GOLD token, deepen Uniswap pool liquidity, test real $10 purchase end-to-end
+- [ ] Gold Merchant: optimize DOM manipulation performance (querySelectorAll('*') loop causes Brave tab throttling)
+- [ ] Gold Merchant: number formatting (commas + 2dp) not working yet — needs investigation
 - [ ] Gold withdrawal design — how players move earned gold out of the embedded wallet
 
 **Narrative & Lore**
@@ -144,7 +147,7 @@ Run through every core flow before inviting players:
 - [ ] Share in Lattice/MUD Discord
 
 **Beta Testing Program**
-- [ ] Define beta feedback channels
+- [x] Define beta feedback channels ✓ Tavern (Discourse) at tavern.ultimatedominion.com, linked in main nav
 - [ ] Create beta tester onboarding guide
 - [ ] Target: 10-25 active beta testers
 

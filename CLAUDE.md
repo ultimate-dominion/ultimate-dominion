@@ -81,6 +81,9 @@ Each package uses per-environment `.env` files. Scripts source the right file au
 - If yes: write a migration script or add a new table instead of modifying the existing one.
 - Never delete a table with live data without a migration plan.
 
+### Player-Facing Copy (Vibecoding)
+Any text that appears in the game — item descriptions, system messages, patch notes, NPC dialogue, UI labels — must sound like a specific person wrote it. No generic AI language ("In today's fast-paced world...", unnecessary bullet points, robotic transitions). If a player can tell AI wrote it, it failed.
+
 ### Scope Control
 - Keep changes focused — one feature or fix per branch/commit.
 - Don't bundle unrelated work together.
@@ -91,8 +94,31 @@ Each package uses per-environment `.env` files. Scripts source the right file au
 - Only commit what was worked on in the current session — don't sweep in unrelated uncommitted changes.
 - Don't push without asking.
 
+### Autonomy Rules
+**Do freely** (no confirmation needed):
+- Read files, search the web, run tests, check health endpoints
+- Deploy to beta (`dev` branch, testnet)
+- Fix obvious bugs, apply config changes to beta
+- Run forge scripts against testnet
+
+**Must ask first**:
+- Push to `main` or deploy to production
+- Spend money (any service, any amount)
+- Delete files, branches, database records, or production resources
+- Change env vars on Railway or Vercel
+- Any security-sensitive change (keys, access control, permissions)
+- Force push anywhere
+
+### Status Updates
+- Before any operation that takes more than 10 seconds, say what you're doing and roughly how long it'll take.
+- "Downloading snapshot, ~2.5 hrs" is better than silence.
+
+### Definition of Done
+- Every task needs a verification command, commit hash, or live URL before it's closed. No closing on vibes.
+- Examples: `forge test` passing, `curl` returning expected response, commit hash confirmed, URL loading correctly.
+
 ### Learn From Mistakes
-- After any error that takes more than one attempt to fix, write the root cause and solution to memory (`~/.claude/projects/-Users-michaelorourke/memory/MEMORY.md`) before moving on.
+- After any error that takes more than one attempt to fix, write the root cause and solution to `~/.claude/projects/-Users-michaelorourke/memory/learnings.md` (general) or `mud-gotchas.md` (MUD-specific) before moving on.
 - Check memory at the start of every session. Past mistakes must not repeat.
 
 ### Session State Persistence
@@ -125,16 +151,14 @@ Each package uses per-environment `.env` files. Scripts source the right file au
 ## Reminders
 
 ### Launch Checklist Updates
-**IMPORTANT**: After completing any significant work, update `docs/launch_checklist.md` to reflect progress. Key areas to track:
+**IMPORTANT**: After every git commit, check `docs/launch_checklist.md` for items that the commit addresses. If a checklist item is resolved by the commit:
 
-- [x] Non-Crypto Authentication (Done - Google OAuth via Thirdweb embedded wallet)
-- [ ] PvP Testing & Balance (50% - Phase 1 done, Phase 2-3 pending)
-- [ ] Item Drop Balance (40% - needs zone-specific tuning)
-- [x] Delegation Revoke (Done - Revoke button + logout revoke implemented)
-- [x] Emergency Pause Mechanism (Done - PauseSystem + PauseLib on all user-facing entry points)
-- [ ] Security Audit (CRITICAL - not done)
+1. **Mark it done**: Change `[ ]` to `[x]`, add the commit hash (e.g., `✓ Fixed shop buy flow (\`bc589ab7\`)`).
+2. **Update stale descriptions**: If the item describes a problem that's now fixed, rewrite it to reflect current state.
+3. **Update the Summary section**: Keep "What's Left for Production Launch" accurate.
+4. **Update the timestamp**: Change `_Last updated:_` at the bottom.
 
-When updating, change `[ ]` to `[x]` for completed items and add notes on partial progress.
+This keeps the checklist in sync with actual work as it happens, not after the fact.
 
 ## Critical Gaps (Pre-Launch Blockers)
 1. ~~No emergency pause/circuit breaker mechanism~~ (DONE)

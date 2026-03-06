@@ -210,6 +210,8 @@ Optional gold sinks that target players with excess gold. Critical for removing 
 | Stat respec | 200-1,000 gold (scales with level) | Percentage-based prevents triviality |
 | Premium crafting | Variable | Upgrade item rarity tier |
 | Housing/land (future) | 5,000-50,000 gold | Long-term aspirational goal |
+| Gold offerings | 100-500 gold (scales with level) | Sacrifice gold at shrine for +10% drop rate boost (1 hour). Permanent burn. |
+| XP boost | 50-200 gold (scales with level) | 1.5x XP multiplier for 1 hour. Permanent burn. |
 
 ---
 
@@ -240,7 +242,7 @@ The target is **sinks removing 90-100% of faucet output** for long-term stabilit
 - **With planned sinks**: ~25% permanent burn rate. Inflationary but manageable during growth.
 - **With all tiers**: ~33% permanent burn rate. Healthy during growth phase.
 
-**Why <100% is acceptable during launch**: New players entering the economy create gold demand (they need gold to buy items, join guilds, repair gear). During growth, moderate inflation rewards early players and ensures new players can earn gold at a reasonable rate. Target higher sink coverage only at steady state when growth slows.
+**Why <100% is acceptable during launch**: New players entering the economy create gold demand (they need gold to buy items, join guilds, repair gear). During growth, moderate inflation ensures new players can earn gold at a reasonable rate. Target higher sink coverage only at steady state when growth slows.
 
 **Throttle mechanisms**: Multiple admin-configurable levers exist to adjust sink rates if inflation becomes a problem (see Economic Levers section).
 
@@ -305,100 +307,37 @@ At 3% fee rate:
 | 1,500 | 225,000 gold | 6,750 gold | 202,500 gold | ~2.5M gold |
 | 5,000 | 750,000 gold | 22,500 gold | 675,000 gold | ~8.2M gold |
 
-### Marketplace Fee Revenue in USD (at Different Gold Prices)
-
-Revenue depends on gold's market price once tradeable on a DEX:
-
-| DAU | Annual Fee (gold) | At $0.001/gold | At $0.01/gold | At $0.10/gold |
-|-----|-------------------|----------------|---------------|---------------|
-| 50 | ~82K | $82/yr | $820/yr | $8,200/yr |
-| 150 | ~246K | $246/yr | $2,460/yr | $24,600/yr |
-| 500 | ~821K | $821/yr | $8,210/yr | $82,100/yr |
-| 1,500 | ~2.5M | $2,500/yr | $25,000/yr | $250,000/yr |
-| 5,000 | ~8.2M | $8,200/yr | $82,000/yr | $820,000/yr |
-
-**Reality check**: Axie at 50K DAU generates ~$4M/year in fee revenue with a 4.25% fee. That implies marketplace volume of ~$94M/year, or ~$5.15/DAU/day. At $0.01/gold, our moderate estimate of 150 gold/DAU/day = $1.50/DAU/day — conservative but realistic for a browser RPG without Axie's speculative NFT economy.
-
-### Revenue Milestones
-
-| Milestone | Required | Notes |
-|-----------|----------|-------|
-| Cover infrastructure ($200/mo) | ~500 DAU at $0.01/gold | Vercel + Railway + RPC costs |
-| Cover infrastructure + time ($2K/mo) | ~1,500 DAU at $0.01/gold | Part-time sustainable |
-| Meaningful revenue ($10K/mo) | ~5,000 DAU at $0.01/gold | Or 1,500 DAU at $0.05/gold |
-| Full-time sustainable ($50K/yr) | ~1,500 DAU at $0.05/gold | Or 5,000 DAU at $0.01/gold |
-
 ---
 
 ## Founder & Team Allocation
 
-### Industry Context
+### Founder Gold Allocation
 
-On-chain games typically allocate 15-25% of token supply to the founding team, with vesting schedules of 3-4 years and a 1-year cliff. Notable approaches:
+A **fixed pre-launch distribution** of gold, minted before the economy goes live. Because gold has infinite supply, this allocation represents a decreasing percentage of total supply as the game grows:
 
-- **Standard model**: Fixed supply token, 18-25% team allocation, 4-year vest
-- **Fair launch model**: 0% team allocation, all tokens from gameplay (Big Time)
-- **Fee capture model**: No token allocation, team earns from marketplace/protocol fees
+| Growth Scenario | Year 1 Circulating Supply | 5M Allocation as % |
+|----------------|--------------------------|-------------------|
+| Slow (50 DAU) | ~2.7M | ~65% |
+| Steady (150 DAU) | ~8.4M | ~37% |
+| Moderate (500 DAU) | ~27M | ~16% |
+| Strong (1,500 DAU) | ~90M | ~5% |
+| Breakout (5,000 DAU) | ~300M+ | ~1% |
 
-### Dual Value Streams
+**Recommended range**: 3-10M gold. This naturally dilutes as the economy grows — in high-growth scenarios, the allocation becomes a small fraction of circulating supply.
 
-The founder captures value through two independent mechanisms:
+### Company Operational Revenue
 
-1. **Pre-launch gold allocation** — Fixed amount minted before the economy goes live. Percentage of total supply decreases over time as more gold enters through gameplay.
-2. **Ongoing marketplace fee revenue** — 3% of all trading volume, scaling naturally with the economy. No additional token creation required.
+The 3% marketplace fee is the primary operational revenue stream. It flows to a configurable `feeRecipient` wallet on every marketplace trade. This is separate from the founder gold allocation — it is ongoing revenue from economic activity, not a pre-mint.
 
-### Combined Founder Value Projection
+**Marketplace fee revenue at different DAU levels (in gold):**
 
-Modeling total founder value (allocation + cumulative marketplace fee revenue) after Year 1:
-
-**At moderate growth (500 DAU year-end) with 5M gold pre-launch allocation:**
-
-| Component | Gold | At $0.01/gold | At $0.05/gold | At $0.10/gold |
-|-----------|------|---------------|---------------|---------------|
-| Pre-launch allocation | 5M | $50,000 | $250,000 | $500,000 |
-| Year 1 marketplace fee revenue | ~821K | $8,210 | $41,050 | $82,100 |
-| **Total Year 1** | **5.82M** | **$58,210** | **$291,050** | **$582,100** |
-| Allocation as % of Year 1 supply | ~15% | — | — | — |
-
-**At strong growth (1,500 DAU year-end) with 5M gold pre-launch allocation:**
-
-| Component | Gold | At $0.01/gold | At $0.05/gold | At $0.10/gold |
-|-----------|------|---------------|---------------|---------------|
-| Pre-launch allocation | 5M | $50,000 | $250,000 | $500,000 |
-| Year 1 marketplace fee revenue | ~2.5M | $25,000 | $125,000 | $250,000 |
-| **Total Year 1** | **7.5M** | **$75,000** | **$375,000** | **$750,000** |
-| Allocation as % of Year 1 supply | ~5% | — | — | — |
-
-**At breakout growth (5,000 DAU year-end) with 5M gold pre-launch allocation:**
-
-| Component | Gold | At $0.01/gold | At $0.05/gold | At $0.10/gold |
-|-----------|------|---------------|---------------|---------------|
-| Pre-launch allocation | 5M | $50,000 | $250,000 | $500,000 |
-| Year 1 marketplace fee revenue | ~8.2M | $82,000 | $410,000 | $820,000 |
-| **Total Year 1** | **13.2M** | **$132,000** | **$660,000** | **$1,320,000** |
-| Allocation as % of Year 1 supply | ~1% | — | — | — |
-
-**Key insight**: At strong+ growth, marketplace fee revenue exceeds the pre-launch allocation within Year 1. The allocation matters most in low-growth scenarios; in high-growth scenarios, the fee revenue dominates.
-
-### Allocation Modeling
-
-If target is ~20% of circulating supply after Year 1:
-
-| Growth Scenario | Circulating Year 1 (planned sinks) | 20% Allocation |
-|----------------|-----------------------------------|----------------|
-| Slow | ~2.6M | ~520K |
-| Steady | ~8.3M | ~1.7M |
-| Moderate | ~26.6M | ~5.3M |
-| Strong | ~89M | ~17.8M |
-
-### Recommended Approach
-
-A **fixed pre-launch distribution** in the range of **3-10M gold**, representing:
-- ~20% at moderate growth
-- ~6% at strong growth
-- ~1% at breakout growth
-
-This naturally dilutes as the economy grows, while marketplace fee revenue grows proportionally. The two mechanisms balance each other: the allocation provides value in early/low-growth scenarios, the fee revenue provides value in high-growth scenarios.
+| DAU | Daily Marketplace Volume | Daily Fee Revenue | Annual Revenue |
+|-----|------------------------|-------------------|---------------|
+| 50 | 7,500 gold | 225 gold | ~82K gold |
+| 150 | 22,500 gold | 675 gold | ~246K gold |
+| 500 | 75,000 gold | 2,250 gold | ~821K gold |
+| 1,500 | 225,000 gold | 6,750 gold | ~2.5M gold |
+| 5,000 | 750,000 gold | 22,500 gold | ~8.2M gold |
 
 ### Lockup & Transparency
 
@@ -412,25 +351,22 @@ Any pre-launch distribution should include:
 
 ## DEX Market Model
 
-Gold will be tradeable on a Uniswap V3 GOLD/ETH pool on Base. This section models the natural gold market — excluding speculation — and how the DEX interacts with the gold-only in-game marketplace.
+Gold is tradeable on a Uniswap V3 GOLD/ETH pool on Base. This section models the natural gold market, company revenue in USD terms, pool dynamics under stress, and how the DEX interacts with the gold-only in-game marketplace.
 
-### GasStation: Current Implementation vs Vision
-
-The current `GasStationSystem.sol` **burns gold from total supply** and sends ETH from a pre-funded treasury at a fixed exchange rate. This is not the intended design.
-
-**Intended design:**
+### GasStation Design
 
 | Phase | Gas Coverage | Mechanism |
 |-------|-------------|-----------|
-| Levels 1-3 | Thirdweb paymaster (free) | Embedded wallet sponsorship — zero friction onboarding |
-| Level 3+ (all wallets) | Gold → ETH auto-swap via DEX | Player's gold is sold on the GOLD/ETH pool; ETH received covers gas |
+| Levels 1-3 | Relayer-sponsored (free) | Embedded wallet sponsorship — zero friction onboarding |
+| Level 3+ (embedded) | Relayer charges Gold | `batchChargeGasGoldWithCounts()` — fault-tolerant, per-player tx counts, partial charges |
+| Level 3+ (MetaMask) | Gold → ETH auto-swap via DEX | `buyGas()` swaps on-chain via Uniswap V3 |
 
-**Critical distinction:** In the intended model, gold is **not burned** — it's **sold on the DEX** to whoever is buying. The gold re-enters circulation through the DEX buyer. This makes the gas mechanism a **redistribution + sell pressure source**, not a permanent sink.
+**Critical distinction:** Gold is **not burned** — it's **sold on the DEX** to whoever is buying. The gold re-enters circulation through the DEX buyer. This makes the gas mechanism a **redistribution + sell pressure source**, not a permanent sink.
 
-The GasStation has been redesigned:
-- **MetaMask wallets**: `buyGas()` swaps gold on-chain via Uniswap V3 SwapRouter02 (`exactInputSingle` GOLD→WETH, then unwrap WETH→ETH to player)
-- **Embedded wallets**: Self-hosted relayer calls `chargeGasGold()` to charge gold from players, then runs an off-chain cron script (`swap-gold.ts`) to sell accumulated gold on the DEX for ETH to self-fund
-- **Fallback**: When `GasStationSwapConfig.swapRouter == address(0)`, falls back to the original burn+treasury pattern
+Implementation:
+- **Embedded wallets**: Self-hosted relayer batches Gold charges every 5 min via `batchChargeGasGoldWithCounts()`, sells accumulated Gold on DEX every hour via `swapGoldForEth()`
+- **MetaMask wallets**: `buyGas()` swaps Gold on-chain via Uniswap V3 SwapRouter02 (`exactInputSingle` GOLD→WETH, then unwrap WETH→ETH to player)
+- **Fallback**: When `GasStationSwapConfig.swapRouter == address(0)`, falls back to burn+treasury pattern
 
 ### Gas Costs on Base L2
 
@@ -460,43 +396,16 @@ Using 60 tx/day ($0.18/day) as the average baseline.
 
 ### Daily Gas Sell Pressure (Gold Sold on DEX for Gas)
 
-Gold needed per player depends on the gold/USD price:
+Gas costs on Base L2 are fixed in fiat terms (~$0.18/player/day at 60 transactions). The gold cost of gas varies inversely with gold's market price — more gold is needed when the price is low, less when it is high. This creates a self-correcting dynamic in the gas mechanism: at lower gold prices, gas consumes a larger share of player income (reducing the attractiveness of playing), while at higher prices gas becomes a negligible cost.
 
-| Gold Price | Gold Needed/Player/Day | At 100 DAU | At 500 DAU | At 1,500 DAU |
-|-----------|----------------------|-----------|-----------|-------------|
-| $0.001 | 180 gold | 18,000 gold ($18) | 90,000 gold ($90) | 270,000 gold ($270) |
-| $0.005 | 36 gold | 3,600 gold ($18) | 18,000 gold ($90) | 54,000 gold ($270) |
-| $0.01 | 18 gold | 1,800 gold ($18) | 9,000 gold ($90) | 27,000 gold ($270) |
-| $0.05 | 3.6 gold | 360 gold ($18) | 1,800 gold ($90) | 5,400 gold ($270) |
-| $0.10 | 1.8 gold | 180 gold ($18) | 900 gold ($90) | 2,700 gold ($270) |
+### Gold Acquisition Paths
 
-**Key insight: Gas sell pressure is constant in USD terms** (~$0.18/player/day), regardless of gold price. At higher gold prices, fewer gold tokens are sold. This is naturally stabilizing — if gold price rises, less gold hits the DEX; if it falls, more gold hits but each unit is worth less.
+Gold can be acquired through two paths:
 
-**Gas sell pressure as % of player income:**
+1. **Gameplay earning**: Killing monsters, completing quests, selling items to other players on the marketplace.
+2. **DEX purchase**: Trading ETH for gold on the Uniswap V3 pool.
 
-| Gold Price | Gold for Gas/Day | Player Income (500 gold/day) | Gas as % of Income |
-|-----------|-----------------|-------|-------------------|
-| $0.001 | 180 gold | 500 gold | **36%** — punishing |
-| $0.005 | 36 gold | 500 gold | **7.2%** — noticeable |
-| $0.01 | 18 gold | 500 gold | **3.6%** — comfortable |
-| $0.05 | 3.6 gold | 500 gold | **0.7%** — negligible |
-| $0.10 | 1.8 gold | 500 gold | **0.4%** — negligible |
-
-This suggests a natural floor: if gold price drops below ~$0.001, gas costs consume most of player income, making the game unplayable and driving players away (reducing sell pressure). Above ~$0.005, gas is a minor cost.
-
-### Natural Buy Pressure Sources
-
-Excluding speculation, gold demand comes from players who need gold and don't have enough from gameplay:
-
-| Source | Mechanism | Daily Volume (500 DAU) | Notes |
-|--------|-----------|----------------------|-------|
-| New player gold acquisition | Buy gold on DEX to purchase starter items on marketplace | ~5,000–20,000 gold | 10-20 new players × 500-1,000 gold each |
-| Repair-constrained players | Players who spend more on repairs than they earn need to buy gold | ~5,000–15,000 gold | Especially late-game players with expensive gear |
-| Guild treasury contributions | Guild leaders may buy gold to fund treasury | ~2,000–10,000 gold | Especially competitive guilds |
-| Marketplace-driven demand | Player wants a specific item, buys gold to afford it | ~5,000–25,000 gold | Driven by item scarcity and marketplace listings |
-| **Total natural buy pressure** | | **~17,000–70,000 gold/day** | |
-
-At $0.01/gold, that's **$170–$700/day** in natural buy-side volume at 500 DAU.
+Players buy gold on the DEX when they need more gold than they can earn through gameplay alone. Primary reasons include: purchasing items on the marketplace, covering repair costs for expensive gear, funding guild treasuries, and acquiring gold faster than grinding allows.
 
 ### Marketplace ↔ DEX Interaction
 
@@ -525,36 +434,17 @@ SELLER → uses gold for repairs/guilds (SINK) ← or → sells gold on DEX (SEL
 
 Assumption: more gold enters from DEX buyers than leaves from sellers, because many sellers reinvest gold in-game (repairs, next purchase). The marketplace creates a net gold demand on the DEX.
 
-### DEX Volume Synthesis
+### DEX Volume Sources
 
-Combining gas sell pressure and marketplace-driven flows at **500 DAU, $0.01/gold**:
+DEX volume comes from several categories of activity:
 
-**SELL SIDE (gold → ETH on DEX):**
+- **Gas auto-swaps**: MetaMask players selling gold for ETH to cover transaction gas costs. Volume scales with player count and transaction frequency.
+- **Marketplace-adjacent buying**: Players who need gold to purchase items on the marketplace buy gold on the DEX with ETH.
+- **Player cashouts**: Players who earn more gold than they need sell excess gold on the DEX for ETH.
+- **Speculative trading**: Crypto-native users trading gold based on their assessment of the game's trajectory.
+- **LP rebalancing**: Arbitrageurs keeping the DEX price aligned with gold's fair value.
 
-| Source | Gold/Day | USD/Day |
-|--------|---------|---------|
-| Gas auto-swaps | 9,000 | $90 |
-| Player cashouts (earn-to-play) | ~5,000 | $50 |
-| Marketplace sellers cashing out | ~15,000 | $150 |
-| **Total daily sell** | **~29,000** | **~$290** |
-
-**BUY SIDE (ETH → gold on DEX):**
-
-| Source | Gold/Day | USD/Day |
-|--------|---------|---------|
-| New players buying gold | ~10,000 | $100 |
-| Marketplace buyers acquiring gold | ~30,000 | $300 |
-| Repair/guild demand (gold-poor players) | ~8,000 | $80 |
-| **Total daily buy** | **~48,000** | **~$480** |
-
-**Net daily flow: ~$190/day BUY pressure** (during growth phase at 500 DAU)
-
-This buy-side surplus exists because:
-1. The game is growing (new players entering)
-2. Sinks destroy gold, creating deficit for some players who need to buy
-3. Item scarcity makes marketplace demand inelastic
-
-At steady state (no new players), buy pressure reduces and approaches equilibrium with sell pressure. If the player base shrinks, sell pressure dominates and gold price declines — which is appropriate since it reflects declining demand.
+Actual DEX volume will depend on player behavior, marketplace activity, and item economy dynamics. At steady state, buy and sell pressure tend toward equilibrium. During growth periods, new player demand creates additional buy-side activity; during contraction, the reverse occurs.
 
 ### Starting DEX Liquidity
 
@@ -567,72 +457,217 @@ At steady state (no new players), buy pressure reduces and approaches equilibriu
 | ±10% | ~17x |
 | ±5% | ~34x |
 
-**Recommended starting position:**
+**Production pool:**
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| Pool | GOLD/WETH on Uniswap V3 (Base) |  |
-| Initial price | $0.01/gold (10,000 gold per $100 ETH) | Conservative starting price — can appreciate with growth |
-| Liquidity provided | $2,000–$5,000 total ($1,000-$2,500 ETH + equivalent gold) | Concentrated in ±20% range |
-| Effective depth | ~$17,000–$42,500 V2-equivalent | Sufficient for $100+ swaps at <1% slippage |
-| Fee tier | 1% (10,000 bps) | Low volume, high volatility — standard for new tokens on V3 |
+| Pool | GOLD/WETH on Uniswap V3 (Base) | |
+| Initial seed | 0.5 ETH + ~240K Gold | Conservative start; deepened by Patron system over time |
+| Initial price | ~$0.002/gold (1,250,000 gold per ETH at $2,500 ETH) | Deliberately low — let price appreciate with growth |
+| Range | ±50% ($0.001–$0.003/gold) | Wide range for thin pool — prevents single buy exhausting liquidity |
+| Effective depth | ~$4,250 V2-equivalent (at ±50%) | Sufficient for gas refuel swaps (<$2 each) |
+| Fee tier | 0.3% (3000 bps) | Matches beta pool; balances LP revenue and trader costs |
 
-**Slippage analysis for gas auto-swaps** (at $3,000 starting liquidity, ±20% range):
+**Why start low ($0.002 vs. $0.01):**
+- Low Gold price = high marketplace velocity (players trade freely, items feel cheap in dollar terms)
+- Gradual appreciation rewards early players and creates a healthy growth narrative
+- Inverse of typical crypto game pattern (high launch → dump). UD pattern: low launch → organic growth.
+- Relayer becomes self-sustaining above ~$0.003/gold (see Relayer Sustainability below)
 
-| Swap Size | USD Value at $0.01/gold | Estimated Slippage |
+**Slippage analysis** (at 0.5 ETH seed, ±50% range):
+
+| Swap Size | USD Value at $0.002/gold | Estimated Slippage |
 |-----------|------------------------|-------------------|
-| 20 gold (single gas refuel) | $0.20 | <0.01% |
-| 200 gold (day's gas supply) | $2.00 | <0.05% |
-| 5,000 gold (marketplace purchase) | $50.00 | ~0.3% |
-| 50,000 gold (large cashout) | $500.00 | ~3-5% |
+| 20 gold (single gas refuel) | $0.04 | <0.01% |
+| 200 gold (day's gas supply) | $0.40 | <0.01% |
+| 5,000 gold (marketplace purchase) | $10 | ~0.2% |
+| 50,000 gold (large cashout) | $100 | ~2-4% |
 
-Daily gas sell pressure of ~$90 across 500 players means individual swaps are tiny ($0.20-$2.00 each) — slippage is effectively zero even with minimal starting liquidity.
+Daily gas sell pressure across all players is tiny at early DAU — individual swaps are effectively zero slippage.
 
-**Who provides liquidity?** The protocol seeds the initial pool. LP fees (1% of all swap volume) accrue to the protocol as a third revenue stream alongside marketplace fees and the founder allocation.
+**Pool buy-out scenario:** With ±50% range, buying ALL Gold from the pool costs ~0.236 ETH ($590) and moves price from $0.002 to $0.003 (1.5x). This is manageable — see Founder Reserve as Market Maker below.
 
-### LP Fee Revenue Estimate
+**Who provides liquidity?** The protocol seeds the initial pool. LP fees (0.3% of all swap volume) accrue to the liquidity provider. Patron of the Realm deepens the pool over time.
 
-| DAU | Daily DEX Volume (USD) | Annual LP Fees (1%) |
-|-----|----------------------|-------------------|
-| 100 | ~$60 | ~$220 |
-| 500 | ~$770 | ~$2,800 |
-| 1,500 | ~$2,300 | ~$8,400 |
-| 5,000 | ~$7,700 | ~$28,000 |
+### LP Fee Revenue
 
-LP fees are modest but cover the cost of providing liquidity and grow proportionally with the game.
+Liquidity providers earn 1% of all swap volume on the GOLD/WETH pool. LP fee revenue scales proportionally with DEX volume, which in turn scales with player count and marketplace activity.
 
-### Gold Price as Game Health Signal
+### LP Incentive System — Patron of the Realm `[PLANNED]`
 
-Because gold's DEX price is driven by natural supply/demand rather than speculation (by design), the price becomes a transparent indicator of game health:
+Players can deepen the GOLD/ETH pool by depositing ETH through an in-game interface. The protocol pairs the ETH with minted gold and adds both to the Uniswap V3 pool. Players receive tiered in-game titles and perks (social status and convenience, never combat power) that persist only while their deposit remains active.
 
-| Game State | DEX Dynamic | Gold Price Trend |
-|-----------|------------|-----------------|
-| Growing (new players > churn) | Buy pressure > sell pressure | Appreciates |
-| Stable (new ≈ churn) | Buy ≈ sell | Stable |
-| Declining (churn > new) | Sell pressure > buy pressure | Depreciates |
+**Tiers**: Bronze (0.01 ETH) → Silver (0.05 ETH) → Gold (0.1 ETH) → Diamond (0.5+ ETH). Diamond-tier Patrons get an NPC permanently named after them.
 
-This is a feature, not a bug. The gold price honestly reflects the state of the economy. No artificial pegs, no buybacks, no manipulation — the price is what it is.
+This solves the cold-start liquidity problem: early LP fee yield alone can't attract capital, but in-game identity and status can. Players provide liquidity because they want the title, not the APY.
 
-### Price Range Scenarios (Year 1)
+The pool launches at the 1% fee tier (highest standard V3 tier) to maximize LP returns during low-volume early period, with a migration path to lower tiers as volume grows.
 
-| Growth Scenario | Expected Price Range | Basis |
-|----------------|---------------------|-------|
-| Slow (50 DAU) | $0.001–$0.005 | Minimal buy pressure, gas costs dominate |
-| Steady (150 DAU) | $0.003–$0.01 | Moderate marketplace activity |
-| Moderate (500 DAU) | $0.005–$0.03 | Healthy marketplace, strong gold demand |
-| Strong (1,500 DAU) | $0.01–$0.10 | Deep marketplace, item scarcity drives demand |
-| Breakout (5,000 DAU) | $0.05–$0.50+ | Speculation would likely enter at this scale |
+See [ECONOMICS.md — Patron of the Realm](./ECONOMICS.md) for the full design.
 
-These are rough ranges based on natural supply/demand dynamics. Actual prices depend on player behavior, sink effectiveness, and marketplace liquidity.
+---
 
-### Self-Correcting Mechanisms
+## Company Revenue Model (USD)
 
-The gold economy has several natural stabilizers:
+### Revenue Streams
 
-1. **Gas cost floor**: If gold price drops too low, gas becomes unaffordable (36% of income at $0.001). Players leave → less sell pressure → price stabilizes.
-2. **Repair demand floor**: Players MUST repair items to keep playing. If gold is cheap, repair costs are trivial and more gold stays in the economy. If gold is expensive, repair costs drive players to the DEX to buy gold.
-3. **Marketplace arbitrage**: If gold is cheap on DEX, players buy gold to buy underpriced items on marketplace. If gold is expensive, players grind rather than buying.
-4. **Admin levers**: Base gold drop rate, repair costs, marketplace fee, and drop rates can all be adjusted to tune supply/demand (see Economic Levers section).
+The company earns Gold from two sources, which is converted to ETH/USD via the DEX:
+
+**1. Marketplace fees (3%)** — passive, scales with trading volume.
+
+**2. Relayer Gold charges** — active, scales with embedded wallet player count. Assuming 50% of players use embedded wallets (Google auth), average 60 tx/day, 1 Gold charge per tx.
+
+### Combined Revenue by DAU and Gold Price
+
+| DAU | Marketplace Fee (gold/mo) | Relayer Charges (gold/mo) | Total Gold/Month | @$0.002 | @$0.005 | @$0.01 |
+|-----|--------------------------|--------------------------|------------------|---------|---------|--------|
+| 50 | 6,750 | 45,000 | 51,750 | $104/mo | $259/mo | $518/mo |
+| 150 | 20,250 | 135,000 | 155,250 | $311/mo | $776/mo | $1,553/mo |
+| 500 | 67,500 | 450,000 | 517,500 | $1,035/mo | $2,588/mo | $5,175/mo |
+| 1,500 | 202,500 | 1,350,000 | 1,552,500 | $3,105/mo | $7,763/mo | $15,525/mo |
+
+**Relayer charges dominate early revenue** (~87%). Marketplace fees only matter at scale.
+
+**Honest assessment:** At 50-150 DAU, revenue covers infrastructure ($100-200/mo) and little else. Real revenue requires 500+ DAU. This is a game-first project, not a token-first project.
+
+### Relayer Self-Sustainability
+
+The relayer spends ETH (gas) and earns Gold (charges). Gold price determines whether it's self-sustaining:
+
+| Gold Price | Gold Value Per Tx | Gas Cost Per Tx (Base) | Per-Tx P&L |
+|---|---|---|---|
+| $0.001 | $0.001 | ~$0.003 | **-$0.002 (losing money)** |
+| $0.002 | $0.002 | ~$0.003 | **-$0.001 (losing money)** |
+| $0.003 | $0.003 | ~$0.003 | ~breakeven |
+| $0.005 | $0.005 | ~$0.003 | +$0.002 (sustainable) |
+
+**Natural price floor:** Below ~$0.003/gold, the relayer can't self-fund. It stops selling Gold on the DEX (removing sell pressure), which helps price recover. This creates a self-correcting feedback loop.
+
+**Levers:** If Gold stays below $0.003, increase `goldPerGasCharge` to 2+ Gold per tx. Or accept relayer subsidy during early growth when player counts are low and gas costs are minimal.
+
+---
+
+## Founder Reserve as Market Maker
+
+### Role of the Founder Allocation
+
+At early DAU (50-150), company revenue Gold (~$100-300/month) is **too small to meaningfully affect the DEX price**. The founder's pre-minted Gold reserve (recommended 5-10M) is the actual market-making tool.
+
+| Founder Reserve | Value @$0.002 | Value @$0.005 | Equiv. Months of 500-DAU Revenue |
+|---|---|---|---|
+| 3M gold | $6,000 | $15,000 | 6 months |
+| 5M gold | $10,000 | $25,000 | 10 months |
+| 10M gold | $20,000 | $50,000 | 19 months |
+
+### Whale Buy-Out Cycle
+
+With a 0.5 ETH pool (±50% range, ~240K Gold):
+
+1. **Whale buys all Gold** → pays ~0.236 ETH ($590), price: $0.002 → $0.003
+2. **You sell Gold from reserve** → receive ~0.236 ETH, price resets to ~$0.002
+3. **Net:** You collected 0.236 ETH, whale holds 240K Gold at above-market cost basis (~18% underwater)
+
+With 5M reserve, you can sustain ~20 full cycles. But the whale loses money each cycle — they'd stop long before you run out. And as the LP, you also earn the 0.3% swap fees on both sides.
+
+**Key advantage:** You're not fighting the whale alone. Other natural participants also respond:
+- Players holding Gold see the spike and cash out → sell pressure
+- Bots detect the spike and sell → sell pressure
+- Arbitrageurs normalize the price → sell pressure
+
+The more players in the economy, the less you need to intervene. The founder reserve is a ~1 year runway for market-making; after that, organic supply/demand should dominate.
+
+### Long-Term Monetization of Founder Reserve
+
+The cycle over months (not individual trades):
+
+| Phase | DAU | Founder Role | Gold Sold | ETH Collected |
+|---|---|---|---|---|
+| Month 1-3 | 50 | Sole market maker, sell into pumps | ~200K | ~0.16 ETH ($400) |
+| Month 3-6 | 150 | Reduce selling, let price drift up | ~500K | ~1.0 ETH ($2,500) |
+| Month 6-12 | 500 | Organic demand rising, sell gradually | ~1M | ~2.4 ETH ($6,000) |
+| Year 2+ | 1,500 | Insurance only, market self-regulates | As needed | — |
+
+**Year 1 total (steady growth to 500 DAU):** ~1.7M Gold sold, ~3.6 ETH (~$9,000) collected. Founder reserve: ~3.3M remaining.
+
+---
+
+## Price Strategy
+
+### Core Principle
+
+**Keep Gold cheap during growth. Revenue comes from volume, not price.**
+
+Low Gold price ($0.002-0.005):
+- Marketplace velocity is high — players trade freely, items feel affordable
+- New players onboard cheaply (low barrier to entry)
+- Game feels like a game, not a financial market
+- Aligns with manifesto: "invisible technology", "earning is secondary to fun"
+
+High Gold price ($0.01+):
+- Marketplace slows — every purchase feels consequential in dollar terms
+- Players think about dollar values instead of playing
+- Farmers emerge to exploit the price, warping the experience
+- Creates fragile dependency on price staying high
+
+### Phased Approach
+
+| Phase | Target Gold Price | Mechanism |
+|---|---|---|
+| Soft launch (50 DAU) | $0.002 | Seed pool at low price. Absorb any pumps via founder reserve. |
+| Growth (150 DAU) | $0.003-0.004 | Reduce sell pressure gradually. Relayer becomes self-sustaining. |
+| Establishment (500 DAU) | $0.005-0.008 | Organic supply/demand drives price. Patron system deepens pool. |
+| Mature (1,500+ DAU) | Market-determined | Founder reserve <5% of supply. Market self-regulates. |
+
+### Why This Is Different From Other Crypto Games
+
+Typical crypto game: **High price launch → inflation → dump → death spiral.**
+
+UD model: **Low price launch → game grows → organic appreciation → early players rewarded.**
+
+The Gold price becomes a trailing indicator of game health, not a leading speculative asset. Players buy Gold to play, not to invest. When the game does well, Gold appreciates naturally. This is durable because it doesn't depend on speculation to sustain itself.
+
+---
+
+## Speculation Dynamics
+
+### Natural Market Participants
+
+Once the pool is liquid, these actors emerge organically:
+
+**Buy side (ETH → Gold):**
+- New players buying Gold to start or buy marketplace items
+- Speculators betting on game growth
+- Item flippers who need Gold to buy underpriced listings
+- Bots buying dips after sell-offs
+
+**Sell side (Gold → ETH):**
+- Players cashing out earnings
+- Relayer swapping charged Gold
+- Founder/company selling reserve into demand
+- Gold farmers (if price is high enough)
+
+**Neutral (both sides):**
+- Arbitrage bots keeping price efficient (dampen volatility — helps stability)
+- LP providers earning fees (Patron system)
+- Market-making bots providing tight spreads (deepen pool for free)
+
+**Net effect of natural participants:** They make the market efficient, which favors the entity with the most supply (the founder). More participants = less need for manual intervention.
+
+### Items vs. Gold as Speculative Targets
+
+The smart speculator buys items, not Gold. See [ECONOMICS.md — Items as the True Value Store](./ECONOMICS.md).
+
+**Every speculative item trade generates:**
+1. ETH → Gold on DEX (buy pressure)
+2. Gold → Item on marketplace (3% fee to protocol)
+3. Item appreciates, sold for more Gold (3% fee again)
+4. Gold → ETH on DEX (sell pressure)
+
+**Two marketplace fees + two DEX trades per speculative cycle.** Item speculation is revenue-positive for the protocol.
+
+### Anti-Speculation Protections
+
+See [ECONOMICS.md — Anti-Speculation Protections](./ECONOMICS.md) for the full design. Key measures: item degradation (carrying cost for speculators), marketplace cooldowns (kill rapid flipping), progressive fees (make flipping unprofitable), soulbound progression (money can't buy everything).
 
 ---
 
@@ -697,13 +732,18 @@ These parameters can be adjusted on-chain without redeployment:
 - [ ] Item durability implementation details (UI, repair NPCs, degradation curve)
 - [ ] Guild system implementation timeline
 - [ ] Marketplace fee: keep at 3% or adjust
-- [ ] Confirm initial DEX liquidity amount ($2,000-$5,000 range) and initial gold price ($0.01 target)
+- [x] ~~Confirm initial DEX liquidity amount and initial gold price~~ — Resolved: 0.5 ETH + ~240K Gold at $0.002/gold on 0.3% fee tier. Deepened over time via Patron system.
 - [ ] How to communicate allocation to players (transparency post, docs update)
 - [ ] Death penalty: implement as escrow burn or wallet burn
 - [ ] Fee recipient: single wallet, multisig, or DAO treasury
 - [x] **GasStation redesign**: Rewritten to swap via Uniswap V3 on-chain + relayer off-chain path. Fallback to burn+treasury when pool not configured.
-- [ ] Uniswap V3 pool deployment: Run `DeployGoldPool.s.sol` to create and seed GOLD/WETH pool (1% fee tier, initial price ~$0.01/gold)
+- [x] Uniswap V3 pool deployment (beta): 0.3% fee tier pool at `0x4338173e5557Eed1638c03c28f3502AD9Bb03e0f`. Production pool pending.
 - [x] Gas batching UX: Auto-swap triggers when ETH balance < 0.0001 ETH, rate-limited to once per 60s client-side
+- [x] ~~Relayer batch charging~~ — `batchChargeGasGoldWithCounts()` implemented with fault tolerance, partial charges, per-player tx counts. Relayer `gasCharge.ts` module with 5-min flush + 1-hour swap scheduler.
+- [ ] LP incentive system design — Patron of the Realm (single-sided ETH deposit, protocol pairs with gold) vs standard LP farming
+- [ ] Anti-speculation: marketplace cooldown (24-48h relist delay) implementation
+- [ ] Anti-speculation: progressive marketplace fees (3% → 5% → 10% for rapid relists)
+- [ ] Autonomous buyback mechanism — use marketplace fee revenue to buy gold on DEX?
 
 ---
 
@@ -720,13 +760,15 @@ Priority order based on economic impact and implementation complexity:
 | 5 | Guild upkeep burn | High | High | Requires territory system |
 | 6 | Cosmetic/aspirational sinks | Medium | Medium | Title system, name changes |
 | 7 | Stat respec fee | Low | Low | Simple gold check before respec |
+| 8 | Gold offerings (shrine sacrifice) | Medium | Low | Temporary drop rate boost, permanent burn |
+| 9 | XP boost purchase | Low | Low | Temporary XP multiplier, permanent burn |
 
 ---
 
 ## Next Steps
 
 1. ~~**Redesign GasStation**~~ — Done. `buyGas()` now swaps via Uniswap V3 when configured, with burn+treasury fallback. Relayer `chargeGasGold()` added for embedded wallets.
-2. **Deploy Uniswap V3 GOLD/ETH pool** — Run `DeployGoldPool.s.sol` to seed with initial liquidity. Configure `GasStationSwapConfig` with pool addresses.
+2. ~~**Deploy Uniswap V3 GOLD/ETH pool**~~ — Done on beta. Pool: `0x4338173e5557Eed1638c03c28f3502AD9Bb03e0f` (0.3% fee tier). Production pool pending — see deploy-guide.md launch checklist.
 3. Implement item degradation system — highest-impact permanent sink, creates compounding demand
 4. Add death penalty (5% PvE, 10% PvP escrow burn)
 5. Increase PvE flee penalty to 10%
@@ -735,7 +777,14 @@ Priority order based on economic impact and implementation complexity:
 8. Implement on-chain vesting contract if applicable
 9. Design guild economic system (creation, upkeep, dissolution)
 10. Prepare public-facing tokenomics announcement
+11. Production pool seeding (0.5 ETH + ~240K Gold, ±50% range, 0.3% fee tier)
+12. Patron of the Realm LP incentive system design + implementation
+13. Gold offerings shrine system (permanent burn sink)
+14. Autonomous buyback mechanism evaluation (marketplace fees → gold purchase on DEX)
+15. Anti-speculation: marketplace cooldown implementation (24-48h relist delay)
+16. Anti-speculation: progressive marketplace fees for rapid relists
+17. Item permanent destruction mechanic (failed repair, crafting sacrifice, or PvP full-loot) — critical for items-as-value-store thesis
 
 ---
 
-*Last updated: March 2026*
+*Last updated: March 3, 2026 — Added company revenue model (USD), pool dynamics, whale scenarios, price strategy, relayer sustainability, speculation dynamics, anti-speculation protections.*
