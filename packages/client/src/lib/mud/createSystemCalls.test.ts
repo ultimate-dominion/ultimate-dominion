@@ -102,6 +102,9 @@ function mockOwnership(owner: string = TEST_WALLET) {
     if (table === 'WorldEncounter') {
       return { end: '0' } as ReturnType<typeof getTableValue>;
     }
+    if (table === 'CombatEncounter') {
+      return { end: '0' } as ReturnType<typeof getTableValue>;
+    }
     return undefined;
   });
 }
@@ -395,6 +398,49 @@ describe('createSystemCalls — ownership validation', () => {
       expect(result.error).toContain('not a valid character');
       expect(waitForTransaction).not.toHaveBeenCalled();
     });
+  });
+});
+
+// ── Suite B2: Encounter Guards ──────────────────────────────────────
+
+describe('createSystemCalls — encounter guards', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('endTurn skips chain call when CombatEncounter already ended', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    const calls = createSystemCalls(network);
+    mockedGetTableValue.mockImplementation((table: string) => {
+      if (table === 'CombatEncounter') {
+        return { end: '1772813895' } as ReturnType<typeof getTableValue>;
+      }
+      return undefined;
+    });
+
+    const result = await calls.endTurn(TEST_ENTITY, TEST_ENTITY, TEST_ENTITY_2, '1');
+    expect(result.success).toBe(true);
+    expect(waitForTransaction).not.toHaveBeenCalled();
+  });
+
+  it('endTurn skips chain call when CombatEncounter not found', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    const calls = createSystemCalls(network);
+    mockedGetTableValue.mockReturnValue(undefined);
+
+    const result = await calls.endTurn(TEST_ENTITY, TEST_ENTITY, TEST_ENTITY_2, '1');
+    expect(result.success).toBe(true);
+    expect(waitForTransaction).not.toHaveBeenCalled();
+  });
+
+  it('endTurn proceeds when CombatEncounter is still active', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    const calls = createSystemCalls(network);
+    mockOwnership();
+
+    const result = await calls.endTurn(TEST_ENTITY, TEST_ENTITY, TEST_ENTITY_2, '1');
+    expect(result.success).toBe(true);
+    expect(waitForTransaction).toHaveBeenCalled();
   });
 });
 

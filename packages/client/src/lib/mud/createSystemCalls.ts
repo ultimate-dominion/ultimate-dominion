@@ -345,6 +345,13 @@ export function createSystemCalls(
     defenderId: string,
     itemId: string,
   ): SystemCallReturn => {
+    // Check the store first — if the encounter already ended (defender died on
+    // previous turn), skip the chain call to avoid a revert.
+    const combatEncounter = getTableValue('CombatEncounter', encounterId);
+    if (!combatEncounter || BigInt(combatEncounter.end as string | number) !== BigInt(0)) {
+      return { success: true };
+    }
+
     const ownershipError = validateCharacterOwnership(playerId, 'endTurn');
     if (ownershipError) return ownershipError;
 
@@ -368,8 +375,8 @@ export function createSystemCalls(
         },
       );
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -439,8 +446,8 @@ export function createSystemCalls(
         characterId as `0x${string}`,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -692,8 +699,8 @@ export function createSystemCalls(
         entity as `0x${string}`,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -861,8 +868,8 @@ export function createSystemCalls(
         characterMetadataCid,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -880,8 +887,8 @@ export function createSystemCalls(
 
       const tx = await worldContract.write.UD__rest([characterId]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -906,8 +913,8 @@ export function createSystemCalls(
         BigInt(tokenId),
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -931,8 +938,8 @@ export function createSystemCalls(
         BigInt(tokenId),
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1117,8 +1124,8 @@ export function createSystemCalls(
         defeatedAreMobs,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return { error: getContractError(e), success: false };
     }
@@ -1141,8 +1148,8 @@ export function createSystemCalls(
         tileY,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1164,8 +1171,8 @@ export function createSystemCalls(
         fragmentType,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1187,8 +1194,8 @@ export function createSystemCalls(
         goldAmount,
       ]);
 
-      waitForTransaction(tx).catch(() => {});
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
     } catch (e) {
       return {
         error: getContractError(e),
