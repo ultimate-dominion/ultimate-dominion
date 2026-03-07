@@ -241,9 +241,6 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     [item.hpRestoreAmount],
   );
 
-  // Buff consumables must be equipped before consuming
-  const needsEquipFirst = !isEquipped && !isHealthRestore;
-
   const isConsumeDisabled = useMemo(() => {
     if (!isOwner) return false;
     // Only allow instant heal items during combat
@@ -251,11 +248,9 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     if (isHealthFull) return true;
     if (!isSpawned) return true;
     if (maxStacksReached) return true;
-    // Buff items must be equipped first
-    if (needsEquipFirst) return true;
 
     return false;
-  }, [currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached, needsEquipFirst]);
+  }, [currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached]);
 
   const isAnyLoading = consumeTx.isLoading || equipTx.isLoading || unequipTx.isLoading;
 
@@ -294,11 +289,6 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
           {isOwner && (
             <Text color="gray.500" fontSize="xs" mt={2}>
               Slot {totalEquippedSlots}/{MAX_EQUIPPED_WEAPONS} equipped
-            </Text>
-          )}
-          {needsEquipFirst && isOwner && !isConsumed && (
-            <Text color="orange" fontWeight="bold" mt={4} size="sm">
-              Equip this consumable before consuming.
             </Text>
           )}
           {statusText && (
