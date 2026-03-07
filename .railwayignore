@@ -1,0 +1,7 @@
+# Exclude everything not needed for Railway builds
+packages/contracts/out/
+packages/contracts/cache/
+packages/contracts/lib/
+packages/client/
+docs/
+.git/
