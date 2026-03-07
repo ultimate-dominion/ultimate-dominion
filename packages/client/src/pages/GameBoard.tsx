@@ -30,9 +30,11 @@ import { MapPanel } from '../components/MapPanel';
 import { PolygonalCard } from '../components/PolygonalCard';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
+import { TransactionProgressBar } from '../components/TransactionProgressBar';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
+import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
 import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
@@ -70,7 +72,8 @@ export const GameBoard = (): JSX.Element => {
   } = useMUD();
   const { character, isMoveEquipped, isRefreshing } = useCharacter();
   const { inSafetyZone, isSpawned, position } = useMap();
-  const { continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
+  const { attackProgress, continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
+  const { moveProgress } = useMovement();
   const { isMapFull, queueStatus } = useQueue();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
@@ -219,27 +222,33 @@ export const GameBoard = (): JSX.Element => {
       <GridItem
         colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
-        rowSpan={{ base: 'auto', lg: 6 }}
+        rowSpan={{ base: 'auto', lg: 12 }}
         rowStart={{ base: 0, lg: 0 }}
+        display="flex"
+        flexDirection="column"
+        gap={0}
+        overflow="hidden"
       >
-        <PolygonalCard className="data-dense" clipPath="none">
-          <TileDetailsPanel />
-        </PolygonalCard>
-      </GridItem>
-      <GridItem
-        colSpan={{ base: 1, lg: 8 }}
-        colStart={{ base: 0, lg: 5 }}
-        display={
-          !isDesktop && !currentBattle && isSpawned && position
-            ? 'none'
-            : undefined
-        }
-        rowSpan={{ base: 'auto', lg: 6 }}
-        rowStart={{ base: 'auto', lg: 7 }}
-      >
-        <PolygonalCard className="data-dense" clipPath="none">
-          <ActionsPanel />
-        </PolygonalCard>
+        <Box flex="1" minH={0} overflow="hidden">
+          <PolygonalCard className="data-dense" clipPath="none" h="100%">
+            <TileDetailsPanel />
+          </PolygonalCard>
+        </Box>
+        <TransactionProgressBar progressA={moveProgress} progressB={attackProgress} />
+        <Box
+          flex="1"
+          minH={0}
+          overflow="hidden"
+          display={
+            !isDesktop && !currentBattle && isSpawned && position
+              ? 'none'
+              : undefined
+          }
+        >
+          <PolygonalCard className="data-dense" clipPath="none" h="100%">
+            <ActionsPanel />
+          </PolygonalCard>
+        </Box>
       </GridItem>
       <GridItem
         colSpan={{ base: 1, lg: 4 }}

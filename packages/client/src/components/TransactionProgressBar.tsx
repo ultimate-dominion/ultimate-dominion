@@ -1,4 +1,5 @@
 import { Box } from '@chakra-ui/react';
+import { useMemo } from 'react';
 
 import type { TransactionProgress } from '../hooks/useTransactionProgress';
 
@@ -9,31 +10,40 @@ const COLORS: Record<string, string> = {
 };
 
 type TransactionProgressBarProps = {
-  progress: TransactionProgress;
+  progressA: TransactionProgress;
+  progressB: TransactionProgress;
 };
 
+/**
+ * Unified progress bar that shows whichever of two progress sources is active.
+ * Sits between the battle panel and the dialog panel.
+ */
 export const TransactionProgressBar = ({
-  progress,
-}: TransactionProgressBarProps): JSX.Element | null => {
-  if (progress.phase === 'idle') return null;
+  progressA,
+  progressB,
+}: TransactionProgressBarProps): JSX.Element => {
+  const progress = useMemo(() => {
+    if (progressA.phase !== 'idle') return progressA;
+    return progressB;
+  }, [progressA, progressB]);
 
   const color = COLORS[progress.phase] ?? COLORS.filling;
-  const opacity = progress.phase === 'done' ? 0 : 1;
+  const isVisible = progress.phase !== 'idle' && progress.phase !== 'done';
 
   return (
     <Box
-      position="absolute"
-      top={0}
-      left={0}
       w="100%"
-      h="3px"
-      zIndex={10}
+      h="6px"
+      bg="rgba(0,0,0,0.4)"
+      overflow="hidden"
+      flexShrink={0}
     >
       <Box
         h="100%"
         bg={color}
         w={`${progress.percent}%`}
-        opacity={opacity}
+        opacity={isVisible ? 1 : 0}
+        boxShadow={isVisible ? `0 0 8px ${color}` : 'none'}
         transition={`width ${progress.transitionMs}ms ease-out, opacity 400ms ease, background-color 200ms ease`}
       />
     </Box>

@@ -31,7 +31,6 @@ import { removeEmoji } from '../utils/helpers';
 import { ConsumableQuickUse } from './ConsumableQuickUse';
 import { ItemConsumeModal } from './ItemConsumeModal';
 import { PotionSvg } from './SVGs/PotionSvg';
-import { TransactionProgressBar } from './TransactionProgressBar';
 
 export const MONSTER_MOVE_MAPPING: Record<string, string> = {
   '1': 'Razor Claws',      // Rock Beetle
@@ -73,7 +72,6 @@ export const ActionsPanel = (): JSX.Element => {
   const {
     attackOutcomes,
     attackingItemId,
-    attackProgress,
     attackStatusMessage,
     currentBattle,
     dotActions,
@@ -526,9 +524,6 @@ export const ActionsPanel = (): JSX.Element => {
                 )}
               </HStack>
             )}
-            <Box position="relative" w="100%">
-              <TransactionProgressBar progress={attackProgress} />
-            </Box>
           </VStack>
         )}
       <Stack p={{ base: 2, lg: 4 }}>

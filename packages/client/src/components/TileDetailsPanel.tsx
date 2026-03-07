@@ -56,7 +56,6 @@ import { AdventureEscrowModal } from './AdventureEscrowModal';
 import { ClassSymbol } from './ClassSymbol';
 import { FragmentClaimModal } from './FragmentClaimModal';
 import { HealthBar } from './HealthBar';
-import { TransactionProgressBar } from './TransactionProgressBar';
 import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
 
@@ -139,7 +138,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     userCharacterForBattleRendering,
     userPredictedHp,
   } = useBattle();
-  const { isRefreshing, moveProgress } = useMovement();
+  const { isRefreshing } = useMovement();
 
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
@@ -923,7 +922,6 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   return (
     <Box h={{ base: 'calc(100% - 36px)', md: 'calc(100% - 46px)' }} position="relative">
-      <TransactionProgressBar progress={moveProgress} />
       <HStack bgColor="blue500" h={{ base: '36px', md: '46px' }}>
         <Grid
           alignItems="center"
