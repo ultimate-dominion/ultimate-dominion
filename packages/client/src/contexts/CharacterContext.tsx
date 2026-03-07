@@ -9,7 +9,6 @@ import {
 } from 'react';
 import { hexToString, zeroHash } from 'viem';
 
-import { useToast } from '../hooks/useToast';
 import {
   encodeAddressKey,
   encodeCompositeKey,
@@ -101,7 +100,6 @@ const CharacterProviderInner = ({
     network: { publicClient, worldContract },
   } = useMUD();
 
-  const { renderError } = useToast();
   const {
     armorTemplates,
     consumableTemplates,
@@ -373,216 +371,112 @@ const CharacterProviderInner = ({
   ]);
 
   // ============================================================
-  // Items (inventory + equipped)
+  // Items (inventory + equipped) — synchronous useMemo from reactive tables
   // ============================================================
 
-  // Subscribe to ItemsOwners table so item balance changes (drops, trades, consumes) trigger re-fetch
   const itemsOwnersTable = useGameTable('ItemsOwners');
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [itemsRefreshCounter, setItemsRefreshCounter] = useState(0);
-  const [inventoryArmor, setInventoryArmor] = useState<Armor[]>([]);
-  const [inventoryConsumables, setInventoryConsumables] = useState<Consumable[]>([]);
-  const [inventorySpells, setInventorySpells] = useState<Spell[]>([]);
-  const [inventoryWeapons, setInventoryWeapons] = useState<Weapon[]>([]);
-  const [equippedArmor, setEquippedArmor] = useState<Armor[]>([]);
-  const [equippedConsumables, setEquippedConsumables] = useState<Consumable[]>([]);
-  const [equippedSpells, setEquippedSpells] = useState<Spell[]>([]);
-  const [equippedWeapons, setEquippedWeapons] = useState<Weapon[]>([]);
-
-  const fetchCharacterItems = useCallback(
-    (
-      characterOwner: string,
-      equippedArmorIds: bigint[],
-      equippedSpellIds: bigint[],
-      equippedWeaponIds: bigint[],
-      equippedConsumableIds: bigint[],
-    ) => {
-      try {
-        const _armor = armorTemplates
-          .map(armor => {
-            const itemOwnerKey = encodeCompositeKey(
-              encodeAddressKey(characterOwner),
-              encodeUint256Key(BigInt(armor.tokenId)),
-            );
-            const itemOwner = getTableValue('ItemsOwners', itemOwnerKey);
-            return {
-              ...armor,
-              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
-              itemId: itemOwnerKey as any,
-              owner: characterOwner,
-            } as Armor;
-          })
-          .filter(a => a.balance !== BigInt(0));
-
-        const _consumables = consumableTemplates
-          .map(consumable => {
-            const itemOwnerKey = encodeCompositeKey(
-              encodeAddressKey(characterOwner),
-              encodeUint256Key(BigInt(consumable.tokenId)),
-            );
-            const itemOwner = getTableValue('ItemsOwners', itemOwnerKey);
-            return {
-              ...consumable,
-              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
-              itemId: itemOwnerKey as any,
-              owner: characterOwner,
-            } as Consumable;
-          })
-          .filter(c => c.balance !== BigInt(0));
-
-        const _spells = spellTemplates
-          .map(spell => {
-            const itemOwnerKey = encodeCompositeKey(
-              encodeAddressKey(characterOwner),
-              encodeUint256Key(BigInt(spell.tokenId)),
-            );
-            const itemOwner = getTableValue('ItemsOwners', itemOwnerKey);
-            return {
-              ...spell,
-              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
-              itemId: itemOwnerKey as any,
-              owner: characterOwner,
-            } as Spell;
-          })
-          .filter(s => s.balance !== BigInt(0));
-
-        const _weapons = weaponTemplates
-          .map(weapon => {
-            const itemOwnerKey = encodeCompositeKey(
-              encodeAddressKey(characterOwner),
-              encodeUint256Key(BigInt(weapon.tokenId)),
-            );
-            const itemOwner = getTableValue('ItemsOwners', itemOwnerKey);
-            return {
-              ...weapon,
-              balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
-              itemId: itemOwnerKey as any,
-              owner: characterOwner,
-            } as Weapon;
-          })
-          .filter(w => w.balance !== BigInt(0));
-
-        const _equippedArmor = equippedArmorIds
-          .map(id => _armor.find(a => a.tokenId === id.toString()))
-          .filter(Boolean) as Armor[];
-        const _equippedConsumablesList = equippedConsumableIds
-          .map(id => _consumables.find(c => c.tokenId === id.toString()))
-          .filter(Boolean) as Consumable[];
-        const _equippedSpells = equippedSpellIds
-          .map(id => _spells.find(s => s.tokenId === id.toString()))
-          .filter(Boolean) as Spell[];
-        const _equippedWeapons = equippedWeaponIds
-          .map(id => _weapons.find(w => w.tokenId === id.toString()))
-          .filter(Boolean) as Weapon[];
-
-        setInventoryArmor(_armor);
-        setInventoryConsumables(_consumables);
-        setInventorySpells(_spells);
-        setInventoryWeapons(_weapons);
-
-        setEquippedArmor(_equippedArmor);
-        setEquippedConsumables(_equippedConsumablesList);
-        setEquippedSpells(_equippedSpells);
-        setEquippedWeapons(_equippedWeapons);
-      } catch (e) {
-        renderError(
-          (e as Error)?.message ?? 'Failed to fetch character items.',
-          e,
-        );
-      }
-    },
-    [
-      armorTemplates,
-      consumableTemplates,
-      renderError,
-      spellTemplates,
-      weaponTemplates,
-    ],
+  const characterOwnerKey = useMemo(
+    () => character ? encodeAddressKey(character.owner) : undefined,
+    [character],
   );
 
-  // Re-fetch items whenever character, equipment data, or item templates change
-  useEffect(() => {
-    if (!character || isLoadingItemTemplates) return;
+  const inventoryArmor = useMemo(() => {
+    if (!character || !characterOwnerKey || isLoadingItemTemplates) return [];
+    return armorTemplates
+      .map(armor => {
+        const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(armor.tokenId)));
+        const itemOwner = itemsOwnersTable[compositeKey];
+        return { ...armor, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Armor;
+      })
+      .filter(a => a.balance !== BigInt(0));
+  }, [armorTemplates, itemsOwnersTable, characterOwnerKey, character, isLoadingItemTemplates]);
 
-    const equippedArmorRaw = Array.isArray(equipmentData?.equippedArmor)
-      ? (equipmentData!.equippedArmor as unknown[]).map(toBigInt)
-      : [];
-    const equippedConsumablesRaw = Array.isArray(equipmentData?.equippedConsumables)
-      ? (equipmentData!.equippedConsumables as unknown[]).map(toBigInt)
-      : [];
-    const equippedSpellsRaw = Array.isArray(equipmentData?.equippedSpells)
-      ? (equipmentData!.equippedSpells as unknown[]).map(toBigInt)
-      : [];
-    const equippedWeaponsRaw = Array.isArray(equipmentData?.equippedWeapons)
-      ? (equipmentData!.equippedWeapons as unknown[]).map(toBigInt)
-      : [];
+  const inventoryConsumables = useMemo(() => {
+    if (!character || !characterOwnerKey || isLoadingItemTemplates) return [];
+    return consumableTemplates
+      .map(consumable => {
+        const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(consumable.tokenId)));
+        const itemOwner = itemsOwnersTable[compositeKey];
+        return { ...consumable, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Consumable;
+      })
+      .filter(c => c.balance !== BigInt(0));
+  }, [consumableTemplates, itemsOwnersTable, characterOwnerKey, character, isLoadingItemTemplates]);
 
-    fetchCharacterItems(
-      character.owner,
-      equippedArmorRaw,
-      equippedSpellsRaw,
-      equippedWeaponsRaw,
-      equippedConsumablesRaw,
-    );
-  }, [
-    character,
-    equipmentData,
-    fetchCharacterItems,
-    isLoadingItemTemplates,
-    itemsRefreshCounter,
-    itemsOwnersTable,
-  ]);
+  const inventorySpells = useMemo(() => {
+    if (!character || !characterOwnerKey || isLoadingItemTemplates) return [];
+    return spellTemplates
+      .map(spell => {
+        const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(spell.tokenId)));
+        const itemOwner = itemsOwnersTable[compositeKey];
+        return { ...spell, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Spell;
+      })
+      .filter(s => s.balance !== BigInt(0));
+  }, [spellTemplates, itemsOwnersTable, characterOwnerKey, character, isLoadingItemTemplates]);
+
+  const inventoryWeapons = useMemo(() => {
+    if (!character || !characterOwnerKey || isLoadingItemTemplates) return [];
+    return weaponTemplates
+      .map(weapon => {
+        const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(weapon.tokenId)));
+        const itemOwner = itemsOwnersTable[compositeKey];
+        return { ...weapon, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Weapon;
+      })
+      .filter(w => w.balance !== BigInt(0));
+  }, [weaponTemplates, itemsOwnersTable, characterOwnerKey, character, isLoadingItemTemplates]);
+
+  // Equipment IDs from reactive store — synchronous
+  const equippedArmorIds = useMemo(() => {
+    const ids = (equipmentData?.equippedArmor ?? []) as unknown[];
+    return ids.map(toBigInt);
+  }, [equipmentData?.equippedArmor]);
+
+  const equippedConsumableIds = useMemo(() => {
+    const ids = (equipmentData?.equippedConsumables ?? []) as unknown[];
+    return ids.map(toBigInt);
+  }, [equipmentData?.equippedConsumables]);
+
+  const equippedSpellIds = useMemo(() => {
+    const ids = (equipmentData?.equippedSpells ?? []) as unknown[];
+    return ids.map(toBigInt);
+  }, [equipmentData?.equippedSpells]);
+
+  const equippedWeaponIds = useMemo(() => {
+    const ids = (equipmentData?.equippedWeapons ?? []) as unknown[];
+    return ids.map(toBigInt);
+  }, [equipmentData?.equippedWeapons]);
+
+  // Equipped items derived from inventory + equipment IDs
+  const equippedArmor = useMemo(() =>
+    equippedArmorIds.map(id => inventoryArmor.find(a => a.tokenId === id.toString())).filter(Boolean) as Armor[],
+    [equippedArmorIds, inventoryArmor]);
+
+  const equippedConsumables = useMemo(() =>
+    equippedConsumableIds.map(id => inventoryConsumables.find(c => c.tokenId === id.toString())).filter(Boolean) as Consumable[],
+    [equippedConsumableIds, inventoryConsumables]);
+
+  const equippedSpells = useMemo(() =>
+    equippedSpellIds.map(id => inventorySpells.find(s => s.tokenId === id.toString())).filter(Boolean) as Spell[],
+    [equippedSpellIds, inventorySpells]);
+
+  const equippedWeapons = useMemo(() =>
+    equippedWeaponIds.map(id => inventoryWeapons.find(w => w.tokenId === id.toString())).filter(Boolean) as Weapon[],
+    [equippedWeaponIds, inventoryWeapons]);
 
   // ============================================================
-  // refreshCharacter: reactive data means no retry loop needed.
-  // Just trigger a re-read of items.
+  // refreshCharacter: no-op — all data is now reactive via useMemo
   // ============================================================
 
-  const refreshCharacter = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      setItemsRefreshCounter(c => c + 1);
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Error refreshing character.', e);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [renderError]);
+  const refreshCharacter = useCallback(async () => {}, []);
 
   // ============================================================
-  // Optimistic equip/unequip (no clearRecsCache needed)
+  // Optimistic equip/unequip — no longer needed since useMemo
+  // rebuilds from store synchronously. Kept as no-ops for backward compat.
   // ============================================================
 
-  const optimisticEquip = useCallback((item: Armor | Spell | Weapon) => {
-    const { itemType, tokenId } = item;
-    if (itemType === ItemType.Weapon) {
-      setEquippedWeapons(prev => {
-        if (prev.some(w => w.tokenId === tokenId)) return prev;
-        return [...prev, item as Weapon];
-      });
-    } else if (itemType === ItemType.Armor) {
-      setEquippedArmor(prev => {
-        if (prev.some(a => a.tokenId === tokenId)) return prev;
-        return [...prev, item as Armor];
-      });
-    } else if (itemType === ItemType.Spell) {
-      setEquippedSpells(prev => {
-        if (prev.some(s => s.tokenId === tokenId)) return prev;
-        return [...prev, item as Spell];
-      });
-    }
-  }, []);
+  const optimisticEquip = useCallback((_item: Armor | Spell | Weapon) => {}, []);
 
-  const optimisticUnequip = useCallback((tokenId: string, itemType: ItemType) => {
-    if (itemType === ItemType.Weapon) {
-      setEquippedWeapons(prev => prev.filter(w => w.tokenId !== tokenId));
-    } else if (itemType === ItemType.Armor) {
-      setEquippedArmor(prev => prev.filter(a => a.tokenId !== tokenId));
-    } else if (itemType === ItemType.Spell) {
-      setEquippedSpells(prev => prev.filter(s => s.tokenId !== tokenId));
-    }
-  }, []);
+  const optimisticUnequip = useCallback((_tokenId: string, _itemType: ItemType) => {}, []);
 
   const isMoveEquipped = useMemo(() => {
     // Equipment data hasn't loaded from store yet — assume equipped
@@ -606,7 +500,7 @@ const CharacterProviderInner = ({
     inventorySpells,
     inventoryWeapons,
     isMoveEquipped,
-    isRefreshing,
+    isRefreshing: false,
     optimisticEquip,
     optimisticUnequip,
     refreshCharacter,
@@ -621,7 +515,6 @@ const CharacterProviderInner = ({
     inventorySpells,
     inventoryWeapons,
     isMoveEquipped,
-    isRefreshing,
     optimisticEquip,
     optimisticUnequip,
     refreshCharacter,
