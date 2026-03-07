@@ -103,6 +103,7 @@ export const BattleProvider = ({
     fail: failAttackProgress,
   } = useTransactionProgress();
   const [attackingItemId, setAttackingItemId] = useState<null | string>(null);
+  const attackInFlightRef = useRef(false); // synchronous guard — immune to React batching
   const [continueToBattleOutcome, setContinueToBattleOutcome] = useState(false);
   const [acknowledgeVersion, setAcknowledgeVersion] = useState(0);
   const attackOutcomeCountAtAttack = useRef<number | null>(null);
@@ -444,8 +445,10 @@ export const BattleProvider = ({
     async (itemId: string) => {
       if (!delegatorAddress || !character || !currentBattle || !opponent)
         return;
-      if (attackingItemId !== null) return; // prevent double-submit
+      if (currentBattle.end !== BigInt(0)) return; // encounter already ended
+      if (attackInFlightRef.current) return; // synchronous double-submit guard
 
+      attackInFlightRef.current = true;
       setAttackingItemId(itemId);
       attackOutcomeCountAtAttack.current = currentBattleAttackOutcomes.length;
       startAttackProgress(authMethod === 'embedded' ? 6000 : 500);
@@ -464,12 +467,12 @@ export const BattleProvider = ({
       } else {
         renderError(result.error || 'Attack failed');
         failAttackProgress();
+        attackInFlightRef.current = false;
         setAttackingItemId(null);
         attackOutcomeCountAtAttack.current = null;
       }
     },
     [
-      attackingItemId,
       authMethod,
       character,
       currentBattle,
@@ -490,6 +493,7 @@ export const BattleProvider = ({
       currentBattleAttackOutcomes.length > attackOutcomeCountAtAttack.current
     ) {
       completeAttackProgress();
+      attackInFlightRef.current = false;
       setAttackingItemId(null);
       attackOutcomeCountAtAttack.current = null;
     }
@@ -500,6 +504,7 @@ export const BattleProvider = ({
     if (attackingItemId === null) return;
     const timeout = setTimeout(() => {
       failAttackProgress();
+      attackInFlightRef.current = false;
       setAttackingItemId(null);
       attackOutcomeCountAtAttack.current = null;
     }, 10000);
