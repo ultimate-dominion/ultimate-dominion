@@ -189,9 +189,12 @@ contract EnsureAccess is Script {
     function run(address worldAddress) external {
         StoreSwitch.setStoreAddress(worldAddress);
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
-        vm.startBroadcast(deployerPrivateKey);
+        // Use --private-key CLI flag for broadcast — avoids .env conflicts.
+        // forge auto-loads .env (Anvil key) which overrides shell-sourced
+        // .env.testnet / .env.mainnet. Using vm.startBroadcast() without
+        // args reads from --private-key, bypassing that conflict entirely.
+        vm.startBroadcast();
+        address deployer = msg.sender;
 
         console.log("=== EnsureAccess ===");
         console.log("World:", worldAddress);
