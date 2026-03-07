@@ -6,6 +6,7 @@ import { Broadcaster } from './ws/broadcaster.js';
 import { createWSServer } from './ws/server.js';
 import { startSync } from './sync/startSync.js';
 import { createApiRouter } from './api/router.js';
+import { createDashboardRouter } from './api/dashboard.js';
 import { closeDb } from './db/connection.js';
 import { initQueueTables, advanceQueue, expireReadyEntries, getQueueStats, getPlayerEmail } from './db/queueSchema.js';
 import { sendSlotOpenEmail } from './lib/slotEmail.js';
@@ -48,6 +49,9 @@ async function main() {
 
   // REST API
   app.use('/api', createApiRouter(syncHandle, broadcaster));
+
+  // Infrastructure dashboard
+  app.use('/dashboard', createDashboardRouter());
 
   // Root health check
   app.get('/', (_req, res) => {

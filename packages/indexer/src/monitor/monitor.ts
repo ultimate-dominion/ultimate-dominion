@@ -89,7 +89,7 @@ async function runChecks() {
   if (m.baseNodeUrl && m.alchemyUrl) {
     checks.push({
       name: 'base-node',
-      promise: checkBaseNode(m.baseNodeUrl, m.baseNodeToken, m.alchemyUrl),
+      promise: checkBaseNode(m.baseNodeUrl, m.baseNodeToken, m.alchemyUrl, m.baseNodeMetricsUrl || undefined),
     });
   }
 

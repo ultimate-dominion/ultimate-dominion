@@ -18,29 +18,44 @@ async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; ms: number }
   return { result, ms: Date.now() - start };
 }
 
+/** Parse a Prometheus gauge/counter value from text exposition format */
+function parsePrometheusGauge(text: string, metricName: string): number | null {
+  // Match lines like: metric_name{labels} value  or  metric_name value
+  const regex = new RegExp(`^${metricName}(?:\\{[^}]*\\})?\\s+(\\S+)`, 'm');
+  const match = text.match(regex);
+  if (!match) return null;
+  const val = parseFloat(match[1]);
+  return isNaN(val) ? null : val;
+}
+
 /**
  * Check self-hosted Base node.
  * Compares block number against Alchemy to detect lag.
+ * Optionally scrapes Prometheus metrics for deeper health data.
  */
 export async function checkBaseNode(
   rpcUrl: string,
   authToken: string,
   alchemyUrl: string,
+  metricsUrl?: string,
 ): Promise<ServiceCheckResult> {
   try {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
     const body = JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', id: 1 });
 
-    const { result: [selfResp, alchemyResp], ms } = await timed(() =>
-      Promise.all([
-        timedFetch(rpcUrl, { method: 'POST', headers, body }),
-        timedFetch(alchemyUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body,
-        }),
-      ]),
+    const promises: [Promise<Response>, Promise<Response>, Promise<Response | null>] = [
+      timedFetch(rpcUrl, { method: 'POST', headers, body }),
+      timedFetch(alchemyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      }),
+      metricsUrl ? timedFetch(metricsUrl, {}, 5_000).catch(() => null) : Promise.resolve(null),
+    ];
+
+    const { result: [selfResp, alchemyResp, metricsResp], ms } = await timed(() =>
+      Promise.all(promises),
     );
 
     const selfData = (await selfResp.json()) as { result?: string };
@@ -54,10 +69,38 @@ export async function checkBaseNode(
     const alchemyBlock = alchemyData.result ? parseInt(alchemyData.result, 16) : selfBlock;
     const blockLag = Math.abs(alchemyBlock - selfBlock);
 
-    const details = { selfBlock, alchemyBlock, blockLag };
+    const details: Record<string, unknown> = { selfBlock, alchemyBlock, blockLag };
+
+    // Parse reth Prometheus metrics if available
+    if (metricsResp?.ok) {
+      try {
+        const metricsText = await metricsResp.text();
+        const memBytes = parsePrometheusGauge(metricsText, 'reth_process_resident_memory_bytes');
+        const peerCount = parsePrometheusGauge(metricsText, 'reth_network_connected_peers');
+
+        details.rethMetrics = {
+          memoryMb: memBytes !== null ? Math.round(memBytes / 1e6) : null,
+          peers: peerCount,
+        };
+      } catch {
+        // Metrics parsing failure is non-critical
+      }
+    }
 
     if (blockLag > 100) return { status: 'down', latencyMs: ms, details, error: `Block lag: ${blockLag}` };
     if (blockLag > 10) return { status: 'degraded', latencyMs: ms, details };
+
+    // Check reth metrics for degraded conditions
+    const rm = details.rethMetrics as { memoryMb: number | null; peers: number | null } | undefined;
+    if (rm) {
+      if (rm.memoryMb !== null && rm.memoryMb > 48000) {
+        return { status: 'degraded', latencyMs: ms, details, error: `High memory: ${rm.memoryMb}MB` };
+      }
+      if (rm.peers !== null && rm.peers < 5) {
+        return { status: 'degraded', latencyMs: ms, details, error: `Low peer count: ${rm.peers}` };
+      }
+    }
+
     return { status: 'up', latencyMs: ms, details };
   } catch (err) {
     return { status: 'down', latencyMs: 0, error: String(err) };
