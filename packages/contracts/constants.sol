@@ -72,7 +72,7 @@ uint256 constant PVP_BASE_XP = 75; // PvP XP = level^2 * 75 (~1.5-2x same-level 
 
 uint256 constant PVP_TIMER = 30 seconds;
 uint256 constant MAX_MONSTERS = 20;
-uint256 constant MOVE_COOLDOWN = 1; // 1 second between moves
+uint256 constant MOVE_COOLDOWN = 0; // Cooldown enforced client-side
 uint256 constant MAX_PARTY_SIZE = 10;
 
 // Fragment system constants

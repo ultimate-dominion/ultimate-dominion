@@ -177,7 +177,7 @@ const MUDProviderInner = ({
       client: { public: setupResult.network.publicClient, wallet: walletClient },
     });
 
-    // Proxy: adds gas buffer (relayer applies 1.5x on outer tx; client adds 1.5x on inner call)
+    // Proxy: logs writes. Gas estimation is handled by the relayer (1.5x buffer).
     const worldContract = new Proxy(rawWorldContract, {
       get(target, prop) {
         if (prop === 'write') {
@@ -187,29 +187,8 @@ const MUDProviderInner = ({
               if (typeof origFn !== 'function') return origFn;
               return async (...args: unknown[]) => {
                 const t0 = performance.now();
-
-                try {
-                  const fnArgs = Array.isArray(args[0]) ? args[0] : [];
-                  const opts = (args.length > 1 && args[1] && typeof args[1] === 'object')
-                    ? args[1] as Record<string, unknown>
-                    : {};
-                  if (!opts.gas) {
-                    const estimated = await setupResult.network.publicClient.estimateContractGas({
-                      address: rawWorldContract.address,
-                      abi: IWorldAbi,
-                      functionName: String(fnName),
-                      args: fnArgs,
-                      account: embeddedWalletClient!.account!,
-                    });
-                    opts.gas = estimated * 3n / 2n;
-                    args = [args[0], opts];
-                    console.info(`[TX][SEND] ${String(fnName)} est=${estimated} gas=${opts.gas}`, fnArgs);
-                  } else {
-                    console.info(`[TX][SEND] ${String(fnName)}`, args);
-                  }
-                } catch (estErr) {
-                  console.warn(`[TX][EST_FAIL] ${String(fnName)}`, estErr);
-                }
+                const fnArgs = Array.isArray(args[0]) ? args[0] : [];
+                console.info(`[TX][SEND] ${String(fnName)}`, fnArgs);
 
                 try {
                   const result = await origFn.apply(writeTarget, args);

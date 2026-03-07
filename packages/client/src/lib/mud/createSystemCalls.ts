@@ -550,58 +550,32 @@ export function createSystemCalls(
 
   let isMovePending = false;
 
-  // Minimum gap (ms) between consecutive moves. Must exceed:
-  //   on-chain MOVE_COOLDOWN (1s) + block.timestamp advance interval (~2s)
-  // The relayer simulates against the latest block it knows. If we move in
-  // block N, the relayer must simulate at block N+1 or later for the cooldown
-  // to appear expired. Using ms precision avoids integer-second rounding bugs.
-  const MIN_MOVE_GAP_MS = 2500;
-
-  // Retry delay for pre-submission failures (simulation/estimation).
-  // Safe to retry because no tx was submitted on-chain.
-  const MOVE_RETRY_DELAY_MS = 500;
+  // Minimum gap (ms) between consecutive moves — debounce to prevent
+  // accidental double-taps. The isMovePending mutex is the real guard.
+  const MIN_MOVE_GAP_MS = 200;
 
   // Local timestamp (ms) of the last move completion (success or revert).
   let lastMoveCompletedMs = 0;
 
   const INVALID_MOVE_SELECTOR = '87822d34';
-  const MOVE_TOO_FAST_SELECTOR = '326f4b4f';
 
   const isInvalidMoveError = (e: unknown): boolean => {
     const msg = String(e).toLowerCase();
     return msg.includes(INVALID_MOVE_SELECTOR) || msg.includes('invalid move') || msg.includes('invalidmove');
   };
 
-  const isMoveTooFastError = (e: unknown): boolean => {
-    const msg = String(e).toLowerCase();
-    return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
-  };
-
   /**
-   * Enforce a minimum gap between consecutive moves.
-   * Uses local tracking (ms precision) as the primary guard, with the chain's
-   * SessionTimer as a fallback for the first move after page load.
+   * Small debounce between consecutive moves.
+   * On-chain cooldown is 0 — this just prevents queueing moves faster
+   * than the pipeline can process them.
    */
-  const waitForMoveCooldown = async (characterEntity: string) => {
+  const waitForMoveCooldown = async () => {
     if (lastMoveCompletedMs > 0) {
       const elapsedMs = Date.now() - lastMoveCompletedMs;
       if (elapsedMs < MIN_MOVE_GAP_MS) {
         const delayMs = MIN_MOVE_GAP_MS - elapsedMs;
-        console.info(`[move] Cooldown: waiting ${delayMs}ms (${elapsedMs}ms since last move)`);
         await new Promise(r => setTimeout(r, delayMs));
       }
-      return;
-    }
-    // First move after page load — fall back to chain SessionTimer
-    const session = getTableValue('SessionTimer', characterEntity);
-    const lastAction = Number(session?.lastAction ?? 0);
-    if (lastAction === 0) return;
-    const nowSec = Math.floor(Date.now() / 1000);
-    const readyAt = lastAction + Math.ceil(MIN_MOVE_GAP_MS / 1000);
-    if (nowSec < readyAt) {
-      const delayMs = (readyAt - nowSec) * 1000;
-      console.info(`[move] Cooldown: waiting ${delayMs}ms (first move, chain=${lastAction})`);
-      await new Promise(r => setTimeout(r, delayMs));
     }
   };
 
@@ -609,7 +583,6 @@ export function createSystemCalls(
   // e.g. state changed between simulation and inclusion). Wait ~1 block for state to settle.
   const ON_CHAIN_RETRY_DELAY_MS = 500;
   const MAX_ON_CHAIN_RETRIES = 1;
-  const MAX_SIMULATION_RETRIES = 2;
 
   const move = async (
     characterEntity: string,
@@ -626,53 +599,29 @@ export function createSystemCalls(
 
     isMovePending = true;
     try {
-      await waitForMoveCooldown(characterEntity);
+      await waitForMoveCooldown();
 
-      // Retry budget covers both simulation and on-chain failures.
-      // - Simulation failures (MoveTooFast before tx hash): safe to retry,
-      //   no tx was sent. Up to MAX_SIMULATION_RETRIES.
-      // - On-chain reverts (tx mined but reverted): the move did NOT modify
-      //   state (SessionTimer, Position unchanged), so retrying with the same
-      //   coordinates is safe. Up to MAX_ON_CHAIN_RETRIES.
-      let simulationRetries = 0;
       let onChainRetries = 0;
 
-      for (let attempt = 0; attempt < 5; attempt++) {
-        try {
-          const tx = await worldContract.write.UD__move(
-            [characterEntity as `0x${string}`, x, y],
-          );
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const tx = await worldContract.write.UD__move(
+          [characterEntity as `0x${string}`, x, y],
+        );
 
-          // tx is now on-chain — wait for receipt
-          const receipt = await waitForTransaction(tx);
-          if (receipt.status === 'reverted') {
-            // Move reverted on-chain — position and SessionTimer are unchanged.
-            // This typically happens when state changed between simulation and
-            // inclusion (e.g. block.prevrandao changed the spawnOnTileEnter gas profile).
-            // Safe to retry since no on-chain state was modified.
-            if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
-              onChainRetries++;
-              console.warn(`[move] On-chain revert (retry ${onChainRetries}/${MAX_ON_CHAIN_RETRIES}), retrying in ${ON_CHAIN_RETRY_DELAY_MS}ms`);
-              await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
-              // Don't update lastMoveCompletedMs — SessionTimer wasn't set
-              continue;
-            }
-            console.warn('[move] On-chain revert — max retries reached');
-            lastMoveCompletedMs = Date.now();
-            return { success: false, error: 'Move failed — tap again to continue.' };
-          }
-          lastMoveCompletedMs = Date.now();
-          return { success: true };
-        } catch (e) {
-          if (isMoveTooFastError(e) && simulationRetries < MAX_SIMULATION_RETRIES) {
-            simulationRetries++;
-            console.warn(`[move] MoveTooFast at simulation (attempt ${simulationRetries}/${MAX_SIMULATION_RETRIES}), retrying in ${MOVE_RETRY_DELAY_MS}ms`);
-            await new Promise(r => setTimeout(r, MOVE_RETRY_DELAY_MS));
-            // Don't update lastMoveCompletedMs — no tx was sent
+        const receipt = await waitForTransaction(tx);
+        if (receipt.status === 'reverted') {
+          if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
+            onChainRetries++;
+            console.warn(`[move] On-chain revert (retry ${onChainRetries}/${MAX_ON_CHAIN_RETRIES}), retrying in ${ON_CHAIN_RETRY_DELAY_MS}ms`);
+            await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
             continue;
           }
-          throw e;
+          console.warn('[move] On-chain revert — max retries reached');
+          lastMoveCompletedMs = Date.now();
+          return { success: false, error: 'Move failed — tap again to continue.' };
         }
+        lastMoveCompletedMs = Date.now();
+        return { success: true };
       }
       return { success: false, error: 'Move failed after retries.' };
     } catch (e) {
