@@ -200,7 +200,7 @@ export const MapPanel = (): JSX.Element => {
       </Box>
 
       {/* Map grid */}
-      <Box order={{ base: 1, lg: 1 }} w="100%" h={{ base: '300px', lg: 'auto' }} flexShrink={0}>
+      <Box order={{ base: 1, lg: 1 }} w="100%" h={{ base: '300px', lg: '35%' }} flexShrink={0}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
