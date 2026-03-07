@@ -67,24 +67,8 @@ export const useGasStation = (): void => {
   }, [character, renderSuccess, systemCalls]);
 
   useEffect(() => {
-    // Embedded wallets: relayer handles gas charging. Only warn if gold is critically low.
+    // Embedded wallets: relayer pays gas on their behalf. No client-side gas management needed.
     if (authMethod === 'embedded') {
-      if (
-        character &&
-        character.level >= 3n &&
-        character.externalGoldBalance < EMBEDDED_LOW_GOLD_THRESHOLD
-      ) {
-        try {
-          const balanceWei = parseEther(burnerBalance);
-          if (balanceWei < GAS_THRESHOLD) {
-            renderWarning(
-              'Your gold and gas are both low. The relayer may not be able to cover your transactions.',
-            );
-          }
-        } catch {
-          // Invalid balance string — ignore
-        }
-      }
       return;
     }
 
