@@ -200,7 +200,7 @@ export const MapPanel = (): JSX.Element => {
       </Box>
 
       {/* Map grid */}
-      <Box order={{ base: 1, lg: 1 }} w="100%" h={{ base: '300px', lg: 'calc(50% - 24px)' }}>
+      <Box order={{ base: 1, lg: 1 }} w="100%" h={{ base: '300px', lg: 'auto' }} flexShrink={0}>
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
@@ -219,7 +219,7 @@ export const MapPanel = (): JSX.Element => {
             display="grid"
             gridTemplateColumns="repeat(10, 1fr)"
             gridTemplateRows="repeat(10, 1fr)"
-            h={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
+            maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
             maxW="100%"
             m="0 auto"
             mt={1}
