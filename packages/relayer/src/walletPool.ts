@@ -1,6 +1,7 @@
 import {
   createWalletClient,
   http,
+  fallback,
   formatEther,
   defineChain,
   type Address,
@@ -31,7 +32,13 @@ const rpcFetchOptions = config.rpcAuthToken
   ? { headers: { Authorization: `Bearer ${config.rpcAuthToken}` } }
   : undefined;
 
-export const rpcTransport = () => http(config.rpcUrl, { fetchOptions: rpcFetchOptions });
+export const rpcTransport = () => {
+  const transports = [http(config.rpcUrl, { fetchOptions: rpcFetchOptions })];
+  if (config.rpcFallbackUrl) {
+    transports.push(http(config.rpcFallbackUrl)); // No auth for Alchemy
+  }
+  return transports.length > 1 ? fallback(transports) : transports[0];
+};
 
 const pool: PooledWallet[] = [];
 

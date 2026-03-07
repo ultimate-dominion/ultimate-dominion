@@ -11,6 +11,7 @@ import { initQueueTables, advanceQueue, expireReadyEntries, getQueueStats, getPl
 import { sendSlotOpenEmail } from './lib/slotEmail.js';
 import { startMilestoneWatcher } from './queue/milestoneWatcher.js';
 import { startEventFeed } from './queue/eventFeed.js';
+import { startMonitor } from './monitor/monitor.js';
 
 async function main() {
   console.log('=== Ultimate Dominion Indexer ===');
@@ -38,6 +39,9 @@ async function main() {
   // Start milestone watcher and event feed
   startMilestoneWatcher(syncHandle, broadcaster);
   startEventFeed(syncHandle, broadcaster);
+
+  // Start infrastructure monitor
+  startMonitor(syncHandle, broadcaster);
 
   // WebSocket server
   createWSServer(httpServer, broadcaster, () => syncHandle.latestBlockNumber);

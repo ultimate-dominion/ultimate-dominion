@@ -30,4 +30,13 @@ export const config = {
   captcha: {
     turnstileSecret: process.env.TURNSTILE_SECRET_KEY || '',
   },
+  monitor: {
+    baseNodeUrl: process.env.MONITOR_BASE_NODE_URL || '',
+    baseNodeToken: process.env.MONITOR_BASE_NODE_TOKEN || '',
+    alchemyUrl: process.env.MONITOR_ALCHEMY_URL || '',
+    relayerUrl: process.env.MONITOR_RELAYER_URL || 'https://8453.relay.ultimatedominion.com/',
+    clientProdUrl: process.env.MONITOR_CLIENT_PROD_URL || 'https://ultimatedominion.com',
+    clientBetaUrl: process.env.MONITOR_CLIENT_BETA_URL || 'https://beta.ultimatedominion.com',
+    apiUrl: process.env.MONITOR_API_URL || '',
+  },
 } as const;

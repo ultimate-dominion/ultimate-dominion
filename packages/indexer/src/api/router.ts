@@ -13,6 +13,7 @@ import { createHealthRouter } from './health.js';
 import { createSnapshotRouter } from './snapshot.js';
 import { createQueueRouter } from './queue.js';
 import { createInviteRouter } from './invite.js';
+import { createStatusRouter } from './status.js';
 
 export function createApiRouter(syncHandle: SyncHandle, broadcaster: Broadcaster): Router {
   const router = Router();
@@ -29,6 +30,7 @@ export function createApiRouter(syncHandle: SyncHandle, broadcaster: Broadcaster
   router.use('/snapshot', createSnapshotRouter(syncHandle));
   router.use('/queue', createQueueRouter(syncHandle, broadcaster));
   router.use('/invite', createInviteRouter());
+  router.use('/status', createStatusRouter());
 
   return router;
 }

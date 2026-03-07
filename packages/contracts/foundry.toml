@@ -26,4 +26,4 @@ fs_permissions = [{ access = "read-write", path = "./" }]
 libs = ["node_modules", "lib"]
 
 [profile.base-mainnet]
-eth_rpc_url = "https://mainnet.base.org"
+# eth_rpc_url sourced from ETH_RPC_URL env var (set in .env.testnet / .env.mainnet)

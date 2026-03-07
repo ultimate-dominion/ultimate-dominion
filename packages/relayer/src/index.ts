@@ -13,6 +13,7 @@ import { handleGetTransactionHash } from './methods/tw_getTransactionHash.js';
 import { handleGetDelegationContract } from './methods/tw_getDelegationContract.js';
 import { startSchedulers, stopSchedulers, getPendingChargeCount, getTotalPendingTxs } from './gasCharge.js';
 import { gasChargingEnabled } from './config.js';
+import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcManager.js';
 
 async function main() {
   console.log('=== Ultimate Dominion Relayer ===');
@@ -29,6 +30,9 @@ async function main() {
 
   // Start gas charge schedulers (no-op if WORLD_ADDRESS/GOLD_TOKEN not set)
   startSchedulers();
+
+  // Start RPC health monitoring (no-op if RPC_FALLBACK_URL not set)
+  startRpcHealthCheck();
 
   const app = express();
   app.use(cors({ origin: config.corsOrigins }));
@@ -50,6 +54,7 @@ async function main() {
         gasCharging: gasChargingEnabled,
         pendingCharges: getPendingChargeCount(),
         pendingChargeTxs: getTotalPendingTxs(),
+        rpcStatus: getRpcStatus(),
       });
     } catch (err) {
       res.status(500).json({ status: 'error', error: String(err) });
@@ -115,6 +120,7 @@ async function main() {
   const shutdown = () => {
     console.log('\n[server] Shutting down...');
     stopSchedulers();
+    stopRpcHealthCheck();
     server.close();
     process.exit(0);
   };
