@@ -63,7 +63,7 @@ export const Shop = (): JSX.Element => {
     isRefreshing,
     refreshCharacter,
   } = useCharacter();
-  const { allShops, refreshEntities } = useMap();
+  const { allShops } = useMap();
 
   const shop = useMemo(() => {
     if (!(shopId && allShops)) return null;
@@ -142,12 +142,11 @@ export const Shop = (): JSX.Element => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
       refreshTimerRef.current = setTimeout(() => {
         refreshCharacter();
-        refreshEntities();
         setGoldAdjustment(0n);
         setShopGoldAdjustment(0n);
       }, 3000);
     },
-    [refreshCharacter, refreshEntities],
+    [refreshCharacter],
   );
 
   useEffect(() => {
@@ -192,7 +191,6 @@ export const Shop = (): JSX.Element => {
       navigate(GAME_BOARD_PATH);
     }
 
-    refreshEntities();
     refreshCharacter();
   }, [
     delegatorAddress,
@@ -202,7 +200,6 @@ export const Shop = (): JSX.Element => {
     isSynced,
     navigate,
     refreshCharacter,
-    refreshEntities,
     userCharacter,
   ]);
 

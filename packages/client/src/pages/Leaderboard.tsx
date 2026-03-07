@@ -54,7 +54,7 @@ export const Leaderboard = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
-  const { allCharacters, isFetchingEntities, refreshEntities } = useMap();
+  const { allCharacters } = useMap();
   const zoneCompletionTable = useGameTable('CharacterZoneCompletion');
 
   const [tab, setTab] = useState<LeaderboardTab>('rankings');
@@ -95,10 +95,8 @@ export const Leaderboard = (): JSX.Element => {
 
     if (!isConnected) {
       navigate(HOME_PATH);
-    } else {
-      refreshEntities();
     }
-  }, [isConnected, isConnecting, navigate, refreshEntities]);
+  }, [isConnected, isConnecting, navigate]);
 
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
@@ -188,14 +186,6 @@ export const Leaderboard = (): JSX.Element => {
     sort.reversed,
     sort.sorted,
   ]);
-
-  if (isFetchingEntities) {
-    return (
-      <Center h="100%">
-        <Spinner size="lg" />
-      </Center>
-    );
-  }
 
   return (
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">

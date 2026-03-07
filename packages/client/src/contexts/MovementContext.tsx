@@ -61,7 +61,7 @@ export const MovementProvider = ({
   } = useDisclosure();
 
   const { character, isMoveEquipped } = useCharacter();
-  const { isFetchingEntities, isSpawned, position } = useMap();
+  const { isSpawned, position } = useMap();
   const { currentBattle } = useBattle();
   const { isMessageInputFocused } = useChat();
 
@@ -236,7 +236,7 @@ export const MovementProvider = ({
   return (
     <MovementContext.Provider
       value={{
-        isRefreshing: isFetchingEntities || isMoving,
+        isRefreshing: isMoving,
         moveProgress: moveTx.progress,
         moveStatusMessage: moveTx.statusMessage || 'Moving...',
         onMove,

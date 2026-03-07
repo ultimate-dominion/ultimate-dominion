@@ -21,7 +21,7 @@ import { FaMedal } from 'react-icons/fa';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
-import { erc721Abi, hexToString, zeroHash } from 'viem';
+import { erc721Abi } from 'viem';
 import {
   encodeAddressKey,
   encodeCompositeKey,
@@ -32,6 +32,7 @@ import {
   useGameTable,
   useGameValue,
 } from '../lib/gameStore';
+import { useReactiveEntity } from '../hooks/useReactiveEntity';
 import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
@@ -52,25 +53,18 @@ import { HOME_PATH } from '../Routes';
 import {
   MAX_EQUIPPED_ARMOR,
   MAX_EQUIPPED_WEAPONS,
-  STATUS_EFFECT_NAME_MAPPING,
 } from '../utils/constants';
 import {
-  decodeAppliedStatusEffectId,
-  decodeBaseStats,
   decodeCharacterId,
   etherToFixedNumber,
-  fetchMetadataFromUri,
-  uriToHttp,
 } from '../utils/helpers';
 import { DARK_DIVIDER_SHADOW } from '../utils/theme';
 import {
-  AdvancedClass,
   type Armor,
   type Character,
   type Consumable,
   type Spell,
   type Weapon,
-  type WorldStatusEffect,
 } from '../utils/types';
 
 // Badge contract address - get from environment
@@ -79,13 +73,12 @@ const ADVENTURER_BADGE_BASE = 1;
 
 export const CharacterPage = (): JSX.Element => {
   const { id } = useParams();
-  const { renderError } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const {
     isSynced,
-    network: { publicClient, worldContract },
+    network: { publicClient },
   } = useMUD();
   const { character: userCharacter, refreshCharacter } = useCharacter();
   const { onOpen: onOpenChat } = useChat();
@@ -102,8 +95,8 @@ export const CharacterPage = (): JSX.Element => {
     onOpen: onOpenClassModal,
   } = useDisclosure();
 
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [isLoadingCharacter, setIsLoadingCharacter] = useState(true);
+  // Reactive character data for any entity ID
+  const reactiveCharacter = useReactiveEntity(id);
   const [hasBadge, setHasBadge] = useState(false);
 
   useEffect(() => {
@@ -144,139 +137,16 @@ export const CharacterPage = (): JSX.Element => {
     checkBadge();
   }, [character, publicClient]);
 
-  const fetchCharacter = useCallback(async () => {
-    try {
-      if (!(id && publicClient && worldContract)) return null;
-      setIsLoadingCharacter(true);
-
-      const characterData = getTableValue('Characters', id);
-      const characterStats = getTableValue('Stats', id);
-
-      if (!(characterData && characterStats)) return null;
-
-      const owner = String(characterData.owner) as `0x${string}`;
-      const tokenId = toBigInt(characterData.tokenId);
-      const ownerKey = encodeAddressKey(owner);
-      const tokenIdKey = encodeUint256Key(tokenId);
-
-      const externalGoldBalance = toBigInt(
-        getTableValue('GoldBalances', ownerKey)?.value,
-      );
-      const escrowGoldBalance = toBigInt(
-        getTableValue('AdventureEscrow', id)?.balance,
-      );
-
-      const tokenURIData = getTableValue('CharactersTokenURI', tokenIdKey);
-      const metadataURI = tokenURIData?.tokenURI as string;
-
-      const fetachedMetadata = await fetchMetadataFromUri(
-        uriToHttp(`ipfs://${metadataURI}`)[0],
-      );
-
-      const encounterData = getTableValue('EncounterEntity', id);
-      const encounterId = (encounterData?.encounterId as string) ?? zeroHash;
-      const pvpTimer = toBigInt(encounterData?.pvpTimer);
-      const inBattle = !!encounterId && encounterId !== zeroHash;
-
-      const decodedBaseStats = decodeBaseStats(characterData.baseStats as `0x${string}`);
-
-      const worldStatusEffectsComponent = getTableValue('WorldStatusEffects', id);
-
-      const { appliedStatusEffects } = worldStatusEffectsComponent ?? {
-        appliedStatusEffects: [],
-      };
-
-      const decodedStatusEffects = (appliedStatusEffects as string[]).map(
-        decodeAppliedStatusEffectId,
-      );
-
-      const worldStatusEffects: WorldStatusEffect[] = decodedStatusEffects
-        .map(effect => {
-          const paddedEffectId = effect.effectId.padEnd(66, '0');
-          const effectStats = getTableValue('StatusEffectStats', paddedEffectId);
-          const validity = getTableValue('StatusEffectValidity', paddedEffectId);
-
-          if (!effectStats || !validity) return null;
-
-          const validTime = toBigInt(validity.validTime);
-          const timestampEnd = effect.timestamp + validTime;
-          const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
-
-          const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
-
-          return {
-            active: isActive,
-            agiModifier: toBigInt(effectStats.agiModifier),
-            effectId: paddedEffectId,
-            intModifier: toBigInt(effectStats.intModifier),
-            maxStacks: toBigInt(validity.maxStacks),
-            name,
-            strModifier: toBigInt(effectStats.strModifier),
-            timestampEnd,
-            timestampStart: effect.timestamp,
-          };
-        })
-        .filter((effect): effect is WorldStatusEffect => effect !== null);
-
-      const _character = {
-        ...fetachedMetadata,
-        advancedClass: (Number(characterStats.advancedClass) as AdvancedClass) ?? AdvancedClass.None,
-        agility: toBigInt(characterStats.agility),
-        baseStats: decodedBaseStats,
-        currentHp: toBigInt(characterStats.currentHp),
-        entityClass: characterStats.class,
-        escrowGoldBalance,
-        experience: toBigInt(characterStats.experience),
-        externalGoldBalance,
-        hasSelectedAdvancedClass: Boolean(characterStats.hasSelectedAdvancedClass),
-        id,
-        inBattle,
-        intelligence: toBigInt(characterStats.intelligence),
-        isSpawned: false,
-        level: toBigInt(characterStats.level),
-        locked: characterData.locked,
-        maxHp: toBigInt(characterStats.maxHp),
-        name: hexToString(characterData.name as `0x${string}`, {
-          size: 32,
-        }),
-        owner,
-        position: { x: 0, y: 0 },
-        pvpCooldownTimer: pvpTimer,
-        strength: toBigInt(characterStats.strength),
-        tokenId: tokenId.toString(),
-        worldStatusEffects,
-      };
-
-      setCharacter(_character);
-      return _character;
-    } catch (e) {
-      renderError(
-        (e as Error)?.message ?? 'Failed to fetch character data.',
-        e,
-      );
-      return null;
-    } finally {
-      setIsLoadingCharacter(false);
-    }
-  }, [id, publicClient, renderError, worldContract]);
-
   const isOwner = useMemo(() => {
     if (!(id && userCharacter)) return false;
     const { ownerAddress } = decodeCharacterId(id as `0x${string}`);
     return userCharacter.owner.toLowerCase() === ownerAddress;
   }, [id, userCharacter]);
 
-  useEffect(() => {
-    if (!isSynced) return;
-    (async (): Promise<void> => {
-      if (isOwner && userCharacter) {
-        setCharacter(userCharacter);
-        setIsLoadingCharacter(false);
-        return;
-      }
-      await fetchCharacter();
-    })();
-  }, [fetchCharacter, isOwner, isSynced, userCharacter]);
+  // For owner's own character, CharacterContext provides reactive data.
+  // For other characters, useReactiveEntity provides reactive data.
+  const character = isOwner ? userCharacter : reactiveCharacter;
+  const isLoadingCharacter = !isSynced || (!character && !!id);
 
   // Auto-open advanced class modal when level >= 10 and no class selected
   useEffect(() => {

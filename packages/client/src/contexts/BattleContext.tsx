@@ -18,6 +18,7 @@ import {
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { useTransactionProgress, type TransactionProgress } from '../hooks/useTransactionProgress';
+import { useReactiveEntity } from '../hooks/useReactiveEntity';
 import {
   BATTLE_OUTCOME_SEEN_KEY,
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
@@ -93,7 +94,7 @@ export const BattleProvider = ({
     systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp },
   } = useMUD();
   const { character } = useCharacter();
-  const { allMonsters, allCharacters, position } = useMap();
+  const { allMonsters, position } = useMap();
 
   const { renderError } = useToast();
   const {
@@ -241,31 +242,32 @@ export const BattleProvider = ({
     checkCombatFragmentTriggers,
   ]);
 
-  const opponent = useMemo(() => {
-    if (!(character && currentBattle)) return null;
-
+  // Derive opponent entity ID for PvP (characters only — monsters use allMonsters)
+  const opponentEntityId = useMemo(() => {
+    if (!character || !currentBattle) return undefined;
     const participants = [
       ...currentBattle.attackers,
       ...currentBattle.defenders,
     ];
+    const isMonsterFight = allMonsters.some(m => participants.includes(m.id));
+    if (isMonsterFight) return undefined;
+    return participants.find(id => id.toLowerCase() !== character.id.toLowerCase());
+  }, [character, currentBattle, allMonsters]);
 
-    let possibleOpponent: Character | Monster | undefined = allMonsters.find(
-      monster => participants.includes(monster.id),
-    );
+  // Fully reactive PvP opponent data
+  const reactiveOpponent = useReactiveEntity(opponentEntityId);
 
-    if (!possibleOpponent) {
-      possibleOpponent = allCharacters
-        .filter(c => c.id !== character.id)
-        .find(char => participants.includes(char.id));
-    }
+  const opponent = useMemo(() => {
+    if (!character || !currentBattle) return null;
+    const participants = [
+      ...currentBattle.attackers,
+      ...currentBattle.defenders,
+    ];
+    return allMonsters.find(m => participants.includes(m.id)) ?? reactiveOpponent;
+  }, [character, currentBattle, allMonsters, reactiveOpponent]);
 
-    return possibleOpponent ?? null;
-  }, [allCharacters, allMonsters, character, currentBattle]);
-
-  const userCharacterForBattleRendering = useMemo(() => {
-    if (!character) return null;
-    return allCharacters.find(char => char.id === character.id) ?? null;
-  }, [allCharacters, character]);
+  // Fully reactive user character for battle rendering
+  const userCharacterForBattleRendering = useReactiveEntity(character?.id);
 
   // Reactive: re-renders when any DamageOverTimeApplied row changes
   const dotTable = useGameTable('DamageOverTimeApplied');

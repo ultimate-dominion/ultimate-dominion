@@ -21,7 +21,6 @@ import { zeroAddress, zeroHash } from 'viem';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
-import { useMap } from '../contexts/MapContext';
 import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
@@ -59,7 +58,6 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     equippedWeapons,
     refreshCharacter,
   } = useCharacter();
-  const { refreshEntities } = useMap();
   const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
 
   const [armor, setArmor] = useState<Armor[]>([]);
@@ -93,14 +91,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
     onContinueToBattleOutcome(false);
     await refreshCharacter();
-    refreshEntities();
     onClose();
   }, [
     battleOutcome.encounterId,
     onContinueToBattleOutcome,
     onClose,
     refreshCharacter,
-    refreshEntities,
   ]);
 
   const nextLevelRow = useGameValue(
