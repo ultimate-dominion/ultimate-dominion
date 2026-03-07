@@ -23,7 +23,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
-import { ChatBox } from '../components/ChatBox';
 import { ConsumableQuickUse } from '../components/ConsumableQuickUse';
 import { EquippedLoadout } from '../components/EquippedLoadout';
 import { InfoModal } from '../components/InfoModal';
@@ -221,7 +220,7 @@ export const GameBoard = (): JSX.Element => {
         </PolygonalCard>
       </GridItem>
       <GridItem
-        colSpan={{ base: 1, lg: 9 }}
+        colSpan={{ base: 1, lg: 8 }}
         colStart={{ base: 0, lg: 5 }}
         rowSpan={{ base: 'auto', lg: 12 }}
         rowStart={{ base: 0, lg: 0 }}
@@ -250,15 +249,10 @@ export const GameBoard = (): JSX.Element => {
             <ActionsPanel />
           </PolygonalCard>
         </Box>
-        {isDesktop && isSpawned && (
-          <Box flex="1" minH={0} overflow="hidden" mt={1}>
-            <ChatBox inline />
-          </Box>
-        )}
       </GridItem>
       <GridItem
-        colSpan={{ base: 1, lg: 3 }}
-        colStart={{ base: 0, lg: 14 }}
+        colSpan={{ base: 1, lg: 4 }}
+        colStart={{ base: 0, lg: 13 }}
         rowSpan={{ base: 'auto', lg: 12 }}
         rowStart={{ base: 'auto', lg: 0 }}
       >
