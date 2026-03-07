@@ -20,7 +20,7 @@ import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
-import { CHARACTERS_PATH, GAME_BOARD_PATH, ITEM_PATH } from '../Routes';
+import { GAME_BOARD_PATH, ITEM_PATH } from '../Routes';
 import { MAX_EQUIPPED_ARMOR, MAX_EQUIPPED_WEAPONS } from '../utils/constants';
 import {
   type Armor,
@@ -57,9 +57,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     equippedConsumables,
     equippedSpells,
     equippedWeapons,
-    optimisticEquip,
-    optimisticUnequip,
-    refreshCharacter,
   } = useCharacter();
   const { inSafetyZone, isSpawned } = useMap();
   const { currentBattle } = useBattle();
@@ -75,30 +72,17 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     return character?.owner === item.owner;
   }, [character, item.owner]);
 
-  // Determine if equipping this item requires swapping out an existing one
-  const conflictingItem = useMemo(() => {
-    if (isEquipped) return null;
+  // Check if all slots are full (no swap — user must unequip first)
+  const slotsFull = useMemo(() => {
+    if (isEquipped) return false;
     if (item.itemType === ItemType.Armor) {
-      if (equippedArmor.length >= MAX_EQUIPPED_ARMOR) {
-        return equippedArmor[0];
-      }
-    } else if (
-      item.itemType === ItemType.Weapon ||
-      item.itemType === ItemType.Spell
-    ) {
-      const totalEquipped = equippedWeapons.length + equippedSpells.length + equippedConsumables.length;
-      if (totalEquipped >= MAX_EQUIPPED_WEAPONS) {
-        // Pick the lowest-rarity equipped weapon/spell/consumable to auto-swap
-        const allEquipped = [...equippedWeapons, ...equippedSpells, ...equippedConsumables].sort(
-          (a, b) => (a.rarity ?? 0) - (b.rarity ?? 0),
-        );
-        return allEquipped[0] ?? null;
-      }
+      return equippedArmor.length >= MAX_EQUIPPED_ARMOR;
     }
-    return null;
+    if (item.itemType === ItemType.Weapon || item.itemType === ItemType.Spell) {
+      return equippedWeapons.length + equippedSpells.length + equippedConsumables.length >= MAX_EQUIPPED_WEAPONS;
+    }
+    return false;
   }, [equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, isEquipped, item.itemType]);
-
-  const needsSwap = conflictingItem != null;
 
   const closeAndReset = useCallback(() => {
     setStatusText('');
@@ -115,32 +99,10 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       return;
     }
 
-    // If swap needed, unequip the conflicting item first
-    if (conflictingItem) {
-      setStatusText(`Unequipping ${conflictingItem.name}...`);
-      const unequipResult = await unequipTx.execute(async () => {
-        const { error, success } = await unequipItem(
-          character.id,
-          conflictingItem.tokenId,
-        );
-        if (error && !success) {
-          // If item wasn't actually equipped (stale state), skip unequip
-          if (error.includes('NOT EQUIPPED')) return 'skip';
-          throw new Error(error);
-        }
-      });
-
-      if (unequipResult === undefined) {
-        setStatusText('');
-        return; // unequip failed for a real reason
-      }
-    }
-
     setStatusText(`Equipping ${item.name}...`);
     const result = await equipTx.execute(async () => {
       const { error, success } = await equipItems(character.id, [item.tokenId]);
       if (error && !success) {
-        // If item is already equipped on-chain (stale client state), treat as success
         if (error.includes('Already equipped')) return 'already-equipped';
         throw new Error(error);
       }
@@ -149,16 +111,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
     if (result !== undefined) {
       if (result === 'already-equipped') {
-        // RECS is stale — optimistically update UI and clear cache
-        optimisticEquip(item as Armor | Spell | Weapon);
         renderSuccess(`${item.name} is already equipped`);
       } else {
-        await refreshCharacter();
-        if (conflictingItem) {
-          renderSuccess(`Swapped ${conflictingItem.name} for ${item.name}`);
-        } else {
-          renderSuccess(`${item.name} equipped`);
-        }
+        renderSuccess(`${item.name} equipped`);
       }
       closeAndReset();
     } else {
@@ -167,17 +122,12 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   }, [
     character,
     closeAndReset,
-    conflictingItem,
     delegatorAddress,
     equipItems,
     equipTx,
     item,
-    optimisticEquip,
-    refreshCharacter,
     renderError,
     renderSuccess,
-    unequipItem,
-    unequipTx,
   ]);
 
   const onUnequipItem = useCallback(async () => {
@@ -194,7 +144,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     const result = await unequipTx.execute(async () => {
       const { error, success } = await unequipItem(character.id, item.tokenId);
       if (error && !success) {
-        // If item isn't actually equipped on-chain (stale client state), treat as success
         if (error.includes('NOT EQUIPPED')) return 'not-equipped';
         throw new Error(error);
       }
@@ -203,11 +152,8 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
     if (result !== undefined) {
       if (result === 'not-equipped') {
-        // RECS is stale — optimistically update UI and clear cache
-        optimisticUnequip(item.tokenId, item.itemType);
         renderSuccess(`${item.name} is already unequipped`);
       } else {
-        await refreshCharacter();
         renderSuccess(`${item.name} unequipped`);
       }
       closeAndReset();
@@ -219,8 +165,6 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     closeAndReset,
     delegatorAddress,
     item,
-    optimisticUnequip,
-    refreshCharacter,
     renderError,
     renderSuccess,
     unequipTx,
@@ -354,30 +298,12 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          {isOwner
-            ? needsSwap
-              ? 'Swap Item'
-              : 'Equip Item'
-            : 'Make an offer'}
+          {isOwner ? 'Equip Item' : 'Make an offer'}
         </ModalHeader>
         {!isLoading && <ModalCloseButton />}
         <ModalBody px={{ base: 6, sm: 8 }}>
           {isOwner ? (
-            needsSwap ? (
-              <Text mb={6}>
-                Equipping{' '}
-                <Text as="span" fontWeight="bold">
-                  {item.name}
-                </Text>{' '}
-                will unequip{' '}
-                <Text as="span" fontWeight="bold">
-                  {conflictingItem?.name}
-                </Text>
-                .
-              </Text>
-            ) : (
-              <Text mb={6}>Do you want to equip this item?</Text>
-            )
+            <Text mb={6}>Do you want to equip this item?</Text>
           ) : (
             <Text mb={6}>Do you want to make an offer for this item?</Text>
           )}
@@ -413,22 +339,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               )}
             </VStack>
           )}
-          {needsSwap && isOwner && (
-            <Text color="#9A9080" fontSize="sm" mt={4}>
-              All equipment slots are full. Go to your{' '}
-              <Text
-                as="span"
-                color="#D4A54A"
-                cursor="pointer"
-                textDecoration="underline"
-                onClick={() => {
-                  closeAndReset();
-                  navigate(`${CHARACTERS_PATH}/${character?.id}`);
-                }}
-              >
-                Character page
-              </Text>{' '}
-              to manage your loadout.
+          {slotsFull && isOwner && (
+            <Text color="orange" fontWeight="bold" mt={4} size="sm">
+              All equipment slots are full. Unequip something first.
             </Text>
           )}
           {!!currentBattle && isNotGameBoard && isOwner && (
@@ -449,18 +362,17 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
           <Button
             isDisabled={
               isOwner &&
-              isNotGameBoard &&
-              (isMissingRequirements || !!currentBattle)
+              (isNotGameBoard && (isMissingRequirements || !!currentBattle) || slotsFull)
             }
             isLoading={isLoading}
-            loadingText={needsSwap ? 'Swapping...' : 'Equipping...'}
+            loadingText="Equipping..."
             onClick={() =>
               isOwner
                 ? onEquipItem()
                 : navigate(`${ITEM_PATH}/${item.tokenId}?${buyingSearchParams}`)
             }
           >
-            {needsSwap ? 'Swap' : isOwner ? 'Equip' : 'Yes'}
+            {isOwner ? 'Equip' : 'Yes'}
           </Button>
           {isOwner && (
             <Button
