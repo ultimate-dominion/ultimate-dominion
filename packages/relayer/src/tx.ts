@@ -4,6 +4,7 @@ import {
   formatEther,
   type Hex,
   type Address,
+  type PublicClient,
 } from 'viem';
 import { acquireWallet, releaseWallet, resyncWallet, primaryAddress, chain, rpcTransport } from './walletPool.js';
 
@@ -11,7 +12,7 @@ import { acquireWallet, releaseWallet, resyncWallet, primaryAddress, chain, rpcT
 export const relayerAddress: Address = primaryAddress;
 
 // Public client (shared, no wallet-specific state)
-export const publicClient = createPublicClient({
+export const publicClient: PublicClient = createPublicClient({
   chain,
   transport: rpcTransport(),
 });
