@@ -99,6 +99,17 @@ export const CharacterPage = (): JSX.Element => {
   const reactiveCharacter = useReactiveEntity(id);
   const [hasBadge, setHasBadge] = useState(false);
 
+  const isOwner = useMemo(() => {
+    if (!(id && userCharacter)) return false;
+    const { ownerAddress } = decodeCharacterId(id as `0x${string}`);
+    return userCharacter.owner.toLowerCase() === ownerAddress;
+  }, [id, userCharacter]);
+
+  // For owner's own character, CharacterContext provides reactive data.
+  // For other characters, useReactiveEntity provides reactive data.
+  const character = isOwner ? userCharacter : reactiveCharacter;
+  const isLoadingCharacter = !isSynced || (!character && !!id);
+
   useEffect(() => {
     if (isConnecting) return;
 
@@ -136,17 +147,6 @@ export const CharacterPage = (): JSX.Element => {
 
     checkBadge();
   }, [character, publicClient]);
-
-  const isOwner = useMemo(() => {
-    if (!(id && userCharacter)) return false;
-    const { ownerAddress } = decodeCharacterId(id as `0x${string}`);
-    return userCharacter.owner.toLowerCase() === ownerAddress;
-  }, [id, userCharacter]);
-
-  // For owner's own character, CharacterContext provides reactive data.
-  // For other characters, useReactiveEntity provides reactive data.
-  const character = isOwner ? userCharacter : reactiveCharacter;
-  const isLoadingCharacter = !isSynced || (!character && !!id);
 
   // Auto-open advanced class modal when level >= 10 and no class selected
   useEffect(() => {
