@@ -2,8 +2,13 @@ node_modules
 dist
 .DS_Store
 
-# local env files
+# Environment files (secrets live here — never commit)
 .env
 .env*.local
+.env.development
+.env.staging
+.env.production
+.env.testnet
+.env.mainnet
 
 .vercel

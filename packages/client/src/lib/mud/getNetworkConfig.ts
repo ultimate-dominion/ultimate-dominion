@@ -13,6 +13,7 @@
  */
 import { getBurnerPrivateKey } from '@latticexyz/common';
 import { MUDChain } from '@latticexyz/common/chains';
+import { validateWorldAddress, IS_DEV } from '../env';
 /*
  * Import the addresses of the World, possibly on multiple chains,
  * from packages/contracts/worlds.json. When the contracts package
@@ -74,12 +75,18 @@ export async function getNetworkConfig(): Promise<{
    * provide it as worldAddress in the query string.
    */
   const world = worlds[chain.id.toString()];
-  const worldAddress = params.get('worldAddress') || import.meta.env.VITE_WORLD_ADDRESS || world?.address;
+  const worldAddress = params.get('worldAddress') || import.meta.env.VITE_WORLD_ADDRESS || (IS_DEV ? world?.address : undefined);
   if (!worldAddress) {
     throw new Error(
-      `No world address found for chain ${chainId}. Did you run \`mud deploy\`?`,
+      `No world address found for chain ${chainId}. ` +
+      (chainId === 8453
+        ? 'VITE_WORLD_ADDRESS must be set for Base Mainnet builds.'
+        : 'Did you run `mud deploy`?'),
     );
   }
+
+  // Validate world address matches environment expectations
+  validateWorldAddress(worldAddress);
 
   /*
    * MUD clients use events to synchronize the database, meaning

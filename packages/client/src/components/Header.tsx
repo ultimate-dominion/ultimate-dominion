@@ -26,6 +26,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
+import { IS_BETA } from '../lib/env';
 import {
   CHARACTER_CREATION_PATH,
   CHARACTERS_PATH,
@@ -129,6 +130,22 @@ export const Header = (): JSX.Element => {
   );
 
   return (
+    <>
+    {IS_BETA && (
+      <Box
+        bg="#C87A2A"
+        color="#1C1814"
+        fontSize="11px"
+        fontWeight={700}
+        letterSpacing="0.1em"
+        py="2px"
+        textAlign="center"
+        textTransform="uppercase"
+        w="100%"
+      >
+        BETA — Test World
+      </Box>
+    )}
     <Grid
       as="header"
       bgColor={pathname === HOME_PATH ? 'transparent' : '#1C1814'}
@@ -384,5 +401,6 @@ export const Header = (): JSX.Element => {
         </Drawer>
       </GridItem>
     </Grid>
+    </>
   );
 };

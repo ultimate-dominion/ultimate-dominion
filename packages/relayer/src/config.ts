@@ -27,6 +27,14 @@ export const config = {
   rpcAuthToken: process.env.RPC_AUTH_TOKEN || '',  // Bearer token for self-hosted RPC (optional)
   rpcFallbackUrl: process.env.RPC_FALLBACK_URL || '',  // Fallback RPC (e.g. Alchemy) if primary goes down
 
+  // World address allowlist — relayer rejects transactions targeting unlisted contracts.
+  // Comma-separated list of allowed world addresses (case-insensitive).
+  // If empty, all targets are allowed (backwards compat for dev).
+  allowedWorldAddresses: (process.env.ALLOWED_WORLD_ADDRESSES || '')
+    .split(',')
+    .map(a => a.trim().toLowerCase())
+    .filter(Boolean),
+
   // Gas charging & Gold swap (optional — disabled if WORLD_ADDRESS or GOLD_TOKEN not set)
   worldAddress: (process.env.WORLD_ADDRESS || '') as Address,
   goldToken: (process.env.GOLD_TOKEN || '') as Address,

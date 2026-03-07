@@ -33,10 +33,12 @@ import { useMap } from './MapContext';
 
 import { useOrders } from './OrdersContext';
 
-// Push Protocol environment: 'prod' for deployed sites, 'staging' for localhost
+// Push Protocol environment: 'prod' for production, 'staging' for beta + localhost
 // Values match @pushprotocol/restapi CONSTANTS.ENV — inlined to avoid static import
+import { IS_PRODUCTION } from '../lib/env';
 const PUSH_ENV = import.meta.env.VITE_PUSH_ENV === 'prod' ? 'prod'
-  : import.meta.env.DEV ? 'staging' : 'prod';
+  : import.meta.env.VITE_PUSH_ENV === 'staging' ? 'staging'
+  : IS_PRODUCTION ? 'prod' : 'staging';
 
 // Group chat ID — differs between staging and prod environments
 const PROD_GROUP_CHAT_ID = '0e66a86ac97a353b068c556612f949f223101ce9a52a3b5ec8f305f989d917f8';

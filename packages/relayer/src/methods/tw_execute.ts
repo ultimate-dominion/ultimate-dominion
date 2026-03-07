@@ -1,6 +1,7 @@
 import { type Hex, type Address, numberToHex } from 'viem';
 import { encodeExecuteWithSig, sendRelayerTx, txQueue } from '../tx.js';
 import { recordRelay } from '../gasCharge.js';
+import { config } from '../config.js';
 
 export async function handleExecute(params: unknown[]): Promise<{ queueId: string }> {
   const [eoaAddress, rawWrappedCalls, signature, rawAuthorization] = params as [
@@ -14,6 +15,18 @@ export async function handleExecute(params: unknown[]): Promise<{ queueId: strin
 
   if (!eoaAddress || !rawWrappedCalls || !signature) {
     throw new Error('Missing required params: [eoaAddress, wrappedCalls, signature]');
+  }
+
+  // Validate call targets against allowlist (if configured)
+  if (config.allowedWorldAddresses.length > 0) {
+    const targets = (rawWrappedCalls.calls as Array<{ target: string }>).map(
+      c => c.target.toLowerCase(),
+    );
+    for (const target of targets) {
+      if (!config.allowedWorldAddresses.includes(target)) {
+        throw new Error(`Target ${target} not in ALLOWED_WORLD_ADDRESSES`);
+      }
+    }
   }
 
   // Normalize wrappedCalls — convert value strings to bigint

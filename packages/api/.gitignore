@@ -1,5 +1,7 @@
 .vercel
 
-# local env files
+# Environment files (secrets live here — never commit)
 .env
 .env*.local
+.env.testnet
+.env.mainnet
