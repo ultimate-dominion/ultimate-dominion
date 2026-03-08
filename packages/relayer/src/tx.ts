@@ -81,24 +81,35 @@ export async function sendRelayerTx(params: {
   to: Address;
   calldata: Hex;
   authorizationList?: SignedAuthorization[];
+  gasOverride?: bigint;
 }): Promise<Hex> {
-  const { to, calldata, authorizationList } = params;
+  const { to, calldata, authorizationList, gasOverride } = params;
+  const t0 = Date.now();
 
   const { wallet, nonce } = await acquireWallet();
-  try {
-    // Estimate gas
-    const gasEstimate = await publicClient.estimateGas({
-      to,
-      data: calldata,
-      account: wallet.address,
-      ...(authorizationList ? { authorizationList } : {}),
-    });
+  const tAcquire = Date.now();
 
-    // 1.5x buffer
-    const gas = (gasEstimate * 150n) / 100n;
+  try {
+    let gas: bigint;
+
+    if (gasOverride) {
+      // Skip estimation — caller provided a known-safe gas limit
+      gas = gasOverride;
+    } else {
+      // Estimate gas
+      const gasEstimate = await publicClient.estimateGas({
+        to,
+        data: calldata,
+        account: wallet.address,
+        ...(authorizationList ? { authorizationList } : {}),
+      });
+      // 1.5x buffer
+      gas = (gasEstimate * 150n) / 100n;
+    }
+    const tEstimate = Date.now();
 
     console.log(
-      `[tx] Sending via ${wallet.address.slice(0, 10)} | nonce=${nonce} | gas=${gas} | auth=${!!authorizationList}`,
+      `[tx] Sending via ${wallet.address.slice(0, 10)} | nonce=${nonce} | gas=${gas}${gasOverride ? ' (fixed)' : ''} | auth=${!!authorizationList} | acquire=${tAcquire - t0}ms est=${tEstimate - tAcquire}ms`,
     );
 
     // Send transaction
@@ -112,11 +123,12 @@ export async function sendRelayerTx(params: {
       ...(authorizationList ? { authorizationList } : {}),
     });
 
-    console.log(`[tx] Broadcast: ${hash}`);
+    const tBroadcast = Date.now();
+    console.log(`[tx] Broadcast: ${hash} | send=${tBroadcast - tEstimate}ms | total=${tBroadcast - t0}ms`);
     releaseWallet(wallet, true);
     return hash;
   } catch (err) {
-    console.error(`[tx] Failed on ${wallet.address.slice(0, 10)}:`, err);
+    console.error(`[tx] Failed on ${wallet.address.slice(0, 10)} (${Date.now() - t0}ms):`, err);
     releaseWallet(wallet, false);
     await resyncWallet(wallet, publicClient);
     throw err;

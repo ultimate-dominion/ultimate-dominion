@@ -3,6 +3,13 @@ import { encodeExecuteWithSig, sendRelayerTx, txQueue } from '../tx.js';
 import { recordRelay } from '../gasCharge.js';
 import { config } from '../config.js';
 
+// Function selectors for calls that need fixed gas limits.
+// Move txs have highly variable gas (1.3M-2.5M) due to spawnOnTileEnter
+// using block.prevrandao — estimateGas at block N often undershoots for block N+1.
+const FIXED_GAS_SELECTORS: Record<string, bigint> = {
+  '0xd1138fa1': 4_000_000n,  // UD__move(bytes32,uint16,uint16)
+};
+
 export async function handleExecute(params: unknown[]): Promise<{ queueId: string }> {
   const [eoaAddress, rawWrappedCalls, signature, rawAuthorization] = params as [
     Address,
@@ -80,12 +87,25 @@ export async function handleExecute(params: unknown[]): Promise<{ queueId: strin
   // Encode calldata
   const calldata = encodeExecuteWithSig(wrappedCalls, signature);
 
+  // Check if any inner call matches a fixed-gas selector (e.g. UD__move).
+  // This skips estimateGas on the relayer side, saving ~300-500ms and
+  // preventing OOG reverts from variable gas paths (spawnOnTileEnter).
+  let gasOverride: bigint | undefined;
+  for (const call of wrappedCalls.calls) {
+    const selector = call.data.slice(0, 10).toLowerCase();
+    if (FIXED_GAS_SELECTORS[selector]) {
+      gasOverride = FIXED_GAS_SELECTORS[selector];
+      break;
+    }
+  }
+
   // Send transaction (synchronous — we wait for broadcast)
   try {
     const txHash = await sendRelayerTx({
       to: eoaAddress,
       calldata,
       authorizationList,
+      gasOverride,
     });
 
     txQueue.set(queueId, { txHash, error: null });
