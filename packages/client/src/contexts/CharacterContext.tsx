@@ -350,7 +350,7 @@ const CharacterProviderInner = ({
       hasSelectedAdvancedClass: Boolean(statsData?.hasSelectedAdvancedClass),
 
       // Metadata fields
-      name: (metadataFetched && metadataName) ? metadataName : decodedName,
+      name: decodedName || metadataName,
       description: metadataDescription,
       image: metadataImage,
     };

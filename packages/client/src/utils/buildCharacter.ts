@@ -106,10 +106,9 @@ export function buildCharacter(
 
   const metadataFallback = metadata ?? { name: '', description: '', image: '' };
 
-  // Use metadata name if available, otherwise decode hex name from on-chain data
-  const name = metadataFallback.name
-    ? metadataFallback.name
-    : hexToString(characterData.name as `0x${string}`, { size: 32 });
+  // On-chain name is authoritative; IPFS metadata name is a fallback
+  const onChainName = hexToString(characterData.name as `0x${string}`, { size: 32 });
+  const name = onChainName || metadataFallback.name;
 
   return {
     ...metadataFallback,
