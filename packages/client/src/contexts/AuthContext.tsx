@@ -150,6 +150,7 @@ export const AuthProvider = ({
 
   // First-login gas funding
   useEffect(() => {
+    console.info('[Gas] Funding check:', { embeddedAddress, RELAYER_URL, hasKey: embeddedAddress ? !!localStorage.getItem(`ud:gasFunded:${embeddedAddress}`) : null });
     if (!embeddedAddress || !RELAYER_URL) return;
     const key = `ud:gasFunded:${embeddedAddress}`;
     if (localStorage.getItem(key)) return;
