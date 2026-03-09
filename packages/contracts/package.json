@@ -24,6 +24,8 @@
     "deploy:local": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry",
     "deploy:testnet": "bash -c 'set -a && source .env.testnet && set +a && pnpm run build && mud deploy --forgeScriptOptions=\"--slow\" --profile=base-mainnet --worldAddress $WORLD_ADDRESS && pnpm run ensure-access:testnet'",
     "deploy:mainnet": "bash -c 'set -a && source .env.mainnet && set +a && pnpm run build && mud deploy --forgeScriptOptions=\"--slow\" --profile=base-mainnet --worldAddress $WORLD_ADDRESS && pnpm run ensure-access:mainnet'",
+    "deploy:mainnet:fresh": "bash -c 'set -a && source .env.mainnet && set +a && pnpm run build && mud deploy --forgeScriptOptions=\"--slow\" --profile=base-mainnet --alwaysRunPostDeploy && pnpm run ensure-access:mainnet'",
+    "genesis-message:mainnet": "bash -c 'set -a && source .env.mainnet && set +a && cast send $WORLD_ADDRESS --private-key $PRIVATE_KEY --rpc-url $RPC_URL --value 0 \"0x$(printf \"good luck, have fun. -mokn\" | xxd -p | tr -d \"\\n\")\"'",
     "ensure-access:testnet": "bash -c 'set -a && source .env.testnet && set +a && forge script script/EnsureAccess.s.sol --tc EnsureAccess --sig \"run(address)\" $WORLD_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast'",
     "ensure-access:mainnet": "bash -c 'set -a && source .env.mainnet && set +a && forge script script/EnsureAccess.s.sol --tc EnsureAccess --sig \"run(address)\" $WORLD_ADDRESS --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast'",
     "dev": "pnpm run build && DEBUG=mud:* mud deploy --forgeScriptOptions=\"--slow --priority-gas-price=1000000\" --profile=mudFoundry",
