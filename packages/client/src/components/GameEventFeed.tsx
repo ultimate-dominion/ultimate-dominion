@@ -23,7 +23,7 @@ export const GameEventFeed = (): JSX.Element => {
           Waiting for game events...
         </Text>
         <Text color="#3A3228" size="xs">
-          Battles, loot drops, and level ups will appear here
+          Battles, loot, quests, and new arrivals will appear here
         </Text>
       </VStack>
     );
@@ -63,6 +63,12 @@ function getEventColor(eventType: string): string {
       return '#4A8B4A'; // green
     case 'marketplace_sale':
       return '#6A8AB0'; // blue
+    case 'character_created':
+      return '#9B8EC4'; // purple — new arrival
+    case 'shop_purchase':
+      return '#8A9E7A'; // sage — commerce
+    case 'quest_complete':
+      return '#C4A54A'; // amber — achievement
     default:
       return '#8A7E6A';
   }

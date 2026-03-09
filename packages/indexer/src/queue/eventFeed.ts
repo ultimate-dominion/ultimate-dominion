@@ -16,6 +16,9 @@ const emittedLevelUps = new Set<string>();    // "keyBytes:level"
 const emittedCombat = new Set<string>();       // "keyBytes"
 const emittedLoot = new Set<string>();         // "keyBytes"
 const emittedSales = new Set<string>();        // "keyBytes"
+const emittedCharacters = new Set<string>();   // "keyBytes"
+const emittedShopSales = new Set<string>();    // "shopId:customerId:itemId:timestamp"
+const emittedQuests = new Set<string>();       // "characterId:questId"
 
 function addEvent(event: GameEvent) {
   eventBuffer.push(event);
@@ -53,12 +56,25 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
       await scanCombatOutcomes(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanLootDrops(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanMarketplaceSales(syncHandle, scanFrom, currentBlock, broadcaster);
+      await scanNewCharacters(syncHandle, scanFrom, currentBlock, broadcaster);
+      await scanShopPurchases(syncHandle, scanFrom, currentBlock, broadcaster);
+      await scanQuestCompletions(syncHandle, scanFrom, currentBlock, broadcaster);
 
+      loggedMissing = true;
       lastScannedBlock = currentBlock;
     } catch (err) {
       console.error('[eventFeed] Scan error:', err);
     }
   }, 10_000);
+}
+
+let loggedMissing = false;
+function logMissing(label: string, tables: [string, string | undefined][]) {
+  if (loggedMissing) return;
+  const missing = tables.filter(([, v]) => !v).map(([k]) => k);
+  if (missing.length > 0) {
+    console.log(`[eventFeed] ${label}: missing tables: ${missing.join(', ')}`);
+  }
 }
 
 /** Scan for level-ups */
@@ -70,6 +86,7 @@ async function scanLevelUps(
 ) {
   const statsTable = syncHandle.tableNameMap.get('Stats');
   const charactersTable = syncHandle.tableNameMap.get('Characters');
+  logMissing('LevelUps', [['Stats', statsTable], ['Characters', charactersTable]]);
   if (!statsTable || !charactersTable) return;
 
   try {
@@ -119,6 +136,7 @@ async function scanCombatOutcomes(
   const outcomeTable = syncHandle.tableNameMap.get('CombatOutcome');
   const worldEncTable = syncHandle.tableNameMap.get('WorldEncounter');
   const charactersTable = syncHandle.tableNameMap.get('Characters');
+  logMissing('Combat', [['CombatOutcome', outcomeTable], ['WorldEncounter', worldEncTable], ['Characters', charactersTable]]);
   if (!outcomeTable || !worldEncTable || !charactersTable) return;
 
   try {
@@ -307,6 +325,175 @@ async function scanMarketplaceSales(
         description: price > 0
           ? `${itemDesc} was sold for ${price.toLocaleString()} gold`
           : `${itemDesc} was sold on the marketplace`,
+        timestamp: Date.now(),
+      };
+      addEvent(event);
+      broadcaster.broadcastGameEvent(event);
+    }
+  } catch {
+    // Table might not exist yet
+  }
+}
+
+/** Scan for new character creations (level 1 characters that just appeared) */
+async function scanNewCharacters(
+  syncHandle: SyncHandle,
+  fromBlock: number,
+  toBlock: number,
+  broadcaster: Broadcaster,
+) {
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  const statsTable = syncHandle.tableNameMap.get('Stats');
+  if (!charactersTable) return;
+
+  try {
+    // Find characters updated in this block range that are level 1 (just created)
+    const query = statsTable
+      ? `SELECT c."__key_bytes", c."name"
+         FROM "${mudSchema}"."${charactersTable}" c
+         JOIN "${mudSchema}"."${statsTable}" s ON c."__key_bytes" = s."__key_bytes"
+         WHERE c."__last_updated_block_number" >= $1
+           AND c."__last_updated_block_number" <= $2
+           AND c."name" IS NOT NULL
+           AND s."level" = 1`
+      : `SELECT "__key_bytes", "name"
+         FROM "${mudSchema}"."${charactersTable}"
+         WHERE "__last_updated_block_number" >= $1
+           AND "__last_updated_block_number" <= $2
+           AND "name" IS NOT NULL`;
+    const rows = await sql.unsafe(query, [fromBlock.toString(), toBlock.toString()]);
+
+    for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      if (emittedCharacters.has(keyHex)) continue;
+      emittedCharacters.add(keyHex);
+
+      const name = decodeCharacterName(row.name);
+      if (!name) continue;
+
+      const event: GameEvent = {
+        id: crypto.randomUUID(),
+        eventType: 'character_created',
+        playerName: name,
+        description: `${name} has entered the world`,
+        timestamp: Date.now(),
+      };
+      addEvent(event);
+      broadcaster.broadcastGameEvent(event);
+    }
+  } catch {
+    // Table might not exist yet
+  }
+}
+
+/** Scan for NPC shop purchases */
+async function scanShopPurchases(
+  syncHandle: SyncHandle,
+  fromBlock: number,
+  toBlock: number,
+  broadcaster: Broadcaster,
+) {
+  const shopSaleTable = syncHandle.tableNameMap.get('ShopSale');
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  const itemsTable = syncHandle.tableNameMap.get('Items');
+  logMissing('ShopSale', [['ShopSale', shopSaleTable], ['Characters', charactersTable]]);
+  if (!shopSaleTable || !charactersTable) return;
+
+  try {
+    const rows = await sql.unsafe(`
+      SELECT ss."__key_bytes", ss."customer_id", ss."item_id", ss."buying", ss."price", c."name"
+      FROM "${mudSchema}"."${shopSaleTable}" ss
+      LEFT JOIN "${mudSchema}"."${charactersTable}" c
+        ON ss."customer_id" = c."__key_bytes"
+      WHERE ss."__last_updated_block_number" >= $1
+        AND ss."__last_updated_block_number" <= $2
+    `, [fromBlock.toString(), toBlock.toString()]);
+
+    for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      if (emittedShopSales.has(keyHex)) continue;
+      emittedShopSales.add(keyHex);
+
+      const name = decodeCharacterName(row.name) || 'An adventurer';
+      const price = Number(row.price || 0);
+      const buying = row.buying;
+      let itemDesc = 'an item';
+
+      if (itemsTable) {
+        try {
+          const itemRow = await sql.unsafe(`
+            SELECT "item_type", "rarity"
+            FROM "${mudSchema}"."${itemsTable}"
+            WHERE "item_id" = $1::numeric
+            LIMIT 1
+          `, [row.item_id]);
+          if (itemRow.length > 0) {
+            const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+            const rarityName = RARITY_NAMES[Number(itemRow[0].rarity)] || '';
+            itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+          }
+        } catch {
+          // Fall back to generic
+        }
+      }
+
+      const desc = buying
+        ? (price > 0 ? `${name} purchased ${itemDesc} for ${price.toLocaleString()} gold` : `${name} purchased ${itemDesc}`)
+        : (price > 0 ? `${name} sold ${itemDesc} for ${price.toLocaleString()} gold` : `${name} sold ${itemDesc}`);
+
+      const event: GameEvent = {
+        id: crypto.randomUUID(),
+        eventType: 'shop_purchase',
+        playerName: name,
+        description: desc,
+        timestamp: Date.now(),
+      };
+      addEvent(event);
+      broadcaster.broadcastGameEvent(event);
+    }
+  } catch {
+    // Table might not exist yet
+  }
+}
+
+// QuestStatus enum values (must match mud.config QuestStatus)
+const QUEST_STATUS_COMPLETED = 3;
+
+/** Scan for quest completions */
+async function scanQuestCompletions(
+  syncHandle: SyncHandle,
+  fromBlock: number,
+  toBlock: number,
+  broadcaster: Broadcaster,
+) {
+  const questTable = syncHandle.tableNameMap.get('QuestProgress');
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  logMissing('Quest', [['QuestProgress', questTable], ['Characters', charactersTable]]);
+  if (!questTable || !charactersTable) return;
+
+  try {
+    const rows = await sql.unsafe(`
+      SELECT qp."__key_bytes", qp."character_id", qp."quest_id", c."name"
+      FROM "${mudSchema}"."${questTable}" qp
+      LEFT JOIN "${mudSchema}"."${charactersTable}" c
+        ON qp."character_id" = c."__key_bytes"
+      WHERE qp."__last_updated_block_number" >= $1
+        AND qp."__last_updated_block_number" <= $2
+        AND qp."status" = $3
+    `, [fromBlock.toString(), toBlock.toString(), QUEST_STATUS_COMPLETED.toString()]);
+
+    for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      if (emittedQuests.has(keyHex)) continue;
+      emittedQuests.add(keyHex);
+
+      const name = decodeCharacterName(row.name) || 'An adventurer';
+
+      const event: GameEvent = {
+        id: crypto.randomUUID(),
+        eventType: 'quest_complete',
+        playerName: name,
+        description: `${name} completed a quest`,
         timestamp: Date.now(),
       };
       addEvent(event);
