@@ -185,8 +185,6 @@ export const AllowanceProvider = ({
       setIsAutoApproving(true);
 
       try {
-        const approvals: Promise<void>[] = [];
-
         const approveGoldIfNeeded = async (spender: string) => {
           const current = await publicClient.readContract({
             address: goldTokenAddress as Address,
@@ -223,20 +221,15 @@ export const AllowanceProvider = ({
           await publicClient.waitForTransactionReceipt({ hash: txHash });
         };
 
-        if (shopAddress) {
-          approvals.push(approveGoldIfNeeded(shopAddress));
-          approvals.push(approveItemsIfNeeded(shopAddress));
-        }
-        if (lootManagerAddress) {
-          approvals.push(approveGoldIfNeeded(lootManagerAddress));
-          approvals.push(approveItemsIfNeeded(lootManagerAddress));
-        }
-        if (marketplaceAddress) {
-          approvals.push(approveGoldIfNeeded(marketplaceAddress));
-          approvals.push(approveItemsIfNeeded(marketplaceAddress));
+        // Run approvals sequentially to avoid nonce collisions.
+        // Each writeContract call needs the previous tx confirmed
+        // so the provider picks up the correct next nonce.
+        const spenders = [shopAddress, lootManagerAddress, marketplaceAddress].filter(Boolean) as string[];
+        for (const spender of spenders) {
+          try { await approveGoldIfNeeded(spender); } catch {}
+          try { await approveItemsIfNeeded(spender); } catch {}
         }
 
-        await Promise.allSettled(approvals);
         await fetchAllowances();
       } catch {
         // Silent — auto-approve is best-effort
