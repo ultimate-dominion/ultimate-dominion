@@ -60,7 +60,7 @@ const headings = [
                 if (isDanger) { bg = 'bg-red/10 text-red/60'; label = '·'; }
                 if (isSpawn) { bg = 'bg-accent/20 text-accent'; label = 'S'; }
                 if (isShop) { bg = 'bg-accent/20 text-accent'; label = 'T'; }
-                if (isFragment) { bg = 'bg-blue-bright/20 text-blue-bright'; label = 'F'; }
+                if (isFragment) { bg = 'bg-accent-gold/20 text-accent-gold'; label = 'F'; }
 
                 return <span class:list={['w-full aspect-square flex items-center justify-center rounded-sm text-[10px] font-bold', bg]}>{label}</span>;
               })}
@@ -71,7 +71,7 @@ const headings = [
       <div class="flex items-center gap-4 mt-3 text-text-secondary justify-center flex-wrap">
         <span><span class="text-accent">S</span> = Spawn</span>
         <span><span class="text-accent">T</span> = Tal's Shop</span>
-        <span><span class="text-blue-bright">F</span> = Fragment Center</span>
+        <span><span class="text-accent-gold">F</span> = Fragment Center</span>
         <span class="text-green/60">Green = Safe</span>
         <span class="text-red/60">Red = Danger</span>
       </div>

@@ -42,21 +42,28 @@ const sections = [
   <MobileSidebar />
 
   <main>
-    <!-- Hero -->
+    <!-- Hero — torchlit atmosphere -->
     <section class="relative overflow-hidden border-b border-border">
-      <div class="absolute inset-0 bg-gradient-to-b from-blue-primary/10 to-transparent"></div>
-      <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 text-center">
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
+      <!-- Radial torch glow from top center -->
+      <div class="absolute inset-0 bg-gradient-to-b from-accent/5 to-transparent"></div>
+      <!-- Vignette edges -->
+      <div class="absolute inset-0" style="background: radial-gradient(ellipse at center, transparent 0%, rgba(18,16,14,0.7) 100%);"></div>
+
+      <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 text-center">
+        <p class="font-display text-text-secondary text-[11px] tracking-[0.3em] uppercase mb-6" style="letter-spacing: 0.3em;">
+          Nothing Is Forgotten
+        </p>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-display font-semibold text-parchment mb-5 tracking-tight" style="letter-spacing: 0.06em;">
           Adventurer's Codex
         </h1>
-        <p class="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-8">
+
+        <p class="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 font-sans" style="line-height: 1.8;">
           Everything you need to survive, fight, and conquer in the world of Ultimate Dominion.
         </p>
+
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a
-            href="/guide/getting-started"
-            class="inline-flex items-center gap-2 bg-accent text-page font-semibold px-6 py-3 rounded-lg hover:bg-accent/90 transition-colors no-underline"
-          >
+          <a href="/guide/getting-started" class="torch-button inline-flex items-center gap-2">
             Start Here
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -64,7 +71,8 @@ const sections = [
           </a>
           <button
             id="hero-search"
-            class="inline-flex items-center gap-2 border border-border text-text-primary px-6 py-3 rounded-lg hover:border-text-secondary hover:text-white transition-colors"
+            class="inline-flex items-center gap-2 border border-border text-text-primary px-6 py-3 hover:border-accent/30 hover:text-parchment transition-colors font-display text-sm tracking-wider uppercase"
+            style="border-radius: 2px;"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -83,8 +91,8 @@ const sections = [
             <div class="flex items-start gap-3">
               <span class="text-2xl mt-0.5">{s.icon}</span>
               <div>
-                <h2 class="text-base font-bold text-white mb-1 group-hover:text-accent transition-colors m-0">{s.title}</h2>
-                <p class="text-sm text-text-secondary m-0 leading-relaxed">{s.desc}</p>
+                <h2 class="text-base font-display font-semibold text-parchment mb-1 group-hover:text-accent transition-colors m-0" style="text-shadow: none; letter-spacing: 0.03em;">{s.title}</h2>
+                <p class="text-sm text-text-secondary m-0 leading-relaxed font-sans">{s.desc}</p>
               </div>
             </div>
           </a>
@@ -92,15 +100,15 @@ const sections = [
       </div>
     </section>
 
-    <!-- Quick Info -->
+    <!-- Quote -->
     <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
       <div class="guide-card text-center">
-        <p class="text-text-secondary italic text-sm mb-4">
+        <p class="text-text-secondary italic text-sm mb-4 font-sans" style="font-style: italic;">
           "You wake in a cave with no memory and no name. Everything after that is yours."
         </p>
-        <p class="text-text-secondary text-sm">
+        <p class="text-text-secondary text-sm font-sans">
           Ultimate Dominion is a persistent dark fantasy MUD. Every character, item, and piece of gold exists permanently in the world.
-          No downloads — just open your browser and <a href="https://ultimatedominion.com" class="text-accent hover:text-accent/80">enter the world</a>.
+          No downloads — just open your browser and <a href="https://ultimatedominion.com" class="text-accent hover:text-accent-glow">enter the world</a>.
         </p>
       </div>
     </section>

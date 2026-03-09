@@ -5,7 +5,7 @@ import { allPages } from '../../data/navigation';
 <div id="search-modal" class="fixed inset-0 z-50 hidden">
   <div id="search-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
   <div class="relative max-w-xl mx-auto mt-[15vh] px-4">
-    <div class="bg-sidebar border border-border rounded-xl shadow-2xl overflow-hidden">
+    <div class="bg-sidebar border border-border shadow-2xl overflow-hidden" style="border-radius: 2px;">
       <!-- Search input -->
       <div class="flex items-center gap-3 px-4 border-b border-border">
         <svg class="w-5 h-5 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,15 +15,15 @@ import { allPages } from '../../data/navigation';
           id="search-input"
           type="text"
           placeholder="Search the guide..."
-          class="w-full bg-transparent text-white py-4 outline-none placeholder:text-text-secondary"
+          class="w-full bg-transparent text-parchment py-4 outline-none placeholder:text-text-secondary font-sans"
           autocomplete="off"
         />
-        <kbd class="text-xs border border-border rounded px-1.5 py-0.5 text-text-secondary font-mono shrink-0">ESC</kbd>
+        <kbd class="text-xs border border-border px-1.5 py-0.5 text-text-secondary font-mono shrink-0" style="border-radius: 2px;">ESC</kbd>
       </div>
 
       <!-- Results -->
       <div id="search-results" class="max-h-80 overflow-y-auto p-2">
-        <div id="search-empty" class="text-center text-text-secondary py-8 text-sm">
+        <div id="search-empty" class="text-center text-text-secondary py-8 text-sm font-sans">
           Type to search pages, classes, items, and more...
         </div>
         <div id="search-list" class="hidden space-y-1"></div>
@@ -84,7 +84,7 @@ import { allPages } from '../../data/navigation';
     resultsEmpty?.classList.add('hidden');
     resultsList?.classList.remove('hidden');
     resultsList.innerHTML = matches.map((p) => `
-      <a href="${p.href}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface text-text-primary hover:text-white transition-colors no-underline">
+      <a href="${p.href}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-surface text-text-primary hover:text-parchment transition-colors no-underline" style="border-radius: 2px;">
         <span class="text-base w-5 text-center">${p.icon || '📄'}</span>
         <span class="text-sm">${p.title}</span>
       </a>

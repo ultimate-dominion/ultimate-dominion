@@ -41,12 +41,12 @@ const { title, description, breadcrumbs = [], headings = [], canonical, ogImage 
     <!-- Mobile menu button -->
     <button
       id="mobile-menu-trigger"
-      class="lg:hidden flex items-center gap-2 text-text-secondary hover:text-white mb-4 text-sm"
+      class="lg:hidden flex items-center gap-2 text-text-secondary hover:text-parchment mb-4 text-sm"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
-      Menu
+      <span class="font-display tracking-wider uppercase text-xs">Menu</span>
     </button>
 
     <div class="flex gap-8">
@@ -56,20 +56,20 @@ const { title, description, breadcrumbs = [], headings = [], canonical, ogImage 
         {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
 
         <article class="prose prose-invert max-w-none
-          prose-headings:text-white prose-headings:font-bold
+          prose-headings:text-parchment prose-headings:font-display
           prose-h1:text-3xl prose-h1:mb-4 prose-h1:mt-0
           prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-border prose-h2:pb-3
           prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
           prose-p:text-text-primary prose-p:leading-relaxed
-          prose-a:text-blue-bright hover:prose-a:text-accent
-          prose-strong:text-white
+          prose-a:text-accent-gold hover:prose-a:text-accent-glow
+          prose-strong:text-parchment
           prose-code:text-accent prose-code:font-mono prose-code:text-sm
-          prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+          prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5
           prose-li:text-text-primary
           prose-table:border-collapse
-          prose-th:text-white prose-th:text-left prose-th:font-semibold prose-th:border-b prose-th:border-border prose-th:px-4 prose-th:py-3
+          prose-th:text-parchment prose-th:text-left prose-th:font-display prose-th:font-semibold prose-th:border-b prose-th:border-border prose-th:px-4 prose-th:py-3
           prose-td:text-text-primary prose-td:border-b prose-td:border-border/50 prose-td:px-4 prose-td:py-3
-        ">
+        " style="--tw-prose-code-bg: #1C1814;">
           <slot />
         </article>
       </main>
