@@ -106,10 +106,24 @@ export const AuthProvider = ({
         const provider = await privyWallet.getEthereumProvider();
         if (cancelled) return;
 
+        // viem v2.35 sends `wallet_sendTransaction` but Privy's EthereumProvider
+        // only intercepts `eth_sendTransaction` for local MPC signing.
+        // Wrap the provider to translate the method so it doesn't fall through
+        // to Privy's RPC proxy (which rejects it with -32604).
+        const wrappedProvider = {
+          ...provider,
+          request: (args: { method: string; params?: unknown[] }) => {
+            if (args.method === 'wallet_sendTransaction') {
+              return provider.request({ ...args, method: 'eth_sendTransaction' });
+            }
+            return provider.request(args);
+          },
+        };
+
         const walletClient = createWalletClient({
           account: privyWallet.address as Address,
           chain: base,
-          transport: custom(provider),
+          transport: custom(wrappedProvider),
         });
 
         setEmbeddedWalletClient(walletClient);
