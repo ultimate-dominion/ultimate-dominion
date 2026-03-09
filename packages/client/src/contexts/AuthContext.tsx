@@ -106,15 +106,25 @@ export const AuthProvider = ({
         const provider = await privyWallet.getEthereumProvider();
         if (cancelled) return;
 
+        // Privy's EthereumProvider doesn't track pending nonces, so concurrent
+        // eth_sendTransaction calls (e.g. AllowanceContext auto-approvals +
+        // character creation steps) grab the same nonce → "replacement tx underpriced".
+        // Serialize all send-tx calls through a promise queue.
+        let txQueue: Promise<unknown> = Promise.resolve();
+
         // viem v2.35 sends `wallet_sendTransaction` but Privy's EthereumProvider
         // only intercepts `eth_sendTransaction` for local MPC signing.
-        // Wrap the provider to translate the method so it doesn't fall through
-        // to Privy's RPC proxy (which rejects it with -32604).
         const wrappedProvider = {
           ...provider,
           request: (args: { method: string; params?: unknown[] }) => {
             if (args.method === 'wallet_sendTransaction') {
-              return provider.request({ ...args, method: 'eth_sendTransaction' });
+              args = { ...args, method: 'eth_sendTransaction' };
+            }
+            if (args.method === 'eth_sendTransaction') {
+              const execute = () => provider.request(args);
+              const queued = txQueue.then(execute, execute);
+              txQueue = queued.catch(() => {}); // don't let failures block the queue
+              return queued;
             }
             return provider.request(args);
           },
