@@ -26,7 +26,8 @@ contract FragmentCombatSystem is System {
         uint16 tileY,
         bool defeatedAreMobs
     ) public {
-        _requireSystemOrAdmin(_msgSender());
+        // No access control — fragment progress is cosmetic/lore only (no gold/items).
+        // Called directly by client after combat resolution.
         for (uint256 i = 0; i < winners.length; i++) {
             if (_isCharacter(winners[i])) {
                 checkCombatFragmentTriggers(winners[i], defeated, tileX, tileY, defeatedAreMobs);
@@ -41,7 +42,6 @@ contract FragmentCombatSystem is System {
         uint16 tileY,
         bool defeatedAreMobs
     ) public {
-        _requireSystemOrAdmin(_msgSender());
         // Fragment III: The Restless - first monster kill
         if (defeatedAreMobs && !CharacterFirstActions.getHasKilledMonster(characterId)) {
             CharacterFirstActions.setHasKilledMonster(characterId, true);

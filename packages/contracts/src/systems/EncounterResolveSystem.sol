@@ -20,7 +20,8 @@ import {_requireSystemOrAdmin} from "../utils.sol";
 
 contract EncounterResolveSystem is System {
     function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
-        _requireSystemOrAdmin(_msgSender());
+        // Client-callable by design: combat resolves client-side, results submitted here.
+        // Full on-chain combat resolution is deferred (SC-5: RNG replacement, post-launch).
         // Inline getEncounterType to avoid cross-system IWorld call
         EncounterType encounterType;
         if (CombatEncounter.getStart(encounterId) > 0) {

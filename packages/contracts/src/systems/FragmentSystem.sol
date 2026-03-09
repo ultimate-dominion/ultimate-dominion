@@ -45,7 +45,8 @@ contract FragmentSystem is System {
      * @param tileY The Y coordinate where triggered
      */
     function triggerFragment(bytes32 characterId, uint8 fragmentType, uint16 tileX, uint16 tileY) public {
-        _requireSystemOrAdmin(_msgSender());
+        // Client-callable: validates character ownership. Fragment progress is cosmetic/lore.
+        if (Characters.getOwner(characterId) != _msgSender()) revert NotCharacterOwner();
         PauseLib.requireNotPaused();
         if (fragmentType < 1 || fragmentType > 8) revert InvalidFragmentType();
         if (!_isCharacter(characterId)) revert InvalidCharacter();
