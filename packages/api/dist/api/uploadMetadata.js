@@ -20,7 +20,6 @@ export default async function uploadMetadata(req, res) {
             `character-${jsonData.name}-${Date.now()}.json` :
             `character-${Date.now()}.json`;
         const cid = await uploadJsonToPinata(jsonData, fileName);
-        console.log('Upload result CID:', cid);
         if (!cid) {
             console.error('Failed to get CID from Pinata');
             return res.status(500).json({ error: "Error uploading metadata" });
@@ -30,13 +29,6 @@ export default async function uploadMetadata(req, res) {
     }
     catch (error) {
         console.error('Error in uploadMetadata:', error);
-        if (error instanceof Error) {
-            console.error('Error details:', {
-                message: error.message,
-                stack: error.stack,
-                name: error.name
-            });
-        }
         return res.status(500).json({ error: "Error uploading metadata" });
     }
 }

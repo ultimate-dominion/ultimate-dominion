@@ -521,6 +521,11 @@
   },
   {
     "type": "error",
+    "name": "MaxStatRollsExceeded",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "MustChoosePowerSourceFirst",
     "inputs": []
   },

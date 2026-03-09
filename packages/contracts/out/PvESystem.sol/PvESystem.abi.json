@@ -206,7 +206,17 @@
   },
   {
     "type": "error",
+    "name": "InvalidAction",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NoWeaponsEquipped",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAuthorizedCaller",
     "inputs": []
   },
   {

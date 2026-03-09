@@ -331,6 +331,11 @@
   },
   {
     "type": "error",
+    "name": "MaxCharacters",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NameTaken",
     "inputs": []
   },
