@@ -1,3 +1,8 @@
+// Polyfill Node.js globals for browser — required by Privy embedded wallet SDK
+import { Buffer } from 'buffer';
+globalThis.Buffer = Buffer;
+(globalThis as any).global = globalThis;
+
 import '@fontsource/cinzel/400.css';
 import '@fontsource/cinzel/500.css';
 import '@fontsource/cinzel/600.css';

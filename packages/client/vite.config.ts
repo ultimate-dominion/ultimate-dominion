@@ -40,9 +40,10 @@ export default defineConfig(({ command }) => {
       },
     },
     define: {
-      // By default, Vite doesn't include shims for NodeJS/
-      // necessary for segment analytics lib to work
-      ...(command === 'serve' ? { global: 'globalThis' } : {}),
+      // Shim NodeJS globals for browser — required by Privy embedded wallet SDK
+      // NOTE: Cannot use `global: 'globalThis'` — it replaces "global" inside
+      // package names like @safe-global/safe-apps-sdk, breaking the build.
+      // The shim is applied at runtime in src/index.tsx instead.
     },
   };
 });
