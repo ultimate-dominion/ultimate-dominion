@@ -31,7 +31,7 @@ export const BetaBanner = (): JSX.Element | null => {
           fontWeight="bold"
           textAlign="center"
         >
-          Early Access — Expect rough edges.{' '}
+          Early Access — Things may break. When in doubt, refresh.{' '}
           <Link
             color="#E8DCC8"
             href="https://tavern.ultimatedominion.com/c/beta-feedback"
