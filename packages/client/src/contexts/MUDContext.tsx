@@ -283,6 +283,7 @@ const MUDProviderInner = ({
     if (authMethod !== 'embedded' && embeddedSetupDone.current) {
       embeddedSetupDone.current = false;
       setEmbeddedSetup(null);
+      setIsSynced(false);
     }
     if (
       authMethod === 'embedded' &&

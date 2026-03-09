@@ -544,11 +544,14 @@ const CharacterCreationInner = (): JSX.Element => {
       return;
     }
 
-    if (!delegatorAddress && isSynced) {
+    // External wallet users need delegation to play — redirect if missing.
+    // Embedded users always own the wallet directly (no delegation needed).
+    if (authMethod !== 'embedded' && !delegatorAddress && isSynced) {
       navigate(HOME_PATH);
       return;
     }
   }, [
+    authMethod,
     character,
     delegatorAddress,
     isConnected,
