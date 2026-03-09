@@ -30,6 +30,8 @@
     { "src": "/api/paymasterWebhook", "dest": "/api/paymasterWebhook.ts" },
     { "src": "/api/signup", "dest": "/api/signup.ts" },
     { "src": "/api/drip", "dest": "/api/drip.ts" },
+    { "src": "/api/stripe/session", "dest": "/api/stripe/session.ts" },
+    { "src": "/api/stripe/webhook", "dest": "/api/stripe/webhook.ts" },
     { "src": "/api/(.*)", "dest": "/api/$1.ts" }
   ],
   "crons": [

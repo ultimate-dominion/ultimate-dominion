@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { type Address, formatEther, parseEther } from 'viem';
+import { type Address, encodeFunctionData, formatEther, parseAbi, parseEther } from 'viem';
 import { config } from './config.js';
 import {
   relayerAddress,
@@ -14,6 +14,13 @@ import { recordFunding } from './gasCharge.js';
 import { gasChargingEnabled } from './config.js';
 import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcManager.js';
 import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, getFundedCount } from './balanceMonitor.js';
+
+// Gold purchase dedup (stripeSessionId → fulfilled)
+const fulfilledSessions = new Set<string>();
+
+const swapRouterAbi = parseAbi([
+  'function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)) payable returns (uint256 amountOut)',
+]);
 
 // Anti-griefing state
 const fundedAddresses = new Set<string>();
@@ -153,6 +160,88 @@ async function main() {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[fund] Failed to fund ${address}:`, message);
       res.status(500).json({ error: 'Funding failed' });
+    }
+  });
+
+  // Gold purchase — Stripe webhook → Uniswap ETH→Gold swap
+  app.post('/gold-purchase', async (req, res) => {
+    // Auth check
+    const authHeader = req.headers.authorization;
+    if (!config.goldPurchaseApiKey || authHeader !== `Bearer ${config.goldPurchaseApiKey}`) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { ownerAddress, ethAmount, stripeSessionId } = req.body as {
+      ownerAddress?: string;
+      ethAmount?: string;
+      stripeSessionId?: string;
+    };
+
+    if (!ownerAddress || !/^0x[a-fA-F0-9]{40}$/.test(ownerAddress)) {
+      res.status(400).json({ error: 'Invalid ownerAddress' });
+      return;
+    }
+    if (!ethAmount || !/^\d+$/.test(ethAmount)) {
+      res.status(400).json({ error: 'Invalid ethAmount' });
+      return;
+    }
+    if (!stripeSessionId) {
+      res.status(400).json({ error: 'Missing stripeSessionId' });
+      return;
+    }
+
+    // Dedup — already fulfilled this session
+    if (fulfilledSessions.has(stripeSessionId)) {
+      res.json({ status: 'already_fulfilled' });
+      return;
+    }
+
+    const swapValue = BigInt(ethAmount);
+
+    // Balance check
+    try {
+      const balance = await publicClient.getBalance({ address: relayerAddress });
+      if (balance < swapValue + parseEther('0.001')) {
+        console.error(`[gold-purchase] Insufficient relayer balance: ${formatEther(balance)} ETH, need ${formatEther(swapValue)}`);
+        res.status(500).json({ error: 'Insufficient relayer balance' });
+        return;
+      }
+    } catch (err) {
+      console.error('[gold-purchase] Balance check failed:', err);
+      res.status(500).json({ error: 'Balance check failed' });
+      return;
+    }
+
+    // Swap ETH → Gold via Uniswap V3 (native ETH auto-wraps to WETH)
+    try {
+      const calldata = encodeFunctionData({
+        abi: swapRouterAbi,
+        functionName: 'exactInputSingle',
+        args: [{
+          tokenIn: config.weth,
+          tokenOut: config.goldToken,
+          fee: config.poolFee,
+          recipient: ownerAddress as Address,
+          amountIn: swapValue,
+          amountOutMinimum: 1n,
+          sqrtPriceLimitX96: 0n,
+        }],
+      });
+
+      const txHash = await sendRelayerTx({
+        to: config.swapRouter,
+        calldata,
+        value: swapValue,
+      });
+
+      fulfilledSessions.add(stripeSessionId);
+      console.log(`[gold-purchase] Swapped ${formatEther(swapValue)} ETH → Gold for ${ownerAddress} | tx: ${txHash} | session: ${stripeSessionId}`);
+      res.json({ status: 'fulfilled', txHash });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[gold-purchase] Swap failed for ${ownerAddress}:`, message);
+      res.status(500).json({ error: 'Swap failed' });
     }
   });
 

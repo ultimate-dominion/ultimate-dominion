@@ -46,6 +46,9 @@ export const config = {
   chargeIntervalMs: parseInt(process.env.CHARGE_INTERVAL_MS || '300000', 10),
   swapIntervalMs: parseInt(process.env.SWAP_INTERVAL_MS || '3600000', 10),
   swapThreshold: BigInt(process.env.SWAP_THRESHOLD || '100000000000000000000'), // 100e18
+
+  // Gold purchase (Stripe → Uniswap ETH→Gold)
+  goldPurchaseApiKey: process.env.GOLD_PURCHASE_API_KEY || '',
 } as const;
 
 /** Whether gas charging is enabled (requires WORLD_ADDRESS + GOLD_TOKEN) */
