@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { GiPerson } from 'react-icons/gi';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -265,19 +266,8 @@ export const GameBoard = (): JSX.Element => {
         pos="fixed"
         zIndex={10}
       >
-        <Button
-          bg="linear-gradient(135deg, #3A2E1A 0%, #2A2218 100%)"
-          border="1px solid #C87A2A"
-          borderRadius="lg"
-          boxShadow="0 0 8px rgba(200, 122, 42, 0.3)"
-          color="#D4A54A"
-          fontFamily="Cinzel, serif"
-          fontSize="xs"
-          onClick={onOpenStatsDrawer}
-          size="sm"
-          _hover={{ bg: '#3A3228', color: '#E8DCC8', borderColor: '#D4A54A', boxShadow: '0 0 12px rgba(212, 165, 74, 0.5)' }}
-        >
-          Character
+        <Button onClick={onOpenStatsDrawer} px={4} py={5}>
+          <GiPerson size={24} />
         </Button>
         <Drawer isOpen={isStatsDrawerOpen} onClose={onCloseStatsDrawer} placement="bottom">
           <DrawerOverlay />

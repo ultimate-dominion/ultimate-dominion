@@ -61,7 +61,7 @@ export const FeedbackButton = (): JSX.Element => {
         position="fixed"
         size="md"
         transform={{ base: 'translateX(-50%)', lg: 'none' }}
-        zIndex={10}
+        zIndex={5}
         _hover={{ bg: '#3A3228', color: '#E8DCC8', borderColor: '#D4A54A', boxShadow: '0 0 12px rgba(212, 165, 74, 0.5)' }}
       />
     </Tooltip>
