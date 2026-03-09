@@ -89,8 +89,8 @@ export const AuthProvider = ({
     // Find embedded wallet (Privy MPC wallet)
     const privyWallet = wallets.find(w => w.walletClientType === 'privy');
     if (!privyWallet) {
-      console.info('[Auth] Authenticated but no privy wallet yet, waiting...');
-      // Don't set isConnecting=false — wallet may still be creating
+      console.info('[Auth] Authenticated but no privy wallet yet, waiting...', { walletTypes: wallets.map(w => w.walletClientType) });
+      setIsConnecting(false);
       return;
     }
 
