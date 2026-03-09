@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { IoChatbubble } from 'react-icons/io5';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
+import { BetaBanner } from './components/BetaBanner';
 import { ChatBox } from './components/ChatBox';
 import { FeedbackButton } from './components/FeedbackButton';
 import { Footer } from './components/Footer';
@@ -142,6 +143,7 @@ const AppInner = (): JSX.Element => {
       templateRows="auto 1fr auto"
       w="100%"
     >
+      <BetaBanner />
       <Header />
       <Box
         m="0 auto"
