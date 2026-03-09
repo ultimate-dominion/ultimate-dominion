@@ -118,7 +118,10 @@ const getContractError = (error: unknown): string => {
 
   if (category === 'FUNDS') return INSUFFICIENT_FUNDS_MESSAGE;
 
-  const sigMatch = message.match(/signature\s+"(0x[0-9a-f]{8})"/i);
+  // Match error selectors in various viem error formats:
+  // - ContractFunctionRevertedError: signature "0x9e4b2685"
+  // - EstimateGasExecutionError:     data: "0x9e4b2685"
+  const sigMatch = message.match(/(?:signature|data)[:\s]+"?(0x[0-9a-f]{8})/i);
   if (sigMatch) {
     const friendly = KNOWN_ERROR_SIGNATURES[sigMatch[1].toLowerCase()];
     if (friendly) return friendly;
@@ -1133,6 +1136,7 @@ export function createSystemCalls(
   const buyGas = async (
     characterId: string,
     goldAmount: bigint,
+    minEthOutput: bigint = 0n,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterId, 'buyGas');
     if (ownershipError) return ownershipError;
@@ -1141,6 +1145,7 @@ export function createSystemCalls(
       const tx = await worldContract.write.UD__buyGas([
         characterId as `0x${string}`,
         goldAmount,
+        minEthOutput,
       ]);
 
       const receipt = await waitForTransaction(tx);
