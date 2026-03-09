@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { type Hex, type Address } from 'viem';
+import { type Address, type Hex } from 'viem';
 
 function required(name: string): string {
   const val = process.env[name];
@@ -20,20 +20,22 @@ export const config = {
   relayerPrivateKeys,
   relayerPrivateKey: relayerPrivateKeys[0],  // backward compat — first key is primary
   rpcUrl: required('RPC_URL'),
-  delegationContract: required('DELEGATION_CONTRACT') as Hex,
   port: parseInt(process.env.PORT || '3001', 10),
   corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:3000').split(','),
   chainId: parseInt(process.env.CHAIN_ID || '8453', 10),
-  rpcAuthToken: process.env.RPC_AUTH_TOKEN || '',  // Bearer token for self-hosted RPC (optional)
-  rpcFallbackUrl: process.env.RPC_FALLBACK_URL || '',  // Fallback RPC (e.g. Alchemy) if primary goes down
+  rpcAuthToken: process.env.RPC_AUTH_TOKEN || '',
+  rpcFallbackUrl: process.env.RPC_FALLBACK_URL || '',
 
-  // World address allowlist — relayer rejects transactions targeting unlisted contracts.
-  // Comma-separated list of allowed world addresses (case-insensitive).
-  // If empty, all targets are allowed (backwards compat for dev).
+  // World address allowlist — relayer rejects funding for unlisted addresses.
   allowedWorldAddresses: (process.env.ALLOWED_WORLD_ADDRESSES || '')
     .split(',')
     .map(a => a.trim().toLowerCase())
     .filter(Boolean),
+
+  // Gas funding config
+  fundingAmount: BigInt(process.env.FUNDING_AMOUNT || '1000000000000000'), // 0.001 ETH
+  minPlayerBalance: BigInt(process.env.MIN_PLAYER_BALANCE || '300000000000000'), // 0.0003 ETH
+  maxFundingsPerMinute: parseInt(process.env.MAX_FUNDINGS_PER_MINUTE || '10', 10),
 
   // Gas charging & Gold swap (optional — disabled if WORLD_ADDRESS or GOLD_TOKEN not set)
   worldAddress: (process.env.WORLD_ADDRESS || '') as Address,

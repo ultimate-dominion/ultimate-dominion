@@ -5,28 +5,20 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
-import { type Address, type WalletClient } from 'viem';
-import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
 import {
-  createThirdwebClient,
-  defineChain as defineThirdwebChain,
-  type ThirdwebClient,
-} from 'thirdweb';
-import { setThirdwebDomains } from 'thirdweb/utils';
-import { type Wallet } from 'thirdweb/wallets';
+  type Address,
+  createWalletClient,
+  custom,
+  type WalletClient,
+} from 'viem';
+import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
+import { usePrivy, useWallets, useLoginWithOAuth } from '@privy-io/react-auth';
 
-import { DEFAULT_CHAIN_ID, SUPPORTED_CHAINS } from '../lib/web3';
+import { base } from '../lib/mud/supportedChains';
 
-const THIRDWEB_CLIENT_ID = import.meta.env.VITE_THIRDWEB_CLIENT_ID || '';
 const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
-
-// Override bundler domain to route through self-hosted relayer
-if (RELAYER_URL) {
-  setThirdwebDomains({ bundler: RELAYER_URL });
-}
 
 type AuthMethod = 'embedded' | 'external' | null;
 
@@ -34,7 +26,6 @@ type AuthContextType = {
   authMethod: AuthMethod;
   connectWithGoogle: () => Promise<void>;
   disconnect: () => Promise<void>;
-  embeddedWallet: Wallet | null;
   embeddedWalletClient: WalletClient | null;
   externalWalletClient: WalletClient | null;
   hasInjectedWallet: boolean;
@@ -42,21 +33,7 @@ type AuthContextType = {
   isConnecting: boolean;
   ownerAddress: Address | null;
   signedInEmail: string | null;
-  thirdwebChain: ReturnType<typeof defineThirdwebChain>;
-  thirdwebClient: ThirdwebClient;
 };
-
-const thirdwebClient = createThirdwebClient({
-  clientId: THIRDWEB_CLIENT_ID,
-});
-
-const activeChain = SUPPORTED_CHAINS[0];
-
-// Let Thirdweb use its built-in RPC Edge CDN (150+ global edge locations)
-// instead of routing through our single RPC URL. Faster geographic routing.
-const thirdwebChain = defineThirdwebChain({
-  id: activeChain.id,
-});
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -65,35 +42,27 @@ export const AuthProvider = ({
 }: {
   children: ReactNode;
 }): JSX.Element => {
+  // --- External wallet (MetaMask via wagmi) ---
   const {
     isConnected: wagmiConnected,
-    isReconnecting: wagmiReconnecting,
     address: wagmiAddress,
   } = useAccount();
   const { data: wagmiWalletClient } = useWalletClient();
   const { disconnect: wagmiDisconnect } = useDisconnect();
 
-  const [embeddedWallet, setEmbeddedWallet] = useState<Wallet | null>(null);
+  // --- Privy ---
+  const { ready, authenticated, user, logout } = usePrivy();
+  const { wallets } = useWallets();
+  const { initOAuth } = useLoginWithOAuth();
+
   const [embeddedWalletClient, setEmbeddedWalletClient] =
     useState<WalletClient | null>(null);
   const [embeddedAddress, setEmbeddedAddress] = useState<Address | null>(null);
   const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
-  // Start as true so consumers (GameBoard, etc.) wait for auto-reconnect
-  // before making redirect decisions. The tryReconnect effect below sets
-  // this to false in its finally block once autoConnect resolves or fails.
-  // For new users (no persisted session), autoConnect returns immediately
-  // so the delay is imperceptible.
   const [isConnecting, setIsConnecting] = useState(true);
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
 
-  // Guard: when true, a manual Google sign-in is in progress and autoConnect
-  // results should be discarded to prevent a stale session from overwriting.
-  const manualSignInActive = useRef(false);
-
   // Detect injected wallet (MetaMask etc.)
-  // Use localStorage flag to hide MetaMask for testing embedded flow:
-  //   localStorage.setItem('ud:hideInjectedWallet', 'true')  — hides Connect Wallet
-  //   localStorage.removeItem('ud:hideInjectedWallet')        — restores it
   useEffect(() => {
     const hidden = localStorage.getItem('ud:hideInjectedWallet') === 'true';
     setHasInjectedWallet(
@@ -101,147 +70,90 @@ export const AuthProvider = ({
     );
   }, []);
 
-  // Convert Thirdweb wallet to viem WalletClient after connection
-  const initEmbeddedClient = useCallback(
-    async (wallet: Wallet) => {
-      try {
-        // Retry getAccount — new embedded wallets may need a moment to provision
-        let account = wallet.getAccount();
-        if (!account) {
-          console.info('[Auth] Wallet account not ready, retrying...');
-          for (let i = 0; i < 5; i++) {
-            await new Promise(r => setTimeout(r, 500));
-            account = wallet.getAccount();
-            if (account) break;
-          }
-        }
-        if (!account) {
-          console.error('[Auth] Wallet has no account after connect — giving up');
-          throw new Error('Account not available after sign-in. Please try again.');
-        }
-
-        // Log full account details to debug wrong-account bug
-        console.info('[Auth] Wallet account details:', {
-          address: account.address,
-          type: (account as any).type,
-          // EIP-7702 may wrap EOA — check for delegation target
-          delegatedAddress: (account as any).delegatedAddress,
-        });
-
-        // Get user email from Thirdweb — both for diagnostics and UI display
-        try {
-          const { getUserEmail } = await import('thirdweb/wallets');
-          const email = await getUserEmail({ client: thirdwebClient });
-          console.info('[Auth] Signed-in email:', email);
-          setSignedInEmail(email ?? null);
-        } catch {
-          console.info('[Auth] Could not retrieve user email (non-fatal)');
-          setSignedInEmail(null);
-        }
-
-        console.info('[Auth] Initializing viem client for', account.address);
-        const { viemAdapter } = await import('thirdweb/adapters/viem');
-        const viemClient = viemAdapter.walletClient.toViem({
-          client: thirdwebClient,
-          chain: thirdwebChain,
-          account,
-        });
-
-        setEmbeddedWalletClient(viemClient as WalletClient);
-        setEmbeddedAddress(account.address as Address);
-        setEmbeddedWallet(wallet);
-      } catch (e) {
-        console.error('[Auth] Failed to initialize embedded client:', e);
-        throw e;
-      }
-    },
-    [],
-  );
-
-  // EIP-7702: embedded wallet transacts as a standard EOA with gas sponsorship.
-  // No bundler, no EntryPoint — direct chain transactions.
-  const executionModeConfig = useMemo(
-    () => ({
-      mode: "EIP7702" as const,
-      sponsorGas: true,
-    }),
-    [],
-  );
-
-  // Auto-reconnect persisted Thirdweb session on mount
+  // Initialize Privy embedded wallet when available
   useEffect(() => {
-    const tryReconnect = async () => {
-      let wallet: Wallet | null = null;
+    if (!ready || !authenticated) {
+      if (ready) setIsConnecting(false);
+      return;
+    }
+
+    // Find embedded wallet (Privy MPC wallet)
+    const privyWallet = wallets.find(w => w.walletClientType === 'privy');
+    if (!privyWallet) {
+      setIsConnecting(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const init = async () => {
       try {
-        const { inAppWallet } = await import('thirdweb/wallets/in-app');
-        wallet = inAppWallet({
-          executionMode: executionModeConfig,
+        const provider = await privyWallet.getEthereumProvider();
+        if (cancelled) return;
+
+        const walletClient = createWalletClient({
+          account: privyWallet.address as Address,
+          chain: base,
+          transport: custom(provider),
         });
-        const connected = await wallet.autoConnect({
-          client: thirdwebClient,
-          chain: thirdwebChain,
-          timeout: 10000,
-        });
-        if (connected) {
-          const acct = wallet.getAccount();
-          console.info('[Auth] autoConnect succeeded, recovered address:', acct?.address);
-          // If user already clicked "Sign in with Google", discard stale session
-          if (manualSignInActive.current) {
-            console.info('[Auth] autoConnect ignored — manual sign-in in progress');
-            try { await wallet.disconnect(); } catch { /* best-effort */ }
-            return;
-          }
-          await initEmbeddedClient(wallet);
-        } else {
-          console.info('[Auth] autoConnect returned no account — no persisted session');
-        }
+
+        setEmbeddedWalletClient(walletClient);
+        setEmbeddedAddress(privyWallet.address as Address);
+
+        // Extract email
+        const email =
+          user?.google?.email ||
+          user?.email?.address ||
+          null;
+        setSignedInEmail(email);
+
+        console.info('[Auth] Privy wallet initialized:', privyWallet.address);
       } catch (e) {
-        console.warn('[Auth] autoConnect failed:', e);
-        // Clear stale Thirdweb session data so fresh sign-in isn't blocked
-        if (wallet) {
-          try {
-            await wallet.disconnect();
-          } catch {
-            // ignore — best-effort cleanup
-          }
-        }
+        console.error('[Auth] Failed to initialize Privy wallet:', e);
       } finally {
-        setIsConnecting(false);
+        if (!cancelled) setIsConnecting(false);
       }
     };
-    tryReconnect();
-  }, [initEmbeddedClient, executionModeConfig]);
+
+    init();
+    return () => { cancelled = true; };
+  }, [ready, authenticated, wallets, user]);
+
+  // First-login gas funding
+  useEffect(() => {
+    if (!embeddedAddress || !RELAYER_URL) return;
+    const key = `ud:gasFunded:${embeddedAddress}`;
+    if (localStorage.getItem(key)) return;
+
+    fetch(`${RELAYER_URL}/fund`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: embeddedAddress }),
+    })
+      .then(res => res.json())
+      .then(data => { if (data.txHash) localStorage.setItem(key, '1'); })
+      .catch(err => console.warn('[Gas] Funding failed:', err));
+  }, [embeddedAddress]);
 
   const connectWithGoogle = useCallback(async () => {
     setIsConnecting(true);
-    manualSignInActive.current = true;
     try {
-      const { inAppWallet } = await import('thirdweb/wallets/in-app');
-      const wallet = inAppWallet({
-        executionMode: executionModeConfig,
-      });
-      await wallet.connect({
-        client: thirdwebClient,
-        chain: thirdwebChain,
-        strategy: 'google',
-      });
-      await initEmbeddedClient(wallet);
+      await initOAuth({ provider: 'google' });
     } catch (e) {
       console.error('[AuthContext] Google sign-in failed:', e);
-      throw e;
-    } finally {
       setIsConnecting(false);
+      throw e;
     }
-  }, [initEmbeddedClient, executionModeConfig]);
+    // isConnecting will be set to false by the wallet init effect above
+  }, [initOAuth]);
 
   const disconnect = useCallback(async () => {
-    if (embeddedWallet) {
+    if (authenticated) {
       try {
-        await embeddedWallet.disconnect();
+        await logout();
       } catch {
         // ignore
       }
-      setEmbeddedWallet(null);
       setEmbeddedWalletClient(null);
       setEmbeddedAddress(null);
       setSignedInEmail(null);
@@ -249,47 +161,7 @@ export const AuthProvider = ({
     if (wagmiConnected) {
       wagmiDisconnect();
     }
-
-    // Aggressively clear Thirdweb session storage to prevent stale
-    // autoConnect from recovering a different user's session
-    try {
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith('thirdweb') || key.startsWith('walletConnect'))) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-      if (keysToRemove.length > 0) {
-        console.info('[Auth] Cleared', keysToRemove.length, 'Thirdweb storage keys');
-      }
-    } catch {
-      // ignore — best-effort cleanup
-    }
-
-    // Also clear sessionStorage and IndexedDB for Thirdweb
-    try {
-      const sessionKeysToRemove: string[] = [];
-      for (let i = 0; i < sessionStorage.length; i++) {
-        const key = sessionStorage.key(i);
-        if (key && (key.startsWith('thirdweb') || key.startsWith('walletConnect'))) {
-          sessionKeysToRemove.push(key);
-        }
-      }
-      sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
-    } catch { /* best-effort */ }
-
-    try {
-      const databases = await indexedDB.databases();
-      for (const db of databases) {
-        if (db.name && (db.name.includes('thirdweb') || db.name.includes('walletconnect'))) {
-          indexedDB.deleteDatabase(db.name);
-          console.info('[Auth] Deleted IndexedDB:', db.name);
-        }
-      }
-    } catch { /* best-effort */ }
-  }, [embeddedWallet, wagmiConnected, wagmiDisconnect]);
+  }, [authenticated, logout, wagmiConnected, wagmiDisconnect]);
 
   // Auto-register email with backend on Google auth
   useEffect(() => {
@@ -323,7 +195,6 @@ export const AuthProvider = ({
         authMethod: 'embedded',
         connectWithGoogle,
         disconnect,
-        embeddedWallet,
         embeddedWalletClient,
         externalWalletClient: null,
         hasInjectedWallet,
@@ -331,8 +202,6 @@ export const AuthProvider = ({
         isConnecting,
         ownerAddress: embeddedAddress,
         signedInEmail,
-        thirdwebChain,
-        thirdwebClient,
       };
     }
 
@@ -342,7 +211,6 @@ export const AuthProvider = ({
         authMethod: 'external',
         connectWithGoogle,
         disconnect,
-        embeddedWallet: null,
         embeddedWalletClient: null,
         externalWalletClient: wagmiWalletClient,
         hasInjectedWallet,
@@ -350,8 +218,6 @@ export const AuthProvider = ({
         isConnecting: false,
         ownerAddress: wagmiAddress,
         signedInEmail: null,
-        thirdwebChain,
-        thirdwebClient,
       };
     }
 
@@ -360,7 +226,6 @@ export const AuthProvider = ({
       authMethod: null,
       connectWithGoogle,
       disconnect,
-      embeddedWallet: null,
       embeddedWalletClient: null,
       externalWalletClient: null,
       hasInjectedWallet,
@@ -368,14 +233,11 @@ export const AuthProvider = ({
       isConnecting,
       ownerAddress: null,
       signedInEmail: null,
-      thirdwebChain,
-      thirdwebClient,
     };
   }, [
     connectWithGoogle,
     disconnect,
     embeddedAddress,
-    embeddedWallet,
     embeddedWalletClient,
     hasInjectedWallet,
     isConnecting,

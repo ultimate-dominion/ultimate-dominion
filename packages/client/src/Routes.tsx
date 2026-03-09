@@ -83,6 +83,12 @@ const Guide = lazyWithReload(() =>
 const WaitingRoom = lazyWithReload(() =>
   import('./pages/WaitingRoom').then(m => ({ default: m.WaitingRoom })),
 );
+const Privacy = lazyWithReload(() =>
+  import('./pages/Privacy').then(m => ({ default: m.Privacy })),
+);
+const Terms = lazyWithReload(() =>
+  import('./pages/Terms').then(m => ({ default: m.Terms })),
+);
 
 export const HOME_PATH = '/';
 export const MANIFESTO_PATH = '/manifesto';
@@ -95,6 +101,8 @@ export const ITEM_PATH = MARKETPLACE_PATH + '/items';
 export const SHOP_PATH = '/shops';
 export const GUIDE_PATH = '/guide';
 export const WAITING_ROOM_PATH = '/waiting-room';
+export const PRIVACY_PATH = '/privacy';
+export const TERMS_PATH = '/terms';
 export const TAVERN_URL = 'https://tavern.ultimatedominion.com';
 
 const ExternalRedirect = ({ to }: { to: string }) => {
@@ -124,6 +132,8 @@ const AppRoutes: React.FC = () => {
           <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
           <Route path={GUIDE_PATH} element={<Guide />} />
           <Route path={WAITING_ROOM_PATH} element={<WaitingRoom />} />
+          <Route path={PRIVACY_PATH} element={<Privacy />} />
+          <Route path={TERMS_PATH} element={<Terms />} />
           <Route path="/tavern" element={<ExternalRedirect to={TAVERN_URL} />} />
         </Routes>
       </Suspense>

@@ -1,6 +1,5 @@
 import {
   createPublicClient,
-  encodeFunctionData,
   formatEther,
   type Hex,
   type Address,
@@ -17,73 +16,13 @@ export const publicClient: PublicClient = createPublicClient({
   transport: rpcTransport(),
 });
 
-// Transaction queue: queueId -> txHash
-export const txQueue = new Map<
-  string,
-  { txHash: Hex | null; error: string | null }
->();
-
-// MinimalAccount ABI — only executeWithSig
-const executeWithSigAbi = [
-  {
-    type: 'function',
-    name: 'executeWithSig',
-    inputs: [
-      {
-        name: 'wrappedCalls',
-        type: 'tuple',
-        components: [
-          {
-            name: 'calls',
-            type: 'tuple[]',
-            components: [
-              { name: 'target', type: 'address' },
-              { name: 'value', type: 'uint256' },
-              { name: 'data', type: 'bytes' },
-            ],
-          },
-          { name: 'uid', type: 'bytes32' },
-        ],
-      },
-      { name: 'signature', type: 'bytes' },
-    ],
-    outputs: [],
-    stateMutability: 'payable',
-  },
-] as const;
-
-interface WrappedCalls {
-  calls: Array<{ target: Address; value: bigint; data: Hex }>;
-  uid: Hex;
-}
-
-interface SignedAuthorization {
-  address: Address;
-  chainId: number;
-  nonce: number;
-  r: Hex;
-  s: Hex;
-  yParity: number;
-}
-
-export function encodeExecuteWithSig(
-  wrappedCalls: WrappedCalls,
-  signature: Hex,
-): Hex {
-  return encodeFunctionData({
-    abi: executeWithSigAbi,
-    functionName: 'executeWithSig',
-    args: [wrappedCalls, signature],
-  });
-}
-
 export async function sendRelayerTx(params: {
   to: Address;
-  calldata: Hex;
-  authorizationList?: SignedAuthorization[];
+  value?: bigint;
+  calldata?: Hex;
   gasOverride?: bigint;
 }): Promise<Hex> {
-  const { to, calldata, authorizationList, gasOverride } = params;
+  const { to, value, calldata, gasOverride } = params;
   const t0 = Date.now();
 
   const { wallet, nonce } = await acquireWallet();
@@ -93,34 +32,31 @@ export async function sendRelayerTx(params: {
     let gas: bigint;
 
     if (gasOverride) {
-      // Skip estimation — caller provided a known-safe gas limit
       gas = gasOverride;
-    } else {
-      // Estimate gas
+    } else if (calldata) {
       const gasEstimate = await publicClient.estimateGas({
         to,
         data: calldata,
         account: wallet.address,
-        ...(authorizationList ? { authorizationList } : {}),
       });
-      // 1.5x buffer
       gas = (gasEstimate * 150n) / 100n;
+    } else {
+      gas = 21_000n; // simple ETH transfer
     }
     const tEstimate = Date.now();
 
     console.log(
-      `[tx] Sending via ${wallet.address.slice(0, 10)} | nonce=${nonce} | gas=${gas}${gasOverride ? ' (fixed)' : ''} | auth=${!!authorizationList} | acquire=${tAcquire - t0}ms est=${tEstimate - tAcquire}ms`,
+      `[tx] Sending via ${wallet.address.slice(0, 10)} | nonce=${nonce} | gas=${gas}${gasOverride ? ' (fixed)' : ''} | acquire=${tAcquire - t0}ms est=${tEstimate - tAcquire}ms`,
     );
 
-    // Send transaction
     const hash = await wallet.walletClient.sendTransaction({
       account: wallet.account,
       chain,
       to,
       data: calldata,
+      value: value ?? 0n,
       gas,
       nonce,
-      ...(authorizationList ? { authorizationList } : {}),
     });
 
     const tBroadcast = Date.now();

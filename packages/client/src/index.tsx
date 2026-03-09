@@ -48,6 +48,8 @@ if (isGameLive) {
     import('./contexts/Web3Provider'),
     import('./lib/gameStore'),
     import('./lib/mud/setup'),
+    import('@privy-io/react-auth'),
+    import('./lib/mud/supportedChains'),
   ]).then(([
     { App },
     { AllowanceProvider },
@@ -60,13 +62,30 @@ if (isGameLive) {
     { Web3Provider },
     { GameStoreProvider },
     { setup },
+    { PrivyProvider },
+    { base },
   ]) => {
     const setupPromise = setup();
+    const privyAppId = import.meta.env.VITE_PRIVY_APP_ID || '';
 
     root.render(
       <HelmetProvider>
         <ChakraProvider resetCSS theme={theme}>
           <Global styles={globalStyles} />
+          <PrivyProvider
+            appId={privyAppId}
+            config={{
+              loginMethods: ['google'],
+              appearance: { theme: 'dark' },
+              embeddedWallets: {
+                createOnLogin: 'users-without-wallets',
+                requireUserPasswordOnCreate: false,
+                showWalletUIs: false,
+              },
+              defaultChain: base,
+              supportedChains: [base],
+            }}
+          >
           <Web3Provider>
           <AuthProvider>
           <GameStoreProvider>
@@ -85,8 +104,9 @@ if (isGameLive) {
             </MUDProvider>
           </GameStoreProvider>
           </AuthProvider>
-        </Web3Provider>
-      </ChakraProvider>
+          </Web3Provider>
+          </PrivyProvider>
+        </ChakraProvider>
       </HelmetProvider>,
     );
   });

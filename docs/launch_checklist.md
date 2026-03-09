@@ -10,21 +10,21 @@ Organized into three phases: Beta Launch (Base Mainnet Beta), Mainnet Launch (Ba
 
 Get the game playable with real users. Rough edges acceptable — the goal is real player feedback.
 
-> **Current status**: Game live at beta.ultimatedominion.com (Base Mainnet, separate world) and ultimatedominion.com (Base Mainnet, production world). Both environments on chain 8453, distinguished by world address. EIP-7702 embedded wallets active. Alchemy RPC with Flashblocks (200ms preconfirmations). Dedicated relayer provisioning.
+> **Current status**: Game live at beta.ultimatedominion.com (Base Mainnet, separate world) and ultimatedominion.com (Base Mainnet, production world). Both environments on chain 8453, distinguished by world address. Privy embedded wallets active (MPC on-device signing). Alchemy RPC with Flashblocks (200ms preconfirmations). Gas station (relayer funds new users, tops up low balances).
 
 ### 1.1 Core Gameplay (Must Work)
 
 **Authentication & Onboarding**
-- [x] Google sign-in (Thirdweb embedded wallet) ✓ Wallet created invisibly on sign-in
+- [x] Google sign-in (Privy embedded wallet) ✓ Wallet created invisibly on sign-in
 - [x] MetaMask / external wallet support ✓ "Connect Wallet" button, delegation fallback
-- [x] Session persistence ✓ Thirdweb auto-persists, auto-reconnect on refresh (multiple fixes: `4232ff25`, `cde0cce5`, `b779fe4a`)
+- [x] Session persistence ✓ Privy auto-persists, auto-reconnect on refresh
 - [x] Embedded wallet MUD integration ✓ EIP-7702 migration (`3886dada`), custom waitForTransaction using viem polling
 - [x] Delegation flow ✓ "Authorize & Play" with crypto-free language
 - [x] Delegation revoke ✓ "Reset Game Account" button, logout also revokes
 - [x] Auth edge cases ✓ Stale session clearing (`6ecda63f`), wrong-account detection (`2e5cba03`), auto-navigate after sign-in (`c3cf4115`), logout no longer blocks on despawn failure (`60817b93`)
 
 **Gasless Transactions (Onboarding Blocker)**
-- [x] Gas onboarding system designed ✓ GasStationSystem (Gold→ETH swap for level 3+), Thirdweb paymaster (levels 1-3)
+- [x] Gas onboarding system designed ✓ GasStationSystem (Gold→ETH swap for level 3+), gas station funds new users + tops up low balances
 - [x] Gasless transactions implementation ✓ GasStation funded, EIP-7702 with 2x gas buffer (`f413df64`)
 
 **Combat & Progression**
@@ -43,9 +43,7 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] Shop inventory and pricing ✓ Uncommon gear + consumables, updated prices (`92a520da`), 6 combat consumables added (`e6114fe5`)
 - [x] Shop UI/UX ✓ Leave Shop button (`498b93bd`), friendly sell errors, Tal narrative intro (`bf411a69`)
 - [x] Marketplace working ✓ List/buy/cancel flows, access grants (`fdb25190`), await tx receipts (`e7496147`), redesigned item page (`cf82490c`), sell action (`f7223baf`)
-- [~] Gold Merchant (fiat-to-GOLD onramp) ✓ UI complete (`872495f0`→`fc743455`), needs: enable Thirdweb Pay in dashboard, register GOLD token, deepen Uniswap pool liquidity, test real $10 purchase end-to-end
-- [ ] Gold Merchant: optimize DOM manipulation performance (querySelectorAll('*') loop causes Brave tab throttling)
-- [ ] Gold Merchant: number formatting (commas + 2dp) not working yet — needs investigation
+- [~] Gold Merchant (fiat-to-GOLD onramp) ✓ MoonPay + Uniswap V3 swap flow, needs: set VITE_MOONPAY_API_KEY, deepen Uniswap pool liquidity, test real purchase end-to-end
 - [ ] Gold withdrawal design — how players move earned gold out of the embedded wallet
 
 **Narrative & Lore**
@@ -89,9 +87,9 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 **Client**
 - [x] Build client for production ✓
 - [x] Deploy to Vercel (vercel.json SPA rewrite configured) ✓
-- [x] Configure production .env (CHAIN_ID, RPC URLs, API_URL, THIRDWEB_CLIENT_ID) ✓
+- [x] Configure production .env (CHAIN_ID, RPC URLs, API_URL, PRIVY_APP_ID) ✓
 - [x] Set up beta.ultimatedominion.com domain and SSL ✓
-- [x] Verify Thirdweb embedded wallet on production domain ✓ New client ID `f82b07302b7e66f02dca1bc26ecfe134`
+- [x] Verify Privy embedded wallet on production domain
 - [x] Code splitting and lazy loading ✓ Route code-splitting (`adb1d835`), lazy-load Push Protocol
 
 **Infrastructure**
@@ -200,7 +198,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Anti-cheat considerations (transaction ordering, bot detection)
 
 **Economy & Gold**
-- [x] Gas onboarding system ✓ GasStationSystem, Thirdweb paymaster, OutOfResourcesModal
+- [x] Gas onboarding system ✓ GasStationSystem, gas station (relayer), OutOfResourcesModal
 - [ ] Gold sink/faucet balance (verify gold isn't inflating or deflating)
 - [ ] Shop pricing vs monster rewards (progression feel)
 - [ ] Marketplace fee structure
@@ -249,7 +247,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 **Client**
 - [x] Production build deployed to Vercel ✓
 - [x] Production .env verified ✓
-- [x] Thirdweb embedded wallet allowlisted for production domain ✓ New client ID
+- [x] Privy embedded wallet configured for production domain
 - [ ] WalletConnect verified on production domain
 
 ### 2.5 GTM (Mainnet Launch)

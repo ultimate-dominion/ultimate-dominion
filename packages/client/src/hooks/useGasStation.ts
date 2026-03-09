@@ -67,12 +67,8 @@ export const useGasStation = (): void => {
   }, [character, renderSuccess, systemCalls]);
 
   useEffect(() => {
-    // Embedded wallets: relayer pays gas on their behalf. No client-side gas management needed.
-    if (authMethod === 'embedded') {
-      return;
-    }
-
-    // MetaMask wallets: auto-swap gold→ETH via on-chain Uniswap
+    // Both embedded (Privy) and external (MetaMask) wallets manage their own gas.
+    // Auto-swap gold→ETH via on-chain buyGas() when balance is low.
     try {
       const balanceWei = parseEther(burnerBalance);
       if (balanceWei < GAS_THRESHOLD && balanceWei >= 0n) {

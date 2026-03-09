@@ -78,13 +78,13 @@ Loaded via `@fontsource` packages (not Google Fonts CDN).
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Thirdweb | ^5.42.0 | Embedded wallet (Google sign-in), wallet adapter |
+| Privy | ^2.x | Embedded wallet (Google sign-in), MPC on-device signing |
 | RainbowKit | ^2.1.1 | External wallet connection UI (MetaMask) |
 | wagmi | ^2.9.6 | Wallet client management |
 | viem | 2.9.20 | Blockchain interactions |
 
 **Dual-path authentication**:
-- Embedded: Thirdweb (Google OAuth) — wallet created invisibly
+- Embedded: Privy (Google OAuth) — MPC wallet created on-device, signs directly as EOA
 - External: RainbowKit (MetaMask) — requires delegation
 
 ### MUD Client Libraries
@@ -153,7 +153,7 @@ All at version 2.0.11:
 
 | Variable | Purpose |
 |----------|---------|
-| `VITE_THIRDWEB_CLIENT_ID` | Thirdweb embedded wallet client ID |
+| `VITE_PRIVY_APP_ID` | Privy embedded wallet app ID |
 | `VITE_WALLET_CONNECT_PROJECT_ID` | WalletConnect v2 project ID |
 | `VITE_CHAIN_ID` | Target chain (default: 31337) |
 | `VITE_HTTPS_RPC_URL` | HTTPS RPC endpoint |

@@ -143,9 +143,15 @@ const MUDProviderInner = ({
   } | null>(null);
   const embeddedSetupDone = useRef(false);
 
+  // Fixed gas limits for functions with variable gas costs.
+  // Prevents estimation misses (spawnOnTileEnter uses block.prevrandao).
+  const FIXED_GAS: Record<string, bigint> = {
+    UD__move: 4_000_000n,
+  };
+
   // =============================================
-  // EMBEDDED PATH: Set up when embedded wallet is connected
-  // No longer waits for RECS SyncStep.LIVE — game store handles data readiness.
+  // EMBEDDED PATH: Privy signs on-device, broadcasts directly to our RPC.
+  // No relayer in the tx path — just a standard viem WalletClient.
   // =============================================
   useEffect(() => {
     if (authMethod !== 'embedded') return;
@@ -167,7 +173,7 @@ const MUDProviderInner = ({
       return;
     }
 
-    // Use the Thirdweb wallet client directly — it has its own signing transport.
+    // Privy WalletClient signs locally — extend with writeObserver for logging
     const walletClient = (embeddedWalletClient as any)
       .extend(writeObserver({ onWrite: (write: ContractWrite) => write$.next(write) }));
 
@@ -177,27 +183,26 @@ const MUDProviderInner = ({
       client: { public: setupResult.network.publicClient, wallet: walletClient },
     });
 
-    // Proxy: logs writes. Gas estimation is handled by the relayer (1.5x buffer).
+    // Gas override proxy: injects fixed gas for functions with variable costs
+    // (prevents estimation misses from spawnOnTileEnter using block.prevrandao)
     const worldContract = new Proxy(rawWorldContract, {
       get(target, prop) {
         if (prop === 'write') {
           return new Proxy(target.write, {
             get(writeTarget: Record<string, (...args: unknown[]) => Promise<unknown>>, fnName: string) {
+              const fixedGas = FIXED_GAS[fnName];
+              if (!fixedGas) return writeTarget[fnName];
               const origFn = writeTarget[fnName];
               if (typeof origFn !== 'function') return origFn;
-              return async (...args: unknown[]) => {
-                const t0 = performance.now();
-                const fnArgs = Array.isArray(args[0]) ? args[0] : [];
-                console.info(`[TX][SEND] ${String(fnName)}`, fnArgs);
-
-                try {
-                  const result = await origFn.apply(writeTarget, args);
-                  console.info(`[TX][OK] ${String(fnName)} hash=${result} (${(performance.now() - t0).toFixed(0)}ms)`);
-                  return result;
-                } catch (err) {
-                  console.error(`[TX][FAIL] ${String(fnName)} (${(performance.now() - t0).toFixed(0)}ms)`, err);
-                  throw err;
+              return (...args: unknown[]) => {
+                // Inject gas into the options argument (last arg)
+                const lastArg = args[args.length - 1];
+                if (lastArg && typeof lastArg === 'object' && !Array.isArray(lastArg)) {
+                  (lastArg as Record<string, unknown>).gas = fixedGas;
+                } else {
+                  args.push({ gas: fixedGas });
                 }
+                return origFn.apply(writeTarget, args);
               };
             },
           });
@@ -207,7 +212,7 @@ const MUDProviderInner = ({
     });
 
     // Wait for receipt, then inject MUD Store events into Zustand immediately.
-    // WebSocket delivers the same updates later as an idempotent overwrite.
+    // Reuses the same waitForTransaction pattern with applyReceiptToStore.
     const embeddedWaitForTransaction = async (tx: Hex) => {
       const receipt = await setupResult.network.publicClient.waitForTransactionReceipt({
         hash: tx,

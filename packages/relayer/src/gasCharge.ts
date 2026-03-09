@@ -13,8 +13,8 @@ import { publicClient, relayerAddress, sendRelayerTx } from './tx.js';
 
 // ==================== State ====================
 
-/** Pending tx counts per player since last flush */
-const pendingCharges = new Map<Address, number>();
+/** Pending ETH funded per player since last flush (in wei) */
+const pendingCharges = new Map<Address, bigint>();
 
 /** Cached characterId lookups (address → characterId) */
 const characterIdCache = new Map<Address, Hex>();
@@ -52,13 +52,13 @@ const CHARACTER_OWNER_TABLE_ID = encodePacked(
 // ==================== Core Functions ====================
 
 /**
- * Record a relayed tx for a player. Called after successful relay.
- * Synchronous — zero latency impact on relay path.
+ * Record a gas funding event for a player. Called after successful fund/top-up.
+ * Synchronous — zero latency impact on funding path.
  */
-export function recordRelay(eoaAddress: Address): void {
+export function recordFunding(eoaAddress: Address, ethAmount: bigint): void {
   if (!gasChargingEnabled) return;
-  const current = pendingCharges.get(eoaAddress) || 0;
-  pendingCharges.set(eoaAddress, current + 1);
+  const current = pendingCharges.get(eoaAddress) || 0n;
+  pendingCharges.set(eoaAddress, current + ethAmount);
 }
 
 /**
@@ -112,15 +112,18 @@ export async function flushCharges(): Promise<void> {
   const snapshot = new Map(pendingCharges);
   pendingCharges.clear();
 
-  console.log(`[gasCharge] Flushing ${snapshot.size} players, ${getTotalFromMap(snapshot)} total txs`);
+  console.log(`[gasCharge] Flushing ${snapshot.size} players, ${formatEther(getTotalFromMap(snapshot))} total ETH funded`);
 
   try {
-    // Build arrays
+    // Build arrays — convert ETH amounts to proportional counts
+    // 1 count per 0.001 ETH funded (minimum 1)
     const players: Address[] = [];
     const characterIds: Hex[] = [];
     const counts: bigint[] = [];
 
-    for (const [player, count] of snapshot) {
+    const countPerUnit = 1_000_000_000_000_000n; // 0.001 ETH
+
+    for (const [player, ethFunded] of snapshot) {
       const charId = await getCharacterId(player);
       if (!charId) {
         console.log(`[gasCharge] Skipping ${player} — no characterId found`);
@@ -128,7 +131,9 @@ export async function flushCharges(): Promise<void> {
       }
       players.push(player);
       characterIds.push(charId);
-      counts.push(BigInt(count));
+      // At least 1 count per funding event
+      const count = ethFunded / countPerUnit;
+      counts.push(count > 0n ? count : 1n);
     }
 
     if (players.length === 0) {
@@ -152,9 +157,9 @@ export async function flushCharges(): Promise<void> {
   } catch (err) {
     console.error('[gasCharge] Batch charge failed, re-queuing:', err);
     // Re-add charges for next flush
-    for (const [player, count] of snapshot) {
-      const existing = pendingCharges.get(player) || 0;
-      pendingCharges.set(player, existing + count);
+    for (const [player, ethFunded] of snapshot) {
+      const existing = pendingCharges.get(player) || 0n;
+      pendingCharges.set(player, existing + ethFunded);
     }
   }
 }
@@ -279,9 +284,9 @@ export function stopSchedulers(): void {
 
 // ==================== Health ====================
 
-function getTotalFromMap(map: Map<Address, number>): number {
-  let total = 0;
-  for (const count of map.values()) total += count;
+function getTotalFromMap(map: Map<Address, bigint>): bigint {
+  let total = 0n;
+  for (const amount of map.values()) total += amount;
   return total;
 }
 
@@ -289,6 +294,6 @@ export function getPendingChargeCount(): number {
   return pendingCharges.size;
 }
 
-export function getTotalPendingTxs(): number {
-  return getTotalFromMap(pendingCharges);
+export function getTotalPendingEth(): string {
+  return formatEther(getTotalFromMap(pendingCharges));
 }

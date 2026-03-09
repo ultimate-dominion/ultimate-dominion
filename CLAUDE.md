@@ -131,7 +131,7 @@ Any text that appears in the game — item descriptions, system messages, patch 
 ## Tech Stack
 - **Framework**: MUD (Lattice) v2 for on-chain game development
 - **Contracts**: Solidity 0.8.24+, deployed via MUD World, tested with Forge (Foundry)
-- **Frontend**: React 18, Chakra UI, Thirdweb + RainbowKit, viem/wagmi
+- **Frontend**: React 18, Chakra UI, Privy + RainbowKit, viem/wagmi
 - **API**: Express on Vercel serverless, Pinata IPFS
 - **Chain**: Base Mainnet (chain 8453) — both production and beta (separate world addresses)
 

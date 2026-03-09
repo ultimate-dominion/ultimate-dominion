@@ -25,19 +25,19 @@ The actual current user experience as implemented in the client.
 
 Dual-path authentication via `AuthContext.tsx`.
 
-### Path A: Thirdweb Embedded Wallet (Primary)
+### Path A: Privy Embedded Wallet (Primary)
 
 For non-crypto users. "Sign in with Google" button.
 
 ```
 Click "Play" → SignInModal → "Sign in with Google"
-    → Thirdweb inAppWallet (strategy: 'google')
-    → viemAdapter.walletClient.toViem()
+    → Privy OAuth (Google) → MPC wallet created on-device
+    → Privy walletClient (EOA, signs directly)
     → authMethod = 'embedded', isAuthenticated = true
     → Navigate to game (no delegation needed)
 ```
 
-The embedded wallet IS the signer — no burner or delegation required.
+The Privy embedded wallet uses MPC on-device signing — the wallet IS a standard EOA that signs transactions directly. No bundler, no enclave, no meta-transactions.
 
 ### Path B: RainbowKit External Wallet
 
@@ -59,9 +59,10 @@ External users get a burner session key so they don't approve every action.
 
 ```
 Web3Provider (wagmi + RainbowKit)
-  → AuthProvider (Thirdweb + auth state)
-    → MUDProvider (world contract, burner, RECS)
-      → App (routes, game contexts)
+  → PrivyProvider (Privy + auth state)
+    → AuthProvider (auth method resolution)
+      → MUDProvider (world contract, burner, RECS)
+        → App (routes, game contexts)
 ```
 
 ---
@@ -235,7 +236,7 @@ Split-screen: player inventory (left) vs shopkeeper inventory (right).
 
 | Context | Purpose |
 |---------|---------|
-| AuthContext | Dual-path auth state, Google OAuth, wallet clients |
+| AuthContext | Dual-path auth state, Privy OAuth, wallet clients |
 | MUDContext | Blockchain sync, burner wallet, delegation, system calls |
 | CharacterContext | Current character data, inventory, equipment |
 | BattleContext | Active combat, attack outcomes, turn management |
