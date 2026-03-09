@@ -57,6 +57,14 @@ contract AdminSystem is System {
         Counters.set(systemAddr, 0, count);
     }
 
+    function setFeeRecipient(address newRecipient) public onlyAdmin {
+        UltimateDominionConfig.setFeeRecipient(newRecipient);
+    }
+
+    function setFeePercent(uint256 newPercent) public onlyAdmin {
+        UltimateDominionConfig.setFeePercent(newPercent);
+    }
+
     function getSystemAddress(ResourceId systemId) public view returns (address) {
         return Systems.getSystem(systemId);
     }
