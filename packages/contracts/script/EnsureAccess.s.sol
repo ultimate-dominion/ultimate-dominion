@@ -87,8 +87,9 @@ contract EnsureAccessSystem is System {
         // ================================================================
         // Step 4: Gold namespace grants
         // ================================================================
-        // CharacterEnterSystem — starter gold on enterGame
+        // CharacterEnterSystem — starter gold on enterGame (writes Balances + TotalSupply)
         ResourceAccess.set(goldBalances, charEnterSys, true);
+        ResourceAccess.set(goldTotalSupply, charEnterSys, true);
         // LootManager — gold rewards from combat
         ResourceAccess.set(goldBalances, lootManager, true);
         ResourceAccess.set(goldTotalSupply, lootManager, true);
