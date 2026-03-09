@@ -59,7 +59,7 @@ import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
 
-const ROW_HEIGHT = { base: 11, md: 8 };
+const ROW_HEIGHT = { base: 10, md: 8 };
 
 const REST_FLAVOR = [
   'The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.',
@@ -1405,7 +1405,7 @@ const OpponentRow = ({
           {(encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image) && (
             <Avatar
               filter={disableRow ? 'grayscale(100%)' : 'none'}
-              size={{ base: 'xs', md: 'xs' }}
+              size={{ base: '2xs', md: 'xs' }}
               src={encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image}
               name={name}
             />
