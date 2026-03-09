@@ -15,8 +15,9 @@ import {
     ActionOutcome,
     ActionOutcomeData
 } from "@codegen/index.sol";
-import {NoWeaponsEquipped} from "../Errors.sol";
+import {NoWeaponsEquipped, InvalidAction} from "../Errors.sol";
 import {Action} from "@interfaces/Structs.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
 
 contract PvESystem is System {
     function isValidPvE(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
@@ -78,8 +79,7 @@ contract PvESystem is System {
     }
 
     function executePvECombat(uint256 randomness, bytes32 encounterId, Action[] memory attacks) public {
-        // Note: Access check removed - this function is called via SystemSwitch from RngSystem
-        // which changes _msgSender(). Authorization is handled by RngSystem.
+        _requireSystemOrAdmin(_msgSender());
 
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
@@ -177,6 +177,7 @@ contract PvESystem is System {
         uint256 randomness,
         uint256 numberOfExecutedActions
     ) internal returns (uint256 _numberOfExecutedActions) {
+        _validateActions(attacks, encounterData.attackers, encounterData.defenders);
         uint256 randomNumber;
         _numberOfExecutedActions = attacks.length;
         // execute attacker effects
@@ -232,5 +233,24 @@ contract PvESystem is System {
             blockNumber: block.number,
             timestamp: block.timestamp
         });
+    }
+
+    /// @dev Validates that each action's attacker and defender are on opposite teams
+    function _validateActions(Action[] memory actions, bytes32[] memory teamA, bytes32[] memory teamB) internal pure {
+        for (uint256 i; i < actions.length; i++) {
+            bool valid = (
+                _isInArray(actions[i].attackerEntityId, teamA) && _isInArray(actions[i].defenderEntityId, teamB)
+            ) || (
+                _isInArray(actions[i].attackerEntityId, teamB) && _isInArray(actions[i].defenderEntityId, teamA)
+            );
+            if (!valid) revert InvalidAction();
+        }
+    }
+
+    function _isInArray(bytes32 id, bytes32[] memory arr) internal pure returns (bool) {
+        for (uint256 j; j < arr.length; j++) {
+            if (arr[j] == id) return true;
+        }
+        return false;
     }
 }

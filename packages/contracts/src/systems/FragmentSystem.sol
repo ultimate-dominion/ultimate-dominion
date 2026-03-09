@@ -17,6 +17,7 @@ import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Bala
 import {_ownersTableId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
 import {FRAGMENTS_NAMESPACE, BADGES_NAMESPACE, ZONE_DARK_CAVE, BADGE_ZONE_FRAGMENT_BASE, FRAGMENT_XP_REWARD} from "../../constants.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
 
 /**
  * @title FragmentSystem
@@ -44,6 +45,7 @@ contract FragmentSystem is System {
      * @param tileY The Y coordinate where triggered
      */
     function triggerFragment(bytes32 characterId, uint8 fragmentType, uint16 tileX, uint16 tileY) public {
+        _requireSystemOrAdmin(_msgSender());
         PauseLib.requireNotPaused();
         if (fragmentType < 1 || fragmentType > 8) revert InvalidFragmentType();
         if (!_isCharacter(characterId)) revert InvalidCharacter();

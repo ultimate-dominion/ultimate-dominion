@@ -14,7 +14,8 @@ import {
     Position,
     SessionConfig,
     SessionTimer,
-    Spawned
+    Spawned,
+    WorldEncounter
 } from "../codegen/index.sol";
 import {SESSION_TIMEOUT, PLAYER_COUNTER_KEY} from "../../constants.sol";
 import {UseFleeFunction, SessionNotTimedOut} from "../Errors.sol";
@@ -35,8 +36,8 @@ contract MapRemovalSystem is System {
             bool senderIsOwner = IWorld(_world()).UD__isValidOwner(entityId, _msgSender());
             // if sender is owner
             if (senderIsOwner) {
-                // if character is in combat use the combat flee function
-                if (encounterId != bytes32(0)) revert UseFleeFunction();
+                // if character is in combat use the combat flee function (shop encounters are ok to exit)
+                if (encounterId != bytes32(0) && CombatEncounter.getStart(encounterId) != 0) revert UseFleeFunction();
                 if (spawnedPlayers > 0) Counters.set(PLAYER_COUNTER_KEY, 0, (spawnedPlayers - 1));
                 // if caller is not a system
             } else if (bytes32(abi.encode(SystemRegistry.getSystemId(_msgSender()))) == bytes32(0)) {
@@ -73,20 +74,27 @@ contract MapRemovalSystem is System {
 
         bytes32[] memory emptyArray;
 
-        // end combat for entity
+        // end encounter for entity (combat or shop)
         if (encounterId != bytes32(0)) {
             CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
-            for (uint256 i; i < encounterData.attackers.length; i++) {
-                EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
-                EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
-            }
-            for (uint256 i; i < encounterData.defenders.length; i++) {
-                EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
-                EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], emptyArray);
-            }
+            if (encounterData.start != 0) {
+                // Combat encounter — clean up all participants
+                for (uint256 i; i < encounterData.attackers.length; i++) {
+                    EncounterEntity.setEncounterId(encounterData.attackers[i], bytes32(0));
+                    EncounterEntity.setAppliedStatusEffects(encounterData.attackers[i], emptyArray);
+                }
+                for (uint256 i; i < encounterData.defenders.length; i++) {
+                    EncounterEntity.setEncounterId(encounterData.defenders[i], bytes32(0));
+                    EncounterEntity.setAppliedStatusEffects(encounterData.defenders[i], emptyArray);
+                }
 
-            EncounterEntity.setDied(entityId, true);
-            CombatEncounter.setEnd(encounterId, block.timestamp);
+                EncounterEntity.setDied(entityId, true);
+                CombatEncounter.setEnd(encounterId, block.timestamp);
+            } else {
+                // World encounter (shop) — close it and unbind character
+                WorldEncounter.setEnd(encounterId, block.timestamp);
+                EncounterEntity.setEncounterId(entityId, bytes32(0));
+            }
         }
     }
 

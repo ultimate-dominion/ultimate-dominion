@@ -2,6 +2,58 @@
   "systems": [
     {
       "namespaceLabel": "UD",
+      "label": "AdminContentSystem",
+      "namespace": "UD",
+      "name": "AdminContSys",
+      "systemId": "0x7379554400000000000000000000000041646d696e436f6e7453797300000000",
+      "abi": [
+        "error NotAdmin()",
+        "function adminCreateEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)",
+        "function adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)",
+        "function adminCreateItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)",
+        "function adminCreateMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)",
+        "function adminCreateMobs(uint8[] mobTypes, bytes[] stats, string[] mobMetadataURIs)",
+        "function adminResupplyLootManager(uint256 itemId, uint256 newSupply)"
+      ],
+      "worldAbi": [
+        "error NotAdmin()",
+        "function UD__adminCreateEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)",
+        "function UD__adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)",
+        "function UD__adminCreateItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)",
+        "function UD__adminCreateMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)",
+        "function UD__adminCreateMobs(uint8[] mobTypes, bytes[] stats, string[] mobMetadataURIs)",
+        "function UD__adminResupplyLootManager(uint256 itemId, uint256 newSupply)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "AdminEntitySystem",
+      "namespace": "UD",
+      "name": "AdminEntSys",
+      "systemId": "0x7379554400000000000000000000000041646d696e456e745379730000000000",
+      "abi": [
+        "error EntityNotAtPosition()",
+        "error NotAdmin()",
+        "function adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId)",
+        "function adminDropGold(bytes32 characterId, uint256 goldAmount)",
+        "function adminDropItem(bytes32 characterId, uint256 itemId, uint256 amount)",
+        "function adminMoveEntity(bytes32 entityId, uint16 x, uint16 y)",
+        "function adminRemoveEntity(bytes32 entityId)",
+        "function adminSetStats(bytes32 entityId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats)"
+      ],
+      "worldAbi": [
+        "error EntityNotAtPosition()",
+        "error NotAdmin()",
+        "function UD__adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId)",
+        "function UD__adminDropGold(bytes32 characterId, uint256 goldAmount)",
+        "function UD__adminDropItem(bytes32 characterId, uint256 itemId, uint256 amount)",
+        "function UD__adminMoveEntity(bytes32 entityId, uint16 x, uint16 y)",
+        "function UD__adminRemoveEntity(bytes32 entityId)",
+        "function UD__adminSetStats(bytes32 entityId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
       "label": "AdminShopSystem",
       "namespace": "UD",
       "name": "AdminShopSys",
@@ -28,48 +80,45 @@
       "name": "AdminSystem",
       "systemId": "0x7379554400000000000000000000000041646d696e53797374656d0000000000",
       "abi": [
-        "error EntityNotAtPosition()",
         "error NotAdmin()",
-        "function adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId)",
         "function adminClearEncounterState(bytes32 entityId)",
-        "function adminCreateEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)",
-        "function adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)",
-        "function adminCreateItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)",
-        "function adminCreateMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)",
-        "function adminCreateMobs(uint8[] mobTypes, bytes[] stats, string[] mobMetadataURIs)",
-        "function adminDropGold(bytes32 characterId, uint256 goldAmount)",
-        "function adminDropItem(bytes32 characterId, uint256 itemId, uint256 amount)",
-        "function adminMoveEntity(bytes32 entityId, uint16 x, uint16 y)",
-        "function adminRemoveEntity(bytes32 entityId)",
-        "function adminResupplyLootManager(uint256 itemId, uint256 newSupply)",
         "function adminSetCombatEncounter(bytes32 encounterId, (uint8 encounterType, uint256 start, uint256 end, bool rewardsDistributed, uint256 currentTurn, uint256 currentTurnTimer, uint256 maxTurns, bool attackersAreMobs, bytes32[] defenders, bytes32[] attackers) encounterData)",
         "function adminSetEncounterEntity(bytes32 entityId, (bytes32 encounterId, bool died, uint256 pvpTimer, bytes32[] appliedStatusEffects) encounterEntityData)",
-        "function adminSetStats(bytes32 entityId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats)",
+        "function adminSetPlayerCount(address systemAddr, uint256 count)",
         "function getSystemAddress(bytes32 systemId) view returns (address)",
         "function setAdmin(address newAdmin, bool adminState)",
         "function setMaxPlayers(uint256 newMax)"
       ],
       "worldAbi": [
-        "error EntityNotAtPosition()",
         "error NotAdmin()",
-        "function UD__adminApplyStatusEffect(bytes32 entityId, bytes32 statusEffectId)",
         "function UD__adminClearEncounterState(bytes32 entityId)",
-        "function UD__adminCreateEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)",
-        "function UD__adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)",
-        "function UD__adminCreateItems(uint8[] itemTypes, uint256[] supply, uint256[] dropChances, uint256[] prices, uint256[] rarities, bytes[] stats, string[] itemMetadataURIs)",
-        "function UD__adminCreateMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)",
-        "function UD__adminCreateMobs(uint8[] mobTypes, bytes[] stats, string[] mobMetadataURIs)",
-        "function UD__adminDropGold(bytes32 characterId, uint256 goldAmount)",
-        "function UD__adminDropItem(bytes32 characterId, uint256 itemId, uint256 amount)",
-        "function UD__adminMoveEntity(bytes32 entityId, uint16 x, uint16 y)",
-        "function UD__adminRemoveEntity(bytes32 entityId)",
-        "function UD__adminResupplyLootManager(uint256 itemId, uint256 newSupply)",
         "function UD__adminSetCombatEncounter(bytes32 encounterId, (uint8 encounterType, uint256 start, uint256 end, bool rewardsDistributed, uint256 currentTurn, uint256 currentTurnTimer, uint256 maxTurns, bool attackersAreMobs, bytes32[] defenders, bytes32[] attackers) encounterData)",
         "function UD__adminSetEncounterEntity(bytes32 entityId, (bytes32 encounterId, bool died, uint256 pvpTimer, bytes32[] appliedStatusEffects) encounterEntityData)",
-        "function UD__adminSetStats(bytes32 entityId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats)",
+        "function UD__adminSetPlayerCount(address systemAddr, uint256 count)",
         "function UD__getSystemAddress(bytes32 systemId) view returns (address)",
         "function UD__setAdmin(address newAdmin, bool adminState)",
         "function UD__setMaxPlayers(uint256 newMax)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "AdminTuningSystem",
+      "namespace": "UD",
+      "name": "AdminTuningSys",
+      "systemId": "0x7379554400000000000000000000000041646d696e54756e696e675379730000",
+      "abi": [
+        "error ItemNotFound()",
+        "error NotAdmin()",
+        "function adminSetClassMultipliers(bytes32 characterId, uint256 physical, uint256 spell, uint256 healing, uint256 critDmg, uint256 maxHp)",
+        "function adminSetWeaponScaling(uint256 itemId, bool usesAgi)",
+        "function adminUpdateItemStats(uint256 itemId, uint256 dropChance, uint256 price, uint256 rarity, bytes stats)"
+      ],
+      "worldAbi": [
+        "error ItemNotFound()",
+        "error NotAdmin()",
+        "function UD__adminSetClassMultipliers(bytes32 characterId, uint256 physical, uint256 spell, uint256 healing, uint256 critDmg, uint256 maxHp)",
+        "function UD__adminSetWeaponScaling(uint256 itemId, bool usesAgi)",
+        "function UD__adminUpdateItemStats(uint256 itemId, uint256 dropChance, uint256 price, uint256 rarity, bytes stats)"
       ]
     },
     {
@@ -150,6 +199,7 @@
         "error InvalidEffectApplication()",
         "error InvalidEffectType()",
         "error NonExistentIndex()",
+        "error NotAuthorizedCaller()",
         "error NotEffectType()",
         "function applyDamageOverTime(bytes32 encounterId, bytes32 entityId)",
         "function applyStatusEffect(bytes32 entityId, bytes32 effectId) returns ((int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) _adjustedStats)",
@@ -168,6 +218,7 @@
         "error InvalidEffectApplication()",
         "error InvalidEffectType()",
         "error NonExistentIndex()",
+        "error NotAuthorizedCaller()",
         "error NotEffectType()",
         "function UD__applyDamageOverTime(bytes32 encounterId, bytes32 entityId)",
         "function UD__applyStatusEffect(bytes32 entityId, bytes32 effectId) returns ((int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) _adjustedStats)",
@@ -191,12 +242,14 @@
         "error EncounterAlreadyOver()",
         "error InvalidEncounter()",
         "error InvalidEncounterType()",
+        "error NotAuthorizedCaller()",
         "function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin)"
       ],
       "worldAbi": [
         "error EncounterAlreadyOver()",
         "error InvalidEncounter()",
         "error InvalidEncounterType()",
+        "error NotAuthorizedCaller()",
         "function UD__endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin)"
       ]
     },
@@ -278,6 +331,25 @@
     },
     {
       "namespaceLabel": "UD",
+      "label": "FragmentCombatSystem",
+      "namespace": "UD",
+      "name": "FragCombatSys",
+      "systemId": "0x7379554400000000000000000000000046726167436f6d626174537973000000",
+      "abi": [
+        "error NotAuthorizedCaller()",
+        "event FragmentTriggered(bytes32 indexed characterId, uint8 fragmentType, uint16 tileX, uint16 tileY)",
+        "function checkCombatFragmentTriggers(bytes32 characterId, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)",
+        "function checkCombatFragmentTriggersForGroup(bytes32[] winners, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)"
+      ],
+      "worldAbi": [
+        "error NotAuthorizedCaller()",
+        "event FragmentTriggered(bytes32 indexed characterId, uint8 fragmentType, uint16 tileX, uint16 tileY)",
+        "function UD__checkCombatFragmentTriggers(bytes32 characterId, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)",
+        "function UD__checkCombatFragmentTriggersForGroup(bytes32[] winners, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
       "label": "FragmentSystem",
       "namespace": "UD",
       "name": "FragmentSystem",
@@ -289,13 +361,12 @@
         "error InvalidCharacter()",
         "error InvalidFragmentType()",
         "error NotAdmin()",
+        "error NotAuthorizedCaller()",
         "error NotCharacterOwner()",
         "error TokenAlreadyMinted()",
         "event FragmentClaimed(bytes32 indexed characterId, uint8 fragmentType, uint256 tokenId)",
         "event FragmentTriggered(bytes32 indexed characterId, uint8 fragmentType, uint16 tileX, uint16 tileY)",
         "function canClaim(bytes32 characterId, uint8 fragmentType) view returns (bool)",
-        "function checkCombatFragmentTriggers(bytes32 characterId, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)",
-        "function checkCombatFragmentTriggersForGroup(bytes32[] winners, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)",
         "function claimFragment(bytes32 characterId, uint8 fragmentType) returns (uint256 tokenId)",
         "function getFragmentMetadata(uint8 fragmentType) view returns (string name, string narrative, string hint)",
         "function getFragmentStatus(bytes32 characterId, uint8 fragmentType) view returns (bool triggered, uint256 triggeredAt, uint16 triggerTileX, uint16 triggerTileY, bool claimed, uint256 claimedAt, uint256 tokenId)",
@@ -309,13 +380,12 @@
         "error InvalidCharacter()",
         "error InvalidFragmentType()",
         "error NotAdmin()",
+        "error NotAuthorizedCaller()",
         "error NotCharacterOwner()",
         "error TokenAlreadyMinted()",
         "event FragmentClaimed(bytes32 indexed characterId, uint8 fragmentType, uint256 tokenId)",
         "event FragmentTriggered(bytes32 indexed characterId, uint8 fragmentType, uint16 tileX, uint16 tileY)",
         "function UD__canClaim(bytes32 characterId, uint8 fragmentType) view returns (bool)",
-        "function UD__checkCombatFragmentTriggers(bytes32 characterId, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)",
-        "function UD__checkCombatFragmentTriggersForGroup(bytes32[] winners, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)",
         "function UD__claimFragment(bytes32 characterId, uint8 fragmentType) returns (uint256 tokenId)",
         "function UD__getFragmentMetadata(uint8 fragmentType) view returns (string name, string narrative, string hint)",
         "function UD__getFragmentStatus(bytes32 characterId, uint8 fragmentType) view returns (bool triggered, uint256 triggeredAt, uint16 triggerTileX, uint16 triggerTileY, bool claimed, uint256 claimedAt, uint256 tokenId)",
@@ -331,35 +401,49 @@
       "systemId": "0x7379554400000000000000000000000047617353746174696f6e537973000000",
       "abi": [
         "error GamePaused()",
+        "error GasStationArrayMismatch()",
         "error GasStationBelowMinLevel()",
         "error GasStationCooldownActive()",
         "error GasStationDisabled()",
         "error GasStationInsufficientTreasury()",
         "error GasStationMaxSwapExceeded()",
+        "error GasStationNotRelayer()",
+        "error GasStationSwapFailed()",
         "error GasStationTransferFailed()",
         "error GasStationZeroAmount()",
         "error InsufficientBalance()",
-        "function buyGas(bytes32 characterId, uint256 goldAmount)",
+        "function batchChargeGasGold(address[] players, bytes32[] characterIds)",
+        "function batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)",
+        "function buyGas(bytes32 characterId, uint256 goldAmount, uint256 minEthOutput)",
+        "function chargeGasGold(address player, bytes32 characterId)",
         "function fundGasTreasury() payable",
         "function gasTreasuryBalance() view returns (uint256)",
         "function setGasStationConfig(uint256 ethPerGold, uint256 maxGoldPerSwap, uint256 cooldownSeconds, bool enabled)",
+        "function setGasStationSwapConfig(address swapRouter, address weth, uint24 poolFee, address relayerAddress, uint256 goldPerGasCharge)",
         "function withdrawGasTreasury(uint256 amount)",
         "receive() external payable"
       ],
       "worldAbi": [
         "error GamePaused()",
+        "error GasStationArrayMismatch()",
         "error GasStationBelowMinLevel()",
         "error GasStationCooldownActive()",
         "error GasStationDisabled()",
         "error GasStationInsufficientTreasury()",
         "error GasStationMaxSwapExceeded()",
+        "error GasStationNotRelayer()",
+        "error GasStationSwapFailed()",
         "error GasStationTransferFailed()",
         "error GasStationZeroAmount()",
         "error InsufficientBalance()",
-        "function UD__buyGas(bytes32 characterId, uint256 goldAmount)",
+        "function UD__batchChargeGasGold(address[] players, bytes32[] characterIds)",
+        "function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)",
+        "function UD__buyGas(bytes32 characterId, uint256 goldAmount, uint256 minEthOutput)",
+        "function UD__chargeGasGold(address player, bytes32 characterId)",
         "function UD__fundGasTreasury() payable",
         "function UD__gasTreasuryBalance() view returns (uint256)",
         "function UD__setGasStationConfig(uint256 ethPerGold, uint256 maxGoldPerSwap, uint256 cooldownSeconds, bool enabled)",
+        "function UD__setGasStationSwapConfig(address swapRouter, address weth, uint24 poolFee, address relayerAddress, uint256 goldPerGasCharge)",
         "function UD__withdrawGasTreasury(uint256 amount)",
         "receive() external payable"
       ]
@@ -371,7 +455,21 @@
       "name": "ImplicitClassSys",
       "systemId": "0x73795544000000000000000000000000496d706c69636974436c617373537973",
       "abi": [
+        "error AdvancedClassAlreadySet()",
+        "error ArmorAlreadySet()",
+        "error CharacterLocked()",
         "error GamePaused()",
+        "error InvalidAdvancedClass()",
+        "error InvalidArmorType()",
+        "error InvalidPowerSource()",
+        "error InvalidRace()",
+        "error MaxStatRollsExceeded()",
+        "error MustChoosePowerSourceFirst()",
+        "error MustChooseRaceFirst()",
+        "error PowerSourceAlreadySet()",
+        "error RaceAlreadySet()",
+        "error RequiresLevel10()",
+        "error Unauthorized()",
         "event AdvancedClassSelected(bytes32 indexed characterId, uint8 advancedClass)",
         "event ArmorTypeSelected(bytes32 indexed characterId, uint8 armorType)",
         "event PowerSourceSelected(bytes32 indexed characterId, uint8 powerSource)",
@@ -389,7 +487,21 @@
         "function selectAdvancedClass(bytes32 characterId, uint8 advancedClass)"
       ],
       "worldAbi": [
+        "error AdvancedClassAlreadySet()",
+        "error ArmorAlreadySet()",
+        "error CharacterLocked()",
         "error GamePaused()",
+        "error InvalidAdvancedClass()",
+        "error InvalidArmorType()",
+        "error InvalidPowerSource()",
+        "error InvalidRace()",
+        "error MaxStatRollsExceeded()",
+        "error MustChoosePowerSourceFirst()",
+        "error MustChooseRaceFirst()",
+        "error PowerSourceAlreadySet()",
+        "error RaceAlreadySet()",
+        "error RequiresLevel10()",
+        "error Unauthorized()",
         "event AdvancedClassSelected(bytes32 indexed characterId, uint8 advancedClass)",
         "event ArmorTypeSelected(bytes32 indexed characterId, uint8 armorType)",
         "event PowerSourceSelected(bytes32 indexed characterId, uint8 powerSource)",
@@ -497,7 +609,6 @@
         "function getEscrowBalance(bytes32 characterId) view returns (uint256 _balance)",
         "function increaseEscrowBalance(bytes32 characterId, uint256 amount) returns (uint256 newBalance)",
         "function issueAdvancedClassItems(bytes32 characterId, uint8 advancedClass)",
-        "function issueStarterItems(bytes32 characterId)",
         "function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) returns (bytes4)",
         "function onERC1155Received(address, address, uint256, uint256, bytes) returns (bytes4)",
         "function setGoldApproval(address spender, uint256 value)",
@@ -519,7 +630,6 @@
         "function UD__getEscrowBalance(bytes32 characterId) view returns (uint256 _balance)",
         "function UD__increaseEscrowBalance(bytes32 characterId, uint256 amount) returns (uint256 newBalance)",
         "function UD__issueAdvancedClassItems(bytes32 characterId, uint8 advancedClass)",
-        "function UD__issueStarterItems(bytes32 characterId)",
         "function UD__onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) returns (bytes4)",
         "function UD__onERC1155Received(address, address, uint256, uint256, bytes) returns (bytes4)",
         "function UD__setGoldApproval(address spender, uint256 value)",
@@ -557,10 +667,12 @@
       "systemId": "0x737955440000000000000000000000004d6170537061776e53797374656d0000",
       "abi": [
         "error NoMonsters()",
+        "error NotAuthorizedCaller()",
         "function spawnOnTileEnter(uint16 x, uint16 y)"
       ],
       "worldAbi": [
         "error NoMonsters()",
+        "error NotAuthorizedCaller()",
         "function UD__spawnOnTileEnter(uint16 x, uint16 y)"
       ]
     },
@@ -584,6 +696,8 @@
         "error Unauthorized()",
         "function getEntitiesAtPosition(uint16 x, uint16 y) view returns (bytes32[] entitiesAtPosition)",
         "function getEntityPosition(bytes32 entityId) view returns (uint16 x, uint16 y)",
+        "function getPlayerCounterKey() pure returns (address)",
+        "function getSpawnedPlayerCount() view returns (uint256)",
         "function isAtPosition(bytes32 entityId, uint16 x, uint16 y) view returns (bool _isAtPosition)",
         "function move(bytes32 entityId, uint16 x, uint16 y)",
         "function spawn(bytes32 entityId)"
@@ -602,6 +716,8 @@
         "error Unauthorized()",
         "function UD__getEntitiesAtPosition(uint16 x, uint16 y) view returns (bytes32[] entitiesAtPosition)",
         "function UD__getEntityPosition(bytes32 entityId) view returns (uint16 x, uint16 y)",
+        "function UD__getPlayerCounterKey() pure returns (address)",
+        "function UD__getSpawnedPlayerCount() view returns (uint256)",
         "function UD__isAtPosition(bytes32 entityId, uint16 x, uint16 y) view returns (bool _isAtPosition)",
         "function UD__move(bytes32 entityId, uint16 x, uint16 y)",
         "function UD__spawn(bytes32 entityId)"
@@ -721,11 +837,15 @@
       "name": "PvESystem",
       "systemId": "0x7379554400000000000000000000000050764553797374656d00000000000000",
       "abi": [
+        "error InvalidAction()",
+        "error NotAuthorizedCaller()",
         "error NoWeaponsEquipped()",
         "function executePvECombat(uint256 randomness, bytes32 encounterId, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] attacks)",
         "function isValidPvE(bytes32[] attackers, bytes32[] defenders, uint16 x, uint16 y) view returns (bool _isValidPvE, bool _attackersAreMobs)"
       ],
       "worldAbi": [
+        "error InvalidAction()",
+        "error NotAuthorizedCaller()",
         "error NoWeaponsEquipped()",
         "function UD__executePvECombat(uint256 randomness, bytes32 encounterId, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] attacks)",
         "function UD__isValidPvE(bytes32[] attackers, bytes32[] defenders, uint16 x, uint16 y) view returns (bool _isValidPvE, bool _attackersAreMobs)"
@@ -738,15 +858,29 @@
       "name": "PvPSystem",
       "systemId": "0x7379554400000000000000000000000050765053797374656d00000000000000",
       "abi": [
+        "error CanOnlyFleeFirstTurn()",
         "error GamePaused()",
+        "error InvalidAction()",
+        "error InvalidFlee()",
+        "error NotAuthorizedCaller()",
+        "error NotInEncounter()",
         "error NoWeaponsEquipped()",
+        "error Unauthorized()",
+        "error UnrecognizedEncounterType()",
         "function executePvPCombat(uint256 prevRandao, bytes32 encounterId, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] effects)",
         "function fleePvp(bytes32 entityId)",
         "function isValidPvP(bytes32[] attackers, bytes32[] defenders, uint16 x, uint16 y) view returns (bool _isValidPvP)"
       ],
       "worldAbi": [
+        "error CanOnlyFleeFirstTurn()",
         "error GamePaused()",
+        "error InvalidAction()",
+        "error InvalidFlee()",
+        "error NotAuthorizedCaller()",
+        "error NotInEncounter()",
         "error NoWeaponsEquipped()",
+        "error Unauthorized()",
+        "error UnrecognizedEncounterType()",
         "function UD__executePvPCombat(uint256 prevRandao, bytes32 encounterId, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] effects)",
         "function UD__fleePvp(bytes32 entityId)",
         "function UD__isValidPvP(bytes32[] attackers, bytes32[] defenders, uint16 x, uint16 y) view returns (bool _isValidPvP)"
@@ -796,7 +930,15 @@
       "systemId": "0x7379554400000000000000000000000053686f7053797374656d000000000000",
       "abi": [
         "error GamePaused()",
+        "error InsufficientItemBalance()",
+        "error InvalidEncounter()",
+        "error InvalidShopEncounter()",
+        "error NotAtShopPosition()",
+        "error NotOwnShopEncounter()",
+        "error OutOfStock()",
         "error ReentrancyGuardReentrantCall()",
+        "error ShopInsufficientGold()",
+        "error Unauthorized()",
         "function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
         "function canRestock(bytes32 shopId) view returns (bool)",
         "function endShopEncounter(bytes32 encounterId)",
@@ -807,11 +949,20 @@
         "function itemStock(bytes32 shopId, uint256 itemIndex) view returns (uint256)",
         "function restock(bytes32 shopId) returns (bool)",
         "function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
+        "function sellAny(uint256 amount, bytes32 shopId, uint256 itemId, bytes32 characterId)",
         "function shopSystemAddress() view returns (address)"
       ],
       "worldAbi": [
         "error GamePaused()",
+        "error InsufficientItemBalance()",
+        "error InvalidEncounter()",
+        "error InvalidShopEncounter()",
+        "error NotAtShopPosition()",
+        "error NotOwnShopEncounter()",
+        "error OutOfStock()",
         "error ReentrancyGuardReentrantCall()",
+        "error ShopInsufficientGold()",
+        "error Unauthorized()",
         "function UD__buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
         "function UD__canRestock(bytes32 shopId) view returns (bool)",
         "function UD__endShopEncounter(bytes32 encounterId)",
@@ -822,6 +973,7 @@
         "function UD__itemStock(bytes32 shopId, uint256 itemIndex) view returns (uint256)",
         "function UD__restock(bytes32 shopId) returns (bool)",
         "function UD__sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
+        "function UD__sellAny(uint256 amount, bytes32 shopId, uint256 itemId, bytes32 characterId)",
         "function UD__shopSystemAddress() view returns (address)"
       ]
     },
@@ -876,14 +1028,28 @@
       "name": "WorldActionSys",
       "systemId": "0x73795544000000000000000000000000576f726c64416374696f6e5379730000",
       "abi": [
+        "error CharacterDead()",
         "error GamePaused()",
+        "error InEncounter()",
+        "error InsufficientItemBalance()",
+        "error NotAtRestPosition()",
+        "error NotItemOwner()",
+        "error OnlyHealingInCombat()",
+        "error Unauthorized()",
         "function executeWorldRngActions(uint256 randomNumber, bytes32 givingEntity, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] actions)",
         "function rest(bytes32 characterId)",
         "function useCombatConsumableItem(bytes32 characterId, uint256 itemId)",
         "function useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId)"
       ],
       "worldAbi": [
+        "error CharacterDead()",
         "error GamePaused()",
+        "error InEncounter()",
+        "error InsufficientItemBalance()",
+        "error NotAtRestPosition()",
+        "error NotItemOwner()",
+        "error OnlyHealingInCombat()",
+        "error Unauthorized()",
         "function UD__executeWorldRngActions(uint256 randomNumber, bytes32 givingEntity, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] actions)",
         "function UD__rest(bytes32 characterId)",
         "function UD__useCombatConsumableItem(bytes32 characterId, uint256 itemId)",
@@ -897,6 +1063,39 @@
       "name": "CharacterCore",
       "systemId": "0x73795544000000000000000000000000436861726163746572436f7265000000",
       "abi": [
+        "error GamePaused()",
+        "error InvalidAccount()",
+        "error InvalidTokenUri()",
+        "error MaxCharacters()",
+        "error NameTaken()",
+        "function getCharacterIdFromOwnerAddress(address ownerAddress) view returns (bytes32)",
+        "function getOwner(bytes32 characterId) view returns (address)",
+        "function getOwnerAddress(bytes32 characterId) pure returns (address)",
+        "function isValidCharacterId(bytes32 characterId) view returns (bool)",
+        "function isValidOwner(bytes32 characterId, address owner) view returns (bool)",
+        "function mintCharacter(address account, bytes32 name, string tokenUri) returns (bytes32 characterId)"
+      ],
+      "worldAbi": [
+        "error GamePaused()",
+        "error InvalidAccount()",
+        "error InvalidTokenUri()",
+        "error MaxCharacters()",
+        "error NameTaken()",
+        "function UD__getCharacterIdFromOwnerAddress(address ownerAddress) view returns (bytes32)",
+        "function UD__getOwner(bytes32 characterId) view returns (address)",
+        "function UD__getOwnerAddress(bytes32 characterId) pure returns (address)",
+        "function UD__isValidCharacterId(bytes32 characterId) view returns (bool)",
+        "function UD__isValidOwner(bytes32 characterId, address owner) view returns (bool)",
+        "function UD__mintCharacter(address account, bytes32 name, string tokenUri) returns (bytes32 characterId)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "CharacterEnterSystem",
+      "namespace": "UD",
+      "name": "CharEnterSys",
+      "systemId": "0x7379554400000000000000000000000043686172456e74657253797300000000",
+      "abi": [
         "error CharacterLocked()",
         "error GamePaused()",
         "error InsufficientStat()",
@@ -904,16 +1103,8 @@
         "error InvalidArmorType()",
         "error InvalidItemType()",
         "error InvalidStarterItem()",
-        "error InvalidTokenUri()",
-        "error NameTaken()",
         "error Unauthorized()",
-        "function enterGame(bytes32 characterId, uint256 starterWeaponId, uint256 starterArmorId)",
-        "function getCharacterIdFromOwnerAddress(address ownerAddress) view returns (bytes32)",
-        "function getOwner(bytes32 characterId) view returns (address)",
-        "function getOwnerAddress(bytes32 characterId) pure returns (address)",
-        "function isValidCharacterId(bytes32 characterId) view returns (bool)",
-        "function isValidOwner(bytes32 characterId, address owner) view returns (bool)",
-        "function mintCharacter(address account, bytes32 name, string tokenUri) returns (bytes32 characterId)"
+        "function enterGame(bytes32 characterId, uint256 starterWeaponId, uint256 starterArmorId)"
       ],
       "worldAbi": [
         "error CharacterLocked()",
@@ -923,16 +1114,8 @@
         "error InvalidArmorType()",
         "error InvalidItemType()",
         "error InvalidStarterItem()",
-        "error InvalidTokenUri()",
-        "error NameTaken()",
         "error Unauthorized()",
-        "function UD__enterGame(bytes32 characterId, uint256 starterWeaponId, uint256 starterArmorId)",
-        "function UD__getCharacterIdFromOwnerAddress(address ownerAddress) view returns (bytes32)",
-        "function UD__getOwner(bytes32 characterId) view returns (address)",
-        "function UD__getOwnerAddress(bytes32 characterId) pure returns (address)",
-        "function UD__isValidCharacterId(bytes32 characterId) view returns (bool)",
-        "function UD__isValidOwner(bytes32 characterId, address owner) view returns (bool)",
-        "function UD__mintCharacter(address account, bytes32 name, string tokenUri) returns (bytes32 characterId)"
+        "function UD__enterGame(bytes32 characterId, uint256 starterWeaponId, uint256 starterArmorId)"
       ]
     },
     {
@@ -979,7 +1162,14 @@
       "name": "StatSystem",
       "systemId": "0x737955440000000000000000000000005374617453797374656d000000000000",
       "abi": [
+        "error CannotLevelInCombat()",
+        "error CharacterLocked()",
         "error GamePaused()",
+        "error InvalidCharacter()",
+        "error InvalidCombatEntity()",
+        "error InvalidStatChange()",
+        "error NotAuthorizedCaller()",
+        "error Unauthorized()",
         "function calculateStatBonuses(bytes32 characterId) view returns (int256 statPoints, int256 hpGain)",
         "function getBaseStats(bytes32 characterId) view returns ((int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass))",
         "function getClass(bytes32 characterId) view returns (uint8)",
@@ -994,7 +1184,14 @@
         "function validateStatRequirements(bytes32 characterId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) requiredStats) view returns (bool)"
       ],
       "worldAbi": [
+        "error CannotLevelInCombat()",
+        "error CharacterLocked()",
         "error GamePaused()",
+        "error InvalidCharacter()",
+        "error InvalidCombatEntity()",
+        "error InvalidStatChange()",
+        "error NotAuthorizedCaller()",
+        "error Unauthorized()",
         "function UD__calculateStatBonuses(bytes32 characterId) view returns (int256 statPoints, int256 hpGain)",
         "function UD__getBaseStats(bytes32 characterId) view returns ((int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass))",
         "function UD__getClass(bytes32 characterId) view returns (uint8)",
@@ -1208,5 +1405,5 @@
       ]
     }
   ],
-  "createdAt": 1772467572006
+  "createdAt": 1773080654719
 }

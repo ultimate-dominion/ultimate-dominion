@@ -55,6 +55,7 @@ contract MobSystem is System {
     }
 
     function spawnMob(uint256 mobId, uint16 x, uint16 y) public returns (bytes32 entityId) {
+        _requireAccessOrAdmin(address(this), _msgSender());
         require(Counters.getCounter(_world(), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
         MobsData memory stats = Mobs.get(mobId);

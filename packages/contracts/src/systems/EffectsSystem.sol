@@ -23,6 +23,7 @@ import {EffectType} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {EffectProcessor} from "@libraries/EffectProcessor.sol";
 import {NonExistentIndex, InvalidEffect, InvalidEffectApplication, InvalidEffectType, EffectNotApplied, NotEffectType} from "../Errors.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
 
 contract EffectsSystem is System {
     using EffectProcessor for *;
@@ -135,7 +136,7 @@ contract EffectsSystem is System {
         public
         returns (AdjustedCombatStats memory _adjustedStats)
     {
-        // Note: Access check removed to allow inter-system calls during combat
+        _requireSystemOrAdmin(_msgSender());
         bytes32 appliedEffectId =
             _getAppliedEffectId(effectId, CombatEncounter.getCurrentTurn(EncounterEntity.getEncounterId(entityId)));
         _adjustedStats = IWorld(_world()).UD__getCombatStats(entityId);
@@ -159,7 +160,7 @@ contract EffectsSystem is System {
     }
 
     function applyWorldEffects(bytes32 entityId) public returns (AdjustedCombatStats memory _adjustedStats) {
-        // Note: Access check removed to allow inter-system calls from EquipmentSystem
+        _requireSystemOrAdmin(_msgSender());
         checkWorldStatusEffects(entityId);
         bytes32[] memory worldEffects = WorldStatusEffects.get(entityId);
         if (worldEffects.length > 0) {
@@ -236,7 +237,7 @@ contract EffectsSystem is System {
     }
 
     function applyDamageOverTime(bytes32 encounterId, bytes32 entityId) public {
-        // Note: Access check removed to allow inter-system calls from PvESystem/PvPSystem
+        _requireSystemOrAdmin(_msgSender());
         uint256 currentTurn = CombatEncounter.getCurrentTurn(encounterId);
         int256 totalDamage;
         bytes32[] memory appliedStatusEffects = EncounterEntity.getAppliedStatusEffects(entityId);

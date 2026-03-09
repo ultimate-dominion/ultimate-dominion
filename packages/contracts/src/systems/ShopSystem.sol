@@ -25,8 +25,6 @@ import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/t
 import {_balancesTableId as _goldBalancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {Position} from "@codegen/index.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
-import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
-
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
@@ -74,8 +72,13 @@ contract ShopSystem is System, ReentrancyGuard {
         Shops.setGold(shopId, Shops.getGold(shopId) + price);
 
         // Gold goes to loot manager as shop reserve (sells draw from this pool)
+        // Direct table write (bypasses ERC20 puppet) — allows Gold to be non-transferable via puppet
         address lootManager = _lootManagerAddress();
-        IERC20(UltimateDominionConfig.getGoldToken()).transferFrom(_msgSender(), lootManager, price);
+        ResourceId goldTableId = _goldBalancesTableId(GOLD_NAMESPACE);
+        uint256 buyerGold = ERC20Balances.get(goldTableId, _msgSender());
+        require(buyerGold >= price, "Insufficient gold");
+        ERC20Balances.set(goldTableId, _msgSender(), buyerGold - price);
+        ERC20Balances.set(goldTableId, lootManager, ERC20Balances.get(goldTableId, lootManager) + price);
 
         IWorld(_world()).UD__dropItem(characterId, buyable[itemIndex], amount);
 

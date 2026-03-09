@@ -257,8 +257,10 @@ damage = magicDamage - resist (min 1)
 
 - Attacker can flee on **turn 1**
 - Defender can flee on **turn 2**
-- **PvE flee**: 5% gold penalty from escrow (burned)
-- **PvP flee**: 25% gold penalty from escrow (goes to opponent)
+- **PvE flee**: 5% gold penalty from escrow (burned, min 20 escrow). Smoke Cloak negates.
+- **PvP flee**: 10% gold penalty from escrow (5% burned + 5% to opponent, min 10 escrow). Smoke Cloak negates.
+- **PvE death**: 5% of escrow burned (permanent sink, min 20 escrow)
+- **PvP death**: 50% of loser escrow removed — 10% burned, 40% to winners
 
 ---
 
@@ -327,7 +329,7 @@ See [ECONOMICS.md](./ECONOMICS.md) for detailed economy design.
 - **Gold**: ERC20 token, primary currency
 - **Marketplace**: Player-to-player trading with fee (2.5–3%, under review)
 - **Shops**: NPC buy/sell with markup/markdown, 12-hour restock cycle
-- **Gold generation**: From mob kills, scales with mob level (exact formula TBD — needs game testing)
+- **Gold generation**: From mob kills, BASE_GOLD_DROP = 3, scales with mob level
 - **Gold sinks**: Marketplace fees, shop purchases, guild creation/upkeep, more planned post-launch
 - **Guilds**: See [GUILDS.md](./GUILDS.md) for full guild system design (tax, treasury, territory, wars, seasons)
 
@@ -366,9 +368,10 @@ See [ECONOMICS.md](./ECONOMICS.md) for detailed economy design.
 - **Location**: Only in danger zone (x ≥ 5 or y ≥ 5)
 - **Cooldown**: 30 seconds between PvP engagements
 - **Escrow**: Portion of player's gold held during combat
-- **PvP flee penalty**: 25% of escrow gold (minimum 4 gold to trigger)
-- **PvE flee penalty**: 5% of escrow gold (burned)
-- **Rewards**: Winner gets loser's escrow gold, split among team members
+- **PvP flee penalty**: 10% of escrow gold (5% burned + 5% to opponent, min 10 escrow). Smoke Cloak negates.
+- **PvE flee penalty**: 5% of escrow gold (burned, min 20 escrow). Smoke Cloak negates.
+- **PvP death penalty**: 50% of loser escrow — 10% burned, 40% to winners
+- **PvE death penalty**: 5% of escrow burned
 - **Group PvP**: Supports multiple attackers vs multiple defenders
 
 ### Flow
@@ -382,8 +385,8 @@ Turn-based combat (same system as PvE)
     ↓
 ├── Player A wins → Gets Player B's escrow gold + XP
 ├── Player B wins → Gets Player A's escrow gold + XP
-├── Player A flees (turn 1) → Loses 25% escrow to Player B
-└── Player B flees (turn 2) → Loses 25% escrow to Player A
+├── Player A flees (turn 1) → Loses 10% escrow (5% burned, 5% to Player B)
+└── Player B flees (turn 2) → Loses 10% escrow (5% burned, 5% to Player A)
 ```
 
 ---

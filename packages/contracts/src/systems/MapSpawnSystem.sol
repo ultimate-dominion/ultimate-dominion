@@ -7,11 +7,13 @@ import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {NoMonsters} from "../Errors.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
 
 contract MapSpawnSystem is System {
     using LibChunks for uint256;
 
     function spawnOnTileEnter(uint16 x, uint16 y) public {
+        _requireSystemOrAdmin(_msgSender());
         uint256 distanceFromHome = uint256(_chebyshevDistance(0, 0, x, y));
         if (distanceFromHome == 0) {
             return;

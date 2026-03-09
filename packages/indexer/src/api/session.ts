@@ -13,8 +13,14 @@ export function createSessionRouter(syncHandle: SyncHandle): Router {
    * POST /cleanup
    * Finds expired characters (session timer > 300s) and removes them from the board.
    */
-  router.post('/cleanup', async (_req, res) => {
+  router.post('/cleanup', async (req, res) => {
     try {
+      // Auth — only internal cron or admin can trigger cleanup
+      const apiKey = req.headers['x-api-key'] as string;
+      if (!config.auth.apiKey || apiKey !== config.auth.apiKey) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
       if (!config.cleanup.privateKey) {
         return res.status(503).json({ error: 'Cleanup not configured (no PRIVATE_KEY)' });
       }

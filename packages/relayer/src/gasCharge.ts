@@ -37,9 +37,29 @@ const swapRouterAbi = parseAbi([
   'function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)) returns (uint256 amountOut)',
 ]);
 
+const quoterV2Abi = parseAbi([
+  'function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96)) returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)',
+]);
+
 const wethAbi = parseAbi([
   'function withdraw(uint256 wad)',
 ]);
+
+async function getSwapMinimum(tokenIn: Address, tokenOut: Address, amountIn: bigint): Promise<bigint> {
+  try {
+    const { result } = await publicClient.simulateContract({
+      address: config.quoterV2,
+      abi: quoterV2Abi,
+      functionName: 'quoteExactInputSingle',
+      args: [{ tokenIn, tokenOut, amountIn, fee: config.poolFee, sqrtPriceLimitX96: 0n }],
+    });
+    const expectedOut = result[0];
+    return expectedOut * BigInt(10000 - config.swapSlippageBps) / 10000n;
+  } catch (err) {
+    console.warn('[gasCharge] Quote failed, using 1 minimum:', err);
+    return 1n;
+  }
+}
 
 // ==================== Table ID for CharacterOwner ====================
 
@@ -208,7 +228,7 @@ export async function swapGoldForEth(): Promise<void> {
         fee: config.poolFee,
         recipient: relayerAddress,
         amountIn: goldBalance,
-        amountOutMinimum: 1n, // Accept any output — these are small relayer recoup swaps
+        amountOutMinimum: await getSwapMinimum(config.goldToken, config.weth, goldBalance),
         sqrtPriceLimitX96: 0n,
       }],
     });

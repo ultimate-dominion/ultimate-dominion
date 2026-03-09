@@ -1,0 +1,22 @@
+# Default owner for everything
+* @ultimate-dominion/core
+
+# Smart contracts — require contract reviewer
+packages/contracts/ @ultimate-dominion/contracts
+
+# Client — require frontend reviewer
+packages/client/ @ultimate-dominion/frontend
+
+# Infrastructure — require infra reviewer
+packages/relayer/ @ultimate-dominion/infra
+packages/indexer/ @ultimate-dominion/infra
+
+# Documentation — any reviewer
+docs/ @ultimate-dominion/core
+
+# Security-sensitive files — require core team
+SECURITY.md @ultimate-dominion/core
+packages/contracts/src/systems/AdminSystem.sol @ultimate-dominion/core
+packages/contracts/src/systems/PauseSystem.sol @ultimate-dominion/core
+packages/contracts/script/PostDeploy.s.sol @ultimate-dominion/core
+packages/contracts/script/EnsureAccess.s.sol @ultimate-dominion/core

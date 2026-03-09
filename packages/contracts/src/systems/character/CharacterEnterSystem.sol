@@ -30,6 +30,8 @@ import {
     InvalidArmorType
 } from "../../Errors.sol";
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
+import {TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
+import {_totalSupplyTableId as _goldTotalSupplyTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {PauseLib} from "../../libraries/PauseLib.sol";
@@ -115,9 +117,11 @@ contract CharacterEnterSystem is System {
 
         address playerAddress = charData.owner;
 
-        // Mint gold
+        // Mint gold (balance + totalSupply)
         ResourceId goldTableId = _goldBalancesTableId();
         Balances.set(goldTableId, playerAddress, Balances.get(goldTableId, playerAddress) + 100 ether);
+        ResourceId supplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
+        TotalSupply.set(supplyTableId, TotalSupply.get(supplyTableId) + 100 ether);
 
         // Mint starter items
         ResourceId itemsTableId = _itemsOwnersTableId();

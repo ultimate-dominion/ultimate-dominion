@@ -1,8 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import { setCors } from '../lib/cors.js';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (setCors(req, res, "GET, OPTIONS")) return res.status(204).end();
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 }

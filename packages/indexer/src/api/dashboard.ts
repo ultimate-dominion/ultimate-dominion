@@ -1,8 +1,18 @@
 import { Router } from 'express';
 import { getMonitorStatus } from '../monitor/monitor.js';
+import { config } from '../config.js';
 
 export function createDashboardRouter(): Router {
   const router = Router();
+
+  // Dashboard requires API key (exposes infrastructure details)
+  router.use((req, res, next) => {
+    const apiKey = (req.headers['x-api-key'] as string) || req.query.key as string;
+    if (!config.auth.apiKey || apiKey !== config.auth.apiKey) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    next();
+  });
 
   router.get('/', (_req, res) => {
     const status = getMonitorStatus();

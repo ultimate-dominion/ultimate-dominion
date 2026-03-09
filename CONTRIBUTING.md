@@ -1,97 +1,134 @@
 # Contributing to Ultimate Dominion
 
-Thank you for your interest in contributing to Ultimate Dominion! This document provides guidelines and instructions for contributing to the project.
-
-## Table of Contents
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Process](#development-process)
-- [Pull Request Process](#pull-request-process)
-- [Documentation Guidelines](#documentation-guidelines)
-- [Community](#community)
+Thank you for your interest in contributing. Ultimate Dominion is fully open source and we welcome contributions across contracts, client, infrastructure, and documentation.
 
 ## Code of Conduct
 
-Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing. We expect all contributors to adhere to these guidelines to maintain a welcoming and inclusive community.
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 ## Getting Started
 
-1. **Fork the Repository**
+1. **Fork and clone**
    ```bash
    git clone https://github.com/YOUR_USERNAME/ultimate-dominion.git
    cd ultimate-dominion
    pnpm install
    ```
 
-2. **Set Up Development Environment**
-   - Follow the setup instructions in our [Implementation Plan](implementation_plan.md)
-   - Copy `.env.sample` files and configure your environment
-   - Ensure all tests pass before making changes
+2. **Set up your environment**
+   ```bash
+   cp packages/client/.env.sample packages/client/.env
+   cp packages/contracts/.env.sample packages/contracts/.env
+   cp packages/api/.env.sample packages/api/.env
+   ```
 
-3. **Create a Branch**
+3. **Start local development**
+   ```bash
+   pnpm dev
+   ```
+   This starts Anvil (local chain), deploys contracts, and runs the client at `http://localhost:3000`.
+
+4. **Create a branch**
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
-## Development Process
+## Project Structure
 
-1. **Code Style**
-   - Follow TypeScript best practices
-   - Use ESLint and Prettier configurations
-   - Maintain consistent naming conventions
-   - Write clear, self-documenting code
+```
+packages/
+  contracts/    Solidity systems (MUD v2), tables, deploy scripts
+  client/       React 18 + Chakra UI frontend
+  api/          Express API on Vercel
+  indexer/      Custom MUD indexer
+  relayer/      Gas relayer (5 EOA pool)
+  guide/        Player-facing Astro site
+```
 
-2. **Testing**
-   - Write unit tests for new features
-   - Ensure all tests pass locally
-   - Add integration tests where necessary
-   - Test across different environments
+## Where to Contribute
 
-3. **Documentation**
-   - Follow our [documentation guidelines](documentation_review_checklist.md)
-   - Update relevant documentation
-   - Add JSDoc comments for new functions
-   - Include examples where helpful
+### Smart Contracts
+
+The MUD schema in `mud.config.ts` includes **121 pre-defined tables** for future features that don't have systems yet. Check [`docs/ROADMAP.md`](docs/ROADMAP.md) to see what's available to build.
+
+**Before writing a new system:**
+- Read [`docs/architecture/SYSTEM_ARCHITECTURE.md`](docs/architecture/SYSTEM_ARCHITECTURE.md)
+- Read [`docs/architecture/ACCESS_CONTROL.md`](docs/architecture/ACCESS_CONTROL.md)
+- Read [`docs/architecture/TOKEN_GUIDE.md`](docs/architecture/TOKEN_GUIDE.md)
+- Check that `PauseLib.requireNotPaused()` is on all player-facing entry points
+- Check access control — admin functions must use `_requireSystemOrAdmin()`
+
+**Testing:**
+```bash
+cd packages/contracts
+forge test
+```
+
+### Client (React)
+
+- Read [`docs/architecture/frontend_guidelines.md`](docs/architecture/frontend_guidelines.md) for the design system
+- Read [`docs/APP_FLOW.md`](docs/APP_FLOW.md) for the current UX flow
+- Follow the crypto abstraction principle: **no wallet addresses, gas fees, chain IDs, or transaction hashes in the UI**
+- Mobile-first — if it doesn't work on a phone browser, it doesn't ship
+
+**Building:**
+```bash
+cd packages/client
+pnpm build
+```
+
+### Documentation
+
+- Developer docs live in `docs/`
+- Player-facing guide lives in `packages/guide/`
+- When updating game mechanics, update both
+- All docs should have a `*Last updated: [date]*` footer
+
+### Bug Fixes
+
+Check the [issues](https://github.com/ultimate-dominion/ultimate-dominion/issues) for bugs labeled `good first issue`. The [`docs/operations/ERROR_REFERENCE.md`](docs/operations/ERROR_REFERENCE.md) is helpful for understanding error codes.
+
+## Development Guidelines
+
+### Code Style
+
+- **Solidity**: Follow existing patterns. Use named imports. Keep systems under 24KB.
+- **TypeScript**: ESLint + Prettier configs are in the repo. Follow existing patterns.
+- **Commits**: Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`)
+- **Scope**: One feature or fix per PR. Don't bundle unrelated changes.
+
+### Security
+
+This is an on-chain game managing real assets. Security is not optional.
+
+- Check for reentrancy, integer overflow, and access control on every contract change
+- Never hardcode private keys or secrets
+- Validate all user input at system boundaries
+- Read [SECURITY.md](SECURITY.md) for the full security policy
+- **Report vulnerabilities privately** — never in a public issue
+
+### Game Design
+
+Every change should pass the manifesto test: *"Does this make the world more permanent, more player-driven, and more worth coming back to in a year?"*
+
+Read [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) for canonical game mechanics.
 
 ## Pull Request Process
 
-1. **Before Submitting**
-   - Update documentation following our checklist
-   - Ensure all tests pass
-   - Update relevant examples
-   - Add changelog entry
-
-2. **PR Requirements**
-   - Clear description of changes
-   - Link to related issues
-   - Screenshots/videos for UI changes
-   - Test coverage for new features
-
-3. **Review Process**
-   - Two approvals required
-   - All CI checks must pass
-   - Documentation must be updated
-   - No merge conflicts
-
-## Documentation Guidelines
-
-Follow our documentation style:
-- Use simple, clear language
-- Include real-world analogies
-- Provide code examples
-- Add ASCII diagrams where helpful
-- Cross-reference related docs
-
-## Community
-
-- Join our Discord server for discussions
-- Check our GitHub Issues for ways to contribute
-- Attend our community calls
-- Follow our blog for updates
+1. Ensure tests pass:
+   - `forge test` for contract changes
+   - `pnpm build` in `packages/client` for frontend changes
+2. Fill out the PR template completely
+3. Link related issues
+4. Include screenshots for UI changes
+5. One approval required for docs, two for contract or security changes
 
 ## Getting Help
 
-- Check our [FAQ](docs/FAQ.md)
-- Ask in Discord
-- Open a GitHub Discussion
-- Email: support@ultimate-dominion.com
+- Open a [GitHub Discussion](https://github.com/ultimate-dominion/ultimate-dominion/discussions)
+- Check [`docs/INDEX.md`](docs/INDEX.md) for the full documentation map
+- Check [`docs/operations/ERROR_REFERENCE.md`](docs/operations/ERROR_REFERENCE.md) for debugging
+
+---
+
+*Last updated: March 9, 2026*

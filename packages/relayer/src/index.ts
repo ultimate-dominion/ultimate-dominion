@@ -14,16 +14,38 @@ import { recordFunding } from './gasCharge.js';
 import { gasChargingEnabled } from './config.js';
 import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcManager.js';
 import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, getFundedCount } from './balanceMonitor.js';
+import { loadFundedAddresses, saveFundedAddresses, loadFulfilledSessions, saveFulfilledSessions } from './persistence.js';
 
-// Gold purchase dedup (stripeSessionId → fulfilled)
-const fulfilledSessions = new Set<string>();
+// Gold purchase dedup (stripeSessionId → fulfilled) — persisted to disk
+const fulfilledSessions = loadFulfilledSessions();
 
 const swapRouterAbi = parseAbi([
   'function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)) payable returns (uint256 amountOut)',
 ]);
 
-// Anti-griefing state
-const fundedAddresses = new Set<string>();
+const quoterV2Abi = parseAbi([
+  'function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96)) returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)',
+]);
+
+async function getMinimumOutput(tokenIn: Address, tokenOut: Address, amountIn: bigint): Promise<bigint> {
+  try {
+    const { result } = await publicClient.simulateContract({
+      address: config.quoterV2,
+      abi: quoterV2Abi,
+      functionName: 'quoteExactInputSingle',
+      args: [{ tokenIn, tokenOut, amountIn, fee: config.poolFee, sqrtPriceLimitX96: 0n }],
+    });
+    const expectedOut = result[0];
+    // Apply slippage tolerance
+    return expectedOut * BigInt(10000 - config.swapSlippageBps) / 10000n;
+  } catch (err) {
+    console.warn('[swap] Quote failed, using 0 minimum:', err);
+    return 1n; // Fallback — better to succeed than revert, but log the warning
+  }
+}
+
+// Anti-griefing state — persisted to disk
+const fundedAddresses = loadFundedAddresses();
 const recentFundings: number[] = []; // timestamps
 const ipFundings = new Map<string, number[]>(); // ip -> timestamps
 
@@ -73,31 +95,48 @@ async function main() {
   app.use(cors({ origin: config.corsOrigins }));
   app.use(express.json());
 
-  // Health check
-  app.get('/', async (_req, res) => {
+  // Health check — minimal public info; full details require API key
+  app.get('/', async (req, res) => {
+    const apiKey = req.headers['x-api-key'] as string;
+    const isAuthed = config.fundApiKey && apiKey === config.fundApiKey;
+
     try {
-      const poolStatus = await getPoolStatus(publicClient);
-      res.json({
-        status: 'ok',
-        service: 'ud-gas-station',
-        relayer: relayerAddress,
-        poolSize: poolStatus.poolSize,
-        wallets: poolStatus.wallets,
-        totalInflight: poolStatus.totalInflight,
-        chainId: config.chainId,
-        gasCharging: gasChargingEnabled,
-        pendingCharges: getPendingChargeCount(),
-        pendingChargeEth: getTotalPendingEth(),
-        fundedPlayers: getFundedCount(),
-        rpcStatus: getRpcStatus(),
-      });
+      if (isAuthed) {
+        const poolStatus = await getPoolStatus(publicClient);
+        res.json({
+          status: 'ok',
+          service: 'ud-gas-station',
+          poolSize: poolStatus.poolSize,
+          wallets: poolStatus.wallets,
+          totalInflight: poolStatus.totalInflight,
+          chainId: config.chainId,
+          gasCharging: gasChargingEnabled,
+          pendingCharges: getPendingChargeCount(),
+          pendingChargeEth: getTotalPendingEth(),
+          fundedPlayers: getFundedCount(),
+          rpcStatus: getRpcStatus(),
+        });
+      } else {
+        res.json({ status: 'ok', service: 'ud-gas-station' });
+      }
     } catch (err) {
-      res.status(500).json({ status: 'error', error: String(err) });
+      res.status(500).json({ status: 'error' });
     }
   });
 
   // Fund a new user's wallet
   app.post('/fund', async (req, res) => {
+    // API key auth — prevents unauthenticated ETH drain
+    if (!config.fundApiKey) {
+      res.status(503).json({ error: 'Fund endpoint not configured' });
+      return;
+    }
+    const apiKey = req.headers['x-api-key'] as string;
+    if (apiKey !== config.fundApiKey) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const { address } = req.body as { address?: string };
 
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
@@ -118,6 +157,7 @@ async function main() {
       const balance = await publicClient.getBalance({ address: address as Address });
       if (balance >= config.fundingAmount) {
         fundedAddresses.add(normalizedAddress);
+        saveFundedAddresses(fundedAddresses);
         trackFundedAddress(address as Address);
         res.json({ status: 'already_funded', balance: formatEther(balance) });
         return;
@@ -145,6 +185,7 @@ async function main() {
       });
 
       fundedAddresses.add(normalizedAddress);
+      saveFundedAddresses(fundedAddresses);
       trackFundedAddress(address as Address);
       recentFundings.push(Date.now());
       const ipTimestamps = ipFundings.get(ip) || [];
@@ -215,6 +256,9 @@ async function main() {
 
     // Swap ETH → Gold via Uniswap V3 (native ETH auto-wraps to WETH)
     try {
+      const minOutput = await getMinimumOutput(config.weth, config.goldToken, swapValue);
+      console.log(`[gold-purchase] Quote: ${formatEther(swapValue)} ETH → min ${minOutput} Gold (${config.swapSlippageBps/100}% slippage)`);
+
       const calldata = encodeFunctionData({
         abi: swapRouterAbi,
         functionName: 'exactInputSingle',
@@ -224,7 +268,7 @@ async function main() {
           fee: config.poolFee,
           recipient: ownerAddress as Address,
           amountIn: swapValue,
-          amountOutMinimum: 1n,
+          amountOutMinimum: minOutput,
           sqrtPriceLimitX96: 0n,
         }],
       });
@@ -236,6 +280,7 @@ async function main() {
       });
 
       fulfilledSessions.add(stripeSessionId);
+      saveFulfilledSessions(fulfilledSessions);
       console.log(`[gold-purchase] Swapped ${formatEther(swapValue)} ETH → Gold for ${ownerAddress} | tx: ${txHash} | session: ${stripeSessionId}`);
       res.json({ status: 'fulfilled', txHash });
     } catch (err) {

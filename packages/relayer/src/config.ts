@@ -42,13 +42,21 @@ export const config = {
   goldToken: (process.env.GOLD_TOKEN || '') as Address,
   weth: (process.env.WETH || '0x4200000000000000000000000000000000000006') as Address,
   swapRouter: (process.env.SWAP_ROUTER || '0x2626664c2603336E57B271c5C0b26F421741e481') as Address,
+  quoterV2: (process.env.QUOTER_V2 || '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a') as Address,
   poolFee: parseInt(process.env.POOL_FEE || '3000', 10),
+  swapSlippageBps: parseInt(process.env.SWAP_SLIPPAGE_BPS || '500', 10), // 5% default
   chargeIntervalMs: parseInt(process.env.CHARGE_INTERVAL_MS || '300000', 10),
   swapIntervalMs: parseInt(process.env.SWAP_INTERVAL_MS || '3600000', 10),
   swapThreshold: BigInt(process.env.SWAP_THRESHOLD || '100000000000000000000'), // 100e18
 
   // Gold purchase (Stripe → Uniswap ETH→Gold)
   goldPurchaseApiKey: process.env.GOLD_PURCHASE_API_KEY || '',
+
+  // Fund endpoint authentication — required to prevent ETH drain
+  fundApiKey: process.env.FUND_API_KEY || '',
+
+  // Data persistence directory
+  dataDir: process.env.DATA_DIR || './data',
 } as const;
 
 /** Whether gas charging is enabled (requires WORLD_ADDRESS + GOLD_TOKEN) */

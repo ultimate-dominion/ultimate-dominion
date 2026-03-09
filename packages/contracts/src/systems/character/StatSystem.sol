@@ -17,7 +17,7 @@ import {IRngSystem} from "../../interfaces/IRngSystem.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
-import {_requireAccess} from "../../utils.sol";
+import {_requireAccess, _requireSystemOrAdmin} from "../../utils.sol";
 import {MAX_LEVEL} from "../../../constants.sol";
 import {PauseLib} from "../../libraries/PauseLib.sol";
 import {
@@ -188,8 +188,8 @@ contract StatSystem is System {
      * @param stats The new stats
      */
     function setStats(bytes32 entityId, AdjustedCombatStats memory stats) public {
-        // Note: openAccess is true for this system, allowing any caller
-        // This function is typically called by other systems like MapSystem
+        _requireSystemOrAdmin(_msgSender());
+        // This function is called by other systems like MapSystem
         StatsData memory statsData = Stats.get(entityId);
 
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {

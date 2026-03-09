@@ -151,12 +151,13 @@ Applied after base magic damage calculation, before class multipliers.
 ## PvE Combat
 
 - **15 turn limit**
-- **Flee**: Attacker turn 1, defender turn 2. **5% escrow gold penalty** (burned).
+- **Flee**: Attacker turn 1, defender turn 2. **5% escrow gold penalty** (burned, min 20 escrow to trigger). Smoke Cloak negates penalty entirely.
+- **Death penalty**: **5% of escrow burned** (permanent sink, min 20 escrow to trigger)
 - **Mob spawning** (based on Chebyshev distance from 0,0):
   - Distance < 5: Level 1–5 mobs
   - Distance >= 5: Level 6–10 mobs
   - 0–3 mobs per tile (random, `rng % 4`)
-- **Rewards**: Gold (BASE_GOLD_DROP = 5), XP, item drops via LootManager
+- **Rewards**: Gold (BASE_GOLD_DROP = 3), XP, item drops via LootManager
 
 ---
 
@@ -166,9 +167,10 @@ Applied after base magic damage calculation, before class multipliers.
 - **Cooldown**: 30 seconds between PvP engagements (PVP_TIMER)
 - **Escrow**: Player gold held during combat
 - **Flee**: Attacker can flee turn 1, defender turn 2
-  - Penalty: **25% of escrow gold** (minimum 4 gold to trigger)
-  - Gold split among opposing team
-- **Rewards**: Loser's escrow gold ÷ PVP_GOLD_DENOMINATOR (2) to winners
+  - Penalty: **10% of escrow gold** (minimum 10 escrow to trigger) — 5% burned (permanent sink), 5% to opponents
+  - Smoke Cloak negates penalty entirely
+- **Death penalty**: Losers lose **50% of escrow** — 10% burned (permanent sink), 40% to winners
+- **Rewards**: Winner's share split equally among team members
 - **Group**: Supports multiple attackers vs multiple defenders
 
 ---
@@ -197,7 +199,7 @@ Applied after base magic damage calculation, before class multipliers.
 | DOUBLE_STRIKE_CAP | 25% |
 | PVP_TIMER | 30 seconds |
 | PVP_GOLD_DENOMINATOR | 2 |
-| BASE_GOLD_DROP | 5 ether |
+| BASE_GOLD_DROP | 3 ether |
 | MAX_PARTY_SIZE | 10 |
 | MAX_MONSTERS | 20 |
 

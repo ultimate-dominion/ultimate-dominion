@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
+import { setCors } from '../../lib/cors.js';
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 
@@ -22,24 +23,29 @@ const TIERS: Record<string, { cents: number; label: string; ethAmount: string }>
   },
 };
 
-// Base URLs for redirect — infer from request origin or use env
+// Allowed redirect origins — prevents open redirect after Stripe payment
+const ALLOWED_REDIRECT_ORIGINS = [
+  'https://ultimatedominion.com',
+  'https://beta.ultimatedominion.com',
+  'https://www.ultimatedominion.com',
+  'http://localhost:3000',
+];
+
 function getBaseUrl(req: VercelRequest): string {
   const origin = req.headers.origin || req.headers.referer;
   if (origin) {
     try {
       const url = new URL(typeof origin === 'string' ? origin : origin[0]);
-      return url.origin;
+      if (ALLOWED_REDIRECT_ORIGINS.includes(url.origin)) {
+        return url.origin;
+      }
     } catch { /* fall through */ }
   }
   return process.env.CLIENT_URL || 'https://beta.ultimatedominion.com';
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (setCors(req, res, 'POST, OPTIONS')) return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   if (!STRIPE_SECRET_KEY) {

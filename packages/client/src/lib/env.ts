@@ -25,14 +25,14 @@ const EXPECTED_WORLDS: Partial<Record<AppEnv, string>> = {
 
 /**
  * Validate that the resolved world address matches the expected one for this environment.
- * Logs a loud warning if mismatched — does not throw (to allow query-param overrides for debugging).
+ * Throws if mismatched — prevents connecting to wrong world in production/beta.
  */
 export function validateWorldAddress(worldAddress: string): void {
   const expected = EXPECTED_WORLDS[APP_ENV];
   if (!expected) return; // development — no validation
 
   if (worldAddress.toLowerCase() !== expected.toLowerCase()) {
-    console.error(
+    throw new Error(
       `[ENV MISMATCH] Expected world ${expected} for ${APP_ENV}, got ${worldAddress}. ` +
       `Check VITE_WORLD_ADDRESS and VITE_ENV on Vercel.`,
     );

@@ -753,3 +753,7 @@ Update all docs to stay in sync.
 | `itemImages.ts` | 20 item names → image paths | Add new zone items |
 | `monsterImages.ts` | 10 monster names → image paths | Add new zone monsters |
 | `constants.ts:56-104` | `STATUS_EFFECT_NAME_MAPPING` 20 effects | Extend with new zone effects |
+
+---
+
+*Last updated: March 9, 2026*

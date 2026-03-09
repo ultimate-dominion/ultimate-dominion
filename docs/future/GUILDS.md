@@ -748,4 +748,4 @@ Guild tables are **new tables with new keys** — no existing data is affected. 
 
 ---
 
-*Last updated: February 2026*
+*Last updated: March 9, 2026*

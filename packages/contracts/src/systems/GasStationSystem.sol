@@ -52,12 +52,20 @@ import {_requireOwner} from "../utils.sol";
  *      ETH treasury lives at this system's address (for fallback mode and received WETH unwraps).
  */
 contract GasStationSystem is System {
+    bool private _locked;
+    modifier nonReentrant() {
+        require(!_locked, "ReentrancyGuard: reentrant call");
+        _locked = true;
+        _;
+        _locked = false;
+    }
+
     /**
      * @notice Swap gold for ETH. Uses Uniswap V3 if configured, otherwise falls back to burn+treasury.
      * @param characterId The player's character ID
      * @param goldAmount Amount of gold to swap (in 1e18 units)
      */
-    function buyGas(bytes32 characterId, uint256 goldAmount) public {
+    function buyGas(bytes32 characterId, uint256 goldAmount, uint256 minEthOutput) public nonReentrant {
         PauseLib.requireNotPaused();
 
         // Check gas station is enabled
@@ -95,7 +103,7 @@ contract GasStationSystem is System {
         // Route to Uniswap swap or fallback
         address swapRouter = GasStationSwapConfig.getSwapRouter();
         if (swapRouter != address(0)) {
-            _buyGasViaUniswap(caller, goldAmount, currentGold, balancesTableId, swapRouter);
+            _buyGasViaUniswap(caller, goldAmount, currentGold, balancesTableId, swapRouter, minEthOutput);
         } else {
             _buyGasViaTreasury(caller, goldAmount, currentGold, balancesTableId);
         }
@@ -110,7 +118,8 @@ contract GasStationSystem is System {
         uint256 goldAmount,
         uint256 currentGold,
         ResourceId balancesTableId,
-        address swapRouter
+        address swapRouter,
+        uint256 minEthOutput
     ) internal {
         // 1. Deduct gold from player
         ERC20Balances.set(balancesTableId, caller, currentGold - goldAmount);
@@ -134,7 +143,7 @@ contract GasStationSystem is System {
                 fee: poolFee,
                 recipient: address(this),
                 amountIn: goldAmount,
-                amountOutMinimum: UNISWAP_MIN_OUTPUT,
+                amountOutMinimum: minEthOutput,
                 sqrtPriceLimitX96: 0
             })
         );

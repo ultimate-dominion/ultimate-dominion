@@ -27,9 +27,12 @@ import {
     NotInEncounter,
     CanOnlyFleeFirstTurn,
     InvalidFlee,
-    UnrecognizedEncounterType
+    UnrecognizedEncounterType,
+    InvalidAction
 } from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
+
 contract PvPSystem is System {
     function isValidPvP(bytes32[] memory attackers, bytes32[] memory defenders, uint16 x, uint16 y)
         public
@@ -105,12 +108,12 @@ contract PvPSystem is System {
     }
 
     function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory effects) public {
-        // Note: Access check removed - this function is called via SystemSwitch from RngSystem
-        // which changes _msgSender(). Authorization is handled by RngSystem.
+        _requireSystemOrAdmin(_msgSender());
 
         uint256 randomNumber;
         //get encounter data
         CombatEncounterData memory encounterData = CombatEncounter.get(encounterId);
+        _validateActions(effects, encounterData.attackers, encounterData.defenders);
         ActionOutcomeData memory currentActionData;
         // execute attacker effects
         for (uint256 i; i < effects.length; i++) {
@@ -154,7 +157,7 @@ contract PvPSystem is System {
         }
         bool hasSmokeCover = _hasStatusEffect(entityId, SMOKE_CLOAK_EFFECT_STAT_ID);
         if (encounterData.encounterType == EncounterType.PvE) {
-            // PvE flee — 5% escrow gold penalty (lighter than PvP's 25%)
+            // PvE flee — 5% escrow gold penalty (burned)
             // Smoke Cloak (Flashpowder) negates the penalty entirely
             uint256 escrowBalance = AdventureEscrow.get(entityId);
             uint256 amountToLose;
@@ -300,5 +303,24 @@ contract PvPSystem is System {
             blockNumber: block.number,
             timestamp: block.timestamp
         });
+    }
+
+    /// @dev Validates that each action's attacker and defender are on opposite teams
+    function _validateActions(Action[] memory actions, bytes32[] memory teamA, bytes32[] memory teamB) internal pure {
+        for (uint256 i; i < actions.length; i++) {
+            bool valid = (
+                _isInArray(actions[i].attackerEntityId, teamA) && _isInArray(actions[i].defenderEntityId, teamB)
+            ) || (
+                _isInArray(actions[i].attackerEntityId, teamB) && _isInArray(actions[i].defenderEntityId, teamA)
+            );
+            if (!valid) revert InvalidAction();
+        }
+    }
+
+    function _isInArray(bytes32 id, bytes32[] memory arr) internal pure returns (bool) {
+        for (uint256 j; j < arr.length; j++) {
+            if (arr[j] == id) return true;
+        }
+        return false;
     }
 }

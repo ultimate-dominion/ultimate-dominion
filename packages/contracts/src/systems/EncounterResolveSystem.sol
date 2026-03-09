@@ -16,9 +16,11 @@ import {
 import {EncounterType} from "@codegen/common.sol";
 import {InvalidEncounter, EncounterAlreadyOver, InvalidEncounterType} from "../Errors.sol";
 import {BoardCleanupLib} from "../libraries/BoardCleanupLib.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
 
 contract EncounterResolveSystem is System {
     function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin) public {
+        _requireSystemOrAdmin(_msgSender());
         // Inline getEncounterType to avoid cross-system IWorld call
         EncounterType encounterType;
         if (CombatEncounter.getStart(encounterId) > 0) {

@@ -381,3 +381,7 @@ Ship incrementally. Each phase builds on the last.
 5. **Multi-zone materials?** Tier 4 recipes should require materials from multiple zones. Creates cross-zone trading demand and marketplace activity. Design when Zone 2 is ready.
 
 6. **Guild crafting?** Guild halls could have upgraded stations that reduce costs or unlock exclusive recipes. Tie into guild design when ready.
+
+---
+
+*Last updated: March 9, 2026*

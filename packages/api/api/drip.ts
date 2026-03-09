@@ -1,14 +1,9 @@
 import { Request, Response } from "express";
 import { DRIP_SCHEDULE, listContacts, sendDripEmail } from "../lib/emailService.js";
+import { setCors } from "../lib/cors.js";
 
 export default async function drip(req: Request, res: Response) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (setCors(req, res, "GET, OPTIONS")) return res.status(204).end();
 
   if (req.method !== "GET") {
     return res.status(405).json({ success: false, error: "Method not allowed" });
@@ -18,7 +13,7 @@ export default async function drip(req: Request, res: Response) {
   const authHeader = req.headers.authorization;
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
 

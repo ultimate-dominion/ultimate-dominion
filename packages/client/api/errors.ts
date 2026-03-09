@@ -1,13 +1,21 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-function setCors(res: VercelResponse): void {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-}
+const ALLOWED_ORIGINS = [
+  "https://ultimatedominion.com",
+  "https://beta.ultimatedominion.com",
+  "https://www.ultimatedominion.com",
+  "http://localhost:3000",
+  "http://localhost:3001",
+];
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  setCors(res);
+  const origin = (req.headers.origin as string) || "";
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();

@@ -71,7 +71,10 @@ async function main() {
     try {
       // 1. Call session cleanup to remove expired players
       const cleanupUrl = `http://localhost:${config.server.port}/api/session/cleanup`;
-      const cleanupResp = await fetch(cleanupUrl, { method: 'POST' });
+      const cleanupResp = await fetch(cleanupUrl, {
+        method: 'POST',
+        headers: config.auth.apiKey ? { 'x-api-key': config.auth.apiKey } : {},
+      });
       const cleanupData = (await cleanupResp.json()) as { removed?: number };
       const slotsFreed = cleanupData.removed ?? 0;
 

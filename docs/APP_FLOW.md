@@ -144,8 +144,8 @@ Triggered from Tile Details when a mob or player is on the same tile.
 - 30-second turn timer
 - Status effects displayed per combatant
 - Consumables usable during combat
-- **PvP flee**: Available turns 1–2 (25% gold penalty)
-- **PvE flee**: Not implemented
+- **PvP flee**: Available turns 1–2 (10% escrow penalty — 5% burned, 5% to opponent. Smoke Cloak negates.)
+- **PvE flee**: Available turns 1–2 (5% escrow burned. Smoke Cloak negates.)
 - Battle Outcome Modal: win/loss, XP, gold, items
 
 ---
@@ -251,4 +251,4 @@ Split-screen: player inventory (left) vs shopkeeper inventory (right).
 
 ---
 
-*Last updated: February 2026*
+*Last updated: March 9, 2026*

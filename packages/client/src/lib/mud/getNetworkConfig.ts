@@ -70,12 +70,11 @@ export async function getNetworkConfig(): Promise<{
   }
 
   /*
-   * Get the address of the World. If you want to use a
-   * different address than the one in worlds.json,
-   * provide it as worldAddress in the query string.
+   * Get the address of the World from env vars or local worlds.json (dev only).
+   * URL query param override removed for security (H-4).
    */
   const world = worlds[chain.id.toString()];
-  const worldAddress = params.get('worldAddress') || import.meta.env.VITE_WORLD_ADDRESS || (IS_DEV ? world?.address : undefined);
+  const worldAddress = import.meta.env.VITE_WORLD_ADDRESS || (IS_DEV ? world?.address : undefined);
   if (!worldAddress) {
     throw new Error(
       `No world address found for chain ${chainId}. ` +

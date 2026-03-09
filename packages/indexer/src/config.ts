@@ -30,6 +30,9 @@ export const config = {
   captcha: {
     turnstileSecret: process.env.TURNSTILE_SECRET_KEY || '',
   },
+  auth: {
+    apiKey: process.env.INDEXER_API_KEY || '',
+  },
   monitor: {
     baseNodeUrl: process.env.MONITOR_BASE_NODE_URL || '',
     baseNodeToken: process.env.MONITOR_BASE_NODE_TOKEN || '',

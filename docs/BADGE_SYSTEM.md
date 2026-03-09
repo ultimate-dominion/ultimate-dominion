@@ -109,3 +109,7 @@ Unique token ID per character: `(BADGE_ID × 1,000,000) + characterTokenId`
 2. Add minting logic in the relevant system contract
 3. Update this document
 4. (Optional) Add UI display for the new badge
+
+---
+
+*Last updated: March 9, 2026*

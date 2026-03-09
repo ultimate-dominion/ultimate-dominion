@@ -32,7 +32,7 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] HP/damage scaling by level ✓ Weapon scalingStat (STR/AGI/INT)
 - [x] Combat rebalance ✓ AGI/INT scaling, class multipliers, combat triangle (`014d0ae6`), stat growth rebalance (`82699a7e`)
 - [x] PvP bug fixes ✓ Missing currentHp, incomplete getItemEffects, HP validation (`fe65eb35`)
-- [~] PvP end-to-end validation — works on beta, needs mainnet verification with 2 players
+- [x] PvP end-to-end validation ✓ Verified working on beta with 2 players
 - [ ] Edge case testing (disconnects, timeouts during combat)
 
 **Survivability**
@@ -43,8 +43,8 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] Shop inventory and pricing ✓ Uncommon gear + consumables, updated prices (`92a520da`), 6 combat consumables added (`e6114fe5`)
 - [x] Shop UI/UX ✓ Leave Shop button (`498b93bd`), friendly sell errors, Tal narrative intro (`bf411a69`)
 - [x] Marketplace working ✓ List/buy/cancel flows, access grants (`fdb25190`), await tx receipts (`e7496147`), redesigned item page (`cf82490c`), sell action (`f7223baf`)
-- [~] Gold Merchant (fiat-to-GOLD onramp) ✓ MoonPay + Uniswap V3 swap flow, needs: set VITE_MOONPAY_API_KEY, deepen Uniswap pool liquidity, test real purchase end-to-end
-- [ ] Gold withdrawal design — how players move earned gold out of the embedded wallet
+- [x] Gold Merchant (fiat-to-GOLD onramp) ✓ Stripe Checkout → backend Uniswap V3 swap → Gold delivered to wallet. Needs live Stripe keys for production.
+- [x] Gold withdrawal design ✓ MetaMask/external wallet users can transfer directly; embedded wallet users cannot withdraw (by design)
 
 **Narrative & Lore**
 - [x] "Fragments of the Fallen" story arc ✓ 8-part story arc complete
@@ -127,7 +127,7 @@ Run through every core flow before inviting players:
 - [x] Landing page with game description ✓ Torchlit dungeon theme (`b7bf197f`), welcome page refresh (`6c470bfb`)
 - [x] OG image and favicon ✓ Dragon favicon (`c2b15235`), OG image updated (`278804c3`)
 - [x] Email capture ✓ Resend integration — signup capture, welcome email, drip infrastructure (`becde351`)
-- [ ] Set `sourcemap: false` in `vite.config.ts` for production
+- [x] Set `sourcemap: false` in `vite.config.ts` for production ✓ Already configured
 
 **Community Channels**
 - [x] Discourse forum live at tavern.ultimatedominion.com ✓ `/tavern` redirect, setup runbook, changelog automation
@@ -157,7 +157,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 
 ### 2.1 Security Review (Gate for Mainnet)
 
-- [ ] Smart contract audit (external or internal review)
+- [~] Smart contract audit (external or internal review) — full security review in progress
 - [x] Access control verification ✓ 6 admin systems locked, _requireSystemOrAdmin() on critical systems
 - [x] Reentrancy protection ✓ PvpRewardSystem double-claim fix, ShopSystem nonReentrant
 - [x] Integer overflow/underflow checks ✓ CombatMath clamping, division-by-zero guards, MapRemovalSystem counter underflow guard (`60817b93`)
@@ -169,7 +169,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [x] Dependency audit ✓ OpenZeppelin pinned to 5.0.2, pnpm audit run
 - [x] Emergency pause mechanism ✓ PauseSystem + PauseLib on 30+ entry points across 13 systems
 - [ ] Test coverage for critical paths (combat, trading, minting)
-- [ ] Economic exploit review (inflation attacks, arbitrage, gold duplication)
+- [~] Economic exploit review (inflation attacks, arbitrage, gold duplication) — in progress
 
 ### 2.2 Playtest Feedback (Must Fix)
 
@@ -267,8 +267,8 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Post on r/IndieGaming, r/playmygame
 
 **Launch Mechanics**
-- [~] Queue/invite system implementation (see LAUNCH_STRATEGY.md) — code complete, needs deploy + env vars
-- [ ] Human verification system (see LAUNCH_STRATEGY.md)
+- [x] Queue/invite system implementation ✓ Code complete, deployed, working on beta
+- [~] Human verification system (Cloudflare Turnstile) — code complete (`CaptchaGate.tsx` + indexer `captcha.ts`), needs Turnstile site keys set on Railway + Vercel
 - [ ] DEX liquidity setup for $GOLD token (see ECONOMICS.md)
 - [ ] Set `founderWindowEnd` timestamp via `cast send` on production world (decides how long founder badges are available)
 - [ ] Set `maxPlayers = 10` via `cast send` on production world
@@ -361,16 +361,26 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 
 ### Blocking (must do)
 - [ ] Deploy latest contract changes to production (beta is ahead of prod)
-- [ ] Wipe indexer DB and re-sync from scratch with new production world (old world schemas have stale data — characters/orders from previous deployments leak into chat announcements)
-- [ ] Production smoke test (Section 2.6)
-- [ ] PvP end-to-end validation with 2 players
+- [ ] Wipe indexer DB and re-sync from scratch with new production world
+- [ ] Production smoke test (Section 2.6) — planned for contract deploy day
+- [ ] Add DEX liquidity for $GOLD token — planned for contract deploy day
+
+### In Progress
+- [~] Smart contract security review — full audit in progress
+- [~] Economic exploit review (gold duplication, inflation) — in progress
+- [~] Cloudflare Turnstile — code done, needs site keys on Railway + Vercel
+
+### Recently Completed
+- [x] PvP end-to-end validation ✓
+- [x] Queue/invite system ✓
+- [x] Gold Merchant (Stripe Checkout) ✓
+- [x] Gold withdrawal design ✓ (MetaMask only, embedded wallet locked by design)
+- [x] sourcemap: false ✓
 
 ### Should Do
-- [ ] Smart contract audit (external or self-review)
-- [ ] Economic exploit review (gold duplication, inflation)
 - [ ] Verify contracts on Basescan
-- [ ] Gold withdrawal design
-- [ ] Set `sourcemap: false` for production builds
+- [ ] Switch Stripe to live keys (`sk_live_`) for production
+- [ ] Set launch config on production world (`maxPlayers`, `sessionTimeout`, `founderWindowEnd`)
 
 ### Nice to Have (can do post-launch)
 - [ ] WalletConnect verification on production
@@ -400,4 +410,4 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 
 ---
 
-_Last updated: March 2026_
+_Last updated: March 9, 2026_

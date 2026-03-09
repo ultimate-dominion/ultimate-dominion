@@ -143,8 +143,9 @@ contract CombatSystem is System {
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
             // Cache character validation and equip check before the loop (saves 5-10K gas/extra effect)
+            // Skip equipped check for consumables — they're used from inventory, not equipment slots
             bool attackerIsCharacter = IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId);
-            if (attackerIsCharacter) {
+            if (attackerIsCharacter && Items.getItemType(actionOutcomeData.itemId) != ItemType.Consumable) {
                 if (!IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId)) {
                     revert ItemNotEquipped();
                 }

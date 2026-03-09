@@ -13,6 +13,7 @@ import {
 import { verifyCaptcha } from './captcha.js';
 import { getRecentEvents } from '../queue/eventFeed.js';
 import { generateInviteCode } from '../queue/milestoneWatcher.js';
+import { config } from '../config.js';
 
 /** Simple rate limiter: max requests per window per IP */
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
@@ -210,6 +211,10 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
    */
   router.delete('/leave/:wallet', async (req, res) => {
     try {
+      const apiKey = req.headers['x-api-key'] as string;
+      if (!config.auth.apiKey || apiKey !== config.auth.apiKey) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
       const { wallet } = req.params;
       if (!isValidWallet(wallet)) {
         return res.status(400).json({ error: 'Invalid wallet address' });
@@ -267,6 +272,10 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
    */
   router.post('/spawned/:wallet', async (req, res) => {
     try {
+      const apiKey = req.headers['x-api-key'] as string;
+      if (!config.auth.apiKey || apiKey !== config.auth.apiKey) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
       const { wallet } = req.params;
       if (!isValidWallet(wallet)) {
         return res.status(400).json({ error: 'Invalid wallet address' });

@@ -13,8 +13,8 @@ import {TokenURI} from "@latticexyz/world-modules/src/modules/erc721-puppet/tabl
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
-import {CHARACTERS_NAMESPACE} from "../../../constants.sol";
-import {InvalidAccount, InvalidTokenUri, NameTaken} from "../../Errors.sol";
+import {CHARACTERS_NAMESPACE, CHARACTER_TOKEN_COUNTER_KEY} from "../../../constants.sol";
+import {InvalidAccount, InvalidTokenUri, NameTaken, MaxCharacters} from "../../Errors.sol";
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {PauseLib} from "../../libraries/PauseLib.sol";
@@ -41,9 +41,10 @@ contract CharacterCore is System {
         if (name == bytes32(0)) revert InvalidAccount();
         if (bytes(tokenUri).length == 0) revert InvalidTokenUri();
         if (NameExists.get(name)) revert NameTaken();
+        if (CharacterOwner.getCharacterId(account) != bytes32(0)) revert MaxCharacters();
 
-        uint256 tokenId = Counters.getCounter(address(this), 0) + 1;
-        Counters.setCounter(address(this), 0, tokenId);
+        uint256 tokenId = Counters.getCounter(CHARACTER_TOKEN_COUNTER_KEY, 0) + 1;
+        Counters.setCounter(CHARACTER_TOKEN_COUNTER_KEY, 0, tokenId);
 
         // Direct table writes bypass v2.2.23 ERC721System._requireOwner check
         ERC721Owners.set(_charsOwnersTableId(), tokenId, account);

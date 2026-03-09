@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { setCors } from "../lib/cors.js";
 import {
   Has,
   HasValue,
@@ -61,9 +62,7 @@ export default async function sessionBooting(
   req: Request,
   res: Response
 ) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (setCors(req, res, "GET, OPTIONS")) return res.status(204).end();
 
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });

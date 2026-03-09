@@ -130,7 +130,7 @@ contract Test_GasStationSystem is Test {
         uint256 expectedEth = (goldToSwap * DEFAULT_ETH_PER_GOLD) / 1e18;
 
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, goldToSwap);
+        world.UD__buyGas(bobCharacterId, goldToSwap, 0);
 
         uint256 goldAfter = goldToken.balanceOf(bob);
         uint256 ethAfter = bob.balance;
@@ -151,7 +151,7 @@ contract Test_GasStationSystem is Test {
         // With DEFAULT_ETH_PER_GOLD = 1e12, 100e18 * 1e12 / 1e18 = 100e12 = 0.0001 ETH
 
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, goldToSwap);
+        world.UD__buyGas(bobCharacterId, goldToSwap, 0);
 
         assertEq(bob.balance - ethBefore, expectedEth, "Exchange rate incorrect");
         assertEq(expectedEth, 100e12, "Expected 0.0001 ETH for 100 Gold");
@@ -163,7 +163,7 @@ contract Test_GasStationSystem is Test {
 
         vm.prank(bob);
         vm.expectRevert(GasStationBelowMinLevel.selector);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
     }
 
     function test_buyGas_revertsIfLevel0() public {
@@ -172,7 +172,7 @@ contract Test_GasStationSystem is Test {
 
         vm.prank(bob);
         vm.expectRevert(GasStationBelowMinLevel.selector);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
     }
 
     function test_buyGas_revertsIfCooldownActive() public {
@@ -181,12 +181,12 @@ contract Test_GasStationSystem is Test {
 
         // First swap should succeed
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
 
         // Second swap immediately should fail (cooldown)
         vm.prank(bob);
         vm.expectRevert(GasStationCooldownActive.selector);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
     }
 
     function test_buyGas_succeedsAfterCooldown() public {
@@ -194,14 +194,14 @@ contract Test_GasStationSystem is Test {
         _giveGold(bobCharacterId, 200 ether);
 
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
 
         // Fast-forward past the cooldown
         vm.warp(block.timestamp + DEFAULT_GAS_COOLDOWN + 1);
 
         // Second swap should succeed now
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
     }
 
     function test_buyGas_revertsIfInsufficientGold() public {
@@ -210,7 +210,7 @@ contract Test_GasStationSystem is Test {
 
         vm.prank(bob);
         vm.expectRevert(InsufficientBalance.selector);
-        world.UD__buyGas(bobCharacterId, 1 ether);
+        world.UD__buyGas(bobCharacterId, 1 ether, 0);
     }
 
     function test_buyGas_revertsIfTreasuryEmpty() public {
@@ -223,7 +223,7 @@ contract Test_GasStationSystem is Test {
 
         vm.prank(bob);
         vm.expectRevert(GasStationInsufficientTreasury.selector);
-        world.UD__buyGas(bobCharacterId, 500 ether);
+        world.UD__buyGas(bobCharacterId, 500 ether, 0);
     }
 
     function test_buyGas_revertsIfMaxSwapExceeded() public {
@@ -232,7 +232,7 @@ contract Test_GasStationSystem is Test {
 
         vm.prank(bob);
         vm.expectRevert(GasStationMaxSwapExceeded.selector);
-        world.UD__buyGas(bobCharacterId, DEFAULT_MAX_GOLD_PER_SWAP + 1);
+        world.UD__buyGas(bobCharacterId, DEFAULT_MAX_GOLD_PER_SWAP + 1, 0);
     }
 
     function test_buyGas_revertsIfDisabled() public {
@@ -245,7 +245,7 @@ contract Test_GasStationSystem is Test {
 
         vm.prank(bob);
         vm.expectRevert(GasStationDisabled.selector);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
     }
 
     function test_buyGas_revertsIfZeroAmount() public {
@@ -254,7 +254,7 @@ contract Test_GasStationSystem is Test {
 
         vm.prank(bob);
         vm.expectRevert(GasStationZeroAmount.selector);
-        world.UD__buyGas(bobCharacterId, 0);
+        world.UD__buyGas(bobCharacterId, 0, 0);
     }
 
     function test_buyGas_revertsIfNotOwner() public {
@@ -264,7 +264,7 @@ contract Test_GasStationSystem is Test {
         // Alice tries to use bob's character
         vm.prank(alice);
         vm.expectRevert(); // "Not character owner"
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
     }
 
     function test_buyGas_updatesCooldownTimestamp() public {
@@ -274,7 +274,7 @@ contract Test_GasStationSystem is Test {
         uint256 timeBefore = block.timestamp;
 
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
 
         uint256 lastSwap = GasStationCooldown.getLastSwap(bob);
         assertEq(lastSwap, timeBefore, "Cooldown timestamp not set");
@@ -288,7 +288,7 @@ contract Test_GasStationSystem is Test {
         uint256 expectedEth = (DEFAULT_MAX_GOLD_PER_SWAP * DEFAULT_ETH_PER_GOLD) / 1e18;
 
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, DEFAULT_MAX_GOLD_PER_SWAP);
+        world.UD__buyGas(bobCharacterId, DEFAULT_MAX_GOLD_PER_SWAP, 0);
 
         assertEq(bob.balance - ethBefore, expectedEth, "Max swap failed");
     }
@@ -325,7 +325,7 @@ contract Test_GasStationSystem is Test {
         uint256 expectedEth = (goldToSwap * 2e12) / 1e18;
 
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, goldToSwap);
+        world.UD__buyGas(bobCharacterId, goldToSwap, 0);
 
         assertEq(bob.balance - ethBefore, expectedEth, "Updated rate not applied");
     }
@@ -694,7 +694,7 @@ contract Test_GasStationSystem is Test {
 
         // Should succeed at exactly level 3
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, 10 ether);
+        world.UD__buyGas(bobCharacterId, 10 ether, 0);
     }
 
     function test_buyGas_fallback_burnsTotalSupply() public {
@@ -705,7 +705,7 @@ contract Test_GasStationSystem is Test {
         uint256 supplyBefore = goldToken.totalSupply();
 
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, 50 ether);
+        world.UD__buyGas(bobCharacterId, 50 ether, 0);
 
         uint256 supplyAfter = goldToken.totalSupply();
         assertEq(supplyBefore - supplyAfter, 50 ether, "Total supply not reduced in fallback mode");
@@ -720,7 +720,7 @@ contract Test_GasStationSystem is Test {
         uint256 expectedEth = (goldToSwap * DEFAULT_ETH_PER_GOLD) / 1e18;
 
         vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, goldToSwap);
+        world.UD__buyGas(bobCharacterId, goldToSwap, 0);
 
         assertEq(treasuryBefore - gasStationAddress.balance, expectedEth, "Treasury reduction incorrect");
     }

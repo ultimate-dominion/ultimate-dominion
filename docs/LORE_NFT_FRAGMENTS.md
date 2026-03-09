@@ -460,3 +460,7 @@ Each zone will have its own set of lore fragments revealing more about the dead 
 ## Technical Implementation
 
 *To be defined: Smart contract structure, NFT metadata, minting triggers.*
+
+---
+
+*Last updated: March 9, 2026*

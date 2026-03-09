@@ -30,13 +30,13 @@ The manifesto (`packages/client/src/pages/Manifesto.tsx`) defines the game's ide
 - Test that any UI change remains responsive on mobile browsers.
 
 ### Usability
-- All UI must work without crypto knowledge. Follow the crypto abstraction table in `docs/architecture/FRONTEND_GUIDELINES.md`.
+- All UI must work without crypto knowledge. Follow the crypto abstraction table in `docs/architecture/frontend_guidelines.md`.
 - Never expose wallet addresses, transaction hashes, gas fees, or chain IDs to the player.
 - Every action needs clear feedback: loading states, success confirmations, error messages with recovery steps.
 - Mobile-first — if it doesn't work on a phone browser, it doesn't ship.
 
 ### Security
-- **Smart contracts**: Check for reentrancy, integer overflow, access control, and input validation on every change. Reference `docs/launch_checklist.md` Section 10 for the full checklist.
+- **Smart contracts**: Check for reentrancy, integer overflow, access control, and input validation on every change. Reference `docs/operations/launch_checklist.md` Section 10 for the full checklist.
 - **Frontend**: No `dangerouslySetInnerHTML`, no `eval`, no user-controlled URLs without validation. Validate `chainId` against `supportedChains`.
 - **API**: All endpoints must have rate limiting, CORS restrictions, input validation, and no secret/stack trace leakage.
 - **Keys**: Never hardcode private keys or secrets. Always use environment variables.
@@ -136,14 +136,24 @@ Any text that appears in the game — item descriptions, system messages, patch 
 - **Chain**: Base Mainnet (chain 8453) — both production and beta (separate world addresses)
 
 ## Key Documentation
-- `docs/launch_checklist.md` - Launch readiness tracking
+- `docs/INDEX.md` - **Master documentation hub** — start here
 - `docs/GAME_DESIGN.md` - Canonical game mechanics reference
 - `docs/ECONOMICS.md` - Token economy and gold balance
-- `docs/architecture/TECH_STACK.md` - Full tech stack details
+- `docs/GOLD_SUPPLY_PLAN.md` - Supply modeling and founder allocation
+- `docs/ROADMAP.md` - Feature roadmap with pre-defined MUD tables
 - `docs/architecture/SYSTEM_ARCHITECTURE.md` - Smart contract systems
-- `docs/architecture/FRONTEND_GUIDELINES.md` - UI design system
+- `docs/architecture/TOKEN_GUIDE.md` - ERC20/ERC721/ERC1155 token architecture
+- `docs/architecture/ACCESS_CONTROL.md` - Namespace permissions and access patterns
+- `docs/architecture/AUTH_INTEGRATION.md` - Privy embedded wallet + RainbowKit
+- `docs/architecture/INDEXER.md` - Custom MUD indexer
+- `docs/architecture/RELAYER.md` - Gas relayer service
+- `docs/architecture/frontend_guidelines.md` - UI design system
+- `docs/architecture/tech_stack.md` - Full tech stack details
 - `docs/combat-stats/COMBAT_SYSTEM.md` - Combat formulas and constants
 - `docs/combat-stats/COMBAT_BALANCE.md` - Balance issues and tuning
+- `docs/operations/launch_checklist.md` - Launch readiness tracking
+- `docs/operations/DEPLOY_RUNBOOK.md` - Deployment procedures
+- `docs/operations/ERROR_REFERENCE.md` - Error codes and troubleshooting
 - `docs/APP_FLOW.md` - User-facing app flow
 - `docs/LAUNCH_STRATEGY.md` - Launch plan and anti-abuse
 - `docs/GO_TO_MARKET.md` - Marketing and distribution
@@ -151,7 +161,7 @@ Any text that appears in the game — item descriptions, system messages, patch 
 ## Reminders
 
 ### Launch Checklist Updates
-**IMPORTANT**: After every git commit, check `docs/launch_checklist.md` for items that the commit addresses. If a checklist item is resolved by the commit:
+**IMPORTANT**: After every git commit, check `docs/operations/launch_checklist.md` for items that the commit addresses. If a checklist item is resolved by the commit:
 
 1. **Mark it done**: Change `[ ]` to `[x]`, add the commit hash (e.g., `✓ Fixed shop buy flow (\`bc589ab7\`)`).
 2. **Update stale descriptions**: If the item describes a problem that's now fixed, rewrite it to reflect current state.

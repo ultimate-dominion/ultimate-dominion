@@ -740,7 +740,7 @@ const CharacterCreationInner = (): JSX.Element => {
                     <Input
                       isDisabled={isCreating}
                       maxLength={15}
-                      onChange={e => setName(e.target.value)}
+                      onChange={e => setName(e.target.value.replace(/[^a-zA-Z0-9 _-]/g, ''))}
                       placeholder="Name"
                       type="text"
                       value={name}

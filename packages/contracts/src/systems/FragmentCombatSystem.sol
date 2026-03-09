@@ -9,6 +9,7 @@ import {
 } from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID} from "../../constants.sol";
+import {_requireSystemOrAdmin} from "../utils.sol";
 
 /**
  * @title FragmentCombatSystem
@@ -25,6 +26,7 @@ contract FragmentCombatSystem is System {
         uint16 tileY,
         bool defeatedAreMobs
     ) public {
+        _requireSystemOrAdmin(_msgSender());
         for (uint256 i = 0; i < winners.length; i++) {
             if (_isCharacter(winners[i])) {
                 checkCombatFragmentTriggers(winners[i], defeated, tileX, tileY, defeatedAreMobs);
@@ -39,6 +41,7 @@ contract FragmentCombatSystem is System {
         uint16 tileY,
         bool defeatedAreMobs
     ) public {
+        _requireSystemOrAdmin(_msgSender());
         // Fragment III: The Restless - first monster kill
         if (defeatedAreMobs && !CharacterFirstActions.getHasKilledMonster(characterId)) {
             CharacterFirstActions.setHasKilledMonster(characterId, true);

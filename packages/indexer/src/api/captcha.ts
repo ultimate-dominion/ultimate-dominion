@@ -7,9 +7,9 @@ import { config } from '../config.js';
 export async function verifyCaptcha(token: string, remoteIp?: string): Promise<boolean> {
   const secret = config.captcha.turnstileSecret;
   if (!secret) {
-    // If no secret configured, skip verification (dev mode)
-    console.warn('[captcha] No TURNSTILE_SECRET_KEY configured, skipping verification');
-    return true;
+    // Fail-closed: reject if CAPTCHA not configured (prevents bypassing in production)
+    console.error('[captcha] No TURNSTILE_SECRET_KEY configured, rejecting request');
+    return false;
   }
 
   try {

@@ -804,6 +804,16 @@ contract PostDeploy is Script {
         } catch {
             console.log("  Items:Owners table access grant to ShopSystem failed");
         }
+
+        // Grant ShopSystem access to Gold:Balances table for _transferGoldFromReserve()
+        {
+            ResourceId goldBalancesTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
+            try world.grantAccess(goldBalancesTableId, shopSysAddr) {
+                console.log("  Granted Gold:Balances table access to ShopSystem");
+            } catch {
+                console.log("  Gold:Balances table access grant to ShopSystem failed");
+            }
+        }
         UltimateDominionConfig.setMarketplace(address(world));
         console.log("  Marketplace address:", address(world));
 
