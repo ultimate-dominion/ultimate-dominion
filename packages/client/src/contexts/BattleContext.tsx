@@ -151,16 +151,22 @@ export const BattleProvider = ({
   }, []);
 
   const currentBattle = useMemo(() => {
-    // Prefer an active (ongoing) battle; fall back to most recent completed
-    const activeBattle = allBattles.filter(b => b.end === BigInt(0)).pop();
+    // Prefer an active (ongoing) battle; fall back to most recent completed.
+    // A battle is "active" if end===0 AND no CombatOutcome exists yet.
+    // (CombatOutcome arrives via Store_SetRecord (sync) while CombatEncounter.end
+    // arrives via splice event (async ~100-300ms). Using CombatOutcome as the
+    // primary "battle over" signal avoids a timing gap.)
+    const activeBattle = allBattles
+      .filter(b => b.end === BigInt(0) && !combatOutcomeTable[b.encounterId])
+      .pop();
     const latestBattle = activeBattle ?? allBattles[allBattles.length - 1];
     if (!latestBattle) return null;
 
-    // If the most recent battle ended but outcome hasn't arrived yet, hide it
-    // (the reactive combatOutcomeTable dep will re-trigger when outcome arrives)
-    if (latestBattle.end !== BigInt(0)) {
-      const combatOutcome = combatOutcomeTable[latestBattle.encounterId];
-      if (!combatOutcome) return null;
+    // Battle is over if end is set OR CombatOutcome exists
+    const hasOutcome = !!combatOutcomeTable[latestBattle.encounterId];
+    if (latestBattle.end !== BigInt(0) || hasOutcome) {
+      // Outcome not synced yet — hide battle until it arrives
+      if (!hasOutcome) return null;
     }
 
     const latestBattleOutcomeSeen = localStorage.getItem(
@@ -174,10 +180,16 @@ export const BattleProvider = ({
   }, [allBattles, combatOutcomeTable, acknowledgeVersion]);
 
   const lastestBattleOutcome = useMemo(() => {
+    // Include battles where CombatOutcome exists even if end hasn't synced yet
+    // (splice event delay). This ensures battleOver=true as soon as outcome arrives.
     const latestCompletedBattle =
       allBattles
-        .filter(b => b.end !== BigInt(0))
-        .sort((a, b) => Number(b.end - a.end))[0] ?? null;
+        .filter(b => b.end !== BigInt(0) || !!combatOutcomeTable[b.encounterId])
+        .sort((a, b) => {
+          const aTime = a.end !== BigInt(0) ? a.end : a.start;
+          const bTime = b.end !== BigInt(0) ? b.end : b.start;
+          return Number(bTime - aTime);
+        })[0] ?? null;
     if (!latestCompletedBattle) return null;
 
     const combatOutcome = combatOutcomeTable[latestCompletedBattle.encounterId];

@@ -1,4 +1,4 @@
-import { Component, type ReactNode } from 'react';
+import React, { Children, Component, type ReactNode } from 'react';
 // eslint-disable-next-line import/no-named-as-default
 import Typist from 'react-typist';
 
@@ -26,9 +26,13 @@ class TypistErrorBoundary extends Component<
 type SafeTypistProps = React.ComponentProps<typeof Typist>;
 
 function SafeTypist({ children, ...props }: SafeTypistProps) {
+  // Filter out null/undefined/false children that cause react-typist's
+  // eachPromise to throw "object null is not iterable"
+  const safeChildren = Children.toArray(children).filter(Boolean);
+  if (safeChildren.length === 0) return null;
   return (
     <TypistErrorBoundary fallback={<>{children}</>}>
-      <Typist {...props}>{children}</Typist>
+      <Typist {...props}>{safeChildren}</Typist>
     </TypistErrorBoundary>
   );
 }
