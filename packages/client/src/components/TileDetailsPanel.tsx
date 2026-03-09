@@ -59,7 +59,7 @@ import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
 
-const ROW_HEIGHT = { base: 5, md: 8 };
+const ROW_HEIGHT = { base: 11, md: 8 };
 
 const REST_FLAVOR = [
   'The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.',
@@ -1390,7 +1390,7 @@ const OpponentRow = ({
         h="98%"
         justifyContent="space-between"
         onClick={disableRow ? undefined : onClick}
-        px={{ base: 1, sm: 4 }}
+        px={{ base: 3, sm: 4 }}
         transition="all 0.3s ease"
         w="100%"
         _active={{
@@ -1405,7 +1405,7 @@ const OpponentRow = ({
           {(encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image) && (
             <Avatar
               filter={disableRow ? 'grayscale(100%)' : 'none'}
-              size={{ base: '2xs', md: 'xs' }}
+              size={{ base: 'xs', md: 'xs' }}
               src={encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image}
               name={name}
             />
@@ -1413,14 +1413,14 @@ const OpponentRow = ({
           <Text
             color={nameColor}
             filter={disableRow ? 'grayscale(100%)' : 'none'}
-            size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+            size={{ base: '2xs', sm: '2xs', md: 'sm', lg: 'md' }}
           >
             {isElite ? '★ ' : ''}{name}
           </Text>
         </HStack>
         {!disableRow && !!level && (
           <HStack spacing={1}>
-            <Text fontWeight={500} size={{ base: '3xs', sm: '2xs', md: 'sm' }}>
+            <Text fontWeight={500} size={{ base: '2xs', sm: '2xs', md: 'sm' }}>
               Level {level.toString()}
             </Text>
             {encounterType === EncounterType.PvP &&

@@ -451,7 +451,8 @@ export const ActionsPanel = (): JSX.Element => {
                       fontSize={
                         equippedSpellsAndWeapons.length > 2 ? '2xs' : 'xs'
                       }
-                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                      size={{ base: 'sm', sm: 'sm', lg: 'md' }}
+                      py={{ base: 5, sm: 4, lg: 'unset' }}
                       variant="outline"
                       w="100%"
                     >
@@ -475,7 +476,7 @@ export const ActionsPanel = (): JSX.Element => {
               </Text>
             )}
             {(combatConsumables.length > 0 || canFlee) && (
-              <HStack spacing={0} w="100%">
+              <HStack mt={{ base: 2, lg: 0 }} spacing={0} w="100%">
                 {combatConsumables.map((consumable, index) => {
                   const consumableIcon = getItemImage(removeEmoji(consumable.name));
                   return (
@@ -490,7 +491,8 @@ export const ActionsPanel = (): JSX.Element => {
                       key={`consumable-${index}`}
                       onClick={() => onUsePotion(consumable)}
                       fontSize="xs"
-                      size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                      size={{ base: 'sm', sm: 'sm', lg: 'md' }}
+                      py={{ base: 5, sm: 4, lg: 'unset' }}
                       variant="outline"
                       w="100%"
                     >
@@ -511,7 +513,8 @@ export const ActionsPanel = (): JSX.Element => {
                     borderTop="none"
                     isLoading={isFleeing}
                     fontSize="xs"
-                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                    size={{ base: 'sm', sm: 'sm', lg: 'md' }}
+                    py={{ base: 5, sm: 4, lg: 'unset' }}
                     onClick={onFleePvp}
                     variant="outline"
                     color="#A0522D"
