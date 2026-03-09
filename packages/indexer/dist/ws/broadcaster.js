@@ -123,6 +123,30 @@ export class Broadcaster {
             this.clients.delete(client);
         }
     }
+    /** Broadcast queue stats to all connected clients */
+    broadcastQueueStats(stats) {
+        const msg = { type: 'queue:stats', stats };
+        this.broadcastToAll(msg);
+    }
+    /** Broadcast slot open notification to all clients (client filters by own wallet) */
+    broadcastSlotOpen(wallet, readyUntil) {
+        const msg = {
+            type: 'queue:slot_open',
+            wallet: wallet.toLowerCase(),
+            readyUntil: readyUntil.toISOString(),
+        };
+        this.broadcastToAll(msg);
+    }
+    /** Broadcast a game event to all connected clients */
+    broadcastGameEvent(event) {
+        const msg = { type: 'game:event', event };
+        this.broadcastToAll(msg);
+    }
+    broadcastToAll(msg) {
+        for (const client of this.clients) {
+            this.send(client, msg);
+        }
+    }
     /**
      * On client resume, send all updates since their lastBlock.
      */

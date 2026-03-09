@@ -9,6 +9,9 @@ import { createConfigRouter } from './config.js';
 import { createSessionRouter } from './session.js';
 import { createHealthRouter } from './health.js';
 import { createSnapshotRouter } from './snapshot.js';
+import { createQueueRouter } from './queue.js';
+import { createInviteRouter } from './invite.js';
+import { createStatusRouter } from './status.js';
 export function createApiRouter(syncHandle, broadcaster) {
     const router = Router();
     router.use('/character', createCharacterRouter(syncHandle));
@@ -21,6 +24,9 @@ export function createApiRouter(syncHandle, broadcaster) {
     router.use('/session', createSessionRouter(syncHandle));
     router.use('/health', createHealthRouter(syncHandle, broadcaster));
     router.use('/snapshot', createSnapshotRouter(syncHandle));
+    router.use('/queue', createQueueRouter(syncHandle, broadcaster));
+    router.use('/invite', createInviteRouter());
+    router.use('/status', createStatusRouter());
     return router;
 }
 //# sourceMappingURL=router.js.map

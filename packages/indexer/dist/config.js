@@ -25,5 +25,21 @@ export const config = {
     cleanup: {
         privateKey: (process.env.PRIVATE_KEY || ''),
     },
+    captcha: {
+        turnstileSecret: process.env.TURNSTILE_SECRET_KEY || '',
+    },
+    auth: {
+        apiKey: process.env.INDEXER_API_KEY || '',
+    },
+    monitor: {
+        baseNodeUrl: process.env.MONITOR_BASE_NODE_URL || '',
+        baseNodeToken: process.env.MONITOR_BASE_NODE_TOKEN || '',
+        baseNodeMetricsUrl: process.env.MONITOR_BASE_NODE_METRICS_URL || '',
+        alchemyUrl: process.env.MONITOR_ALCHEMY_URL || '',
+        relayerUrl: process.env.MONITOR_RELAYER_URL || 'https://8453.relay.ultimatedominion.com/',
+        clientProdUrl: process.env.MONITOR_CLIENT_PROD_URL || 'https://ultimatedominion.com',
+        clientBetaUrl: process.env.MONITOR_CLIENT_BETA_URL || 'https://beta.ultimatedominion.com',
+        apiUrl: process.env.MONITOR_API_URL || '',
+    },
 };
 //# sourceMappingURL=config.js.map

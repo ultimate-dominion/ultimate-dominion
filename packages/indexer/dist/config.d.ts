@@ -19,4 +19,20 @@ export declare const config: {
     readonly cleanup: {
         readonly privateKey: `0x${string}`;
     };
+    readonly captcha: {
+        readonly turnstileSecret: string;
+    };
+    readonly auth: {
+        readonly apiKey: string;
+    };
+    readonly monitor: {
+        readonly baseNodeUrl: string;
+        readonly baseNodeToken: string;
+        readonly baseNodeMetricsUrl: string;
+        readonly alchemyUrl: string;
+        readonly relayerUrl: string;
+        readonly clientProdUrl: string;
+        readonly clientBetaUrl: string;
+        readonly apiUrl: string;
+    };
 };
