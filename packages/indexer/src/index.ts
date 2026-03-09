@@ -8,7 +8,7 @@ import { startSync } from './sync/startSync.js';
 import { createApiRouter } from './api/router.js';
 import { createDashboardRouter } from './api/dashboard.js';
 import { closeDb } from './db/connection.js';
-import { initQueueTables, advanceQueue, expireReadyEntries, getQueueStats, getPlayerEmail } from './db/queueSchema.js';
+import { initQueueTables, advanceQueue, expireReadyEntries, getQueueStats, getPlayerEmail, shouldNotifyAndMark } from './db/queueSchema.js';
 import { sendSlotOpenEmail } from './lib/slotEmail.js';
 import { startMilestoneWatcher } from './queue/milestoneWatcher.js';
 import { startEventFeed } from './queue/eventFeed.js';
@@ -103,13 +103,16 @@ async function main() {
           console.log(`[cron] Slot open for ${wallet}, ready until ${readyUntil.toISOString()}`);
           broadcaster.broadcastSlotOpen(wallet, readyUntil);
 
-          // Send email notification if we have one on file
-          getPlayerEmail(wallet).then((email) => {
-            if (email) {
-              sendSlotOpenEmail(email).catch((err) =>
-                console.error(`[cron] Failed to send slot email to ${wallet}:`, err)
-              );
-            }
+          // Send email notification if we have one on file (max once per 15 min)
+          shouldNotifyAndMark(wallet).then((shouldSend) => {
+            if (!shouldSend) return;
+            getPlayerEmail(wallet).then((email) => {
+              if (email) {
+                sendSlotOpenEmail(email).catch((err) =>
+                  console.error(`[cron] Failed to send slot email to ${wallet}:`, err)
+                );
+              }
+            });
           }).catch(() => {});
         }
       }

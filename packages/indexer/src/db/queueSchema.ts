@@ -18,7 +18,8 @@ export async function initQueueTables() {
       invite_code_used TEXT,
       joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       status TEXT NOT NULL DEFAULT 'waiting',
-      ready_until TIMESTAMPTZ
+      ready_until TIMESTAMPTZ,
+      last_notified_at TIMESTAMPTZ
     )
   `;
 
@@ -43,6 +44,12 @@ export async function initQueueTables() {
       referrer_notified BOOLEAN NOT NULL DEFAULT false,
       PRIMARY KEY (invite_code, invitee_wallet)
     )
+  `;
+
+  // Migration: add last_notified_at column if missing (existing deployments)
+  await sql`
+    ALTER TABLE queue.queue_entries
+    ADD COLUMN IF NOT EXISTS last_notified_at TIMESTAMPTZ
   `;
 
   // Indexes for common queries
@@ -82,6 +89,21 @@ export async function getPlayerEmail(wallet: string): Promise<string | null> {
     SELECT email FROM queue.player_emails WHERE wallet = ${wallet.toLowerCase()}
   `;
   return rows.length > 0 ? (rows[0].email as string) : null;
+}
+
+/** Check if enough time has passed since the last email, and mark as notified. */
+const EMAIL_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
+
+export async function shouldNotifyAndMark(wallet: string): Promise<boolean> {
+  const w = wallet.toLowerCase();
+  const rows = await sql`
+    UPDATE queue.queue_entries
+    SET last_notified_at = NOW()
+    WHERE wallet = ${w}
+      AND (last_notified_at IS NULL OR last_notified_at < NOW() - INTERVAL '15 minutes')
+    RETURNING wallet
+  `;
+  return rows.length > 0;
 }
 
 /** Get current queue position for a wallet (1-based, computed dynamically) */
