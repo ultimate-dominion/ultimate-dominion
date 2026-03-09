@@ -259,14 +259,25 @@ export const GameBoard = (): JSX.Element => {
         <MapPanel />
       </GridItem>
       <Box
-        bottom={2}
+        bottom={4}
         display={{ base: 'block', lg: 'none' }}
-        left={2}
+        left={4}
         pos="fixed"
-        zIndex={5}
+        zIndex={10}
       >
-        <Button onClick={onOpenStatsDrawer} size="sm">
-          Stats
+        <Button
+          bg="linear-gradient(135deg, #3A2E1A 0%, #2A2218 100%)"
+          border="1px solid #C87A2A"
+          borderRadius="lg"
+          boxShadow="0 0 8px rgba(200, 122, 42, 0.3)"
+          color="#D4A54A"
+          fontFamily="Cinzel, serif"
+          fontSize="xs"
+          onClick={onOpenStatsDrawer}
+          size="sm"
+          _hover={{ bg: '#3A3228', color: '#E8DCC8', borderColor: '#D4A54A', boxShadow: '0 0 12px rgba(212, 165, 74, 0.5)' }}
+        >
+          Character
         </Button>
         <Drawer isOpen={isStatsDrawerOpen} onClose={onCloseStatsDrawer} placement="bottom">
           <DrawerOverlay />

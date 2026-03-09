@@ -56,10 +56,11 @@ export const FeedbackButton = (): JSX.Element => {
         boxShadow="0 0 8px rgba(200, 122, 42, 0.3)"
         color="#D4A54A"
         icon={<GiQuillInk size={20} />}
-        left={4}
+        left={{ base: '50%', lg: 4 }}
         onClick={openFeedback}
         position="fixed"
         size="md"
+        transform={{ base: 'translateX(-50%)', lg: 'none' }}
         zIndex={10}
         _hover={{ bg: '#3A3228', color: '#E8DCC8', borderColor: '#D4A54A', boxShadow: '0 0 12px rgba(212, 165, 74, 0.5)' }}
       />
