@@ -53,7 +53,15 @@ export const AuthProvider = ({
   // --- Privy ---
   const { ready, authenticated, user, logout } = usePrivy();
   const { wallets } = useWallets();
-  const { initOAuth } = useLoginWithOAuth();
+  const { initOAuth } = useLoginWithOAuth({
+    onComplete: ({ user: privyUser, isNewUser }) => {
+      console.info('[Auth] OAuth complete:', { email: privyUser?.google?.email, isNewUser });
+    },
+    onError: (error) => {
+      console.error('[Auth] OAuth error:', error);
+      setIsConnecting(false);
+    },
+  });
 
   const [embeddedWalletClient, setEmbeddedWalletClient] =
     useState<WalletClient | null>(null);
@@ -72,6 +80,7 @@ export const AuthProvider = ({
 
   // Initialize Privy embedded wallet when available
   useEffect(() => {
+    console.info('[Auth] Wallet init effect:', { ready, authenticated, walletsCount: wallets.length, walletTypes: wallets.map(w => w.walletClientType) });
     if (!ready || !authenticated) {
       if (ready) setIsConnecting(false);
       return;
@@ -80,7 +89,8 @@ export const AuthProvider = ({
     // Find embedded wallet (Privy MPC wallet)
     const privyWallet = wallets.find(w => w.walletClientType === 'privy');
     if (!privyWallet) {
-      setIsConnecting(false);
+      console.info('[Auth] Authenticated but no privy wallet yet, waiting...');
+      // Don't set isConnecting=false — wallet may still be creating
       return;
     }
 
@@ -136,16 +146,27 @@ export const AuthProvider = ({
   }, [embeddedAddress]);
 
   const connectWithGoogle = useCallback(async () => {
+    // If already authenticated via Privy (e.g. returning from OAuth redirect),
+    // don't initiate another OAuth flow — the wallet init effect will handle it.
+    if (authenticated) {
+      console.info('[Auth] Already authenticated, skipping initOAuth');
+      return;
+    }
     setIsConnecting(true);
     try {
       await initOAuth({ provider: 'google' });
-    } catch (e) {
+    } catch (e: any) {
+      // "already logged in" means the redirect auth completed — not an error
+      if (e?.message?.includes('already logged in')) {
+        console.info('[Auth] OAuth redirect completed, waiting for wallet init');
+        return;
+      }
       console.error('[AuthContext] Google sign-in failed:', e);
       setIsConnecting(false);
       throw e;
     }
     // isConnecting will be set to false by the wallet init effect above
-  }, [initOAuth]);
+  }, [authenticated, initOAuth]);
 
   const disconnect = useCallback(async () => {
     if (authenticated) {
