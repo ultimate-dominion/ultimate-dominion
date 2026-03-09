@@ -220,9 +220,27 @@ export const AuthProvider = ({
         externalWalletClient: null,
         hasInjectedWallet,
         isAuthenticated: true,
-        isConnecting,
+        isConnecting: false,
         ownerAddress: embeddedAddress,
         signedInEmail,
+      };
+    }
+
+    // Privy authenticated but wallet still initializing (e.g. just returned from OAuth redirect).
+    // Mark isAuthenticated=true so Welcome.tsx doesn't show blank screen or sign-in modal.
+    // Keep isConnecting=true so downstream knows wallet isn't ready yet.
+    if (authenticated && !embeddedWalletClient) {
+      return {
+        authMethod: 'embedded',
+        connectWithGoogle,
+        disconnect,
+        embeddedWalletClient: null,
+        externalWalletClient: null,
+        hasInjectedWallet,
+        isAuthenticated: true,
+        isConnecting: true,
+        ownerAddress: null,
+        signedInEmail: null,
       };
     }
 
@@ -256,6 +274,7 @@ export const AuthProvider = ({
       signedInEmail: null,
     };
   }, [
+    authenticated,
     connectWithGoogle,
     disconnect,
     embeddedAddress,
