@@ -30,7 +30,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Stripe not configured' });
   }
 
-  const stripe = new Stripe(STRIPE_SECRET_KEY);
+  const stripe = new Stripe(STRIPE_SECRET_KEY, {
+    httpClient: Stripe.createFetchHttpClient(),
+  });
   const sig = req.headers['stripe-signature'];
 
   if (!sig) {

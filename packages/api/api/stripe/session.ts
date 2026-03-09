@@ -62,7 +62,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const baseUrl = getBaseUrl(req);
 
   try {
-    const stripe = new Stripe(STRIPE_SECRET_KEY);
+    const stripe = new Stripe(STRIPE_SECRET_KEY, {
+      httpClient: Stripe.createFetchHttpClient(),
+    });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
