@@ -19,6 +19,7 @@ import { usePrivy, useWallets, useLoginWithOAuth, useCreateWallet } from '@privy
 import { base } from '../lib/mud/supportedChains';
 
 const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
+const FUND_API_KEY = import.meta.env.VITE_FUND_API_KEY;
 
 type AuthMethod = 'embedded' | 'external' | null;
 
@@ -167,7 +168,10 @@ export const AuthProvider = ({
 
     fetch(`${RELAYER_URL}/fund`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(FUND_API_KEY ? { 'x-api-key': FUND_API_KEY } : {}),
+      },
       body: JSON.stringify({ address: embeddedAddress }),
     })
       .then(res => res.json())
