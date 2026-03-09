@@ -1,3 +1,17 @@
+/** Queue stats broadcast payload */
+export type QueueStats = {
+    totalInQueue: number;
+    slotsAvailable: number;
+    currentPlayers: number;
+};
+/** Game event for the live feed */
+export type GameEvent = {
+    id: string;
+    eventType: 'loot_drop' | 'pvp_kill' | 'level_up' | 'marketplace_sale' | 'rare_find' | 'death' | 'character_created' | 'shop_purchase' | 'quest_complete';
+    playerName: string;
+    description: string;
+    timestamp: number;
+};
 /** Messages from server to client */
 export type ServerMessage = {
     type: 'connected';
@@ -17,6 +31,16 @@ export type ServerMessage = {
     block: number;
 } | {
     type: 'pong';
+} | {
+    type: 'queue:stats';
+    stats: QueueStats;
+} | {
+    type: 'queue:slot_open';
+    wallet: string;
+    readyUntil: string;
+} | {
+    type: 'game:event';
+    event: GameEvent;
 };
 /** Messages from client to server */
 export type ClientMessage = {
