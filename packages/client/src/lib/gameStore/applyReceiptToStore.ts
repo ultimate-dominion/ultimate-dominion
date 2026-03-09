@@ -77,6 +77,7 @@ async function resolveSpliceEvents(
   spliceReads: { table: TableEntry; keyTuple: readonly Hex[]; keyBytes: string }[],
   publicClient: PublicClient,
   worldAddress: Hex,
+  blockNumber?: bigint,
 ): Promise<void> {
   // Deduplicate by table+keyBytes (a single tx can splice the same row multiple times)
   const unique = new Map<string, (typeof spliceReads)[0]>();
@@ -84,50 +85,66 @@ async function resolveSpliceEvents(
     unique.set(`${r.table.label}:${r.keyBytes}`, r);
   }
 
-  const results = await Promise.allSettled(
-    [...unique.values()].map(async ({ table, keyTuple, keyBytes }) => {
-      const [staticData, encodedLengths, dynamicData] =
-        await publicClient.readContract({
-          address: worldAddress,
-          abi: getRecordAbi,
-          functionName: 'getRecord',
-          args: [table.tableId as Hex, [...keyTuple]],
-        });
-
-      // Reuse logToRecord — it needs { tableId, keyTuple, staticData, encodedLengths, dynamicData }
-      const record = logToRecord({
-        table: table as { schema: typeof table.schema; key: typeof table.key },
-        log: {
-          args: {
-            tableId: table.tableId as Hex,
-            keyTuple: [...keyTuple],
-            staticData,
-            encodedLengths,
-            dynamicData,
-          },
-        },
+  const readRecord = async ({ table, keyTuple, keyBytes }: (typeof spliceReads)[0]) => {
+    const [staticData, encodedLengths, dynamicData] =
+      await publicClient.readContract({
+        address: worldAddress,
+        abi: getRecordAbi,
+        functionName: 'getRecord',
+        args: [table.tableId as Hex, [...keyTuple]],
+        // Pin to the receipt's block to avoid stale reads from RPC lag
+        ...(blockNumber ? { blockNumber } : {}),
       });
 
-      const serialized = serializeRecord(record as Record<string, unknown>);
-      console.debug(`[TX][RECEIPT] splice setRow: ${table.label} key=${keyBytes}`, serialized);
-      useGameStore.getState().setRow(table.label, keyBytes, serialized);
-      return table.label;
-    }),
-  );
+    const record = logToRecord({
+      table: table as { schema: typeof table.schema; key: typeof table.key },
+      log: {
+        args: {
+          tableId: table.tableId as Hex,
+          keyTuple: [...keyTuple],
+          staticData,
+          encodedLengths,
+          dynamicData,
+        },
+      },
+    });
+
+    const serialized = serializeRecord(record as Record<string, unknown>);
+    console.debug(`[TX][RECEIPT] splice setRow: ${table.label} key=${keyBytes}`, serialized);
+    useGameStore.getState().setRow(table.label, keyBytes, serialized);
+    return table.label;
+  };
+
+  const entries = [...unique.values()];
+  const results = await Promise.allSettled(entries.map(readRecord));
 
   const resolved = results.filter(r => r.status === 'fulfilled');
-  const failed = results.filter(r => r.status === 'rejected');
+  const failed = results
+    .map((r, i) => ({ result: r, entry: entries[i] }))
+    .filter(({ result }) => result.status === 'rejected');
 
   if (resolved.length > 0) {
     console.info(
       `[TX][RECEIPT] Resolved ${resolved.length} splice record(s) from chain: ${resolved.map(r => (r as PromiseFulfilledResult<string>).value).join(', ')}`,
     );
   }
-  for (const f of failed) {
+
+  // Retry failed reads once without pinning blockNumber (in case the node
+  // doesn't support historical reads but has applied the block by now)
+  if (failed.length > 0) {
     console.warn(
-      '[TX][RECEIPT] Failed to read splice record from chain:',
-      (f as PromiseRejectedResult).reason,
+      `[TX][RECEIPT] ${failed.length} splice read(s) failed, retrying without blockNumber...`,
     );
+    const retryResults = await Promise.allSettled(
+      failed.map(({ entry }) => readRecord(entry)),
+    );
+    const retryFailed = retryResults.filter(r => r.status === 'rejected');
+    for (const f of retryFailed) {
+      console.warn(
+        '[TX][RECEIPT] Splice read failed after retry:',
+        (f as PromiseRejectedResult).reason,
+      );
+    }
   }
 }
 
@@ -229,7 +246,7 @@ export async function applyReceiptToStore(
   // gets the receipt back. Adds ~100-300ms (parallel getRecord RPCs) but
   // prevents stale-data bugs (HP not updating, double-attack, etc).
   if (spliceReads.length > 0 && publicClient && worldAddress) {
-    await resolveSpliceEvents(spliceReads, publicClient, worldAddress).catch(err => {
+    await resolveSpliceEvents(spliceReads, publicClient, worldAddress, receipt.blockNumber).catch(err => {
       console.warn('[TX][RECEIPT] Splice resolution failed:', err);
     });
   }

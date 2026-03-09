@@ -296,11 +296,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     Gold.
                   </Text>
                 )}
-                {/* Level-up banner — only when this battle triggered eligibility */}
-                {(hasLeveledUp || justBecameEligible) && (
+                {/* Level-up banner — only on victory when this battle triggered eligibility */}
+                {winner === character.id && (hasLeveledUp || justBecameEligible) && (
                   <LevelUpBanner level={canLevel ? BigInt(character.level) + 1n : character.level} />
                 )}
-                {canLevel && (
+                {winner === character.id && canLevel && (
                   <LevelingPanel canLevel character={character} compact />
                 )}
                 {(hasLeveledUp || justBecameEligible || canLevel) &&

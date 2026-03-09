@@ -323,6 +323,7 @@ export const GameBoard = (): JSX.Element => {
 
       {lastestBattleOutcome && (
         <BattleOutcomeModal
+          key={lastestBattleOutcome.encounterId}
           battleOutcome={lastestBattleOutcome}
           isOpen={isBattleOutcomeModalOpen}
           onClose={onCloseBattleOutcomeModal}
