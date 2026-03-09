@@ -14,7 +14,7 @@ import {
   type WalletClient,
 } from 'viem';
 import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
-import { usePrivy, useWallets, useLoginWithOAuth } from '@privy-io/react-auth';
+import { usePrivy, useWallets, useLoginWithOAuth, useCreateWallet } from '@privy-io/react-auth';
 
 import { base } from '../lib/mud/supportedChains';
 
@@ -53,6 +53,7 @@ export const AuthProvider = ({
   // --- Privy ---
   const { ready, authenticated, user, logout } = usePrivy();
   const { wallets } = useWallets();
+  const { createWallet } = useCreateWallet();
   const { initOAuth } = useLoginWithOAuth({
     onComplete: ({ user: privyUser, isNewUser }) => {
       console.info('[Auth] OAuth complete:', { email: privyUser?.google?.email, isNewUser });
@@ -89,8 +90,12 @@ export const AuthProvider = ({
     // Find embedded wallet (Privy MPC wallet)
     const privyWallet = wallets.find(w => w.walletClientType === 'privy');
     if (!privyWallet) {
-      console.info('[Auth] Authenticated but no privy wallet yet, waiting...', { walletTypes: wallets.map(w => w.walletClientType) });
-      setIsConnecting(false);
+      console.info('[Auth] Authenticated but no privy wallet — creating one...', { walletTypes: wallets.map(w => w.walletClientType) });
+      // useLoginWithOAuth doesn't auto-create wallets (only the Privy modal does).
+      // Explicitly create one. createWallet() is idempotent — safe to call if one exists.
+      createWallet()
+        .then(w => console.info('[Auth] Wallet created:', w.address))
+        .catch(err => console.warn('[Auth] createWallet failed (may already exist):', err.message));
       return;
     }
 
