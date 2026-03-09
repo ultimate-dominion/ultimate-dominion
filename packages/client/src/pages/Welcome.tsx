@@ -52,7 +52,7 @@ export const Welcome = (): JSX.Element => {
     if (!isAuthenticated) return;
     if (!statsLoaded) return; // Wait for queue stats before deciding
 
-    const embeddedReady = authMethod === 'embedded';
+    const embeddedReady = authMethod === 'embedded' && !!delegatorAddress;
     const externalReady = authMethod === 'external' && !!delegatorAddress;
     if (!embeddedReady && !externalReady) return;
 
