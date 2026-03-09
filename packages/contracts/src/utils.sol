@@ -111,3 +111,7 @@ function _requireSystemOrAdmin(address sender) view {
     // Neither a registered system nor an admin
     revert NotAuthorizedCaller();
 }
+
+function _isSystemOrAdmin(address sender) view returns (bool) {
+    return ResourceId.unwrap(SystemRegistry.get(sender)) != bytes32(0) || Admin.get(sender);
+}
