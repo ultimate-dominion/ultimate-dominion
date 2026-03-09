@@ -11,6 +11,12 @@ const MAX_EVENTS = 50;
 /** Track last-seen block for incremental scanning */
 let lastScannedBlock = 0;
 
+/** Dedup: track already-emitted events to prevent repeats */
+const emittedLevelUps = new Set<string>();    // "keyBytes:level"
+const emittedCombat = new Set<string>();       // "keyBytes"
+const emittedLoot = new Set<string>();         // "keyBytes"
+const emittedSales = new Set<string>();        // "keyBytes"
+
 function addEvent(event: GameEvent) {
   eventBuffer.push(event);
   if (eventBuffer.length > MAX_EVENTS) {
@@ -83,6 +89,11 @@ async function scanLevelUps(
       const level = Number(row.level);
       if (!name || level <= 1) continue;
 
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      const dedupKey = `${keyHex}:${level}`;
+      if (emittedLevelUps.has(dedupKey)) continue;
+      emittedLevelUps.add(dedupKey);
+
       const event: GameEvent = {
         id: crypto.randomUUID(),
         eventType: 'level_up',
@@ -112,7 +123,7 @@ async function scanCombatOutcomes(
 
   try {
     const rows = await sql.unsafe(`
-      SELECT co."exp_dropped", co."gold_dropped", co."attackers_win", c."name"
+      SELECT co."__key_bytes", co."exp_dropped", co."gold_dropped", co."attackers_win", c."name"
       FROM "${mudSchema}"."${outcomeTable}" co
       JOIN "${mudSchema}"."${worldEncTable}" we
         ON co."__key_bytes" = we."__key_bytes"
@@ -125,6 +136,10 @@ async function scanCombatOutcomes(
     for (const row of rows) {
       const name = decodeCharacterName(row.name);
       if (!name) continue;
+
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      if (emittedCombat.has(keyHex)) continue;
+      emittedCombat.add(keyHex);
 
       const xpGained = Number(row.exp_dropped || 0);
       const goldGained = Number(row.gold_dropped || 0);
@@ -191,6 +206,10 @@ async function scanLootDrops(
     `, [fromBlock.toString(), toBlock.toString()]);
 
     for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      if (emittedLoot.has(keyHex)) continue;
+      emittedLoot.add(keyHex);
+
       const name = decodeCharacterName(row.name) || 'An adventurer';
       const itemIds: string[] = Array.isArray(row.items_dropped) ? row.items_dropped : [];
       if (itemIds.length === 0) continue;
@@ -248,13 +267,17 @@ async function scanMarketplaceSales(
 
   try {
     const rows = await sql.unsafe(`
-      SELECT ms."item_id", ms."price", ms."buyer", ms."seller"
+      SELECT ms."__key_bytes", ms."item_id", ms."price", ms."buyer", ms."seller"
       FROM "${mudSchema}"."${saleTable}" ms
       WHERE ms."__last_updated_block_number" >= $1
         AND ms."__last_updated_block_number" <= $2
     `, [fromBlock.toString(), toBlock.toString()]);
 
     for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      if (emittedSales.has(keyHex)) continue;
+      emittedSales.add(keyHex);
+
       const price = Number(row.price || 0);
       let itemDesc = 'an item';
 
