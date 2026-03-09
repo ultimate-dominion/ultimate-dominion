@@ -24,5 +24,9 @@ interface IAdminSystem {
 
   function UD__adminSetPlayerCount(address systemAddr, uint256 count) external;
 
+  function UD__setFeeRecipient(address newRecipient) external;
+
+  function UD__setFeePercent(uint256 newPercent) external;
+
   function UD__getSystemAddress(ResourceId systemId) external view returns (address);
 }

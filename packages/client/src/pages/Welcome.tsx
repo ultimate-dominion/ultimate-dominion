@@ -2,16 +2,18 @@ import {
   Box,
   Button,
   HStack,
+  Input,
   keyframes,
   Link,
   Text,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import SafeTypist from '../components/SafeTypist';
+import { API_URL } from '../utils/constants';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
 import { useAuth } from '../contexts/AuthContext';
@@ -37,6 +39,44 @@ export const Welcome = (): JSX.Element => {
   const { delegatorAddress, isSynced } = useMUD();
   const { character, isRefreshing } = useCharacter();
   const { isMapFull, statsLoaded } = useQueue();
+
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
+  const onEmailSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setEmailError('');
+
+    try {
+      const existing = JSON.parse(localStorage.getItem('ud:signups') || '[]');
+      existing.push({ email, ts: Date.now() });
+      localStorage.setItem('ud:signups', JSON.stringify(existing));
+    } catch { /* localStorage unavailable */ }
+
+    try {
+      const res = await fetch(`${API_URL}/api/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setEmailError(data.error || 'Something went wrong. Try again.');
+        setIsSubmitting(false);
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Capture invite code from URL params
   useEffect(() => {
@@ -204,6 +244,99 @@ export const Welcome = (): JSX.Element => {
           >
             Enter
           </Button>
+
+          {/* Email signup */}
+          <VStack spacing={3} w="100%">
+            {submitted ? (
+              <VStack spacing={1}>
+                <Text
+                  color="rgba(196, 184, 158, 0.7)"
+                  fontSize="14px"
+                  fontWeight={500}
+                  letterSpacing="0.05em"
+                >
+                  You won&apos;t be forgotten.
+                </Text>
+                <Text
+                  color="rgba(196, 184, 158, 0.4)"
+                  fontSize="13px"
+                  fontStyle="italic"
+                >
+                  We&apos;ll find you when it&apos;s time to rise.
+                </Text>
+              </VStack>
+            ) : (
+              <Box as="form" maxW="420px" mx="auto" onSubmit={onEmailSubmit} w="100%">
+                <VStack spacing={2}>
+                  <Text
+                    color="rgba(196, 184, 158, 0.45)"
+                    fontFamily="'Cinzel', serif"
+                    fontSize={{ base: '10px', sm: '11px' }}
+                    letterSpacing="0.15em"
+                    textTransform="uppercase"
+                  >
+                    Or leave your name — we&apos;ll send word
+                  </Text>
+                  <HStack spacing={0} w="100%">
+                    <Input
+                      bg="rgba(196, 184, 158, 0.05)"
+                      border="1px solid"
+                      borderColor="rgba(196, 184, 158, 0.15)"
+                      borderRadius="0"
+                      color="rgba(232, 220, 200, 0.8)"
+                      fontSize="14px"
+                      h="40px"
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      type="email"
+                      value={email}
+                      _focus={{
+                        borderColor: 'rgba(200, 122, 42, 0.5)',
+                        boxShadow: 'none',
+                      }}
+                      _placeholder={{
+                        color: 'rgba(196, 184, 158, 0.25)',
+                      }}
+                    />
+                    <Box
+                      as="button"
+                      bg={isSubmitting ? 'rgba(200, 122, 42, 0.2)' : 'rgba(200, 122, 42, 0.35)'}
+                      border="1px solid"
+                      borderColor="rgba(200, 122, 42, 0.4)"
+                      borderLeft="none"
+                      color="rgba(232, 220, 200, 0.85)"
+                      cursor={isSubmitting ? 'wait' : 'pointer'}
+                      flexShrink={0}
+                      fontSize="11px"
+                      fontWeight={600}
+                      h="40px"
+                      letterSpacing="0.15em"
+                      opacity={isSubmitting ? 0.6 : 1}
+                      px={5}
+                      textTransform="uppercase"
+                      transition="all 0.2s ease"
+                      type="submit"
+                      _hover={{
+                        bg: isSubmitting ? undefined : 'rgba(200, 122, 42, 0.55)',
+                        color: '#E8DCC8',
+                      }}
+                    >
+                      {isSubmitting ? '...' : 'Awaken'}
+                    </Box>
+                  </HStack>
+                  {emailError && (
+                    <Text
+                      color="rgba(200, 100, 100, 0.8)"
+                      fontSize="13px"
+                      textAlign="center"
+                    >
+                      {emailError}
+                    </Text>
+                  )}
+                </VStack>
+              </Box>
+            )}
+          </VStack>
 
           <HStack
             fontFamily="'Cinzel', serif"
