@@ -41,7 +41,7 @@ const headings = [
     Each combat encounter follows a strict turn order:
   </p>
   <ul>
-    <li>Combatants alternate turns — <strong>the attacker (initiator) acts first</strong>.</li>
+    <li>Combatants alternate turns — <strong>the faster group (higher total AGI) acts first</strong>.</li>
     <li>Each turn has a <strong>30-second timer</strong>. If you don't act, the other side can force-advance the turn.</li>
     <li>Battles last a maximum of <strong>15 turns</strong>. If no one wins by then, the fight ends in a draw (no rewards, no penalties).</li>
     <li>On your turn: select a weapon or spell, then confirm your attack. You can also use consumable items.</li>
@@ -62,6 +62,14 @@ const headings = [
   <Callout type="info">
     Higher AGI makes you harder to hit with physical attacks <em>and</em> makes your physical attacks more accurate. INT does the same for magic. This is why stat investment matters — even a few points of AGI can swing hit rates significantly.
   </Callout>
+
+  <p>
+    <strong>Evasion:</strong> AGI differential gives a chance to dodge incoming physical attacks entirely, capped at <strong>25%</strong>. This stacks with the base miss chance, making high-AGI characters slippery targets for melee fighters.
+  </p>
+
+  <p>
+    <strong>Double strike:</strong> AGI-based weapons can trigger a double strike based on the attacker's AGI advantage over the target. A double strike deals <strong>150% damage</strong> on the triggering hit — rewarding speed-focused builds with burst potential.
+  </p>
 
   <h2 id="damage-calculation">Damage Calculation</h2>
 
@@ -88,8 +96,8 @@ const headings = [
     <li><strong>&times; Class multiplier</strong> — your class's spell damage percentage.</li>
   </ol>
 
-  <Callout type="tip" title="Armor does not block magic">
-    Spells bypass armor entirely. Against heavily armored targets (like Warrior-class monsters with high armor values), magic is often more efficient than physical attacks.
+  <Callout type="tip" title="Armor does not block magic — but INT does">
+    Spells bypass armor entirely, but they don't bypass INT defense. Each point of INT grants <strong>2% magic resistance</strong> (capped at 40%), reducing incoming spell damage. Against heavily armored targets, magic is often more efficient than physical attacks — but against high-INT targets, spells lose their edge.
   </Callout>
 
   <h2 id="critical-hits">Critical Hits</h2>
@@ -113,7 +121,7 @@ const headings = [
     <li><strong>INT beats STR</strong> — magic bypasses muscle.</li>
   </ul>
   <p>
-    The bonus is <strong>+5% damage per stat point</strong> of advantage (on the winning side only — the losing side takes no extra penalty). This means a Warrior with 15 STR fighting a Rogue with 10 AGI gains a +25% damage bonus.
+    The bonus is <strong>+4% damage per stat point</strong> of advantage, capped at 40% (on the winning side only — the losing side takes no extra penalty). This means a Warrior with 15 STR fighting a Rogue with 10 AGI gains a +20% damage bonus.
   </p>
 
   <Callout type="tip" title="Check the bestiary">
@@ -153,9 +161,12 @@ const headings = [
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Crit damage multiplier</td><td class="px-4 py-3 font-mono text-sm">&times;2</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Attack modifier</td><td class="px-4 py-3 font-mono text-sm">&times;1.2</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Defense modifier</td><td class="px-4 py-3 font-mono text-sm">&times;1.0</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Combat triangle bonus</td><td class="px-4 py-3 font-mono text-sm">+5% per stat point</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Combat triangle bonus</td><td class="px-4 py-3 font-mono text-sm">+4% per stat point (cap 40%)</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Max turns</td><td class="px-4 py-3 font-mono text-sm">15</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Turn timer</td><td class="px-4 py-3 font-mono text-sm">30 seconds</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Magic resistance</td><td class="px-4 py-3 font-mono text-sm">2% per INT point (cap 40%)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Evasion cap</td><td class="px-4 py-3 font-mono text-sm">25% (AGI differential)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Double strike (AGI weapons)</td><td class="px-4 py-3 font-mono text-sm">150% damage on proc</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Max party size</td><td class="px-4 py-3 font-mono text-sm">10</td></tr>
   </DataTable>
 </GuideLayout>

@@ -37,8 +37,8 @@ const headings = [
     The world map is divided into <strong>safe zones</strong> and <strong>danger zones</strong>:
   </p>
   <ul>
-    <li><strong>Safe zone</strong> — the outer edges of the map, near the cave entrance. PvP is disabled here. Only monsters can attack you.</li>
-    <li><strong>Danger zone</strong> — deeper in the cave. Both PvE and PvP are active. Any player on the same tile can attack you.</li>
+    <li><strong>Safe zone</strong> — the 5&times;5 northwest corner of the map, near the cave entrance. PvP is disabled here. Only monsters can attack you.</li>
+    <li><strong>Danger zone</strong> — everything outside the safe corner. Both PvE and PvP are active. Any player on the same tile can attack you.</li>
   </ul>
 
   <Callout type="warning" title="Entering the danger zone is a choice">
@@ -65,7 +65,7 @@ const headings = [
   </p>
   <ul>
     <li>There is a <strong>30-second cooldown</strong> between PvP encounters.</li>
-    <li>The attacker always goes first (turn 1).</li>
+    <li>The faster combatant (higher total AGI) acts first.</li>
     <li>Standard <a href="/guide/combat">combat rules</a> apply — same hit formulas, damage calculations, combat triangle, and turn limits.</li>
   </ul>
 
@@ -78,21 +78,25 @@ const headings = [
     <tr class="hover:bg-surface/50">
       <td class="px-4 py-3 text-white font-medium">Attacker</td>
       <td class="px-4 py-3 font-mono text-sm">Turn 1</td>
-      <td class="px-4 py-3 text-red">25% of escrowed gold</td>
+      <td class="px-4 py-3 text-red">10% of escrowed gold</td>
     </tr>
     <tr class="hover:bg-surface/50">
       <td class="px-4 py-3 text-white font-medium">Defender</td>
       <td class="px-4 py-3 font-mono text-sm">Turn 2</td>
-      <td class="px-4 py-3 text-red">25% of escrowed gold</td>
+      <td class="px-4 py-3 text-red">10% of escrowed gold</td>
     </tr>
   </DataTable>
 
   <p>
-    The flee penalty is <strong>25% of your escrowed gold</strong>, paid to the other player. This discourages hit-and-run tactics while still giving an escape route when you're outmatched.
+    The flee penalty is <strong>10% of your escrowed gold</strong>. Half goes to the other player, half is burned (removed from the economy). This discourages hit-and-run tactics while still giving an escape route when you're outmatched.
   </p>
 
+  <Callout type="info" title="PvE flee penalty">
+    Fleeing from monsters (PvE) costs <strong>5% of your escrowed gold</strong>, burned entirely. Lower risk than PvP, but still not free.
+  </Callout>
+
   <Callout type="tip" title="Know when to run">
-    If you're clearly outmatched — wrong side of the combat triangle, lower level, worse gear — fleeing on your first available turn and losing 25% is often better than fighting and losing 50%.
+    If you're clearly outmatched — wrong side of the combat triangle, lower level, worse gear — fleeing on your first available turn and losing 10% is often better than fighting and losing ~40%.
   </Callout>
 
   <h2 id="rewards-and-penalties">Rewards and Penalties</h2>
@@ -100,8 +104,8 @@ const headings = [
     When PvP combat ends decisively:
   </p>
   <ul>
-    <li><strong>Winner</strong> receives half of the loser's escrowed gold.</li>
-    <li><strong>Loser</strong> loses half of their escrowed gold.</li>
+    <li><strong>Winner</strong> receives ~40% of the loser's escrowed gold. (20% of the pot is burned as a gold sink.)</li>
+    <li><strong>Loser</strong> loses ~40% of their escrowed gold.</li>
     <li>If the fight draws (15-turn limit), neither side gains or loses.</li>
   </ul>
 

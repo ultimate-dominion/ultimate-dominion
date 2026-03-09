@@ -15,12 +15,12 @@ const headings = [
 
 const statRows = [
   ...progressionRules.statPointsPerLevel.map((r) => ({ col1: r.range, col2: r.rate, highlight: false })),
-  { col1: 'Total (Level 100)', col2: progressionRules.totalFromLeveling.statPoints, highlight: true },
+  { col1: 'Total (Level 10)', col2: progressionRules.totalFromLeveling.statPoints, highlight: true },
 ];
 
 const hpRows = [
   ...progressionRules.hpPerLevel.map((r) => ({ col1: r.range, col2: r.rate, highlight: false })),
-  { col1: 'Total (Level 100)', col2: progressionRules.totalFromLeveling.hp, highlight: true },
+  { col1: 'Total (Level 10)', col2: progressionRules.totalFromLeveling.hp, highlight: true },
 ];
 
 const powerRows = [
@@ -59,7 +59,7 @@ const powerRows = [
 
   <h2 id="stat-growth">Stat Growth</h2>
   <p>
-    Each level grants stat points that you can allocate to STR, AGI, or INT. The rate slows as you advance:
+    Each level grants stat points that you can allocate to STR, AGI, or INT:
   </p>
 
   <DataTable headers={['Level Range', 'Stat Points']}>
@@ -77,7 +77,7 @@ const powerRows = [
 
   <h2 id="hp-growth">HP Growth</h2>
   <p>
-    HP grows automatically with each level, but the rate diminishes over time:
+    HP grows automatically with each level:
   </p>
 
   <DataTable headers={['Level Range', 'HP Per Level']}>
@@ -90,7 +90,7 @@ const powerRows = [
   </DataTable>
 
   <p>
-    Combined with your base HP of 18 (modified by race), a max-level character will have significantly more health — but it's a gradual climb, not an exponential spike.
+    Combined with your base HP of 18 (modified by race), a max-level character will have 20 additional HP from leveling — meaningful but not overwhelming. Gear and consumables fill the gap.
   </p>
 
   <h2 id="milestone-unlocks">Milestone Unlocks</h2>
@@ -104,6 +104,10 @@ const powerRows = [
       <td class="px-4 py-3 text-text-primary"><a href="/guide/badges">Adventurer Badge</a> + Chat access — you can now communicate with other players</td>
     </tr>
     <tr>
+      <td class="px-4 py-3 font-mono text-accent font-bold">5</td>
+      <td class="px-4 py-3 text-text-primary"><a href="/guide/character-creation">Power Source Bonus</a> — Divine: +2 max HP, Weave: +1 INT, Physical: +1 extra stat point</td>
+    </tr>
+    <tr>
       <td class="px-4 py-3 font-mono text-accent font-bold">10</td>
       <td class="px-4 py-3 text-text-primary"><a href="/guide/classes">Advanced Class</a> selection + Class Ability — permanent specialization and a unique combat skill</td>
     </tr>
@@ -111,7 +115,7 @@ const powerRows = [
 
   <h2 id="power-distribution">Power Distribution</h2>
   <p>
-    By mid-game (around level 50), your total power comes from multiple sources. Understanding the balance helps you prioritize:
+    At max level, your total power comes from multiple sources. Understanding the balance helps you prioritize:
   </p>
 
   <DataTable headers={['Source', 'Approximate Power %']}>
@@ -124,7 +128,7 @@ const powerRows = [
   </DataTable>
 
   <Callout type="warning" title="Items are king">
-    Equipment accounts for roughly 60% of a character's power. A well-equipped level 20 can outperform a poorly-equipped level 40. Never neglect your gear — check <a href="/guide/items">the item guide</a> and the <a href="/guide/economy">marketplace</a>.
+    Equipment accounts for roughly 60% of a character's power. Never neglect your gear — check <a href="/guide/items">the item guide</a> and the <a href="/guide/economy">marketplace</a>.
   </Callout>
 
   <Callout type="lore">

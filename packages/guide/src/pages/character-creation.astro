@@ -24,7 +24,7 @@ const headings = [
     mainEntity: [
       { '@type': 'Question', name: 'What races can I choose in Ultimate Dominion?', acceptedAnswer: { '@type': 'Answer', text: 'Human (+1 STR, +1 AGI, +1 INT), Elf (-1 STR, +2 AGI, +1 INT, -1 HP), and Dwarf (+2 STR, -1 AGI, +1 HP).' } },
       { '@type': 'Question', name: 'How do stats work in Ultimate Dominion?', acceptedAnswer: { '@type': 'Answer', text: 'You have 19 stat points distributed across STR, AGI, and INT (range 3–10 each). Base HP is 18. Stats determine combat effectiveness, item eligibility, and combat triangle positioning.' } },
-      { '@type': 'Question', name: 'Does power source matter?', acceptedAnswer: { '@type': 'Answer', text: 'Power source (Divine, Weave, Physical) is flavor only. It does not restrict your abilities, equipment, or class options.' } },
+      { '@type': 'Question', name: 'Does power source matter?', acceptedAnswer: { '@type': 'Answer', text: 'Power source (Divine, Weave, Physical) grants a real bonus at level 5: Divine gives +2 max HP, Weave gives +1 INT, Physical gives +1 extra stat point. It does not restrict your abilities, equipment, or class options.' } },
     ],
   }} slot="head" />
 
@@ -53,16 +53,16 @@ const headings = [
 
   <h2 id="power-sources">Power Sources</h2>
   <p>
-    Your power source defines your character's flavor — how they explain their abilities to the world. It has <strong>no mechanical effect</strong>.
+    Your power source defines your character's identity — how they explain their abilities to the world. It also grants a <strong>real bonus at level 5</strong>:
   </p>
   <ul>
-    <li><strong>Divine</strong> — your strength comes from the remnants of dead gods. Healing and protection.</li>
-    <li><strong>Weave</strong> — you tap into raw arcane energy. Pure magical power.</li>
-    <li><strong>Physical</strong> — no magic, no prayers. Just skill, muscle, and steel.</li>
+    <li><strong>Divine</strong> — your strength comes from the remnants of dead gods. Healing and protection. <em>Level 5 bonus: +2 max HP.</em></li>
+    <li><strong>Weave</strong> — you tap into raw arcane energy. Pure magical power. <em>Level 5 bonus: +1 INT.</em></li>
+    <li><strong>Physical</strong> — no magic, no prayers. Just skill, muscle, and steel. <em>Level 5 bonus: +1 extra stat point.</em></li>
   </ul>
 
   <Callout type="info">
-    Power source does not restrict your equipment, class, or abilities. A Physical character can still use spells. A Divine character can still swing a greatsword.
+    Power source does not restrict your equipment, class, or abilities. A Physical character can still use spells. A Divine character can still swing a greatsword. The level 5 bonus is permanent once earned.
   </Callout>
 
   <h2 id="stat-roll">The Stat Roll</h2>
@@ -76,7 +76,7 @@ const headings = [
   </ul>
   <p>
     Each stat ranges from <strong>3 to 10</strong>. Your base HP starts at <strong>18</strong>, modified by race.
-    You can re-roll as many times as you like before confirming — the cost is only your patience.
+    You get <strong>4 total rolls</strong> (1 initial + 3 re-rolls). Choose carefully — once you've used your re-rolls, you're locked in.
   </p>
 
   <Callout type="warning" title="Stats are permanent">

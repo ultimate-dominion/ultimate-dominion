@@ -52,8 +52,8 @@ const headings = [
                 const isSpawn = x === 0 && y === 0;
                 const isShop = x === 9 && y === 9;
                 const isFragment = x === 5 && y === 5;
-                const isDanger = x >= 5 && y >= 5;
-                const isSafe = x < 5 || y < 5;
+                const isSafe = x < 5 && y < 5;
+                const isDanger = x >= 5 || y >= 5;
 
                 let bg = 'bg-green/10 text-green/60';
                 let label = '·';
@@ -86,13 +86,13 @@ const headings = [
   <DataTable headers={['Zone', 'Condition', 'PvP', 'Monster Levels']}>
     <tr class="hover:bg-surface/50">
       <td class="px-4 py-3 text-green font-medium">Safe Zone</td>
-      <td class="px-4 py-3 text-sm">x &lt; 5 or y &lt; 5</td>
+      <td class="px-4 py-3 text-sm">x &lt; 5 and y &lt; 5</td>
       <td class="px-4 py-3 text-sm text-green">Disabled</td>
       <td class="px-4 py-3 text-sm">1–6 (lower-level)</td>
     </tr>
     <tr class="hover:bg-surface/50">
       <td class="px-4 py-3 text-red font-medium">Danger Zone</td>
-      <td class="px-4 py-3 text-sm">x &ge; 5 and y &ge; 5</td>
+      <td class="px-4 py-3 text-sm">x &ge; 5 or y &ge; 5</td>
       <td class="px-4 py-3 text-sm text-red">Enabled</td>
       <td class="px-4 py-3 text-sm">6–10 (higher-level)</td>
     </tr>
@@ -140,7 +140,7 @@ const headings = [
 
   <h2 id="navigation-tips">Navigation Tips</h2>
   <ul>
-    <li><strong>Hug the edges</strong> — traveling along x=0 or y=0 keeps you in the safe zone the entire trip. Only cut diagonally into the danger zone when you're ready.</li>
+    <li><strong>Stay in the corner</strong> — the 5&times;5 northwest corner (x&lt;5, y&lt;5) is safe. Moving past row 4 or column 4 puts you in the danger zone.</li>
     <li><strong>Level by distance</strong> — you can roughly control monster difficulty by staying close to or far from the spawn point.</li>
     <li><strong>Retreat to safety</strong> — if you're low on HP or potions, head back toward the northwest. The safe zone border is your lifeline.</li>
     <li><strong>Watch the tile</strong> — before moving, check the tile detail panel to see what monsters (and players) are on adjacent tiles.</li>
