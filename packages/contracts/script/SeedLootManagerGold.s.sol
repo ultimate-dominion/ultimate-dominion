@@ -10,7 +10,7 @@ import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/t
 import {TotalSupply as ERC20TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
 import {_balancesTableId, _totalSupplyTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
-import {GOLD_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
+import {GOLD_NAMESPACE, WORLD_NAMESPACE} from "../constants.sol";
 
 /// @dev Root system that mints gold directly via table writes — single use
 contract GoldSeeder is System {
