@@ -120,6 +120,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
         parseEther(depositAmount),
       );
       if (error && !success) throw new Error(error);
+      return true;
     });
 
     if (result !== undefined) {
@@ -163,6 +164,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
         parseEther(withdrawAmount),
       );
       if (error && !success) throw new Error(error);
+      return true;
     });
 
     if (result !== undefined) {

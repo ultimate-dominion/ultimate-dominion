@@ -143,6 +143,7 @@ export const AdvancedClassModal = ({
     const result = await selectClassTx.execute(async () => {
       const { error, success } = await selectAdvancedClass(characterId, selectedClass);
       if (error && !success) throw new Error(error);
+      return true;
     });
 
     if (result !== undefined) {

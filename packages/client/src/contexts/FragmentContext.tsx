@@ -156,6 +156,7 @@ export const FragmentProvider = ({
           fragmentType,
         );
         if (error && !success) throw new Error(error);
+        return true;
       });
 
       if (result !== undefined) {

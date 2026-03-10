@@ -334,6 +334,7 @@ export const MarketplaceItem = (): JSX.Element => {
       const result = await createOrderTx.execute(async () => {
         const { error, success } = await createOrder(_order);
         if (error && !success) throw new Error(error);
+        return true;
       });
 
       if (result !== undefined) {

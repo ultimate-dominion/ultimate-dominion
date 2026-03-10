@@ -113,6 +113,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
         ? await useCombatConsumableItem(character.id, item.tokenId)
         : await useWorldConsumableItem(character.id, item.tokenId);
       if (error && !success) throw new Error(error);
+      return true;
     });
 
     if (result !== undefined) {
@@ -178,6 +179,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     const result = await unequipTx.execute(async () => {
       const { error, success } = await unequipItem(character.id, item.tokenId);
       if (error && !success) throw new Error(error);
+      return true;
     });
 
     if (result !== undefined) {

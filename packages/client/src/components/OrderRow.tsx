@@ -68,6 +68,7 @@ export const OrderRow = ({
     const result = await cancelTx.execute(async () => {
       const { error, success } = await cancelOrder(order.orderHash);
       if (error && !success) throw new Error(error);
+      return true;
     });
 
     if (result !== undefined) {
@@ -88,6 +89,7 @@ export const OrderRow = ({
     const result = await fillTx.execute(async () => {
       const { error, success } = await fulfillOrder(order.orderHash);
       if (error && !success) throw new Error(error);
+      return true;
     });
 
     if (result !== undefined) {

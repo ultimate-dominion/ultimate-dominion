@@ -162,6 +162,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
             characterMetadataCid,
           );
           if (error && !success) throw new Error(error);
+          return true;
         });
 
         if (result !== undefined) {
