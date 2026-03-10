@@ -88,8 +88,8 @@ contract DeployGoldPool is Script {
         console.log("WETH:", WETH);
         console.log("Deployer:", deployer);
 
-        // Read configurable amounts from env (defaults: 100K gold + 0.5 ETH)
-        uint256 goldAmount = vm.envOr("POOL_GOLD_AMOUNT", uint256(100_000e18));
+        // Read configurable amounts from env (defaults: 500K gold + 0.5 ETH)
+        uint256 goldAmount = vm.envOr("POOL_GOLD_AMOUNT", uint256(500_000e18));
         uint256 ethAmount = vm.envOr("POOL_ETH_AMOUNT", uint256(0.5 ether));
 
         console.log("Gold for liquidity:", goldAmount / 1e18, "GOLD");
@@ -121,24 +121,24 @@ contract DeployGoldPool is Script {
             console.log("Pool created:", pool);
 
             // 3. Initialize pool with starting price
-            // Target: ~$0.01/gold at ~$2500/ETH → 1 ETH = 250,000 gold
+            // Target: ~$0.001/gold at ~$2500/ETH → 1 ETH = 1,000,000 gold
             // sqrtPriceX96 = sqrt(price) * 2^96
             // price = token1/token0 in Uniswap V3
             //
-            // If gold is token0: price = WETH/GOLD = 250000 gold per ETH → price = 1/250000
-            //   sqrtPriceX96 = sqrt(1/250000) * 2^96 = (1/500) * 2^96 ≈ 158456325028528675187087900672 / 500
-            // If WETH is token0: price = GOLD/WETH = 250000 → sqrt(250000) * 2^96
+            // If gold is token0: price = WETH/GOLD = 1/1000000
+            //   sqrtPriceX96 = sqrt(1/1000000) * 2^96 = (1/1000) * 2^96
+            // If WETH is token0: price = GOLD/WETH = 1000000 → sqrt(1000000) * 2^96
             //
             // We use a configurable sqrtPriceX96 from env, with a reasonable default
             uint160 sqrtPriceX96;
             if (goldIsToken0) {
-                // price = WETH/GOLD = 1/250000 (very small number, gold is cheap vs WETH)
-                // sqrt(1/250000) * 2^96 ≈ 158456325028528678485622784
-                sqrtPriceX96 = uint160(vm.envOr("SQRT_PRICE_X96", uint256(158456325028528678485622784)));
+                // price = WETH/GOLD = 1/1000000 (very small number, gold is cheap vs WETH)
+                // sqrt(1/1000000) * 2^96 = (1/1000) * 2^96 ≈ 79228162514264337593543950
+                sqrtPriceX96 = uint160(vm.envOr("SQRT_PRICE_X96", uint256(79228162514264337593543950)));
             } else {
-                // price = GOLD/WETH = 250000 (large number)
-                // sqrt(250000) * 2^96 ≈ 39614081257132168796771975168000
-                sqrtPriceX96 = uint160(vm.envOr("SQRT_PRICE_X96", uint256(39614081257132168796771975168000)));
+                // price = GOLD/WETH = 1000000 (large number)
+                // sqrt(1000000) * 2^96 = 1000 * 2^96 ≈ 79228162514264337593543950336000
+                sqrtPriceX96 = uint160(vm.envOr("SQRT_PRICE_X96", uint256(79228162514264337593543950336000)));
             }
 
             IUniswapV3Pool(pool).initialize(sqrtPriceX96);

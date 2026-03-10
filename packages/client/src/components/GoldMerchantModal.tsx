@@ -164,40 +164,21 @@ export const GoldMerchantModal = ({
 
         <ModalBody p={6}>
           {step === 'idle' && (
-            <VStack spacing={4}>
-              <Text color="#8A7E6A" fontSize="sm" textAlign="center">
-                Choose a Gold package. You'll be redirected to a secure checkout.
+            <VStack spacing={4} py={4}>
+              <Text
+                color="#D4A54A"
+                fontFamily="'Cormorant Garamond', Georgia, serif"
+                fontSize="xl"
+                fontWeight={700}
+              >
+                Coming Soon
               </Text>
-              <SimpleGrid columns={3} spacing={3} w="100%">
-                {TIERS.map(({ tier, gold, price }) => (
-                  <Button
-                    key={tier}
-                    bg="#2A2218"
-                    border="1px solid #3A3228"
-                    borderRadius="lg"
-                    color="#E8DCC8"
-                    display="flex"
-                    flexDirection="column"
-                    fontFamily="'Cormorant Garamond', Georgia, serif"
-                    h="auto"
-                    py={4}
-                    _hover={{ bg: '#3A3228', borderColor: '#C87A2A' }}
-                    onClick={() => handlePurchase(tier)}
-                  >
-                    <Text fontSize="lg" fontWeight={700} color="#D4A54A">
-                      {gold}
-                    </Text>
-                    <Text fontSize="xs" color="#6A6050" mt={1}>
-                      Gold
-                    </Text>
-                    <Text fontSize="md" fontWeight={700} color="#E8DCC8" mt={2}>
-                      {price}
-                    </Text>
-                  </Button>
-                ))}
-              </SimpleGrid>
-              <Text color="#6A6050" fontSize="2xs" textAlign="center">
-                Gold amounts are approximate and depend on current market rates.
+              <Text color="#8A7E6A" fontSize="sm" textAlign="center" maxW="320px">
+                The Gold Merchant is preparing his wares. You'll be able to purchase
+                gold directly here soon.
+              </Text>
+              <Text color="#6A6050" fontSize="xs" textAlign="center">
+                For now, earn gold through combat and trade on the marketplace.
               </Text>
             </VStack>
           )}
