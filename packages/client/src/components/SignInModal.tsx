@@ -69,13 +69,30 @@ export const SignInModal = ({
         <ModalBody pb={8}>
           <VStack spacing={6}>
             <Button
+              bg="white"
+              border="1px solid rgba(0, 0, 0, 0.15)"
+              borderRadius="4px"
+              color="#3c4043"
+              fontSize="15px"
+              fontWeight={500}
+              h="48px"
               isLoading={isConnecting}
-              leftIcon={<FcGoogle size={20} />}
+              leftIcon={<FcGoogle size={22} />}
               onClick={handleGoogle}
-              variant="outline"
+              variant="unstyled"
               w="100%"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              _hover={{
+                bg: '#f8f9fa',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+              }}
+              _active={{
+                bg: '#f1f3f4',
+              }}
             >
-              Sign in with Google
+              Continue with Google
             </Button>
 
             {error && (
