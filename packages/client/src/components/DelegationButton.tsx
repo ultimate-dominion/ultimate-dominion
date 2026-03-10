@@ -56,11 +56,11 @@ export const DelegationButton = ({
 
       renderSuccess('Game account ready!');
 
-      // getBurner() must complete before the modal closes — it sets
+      // getBurner(true) must complete before the modal closes — it sets
       // delegatorAddress, which triggers ConnectWalletModal's navigation
-      // effect. If the modal closes first (isOpen=false), the effect
-      // short-circuits and navigation never happens.
-      await getBurner();
+      // effect. forceCreate=true skips the redundant on-chain delegation
+      // check (the TX was just confirmed above).
+      await getBurner(true);
 
       // Force an immediate balance refresh so App.tsx doesn't flash
       // the WalletDetailsModal for a stale '0' balance.

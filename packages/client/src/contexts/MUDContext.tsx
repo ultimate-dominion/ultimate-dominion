@@ -47,7 +47,7 @@ type MUDContextType = {
   burnerBalanceFetched: boolean;
   delegatorAddress: Address | null;
   delegatorEntity: string | null;
-  getBurner: () => void;
+  getBurner: (forceCreate?: boolean) => void;
   getBurnerBalance: () => void;
   handleLogoutRevoke: () => Promise<void>;
   handleRevokeDelegation: () => Promise<void>;
@@ -305,7 +305,13 @@ const MUDProviderInner = ({
   // =============================================
 
   const checkDelegation = useCallback(async (): Promise<boolean> => {
-    if (!externalWalletClient || !setupResult.network) return false;
+    if (!externalWalletClient || !setupResult.network) {
+      console.warn('[MUD][checkDelegation] Missing wallet or network', {
+        hasWallet: !!externalWalletClient,
+        hasNetwork: !!setupResult.network,
+      });
+      return false;
+    }
 
     // Read delegation directly from the World contract's UserDelegationControl table
     // This replaces the RECS-based delegation check
@@ -330,6 +336,12 @@ const MUDProviderInner = ({
       const delegatorPadded = padHex(externalWalletClient.account.address, { size: 32 });
       const delegateePadded = padHex(setupResult.network.walletClient.account.address, { size: 32 });
 
+      console.info('[MUD][checkDelegation] Reading on-chain delegation', {
+        delegator: externalWalletClient.account.address,
+        delegatee: setupResult.network.walletClient.account.address,
+        worldAddress: setupResult.network.worldContract.address,
+      });
+
       const delegationControlId = await setupResult.network.publicClient.readContract({
         address: setupResult.network.worldContract.address as Hex,
         abi: GSF_ABI,
@@ -342,23 +354,48 @@ const MUDProviderInner = ({
         ],
       });
 
-      return isDelegated({ delegationControlId } as { delegationControlId: Hex });
-    } catch {
+      const result = isDelegated({ delegationControlId } as { delegationControlId: Hex });
+      console.info('[MUD][checkDelegation] Result', {
+        delegationControlId,
+        isDelegated: result,
+      });
+      return result;
+    } catch (err) {
+      console.error('[MUD][checkDelegation] Failed to read delegation from chain:', err);
       return false;
     }
   }, [externalWalletClient, setupResult.network]);
 
-  const getBurner = useCallback(async () => {
-    if (!(externalWalletClient && setupResult.network)) return;
+  const getBurner = useCallback(async (forceCreate?: boolean) => {
+    if (!(externalWalletClient && setupResult.network)) {
+      console.warn('[MUD][getBurner] Missing wallet or network');
+      return;
+    }
 
-    const hasDelegation = await checkDelegation();
+    if (burner) {
+      console.info('[MUD][getBurner] Burner already exists, skipping creation');
+      return;
+    }
 
-    if (burner) return;
+    // forceCreate skips the on-chain delegation check — used by DelegationButton
+    // right after registerDelegation succeeds (the TX is already confirmed).
+    let hasDelegation = forceCreate || false;
+    if (!forceCreate) {
+      console.info('[MUD][getBurner] Checking delegation on-chain...');
+      hasDelegation = await checkDelegation();
+      console.info('[MUD][getBurner] Delegation check result:', hasDelegation);
+    } else {
+      console.info('[MUD][getBurner] Force-creating burner (delegation just confirmed)');
+    }
+
     if (hasDelegation) {
+      console.info('[MUD][getBurner] Creating burner for delegator:', externalWalletClient.account.address);
       burnerCreated.current = true;
       setBurner(
         createBurner(setupResult.network, externalWalletClient.account.address),
       );
+    } else {
+      console.warn('[MUD][getBurner] No delegation found — burner NOT created');
     }
     setIsSynced(true);
   }, [burner, checkDelegation, externalWalletClient, setupResult]);
