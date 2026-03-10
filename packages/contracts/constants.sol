@@ -101,7 +101,7 @@ uint256 constant ELITE_CHANCE = 15;           // 15% spawn chance
 uint256 constant ELITE_STAT_MULTIPLIER = 130; // 1.3x STR/AGI/INT
 uint256 constant ELITE_HP_MULTIPLIER = 150;   // 1.5x HP
 uint256 constant ELITE_REWARD_MULTIPLIER = 150; // 1.5x XP/gold
-uint256 constant ELITE_DROP_BONUS = 15;       // +15% additive drop chance
+uint256 constant ELITE_DROP_BONUS = 1500;     // +15% additive drop chance (basis points)
 uint256 constant STAT_VARIANCE_PCT = 10;      // ±10% variance on all spawns
 
 // Flashpowder / Smoke Cloak — flee without gold penalty
