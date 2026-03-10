@@ -103,6 +103,7 @@ export const GUIDE_PATH = '/guide';
 export const WAITING_ROOM_PATH = '/waiting-room';
 export const PRIVACY_PATH = '/privacy';
 export const TERMS_PATH = '/terms';
+export const BLOG_URL = 'https://ultimatedominion.com/blog';
 export const TAVERN_URL = 'https://tavern.ultimatedominion.com';
 
 const ExternalRedirect = ({ to }: { to: string }) => {

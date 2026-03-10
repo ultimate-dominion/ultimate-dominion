@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Fira+Code:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-page text-text-primary font-sans;
+    font-size: 19px;
+    line-height: 1.85;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 999;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  h1, h2, h3, h4 {
+    @apply text-parchment font-display;
+    font-weight: 600;
+  }
+
+  h1 {
+    text-shadow: 0 0 30px rgba(200, 122, 42, 0.25);
+    letter-spacing: 0.06em;
+  }
+
+  h2 {
+    text-shadow: 0 0 20px rgba(200, 122, 42, 0.15);
+    letter-spacing: 0.04em;
+  }
+
+  h3 {
+    letter-spacing: 0.02em;
+  }
+
+  a {
+    @apply text-accent-gold transition-colors duration-200;
+  }
+
+  a:hover {
+    @apply text-accent-glow;
+  }
+
+  ::selection {
+    background: rgba(200, 122, 42, 0.3);
+    color: #E8DCC8;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-page;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #5A4E3A;
+  }
+}
+
+@layer components {
+  .blog-card {
+    @apply bg-surface border border-border p-6 shadow-card;
+    border-radius: 2px;
+  }
+
+  .blog-card-hover {
+    @apply blog-card transition-all duration-300;
+  }
+
+  .blog-card-hover:hover {
+    border-color: rgba(200, 122, 42, 0.35);
+    box-shadow: 0 0 20px rgba(200, 122, 42, 0.12);
+    transform: translateY(-2px);
+    background-color: #24201A;
+  }
+
+  .torch-button {
+    @apply bg-accent text-page font-display font-semibold px-6 py-3 no-underline;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    animation: torch-glow 4s ease-in-out infinite;
+    transition: all 0.3s ease;
+  }
+
+  .torch-button:hover {
+    @apply bg-accent-glow text-page;
+  }
+
+  .tag {
+    @apply text-xs font-display tracking-wider uppercase border border-border px-2 py-0.5 text-text-secondary;
+    border-radius: 2px;
+  }
+
+  .tag:hover {
+    @apply border-accent/30 text-accent-gold;
+  }
+
+  /* Prose styling for markdown blog posts */
+  .prose {
+    @apply text-text-primary;
+    max-width: 72ch;
+  }
+
+  .prose h1 {
+    @apply text-3xl sm:text-4xl mb-6 mt-12;
+  }
+
+  .prose h2 {
+    @apply text-2xl sm:text-3xl mb-4 mt-10;
+    position: relative;
+  }
+
+  .prose h2:not(:first-child)::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(200, 122, 42, 0.25) 15%,
+      rgba(200, 122, 42, 0.25) 85%,
+      transparent
+    );
+    margin-bottom: 2.5rem;
+  }
+
+  .prose h3 {
+    @apply text-xl sm:text-2xl mb-3 mt-8;
+  }
+
+  .prose p {
+    @apply mb-6;
+  }
+
+  .prose ul, .prose ol {
+    @apply mb-6 pl-6;
+  }
+
+  .prose li {
+    @apply mb-2;
+  }
+
+  .prose ul li {
+    list-style-type: disc;
+  }
+
+  .prose ol li {
+    list-style-type: decimal;
+  }
+
+  .prose blockquote {
+    @apply border-l-2 border-accent/40 pl-5 my-6 italic text-text-secondary;
+  }
+
+  .prose code {
+    @apply font-mono text-sm bg-surface px-1.5 py-0.5 border border-border;
+    border-radius: 2px;
+  }
+
+  .prose pre {
+    @apply bg-surface border border-border p-4 mb-6 overflow-x-auto;
+    border-radius: 2px;
+  }
+
+  .prose pre code {
+    @apply bg-transparent border-0 p-0;
+  }
+
+  .prose img {
+    @apply my-8 border border-border;
+    border-radius: 2px;
+  }
+
+  .prose a {
+    @apply text-accent-gold underline underline-offset-4 decoration-accent/30;
+  }
+
+  .prose a:hover {
+    @apply text-accent-glow decoration-accent-glow/50;
+  }
+
+  .prose strong {
+    @apply text-parchment font-semibold;
+  }
+
+  .prose hr {
+    @apply border-border my-10;
+  }
+}

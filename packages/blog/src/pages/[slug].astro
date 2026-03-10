@@ -1,0 +1,95 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+type Props = { post: CollectionEntry<'posts'> };
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  publishedDate={post.data.date}
+>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.data.title,
+    description: post.data.description,
+    datePublished: post.data.date.toISOString(),
+    url: `https://ultimatedominion.com/blog/${post.slug}`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Ultimate Dominion',
+      url: 'https://ultimatedominion.com',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://ultimatedominion.com/blog/${post.slug}`,
+    },
+  })} />
+
+  <Header />
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <!-- Back link -->
+    <a href="/blog/" class="inline-flex items-center gap-2 text-text-secondary hover:text-accent-gold text-sm font-display tracking-wider uppercase no-underline mb-10 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+      </svg>
+      All Posts
+    </a>
+
+    <!-- Post header -->
+    <header class="mb-12">
+      <div class="flex items-center gap-3 flex-wrap mb-4">
+        <time class="text-sm font-mono text-text-secondary" datetime={post.data.date.toISOString()}>
+          {formatDate(post.data.date)}
+        </time>
+        {post.data.tags.map((tag: string) => (
+          <span class="tag">{tag}</span>
+        ))}
+      </div>
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-display font-semibold text-parchment tracking-tight" style="letter-spacing: 0.04em;">
+        {post.data.title}
+      </h1>
+    </header>
+
+    <!-- Post content -->
+    <article class="prose">
+      <Content />
+    </article>
+
+    <!-- Post footer -->
+    <div class="mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <a href="/blog/" class="text-text-secondary hover:text-accent-gold text-sm font-display tracking-wider uppercase no-underline transition-colors">
+        &larr; Back to all posts
+      </a>
+      <a href="https://ultimatedominion.com" class="torch-button text-sm px-4 py-2">
+        Enter the World
+      </a>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>

@@ -43,6 +43,15 @@ export const Footer = (): JSX.Element => {
               >
                 Privacy
               </Link>
+              <Link
+                alignSelf="start"
+                color="#8A7E6A"
+                fontSize={{ base: 'xs', sm: 'sm' }}
+                href="https://ultimatedominion.com/blog"
+                isExternal
+              >
+                Blog
+              </Link>
             </Stack>
           </HStack>
         </GridItem>

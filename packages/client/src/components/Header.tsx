@@ -28,6 +28,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
 import { IS_BETA } from '../lib/env';
 import {
+  BLOG_URL,
   CHARACTER_CREATION_PATH,
   CHARACTERS_PATH,
   GAME_BOARD_PATH,
@@ -216,6 +217,22 @@ export const Header = (): JSX.Element => {
                 fontFamily="Cinzel, serif"
                 fontSize="13px"
                 fontWeight={600}
+                href={BLOG_URL}
+                isExternal
+                letterSpacing="0.05em"
+                pb={1}
+                textTransform="uppercase"
+                transition="color 0.2s ease"
+                _hover={{ color: '#C4B89E', textDecoration: 'none' }}
+              >
+                Blog
+              </Link>
+              <Link
+                borderBottom="2px solid transparent"
+                color="#6A6050"
+                fontFamily="Cinzel, serif"
+                fontSize="13px"
+                fontWeight={600}
                 href={TAVERN_URL}
                 isExternal
                 letterSpacing="0.05em"
@@ -319,6 +336,19 @@ export const Header = (): JSX.Element => {
                     >
                       Guide
                     </Text>
+                    <Link
+                      alignSelf="start"
+                      color="#8A7E6A"
+                      fontFamily="Cinzel, serif"
+                      fontSize="sm"
+                      fontWeight={500}
+                      href={BLOG_URL}
+                      isExternal
+                      textTransform="uppercase"
+                      _hover={{ color: '#C4B89E', textDecoration: 'none' }}
+                    >
+                      Blog
+                    </Link>
                     <Link
                       alignSelf="start"
                       color="#8A7E6A"
