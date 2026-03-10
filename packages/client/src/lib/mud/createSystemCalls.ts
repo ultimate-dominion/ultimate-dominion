@@ -73,8 +73,9 @@ const classifyError = (error: unknown): { category: ErrorCategory; message: stri
       e => e instanceof ContractFunctionRevertedError,
     );
     if (revertError instanceof ContractFunctionRevertedError) {
+      const errorName = revertError.data?.errorName;
       const args = revertError.data?.args ?? [];
-      const reason = (args[0] as string) ?? 'Unknown revert reason';
+      const reason = errorName ?? (args[0] as string) ?? 'Unknown revert reason';
       return { category: 'REVERT', message: reason };
     }
 

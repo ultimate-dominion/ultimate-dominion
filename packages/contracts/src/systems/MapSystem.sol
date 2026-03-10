@@ -86,12 +86,16 @@ contract MapSystem is System {
         Spawned.setSpawned(entityId, true);
 
         if (isCharacter) {
-            SessionTimer.set(entityId, block.timestamp);
+            // Allow immediate movement after spawn — pre-expire the cooldown
+            SessionTimer.set(entityId, block.timestamp - MOVE_COOLDOWN);
             // re-calculate equipment bonuses
             IWorld(_world()).UD__setStats(entityId, IWorld(_world()).UD__calculateEquipmentBonuses(entityId));
             // increment player counter (only for characters)
             Counters.set(PLAYER_COUNTER_KEY, 0, (spawnedPlayers + 1));
         }
+        // Clear stale encounter state — defensive reset in case a previous session's
+        // encounter wasn't properly resolved (client crash, failed tx, etc.)
+        EncounterEntity.setEncounterId(entityId, bytes32(0));
         EncounterEntity.setDied(entityId, false);
         EntitiesAtPosition.pushEntities(0, 0, entityId);
 

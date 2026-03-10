@@ -211,10 +211,6 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
    */
   router.delete('/leave/:wallet', async (req, res) => {
     try {
-      const apiKey = req.headers['x-api-key'] as string;
-      if (!config.auth.apiKey || apiKey !== config.auth.apiKey) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
       const { wallet } = req.params;
       if (!isValidWallet(wallet)) {
         return res.status(400).json({ error: 'Invalid wallet address' });
@@ -272,10 +268,6 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
    */
   router.post('/spawned/:wallet', async (req, res) => {
     try {
-      const apiKey = req.headers['x-api-key'] as string;
-      if (!config.auth.apiKey || apiKey !== config.auth.apiKey) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
       const { wallet } = req.params;
       if (!isValidWallet(wallet)) {
         return res.status(400).json({ error: 'Invalid wallet address' });
