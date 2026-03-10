@@ -36,17 +36,21 @@ export const ConnectWalletModal = ({
   const { delegatorAddress } = useMUD();
   const { character } = useCharacter();
   const { disconnect } = useDisconnect();
-  const [showSignIn, setShowSignIn] = useState(false);
+  const [showWallet, setShowWallet] = useState(false);
 
   const handleClose = useCallback(() => {
-    setShowSignIn(false);
+    setShowWallet(false);
     onClose();
   }, [onClose]);
 
   const handleSwitchToGoogle = useCallback(() => {
     disconnect();
-    setShowSignIn(true);
+    setShowWallet(false);
   }, [disconnect]);
+
+  const handleChooseWallet = useCallback(() => {
+    setShowWallet(true);
+  }, []);
 
   // When user signs in via this modal, close and navigate
   useEffect(() => {
@@ -64,9 +68,14 @@ export const ConnectWalletModal = ({
     }
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isOpen, handleClose, navigate, suppressNavigate]);
 
-  // Show SignInModal if not authenticated, or if user chose to switch from MetaMask
-  if (!isAuthenticated || showSignIn) {
-    return <SignInModal isOpen={isOpen} onClose={handleClose} />;
+  // Show SignInModal (Google-primary) by default.
+  // Only skip past it when: embedded auth is already in progress, or user explicitly chose wallet.
+  const showGoogleFirst =
+    !isAuthenticated ||
+    (authMethod === 'external' && !delegatorAddress && !showWallet);
+
+  if (showGoogleFirst) {
+    return <SignInModal isOpen={isOpen} onClose={handleClose} onChooseWallet={handleChooseWallet} />;
   }
 
   // Embedded path — authenticated, auto-closing above
