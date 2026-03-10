@@ -5,7 +5,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import { IoIosWarning } from 'react-icons/io';
@@ -68,19 +67,6 @@ export const MovementProvider = ({
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
 
-  // Optimistic position: tracks where the character logically IS after confirmed
-  // moves, even before the MUD store syncs. This allows rapid sequential moves
-  // without waiting for store sync between each one.
-  const optimisticPositionRef = useRef<{ x: number; y: number } | null>(null);
-
-  // Sync optimistic position back to store position when store catches up
-  // or when we don't have an optimistic position yet
-  useEffect(() => {
-    if (position && !optimisticPositionRef.current) {
-      optimisticPositionRef.current = { x: position.x, y: position.y };
-    }
-  }, [position]);
-
   const moveTx = useTransaction({
     actionName: 'moving',
     silent: true,
@@ -102,12 +88,9 @@ export const MovementProvider = ({
 
       if (!delegatorAddress) return;
       if (!character) return;
+      if (!position) return;
 
-      // Use optimistic position (tracks confirmed moves ahead of store sync)
-      const currentPos = optimisticPositionRef.current || position;
-      if (!currentPos) return;
-
-      const { x, y } = currentPos;
+      const { x, y } = position;
 
       if (
         (direction === 'up' && y === 9) ||
@@ -128,36 +111,8 @@ export const MovementProvider = ({
         }
       }
 
-      let newX = x;
-      let newY = y;
-
-      switch (direction) {
-        case 'up':
-          newY = y + 1;
-          break;
-        case 'down':
-          newY = y - 1;
-          break;
-        case 'left':
-          newX = x - 1;
-          break;
-        case 'right':
-          newX = x + 1;
-          break;
-        default:
-          break;
-      }
-
       setIsMoving(true);
-      const result = await moveTx.execute(() => move(character.id, newX, newY));
-      if (result?.success) {
-        // Update optimistic position immediately — don't wait for store sync.
-        // This allows the next move to start from the correct position.
-        optimisticPositionRef.current = { x: newX, y: newY };
-      } else {
-        // Move failed — reset optimistic position to store truth
-        optimisticPositionRef.current = position ? { x: position.x, y: position.y } : null;
-      }
+      await moveTx.execute(() => move(character.id, direction));
       setIsMoving(false);
     },
     [

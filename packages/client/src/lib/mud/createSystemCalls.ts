@@ -602,10 +602,11 @@ export function createSystemCalls(
   const SIM_RETRY_DELAY_MS = 400;
   const MAX_SIM_RETRIES = 2;
 
+  type Direction = 'up' | 'down' | 'left' | 'right';
+
   const move = async (
     characterEntity: string,
-    x: number,
-    y: number,
+    direction: Direction,
   ): SystemCallReturn => {
     if (isMovePending) {
       console.warn('[move] Move already in progress, ignoring request');
@@ -624,6 +625,23 @@ export function createSystemCalls(
       return { success: false, error: 'In encounter.' };
     }
 
+    // Read position from the Zustand store (updated synchronously from receipts)
+    // instead of relying on React state or optimistic refs which can be stale.
+    const pos = getTableValue('Position', characterEntity) as
+      | { x: number; y: number } | undefined;
+    if (!pos) {
+      return { success: false, error: 'Position not found.' };
+    }
+
+    let x = Number(pos.x);
+    let y = Number(pos.y);
+    switch (direction) {
+      case 'up': y += 1; break;
+      case 'down': y -= 1; break;
+      case 'left': x -= 1; break;
+      case 'right': x += 1; break;
+    }
+
     isMovePending = true;
     try {
       await waitForMoveCooldown();
@@ -638,10 +656,7 @@ export function createSystemCalls(
 
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
-            // On-chain revert (state changed between simulation and inclusion).
-            // Don't retry — the receipt is already applied to the store, so the
-            // caller will get the updated state on next attempt.
-            console.warn(`[move] On-chain revert after successful simulation (target: ${x},${y}, tx: ${tx})`);
+            console.warn(`[move] On-chain revert (target: ${x},${y}, tx: ${tx})`);
             lastMoveCompletedMs = Date.now();
             return { success: false, error: 'Move failed — tap again to continue.' };
           }
@@ -649,22 +664,33 @@ export function createSystemCalls(
           return { success: true };
         } catch (simError) {
           if (isInvalidMoveError(simError)) {
-            console.warn('[move] InvalidMove — position already changed');
+            console.warn(`[move] InvalidMove — store pos may be stale (target: ${x},${y})`);
             lastMoveCompletedMs = Date.now();
             return { success: false, error: 'Position changed — tap again to continue.' };
           }
 
-          // Simulation failed — log the actual reason for debugging.
           const { category, message: errMsg, selector } = classifyError(simError);
           const detail = `${errMsg}${selector ? ` [${selector}]` : ''} (category: ${category})`;
 
           if (simAttempt < MAX_SIM_RETRIES) {
             console.warn(`[move] Sim failed (${simAttempt + 1}/${MAX_SIM_RETRIES + 1}): ${detail} — retrying in ${SIM_RETRY_DELAY_MS}ms (target: ${x},${y})`);
+            // Re-read position from store on retry — it may have been updated
+            const freshPos = getTableValue('Position', characterEntity) as
+              | { x: number; y: number } | undefined;
+            if (freshPos) {
+              x = Number(freshPos.x);
+              y = Number(freshPos.y);
+              switch (direction) {
+                case 'up': y += 1; break;
+                case 'down': y -= 1; break;
+                case 'left': x -= 1; break;
+                case 'right': x += 1; break;
+              }
+            }
             await new Promise(r => setTimeout(r, SIM_RETRY_DELAY_MS));
             continue;
           }
 
-          // All simulation retries exhausted — surface the error
           console.warn(`[move] Sim failed after retries: ${detail} (target: ${x},${y})`);
           return {
             error: getContractError(simError),

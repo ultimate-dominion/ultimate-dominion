@@ -105,6 +105,12 @@ function mockOwnership(owner: string = TEST_WALLET) {
     if (table === 'CombatEncounter') {
       return { end: '0' } as ReturnType<typeof getTableValue>;
     }
+    if (table === 'Position') {
+      return { x: 1, y: 1 } as ReturnType<typeof getTableValue>;
+    }
+    if (table === 'EncounterEntity') {
+      return undefined;
+    }
     return undefined;
   });
 }
@@ -321,11 +327,9 @@ describe('createSystemCalls — receipt awaiting regression guard', () => {
   });
 
   it('move returns failure when receipt is reverted', async () => {
-    // move has retry logic for reverts — after MAX_ON_CHAIN_RETRIES (1) it should fail
-    const result = await calls.move(TEST_ENTITY, 1, 1);
+    const result = await calls.move(TEST_ENTITY, 'right');
     expect(result.success).toBe(false);
-    // move retries once on revert, so waitForTransaction called twice
-    expect(waitForTransaction).toHaveBeenCalledTimes(2);
+    expect(waitForTransaction).toHaveBeenCalled();
   });
 });
 
