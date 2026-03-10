@@ -58,7 +58,9 @@ const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0xecea39ab': 'Maximum mob types reached.',
   '0xdd94cf19': 'Mob array length mismatch.',
   '0x64b92770': 'Wrong mob type.',
+  '0x326f4b4f': 'Moving too fast — wait a moment.',
   '0x5ffeddff': 'Maximum mob spawns reached.',
+  '0x63754e43': 'In encounter — finish the battle first.',
   '0x72af8dba': 'Stats cannot be negative.',
   '0x03dee4c5': 'You don\'t have enough of this item to sell.',
 };
@@ -600,6 +602,15 @@ export function createSystemCalls(
 
     const ownershipError = validateCharacterOwnership(characterEntity, 'move');
     if (ownershipError) return ownershipError;
+
+    // Check store for active encounter — prevents sending a doomed tx when
+    // the previous move triggered a mob spawn (receipt already applied to store
+    // but React hasn't re-rendered currentBattle yet).
+    const encounterState = getTableValue('EncounterEntity', characterEntity) as
+      | { encounterId: string } | undefined;
+    if (encounterState?.encounterId && encounterState.encounterId !== ('0x' + '0'.repeat(64))) {
+      return { success: false, error: 'In encounter.' };
+    }
 
     isMovePending = true;
     try {
