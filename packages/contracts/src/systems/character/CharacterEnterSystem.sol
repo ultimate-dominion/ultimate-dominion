@@ -119,9 +119,9 @@ contract CharacterEnterSystem is System {
 
         // Mint gold (balance + totalSupply)
         ResourceId goldTableId = _goldBalancesTableId();
-        Balances.set(goldTableId, playerAddress, Balances.get(goldTableId, playerAddress) + 100 ether);
+        Balances.set(goldTableId, playerAddress, Balances.get(goldTableId, playerAddress) + 5 ether);
         ResourceId supplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
-        TotalSupply.set(supplyTableId, TotalSupply.get(supplyTableId) + 100 ether);
+        TotalSupply.set(supplyTableId, TotalSupply.get(supplyTableId) + 5 ether);
 
         // Mint starter items
         ResourceId itemsTableId = _itemsOwnersTableId();
