@@ -303,7 +303,9 @@ const CharacterCreationInner = (): JSX.Element => {
         setIsCreating(true);
 
         if (!delegatorAddress) {
-          throw new Error('Missing delegation.');
+          renderWarning('Wallet still initializing — please wait a moment and try again.');
+          setIsCreating(false);
+          return;
         }
 
         if (!(description && name)) {
@@ -499,8 +501,8 @@ const CharacterCreationInner = (): JSX.Element => {
   ]);
 
   const isDisabled = useMemo(() => {
-    return !character || isCreating || enterGameTx.isLoading || rollStatsTx.isLoading || raceTx.isLoading || powerSourceTx.isLoading;
-  }, [character, isCreating, enterGameTx.isLoading, rollStatsTx.isLoading, raceTx.isLoading, powerSourceTx.isLoading]);
+    return !character || !delegatorAddress || isCreating || enterGameTx.isLoading || rollStatsTx.isLoading || raceTx.isLoading || powerSourceTx.isLoading;
+  }, [character, delegatorAddress, isCreating, enterGameTx.isLoading, rollStatsTx.isLoading, raceTx.isLoading, powerSourceTx.isLoading]);
 
   // Check if race and power source have been chosen (armor is chosen via starter item selection)
   const hasCompletedChoices = useMemo(() => {
