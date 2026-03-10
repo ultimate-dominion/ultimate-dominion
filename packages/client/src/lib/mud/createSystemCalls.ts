@@ -585,11 +585,11 @@ export function createSystemCalls(
     }
   };
 
-  // Retry delay for on-chain reverts (state-dependent failures,
-  // e.g. encounter started between tx broadcast and inclusion).
-  // Simulation is skipped for moves, so transient reverts land on-chain.
-  const ON_CHAIN_RETRY_DELAY_MS = 500;
-  const MAX_ON_CHAIN_RETRIES = 2;
+  // Simulation retry delay — RPC may serve stale state after a rapid move,
+  // causing eth_call to see the old position and reject the next move.
+  // One block (~2s) is enough for the RPC to catch up.
+  const SIM_RETRY_DELAY_MS = 400;
+  const MAX_SIM_RETRIES = 2;
 
   const move = async (
     characterEntity: string,
@@ -617,43 +617,48 @@ export function createSystemCalls(
     try {
       await waitForMoveCooldown();
 
-      let onChainRetries = 0;
+      // Try simulation (default viem behavior). If it fails due to stale RPC
+      // state, retry after a short delay to let the RPC catch up.
+      for (let simAttempt = 0; simAttempt <= MAX_SIM_RETRIES; simAttempt++) {
+        try {
+          const tx = await worldContract.write.UD__move(
+            [characterEntity as `0x${string}`, x, y],
+          );
 
-      for (let attempt = 0; attempt < 3; attempt++) {
-        // Skip simulation (provide explicit gas) — the RPC may serve stale
-        // state for eth_call, causing InvalidMove reverts even though the
-        // on-chain execution would succeed with current state.
-        const tx = await worldContract.write.UD__move(
-          [characterEntity as `0x${string}`, x, y],
-          { gas: 500_000n },
-        );
+          const receipt = await waitForTransaction(tx);
+          if (receipt.status === 'reverted') {
+            // On-chain revert (state changed between simulation and inclusion).
+            // Don't retry — the receipt is already applied to the store, so the
+            // caller will get the updated state on next attempt.
+            console.warn('[move] On-chain revert after successful simulation');
+            lastMoveCompletedMs = Date.now();
+            return { success: false, error: 'Move failed — tap again to continue.' };
+          }
+          lastMoveCompletedMs = Date.now();
+          return { success: true };
+        } catch (simError) {
+          if (isInvalidMoveError(simError)) {
+            console.warn('[move] InvalidMove — position already changed');
+            lastMoveCompletedMs = Date.now();
+            return { success: false, error: 'Position changed — tap again to continue.' };
+          }
 
-        const receipt = await waitForTransaction(tx);
-        if (receipt.status === 'reverted') {
-          if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
-            onChainRetries++;
-            console.warn(`[move] On-chain revert (retry ${onChainRetries}/${MAX_ON_CHAIN_RETRIES}), retrying in ${ON_CHAIN_RETRY_DELAY_MS}ms`);
-            await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
+          // Simulation failed (likely stale RPC state). Retry after delay.
+          if (simAttempt < MAX_SIM_RETRIES) {
+            console.warn(`[move] Simulation failed (attempt ${simAttempt + 1}/${MAX_SIM_RETRIES + 1}), retrying in ${SIM_RETRY_DELAY_MS}ms`);
+            await new Promise(r => setTimeout(r, SIM_RETRY_DELAY_MS));
             continue;
           }
-          console.warn('[move] On-chain revert — max retries reached');
-          lastMoveCompletedMs = Date.now();
-          return { success: false, error: 'Move failed — tap again to continue.' };
+
+          // All simulation retries exhausted — surface the error
+          console.warn('[move] Simulation failed after retries');
+          return {
+            error: getContractError(simError),
+            success: false,
+          };
         }
-        lastMoveCompletedMs = Date.now();
-        return { success: true };
       }
       return { success: false, error: 'Move failed after retries.' };
-    } catch (e) {
-      if (isInvalidMoveError(e)) {
-        console.warn('[move] InvalidMove — position already changed');
-        lastMoveCompletedMs = Date.now();
-        return { success: false, error: 'Position changed — tap again to continue.' };
-      }
-      return {
-        error: getContractError(e),
-        success: false,
-      };
     } finally {
       isMovePending = false;
     }
