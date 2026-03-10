@@ -586,9 +586,10 @@ export function createSystemCalls(
   };
 
   // Retry delay for on-chain reverts (state-dependent failures,
-  // e.g. state changed between simulation and inclusion). Wait ~1 block for state to settle.
+  // e.g. encounter started between tx broadcast and inclusion).
+  // Simulation is skipped for moves, so transient reverts land on-chain.
   const ON_CHAIN_RETRY_DELAY_MS = 500;
-  const MAX_ON_CHAIN_RETRIES = 1;
+  const MAX_ON_CHAIN_RETRIES = 2;
 
   const move = async (
     characterEntity: string,
@@ -619,8 +620,12 @@ export function createSystemCalls(
       let onChainRetries = 0;
 
       for (let attempt = 0; attempt < 3; attempt++) {
+        // Skip simulation (provide explicit gas) — the RPC may serve stale
+        // state for eth_call, causing InvalidMove reverts even though the
+        // on-chain execution would succeed with current state.
         const tx = await worldContract.write.UD__move(
           [characterEntity as `0x${string}`, x, y],
+          { gas: 500_000n },
         );
 
         const receipt = await waitForTransaction(tx);
