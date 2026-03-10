@@ -103,12 +103,9 @@ export const Welcome = (): JSX.Element => {
     }
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isMapFull, isRefreshing, navigate, statsLoaded]);
 
-  // Auto-open delegation modal for external wallets that haven't delegated yet
-  useEffect(() => {
-    if (authMethod === 'external' && isAuthenticated && !delegatorAddress && isSynced && !isOpen) {
-      onOpen();
-    }
-  }, [authMethod, delegatorAddress, isAuthenticated, isOpen, isSynced, onOpen]);
+  // Auto-open delegation modal for external wallets that haven't delegated yet.
+  // Only when user explicitly clicked Enter (isOpen is already true), not on page load.
+  // Removed auto-open to prevent MetaMask auto-reconnect from hijacking the auth flow.
 
   const onPlay = useCallback(() => {
     // If map is full, go to waiting room (auth or not)

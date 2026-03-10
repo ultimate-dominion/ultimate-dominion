@@ -8,10 +8,10 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
-import { useWalletClient } from 'wagmi';
+import { useDisconnect, useWalletClient } from 'wagmi';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -35,10 +35,18 @@ export const ConnectWalletModal = ({
   const { authMethod, isAuthenticated, ownerAddress } = useAuth();
   const { delegatorAddress } = useMUD();
   const { character } = useCharacter();
+  const { disconnect } = useDisconnect();
+  const [showSignIn, setShowSignIn] = useState(false);
 
   const handleClose = useCallback(() => {
+    setShowSignIn(false);
     onClose();
   }, [onClose]);
+
+  const handleSwitchToGoogle = useCallback(() => {
+    disconnect();
+    setShowSignIn(true);
+  }, [disconnect]);
 
   // When user signs in via this modal, close and navigate
   useEffect(() => {
@@ -56,8 +64,8 @@ export const ConnectWalletModal = ({
     }
   }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isOpen, handleClose, navigate, suppressNavigate]);
 
-  // Show SignInModal only if not authenticated yet
-  if (!isAuthenticated) {
+  // Show SignInModal if not authenticated, or if user chose to switch from MetaMask
+  if (!isAuthenticated || showSignIn) {
     return <SignInModal isOpen={isOpen} onClose={handleClose} />;
   }
 
@@ -93,6 +101,16 @@ export const ConnectWalletModal = ({
             externalWalletClient={externalWalletClient}
             onClose={handleClose}
           />
+          <Text
+            color="#8A7E6A"
+            cursor="pointer"
+            fontSize="xs"
+            onClick={handleSwitchToGoogle}
+            textAlign="center"
+            _hover={{ color: '#C4B89E' }}
+          >
+            Use Google sign-in instead
+          </Text>
         </VStack>
       );
     }
