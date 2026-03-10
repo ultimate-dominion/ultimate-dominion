@@ -291,11 +291,11 @@ contract DeployClassSpells is Script {
         _setAdvancedClassItem(AdvancedClass.Wizard, arcaneBlastItemId);
         console.log("  Arcane Blast (Wizard) itemId:", arcaneBlastItemId);
 
-        // 9. Blessing (Cleric) - status effect only, no damage
+        // 9. Blessing (Cleric) - buff + light divine damage 4-7
         bytes32[] memory blessingEffects = new bytes32[](1);
         blessingEffects[0] = blessingId;
         uint256 blessingItemId = _createSpellWeapon(
-            "spell:blessing", 0, 0, 10, blessingEffects, noRestrictions
+            "spell:blessing", 4, 7, 10, blessingEffects, noRestrictions
         );
         _setAdvancedClassItem(AdvancedClass.Cleric, blessingItemId);
         console.log("  Blessing (Cleric) itemId:", blessingItemId);
