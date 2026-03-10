@@ -88,12 +88,12 @@ After every git commit, check `docs/operations/launch_checklist.md` for items th
 
 ## Current Deploy State
 
-> Keep this section updated after every deploy. This is the canonical reference for world addresses and what's live.
+> **Canonical source for world addresses:** `packages/client/src/mud/worlds.json` (both envs). After any deploy, read this file — don't rely on hardcoded addresses elsewhere.
 
-| Env | World Address | Branch | Status |
-|-----|--------------|--------|--------|
-| Production | `0x5554b8F69526eFebf6cb32161A314Eaff1c8c39b` | `main` | LIVE — deployed Mar 9, 2026 |
-| Beta | `0xD2051EB4F5001d46c11F928BD6578Bd5f7e028A3` | `dev` | TEST VALUES |
+| Env | Branch | Address Source |
+|-----|--------|---------------|
+| Production | `main` | `worlds.json` → chain `8453`, key `address` (production entry) |
+| Beta | `dev` | `worlds.json` → chain `8453`, key `address` (beta entry) |
 
 | Service | URL |
 |---------|-----|
