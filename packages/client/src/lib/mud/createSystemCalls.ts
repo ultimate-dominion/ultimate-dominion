@@ -65,7 +65,15 @@ const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0x03dee4c5': 'You don\'t have enough of this item to sell.',
 };
 
-const classifyError = (error: unknown): { category: ErrorCategory; message: string } => {
+// Extract the raw 4-byte error selector from a viem error chain.
+const extractRevertSelector = (error: unknown): string | null => {
+  const str = String(error);
+  // viem includes the selector in various formats: signature "0x...", data: "0x..."
+  const match = str.match(/(?:signature|data)[:\s]+"?(0x[0-9a-f]{8})/i);
+  return match ? match[1].toLowerCase() : null;
+};
+
+const classifyError = (error: unknown): { category: ErrorCategory; message: string; selector?: string } => {
   const raw = ((error as Error)?.message ?? '').toLowerCase();
 
   if (error && typeof error === 'object' && 'walk' in error) {
@@ -77,8 +85,11 @@ const classifyError = (error: unknown): { category: ErrorCategory; message: stri
     if (revertError instanceof ContractFunctionRevertedError) {
       const errorName = revertError.data?.errorName;
       const args = revertError.data?.args ?? [];
-      const reason = errorName ?? (args[0] as string) ?? 'Unknown revert reason';
-      return { category: 'REVERT', message: reason };
+      // If ABI couldn't decode, try matching the raw selector against known errors
+      const selector = extractRevertSelector(error);
+      const knownMsg = selector ? KNOWN_ERROR_SIGNATURES[selector] : undefined;
+      const reason = errorName ?? knownMsg ?? (args[0] as string) ?? `Unknown revert (${selector ?? 'no selector'})`;
+      return { category: 'REVERT', message: reason, selector: selector ?? undefined };
     }
 
     const insufficientFundsError = baseError.walk(
@@ -630,7 +641,7 @@ export function createSystemCalls(
             // On-chain revert (state changed between simulation and inclusion).
             // Don't retry — the receipt is already applied to the store, so the
             // caller will get the updated state on next attempt.
-            console.warn('[move] On-chain revert after successful simulation');
+            console.warn(`[move] On-chain revert after successful simulation (target: ${x},${y}, tx: ${tx})`);
             lastMoveCompletedMs = Date.now();
             return { success: false, error: 'Move failed — tap again to continue.' };
           }
@@ -643,15 +654,18 @@ export function createSystemCalls(
             return { success: false, error: 'Position changed — tap again to continue.' };
           }
 
-          // Simulation failed (likely stale RPC state). Retry after delay.
+          // Simulation failed — log the actual reason for debugging.
+          const { category, message: errMsg, selector } = classifyError(simError);
+          const detail = `${errMsg}${selector ? ` [${selector}]` : ''} (category: ${category})`;
+
           if (simAttempt < MAX_SIM_RETRIES) {
-            console.warn(`[move] Simulation failed (attempt ${simAttempt + 1}/${MAX_SIM_RETRIES + 1}), retrying in ${SIM_RETRY_DELAY_MS}ms`);
+            console.warn(`[move] Sim failed (${simAttempt + 1}/${MAX_SIM_RETRIES + 1}): ${detail} — retrying in ${SIM_RETRY_DELAY_MS}ms (target: ${x},${y})`);
             await new Promise(r => setTimeout(r, SIM_RETRY_DELAY_MS));
             continue;
           }
 
           // All simulation retries exhausted — surface the error
-          console.warn('[move] Simulation failed after retries');
+          console.warn(`[move] Sim failed after retries: ${detail} (target: ${x},${y})`);
           return {
             error: getContractError(simError),
             success: false,
