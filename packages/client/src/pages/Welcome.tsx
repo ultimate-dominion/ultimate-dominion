@@ -9,7 +9,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import SafeTypist from '../components/SafeTypist';
@@ -127,7 +127,17 @@ export const Welcome = (): JSX.Element => {
   // While auto-reconnect is resolving, render nothing so returning users
   // don't see the landing page flash before being redirected to the game.
   // Don't hide when the sign-in modal is open (manual sign-in flow).
-  if (isConnecting && !isAuthenticated && !isOpen) {
+  // Timeout after 3s so the page is never permanently blank (e.g. Privy fails to init).
+  const [connectTimeout, setConnectTimeout] = useState(false);
+  const connectTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    if (isConnecting && !isAuthenticated) {
+      connectTimerRef.current = setTimeout(() => setConnectTimeout(true), 3000);
+    }
+    return () => clearTimeout(connectTimerRef.current);
+  }, [isConnecting, isAuthenticated]);
+
+  if (isConnecting && !isAuthenticated && !isOpen && !connectTimeout) {
     return <Box />;
   }
 
