@@ -596,11 +596,23 @@ export function createSystemCalls(
     }
   };
 
-  // Simulation retry delay — RPC may serve stale state after a rapid move,
-  // causing eth_call to see the old position and reject the next move.
-  // One block (~2s) is enough for the RPC to catch up.
-  const SIM_RETRY_DELAY_MS = 400;
-  const MAX_SIM_RETRIES = 2;
+  // MoveTooFast selector — on-chain MOVE_COOLDOWN is 0 so this error can only
+  // come from stale RPC state during eth_call simulation (Base L2 edge case
+  // where state propagates faster than block headers). Safe to skip simulation.
+  const MOVE_TOO_FAST_SELECTOR = '326f4b4f';
+
+  const isMoveTooFastError = (e: unknown): boolean => {
+    const msg = String(e).toLowerCase();
+    return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
+  };
+
+  // Gas limit for moves that skip simulation (covers spawnOnTileEnter worst case)
+  const MOVE_GAS_LIMIT = BigInt(3_000_000);
+
+  // On-chain retry: if the receipt reverts, retry once after a short delay
+  // (matches the approach that was stable on beta).
+  const ON_CHAIN_RETRY_DELAY_MS = 500;
+  const MAX_ON_CHAIN_RETRIES = 1;
 
   type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -646,54 +658,50 @@ export function createSystemCalls(
     try {
       await waitForMoveCooldown();
 
-      // Try simulation (default viem behavior). If it fails due to stale RPC
-      // state, retry after a short delay to let the RPC catch up.
-      for (let simAttempt = 0; simAttempt <= MAX_SIM_RETRIES; simAttempt++) {
+      const args = [characterEntity as `0x${string}`, x, y] as const;
+      let onChainRetries = 0;
+
+      // Attempt: simulation (default viem) → send tx → wait receipt.
+      // If simulation fails with MoveTooFast (stale RPC timestamp, safe to
+      // ignore since on-chain MOVE_COOLDOWN=0), skip simulation and send
+      // with a fixed gas limit.
+      for (let attempt = 0; attempt < 2 + MAX_ON_CHAIN_RETRIES; attempt++) {
         try {
-          const tx = await worldContract.write.UD__move(
-            [characterEntity as `0x${string}`, x, y],
-          );
+          let tx: `0x${string}`;
+          try {
+            // Default path: simulate then send
+            tx = await worldContract.write.UD__move(args);
+          } catch (simError) {
+            if (isMoveTooFastError(simError)) {
+              // Stale RPC timestamp — safe to skip simulation
+              console.warn(`[move] Sim returned MoveTooFast (stale RPC) — sending without simulation (target: ${x},${y})`);
+              tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
+            } else if (isInvalidMoveError(simError)) {
+              console.warn(`[move] InvalidMove — store pos may be stale (target: ${x},${y})`);
+              lastMoveCompletedMs = Date.now();
+              return { success: false, error: 'Position changed — tap again to continue.' };
+            } else {
+              throw simError;
+            }
+          }
 
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
-            console.warn(`[move] On-chain revert (target: ${x},${y}, tx: ${tx})`);
+            if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
+              onChainRetries++;
+              console.warn(`[move] On-chain revert (retry ${onChainRetries}/${MAX_ON_CHAIN_RETRIES}) — retrying in ${ON_CHAIN_RETRY_DELAY_MS}ms (target: ${x},${y})`);
+              await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
+              continue;
+            }
+            console.warn(`[move] On-chain revert — max retries reached (target: ${x},${y})`);
             lastMoveCompletedMs = Date.now();
             return { success: false, error: 'Move failed — tap again to continue.' };
           }
           lastMoveCompletedMs = Date.now();
           return { success: true };
-        } catch (simError) {
-          if (isInvalidMoveError(simError)) {
-            console.warn(`[move] InvalidMove — store pos may be stale (target: ${x},${y})`);
-            lastMoveCompletedMs = Date.now();
-            return { success: false, error: 'Position changed — tap again to continue.' };
-          }
-
-          const { category, message: errMsg, selector } = classifyError(simError);
-          const detail = `${errMsg}${selector ? ` [${selector}]` : ''} (category: ${category})`;
-
-          if (simAttempt < MAX_SIM_RETRIES) {
-            console.warn(`[move] Sim failed (${simAttempt + 1}/${MAX_SIM_RETRIES + 1}): ${detail} — retrying in ${SIM_RETRY_DELAY_MS}ms (target: ${x},${y})`);
-            // Re-read position from store on retry — it may have been updated
-            const freshPos = getTableValue('Position', characterEntity) as
-              | { x: number; y: number } | undefined;
-            if (freshPos) {
-              x = Number(freshPos.x);
-              y = Number(freshPos.y);
-              switch (direction) {
-                case 'up': y += 1; break;
-                case 'down': y -= 1; break;
-                case 'left': x -= 1; break;
-                case 'right': x += 1; break;
-              }
-            }
-            await new Promise(r => setTimeout(r, SIM_RETRY_DELAY_MS));
-            continue;
-          }
-
-          console.warn(`[move] Sim failed after retries: ${detail} (target: ${x},${y})`);
+        } catch (e) {
           return {
-            error: getContractError(simError),
+            error: getContractError(e),
             success: false,
           };
         }
