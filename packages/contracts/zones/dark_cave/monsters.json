@@ -7,7 +7,7 @@
         "agility": 7,
         "armor": 0,
         "class": 1,
-        "experience": 225,
+        "experience": 2,
         "hitPoints": 12,
         "intelligence": 3,
         "inventoryNames": [
@@ -36,7 +36,7 @@
         "agility": 5,
         "armor": 0,
         "class": 2,
-        "experience": 400,
+        "experience": 4,
         "hitPoints": 14,
         "intelligence": 9,
         "inventoryNames": [
@@ -66,7 +66,7 @@
         "agility": 5,
         "armor": 1,
         "class": 0,
-        "experience": 550,
+        "experience": 6,
         "hitPoints": 22,
         "intelligence": 4,
         "inventoryNames": [
@@ -97,7 +97,7 @@
         "agility": 6,
         "armor": 1,
         "class": 2,
-        "experience": 800,
+        "experience": 8,
         "hitPoints": 20,
         "intelligence": 12,
         "inventoryNames": [
@@ -130,7 +130,7 @@
         "agility": 8,
         "armor": 3,
         "class": 0,
-        "experience": 1000,
+        "experience": 10,
         "hitPoints": 32,
         "intelligence": 6,
         "inventoryNames": [
@@ -164,7 +164,7 @@
         "agility": 15,
         "armor": 0,
         "class": 1,
-        "experience": 1325,
+        "experience": 13,
         "hitPoints": 28,
         "intelligence": 7,
         "inventoryNames": [
@@ -198,7 +198,7 @@
         "agility": 9,
         "armor": 0,
         "class": 2,
-        "experience": 2000,
+        "experience": 20,
         "hitPoints": 32,
         "intelligence": 17,
         "inventoryNames": [
@@ -233,7 +233,7 @@
         "agility": 10,
         "armor": 4,
         "class": 0,
-        "experience": 2500,
+        "experience": 25,
         "hitPoints": 48,
         "intelligence": 9,
         "inventoryNames": [
@@ -271,7 +271,7 @@
         "agility": 20,
         "armor": 0,
         "class": 1,
-        "experience": 3250,
+        "experience": 33,
         "hitPoints": 42,
         "intelligence": 10,
         "inventoryNames": [
@@ -307,7 +307,7 @@
         "agility": 18,
         "armor": 3,
         "class": 2,
-        "experience": 6500,
+        "experience": 65,
         "hitPoints": 70,
         "intelligence": 20,
         "inventoryNames": [
