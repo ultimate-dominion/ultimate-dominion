@@ -19,7 +19,9 @@
  */
 
 import { config } from 'dotenv';
-config();
+// Load environment-specific .env file; shell env vars take precedence (override: false)
+const envFile = process.env.CHAIN_ID === '8453' ? '.env.mainnet' : '.env';
+config({ path: envFile, override: false });
 
 import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, Hex, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
