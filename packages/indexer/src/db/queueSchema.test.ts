@@ -34,6 +34,7 @@ const {
   markSpawned,
   expireReadyEntries,
   cleanupStaleEntries,
+  advanceQueue,
   getQueueStats,
   leaveQueue,
   setPlayerEmail,
@@ -356,5 +357,67 @@ describe('shouldNotifyAndMark', () => {
   it('returns false when cooldown not elapsed', async () => {
     sqlResults = [];
     expect(await shouldNotifyAndMark('0xabc')).toBe(false);
+  });
+});
+
+describe('advanceQueue', () => {
+  it('returns empty array when no slots available', async () => {
+    const result = await advanceQueue(0);
+    expect(result).toEqual([]);
+    expect(mockSql).not.toHaveBeenCalled();
+  });
+
+  it('returns empty array for negative slots', async () => {
+    const result = await advanceQueue(-1);
+    expect(result).toEqual([]);
+  });
+
+  it('returns notified wallets with readyUntil timestamp', async () => {
+    sqlResults = [{ wallet: '0xabc' }, { wallet: '0xdef' }];
+    const before = Date.now();
+    const result = await advanceQueue(2);
+    const after = Date.now();
+
+    expect(result).toHaveLength(2);
+    expect(result[0].wallet).toBe('0xabc');
+    expect(result[1].wallet).toBe('0xdef');
+    // readyUntil should be ~2 minutes in the future
+    const readyMs = result[0].readyUntil.getTime();
+    expect(readyMs).toBeGreaterThanOrEqual(before + 2 * 60 * 1000 - 100);
+    expect(readyMs).toBeLessThanOrEqual(after + 2 * 60 * 1000 + 100);
+  });
+
+  it('orders by priority_rank ASC then joined_at ASC', async () => {
+    sqlResults = [];
+    await advanceQueue(5);
+
+    const queryTemplate = mockSql.mock.calls[0][0].join('');
+    expect(queryTemplate).toContain('ORDER BY priority_rank ASC, joined_at ASC');
+  });
+
+  it('only advances waiting entries', async () => {
+    sqlResults = [];
+    await advanceQueue(1);
+
+    const queryTemplate = mockSql.mock.calls[0][0].join('');
+    expect(queryTemplate).toContain("status = 'waiting'");
+  });
+
+  it('sets status to ready with ready_until', async () => {
+    sqlResults = [];
+    await advanceQueue(1);
+
+    const queryTemplate = mockSql.mock.calls[0][0].join('');
+    expect(queryTemplate).toContain("SET status = 'ready'");
+    expect(queryTemplate).toContain('ready_until');
+  });
+
+  it('limits to slotsAvailable', async () => {
+    sqlResults = [];
+    await advanceQueue(3);
+
+    // The LIMIT value is the slotsAvailable parameter
+    const limitArg = mockSql.mock.calls[0][2];
+    expect(limitArg).toBe(3);
   });
 });

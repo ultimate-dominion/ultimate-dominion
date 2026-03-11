@@ -335,7 +335,7 @@ async function checkFounderBadge(syncHandle: SyncHandle, wallet: string): Promis
 /**
  * Validate and redeem an invite code. Returns true if valid and successfully redeemed.
  */
-async function validateAndRedeemInviteCode(code: string, wallet: string): Promise<boolean> {
+export async function validateAndRedeemInviteCode(code: string, wallet: string): Promise<boolean> {
   try {
     const result = await sql`
       UPDATE queue.invite_codes
