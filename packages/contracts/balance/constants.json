@@ -1,0 +1,128 @@
+{
+  "version": "2.0",
+
+  "combat": {
+    "hit": {
+      "startingProbability": 90,
+      "attackerDampener": 95,
+      "defenderDampener": 30,
+      "min": 5,
+      "max": 98,
+      "strWeaponsUseStr": true
+    },
+    "damage": {
+      "attackModifier": 1.2,
+      "agiAttackModifier": 0.9,
+      "defenseModifier": 1.0,
+      "critMultiplier": 2
+    },
+    "evasion": {
+      "divisor": 3,
+      "cap": 25
+    },
+    "doubleStrike": {
+      "multiplier": 2,
+      "cap": 25
+    },
+    "crit": {
+      "baseChance": 4,
+      "agiDivisor": 4
+    },
+    "magicResist": {
+      "pctPerInt": 2,
+      "cap": 40
+    },
+    "triangle": {
+      "flatBonusPct": 20,
+      "bonusPerStatPct": 2,
+      "maxBonusPct": 20,
+      "order": ["str", "agi", "int"]
+    },
+    "spellDodge": {
+      "threshold": 10,
+      "pctPerAgi": 2.0,
+      "cap": 20
+    },
+    "block": {
+      "chancePerStr": 1.5,
+      "cap": 30,
+      "damageReduction": 0.5,
+      "vsMagicPenalty": 0.5
+    },
+    "classMultiplierBase": 1000
+  },
+
+  "leveling": {
+    "maxLevel": 10,
+    "statPointsPerLevel": 2,
+    "hpPerLevel": 2,
+    "baseHp": 18,
+    "powerSourceBonusLevel": 5
+  },
+
+  "baseRolls": {
+    "str": { "str": 8, "agi": 5, "int": 6 },
+    "agi": { "str": 5, "agi": 8, "int": 6 },
+    "int": { "str": 5, "agi": 6, "int": 8 }
+  },
+
+  "races": {
+    "human": { "str": 1, "agi": 1, "int": 1, "hp": 0 },
+    "dwarf": { "str": 2, "agi": -1, "int": 0, "hp": 1 },
+    "elf":   { "str": -1, "agi": 2, "int": 1, "hp": -1 }
+  },
+
+  "startingArmors": {
+    "plate":   { "str": 2, "agi": -1, "int": 0, "hp": 1 },
+    "leather": { "str": 1, "agi": 2, "int": 0, "hp": 0 },
+    "cloth":   { "str": -1, "agi": 1, "int": 2, "hp": 0 }
+  },
+
+  "powerSources": {
+    "physical": { "type": "physical" },
+    "weave":    { "type": "weave" },
+    "divine":   { "type": "divine" }
+  },
+
+  "classes": {
+    "warrior":  { "physMult": 1100, "spellMult": 1000, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "paladin":  { "physMult": 1050, "spellMult": 1000, "healMult": 1050, "critMult": 1000, "hpMult": 1000 },
+    "ranger":   { "physMult": 1100, "spellMult": 1000, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "rogue":    { "physMult": 1000, "spellMult": 1000, "healMult": 1000, "critMult": 1150, "hpMult": 1000 },
+    "druid":    { "physMult": 1050, "spellMult": 1050, "healMult": 1000, "critMult": 1000, "hpMult": 1050 },
+    "warlock":  { "physMult": 1000, "spellMult": 1200, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "wizard":   { "physMult": 1000, "spellMult": 1250, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "cleric":   { "physMult": 1000, "spellMult": 1000, "healMult": 1100, "critMult": 1000, "hpMult": 1000 },
+    "sorcerer": { "physMult": 1000, "spellMult": 1150, "healMult": 1000, "critMult": 1000, "hpMult": 1050 }
+  },
+
+  "archetypes": {
+    "WAR-S": { "name": "Tank",         "class": "warrior",  "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "WAR-A": { "name": "Fury",         "class": "warrior",  "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "WAR-I": { "name": "Battlemage",   "class": "warrior",  "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" },
+    "PAL-S": { "name": "Crusader",     "class": "paladin",  "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "PAL-A": { "name": "Avenger",      "class": "paladin",  "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "PAL-I": { "name": "Templar",      "class": "paladin",  "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" },
+    "RAN-S": { "name": "Beastmaster",  "class": "ranger",   "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "RAN-A": { "name": "Sharpshooter", "class": "ranger",   "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "RAN-I": { "name": "ArcaneArcher", "class": "ranger",   "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" },
+    "ROG-S": { "name": "Thug",         "class": "rogue",    "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "ROG-A": { "name": "Assassin",     "class": "rogue",    "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "ROG-I": { "name": "Trickster",    "class": "rogue",    "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" },
+    "DRU-S": { "name": "Bear",         "class": "druid",    "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "DRU-A": { "name": "Cat",          "class": "druid",    "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "DRU-I": { "name": "Caster",       "class": "druid",    "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" },
+    "WLK-S": { "name": "Hexblade",     "class": "warlock",  "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "WLK-A": { "name": "Shadow",       "class": "warlock",  "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "WLK-I": { "name": "VoidMage",     "class": "warlock",  "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" },
+    "WIZ-S": { "name": "WarMage",      "class": "wizard",   "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "WIZ-A": { "name": "Spellblade",   "class": "wizard",   "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "WIZ-I": { "name": "Archmage",     "class": "wizard",   "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" },
+    "CLR-S": { "name": "BattlePriest", "class": "cleric",   "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "CLR-A": { "name": "WindCleric",   "class": "cleric",   "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "CLR-I": { "name": "HighPriest",   "class": "cleric",   "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" },
+    "SOR-S": { "name": "Spellsword",   "class": "sorcerer", "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "SOR-A": { "name": "StormMage",    "class": "sorcerer", "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" },
+    "SOR-I": { "name": "Elementalist", "class": "sorcerer", "race": "elf",   "armor": "cloth",   "power": "weave",    "path": "int" }
+  }
+}
