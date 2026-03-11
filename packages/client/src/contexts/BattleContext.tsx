@@ -239,13 +239,17 @@ export const BattleProvider = ({
     );
     const defeatedAreMobs = battle?.encounterType === EncounterType.PvE;
 
-    checkCombatFragmentTriggers(
-      winners,
-      defeated,
-      position.x,
-      position.y,
-      defeatedAreMobs,
-    ).catch(() => {});
+    // Delay fragment check so viem's nonce cache refreshes after the
+    // endTurn TX that resolved combat — avoids "nonce too low" errors.
+    setTimeout(() => {
+      checkCombatFragmentTriggers(
+        winners,
+        defeated,
+        position.x,
+        position.y,
+        defeatedAreMobs,
+      ).catch(() => {});
+    }, 1500);
   }, [
     lastestBattleOutcome,
     character,
