@@ -8,7 +8,7 @@ import { startSync } from './sync/startSync.js';
 import { createApiRouter } from './api/router.js';
 import { createDashboardRouter } from './api/dashboard.js';
 import { closeDb } from './db/connection.js';
-import { initQueueTables, advanceQueue, expireReadyEntries, getQueueStats, getPlayerEmail, shouldNotifyAndMark } from './db/queueSchema.js';
+import { initQueueTables, advanceQueue, expireReadyEntries, cleanupStaleEntries, getQueueStats, getPlayerEmail, shouldNotifyAndMark } from './db/queueSchema.js';
 import { sendSlotOpenEmail } from './lib/slotEmail.js';
 import { startMilestoneWatcher } from './queue/milestoneWatcher.js';
 import { startEventFeed } from './queue/eventFeed.js';
@@ -83,12 +83,21 @@ async function main() {
       }
 
       // 2. Expire ready entries whose spawn window passed
-      const expired = await expireReadyEntries();
-      if (expired.length > 0) {
-        console.log(`[cron] Expired ${expired.length} ready entries back to waiting`);
+      const { recycled, expired: permanentlyExpired } = await expireReadyEntries();
+      if (recycled.length > 0) {
+        console.log(`[cron] Recycled ${recycled.length} ready entries back to waiting`);
+      }
+      if (permanentlyExpired.length > 0) {
+        console.log(`[cron] Permanently expired ${permanentlyExpired.length} ghost entries: ${permanentlyExpired.join(', ')}`);
       }
 
-      // 3. Always check actual player count from MUD tables (don't trust cleanup response)
+      // 3. Clean up stale waiting entries (client stopped polling)
+      const staleWallets = await cleanupStaleEntries(30);
+      if (staleWallets.length > 0) {
+        console.log(`[cron] Cleaned up ${staleWallets.length} stale queue entries: ${staleWallets.join(', ')}`);
+      }
+
+      // 4. Always check actual player count from MUD tables (don't trust cleanup response)
       const { getCurrentPlayerInfo } = await import('./api/queue.js');
       const playerInfo = await getCurrentPlayerInfo(syncHandle);
       const slotsAvailable = Math.max(0, playerInfo.maxPlayers - playerInfo.currentPlayers);

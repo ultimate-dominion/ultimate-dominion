@@ -52,7 +52,6 @@ type QueueContextType = {
   statsLoaded: boolean;
   joinQueue: (captchaToken: string, inviteCode?: string) => Promise<void>;
   leaveQueue: () => Promise<void>;
-  acknowledgeSlot: () => Promise<void>;
   reportSpawned: () => Promise<void>;
   refreshInviteCodes: () => Promise<void>;
 };
@@ -81,7 +80,6 @@ const QueueContext = createContext<QueueContextType>({
   statsLoaded: false,
   joinQueue: async () => {},
   leaveQueue: async () => {},
-  acknowledgeSlot: async () => {},
   reportSpawned: async () => {},
   refreshInviteCodes: async () => {},
 });
@@ -432,15 +430,6 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     }
   }, [wallet]);
 
-  const acknowledgeSlot = useCallback(async () => {
-    if (!wallet) return;
-    try {
-      await fetch(`${INDEXER_URL}/api/queue/ready-ack/${wallet}`, { method: 'POST' });
-    } catch (err) {
-      console.error('[queue] Ack error:', err);
-    }
-  }, [wallet]);
-
   const reportSpawned = useCallback(async () => {
     if (!wallet) return;
     try {
@@ -559,7 +548,6 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     statsLoaded,
     joinQueue,
     leaveQueue,
-    acknowledgeSlot,
     reportSpawned,
     refreshInviteCodes,
   }), [
@@ -579,7 +567,6 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     statsLoaded,
     joinQueue,
     leaveQueue,
-    acknowledgeSlot,
     reportSpawned,
     refreshInviteCodes,
   ]);

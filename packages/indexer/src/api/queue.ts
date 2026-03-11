@@ -235,21 +235,6 @@ export function createQueueRouter(syncHandle: SyncHandle, broadcaster: Broadcast
   });
 
   /**
-   * POST /ready-ack/:wallet
-   * Acknowledge that a slot notification was received.
-   */
-  router.post('/ready-ack/:wallet', async (req, res) => {
-    try {
-      const { wallet } = req.params;
-      // Already marked ready by advanceQueue — this is just an ack
-      res.json({ acknowledged: true });
-    } catch (err) {
-      console.error('[queue] Ready-ack error:', err);
-      res.status(500).json({ error: 'Failed to acknowledge' });
-    }
-  });
-
-  /**
    * GET /feed
    * Initial load of recent game events for the waiting room.
    */

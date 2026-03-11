@@ -19,7 +19,9 @@ export async function initQueueTables() {
       joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       status TEXT NOT NULL DEFAULT 'waiting',
       ready_until TIMESTAMPTZ,
-      last_notified_at TIMESTAMPTZ
+      last_notified_at TIMESTAMPTZ,
+      last_poll_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ready_attempts INTEGER NOT NULL DEFAULT 0
     )
   `;
 
@@ -46,10 +48,18 @@ export async function initQueueTables() {
     )
   `;
 
-  // Migration: add last_notified_at column if missing (existing deployments)
+  // Migrations: add columns if missing (existing deployments)
   await sql`
     ALTER TABLE queue.queue_entries
     ADD COLUMN IF NOT EXISTS last_notified_at TIMESTAMPTZ
+  `;
+  await sql`
+    ALTER TABLE queue.queue_entries
+    ADD COLUMN IF NOT EXISTS last_poll_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  `;
+  await sql`
+    ALTER TABLE queue.queue_entries
+    ADD COLUMN IF NOT EXISTS ready_attempts INTEGER NOT NULL DEFAULT 0
   `;
 
   // Indexes for common queries
@@ -92,8 +102,6 @@ export async function getPlayerEmail(wallet: string): Promise<string | null> {
 }
 
 /** Check if enough time has passed since the last email, and mark as notified. */
-const EMAIL_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
-
 export async function shouldNotifyAndMark(wallet: string): Promise<boolean> {
   const w = wallet.toLowerCase();
   const rows = await sql`
@@ -114,11 +122,12 @@ export async function getQueuePosition(wallet: string): Promise<{
   status: string;
   readyUntil: Date | null;
 } | null> {
-  // First check if the player is in the queue at all (waiting or ready)
+  // Check if player is in queue and touch last_poll_at to prove client is alive
   const entryRows = await sql`
-    SELECT wallet, priority, status, ready_until
-    FROM queue.queue_entries
+    UPDATE queue.queue_entries
+    SET last_poll_at = NOW()
     WHERE wallet = ${wallet.toLowerCase()} AND status IN ('waiting', 'ready')
+    RETURNING wallet, priority, status, ready_until
   `;
 
   if (entryRows.length === 0) return null;
@@ -174,10 +183,10 @@ export async function joinQueue(
   const w = wallet.toLowerCase();
   const priorityRank = priority === 'founder' ? 0 : priority === 'invited' ? 1 : 2;
 
-  // Upsert: if already in queue with expired/spawned status, re-add
+  // Upsert: if already in queue with expired/spawned status, re-add with fresh state
   const result = await sql`
-    INSERT INTO queue.queue_entries (wallet, priority, priority_rank, invite_code_used, status)
-    VALUES (${w}, ${priority}, ${priorityRank}, ${inviteCodeUsed ?? null}, 'waiting')
+    INSERT INTO queue.queue_entries (wallet, priority, priority_rank, invite_code_used, status, last_poll_at, ready_attempts)
+    VALUES (${w}, ${priority}, ${priorityRank}, ${inviteCodeUsed ?? null}, 'waiting', NOW(), 0)
     ON CONFLICT (wallet) DO UPDATE SET
       status = CASE
         WHEN queue.queue_entries.status IN ('expired', 'spawned') THEN 'waiting'
@@ -194,7 +203,12 @@ export async function joinQueue(
       joined_at = CASE
         WHEN queue.queue_entries.status IN ('expired', 'spawned') THEN NOW()
         ELSE queue.queue_entries.joined_at
-      END
+      END,
+      ready_attempts = CASE
+        WHEN queue.queue_entries.status IN ('expired', 'spawned') THEN 0
+        ELSE queue.queue_entries.ready_attempts
+      END,
+      last_poll_at = NOW()
     RETURNING status
   `;
 
@@ -216,23 +230,12 @@ export async function leaveQueue(wallet: string): Promise<boolean> {
   return result.length > 0;
 }
 
-/** Mark a player as having acknowledged their slot */
-export async function acknowledgeSlot(wallet: string): Promise<boolean> {
-  const result = await sql`
-    UPDATE queue.queue_entries
-    SET status = 'ready'
-    WHERE wallet = ${wallet.toLowerCase()} AND status = 'ready'
-    RETURNING wallet
-  `;
-  return result.length > 0;
-}
-
-/** Mark a player as having successfully spawned (only valid for 'ready' players) */
+/** Mark a player as having successfully spawned (valid for 'ready' or 'waiting' entries) */
 export async function markSpawned(wallet: string): Promise<boolean> {
   const result = await sql`
     UPDATE queue.queue_entries
     SET status = 'spawned'
-    WHERE wallet = ${wallet.toLowerCase()} AND status = 'ready'
+    WHERE wallet = ${wallet.toLowerCase()} AND status IN ('ready', 'waiting')
     RETURNING wallet
   `;
   return result.length > 0;
@@ -262,12 +265,47 @@ export async function advanceQueue(slotsAvailable: number): Promise<Array<{ wall
   return rows.map((r) => ({ wallet: r.wallet as string, readyUntil }));
 }
 
-/** Expire ready entries whose spawn window has passed. Re-add as waiting at same priority. */
-export async function expireReadyEntries(): Promise<string[]> {
-  const rows = await sql`
+/**
+ * Expire ready entries whose spawn window has passed.
+ * Entries that have exceeded maxReadyAttempts are permanently expired (ghost prevention).
+ * Others are recycled back to waiting with incremented attempt counter.
+ */
+export async function expireReadyEntries(maxReadyAttempts = 3): Promise<{
+  recycled: string[];
+  expired: string[];
+}> {
+  // Permanently expire ghosts that have been cycled too many times
+  const permanentlyExpired = await sql`
     UPDATE queue.queue_entries
-    SET status = 'waiting', ready_until = NULL
+    SET status = 'expired', ready_until = NULL
     WHERE status = 'ready' AND ready_until < NOW()
+      AND ready_attempts >= ${maxReadyAttempts - 1}
+    RETURNING wallet
+  `;
+
+  // Recycle remaining entries back to waiting
+  const recycled = await sql`
+    UPDATE queue.queue_entries
+    SET status = 'waiting', ready_until = NULL, ready_attempts = ready_attempts + 1
+    WHERE status = 'ready' AND ready_until < NOW()
+    RETURNING wallet
+  `;
+
+  return {
+    recycled: recycled.map((r) => r.wallet as string),
+    expired: permanentlyExpired.map((r) => r.wallet as string),
+  };
+}
+
+/**
+ * Remove stale waiting entries whose client hasn't polled recently.
+ * Indicates the user closed their browser/tab.
+ */
+export async function cleanupStaleEntries(staleMinutes = 30): Promise<string[]> {
+  const rows = await sql`
+    DELETE FROM queue.queue_entries
+    WHERE status = 'waiting'
+      AND last_poll_at < NOW() - INTERVAL '1 minute' * ${staleMinutes}
     RETURNING wallet
   `;
   return rows.map((r) => r.wallet as string);
