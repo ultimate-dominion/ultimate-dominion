@@ -96,7 +96,7 @@ def _file_to_data_uri(path: Path, max_size: int = 512) -> str:
 
 def load_item_registry():
     """Load all items from the project and identify what needs art."""
-    items_file = PROJECT_ROOT / "packages" / "contracts" / "items_expanded.json"
+    items_file = PROJECT_ROOT / "packages" / "contracts" / "zones" / "dark_cave" / "items.json"
     desc_map = _load_descriptions()
 
     with open(items_file) as f:

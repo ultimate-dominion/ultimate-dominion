@@ -56,32 +56,31 @@ Why: Changing compiler settings (optimizer_runs, via_ir, Solidity version) alter
 
 ### PostDeploy Scripts
 
-`PostDeploy.s.sol` runs automatically on **fresh deploys only** (not upgrades). It registers ERC20 (Gold), ERC721 (Characters), ERC1155 (Items/Badges/Fragments), sets up delegation, configures GasStation, and seeds initial game data.
+`MinimalPostDeploy.s.sol` runs automatically on **fresh deploys only** (not upgrades). It registers ERC20 (Gold), ERC721 (Characters), ERC1155 (Items/Badges/Fragments), sets up delegation, and configures GasStation.
 
-On upgrade deploys, PostDeploy does NOT run. You must handle config changes manually:
+On upgrade deploys, MinimalPostDeploy does NOT run. You must handle config changes manually:
 - GasStationSwapConfig: `cast send` after deploy
 - Gold namespace access: Handled by auto-chained `EnsureAccess.s.sol`
 - New cross-namespace systems: Update `EnsureAccess.s.sol` BEFORE deploying
 
-### Post-Deploy Data Sync
+### Content Pipeline
 
-`mud deploy` only upgrades system contract logic. Zone data (items, monsters, XP curves) requires separate sync steps:
+Zone data lives in `zones/dark_cave/` (items.json, monsters.json, effects.json, shops.json). This is the **single source of truth** for all game content. The zone-loader script is the only tool for loading content on-chain.
 
+**Fresh deploy:** Load all content via zone-loader after MinimalPostDeploy:
+```bash
+pnpm zone:load:testnet dark_cave      # Beta
+pnpm zone:load:mainnet dark_cave      # Production
+```
+
+**Updating existing content:** Use item-sync to diff and push changes:
 ```bash
 # If items.json changed — diff first, then push
 pnpm item:verify:testnet dark_cave    # Diff only (safe, read-only)
 pnpm item:sync:testnet dark_cave      # Diff + push changes on-chain
-
-# If monsters.json changed
-source .env.testnet && forge script script/UpdateMonsterStats.s.sol \
-  --broadcast --rpc-url $RPC_URL --private-key $PRIVATE_KEY
-
-# If XP thresholds changed
-source .env.testnet && forge script script/UpdateXpThresholds.s.sol \
-  --broadcast --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 ```
 
-**WARNING:** Never re-run `zone:load` on an existing world to update stats. It calls `createMob()`/`createItem()` which increment counters and create DUPLICATE entities. Old data stays at old IDs. Use `item:sync` for items and `UpdateMonsterStats.s.sol` for monsters.
+**WARNING:** Never re-run `zone:load` on an existing world to update stats. It calls `createMob()`/`createItem()` which increment counters and create DUPLICATE entities. Old data stays at old IDs. Use `item:sync` for items.
 
 ### Fresh Deploy (Rare — New World)
 
@@ -471,18 +470,16 @@ cast send $WORLD_ADDRESS "UD__setPaused(bool)" false \
 1. git status                          # Verify clean working tree
 2. forge test                          # All tests pass
 3. pnpm build (client)                 # No build errors
-4. pnpm deploy:testnet                 # System contracts + EnsureAccess
-5. pnpm item:sync:testnet <zone>       # If items.json changed
-6. forge script UpdateMonsterStats     # If monsters.json changed
-7. forge script UpdateXpThresholds     # If XP curve changed
-8. curl indexer /api/health            # Indexer syncing
-9. curl relayer /                      # Relayer healthy
-10. Smoke test in-game                 # Combat, shop, drops
-11. git add & commit deploy artifacts  # worlds.json, broadcast/
+4. pnpm deploy:mainnet                 # System contracts + EnsureAccess
+5. pnpm item:sync:mainnet dark_cave    # If zone JSON changed
+6. curl indexer /api/health            # Indexer syncing
+7. curl relayer /                      # Relayer healthy
+8. Smoke test in-game                  # Combat, shop, drops
+9. git add & commit deploy artifacts   # worlds.json, broadcast/
 ```
 
-For production, replace step 4 with `pnpm deploy:mainnet` and get explicit confirmation before starting.
+Currently deploying directly to production (no players yet). When beta pipeline resumes, use `pnpm deploy:testnet` and `item:sync:testnet` on the `dev` branch first.
 
 ---
 
-*Last updated: March 9, 2026*
+*Last updated: March 11, 2026*

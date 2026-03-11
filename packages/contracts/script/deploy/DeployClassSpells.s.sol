@@ -31,8 +31,8 @@ import "forge-std/StdJson.sol";
  *         and populates AdvancedClassItems table.
  *
  * Prerequisites:
- * - World must be deployed
- * - DeployEffects must have run (for existing effects)
+ * - World must be deployed (MinimalPostDeploy complete)
+ * - Effects must exist on-chain (loaded via zone-loader)
  *
  * Usage:
  *   forge script DeployClassSpells --broadcast --sig "run(address)" <WORLD_ADDRESS>

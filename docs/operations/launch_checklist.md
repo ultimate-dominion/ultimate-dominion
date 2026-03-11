@@ -68,8 +68,8 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 
 **Smart Contracts**
 - [x] Deploy MUD World to Base Mainnet Beta ✓ World: `0xDd8692cf4C0A20569D8e78D9015d1e44D5E0b662`
-- [x] Run FullPostDeploy (ERC20 Gold, ERC721 Characters, ERC1155 Items, core config) ✓
-- [x] Seed game data (items, monsters, shops via zone loader) ✓ Dark Cave zone loaded
+- [x] Run MinimalPostDeploy (ERC20 Gold, ERC721 Characters, ERC1155 Items, core config) ✓
+- [x] Load zone data via zone-loader ✓ Dark Cave zone loaded
 - [x] Record deployed WORLD_ADDRESS and INITIAL_BLOCK_NUMBER ✓
 - [x] Test all system calls against live world ✓ Game fully playable on beta
 - [x] Contract size management ✓ Split AdminTuningSystem (`088ad960`), danger-zone splits (`2221ad2d`), optimization sweep (`506dcfda`)
@@ -221,8 +221,8 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 
 **Smart Contracts**
 - [x] Deploy MUD World to Base mainnet ✓ World: `0x99d01939F58B965E6E84a1D167E710Abdf5764b0`
-- [x] Run FullPostDeploy with production config ✓
-- [x] Seed production game data ✓
+- [x] Run MinimalPostDeploy with production config ✓
+- [x] Load zone data via zone-loader ✓
 - [x] Record production WORLD_ADDRESS and INITIAL_BLOCK_NUMBER ✓
 - [x] Validate all system calls on mainnet ✓ Game playable on production
 - [x] Document deployment runbook ✓ `deploy-guide.md` — fresh deploy checklist, upgrade checklist, zone loading, item sync

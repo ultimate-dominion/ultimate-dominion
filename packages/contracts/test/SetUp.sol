@@ -72,7 +72,7 @@ contract SetUp is Test {
         vm.label(address(worldAddress), "World");
         StoreSwitch.setStoreAddress(worldAddress);
         lootManagerAddress = Systems.getSystem(_lootManagerSystemId("UD"));
-        string memory starterItemsJson = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/items.json")));
+        string memory starterItemsJson = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/zones/dark_cave/items.json")));
         bytes memory parsedJson = vm.parseJson(starterItemsJson);
         StarterItems memory _starterItems = abi.decode(parsedJson, (StarterItems));
 
