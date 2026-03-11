@@ -444,6 +444,9 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@edge-runtime/vm@3.2.0)(@types/debug@4.1.7)(@types/node@18.19.33)(terser@5.31.0)
 
 packages:
 
@@ -16186,7 +16189,7 @@ snapshots:
       debug: 4.4.3
       drizzle-orm: 0.28.6(kysely@0.26.3)(postgres@3.4.4)(sql.js@1.10.3)
       fast-deep-equal: 3.1.3
-      isomorphic-ws: 5.0.0(ws@8.13.0(bufferutil@4.0.8)(utf-8-validate@6.0.4))
+      isomorphic-ws: 5.0.0(ws@8.19.0(bufferutil@4.0.8)(utf-8-validate@6.0.4))
       kysely: 0.26.3
       postgres: 3.4.4
       rxjs: 7.5.5
