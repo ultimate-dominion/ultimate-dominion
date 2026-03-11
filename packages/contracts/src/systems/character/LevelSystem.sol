@@ -58,9 +58,11 @@ contract LevelSystem is System {
             revert LevelSystem_CharacterInCombat();
         }
 
-        // Get current stats
+        // Get current stats — sync experience from Stats table because
+        // PveRewardSystem only updates Stats, not Characters.baseStats
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
         stats.currentHp = Stats.getCurrentHp(characterId);
+        stats.experience = Stats.getExperience(characterId);
         
         // Check if already at max level
         if (stats.level >= MAX_LEVEL) {
@@ -113,6 +115,7 @@ contract LevelSystem is System {
      */
     function validateLevelRequirements(bytes32 characterId, StatsData memory desiredStats) public view returns (bool isValid) {
         StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
+        stats.experience = Stats.getExperience(characterId);
         uint256 availableLevel = UD__getCurrentAvailableLevel(stats.experience);
 
         // Check if character can level up
@@ -140,11 +143,12 @@ contract LevelSystem is System {
             emit LevelBonusApplied(characterId, 3, hpGain); // 3 = HP
         }
 
-        // Update stats
+        // Update stats — sync experience from Stats table so baseStats stays current
         currentStats.strength = desiredStats.strength;
         currentStats.agility = desiredStats.agility;
         currentStats.intelligence = desiredStats.intelligence;
         currentStats.level = newLevel;
+        currentStats.experience = Stats.getExperience(characterId);
 
         // Power source milestone bonus at level 5
         if (newLevel == POWER_SOURCE_BONUS_LEVEL) {
