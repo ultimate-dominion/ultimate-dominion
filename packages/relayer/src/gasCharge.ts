@@ -6,7 +6,7 @@ import {
   formatEther,
 } from 'viem';
 import { config, gasChargingEnabled } from './config.js';
-import { publicClient, relayerAddress, sendRelayerTx, sendPrimaryTx } from './tx.js';
+import { publicClient, relayerAddress, sendPrimaryTx } from './tx.js';
 import { getCharacterId } from './chainReader.js';
 
 // ==================== State ====================
@@ -159,7 +159,7 @@ export async function swapGoldForEth(): Promise<void> {
       args: [config.swapRouter, goldBalance],
     });
 
-    const approveTx = await sendRelayerTx({
+    const approveTx = await sendPrimaryTx({
       to: config.goldToken,
       calldata: approveCalldata,
     });
@@ -180,7 +180,7 @@ export async function swapGoldForEth(): Promise<void> {
       }],
     });
 
-    const swapTx = await sendRelayerTx({
+    const swapTx = await sendPrimaryTx({
       to: config.swapRouter,
       calldata: swapCalldata,
     });
@@ -201,7 +201,7 @@ export async function swapGoldForEth(): Promise<void> {
         args: [wethBalance],
       });
 
-      const unwrapTx = await sendRelayerTx({
+      const unwrapTx = await sendPrimaryTx({
         to: config.weth,
         calldata: unwrapCalldata,
       });
