@@ -71,6 +71,9 @@ export const FragmentProvider = ({
 
   const claimTx = useTransaction({ actionName: 'claim fragment', showSuccessToast: false });
   const [refreshKey, setRefreshKey] = useState(0);
+  // Optimistic: track recently claimed fragment types so pendingEcho clears
+  // immediately without waiting for the store splice event.
+  const [claimedTypes, setClaimedTypes] = useState<Set<number>>(new Set());
 
   // All rows from the FragmentProgress table, keyed by keyBytes.
   // Each keyBytes is the ABI-encoded composite key: characterId (32 bytes) + fragmentType (32 bytes).
@@ -140,10 +143,11 @@ export const FragmentProvider = ({
       f =>
         f.triggered &&
         !f.claimed &&
+        !claimedTypes.has(f.fragmentType) &&
         f.triggerTileX === position.x &&
         f.triggerTileY === position.y,
     ) ?? null;
-  }, [fragments, position]);
+  }, [fragments, position, claimedTypes]);
 
   const claimFragment = useCallback(
     async (fragmentType: number) => {
@@ -162,6 +166,7 @@ export const FragmentProvider = ({
       if (result !== undefined) {
         const info = getFragmentInfo(fragmentType);
         renderSuccess(`Fragment claimed: ${info?.name ?? 'Unknown'}`);
+        setClaimedTypes(prev => new Set(prev).add(fragmentType));
         setRefreshKey(k => k + 1);
       }
     },

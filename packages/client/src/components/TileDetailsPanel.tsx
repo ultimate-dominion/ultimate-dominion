@@ -132,6 +132,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     attackOutcomes,
     currentBattle,
     dotActions,
+    lastestBattleOutcome,
     opponent,
     opponentPredictedHp,
     statusEffectActions,
@@ -526,6 +527,10 @@ export const TileDetailsPanel = (): JSX.Element => {
     isInBattle: !!currentBattle,
   });
 
+  const battleOver = currentBattle?.encounterId === lastestBattleOutcome?.encounterId;
+  const opponentDefeated = opponentDisplayedHp <= 0n && battleOver;
+  const userDefeated = userDisplayedHp <= 0n && battleOver;
+
   if (!character) {
     return (
       <Box>
@@ -615,8 +620,9 @@ export const TileDetailsPanel = (): JSX.Element => {
               >
                 <Avatar
                   animation={isUserHit ? 'flicker .7s infinite' : 'none'}
+                  filter={userDefeated ? 'grayscale(100%)' : undefined}
                   mb={{ base: 0, lg: 2 }}
-                  opacity={isUserHit ? 0 : 1}
+                  opacity={userDefeated ? 0.4 : isUserHit ? 0 : 1}
                   size={{ base: '2xs', lg: 'md' }}
                   src={userCharacterForBattleRendering.image}
                 />
@@ -724,8 +730,9 @@ export const TileDetailsPanel = (): JSX.Element => {
                       animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
                       bgColor="grey300"
                       boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                      filter={opponentDefeated ? 'grayscale(100%)' : undefined}
                       mb={{ base: 1, lg: 2 }}
-                      opacity={isMonsterHit ? 0 : 1}
+                      opacity={opponentDefeated ? 0.4 : isMonsterHit ? 0 : 1}
                       size={{ base: '2xs', lg: 'md' }}
                       src={getMonsterImage(opponent.name)}
                       name={opponent.name}
@@ -743,8 +750,12 @@ export const TileDetailsPanel = (): JSX.Element => {
                     </Avatar>
                   )}
                   <HStack>
-                    <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
-                      {opponent.name}
+                    <Text
+                      fontWeight={700}
+                      size={{ base: 'sm', lg: 'lg' }}
+                      color={opponentDefeated ? 'red.400' : undefined}
+                    >
+                      {opponentDefeated ? `${opponent.name} defeated` : opponent.name}
                     </Text>
                     <ClassSymbol
                       entityClass={opponent.entityClass}
@@ -763,14 +774,19 @@ export const TileDetailsPanel = (): JSX.Element => {
                 >
                   <Avatar
                     animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
+                    filter={opponentDefeated ? 'grayscale(100%)' : undefined}
                     mb={{ base: 1, lg: 2 }}
-                    opacity={isMonsterHit ? 0 : 1}
+                    opacity={opponentDefeated ? 0.4 : isMonsterHit ? 0 : 1}
                     size={{ base: '2xs', lg: 'md' }}
                     src={opponent.image}
                   />
                   <HStack>
-                    <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
-                      {opponent.name}
+                    <Text
+                      fontWeight={700}
+                      size={{ base: 'sm', lg: 'lg' }}
+                      color={opponentDefeated ? 'red.400' : undefined}
+                    >
+                      {opponentDefeated ? `${opponent.name} defeated` : opponent.name}
                     </Text>
                     <ClassSymbol
                       advancedClass={(opponent as Character).advancedClass}
