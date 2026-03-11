@@ -87,6 +87,8 @@
         "function adminSetPlayerCount(address systemAddr, uint256 count)",
         "function getSystemAddress(bytes32 systemId) view returns (address)",
         "function setAdmin(address newAdmin, bool adminState)",
+        "function setFeePercent(uint256 newPercent)",
+        "function setFeeRecipient(address newRecipient)",
         "function setMaxPlayers(uint256 newMax)"
       ],
       "worldAbi": [
@@ -97,6 +99,8 @@
         "function UD__adminSetPlayerCount(address systemAddr, uint256 count)",
         "function UD__getSystemAddress(bytes32 systemId) view returns (address)",
         "function UD__setAdmin(address newAdmin, bool adminState)",
+        "function UD__setFeePercent(uint256 newPercent)",
+        "function UD__setFeeRecipient(address newRecipient)",
         "function UD__setMaxPlayers(uint256 newMax)"
       ]
     },
@@ -242,14 +246,12 @@
         "error EncounterAlreadyOver()",
         "error InvalidEncounter()",
         "error InvalidEncounterType()",
-        "error NotAuthorizedCaller()",
         "function endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin)"
       ],
       "worldAbi": [
         "error EncounterAlreadyOver()",
         "error InvalidEncounter()",
         "error InvalidEncounterType()",
-        "error NotAuthorizedCaller()",
         "function UD__endEncounter(bytes32 encounterId, uint256 randomNumber, bool attackersWin)"
       ]
     },
@@ -336,13 +338,11 @@
       "name": "FragCombatSys",
       "systemId": "0x7379554400000000000000000000000046726167436f6d626174537973000000",
       "abi": [
-        "error NotAuthorizedCaller()",
         "event FragmentTriggered(bytes32 indexed characterId, uint8 fragmentType, uint16 tileX, uint16 tileY)",
         "function checkCombatFragmentTriggers(bytes32 characterId, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)",
         "function checkCombatFragmentTriggersForGroup(bytes32[] winners, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)"
       ],
       "worldAbi": [
-        "error NotAuthorizedCaller()",
         "event FragmentTriggered(bytes32 indexed characterId, uint8 fragmentType, uint16 tileX, uint16 tileY)",
         "function UD__checkCombatFragmentTriggers(bytes32 characterId, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)",
         "function UD__checkCombatFragmentTriggersForGroup(bytes32[] winners, bytes32[] defeated, uint16 tileX, uint16 tileY, bool defeatedAreMobs)"
@@ -361,7 +361,6 @@
         "error InvalidCharacter()",
         "error InvalidFragmentType()",
         "error NotAdmin()",
-        "error NotAuthorizedCaller()",
         "error NotCharacterOwner()",
         "error TokenAlreadyMinted()",
         "event FragmentClaimed(bytes32 indexed characterId, uint8 fragmentType, uint256 tokenId)",
@@ -380,7 +379,6 @@
         "error InvalidCharacter()",
         "error InvalidFragmentType()",
         "error NotAdmin()",
-        "error NotAuthorizedCaller()",
         "error NotCharacterOwner()",
         "error TokenAlreadyMinted()",
         "event FragmentClaimed(bytes32 indexed characterId, uint8 fragmentType, uint256 tokenId)",
@@ -1405,5 +1403,5 @@
       ]
     }
   ],
-  "createdAt": 1773080654719
+  "createdAt": 1773227782452
 }
