@@ -13,11 +13,14 @@ import { startSchedulers, stopSchedulers, getPendingChargeCount, getTotalPending
 import { recordFunding } from './gasCharge.js';
 import { gasChargingEnabled } from './config.js';
 import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcManager.js';
-import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, getFundedCount } from './balanceMonitor.js';
-import { loadFundedAddresses, saveFundedAddresses, loadFulfilledSessions, saveFulfilledSessions } from './persistence.js';
+import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, trackPlayer, getFundedCount, getLifelineCount } from './balanceMonitor.js';
+import { loadFundedAddresses, saveFundedAddresses, loadFulfilledSessions, saveFulfilledSessions, loadPlayerMap, savePlayerMap } from './persistence.js';
 
 // Gold purchase dedup (stripeSessionId → fulfilled) — persisted to disk
 const fulfilledSessions = loadFulfilledSessions();
+
+// Player map: burnerAddress → delegatorAddress — persisted to disk
+const playerMap = loadPlayerMap();
 
 const swapRouterAbi = parseAbi([
   'function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96)) payable returns (uint256 amountOut)',
@@ -88,7 +91,14 @@ async function main() {
   // Start RPC health monitoring (no-op if RPC_FALLBACK_URL not set)
   startRpcHealthCheck();
 
-  // Start balance monitor (tops up funded players when low)
+  // Restore tracked players from persisted data
+  for (const addr of fundedAddresses) {
+    const delegator = playerMap.get(addr) || addr;
+    trackPlayer(addr as Address, delegator as Address);
+  }
+  console.log(`Restored ${fundedAddresses.size} tracked players (${playerMap.size} with separate delegators)`);
+
+  // Start balance monitor (tops up funded players when low, with level gating + lifeline)
   startBalanceMonitor();
 
   const app = express();
@@ -114,6 +124,7 @@ async function main() {
           pendingCharges: getPendingChargeCount(),
           pendingChargeEth: getTotalPendingEth(),
           fundedPlayers: getFundedCount(),
+          lifelinesGranted: getLifelineCount(),
           rpcStatus: getRpcStatus(),
         });
       } else {
@@ -137,17 +148,26 @@ async function main() {
       return;
     }
 
-    const { address } = req.body as { address?: string };
+    const { address, delegatorAddress } = req.body as { address?: string; delegatorAddress?: string };
 
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
       res.status(400).json({ error: 'Invalid address' });
       return;
     }
 
+    // delegatorAddress = wallet that owns the character / holds gold.
+    // For embedded wallets: same as address (or omitted).
+    // For MetaMask: the MetaMask address (address is the burner).
+    const delegator = (delegatorAddress && /^0x[a-fA-F0-9]{40}$/.test(delegatorAddress))
+      ? delegatorAddress
+      : address;
+
     const normalizedAddress = address.toLowerCase();
 
     // Already funded — no double-fund
     if (fundedAddresses.has(normalizedAddress)) {
+      // Still register the player mapping in case it changed
+      trackPlayer(address as Address, delegator as Address);
       res.json({ status: 'already_funded' });
       return;
     }
@@ -158,7 +178,11 @@ async function main() {
       if (balance >= config.fundingAmount) {
         fundedAddresses.add(normalizedAddress);
         saveFundedAddresses(fundedAddresses);
-        trackFundedAddress(address as Address);
+        trackPlayer(address as Address, delegator as Address);
+        if (delegator !== address) {
+          playerMap.set(normalizedAddress, delegator.toLowerCase());
+          savePlayerMap(playerMap);
+        }
         res.json({ status: 'already_funded', balance: formatEther(balance) });
         return;
       }
@@ -186,16 +210,20 @@ async function main() {
 
       fundedAddresses.add(normalizedAddress);
       saveFundedAddresses(fundedAddresses);
-      trackFundedAddress(address as Address);
+      trackPlayer(address as Address, delegator as Address);
+      if (delegator !== address) {
+        playerMap.set(normalizedAddress, delegator.toLowerCase());
+        savePlayerMap(playerMap);
+      }
       recentFundings.push(Date.now());
       const ipTimestamps = ipFundings.get(ip) || [];
       ipTimestamps.push(Date.now());
       ipFundings.set(ip, ipTimestamps);
 
       // Record for gas charging (Gold deduction)
-      recordFunding(address as Address, config.fundingAmount);
+      recordFunding(delegator as Address, config.fundingAmount);
 
-      console.log(`[fund] Funded ${address} with ${formatEther(config.fundingAmount)} ETH — tx: ${txHash}`);
+      console.log(`[fund] Funded ${address} (delegator: ${delegator}) with ${formatEther(config.fundingAmount)} ETH — tx: ${txHash}`);
       res.json({ status: 'funded', txHash, amount: formatEther(config.fundingAmount) });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

@@ -157,7 +157,10 @@ const MUDProviderInner = ({
     if (authMethod !== 'embedded') return;
     if (!embeddedWalletClient) return;
     if (!ownerAddress) return;
-    if (embeddedSetupDone.current) return;
+    // Skip if already set up for this exact address.
+    // Using state (not just a ref) so the effect re-runs when the reset
+    // effect nullifies embeddedSetup after an address change.
+    if (embeddedSetup?.walletAddress === ownerAddress) return;
 
     embeddedSetupDone.current = true;
 
@@ -273,6 +276,7 @@ const MUDProviderInner = ({
     setIsSynced(true);
   }, [
     authMethod,
+    embeddedSetup,
     embeddedWalletClient,
     ownerAddress,
     setupResult,
@@ -391,9 +395,22 @@ const MUDProviderInner = ({
     if (hasDelegation) {
       console.info('[MUD][getBurner] Creating burner for delegator:', externalWalletClient.account.address);
       burnerCreated.current = true;
-      setBurner(
-        createBurner(setupResult.network, externalWalletClient.account.address),
-      );
+      const newBurner = createBurner(setupResult.network, externalWalletClient.account.address);
+      setBurner(newBurner);
+
+      // Register burner→delegator with relayer for gas monitoring (fire-and-forget)
+      const relayerUrl = import.meta.env.VITE_RELAYER_URL;
+      const fundApiKey = import.meta.env.VITE_FUND_API_KEY;
+      if (relayerUrl && fundApiKey) {
+        fetch(`${relayerUrl}/fund`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': fundApiKey },
+          body: JSON.stringify({
+            address: newBurner.walletClient.account.address,
+            delegatorAddress: externalWalletClient.account.address,
+          }),
+        }).catch(() => {});
+      }
     } else {
       console.warn('[MUD][getBurner] No delegation found — burner NOT created');
     }

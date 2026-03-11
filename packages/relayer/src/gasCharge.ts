@@ -2,22 +2,17 @@ import {
   type Address,
   type Hex,
   encodeFunctionData,
-  encodePacked,
-  padHex,
-  toHex,
   parseAbi,
   formatEther,
 } from 'viem';
 import { config, gasChargingEnabled } from './config.js';
 import { publicClient, relayerAddress, sendRelayerTx } from './tx.js';
+import { getCharacterId } from './chainReader.js';
 
 // ==================== State ====================
 
 /** Pending ETH funded per player since last flush (in wei) */
 const pendingCharges = new Map<Address, bigint>();
-
-/** Cached characterId lookups (address → characterId) */
-const characterIdCache = new Map<Address, Hex>();
 
 let chargeTimer: ReturnType<typeof setInterval> | null = null;
 let swapTimer: ReturnType<typeof setInterval> | null = null;
@@ -61,14 +56,6 @@ async function getSwapMinimum(tokenIn: Address, tokenOut: Address, amountIn: big
   }
 }
 
-// ==================== Table ID for CharacterOwner ====================
-
-// ResourceId: type=table(0x7462), namespace="UD" (14 bytes), name="CharacterOwner" (16 bytes)
-const CHARACTER_OWNER_TABLE_ID = encodePacked(
-  ['bytes2', 'bytes14', 'bytes16'],
-  [toHex('tb', { size: 2 }) as Hex, toHex('UD', { size: 14 }) as Hex, toHex('CharacterOwner', { size: 16 }) as Hex],
-);
-
 // ==================== Core Functions ====================
 
 /**
@@ -79,46 +66,6 @@ export function recordFunding(eoaAddress: Address, ethAmount: bigint): void {
   if (!gasChargingEnabled) return;
   const current = pendingCharges.get(eoaAddress) || 0n;
   pendingCharges.set(eoaAddress, current + ethAmount);
-}
-
-/**
- * Look up a player's characterId from the CharacterOwner MUD table.
- * Uses cache to avoid repeated on-chain reads.
- */
-async function getCharacterId(player: Address): Promise<Hex | null> {
-  const cached = characterIdCache.get(player);
-  if (cached) return cached;
-
-  try {
-    // MUD getRecord: read static fields from CharacterOwner table
-    // Key: [padded address], Value: [uint256 characterTokenId, bytes32 characterId]
-    const keyTuple = [padHex(player, { size: 32 })] as const;
-
-    const data = await publicClient.readContract({
-      address: config.worldAddress,
-      abi: parseAbi([
-        'function getRecord(bytes32 tableId, bytes32[] calldata keyTuple) view returns (bytes memory staticData, bytes32 encodedLengths, bytes memory dynamicData)',
-      ]),
-      functionName: 'getRecord',
-      args: [CHARACTER_OWNER_TABLE_ID, [...keyTuple]],
-    });
-
-    const staticData = data[0] as Hex;
-    // staticData is 64 bytes: [uint256 characterTokenId (32)] [bytes32 characterId (32)]
-    if (!staticData || staticData.length < 130) return null; // 0x + 128 hex chars = 66 bytes min
-
-    // Extract characterId from bytes 32-63 (hex chars 66-130)
-    const characterId = ('0x' + staticData.slice(66, 130)) as Hex;
-    if (characterId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
-      return null;
-    }
-
-    characterIdCache.set(player, characterId);
-    return characterId;
-  } catch (err) {
-    console.error(`[gasCharge] Failed to look up characterId for ${player}:`, err);
-    return null;
-  }
 }
 
 /**

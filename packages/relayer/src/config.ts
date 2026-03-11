@@ -55,6 +55,11 @@ export const config = {
   // Fund endpoint authentication — required to prevent ETH drain
   fundApiKey: process.env.FUND_API_KEY || '',
 
+  // Lifeline config (for level 3+ players with gold < fee AND near-zero ETH)
+  lifelineAmount: BigInt(process.env.LIFELINE_AMOUNT || '300000000000000'),        // 0.0003 ETH (~5-10 battles)
+  lifelineCooldownMs: parseInt(process.env.LIFELINE_COOLDOWN_MS || '86400000', 10), // 24 hours
+  lifelineMinBalance: BigInt(process.env.LIFELINE_MIN_BALANCE || '50000000000000'), // 0.00005 ETH — truly stuck threshold
+
   // Data persistence directory
   dataDir: process.env.DATA_DIR || './data',
 } as const;

@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -55,6 +56,7 @@ export const AuthProvider = ({
   const { ready, authenticated, user, logout } = usePrivy();
   const { wallets } = useWallets();
   const { createWallet } = useCreateWallet();
+  const isCreatingWallet = useRef(false);
   const { initOAuth } = useLoginWithOAuth({
     onComplete: ({ user: privyUser, isNewUser }) => {
       console.info('[Auth] OAuth complete:', { email: privyUser?.google?.email, isNewUser });
@@ -71,6 +73,7 @@ export const AuthProvider = ({
   const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
+  const initAddressRef = useRef<string | null>(null);
 
   // Detect injected wallet (MetaMask etc.)
   useEffect(() => {
@@ -91,14 +94,22 @@ export const AuthProvider = ({
     // Find embedded wallet (Privy MPC wallet)
     const privyWallet = wallets.find(w => w.walletClientType === 'privy');
     if (!privyWallet) {
+      // Prevent concurrent createWallet() calls — multiple renders can fire
+      // before Privy updates the wallets array, causing duplicate wallets.
+      if (isCreatingWallet.current) return;
+      isCreatingWallet.current = true;
       console.info('[Auth] Authenticated but no privy wallet — creating one...', { walletTypes: wallets.map(w => w.walletClientType) });
-      // useLoginWithOAuth doesn't auto-create wallets (only the Privy modal does).
-      // Explicitly create one. createWallet() is idempotent — safe to call if one exists.
       createWallet()
         .then(w => console.info('[Auth] Wallet created:', w.address))
-        .catch(err => console.warn('[Auth] createWallet failed (may already exist):', err.message));
+        .catch(err => console.warn('[Auth] createWallet failed (may already exist):', err.message))
+        .finally(() => { isCreatingWallet.current = false; });
       return;
     }
+
+    // Skip re-init if we already initialized this wallet address.
+    // Prevents address flip when Privy reorders the wallets array.
+    if (initAddressRef.current === privyWallet.address) return;
+    initAddressRef.current = privyWallet.address;
 
     let cancelled = false;
 
@@ -212,6 +223,8 @@ export const AuthProvider = ({
       setEmbeddedWalletClient(null);
       setEmbeddedAddress(null);
       setSignedInEmail(null);
+      initAddressRef.current = null;
+      isCreatingWallet.current = false;
     }
     if (wagmiConnected) {
       wagmiDisconnect();
