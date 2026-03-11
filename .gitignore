@@ -18,3 +18,15 @@ monsters.json
 mprocs.log
 .claude/
 CODEBASE_ANALYSIS.md
+
+# Build artifacts
+packages/contracts/out/
+packages/api/dist/
+packages/relayer/dist/
+packages/indexer/dist/
+packages/blog/dist/
+packages/guide/.astro/
+
+# IDE / editor junk
+.windsurf/
+windsurfrules.json
