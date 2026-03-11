@@ -199,7 +199,7 @@ UltimateDominionConfig.getBadgeToken()
 UltimateDominionConfig.getFragmentToken()
 ```
 
-Production World: `0x705607De7F5dE1e95346Eb8d9Ccc7D69C225C4D7`
+Production World: `0x99d01939F58B965E6E84a1D167E710Abdf5764b0`
 Beta World: `0xD2051EB4F5001d46c11F928BD6578Bd5f7e028A3`
 
 Query token addresses by calling `UD__getCharacterToken()`, `UD__getGoldToken()`, or `UD__getItemsContract()` on the World.

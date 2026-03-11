@@ -20,7 +20,7 @@ export const IS_DEV = APP_ENV === 'development';
 /** Expected world addresses per environment — prevents silent wrong-world connections */
 const EXPECTED_WORLDS: Partial<Record<AppEnv, string>> = {
   beta: '0xD2051EB4F5001d46c11F928BD6578Bd5f7e028A3',
-  production: '0x705607De7F5dE1e95346Eb8d9Ccc7D69C225C4D7',
+  production: '0x99d01939F58B965E6E84a1D167E710Abdf5764b0',
 };
 
 /**

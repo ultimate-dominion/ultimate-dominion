@@ -208,7 +208,7 @@ Returns:
   "lag": 2,
   "wsClients": 14,
   "tables": 47,
-  "worldAddress": "0x705607De7F5dE1e95346Eb8d9Ccc7D69C225C4D7"
+  "worldAddress": "0x99d01939F58B965E6E84a1D167E710Abdf5764b0"
 }
 ```
 

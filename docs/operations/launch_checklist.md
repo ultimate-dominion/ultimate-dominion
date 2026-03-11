@@ -220,7 +220,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 ### 2.4 Mainnet Deployment
 
 **Smart Contracts**
-- [x] Deploy MUD World to Base mainnet ✓ World: `0x705607De7F5dE1e95346Eb8d9Ccc7D69C225C4D7`
+- [x] Deploy MUD World to Base mainnet ✓ World: `0x99d01939F58B965E6E84a1D167E710Abdf5764b0`
 - [x] Run FullPostDeploy with production config ✓
 - [x] Seed production game data ✓
 - [x] Record production WORLD_ADDRESS and INITIAL_BLOCK_NUMBER ✓

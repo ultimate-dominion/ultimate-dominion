@@ -10,7 +10,7 @@ How to deploy every component of Ultimate Dominion, from contracts to infrastruc
 |-------------|-------|----------|---------------|--------|------------|
 | **Local** | Anvil | 31337 | Auto-generated | Any | `http://localhost:3000` |
 | **Beta** | Base Mainnet | 8453 | `0xD2051EB4F5001d46c11F928BD6578Bd5f7e028A3` | `dev` | `https://beta.ultimatedominion.com` |
-| **Production** | Base Mainnet | 8453 | `0x705607De7F5dE1e95346Eb8d9Ccc7D69C225C4D7` | `main` | `https://ultimatedominion.com` |
+| **Production** | Base Mainnet | 8453 | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `main` | `https://ultimatedominion.com` |
 
 Both beta and production run on Base Mainnet (chain 8453). They are distinguished **only** by world address. Never mix them.
 
@@ -137,7 +137,7 @@ pnpm build            # Build for production
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `VITE_WORLD_ADDRESS` | MUD world contract address | `0x705607De7F5dE1e95346Eb8d9Ccc7D69C225C4D7` |
+| `VITE_WORLD_ADDRESS` | MUD world contract address | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` |
 | `VITE_CHAIN_ID` | Target chain ID | `8453` |
 | `VITE_PRIVY_APP_ID` | Privy authentication app ID | (set in dashboard) |
 
