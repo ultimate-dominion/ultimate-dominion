@@ -6,7 +6,7 @@ import {
   formatEther,
 } from 'viem';
 import { config, gasChargingEnabled } from './config.js';
-import { publicClient, relayerAddress, sendRelayerTx } from './tx.js';
+import { publicClient, relayerAddress, sendRelayerTx, sendPrimaryTx } from './tx.js';
 import { getCharacterId } from './chainReader.js';
 
 // ==================== State ====================
@@ -115,7 +115,7 @@ export async function flushCharges(): Promise<void> {
       args: [players, characterIds, counts],
     });
 
-    const txHash = await sendRelayerTx({
+    const txHash = await sendPrimaryTx({
       to: config.worldAddress,
       calldata,
     });

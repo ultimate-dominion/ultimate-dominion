@@ -61,6 +61,13 @@ export async function acquireWallet() {
     best.inflight++;
     return { wallet: best, nonce };
 }
+/** Acquire the primary wallet specifically (for gas charging — must match on-chain relayer address) */
+export async function acquirePrimaryWallet() {
+    const primary = pool[0];
+    const nonce = await primary.nonceManager.acquire();
+    primary.inflight++;
+    return { wallet: primary, nonce };
+}
 /** Release wallet back to pool after tx completes */
 export function releaseWallet(wallet, success) {
     wallet.inflight--;

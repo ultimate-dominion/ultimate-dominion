@@ -64,6 +64,11 @@ export declare function acquireWallet(): Promise<{
     wallet: PooledWallet;
     nonce: number;
 }>;
+/** Acquire the primary wallet specifically (for gas charging — must match on-chain relayer address) */
+export declare function acquirePrimaryWallet(): Promise<{
+    wallet: PooledWallet;
+    nonce: number;
+}>;
 /** Release wallet back to pool after tx completes */
 export declare function releaseWallet(wallet: PooledWallet, success: boolean): void;
 /** Resync a wallet's nonce from chain (after failure) */
