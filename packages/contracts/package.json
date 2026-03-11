@@ -6,11 +6,6 @@
   "scripts": {
     "build": "which forge > /dev/null 2>&1 && mud build || echo Skipping contracts build - Foundry not available",
     "clean": "forge clean && rimraf src/codegen",
-    "seed": "npx tsx scripts/seed-game-data.ts",
-    "seed:items": "npx tsx scripts/seed-game-data.ts --items-only",
-    "seed:monsters": "npx tsx scripts/seed-game-data.ts --monsters-only",
-    "seed:testnet": "bash -c 'set -a && source .env.testnet && set +a && npx tsx scripts/seed-game-data.ts'",
-    "seed:mainnet": "bash -c 'set -a && source .env.mainnet && set +a && npx tsx scripts/seed-game-data.ts'",
     "zone:load": "npx tsx scripts/zone-loader.ts",
     "zone:list": "npx tsx scripts/zone-loader.ts --help",
     "zone:load:testnet": "bash -c 'set -a && source .env.testnet && set +a && npx tsx scripts/zone-loader.ts'",
