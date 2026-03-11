@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gold Merchant — Onramp Concept</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0D0B09;
+    --bg-primary: #12100E;
+    --bg-card: #1C1814;
+    --bg-card-raised: #24201A;
+    --bg-input: #14120F;
+    --text-primary: #E8DCC8;
+    --text-muted: #8A7E6A;
+    --text-dim: #6A6050;
+    --gold: #D4A54A;
+    --gold-bright: #EFD31C;
+    --amber: #C87A2A;
+    --amber-hover: #E8A840;
+    --amber-active: #A86420;
+    --red: #B83A2A;
+    --green: #4A8C5C;
+    --border: #2A2520;
+    --border-light: #3A3530;
+    --shadow-glow: rgba(200, 122, 42, 0.15);
+    --shadow-gold: rgba(212, 165, 74, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
+  /* ─── Page Layout ─── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    max-width: 700px;
+  }
+  .page-header h1 {
+    font-family: 'Cinzel', serif;
+    color: var(--gold);
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+  }
+  .page-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-style: italic;
+  }
+  .page-header .badge {
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    color: #fff;
+    background: #2D6A4F;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+  }
+
+  .concepts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  /* ─── Section Headers ─── */
+  .section {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-primary);
+  }
+  .section-header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-header .num {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--amber);
+    background: rgba(200, 122, 42, 0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+  .section-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .section-body {
+    padding: 1.5rem;
+  }
+  .section-body p {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+
+  /* ─── Trigger Points Concept ─── */
+  .trigger-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 600px) {
+    .trigger-grid { grid-template-columns: 1fr; }
+  }
+  .trigger-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .trigger-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--amber);
+    border-radius: 3px 0 0 3px;
+  }
+  .trigger-card h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--gold);
+    margin-bottom: 0.35rem;
+    padding-left: 0.5rem;
+  }
+  .trigger-card p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin: 0;
+    padding-left: 0.5rem;
+    line-height: 1.5;
+  }
+  .trigger-card .trigger-moment {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--amber);
+    background: rgba(200, 122, 42, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-top: 0.5rem;
+    margin-left: 0.5rem;
+  }
+
+  /* ─── Gold Merchant Modal Mockup ─── */
+  .modal-backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    width: 100%;
+    max-width: 420px;
+    clip-path: polygon(30px 0%, 100% 0%, 100% calc(100% - 36px), calc(100% - 36px) 100%, 0% 100%, 0% 60px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px var(--shadow-glow);
+    position: relative;
+  }
+  .modal-header {
+    padding: 1.75rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .modal-header h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.03em;
+  }
+  .modal-header .subtitle {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 0.25rem;
+  }
+  .modal-close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-input);
+    transition: all 0.15s;
+  }
+  .modal-close:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+  }
+
+  /* Balance display */
+  .balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+  }
+  .balance-row .label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'Fira Code', monospace;
+  }
+  .balance-row .value {
+    font-family: 'Fira Code', monospace;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--gold-bright);
+  }
+  .balance-row .coin {
+    color: var(--gold);
+    margin-right: 4px;
+  }
+
+  /* Amount input */
+  .amount-group {
+    margin-bottom: 1.25rem;
+  }
+  .amount-group label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'Fira Code', monospace;
+    margin-bottom: 0.5rem;
+  }
+  .amount-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .amount-input-wrapper:focus-within {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 1px var(--shadow-glow);
+  }
+  .amount-input-wrapper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: 'Fira Code', monospace;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+  }
+  .amount-input-wrapper input::placeholder {
+    color: var(--text-dim);
+    opacity: 0.6;
+  }
+  .amount-input-wrapper .unit {
+    padding: 0.75rem 1rem;
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-left: 1px solid var(--border);
+    background: rgba(212, 165, 74, 0.05);
+    white-space: nowrap;
+  }
+
+  /* Quick amounts */
+  .quick-amounts {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .quick-btn {
+    flex: 1;
+    padding: 0.4rem 0.5rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .quick-btn:hover {
+    border-color: var(--amber);
+    color: var(--gold);
+    background: rgba(200, 122, 42, 0.08);
+  }
+  .quick-btn.active {
+    border-color: var(--amber);
+    color: var(--gold);
+    background: rgba(200, 122, 42, 0.12);
+  }
+
+  /* Cost summary */
+  .cost-summary {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .cost-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cost-row .cost-label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+  .cost-row .cost-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .cost-row + .cost-row {
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--border);
+  }
+  .cost-row.total .cost-label {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .cost-row.total .cost-value {
+    color: var(--gold);
+  }
+
+  /* Payment methods */
+  .payment-methods {
+    margin-bottom: 1.5rem;
+  }
+  .payment-methods label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'Fira Code', monospace;
+    margin-bottom: 0.5rem;
+  }
+  .payment-options {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .payment-opt {
+    flex: 1;
+    padding: 0.65rem 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .payment-opt:hover {
+    border-color: var(--amber);
+  }
+  .payment-opt.selected {
+    border-color: var(--amber);
+    background: rgba(200, 122, 42, 0.08);
+    box-shadow: 0 0 8px var(--shadow-glow);
+  }
+  .payment-opt .pay-icon {
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
+  }
+  .payment-opt .pay-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-family: 'Fira Code', monospace;
+    letter-spacing: 0.03em;
+  }
+  .payment-opt.selected .pay-label {
+    color: var(--gold);
+  }
+
+  /* Buy button */
+  .buy-btn {
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    background: var(--amber);
+    border: 2px solid var(--amber);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(200, 122, 42, 0.3);
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .buy-btn:hover {
+    background: var(--amber-hover);
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(232, 168, 64, 0.3), 0 0 20px var(--shadow-glow);
+  }
+  .buy-btn:active {
+    background: var(--amber-active);
+    transform: translateY(1px);
+  }
+
+  .modal-footer {
+    padding: 0 1.5rem 1.5rem;
+  }
+  .footer-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.75rem;
+    font-style: italic;
+  }
+  .footer-note a {
+    color: var(--amber);
+    text-decoration: none;
+  }
+
+  /* ─── Contextual Prompt Mockups ─── */
+  .inline-mockups {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .inline-mockup {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .inline-mockup-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.5rem 1rem;
+    background: var(--bg-input);
+    border-bottom: 1px solid var(--border);
+  }
+  .inline-mockup-content {
+    padding: 1rem;
+  }
+
+  /* Shop item insufficient gold mockup */
+  .shop-item-mock {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .item-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #2A3A2A, #1A2A1A);
+    border: 1px solid #3A4A3A;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .item-details {
+    flex: 1;
+    min-width: 0;
+  }
+  .item-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    color: #5D9B5D;
+    font-weight: 600;
+  }
+  .item-name.rare { color: #6B8FC7; }
+  .item-stats {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+  .item-price {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gold-bright);
+    white-space: nowrap;
+  }
+  .insufficient-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: rgba(184, 58, 42, 0.08);
+    border: 1px solid rgba(184, 58, 42, 0.2);
+    border-radius: 6px;
+  }
+  .insufficient-text {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .insufficient-text strong {
+    color: var(--red);
+    font-weight: 600;
+  }
+  .get-gold-link {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--amber);
+    background: rgba(200, 122, 42, 0.1);
+    border: 1px solid rgba(200, 122, 42, 0.3);
+    border-radius: 4px;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .get-gold-link:hover {
+    background: rgba(200, 122, 42, 0.2);
+    border-color: var(--amber);
+    color: var(--amber-hover);
+  }
+
+  /* Stats panel gold + button mockup */
+  .stats-gold-mock {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    max-width: 260px;
+  }
+  .stats-gold-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .stats-gold-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stats-gold-label .coin-icon {
+    color: var(--gold);
+    font-size: 1rem;
+  }
+  .stats-gold-label span {
+    font-weight: 700;
+    color: var(--gold-bright);
+    font-size: 0.95rem;
+  }
+  .stats-gold-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .stats-gold-value .amount {
+    font-family: 'Fira Code', monospace;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--gold-bright);
+  }
+  .plus-btn {
+    width: 22px;
+    height: 22px;
+    background: rgba(200, 122, 42, 0.12);
+    border: 1px solid rgba(200, 122, 42, 0.3);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--amber);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Fira Code', monospace;
+  }
+  .plus-btn:hover {
+    background: rgba(200, 122, 42, 0.25);
+    border-color: var(--amber);
+    box-shadow: 0 0 6px var(--shadow-glow);
+  }
+
+  /* Out of resources mockup */
+  .oor-mock {
+    background: var(--bg-card-raised);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 1.25rem;
+    text-align: center;
+    max-width: 340px;
+    margin: 0 auto;
+  }
+  .oor-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+  }
+  .oor-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    color: var(--gold);
+    margin-bottom: 0.4rem;
+  }
+  .oor-text {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  .oor-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .oor-btn-primary {
+    padding: 0.65rem 1rem;
+    background: var(--amber);
+    border: 2px solid var(--amber);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(200, 122, 42, 0.3);
+    transition: all 0.15s;
+  }
+  .oor-btn-primary:hover { background: var(--amber-hover); }
+  .oor-btn-secondary {
+    padding: 0.55rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .oor-btn-secondary:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  /* ─── Strategy table ─── */
+  .strategy-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .strategy-table th {
+    background: var(--bg-card);
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-align: left;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border);
+    letter-spacing: 0.03em;
+  }
+  .strategy-table td {
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: top;
+  }
+  .strategy-table tr:nth-child(even) td {
+    background: rgba(28, 24, 20, 0.5);
+  }
+  .strategy-table .provider {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .strategy-table .tag {
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.6rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 0.35rem;
+    vertical-align: middle;
+  }
+  .tag-rec { background: rgba(74, 140, 92, 0.2); color: #6FBF7F; border: 1px solid rgba(74, 140, 92, 0.3); }
+  .tag-alt { background: rgba(107, 143, 199, 0.15); color: #8FAFD7; border: 1px solid rgba(107, 143, 199, 0.25); }
+
+  /* ─── Flow diagram ─── */
+  .flow-diagram {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 2;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .flow-diagram .step { color: var(--text-primary); }
+  .flow-diagram .arrow { color: var(--amber); }
+  .flow-diagram .invisible { color: var(--text-dim); font-style: italic; }
+  .flow-diagram .visible { color: var(--gold); font-weight: 600; }
+
+  /* ─── Notes / callouts ─── */
+  .callout {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: rgba(200, 122, 42, 0.06);
+    border: 1px solid rgba(200, 122, 42, 0.15);
+    border-radius: 6px;
+    margin-top: 1rem;
+  }
+  .callout-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .callout-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .callout-text strong {
+    color: var(--text-primary);
+  }
+
+  /* ─── Divider ─── */
+  .divider {
+    width: 100%;
+    max-width: 900px;
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+  }
+
+  /* ─── Two-column layout for modal + explanation ─── */
+  .modal-section {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .modal-section {
+      grid-template-columns: 1fr;
+    }
+  }
+  .modal-explanation {
+    padding-top: 0.5rem;
+  }
+  .modal-explanation h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+  .modal-explanation ul {
+    list-style: none;
+    padding: 0;
+  }
+  .modal-explanation li {
+    padding: 0.35rem 0;
+    padding-left: 1rem;
+    position: relative;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .modal-explanation li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--amber);
+    font-weight: 700;
+  }
+  .modal-explanation li strong {
+    color: var(--text-primary);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="badge">UX Concept</span>
+  <h1>Gold Merchant — Fiat Onramp</h1>
+  <p>How non-crypto players acquire gold without ever touching ETH, wallets, or exchanges.</p>
+</div>
+
+<div class="concepts-grid">
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 1: The Problem -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="num">01</span>
+      <h2>The Friction Point</h2>
+    </div>
+    <div class="section-body">
+      <p>A non-crypto player reaches level 5, sees a Rare Sword on the marketplace for 500 gold, but only has 80. They could grind for hours — or they'd happily pay $5 for the gold right now. But the current path is:</p>
+
+      <div class="flow-diagram"><span class="visible">Player wants 500 Gold</span>
+  <span class="arrow">→</span> <span class="invisible">Find a crypto exchange (Coinbase?)</span>
+  <span class="arrow">→</span> <span class="invisible">Create account, KYC, wait 3 days</span>
+  <span class="arrow">→</span> <span class="invisible">Buy ETH with credit card</span>
+  <span class="arrow">→</span> <span class="invisible">Bridge ETH to Base network (?)</span>
+  <span class="arrow">→</span> <span class="invisible">Find the GOLD/ETH pool on Uniswap (?)</span>
+  <span class="arrow">→</span> <span class="invisible">Swap ETH for GOLD</span>
+  <span class="arrow">→</span> <span class="visible">Player has Gold</span></div>
+
+      <div class="callout">
+        <span class="callout-icon">&#x26A0;</span>
+        <div class="callout-text">
+          <strong>Every invisible step is a dropout point.</strong> Most non-crypto players will never complete this flow. They'll either grind (and maybe churn), or just leave. The game loses revenue and the player loses fun.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 2: The Solution -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="num">02</span>
+      <h2>The Ideal Flow</h2>
+    </div>
+    <div class="section-body">
+      <p>With Thirdweb Universal Bridge (already in your SDK), the entire chain collapses to one step:</p>
+
+      <div class="flow-diagram"><span class="visible">Player taps "Get Gold"</span>
+  <span class="arrow">→</span> <span class="visible">Enters amount: 500 Gold</span>
+  <span class="arrow">→</span> <span class="visible">Sees price: ~$5.55</span>
+  <span class="arrow">→</span> <span class="visible">Pays with credit card / Apple Pay</span>
+  <span class="arrow">→</span> <span class="invisible">(Thirdweb: fiat → ETH on Base → 10% fee to company → GOLD via Uniswap)</span>
+  <span class="arrow">→</span> <span class="visible">Gold appears in inventory. Done.</span></div>
+
+      <div class="callout">
+        <span class="callout-icon">&#x2728;</span>
+        <div class="callout-text">
+          <strong>The player never sees ETH, Base, Uniswap, or any crypto concept.</strong> They buy gold the same way they'd buy gems in Clash of Clans. Thirdweb handles KYC, payment processing, routing, and the swap — all behind a single embedded UI.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 3: Provider Options -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="num">03</span>
+      <h2>Provider Options</h2>
+    </div>
+    <div class="section-body">
+      <p>Multiple services can power the "credit card → gold" flow. Since UD already uses Thirdweb SDK v5, that's the lowest-friction integration.</p>
+
+      <table class="strategy-table">
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>How It Works</th>
+            <th>Pros</th>
+            <th>Cons</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="provider">Thirdweb Pay</span> <span class="tag tag-rec">REC</span></td>
+            <td>PayEmbed component. Fiat → ETH → GOLD routed automatically via Universal Bridge. Embeds directly in game UI.</td>
+            <td>Already in your SDK. Dark theme. Handles KYC. Apple Pay, Google Pay, cards. 160+ countries.</td>
+            <td>Requires DEX liquidity for GOLD routing. Onramp fees ~2-5%.</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Stripe Onramp</span> <span class="tag tag-alt">ALT</span></td>
+            <td>Embeddable widget. Fiat → ETH on Base. Requires separate swap step for GOLD.</td>
+            <td>Trusted brand. Low fraud. Great conversion rates.</td>
+            <td>Only gets player to ETH — still need a swap step. US + EU only.</td>
+          </tr>
+          <tr>
+            <td><span class="provider">MoonPay</span> <span class="tag tag-alt">ALT</span></td>
+            <td>White-label onramp. Fiat → ETH. Can customize branding.</td>
+            <td>Broad country coverage. White-label option.</td>
+            <td>Higher fees (~4.5%). Separate integration. ETH only, not GOLD.</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Direct Sale</span> <span class="tag tag-alt">ALT</span></td>
+            <td>Protocol sells GOLD directly from a funded wallet. Player pays fiat, protocol transfers GOLD.</td>
+            <td>Simplest UX. Fixed pricing. No DEX dependency.</td>
+            <td>Requires maintaining a gold inventory. Regulatory complexity (selling a token directly).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <span class="callout-icon">&#x1F3AF;</span>
+        <div class="callout-text">
+          <strong>Recommendation: Start with Thirdweb Pay.</strong> It's already in the SDK, handles the full fiat-to-GOLD pipeline (including the Uniswap swap), and can be themed to match the game. If Thirdweb's routing can't find your GOLD token (low DEX liquidity), fall back to fiat → ETH with an auto-swap on arrival.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 4: Fee Structure & Revenue -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="num">04</span>
+      <h2>Fee Structure &amp; Revenue</h2>
+    </div>
+    <div class="section-body">
+      <p>The company takes a 10% fee in ETH, deducted after the fiat onramp and before the Uniswap swap. This is a configurable parameter via Thirdweb's developer fee — no custom contract needed.</p>
+
+      <div class="flow-diagram"><span class="visible">Player pays $5.55</span>
+  <span class="arrow">→</span> <span class="invisible">Stripe processes card (~2.5% fee → Stripe keeps ~$0.14)</span>
+  <span class="arrow">→</span> <span class="invisible">$5.41 of ETH lands on Base</span>
+  <span class="arrow">→</span> <span class="invisible">10% fee → $0.50 ETH to company wallet</span>
+  <span class="arrow">→</span> <span class="invisible">$4.91 ETH swaps for GOLD on Uniswap (1% pool fee → LPs)</span>
+  <span class="arrow">→</span> <span class="visible">~486 Gold arrives in player's balance</span></div>
+
+      <table class="strategy-table">
+        <thead>
+          <tr>
+            <th>Fee Component</th>
+            <th>Rate</th>
+            <th>On a $5.55 Purchase</th>
+            <th>Who Gets It</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="provider">Card processing</span></td>
+            <td>~2.5%</td>
+            <td>~$0.14</td>
+            <td>Stripe / payment processor</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Company fee</span> <span class="tag tag-rec">REVENUE</span></td>
+            <td>10%</td>
+            <td>~$0.50</td>
+            <td>Company wallet (ETH)</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Uniswap swap fee</span></td>
+            <td>1%</td>
+            <td>~$0.05</td>
+            <td>LP providers (Patrons)</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Base gas</span></td>
+            <td>Flat</td>
+            <td>~$0.005</td>
+            <td>Network</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Total fees</span></td>
+            <td><strong>~13.5%</strong></td>
+            <td><strong>~$0.70</strong></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td><span class="provider">Gold delivered</span></td>
+            <td></td>
+            <td><strong>~$4.86 worth (~486 gold)</strong></td>
+            <td>Player</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <span class="callout-icon">&#x1F4B0;</span>
+        <div class="callout-text">
+          <strong>Why 10% and why in ETH:</strong> Starting high lets you lower the fee later as a goodwill gesture once demand is proven sticky — you can never raise a fee without backlash. ETH is immediately liquid for operations, relayer top-ups, and pool seeding. Taking the fee in GOLD would create sell pressure on your own token.
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">&#x1F4CA;</span>
+        <div class="callout-text">
+          <strong>Industry context: ~13.5% total is well below mobile gaming norms.</strong> Apple/Google take 30% on in-app purchases. Fortnite direct takes ~12%. Players are accustomed to paying a premium for convenience. The key is that the player sees one total price ("$5.55 for 500 Gold") — they don't see the fee breakdown unless they look for it.
+        </div>
+      </div>
+
+      <table class="strategy-table" style="margin-top: 1rem;">
+        <thead>
+          <tr>
+            <th>DAU</th>
+            <th>Buyers (10%)</th>
+            <th>Avg Purchase</th>
+            <th>Company Fee (10%)</th>
+            <th>Monthly Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>50</td>
+            <td>5/day</td>
+            <td>$5</td>
+            <td>$0.50 each</td>
+            <td>~$75</td>
+          </tr>
+          <tr>
+            <td>500</td>
+            <td>50/day</td>
+            <td>$5</td>
+            <td>$0.50 each</td>
+            <td>~$750</td>
+          </tr>
+          <tr>
+            <td>1,500</td>
+            <td>150/day</td>
+            <td>$7</td>
+            <td>$0.70 each</td>
+            <td>~$3,150</td>
+          </tr>
+          <tr>
+            <td>5,000</td>
+            <td>500/day</td>
+            <td>$10</td>
+            <td>$1.00 each</td>
+            <td>~$15,000</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <span class="callout-icon">&#x1F517;</span>
+        <div class="callout-text">
+          <strong>This stacks with existing revenue.</strong> The 10% onramp fee is additive to the 3% marketplace fee. A player who buys gold via onramp and then buys an item on the marketplace generates revenue at both touchpoints. Every onramp purchase also generates LP fee revenue for Patrons (1% of the swap).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 5: UI Trigger Points -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="num">05</span>
+      <h2>Where "Get Gold" Appears</h2>
+    </div>
+    <div class="section-body">
+      <p>The onramp should surface at moments of intent — when the player actively wants gold and doesn't have enough. Never as a pop-up or nag.</p>
+
+      <div class="trigger-grid">
+        <div class="trigger-card">
+          <h4>Marketplace — Can't Afford Item</h4>
+          <p>Player views a listing they can't afford. Below the price, a subtle "Need gold?" link opens the Gold Merchant.</p>
+          <span class="trigger-moment">highest intent</span>
+        </div>
+        <div class="trigger-card">
+          <h4>Shop — Insufficient Gold Error</h4>
+          <p>Currently shows red error text. Add a "Get Gold" button next to the error message.</p>
+          <span class="trigger-moment">high intent</span>
+        </div>
+        <div class="trigger-card">
+          <h4>Stats Panel — Gold Balance</h4>
+          <p>Small "+" button next to the gold amount. Always visible, never intrusive. One tap opens Gold Merchant.</p>
+          <span class="trigger-moment">passive / always available</span>
+        </div>
+        <div class="trigger-card">
+          <h4>Out of Resources Modal</h4>
+          <p>Already triggers at level 3+ with 0 ETH + 0 Gold. Add "Purchase Gold" as the primary action.</p>
+          <span class="trigger-moment">critical moment</span>
+        </div>
+        <div class="trigger-card">
+          <h4>Repair NPC (Future)</h4>
+          <p>When item degradation ships, the repair screen will be another high-intent moment. "Not enough gold to repair your Runic Blade."</p>
+          <span class="trigger-moment">future — high intent</span>
+        </div>
+        <div class="trigger-card">
+          <h4>Guild Treasury (Future)</h4>
+          <p>Guild leader trying to fund treasury or claim territory. "Your guild needs 500 gold for this tile."</p>
+          <span class="trigger-moment">future — social pressure</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 5: The Gold Merchant Modal -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="num">06</span>
+      <h2>Gold Merchant — Modal Concept</h2>
+    </div>
+    <div class="section-body">
+      <p>The Gold Merchant modal wraps Thirdweb's PayEmbed in the game's visual language. The player sees gold coins, not crypto infrastructure.</p>
+
+      <div class="modal-section">
+        <!-- Modal Mockup -->
+        <div class="modal-backdrop">
+          <div class="modal">
+            <div class="modal-header">
+              <h3>Gold Merchant</h3>
+              <div class="subtitle">Purchase gold with card or wallet</div>
+              <div class="modal-close">&times;</div>
+            </div>
+            <div class="modal-content">
+              <div class="balance-row">
+                <span class="label">Your Gold</span>
+                <span class="value"><span class="coin">&#x1FA99;</span> 82.5</span>
+              </div>
+
+              <div class="amount-group">
+                <label>Amount to Purchase</label>
+                <div class="amount-input-wrapper">
+                  <input type="text" value="500" placeholder="0">
+                  <span class="unit">Gold</span>
+                </div>
+              </div>
+
+              <div class="quick-amounts">
+                <div class="quick-btn">100</div>
+                <div class="quick-btn active">500</div>
+                <div class="quick-btn">1,000</div>
+                <div class="quick-btn">5,000</div>
+              </div>
+
+              <div class="cost-summary">
+                <div class="cost-row">
+                  <span class="cost-label">500 Gold at market rate</span>
+                  <span class="cost-value">$5.00</span>
+                </div>
+                <div class="cost-row">
+                  <span class="cost-label">Service fee</span>
+                  <span class="cost-value">$0.55</span>
+                </div>
+                <div class="cost-row total">
+                  <span class="cost-label">Total</span>
+                  <span class="cost-value">$5.55</span>
+                </div>
+              </div>
+
+              <div class="payment-methods">
+                <label>Pay With</label>
+                <div class="payment-options">
+                  <div class="payment-opt selected">
+                    <div class="pay-icon">&#x1F4B3;</div>
+                    <div class="pay-label">Card</div>
+                  </div>
+                  <div class="payment-opt">
+                    <div class="pay-icon">&#xF8FF;</div>
+                    <div class="pay-label">Apple Pay</div>
+                  </div>
+                  <div class="payment-opt">
+                    <div class="pay-icon">&#x1F310;</div>
+                    <div class="pay-label">Google Pay</div>
+                  </div>
+                  <div class="payment-opt">
+                    <div class="pay-icon">&#x26D3;</div>
+                    <div class="pay-label">Crypto</div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="buy-btn">Purchase 500 Gold &mdash; $5.55</button>
+            </div>
+            <div class="modal-footer">
+              <div class="footer-note">
+                Gold price based on current market rate. Price may vary slightly at time of purchase.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explanation -->
+        <div class="modal-explanation">
+          <h4>Design Decisions</h4>
+          <ul>
+            <li><strong>No crypto language.</strong> "Gold Merchant" not "Swap" or "Onramp." "Purchase" not "Bridge." "Card" not "Fiat."</li>
+            <li><strong>Gold-denominated.</strong> Player enters how much gold they want, not how much USD to spend. The game sets the frame.</li>
+            <li><strong>Quick amounts</strong> anchor expectations and reduce decision fatigue. Pre-set to common purchase sizes.</li>
+            <li><strong>Price shown in USD.</strong> Player sees the real cost. No hidden fees. "Service fee" bundles the 10% company fee + processing — player doesn't need to know the breakdown.</li>
+            <li><strong>Total on the button.</strong> The buy button shows the exact charge. No surprises after clicking. Builds trust.</li>
+            <li><strong>Crypto option exists</strong> but isn't prominent. Power users who want to pay with existing ETH can, but it's not the default.</li>
+            <li><strong>Same modal chrome</strong> as existing game modals (clip-path corners, gold header, dark card bg). Feels native, not third-party.</li>
+            <li><strong>Market rate disclaimer</strong> manages expectations around price volatility without using terms like "slippage" or "AMM."</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 6: Contextual Prompts -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="num">07</span>
+      <h2>Contextual Prompt Mockups</h2>
+    </div>
+    <div class="section-body">
+      <p>How the "Get Gold" prompt appears in existing UI surfaces — gentle, contextual, never aggressive.</p>
+
+      <div class="inline-mockups">
+        <!-- Shop insufficient gold -->
+        <div class="inline-mockup">
+          <div class="inline-mockup-label">Shop — Insufficient Gold on Purchase Attempt</div>
+          <div class="inline-mockup-content">
+            <div class="shop-item-mock">
+              <div class="item-icon">&#x1F5E1;</div>
+              <div class="item-details">
+                <div class="item-name rare">Runic Shortsword</div>
+                <div class="item-stats">+8 Attack, +3 Speed</div>
+              </div>
+              <div class="item-price">&#x1FA99; 350</div>
+            </div>
+            <div class="insufficient-banner">
+              <span class="insufficient-text"><strong>Not enough gold.</strong> You need 268 more.</span>
+              <a class="get-gold-link">Get Gold</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats panel + button -->
+        <div class="inline-mockup">
+          <div class="inline-mockup-label">Stats Panel — Gold Balance with + Button</div>
+          <div class="inline-mockup-content">
+            <div class="stats-gold-mock">
+              <div class="stats-gold-row">
+                <div class="stats-gold-label">
+                  <span class="coin-icon">&#x1FA99;</span>
+                  <span>Gold</span>
+                </div>
+                <div class="stats-gold-value">
+                  <span class="amount">82.5</span>
+                  <div class="plus-btn">+</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Out of resources -->
+        <div class="inline-mockup">
+          <div class="inline-mockup-label">Out of Resources Modal — Enhanced</div>
+          <div class="inline-mockup-content">
+            <div class="oor-mock">
+              <div class="oor-icon">&#x1FA99;</div>
+              <div class="oor-title">Out of Gold</div>
+              <div class="oor-text">You've run out of gold and can't cover transaction costs. Fight a monster to earn some, or purchase gold instantly.</div>
+              <div class="oor-buttons">
+                <button class="oor-btn-primary">Purchase Gold</button>
+                <button class="oor-btn-secondary">Fight a Monster</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 7: Implementation -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="num">08</span>
+      <h2>Implementation Path</h2>
+    </div>
+    <div class="section-body">
+      <p>Rough ordering based on impact and effort.</p>
+
+      <table class="strategy-table">
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>What</th>
+            <th>Effort</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="provider">Phase 1</span></td>
+            <td>Add Thirdweb PayEmbed to a "Gold Merchant" modal. Wire it to buy GOLD on Base. Theme to match game UI.</td>
+            <td>1-2 days</td>
+            <td>Requires GOLD to be routable via Universal Bridge (needs DEX liquidity). Test on beta pool first.</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Phase 2</span></td>
+            <td>Add contextual triggers: "+" on stats panel, "Get Gold" on shop/marketplace insufficient-gold errors, enhance OutOfResourcesModal.</td>
+            <td>Half day</td>
+            <td>These are small UI additions to existing components.</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Phase 3</span></td>
+            <td>Pre-fill amounts from context. "You need 268 more gold" → opens merchant with 268 pre-filled.</td>
+            <td>Half day</td>
+            <td>Reduces friction further. Player sees exact cost to unblock themselves.</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Phase 4</span></td>
+            <td>Analytics: track funnel (trigger shown → modal opened → purchase started → purchase completed). Optimize placement.</td>
+            <td>1 day</td>
+            <td>Essential for knowing which trigger points convert and which don't.</td>
+          </tr>
+          <tr>
+            <td><span class="provider">Future</span></td>
+            <td>Gold offramp (sell gold for fiat). Player cashout flow. "Sell to Gold Merchant" button.</td>
+            <td>TBD</td>
+            <td>Requires offramp provider (Thirdweb doesn't offer this yet). Lower priority — earning gold should feel rewarding, not like earning fiat.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <span class="callout-icon">&#x1F6E1;</span>
+        <div class="callout-text">
+          <strong>Manifesto check — "Fair economics."</strong> This doesn't violate "money can't buy insurmountable advantage" because gold buys items that are also earnable through gameplay. A whale can accelerate but can't access anything a grinder can't. The marketplace already enables this dynamic — the onramp just removes the crypto friction from it.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

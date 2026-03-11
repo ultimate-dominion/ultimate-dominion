@@ -6,6 +6,9 @@ Full manifesto: `packages/client/src/pages/Manifesto.tsx`. Core principles: perm
 
 ## Rules
 
+### Testing
+**CRITICAL**: Every code change MUST have tests — happy paths, unhappy paths, and edge cases. No exceptions. We deploy directly to production; untested code goes straight to players.
+
 ### Documentation Consistency
 **CRITICAL**: The docs (`docs/`) are the source of truth for game design. Before making any major code change:
 1. Read the relevant doc(s) to verify the change aligns with documented design

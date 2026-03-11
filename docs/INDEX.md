@@ -25,6 +25,7 @@ Master navigation hub for all project documentation.
 | [Badge System](BADGE_SYSTEM.md) | Badge system for chat gating and progression milestones |
 | [Lore Bible](LORE_BIBLE.md) | World lore, history, factions, and narrative canon |
 | [Lore NFT Fragments](LORE_NFT_FRAGMENTS.md) | Lore fragment NFT system and collectible discovery |
+| [Art System](ART_SYSTEM.md) | Visual identity, rarity hierarchy, color system, generation pipeline |
 
 ## 3. Architecture
 
