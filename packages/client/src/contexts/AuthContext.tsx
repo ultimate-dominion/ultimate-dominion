@@ -19,6 +19,23 @@ import { usePrivy, useWallets, useLoginWithOAuth, useCreateWallet } from '@privy
 
 import { base } from '../lib/mud/supportedChains';
 
+/**
+ * Determines the wallet initialization action when no privy wallet is in the
+ * local wallets array yet.
+ *
+ * - 'wait': user already has a wallet server-side → recovery in progress, don't create
+ * - 'create': truly new user with no wallet → call createWallet()
+ * - 'skip': createWallet() already in flight → do nothing
+ */
+export function resolveWalletAction(
+  userWallet: { address: string } | undefined | null,
+  isCreatingWallet: boolean,
+): 'wait' | 'create' | 'skip' {
+  if (userWallet) return 'wait';
+  if (isCreatingWallet) return 'skip';
+  return 'create';
+}
+
 const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
 const FUND_API_KEY = import.meta.env.VITE_FUND_API_KEY;
 
@@ -94,11 +111,15 @@ export const AuthProvider = ({
     // Find embedded wallet (Privy MPC wallet)
     const privyWallet = wallets.find(w => w.walletClientType === 'privy');
     if (!privyWallet) {
-      // Prevent concurrent createWallet() calls — multiple renders can fire
-      // before Privy updates the wallets array, causing duplicate wallets.
-      if (isCreatingWallet.current) return;
+      const action = resolveWalletAction(user?.wallet, isCreatingWallet.current);
+      if (action === 'wait') {
+        console.info('[Auth] User already has wallet on server, waiting for recovery...', { serverWallet: user?.wallet?.address });
+        return;
+      }
+      if (action === 'skip') return;
+      // action === 'create': truly new user
       isCreatingWallet.current = true;
-      console.info('[Auth] Authenticated but no privy wallet — creating one...', { walletTypes: wallets.map(w => w.walletClientType) });
+      console.info('[Auth] New user with no wallet — creating one...', { walletTypes: wallets.map(w => w.walletClientType) });
       createWallet()
         .then(w => console.info('[Auth] Wallet created:', w.address))
         .catch(err => console.warn('[Auth] createWallet failed (may already exist):', err.message))
