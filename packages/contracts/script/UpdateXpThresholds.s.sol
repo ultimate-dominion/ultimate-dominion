@@ -19,27 +19,28 @@ contract UpdateXpThresholds is Script {
         vm.startBroadcast(deployerKey);
 
         // Early game: hand-tuned thresholds (~29 gameplay hours to L10)
-        Levels.setExperience(1, 500);
-        Levels.setExperience(2, 2000);
-        Levels.setExperience(3, 5500);
-        Levels.setExperience(4, 25000);
-        Levels.setExperience(5, 85000);
-        Levels.setExperience(6, 200000);
-        Levels.setExperience(7, 450000);
-        Levels.setExperience(8, 900000);
-        Levels.setExperience(9, 1600000);
-        Levels.setExperience(10, 2500000);
+        // Scaled /100 from original values to match gold-per-kill order of magnitude
+        Levels.setExperience(1, 5);
+        Levels.setExperience(2, 20);
+        Levels.setExperience(3, 55);
+        Levels.setExperience(4, 250);
+        Levels.setExperience(5, 850);
+        Levels.setExperience(6, 2000);
+        Levels.setExperience(7, 4500);
+        Levels.setExperience(8, 9000);
+        Levels.setExperience(9, 16000);
+        Levels.setExperience(10, 25000);
 
         // Mid-game: quadratic growth (L11-30)
-        uint256 baseExp = 2500000;
+        uint256 baseExp = 25000;
         for (uint256 level = 11; level <= 30; level++) {
-            baseExp += (level * level * 25000);
+            baseExp += (level * level * 250);
             Levels.setExperience(level, baseExp);
         }
 
         // Late game: cubic growth (L31-50)
         for (uint256 level = 31; level <= 50; level++) {
-            baseExp += (level * level * level * 1000);
+            baseExp += (level * level * level * 10);
             Levels.setExperience(level, baseExp);
         }
 
