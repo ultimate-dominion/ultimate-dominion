@@ -1,7 +1,9 @@
 # Exclude everything not needed for Railway builds
-packages/contracts/out/
-packages/contracts/cache/
-packages/contracts/lib/
+node_modules/
+packages/contracts/
 packages/client/
+packages/api/
+packages/blog/
 docs/
+scripts/
 .git/
