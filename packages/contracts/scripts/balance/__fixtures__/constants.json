@@ -1,0 +1,52 @@
+{
+  "version": "2.0",
+  "combat": {
+    "hit": { "startingProbability": 90, "attackerDampener": 95, "defenderDampener": 30, "min": 5, "max": 98, "strWeaponsUseStr": true },
+    "damage": { "attackModifier": 1.2, "agiAttackModifier": 0.9, "defenseModifier": 1.0, "critMultiplier": 2 },
+    "evasion": { "divisor": 3, "cap": 25 },
+    "doubleStrike": { "multiplier": 2, "cap": 25 },
+    "crit": { "baseChance": 4, "agiDivisor": 4 },
+    "magicResist": { "pctPerInt": 2, "cap": 40 },
+    "triangle": { "flatBonusPct": 20, "bonusPerStatPct": 2, "maxBonusPct": 20, "order": ["str", "agi", "int"] },
+    "spellDodge": { "threshold": 10, "pctPerAgi": 2.0, "cap": 20 },
+    "block": { "chancePerStr": 1.5, "cap": 30, "damageReduction": 0.5, "vsMagicPenalty": 0.5 },
+    "classMultiplierBase": 1000
+  },
+  "leveling": {
+    "maxLevel": 10,
+    "statPointsPerLevel": 2,
+    "hpPerLevel": 2,
+    "baseHp": 18,
+    "earlyGameCap": 10,
+    "midGameCap": 50,
+    "powerSourceBonusLevel": 5
+  },
+  "baseRolls": {
+    "str": { "str": 8, "agi": 5, "int": 6 },
+    "agi": { "str": 5, "agi": 8, "int": 6 },
+    "int": { "str": 5, "agi": 6, "int": 8 }
+  },
+  "races": {
+    "human": { "str": 1, "agi": 1, "int": 1, "hp": 0 },
+    "dwarf": { "str": 2, "agi": -1, "int": 0, "hp": 1 },
+    "elf":   { "str": -1, "agi": 2, "int": 1, "hp": -1 }
+  },
+  "startingArmors": {
+    "plate":   { "str": 2, "agi": -1, "int": 0, "hp": 1 },
+    "leather": { "str": 1, "agi": 2, "int": 0, "hp": 0 },
+    "cloth":   { "str": -1, "agi": 1, "int": 2, "hp": 0 }
+  },
+  "powerSources": {
+    "physical": { "type": "physical" },
+    "weave":    { "type": "weave" },
+    "divine":   { "type": "divine" }
+  },
+  "classes": {
+    "warrior": { "flatStr": 3, "flatAgi": 0, "flatInt": 0, "flatHp": 10, "physMult": 1100, "spellMult": 1000, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "rogue":   { "flatStr": 0, "flatAgi": 2, "flatInt": 1, "flatHp": 0,  "physMult": 1000, "spellMult": 1000, "healMult": 1000, "critMult": 1150, "hpMult": 1000 }
+  },
+  "archetypes": {
+    "WAR-S": { "name": "Tank",     "class": "warrior", "race": "dwarf", "armor": "plate",   "power": "physical", "path": "str" },
+    "ROG-A": { "name": "Assassin", "class": "rogue",   "race": "elf",   "armor": "leather", "power": "physical", "path": "agi" }
+  }
+}

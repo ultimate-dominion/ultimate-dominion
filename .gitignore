@@ -13,8 +13,8 @@ node_modules
 
 # Dev test data
 packages/api/dev-storage/
-items.json
-monsters.json
+/items.json
+/monsters.json
 mprocs.log
 .claude/
 CODEBASE_ANALYSIS.md

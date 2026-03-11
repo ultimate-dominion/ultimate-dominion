@@ -1,0 +1,34 @@
+{
+  "monsters": [
+    {
+      "name": "Cave Rat",
+      "metadataUri": "monster:cave_rat",
+      "stats": {
+        "agility": 7,
+        "armor": 0,
+        "class": 1,
+        "experience": 2,
+        "hitPoints": 12,
+        "intelligence": 3,
+        "inventoryNames": ["Venomous Bite"],
+        "level": 1,
+        "strength": 4
+      }
+    },
+    {
+      "name": "Rock Golem",
+      "metadataUri": "monster:rock_golem",
+      "stats": {
+        "agility": 8,
+        "armor": 4,
+        "class": 0,
+        "experience": 2500,
+        "hitPoints": 45,
+        "intelligence": 6,
+        "inventoryNames": ["Unknown Weapon"],
+        "level": 8,
+        "strength": 16
+      }
+    }
+  ]
+}

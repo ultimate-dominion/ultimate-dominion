@@ -48,361 +48,159 @@
  *   No flags = run everything + summary
  */
 
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+import { loadGameData } from "./loader.js";
+import {
+  applyOverrides,
+  WEAPONS_BASELINE,
+  WEAPONS_REBALANCED,
+  WEAPONS_V2,
+  WEAPONS_V3,
+  type SimFlags,
+} from "./overrides.js";
+import type {
+  Weapon, Monster, Armor, Consumable, ClassSpell,
+  WeaponEffect, Race, StartingArmor, PowerSource,
+  AdvancedClass, Archetype, StatProfile, Combatant,
+  CombatResult, GameData, LevelingConstants, CombatConstants,
+} from "./types.js";
+import {
+  statPointsForLevel as _statPointsForLevel,
+  hpForLevel as _hpForLevel,
+  totalStatPointsAtLevel as _totalStatPointsAtLevel,
+  totalHpFromLeveling as _totalHpFromLeveling,
+  allocatePoints as _allocatePoints,
+  buildProfile as _buildProfile,
+  canEquip as _canEquip,
+  canEquipArmor as _canEquipArmor,
+  triangleAdvantage as _triangleAdvantage,
+  getDominant as _getDominant,
+  makeCombatant as _makeCombatant,
+  makeMonsterCombatant as _makeMonsterCombatant,
+} from "./formulas.js";
+import {
+  resolveAttack as _resolveAttack,
+  resolveDualMagicHit as _resolveDualMagicHit,
+  resolveBreathAttack as _resolveBreathAttack,
+  tickEffects as _tickEffects,
+  adjustCombatant as _adjustCombatant,
+  defaultRng,
+  type ActiveEffectInstance,
+  type RngFn,
+} from "./combat.js";
+
 // ============================================================
-// CONSTANTS
+// MODULE STATE — set from loaded GameData in main()
 // ============================================================
 
-const BASE_HP = 18;
-const EARLY_GAME_CAP = 10;
-const MID_GAME_CAP = 50;
+// Leveling constants
+let BASE_HP = 18;
+let EARLY_GAME_CAP = 10;
+let MID_GAME_CAP = 50;
+let STAT_POINTS_EARLY = 1;
+let STAT_POINTS_MID = 1;
+let STAT_POINTS_LATE = 1;
+let HP_GAIN_EARLY = 2;
+let HP_GAIN_MID = 1;
+let HP_GAIN_LATE = 1;
+let POWER_SOURCE_BONUS_LEVEL = 5;
+let CLASS_MULTIPLIER_BASE = 1000;
 
-const STAT_POINTS_EARLY = 1;
-const STAT_POINTS_MID = 1;
-const STAT_POINTS_LATE = 1;
-const HP_GAIN_EARLY = 2;
-const HP_GAIN_MID = 1;
-const HP_GAIN_LATE = 1;
+// Combat constants (set from proposed overrides)
+let ATTACK_MODIFIER = 1.2;
+let AGI_ATTACK_MODIFIER = 1.0;
+let CRIT_MULTIPLIER = 2;
+let CRIT_BASE_CHANCE = 5;
+let EVASION_CAP = 35;
+let DOUBLE_STRIKE_CAP = 40;
+let COMBAT_TRIANGLE_PER_STAT = 0.02;
+let COMBAT_TRIANGLE_MAX = 0.12;
+let MAGIC_RESIST_PER_INT = 3;
+let MAGIC_RESIST_CAP = 40;
+let BLOCK_CHANCE_PER_STR = 2;
+let BLOCK_CHANCE_CAP = 30;
+let BLOCK_REDUCTION_PHYS = 0.50;
+let BLOCK_REDUCTION_MAGIC = 0.0;
 
-const POWER_SOURCE_BONUS_LEVEL = 5;
-const CLASS_MULTIPLIER_BASE = 1000;
+// Game data (set from loaded zone JSON + overrides)
+let RACES: Record<string, Race> = {};
+let STARTING_ARMORS: Record<string, StartingArmor> = {};
+let POWER_SOURCES: Record<string, PowerSource> = {};
+let CLASSES: Record<string, AdvancedClass> = {};
+let BASE_ROLLS: Record<string, { str: number; agi: number; int: number }> = {};
+let WEAPONS: Weapon[] = [];
+let ARMORS: Armor[] = [];
+let MONSTERS: Monster[] = [];
+let CONSUMABLES: Consumable[] = [];
+let CLASS_SPELLS: Record<string, ClassSpell> = {};
+let WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {};
+let MONSTER_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {};
+let ARCHETYPE_CONFIGS: Record<string, { name: string; class: string; race: string; armor: string; power: string; path: "str" | "agi" | "int" }> = {};
 
-// Combat constants (from L1 model — source of truth)
-const ATTACK_MODIFIER = 1.2;
-const AGI_ATTACK_MODIFIER = 1.0;
-const CRIT_MULTIPLIER = 2;
-const CRIT_BASE_CHANCE = 5; // percent
-const EVASION_CAP = 35;     // percent
-const DOUBLE_STRIKE_CAP = 40; // percent
-const COMBAT_TRIANGLE_PER_STAT = 0.02; // 2% per stat point (L1 decision)
-const COMBAT_TRIANGLE_MAX = 0.12;      // 12% cap — tiebreaker, not primary driver
-const MAGIC_RESIST_PER_INT = 3;        // percent
-const MAGIC_RESIST_CAP = 40;           // percent
-// Armor does NOT reduce magic — that's INT's advantage over STR.
-// AGI's defense vs magic is evasion (dodge the spell entirely).
-// STR's defense is BLOCK — chance to reduce all incoming damage.
-const BLOCK_CHANCE_PER_STR = 2;        // % per STR point above 10
-const BLOCK_CHANCE_CAP = 30;           // % max
-const BLOCK_REDUCTION_PHYS = 0.50;     // 50% damage reduction on block
-const BLOCK_REDUCTION_MAGIC = 0.0;     // block doesn't reduce magic (can't block a fireball)
-
-const SIM_ITERATIONS = 500; // Monte Carlo iterations per matchup
-
-// Max combat rounds per fight. On-chain DEFAULT_MAX_TURNS = 15, each sim round = 2 on-chain turns.
-// 8 rounds ≈ 15 on-chain turns (both sides act per round, round 1 spell cast counts as a turn).
-// Configurable via --rounds N flag. Draws count as defender/monster win.
+// Sim config
+let activeWeapons: Weapon[] = [];
+let useArmorFlag = false;
+let useSpellsFlag = false;
+const SIM_ITERATIONS = 500;
 let maxCombatRounds = 8;
 
-// ============================================================
-// TYPES
-// ============================================================
 
-interface Race { name: string; str: number; agi: number; int: number; hp: number; }
-interface StartingArmor { name: string; str: number; agi: number; int: number; hp: number; }
-interface PowerSource { name: string; type: "divine" | "weave" | "physical"; }
-
-interface AdvancedClass {
-  name: string;
-  flatStr: number; flatAgi: number; flatInt: number; flatHp: number;
-  physMult: number; spellMult: number; healMult: number; critMult: number; hpMult: number;
-}
-
-interface Weapon {
-  name: string;
-  minDamage: number;
-  maxDamage: number;
-  strMod: number;
-  agiMod: number;
-  intMod: number;
-  hpMod: number;
-  scaling: "str" | "agi";
-  isMagic: boolean;
-  minStr: number;
-  minAgi: number;
-  minInt: number;
-  rarity: number;
-  price: number;
-}
-
-interface Monster {
-  name: string;
-  level: number;
-  str: number;
-  agi: number;
-  int: number;
-  hp: number;
-  armor: number;
-  classType: number; // 0=warrior, 1=rogue, 2=mage
-  xp: number;
-  weaponMinDmg: number;
-  weaponMaxDmg: number;
-  weaponScaling: "str" | "agi";
-  weaponIsMagic: boolean;
-}
-
-interface Archetype {
-  id: string;
-  name: string;
-  className: string;
-  advClass: AdvancedClass;
-  race: Race;
-  startingArmor: StartingArmor;
-  powerSource: PowerSource;
-  statPath: "str" | "agi" | "int";
-  baseRoll: { str: number; agi: number; int: number };
-}
-
-interface StatProfile {
-  str: number; agi: number; int: number; hp: number;
-  totalStats: number; primaryStat: number; dominantType: string;
-}
-
-interface Combatant {
-  str: number; agi: number; int: number;
-  hp: number; maxHp: number; armor: number;
-  weapon: Weapon;
-  physMult: number; spellMult: number; critMult: number; hpMult: number;
-  dominantType: string;
-  dominantStat: number;
-  className: string;
-}
-
-// ============================================================
-// CLASS SPELLS (L5) — cast once on turn 1, replacing weapon attack
-// Self-buffs boost caster stats for duration turns.
-// Debuffs weaken opponent for duration turns.
-// Damage spells deal instant magic damage.
-// ============================================================
-
-interface ClassSpell {
-  name: string;
-  type: "self_buff" | "debuff" | "magic_damage" | "damage_debuff" | "damage_buff";
-  // Percentage-based stat modifiers — scale with caster's stat (buffs) or target's stat (debuffs).
-  // E.g., strPct: 0.15 on a self_buff = +15% of caster's STR. On a debuff = -15% of target's STR.
-  // Flat mods still available for things like armor that don't scale the same way.
-  strPct?: number;
-  agiPct?: number;
-  intPct?: number;
-  armorMod?: number;    // Flat armor (doesn't scale as fast as stats)
-  hpPct?: number;       // % of caster's maxHp added
-  duration?: number;
-  // Magic damage spells: base damage scales with caster INT via dmgPerInt.
-  // Total damage = baseDmg + (casterInt × dmgPerInt).
-  baseDmgMin?: number;
-  baseDmgMax?: number;
-  dmgPerInt?: number;   // Scaling factor per INT point
-  // Physical damage spells: base damage scales with caster STR/AGI.
-  // Total damage = baseDmg + (stat × dmgPerStat). Reduced by armor, not magic resist.
-  dmgPerStr?: number;   // Scaling factor per STR point (Warrior, Paladin)
-  dmgPerAgi?: number;   // Scaling factor per AGI point (Ranger, Rogue)
-}
-
-// Spell durations tuned relative to fight length (~5-6 rounds avg, 8 round cap).
-// Duration N = active for N sim rounds (both sides attack each round).
-// On-chain validTurns ≈ duration × 2 (since each sim round = 2 on-chain turns).
-//
-// SCALING DESIGN:
-//   - Buff/debuff stats use percentages so they scale with character progression.
-//     At L10 with ~25 primary stat, 15% = +3.75. At L50 with ~55, 15% = +8.25.
-//   - Magic damage spells use baseDmg + (INT × dmgPerInt), reduced by magic resist.
-//   - Physical damage spells use baseDmg + (STR/AGI × dmgPerStat), reduced by armor.
-//   - STR/AGI classes get hybrid damage+buff/debuff spells (damage compensates for lost weapon swing).
-//   - Armor mods stay flat — armor values grow slower than stats across zones.
-//   - hpPct scales with maxHp which grows with level.
-const CLASS_SPELLS: Record<string, ClassSpell> = {
-  // STR classes: physical damage (STR-scaled) + self-buff. Damage ≈ one weapon swing so buff is pure upside.
-  Warrior:  { name: "Battle Cry",    type: "damage_buff",   baseDmgMin: 4, baseDmgMax: 8, dmgPerStr: 0.4, strPct: 0.15, armorMod: 3, duration: 6 },
-  Paladin:  { name: "Divine Shield", type: "damage_buff",   baseDmgMin: 3, baseDmgMax: 7, dmgPerStr: 0.35, strPct: 0.12, armorMod: 5, duration: 6 },
-
-  // AGI classes: physical damage (AGI-scaled) + buff/debuff
-  Ranger:   { name: "Hunter's Mark", type: "damage_debuff", baseDmgMin: 3, baseDmgMax: 7, dmgPerAgi: 0.35, agiPct: -0.15, armorMod: -2, duration: 6 },
-  Rogue:    { name: "Shadowstep",    type: "damage_buff",   baseDmgMin: 4, baseDmgMax: 8, dmgPerAgi: 0.4, agiPct: 0.25, duration: 4 },
-
-  // Hybrid: Druid deals nature (magic) damage + debuffs multiple stats
-  Druid:    { name: "Entangle",      type: "damage_debuff", baseDmgMin: 3, baseDmgMax: 6, dmgPerInt: 0.3, agiPct: -0.15, strPct: -0.10, duration: 6 },
-
-  // INT classes: damage spells that scale with INT
-  Warlock:  { name: "Soul Drain",    type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerInt: 0.4, strPct: -0.12, intPct: -0.12, duration: 5 },
-  Wizard:   { name: "Arcane Blast",  type: "magic_damage",  baseDmgMin: 5, baseDmgMax: 10, dmgPerInt: 0.5 },
-  Sorcerer: { name: "Arcane Surge",  type: "magic_damage",  baseDmgMin: 4, baseDmgMax: 8, dmgPerInt: 0.4 },
-  Cleric:   { name: "Blessing",      type: "self_buff",     intPct: 0.12, armorMod: 5, hpPct: 0.10, duration: 6 },
-};
-
-interface CombatResult {
-  attackerWins: number;
-  defenderWins: number;
-  avgRounds: number;
-  avgDamagePerRound: number;
-  winRate: number;
-  iterations: number;
-}
-
-// ============================================================
-// WEAPON EFFECTS — from dark_cave/effects.json + items.json
-// All status effects have resistanceStat = 0 (None) → always land.
-// ============================================================
-
-interface WeaponEffect {
-  type: "dot" | "stat_debuff" | "dual_magic" | "magic_breath";
-  name: string;
-  damagePerTick?: number;
-  maxStacks?: number;
-  duration?: number;  // combat turns
-  cooldown?: number;  // turns between applications
-  strMod?: number;
-  agiMod?: number;
-  intMod?: number;
-  armorMod?: number;
-  minDmg?: number;    // for magic_breath: base damage range
-  maxDmg?: number;
-}
-
-interface ActiveEffectInstance {
-  name: string;
-  type: "dot" | "stat_debuff" | "self_buff";
-  turnsRemaining: number;
-  damagePerTick: number;
-  strMod: number;
-  agiMod: number;
-  intMod: number;
-  armorMod: number;
-}
-
-// Effects by weapon name — looked up at combat time, no need to modify weapon arrays
-const WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
-  // Current weapons (from items.json)
-  "Dire Rat Fang":        [{ type: "dot", name: "poison", damagePerTick: 3, maxStacks: 2, duration: 8, cooldown: 2 }],
-  "Sporecap Wand":        [{ type: "dual_magic", name: "dual_magic" }],
-  "Bone Staff":           [{ type: "dual_magic", name: "dual_magic" }],
-  // V3 epic weapons — proposed effects
-  "Phasefang":  [
-    { type: "dot", name: "poison", damagePerTick: 3, maxStacks: 2, duration: 8, cooldown: 2 },
-    { type: "stat_debuff", name: "blind", agiMod: -8, duration: 8, cooldown: 3 },
-  ],
-  "Trollhide Cleaver": [{ type: "stat_debuff", name: "weaken", strMod: -8, duration: 8, cooldown: 3 }],
-  "Drakescale Staff":   [{ type: "stat_debuff", name: "stupify", intMod: -8, duration: 8, cooldown: 3 }],
-};
-
-// Monster weapon effects — keyed by monster name, applied to monster combatant weapon
-const MONSTER_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
-  "Dire Rat": [{ type: "dot", name: "poison", damagePerTick: 3, maxStacks: 2, duration: 8, cooldown: 2 }],
-  // Basilisk has 3 attack types: physical bite (main weapon), petrifying gaze (magic effect), venom DoT.
-  // Every build resists ONE type but eats the other — natural balance compression.
-  // STR tanks: resist bite (armor), eat gaze. INT casters: resist gaze (magic resist), eat bite. AGI: dodge some of both.
-  "Basilisk": [
-    { type: "magic_breath", name: "gaze", minDmg: 6, maxDmg: 10, cooldown: 2 },
-    { type: "dot", name: "venom", damagePerTick: 5, maxStacks: 1, duration: 6, cooldown: 3 },
-  ],
-};
+// ActiveEffectInstance imported from combat.ts
 
 function getWeaponEffects(weaponName: string): WeaponEffect[] {
   return WEAPON_EFFECTS[weaponName] || MONSTER_WEAPON_EFFECTS[weaponName] || [];
 }
 
-// ============================================================
-// CONSUMABLES (L6) — from dark_cave/effects.json + items.json
-//
-// Two categories:
-//   1. PRE-COMBAT BUFFS: validTime-based (600s), applied before fight, last entire combat.
-//      No turn cost. Player uses from inventory before engaging.
-//      These are: Fortifying Stew (+5 STR), Quickening Mushrooms (+5 AGI), Focusing Draught (+5 INT).
-//
-//   2. IN-COMBAT ITEMS: validTurns-based or instant. Cost 1 weapon attack turn (like spells).
-//      Player chooses to use instead of attacking on a given round.
-//      Health potions heal instantly. Debuffs/tradeoff buffs apply for N turns.
-//
-// On-chain: consumables are used from inventory (not equipment slots).
-// Sim model: pre-combat buffs modify combatant stats before fight starts.
-//            In-combat items are used on optimal round (turn 1 for debuffs, when HP low for potions).
-// ============================================================
+// Consumable types imported from types.ts. Data loaded from zone JSON.
 
-interface Consumable {
-  name: string;
-  type: "pre_buff" | "heal" | "debuff" | "tradeoff_buff" | "cleanse";
-  // Pre-combat buffs
-  strMod?: number;
-  agiMod?: number;
-  intMod?: number;
-  armorMod?: number;
-  // Heals
-  healAmount?: number;
-  // In-combat effects (debuffs applied to target, tradeoff_buffs to self)
-  effect?: {
-    strMod: number;
-    agiMod: number;
-    intMod: number;
-    armorMod: number;
-    damagePerTick: number;
-    duration: number;
-    maxStacks: number;
-    cooldown: number;
-  };
-  rarity: number;
-  price: number;  // in gold
-}
-
-const CONSUMABLES: Consumable[] = [
-  // Pre-combat stat buffs (validTime: 600, validTurns: 0 — persist entire fight)
-  { name: "Fortifying Stew",     type: "pre_buff", strMod: 5, rarity: 1, price: 20 },
-  { name: "Quickening Mushrooms",  type: "pre_buff", agiMod: 5, rarity: 1, price: 20 },
-  { name: "Focusing Draught",        type: "pre_buff", intMod: 5, rarity: 1, price: 20 },
-
-  // Health potions (instant heal, costs 1 turn)
-  { name: "Minor Health Potion",    type: "heal", healAmount: 15,  rarity: 1, price: 10 },
-  { name: "Health Potion",          type: "heal", healAmount: 35,  rarity: 2, price: 25 },
-  { name: "Greater Health Potion",  type: "heal", healAmount: 75,  rarity: 3, price: 60 },
-  { name: "Superior Health Potion", type: "heal", healAmount: 150, rarity: 4, price: 150 },
-
-  // Tradeoff self-buffs (costs 1 turn, duration 3 turns)
-  { name: "Bloodrage Tonic", type: "tradeoff_buff", rarity: 1, price: 25, effect: { strMod: 6, agiMod: 0, intMod: 0, armorMod: -4, damagePerTick: 0, duration: 3, maxStacks: 1, cooldown: 0 } },
-  { name: "Stoneskin Salve", type: "tradeoff_buff", rarity: 1, price: 25, effect: { strMod: 0, agiMod: -4, intMod: 0, armorMod: 6, damagePerTick: 0, duration: 3, maxStacks: 1, cooldown: 0 } },
-  { name: "Trollblood Ale",  type: "tradeoff_buff", rarity: 1, price: 25, effect: { strMod: 8, agiMod: -3, intMod: -5, armorMod: 0, damagePerTick: 0, duration: 3, maxStacks: 1, cooldown: 0 } },
-
-  // Debuffs (costs 1 turn, applied to target)
-  { name: "Venom Vial",     type: "debuff", rarity: 1, price: 35, effect: { strMod: 0, agiMod: 0, intMod: 0, armorMod: 0, damagePerTick: 3, duration: 8, maxStacks: 2, cooldown: 2 } },
-  { name: "Spore Cloud",    type: "debuff", rarity: 1, price: 35, effect: { strMod: 0, agiMod: 0, intMod: -8, armorMod: 0, damagePerTick: 0, duration: 8, maxStacks: 1, cooldown: 3 } },
-  { name: "Sapping Poison", type: "debuff", rarity: 1, price: 35, effect: { strMod: -8, agiMod: 0, intMod: 0, armorMod: 0, damagePerTick: 0, duration: 8, maxStacks: 1, cooldown: 3 } },
-  { name: "Smoke Bomb",     type: "debuff", rarity: 2, price: 35, effect: { strMod: 0, agiMod: -8, intMod: 0, armorMod: 0, damagePerTick: 0, duration: 8, maxStacks: 1, cooldown: 3 } },
-
-  // Cleanse
-  { name: "Antidote", type: "cleanse", rarity: 1, price: 15 },
-];
-
-// Consumable loadout: what a player brings into a fight
 interface ConsumableLoadout {
-  name: string;                 // Human-readable loadout name
-  preBuffs: Consumable[];       // Applied before combat (no turn cost)
-  inCombat: Consumable[];       // Used during combat (costs turn)
+  name: string;
+  preBuffs: Consumable[];
+  inCombat: Consumable[];
 }
 
-// Consumable indices for convenience
-const C_STEW = 0, C_BERRIES = 1, C_TEA = 2;
-const C_MINOR_HP = 3, C_HP = 4, C_GREATER_HP = 5, C_SUPERIOR_HP = 6;
-const C_BLOODRAGE = 7, C_STONESKIN = 8, C_TROLLBLOOD = 9;
-const C_VENOM = 10, C_SPORE = 11, C_SAPPING = 12, C_SMOKE = 13;
-const C_ANTIDOTE = 14;
+// Helper to find consumable by name (used to build loadouts after data is loaded)
+function findConsumable(name: string): Consumable {
+  const c = CONSUMABLES.find(c => c.name === name);
+  if (!c) throw new Error(`Consumable not found: ${name}`);
+  return c;
+}
 
-// Pre-defined loadouts for testing
-const WYRM_LOADOUTS: ConsumableLoadout[] = [
-  { name: "No consumables", preBuffs: [], inCombat: [] },
-  // Single pre-buff
-  { name: "+STR buff", preBuffs: [CONSUMABLES[C_STEW]], inCombat: [] },
-  { name: "+AGI buff", preBuffs: [CONSUMABLES[C_BERRIES]], inCombat: [] },
-  { name: "+INT buff", preBuffs: [CONSUMABLES[C_TEA]], inCombat: [] },
-  // Pre-buff + heal
-  { name: "+STR + Greater HP", preBuffs: [CONSUMABLES[C_STEW]], inCombat: [CONSUMABLES[C_GREATER_HP]] },
-  { name: "+AGI + Greater HP", preBuffs: [CONSUMABLES[C_BERRIES]], inCombat: [CONSUMABLES[C_GREATER_HP]] },
-  { name: "+INT + Greater HP", preBuffs: [CONSUMABLES[C_TEA]], inCombat: [CONSUMABLES[C_GREATER_HP]] },
-  // Pre-buff + debuff (Sapping Poison = -8 STR on Basilisk, huge vs Warrior boss)
-  { name: "+STR + Sapping",    preBuffs: [CONSUMABLES[C_STEW]], inCombat: [CONSUMABLES[C_SAPPING]] },
-  { name: "+AGI + Sapping",    preBuffs: [CONSUMABLES[C_BERRIES]], inCombat: [CONSUMABLES[C_SAPPING]] },
-  { name: "+INT + Sapping",    preBuffs: [CONSUMABLES[C_TEA]], inCombat: [CONSUMABLES[C_SAPPING]] },
-  // Full kit: pre-buff + heal + debuff (3 consumable slots used)
-  { name: "+STR + GHP + Sapping", preBuffs: [CONSUMABLES[C_STEW]], inCombat: [CONSUMABLES[C_GREATER_HP], CONSUMABLES[C_SAPPING]] },
-  { name: "+AGI + GHP + Sapping", preBuffs: [CONSUMABLES[C_BERRIES]], inCombat: [CONSUMABLES[C_GREATER_HP], CONSUMABLES[C_SAPPING]] },
-  { name: "+INT + GHP + Sapping", preBuffs: [CONSUMABLES[C_TEA]], inCombat: [CONSUMABLES[C_GREATER_HP], CONSUMABLES[C_SAPPING]] },
-  // Antidote (Basilisk applies venom — does cleansing help?)
-  { name: "+STR + Antidote", preBuffs: [CONSUMABLES[C_STEW]], inCombat: [CONSUMABLES[C_ANTIDOTE]] },
-];
+// Built lazily in main() after CONSUMABLES is loaded
+let WYRM_LOADOUTS: ConsumableLoadout[] = [];
+
+function buildWyrmLoadouts(): ConsumableLoadout[] {
+  // Find consumables by name — zone JSON uses canonical on-chain names
+  const stew = CONSUMABLES.find(c => c.type === "pre_buff" && c.strMod);
+  const berries = CONSUMABLES.find(c => c.type === "pre_buff" && c.agiMod);
+  const tea = CONSUMABLES.find(c => c.type === "pre_buff" && c.intMod);
+  const ghp = CONSUMABLES.find(c => c.type === "heal" && c.healAmount === 75);
+  const sapping = CONSUMABLES.find(c => c.type === "debuff" && c.effect && c.effect.strMod < 0);
+  const antidote = CONSUMABLES.find(c => c.type === "cleanse");
+
+  if (!stew || !berries || !tea || !ghp || !sapping || !antidote) {
+    console.warn("Warning: some consumables not found, wyrm loadouts incomplete");
+    return [{ name: "No consumables", preBuffs: [], inCombat: [] }];
+  }
+
+  return [
+    { name: "No consumables", preBuffs: [], inCombat: [] },
+    { name: "+STR buff", preBuffs: [stew], inCombat: [] },
+    { name: "+AGI buff", preBuffs: [berries], inCombat: [] },
+    { name: "+INT buff", preBuffs: [tea], inCombat: [] },
+    { name: "+STR + Greater HP", preBuffs: [stew], inCombat: [ghp] },
+    { name: "+AGI + Greater HP", preBuffs: [berries], inCombat: [ghp] },
+    { name: "+INT + Greater HP", preBuffs: [tea], inCombat: [ghp] },
+    { name: "+STR + Sapping",    preBuffs: [stew], inCombat: [sapping] },
+    { name: "+AGI + Sapping",    preBuffs: [berries], inCombat: [sapping] },
+    { name: "+INT + Sapping",    preBuffs: [tea], inCombat: [sapping] },
+    { name: "+STR + GHP + Sapping", preBuffs: [stew], inCombat: [ghp, sapping] },
+    { name: "+AGI + GHP + Sapping", preBuffs: [berries], inCombat: [ghp, sapping] },
+    { name: "+INT + GHP + Sapping", preBuffs: [tea], inCombat: [ghp, sapping] },
+    { name: "+STR + Antidote", preBuffs: [stew], inCombat: [antidote] },
+  ];
+}
 
 /**
  * Estimate the combat value of a weapon's effects for scoring purposes.
@@ -438,397 +236,59 @@ function estimateEffectValue(weaponName: string): number {
   return value;
 }
 
-// ============================================================
-// DATA: Races, Armor, Classes, Power Sources
-// ============================================================
+// All game data loaded dynamically in main() via loader.ts + overrides.ts
 
-const RACES: Record<string, Race> = {
-  human: { name: "Human", str: 1, agi: 1, int: 1, hp: 0 },
-  dwarf: { name: "Dwarf", str: 2, agi: -1, int: 0, hp: 1 },
-  elf:   { name: "Elf",   str: -1, agi: 2, int: 1, hp: -1 },
-};
-
-const STARTING_ARMORS: Record<string, StartingArmor> = {
-  cloth:   { name: "Cloth",   str: -1, agi: 1, int: 2, hp: 0 },
-  leather: { name: "Leather", str: 1,  agi: 2, int: 0, hp: 0 },
-  plate:   { name: "Plate",   str: 2,  agi: -1, int: 0, hp: 1 },
-};
-
-const POWER_SOURCES: Record<string, PowerSource> = {
-  physical: { name: "Physical", type: "physical" },
-  weave:    { name: "Weave",    type: "weave" },
-  divine:   { name: "Divine",   type: "divine" },
-};
-
-const CLASSES: Record<string, AdvancedClass> = {
-  warrior:  { name: "Warrior",  flatStr: 3, flatAgi: 0, flatInt: 0, flatHp: 10, physMult: 1100, spellMult: 1000, healMult: 1000, critMult: 1000, hpMult: 1000 },
-  paladin:  { name: "Paladin",  flatStr: 2, flatAgi: 0, flatInt: 0, flatHp: 15, physMult: 1050, spellMult: 1000, healMult: 1050, critMult: 1000, hpMult: 1000 },
-  ranger:   { name: "Ranger",   flatStr: 0, flatAgi: 3, flatInt: 0, flatHp: 0,  physMult: 1100, spellMult: 1000, healMult: 1000, critMult: 1000, hpMult: 1000 },
-  rogue:    { name: "Rogue",    flatStr: 0, flatAgi: 2, flatInt: 1, flatHp: 0,  physMult: 1000, spellMult: 1000, healMult: 1000, critMult: 1150, hpMult: 1000 },
-  druid:    { name: "Druid",    flatStr: 2, flatAgi: 2, flatInt: 0, flatHp: 0,  physMult: 1050, spellMult: 1050, healMult: 1000, critMult: 1000, hpMult: 1050 },
-  warlock:  { name: "Warlock",  flatStr: 0, flatAgi: 2, flatInt: 2, flatHp: 0,  physMult: 1000, spellMult: 1200, healMult: 1000, critMult: 1000, hpMult: 1000 },
-  wizard:   { name: "Wizard",   flatStr: 0, flatAgi: 0, flatInt: 3, flatHp: 0,  physMult: 1000, spellMult: 1250, healMult: 1000, critMult: 1000, hpMult: 1000 },
-  cleric:   { name: "Cleric",   flatStr: 0, flatAgi: 0, flatInt: 2, flatHp: 10, physMult: 1000, spellMult: 1000, healMult: 1100, critMult: 1000, hpMult: 1000 },
-  sorcerer: { name: "Sorcerer", flatStr: 2, flatAgi: 0, flatInt: 2, flatHp: 0,  physMult: 1000, spellMult: 1150, healMult: 1000, critMult: 1000, hpMult: 1050 },
-};
-
-const BASE_ROLLS = {
-  str: { str: 8, agi: 5, int: 6 },
-  agi: { str: 5, agi: 8, int: 6 },
-  int: { str: 5, agi: 6, int: 8 },
-};
-
-// ============================================================
-// DATA: Weapons (from dark_cave/items.json)
+// L2 STAT CALCULATION — delegated to formulas.ts, wired with module-level constants
 // ============================================================
 
-const WEAPONS: Weapon[] = [
-  // Starters (R0)
-  { name: "Broken Sword",     minDamage: 1, maxDamage: 1, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-  { name: "Worn Shortbow",    minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 1, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-  { name: "Cracked Wand",     minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-
-  // R1
-  { name: "Iron Axe",         minDamage: 1, maxDamage: 2, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 0,  rarity: 1, price: 15 },
-  { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
-  { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
-  { name: "Steel Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 9,  minAgi: 0,  minInt: 0,  rarity: 1, price: 40 },
-  { name: "Shortbow",      minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },
-  { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 10, rarity: 1, price: 40 },
-  { name: "Notched Blade",     minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 1, price: 50 },
-
-  // R2
-  { name: "Brute's Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 7,  minAgi: 0,  minInt: 0,  rarity: 2, price: 60 },
-  { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
-  { name: "Crystal Shard",    minDamage: 6, maxDamage: 9, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 2, price: 70 },
-  { name: "Webspinner Bow",   minDamage: 3, maxDamage: 4, strMod: 0, agiMod: 3, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },
-  { name: "Warhammer",        minDamage: 4, maxDamage: 7, strMod: 3, agiMod: 0, intMod: 0, hpMod: 8, scaling: "str", isMagic: false, minStr: 13, minAgi: 0,  minInt: 0,  rarity: 2, price: 100 },
-  { name: "Longbow",          minDamage: 4, maxDamage: 6, strMod: 0, agiMod: 3, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 15, minInt: 0,  rarity: 2, price: 100 },
-  { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 11, rarity: 2, price: 100 },
-
-  // R3
-  { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
-  { name: "Troll's Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 12, minAgi: 0,  minInt: 0,  rarity: 3, price: 180 },
-  { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 13, rarity: 3, price: 180 },
-  { name: "Stone Maul",     minDamage: 5, maxDamage: 7, strMod: 4, agiMod: 0, intMod: 0, hpMod: 8, scaling: "str", isMagic: false, minStr: 15, minAgi: 0,  minInt: 0,  rarity: 3, price: 250 },
-
-  // R4
-  { name: "Darkwood Bow",     minDamage: 6, maxDamage: 9, strMod: 2, agiMod: 5, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 18, minInt: 0,  rarity: 4, price: 220 },
-  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 2, intMod: 5, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 16, rarity: 4, price: 300 },
-];
-
-// ============================================================
-// REBALANCED WEAPONS V1 — stat changes only, no requirement changes
-// ============================================================
-
-const WEAPONS_REBALANCED: Weapon[] = [
-  // Starters (R0) — unchanged
-  { name: "Broken Sword",     minDamage: 1, maxDamage: 1, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-  { name: "Worn Shortbow",    minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 1, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-  { name: "Cracked Wand",     minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-
-  // R1 — STR HP reduced, AGI gets HP
-  { name: "Iron Axe",         minDamage: 1, maxDamage: 2, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 0,  rarity: 1, price: 15 },
-  { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
-  { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
-  { name: "Steel Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 9,  minAgi: 0,  minInt: 0,  rarity: 1, price: 40 },
-  { name: "Shortbow",      minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },
-  { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 10, rarity: 1, price: 40 },
-  { name: "Notched Blade",     minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 1, price: 50 },
-
-  // R2
-  { name: "Brute's Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 0,  minInt: 0,  rarity: 2, price: 60 },
-  { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
-  { name: "Crystal Shard",    minDamage: 4, maxDamage: 6, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 2, price: 70 },
-  { name: "Webspinner Bow",   minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },
-  { name: "Warhammer",        minDamage: 4, maxDamage: 7, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 13, minAgi: 0,  minInt: 0,  rarity: 2, price: 100 },
-  { name: "Longbow",          minDamage: 4, maxDamage: 7, strMod: 0, agiMod: 3, intMod: 0, hpMod: 5, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 15, minInt: 0,  rarity: 2, price: 100 },
-  { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 11, rarity: 2, price: 100 },
-
-  // R3
-  { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
-  { name: "Troll's Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 12, minAgi: 0,  minInt: 0,  rarity: 3, price: 180 },
-  { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 13, rarity: 3, price: 180 },
-  { name: "Stone Maul",     minDamage: 5, maxDamage: 7, strMod: 4, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 15, minAgi: 0,  minInt: 0,  rarity: 3, price: 250 },
-
-  // R4
-  { name: "Darkwood Bow",     minDamage: 7, maxDamage: 10,strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 18, minInt: 0,  rarity: 4, price: 220 },
-  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 2, intMod: 5, hpMod: 6, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 16, rarity: 4, price: 300 },
-];
-
-// ============================================================
-// REBALANCED WEAPONS V2 — stat changes + secondary stat requirements
-// Goal: endgame weapons cost 3-5 off-path points to equip.
-// Creates real tradeoffs: better weapon = weaker primary stat.
-//
-// Secondary stat logic (taxes the path that uses the weapon):
-//   STR weapons → require some AGI (STR builds have base AGI 3-6)
-//   AGI weapons → require some STR (AGI builds have base STR 5)
-//   INT weapons → require some STR (INT builds have base STR 3)
-//
-// Budget context at L10: 21 stat points total.
-//   Weapon req cost: ~3-5 off-path
-//   Armor req cost:  ~3-5 off-path (designed in L4)
-//   Remaining for primary: ~11-15 (from 21)
-//   Total primary: base(12-15) + allocated(11-15) = 23-30
-//
-// Hard constraints:
-//   - Every L10 build must beat Dusk Drake (18/18/20, 70 HP, 3 armor)
-//   - Every L10 build must have >30% PvP win rate
-// ============================================================
-
-interface Armor {
-  name: string;
-  armorValue: number;
-  strMod: number; agiMod: number; intMod: number; hpMod: number;
-  minStr: number; minAgi: number; minInt: number;
-  armorType: "Plate" | "Leather" | "Cloth";
-  rarity: number;
-  price: number;
+function getLevelingConstants(): LevelingConstants {
+  return {
+    baseHp: BASE_HP, earlyGameCap: EARLY_GAME_CAP, midGameCap: MID_GAME_CAP,
+    statPointsEarly: STAT_POINTS_EARLY, statPointsMid: STAT_POINTS_MID, statPointsLate: STAT_POINTS_LATE,
+    hpGainEarly: HP_GAIN_EARLY, hpGainMid: HP_GAIN_MID, hpGainLate: HP_GAIN_LATE,
+    powerSourceBonusLevel: POWER_SOURCE_BONUS_LEVEL,
+  };
 }
 
-// ============================================================
-// DATA: Equipped Armor (L4 — separate slot from weapons)
-// Secondary stat requirements: STR armor→INT, AGI armor→INT, INT armor→AGI
-// This creates independent stat demands from weapons (which use STR→AGI, AGI→STR, INT→STR).
-// Armor stat bonuses count toward weapon requirements (creates gear dependency tension).
-// ============================================================
-
-const ARMORS: Armor[] = [
-  // ---- R0: Starters — no reqs, everyone gets basic armor ----
-  { name: "Tattered Cloth",     armorValue: 1, strMod: 0,  agiMod: 0, intMod: 1, hpMod: 0, minStr: 0,  minAgi: 0,  minInt: 0,  armorType: "Cloth",   rarity: 0, price: 5 },
-  { name: "Worn Leather Vest",  armorValue: 2, strMod: -1, agiMod: 1, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 0,  minInt: 0,  armorType: "Leather", rarity: 0, price: 5 },
-  { name: "Rusty Chainmail",    armorValue: 3, strMod: 0,  agiMod: -1,intMod: 0, hpMod: 0, minStr: 0,  minAgi: 0,  minInt: 0,  armorType: "Plate",   rarity: 0, price: 5 },
-
-  // ---- R1: Single primary req, early game ----
-  { name: "Padded Armor",       armorValue: 3, strMod: 1,  agiMod: 0, intMod: 0, hpMod: 0, minStr: 8,  minAgi: 0,  minInt: 0,  armorType: "Plate",   rarity: 1, price: 15 },
-  { name: "Leather Jerkin",     armorValue: 2, strMod: 0,  agiMod: 1, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 5,  minInt: 0,  armorType: "Leather", rarity: 1, price: 15 },
-  { name: "Apprentice Robes",   armorValue: 1, strMod: 0,  agiMod: 0, intMod: 1, hpMod: 0, minStr: 0,  minAgi: 0,  minInt: 7,  armorType: "Cloth",   rarity: 1, price: 15 },
-  { name: "Studded Leather",    armorValue: 5, strMod: 1,  agiMod: 0, intMod: 0, hpMod: 5, minStr: 8,  minAgi: 0,  minInt: 0,  armorType: "Plate",   rarity: 1, price: 40 },
-  { name: "Scout Armor",        armorValue: 4, strMod: 0,  agiMod: 2, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 10, minInt: 0,  armorType: "Leather", rarity: 1, price: 40 },
-  { name: "Acolyte Vestments",  armorValue: 2, strMod: 0,  agiMod: 0, intMod: 2, hpMod: 0, minStr: 0,  minAgi: 0,  minInt: 7,  armorType: "Cloth",   rarity: 1, price: 40 },
-
-  // ---- R2: Primary + secondary req. Costs 0-1 off-path points. ----
-  // STR→INT secondary: WAR/PAL/RAN/DRU pure STR have INT 6, need 1pt for INT 7
-  // AGI→INT secondary: WAR/PAL/RAN/DRU pure AGI have INT 7, need 1pt for INT 8
-  // INT→AGI secondary: WAR/PAL/WIZ/CLR/SOR pure INT have AGI 9, need 1pt for AGI 10
-  { name: "Chainmail Shirt",    armorValue: 8, strMod: 2,  agiMod: 0, intMod: 0, hpMod: 8, minStr: 12, minAgi: 0,  minInt: 7,  armorType: "Plate",   rarity: 2, price: 100 },   // INT 7 costs WAR/PAL/RAN/DRU-S 1pt
-  { name: "Ranger Leathers",    armorValue: 6, strMod: 0,  agiMod: 3, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 11, minInt: 8,  armorType: "Leather", rarity: 2, price: 100 },   // INT 8 costs WAR/PAL/RAN/DRU-A 1pt
-  { name: "Mage Robes",         armorValue: 4, strMod: 0,  agiMod: 0, intMod: 3, hpMod: 0, minStr: 0,  minAgi: 10, minInt: 14, armorType: "Cloth",   rarity: 2, price: 100 },   // AGI 10 costs WAR/PAL/WIZ/CLR/SOR-I 1pt
-  { name: "Spider Silk Wraps",  armorValue: 3, strMod: 0,  agiMod: 4, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 12, minInt: 8,  armorType: "Leather", rarity: 2, price: 90 },    // AGI 12 harder to reach, niche
-
-  // ---- R3: Primary + higher secondary. Costs 1-3 off-path points. ----
-  // STR→INT 9: WAR/PAL/RAN/DRU-S (INT 6) need 3pts. WLK/CLR/SOR-S (INT 8) need 1pt. WIZ-S free.
-  // AGI→INT 10: WAR/PAL/RAN/DRU-A (INT 7) need 3pts. ROG-A (INT 8) needs 2. WLK-A (INT 9) needs 1.
-  // INT→AGI 12: WAR/PAL/WIZ/CLR/SOR-I (AGI 9) need 3pts. ROG/DRU/WLK-I (AGI 11) need 1pt. RAN-I free.
-  { name: "Cracked Stone Plate",armorValue: 10, strMod: 3, agiMod: 0, intMod: 0, hpMod: 10, minStr: 14, minAgi: 0,  minInt: 9,  armorType: "Plate",   rarity: 3, price: 200 },
-  { name: "Stalker's Cloak",    armorValue: 7,  strMod: 0, agiMod: 5, intMod: 0, hpMod: 0,  minStr: 0,  minAgi: 14, minInt: 10, armorType: "Leather", rarity: 3, price: 200 },
-  { name: "Drake's Cowl",      armorValue: 6,  strMod: 0, agiMod: 0, intMod: 5, hpMod: 0,  minStr: 0,  minAgi: 12, minInt: 14, armorType: "Cloth",   rarity: 3, price: 200 },
-  { name: "Scorched Scale Vest",armorValue: 8,  strMod: 1, agiMod: 1, intMod: 4, hpMod: 6,  minStr: 12, minAgi: 0,  minInt: 9,  armorType: "Plate",   rarity: 3, price: 250 },  // Hybrid STR/INT
-];
-
-const WEAPONS_V2: Weapon[] = [
-  // Starters (R0) — no requirements
-  { name: "Broken Sword",     minDamage: 1, maxDamage: 1, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-  { name: "Worn Shortbow",    minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 1, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-  { name: "Cracked Wand",     minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-
-  // R1 cheap (15g) — single primary req, no secondary. Early game is simple.
-  { name: "Iron Axe",         minDamage: 1, maxDamage: 2, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 0,  rarity: 1, price: 15 },
-  { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
-  { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
-
-  // R1 mid (40-50g) — slight secondary. Cost 0-2 off-path.
-  { name: "Steel Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 9,  minAgi: 5,  minInt: 0,  rarity: 1, price: 40 },   // AGI 5 costs STR builds 0-2
-  { name: "Shortbow",      minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 6,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },   // STR 6 costs AGI builds 1
-  { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 10, rarity: 1, price: 40 },   // STR 4 costs INT builds 1
-  { name: "Notched Blade",     minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 1, price: 50 },   // Hybrid, both low
-
-  // R2 mid (60-90g) — moderate secondary. Cost 2-3 off-path.
-  { name: "Brute's Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 5,  minInt: 0,  rarity: 2, price: 60 },   // AGI 5 costs STR builds 0-2
-  { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
-  { name: "Crystal Shard",    minDamage: 4, maxDamage: 6, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 8,  minAgi: 0,  minInt: 8,  rarity: 2, price: 70 },   // Dual req bumped: STR 8 + INT 8. Costs STR builds 2 INT, INT builds 5 STR
-  { name: "Webspinner Bow",   minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4, scaling: "agi", isMagic: false, minStr: 7,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },   // STR 7 costs AGI builds 2
-
-  // R2 high (100g) — heavier secondary. Cost 2-4 off-path.
-  { name: "Warhammer",        minDamage: 4, maxDamage: 7, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 13, minAgi: 6,  minInt: 0,  rarity: 2, price: 100 },  // AGI 6 costs STR builds 1-3
-  { name: "Longbow",          minDamage: 4, maxDamage: 7, strMod: 0, agiMod: 3, intMod: 0, hpMod: 5, scaling: "agi", isMagic: false, minStr: 8,  minAgi: 15, minInt: 0,  rarity: 2, price: 100 },  // STR 8 costs AGI builds 3
-  { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 5,  minAgi: 0,  minInt: 11, rarity: 2, price: 100 },  // STR 5 costs INT builds 2
-
-  // R3 (150-250g) — significant secondary. Cost 3-5 off-path.
-  { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },  // Drop weapon, no reqs
-  { name: "Troll's Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 12, minAgi: 6,  minInt: 0,  rarity: 3, price: 180 },  // AGI 6 costs STR builds 1-3
-  { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 6,  minAgi: 0,  minInt: 13, rarity: 3, price: 180 },  // STR 6 costs INT builds 3
-  { name: "Stone Maul",     minDamage: 5, maxDamage: 7, strMod: 4, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 15, minAgi: 8,  minInt: 0,  rarity: 3, price: 250 },  // AGI 8 costs STR builds 2-5
-
-  // R4 (220-300g) — endgame, meaningful secondary. Cost 3-5 off-path.
-  { name: "Darkwood Bow",     minDamage: 7, maxDamage: 10,strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 9,  minAgi: 18, minInt: 0,  rarity: 4, price: 220 },  // STR 9 costs AGI builds 4
-  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 2, intMod: 5, hpMod: 6, scaling: "str", isMagic: true,  minStr: 7,  minAgi: 0,  minInt: 16, rarity: 4, price: 300 },  // STR 7 costs INT builds 4
-];
-
-// ============================================================
-// WEAPONS V3 — epic hybrid weapons + pure path nerfs
-// Goal: hybrid 70/30 builds equip epic weapons for FREE,
-//       pure builds pay 5-8 off-path points (not worth it).
-// Pure path weapons are slightly nerfed — armor/consumables (L4/L5)
-// will further differentiate builds, so don't over-tune here.
-//
-// Rogue note: Phasefang gives AGI/INT hybrid a real weapon.
-// Rogue's critMult (1.15) and double-strike from high AGI are its levers.
-// Remaining Rogue gap can be closed by armor (L4) and consumables (L5).
-// ============================================================
-
-const WEAPONS_V3: Weapon[] = [
-  // ---- R0: Starters — unchanged ----
-  { name: "Broken Sword",     minDamage: 1, maxDamage: 1, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-  { name: "Worn Shortbow",    minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 1, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-  { name: "Cracked Wand",     minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
-
-  // ---- R1 cheap (15g) — unchanged from V2 ----
-  { name: "Iron Axe",         minDamage: 1, maxDamage: 2, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 0,  rarity: 1, price: 15 },
-  { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
-  { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
-
-  // ---- R1 mid (40-50g) — secondary reqs scaled for 1pt/level ----
-  { name: "Steel Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 8,  minAgi: 3,  minInt: 0,  rarity: 1, price: 40 },   // AGI 5→3 (free for STR base 3)
-  { name: "Shortbow",      minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },   // STR 6→4 (free for AGI base 5)
-  { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 3,  minAgi: 0,  minInt: 9,  rarity: 1, price: 40 },   // STR 4→3, INT 10→9
-  { name: "Notched Blade",     minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 4,  minAgi: 0,  minInt: 4,  rarity: 1, price: 50 },   // Both 5→4
-
-  // ---- R2 mid (60-90g) — secondary reqs scaled ----
-  { name: "Brute's Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 3,  minInt: 0,  rarity: 2, price: 60 },   // AGI 5→3
-  { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
-  { name: "Crystal Shard",    minDamage: 4, maxDamage: 6, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 6,  minAgi: 0,  minInt: 6,  rarity: 2, price: 70 },   // Both 8→6
-  { name: "Webspinner Bow",   minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4, scaling: "agi", isMagic: false, minStr: 5,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },   // STR 7→5
-
-  // ---- R2 high (100g) — reqs scaled for 1pt/level ----
-  { name: "Warhammer",        minDamage: 4, maxDamage: 7, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 11, minAgi: 4,  minInt: 0,  rarity: 2, price: 100 },  // STR 13→11, AGI 6→4
-  { name: "Longbow",          minDamage: 4, maxDamage: 7, strMod: 0, agiMod: 3, intMod: 0, hpMod: 5, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 13, minInt: 0,  rarity: 2, price: 100 },  // STR 8→6→4, AGI 15→13. Pure AGI builds can equip.
-  { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 9,  rarity: 2, price: 100 },  // STR 5→4, INT 11→9
-
-  // ---- R3: Pure path ceiling (NERFED from V2) ----
-  { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
-  { name: "Troll's Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 10, minAgi: 4,  minInt: 0,  rarity: 3, price: 180 },  // STR 12→10, AGI 6→4
-  { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 11, rarity: 3, price: 180 },  // STR 6→4, INT 13→11
-  { name: "Stone Maul",     minDamage: 5, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 13, minAgi: 5,  minInt: 0,  rarity: 3, price: 250 },  // STR 15→13, AGI 8→5
-
-  // ---- R3: Pure path endgame (demoted from R4) — reqs scaled for 1pt/level ----
-  { name: "Darkwood Bow",     minDamage: 6, maxDamage: 9, strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 14, minInt: 0,  rarity: 3, price: 220 },   // STR 9→6→4, AGI 18→14. Pure AGI builds can equip.
-  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 7, strMod: 0, agiMod: 2, intMod: 5, hpMod: 6, scaling: "str", isMagic: true,  minStr: 5,  minAgi: 0,  minInt: 13, rarity: 3, price: 300 },   // STR 7→5, INT 16→13
-
-  // ---- R4 EPIC: Hybrid weapons — reqs scaled for 1pt/level (11 points at L10) ----
-  // 70/30 hybrids equip FREE. 90/10 locked out (secondary > base + 10% allocation).
-  // Epic reqs: primary raised to lock out 33/33/33 (15/14/10) while allowing 50/50+ (16/16).
-  // Secondary locks out 90/10 (base+1 < req). 70/30 equips FREE.
-  { name: "Trollhide Cleaver", minDamage: 6, maxDamage: 9, strMod: 3, agiMod: 3, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 16, minAgi: 13, minInt: 0,  rarity: 4, price: 350 },  // STR/AGI — Druid hybrid
-  { name: "Phasefang",  minDamage: 5, maxDamage: 10, strMod: 0, agiMod: 4, intMod: 3, hpMod: 5, scaling: "agi", isMagic: true,  minStr: 0,  minAgi: 16, minInt: 11, rarity: 4, price: 350 },  // AGI/INT — Warlock, Rogue
-  { name: "Drakescale Staff",   minDamage: 5, maxDamage: 8, strMod: 2, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 16, minAgi: 0,  minInt: 11, rarity: 4, price: 350 },  // STR/INT — Sorcerer hybrid
-];
-
-// ============================================================
-// DATA: Monsters (from dark_cave/monsters.json)
-// ============================================================
-
-const MONSTERS: Monster[] = [
-  // Retuned for 1pt/level stat budget. Primary stats scaled ~75-90%, HP ~80-85%, armor -1 where high.
-  { name: "Dire Rat",          level: 1,  str: 3,  agi: 6,  int: 2,  hp: 10, armor: 0, classType: 1, xp: 225,  weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "agi", weaponIsMagic: false },
-  { name: "Fungal Shaman",     level: 2,  str: 3,  agi: 4,  int: 8,  hp: 12, armor: 0, classType: 2, xp: 400,  weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "str", weaponIsMagic: true },
-  { name: "Cavern Brute",      level: 3,  str: 9,  agi: 4,  int: 3,  hp: 18, armor: 1, classType: 0, xp: 550,  weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "str", weaponIsMagic: false },
-  { name: "Crystal Elemental", level: 4,  str: 4,  agi: 5,  int: 10, hp: 16, armor: 1, classType: 2, xp: 800,  weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "str", weaponIsMagic: true },
-  { name: "Ironhide Troll",        level: 5,  str: 11, agi: 6,  int: 5,  hp: 26, armor: 2, classType: 0, xp: 1000, weaponMinDmg: 1, weaponMaxDmg: 3, weaponScaling: "str", weaponIsMagic: false },
-  { name: "Phase Spider",      level: 6,  str: 8,  agi: 12, int: 5,  hp: 22, armor: 0, classType: 1, xp: 1325, weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "agi", weaponIsMagic: false },
-  { name: "Bonecaster",      level: 7,  str: 6,  agi: 7,  int: 13, hp: 26, armor: 0, classType: 2, xp: 2000, weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "str", weaponIsMagic: true },
-  { name: "Rock Golem",       level: 8,  str: 14, agi: 8,  int: 7,  hp: 38, armor: 3, classType: 0, xp: 2500, weaponMinDmg: 1, weaponMaxDmg: 3, weaponScaling: "str", weaponIsMagic: false },
-  { name: "Pale Stalker",    level: 9,  str: 10, agi: 15, int: 7,  hp: 34, armor: 0, classType: 1, xp: 3250, weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "agi", weaponIsMagic: false },
-  { name: "Dusk Drake",     level: 10, str: 13, agi: 13, int: 15, hp: 52, armor: 2, classType: 2, xp: 6500, weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "str", weaponIsMagic: true },
-  // Zone boss — 3 attack types: physical bite (weapon) + petrifying gaze (magic effect) + venom DoT.
-  // Armor 4 slows physical weapons (Crystal Shard 3-6 → 0-2 effective). Physical weapon lets ARM matter.
-  // Gaze is separate magic hit. INT 10 → only 30% magic resist on Basilisk. Player magic can deal damage.
-  // Every build resists one type but eats the other. Venom (flat DoT) is the equalizer.
-  { name: "Basilisk",   level: 10, str: 20, agi: 12, int: 10, hp: 100, armor: 4, classType: 0, xp: 10000, weaponMinDmg: 4, weaponMaxDmg: 7, weaponScaling: "str", weaponIsMagic: false },
-];
-
-// ============================================================
-// L2 STAT CALCULATION (copied from L2 — single source would be better, but keeps this standalone)
-// ============================================================
+function getCombatConstants(): CombatConstants {
+  return {
+    attackModifier: ATTACK_MODIFIER, agiAttackModifier: AGI_ATTACK_MODIFIER,
+    defenseModifier: 1.0, critMultiplier: CRIT_MULTIPLIER, critBaseChance: CRIT_BASE_CHANCE,
+    critAgiDivisor: 4, evasionDivisor: 3, evasionCap: EVASION_CAP,
+    doubleStrikeMultiplier: 3, doubleStrikeCap: DOUBLE_STRIKE_CAP,
+    combatTriangleFlatPct: 0.20, combatTrianglePerStat: COMBAT_TRIANGLE_PER_STAT,
+    combatTriangleMax: COMBAT_TRIANGLE_MAX,
+    magicResistPerInt: MAGIC_RESIST_PER_INT, magicResistCap: MAGIC_RESIST_CAP,
+    blockChancePerStr: BLOCK_CHANCE_PER_STR, blockChanceCap: BLOCK_CHANCE_CAP,
+    blockReductionPhys: BLOCK_REDUCTION_PHYS, blockReductionMagic: BLOCK_REDUCTION_MAGIC,
+    hitStartingProbability: 90, hitAttackerDampener: 95, hitDefenderDampener: 30,
+    hitMin: 5, hitMax: 98, spellDodgeThreshold: 10, spellDodgePctPerAgi: 2.0, spellDodgeCap: 20,
+    classMultiplierBase: CLASS_MULTIPLIER_BASE,
+  };
+}
 
 function statPointsForLevel(level: number): number {
-  if (level <= EARLY_GAME_CAP) return STAT_POINTS_EARLY;
-  if (level <= MID_GAME_CAP) return (level % 2 === 0) ? STAT_POINTS_MID : 0;
-  return (level % 5 === 0) ? STAT_POINTS_LATE : 0;
+  return _statPointsForLevel(level, getLevelingConstants());
 }
 
 function hpForLevel(level: number): number {
-  if (level <= EARLY_GAME_CAP) return HP_GAIN_EARLY;
-  if (level <= MID_GAME_CAP) return HP_GAIN_MID;
-  return (level % 2 === 0) ? HP_GAIN_LATE : 0;
+  return _hpForLevel(level, getLevelingConstants());
 }
 
 function totalStatPointsAtLevel(level: number): number {
-  let total = 0;
-  for (let l = 1; l <= level; l++) total += statPointsForLevel(l);
-  return total;
+  return _totalStatPointsAtLevel(level, getLevelingConstants());
 }
 
 function totalHpFromLeveling(level: number): number {
-  let total = 0;
-  for (let l = 1; l <= level; l++) total += hpForLevel(l);
-  return total;
+  return _totalHpFromLeveling(level, getLevelingConstants());
 }
 
 function allocatePoints(totalPoints: number, path: "str" | "agi" | "int", extraPsPoint: boolean = false): { str: number; agi: number; int: number } {
-  const points = totalPoints + (extraPsPoint ? 1 : 0);
-  const alloc = { str: 0, agi: 0, int: 0 };
-  alloc[path] = points;
-  return alloc; // focused allocation only for L3 — it's the worst-case test
+  return _allocatePoints(totalPoints, path, extraPsPoint);
 }
 
 function buildProfile(arch: Archetype, level: number): StatProfile {
-  let str = arch.baseRoll.str;
-  let agi = arch.baseRoll.agi;
-  let int_ = arch.baseRoll.int;
-  let hp = BASE_HP;
-
-  str += arch.race.str;
-  agi += arch.race.agi;
-  int_ += arch.race.int;
-  hp += arch.race.hp;
-
-  str += arch.startingArmor.str;
-  agi += arch.startingArmor.agi;
-  int_ += arch.startingArmor.int;
-  hp += arch.startingArmor.hp;
-
-  const totalStatPts = totalStatPointsAtLevel(level);
-  const isPsPhysical = arch.powerSource.type === "physical";
-  const psExtraPoint = isPsPhysical && level >= POWER_SOURCE_BONUS_LEVEL;
-  const alloc = allocatePoints(totalStatPts, arch.statPath, psExtraPoint);
-  str += alloc.str; agi += alloc.agi; int_ += alloc.int;
-
-  hp += totalHpFromLeveling(level);
-
-  if (level >= POWER_SOURCE_BONUS_LEVEL) {
-    if (arch.powerSource.type === "weave") int_ += 1;
-    else if (arch.powerSource.type === "divine") hp += 2;
-  }
-
-  if (level >= 10) {
-    str += arch.advClass.flatStr;
-    agi += arch.advClass.flatAgi;
-    int_ += arch.advClass.flatInt;
-    hp += arch.advClass.flatHp;
-  }
-
-  if (level >= 10 && arch.advClass.hpMult !== CLASS_MULTIPLIER_BASE) {
-    hp = Math.floor((hp * arch.advClass.hpMult) / CLASS_MULTIPLIER_BASE);
-  }
-
-  const totalStats = str + agi + int_;
-  const primaryStat = Math.max(str, agi, int_);
-  const dominantType = str >= agi && str >= int_ ? "STR" :
-                       agi > str && agi >= int_ ? "AGI" : "INT";
-
-  return { str, agi, int: int_, hp, totalStats, primaryStat, dominantType };
+  return _buildProfile(arch, level, getLevelingConstants(), CLASS_MULTIPLIER_BASE);
 }
 
 // ============================================================
@@ -836,39 +296,20 @@ function buildProfile(arch: Archetype, level: number): StatProfile {
 // ============================================================
 
 function buildArchetypes(): Archetype[] {
-  const R = RACES, SA = STARTING_ARMORS, PS = POWER_SOURCES, C = CLASSES;
-  const d = (id: string, name: string, cn: string, ac: AdvancedClass, r: Race, sa: StartingArmor, ps: PowerSource, p: "str"|"agi"|"int"): Archetype =>
-    ({ id, name, className: cn, advClass: ac, race: r, startingArmor: sa, powerSource: ps, statPath: p, baseRoll: BASE_ROLLS[p] });
-
-  return [
-    d("WAR-S", "Tank",        "Warrior",  C.warrior,  R.dwarf, SA.plate,   PS.physical, "str"),
-    d("WAR-A", "Fury",        "Warrior",  C.warrior,  R.elf,   SA.leather, PS.physical, "agi"),
-    d("WAR-I", "Battlemage",  "Warrior",  C.warrior,  R.elf,   SA.cloth,   PS.weave,    "int"),
-    d("PAL-S", "Crusader",    "Paladin",  C.paladin,  R.dwarf, SA.plate,   PS.physical, "str"),
-    d("PAL-A", "Avenger",     "Paladin",  C.paladin,  R.elf,   SA.leather, PS.physical, "agi"),
-    d("PAL-I", "Templar",     "Paladin",  C.paladin,  R.elf,   SA.cloth,   PS.weave,    "int"),
-    d("RAN-S", "Beastmaster", "Ranger",   C.ranger,   R.dwarf, SA.plate,   PS.physical, "str"),
-    d("RAN-A", "Sharpshooter","Ranger",   C.ranger,   R.elf,   SA.leather, PS.physical, "agi"),
-    d("RAN-I", "ArcaneArcher","Ranger",   C.ranger,   R.elf,   SA.cloth,   PS.weave,    "int"),
-    d("ROG-S", "Thug",        "Rogue",    C.rogue,    R.dwarf, SA.plate,   PS.physical, "str"),
-    d("ROG-A", "Assassin",    "Rogue",    C.rogue,    R.elf,   SA.leather, PS.physical, "agi"),
-    d("ROG-I", "Trickster",   "Rogue",    C.rogue,    R.elf,   SA.cloth,   PS.weave,    "int"),
-    d("DRU-S", "Bear",        "Druid",    C.druid,    R.dwarf, SA.plate,   PS.physical, "str"),
-    d("DRU-A", "Cat",         "Druid",    C.druid,    R.elf,   SA.leather, PS.physical, "agi"),
-    d("DRU-I", "Caster",      "Druid",    C.druid,    R.elf,   SA.cloth,   PS.weave,    "int"),
-    d("WLK-S", "Hexblade",    "Warlock",  C.warlock,  R.dwarf, SA.plate,   PS.physical, "str"),
-    d("WLK-A", "Shadow",      "Warlock",  C.warlock,  R.elf,   SA.leather, PS.physical, "agi"),
-    d("WLK-I", "VoidMage",    "Warlock",  C.warlock,  R.elf,   SA.cloth,   PS.weave,    "int"),
-    d("WIZ-S", "WarMage",     "Wizard",   C.wizard,   R.dwarf, SA.plate,   PS.physical, "str"),
-    d("WIZ-A", "Spellblade",  "Wizard",   C.wizard,   R.elf,   SA.leather, PS.physical, "agi"),
-    d("WIZ-I", "Archmage",    "Wizard",   C.wizard,   R.elf,   SA.cloth,   PS.weave,    "int"),
-    d("CLR-S", "BattlePriest","Cleric",   C.cleric,   R.dwarf, SA.plate,   PS.physical, "str"),
-    d("CLR-A", "WindCleric",  "Cleric",   C.cleric,   R.elf,   SA.leather, PS.physical, "agi"),
-    d("CLR-I", "HighPriest",  "Cleric",   C.cleric,   R.elf,   SA.cloth,   PS.weave,    "int"),
-    d("SOR-S", "Spellsword",  "Sorcerer", C.sorcerer, R.dwarf, SA.plate,   PS.physical, "str"),
-    d("SOR-A", "StormMage",   "Sorcerer", C.sorcerer, R.elf,   SA.leather, PS.physical, "agi"),
-    d("SOR-I", "Elementalist","Sorcerer", C.sorcerer, R.elf,   SA.cloth,   PS.weave,    "int"),
-  ];
+  return Object.entries(ARCHETYPE_CONFIGS).map(([id, cfg]) => {
+    const className = cfg.class.charAt(0).toUpperCase() + cfg.class.slice(1);
+    return {
+      id,
+      name: cfg.name,
+      className,
+      advClass: CLASSES[cfg.class],
+      race: RACES[cfg.race],
+      startingArmor: STARTING_ARMORS[cfg.armor],
+      powerSource: POWER_SOURCES[cfg.power],
+      statPath: cfg.path,
+      baseRoll: BASE_ROLLS[cfg.path],
+    };
+  });
 }
 
 // ============================================================
@@ -876,9 +317,7 @@ function buildArchetypes(): Archetype[] {
 // ============================================================
 
 function canEquip(weapon: Weapon, profile: StatProfile): boolean {
-  return profile.str >= weapon.minStr &&
-         profile.agi >= weapon.minAgi &&
-         profile.int >= weapon.minInt;
+  return _canEquip(weapon, profile);
 }
 
 /**
@@ -938,9 +377,7 @@ function selectBestWeapon(arch: Archetype, profile: StatProfile): Weapon {
 // ============================================================
 
 function canEquipArmor(armor: Armor, profile: StatProfile): boolean {
-  return profile.str >= armor.minStr &&
-         profile.agi >= armor.minAgi &&
-         profile.int >= armor.minInt;
+  return _canEquipArmor(armor, profile);
 }
 
 /**
@@ -1248,35 +685,21 @@ function selectBestWeaponWithTradeoffs(arch: Archetype, level: number, weapons: 
 // ============================================================
 
 function randInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return defaultRng(min, max);
 }
 
 function getDominant(str: number, agi: number, int_: number): { type: string; stat: number } {
-  if (str >= agi && str >= int_) return { type: "STR", stat: str };
-  if (agi > str && agi >= int_) return { type: "AGI", stat: agi };
-  return { type: "INT", stat: int_ };
+  return _getDominant(str, agi, int_);
 }
 
 function triangleAdvantage(attackerType: string, defenderType: string): boolean {
-  return (attackerType === "STR" && defenderType === "AGI") ||
-         (attackerType === "AGI" && defenderType === "INT") ||
-         (attackerType === "INT" && defenderType === "STR");
+  return _triangleAdvantage(attackerType, defenderType);
 }
 
 // --- Effect helpers ---
 
 function tickEffects(effects: ActiveEffectInstance[]): number {
-  let dotDamage = 0;
-  for (let i = effects.length - 1; i >= 0; i--) {
-    effects[i].turnsRemaining--;
-    if (effects[i].type === "dot") {
-      dotDamage += effects[i].damagePerTick;
-    }
-    if (effects[i].turnsRemaining <= 0) {
-      effects.splice(i, 1);
-    }
-  }
-  return dotDamage;
+  return _tickEffects(effects);
 }
 
 function tryApplyEffects(weaponName: string, targetEffects: ActiveEffectInstance[], cooldowns: Map<string, number>, round: number) {
@@ -1308,68 +731,15 @@ function tryApplyEffects(weaponName: string, targetEffects: ActiveEffectInstance
 }
 
 function adjustCombatant(base: Combatant, effects: ActiveEffectInstance[]): Combatant {
-  let strAdj = 0, agiAdj = 0, intAdj = 0, armorAdj = 0;
-  for (const e of effects) {
-    if (e.type === "stat_debuff" || e.type === "self_buff") {
-      strAdj += e.strMod;
-      agiAdj += e.agiMod;
-      intAdj += e.intMod;
-      armorAdj += e.armorMod;
-    }
-  }
-  if (strAdj === 0 && agiAdj === 0 && intAdj === 0 && armorAdj === 0) return base;
-
-  const str = Math.max(0, base.str + strAdj);
-  const agi = Math.max(0, base.agi + agiAdj);
-  const int_ = Math.max(0, base.int + intAdj);
-  const dom = getDominant(str, agi, int_);
-  return {
-    ...base,
-    str, agi, int: int_,
-    armor: Math.max(0, base.armor + armorAdj),
-    dominantType: dom.type,
-    dominantStat: dom.stat,
-  };
+  return _adjustCombatant(base, effects);
 }
 
 function resolveDualMagicHit(attacker: Combatant, defender: Combatant): number {
-  // Second hit using magic damage formula (simplified — uses INT for scaling)
-  const w = attacker.weapon;
-  const rawDmg = randInt(w.minDamage, w.maxDamage);
-  let damage = rawDmg * ATTACK_MODIFIER;
-
-  // Magic uses INT
-  const statDiff = (attacker.int * ATTACK_MODIFIER) - defender.int;
-  if (statDiff > 0) {
-    damage += statDiff / 2;
-  } else {
-    damage = Math.max(1, damage + statDiff / 2);
-  }
-
-  // Magic resistance
-  const resistPct = Math.min(defender.int * MAGIC_RESIST_PER_INT, MAGIC_RESIST_CAP);
-  damage = Math.max(1, damage * (1 - resistPct / 100));
-
-  // Spell multiplier
-  damage = damage * attacker.spellMult / 1000;
-
-  return Math.max(1, Math.floor(damage));
+  return _resolveDualMagicHit(attacker, defender, getCombatConstants(), defaultRng);
 }
 
 function resolveBreathAttack(attacker: Combatant, defender: Combatant, breath: WeaponEffect): number {
-  // Separate magic damage hit — NOT evasion-checked (breath covers area, can't dodge).
-  // Uses attacker INT vs defender INT for magic resist. No weapon scaling.
-  const rawDmg = randInt(breath.minDmg ?? 1, breath.maxDmg ?? 1);
-
-  // INT stat comparison — attacker INT advantage adds damage, defender advantage reduces
-  const statDiff = attacker.int - defender.int;
-  let damage = rawDmg + statDiff / 2;
-
-  // Magic resistance (3% per INT point, capped at 40%)
-  const resistPct = Math.min(defender.int * MAGIC_RESIST_PER_INT, MAGIC_RESIST_CAP);
-  damage = Math.max(1, damage * (1 - resistPct / 100));
-
-  return Math.max(1, Math.floor(damage));
+  return _resolveBreathAttack(attacker, defender, breath, getCombatConstants(), defaultRng);
 }
 
 // Consumable AI: decide which in-combat consumable to use on a given round.
@@ -1707,158 +1077,15 @@ function simulateOneCombat(
 }
 
 function resolveAttack(attacker: Combatant, defender: Combatant): number {
-  const w = attacker.weapon;
-
-  // Evasion check (defender AGI vs attacker AGI)
-  if (defender.agi > attacker.agi) {
-    let evadeChance = Math.min((defender.agi - attacker.agi) * 2, EVASION_CAP);
-    // Physical attacks: STR advantage reduces evasion (overwhelming force)
-    // Magic attacks: face full evasion (AGI's defense vs magic)
-    if (!w.isMagic && attacker.str > defender.str) {
-      const strReduction = Math.min(attacker.str - defender.str, 15);
-      evadeChance = Math.max(0, evadeChance - strReduction);
-    }
-    if (randInt(1, 100) <= evadeChance) return 0;
-  }
-
-  // Crit check
-  const critChance = CRIT_BASE_CHANCE + Math.floor(attacker.agi / 4);
-  const isCrit = randInt(1, 100) <= critChance;
-
-  // Roll damage
-  let rawDmg: number;
-  if (isCrit) {
-    rawDmg = w.maxDamage;
-  } else {
-    rawDmg = randInt(w.minDamage, w.maxDamage);
-  }
-
-  // Scaling modifier
-  const scalingMod = w.isMagic ? ATTACK_MODIFIER :
-                     w.scaling === "agi" ? AGI_ATTACK_MODIFIER : ATTACK_MODIFIER;
-
-  let damage = rawDmg * scalingMod;
-
-  // Stat bonus
-  let attackerStat: number;
-  let defenderStat: number;
-  if (w.isMagic) {
-    attackerStat = attacker.int;
-    defenderStat = defender.int;
-  } else if (w.scaling === "agi") {
-    attackerStat = attacker.agi;
-    defenderStat = defender.agi; // AGI vs AGI for AGI weapons
-  } else {
-    attackerStat = attacker.str;
-    defenderStat = defender.str;
-  }
-
-  const statDiff = (attackerStat * scalingMod) - (defenderStat * 1.0);
-  if (statDiff > 0) {
-    damage += statDiff / 2;
-  } else {
-    // Defender stat advantage reduces damage (capped at attacker's contribution)
-    damage = Math.max(1, damage + statDiff / 2);
-  }
-
-  // Armor reduction (physical only — magic bypasses armor, that's INT's advantage)
-  if (!w.isMagic) {
-    const armorReduction = Math.max(0, defender.armor);
-    damage = Math.max(1, damage - armorReduction);
-  }
-
-  // Magic resistance (magic only)
-  if (w.isMagic) {
-    const resistPct = Math.min(defender.int * MAGIC_RESIST_PER_INT, MAGIC_RESIST_CAP);
-    damage = Math.max(1, damage * (1 - resistPct / 100));
-  }
-
-  // Crit multiplier
-  if (isCrit) {
-    damage *= CRIT_MULTIPLIER;
-    // Class crit multiplier (Rogue)
-    if (attacker.critMult > 1000) {
-      damage = damage * attacker.critMult / 1000;
-    }
-  }
-
-  // Class damage multiplier
-  if (w.isMagic) {
-    damage = damage * attacker.spellMult / 1000;
-  } else {
-    damage = damage * attacker.physMult / 1000;
-  }
-
-  // Combat triangle
-  if (triangleAdvantage(attacker.dominantType, defender.dominantType)) {
-    const diff = Math.abs(attacker.dominantStat - defender.dominantStat);
-    const bonus = Math.min(diff * COMBAT_TRIANGLE_PER_STAT, COMBAT_TRIANGLE_MAX);
-    damage *= (1 + bonus);
-  }
-
-  // Double strike (AGI weapons only)
-  if (w.scaling === "agi" && !w.isMagic && attacker.agi > defender.agi) {
-    const dsChance = Math.min((attacker.agi - defender.agi) * 3, DOUBLE_STRIKE_CAP);
-    if (randInt(1, 100) <= dsChance) {
-      damage += damage / 2;
-    }
-  }
-
-  // Block (STR-based defense — decided design feature from COMBAT_SYSTEM)
-  // Reduces all incoming damage. Half effectiveness vs magic.
-  if (defender.str > 10) {
-    const blockChance = Math.min((defender.str - 10) * BLOCK_CHANCE_PER_STR, BLOCK_CHANCE_CAP);
-    if (randInt(1, 100) <= blockChance) {
-      const reduction = w.isMagic ? BLOCK_REDUCTION_MAGIC : BLOCK_REDUCTION_PHYS;
-      damage *= (1 - reduction);
-    }
-  }
-
-  return Math.max(1, Math.floor(damage));
+  return _resolveAttack(attacker, defender, getCombatConstants(), defaultRng);
 }
 
 function makeCombatant(profile: StatProfile, weapon: Weapon, advClass: AdvancedClass, armor: number = 0, className: string = ""): Combatant {
-  const str = profile.str + weapon.strMod;
-  const agi = profile.agi + weapon.agiMod;
-  const int_ = profile.int + weapon.intMod;
-  const dom = getDominant(str, agi, int_);
-  let hp = profile.hp + weapon.hpMod;
-  if (advClass.hpMult > 1000) {
-    // HP mult already applied in buildProfile, but weapon HP is added after — apply mult to weapon HP
-    hp = profile.hp + Math.floor(weapon.hpMod * advClass.hpMult / 1000);
-  }
-
-  return {
-    str, agi, int: int_,
-    hp, maxHp: hp, armor,
-    weapon,
-    physMult: advClass.physMult,
-    spellMult: advClass.spellMult,
-    critMult: advClass.critMult,
-    hpMult: advClass.hpMult,
-    dominantType: dom.type,
-    dominantStat: dom.stat,
-    className,
-  };
+  return _makeCombatant(profile, weapon, advClass, armor, className);
 }
 
 function makeMonsterCombatant(m: Monster): Combatant {
-  const dom = getDominant(m.str, m.agi, m.int);
-  const weaponName = MONSTER_WEAPON_EFFECTS[m.name] ? m.name : "Monster Attack";
-  const monsterWeapon: Weapon = {
-    name: weaponName, minDamage: m.weaponMinDmg, maxDamage: m.weaponMaxDmg,
-    strMod: 0, agiMod: 0, intMod: 0, hpMod: 0,
-    scaling: m.weaponScaling, isMagic: m.weaponIsMagic,
-    minStr: 0, minAgi: 0, minInt: 0, rarity: 0, price: 0,
-  };
-  return {
-    str: m.str, agi: m.agi, int: m.int,
-    hp: m.hp, maxHp: m.hp, armor: m.armor,
-    weapon: monsterWeapon,
-    physMult: 1000, spellMult: 1000, critMult: 1000, hpMult: 1000,
-    dominantType: dom.type, dominantStat: dom.stat,
-    className: "",
-  };
+  return _makeMonsterCombatant(m, !!MONSTER_WEAPON_EFFECTS[m.name]);
 }
 
 function simulate(
@@ -2306,11 +1533,12 @@ function reportViability(archetypes: Archetype[]) {
 
 function reportWeapons(archetypes: Archetype[]) {
   console.log("\n" + "=".repeat(100));
-  console.log("  WEAPON EFFECTIVENESS: Average damage per round by weapon (vs L10 Dusk Drake)");
+  const topMonster = MONSTERS.find(m => m.level === 10) || MONSTERS[MONSTERS.length - 1];
+  console.log(`  WEAPON EFFECTIVENESS: Average damage per round by weapon (vs L10 ${topMonster.name})`);
   console.log("=".repeat(100));
 
   const level = 10;
-  const monster = MONSTERS[MONSTERS.length - 1]; // Dusk Drake
+  const monster = topMonster;
   const monsterCombatant = makeMonsterCombatant(monster);
 
   console.log(
@@ -2399,21 +1627,22 @@ function reportSummary(archetypes: Archetype[]) {
   console.log(`  ${hardCount} HARD (20-50% win rate)`);
   console.log(`  ${totalMatchups - blockedCount - hardCount} OK (>= 50% win rate)`);
 
-  // 3. Crystal Shard check
-  console.log("\n--- 3. Crystal Shard Dominance Check ---");
-  const monster10 = MONSTERS.find(m => m.name === "Dusk Drake")!;
-  const mc = makeMonsterCombatant(monster10);
-  const cbWeapon = WEAPONS.find(w => w.name === "Crystal Shard")!;
-
-  for (const arch of archetypes.filter(a => a.statPath === "str").slice(0, 3)) {
-    const profile = buildProfile(arch, 10);
-    if (!canEquip(cbWeapon, profile)) continue;
-    const bestWeapon = selectBestWeapon(arch, profile);
-    const cbCombat = makeCombatant(profile, cbWeapon, arch.advClass);
-    const bestCombat = makeCombatant(profile, bestWeapon, arch.advClass);
-    const cbResult = simulate(cbCombat, mc, 200);
-    const bestResult = simulate(bestCombat, mc, 200);
-    console.log(`  ${pad(arch.id, 7)} Crystal Shard: ${(cbResult.winRate * 100).toFixed(0)}% | Best (${bestWeapon.name}): ${(bestResult.winRate * 100).toFixed(0)}%`);
+  // 3. Crystal Blade (on-chain Crystal Shard) dominance check
+  const cbWeapon = activeWeapons.find(w => w.name === "Crystal Blade" || w.name === "Crystal Shard");
+  if (cbWeapon) {
+    console.log(`\n--- 3. ${cbWeapon.name} Dominance Check ---`);
+    const monster10 = MONSTERS.find(m => m.level === 10)!;
+    const mc = makeMonsterCombatant(monster10);
+    for (const arch of archetypes.filter(a => a.statPath === "str").slice(0, 3)) {
+      const profile = buildProfile(arch, 10);
+      if (!canEquip(cbWeapon, profile)) continue;
+      const bestWeapon = selectBestWeapon(arch, profile);
+      const cbCombat = makeCombatant(profile, cbWeapon, arch.advClass);
+      const bestCombat = makeCombatant(profile, bestWeapon, arch.advClass);
+      const cbResult = simulate(cbCombat, mc, 200);
+      const bestResult = simulate(bestCombat, mc, 200);
+      console.log(`  ${pad(arch.id, 7)} ${cbWeapon.name}: ${(cbResult.winRate * 100).toFixed(0)}% | Best (${bestWeapon.name}): ${(bestResult.winRate * 100).toFixed(0)}%`);
+    }
   }
 }
 
@@ -2433,10 +1662,10 @@ function reportCompare(archetypes: Archetype[]) {
   // Swap to rebalanced weapons for comparison
   const originalWeapons = [...activeWeapons];
 
-  // Run current
+  // Run current (tuned baseline)
   activeWeapons.length = 0;
-  activeWeapons.push(...WEAPONS);
-  console.log("\n--- CURRENT WEAPONS ---");
+  activeWeapons.push(...WEAPONS_BASELINE);
+  console.log("\n--- CURRENT WEAPONS (tuned baseline) ---");
   const currentResults = runPvPAggregates(archetypes);
 
   // Run rebalanced
@@ -2524,11 +1753,6 @@ function runPvPAggregates(archetypes: Archetype[]): { id: string; className: str
 
   return results;
 }
-
-// Active weapons (swappable for comparison)
-let activeWeapons: Weapon[] = [...WEAPONS];
-let useArmorFlag = false;
-let useSpellsFlag = false;
 
 function selectBestWeaponFromActive(arch: Archetype, profile: StatProfile): Weapon {
   const equippable = activeWeapons.filter(w => canEquip(w, profile));
@@ -2888,8 +2112,8 @@ function reportHybrid(archetypes: Archetype[]) {
       }
       const pvpAvg = pvpWins / pvpTotal;
 
-      // vs Dusk Drake (find by name, not index — Basilisk is now last)
-      const dragon = MONSTERS.find(m => m.name === "Dusk Drake")!;
+      // vs L10 monster (boss)
+      const dragon = MONSTERS.find(m => m.level === 10)!;
       const dragonCombatant = makeMonsterCombatant(dragon);
       const dragonResult = simulate(combatant, dragonCombatant, 500);
 
@@ -2953,13 +2177,22 @@ function reportWyrm(archetypes: Archetype[]) {
   const monsterCombatant = makeMonsterCombatant(wyrm);
 
   // Build the 4 loadout tiers
-  const hp35 = CONSUMABLES[C_HP];          // Health Potion (35 HP)
-  const ghp75 = CONSUMABLES[C_GREATER_HP]; // Greater Health Potion (75 HP)
-  const sapping = CONSUMABLES[C_SAPPING];  // Sapping Poison (-8 STR)
+  const hp35 = CONSUMABLES.find(c => c.type === "heal" && c.healAmount === 35);
+  const ghp75 = CONSUMABLES.find(c => c.type === "heal" && c.healAmount === 75);
+  const sapping = CONSUMABLES.find(c => c.type === "debuff" && c.effect && c.effect.strMod < 0);
+  const stew = CONSUMABLES.find(c => c.type === "pre_buff" && c.strMod);
+  const berries = CONSUMABLES.find(c => c.type === "pre_buff" && c.agiMod);
+  const tea = CONSUMABLES.find(c => c.type === "pre_buff" && c.intMod);
+
+  if (!hp35 || !ghp75 || !sapping || !stew || !berries || !tea) {
+    console.log("!! Missing consumables for wyrm report");
+    maxCombatRounds = savedRounds;
+    return;
+  }
 
   function getTieredLoadouts(arch: Archetype): { name: string; loadout: ConsumableLoadout }[] {
     const path = arch.statPath;
-    const preBuff = path === "str" ? CONSUMABLES[C_STEW] : path === "agi" ? CONSUMABLES[C_BERRIES] : CONSUMABLES[C_TEA];
+    const preBuff = path === "str" ? stew : path === "agi" ? berries : tea;
     return [
       { name: "Naked",     loadout: { name: "Naked",     preBuffs: [], inCombat: [] } },
       { name: "2×HP",      loadout: { name: "2×HP",      preBuffs: [], inCombat: [hp35, hp35] } },
@@ -3063,37 +2296,98 @@ function main() {
   const runAll = args.length === 0;
   const flags = new Set(args.map(a => a.toLowerCase()));
 
-  const useV3 = flags.has("--v3");
-  const useV2 = flags.has("--v2");
-  const useRebalanced = flags.has("--rebalance");
-  useArmorFlag = flags.has("--armor");
-  useSpellsFlag = flags.has("--spells");
+  // ---- 1. Parse CLI flags ----
+  const simFlags: SimFlags = {
+    useRebalanced: flags.has("--rebalance"),
+    useV2: flags.has("--v2"),
+    useV3: flags.has("--v3"),
+    useArmor: flags.has("--armor"),
+    useSpells: flags.has("--spells"),
+    useRetunedMonsters: runAll || flags.has("--retuned") || flags.has("--v3"),
+  };
+  useArmorFlag = simFlags.useArmor;
+  useSpellsFlag = simFlags.useSpells;
 
-  // Parse --rounds N flag
   const roundsIdx = args.findIndex(a => a.toLowerCase() === "--rounds");
   if (roundsIdx !== -1 && args[roundsIdx + 1]) {
     maxCombatRounds = parseInt(args[roundsIdx + 1], 10);
     if (isNaN(maxCombatRounds) || maxCombatRounds < 1) maxCombatRounds = 8;
   }
 
-  if (useV3) {
-    activeWeapons = [...WEAPONS_V3];
-    console.log("Balance Layer 3: Weapons & Combat Viability (V3 — epic hybrids + pure nerfs)");
-  } else if (useV2) {
-    activeWeapons = [...WEAPONS_V2];
-    console.log("Balance Layer 3: Weapons & Combat Viability (V2 — secondary stat requirements)");
-  } else if (useRebalanced) {
-    activeWeapons = [...WEAPONS_REBALANCED];
-    console.log("Balance Layer 3: Weapons & Combat Viability (REBALANCED)");
-  } else {
-    activeWeapons = [...WEAPONS];
-    console.log("Balance Layer 3: Weapons & Combat Viability");
-  }
+  // ---- 2. Load on-chain data from zone JSON ----
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const zonePath = resolve(__dirname, "../../zones/dark_cave");
+  const constantsPath = resolve(__dirname, "../balance/constants.json");
+
+  const baselineData = loadGameData(zonePath, constantsPath);
+
+  // ---- 3. Apply proposed overrides ----
+  const data = applyOverrides(baselineData, simFlags);
+
+  // ---- 4. Set module-level state from loaded data ----
+  // Leveling constants
+  BASE_HP = data.levelingConstants.baseHp;
+  EARLY_GAME_CAP = data.levelingConstants.earlyGameCap;
+  MID_GAME_CAP = data.levelingConstants.midGameCap;
+  STAT_POINTS_EARLY = data.levelingConstants.statPointsEarly;
+  STAT_POINTS_MID = data.levelingConstants.statPointsMid;
+  STAT_POINTS_LATE = data.levelingConstants.statPointsLate;
+  HP_GAIN_EARLY = data.levelingConstants.hpGainEarly;
+  HP_GAIN_MID = data.levelingConstants.hpGainMid;
+  HP_GAIN_LATE = data.levelingConstants.hpGainLate;
+  POWER_SOURCE_BONUS_LEVEL = data.levelingConstants.powerSourceBonusLevel;
+  CLASS_MULTIPLIER_BASE = data.combatConstants.classMultiplierBase;
+
+  // Combat constants
+  ATTACK_MODIFIER = data.combatConstants.attackModifier;
+  AGI_ATTACK_MODIFIER = data.combatConstants.agiAttackModifier;
+  CRIT_MULTIPLIER = data.combatConstants.critMultiplier;
+  CRIT_BASE_CHANCE = data.combatConstants.critBaseChance;
+  EVASION_CAP = data.combatConstants.evasionCap;
+  DOUBLE_STRIKE_CAP = data.combatConstants.doubleStrikeCap;
+  COMBAT_TRIANGLE_PER_STAT = data.combatConstants.combatTrianglePerStat;
+  COMBAT_TRIANGLE_MAX = data.combatConstants.combatTriangleMax;
+  MAGIC_RESIST_PER_INT = data.combatConstants.magicResistPerInt;
+  MAGIC_RESIST_CAP = data.combatConstants.magicResistCap;
+  BLOCK_CHANCE_PER_STR = data.combatConstants.blockChancePerStr;
+  BLOCK_CHANCE_CAP = data.combatConstants.blockChanceCap;
+  BLOCK_REDUCTION_PHYS = data.combatConstants.blockReductionPhys;
+  BLOCK_REDUCTION_MAGIC = data.combatConstants.blockReductionMagic;
+
+  // Game data
+  RACES = data.races;
+  STARTING_ARMORS = data.startingArmors;
+  POWER_SOURCES = data.powerSources;
+  CLASSES = data.classes;
+  BASE_ROLLS = data.baseRolls;
+  WEAPONS = baselineData.weapons;  // Keep baseline for --compare
+  ARMORS = data.armors;
+  MONSTERS = data.monsters;
+  CONSUMABLES = data.consumables;
+  CLASS_SPELLS = data.classSpells;
+  WEAPON_EFFECTS = data.weaponEffects;
+  MONSTER_WEAPON_EFFECTS = data.monsterWeaponEffects;
+  ARCHETYPE_CONFIGS = data.archetypeConfigs;
+
+  // Active weapons = whatever the overrides selected (or baseline)
+  activeWeapons = [...data.weapons];
+
+  // Build wyrm loadouts now that consumables are loaded
+  WYRM_LOADOUTS = buildWyrmLoadouts();
+
+  // ---- 5. Print banner ----
+  const variant = simFlags.useV3 ? "V3 — epic hybrids + pure nerfs" :
+                  simFlags.useV2 ? "V2 — secondary stat requirements" :
+                  simFlags.useRebalanced ? "REBALANCED" : "BASELINE (on-chain)";
+  console.log(`Balance Layer 3: Weapons & Combat Viability (${variant})`);
   if (useArmorFlag) console.log("  + L4 ARMOR ENABLED (equipped armor affects stats + defense)");
   if (useSpellsFlag) console.log("  + L5 CLASS SPELLS ENABLED (spell costs round 1 weapon attack)");
   console.log(`  Max rounds: ${maxCombatRounds} (≈ ${maxCombatRounds * 2} on-chain turns). --rounds N to change.`);
+  console.log(`  Data: ${zonePath}`);
   console.log(`Simulating with ${SIM_ITERATIONS} iterations per matchup...\n`);
 
+  // ---- 6. Run reports ----
   const archetypes = buildArchetypes();
 
   if (flags.has("--compare")) {

@@ -1,0 +1,228 @@
+{
+  "armor": [
+    {
+      "name": "Tattered Cloth",
+      "rarity": 0,
+      "price": 5000000000000000000,
+      "armorType": "Cloth",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 1,
+        "hpModifier": 0,
+        "intModifier": 1,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    }
+  ],
+  "weapons": [
+    {
+      "name": "Iron Axe",
+      "rarity": 1,
+      "price": 15000000000000000000,
+      "metadataUri": "weapon:iron_axe",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 2,
+        "minDamage": 1,
+        "minLevel": 0,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 5
+      }
+    },
+    {
+      "name": "Hunting Bow",
+      "rarity": 1,
+      "price": 15000000000000000000,
+      "metadataUri": "weapon:hunting_bow",
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 1,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 2,
+        "minDamage": 1,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 8,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Smoldering Rod",
+      "rarity": 4,
+      "price": 300000000000000000000,
+      "metadataUri": "weapon:smoldering_rod",
+      "stats": {
+        "agiModifier": 2,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 5,
+        "intModifier": 5,
+        "maxDamage": 8,
+        "minDamage": 5,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 16,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Bone Staff",
+      "rarity": 3,
+      "price": 180000000000000000000,
+      "metadataUri": "weapon:bone_staff",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 3,
+        "intModifier": 3,
+        "maxDamage": 5,
+        "minDamage": 3,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 13,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Venomous Bite",
+      "rarity": 0,
+      "price": 0,
+      "metadataUri": "weapon:monster_venomous_bite",
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
+          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 2,
+        "minDamage": 1,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    }
+  ],
+  "consumables": [
+    {
+      "name": "Minor Health Potion",
+      "rarity": 1,
+      "price": 10000000000000000000,
+      "stats": {
+        "effects": [
+          "0x2e0e6d5039f8c272000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": -15,
+        "minDamage": -15,
+        "minLevel": 0
+      },
+      "statRestrictions": { "minAgility": 0, "minIntelligence": 0, "minStrength": 0 }
+    },
+    {
+      "name": "Focusing Tea",
+      "rarity": 1,
+      "price": 20000000000000000000,
+      "stats": {
+        "effects": [
+          "0x54d076d5607dc751000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": { "minAgility": 0, "minIntelligence": 0, "minStrength": 0 }
+    },
+    {
+      "name": "Antidote",
+      "rarity": 1,
+      "price": 15000000000000000000,
+      "stats": {
+        "effects": [
+          "0x78ded5c390ab6de3000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": { "minAgility": 0, "minIntelligence": 0, "minStrength": 0 }
+    },
+    {
+      "name": "Sapping Poison",
+      "rarity": 1,
+      "price": 35000000000000000000,
+      "stats": {
+        "effects": [
+          "0x98562f2b32aeb98f000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": { "minAgility": 0, "minIntelligence": 0, "minStrength": 0 }
+    },
+    {
+      "name": "Trollblood Ale",
+      "rarity": 1,
+      "price": 25000000000000000000,
+      "stats": {
+        "effects": [
+          "0x3e2125b981b54b08000000000000000000000000000000000000000000000000"
+        ],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": { "minAgility": 0, "minIntelligence": 0, "minStrength": 0 }
+    },
+    {
+      "name": "Rat Tooth",
+      "rarity": 0,
+      "price": 1000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": { "minAgility": 0, "minIntelligence": 0, "minStrength": 0 }
+    }
+  ]
+}
