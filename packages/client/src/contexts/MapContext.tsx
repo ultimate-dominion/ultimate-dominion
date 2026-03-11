@@ -84,6 +84,10 @@ export type MapProviderProps = {
   children: ReactNode;
 };
 
+/** Idle timeout — matches on-chain SessionConfig (5 minutes) */
+const SESSION_IDLE_MS = 5 * 60 * 1000;
+const IDLE_CHECK_INTERVAL_MS = 30 * 1000;
+
 export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const { renderError } = useToast();
   const {
@@ -375,6 +379,37 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     const timeout = setTimeout(() => setIsWaitingForSpawn(false), 15000);
     return () => clearTimeout(timeout);
   }, [isWaitingForSpawn]);
+
+  // ============================================================
+  // Idle timeout — reload page after 5 min of no user interaction
+  // Matches on-chain SessionConfig (300s). Reloading re-syncs all
+  // state from the indexer, handles stale WS, and shows the spawn
+  // button if the character was despawned while idle.
+  // ============================================================
+  useEffect(() => {
+    if (!isSpawned) return;
+
+    let lastActivity = Date.now();
+
+    const resetActivity = () => {
+      lastActivity = Date.now();
+    };
+
+    const events = ['mousedown', 'keydown', 'touchstart', 'wheel'] as const;
+    events.forEach((e) => window.addEventListener(e, resetActivity, { passive: true }));
+
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivity >= SESSION_IDLE_MS) {
+        console.log('[MapContext] Session idle timeout — reloading');
+        window.location.reload();
+      }
+    }, IDLE_CHECK_INTERVAL_MS);
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, resetActivity));
+      clearInterval(interval);
+    };
+  }, [isSpawned]);
 
   const onSpawn = useCallback(async () => {
     if (!delegatorAddress || !character) return;
