@@ -416,8 +416,10 @@ describe("combat", () => {
     it("AGI builds evade more than STR builds", () => {
       const rng = seededRng(11111);
       const weapon = makeWeapon({ minDamage: 3, maxDamage: 5 });
-      const strAttacker = makeCombatant({ str: 20, agi: 5, weapon });
-      const agiDefender = makeCombatant({ agi: 25, str: 5 }); // agi >> attacker agi
+      // With evasionDivisor=3, need large AGI gap and no STR advantage
+      // to produce meaningful evasion (agiDiff=35 / 3 = 11%)
+      const strAttacker = makeCombatant({ str: 10, agi: 5, weapon });
+      const agiDefender = makeCombatant({ agi: 40, str: 10 });
 
       let evades = 0;
       for (let i = 0; i < ITERATIONS; i++) {

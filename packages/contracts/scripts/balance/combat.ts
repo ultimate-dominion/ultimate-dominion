@@ -106,7 +106,7 @@ export function resolveAttack(
 
   // Evasion check (defender AGI vs attacker AGI)
   if (defender.agi > attacker.agi) {
-    let evadeChance = Math.min((defender.agi - attacker.agi) * 2, cc.evasionCap);
+    let evadeChance = Math.min(Math.floor((defender.agi - attacker.agi) / cc.evasionDivisor), cc.evasionCap);
     if (!w.isMagic && attacker.str > defender.str) {
       const strReduction = Math.min(attacker.str - defender.str, 15);
       evadeChance = Math.max(0, evadeChance - strReduction);
@@ -115,7 +115,7 @@ export function resolveAttack(
   }
 
   // Crit check
-  const critChance = cc.critBaseChance + Math.floor(attacker.agi / 4);
+  const critChance = cc.critBaseChance + Math.floor(attacker.agi / cc.critAgiDivisor);
   const isCrit = rng(1, 100) <= critChance;
 
   // Roll damage
@@ -146,7 +146,7 @@ export function resolveAttack(
     defenderStat = defender.str;
   }
 
-  const statDiff = (attackerStat * scalingMod) - (defenderStat * 1.0);
+  const statDiff = (attackerStat * scalingMod) - (defenderStat * cc.defenseModifier);
   if (statDiff > 0) {
     damage += statDiff / 2;
   } else {
@@ -192,7 +192,7 @@ export function resolveAttack(
 
   // Double strike (AGI weapons only)
   if (w.scaling === "agi" && !w.isMagic && attacker.agi > defender.agi) {
-    const dsChance = Math.min((attacker.agi - defender.agi) * 3, cc.doubleStrikeCap);
+    const dsChance = Math.min((attacker.agi - defender.agi) * cc.doubleStrikeMultiplier, cc.doubleStrikeCap);
     if (rng(1, 100) <= dsChance) {
       damage += damage / 2;
     }
