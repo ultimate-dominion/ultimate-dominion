@@ -1,30 +1,27 @@
 /**
- * Receipt Log Injection — parse MUD Store events from a transaction receipt
- * and inject decoded rows directly into the Zustand store.
+ * Receipt-based store injection: handles deletes from receipt logs,
+ * then fetches all updates (SetRecord + Splice, ALL namespaces) from
+ * the indexer's /api/delta endpoint.
  *
- * This gives ~0ms state updates after receipt (vs 5-15s waiting for
- * indexer → Postgres → WebSocket). The WebSocket update arrives later
- * as an idempotent overwrite.
- *
- * SetRecord/DeleteRecord events are handled synchronously.
- * SpliceStaticData/SpliceDynamicData events trigger an async on-chain
- * read of the full record, then inject the result into the store.
+ * This replaces the old local log decoding which only covered UD-namespace
+ * tables (mudConfig.tables). The delta approach covers all namespaces
+ * (gold, items, characters, fragments, badges) without maintaining a
+ * client-side table registry.
  */
 import { storeEventsAbi } from '@latticexyz/store';
-import { logToRecord } from '@latticexyz/store/internal';
 import mudConfig from 'contracts/mud.config';
 import {
   type Hex,
-  type PublicClient,
   type TransactionReceipt,
   decodeEventLog,
 } from 'viem';
 
 import { useGameStore } from './store';
-import type { TableRow } from './types';
+
+const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
 
 // ---------------------------------------------------------------------------
-// Table registry: tableId (bytes32 hex) → table config
+// Table registry for delete handling only (UD-namespace tables from mudConfig)
 // ---------------------------------------------------------------------------
 type TableEntry = (typeof mudConfig.tables)[keyof typeof mudConfig.tables];
 
@@ -34,101 +31,56 @@ for (const table of Object.values(mudConfig.tables)) {
 }
 
 // ---------------------------------------------------------------------------
-// ABI for reading full records from the World contract
+// Delta fetch with polling for indexer catchup
 // ---------------------------------------------------------------------------
-const getRecordAbi = [
-  {
-    type: 'function' as const,
-    name: 'getRecord' as const,
-    stateMutability: 'view' as const,
-    inputs: [
-      { name: 'tableId', type: 'bytes32' as const },
-      { name: 'keyTuple', type: 'bytes32[]' as const },
-    ],
-    outputs: [
-      { name: 'staticData', type: 'bytes' as const },
-      { name: 'encodedLengths', type: 'bytes32' as const },
-      { name: 'dynamicData', type: 'bytes' as const },
-    ],
-  },
-] as const;
+const DELTA_MAX_ATTEMPTS = 6;
+const DELTA_POLL_INTERVAL = 500; // ms
 
-// ---------------------------------------------------------------------------
-// Value serialization (match indexer's Postgres → JSON format)
-// ---------------------------------------------------------------------------
-function serializeValue(v: unknown): unknown {
-  if (typeof v === 'bigint') return v.toString();
-  if (Array.isArray(v)) return v.map(serializeValue);
-  return v;
+type DeltaResponse = {
+  block: number;
+  tables: Record<string, Record<string, Record<string, unknown>>>;
+};
+
+async function fetchDelta(sinceBlock: number): Promise<DeltaResponse> {
+  const response = await fetch(`${INDEXER_API_URL}/delta?block=${sinceBlock}`);
+  if (!response.ok) {
+    throw new Error(`Delta fetch failed: ${response.status}`);
+  }
+  return response.json();
 }
 
-function serializeRecord(record: Record<string, unknown>): TableRow {
-  const result: TableRow = {};
-  for (const [key, value] of Object.entries(record)) {
-    result[key] = serializeValue(value);
-  }
-  return result;
-}
+/**
+ * Poll the delta endpoint until the indexer has processed at least `targetBlock`.
+ * Returns all rows updated since `sinceBlock`.
+ */
+async function fetchDeltaWithRetry(
+  sinceBlock: number,
+  targetBlock: number,
+): Promise<DeltaResponse | null> {
+  for (let attempt = 0; attempt < DELTA_MAX_ATTEMPTS; attempt++) {
+    try {
+      const delta = await fetchDelta(sinceBlock);
 
-// ---------------------------------------------------------------------------
-// Async splice resolution: read full records from chain for splice events
-// ---------------------------------------------------------------------------
-async function resolveSpliceEvents(
-  spliceReads: { table: TableEntry; keyTuple: readonly Hex[]; keyBytes: string }[],
-  publicClient: PublicClient,
-  worldAddress: Hex,
-): Promise<void> {
-  // Deduplicate by table+keyBytes (a single tx can splice the same row multiple times)
-  const unique = new Map<string, (typeof spliceReads)[0]>();
-  for (const r of spliceReads) {
-    unique.set(`${r.table.label}:${r.keyBytes}`, r);
-  }
+      if (delta.block >= targetBlock) {
+        return delta;
+      }
 
-  const readRecord = async ({ table, keyTuple, keyBytes }: (typeof spliceReads)[0]) => {
-    const [staticData, encodedLengths, dynamicData] =
-      await publicClient.readContract({
-        address: worldAddress,
-        abi: getRecordAbi,
-        functionName: 'getRecord',
-        args: [table.tableId as Hex, [...keyTuple]],
-      });
-
-    const record = logToRecord({
-      table: table as { schema: typeof table.schema; key: typeof table.key },
-      log: {
-        args: {
-          tableId: table.tableId as Hex,
-          keyTuple: [...keyTuple],
-          staticData,
-          encodedLengths,
-          dynamicData,
-        },
-      },
-    });
-
-    const serialized = serializeRecord(record as Record<string, unknown>);
-    console.debug(`[TX][RECEIPT] splice setRow: ${table.label} key=${keyBytes}`, serialized);
-    useGameStore.getState().setRow(table.label, keyBytes, serialized);
-    return table.label;
-  };
-
-  const entries = [...unique.values()];
-  const results = await Promise.allSettled(entries.map(readRecord));
-
-  const resolved = results.filter(r => r.status === 'fulfilled');
-  if (resolved.length > 0) {
-    console.info(
-      `[TX][RECEIPT] Resolved ${resolved.length} splice record(s) from chain: ${resolved.map(r => (r as PromiseFulfilledResult<string>).value).join(', ')}`,
-    );
+      // Indexer hasn't caught up yet — wait and retry
+      if (attempt < DELTA_MAX_ATTEMPTS - 1) {
+        await new Promise(r => setTimeout(r, DELTA_POLL_INTERVAL));
+      }
+    } catch (err) {
+      console.warn(`[TX][DELTA] Fetch attempt ${attempt + 1} failed:`, err);
+      if (attempt < DELTA_MAX_ATTEMPTS - 1) {
+        await new Promise(r => setTimeout(r, DELTA_POLL_INTERVAL));
+      }
+    }
   }
 
-  const failed = results.filter(r => r.status === 'rejected');
-  for (const f of failed) {
-    console.warn(
-      '[TX][RECEIPT] Splice read failed:',
-      (f as PromiseRejectedResult).reason,
-    );
-  }
+  console.warn(
+    `[TX][DELTA] Indexer did not reach block ${targetBlock} after ${DELTA_MAX_ATTEMPTS} attempts`
+  );
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -136,19 +88,13 @@ async function resolveSpliceEvents(
 // ---------------------------------------------------------------------------
 export async function applyReceiptToStore(
   receipt: TransactionReceipt,
-  publicClient?: PublicClient,
-  worldAddress?: Hex,
 ): Promise<void> {
-  let applied = 0;
-  let skippedSplice = 0;
+  const store = useGameStore.getState();
 
-  // Collect splice events for async on-chain reads
-  const spliceReads: {
-    table: TableEntry;
-    keyTuple: readonly Hex[];
-    keyBytes: string;
-  }[] = [];
-
+  // Step 1: Process deletes from receipt logs immediately.
+  // Delete events are fast to decode and only need the UD-namespace registry.
+  // Non-UD deletes are rare (ERC token burns) and handled by WS.
+  let deleteCount = 0;
   for (const log of receipt.logs) {
     let decoded;
     try {
@@ -158,53 +104,7 @@ export async function applyReceiptToStore(
         topics: log.topics as [Hex, ...Hex[]],
       });
     } catch {
-      // Not a MUD Store event — skip
       continue;
-    }
-
-    if (decoded.eventName === 'Store_SetRecord') {
-      const { tableId, keyTuple } = decoded.args;
-      const table = tableRegistry.get(tableId as Hex);
-      if (!table) continue;
-
-      try {
-        const record = logToRecord({
-          table: table as { schema: typeof table.schema; key: typeof table.key },
-          log: { args: decoded.args },
-        });
-
-        const keyBytes = ('0x' +
-          keyTuple.map((k: Hex) => k.slice(2)).join('')) as string;
-        const serialized = serializeRecord(
-          record as Record<string, unknown>,
-        );
-
-        useGameStore.getState().setRow(table.label, keyBytes, serialized);
-        applied++;
-      } catch (err) {
-        console.warn(
-          `[TX][RECEIPT] Failed to decode record for ${table.label}:`,
-          err,
-        );
-      }
-    }
-
-    if (
-      decoded.eventName === 'Store_SpliceStaticData' ||
-      decoded.eventName === 'Store_SpliceDynamicData'
-    ) {
-      const { tableId, keyTuple } = decoded.args;
-      const table = tableRegistry.get(tableId as Hex);
-      if (table) {
-        const keyBytes = ('0x' +
-          keyTuple.map((k: Hex) => k.slice(2)).join('')) as string;
-        spliceReads.push({
-          table,
-          keyTuple: keyTuple as readonly Hex[],
-          keyBytes,
-        });
-        skippedSplice++;
-      }
     }
 
     if (decoded.eventName === 'Store_DeleteRecord') {
@@ -212,25 +112,36 @@ export async function applyReceiptToStore(
       const table = tableRegistry.get(tableId as Hex);
       if (!table) continue;
 
-      const keyBytes = ('0x' +
-        keyTuple.map((k: Hex) => k.slice(2)).join('')) as string;
-      useGameStore.getState().deleteRow(table.label, keyBytes);
-      applied++;
+      const keyBytes = '0x' + keyTuple.map((k: Hex) => k.slice(2)).join('');
+      store.deleteRow(table.label, keyBytes);
+      deleteCount++;
     }
   }
 
-  if (applied > 0 || skippedSplice > 0) {
-    console.info(
-      `[TX][RECEIPT] Injected ${applied} store update(s) from receipt logs (${skippedSplice} splice event(s) resolving from chain...)`,
-    );
+  if (deleteCount > 0) {
+    console.info(`[TX][RECEIPT] Applied ${deleteCount} delete(s) from receipt logs`);
   }
 
-  // Await splice resolution so the store is fully up-to-date when the caller
-  // gets the receipt back. Adds ~100-300ms (parallel getRecord RPCs) but
-  // prevents stale-data bugs (HP not updating, double-attack, etc).
-  if (spliceReads.length > 0 && publicClient && worldAddress) {
-    await resolveSpliceEvents(spliceReads, publicClient, worldAddress).catch(err => {
-      console.warn('[TX][RECEIPT] Splice resolution failed:', err);
-    });
+  // Step 2: Fetch all updated rows from indexer (covers ALL namespaces).
+  const blockNumber = Number(receipt.blockNumber);
+  const delta = await fetchDeltaWithRetry(blockNumber, blockNumber);
+
+  if (!delta) {
+    console.warn('[TX][DELTA] No delta received — updates will arrive via WebSocket');
+    return;
+  }
+
+  let updateCount = 0;
+  for (const [tableName, rows] of Object.entries(delta.tables)) {
+    for (const [keyBytes, rowData] of Object.entries(rows)) {
+      store.setRow(tableName, keyBytes, rowData as Record<string, unknown>);
+      updateCount++;
+    }
+  }
+
+  if (updateCount > 0) {
+    console.info(
+      `[TX][DELTA] Applied ${updateCount} update(s) from indexer delta at block ${delta.block}`
+    );
   }
 }

@@ -69,7 +69,7 @@ export async function setupNetwork() {
           pollingInterval: 150,
         });
         if (receipt.status !== 'reverted') {
-          await applyReceiptToStore(receipt, publicClient, networkConfig.worldAddress as Hex);
+          await applyReceiptToStore(receipt);
         }
         trackTxRoundtrip('waitForTransaction', startMs, true);
         return receipt;
