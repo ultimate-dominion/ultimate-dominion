@@ -41,7 +41,7 @@ function getBaseUrl(req: VercelRequest): string {
       }
     } catch { /* fall through */ }
   }
-  return process.env.CLIENT_URL || 'https://beta.ultimatedominion.com';
+  return process.env.CLIENT_URL || 'https://ultimatedominion.com';
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
