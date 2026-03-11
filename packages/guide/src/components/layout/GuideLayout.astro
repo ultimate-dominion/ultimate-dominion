@@ -49,23 +49,24 @@ const { title, description, breadcrumbs = [], headings = [], canonical, ogImage 
       <span class="font-display tracking-wider uppercase text-xs">Menu</span>
     </button>
 
-    <div class="flex gap-8">
+    <div class="flex gap-10">
       <Sidebar />
 
-      <main class="flex-1 min-w-0">
+      <main class="flex-1 min-w-0 max-w-4xl">
         {breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
 
-        <article class="prose prose-invert max-w-none
+        <article class="prose prose-invert prose-lg max-w-none
           prose-headings:text-parchment prose-headings:font-display
-          prose-h1:text-3xl prose-h1:mb-4 prose-h1:mt-0
-          prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-border prose-h2:pb-3
-          prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-          prose-p:text-text-primary prose-p:leading-relaxed
+          prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-0
+          prose-h2:text-[1.65rem] prose-h2:mt-14 prose-h2:mb-5
+          prose-h3:text-[1.3rem] prose-h3:mt-10 prose-h3:mb-4
+          prose-p:text-text-primary prose-p:leading-relaxed prose-p:mb-5
           prose-a:text-accent-gold hover:prose-a:text-accent-glow
           prose-strong:text-parchment
           prose-code:text-accent prose-code:font-mono prose-code:text-sm
           prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5
-          prose-li:text-text-primary
+          prose-li:text-text-primary prose-li:mb-1.5
+          prose-ul:mb-5 prose-ol:mb-5
           prose-table:border-collapse
           prose-th:text-parchment prose-th:text-left prose-th:font-display prose-th:font-semibold prose-th:border-b prose-th:border-border prose-th:px-4 prose-th:py-3
           prose-td:text-text-primary prose-td:border-b prose-td:border-border/50 prose-td:px-4 prose-td:py-3

@@ -14,17 +14,21 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 ---
 
 {filteredHeadings.length > 0 && (
-  <aside class="hidden xl:block w-56 shrink-0">
-    <div class="sticky top-20 overflow-y-auto max-h-[calc(100vh-5rem)] pb-8 pl-4">
-      <p class="text-[10px] font-display font-semibold uppercase tracking-[0.2em] text-text-secondary mb-3">On this page</p>
-      <ul class="space-y-1 border-l border-border">
+  <aside class="hidden xl:block w-60 shrink-0">
+    <div class="sticky top-20 overflow-y-auto max-h-[calc(100vh-5rem)] pb-8 pl-6">
+      <p class="text-[11px] font-display font-semibold uppercase tracking-[0.2em] text-text-secondary mb-4">On this page</p>
+      <ul class="space-y-1.5 border-l border-border" id="toc-list">
         {filteredHeadings.map((heading) => (
           <li>
             <a
               href={`#${heading.slug}`}
+              data-toc-link
+              data-toc-id={heading.slug}
               class:list={[
-                'block text-sm no-underline transition-colors py-1 hover:text-accent',
-                heading.depth === 2 ? 'pl-4 text-text-secondary' : 'pl-8 text-text-secondary/70',
+                'block no-underline transition-all duration-200 py-1',
+                heading.depth === 2
+                  ? 'pl-4 text-[15px] text-text-secondary hover:text-accent'
+                  : 'pl-8 text-[13px] text-text-secondary/70 hover:text-accent',
               ]}
             >
               {heading.text}
@@ -35,3 +39,52 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     </div>
   </aside>
 )}
+
+<script>
+  function initTocHighlight() {
+    const links = document.querySelectorAll('[data-toc-link]');
+    if (!links.length) return;
+
+    const ids = Array.from(links).map(l => (l as HTMLElement).dataset.tocId!);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            links.forEach(link => {
+              const el = link as HTMLElement;
+              if (el.dataset.tocId === id) {
+                el.classList.add('text-accent', 'font-medium', 'border-l-2', 'border-accent', '-ml-[1px]');
+                el.classList.remove('text-text-secondary', 'text-text-secondary/70');
+              } else {
+                el.classList.remove('text-accent', 'font-medium', 'border-l-2', 'border-accent', '-ml-[1px]');
+                // Restore original color based on depth
+                const depth = el.closest('li')?.querySelector('a')?.classList.contains('pl-8') ? 3 : 2;
+                if (depth === 2) {
+                  el.classList.add('text-text-secondary');
+                } else {
+                  el.classList.add('text-text-secondary/70');
+                }
+              }
+            });
+            break;
+          }
+        }
+      },
+      {
+        rootMargin: '-80px 0px -70% 0px',
+        threshold: 0,
+      }
+    );
+
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+  }
+
+  // Run on initial load and on Astro page transitions
+  initTocHighlight();
+  document.addEventListener('astro:after-swap', initTocHighlight);
+</script>

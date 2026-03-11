@@ -17,7 +17,7 @@ function isActive(href: string): boolean {
       {navigation.map((item) => (
         item.children ? (
           <li class="pt-4 first:pt-0">
-            <span class="block text-[10px] font-display font-semibold uppercase tracking-[0.2em] text-text-secondary mb-2 px-3">
+            <span class="block text-[11px] font-display font-semibold uppercase tracking-[0.2em] text-text-secondary mb-2 px-3">
               {item.title}
             </span>
             <ul class="space-y-0.5">
@@ -26,7 +26,7 @@ function isActive(href: string): boolean {
                   <a
                     href={child.href}
                     class:list={[
-                      'flex items-center gap-2 px-3 py-2 text-sm transition-all no-underline',
+                      'flex items-center gap-2 px-3 py-2 text-[15px] transition-all no-underline',
                       isActive(child.href)
                         ? 'bg-accent/10 text-accent font-medium border-l-2 border-accent'
                         : 'text-text-primary hover:bg-surface hover:text-parchment',
@@ -45,7 +45,7 @@ function isActive(href: string): boolean {
             <a
               href={item.href}
               class:list={[
-                'flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all no-underline',
+                'flex items-center gap-2 px-3 py-2 text-[15px] font-medium transition-all no-underline',
                 isActive(item.href)
                   ? 'bg-accent/10 text-accent border-l-2 border-accent'
                   : 'text-text-primary hover:bg-surface hover:text-parchment',

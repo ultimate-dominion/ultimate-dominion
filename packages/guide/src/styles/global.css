@@ -13,8 +13,8 @@
 
   body {
     @apply bg-page text-text-primary font-sans;
-    font-size: 17px;
-    line-height: 1.75;
+    font-size: 19px;
+    line-height: 1.85;
   }
 
   /* Parchment noise overlay — subtle paper texture */
@@ -166,5 +166,24 @@
 
   .torch-button:hover {
     @apply bg-accent-glow text-page;
+  }
+
+  /* Auto section divider before h2 in prose articles (except the first) */
+  article.prose h2:not(:first-child) {
+    position: relative;
+  }
+
+  article.prose h2:not(:first-child)::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(200, 122, 42, 0.25) 15%,
+      rgba(200, 122, 42, 0.25) 85%,
+      transparent
+    );
+    margin-bottom: 2.5rem;
   }
 }
