@@ -15,7 +15,7 @@ uint256 constant BADGE_ZONE_CONQUEROR_BASE = 100; // Base for zone conqueror bad
 uint256 constant BADGE_ZONE_FRAGMENT_BASE = 200;  // +zoneId → Dark Cave = 201, Zone 2 = 202, etc.
 
 // Fragment rewards
-uint256 constant FRAGMENT_XP_REWARD = 100;
+uint256 constant FRAGMENT_XP_REWARD = 1;
 
 // Badge requirements
 uint256 constant ADVENTURER_BADGE_LEVEL = 3;
@@ -71,7 +71,7 @@ uint256 constant POWER_SOURCE_BONUS_LEVEL = 5;
 uint256 constant CLASS_MULTIPLIER_BASE = 1000;  // 100% base
 uint256 constant SESSION_TIMEOUT = 10 minutes;
 uint256 constant PVP_GOLD_DENOMINATOR = 2;
-uint256 constant PVP_BASE_XP = 75; // PvP XP = level^2 * 75 (~1.5-2x same-level monster XP)
+uint256 constant PVP_BASE_XP = 1; // PvP XP = level^2 * 1 (scaled /75 to match /100 XP rescale)
 
 uint256 constant PVP_TIMER = 30 seconds;
 uint256 constant MAX_MONSTERS = 20;
