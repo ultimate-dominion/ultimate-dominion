@@ -57,6 +57,8 @@
     "statPointsPerLevel": 2,
     "hpPerLevel": 2,
     "baseHp": 18,
+    "earlyGameCap": 10,
+    "midGameCap": 50,
     "powerSourceBonusLevel": 5
   },
 
@@ -85,15 +87,15 @@
   },
 
   "classes": {
-    "warrior":  { "physMult": 1100, "spellMult": 1000, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
-    "paladin":  { "physMult": 1050, "spellMult": 1000, "healMult": 1050, "critMult": 1000, "hpMult": 1000 },
-    "ranger":   { "physMult": 1100, "spellMult": 1000, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
-    "rogue":    { "physMult": 1000, "spellMult": 1000, "healMult": 1000, "critMult": 1150, "hpMult": 1000 },
-    "druid":    { "physMult": 1050, "spellMult": 1050, "healMult": 1000, "critMult": 1000, "hpMult": 1050 },
-    "warlock":  { "physMult": 1000, "spellMult": 1200, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
-    "wizard":   { "physMult": 1000, "spellMult": 1250, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
-    "cleric":   { "physMult": 1000, "spellMult": 1000, "healMult": 1100, "critMult": 1000, "hpMult": 1000 },
-    "sorcerer": { "physMult": 1000, "spellMult": 1150, "healMult": 1000, "critMult": 1000, "hpMult": 1050 }
+    "warrior":  { "flatStr": 3, "flatAgi": 0, "flatInt": 0, "flatHp": 10, "physMult": 1100, "spellMult": 1000, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "paladin":  { "flatStr": 2, "flatAgi": 0, "flatInt": 0, "flatHp": 15, "physMult": 1050, "spellMult": 1000, "healMult": 1050, "critMult": 1000, "hpMult": 1000 },
+    "ranger":   { "flatStr": 0, "flatAgi": 3, "flatInt": 0, "flatHp": 0,  "physMult": 1100, "spellMult": 1000, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "rogue":    { "flatStr": 0, "flatAgi": 2, "flatInt": 1, "flatHp": 0,  "physMult": 1000, "spellMult": 1000, "healMult": 1000, "critMult": 1150, "hpMult": 1000 },
+    "druid":    { "flatStr": 2, "flatAgi": 2, "flatInt": 0, "flatHp": 0,  "physMult": 1050, "spellMult": 1050, "healMult": 1000, "critMult": 1000, "hpMult": 1050 },
+    "warlock":  { "flatStr": 0, "flatAgi": 2, "flatInt": 2, "flatHp": 0,  "physMult": 1000, "spellMult": 1200, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "wizard":   { "flatStr": 0, "flatAgi": 0, "flatInt": 3, "flatHp": 0,  "physMult": 1000, "spellMult": 1250, "healMult": 1000, "critMult": 1000, "hpMult": 1000 },
+    "cleric":   { "flatStr": 0, "flatAgi": 0, "flatInt": 2, "flatHp": 10, "physMult": 1000, "spellMult": 1000, "healMult": 1100, "critMult": 1000, "hpMult": 1000 },
+    "sorcerer": { "flatStr": 2, "flatAgi": 0, "flatInt": 2, "flatHp": 0,  "physMult": 1000, "spellMult": 1150, "healMult": 1000, "critMult": 1000, "hpMult": 1050 }
   },
 
   "archetypes": {

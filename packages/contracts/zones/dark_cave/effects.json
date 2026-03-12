@@ -17,12 +17,31 @@
         "bonusDamage": 0,
         "critChanceBonus": 0
       }
+    },
+    {
+      "effectId": "0xba51116a00000000000000000000000000000000000000000000000000000000",
+      "name": "basilisk_gaze_magic",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
     }
   ],
   "physicalDamage": [
     {
       "effectId": "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
       "name": "basic weapon attack",
+      "stats": {
+        "armorPenetration": 0,
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
+    },
+    {
+      "effectId": "0xba51115f00000000000000000000000000000000000000000000000000000000",
+      "name": "basilisk_fangs_attack",
       "stats": {
         "armorPenetration": 0,
         "attackModifierBonus": 0,
@@ -245,6 +264,44 @@
         "validTurns": 2
       },
       "targetsSelf": true
+    },
+    {
+      "effectId": "0xfa5efa0900000000000000000000000000000000000000000000000000000000",
+      "name": "phasefang_poison",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 2,
+        "maxStacks": 2,
+        "validTime": 0,
+        "validTurns": 8
+      }
+    },
+    {
+      "effectId": "0xba5117e000000000000000000000000000000000000000000000000000000000",
+      "name": "basilisk_venom",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 5,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 3,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 6
+      }
     }
   ]
 }

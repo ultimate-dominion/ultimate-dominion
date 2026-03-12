@@ -151,7 +151,7 @@
       "dropChance": 500,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:studded_leather",
-      "price": 35000000000000000000,
+      "price": 40000000000000000000,
       "armorType": "Plate",
       "isStarter": false,
       "stats": {
@@ -175,7 +175,7 @@
       "dropChance": 500,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:scout_armor",
-      "price": 35000000000000000000,
+      "price": 40000000000000000000,
       "armorType": "Leather",
       "isStarter": false,
       "stats": {
@@ -199,7 +199,7 @@
       "dropChance": 500,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:acolyte_vestments",
-      "price": 35000000000000000000,
+      "price": 40000000000000000000,
       "armorType": "Cloth",
       "isStarter": false,
       "stats": {
@@ -223,7 +223,7 @@
       "dropChance": 200,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:chainmail_shirt",
-      "price": 80000000000000000000,
+      "price": 100000000000000000000,
       "armorType": "Plate",
       "isStarter": false,
       "stats": {
@@ -236,7 +236,7 @@
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 0,
+        "minIntelligence": 7,
         "minStrength": 12
       }
     },
@@ -247,7 +247,7 @@
       "dropChance": 200,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:ranger_leathers",
-      "price": 80000000000000000000,
+      "price": 100000000000000000000,
       "armorType": "Leather",
       "isStarter": false,
       "stats": {
@@ -260,7 +260,7 @@
       },
       "statRestrictions": {
         "minAgility": 11,
-        "minIntelligence": 0,
+        "minIntelligence": 8,
         "minStrength": 0
       }
     },
@@ -271,7 +271,7 @@
       "dropChance": 200,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:mage_robes",
-      "price": 80000000000000000000,
+      "price": 100000000000000000000,
       "armorType": "Cloth",
       "isStarter": false,
       "stats": {
@@ -283,7 +283,7 @@
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 0,
+        "minAgility": 10,
         "minIntelligence": 14,
         "minStrength": 0
       }
@@ -308,7 +308,7 @@
       },
       "statRestrictions": {
         "minAgility": 12,
-        "minIntelligence": 0,
+        "minIntelligence": 8,
         "minStrength": 0
       }
     },
@@ -324,15 +324,15 @@
       "isStarter": false,
       "stats": {
         "agiModifier": 0,
-        "armorModifier": 8,
-        "hpModifier": 8,
+        "armorModifier": 10,
+        "hpModifier": 10,
         "intModifier": 0,
         "minLevel": 0,
         "strModifier": 3
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 0,
+        "minIntelligence": 9,
         "minStrength": 14
       }
     },
@@ -348,7 +348,7 @@
       "isStarter": false,
       "stats": {
         "agiModifier": 5,
-        "armorModifier": 5,
+        "armorModifier": 7,
         "hpModifier": 0,
         "intModifier": 0,
         "minLevel": 0,
@@ -356,7 +356,7 @@
       },
       "statRestrictions": {
         "minAgility": 14,
-        "minIntelligence": 0,
+        "minIntelligence": 10,
         "minStrength": 0
       }
     },
@@ -367,7 +367,7 @@
       "dropChance": 50,
       "initialSupply": 10000000000000000000,
       "metadataUri": "armor:scorched_scale_vest",
-      "price": 300000000000000000000,
+      "price": 250000000000000000000,
       "armorType": "Plate",
       "isStarter": false,
       "stats": {
@@ -380,8 +380,32 @@
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 0,
+        "minIntelligence": 9,
         "minStrength": 12
+      }
+    },
+    {
+      "name": "Drake's Cowl",
+      "description": "Stitched from drake membrane. The cowl whispers when you channel through it.",
+      "rarity": 3,
+      "dropChance": 50,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "armor:drakes_cowl",
+      "price": 200000000000000000000,
+      "armorType": "Cloth",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 6,
+        "hpModifier": 0,
+        "intModifier": 5,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 12,
+        "minStrength": 0
       }
     }
   ],
@@ -510,7 +534,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 2,
         "intModifier": 0,
         "maxDamage": 2,
         "minDamage": 1,
@@ -563,7 +587,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 5,
+        "hpModifier": 3,
         "intModifier": 0,
         "maxDamage": 4,
         "minDamage": 2,
@@ -571,9 +595,9 @@
         "strModifier": 2
       },
       "statRestrictions": {
-        "minAgility": 0,
+        "minAgility": 3,
         "minIntelligence": 0,
-        "minStrength": 9
+        "minStrength": 8
       }
     },
     {
@@ -590,7 +614,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 3,
         "intModifier": 0,
         "maxDamage": 3,
         "minDamage": 2,
@@ -600,7 +624,7 @@
       "statRestrictions": {
         "minAgility": 7,
         "minIntelligence": 0,
-        "minStrength": 0
+        "minStrength": 4
       }
     },
     {
@@ -616,7 +640,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 2,
+        "hpModifier": 3,
         "intModifier": 2,
         "maxDamage": 3,
         "minDamage": 2,
@@ -625,8 +649,8 @@
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 10,
-        "minStrength": 0
+        "minIntelligence": 9,
+        "minStrength": 3
       }
     },
     {
@@ -651,8 +675,8 @@
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 5,
-        "minStrength": 5
+        "minIntelligence": 4,
+        "minStrength": 4
       }
     },
     {
@@ -668,7 +692,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 8,
+        "hpModifier": 5,
         "intModifier": 0,
         "maxDamage": 7,
         "minDamage": 4,
@@ -676,9 +700,9 @@
         "strModifier": 3
       },
       "statRestrictions": {
-        "minAgility": 0,
+        "minAgility": 4,
         "minIntelligence": 0,
-        "minStrength": 13
+        "minStrength": 11
       }
     },
     {
@@ -695,17 +719,17 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 5,
         "intModifier": 0,
-        "maxDamage": 6,
+        "maxDamage": 7,
         "minDamage": 4,
         "minLevel": 0,
         "strModifier": 0
       },
       "statRestrictions": {
-        "minAgility": 15,
+        "minAgility": 13,
         "minIntelligence": 0,
-        "minStrength": 0
+        "minStrength": 4
       }
     },
     {
@@ -730,8 +754,8 @@
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 11,
-        "minStrength": 0
+        "minIntelligence": 9,
+        "minStrength": 4
       }
     },
     {
@@ -804,7 +828,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 3,
+        "hpModifier": 2,
         "intModifier": 0,
         "maxDamage": 4,
         "minDamage": 2,
@@ -812,7 +836,7 @@
         "strModifier": 2
       },
       "statRestrictions": {
-        "minAgility": 0,
+        "minAgility": 3,
         "minIntelligence": 0,
         "minStrength": 7
       }
@@ -833,15 +857,15 @@
         ],
         "hpModifier": 3,
         "intModifier": 2,
-        "maxDamage": 9,
-        "minDamage": 6,
+        "maxDamage": 6,
+        "minDamage": 4,
         "minLevel": 0,
         "strModifier": 1
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 5,
-        "minStrength": 5
+        "minIntelligence": 6,
+        "minStrength": 6
       }
     },
     {
@@ -858,7 +882,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 5,
+        "hpModifier": 3,
         "intModifier": 0,
         "maxDamage": 6,
         "minDamage": 4,
@@ -866,9 +890,9 @@
         "strModifier": 3
       },
       "statRestrictions": {
-        "minAgility": 0,
+        "minAgility": 4,
         "minIntelligence": 0,
-        "minStrength": 12
+        "minStrength": 10
       }
     },
     {
@@ -886,9 +910,9 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 0,
+        "hpModifier": 4,
         "intModifier": 0,
-        "maxDamage": 4,
+        "maxDamage": 5,
         "minDamage": 3,
         "minLevel": 0,
         "strModifier": 0
@@ -896,7 +920,7 @@
       "statRestrictions": {
         "minAgility": 10,
         "minIntelligence": 0,
-        "minStrength": 0
+        "minStrength": 5
       }
     },
     {
@@ -914,7 +938,7 @@
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 3,
+        "hpModifier": 5,
         "intModifier": 3,
         "maxDamage": 5,
         "minDamage": 3,
@@ -923,8 +947,8 @@
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 13,
-        "minStrength": 0
+        "minIntelligence": 11,
+        "minStrength": 4
       }
     },
     {
@@ -941,23 +965,23 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 8,
+        "hpModifier": 5,
         "intModifier": 0,
-        "maxDamage": 7,
+        "maxDamage": 6,
         "minDamage": 5,
         "minLevel": 0,
-        "strModifier": 4
+        "strModifier": 3
       },
       "statRestrictions": {
-        "minAgility": 0,
+        "minAgility": 5,
         "minIntelligence": 0,
-        "minStrength": 15
+        "minStrength": 13
       }
     },
     {
       "name": "Darkwood Bow",
       "description": "The wood is so dark it drinks the torchlight. Silent to draw.",
-      "rarity": 4,
+      "rarity": 3,
       "dropChance": 10,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:darkwood_bow",
@@ -969,7 +993,7 @@
         "effects": [
           "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 3,
+        "hpModifier": 6,
         "intModifier": 0,
         "maxDamage": 9,
         "minDamage": 6,
@@ -977,15 +1001,15 @@
         "strModifier": 2
       },
       "statRestrictions": {
-        "minAgility": 18,
+        "minAgility": 14,
         "minIntelligence": 0,
-        "minStrength": 0
+        "minStrength": 4
       }
     },
     {
       "name": "Smoldering Rod",
       "description": "The tip glows like a dying ember. It never goes out.",
-      "rarity": 4,
+      "rarity": 3,
       "dropChance": 10,
       "initialSupply": 10000000000000000000,
       "metadataUri": "weapon:smoldering_rod",
@@ -996,8 +1020,94 @@
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
-        "hpModifier": 5,
+        "hpModifier": 6,
         "intModifier": 5,
+        "maxDamage": 7,
+        "minDamage": 5,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 13,
+        "minStrength": 5
+      }
+    },
+    {
+      "name": "Trollhide Cleaver",
+      "description": "The blade is wrapped in troll hide that refuses to rot. Cuts deeper the harder you swing.",
+      "rarity": 3,
+      "dropChance": 50,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:trollhide_cleaver",
+      "price": 350000000000000000000,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
+          "0x98562f2b32aeb98f000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 5,
+        "intModifier": 0,
+        "maxDamage": 9,
+        "minDamage": 6,
+        "minLevel": 0,
+        "strModifier": 4
+      },
+      "statRestrictions": {
+        "minAgility": 5,
+        "minIntelligence": 0,
+        "minStrength": 13
+      }
+    },
+    {
+      "name": "Phasefang",
+      "description": "Shimmers at the edges like a heat mirage. Strikes from angles that shouldn't exist.",
+      "rarity": 3,
+      "dropChance": 50,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:phasefang",
+      "price": 350000000000000000000,
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 4,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
+          "0xfa5efa0900000000000000000000000000000000000000000000000000000000",
+          "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 5,
+        "intModifier": 0,
+        "maxDamage": 10,
+        "minDamage": 5,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 13,
+        "minIntelligence": 0,
+        "minStrength": 5
+      }
+    },
+    {
+      "name": "Drakescale Staff",
+      "description": "Scaled in drake hide with a core of compressed flame. The air warps around it.",
+      "rarity": 3,
+      "dropChance": 50,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:drakescale_staff",
+      "price": 350000000000000000000,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000",
+          "0x54a7e38986f19669000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 5,
+        "intModifier": 4,
         "maxDamage": 8,
         "minDamage": 5,
         "minLevel": 0,
@@ -1005,8 +1115,8 @@
       },
       "statRestrictions": {
         "minAgility": 0,
-        "minIntelligence": 16,
-        "minStrength": 0
+        "minIntelligence": 13,
+        "minStrength": 5
       }
     },
     {
@@ -1186,6 +1296,62 @@
         "intModifier": 0,
         "maxDamage": 2,
         "minDamage": 1,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Basilisk Fangs",
+      "description": "Each fang drips with venom that smells of copper and decay.",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:basilisk_fangs",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xba51115f00000000000000000000000000000000000000000000000000000000",
+          "0xba5117e000000000000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 10,
+        "minDamage": 6,
+        "minLevel": 1,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Petrifying Gaze",
+      "description": "Not a weapon you hold. A weapon that holds you.",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "weapon:petrifying_gaze",
+      "price": 0,
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xba51116a00000000000000000000000000000000000000000000000000000000",
+          "0xba5117e000000000000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 10,
+        "minDamage": 6,
         "minLevel": 1,
         "strModifier": 0
       },

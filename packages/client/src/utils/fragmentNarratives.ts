@@ -104,7 +104,7 @@ Something is pleased.`,
   6: {
     id: 6,
     name: 'Death of the Death God',
-    narrative: `The Lich Acolyte crumbles, and with its destruction comes a flood of knowledge:
+    narrative: `The Bonecaster crumbles, and with its destruction comes a flood of knowledge:
 
 There was a god of death once. Not cruel, not kind - simply the keeper of the final door. Souls passed through it, and found rest beyond.
 
@@ -119,12 +119,12 @@ Now the dead cannot leave. They linger, twist, become the monsters that haunt th
 This isn't a dungeon. It's a tomb. A tomb for a god.
 
 And somewhere in its depths, the god's corpse still holds power.`,
-    hint: 'Defeat the Lich Acolyte.',
+    hint: 'Defeat the Bonecaster.',
   },
   7: {
     id: 7,
     name: "Betrayer's Truth",
-    narrative: `As the Shadow Stalker dissolves into the darkness it once commanded, its final message burns into your mind:
+    narrative: `As the Pale Stalker dissolves into the darkness it once commanded, its final message burns into your mind:
 
 *"There was one among them who knew the truth. Who tried to stop it."*
 
@@ -141,7 +141,7 @@ The voice fades, but not before whispering one last thing:
 The merchant with blind eyes. The quartermaster who never leaves.
 
 How long has he truly been waiting?`,
-    hint: 'Defeat the Shadow Stalker.',
+    hint: 'Defeat the Pale Stalker.',
   },
   8: {
     id: 8,
