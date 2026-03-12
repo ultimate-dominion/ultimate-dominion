@@ -15,21 +15,29 @@ import {
 /////////////////// Items ///////////////////////
 
 struct WeaponTemplateDetails {
+    string description;
     uint256 dropChance;
     uint256 initialSupply;
+    bool isStarter;
     string metadataUri;
     string name;
     uint256 price;
+    uint256 rarity;
+    string scalingStat;
     StatRestrictionsData statRestrictions;
     WeaponStatDetails stats;
 }
 
 struct ArmorTemplateDetails {
+    string armorType;
+    string description;
     uint256 dropChance;
     uint256 initialSupply;
+    bool isStarter;
     string metadataUri;
     string name;
     uint256 price;
+    uint256 rarity;
     StatRestrictionsData statRestrictions;
     ArmorStatDetails stats;
 }
@@ -41,7 +49,6 @@ struct ArmorStatDetails {
     int256 intModifier;
     uint256 minLevel;
     int256 strModifier;
-    ArmorType armorType;
 }
 
 struct WeaponStatDetails {
@@ -56,11 +63,14 @@ struct WeaponStatDetails {
 }
 
 struct ConsumableTemplateDetails {
+    string description;
     uint256 dropChance;
     uint256 initialSupply;
+    bool isStarter;
     string metadataUri;
     string name;
     uint256 price;
+    uint256 rarity;
     StatRestrictionsData statRestrictions;
     ConsumableStatDetails stats;
 }

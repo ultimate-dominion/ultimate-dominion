@@ -113,6 +113,7 @@ interface MonsterStats {
   armor: number;
   class: number;
   experience: number;
+  hasBossAI?: boolean;
   hitPoints: number;
   intelligence: number;
   inventory: number[];
@@ -277,6 +278,7 @@ function encodeMonsterStats(stats: MonsterStats): Hex {
       { name: 'armor', type: 'int256' },
       { name: 'class', type: 'uint8' },
       { name: 'experience', type: 'uint256' },
+      { name: 'hasBossAI', type: 'bool' },
       { name: 'hitPoints', type: 'int256' },
       { name: 'intelligence', type: 'int256' },
       { name: 'inventory', type: 'uint256[]' },
@@ -288,6 +290,7 @@ function encodeMonsterStats(stats: MonsterStats): Hex {
       armor: BigInt(stats.armor),
       class: stats.class,
       experience: BigInt(stats.experience),
+      hasBossAI: stats.hasBossAI ?? false,
       hitPoints: BigInt(stats.hitPoints),
       intelligence: BigInt(stats.intelligence),
       inventory: stats.inventory.map(i => BigInt(i)),

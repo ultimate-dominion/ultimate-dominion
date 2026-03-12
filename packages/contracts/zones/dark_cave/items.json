@@ -435,7 +435,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Worn Shortbow",
@@ -490,7 +491,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Iron Axe",
@@ -517,7 +519,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 5
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Hunting Bow",
@@ -572,7 +575,8 @@
         "minAgility": 0,
         "minIntelligence": 6,
         "minStrength": 0
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Steel Mace",
@@ -598,7 +602,9 @@
         "minAgility": 3,
         "minIntelligence": 0,
         "minStrength": 8
-      }
+      },
+      "isStarter": false,
+      "scalingStat": ""
     },
     {
       "name": "Recurve Bow",
@@ -625,7 +631,8 @@
         "minAgility": 7,
         "minIntelligence": 0,
         "minStrength": 4
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Channeling Rod",
@@ -651,7 +658,9 @@
         "minAgility": 0,
         "minIntelligence": 9,
         "minStrength": 3
-      }
+      },
+      "isStarter": false,
+      "scalingStat": ""
     },
     {
       "name": "Etched Blade",
@@ -677,7 +686,9 @@
         "minAgility": 0,
         "minIntelligence": 4,
         "minStrength": 4
-      }
+      },
+      "isStarter": false,
+      "scalingStat": ""
     },
     {
       "name": "Warhammer",
@@ -703,7 +714,9 @@
         "minAgility": 4,
         "minIntelligence": 0,
         "minStrength": 11
-      }
+      },
+      "isStarter": false,
+      "scalingStat": ""
     },
     {
       "name": "Longbow",
@@ -730,7 +743,8 @@
         "minAgility": 13,
         "minIntelligence": 0,
         "minStrength": 4
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Mage Staff",
@@ -756,7 +770,9 @@
         "minAgility": 0,
         "minIntelligence": 9,
         "minStrength": 4
-      }
+      },
+      "isStarter": false,
+      "scalingStat": ""
     },
     {
       "name": "Rat King's Fang",
@@ -784,7 +800,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Sporecap Wand",
@@ -812,7 +829,8 @@
         "minAgility": 0,
         "minIntelligence": 5,
         "minStrength": 0
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Brute's Cleaver",
@@ -839,7 +857,8 @@
         "minAgility": 3,
         "minIntelligence": 0,
         "minStrength": 7
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Crystal Blade",
@@ -866,7 +885,8 @@
         "minAgility": 0,
         "minIntelligence": 6,
         "minStrength": 6
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Troll's Bonebreaker",
@@ -893,7 +913,8 @@
         "minAgility": 4,
         "minIntelligence": 0,
         "minStrength": 10
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Webspinner Bow",
@@ -949,7 +970,8 @@
         "minAgility": 0,
         "minIntelligence": 11,
         "minStrength": 4
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Giant's Club",
@@ -976,7 +998,8 @@
         "minAgility": 5,
         "minIntelligence": 0,
         "minStrength": 13
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Darkwood Bow",
@@ -1031,7 +1054,8 @@
         "minAgility": 0,
         "minIntelligence": 13,
         "minStrength": 5
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Trollhide Cleaver",
@@ -1059,7 +1083,8 @@
         "minAgility": 5,
         "minIntelligence": 0,
         "minStrength": 13
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Phasefang",
@@ -1117,7 +1142,8 @@
         "minAgility": 0,
         "minIntelligence": 13,
         "minStrength": 5
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Venomous Bite",
@@ -1145,7 +1171,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "description": ""
     },
     {
       "name": "Crushing Slam",
@@ -1171,7 +1198,9 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "description": "",
+      "scalingStat": ""
     },
     {
       "name": "Razor Claws",
@@ -1198,7 +1227,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "description": ""
     },
     {
       "name": "Dark Magic",
@@ -1224,7 +1254,9 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "description": "",
+      "scalingStat": ""
     },
     {
       "name": "Elemental Burst",
@@ -1250,7 +1282,9 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "description": "",
+      "scalingStat": ""
     },
     {
       "name": "Stone Fist",
@@ -1276,7 +1310,9 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "description": "",
+      "scalingStat": ""
     },
     {
       "name": "Shadow Strike",
@@ -1303,7 +1339,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "description": ""
     },
     {
       "name": "Basilisk Fangs",
@@ -1331,7 +1368,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "scalingStat": ""
     },
     {
       "name": "Petrifying Gaze",
@@ -1359,7 +1397,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "scalingStat": ""
     }
   ],
   "consumables": [
@@ -1406,7 +1445,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Greater Health Potion",
@@ -1428,7 +1468,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Fortifying Stew",
@@ -1450,7 +1491,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Quickening Berries",
@@ -1472,7 +1514,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Focusing Tea",
@@ -1494,7 +1537,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Bloodrage Tonic",
@@ -1516,7 +1560,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Stoneskin Salve",
@@ -1538,7 +1583,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Trollblood Ale",
@@ -1560,7 +1606,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Venom Vial",
@@ -1582,7 +1629,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Spore Cloud",
@@ -1604,7 +1652,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Sapping Poison",
@@ -1626,7 +1675,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Rat Tooth",
@@ -1646,7 +1696,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Cave Moss",
@@ -1666,7 +1717,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Cracked Bone",
@@ -1686,7 +1738,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Dull Crystal",
@@ -1706,7 +1759,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Tattered Hide",
@@ -1726,7 +1780,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Bent Nail",
@@ -1746,7 +1801,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Flashpowder",
@@ -1768,7 +1824,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     },
     {
       "name": "Antidote",
@@ -1790,7 +1847,8 @@
         "minAgility": 0,
         "minIntelligence": 0,
         "minStrength": 0
-      }
+      },
+      "isStarter": false
     }
   ],
   "metadataUriPrefix": "ipfs://dark_cave/"
