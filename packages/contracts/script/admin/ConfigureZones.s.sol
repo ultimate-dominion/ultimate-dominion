@@ -6,7 +6,7 @@ import {console} from "forge-std/console.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {ZoneConfig} from "@codegen/index.sol";
-import {BADGE_ZONE_CONQUEROR_BASE, MAX_LEVEL, ZONE_DARK_CAVE} from "../constants.sol";
+import {BADGE_ZONE_CONQUEROR_BASE, MAX_LEVEL, ZONE_DARK_CAVE} from "../../constants.sol";
 
 /**
  * @title ConfigureZones

@@ -3,9 +3,9 @@ pragma solidity >=0.8.24;
 
 import "forge-std/Script.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {NoTransferHook} from "../src/NoTransferHook.sol";
-import {_erc20SystemId} from "../src/utils.sol";
-import {GOLD_NAMESPACE} from "../constants.sol";
+import {NoTransferHook} from "../../src/NoTransferHook.sol";
+import {_erc20SystemId} from "../../src/utils.sol";
+import {GOLD_NAMESPACE} from "../../constants.sol";
 import {BEFORE_CALL_SYSTEM} from "@latticexyz/world/src/systemHookTypes.sol";
 
 /**

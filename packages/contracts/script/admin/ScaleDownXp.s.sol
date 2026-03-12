@@ -7,7 +7,7 @@ import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {Levels, Stats, StatsData, Characters, Mobs, Counters} from "@codegen/index.sol";
 import {MonsterStats} from "@interfaces/Structs.sol";
 import {Classes} from "@codegen/common.sol";
-import {CHARACTER_TOKEN_COUNTER_KEY} from "../constants.sol";
+import {CHARACTER_TOKEN_COUNTER_KEY} from "../../constants.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_TABLE} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
