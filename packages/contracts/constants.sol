@@ -37,9 +37,10 @@ address constant CHARACTER_TOKEN_COUNTER_KEY = address(2);
 uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1.2 ether;
-uint256 constant AGI_ATTACK_MODIFIER = 0.9 ether;
-uint256 constant EVASION_CAP = 25;
-uint256 constant DOUBLE_STRIKE_CAP = 25;
+uint256 constant AGI_ATTACK_MODIFIER = 1.0 ether;
+uint256 constant EVASION_CAP = 35;
+uint256 constant DOUBLE_STRIKE_CAP = 40;
+uint256 constant DOUBLE_STRIKE_DAMAGE_DIVISOR = 2;
 // the amount crits damage is multiplied by
 uint256 constant CRIT_MULTIPLIER = 2;
 // the character's stats are divided by PROFICIENCY_DENOMINATOR when applying stat bonuses
@@ -58,7 +59,7 @@ uint256 constant BASE_GOLD_DROP = 3 ether;
 int256 constant BASE_HP_GAIN_EARLY = 2;      // Levels 1-10
 int256 constant BASE_HP_GAIN_MID = 1;        // Levels 11-50
 int256 constant BASE_HP_GAIN_LATE = 1;       // Levels 51-100 (every 2 levels)
-int256 constant STAT_POINTS_EARLY = 2;       // Levels 1-10 (every level)
+int256 constant STAT_POINTS_EARLY = 1;       // Levels 1-10 (every level)
 int256 constant STAT_POINTS_MID = 1;         // Levels 11-50 (every 2 levels)
 int256 constant STAT_POINTS_LATE = 1;        // Levels 51-100 (every 5 levels)
 uint256 constant EARLY_GAME_CAP = 10;

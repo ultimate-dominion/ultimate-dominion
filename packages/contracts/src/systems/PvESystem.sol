@@ -5,6 +5,7 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {
     Stats,
+    StatsData,
     Effects,
     CombatEncounter,
     CombatEncounterData,
@@ -146,18 +147,32 @@ contract PvESystem is System {
         _numberOfExecutedActions = encounterData.defenders.length;
 
         for (uint256 i; i < _numberOfExecutedActions; i++) {
-            uint256 monsterWeapon = encounterData.attackersAreMobs
-                ? MobStats.getItemInventory(encounterData.attackers[i], 0)
-                : MobStats.getItemInventory(encounterData.defenders[i], 0);
+            bytes32 mobEntity = encounterData.attackersAreMobs
+                ? encounterData.attackers[i]
+                : encounterData.defenders[i];
+            bytes32 defenderEntity = encounterData.attackersAreMobs
+                ? encounterData.defenders[i]
+                : encounterData.attackers[i];
+
+            uint256 monsterWeapon;
+            if (MobStats.getHasBossAI(mobEntity)) {
+                // Boss AI: pick weapon that counters defender's dominant stat
+                int256 defStr = Stats.getStrength(defenderEntity);
+                int256 defAgi = Stats.getAgility(defenderEntity);
+                int256 defInt = Stats.getIntelligence(defenderEntity);
+                // INT-dominant → physical (slot 0) exploits low armor/STR
+                // STR/AGI-dominant → magic (slot 1) exploits low INT, bypasses evasion
+                monsterWeapon = (defInt >= defStr && defInt >= defAgi)
+                    ? MobStats.getItemInventory(mobEntity, 0)
+                    : MobStats.getItemInventory(mobEntity, 1);
+            } else {
+                monsterWeapon = MobStats.getItemInventory(mobEntity, 0);
+            }
 
             ActionOutcomeData memory mobAction = _getCurrentActionData(
                 Action({
-                    attackerEntityId: encounterData.attackersAreMobs
-                        ? encounterData.attackers[i]
-                        : encounterData.defenders[i],
-                    defenderEntityId: encounterData.attackersAreMobs
-                        ? encounterData.defenders[i]
-                        : encounterData.attackers[i],
+                    attackerEntityId: mobEntity,
+                    defenderEntityId: defenderEntity,
                     itemId: monsterWeapon
                 })
             );

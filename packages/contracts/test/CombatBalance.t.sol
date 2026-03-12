@@ -23,8 +23,8 @@ import {
  */
 contract CombatBalanceTest is Test {
     uint256 constant WAD = 1 ether;
-    uint256 constant TRIANGLE_PER_STAT = WAD / 25; // 4% per stat point
-    uint256 constant TRIANGLE_MAX = WAD * 40 / 100; // 40% cap
+    uint256 constant TRIANGLE_PER_STAT = WAD / 50; // 2% per stat point
+    uint256 constant TRIANGLE_MAX = WAD * 12 / 100; // 12% cap
 
     // =====================================================================
     // Structs

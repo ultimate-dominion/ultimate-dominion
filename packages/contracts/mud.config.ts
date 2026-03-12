@@ -434,6 +434,7 @@ export default defineWorld({
         mobId: "bytes32",
         armor: "int256",
         isElite: "bool",
+        hasBossAI: "bool",
         inventory: "uint256[]",
       },
     },
@@ -507,6 +508,13 @@ export default defineWorld({
       schema: {
         itemId: "uint256",
         usesAgi: "bool",
+      },
+    },
+    SpellScaling: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        scalingStat: "ResistanceStat",
       },
     },
     ArmorStats: {

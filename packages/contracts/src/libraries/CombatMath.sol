@@ -69,7 +69,7 @@ library CombatMath {
         attackLands = (attackRoll % 100) + 1 <= probability;
 
         if (attackLands) {
-            crit = ((int256(attackRoll % 100) - critChanceBonus) + 1) < 5;
+            crit = ((int256(attackRoll % 100) - critChanceBonus) + 1) < 6;
         }
     }
 
@@ -311,8 +311,8 @@ library CombatMath {
         returns (int256)
     {
         if (damage <= 0) return int256(0);
-        // 2% damage reduction per INT point, capped at 40%
-        int256 resistPct = defenderIntelligence * 2;
+        // 3% damage reduction per INT point, capped at 40%
+        int256 resistPct = defenderIntelligence * 3;
         if (resistPct > 40) resistPct = 40;
         if (resistPct < 0) resistPct = 0;
         int256 resist = (damage * resistPct) / 100;
@@ -351,6 +351,19 @@ library CombatMath {
         int256 damageAfterArmor = baseDamage - calculateArmorModifier(armor, armorPenetration, baseDamage);
         damageAfterArmor = damageAfterArmor < int256(0) ? int256(0) : damageAfterArmor;
         finalDamage = applyCriticalHit(damageAfterArmor, crit);
+    }
+
+    /**
+     * @notice Calculate block chance based on STR
+     * @param defenderStr Defender's strength stat
+     * @param rnChunk Random number chunk for roll
+     * @return blocked Whether the attack was blocked
+     */
+    function calculateBlock(int256 defenderStr, uint64 rnChunk) internal pure returns (bool) {
+        if (defenderStr <= 10) return false;
+        uint256 blockChance = uint256(defenderStr - 10) * 2; // 2% per STR above 10
+        if (blockChance > 30) blockChance = 30; // cap 30%
+        return (uint256(rnChunk) % 100) < blockChance;
     }
 
     /**

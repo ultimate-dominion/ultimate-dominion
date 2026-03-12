@@ -27,12 +27,11 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateLevelFromExperience() public {
-        // Create array with 100 levels (MAX_LEVEL)
-        uint256[] memory levelsTable = new uint256[](100);
+        // Create array with 10 levels (MAX_LEVEL)
+        uint256[] memory levelsTable = new uint256[](10);
 
         // Set up experience thresholds with increasing requirements
-        for (uint256 i = 0; i < 100; i++) {
-            // Simple formula: level 1 = 0 XP, then increasing exponentially
+        for (uint256 i = 0; i < 10; i++) {
             if (i == 0) {
                 levelsTable[i] = 0;
             } else {
@@ -48,9 +47,9 @@ contract StatCalculatorTest is Test {
         level = StatCalculator.calculateLevelFromExperience(1100, levelsTable);
         assertEq(level, 5);
 
-        // Test max level (XP >= levelsTable[99])
+        // Test max level (XP >= levelsTable[9])
         level = StatCalculator.calculateLevelFromExperience(1000000, levelsTable);
-        assertEq(level, 100);
+        assertEq(level, 10);
     }
 
     function testGenerateRandomStats() public {
@@ -82,12 +81,12 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateStatPointsForLevel() public {
-        // Test early game: levels 1-10, +2 per level
+        // Test early game: levels 1-10, +1 per level (V3: was +2)
         int256 statPoints = StatCalculator.calculateStatPointsForLevel(5);
-        assertEq(statPoints, 2);
+        assertEq(statPoints, 1);
 
         statPoints = StatCalculator.calculateStatPointsForLevel(10);
-        assertEq(statPoints, 2);
+        assertEq(statPoints, 1);
 
         // Test mid game: levels 11-50, +1 per 2 levels (even levels only)
         statPoints = StatCalculator.calculateStatPointsForLevel(12);
@@ -125,9 +124,9 @@ contract StatCalculatorTest is Test {
         StatsData memory currentStats = _createDefaultStatsData();
 
         StatsData memory desiredStats = _createDefaultStatsData();
-        desiredStats.strength = 12; // +2 point change
+        desiredStats.strength = 11; // +1 point change (V3: early game = 1 point/level)
 
-        // Valid stat changes for level 2 (early game: +2 points)
+        // Valid stat changes for level 2 (early game: +1 point)
         bool isValid = StatCalculator.validateStatChanges(currentStats, desiredStats, 2);
         assertTrue(isValid);
 
@@ -141,19 +140,19 @@ contract StatCalculatorTest is Test {
         StatsData memory currentStats = _createDefaultStatsData();
         currentStats.powerSource = PowerSource.Physical;
 
-        // Physical at level 5 gets 3 points (2 base + 1 bonus)
+        // Physical at level 5 gets 2 points (1 base + 1 bonus) (V3: base was 2, now 1)
         StatsData memory desiredStats = _createDefaultStatsData();
         desiredStats.powerSource = PowerSource.Physical;
-        desiredStats.strength = 13; // +3 point change
+        desiredStats.strength = 12; // +2 point change
 
         bool isValid = StatCalculator.validateStatChanges(currentStats, desiredStats, 5);
         assertTrue(isValid);
 
-        // 2 points should be invalid for Physical at level 5 (needs exactly 3)
-        StatsData memory twoPointStats = _createDefaultStatsData();
-        twoPointStats.powerSource = PowerSource.Physical;
-        twoPointStats.strength = 12; // +2 point change
-        isValid = StatCalculator.validateStatChanges(currentStats, twoPointStats, 5);
+        // 1 point should be invalid for Physical at level 5 (needs exactly 2)
+        StatsData memory onePointStats = _createDefaultStatsData();
+        onePointStats.powerSource = PowerSource.Physical;
+        onePointStats.strength = 11; // +1 point change
+        isValid = StatCalculator.validateStatChanges(currentStats, onePointStats, 5);
         assertFalse(isValid);
     }
 
@@ -164,16 +163,16 @@ contract StatCalculatorTest is Test {
 
         StatsData memory desiredStats = _createDefaultStatsData();
         desiredStats.powerSource = PowerSource.Divine;
-        desiredStats.strength = 12; // +2 points (normal)
+        desiredStats.strength = 11; // +1 point (V3: base 1 point/level, no bonus)
 
         bool isValid = StatCalculator.validateStatChanges(divineStats, desiredStats, 5);
         assertTrue(isValid);
 
-        // 3 points should be invalid for Divine at level 5
-        StatsData memory threePointStats = _createDefaultStatsData();
-        threePointStats.powerSource = PowerSource.Divine;
-        threePointStats.strength = 13; // +3 points
-        isValid = StatCalculator.validateStatChanges(divineStats, threePointStats, 5);
+        // 2 points should be invalid for Divine at level 5
+        StatsData memory twoPointStats = _createDefaultStatsData();
+        twoPointStats.powerSource = PowerSource.Divine;
+        twoPointStats.strength = 12; // +2 points
+        isValid = StatCalculator.validateStatChanges(divineStats, twoPointStats, 5);
         assertFalse(isValid);
     }
 
@@ -184,16 +183,16 @@ contract StatCalculatorTest is Test {
 
         StatsData memory desiredStats = _createDefaultStatsData();
         desiredStats.powerSource = PowerSource.Physical;
-        desiredStats.strength = 12; // +2 points (normal)
+        desiredStats.strength = 11; // +1 point (V3: base 1 point/level)
 
         bool isValid = StatCalculator.validateStatChanges(currentStats, desiredStats, 4);
         assertTrue(isValid);
 
-        // 3 points should be invalid at level 4
-        StatsData memory threePointStats = _createDefaultStatsData();
-        threePointStats.powerSource = PowerSource.Physical;
-        threePointStats.strength = 13; // +3 points
-        isValid = StatCalculator.validateStatChanges(currentStats, threePointStats, 4);
+        // 2 points should be invalid at level 4 (no power source bonus at this level)
+        StatsData memory twoPointStats = _createDefaultStatsData();
+        twoPointStats.powerSource = PowerSource.Physical;
+        twoPointStats.strength = 12; // +2 points
+        isValid = StatCalculator.validateStatChanges(currentStats, twoPointStats, 4);
         assertFalse(isValid);
     }
 
@@ -262,17 +261,17 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateTotalStatPoints() public {
-        // Test level 10 (early game: 20 points)
+        // Test level 10 (early game: 10 points) V3: 1 point/level instead of 2
         int256 totalPoints = StatCalculator.calculateTotalStatPoints(10);
-        assertEq(totalPoints, 20); // 10 levels * 2 points
+        assertEq(totalPoints, 10); // 10 levels * 1 point
 
-        // Test level 20 (20 early + 5 mid = 25)
+        // Test level 20 (10 early + 5 mid = 15)
         totalPoints = StatCalculator.calculateTotalStatPoints(20);
-        assertEq(totalPoints, 25); // 20 + (10/2) = 25
+        assertEq(totalPoints, 15); // 10 + (10/2) = 15
 
-        // Test level 60 (20 early + 20 mid + 2 late)
+        // Test level 60 (10 early + 20 mid + 2 late)
         totalPoints = StatCalculator.calculateTotalStatPoints(60);
-        assertEq(totalPoints, 42); // 20 + 20 + 2 = 42
+        assertEq(totalPoints, 32); // 10 + 20 + 2 = 32
     }
 
     function testCalculateTotalHpFromLeveling() public {

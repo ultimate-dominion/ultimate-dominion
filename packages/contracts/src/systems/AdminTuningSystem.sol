@@ -5,6 +5,7 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {
     Admin,
     WeaponScaling,
+    SpellScaling,
     ClassMultipliers,
     Items,
     ItemsData,
@@ -17,8 +18,11 @@ import {
     ConsumableStats,
     ConsumableStatsData
 } from "@codegen/index.sol";
-import {ItemType} from "@codegen/common.sol";
+import {ItemType, ResistanceStat} from "@codegen/common.sol";
 import {NotAdmin} from "../Errors.sol";
+import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
+import {_erc1155URIStorageTableId} from "@erc1155/utils.sol";
+import {ITEMS_NAMESPACE} from "../../constants.sol";
 
 error ItemNotFound();
 
@@ -87,5 +91,13 @@ contract AdminTuningSystem is System {
             rarity: rarity,
             stats: stats
         }));
+    }
+
+    function adminUpdateItemMetadata(uint256 itemId, string memory newUri) public onlyAdmin {
+        ERC1155URIStorage.setUri(_erc1155URIStorageTableId(ITEMS_NAMESPACE), itemId, newUri);
+    }
+
+    function adminSetSpellScaling(bytes32 effectId, ResistanceStat scalingStat) public onlyAdmin {
+        SpellScaling.set(effectId, scalingStat);
     }
 }

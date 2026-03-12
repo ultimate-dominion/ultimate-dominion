@@ -29,7 +29,8 @@ import {
     StatusEffectStats,
     StatusEffectTargeting,
     WeaponScaling,
-    ClassMultipliers
+    ClassMultipliers,
+    SpellScaling
 } from "@codegen/index.sol";
 import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
 import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
@@ -43,7 +44,8 @@ import {
     ATTACKER_HIT_DAMPENER,
     DEFENDER_HIT_DAMPENER,
     AGI_ATTACK_MODIFIER,
-    CLASS_MULTIPLIER_BASE
+    CLASS_MULTIPLIER_BASE,
+    DOUBLE_STRIKE_DAMAGE_DIVISOR
 } from "../../constants.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
 import {ActionNotFound, ItemNotEquipped, ActionTypeNotRecognized, InvalidMagicItemType, InvalidAction, UnrecognizedResistanceStat} from "../Errors.sol";
@@ -53,8 +55,8 @@ contract CombatSystem is System {
     using Math for int256;
 
     // Combat triangle constants
-    uint256 constant COMBAT_TRIANGLE_BONUS_PER_STAT = WAD / 25; // 4% per stat point difference
-    uint256 constant COMBAT_TRIANGLE_MAX_BONUS = WAD * 40 / 100; // 40% cap
+    uint256 constant COMBAT_TRIANGLE_BONUS_PER_STAT = WAD / 50; // 2% per stat point difference
+    uint256 constant COMBAT_TRIANGLE_MAX_BONUS = WAD * 12 / 100; // 12% cap
 
     /**
      * @notice Determine the dominant stat for an entity
@@ -306,6 +308,12 @@ contract CombatSystem is System {
                 // Combat triangle
                 damage = _applyCombatTriangle(damage, attacker, defender);
 
+                // Block (STR-based, physical only — 50% damage reduction)
+                uint64 blockRn = uint64(uint256(keccak256(abi.encode(randomNumber))));
+                if (CombatMath.calculateBlock(defender.strength, blockRn)) {
+                    damage = damage / 2;
+                }
+
                 // Evasion (all physical attacks — AGI dodge check)
                 if (CombatMath.calculateEvasionDodge(defender.agility, attacker.agility, rnChunks[3])) {
                     damage = 0;
@@ -314,7 +322,7 @@ contract CombatSystem is System {
 
                 // Double strike (AGI weapons only)
                 if (hit && usesAgi && CombatMath.calculateDoubleStrike(attacker.agility, defender.agility, rnChunks[1])) {
-                    damage = damage + damage / 2;
+                    damage = damage + damage / int256(DOUBLE_STRIKE_DAMAGE_DIVISOR);
                 }
             } else {
                 damage = 0;
@@ -364,24 +372,36 @@ contract CombatSystem is System {
         if (Stats.getCurrentHp(defenderId) > 0) {
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
 
+            // Determine scaling stat pair from SpellScaling (defaults to INT)
+            int256 attackerScalingStat = attacker.intelligence;
+            int256 defenderScalingStat = defender.intelligence;
+            ResistanceStat scalingStat = SpellScaling.getScalingStat(effectId);
+            if (scalingStat == ResistanceStat.Strength) {
+                attackerScalingStat = attacker.strength;
+                defenderScalingStat = defender.strength;
+            } else if (scalingStat == ResistanceStat.Agility) {
+                attackerScalingStat = attacker.agility;
+                defenderScalingStat = defender.agility;
+            }
+
             // AGI crit bonus
             int256 agiCritBonus = CombatMath.calculateAgiCritBonus(attacker.agility);
             (hit, crit) = CombatMath.calculateToHit(
                 uint256(rnChunks[0]),
                 attackStats.attackModifierBonus,
                 attackStats.critChanceBonus + agiCritBonus,
-                attacker.intelligence,
-                defender.intelligence
+                attackerScalingStat,
+                defenderScalingStat
             );
             if (hit) {
                 damage = CombatMath.calculateMagicDamage(
-                    attackStats, magicItem, rnChunks[2], attacker.intelligence, defender.intelligence, crit, ATTACK_MODIFIER
+                    attackStats, magicItem, rnChunks[2], attackerScalingStat, defenderScalingStat, crit, ATTACK_MODIFIER
                 );
                 int256 currentHp = Stats.getCurrentHp(defenderId);
                 int256 maxHp = Stats.getMaxHp(defenderId);
                 damage = CombatMath.calculateFinalMagicDamage(damage, currentHp, maxHp, crit);
 
-                // Magic resistance
+                // Magic resistance (always based on defender INT regardless of scaling)
                 if (damage > 0) {
                     damage -= CombatMath.calculateMagicResistance(defender.intelligence, damage);
                 }
