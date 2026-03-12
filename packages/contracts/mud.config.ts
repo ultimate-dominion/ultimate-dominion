@@ -434,7 +434,6 @@ export default defineWorld({
         mobId: "bytes32",
         armor: "int256",
         isElite: "bool",
-        hasBossAI: "bool",
         inventory: "uint256[]",
       },
     },

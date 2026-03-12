@@ -124,7 +124,7 @@ contract MobSystem is System {
             }
 
             MobStatsData memory newMobStats =
-                MobStatsData({armor: monsterStats.armor, isElite: isElite, hasBossAI: monsterStats.hasBossAI, inventory: monsterStats.inventory});
+                MobStatsData({armor: monsterStats.armor, isElite: isElite, inventory: monsterStats.inventory});
             MobStats.set(entityId, newMobStats);
             Stats.set(entityId, statsData);
         } else if (stats.mobType == MobType.Shop) {

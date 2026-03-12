@@ -10,6 +10,7 @@ import {
     CombatEncounter,
     CombatEncounterData,
     CharacterEquipment,
+    Mobs,
     MobStats,
     Position,
     Spawned,
@@ -17,7 +18,7 @@ import {
     ActionOutcomeData
 } from "@codegen/index.sol";
 import {NoWeaponsEquipped, InvalidAction} from "../Errors.sol";
-import {Action} from "@interfaces/Structs.sol";
+import {Action, MonsterStats} from "@interfaces/Structs.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
 
 contract PvESystem is System {
@@ -155,7 +156,10 @@ contract PvESystem is System {
                 : encounterData.attackers[i];
 
             uint256 monsterWeapon;
-            if (MobStats.getHasBossAI(mobEntity)) {
+            // Look up hasBossAI from mob template (not on spawned MobStats table)
+            uint256 _mobId = IWorld(_world()).UD__getMobId(mobEntity);
+            MonsterStats memory _templateStats = abi.decode(Mobs.getMobStats(_mobId), (MonsterStats));
+            if (_templateStats.hasBossAI) {
                 // Boss AI: pick weapon that counters defender's dominant stat
                 int256 defStr = Stats.getStrength(defenderEntity);
                 int256 defAgi = Stats.getAgility(defenderEntity);

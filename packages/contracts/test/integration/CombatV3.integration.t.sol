@@ -6,6 +6,7 @@ import {console} from "forge-std/console.sol";
 import {
     Stats,
     StatsData,
+    Mobs,
     MobStats,
     MobStatsData,
     SpellScaling,
@@ -16,7 +17,7 @@ import {
     StarterItemsData
 } from "@codegen/index.sol";
 import {Classes, EncounterType, ResistanceStat} from "@codegen/common.sol";
-import {Action} from "@interfaces/Structs.sol";
+import {Action, MonsterStats} from "@interfaces/Structs.sol";
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 
@@ -146,8 +147,9 @@ contract CombatV3IntegrationTest is V3SetUp {
     function test_BossAI_INTDominantDefender_CompletesSuccessfully() public {
         bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, TEST_X, TEST_Y);
 
-        // hasBossAI now propagates from MonsterStats template
-        assertTrue(MobStats.getHasBossAI(bossEntity), "hasBossAI should be true");
+        // hasBossAI lives on the mob template, not the spawned MobStats table
+        MonsterStats memory tmpl = abi.decode(Mobs.getMobStats(basiliskMobId), (MonsterStats));
+        assertTrue(tmpl.hasBossAI, "hasBossAI should be true on template");
 
         // Verify boss has 2 different weapons
         uint256 slot0Weapon = MobStats.getItemInventory(bossEntity, 0);
@@ -194,7 +196,8 @@ contract CombatV3IntegrationTest is V3SetUp {
     function test_NoBossAI_DefaultSlot0_CompletesSuccessfully() public {
         // Use a non-boss monster (midLevel has hasBossAI: false)
         bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, TEST_X, TEST_Y);
-        assertFalse(MobStats.getHasBossAI(monsterEntity), "hasBossAI should be false for non-boss");
+        MonsterStats memory tmplMid = abi.decode(Mobs.getMobStats(midLevelMobId), (MonsterStats));
+        assertFalse(tmplMid.hasBossAI, "hasBossAI should be false for non-boss");
 
         // Even with STR-dominant defender, non-boss always uses slot 0
         _setupCharlie(20, 5, 5, 300);
