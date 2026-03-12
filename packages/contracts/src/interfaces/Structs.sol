@@ -147,6 +147,8 @@ struct MonsterStats {
     Classes class;
     // the amount of experience this monster is worth
     uint256 experience;
+    // whether this monster uses BossAI weapon selection
+    bool hasBossAI;
     // hit points
     int256 hitPoints;
     // base to hit modifier for magical Actions = inteligence * magicDefenseConversion

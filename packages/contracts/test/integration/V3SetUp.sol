@@ -224,7 +224,7 @@ contract V3SetUp is Test {
             MobType.Monster,
             abi.encode(MonsterStats({
                 agility: 6, armor: 0, class: Classes.Warrior,
-                experience: 225, hitPoints: 10, intelligence: 2,
+                experience: 225, hasBossAI: false, hitPoints: 10, intelligence: 2,
                 inventory: bothWeapons, level: 1, strength: 3
             })),
             "monster:dire_rat"
@@ -235,7 +235,7 @@ contract V3SetUp is Test {
             MobType.Monster,
             abi.encode(MonsterStats({
                 agility: 4, armor: 1, class: Classes.Mage,
-                experience: 550, hitPoints: 18, intelligence: 9,
+                experience: 550, hasBossAI: false, hitPoints: 18, intelligence: 9,
                 inventory: bothWeapons, level: 3, strength: 3
             })),
             "monster:cavern_brute"
@@ -246,7 +246,7 @@ contract V3SetUp is Test {
             MobType.Monster,
             abi.encode(MonsterStats({
                 agility: 6, armor: 2, class: Classes.Warrior,
-                experience: 1000, hitPoints: 26, intelligence: 5,
+                experience: 1000, hasBossAI: false, hitPoints: 26, intelligence: 5,
                 inventory: bothWeapons, level: 5, strength: 11
             })),
             "monster:ironhide_troll"
@@ -258,7 +258,7 @@ contract V3SetUp is Test {
             MobType.Monster,
             abi.encode(MonsterStats({
                 agility: 12, armor: 4, class: Classes.Warrior,
-                experience: 10000, hitPoints: 100, intelligence: 10,
+                experience: 10000, hasBossAI: true, hitPoints: 100, intelligence: 10,
                 inventory: bothWeapons, level: 10, strength: 20
             })),
             "monster:basilisk"
