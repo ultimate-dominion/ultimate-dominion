@@ -85,6 +85,7 @@ export const MonstersProvider = ({
               armor: monsterStats.armor,
               entityClass: monsterStats.entityClass,
               experience: monsterStats.experience,
+              hasBossAI: monsterStats.hasBossAI,
               hitPoints: monsterStats.hitPoints,
               intelligence: monsterStats.intelligence,
               inventory: monsterStats.inventory,

@@ -331,6 +331,7 @@ export type MonsterStats = {
   armor: bigint;
   entityClass: StatsClasses;
   experience: bigint;
+  hasBossAI: boolean;
   hitPoints: bigint;
   intelligence: bigint;
   inventory: string[];
