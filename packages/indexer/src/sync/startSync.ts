@@ -8,8 +8,10 @@ import type { Broadcaster } from '../ws/broadcaster.js';
 
 export type SyncHandle = {
   stopSync: () => void;
-  /** Observable of latest indexed block number */
+  /** Latest block number seen from the chain RPC (may be ahead of Postgres) */
   latestBlockNumber: number;
+  /** Latest block number actually committed to Postgres (safe for queries) */
+  latestStoredBlockNumber: number;
   /** Map of discovered Postgres table names → column names */
   tables: Map<string, string[]>;
   /** Logical table name → Postgres table name mapping */
@@ -48,6 +50,7 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
   const handle: SyncHandle = {
     stopSync: sync.stopSync,
     latestBlockNumber: 0,
+    latestStoredBlockNumber: 0,
     tables: new Map(),
     tableNameMap: new Map(),
   };
@@ -62,10 +65,13 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
     },
   });
 
-  // Subscribe to stored block logs for WS broadcasting
+  // Subscribe to stored block logs for WS broadcasting.
+  // This fires AFTER data is committed to Postgres, so latestStoredBlockNumber
+  // is safe to use for delta queries (unlike latestBlockNumber$ which can race ahead).
   sync.storedBlockLogs$.subscribe({
     next: async ({ blockNumber, logs }) => {
       handle.latestBlockNumber = Number(blockNumber);
+      handle.latestStoredBlockNumber = Number(blockNumber);
 
       if (logs.length === 0) return;
 

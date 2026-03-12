@@ -35,7 +35,7 @@ export function createSnapshotRouter(syncHandle: SyncHandle): Router {
       }
 
       res.json({
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
         tables: snapshot,
       });
     } catch (err) {

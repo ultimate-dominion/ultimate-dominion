@@ -37,6 +37,7 @@ function makeSyncHandle(overrides?: Partial<SyncHandle>): SyncHandle {
   return {
     stopSync: vi.fn(),
     latestBlockNumber: 100,
+    latestStoredBlockNumber: 100,
     tables: new Map(),
     tableNameMap: new Map([
       ['Characters', 'ud__characters'],
@@ -145,6 +146,22 @@ describe('GET /delta', () => {
     await request(app).get('/delta?block=99');
 
     expect(mockSql).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses latestStoredBlockNumber (not latestBlockNumber) in response', async () => {
+    const mockSql = vi.mocked(sql.unsafe);
+    mockSql.mockResolvedValue([] as any);
+
+    // Simulate the race: chain is at block 200 but Postgres only has up to 150
+    const app = createApp(makeSyncHandle({
+      latestBlockNumber: 200,
+      latestStoredBlockNumber: 150,
+    }));
+    const res = await request(app).get('/delta?block=100');
+
+    expect(res.status).toBe(200);
+    // Must return the stored block number so the client knows whether to retry
+    expect(res.body.block).toBe(150);
   });
 
   it('passes sinceBlock parameter to SQL query', async () => {

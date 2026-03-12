@@ -55,7 +55,7 @@ export function createDeltaRouter(syncHandle: SyncHandle): Router {
       }
 
       res.json({
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
         tables: delta,
       });
     } catch (err) {
