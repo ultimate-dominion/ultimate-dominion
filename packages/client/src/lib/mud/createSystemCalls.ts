@@ -606,13 +606,14 @@ export function createSystemCalls(
     return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
   };
 
-  // Gas limit for moves that skip simulation (covers spawnOnTileEnter worst case)
-  const MOVE_GAS_LIMIT = BigInt(3_000_000);
+  // Gas limit for moves that skip simulation (covers spawnOnTileEnter worst case).
+  // Tiles accumulate mobs across sessions; spawning into a dense tile requires
+  // significantly more gas due to EntitiesAtPosition reads + multiple mob writes.
+  const MOVE_GAS_LIMIT = BigInt(8_000_000);
 
-  // On-chain retry: if the receipt reverts, retry once after a short delay
-  // (matches the approach that was stable on beta).
+  // On-chain retry: if the receipt reverts, retry after a short delay.
   const ON_CHAIN_RETRY_DELAY_MS = 500;
-  const MAX_ON_CHAIN_RETRIES = 1;
+  const MAX_ON_CHAIN_RETRIES = 2;
 
   type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -661,35 +662,43 @@ export function createSystemCalls(
       const args = [characterEntity as `0x${string}`, x, y] as const;
       let onChainRetries = 0;
 
-      // Attempt: simulation (default viem) → send tx → wait receipt.
-      // If simulation fails with MoveTooFast (stale RPC timestamp, safe to
-      // ignore since on-chain MOVE_COOLDOWN=0), skip simulation and send
-      // with a fixed gas limit.
-      for (let attempt = 0; attempt < 2 + MAX_ON_CHAIN_RETRIES; attempt++) {
+      // First attempt: simulate then send (catches real errors like InvalidMove).
+      // If sim returns MoveTooFast (stale RPC, safe to skip since MOVE_COOLDOWN=0),
+      // send without simulation using a generous gas limit.
+      // Retries after on-chain revert always bypass simulation with high gas.
+      for (let attempt = 0; attempt < 1 + MAX_ON_CHAIN_RETRIES; attempt++) {
         try {
           let tx: `0x${string}`;
-          try {
-            // Default path: simulate then send
-            tx = await worldContract.write.UD__move(args);
-          } catch (simError) {
-            if (isMoveTooFastError(simError)) {
-              // Stale RPC timestamp — safe to skip simulation
-              console.warn(`[move] Sim returned MoveTooFast (stale RPC) — sending without simulation (target: ${x},${y})`);
-              tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
-            } else if (isInvalidMoveError(simError)) {
-              console.warn(`[move] InvalidMove — store pos may be stale (target: ${x},${y})`);
-              lastMoveCompletedMs = Date.now();
-              return { success: false, error: 'Position changed — tap again to continue.' };
-            } else {
-              throw simError;
+
+          if (onChainRetries > 0) {
+            // Retries: skip simulation, use high gas limit
+            console.warn(`[move] Retry ${onChainRetries} — sending with gas ${MOVE_GAS_LIMIT} (target: ${x},${y})`);
+            tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
+          } else {
+            try {
+              // Default path: simulate then send
+              tx = await worldContract.write.UD__move(args);
+            } catch (simError) {
+              if (isMoveTooFastError(simError)) {
+                // Stale RPC timestamp — safe to skip simulation
+                console.warn(`[move] Sim returned MoveTooFast (stale RPC) — sending with gas ${MOVE_GAS_LIMIT} (target: ${x},${y})`);
+                tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
+              } else if (isInvalidMoveError(simError)) {
+                console.warn(`[move] InvalidMove — store pos may be stale (target: ${x},${y})`);
+                lastMoveCompletedMs = Date.now();
+                return { success: false, error: 'Position changed — tap again to continue.' };
+              } else {
+                throw simError;
+              }
             }
           }
 
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
+            console.error(`[move] TX REVERTED — hash: ${tx}, gasUsed: ${receipt.gasUsed}, block: ${receipt.blockNumber} (target: ${x},${y})`);
             if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
               onChainRetries++;
-              console.warn(`[move] On-chain revert (retry ${onChainRetries}/${MAX_ON_CHAIN_RETRIES}) — retrying in ${ON_CHAIN_RETRY_DELAY_MS}ms (target: ${x},${y})`);
+              console.warn(`[move] On-chain revert (retry ${onChainRetries}/${MAX_ON_CHAIN_RETRIES}) — retrying in ${ON_CHAIN_RETRY_DELAY_MS}ms`);
               await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
               continue;
             }
