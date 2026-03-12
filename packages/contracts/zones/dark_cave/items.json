@@ -217,12 +217,12 @@
       }
     },
     {
-      "name": "Chainmail Shirt",
+      "name": "Etched Chainmail",
       "description": "Heavy and well-kept. Whoever wore it before knew what they were doing.",
       "rarity": 2,
       "dropChance": 200,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "armor:chainmail_shirt",
+      "metadataUri": "armor:etched_chainmail",
       "price": 100000000000000000000,
       "armorType": "Plate",
       "isStarter": false,
@@ -313,12 +313,12 @@
       }
     },
     {
-      "name": "Cracked Stone Plate",
+      "name": "Carved Stone Plate",
       "description": "Carved from the giant's own armor. It cracked when he fell. Still heavier than anything you've lifted.",
       "rarity": 3,
       "dropChance": 50,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "armor:cracked_stone_plate",
+      "metadataUri": "armor:carved_stone_plate",
       "price": 200000000000000000000,
       "armorType": "Plate",
       "isStarter": false,
@@ -579,12 +579,12 @@
       "scalingStat": ""
     },
     {
-      "name": "Steel Mace",
+      "name": "Light Mace",
       "description": "Dented but solid. Doesn't need an edge to break bones.",
       "rarity": 1,
       "dropChance": 500,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:steel_mace",
+      "metadataUri": "weapon:light_mace",
       "price": 40000000000000000000,
       "stats": {
         "agiModifier": 0,
@@ -607,12 +607,12 @@
       "scalingStat": ""
     },
     {
-      "name": "Recurve Bow",
+      "name": "Shortbow",
       "description": "Compact and tense. Pulls harder than it looks.",
       "rarity": 1,
       "dropChance": 500,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:recurve_bow",
+      "metadataUri": "weapon:shortbow",
       "price": 40000000000000000000,
       "scalingStat": "AGI",
       "stats": {
@@ -663,12 +663,12 @@
       "scalingStat": ""
     },
     {
-      "name": "Etched Blade",
+      "name": "Notched Blade",
       "description": "Someone scratched symbols into the flat of the blade. They might mean something.",
       "rarity": 1,
       "dropChance": 500,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:etched_blade",
+      "metadataUri": "weapon:notched_blade",
       "price": 50000000000000000000,
       "stats": {
         "agiModifier": 0,
@@ -775,12 +775,12 @@
       "scalingStat": ""
     },
     {
-      "name": "Rat King's Fang",
+      "name": "Dire Rat Fang",
       "description": "Pulled from a jaw the size of your head. The venom still weeps from the root.",
       "rarity": 3,
       "dropChance": 50,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:rat_kings_fang",
+      "metadataUri": "weapon:dire_rat_fang",
       "price": 150000000000000000000,
       "isStarter": false,
       "stats": {
@@ -833,12 +833,12 @@
       "scalingStat": ""
     },
     {
-      "name": "Brute's Cleaver",
+      "name": "Notched Cleaver",
       "description": "Chipped from use, not neglect. The brute knew how to hit.",
       "rarity": 2,
       "dropChance": 200,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:brutes_cleaver",
+      "metadataUri": "weapon:notched_cleaver",
       "price": 60000000000000000000,
       "isStarter": false,
       "stats": {
@@ -861,12 +861,12 @@
       "scalingStat": ""
     },
     {
-      "name": "Crystal Blade",
+      "name": "Crystal Shard",
       "description": "Grown, not forged. The edge is sharper than steel but brittle.",
       "rarity": 2,
       "dropChance": 200,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:crystal_blade",
+      "metadataUri": "weapon:crystal_shard",
       "price": 70000000000000000000,
       "isStarter": false,
       "stats": {
@@ -889,12 +889,12 @@
       "scalingStat": ""
     },
     {
-      "name": "Troll's Bonebreaker",
+      "name": "Gnarled Cudgel",
       "description": "A femur sharpened to a point. The troll used it on everything.",
       "rarity": 3,
       "dropChance": 50,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:trolls_bonebreaker",
+      "metadataUri": "weapon:gnarled_cudgel",
       "price": 180000000000000000000,
       "isStarter": false,
       "stats": {
@@ -974,12 +974,12 @@
       "scalingStat": ""
     },
     {
-      "name": "Giant's Club",
+      "name": "Stone Maul",
       "description": "A stone column broken from the cave wall. The giant called it a weapon.",
       "rarity": 3,
       "dropChance": 50,
       "initialSupply": 10000000000000000000,
-      "metadataUri": "weapon:giants_club",
+      "metadataUri": "weapon:stone_maul",
       "price": 250000000000000000000,
       "isStarter": false,
       "stats": {
