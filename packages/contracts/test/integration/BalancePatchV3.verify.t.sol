@@ -453,8 +453,8 @@ contract BalancePatchV3Verify is Test {
     // =====================================================================
 
     function test_basilisk_exists() public {
-        // Basilisk is the 11th mob created (IDs 1-10 are existing)
-        MonsterStats memory m = _getMonsterStats(11);
+        // Basilisk is mob 12 (IDs 1-10 monsters, 11 shop, 12 Basilisk)
+        MonsterStats memory m = _getMonsterStats(12);
         assertEq(m.strength, 20, "Basilisk STR");
         assertEq(m.agility, 12, "Basilisk AGI");
         assertEq(m.intelligence, 10, "Basilisk INT");
