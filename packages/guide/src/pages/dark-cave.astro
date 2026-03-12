@@ -23,14 +23,17 @@ const headings = [
     '@type': 'Article',
     headline: "Noctum's Wound — Dark Cave Map Guide",
     description: 'Complete map guide for the Dark Cave zone in Ultimate Dominion.',
+    dateModified: '2026-03-12',
   }} slot="head" />
 
   <h1>Noctum's Wound</h1>
   <p class="text-lg text-text-secondary">
-    The Dark Cave is the first zone in Ultimate Dominion — a wound torn in reality by the death of Noctum, the god of death. It's a 10&times;10 grid of tunnels, caverns, and darkness. Here's how to navigate it.
+    The Dark Cave is Ultimate Dominion's first zone — a 10x10 tile grid with coordinates from (0,0) to (9,9). The northwest 5x5 corner is a safe zone (no PvP, levels 1-6). Everything else is a danger zone with PvP enabled and levels 6-10. Key locations: spawn/escrow at (0,0), a lore fragment at (5,5), and Tal's NPC shop at (9,9). Monster level scales with distance from spawn.
   </p>
+  <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
   <h2 id="map-layout">Map Layout</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>10x10 tile grid, coordinates (0,0) northwest to (9,9) southeast. Move one tile at a time.</em></p>
   <p>
     The Dark Cave is a <strong>10&times;10 tile grid</strong>. Coordinates run from (0,0) in the northwest corner to (9,9) in the southeast. You move one tile at a time using arrow keys or on-screen buttons.
   </p>
@@ -79,6 +82,7 @@ const headings = [
   </div>
 
   <h2 id="safe-and-danger-zones">Safe and Danger Zones</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Safe: x&lt;5 and y&lt;5 (PvP off, levels 1-6). Danger: x>=5 or y>=5 (PvP on, levels 6-10).</em></p>
   <p>
     The map is divided into two zones based on coordinates:
   </p>
@@ -103,6 +107,7 @@ const headings = [
   </Callout>
 
   <h2 id="monster-spawning">Monster Spawning</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Level based on Chebyshev distance from (0,0). 0-5 monsters per tile, randomly spawning.</em></p>
   <p>
     Monster level is determined by distance from the spawn point (0,0), measured using Chebyshev distance (the greater of horizontal and vertical distance):
   </p>
@@ -115,6 +120,7 @@ const headings = [
   </p>
 
   <h2 id="key-locations">Key Locations</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Spawn/Escrow at (0,0), Fragment Center at (5,5), Tal's Shop at (9,9) — shop is deep in the danger zone.</em></p>
 
   <DataTable headers={['Location', 'Coordinates', 'Purpose']}>
     <tr class="hover:bg-surface/50">
@@ -139,6 +145,7 @@ const headings = [
   </Callout>
 
   <h2 id="navigation-tips">Navigation Tips</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Stay in the northwest corner when starting. Retreat toward (0,0) when low on HP. Check adjacent tiles before moving.</em></p>
   <ul>
     <li><strong>Stay in the corner</strong> — the 5&times;5 northwest corner (x&lt;5, y&lt;5) is safe. Moving past row 4 or column 4 puts you in the danger zone.</li>
     <li><strong>Level by distance</strong> — you can roughly control monster difficulty by staying close to or far from the spawn point.</li>

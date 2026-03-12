@@ -25,6 +25,7 @@ const headings = [
     name: 'Ultimate Dominion Bestiary — Dark Cave',
     description: 'All creatures found in the Dark Cave zone.',
     numberOfItems: darkCaveMonsters.length,
+    dateModified: '2026-03-12',
     itemListElement: darkCaveMonsters.map((m, i) => ({
       '@type': 'ListItem',
       position: i + 1,
@@ -34,10 +35,12 @@ const headings = [
 
   <h1>Creatures of the Wound</h1>
   <p class="text-lg text-text-secondary">
-    The Dark Cave pulses with hostile life — creatures twisted by the death of the god Noctum. Ten species stalk the tunnels, each with distinct combat styles, weaknesses, and rewards.
+    Ultimate Dominion's Dark Cave contains 10 monsters spanning levels 1-10, each belonging to one of three combat classes: Warrior (STR), Rogue (AGI), or Mage (INT). Monster class determines combat triangle interactions — fighting with the triangle advantage grants up to +40% bonus damage. Each monster has unique stats, drop tables, and tactical considerations.
   </p>
+  <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
   <h2 id="monster-classes">Monster Classes</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Three classes: Warrior (STR, weak to INT), Rogue (AGI, weak to STR), Mage (INT, weak to AGI).</em></p>
   <p>
     Every monster belongs to one of three <a href="/guide/combat">combat classes</a>, determining its dominant stat and how the combat triangle applies:
   </p>
@@ -52,6 +55,7 @@ const headings = [
   </Callout>
 
   <h2 id="dark-cave-monsters">Dark Cave Monsters</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Ten creatures, one per level (1-10), with alternating combat classes. Full stat cards and drop tables below.</em></p>
   <p>
     Ten creatures inhabit the Dark Cave, one per level from 1 to 10. The class sequence alternates irregularly — there's no simple pattern to exploit.
   </p>
@@ -90,6 +94,7 @@ const headings = [
   </DataTable>
 
   <h2 id="hunting-tips">Hunting Tips</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Start with Cave Rats (level 1), farm Stone Giant (level 8) for weapons, prep consumables for the Shadow Dragon (level 10).</em></p>
   <ul>
     <li><strong>Start with Cave Rats</strong> — level 1, low HP, drops starter gear. Perfect for your first fights.</li>
     <li><strong>Farm the Stone Giant</strong> — level 8 Warrior drops two different weapons (Steel Mace and Warhammer), making it one of the best farming targets for weapon upgrades.</li>

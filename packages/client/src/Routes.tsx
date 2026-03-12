@@ -89,6 +89,9 @@ const Privacy = lazyWithReload(() =>
 const Terms = lazyWithReload(() =>
   import('./pages/Terms').then(m => ({ default: m.Terms })),
 );
+const FAQ = lazyWithReload(() =>
+  import('./pages/FAQ').then(m => ({ default: m.FAQ })),
+);
 
 export const HOME_PATH = '/';
 export const MANIFESTO_PATH = '/manifesto';
@@ -103,6 +106,7 @@ export const GUIDE_PATH = '/guide';
 export const WAITING_ROOM_PATH = '/waiting-room';
 export const PRIVACY_PATH = '/privacy';
 export const TERMS_PATH = '/terms';
+export const FAQ_PATH = '/faq';
 export const BLOG_URL = 'https://ultimatedominion.com/blog';
 export const TAVERN_URL = 'https://tavern.ultimatedominion.com';
 
@@ -135,6 +139,7 @@ const AppRoutes: React.FC = () => {
           <Route path={WAITING_ROOM_PATH} element={<WaitingRoom />} />
           <Route path={PRIVACY_PATH} element={<Privacy />} />
           <Route path={TERMS_PATH} element={<Terms />} />
+          <Route path={FAQ_PATH} element={<FAQ />} />
           <Route path="/tavern" element={<ExternalRedirect to={TAVERN_URL} />} />
         </Routes>
       </Suspense>

@@ -29,14 +29,17 @@ const headings = [
     '@type': 'Article',
     headline: 'The Art of Survival — Ultimate Dominion Combat Guide',
     description: 'How combat works in Ultimate Dominion: hit chance, damage formulas, the combat triangle, and status effects.',
+    dateModified: '2026-03-12',
   }} slot="head" />
 
   <h1>The Art of Survival</h1>
   <p class="text-lg text-text-secondary">
-    Combat in Ultimate Dominion is turn-based, tactical, and lethal. Understanding the math behind every swing gives you the edge between victory and death.
+    Ultimate Dominion uses turn-based combat with a rock-paper-scissors triangle: Strength beats Agility, Agility beats Intelligence, Intelligence beats Strength. Each stat provides unique offensive and defensive bonuses. Battles have a 30-second turn timer, a 15-turn maximum, and damage is calculated from weapon rolls modified by stats, armor, class multipliers, and critical hits.
   </p>
+  <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
   <h2 id="turn-structure">Turn Structure</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Alternating turns with 30-second timers, 15-turn maximum, and AGI-based initiative.</em></p>
   <p>
     Each combat encounter follows a strict turn order:
   </p>
@@ -48,6 +51,7 @@ const headings = [
   </ul>
 
   <h2 id="hit-chance">Hit Chance</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Base 90% hit chance, modified by AGI (physical) or INT (magic), clamped between 5% and 98%.</em></p>
   <p>
     Every attack rolls against the target's evasion to determine a hit. The formula:
   </p>
@@ -72,6 +76,7 @@ const headings = [
   </p>
 
   <h2 id="damage-calculation">Damage Calculation</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Weapon base roll x1.2 attack modifier + stat bonus - armor, then multiplied by crit, combat triangle, and class modifiers.</em></p>
 
   <h3 id="physical-damage">Physical Damage</h3>
   <p>Physical damage from weapons follows this pipeline:</p>
@@ -101,6 +106,7 @@ const headings = [
   </Callout>
 
   <h2 id="critical-hits">Critical Hits</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>~5% base crit chance, x2 damage using max weapon roll, modified by class crit multiplier.</em></p>
   <p>
     Critical hits deal <strong>&times;2 damage</strong> and always use your weapon's <strong>maximum damage</strong> as the base roll (instead of a random value). The base crit chance is approximately <strong>5%</strong>, modified by your class's crit multiplier.
   </p>
@@ -109,6 +115,7 @@ const headings = [
   </p>
 
   <h2 id="the-combat-triangle">The Combat Triangle</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>STR beats AGI, AGI beats INT, INT beats STR — +4% damage per stat point of advantage, capped at 40%.</em></p>
   <p>
     The combat triangle is the rock-paper-scissors of Ultimate Dominion. Your <strong>dominant stat</strong> (whichever of STR, AGI, or INT is highest) determines your side:
   </p>
@@ -129,6 +136,7 @@ const headings = [
   </Callout>
 
   <h2 id="armor">Armor</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Flat physical damage reduction per hit. No effect on magic — INT provides 2% magic resistance per point (cap 40%).</em></p>
   <p>
     Armor reduces incoming <strong>physical</strong> damage by a flat amount per hit. The formula:
   </p>
@@ -140,6 +148,7 @@ const headings = [
   </p>
 
   <h2 id="status-effects">Status Effects</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Temporary buffs/debuffs from abilities and consumables: hit modifiers, DoT, healing, armor changes, weapon changes, and stuns.</em></p>
   <p>
     Some abilities and consumables apply temporary effects that alter combat:
   </p>

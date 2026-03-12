@@ -31,14 +31,17 @@ const headings = [
       { '@type': 'Question', name: 'What is the best class in Ultimate Dominion?', acceptedAnswer: { '@type': 'Answer', text: 'There is no single best class. Warriors and Rangers deal the most physical damage (110%), Wizards have the highest spell damage (115%), Rogues have the highest crit chance (115%), and Clerics are the best healers (110%). Choose based on your stat build and playstyle.' } },
       { '@type': 'Question', name: 'Can I change my class?', acceptedAnswer: { '@type': 'Answer', text: 'Class selection is a permanent choice. Choose carefully at Level 10 based on your build and preferred playstyle.' } },
     ],
+    dateModified: '2026-03-12',
   }} slot="head" />
 
   <h1>Paths of Power</h1>
   <p class="text-lg text-text-secondary">
-    At Level 10, you choose an advanced class — a permanent specialization that amplifies your strengths through damage multipliers, stat bonuses, and a unique class ability.
+    Ultimate Dominion has 9 advanced classes unlocked at level 10: Warrior, Paladin, Ranger, Rogue, Druid, Warlock, Wizard, Cleric, and Sorcerer. Each class grants permanent stat bonuses, damage/healing multipliers, and a unique combat ability. Class selection is permanent and available to any race or stat build.
   </p>
+  <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
   <h2 id="unlocking-classes">Unlocking Classes</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Any class available at level 10 regardless of race, stats, or power source — grants permanent stat bonuses and multipliers.</em></p>
   <p>
     Advanced classes unlock at <strong>Level 10</strong>. When you reach this milestone:
   </p>
@@ -54,6 +57,7 @@ const headings = [
   </Callout>
 
   <h2 id="multiplier-reference">Multiplier Reference</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Physical, spell, healing, crit, and max HP multipliers vary by class — values above 100% are highlighted below.</em></p>
 
   <DataTable headers={['Class', 'Phys', 'Spell', 'Heal', 'Crit', 'Max HP']}>
     {classes.map((c) => (
@@ -102,6 +106,7 @@ const headings = [
   </div>
 
   <h2 id="choosing-a-class">Choosing a Class</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Match your dominant stat and playstyle — burst damage (Wizard/Rogue), sustain (Paladin/Cleric), or flexibility (Druid/Sorcerer).</em></p>
   <p>Consider these factors:</p>
   <ul>
     <li><strong>Your dominant stat</strong> — if you rolled high STR, Warrior/Paladin maximize your existing advantage. If high INT, Wizard gives you the biggest spell boost.</li>

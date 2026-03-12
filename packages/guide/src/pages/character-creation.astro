@@ -26,14 +26,17 @@ const headings = [
       { '@type': 'Question', name: 'How do stats work in Ultimate Dominion?', acceptedAnswer: { '@type': 'Answer', text: 'You have 19 stat points distributed across STR, AGI, and INT (range 3–10 each). Base HP is 18. Stats determine combat effectiveness, item eligibility, and combat triangle positioning.' } },
       { '@type': 'Question', name: 'Does power source matter?', acceptedAnswer: { '@type': 'Answer', text: 'Power source (Divine, Weave, Physical) grants a real bonus at level 5: Divine gives +2 max HP, Weave gives +1 INT, Physical gives +1 extra stat point. It does not restrict your abilities, equipment, or class options.' } },
     ],
+    dateModified: '2026-03-12',
   }} slot="head" />
 
   <h1>Forging an Identity</h1>
   <p class="text-lg text-text-secondary">
-    Your race and stats shape every fight, every item you can wield, and every edge you hold in battle. Choose carefully — or re-roll until the numbers align.
+    Ultimate Dominion character creation has four steps: choose a race (Human, Elf, or Dwarf — each with permanent stat modifiers), select a power source (Divine, Weave, or Physical — grants a bonus at level 5), roll stats (19 points across STR/AGI/INT, range 3-10 each, with 3 re-rolls), and pick starter armor (Cloth, Leather, or Plate). All choices are permanent and determine your combat effectiveness and equipment eligibility.
   </p>
+  <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
   <h2 id="races">Races</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Human (+1/+1/+1 balanced), Elf (-1 STR/+2 AGI/+1 INT/-1 HP fast and sharp), Dwarf (+2 STR/-1 AGI/+1 HP tough and strong).</em></p>
   <p>
     Each race grants permanent stat modifiers applied on top of your rolled stats. These cannot be changed later.
   </p>
@@ -52,6 +55,7 @@ const headings = [
   </Callout>
 
   <h2 id="power-sources">Power Sources</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Divine (+2 HP at level 5), Weave (+1 INT at level 5), Physical (+1 stat point at level 5). Does not restrict abilities or gear.</em></p>
   <p>
     Your power source defines your character's identity — how they explain their abilities to the world. It also grants a <strong>real bonus at level 5</strong>:
   </p>
@@ -66,6 +70,7 @@ const headings = [
   </Callout>
 
   <h2 id="stat-roll">The Stat Roll</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>19 points randomly across STR/AGI/INT (3-10 each). Base HP: 18. 4 total rolls (1 initial + 3 re-rolls). Permanent once confirmed.</em></p>
   <p>
     When you create a character, 19 points are randomly distributed across three stats:
   </p>
@@ -84,6 +89,7 @@ const headings = [
   </Callout>
 
   <h2 id="starter-armor">Starter Armor</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Cloth (INT builds), Leather (AGI builds), or Plate (STR builds) — each adds stat modifiers on top of your roll.</em></p>
   <p>
     After rolling, you choose one starter armor. Each type shifts your stats further:
   </p>
@@ -98,6 +104,7 @@ const headings = [
   />
 
   <h2 id="example-builds">Example Builds</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Bruiser (Dwarf+Plate), Shadow (Elf+Leather), Arcanist (Elf+Cloth), Generalist (Human+Leather).</em></p>
   <p>
     Combine race + armor to push a stat as high as possible, or balance across multiple stats. Here are some starting archetypes:
   </p>

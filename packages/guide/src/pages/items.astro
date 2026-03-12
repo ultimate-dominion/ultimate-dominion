@@ -29,14 +29,17 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
     name: 'Ultimate Dominion Items',
     description: 'All weapons, armor, and consumables in Ultimate Dominion.',
     numberOfItems: weapons.length + armors.length + consumables.length,
+    dateModified: '2026-03-12',
   }} slot="head" />
 
   <h1>Tools of the Trade</h1>
   <p class="text-lg text-text-secondary">
-    Items account for roughly 60% of your character's power. The right weapon or armor can mean the difference between dominating the cave and becoming food for it.
+    Ultimate Dominion has three item categories — weapons, armor, and consumables — across four rarity tiers (Worn, Common, Uncommon, Rare). Weapons are divided into STR, AGI, and INT families. Items account for roughly 60% of a character's total power. All items are on-chain NFTs that can be traded on the player marketplace.
   </p>
+  <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
   <h2 id="rarity-tiers">Rarity Tiers</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Four tiers: Worn, Common, Uncommon, Rare — each progressively more powerful, harder to find, and with higher stat requirements.</em></p>
   <p>Items come in four rarity tiers, each progressively more powerful and harder to find:</p>
   <div class="flex flex-wrap gap-3 my-4 not-prose">
     <RarityBadge rarity="worn" />
@@ -49,6 +52,7 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
   </p>
 
   <h2 id="weapons">Weapons</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Three families: STR (swords/axes/maces), AGI (bows/crossbows), INT (staves/wands). Each has min stat requirements.</em></p>
   <p>
     Weapons determine your base damage and often grant bonus stats. There are three weapon families:
   </p>
@@ -76,6 +80,7 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
   </DataTable>
 
   <h2 id="armor">Armor</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Reduces physical damage per hit, often with bonus stats. No effect on magic damage.</em></p>
   <p>
     Armor reduces incoming physical damage and often provides stat bonuses. Higher armor values mean less damage taken per hit from physical attacks.
   </p>
@@ -102,6 +107,7 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
   </Callout>
 
   <h2 id="consumables">Consumables</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Single-use items for healing, stat buffs, and combat effects. Dropped by monsters and sold in shops.</em></p>
   <p>
     Consumables are single-use items that provide healing, stat buffs, or other effects during combat. Use them wisely — they're gone after one use.
   </p>
@@ -117,6 +123,7 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
   </DataTable>
 
   <h2 id="equipment-requirements">Equipment Requirements</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Stat-based only (no level requirements). Your STR/AGI/INT determines what you can equip.</em></p>
   <p>
     Most items above Worn rarity require minimum stat thresholds to equip. These requirements are based on <strong>stats only</strong> — there are no level requirements for items.
   </p>
@@ -130,6 +137,7 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
   </p>
 
   <h2 id="finding-items">Finding Items</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Monster drops, NPC shops, and the player marketplace — higher-level monsters drop rarer items.</em></p>
   <p>
     Items enter the game through three channels:
   </p>

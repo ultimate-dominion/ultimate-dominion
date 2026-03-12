@@ -25,14 +25,17 @@ const headings = [
     '@type': 'Article',
     headline: 'Blood in the Dark — Ultimate Dominion PvP Guide',
     description: 'How player-vs-player combat works in Ultimate Dominion: danger zones, gold escrow, flee penalties, and strategic advice.',
+    dateModified: '2026-03-12',
   }} slot="head" />
 
   <h1>Blood in the Dark</h1>
   <p class="text-lg text-text-secondary">
-    In the deeper reaches of the cave, the monsters aren't the only threat. Other adventurers carry gold, grudges, and ambition — and in the danger zone, combat between players is always an option.
+    Ultimate Dominion features player-vs-player combat in designated danger zones. Players deposit gold into an escrow system before entering, and the winner claims ~40% of the loser's escrowed gold. PvP uses the same turn-based combat system as PvE, with a 30-second cooldown between encounters. The safe zone (northwest 5x5 corner) has PvP disabled; everything else is the danger zone.
   </p>
+  <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
   <h2 id="danger-zones">Danger Zones</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Northwest 5x5 is safe (PvP disabled). Everything outside is the danger zone with PvP enabled and tougher monsters.</em></p>
   <p>
     The world map is divided into <strong>safe zones</strong> and <strong>danger zones</strong>:
   </p>
@@ -50,6 +53,7 @@ const headings = [
   </p>
 
   <h2 id="gold-escrow">Gold Escrow</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Deposit gold at the cave entrance before entering danger zones. Only escrowed gold is at risk — main balance is always safe.</em></p>
   <p>
     Before entering the danger zone, you must deposit gold into <strong>Adventure Escrow</strong> at the cave entrance tile. This gold is what's at stake in PvP:
   </p>
@@ -60,6 +64,7 @@ const headings = [
   </ul>
 
   <h2 id="initiating-pvp">Initiating PvP</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Same tile + danger zone required. 30-second cooldown between fights. Standard combat rules apply.</em></p>
   <p>
     To attack another player, you must be on the same tile in a danger zone. Select the player and choose to attack. Rules:
   </p>
@@ -70,6 +75,7 @@ const headings = [
   </ul>
 
   <h2 id="fleeing">Fleeing</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>10% escrow penalty to flee — half to opponent, half burned. Attacker flees turn 1, defender turn 2.</em></p>
   <p>
     Either side can attempt to flee, but it comes at a cost:
   </p>
@@ -100,6 +106,7 @@ const headings = [
   </Callout>
 
   <h2 id="rewards-and-penalties">Rewards and Penalties</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Winner gets ~40% of loser's escrow. 20% of the pot is burned. Draws have no consequences.</em></p>
   <p>
     When PvP combat ends decisively:
   </p>
@@ -110,6 +117,7 @@ const headings = [
   </ul>
 
   <h2 id="group-pvp">Group PvP</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Always 1v1 — select a single target. Other players on the tile are unaffected.</em></p>
   <p>
     Multiple players can occupy the same tile. In group scenarios:
   </p>

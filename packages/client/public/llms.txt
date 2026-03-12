@@ -1,0 +1,27 @@
+# Ultimate Dominion
+
+> A free multiplayer text-based RPG (MUD) playable in any browser. Fight monsters, trade items, and build your legacy in a persistent on-chain world on Base. No downloads required.
+
+## Game
+- [Play Ultimate Dominion](https://ultimatedominion.com): Browser-based MUD — create a character and start playing immediately
+- [Game Manifesto](https://ultimatedominion.com/manifesto): Design philosophy — permanent world, player ownership, meaningful consequences
+- [Leaderboard](https://ultimatedominion.com/leaderboard): Live global rankings by XP and PvP wins
+- [Marketplace](https://ultimatedominion.com/marketplace): Player-to-player item trading with on-chain escrow
+
+## Guide
+- [Adventurer's Codex](https://ultimatedominion.com/guide): Complete player guide — combat, classes, items, monsters, economy
+- [Getting Started](https://ultimatedominion.com/guide/getting-started): How to create a character and take your first steps
+- [Combat System](https://ultimatedominion.com/guide/combat): Turn-based combat with STR/AGI/INT triangle
+- [Classes](https://ultimatedominion.com/guide/classes): 9 advanced classes with unique abilities
+- [Bestiary](https://ultimatedominion.com/guide/bestiary): All monsters with stats, drops, and combat tips
+- [Items](https://ultimatedominion.com/guide/items): Every weapon, armor, and consumable with stats and rarity
+- [Economy](https://ultimatedominion.com/guide/economy): How gold flows — drops, shops, marketplace, fees
+- [PvP](https://ultimatedominion.com/guide/pvp): Danger zones, gold escrow, and player-vs-player combat
+- [Lore](https://ultimatedominion.com/guide/lore): Dead gods, factions, and the mystery of the Fragments
+
+## Blog
+- [Blog](https://ultimatedominion.com/blog): Development updates and stories from the world
+- [The Game That Faded Away](https://ultimatedominion.com/blog/the-game-that-faded-away): Origin story — why Ultimate Dominion was built
+
+## About
+- [FAQ](https://ultimatedominion.com/faq): Common questions about gameplay, blockchain integration, and getting started
