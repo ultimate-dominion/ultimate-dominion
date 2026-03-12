@@ -97,7 +97,7 @@ contract BalancePatchV3 is Script {
         _updateMonsters();
         _createBasilisk();
         _updateSpells();
-        _renameMonsters();
+        // _renameMonsters() removed — already deployed via RenameV3.s.sol
 
         vm.stopBroadcast();
 
@@ -402,7 +402,7 @@ contract BalancePatchV3 is Script {
 
             uint256 id = world.UD__createItem(
                 ItemType.Weapon, 0, 0, 350, 4,
-                abi.encode(w, r), "trollhide_cleaver"
+                abi.encode(w, r), "weapon:trollhide_cleaver"
             );
             console.log("  Trollhide Cleaver id:", id);
         }
@@ -427,7 +427,7 @@ contract BalancePatchV3 is Script {
 
             uint256 id = world.UD__createItem(
                 ItemType.Weapon, 0, 0, 350, 4,
-                abi.encode(w, r), "phasefang"
+                abi.encode(w, r), "weapon:phasefang"
             );
             console.log("  Phasefang id:", id);
         }
@@ -451,7 +451,7 @@ contract BalancePatchV3 is Script {
 
             uint256 id = world.UD__createItem(
                 ItemType.Weapon, 0, 0, 350, 4,
-                abi.encode(w, r), "drakescale_staff"
+                abi.encode(w, r), "weapon:drakescale_staff"
             );
             console.log("  Drakescale Staff id:", id);
         }
@@ -474,7 +474,7 @@ contract BalancePatchV3 is Script {
 
             direRatBiteId = world.UD__createItem(
                 ItemType.Weapon, 0, 0, 0, 0,
-                abi.encode(w, noRestrictions), "dire_rat_bite"
+                abi.encode(w, noRestrictions), "weapon:dire_rat_bite"
             );
             console.log("  Dire Rat Bite id:", direRatBiteId);
         }
@@ -495,7 +495,7 @@ contract BalancePatchV3 is Script {
 
             basiliskFangId = world.UD__createItem(
                 ItemType.Weapon, 0, 0, 0, 0,
-                abi.encode(w, noRestrictions), "basilisk_fang"
+                abi.encode(w, noRestrictions), "weapon:basilisk_fang"
             );
             console.log("  Basilisk Fang id:", basiliskFangId);
         }
@@ -516,7 +516,7 @@ contract BalancePatchV3 is Script {
 
             basiliskGazeId = world.UD__createItem(
                 ItemType.Weapon, 0, 0, 0, 0,
-                abi.encode(w, noRestrictions), "basilisk_gaze"
+                abi.encode(w, noRestrictions), "weapon:basilisk_gaze"
             );
             console.log("  Basilisk Gaze id:", basiliskGazeId);
         }
@@ -637,7 +637,7 @@ contract BalancePatchV3 is Script {
 
         uint256 id = world.UD__createItem(
             ItemType.Armor, 0, 0, 200, 3,
-            abi.encode(a, r), "drakes_cowl"
+            abi.encode(a, r), "armor:drakes_cowl"
         );
         console.log("  Drake's Cowl id:", id);
     }
@@ -751,7 +751,7 @@ contract BalancePatchV3 is Script {
         // Direct table writes (bypasses MobSystem to avoid memory panic in nested calls)
         uint256 mobId = Counters.getCounter(address(world), 0) + 1;
         Counters.setCounter(address(world), 0, mobId);
-        Mobs.set(mobId, MobType.Monster, abi.encode(stats), "basilisk");
+        Mobs.set(mobId, MobType.Monster, abi.encode(stats), "monster:basilisk");
         MobsByLevel.pushMobIds(stats.level, mobId);
 
         console.log("  Basilisk mobId:", mobId);
@@ -894,21 +894,8 @@ contract BalancePatchV3 is Script {
     }
 
     // =========================================================================
-    //  9. MONSTER RENAMES
+    //  9. MONSTER RENAMES — already deployed via RenameV3.s.sol
     // =========================================================================
-
-    function _renameMonsters() internal {
-        console.log("Renaming 6 monsters...");
-
-        Mobs.setMobMetadata(1, "dire_rat");           // was cave_rat
-        Mobs.setMobMetadata(5, "ironhide_troll");     // was cave_troll
-        Mobs.setMobMetadata(7, "bonecaster");          // was lich_acolyte
-        Mobs.setMobMetadata(8, "rock_golem");          // was stone_giant
-        Mobs.setMobMetadata(9, "pale_stalker");        // was shadow_stalker
-        Mobs.setMobMetadata(10, "dusk_drake");         // was shadow_dragon
-
-        console.log("All 6 monsters renamed");
-    }
 
     // =========================================================================
     //  HELPERS
