@@ -73,7 +73,7 @@ export const LevelingPanel = ({
       const level = Number(nextLevel);
       let points: number;
       if (level <= 10) {
-        points = 2; // Early game: +2 per level
+        points = 1; // Early game: +1 per level (balance patch)
       } else if (level <= 50) {
         points = level % 2 === 0 ? 1 : 0; // Mid game: +1 every 2 levels
       } else {

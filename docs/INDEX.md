@@ -47,6 +47,7 @@ Master navigation hub for all project documentation.
 | [Deploy Runbook](operations/DEPLOY_RUNBOOK.md) | Deployment procedures, checklists, and rollback steps |
 | [Error Reference](operations/ERROR_REFERENCE.md) | Error codes, common failures, and troubleshooting guides |
 | [Launch Checklist](operations/launch_checklist.md) | Launch readiness tracking and go/no-go criteria |
+| [Upgrade Checklist](operations/UPGRADE_CHECKLIST.md) | Checklist for balance patches, contract deploys, and sync changes |
 | [New Zone Checklist](NEW_ZONE_CHECKLIST.md) | Step-by-step checklist for adding new zones |
 | [Discourse Setup](operations/discourse-setup.md) | Community forum setup and configuration guide |
 
