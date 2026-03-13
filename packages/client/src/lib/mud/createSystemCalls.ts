@@ -575,10 +575,16 @@ export function createSystemCalls(
   let lastMoveCompletedMs = 0;
 
   const INVALID_MOVE_SELECTOR = '87822d34';
+  const NOT_SPAWNED_SELECTOR = 'bd45e4f6';
 
   const isInvalidMoveError = (e: unknown): boolean => {
     const msg = String(e).toLowerCase();
     return msg.includes(INVALID_MOVE_SELECTOR) || msg.includes('invalid move') || msg.includes('invalidmove');
+  };
+
+  const isNotSpawnedError = (e: unknown): boolean => {
+    const msg = String(e).toLowerCase();
+    return msg.includes(NOT_SPAWNED_SELECTOR) || msg.includes('not spawned') || msg.includes('notspawned');
   };
 
   /**
@@ -659,7 +665,7 @@ export function createSystemCalls(
     try {
       await waitForMoveCooldown();
 
-      const args = [characterEntity as `0x${string}`, x, y] as const;
+      let args: readonly [`0x${string}`, number, number] = [characterEntity as `0x${string}`, x, y];
       let onChainRetries = 0;
 
       // First attempt: simulate then send (catches real errors like InvalidMove).
@@ -721,12 +727,67 @@ export function createSystemCalls(
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
             console.error(`[move] TX REVERTED — hash: ${tx}, gasUsed: ${receipt.gasUsed}, block: ${receipt.blockNumber} (target: ${x},${y})`);
-            if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
-              onChainRetries++;
-              console.warn(`[move] On-chain revert (retry ${onChainRetries}/${MAX_ON_CHAIN_RETRIES}) — retrying in ${ON_CHAIN_RETRY_DELAY_MS}ms`);
-              await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
-              continue;
+
+            // Diagnose the revert by re-simulating against current RPC state
+            // instead of blindly retrying (which wastes gas if the character
+            // was despawned by idle timeout while the store was stale).
+            try {
+              await worldContract.write.UD__move(args);
+              // Simulation passed — was transient, retry with gas
+              if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
+                onChainRetries++;
+                console.warn(`[move] Simulation now passes — retrying (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
+                await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
+                continue;
+              }
+            } catch (diagError) {
+              if (isNotSpawnedError(diagError)) {
+                // Character was despawned (idle timeout) — update store so UI shows spawn button
+                console.warn('[move] Character is not spawned — updating store');
+                useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
+                lastMoveCompletedMs = Date.now();
+                return { success: false, error: 'Session expired — respawn to continue.' };
+              }
+              if (isInvalidMoveError(diagError)) {
+                // Position stale — refresh from chain
+                console.warn(`[move] Position stale after revert — refreshing from chain`);
+                try {
+                  const [cx, cy] = await worldContract.read.UD__getEntityPosition([
+                    characterEntity as `0x${string}`,
+                  ]);
+                  x = Number(cx);
+                  y = Number(cy);
+                  useGameStore.getState().setRow('Position', characterEntity, { x, y });
+                  // Recompute target
+                  switch (direction) {
+                    case 'up': y += 1; break;
+                    case 'down': y -= 1; break;
+                    case 'left': x -= 1; break;
+                    case 'right': x += 1; break;
+                  }
+                  args = [characterEntity as `0x${string}`, x, y] as const;
+                  if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
+                    onChainRetries++;
+                    continue;
+                  }
+                } catch {
+                  // Chain read failed — fall through to failure
+                }
+              }
+              if (isMoveTooFastError(diagError)) {
+                // Still transient RPC issue — retry with gas
+                if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
+                  onChainRetries++;
+                  console.warn(`[move] Still MoveTooFast — retrying (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
+                  await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
+                  continue;
+                }
+              }
+              // Any other error — return it
+              lastMoveCompletedMs = Date.now();
+              return { success: false, error: getContractError(diagError) };
             }
+
             console.warn(`[move] On-chain revert — max retries reached (target: ${x},${y})`);
             lastMoveCompletedMs = Date.now();
             return { success: false, error: 'Move failed — tap again to continue.' };

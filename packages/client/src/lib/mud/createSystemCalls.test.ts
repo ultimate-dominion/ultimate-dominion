@@ -690,3 +690,76 @@ describe('createSystemCalls — move stale position recovery', () => {
     expect(waitForTransaction).not.toHaveBeenCalled();
   });
 });
+
+// ── Suite E: On-chain Revert Diagnosis ─────────────────────────────
+
+describe('createSystemCalls — on-chain revert diagnosis', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('detects NotSpawned after on-chain revert and updates store', async () => {
+    // Simulate: MoveTooFast bypass → TX reverts → re-sim finds NotSpawned
+    const { network, waitForTransaction: waitFn } = createMockNetwork({ receiptStatus: 'reverted' });
+    mockOwnership();
+
+    let moveCallCount = 0;
+    const moveWriteFn = vi.fn().mockImplementation(() => {
+      moveCallCount++;
+      if (moveCallCount === 1) {
+        // First sim: MoveTooFast (stale RPC)
+        return Promise.reject(new Error('0x326f4b4f'));
+      }
+      if (moveCallCount === 2) {
+        // MoveTooFast bypass: send with gas → returns TX hash (receipt will be reverted)
+        return Promise.resolve(FAKE_TX_HASH);
+      }
+      // Third call: diagnostic re-simulation → NotSpawned
+      return Promise.reject(new Error('0xbd45e4f6'));
+    });
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    const calls = createSystemCalls(network);
+
+    const result = await calls.move(TEST_ENTITY, 'up');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('respawn');
+    // Store should be updated with spawned=false
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_ENTITY, { spawned: false });
+    // Should NOT send more than 1 TX (the first reverted one)
+    expect(waitFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries when diagnostic re-simulation passes (transient revert)', async () => {
+    const mockReceipt = { status: 'reverted', blockNumber: BigInt(100), gasUsed: BigInt(100000) };
+    const successReceipt = { status: 'success', blockNumber: BigInt(101), gasUsed: BigInt(100000) };
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    let receiptCount = 0;
+    const waitFn = vi.fn().mockImplementation(() => {
+      receiptCount++;
+      // First TX reverts, second succeeds
+      return Promise.resolve(receiptCount === 1 ? mockReceipt : successReceipt);
+    });
+    network.waitForTransaction = waitFn;
+
+    // All write calls succeed (return TX hash)
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockResolvedValue(FAKE_TX_HASH),
+    });
+
+    const calls = createSystemCalls(network);
+
+    const result = await calls.move(TEST_ENTITY, 'right');
+    expect(result.success).toBe(true);
+    // Two TXs: first reverted, diagnostic sim passed, retry succeeded
+    expect(waitFn).toHaveBeenCalledTimes(2);
+  });
+});
