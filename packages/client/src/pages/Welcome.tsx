@@ -35,7 +35,7 @@ export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const { authMethod, isAuthenticated, isConnecting } = useAuth();
+  const { authMethod, isAuthenticated, isConnecting, walletRecoveryFailed, disconnect } = useAuth();
   const { delegatorAddress, isSynced } = useMUD();
   const { character, isRefreshing } = useCharacter();
   const { isMapFull, statsLoaded } = useQueue();
@@ -139,6 +139,49 @@ export const Welcome = (): JSX.Element => {
 
   if (isConnecting && !isAuthenticated && !isOpen && !connectTimeout) {
     return <Box />;
+  }
+
+  // Wallet recovery failed — show error instead of infinite loading
+  if (walletRecoveryFailed) {
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        minH="100vh"
+        gap={6}
+        px={6}
+      >
+        <Text
+          color="#C4B89E"
+          fontFamily="'Cinzel', serif"
+          fontSize="lg"
+          textAlign="center"
+        >
+          Could not recover your wallet
+        </Text>
+        <Text
+          color="rgba(196, 184, 158, 0.6)"
+          fontSize="sm"
+          textAlign="center"
+          maxW="400px"
+        >
+          Your account was found, but we couldn&apos;t restore your wallet on this device.
+          Try signing in from your original device, or clearing your browser data and signing in again.
+        </Text>
+        <Button
+          variant="outline"
+          color="#C4B89E"
+          borderColor="rgba(196, 184, 158, 0.3)"
+          onClick={() => { disconnect(); }}
+          size="sm"
+          _hover={{ borderColor: '#C4B89E' }}
+        >
+          Sign out and retry
+        </Button>
+      </Box>
+    );
   }
 
   return (

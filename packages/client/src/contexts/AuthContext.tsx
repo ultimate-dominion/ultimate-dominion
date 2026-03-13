@@ -52,6 +52,7 @@ type AuthContextType = {
   isConnecting: boolean;
   ownerAddress: Address | null;
   signedInEmail: string | null;
+  walletRecoveryFailed: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -90,6 +91,8 @@ export const AuthProvider = ({
   const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
+  const [walletRecoveryFailed, setWalletRecoveryFailed] = useState(false);
+  const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initAddressRef = useRef<string | null>(null);
 
   // Detect injected wallet (MetaMask etc.)
@@ -102,18 +105,40 @@ export const AuthProvider = ({
 
   // Initialize Privy embedded wallet when available
   useEffect(() => {
-    console.info('[Auth] Wallet init effect:', { ready, authenticated, walletsCount: wallets.length, walletTypes: wallets.map(w => w.walletClientType) });
+    const serverWalletAddress = user?.wallet?.address?.toLowerCase();
+    console.info('[Auth] Wallet init effect:', { ready, authenticated, walletsCount: wallets.length, walletTypes: wallets.map(w => w.walletClientType), serverWallet: serverWalletAddress });
     if (!ready || !authenticated) {
       if (ready) setIsConnecting(false);
       return;
     }
 
-    // Find embedded wallet (Privy MPC wallet)
-    const privyWallet = wallets.find(w => w.walletClientType === 'privy');
+    // Find embedded wallet (Privy MPC wallet).
+    // For existing users, only accept the wallet matching the server-side address.
+    // This prevents using a newly-created duplicate if recovery is still in progress.
+    const privyWallet = serverWalletAddress
+      ? wallets.find(w => w.walletClientType === 'privy' && w.address.toLowerCase() === serverWalletAddress)
+      : wallets.find(w => w.walletClientType === 'privy');
+
+    // Log if there's a mismatched privy wallet (indicates recovery issue)
+    if (!privyWallet && serverWalletAddress) {
+      const anyPrivyWallet = wallets.find(w => w.walletClientType === 'privy');
+      if (anyPrivyWallet) {
+        console.warn('[Auth] Wallet mismatch — server expects', serverWalletAddress, 'but got', anyPrivyWallet.address, '(ignoring mismatched wallet, waiting for recovery)');
+      }
+    }
+
     if (!privyWallet) {
       const action = resolveWalletAction(user?.wallet, isCreatingWallet.current);
       if (action === 'wait') {
-        console.info('[Auth] User already has wallet on server, waiting for recovery...', { serverWallet: user?.wallet?.address });
+        console.info('[Auth] User already has wallet on server, waiting for recovery...', { serverWallet: serverWalletAddress });
+        // Start a recovery timeout — if wallet doesn't appear in 15s, mark failed
+        if (!recoveryTimerRef.current && !walletRecoveryFailed) {
+          recoveryTimerRef.current = setTimeout(() => {
+            console.error('[Auth] Wallet recovery timed out after 15s. Server wallet:', serverWalletAddress);
+            setWalletRecoveryFailed(true);
+            setIsConnecting(false);
+          }, 15_000);
+        }
         return;
       }
       if (action === 'skip') return;
@@ -126,6 +151,13 @@ export const AuthProvider = ({
         .finally(() => { isCreatingWallet.current = false; });
       return;
     }
+
+    // Wallet found — clear recovery timeout
+    if (recoveryTimerRef.current) {
+      clearTimeout(recoveryTimerRef.current);
+      recoveryTimerRef.current = null;
+    }
+    if (walletRecoveryFailed) setWalletRecoveryFailed(false);
 
     // Skip re-init if we already initialized this wallet address.
     // Prevents address flip when Privy reorders the wallets array.
@@ -244,6 +276,8 @@ export const AuthProvider = ({
       setEmbeddedWalletClient(null);
       setEmbeddedAddress(null);
       setSignedInEmail(null);
+      setWalletRecoveryFailed(false);
+      if (recoveryTimerRef.current) { clearTimeout(recoveryTimerRef.current); recoveryTimerRef.current = null; }
       initAddressRef.current = null;
       isCreatingWallet.current = false;
     }
@@ -291,6 +325,7 @@ export const AuthProvider = ({
         isConnecting: false,
         ownerAddress: embeddedAddress,
         signedInEmail,
+        walletRecoveryFailed: false,
       };
     }
 
@@ -306,9 +341,10 @@ export const AuthProvider = ({
         externalWalletClient: null,
         hasInjectedWallet,
         isAuthenticated: true,
-        isConnecting: true,
+        isConnecting: !walletRecoveryFailed,
         ownerAddress: null,
         signedInEmail: null,
+        walletRecoveryFailed,
       };
     }
 
@@ -325,6 +361,7 @@ export const AuthProvider = ({
         isConnecting: false,
         ownerAddress: wagmiAddress,
         signedInEmail: null,
+        walletRecoveryFailed: false,
       };
     }
 
@@ -340,6 +377,7 @@ export const AuthProvider = ({
       isConnecting,
       ownerAddress: null,
       signedInEmail: null,
+      walletRecoveryFailed: false,
     };
   }, [
     authenticated,
@@ -350,6 +388,7 @@ export const AuthProvider = ({
     hasInjectedWallet,
     isConnecting,
     signedInEmail,
+    walletRecoveryFailed,
     wagmiAddress,
     wagmiConnected,
     wagmiWalletClient,
