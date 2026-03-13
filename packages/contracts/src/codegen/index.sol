@@ -17,6 +17,8 @@ import { SessionTimer } from "./tables/SessionTimer.sol";
 import { Mobs, MobsData } from "./tables/Mobs.sol";
 import { MobStats, MobStatsData } from "./tables/MobStats.sol";
 import { MobsByLevel } from "./tables/MobsByLevel.sol";
+import { MobDropBonus } from "./tables/MobDropBonus.sol";
+import { BossSpawnConfig, BossSpawnConfigData } from "./tables/BossSpawnConfig.sol";
 import { Levels } from "./tables/Levels.sol";
 import { CharacterEquipment, CharacterEquipmentData } from "./tables/CharacterEquipment.sol";
 import { Items, ItemsData } from "./tables/Items.sol";

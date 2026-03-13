@@ -217,6 +217,13 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Experience curve balance (post-beta feedback)
 - [ ] Level cap and endgame balance
 
+**V3 Balance Patch**
+- [x] BalancePatchV3 forge script — deployed to beta, 101 txs confirmed (2026-03-11). Fixes: OldMonsterStats decode, direct table writes for Basilisk + SpellScaling
+- [ ] V3 balance patch verification tests (dedicated test file — run against beta fork)
+- [ ] Shop inventory update — add new V3 items (Trollhide Cleaver, Phasefang, Drakescale Staff, Drake's Cowl) to Tal's buyable list (separate script)
+- [ ] Metadata URI renames — item/monster name updates (Dire Rat Fang, Light Mace, Notched Blade, etc.) (separate script)
+- [ ] Data file sync — update items.json, monsters.json with V3 values (Phase 5 in roadmap)
+
 ### 2.4 Mainnet Deployment
 
 **Smart Contracts**
@@ -410,4 +417,4 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 
 ---
 
-_Last updated: March 9, 2026_
+_Last updated: March 11, 2026_

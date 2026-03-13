@@ -123,8 +123,16 @@ contract MobSystem is System {
                 monsterStats.armor += 1;
             }
 
+            // Trim spawned inventory to combat weapons only (saves ~500k gas for large inventories)
+            // PvESystem reads weapons from index 0 (non-boss) or 0+1 (boss)
+            // Drop calculation reads from template Mobs table, not spawned MobStats
+            uint256 weaponCount = monsterStats.hasBossAI ? 2 : 1;
+            uint256[] memory combatWeapons = new uint256[](weaponCount);
+            for (uint256 w = 0; w < weaponCount; w++) {
+                combatWeapons[w] = monsterStats.inventory[w];
+            }
             MobStatsData memory newMobStats =
-                MobStatsData({armor: monsterStats.armor, isElite: isElite, inventory: monsterStats.inventory});
+                MobStatsData({armor: monsterStats.armor, isElite: isElite, inventory: combatWeapons});
             MobStats.set(entityId, newMobStats);
             Stats.set(entityId, statsData);
         } else if (stats.mobType == MobType.Shop) {

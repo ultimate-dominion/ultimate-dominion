@@ -239,38 +239,109 @@ contract CombatMathTest is Test {
 
     function testEvasionDodge() public {
         // Defender AGI > Attacker AGI: chance to dodge
-        // defAGI=20, atkAGI=10, diff=10 -> dodge chance = 10/3 = 3%
-        // rnChunk=1 -> 1%100=1 < 3 -> dodge
-        assertTrue(CombatMath.calculateEvasionDodge(20, 10, 1));
+        // defAGI=20, atkAGI=10, diff=10 -> dodge chance = 10*2 = 20%
+        // Equal STR: no STR reduction
+        // rnChunk=15 -> 15%100=15 < 20 -> dodge
+        assertTrue(CombatMath.calculateEvasionDodge(20, 10, 10, 10, 15));
 
-        // rnChunk=50 -> 50%100=50, not < 3 -> no dodge
-        assertFalse(CombatMath.calculateEvasionDodge(20, 10, 50));
+        // rnChunk=50 -> 50%100=50, not < 20 -> no dodge
+        assertFalse(CombatMath.calculateEvasionDodge(20, 10, 10, 10, 50));
 
         // Equal AGI: no dodge possible
-        assertFalse(CombatMath.calculateEvasionDodge(10, 10, 0));
+        assertFalse(CombatMath.calculateEvasionDodge(10, 10, 10, 10, 0));
 
         // Lower defender AGI: no dodge
-        assertFalse(CombatMath.calculateEvasionDodge(5, 10, 0));
+        assertFalse(CombatMath.calculateEvasionDodge(5, 10, 10, 10, 0));
     }
 
     function testEvasionDodgeCap_V3() public {
-        // V3: Evasion cap is now 35 (was 25)
+        // Evasion cap is 35
         assertEq(EVASION_CAP, 35);
 
-        // defAGI=200, atkAGI=0, diff=200 -> uncapped=66, capped=35
+        // defAGI=200, atkAGI=0, diff=200 -> uncapped=400, capped=35
+        // Equal STR: no STR reduction
         // rnChunk=34 -> 34 < 35 -> dodge (within cap)
-        assertTrue(CombatMath.calculateEvasionDodge(200, 0, 34));
+        assertTrue(CombatMath.calculateEvasionDodge(200, 0, 10, 10, 34));
         // rnChunk=35 -> 35 < 35 is false -> no dodge (cap works)
-        assertFalse(CombatMath.calculateEvasionDodge(200, 0, 35));
+        assertFalse(CombatMath.calculateEvasionDodge(200, 0, 10, 10, 35));
+    }
+
+    function testEvasionDodge_STRReduction() public {
+        // defAGI=20, atkAGI=10, diff=10 -> base dodge = 10*2 = 20%
+        // atkSTR=20, defSTR=10, strDiff=10 -> reduction=10
+        // effective dodge = 20 - 10 = 10%
+        // rnChunk=9 -> 9 < 10 -> dodge
+        assertTrue(CombatMath.calculateEvasionDodge(20, 10, 20, 10, 9));
+        // rnChunk=10 -> 10 < 10 is false -> no dodge
+        assertFalse(CombatMath.calculateEvasionDodge(20, 10, 20, 10, 10));
+    }
+
+    function testEvasionDodge_STRReductionCap() public {
+        // STR reduction capped at 15
+        // defAGI=30, atkAGI=10, diff=20 -> base dodge = 20*2 = 40
+        // atkSTR=50, defSTR=10, strDiff=40 -> reduction=min(40,15)=15
+        // dodge after STR = 40 - 15 = 25 (below evasion cap 35, no cap applied)
+        // effective dodge = 25%
+        assertTrue(CombatMath.calculateEvasionDodge(30, 10, 50, 10, 24));
+        assertFalse(CombatMath.calculateEvasionDodge(30, 10, 50, 10, 25));
+    }
+
+    function testEvasionDodge_STRCanEliminateDodge() public {
+        // defAGI=13, atkAGI=10, diff=3 -> base dodge = 3*2 = 6%
+        // atkSTR=20, defSTR=10, strDiff=10 -> reduction=10
+        // 10 >= 6 -> return false immediately (dodge eliminated)
+        assertFalse(CombatMath.calculateEvasionDodge(13, 10, 20, 10, 0));
+    }
+
+    function testEvasionDodge_NegativeSTR() public {
+        // Negative attacker STR should not cause underflow or weird behavior
+        // defAGI=15, atkAGI=10, diff=5 -> base dodge = 10%
+        // atkSTR=-5, defSTR=10: attacker STR not > defender STR, no reduction
+        // rnChunk=5 -> 5 < 10 -> dodge
+        assertTrue(CombatMath.calculateEvasionDodge(15, 10, -5, 10, 5));
+        // rnChunk=10 -> 10 < 10 is false -> no dodge
+        assertFalse(CombatMath.calculateEvasionDodge(15, 10, -5, 10, 10));
+    }
+
+    function testEvasionDodge_ZeroSTRBothSides() public {
+        // defAGI=15, atkAGI=10, diff=5 -> base dodge = 10%
+        // atkSTR=0, defSTR=0: no reduction (not >)
+        assertTrue(CombatMath.calculateEvasionDodge(15, 10, 0, 0, 9));
+        assertFalse(CombatMath.calculateEvasionDodge(15, 10, 0, 0, 10));
+    }
+
+    function testEvasionDodge_ExactZeroAfterSTR() public {
+        // defAGI=15, atkAGI=10, diff=5 -> base dodge = 10%
+        // atkSTR=20, defSTR=10, strDiff=10 -> reduction=10
+        // 10 >= 10 -> return false (dodge exactly eliminated)
+        assertFalse(CombatMath.calculateEvasionDodge(15, 10, 20, 10, 0));
+    }
+
+    function testEvasionDodge_OneAGIDifference() public {
+        // defAGI=11, atkAGI=10, diff=1 -> base dodge = 2%
+        // Equal STR: no reduction
+        assertTrue(CombatMath.calculateEvasionDodge(11, 10, 10, 10, 1));
+        assertFalse(CombatMath.calculateEvasionDodge(11, 10, 10, 10, 2));
+    }
+
+    function testDoubleStrike_OneAGIDifference() public {
+        // atkAGI=11, defAGI=10, diff=1 -> chance = 1*3 = 3%
+        assertTrue(CombatMath.calculateDoubleStrike(11, 10, 2));
+        assertFalse(CombatMath.calculateDoubleStrike(11, 10, 3));
+    }
+
+    function testBlock_ExactlySTR10() public {
+        // STR=10: (10-10)*2 = 0%, never blocks
+        assertFalse(CombatMath.calculateBlock(10, 0));
     }
 
     function testDoubleStrike() public {
         // Attacker AGI > Defender AGI: chance to double strike
-        // atkAGI=20, defAGI=10, diff=10 -> chance = 10*2 = 20%
-        // rnChunk=15 -> 15%100=15 < 20 -> triggers
-        assertTrue(CombatMath.calculateDoubleStrike(20, 10, 15));
+        // atkAGI=20, defAGI=10, diff=10 -> chance = 10*3 = 30%
+        // rnChunk=25 -> 25%100=25 < 30 -> triggers
+        assertTrue(CombatMath.calculateDoubleStrike(20, 10, 25));
 
-        // rnChunk=50 -> 50 < 20 false -> no trigger
+        // rnChunk=50 -> 50 < 30 false -> no trigger
         assertFalse(CombatMath.calculateDoubleStrike(20, 10, 50));
 
         // Equal AGI: no double strike
@@ -281,12 +352,12 @@ contract CombatMathTest is Test {
     }
 
     function testDoubleStrikeCap_V3() public {
-        // V3: Double strike cap is now 40 (was 25)
+        // Double strike cap is 40
         assertEq(DOUBLE_STRIKE_CAP, 40);
 
-        // atkAGI=50, defAGI=0, diff=50 -> uncapped=100, capped=40
-        assertTrue(CombatMath.calculateDoubleStrike(50, 0, 39));
-        assertFalse(CombatMath.calculateDoubleStrike(50, 0, 40));
+        // atkAGI=20, defAGI=0, diff=20 -> uncapped=60, capped=40
+        assertTrue(CombatMath.calculateDoubleStrike(20, 0, 39));
+        assertFalse(CombatMath.calculateDoubleStrike(20, 0, 40));
     }
 
     function testMagicResistance_V3() public {
@@ -359,14 +430,18 @@ contract CombatMathTest is Test {
         assertFalse(CombatMath.calculateBlock(20, 20));  // 20 < 20 is false
     }
 
-    function testBlock_Cap30Percent() public {
-        // STR=25: (25-10)*2 = 30% -> at cap
+    function testBlock_Cap35Percent() public {
+        // STR=25: (25-10)*2 = 30% -> below new cap of 35
         assertTrue(CombatMath.calculateBlock(25, 29));   // 29 < 30 -> blocks
         assertFalse(CombatMath.calculateBlock(25, 30));  // 30 < 30 is false
 
-        // STR=50: (50-10)*2 = 80% -> capped at 30%
-        assertTrue(CombatMath.calculateBlock(50, 29));   // 29 < 30 -> blocks
-        assertFalse(CombatMath.calculateBlock(50, 30));  // still capped at 30
+        // STR=27: (27-10)*2 = 34% -> below cap
+        assertTrue(CombatMath.calculateBlock(27, 33));   // 33 < 34 -> blocks
+        assertFalse(CombatMath.calculateBlock(27, 34));  // 34 < 34 is false
+
+        // STR=50: (50-10)*2 = 80% -> capped at 35%
+        assertTrue(CombatMath.calculateBlock(50, 34));   // 34 < 35 -> blocks
+        assertFalse(CombatMath.calculateBlock(50, 35));  // still capped at 35
     }
 
     function testBlock_ProcAtExactThreshold() public {

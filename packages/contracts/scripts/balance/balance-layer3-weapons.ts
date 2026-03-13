@@ -43,7 +43,9 @@
  *   --tradeoffs  Stat requirement tradeoff analysis (cost of cross-path weapons)
  *   --spells     Enable L5 class spells (cast on turn 1 at L10, costs weapon attack)
  *   --armor      Enable L4 armor (smart allocation + armor bonuses)
+ *   --consumables Enable L6 consumables in PvP (path buff + HP pot, both sides)
  *   --v3         Use V3 weapons (epic hybrids + pure nerfs + effects)
+ *   --onchain    Use raw on-chain data (no overrides — shows actual deployed balance)
  *   --rounds N   Set max combat rounds (default: 8, matching 15 on-chain turns)
  *   No flags = run everything + summary
  */
@@ -142,8 +144,30 @@ let ARCHETYPE_CONFIGS: Record<string, { name: string; class: string; race: strin
 let activeWeapons: Weapon[] = [];
 let useArmorFlag = false;
 let useSpellsFlag = false;
+let useConsumablesFlag = false;
+let useF2PProgressionFlag = false;
 const SIM_ITERATIONS = 500;
 let maxCombatRounds = 8;
+
+/**
+ * F2P progression: max weapon/armor rarity available at each level.
+ * Models worst-case free-to-play: no marketplace purchases, only drops from mobs
+ * at or below the player's farming level.
+ *
+ * Based on actual drop tables in UpdateMonsterInventories:
+ * - L1: R0 only (starter weapon, haven't killed anything yet)
+ * - L2-3: R0-R1 (Apprentice Staff, Iron Axe from L1-2 drops)
+ * - L4-5: R0-R2 (Crystal Shard, Notched Cleaver, Warhammer start dropping)
+ * - L6-7: R0-R3 (Gnarled Cudgel from L5, Bone Staff from L7)
+ * - L8-10: R0-R4 (Trollhide Cleaver from L5, Phasefang from L6)
+ */
+function maxRarityForLevel(level: number): number {
+  if (level <= 1) return 0;
+  if (level <= 3) return 1;
+  if (level <= 5) return 2;
+  if (level <= 7) return 3;
+  return 4;
+}
 
 
 // ActiveEffectInstance imported from combat.ts
@@ -203,6 +227,32 @@ function buildWyrmLoadouts(): ConsumableLoadout[] {
 }
 
 /**
+ * Build PvP consumable loadout for an archetype.
+ * ALL consumables cost a turn — stat buffs go in inCombat, not preBuffs.
+ * This creates the spell vs buff vs attack tradeoff on turn 1.
+ */
+function buildPvPConsumableLoadout(arch: Archetype): ConsumableLoadout {
+  const stew = CONSUMABLES.find(c => c.type === "pre_buff" && c.strMod);
+  const berries = CONSUMABLES.find(c => c.type === "pre_buff" && c.agiMod);
+  const tea = CONSUMABLES.find(c => c.type === "pre_buff" && c.intMod);
+  const hp35 = CONSUMABLES.find(c => c.type === "heal" && c.healAmount === 35);
+
+  if (!stew || !berries || !tea) {
+    return { name: "No consumables", preBuffs: [], inCombat: [] };
+  }
+
+  const pathBuff = arch.statPath === "str" ? stew : arch.statPath === "agi" ? berries : tea;
+  const inCombat: Consumable[] = [pathBuff];
+  if (hp35) inCombat.push(hp35);
+
+  return {
+    name: `+${arch.statPath.toUpperCase()} buff + HP pot`,
+    preBuffs: [],
+    inCombat,
+  };
+}
+
+/**
  * Estimate the combat value of a weapon's effects for scoring purposes.
  * This bridges the gap so the scorer properly accounts for DoTs, debuffs, and dual hits.
  *
@@ -254,7 +304,7 @@ function getCombatConstants(): CombatConstants {
   return {
     attackModifier: ATTACK_MODIFIER, agiAttackModifier: AGI_ATTACK_MODIFIER,
     defenseModifier: 1.0, critMultiplier: CRIT_MULTIPLIER, critBaseChance: CRIT_BASE_CHANCE,
-    critAgiDivisor: 4, evasionDivisor: 3, evasionCap: EVASION_CAP,
+    critAgiDivisor: 4, evasionMultiplier: 2, evasionCap: EVASION_CAP,
     doubleStrikeMultiplier: 3, doubleStrikeCap: DOUBLE_STRIKE_CAP,
     combatTriangleFlatPct: 0.20, combatTrianglePerStat: COMBAT_TRIANGLE_PER_STAT,
     combatTriangleMax: COMBAT_TRIANGLE_MAX,
@@ -326,8 +376,8 @@ function canEquip(weapon: Weapon, profile: StatProfile): boolean {
  * For on-path builds, prefers weapons matching their stat path.
  * Falls back to any equippable weapon.
  */
-function selectBestWeapon(arch: Archetype, profile: StatProfile): Weapon {
-  const equippable = activeWeapons.filter(w => canEquip(w, profile));
+function selectBestWeapon(arch: Archetype, profile: StatProfile, maxRarity?: number): Weapon {
+  const equippable = activeWeapons.filter(w => canEquip(w, profile) && (maxRarity === undefined || w.rarity <= maxRarity));
   if (equippable.length === 0) return activeWeapons[0]; // fallback to Broken Sword
 
   // Score each weapon by expected damage per round
@@ -385,8 +435,8 @@ function canEquipArmor(armor: Armor, profile: StatProfile): boolean {
  * Prefers on-path armor (Plate for STR, Leather for AGI, Cloth for INT) but
  * will pick cross-path armor if it scores higher (e.g., 33/33/33 picking Chainmail for +2 STR).
  */
-function selectBestArmor(profile: StatProfile, path: "str" | "agi" | "int"): Armor {
-  const equippable = ARMORS.filter(a => canEquipArmor(a, profile));
+function selectBestArmor(profile: StatProfile, path: "str" | "agi" | "int", maxRarity?: number): Armor {
+  const equippable = ARMORS.filter(a => canEquipArmor(a, profile) && (maxRarity === undefined || a.rarity <= maxRarity));
   if (equippable.length === 0) return ARMORS[0]; // fallback to Tattered Cloth
 
   const scored = equippable.map(a => {
@@ -445,9 +495,11 @@ interface GearLoadout {
  * Picks whichever investment level yields the best total loadout score.
  */
 function buildGearLoadout(arch: Archetype, level: number): GearLoadout {
+  const rarityGate = useF2PProgressionFlag ? maxRarityForLevel(level) : undefined;
+
   if (!useArmorFlag) {
     const baseProfile = buildProfile(arch, level);
-    const weapon = selectBestWeapon(arch, baseProfile);
+    const weapon = selectBestWeapon(arch, baseProfile, rarityGate);
     return { baseProfile, profile: baseProfile, weapon, armor: null, armorRating: 0 };
   }
 
@@ -499,14 +551,14 @@ function buildGearLoadout(arch: Archetype, level: number): GearLoadout {
       const baseProfile: StatProfile = { str, agi, int: int_, hp, totalStats, primaryStat: dom.stat, dominantType: dom.type };
 
       // Select best armor for this allocation
-      const armor = selectBestArmor(baseProfile, arch.statPath);
+      const armor = selectBestArmor(baseProfile, arch.statPath, rarityGate);
       const profile = applyArmorToProfile(baseProfile, armor);
 
       // Select best weapon for post-armor profile
-      const weapon = selectBestWeapon(arch, profile);
+      const weapon = selectBestWeapon(arch, profile, rarityGate);
       const armorRating = armor.armorValue;
 
-      // Score: weapon combat effectiveness + armor defensive value
+      // Score: weapon combat effectiveness + armor defensive value + AGI combat value
       const avgDmg = (weapon.minDamage + weapon.maxDamage) / 2;
       const scalingMod = weapon.isMagic ? ATTACK_MODIFIER :
                          weapon.scaling === "agi" ? AGI_ATTACK_MODIFIER : ATTACK_MODIFIER;
@@ -521,9 +573,26 @@ function buildGearLoadout(arch: Archetype, level: number): GearLoadout {
       const weaponScore = dmgScore * classMult * effectMult + weapon.hpMod * 0.3;
 
       // Armor value: rating reduces per-hit damage, HP extends fight duration
-      const armorScore = armorRating * 1.5 + armor.hpMod * 0.5;
+      const armorScore = armorRating * 1.5 + armor.hpMod * 0.3;
 
-      const totalScore = weaponScore + armorScore;
+      // AGI combat value: evasion + double strike (physical AGI only)
+      // Only give double strike bonus for AGI-path builds with physical AGI weapons.
+      // This prevents magic-weapon builds (Warlock etc.) from incorrectly switching to bows.
+      const combatAgi = profile.agi + weapon.agiMod;
+      let agiScore = Math.max(0, combatAgi - 10) * 0.15; // baseline evasion for all
+      if (weapon.scaling === "agi" && !weapon.isMagic && arch.statPath === "agi"
+          && arch.advClass.physMult >= arch.advClass.spellMult) {
+        agiScore += combatAgi * 0.35; // double strike + stronger evasion for physical AGI-path
+      }
+
+      // Magic weapons bypass armor — significant advantage not in raw damage score
+      const magicBypassScore = weapon.isMagic ? 4.0 : 0;
+
+      // STR defensive value: block chance scales with STR
+      const combatStr = profile.str + weapon.strMod;
+      const strDefScore = combatStr > 10 ? (combatStr - 10) * 0.25 : 0;
+
+      const totalScore = weaponScore + armorScore + agiScore + magicBypassScore + strDefScore;
       if (totalScore > bestScore) {
         bestScore = totalScore;
         bestLoadout = { baseProfile, profile, weapon, armor, armorRating };
@@ -771,11 +840,13 @@ function pickConsumable(
     if (healIdx >= 0) return healIdx;
   }
 
-  // Priority 2: Debuffs on first available round (huge value vs boss — Sapping strips 8 STR)
+  // Priority 2: Buffs/debuffs on first available round
   if (round === earlyRound) {
+    // Pre-buff consumables (stat buffs) — use immediately for full fight duration
+    const preBuffIdx = items.findIndex(i => i.type === "pre_buff");
+    if (preBuffIdx >= 0) return preBuffIdx;
     const debuffIdx = items.findIndex(i => i.type === "debuff");
     if (debuffIdx >= 0) return debuffIdx;
-    // Also use tradeoff buffs early
     const buffIdx = items.findIndex(i => i.type === "tradeoff_buff");
     if (buffIdx >= 0) return buffIdx;
   }
@@ -787,8 +858,10 @@ function pickConsumable(
     if (cleanseIdx >= 0) return cleanseIdx;
   }
 
-  // Priority 4: Use remaining debuffs if we haven't used them yet (round 3+)
+  // Priority 4: Use remaining buffs/debuffs if we haven't used them yet (round 3+)
   if (round > earlyRound) {
+    const preBuffIdx = items.findIndex(i => i.type === "pre_buff");
+    if (preBuffIdx >= 0) return preBuffIdx;
     const debuffIdx = items.findIndex(i => i.type === "debuff");
     if (debuffIdx >= 0) return debuffIdx;
     const buffIdx = items.findIndex(i => i.type === "tradeoff_buff");
@@ -799,38 +872,42 @@ function pickConsumable(
 }
 
 // Per-side spell override: undefined = use global useSpellsFlag, true/false = force
+function applyPreBuffs(combatant: Combatant, consumables?: ConsumableLoadout): Combatant {
+  if (!consumables || consumables.preBuffs.length === 0) return combatant;
+  let sAdj = 0, aAdj = 0, iAdj = 0, armAdj = 0;
+  for (const c of consumables.preBuffs) {
+    sAdj += c.strMod ?? 0;
+    aAdj += c.agiMod ?? 0;
+    iAdj += c.intMod ?? 0;
+    armAdj += c.armorMod ?? 0;
+  }
+  const newStr = Math.max(0, combatant.str + sAdj);
+  const newAgi = Math.max(0, combatant.agi + aAdj);
+  const newInt = Math.max(0, combatant.int + iAdj);
+  const dom = getDominant(newStr, newAgi, newInt);
+  return {
+    ...combatant,
+    str: newStr, agi: newAgi, int: newInt,
+    armor: Math.max(0, combatant.armor + armAdj),
+    dominantType: dom.type, dominantStat: dom.stat,
+  };
+}
+
 function simulateOneCombat(
   attacker: Combatant, defender: Combatant,
   attackerCastsSpell?: boolean, defenderCastsSpell?: boolean,
   attackerConsumables?: ConsumableLoadout,
+  defenderConsumables?: ConsumableLoadout,
 ): { attackerWins: boolean; rounds: number; totalDamageDealt: number } {
   const aCasts = attackerCastsSpell ?? useSpellsFlag;
   const dCasts = defenderCastsSpell ?? useSpellsFlag;
 
   // Apply pre-combat consumable buffs (Stew/Berries/Tea — no turn cost, last entire fight)
-  let preBuffAttacker = attacker;
-  if (attackerConsumables && attackerConsumables.preBuffs.length > 0) {
-    let sAdj = 0, aAdj = 0, iAdj = 0, armAdj = 0;
-    for (const c of attackerConsumables.preBuffs) {
-      sAdj += c.strMod ?? 0;
-      aAdj += c.agiMod ?? 0;
-      iAdj += c.intMod ?? 0;
-      armAdj += c.armorMod ?? 0;
-    }
-    const newStr = Math.max(0, attacker.str + sAdj);
-    const newAgi = Math.max(0, attacker.agi + aAdj);
-    const newInt = Math.max(0, attacker.int + iAdj);
-    const dom = getDominant(newStr, newAgi, newInt);
-    preBuffAttacker = {
-      ...attacker,
-      str: newStr, agi: newAgi, int: newInt,
-      armor: Math.max(0, attacker.armor + armAdj),
-      dominantType: dom.type, dominantStat: dom.stat,
-    };
-  }
+  const preBuffAttacker = applyPreBuffs(attacker, attackerConsumables);
+  const preBuffDefender = applyPreBuffs(defender, defenderConsumables);
 
   let aHp = preBuffAttacker.maxHp;
-  let dHp = defender.maxHp;
+  let dHp = preBuffDefender.maxHp;
   let rounds = 0;
   let totalDamageDealt = 0;
   // Effect tracking
@@ -839,21 +916,25 @@ function simulateOneCombat(
   const aCooldowns = new Map<string, number>();
   const dCooldowns = new Map<string, number>();
   const aHasEffects = getWeaponEffects(preBuffAttacker.weapon.name).length > 0;
-  const dHasEffects = getWeaponEffects(defender.weapon.name).length > 0;
+  const dHasEffects = getWeaponEffects(preBuffDefender.weapon.name).length > 0;
   const aHasDualMagic = getWeaponEffects(preBuffAttacker.weapon.name).some(e => e.type === "dual_magic");
-  const dHasDualMagic = getWeaponEffects(defender.weapon.name).some(e => e.type === "dual_magic");
+  const dHasDualMagic = getWeaponEffects(preBuffDefender.weapon.name).some(e => e.type === "dual_magic");
   const aBreathEffect = getWeaponEffects(preBuffAttacker.weapon.name).find(e => e.type === "magic_breath");
-  const dBreathEffect = getWeaponEffects(defender.weapon.name).find(e => e.type === "magic_breath");
+  const dBreathEffect = getWeaponEffects(preBuffDefender.weapon.name).find(e => e.type === "magic_breath");
   const aBreathCooldown = { lastUsed: -999 };
   const dBreathCooldown = { lastUsed: -999 };
 
   // In-combat consumable tracking
-  const inCombatItems = attackerConsumables ? [...attackerConsumables.inCombat] : [];
-  let consumableUsedRound = new Set<number>();  // rounds where attacker uses consumable instead of weapon
+  const aInCombatItems = attackerConsumables ? [...attackerConsumables.inCombat] : [];
+  const dInCombatItems = defenderConsumables ? [...defenderConsumables.inCombat] : [];
 
   // Track whether each side cast a spell (costs their round 1 weapon attack)
   let aSkipRound1 = false;
   let dSkipRound1 = false;
+
+  // Multi-use spell tracking: remaining uses after initial cast
+  let aSpellUsesLeft = 0;
+  let dSpellUsesLeft = 0;
 
   // Compute spell damage: physical (STR/AGI scaled, reduced by armor) or magic (INT scaled, reduced by resist).
   // Physical spells use dmgPerStr/dmgPerAgi, magic spells use dmgPerInt. Falls back to magic if no phys scaling.
@@ -942,6 +1023,15 @@ function simulateOneCombat(
         damagePerTick: 0, strMod, agiMod, intMod, armorMod: spell.armorMod ?? 0,
       });
       if (spell.hpPct) { casterHpDelta = Math.floor(spell.hpPct * caster.maxHp); }
+    } else if (spell.type === "weapon_enchant") {
+      // Enchant weapon with bonus magic damage per hit — no upfront damage, pure utility
+      casterEffects.push({
+        name: spell.name, type: "weapon_enchant", turnsRemaining: spell.duration ?? 8,
+        damagePerTick: 0, strMod: 0, agiMod: 0, intMod: 0, armorMod: 0,
+        bonusMagicDmgMin: spell.baseDmgMin ?? 0,
+        bonusMagicDmgMax: spell.baseDmgMax ?? 0,
+        bonusMagicDmgPerInt: spell.dmgPerInt ?? 0,
+      });
     }
     return { casterHpDelta, targetHpDelta, dmgDealt };
   }
@@ -950,11 +1040,12 @@ function simulateOneCombat(
   // Spell replaces round 1 weapon attack (matches on-chain: player picks spell OR weapon per turn)
   {
     const aSpell = (aCasts && preBuffAttacker.className) ? CLASS_SPELLS[preBuffAttacker.className] : undefined;
-    const dSpell = (dCasts && defender.className) ? CLASS_SPELLS[defender.className] : undefined;
+    const dSpell = (dCasts && preBuffDefender.className) ? CLASS_SPELLS[preBuffDefender.className] : undefined;
 
     if (aSpell) {
       aSkipRound1 = true;
-      const r = resolveSpell(aSpell, preBuffAttacker, defender, aEffects, dEffects);
+      aSpellUsesLeft = (aSpell.maxUses ?? 1) - 1; // subtract initial cast
+      const r = resolveSpell(aSpell, preBuffAttacker, preBuffDefender, aEffects, dEffects);
       aHp += r.casterHpDelta;
       dHp += r.targetHpDelta;
       totalDamageDealt += r.dmgDealt;
@@ -962,7 +1053,8 @@ function simulateOneCombat(
 
     if (dSpell) {
       dSkipRound1 = true;
-      const r = resolveSpell(dSpell, defender, preBuffAttacker, dEffects, aEffects);
+      dSpellUsesLeft = (dSpell.maxUses ?? 1) - 1;
+      const r = resolveSpell(dSpell, preBuffDefender, preBuffAttacker, dEffects, aEffects);
       dHp += r.casterHpDelta;
       aHp += r.targetHpDelta;
     }
@@ -970,6 +1062,36 @@ function simulateOneCombat(
     if (dHp <= 0 || aHp <= 0) {
       return { attackerWins: dHp <= 0, rounds: 0, totalDamageDealt };
     }
+  }
+
+  // Recast decision: should a combatant spend this turn recasting their spell?
+  function shouldRecast(
+    spell: ClassSpell, casterEffects: ActiveEffectInstance[], targetEffects: ActiveEffectInstance[],
+  ): boolean {
+    switch (spell.type) {
+      case "magic_damage":
+        return true; // Pure damage — always cast if uses remain
+      case "self_buff":
+      case "damage_buff":
+      case "weapon_enchant":
+        return !casterEffects.some(e => e.name === spell.name); // Recast when buff expired
+      case "debuff":
+      case "damage_debuff":
+        return !targetEffects.some(e => e.name === spell.name); // Recast when debuff expired
+      default:
+        return false;
+    }
+  }
+
+  // Resolve weapon enchant bonus damage (bonus magic hit per weapon attack)
+  function resolveEnchantBonus(enchant: ActiveEffectInstance, caster: Combatant, target: Combatant): number {
+    const baseDmg = randInt(enchant.bonusMagicDmgMin ?? 0, enchant.bonusMagicDmgMax ?? 0);
+    const intScale = Math.floor(caster.int * (enchant.bonusMagicDmgPerInt ?? 0));
+    let damage = baseDmg + intScale;
+    const resistPct = Math.min(target.int * MAGIC_RESIST_PER_INT, MAGIC_RESIST_CAP);
+    damage = Math.max(1, Math.floor(damage * (1 - resistPct / 100)));
+    damage = Math.floor(damage * caster.spellMult / 1000);
+    return Math.max(1, damage);
   }
 
   while (aHp > 0 && dHp > 0 && rounds < maxCombatRounds) {
@@ -982,17 +1104,30 @@ function simulateOneCombat(
 
     // Adjust stats for active effects (buffs + debuffs)
     const adjAttacker = aEffects.length > 0 ? adjustCombatant(preBuffAttacker, aEffects) : preBuffAttacker;
-    const adjDefender = dEffects.length > 0 ? adjustCombatant(defender, dEffects) : defender;
+    const adjDefender = dEffects.length > 0 ? adjustCombatant(preBuffDefender, dEffects) : preBuffDefender;
 
     // --- Attacker's turn ---
-    // Check if attacker should use an in-combat consumable this round (costs weapon attack)
-    let aUsedConsumable = false;
-    if (!(rounds === 1 && aSkipRound1) && inCombatItems.length > 0) {
-      // Decision logic: use heal when HP < 50% of max, use debuffs/buffs on round 2 (after spell on r1)
-      const consumableIdx = pickConsumable(inCombatItems, aHp, preBuffAttacker.maxHp, rounds, aSkipRound1, aEffects, dEffects);
+    let aUsedAction = rounds === 1 && aSkipRound1; // round 1 skipped if initial spell cast
+
+    // Multi-use spell recast (costs weapon attack, takes priority over consumables)
+    if (!aUsedAction && aSpellUsesLeft > 0) {
+      const aSpell = CLASS_SPELLS[preBuffAttacker.className];
+      if (aSpell && shouldRecast(aSpell, aEffects, dEffects)) {
+        aUsedAction = true;
+        aSpellUsesLeft--;
+        const r = resolveSpell(aSpell, preBuffAttacker, adjDefender, aEffects, dEffects);
+        aHp += r.casterHpDelta;
+        dHp += r.targetHpDelta;
+        totalDamageDealt += r.dmgDealt;
+      }
+    }
+
+    // In-combat consumable (costs weapon attack)
+    if (!aUsedAction && aInCombatItems.length > 0) {
+      const consumableIdx = pickConsumable(aInCombatItems, aHp, preBuffAttacker.maxHp, rounds, aSkipRound1, aEffects, dEffects);
       if (consumableIdx >= 0) {
-        const item = inCombatItems.splice(consumableIdx, 1)[0];
-        aUsedConsumable = true;
+        const item = aInCombatItems.splice(consumableIdx, 1)[0];
+        aUsedAction = true;
         if (item.type === "heal") {
           aHp = Math.min(preBuffAttacker.maxHp, aHp + (item.healAmount ?? 0));
         } else if (item.type === "debuff" && item.effect) {
@@ -1003,6 +1138,14 @@ function simulateOneCombat(
             strMod: item.effect.strMod, agiMod: item.effect.agiMod,
             intMod: item.effect.intMod, armorMod: item.effect.armorMod,
           });
+        } else if (item.type === "pre_buff") {
+          aEffects.push({
+            name: item.name, type: "self_buff",
+            turnsRemaining: 99,
+            damagePerTick: 0,
+            strMod: item.strMod ?? 0, agiMod: item.agiMod ?? 0,
+            intMod: item.intMod ?? 0, armorMod: item.armorMod ?? 0,
+          });
         } else if (item.type === "tradeoff_buff" && item.effect) {
           aEffects.push({
             name: item.name, type: "self_buff",
@@ -1012,7 +1155,6 @@ function simulateOneCombat(
             intMod: item.effect.intMod, armorMod: item.effect.armorMod,
           });
         } else if (item.type === "cleanse") {
-          // Remove all DoT effects on self
           for (let i = aEffects.length - 1; i >= 0; i--) {
             if (aEffects[i].type === "dot") aEffects.splice(i, 1);
           }
@@ -1020,11 +1162,19 @@ function simulateOneCombat(
       }
     }
 
-    // Skip weapon attack on round 1 if spell was cast, or if consumable was used this turn
-    if (!(rounds === 1 && aSkipRound1) && !aUsedConsumable) {
+    // Weapon attack (skipped if spell recast or consumable used this turn)
+    if (!aUsedAction) {
       const aDmg = resolveAttack(adjAttacker, adjDefender);
       dHp -= aDmg;
       totalDamageDealt += aDmg;
+
+      // Weapon enchant: bonus magic damage on every weapon hit
+      const aEnchant = aEffects.find(e => e.type === "weapon_enchant");
+      if (aEnchant && aDmg > 0) {
+        const bonusDmg = resolveEnchantBonus(aEnchant, adjAttacker, adjDefender);
+        dHp -= bonusDmg;
+        totalDamageDealt += bonusDmg;
+      }
 
       // Apply weapon effects on defender
       if (aHasEffects) tryApplyEffects(preBuffAttacker.weapon.name, dEffects, dCooldowns, rounds);
@@ -1048,13 +1198,74 @@ function simulateOneCombat(
     if (dHp <= 0) break;
 
     // --- Defender's turn ---
-    // Skip weapon attack on round 1 if spell was cast
-    if (!(rounds === 1 && dSkipRound1)) {
+    let dUsedAction = rounds === 1 && dSkipRound1;
+
+    // Multi-use spell recast
+    if (!dUsedAction && dSpellUsesLeft > 0) {
+      const dSpell = CLASS_SPELLS[preBuffDefender.className];
+      if (dSpell && shouldRecast(dSpell, dEffects, aEffects)) {
+        dUsedAction = true;
+        dSpellUsesLeft--;
+        const r = resolveSpell(dSpell, preBuffDefender, adjAttacker, dEffects, aEffects);
+        dHp += r.casterHpDelta;
+        aHp += r.targetHpDelta;
+      }
+    }
+
+    // In-combat consumable
+    if (!dUsedAction && dInCombatItems.length > 0) {
+      const consumableIdx = pickConsumable(dInCombatItems, dHp, preBuffDefender.maxHp, rounds, dSkipRound1, dEffects, aEffects);
+      if (consumableIdx >= 0) {
+        const item = dInCombatItems.splice(consumableIdx, 1)[0];
+        dUsedAction = true;
+        if (item.type === "heal") {
+          dHp = Math.min(preBuffDefender.maxHp, dHp + (item.healAmount ?? 0));
+        } else if (item.type === "debuff" && item.effect) {
+          aEffects.push({
+            name: item.name, type: "stat_debuff",
+            turnsRemaining: item.effect.duration,
+            damagePerTick: item.effect.damagePerTick,
+            strMod: item.effect.strMod, agiMod: item.effect.agiMod,
+            intMod: item.effect.intMod, armorMod: item.effect.armorMod,
+          });
+        } else if (item.type === "pre_buff") {
+          dEffects.push({
+            name: item.name, type: "self_buff",
+            turnsRemaining: 99,
+            damagePerTick: 0,
+            strMod: item.strMod ?? 0, agiMod: item.agiMod ?? 0,
+            intMod: item.intMod ?? 0, armorMod: item.armorMod ?? 0,
+          });
+        } else if (item.type === "tradeoff_buff" && item.effect) {
+          dEffects.push({
+            name: item.name, type: "self_buff",
+            turnsRemaining: item.effect.duration,
+            damagePerTick: 0,
+            strMod: item.effect.strMod, agiMod: item.effect.agiMod,
+            intMod: item.effect.intMod, armorMod: item.effect.armorMod,
+          });
+        } else if (item.type === "cleanse") {
+          for (let i = dEffects.length - 1; i >= 0; i--) {
+            if (dEffects[i].type === "dot") dEffects.splice(i, 1);
+          }
+        }
+      }
+    }
+
+    // Weapon attack
+    if (!dUsedAction) {
       const dDmg = resolveAttack(adjDefender, adjAttacker);
       aHp -= dDmg;
 
+      // Weapon enchant: bonus magic damage on every weapon hit
+      const dEnchant = dEffects.find(e => e.type === "weapon_enchant");
+      if (dEnchant && dDmg > 0) {
+        const bonusDmg = resolveEnchantBonus(dEnchant, adjDefender, adjAttacker);
+        aHp -= bonusDmg;
+      }
+
       // Apply weapon effects on attacker
-      if (dHasEffects) tryApplyEffects(defender.weapon.name, aEffects, aCooldowns, rounds);
+      if (dHasEffects) tryApplyEffects(preBuffDefender.weapon.name, aEffects, aCooldowns, rounds);
 
       // Dual magic second hit
       if (dHasDualMagic) {
@@ -1092,13 +1303,14 @@ function simulate(
   attacker: Combatant, defender: Combatant, iterations: number = SIM_ITERATIONS,
   attackerCastsSpell?: boolean, defenderCastsSpell?: boolean,
   attackerConsumables?: ConsumableLoadout,
+  defenderConsumables?: ConsumableLoadout,
 ): CombatResult {
   let wins = 0;
   let totalRounds = 0;
   let totalDmg = 0;
 
   for (let i = 0; i < iterations; i++) {
-    const result = simulateOneCombat(attacker, defender, attackerCastsSpell, defenderCastsSpell, attackerConsumables);
+    const result = simulateOneCombat(attacker, defender, attackerCastsSpell, defenderCastsSpell, attackerConsumables, defenderConsumables);
     if (result.attackerWins) wins++;
     totalRounds += result.rounds;
     totalDmg += result.totalDamageDealt;
@@ -1123,20 +1335,23 @@ interface OptimalResult {
   dCasts: boolean;
 }
 
-function simulateOptimal(attacker: Combatant, defender: Combatant, iterations: number = SIM_ITERATIONS): OptimalResult {
+function simulateOptimal(
+  attacker: Combatant, defender: Combatant, iterations: number = SIM_ITERATIONS,
+  attackerConsumables?: ConsumableLoadout, defenderConsumables?: ConsumableLoadout,
+): OptimalResult {
   const aHasSpell = !!(attacker.className && CLASS_SPELLS[attacker.className]);
   const dHasSpell = !!(defender.className && CLASS_SPELLS[defender.className]);
 
   // If neither has a spell, skip the optimization
   if (!aHasSpell && !dHasSpell) {
-    return { result: simulate(attacker, defender, iterations, false, false), aCasts: false, dCasts: false };
+    return { result: simulate(attacker, defender, iterations, false, false, attackerConsumables, defenderConsumables), aCasts: false, dCasts: false };
   }
 
   // Test all 4 combinations
-  const nn = simulate(attacker, defender, iterations, false, false);
-  const yn = aHasSpell ? simulate(attacker, defender, iterations, true, false) : nn;
-  const ny = dHasSpell ? simulate(attacker, defender, iterations, false, true) : nn;
-  const yy = (aHasSpell && dHasSpell) ? simulate(attacker, defender, iterations, true, true) :
+  const nn = simulate(attacker, defender, iterations, false, false, attackerConsumables, defenderConsumables);
+  const yn = aHasSpell ? simulate(attacker, defender, iterations, true, false, attackerConsumables, defenderConsumables) : nn;
+  const ny = dHasSpell ? simulate(attacker, defender, iterations, false, true, attackerConsumables, defenderConsumables) : nn;
+  const yy = (aHasSpell && dHasSpell) ? simulate(attacker, defender, iterations, true, true, attackerConsumables, defenderConsumables) :
              aHasSpell ? yn : dHasSpell ? ny : nn;
 
   // Each side picks their best response to the opponent's best response (iterated best response).
@@ -1232,10 +1447,10 @@ function reportPvE(archetypes: Archetype[]) {
   console.log(`  ${SIM_ITERATIONS} iterations per matchup. Win rate & avg rounds.`);
   console.log("=".repeat(130));
 
-  // Simulate at key levels + all L10 monsters (including boss)
-  const showLevels = new Set([1, 3, 5, 7, 10]);
+  // Simulate at key levels (or ALL levels in F2P mode)
+  const showLevels = useF2PProgressionFlag ? null : new Set([1, 3, 5, 7, 10]);
   for (const monster of MONSTERS) {
-    if (!showLevels.has(monster.level)) continue;
+    if (showLevels && !showLevels.has(monster.level)) continue;
     const level = monster.level;
 
     console.log(`\n--- Level ${level} vs ${monster.name} (L${monster.level}, HP=${monster.hp}, ARM=${monster.armor}, ${getDominant(monster.str, monster.agi, monster.int).type}) ---`);
@@ -1298,19 +1513,24 @@ function reportPvP(archetypes: Archetype[]) {
   console.log("=".repeat(130));
 
   const level = 10;
-  const combatants: { arch: Archetype; combat: Combatant; weapon: Weapon; armor: Armor | null }[] = [];
+  const combatants: { arch: Archetype; combat: Combatant; weapon: Weapon; armor: Armor | null; consumables: ConsumableLoadout | undefined }[] = [];
 
   for (const arch of archetypes) {
     const gear = buildGearLoadout(arch, level);
     const combat = makeCombatant(gear.profile, gear.weapon, arch.advClass, gear.armorRating, arch.className);
-    combatants.push({ arch, combat, weapon: gear.weapon, armor: gear.armor });
+    const consumables = useConsumablesFlag ? buildPvPConsumableLoadout(arch) : undefined;
+    combatants.push({ arch, combat, weapon: gear.weapon, armor: gear.armor, consumables });
   }
 
   // Build win rate matrix — but only show aggregated stats (full matrix is too big)
   // When spells are enabled, use optimal spell decision per matchup
   const useOptimal = useSpellsFlag;
 
-  console.log("\n--- Aggregate PvP Performance at L10" + (useOptimal ? " (optimal spell use)" : "") + " ---");
+  const modeLabel = [
+    useOptimal ? "optimal spell use" : "",
+    useConsumablesFlag ? "consumables" : "",
+  ].filter(Boolean).join(" + ");
+  console.log("\n--- Aggregate PvP Performance at L10" + (modeLabel ? ` (${modeLabel})` : "") + " ---");
   console.log(
     pad("ID", 7) + pad("Name", 14) + pad("Class", 10) + pad("Weapon", 18) +
     (useArmorFlag ? pad("Armor", 22) : "") +
@@ -1350,16 +1570,16 @@ function reportPvP(archetypes: Archetype[]) {
       let noSpellWinRate = 0;
 
       if (useOptimal) {
-        const opt = simulateOptimal(a.combat, d.combat);
+        const opt = simulateOptimal(a.combat, d.combat, SIM_ITERATIONS, a.consumables, d.consumables);
         result = opt.result;
         aCasts = opt.aCasts;
         if (aCasts) spellCasts++;
         // Also get no-spell baseline for the decision map
-        const noSpell = simulate(a.combat, d.combat, SIM_ITERATIONS, false, false);
+        const noSpell = simulate(a.combat, d.combat, SIM_ITERATIONS, false, false, a.consumables, d.consumables);
         noSpellWinRate = noSpell.winRate;
         spellDecisions.push({ opponentId: d.arch.id, casts: aCasts, winRate: result.winRate, noSpellWinRate });
       } else {
-        result = simulate(a.combat, d.combat);
+        result = simulate(a.combat, d.combat, SIM_ITERATIONS, undefined, undefined, a.consumables, d.consumables);
       }
 
       totalWins += result.winRate;
@@ -1462,8 +1682,9 @@ function reportPvP(archetypes: Archetype[]) {
       const castsOnly = allDecisions.filter(d => d.casts);
       const avgBenefit = castsOnly.length > 0 ? castsOnly.reduce((s, d) => s + (d.winRate - d.noSpellWinRate), 0) / castsOnly.length * 100 : 0;
 
+      const usesLabel = (spell.maxUses ?? 1) > 1 ? `, ${spell.maxUses}x` : "";
       console.log(
-        `  ${pad(className, 12)} ${spell.name} (${spell.type}, ${spell.duration ?? "instant"}t): ` +
+        `  ${pad(className, 12)} ${spell.name} (${spell.type}, ${spell.duration ?? "instant"}t${usesLabel}): ` +
         `cast ${castCount}/${totalCount} matchups ` +
         `(vsSTR ${castVsStr}/${totalVsStr}, vsAGI ${castVsAgi}/${totalVsAgi}, vsINT ${castVsInt}/${totalVsInt}) ` +
         `avg benefit when cast: ${avgBenefit > 0 ? "+" : ""}${avgBenefit.toFixed(1)}%`
@@ -2304,9 +2525,12 @@ function main() {
     useArmor: flags.has("--armor"),
     useSpells: flags.has("--spells"),
     useRetunedMonsters: runAll || flags.has("--retuned") || flags.has("--v3"),
+    useOnchain: flags.has("--onchain"),
   };
   useArmorFlag = simFlags.useArmor;
   useSpellsFlag = simFlags.useSpells;
+  useConsumablesFlag = flags.has("--consumables");
+  useF2PProgressionFlag = flags.has("--f2p");
 
   const roundsIdx = args.findIndex(a => a.toLowerCase() === "--rounds");
   if (roundsIdx !== -1 && args[roundsIdx + 1]) {
@@ -2383,6 +2607,8 @@ function main() {
   console.log(`Balance Layer 3: Weapons & Combat Viability (${variant})`);
   if (useArmorFlag) console.log("  + L4 ARMOR ENABLED (equipped armor affects stats + defense)");
   if (useSpellsFlag) console.log("  + L5 CLASS SPELLS ENABLED (spell costs round 1 weapon attack)");
+  if (useConsumablesFlag) console.log("  + L6 CONSUMABLES ENABLED (path-appropriate buff + HP pot in PvP)");
+  if (useF2PProgressionFlag) console.log("  + F2P PROGRESSION: weapon/armor rarity gated by level (L1:R0, L2-3:R1, L4-5:R2, L6-7:R3, L8+:R4)");
   console.log(`  Max rounds: ${maxCombatRounds} (≈ ${maxCombatRounds * 2} on-chain turns). --rounds N to change.`);
   console.log(`  Data: ${zonePath}`);
   console.log(`Simulating with ${SIM_ITERATIONS} iterations per matchup...\n`);

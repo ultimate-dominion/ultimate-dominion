@@ -308,14 +308,14 @@ contract CombatSystem is System {
                 // Combat triangle
                 damage = _applyCombatTriangle(damage, attacker, defender);
 
-                // Block (STR-based, physical only — 50% damage reduction)
+                // Block (STR-based, physical only — 55% damage reduction)
                 uint64 blockRn = uint64(uint256(keccak256(abi.encode(randomNumber))));
                 if (CombatMath.calculateBlock(defender.strength, blockRn)) {
-                    damage = damage / 2;
+                    damage = damage * 45 / 100;
                 }
 
-                // Evasion (all physical attacks — AGI dodge check)
-                if (CombatMath.calculateEvasionDodge(defender.agility, attacker.agility, rnChunks[3])) {
+                // Evasion (all physical attacks — AGI dodge check, STR reduces dodge)
+                if (CombatMath.calculateEvasionDodge(defender.agility, attacker.agility, attacker.strength, defender.strength, rnChunks[3])) {
                     damage = 0;
                     hit = false;
                 }
@@ -425,6 +425,14 @@ contract CombatSystem is System {
 
                 // Apply combat triangle modifier (STR > AGI > INT > STR)
                 damage = _applyCombatTriangle(damage, attacker, defender);
+
+                // Block (STR-based, magic path — 30% damage reduction, separate RNG seed)
+                if (damage > 0) {
+                    uint64 magicBlockRn = uint64(uint256(keccak256(abi.encode(randomNumber, "magicBlock"))));
+                    if (CombatMath.calculateBlock(defender.strength, magicBlockRn)) {
+                        damage = damage * 70 / 100;
+                    }
+                }
             } else {
                 damage = 0;
                 hit = false;

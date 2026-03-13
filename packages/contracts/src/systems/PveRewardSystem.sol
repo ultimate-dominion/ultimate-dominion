@@ -13,6 +13,7 @@ import {
     CombatEncounterData,
     Mobs,
     MobStats,
+    MobDropBonus,
     EncounterEntity,
     AdventureEscrow,
     UltimateDominionConfig
@@ -128,6 +129,10 @@ contract PveRewardSystem is System {
         uint256 mobId = IWorld(_world()).UD__getMobId(entityId);
         MonsterStats memory monsterStats = abi.decode(Mobs.getMobStats(mobId), (MonsterStats));
 
+        // Read signature bonuses (parallel array to inventory)
+        uint256[] memory bonuses = MobDropBonus.getBonuses(mobId);
+        bool hasBonuses = bonuses.length == monsterStats.inventory.length;
+
         // Roll each item independently — all winners drop
         bool _isElite = MobStats.getIsElite(entityId);
         uint256[] memory candidates = new uint256[](monsterStats.inventory.length);
@@ -135,6 +140,9 @@ contract PveRewardSystem is System {
         for (uint256 i; i < monsterStats.inventory.length; i++) {
             uint256 tempItemId = monsterStats.inventory[i];
             uint256 dropChance = Items.getDropChance(tempItemId);
+            if (hasBonuses) {
+                dropChance += bonuses[i];
+            }
             if (_isElite) {
                 dropChance = dropChance + ELITE_DROP_BONUS;
             }

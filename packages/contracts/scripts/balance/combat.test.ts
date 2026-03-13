@@ -18,7 +18,7 @@ const CC: CombatConstants = {
   critMultiplier: 2,
   critBaseChance: 5,
   critAgiDivisor: 4,
-  evasionDivisor: 3,
+  evasionMultiplier: 2,
   evasionCap: 35,
   doubleStrikeMultiplier: 3,
   doubleStrikeCap: 40,
@@ -416,8 +416,7 @@ describe("combat", () => {
     it("AGI builds evade more than STR builds", () => {
       const rng = seededRng(11111);
       const weapon = makeWeapon({ minDamage: 3, maxDamage: 5 });
-      // With evasionDivisor=3, need large AGI gap and no STR advantage
-      // to produce meaningful evasion (agiDiff=35 / 3 = 11%)
+      // With evasionMultiplier=2, AGI gap produces evasion: (agiDiff=35) * 2 = 70% → capped at 35%
       const strAttacker = makeCombatant({ str: 10, agi: 5, weapon });
       const agiDefender = makeCombatant({ agi: 40, str: 10 });
 

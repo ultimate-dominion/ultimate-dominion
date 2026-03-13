@@ -34,13 +34,17 @@ export function seededRng(seed: number): RngFn {
 
 export interface ActiveEffectInstance {
   name: string;
-  type: "dot" | "stat_debuff" | "self_buff";
+  type: "dot" | "stat_debuff" | "self_buff" | "weapon_enchant";
   turnsRemaining: number;
   damagePerTick: number;
   strMod: number;
   agiMod: number;
   intMod: number;
   armorMod: number;
+  // Weapon enchant: bonus magic damage added to each weapon attack
+  bonusMagicDmgMin?: number;
+  bonusMagicDmgMax?: number;
+  bonusMagicDmgPerInt?: number;
 }
 
 // ============================================================
@@ -106,12 +110,21 @@ export function resolveAttack(
 
   // Evasion check (defender AGI vs attacker AGI)
   if (defender.agi > attacker.agi) {
-    let evadeChance = Math.min(Math.floor((defender.agi - attacker.agi) / cc.evasionDivisor), cc.evasionCap);
+    let evadeChance = Math.min(Math.floor((defender.agi - attacker.agi) * cc.evasionMultiplier), cc.evasionCap);
     if (!w.isMagic && attacker.str > defender.str) {
       const strReduction = Math.min(attacker.str - defender.str, 15);
       evadeChance = Math.max(0, evadeChance - strReduction);
     }
     if (rng(1, 100) <= evadeChance) return 0;
+  }
+
+  // Spell dodge (AGI defense vs magic — additional to regular evasion)
+  if (w.isMagic && defender.agi >= cc.spellDodgeThreshold) {
+    const spellDodgeChance = Math.min(
+      Math.floor((defender.agi - cc.spellDodgeThreshold) * cc.spellDodgePctPerAgi),
+      cc.spellDodgeCap,
+    );
+    if (rng(1, 100) <= spellDodgeChance) return 0;
   }
 
   // Crit check

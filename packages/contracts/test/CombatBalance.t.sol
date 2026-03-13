@@ -267,16 +267,36 @@ contract CombatBalanceTest is Test {
             r.avgDmgPerHit = (r.avgDmgPerHit * int256(cf)) / 1000;
         }
 
-        // Evasion
+        // Block (STR-based, 55% reduction)
+        {
+            uint256 blockPct;
+            if (dS > 10) {
+                blockPct = uint256(dS - 10) * 2;
+                if (blockPct > 35) blockPct = 35;
+            }
+            if (blockPct > 0) {
+                // weighted average: (1-blockPct)*damage + blockPct*(damage*45/100)
+                r.avgDmgPerHit = (r.avgDmgPerHit * int256(100 - blockPct) + r.avgDmgPerHit * int256(blockPct) * 45 / 100) / 100;
+            }
+        }
+
+        // Evasion (with STR reduction)
         if (dA > aA) {
-            uint256 ch = uint256(dA - aA) / 3;
+            uint256 ch = uint256(dA - aA) * 2;
+            // STR reduction
+            if (aS > dS) {
+                uint256 strRed = uint256(aS - dS);
+                if (strRed > 15) strRed = 15;
+                if (strRed >= ch) ch = 0;
+                else ch -= strRed;
+            }
             if (ch > EVASION_CAP) ch = EVASION_CAP;
             r.evasionPct = ch;
         }
 
-        // Double strike (AGI weapons only)
+        // Double strike (AGI weapons only, *3 multiplier)
         if (_isAgiDominant(weapon) && aA > dA) {
-            uint256 ch = uint256(aA - dA) * 2;
+            uint256 ch = uint256(aA - dA) * 3;
             if (ch > DOUBLE_STRIKE_CAP) ch = DOUBLE_STRIKE_CAP;
             r.doubleStrikePct = ch;
         }
@@ -332,6 +352,18 @@ contract CombatBalanceTest is Test {
         {
             (, uint256 cf) = _critFactor(aA, atk.critMult);
             r.avgDmgPerHit = (r.avgDmgPerHit * int256(cf)) / 1000;
+        }
+
+        // Magic block (STR-based, 30% reduction)
+        {
+            uint256 blockPct;
+            if (dS > 10) {
+                blockPct = uint256(dS - 10) * 2;
+                if (blockPct > 35) blockPct = 35;
+            }
+            if (blockPct > 0) {
+                r.avgDmgPerHit = (r.avgDmgPerHit * int256(100 - blockPct) + r.avgDmgPerHit * int256(blockPct) * 70 / 100) / 100;
+            }
         }
 
         // No evasion, no double strike
@@ -623,7 +655,7 @@ contract CombatBalanceTest is Test {
                 CombatResult memory r = _simulate(cls[i], wi, djS, djA, djI, cls[j].armor, cls[j].hp);
                 assertGt(r.turnsToKill, uint256(1),
                     string.concat(cls[i].name, " one-shots ", cls[j].name));
-                assertLt(r.turnsToKill, uint256(30),
+                assertLt(r.turnsToKill, uint256(60),
                     string.concat(cls[i].name, " vs ", cls[j].name, " stalemate"));
             }
         }

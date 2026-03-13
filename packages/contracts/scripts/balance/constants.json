@@ -12,30 +12,30 @@
     },
     "damage": {
       "attackModifier": 1.2,
-      "agiAttackModifier": 0.9,
+      "agiAttackModifier": 1.0,
       "defenseModifier": 1.0,
       "critMultiplier": 2
     },
     "evasion": {
-      "divisor": 3,
-      "cap": 25
+      "multiplier": 2,
+      "cap": 35
     },
     "doubleStrike": {
-      "multiplier": 2,
-      "cap": 25
+      "multiplier": 3,
+      "cap": 40
     },
     "crit": {
-      "baseChance": 4,
+      "baseChance": 5,
       "agiDivisor": 4
     },
     "magicResist": {
-      "pctPerInt": 2,
+      "pctPerInt": 3,
       "cap": 40
     },
     "triangle": {
-      "flatBonusPct": 20,
+      "flatBonusPct": 0,
       "bonusPerStatPct": 2,
-      "maxBonusPct": 20,
+      "maxBonusPct": 12,
       "order": ["str", "agi", "int"]
     },
     "spellDodge": {
@@ -44,17 +44,17 @@
       "cap": 20
     },
     "block": {
-      "chancePerStr": 1.5,
-      "cap": 30,
-      "damageReduction": 0.5,
-      "vsMagicPenalty": 0.5
+      "chancePerStr": 2,
+      "cap": 35,
+      "damageReduction": 0.55,
+      "vsMagicPenalty": 0.30
     },
     "classMultiplierBase": 1000
   },
 
   "leveling": {
     "maxLevel": 10,
-    "statPointsPerLevel": 2,
+    "statPointsPerLevel": 1,
     "hpPerLevel": 2,
     "baseHp": 18,
     "earlyGameCap": 10,

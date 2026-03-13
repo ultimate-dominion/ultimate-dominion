@@ -34,7 +34,7 @@ address constant PLAYER_COUNTER_KEY = address(1);
 // Stable key for the character token counter (must NOT be address(this) — that resets on system upgrades)
 address constant CHARACTER_TOKEN_COUNTER_KEY = address(2);
 
-uint256 constant DEFAULT_MAX_TURNS = 15;
+uint256 constant DEFAULT_MAX_TURNS = 30;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1.2 ether;
 uint256 constant AGI_ATTACK_MODIFIER = 1.0 ether;

@@ -270,13 +270,22 @@ library CombatMath {
      * @param rnChunk Random number chunk for roll
      * @return dodged Whether the attack was evaded
      */
-    function calculateEvasionDodge(int256 defenderAgi, int256 attackerAgi, uint64 rnChunk)
-        internal
-        pure
-        returns (bool)
-    {
+    function calculateEvasionDodge(
+        int256 defenderAgi,
+        int256 attackerAgi,
+        int256 attackerStr,
+        int256 defenderStr,
+        uint64 rnChunk
+    ) internal pure returns (bool) {
         if (defenderAgi <= attackerAgi) return false;
-        uint256 dodgeChance = uint256(defenderAgi - attackerAgi) / 3;
+        uint256 dodgeChance = uint256(defenderAgi - attackerAgi) * 2;
+        // STR advantage reduces dodge chance (capped at 15)
+        if (attackerStr > defenderStr) {
+            uint256 strReduction = uint256(attackerStr - defenderStr);
+            if (strReduction > 15) strReduction = 15;
+            if (strReduction >= dodgeChance) return false;
+            dodgeChance -= strReduction;
+        }
         if (dodgeChance > EVASION_CAP) dodgeChance = EVASION_CAP;
         return (uint256(rnChunk) % 100) < dodgeChance;
     }
@@ -294,7 +303,7 @@ library CombatMath {
         returns (bool)
     {
         if (attackerAgi <= defenderAgi) return false;
-        uint256 chance = uint256(attackerAgi - defenderAgi) * 2;
+        uint256 chance = uint256(attackerAgi - defenderAgi) * 3;
         if (chance > DOUBLE_STRIKE_CAP) chance = DOUBLE_STRIKE_CAP;
         return (uint256(rnChunk) % 100) < chance;
     }
@@ -362,7 +371,7 @@ library CombatMath {
     function calculateBlock(int256 defenderStr, uint64 rnChunk) internal pure returns (bool) {
         if (defenderStr <= 10) return false;
         uint256 blockChance = uint256(defenderStr - 10) * 2; // 2% per STR above 10
-        if (blockChance > 30) blockChance = 30; // cap 30%
+        if (blockChance > 35) blockChance = 35; // cap 35%
         return (uint256(rnChunk) % 100) < blockChance;
     }
 

@@ -149,7 +149,7 @@ interface ConstantsJson {
   combat: {
     hit: { startingProbability: number; attackerDampener: number; defenderDampener: number; min: number; max: number; strWeaponsUseStr: boolean };
     damage: { attackModifier: number; agiAttackModifier: number; defenseModifier: number; critMultiplier: number };
-    evasion: { divisor: number; cap: number };
+    evasion: { multiplier: number; cap: number };
     doubleStrike: { multiplier: number; cap: number };
     crit: { baseChance: number; agiDivisor: number };
     magicResist: { pctPerInt: number; cap: number };
@@ -439,7 +439,7 @@ function mapCombatConstants(c: ConstantsJson["combat"]): CombatConstants {
     critMultiplier: c.damage.critMultiplier,
     critBaseChance: c.crit.baseChance,
     critAgiDivisor: c.crit.agiDivisor,
-    evasionDivisor: c.evasion.divisor,
+    evasionMultiplier: c.evasion.multiplier,
     evasionCap: c.evasion.cap,
     doubleStrikeMultiplier: c.doubleStrike.multiplier,
     doubleStrikeCap: c.doubleStrike.cap,

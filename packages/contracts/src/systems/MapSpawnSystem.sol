@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {MobsByLevel, EntitiesAtPosition} from "@codegen/index.sol";
+import {MobsByLevel, EntitiesAtPosition, BossSpawnConfig} from "@codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
@@ -62,6 +62,20 @@ contract MapSpawnSystem is System {
                     IMobSystem.UD__spawnMobs, (mobIdsToSpawn, x, y)
                 )
             );
+        }
+
+        // Boss spawn check — flat probability on every tile entry
+        {
+            uint256 bossMobId = BossSpawnConfig.getBossMobId();
+            if (bossMobId != 0) {
+                uint256 chance = BossSpawnConfig.getSpawnChanceBp();
+                uint256 bossRoll = uint256(keccak256(abi.encodePacked(block.prevrandao, x, y, "boss"))) % 10000;
+                if (bossRoll < chance) {
+                    uint256[] memory bossSpawn = new uint256[](1);
+                    bossSpawn[0] = bossMobId;
+                    SystemSwitch.call(abi.encodeCall(IMobSystem.UD__spawnMobs, (bossSpawn, x, y)));
+                }
+            }
         }
     }
 

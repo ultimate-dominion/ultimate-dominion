@@ -49,19 +49,19 @@ export const PROPOSED_COMBAT_CONSTANTS: CombatConstants = {
   critMultiplier: 2,
   critBaseChance: 5,              // on-chain: 4
   critAgiDivisor: 4,              // same as on-chain (sim uses hardcoded /4 in resolveAttack)
-  evasionDivisor: 3,              // same as on-chain (sim uses AGI_DIFF × 2 formula instead)
+  evasionMultiplier: 2,            // (AGI diff) × 2, capped at 35% — fixed from division to match design
   evasionCap: 35,                 // on-chain: 25
   doubleStrikeMultiplier: 3,      // on-chain: 2 (sim uses × 3 in resolveAttack)
   doubleStrikeCap: 40,            // on-chain: 25
-  combatTriangleFlatPct: 0.20,    // same as on-chain
+  combatTriangleFlatPct: 0,        // removed — triangle driven by per-stat bonus only
   combatTrianglePerStat: 0.02,    // on-chain: 0.02 (same, but triangle cap differs)
   combatTriangleMax: 0.12,        // on-chain: 0.20
   magicResistPerInt: 3,           // on-chain: 2
   magicResistCap: 40,
   blockChancePerStr: 2,           // on-chain: 1.5
-  blockChanceCap: 30,
-  blockReductionPhys: 0.50,
-  blockReductionMagic: 0.0,       // on-chain: 0.5 penalty (applied differently)
+  blockChanceCap: 35,
+  blockReductionPhys: 0.55,
+  blockReductionMagic: 0.30,      // partial block vs magic (30% vs 55% physical) — closes INT>STR gap
   hitStartingProbability: 90,     // same as on-chain (not used by sim yet)
   hitAttackerDampener: 95,        // same as on-chain (not used by sim yet)
   hitDefenderDampener: 30,        // same as on-chain (not used by sim yet)
@@ -79,22 +79,22 @@ export const PROPOSED_COMBAT_CONSTANTS: CombatConstants = {
 // ============================================================
 
 export const CLASS_SPELLS: Record<string, ClassSpell> = {
-  // STR classes: physical damage (STR-scaled) + self-buff
-  Warrior:  { name: "Battle Cry",    type: "damage_buff",   baseDmgMin: 4, baseDmgMax: 8, dmgPerStr: 0.4, strPct: 0.15, armorMod: 3, duration: 6 },
-  Paladin:  { name: "Divine Shield", type: "damage_buff",   baseDmgMin: 3, baseDmgMax: 7, dmgPerStr: 0.35, strPct: 0.12, armorMod: 5, duration: 6 },
+  // STR classes: tank spells — survivability over damage
+  Warrior:  { name: "Battle Cry",    type: "damage_buff",   baseDmgMin: 5, baseDmgMax: 10, dmgPerStr: 0.5, strPct: 0.25, armorMod: 8, hpPct: 0.10, duration: 8, maxUses: 2 },
+  Paladin:  { name: "Divine Shield", type: "self_buff",     strPct: 0.15, armorMod: 10, hpPct: 0.15, duration: 8, maxUses: 2 },
 
-  // AGI classes: physical damage (AGI-scaled) + buff/debuff
-  Ranger:   { name: "Hunter's Mark", type: "damage_debuff", baseDmgMin: 3, baseDmgMax: 7, dmgPerAgi: 0.35, agiPct: -0.15, armorMod: -2, duration: 6 },
-  Rogue:    { name: "Shadowstep",    type: "damage_buff",   baseDmgMin: 4, baseDmgMax: 8, dmgPerAgi: 0.4, agiPct: 0.25, duration: 4 },
+  // AGI classes
+  Ranger:   { name: "Marked Shot",     type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerAgi: 0.4, agiPct: -0.20, armorMod: -5, duration: 8 },
+  Rogue:    { name: "Expose Weakness", type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerAgi: 0.4, armorMod: -8, strPct: -0.15, duration: 8 },
 
-  // Hybrid: Druid deals nature (magic) damage + debuffs multiple stats
-  Druid:    { name: "Entangle",      type: "damage_debuff", baseDmgMin: 3, baseDmgMax: 6, dmgPerInt: 0.3, agiPct: -0.15, strPct: -0.10, duration: 6 },
+  // Hybrid: Druid deals nature (magic) damage + anti-AGI debuff + armor strip (roots pull at plate)
+  Druid:    { name: "Entangle",      type: "damage_debuff", baseDmgMin: 3, baseDmgMax: 6, dmgPerInt: 0.3, agiPct: -0.25, strPct: -0.15, armorMod: -3, duration: 8 },
 
-  // INT classes: damage spells that scale with INT
-  Warlock:  { name: "Soul Drain",    type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerInt: 0.4, strPct: -0.12, intPct: -0.12, duration: 5 },
-  Wizard:   { name: "Arcane Blast",  type: "magic_damage",  baseDmgMin: 5, baseDmgMax: 10, dmgPerInt: 0.5 },
-  Sorcerer: { name: "Arcane Surge",  type: "magic_damage",  baseDmgMin: 4, baseDmgMax: 8, dmgPerInt: 0.4 },
-  Cleric:   { name: "Blessing",      type: "self_buff",     intPct: 0.12, armorMod: 5, hpPct: 0.10, duration: 6 },
+  // INT classes
+  Warlock:  { name: "Soul Drain",    type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerInt: 0.4, strPct: -0.12, intPct: -0.12, duration: 5, maxUses: 2 },
+  Wizard:   { name: "Arcane Blast",  type: "magic_damage",  baseDmgMin: 5, baseDmgMax: 10, dmgPerInt: 0.5, maxUses: 3 },
+  Sorcerer: { name: "Arcane Infusion", type: "weapon_enchant", baseDmgMin: 3, baseDmgMax: 6, dmgPerInt: 0.25, duration: 10 },
+  Cleric:   { name: "Blessing",      type: "self_buff",     intPct: 0.12, armorMod: 7, hpPct: 0.15, duration: 6, maxUses: 2 },
 };
 
 // ============================================================
@@ -120,12 +120,12 @@ export const WEAPONS_BASELINE: Weapon[] = [
   { name: "Iron Axe",         minDamage: 1, maxDamage: 2, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 0,  rarity: 1, price: 15 },
   { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
   { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
-  { name: "Steel Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 9,  minAgi: 0,  minInt: 0,  rarity: 1, price: 40 },
+  { name: "Light Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 9,  minAgi: 0,  minInt: 0,  rarity: 1, price: 40 },
   { name: "Shortbow",         minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },
   { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 10, rarity: 1, price: 40 },
   { name: "Notched Blade",    minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 1, price: 50 },
   // R2
-  { name: "Brute's Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 7,  minAgi: 0,  minInt: 0,  rarity: 2, price: 60 },
+  { name: "Notched Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 7,  minAgi: 0,  minInt: 0,  rarity: 2, price: 60 },
   { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
   { name: "Crystal Shard",    minDamage: 6, maxDamage: 9, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 2, price: 70 },
   { name: "Webspinner Bow",   minDamage: 3, maxDamage: 4, strMod: 0, agiMod: 3, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },
@@ -134,7 +134,7 @@ export const WEAPONS_BASELINE: Weapon[] = [
   { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 11, rarity: 2, price: 100 },
   // R3
   { name: "Dire Rat Fang",    minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
-  { name: "Troll's Cudgel",   minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 12, minAgi: 0,  minInt: 0,  rarity: 3, price: 180 },
+  { name: "Gnarled Cudgel",   minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 12, minAgi: 0,  minInt: 0,  rarity: 3, price: 180 },
   { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 13, rarity: 3, price: 180 },
   { name: "Stone Maul",       minDamage: 5, maxDamage: 7, strMod: 4, agiMod: 0, intMod: 0, hpMod: 8, scaling: "str", isMagic: false, minStr: 15, minAgi: 0,  minInt: 0,  rarity: 3, price: 250 },
   // R4
@@ -157,12 +157,12 @@ export const WEAPONS_REBALANCED: Weapon[] = [
   { name: "Iron Axe",         minDamage: 1, maxDamage: 2, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 0,  rarity: 1, price: 15 },
   { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
   { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
-  { name: "Steel Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 9,  minAgi: 0,  minInt: 0,  rarity: 1, price: 40 },
+  { name: "Light Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 9,  minAgi: 0,  minInt: 0,  rarity: 1, price: 40 },
   { name: "Shortbow",      minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },
   { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 10, rarity: 1, price: 40 },
   { name: "Notched Blade",     minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 1, price: 50 },
   // R2
-  { name: "Brute's Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 0,  minInt: 0,  rarity: 2, price: 60 },
+  { name: "Notched Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 0,  minInt: 0,  rarity: 2, price: 60 },
   { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
   { name: "Crystal Shard",    minDamage: 4, maxDamage: 6, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 2, price: 70 },
   { name: "Webspinner Bow",   minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },
@@ -171,7 +171,7 @@ export const WEAPONS_REBALANCED: Weapon[] = [
   { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 11, rarity: 2, price: 100 },
   // R3
   { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
-  { name: "Troll's Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 12, minAgi: 0,  minInt: 0,  rarity: 3, price: 180 },
+  { name: "Gnarled Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 12, minAgi: 0,  minInt: 0,  rarity: 3, price: 180 },
   { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 13, rarity: 3, price: 180 },
   { name: "Stone Maul",     minDamage: 5, maxDamage: 7, strMod: 4, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 15, minAgi: 0,  minInt: 0,  rarity: 3, price: 250 },
   // R4
@@ -190,12 +190,12 @@ export const WEAPONS_V2: Weapon[] = [
   { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
   { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
   // R1 mid — slight secondary
-  { name: "Steel Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 9,  minAgi: 5,  minInt: 0,  rarity: 1, price: 40 },
+  { name: "Light Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 9,  minAgi: 5,  minInt: 0,  rarity: 1, price: 40 },
   { name: "Shortbow",      minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 6,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },
   { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 10, rarity: 1, price: 40 },
   { name: "Notched Blade",     minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 5,  rarity: 1, price: 50 },
   // R2 mid — moderate secondary
-  { name: "Brute's Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 5,  minInt: 0,  rarity: 2, price: 60 },
+  { name: "Notched Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 5,  minInt: 0,  rarity: 2, price: 60 },
   { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
   { name: "Crystal Shard",    minDamage: 4, maxDamage: 6, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 8,  minAgi: 0,  minInt: 8,  rarity: 2, price: 70 },
   { name: "Webspinner Bow",   minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4, scaling: "agi", isMagic: false, minStr: 7,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },
@@ -204,7 +204,7 @@ export const WEAPONS_V2: Weapon[] = [
   { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 5,  minAgi: 0,  minInt: 11, rarity: 2, price: 100 },
   // R3
   { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
-  { name: "Troll's Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 12, minAgi: 6,  minInt: 0,  rarity: 3, price: 180 },
+  { name: "Gnarled Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 12, minAgi: 6,  minInt: 0,  rarity: 3, price: 180 },
   { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 6,  minAgi: 0,  minInt: 13, rarity: 3, price: 180 },
   { name: "Stone Maul",     minDamage: 5, maxDamage: 7, strMod: 4, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 15, minAgi: 8,  minInt: 0,  rarity: 3, price: 250 },
   // R4
@@ -226,12 +226,12 @@ export const WEAPONS_V3: Weapon[] = [
   { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
   { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
   // R1 mid — secondary reqs scaled for 1pt/level
-  { name: "Steel Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 8,  minAgi: 3,  minInt: 0,  rarity: 1, price: 40 },
+  { name: "Light Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 8,  minAgi: 3,  minInt: 0,  rarity: 1, price: 40 },
   { name: "Shortbow",      minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },
   { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 3,  minAgi: 0,  minInt: 9,  rarity: 1, price: 40 },
   { name: "Notched Blade",     minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 4,  minAgi: 0,  minInt: 4,  rarity: 1, price: 50 },
   // R2 mid — secondary reqs scaled
-  { name: "Brute's Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 3,  minInt: 0,  rarity: 2, price: 60 },
+  { name: "Notched Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 3,  minInt: 0,  rarity: 2, price: 60 },
   { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
   { name: "Crystal Shard",    minDamage: 4, maxDamage: 6, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 6,  minAgi: 0,  minInt: 6,  rarity: 2, price: 70 },
   { name: "Webspinner Bow",   minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4, scaling: "agi", isMagic: false, minStr: 5,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },
@@ -241,16 +241,16 @@ export const WEAPONS_V3: Weapon[] = [
   { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 9,  rarity: 2, price: 100 },
   // R3 — pure path ceiling (nerfed from V2)
   { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
-  { name: "Troll's Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 10, minAgi: 4,  minInt: 0,  rarity: 3, price: 180 },
+  { name: "Gnarled Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 10, minAgi: 4,  minInt: 0,  rarity: 3, price: 180 },
   { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 11, rarity: 3, price: 180 },
   { name: "Stone Maul",     minDamage: 5, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 13, minAgi: 5,  minInt: 0,  rarity: 3, price: 250 },
   // R3 — pure path endgame (demoted from R4)
-  { name: "Darkwood Bow",     minDamage: 6, maxDamage: 9, strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 14, minInt: 0,  rarity: 3, price: 220 },
+  { name: "Darkwood Bow",     minDamage: 7, maxDamage: 10, strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 14, minInt: 0,  rarity: 3, price: 220 },
   { name: "Smoldering Rod",   minDamage: 5, maxDamage: 7, strMod: 0, agiMod: 2, intMod: 5, hpMod: 6, scaling: "str", isMagic: true,  minStr: 5,  minAgi: 0,  minInt: 13, rarity: 3, price: 300 },
-  // R4 EPIC — hybrid weapons (70/30 builds equip free, pure/even builds locked out)
-  { name: "Trollhide Cleaver", minDamage: 6, maxDamage: 9, strMod: 3, agiMod: 3, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 16, minAgi: 13, minInt: 0,  rarity: 4, price: 350 },
-  { name: "Phasefang",  minDamage: 5, maxDamage: 10, strMod: 0, agiMod: 4, intMod: 3, hpMod: 5, scaling: "agi", isMagic: true,  minStr: 0,  minAgi: 16, minInt: 11, rarity: 4, price: 350 },
-  { name: "Drakescale Staff",   minDamage: 5, maxDamage: 8, strMod: 2, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 16, minAgi: 0,  minInt: 11, rarity: 4, price: 350 },
+  // R4 EPIC — hybrid weapons (require cross-path investment, marketplace drivers)
+  { name: "Trollhide Cleaver", minDamage: 6, maxDamage: 9, strMod: 3, agiMod: 3, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 16, minAgi: 10, minInt: 0,  rarity: 4, price: 350 },
+  { name: "Phasefang",  minDamage: 4, maxDamage: 8, strMod: 0, agiMod: 4, intMod: 3, hpMod: 5, scaling: "agi", isMagic: true,  minStr: 0,  minAgi: 16, minInt: 11, rarity: 4, price: 350 },
+  { name: "Drakescale Staff",   minDamage: 5, maxDamage: 8, strMod: 2, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 12, minAgi: 0,  minInt: 11, rarity: 4, price: 350 },
 ];
 
 // ============================================================
@@ -270,13 +270,13 @@ export const ARMORS_WITH_SECONDARY_REQS: Armor[] = [
   { name: "Scout Armor",        armorValue: 4, strMod: 0,  agiMod: 2, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 10, minInt: 0,  armorType: "Leather", rarity: 1, price: 40 },
   { name: "Acolyte Vestments",  armorValue: 2, strMod: 0,  agiMod: 0, intMod: 2, hpMod: 0, minStr: 0,  minAgi: 0,  minInt: 7,  armorType: "Cloth",   rarity: 1, price: 40 },
   // R2 — primary + secondary req (costs 0-1 off-path)
-  { name: "Chainmail Shirt",    armorValue: 8, strMod: 2,  agiMod: 0, intMod: 0, hpMod: 8, minStr: 12, minAgi: 0,  minInt: 7,  armorType: "Plate",   rarity: 2, price: 100 },
+  { name: "Etched Chainmail",    armorValue: 8, strMod: 2,  agiMod: 0, intMod: 0, hpMod: 8, minStr: 12, minAgi: 0,  minInt: 7,  armorType: "Plate",   rarity: 2, price: 100 },
   { name: "Ranger Leathers",    armorValue: 6, strMod: 0,  agiMod: 3, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 11, minInt: 8,  armorType: "Leather", rarity: 2, price: 100 },
   { name: "Mage Robes",         armorValue: 4, strMod: 0,  agiMod: 0, intMod: 3, hpMod: 0, minStr: 0,  minAgi: 10, minInt: 14, armorType: "Cloth",   rarity: 2, price: 100 },
   { name: "Spider Silk Wraps",  armorValue: 3, strMod: 0,  agiMod: 4, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 12, minInt: 8,  armorType: "Leather", rarity: 2, price: 90 },
   // R3 — primary + higher secondary (costs 1-3 off-path)
-  { name: "Cracked Stone Plate",armorValue: 10, strMod: 3, agiMod: 0, intMod: 0, hpMod: 10, minStr: 14, minAgi: 0,  minInt: 9,  armorType: "Plate",   rarity: 3, price: 200 },
-  { name: "Stalker's Cloak",    armorValue: 7,  strMod: 0, agiMod: 5, intMod: 0, hpMod: 0,  minStr: 0,  minAgi: 14, minInt: 10, armorType: "Leather", rarity: 3, price: 200 },
+  { name: "Carved Stone Plate",armorValue: 10, strMod: 3, agiMod: 0, intMod: 0, hpMod: 10, minStr: 14, minAgi: 0,  minInt: 9,  armorType: "Plate",   rarity: 3, price: 200 },
+  { name: "Stalker's Cloak",    armorValue: 7,  strMod: 0, agiMod: 5, intMod: 0, hpMod: 0,  minStr: 0,  minAgi: 14, minInt: 8,  armorType: "Leather", rarity: 3, price: 200 },
   { name: "Drake's Cowl",      armorValue: 6,  strMod: 0, agiMod: 0, intMod: 5, hpMod: 0,  minStr: 0,  minAgi: 12, minInt: 14, armorType: "Cloth",   rarity: 3, price: 200 },
   { name: "Scorched Scale Vest",armorValue: 8,  strMod: 1, agiMod: 1, intMod: 4, hpMod: 6,  minStr: 12, minAgi: 0,  minInt: 9,  armorType: "Plate",   rarity: 3, price: 250 },
 ];
@@ -297,8 +297,8 @@ export const MONSTERS_RETUNED: Monster[] = [
   { name: "Rock Golem",        level: 8,  str: 14, agi: 8,  int: 7,  hp: 38, armor: 3, classType: 0, xp: 2500, weaponMinDmg: 1, weaponMaxDmg: 3, weaponScaling: "str", weaponIsMagic: false },
   { name: "Pale Stalker",      level: 9,  str: 10, agi: 15, int: 7,  hp: 34, armor: 0, classType: 1, xp: 3250, weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "agi", weaponIsMagic: false },
   { name: "Dusk Drake",        level: 10, str: 13, agi: 13, int: 15, hp: 52, armor: 2, classType: 2, xp: 6500, weaponMinDmg: 1, weaponMaxDmg: 2, weaponScaling: "str", weaponIsMagic: true },
-  // Zone boss — 3 attack types. Not on-chain yet.
-  { name: "Basilisk",   level: 10, str: 20, agi: 12, int: 10, hp: 100, armor: 4, classType: 0, xp: 10000, weaponMinDmg: 4, weaponMaxDmg: 7, weaponScaling: "str", weaponIsMagic: false },
+  // Zone boss — 3 attack types. On-chain (mobId 12). Level 12 = raid boss tier.
+  { name: "Basilisk",   level: 12, str: 17, agi: 12, int: 10, hp: 130, armor: 4, classType: 0, xp: 10000, weaponMinDmg: 3, weaponMaxDmg: 5, weaponScaling: "str", weaponIsMagic: false },
 ];
 
 // ============================================================
@@ -310,8 +310,8 @@ export const MONSTERS_RETUNED: Monster[] = [
 export const PROPOSED_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
   // V3 epic weapons
   "Phasefang": [
-    { type: "dot", name: "poison", damagePerTick: 3, maxStacks: 2, duration: 8, cooldown: 2 },
-    { type: "stat_debuff", name: "blind", agiMod: -8, duration: 8, cooldown: 3 },
+    { type: "dot", name: "poison", damagePerTick: 2, maxStacks: 2, duration: 8, cooldown: 2 },
+    { type: "stat_debuff", name: "blind", agiMod: -5, duration: 8, cooldown: 3 },
   ],
   "Trollhide Cleaver": [{ type: "stat_debuff", name: "weaken", strMod: -8, duration: 8, cooldown: 3 }],
   "Drakescale Staff":   [{ type: "stat_debuff", name: "stupify", intMod: -8, duration: 8, cooldown: 3 }],
@@ -320,8 +320,8 @@ export const PROPOSED_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
 export const PROPOSED_MONSTER_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
   "Dire Rat": [{ type: "dot", name: "poison", damagePerTick: 3, maxStacks: 2, duration: 8, cooldown: 2 }],
   "Basilisk": [
-    { type: "magic_breath", name: "gaze", minDmg: 6, maxDmg: 10, cooldown: 2 },
-    { type: "dot", name: "venom", damagePerTick: 5, maxStacks: 1, duration: 6, cooldown: 3 },
+    { type: "magic_breath", name: "gaze", minDmg: 8, maxDmg: 14, cooldown: 2 },
+    { type: "dot", name: "venom", damagePerTick: 4, maxStacks: 1, duration: 6, cooldown: 3 },
   ],
 };
 
@@ -336,10 +336,18 @@ export interface SimFlags {
   useArmor: boolean;
   useSpells: boolean;
   useRetunedMonsters: boolean;
+  useOnchain: boolean;
 }
 
 export function applyOverrides(data: GameData, flags: SimFlags): GameData {
   const result = { ...data };
+
+  if (flags.useOnchain) {
+    // --onchain: use raw loader data from constants.json + zone JSON.
+    // No weapon, monster, constant, or spell overrides.
+    // Shows the actual on-chain balance (including any data bugs).
+    return result;
+  }
 
   // Always use proposed constants (the whole point of the sim)
   result.combatConstants = PROPOSED_COMBAT_CONSTANTS;

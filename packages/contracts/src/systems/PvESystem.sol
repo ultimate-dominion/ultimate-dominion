@@ -143,11 +143,11 @@ contract PvESystem is System {
         uint256 randomness,
         uint256 numberOfExecutedActions
     ) internal returns (uint256 _numberOfExecutedActions) {
-        uint256 randomNumber;
+        uint256 actionIndex;
 
-        _numberOfExecutedActions = encounterData.defenders.length;
+        uint256 mobCount = encounterData.defenders.length;
 
-        for (uint256 i; i < _numberOfExecutedActions; i++) {
+        for (uint256 i; i < mobCount; i++) {
             bytes32 mobEntity = encounterData.attackersAreMobs
                 ? encounterData.attackers[i]
                 : encounterData.defenders[i];
@@ -155,38 +155,34 @@ contract PvESystem is System {
                 ? encounterData.defenders[i]
                 : encounterData.attackers[i];
 
-            uint256 monsterWeapon;
-            // Look up hasBossAI from mob template (not on spawned MobStats table)
+            // Look up hasBossAI from mob template
             uint256 _mobId = IWorld(_world()).UD__getMobId(mobEntity);
             MonsterStats memory _templateStats = abi.decode(Mobs.getMobStats(_mobId), (MonsterStats));
-            if (_templateStats.hasBossAI) {
-                // Boss AI: pick weapon that counters defender's dominant stat
-                int256 defStr = Stats.getStrength(defenderEntity);
-                int256 defAgi = Stats.getAgility(defenderEntity);
-                int256 defInt = Stats.getIntelligence(defenderEntity);
-                // INT-dominant → physical (slot 0) exploits low armor/STR
-                // STR/AGI-dominant → magic (slot 1) exploits low INT, bypasses evasion
-                monsterWeapon = (defInt >= defStr && defInt >= defAgi)
-                    ? MobStats.getItemInventory(mobEntity, 0)
-                    : MobStats.getItemInventory(mobEntity, 1);
-            } else {
-                monsterWeapon = MobStats.getItemInventory(mobEntity, 0);
+
+            // Determine how many weapons fire: boss = slots 0 and 1, normal = slot 0 only
+            uint256 weaponCount = _templateStats.hasBossAI ? 2 : 1;
+
+            for (uint256 w; w < weaponCount; w++) {
+                uint256 monsterWeapon = MobStats.getItemInventory(mobEntity, w);
+
+                ActionOutcomeData memory mobAction = _getCurrentActionData(
+                    Action({
+                        attackerEntityId: mobEntity,
+                        defenderEntityId: defenderEntity,
+                        itemId: monsterWeapon
+                    })
+                );
+
+                uint256 randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn, w)));
+                mobAction = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
+
+                // set offchain table
+                ActionOutcome.set(encounterId, encounterData.currentTurn, actionIndex + numberOfExecutedActions, mobAction);
+                actionIndex++;
             }
-
-            ActionOutcomeData memory mobAction = _getCurrentActionData(
-                Action({
-                    attackerEntityId: mobEntity,
-                    defenderEntityId: defenderEntity,
-                    itemId: monsterWeapon
-                })
-            );
-
-            randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn)));
-            mobAction = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
-
-            // set offchain table
-            ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, mobAction);
         }
+
+        _numberOfExecutedActions = actionIndex;
     }
 
     function _executePlayerAction(

@@ -444,6 +444,20 @@ export default defineWorld({
         mobIds: "uint256[]",
       },
     },
+    MobDropBonus: {
+      key: ["mobId"],
+      schema: {
+        mobId: "uint256",
+        bonuses: "uint256[]",
+      },
+    },
+    BossSpawnConfig: {
+      key: [],
+      schema: {
+        bossMobId: "uint256",
+        spawnChanceBp: "uint256",
+      },
+    },
     Levels: {
       key: ["level"],
       schema: {

@@ -87,7 +87,7 @@ export interface Armor {
 
 export interface ClassSpell {
   name: string;
-  type: "self_buff" | "debuff" | "magic_damage" | "damage_debuff" | "damage_buff";
+  type: "self_buff" | "debuff" | "magic_damage" | "damage_debuff" | "damage_buff" | "weapon_enchant";
   strPct?: number;
   agiPct?: number;
   intPct?: number;
@@ -99,6 +99,7 @@ export interface ClassSpell {
   dmgPerInt?: number;
   dmgPerStr?: number;
   dmgPerAgi?: number;
+  maxUses?: number;  // how many times per fight (default 1)
 }
 
 export interface WeaponEffect {
@@ -193,7 +194,7 @@ export interface CombatConstants {
   critMultiplier: number;
   critBaseChance: number;
   critAgiDivisor: number;
-  evasionDivisor: number;
+  evasionMultiplier: number;
   evasionCap: number;
   doubleStrikeMultiplier: number;
   doubleStrikeCap: number;

@@ -114,14 +114,18 @@
         "error ItemNotFound()",
         "error NotAdmin()",
         "function adminSetClassMultipliers(bytes32 characterId, uint256 physical, uint256 spell, uint256 healing, uint256 critDmg, uint256 maxHp)",
+        "function adminSetSpellScaling(bytes32 effectId, uint8 scalingStat)",
         "function adminSetWeaponScaling(uint256 itemId, bool usesAgi)",
+        "function adminUpdateItemMetadata(uint256 itemId, string newUri)",
         "function adminUpdateItemStats(uint256 itemId, uint256 dropChance, uint256 price, uint256 rarity, bytes stats)"
       ],
       "worldAbi": [
         "error ItemNotFound()",
         "error NotAdmin()",
         "function UD__adminSetClassMultipliers(bytes32 characterId, uint256 physical, uint256 spell, uint256 healing, uint256 critDmg, uint256 maxHp)",
+        "function UD__adminSetSpellScaling(bytes32 effectId, uint8 scalingStat)",
         "function UD__adminSetWeaponScaling(uint256 itemId, bool usesAgi)",
+        "function UD__adminUpdateItemMetadata(uint256 itemId, string newUri)",
         "function UD__adminUpdateItemStats(uint256 itemId, uint256 dropChance, uint256 price, uint256 rarity, bytes stats)"
       ]
     },
@@ -776,7 +780,7 @@
         "function getMobId(bytes32 entityId) pure returns (uint256)",
         "function getMobPositionFromId(bytes32 entityId) pure returns (uint16 x, uint16 y)",
         "function getMonsterCombatStats(bytes32 entityId) view returns ((int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) _spawnedMonsterStats)",
-        "function getMonsterStats(uint256 mobId) view returns ((int256 agility, int256 armor, uint8 class, uint256 experience, int256 hitPoints, int256 intelligence, uint256[] inventory, uint256 level, int256 strength))",
+        "function getMonsterStats(uint256 mobId) view returns ((int256 agility, int256 armor, uint8 class, uint256 experience, bool hasBossAI, int256 hitPoints, int256 intelligence, uint256[] inventory, uint256 level, int256 strength))",
         "function getNpcStats(bytes32 entityId) view returns ((string name, bytes32[] storyPathIds, uint8 alignment))",
         "function getNpcStats(uint256 mobId) view returns ((string name, bytes32[] storyPathIds, uint8 alignment))",
         "function getSpawnCounter(bytes32 entityId) pure returns (uint256)",
@@ -796,7 +800,7 @@
         "function UD__getMobId(bytes32 entityId) pure returns (uint256)",
         "function UD__getMobPositionFromId(bytes32 entityId) pure returns (uint16 x, uint16 y)",
         "function UD__getMonsterCombatStats(bytes32 entityId) view returns ((int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) _spawnedMonsterStats)",
-        "function UD__getMonsterStats(uint256 mobId) view returns ((int256 agility, int256 armor, uint8 class, uint256 experience, int256 hitPoints, int256 intelligence, uint256[] inventory, uint256 level, int256 strength))",
+        "function UD__getMonsterStats(uint256 mobId) view returns ((int256 agility, int256 armor, uint8 class, uint256 experience, bool hasBossAI, int256 hitPoints, int256 intelligence, uint256[] inventory, uint256 level, int256 strength))",
         "function UD__getNpcStats(bytes32 entityId) view returns ((string name, bytes32[] storyPathIds, uint8 alignment))",
         "function UD__getNpcStats(uint256 mobId) view returns ((string name, bytes32[] storyPathIds, uint8 alignment))",
         "function UD__getSpawnCounter(bytes32 entityId) pure returns (uint256)",
@@ -1403,5 +1407,5 @@
       ]
     }
   ],
-  "createdAt": 1773227782452
+  "createdAt": 1773415711398
 }
