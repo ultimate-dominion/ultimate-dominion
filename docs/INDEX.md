@@ -38,6 +38,8 @@ Master navigation hub for all project documentation.
 | [Indexer](architecture/INDEXER.md) | Custom MUD indexer architecture and query patterns |
 | [Relayer](architecture/RELAYER.md) | Gas relayer service with 5-EOA pool design |
 | [Tech Stack](architecture/tech_stack.md) | Full technology stack reference across all layers |
+| [Performance](architecture/PERFORMANCE.md) | How the game achieves instant speed — Flashblocks, receipt decoding, timing |
+| [Client Sync](architecture/CLIENT_SYNC.md) | Data sync architecture — receipt decoding, delta, WebSocket layers |
 | [Frontend Guidelines](architecture/frontend_guidelines.md) | UI design system, component patterns, and crypto abstraction |
 
 ## 4. Operations
