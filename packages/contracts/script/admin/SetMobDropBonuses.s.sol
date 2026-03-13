@@ -32,7 +32,9 @@ contract SetMobDropBonuses is Script {
         console.log("=== SetMobDropBonuses ===");
 
         // Read each monster's inventory length to build parallel bonus arrays
-        for (uint256 mobId = 1; mobId <= 11; mobId++) {
+        // mobId 11 is the shop NPC — skip it
+        for (uint256 mobId = 1; mobId <= 12; mobId++) {
+            if (mobId == 11) continue;
             uint256[] memory bonuses = _getBonuses(mobId);
             MobDropBonus.setBonuses(mobId, bonuses);
             console.log("  Mob", mobId, "bonuses set, length:", bonuses.length);
@@ -58,7 +60,7 @@ contract SetMobDropBonuses is Script {
         if (mobId == 8) return _rockGolem(b);
         if (mobId == 9) return _paleStalker(b);
         if (mobId == 10) return _duskDrake(b);
-        if (mobId == 11) return _basilisk(b);
+        if (mobId == 12) return _basilisk(b);
 
         return b;
     }
@@ -174,7 +176,7 @@ contract SetMobDropBonuses is Script {
         return b;
     }
 
-    // Mob 11: Basilisk — 23 items (boss, custom bonuses)
+    // Mob 12: Basilisk — 23 items (boss, custom bonuses)
     // Boss loot piñata: high bonuses so every kill is rewarding
     // [0] Basilisk Fangs: combat, no bonus
     // [1] Petrifying Gaze: combat, no bonus
