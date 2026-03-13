@@ -6,11 +6,12 @@ How Ultimate Dominion achieves webapp-like speed on a fully on-chain game.
 
 ## Overview
 
-The game runs on Base L2 with ~2-second block times and 200ms Flashblock preconfirmations. Three systems work together to hide blockchain latency:
+The game runs on Base L2 with ~2-second block times and 200ms Flashblock preconfirmations. Four systems work together to hide blockchain latency:
 
-1. **Self-hosted Base node** — eliminates third-party RPC latency
-2. **Receipt log decoding** — instant store updates from TX receipts (~0ms)
-3. **Tuned timing constants** — move debounce, gas limits, and retry logic aligned to Flashblock cadence
+1. **Local signing** — Privy embedded wallet signs on-device; burner wallets sign from localStorage. No external signing services in the hot path.
+2. **Self-hosted Base node** — eliminates third-party RPC latency
+3. **Receipt log decoding** — instant store updates from TX receipts (~0ms)
+4. **Tuned timing constants** — move debounce, gas limits, and retry logic aligned to Flashblock cadence
 
 The result: players move, fight, and level up with no perceptible delay. No loading spinners, no "confirming transaction" screens, no blockchain UX.
 
@@ -127,33 +128,132 @@ See [CLIENT_SYNC.md](CLIENT_SYNC.md) for the full architecture. Summary:
 
 ---
 
-## The Speed Stack (How It All Fits Together)
+## Local Signing — No External Services
+
+A major speed unlock: both wallet paths sign transactions locally. No round-trips to external signing services.
+
+### Privy Embedded Wallet (Google/Email Players)
+- Privy creates an MPC wallet on-device during signup
+- Signing happens locally via multi-party computation — the private key is never assembled in one place, but signing is still instant from the player's perspective
+- No popups, no approval screens for gameplay actions
+- TX serialization via promise queue prevents nonce collisions on concurrent actions (e.g., auto-approval + character creation firing simultaneously)
+- **Signing latency: <50ms**
+
+### MetaMask + Burner Delegation (Crypto-Native Players)
+- Player signs ONE delegation TX with MetaMask (registers a burner wallet as their delegate via `GameDelegationControl`)
+- Deposits 0.0005 ETH to the burner (enough for hundreds of Base TXs)
+- From then on, all gameplay TXs are signed by the burner wallet — private key in localStorage, viem signs locally
+- No MetaMask popups during gameplay
+- `callFrom` extension wraps each call with the delegator address; the World contract verifies delegation on-chain
+- **Signing latency: <10ms** (raw private key, no MPC)
+
+### What This Replaces
+Previous architectures routed signing through external services (remote key management, hosted signers). Each sign operation added 200-500ms of network latency. With local signing, this step is effectively free.
+
+### Security Boundaries
+- **Privy**: MPC wallet — no single-point key exposure. Recoverable via OAuth provider.
+- **Burner**: `GameDelegationControl` whitelists only gameplay systems. A compromised burner can fight and move but cannot drain gold, transfer items, or call admin functions. Player can revoke delegation at any time from wallet settings.
+
+---
+
+## The Speed Stack — Deep Dive
+
+Every step from button tap to UI update, with real latency numbers.
+
+### Step-by-step: Player Taps "Move Right"
 
 ```
-Player taps "move right"
-  ↓  MIN_MOVE_GAP_MS check (200ms debounce)
-  ↓  Skip gas estimation (hardcoded 8M)
-  ↓  TX submitted to self-hosted Base node
-  ↓  ~200ms (Flashblock preconfirmation)
-  ↓  Receipt available, polled at 150ms intervals
-  ↓  applyReceiptToStore decodes receipt logs (~0ms)
-  ↓  Zustand store updated → React re-renders
-  ↓  Player sees new position + any encounter
-  ↓  Total: ~200-400ms (feels instant)
-  ↓
-  Background: delta fetch for gold/items (~1-2s)
-  Background: WebSocket delivers all updates (~1-2s)
+Step 1: Client-side validation                         ~0ms
+  ├─ MIN_MOVE_GAP_MS check (200ms since last move?)
+  ├─ Check store for active encounter (prevent doomed TX)
+  ├─ Read position from Zustand store
+  └─ Compute target coordinates
+
+Step 2: Transaction signing                            <50ms
+  ├─ Privy: MPC signs on-device (no network call)
+  └─ Burner: viem signs with localStorage private key
+
+Step 3: Broadcast to Base node                         ~10-30ms
+  ├─ Self-hosted RPC at rpc.ultimatedominion.com
+  ├─ No third-party rate limits or queuing
+  └─ Fallback to Alchemy if primary is down
+
+Step 4: Propagation + inclusion                        ~200-400ms ← longest step
+  ├─ TX enters Base sequencer mempool
+  ├─ Sequencer includes TX in next Flashblock (~200ms)
+  ├─ Block propagates to our Base node
+  └─ Receipt becomes available
+
+Step 5: Receipt polling                                ~0-150ms
+  ├─ waitForTransactionReceipt polls at 150ms intervals
+  └─ Catches the Flashblock receipt within 1 poll cycle
+
+Step 6: Receipt log decoding                           ~0ms (synchronous)
+  ├─ applyReceiptToStore parses Store_SetRecord events
+  ├─ logToRecord decodes encoded data using table schemas
+  ├─ Zustand store.setRow() for each changed table
+  └─ Position, CombatEncounter, Stats, etc. all updated
+
+Step 7: React re-render                                ~5-15ms
+  ├─ Zustand selector detects new reference
+  ├─ useGameTable('CombatEncounter') triggers re-render
+  ├─ BattleContext computes currentBattle
+  └─ UI shows new position / battle screen / outcome
+
+Step 8: Splice resolution (if needed)                  ~100-300ms (async, parallel)
+  ├─ SpliceStaticData/SpliceDynamicData events
+  ├─ getRecord RPC reads full row from chain
+  └─ Store updated with complete row data
+
+  TOTAL (steps 1-7): ~250-600ms
+  Player perceives: instant
 ```
 
-Without this stack (e.g., relying on indexer delta):
+### Background (non-blocking, after UI updates)
+
 ```
-Player taps "move right"
-  ↓  TX submitted
-  ↓  ~200ms receipt
-  ↓  Poll indexer delta (500ms × 4 attempts = up to 2s)
-  ↓  Maybe get data, maybe fall back to WebSocket
-  ↓  Total: 1-5 seconds, sometimes never (requires refresh)
+Step 9: Indexer delta fetch                            ~500-2000ms
+  ├─ GET /api/delta?block=N (fire-and-forget)
+  ├─ Catches non-UD namespace tables:
+  │   gold (ERC20), items (ERC1155), characters (ERC721)
+  └─ Idempotent — UD tables already in store from step 6
+
+Step 10: WebSocket delivery                            ~500-3000ms
+  ├─ Indexer processes block, broadcasts via WS
+  ├─ All tables delivered as idempotent overwrites
+  └─ Catch-all for anything missed by steps 6 + 9
 ```
+
+### Where the Time Goes
+
+| Step | Latency | % of Total | Can We Optimize? |
+|------|---------|-----------|-----------------|
+| Signing | <50ms | ~10% | Already local — near zero |
+| Broadcast | ~20ms | ~5% | Self-hosted node — near zero |
+| **Propagation + inclusion** | **~200-400ms** | **~70%** | **Limited by Base sequencer** |
+| Receipt polling | ~75ms avg | ~15% | Could use WS subscriptions |
+| Log decoding | ~0ms | ~0% | Already synchronous |
+| React render | ~10ms | ~0% | Already fast |
+
+**Propagation is the bottleneck** — and it's the one step we can't control. It's the time between broadcasting the TX and the Base sequencer including it in a Flashblock, then that block propagating back to our node. At ~200-400ms, it's already fast enough that players don't perceive it as a delay.
+
+### Comparison: What Happens Without This Stack
+
+If we relied on external signing + third-party RPC + indexer delta:
+
+```
+Step 1: Validation                                     ~0ms
+Step 2: Remote signing service                         ~200-500ms
+Step 3: Broadcast via Alchemy                          ~50-200ms
+Step 4: Propagation + inclusion                        ~200-400ms
+Step 5: Receipt polling (slower RPC)                   ~150-500ms
+Step 6: Poll indexer delta (6x @ 500ms)                ~500-3000ms
+Step 7: React render                                   ~10ms
+  TOTAL: ~1.1-4.6 seconds
+  Player perceives: laggy, "blockchain game"
+```
+
+The difference is **4-10x slower** and unreliable (delta can fail entirely).
 
 ---
 
