@@ -146,8 +146,8 @@ contract PveRewardSystem is System {
             if (_isElite) {
                 dropChance = dropChance + ELITE_DROP_BONUS;
             }
-            if (dropChance > 10000) dropChance = 10000;
-            uint256 roll = uint256(keccak256(abi.encodePacked(randomNumber, i))) % 10000;
+            if (dropChance > 100000) dropChance = 100000;
+            uint256 roll = uint256(keccak256(abi.encodePacked(randomNumber, i))) % 100000;
             if (roll < dropChance) {
                 candidates[numCandidates] = tempItemId;
                 numCandidates++;
