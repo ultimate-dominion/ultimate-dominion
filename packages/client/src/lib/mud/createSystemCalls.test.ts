@@ -13,8 +13,14 @@ import {
 
 // ── Mocks ───────────────────────────────────────────────────────────
 
+const mockSetRow = vi.fn();
 vi.mock('../gameStore', () => ({
   getTableValue: vi.fn(),
+  useGameStore: {
+    getState: () => ({
+      setRow: mockSetRow,
+    }),
+  },
 }));
 
 vi.mock('../../utils/errorReporter', () => ({
@@ -514,5 +520,173 @@ describe('createSystemCalls — error handling', () => {
     );
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
+  });
+});
+
+// ── Suite D: Move Stale Position Recovery ───────────────────────────
+
+describe('createSystemCalls — move stale position recovery', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('retries with chain position when simulation returns InvalidMove', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnership();
+
+    // First UD__move call (simulation) throws InvalidMove, second succeeds
+    const moveWriteFn = vi.fn()
+      .mockRejectedValueOnce(new Error('0x87822d34'))
+      .mockResolvedValueOnce(FAKE_TX_HASH);
+
+    // UD__getEntityPosition returns corrected position (2, 3)
+    const getPositionFn = vi.fn().mockResolvedValue([2, 3]);
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__getEntityPosition') return getPositionFn;
+        return vi.fn().mockResolvedValue(BigInt(0));
+      },
+    });
+
+    const calls = createSystemCalls(network);
+
+    const result = await calls.move(TEST_ENTITY, 'right');
+    expect(result.success).toBe(true);
+    expect(moveWriteFn).toHaveBeenCalledTimes(2);
+    expect(getPositionFn).toHaveBeenCalledWith([TEST_ENTITY]);
+    expect(waitForTransaction).toHaveBeenCalled();
+  });
+
+  it('updates Zustand store with corrected chain position', async () => {
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    const moveWriteFn = vi.fn()
+      .mockRejectedValueOnce(new Error('0x87822d34'))
+      .mockResolvedValueOnce(FAKE_TX_HASH);
+
+    const getPositionFn = vi.fn().mockResolvedValue([5, 7]);
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__getEntityPosition') return getPositionFn;
+        return vi.fn().mockResolvedValue(BigInt(0));
+      },
+    });
+
+    const calls = createSystemCalls(network);
+
+    await calls.move(TEST_ENTITY, 'up');
+    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 5, y: 7 });
+  });
+
+  it('applies direction correctly to corrected chain position', async () => {
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    const moveWriteFn = vi.fn()
+      .mockRejectedValueOnce(new Error('0x87822d34'))
+      .mockResolvedValueOnce(FAKE_TX_HASH);
+
+    // Chain position is (4, 4)
+    const getPositionFn = vi.fn().mockResolvedValue([4, 4]);
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__getEntityPosition') return getPositionFn;
+        return vi.fn().mockResolvedValue(BigInt(0));
+      },
+    });
+
+    const calls = createSystemCalls(network);
+
+    await calls.move(TEST_ENTITY, 'down');
+    // direction 'down' → y - 1: target should be (4, 3)
+    expect(moveWriteFn).toHaveBeenLastCalledWith([TEST_ENTITY, 4, 3]);
+  });
+
+  it('returns failure when chain position read fails', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnership();
+
+    const moveWriteFn = vi.fn()
+      .mockRejectedValueOnce(new Error('0x87822d34'));
+
+    const getPositionFn = vi.fn().mockRejectedValue(new Error('RPC error'));
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__getEntityPosition') return getPositionFn;
+        return vi.fn().mockResolvedValue(BigInt(0));
+      },
+    });
+
+    const calls = createSystemCalls(network);
+
+    const result = await calls.move(TEST_ENTITY, 'right');
+    expect(result.success).toBe(false);
+    expect(waitForTransaction).not.toHaveBeenCalled();
+  });
+
+  it('returns failure when retry move also fails', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnership();
+
+    const retryError = new Error('NotSpawned');
+    const moveWriteFn = vi.fn()
+      .mockRejectedValueOnce(new Error('0x87822d34'))
+      .mockRejectedValueOnce(retryError);
+
+    const getPositionFn = vi.fn().mockResolvedValue([0, 0]);
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__getEntityPosition') return getPositionFn;
+        return vi.fn().mockResolvedValue(BigInt(0));
+      },
+    });
+
+    const calls = createSystemCalls(network);
+
+    const result = await calls.move(TEST_ENTITY, 'left');
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(waitForTransaction).not.toHaveBeenCalled();
   });
 });

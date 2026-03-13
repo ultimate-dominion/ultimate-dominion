@@ -29,7 +29,7 @@ import {
   StatsClasses,
 } from '../../utils/types';
 
-import { getTableValue } from '../gameStore';
+import { getTableValue, useGameStore } from '../gameStore';
 import { SetupNetworkResult } from './setupNetwork';
 
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
@@ -684,9 +684,34 @@ export function createSystemCalls(
                 console.warn(`[move] Sim returned MoveTooFast (stale RPC) — sending with gas ${MOVE_GAS_LIMIT} (target: ${x},${y})`);
                 tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
               } else if (isInvalidMoveError(simError)) {
-                console.warn(`[move] InvalidMove — store pos may be stale (target: ${x},${y})`);
-                lastMoveCompletedMs = Date.now();
-                return { success: false, error: 'Position changed — tap again to continue.' };
+                // Store position doesn't match on-chain — fetch correct position and retry
+                console.warn(`[move] InvalidMove — refreshing position from chain (stale target: ${x},${y})`);
+                try {
+                  const [chainX, chainY] = await worldContract.read.UD__getEntityPosition([
+                    characterEntity as `0x${string}`,
+                  ]);
+                  const cx = Number(chainX);
+                  const cy = Number(chainY);
+
+                  // Update store so the UI and subsequent moves use correct position
+                  useGameStore.getState().setRow('Position', characterEntity, { x: cx, y: cy });
+
+                  // Recompute target from the correct on-chain position
+                  let rx = cx, ry = cy;
+                  switch (direction) {
+                    case 'up': ry += 1; break;
+                    case 'down': ry -= 1; break;
+                    case 'left': rx -= 1; break;
+                    case 'right': rx += 1; break;
+                  }
+                  console.info(`[move] Position refreshed: (${cx},${cy}) → target (${rx},${ry})`);
+                  tx = await worldContract.write.UD__move(
+                    [characterEntity as `0x${string}`, rx, ry],
+                  );
+                } catch (refreshError) {
+                  lastMoveCompletedMs = Date.now();
+                  return { success: false, error: getContractError(refreshError) };
+                }
               } else {
                 throw simError;
               }
