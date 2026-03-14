@@ -13,7 +13,7 @@ import { startSchedulers, stopSchedulers, getPendingChargeCount, getTotalPending
 import { recordFunding } from './gasCharge.js';
 import { gasChargingEnabled } from './config.js';
 import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcManager.js';
-import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, trackPlayer, getFundedCount, getLifelineCount } from './balanceMonitor.js';
+import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, trackPlayer, getFundedCount } from './balanceMonitor.js';
 import { loadFundedAddresses, saveFundedAddresses, loadFulfilledSessions, saveFulfilledSessions, loadPlayerMap, savePlayerMap } from './persistence.js';
 
 // Gold purchase dedup (stripeSessionId → fulfilled) — persisted to disk
@@ -98,7 +98,7 @@ async function main() {
   }
   console.log(`Restored ${fundedAddresses.size} tracked players (${playerMap.size} with separate delegators)`);
 
-  // Start balance monitor (tops up funded players when low, with level gating + lifeline)
+  // Start balance monitor (tops up funded players when low, with level gating)
   startBalanceMonitor();
 
   const app = express();
@@ -124,7 +124,7 @@ async function main() {
           pendingCharges: getPendingChargeCount(),
           pendingChargeEth: getTotalPendingEth(),
           fundedPlayers: getFundedCount(),
-          lifelinesGranted: getLifelineCount(),
+          // lifelinesGranted removed — lifeline system replaced by unconditional top-ups
           rpcStatus: getRpcStatus(),
         });
       } else {

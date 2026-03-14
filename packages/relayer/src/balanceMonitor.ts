@@ -3,8 +3,7 @@ import { config } from './config.js';
 import { gasChargingEnabled } from './config.js';
 import { publicClient, sendRelayerTx } from './tx.js';
 import { recordFunding } from './gasCharge.js';
-import { getCharacterId, getPlayerLevel, getGoldBalance, getGoldPerGasCharge } from './chainReader.js';
-import { loadLifelineCooldowns, saveLifelineCooldowns } from './persistence.js';
+import { getCharacterId, getPlayerLevel, getGoldPerGasCharge } from './chainReader.js';
 
 // ==================== State ====================
 
@@ -15,13 +14,9 @@ const trackedPlayers = new Map<Address, Address>();
 
 let monitorTimer: ReturnType<typeof setInterval> | null = null;
 let topUpCount = 0;
-let lifelineCount = 0;
 let topUpResetTimer: ReturnType<typeof setInterval> | null = null;
 
 const MAX_TOP_UPS_PER_HOUR = 50;
-
-// Lifeline cooldowns — persisted across restarts
-let lifelineCooldowns: Map<string, number>;
 
 // ==================== Public API ====================
 
@@ -41,10 +36,6 @@ export function getFundedCount(): number {
   return trackedPlayers.size;
 }
 
-export function getLifelineCount(): number {
-  return lifelineCount;
-}
-
 // ==================== Core Logic ====================
 
 async function doTopUp(address: Address, amount: bigint, reason: string): Promise<void> {
@@ -59,9 +50,7 @@ async function doTopUp(address: Address, amount: bigint, reason: string): Promis
  * 1. ETH >= minPlayerBalance → skip (has gas)
  * 2. No character → free top-up (new player)
  * 3. Level < 3 → free top-up (onboarding)
- * 4. Level 3+, gold >= fee → top-up + charge gold (revenue)
- * 5. Level 3+, gold < fee, has some ETH (> lifelineMinBalance) → skip (can still play)
- * 6. Level 3+, gold < fee, near-zero ETH → LIFELINE (small amount, cooldown, no charge)
+ * 4. Level 3+ → top-up + charge gold (batchCharge handles partial/zero gold)
  */
 async function checkBalances(): Promise<void> {
   if (trackedPlayers.size === 0) return;
@@ -109,46 +98,16 @@ async function checkBalances(): Promise<void> {
         continue;
       }
 
-      // Level 3+ — check gold on the delegator address
-      const goldBalance = await getGoldBalance(delegatorAddress);
-      if (goldBalance === null) {
-        // RPC failure — fail open, normal top-up with charge (conservative)
-        await doTopUp(burnerAddress, config.fundingAmount, 'charged (gold read failed)');
+      // Level 3+ — always top up, charge Gold if they can afford it.
+      // Never leave a player stranded — they'll earn Gold from the next battle.
+      await doTopUp(burnerAddress, config.fundingAmount, goldPerCharge ? 'charged' : 'free (no charge config)');
+
+      // Charge Gold if gas charging is configured
+      if (goldPerCharge) {
         recordFunding(delegatorAddress, config.fundingAmount);
-        continue;
+        // batchChargeGasGoldWithCounts already handles partial charges —
+        // if player can't afford the full fee, it takes what they have.
       }
-
-      const feeThreshold = goldPerCharge ?? 1_000_000_000_000_000_000n; // fallback 1e18
-
-      if (goldBalance >= feeThreshold) {
-        // Has enough gold to cover the fee — normal top-up + charge
-        await doTopUp(burnerAddress, config.fundingAmount, 'charged');
-        recordFunding(delegatorAddress, config.fundingAmount);
-        continue;
-      }
-
-      // Level 3+, gold < fee — check if truly stuck
-      if (ethBalance > config.lifelineMinBalance) {
-        // Has some ETH, just below top-up threshold. Can still transact.
-        // Don't top up — they need to earn gold from battles first.
-        continue;
-      }
-
-      // Truly stuck: level 3+, gold < fee, near-zero ETH → LIFELINE
-      const cooldownKey = burnerAddress.toLowerCase();
-      const lastLifeline = lifelineCooldowns.get(cooldownKey);
-      const now = Date.now();
-      if (lastLifeline && (now - lastLifeline) < config.lifelineCooldownMs) {
-        console.log(`[balanceMonitor] Skipping ${burnerAddress} — lifeline on cooldown (${Math.round((config.lifelineCooldownMs - (now - lastLifeline)) / 60_000)}min left)`);
-        continue;
-      }
-
-      // Grant lifeline — smaller amount, no gold charge
-      await doTopUp(burnerAddress, config.lifelineAmount, 'LIFELINE');
-      lifelineCooldowns.set(cooldownKey, now);
-      saveLifelineCooldowns(lifelineCooldowns);
-      lifelineCount++;
-      // NO recordFunding — lifeline is free, they have nothing to charge
 
     } catch (err) {
       console.error(`[balanceMonitor] Failed to check/top-up ${burnerAddress}:`, err);
@@ -159,22 +118,7 @@ async function checkBalances(): Promise<void> {
 // ==================== Lifecycle ====================
 
 export function startBalanceMonitor(): void {
-  // Load persisted lifeline cooldowns
-  lifelineCooldowns = loadLifelineCooldowns();
-
-  // Prune expired cooldowns on startup
-  const now = Date.now();
-  const expiry = config.lifelineCooldownMs * 2;
-  for (const [addr, ts] of lifelineCooldowns) {
-    if (now - ts > expiry) lifelineCooldowns.delete(addr);
-  }
-  if (lifelineCooldowns.size > 0) {
-    saveLifelineCooldowns(lifelineCooldowns);
-    console.log(`[balanceMonitor] Loaded ${lifelineCooldowns.size} active lifeline cooldowns`);
-  }
-
   console.log(`[balanceMonitor] Starting — check every 60s, min balance ${formatEther(config.minPlayerBalance)} ETH`);
-  console.log(`[balanceMonitor] Lifeline: ${formatEther(config.lifelineAmount)} ETH, cooldown ${config.lifelineCooldownMs / 3600_000}h`);
 
   monitorTimer = setInterval(() => {
     checkBalances().catch(err => console.error('[balanceMonitor] Error:', err));
@@ -183,19 +127,6 @@ export function startBalanceMonitor(): void {
   // Reset top-up counter every hour
   topUpResetTimer = setInterval(() => {
     topUpCount = 0;
-  }, 3_600_000);
-
-  // Prune expired lifeline cooldowns every hour
-  setInterval(() => {
-    const cutoff = Date.now() - config.lifelineCooldownMs * 2;
-    let pruned = 0;
-    for (const [addr, ts] of lifelineCooldowns) {
-      if (ts < cutoff) { lifelineCooldowns.delete(addr); pruned++; }
-    }
-    if (pruned > 0) {
-      saveLifelineCooldowns(lifelineCooldowns);
-      console.log(`[balanceMonitor] Pruned ${pruned} expired lifeline cooldowns`);
-    }
   }, 3_600_000);
 }
 
