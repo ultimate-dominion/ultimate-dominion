@@ -61,7 +61,6 @@ export const Shop = (): JSX.Element => {
     inventorySpells,
     inventoryWeapons,
     isRefreshing,
-    refreshCharacter,
   } = useCharacter();
   const { allShops } = useMap();
 
@@ -104,7 +103,23 @@ export const Shop = (): JSX.Element => {
 
   const [goldAdjustment, setGoldAdjustment] = useState(0n);
   const [shopGoldAdjustment, setShopGoldAdjustment] = useState(0n);
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear optimistic gold adjustments when the reactive data catches up
+  const prevGoldRef = useRef(userCharacter?.externalGoldBalance);
+  useEffect(() => {
+    if (userCharacter && prevGoldRef.current !== userCharacter.externalGoldBalance) {
+      prevGoldRef.current = userCharacter.externalGoldBalance;
+      setGoldAdjustment(0n);
+    }
+  }, [userCharacter?.externalGoldBalance]);
+
+  const prevShopGoldRef = useRef(shop?.gold);
+  useEffect(() => {
+    if (shop && prevShopGoldRef.current !== shop.gold) {
+      prevShopGoldRef.current = shop.gold;
+      setShopGoldAdjustment(0n);
+    }
+  }, [shop?.gold]);
 
   const onTradeComplete = useCallback(
     (tokenId: string, amount: number, goldDelta: bigint, orderType: OrderType) => {
@@ -138,22 +153,9 @@ export const Shop = (): JSX.Element => {
           ),
         );
       }
-
-      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-      refreshTimerRef.current = setTimeout(() => {
-        refreshCharacter();
-        setGoldAdjustment(0n);
-        setShopGoldAdjustment(0n);
-      }, 3000);
     },
-    [refreshCharacter],
+    [],
   );
-
-  useEffect(() => {
-    return () => {
-      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    };
-  }, []);
 
   const items = useMemo(
     () => [
@@ -190,8 +192,6 @@ export const Shop = (): JSX.Element => {
     if (!userCharacter?.worldEncounter) {
       navigate(GAME_BOARD_PATH);
     }
-
-    refreshCharacter();
   }, [
     delegatorAddress,
     isConnected,
@@ -199,7 +199,6 @@ export const Shop = (): JSX.Element => {
     isRefreshing,
     isSynced,
     navigate,
-    refreshCharacter,
     userCharacter,
   ]);
 

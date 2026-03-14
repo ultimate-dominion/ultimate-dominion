@@ -886,7 +886,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (isWaitingForBattle || encounterTx.isLoading) {
+  if (isWaitingForBattle || encounterTx.isLoading || (currentBattle && (!opponent || !userCharacterForBattleRendering))) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
         <style>
