@@ -6,10 +6,10 @@ import { useMUD } from '../contexts/MUDContext';
 
 import { useToast } from './useToast';
 
-const GAS_THRESHOLD = parseEther('0.0001'); // 0.0001 ETH
-const DEFAULT_GOLD_PER_SWAP = parseEther('50'); // 50 Gold per auto-swap
-const MIN_SWAP_INTERVAL_MS = 60_000; // 60 seconds client-side rate limit
-const EMBEDDED_LOW_GOLD_THRESHOLD = parseEther('10'); // Warn if gold drops below 10
+const GAS_THRESHOLD = parseEther('0.0003'); // 0.0003 ETH — swap before wallet drains
+const DEFAULT_GOLD_PER_SWAP = parseEther('2'); // 2 Gold per auto-swap (~1 battle)
+const MIN_SWAP_INTERVAL_MS = 30_000; // 30 seconds — Base gas is cheap, swap often
+const EMBEDDED_LOW_GOLD_THRESHOLD = parseEther('5'); // Warn if gold drops below 5
 
 /**
  * Auto-swaps Gold for ETH when the player's balance drops below a threshold.
