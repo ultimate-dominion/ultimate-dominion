@@ -23,6 +23,7 @@ import { useToast } from '../hooks/useToast';
 import { useGameConfig, useGameTable, getTableValue, toNumber } from '../lib/gameStore';
 import { CHARACTERS_PATH, ITEM_PATH } from '../Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
+import { decodeMobInstanceId } from '../utils/helpers';
 
 import { Character, CLASS_COLORS, OrderStatus, Rarity, RARITY_COLORS, TokenType } from '../utils/types';
 
@@ -53,10 +54,17 @@ const BADGE_CONTRACT_ADDRESS = import.meta.env.VITE_BADGE_CONTRACT_ADDRESS || ''
 // Adventurer badge token ID base (actual ID = 1_000_000 + characterTokenId)
 const ADVENTURER_BADGE_BASE = 1;
 
+// Boss mob ID — Basilisk is mob 12 on-chain
+const BOSS_MOB_ID = '12';
+const BOSS_NAME = 'Basilisk';
+const BOSS_COLOR = '#E04040';
+
 // Rare drops and gold offers older than this are filtered out of chat
 const ANNOUNCEMENT_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
 // Marketplace sales persist longer — low-volume, high-signal events
 const MARKETPLACE_ANNOUNCEMENT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+// Boss announcements persist for same duration as marketplace (rare events)
+const BOSS_ANNOUNCEMENT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 type Message = {
   delivered: boolean;
@@ -135,7 +143,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     spellTemplates,
     weaponTemplates,
   } = useItems();
-  const { allCharacters, isSpawned } = useMap();
+  const { allCharacters, allMonsters, isSpawned } = useMap();
   const { character: currentCharacter } = useCharacter();
   const { activeOrders } = useOrders();
 
@@ -511,6 +519,126 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     return result;
   }, [activeOrders, allCharacters, allItems, goldToken]);
 
+  // Boss spawn announcements — detect live Basilisk entities on the map
+  const bossSpawnTimestamps = useRef<Map<string, number>>(new Map());
+  const bossSpawnAnnouncements: Message[] = useMemo(() => {
+    const now = Date.now();
+    const cutoff = now - BOSS_ANNOUNCEMENT_MAX_AGE_MS;
+
+    const liveBasilisks = allMonsters.filter(
+      m => m.mobId === BOSS_MOB_ID && m.isSpawned && m.currentHp > 0n,
+    );
+
+    // Assign stable timestamps for new Basilisk entities
+    for (const basilisk of liveBasilisks) {
+      if (!bossSpawnTimestamps.current.has(basilisk.id)) {
+        bossSpawnTimestamps.current.set(basilisk.id, now);
+      }
+    }
+
+    // Clean up dead/despawned entries
+    const liveIds = new Set(liveBasilisks.map(b => b.id));
+    for (const id of bossSpawnTimestamps.current.keys()) {
+      if (!liveIds.has(id)) {
+        bossSpawnTimestamps.current.delete(id);
+      }
+    }
+
+    return liveBasilisks
+      .map(basilisk => {
+        const ts = bossSpawnTimestamps.current.get(basilisk.id)!;
+        if (ts < cutoff) return null;
+
+        const { x, y } = basilisk.position;
+        return {
+          delivered: true,
+          from: zeroAddress,
+          jsx: (
+            <Text fontWeight={500} size="xs" textAlign="center">
+              A{' '}
+              <Text as="span" color={BOSS_COLOR} fontWeight={700}>
+                {BOSS_NAME}
+              </Text>{' '}
+              has appeared at ({x}, {y})!
+            </Text>
+          ),
+          message: '',
+          rarityColor: BOSS_COLOR,
+          timestamp: ts,
+        };
+      })
+      .filter((m): m is Message => m !== null);
+  }, [allMonsters]);
+
+  // Boss kill announcements — detect Basilisk deaths from combat outcomes
+  const bossKillAnnouncements: Message[] = useMemo(() => {
+    const cutoff = Date.now() - BOSS_ANNOUNCEMENT_MAX_AGE_MS;
+    return Object.entries(combatOutcomeRows)
+      .map(([keyBytes, data]) => {
+        const ts = toNumber(data.endTime) * 1000;
+        if (ts < cutoff) return null;
+
+        const encounterData = getTableValue('CombatEncounter', keyBytes);
+        if (!encounterData) return null;
+
+        const attackers = encounterData.attackers as string[];
+        const defenders = encounterData.defenders as string[];
+        const attackersWin = Boolean(data.attackersWin);
+
+        // Check if any participant is the Basilisk
+        const allEntities = [...attackers, ...defenders];
+        const basiliskEntity = allEntities.find(entity => {
+          try {
+            const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
+            return mobId === BOSS_MOB_ID;
+          } catch {
+            return false;
+          }
+        });
+        if (!basiliskEntity) return null;
+
+        // Determine if the Basilisk died
+        const basiliskIsAttacker = attackers.includes(basiliskEntity);
+        const basiliskDied = basiliskIsAttacker ? !attackersWin : attackersWin;
+        if (!basiliskDied) return null;
+
+        // Find the winning player
+        const winnerEntities = basiliskIsAttacker ? defenders : attackers;
+        const winnerId = winnerEntities[0];
+        const winnerCharacter = allCharacters.find(c => c.id === winnerId);
+        const winnerName = winnerCharacter?.name;
+        if (!winnerName) return null;
+        const winnerNameColor = winnerCharacter ? (CLASS_COLORS[winnerCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
+
+        return {
+          delivered: true,
+          from: zeroAddress,
+          jsx: (
+            <Text fontWeight={500} size="xs" textAlign="center">
+              <Text
+                as={RouterLink}
+                color={winnerNameColor}
+                fontWeight={700}
+                to={`${CHARACTERS_PATH}/${winnerId}`}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                {winnerName}
+              </Text>{' '}
+              has slain the{' '}
+              <Text as="span" color={BOSS_COLOR} fontWeight={700}>
+                {BOSS_NAME}
+              </Text>
+              !
+            </Text>
+          ),
+          message: '',
+          rarityColor: BOSS_COLOR,
+          timestamp: ts,
+        };
+      })
+      .filter((m): m is Message => m !== null);
+  }, [combatOutcomeRows, allCharacters]);
+
   const messagesAndEvents = useMemo(() => {
     return [
       ...messages,
@@ -518,8 +646,10 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       ...rareMarketplaceSales,
       ...goldOfferAnnouncements,
       ...sellListingAnnouncements,
+      ...bossSpawnAnnouncements,
+      ...bossKillAnnouncements,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [goldOfferAnnouncements, rareDropAnnouncements, rareMarketplaceSales, sellListingAnnouncements, messages]);
+  }, [goldOfferAnnouncements, rareDropAnnouncements, rareMarketplaceSales, sellListingAnnouncements, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
 
   // Track unread messages using last-seen timestamp (persists across refreshes)
   useEffect(() => {
