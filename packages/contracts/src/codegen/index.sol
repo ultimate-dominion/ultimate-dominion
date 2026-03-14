@@ -67,6 +67,7 @@ import { AllowedGameSystems } from "./tables/AllowedGameSystems.sol";
 import { GasStationConfig, GasStationConfigData } from "./tables/GasStationConfig.sol";
 import { GasStationCooldown } from "./tables/GasStationCooldown.sol";
 import { GasStationSwapConfig, GasStationSwapConfigData } from "./tables/GasStationSwapConfig.sol";
+import { AutoAdventureCooldown } from "./tables/AutoAdventureCooldown.sol";
 import { FragmentProgress, FragmentProgressData } from "./tables/FragmentProgress.sol";
 import { StatRollCount } from "./tables/StatRollCount.sol";
 import { CharacterFirstActions, CharacterFirstActionsData } from "./tables/CharacterFirstActions.sol";

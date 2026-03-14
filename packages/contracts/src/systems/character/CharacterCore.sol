@@ -14,7 +14,7 @@ import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc7
 import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
 import {CHARACTERS_NAMESPACE, CHARACTER_TOKEN_COUNTER_KEY} from "../../../constants.sol";
-import {InvalidAccount, InvalidTokenUri, NameTaken, MaxCharacters} from "../../Errors.sol";
+import {InvalidAccount, InvalidTokenUri, NameTaken, MaxCharacters, Unauthorized} from "../../Errors.sol";
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {PauseLib} from "../../libraries/PauseLib.sol";
@@ -66,6 +66,15 @@ contract CharacterCore is System {
 
         CharacterOwner.set(account, tokenId, characterId);
         NameExists.set(name, true);
+    }
+
+    function updateTokenUri(bytes32 characterId, string calldata tokenUri) external {
+        PauseLib.requireNotPaused();
+        if (Characters.getOwner(characterId) != _msgSender()) revert Unauthorized();
+        if (bytes(tokenUri).length == 0) revert InvalidTokenUri();
+
+        uint256 tokenId = Characters.getTokenId(characterId);
+        TokenURI.set(_charsTokenUriTableId(), tokenId, tokenUri);
     }
 
     function isValidOwner(bytes32 characterId, address owner) external view returns (bool) {
