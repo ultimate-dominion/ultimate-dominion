@@ -438,6 +438,7 @@ const Tooltip = {
     clipPath: 'polygon(0% 0%, 93% 0%, 100% 18%, 100% 100%, 10% 100%, 0% 90%);',
     color: '#E8DCC8',
     p: 4,
+    zIndex: 1300,
   },
 };
 

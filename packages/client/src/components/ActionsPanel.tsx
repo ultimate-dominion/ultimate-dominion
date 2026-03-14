@@ -413,12 +413,19 @@ export const ActionsPanel = (): JSX.Element => {
                   w="100%"
                 />
               )}
-              <HStack spacing={0} w="100%">
+              <HStack spacing={0} w="100%" flexWrap={{ base: 'wrap', lg: 'nowrap' }}>
                 {equippedSpellsAndWeapons.map((item, index) => {
                   const icon = getItemImage(removeEmoji(item.name));
                   return (
                     <Button
-                      borderLeft={index === 0 ? 'none' : '2px'}
+                      borderLeft={{
+                        base: index % 2 === 0 ? 'none' : '2px',
+                        lg: index === 0 ? 'none' : '2px',
+                      }}
+                      borderTop={{
+                        base: index >= 2 ? '2px' : 'none',
+                        lg: 'none',
+                      }}
                       borderRadius={0}
                       borderRight="none"
                       isDisabled={
@@ -435,7 +442,7 @@ export const ActionsPanel = (): JSX.Element => {
                       size={{ base: 'sm', sm: 'sm', lg: 'md' }}
                       py={{ base: 5, sm: 4, lg: 'unset' }}
                       variant="outline"
-                      w="100%"
+                      w={{ base: '50%', lg: '100%' }}
                     >
                       <>
                         {isDesktop && (
