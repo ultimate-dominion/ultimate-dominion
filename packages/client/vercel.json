@@ -9,7 +9,15 @@
       "destination": "/api/metrics"
     },
     {
-      "source": "/((?!api).*)",
+      "source": "/guide",
+      "destination": "https://ud-guide.vercel.app/guide"
+    },
+    {
+      "source": "/guide/:path*",
+      "destination": "https://ud-guide.vercel.app/guide/:path*"
+    },
+    {
+      "source": "/((?!api|guide).*)",
       "destination": "/index.html"
     }
   ],
