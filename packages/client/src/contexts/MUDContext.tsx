@@ -187,7 +187,8 @@ const MUDProviderInner = ({
     });
 
     // Gas override proxy: injects fixed gas for functions with variable costs
-    // (prevents estimation misses from spawnOnTileEnter using block.prevrandao)
+    // (prevents estimation misses from spawnOnTileEnter using block.prevrandao).
+    // Only injects when the caller hasn't already set gas explicitly.
     const worldContract = new Proxy(rawWorldContract, {
       get(target, prop) {
         if (prop === 'write') {
@@ -198,10 +199,15 @@ const MUDProviderInner = ({
               const origFn = writeTarget[fnName];
               if (typeof origFn !== 'function') return origFn;
               return (...args: unknown[]) => {
-                // Inject gas into the options argument (last arg)
+                // Inject gas into the options argument (last arg),
+                // but don't override if the caller already set gas explicitly
+                // (e.g. move retries use MOVE_GAS_LIMIT = 8M).
                 const lastArg = args[args.length - 1];
                 if (lastArg && typeof lastArg === 'object' && !Array.isArray(lastArg)) {
-                  (lastArg as Record<string, unknown>).gas = fixedGas;
+                  const opts = lastArg as Record<string, unknown>;
+                  if (opts.gas === undefined) {
+                    opts.gas = fixedGas;
+                  }
                 } else {
                   args.push({ gas: fixedGas });
                 }
@@ -216,11 +222,38 @@ const MUDProviderInner = ({
 
     // Wait for receipt, then inject MUD Store events into Zustand immediately.
     // Reuses the same waitForTransaction pattern with applyReceiptToStore.
+    // Includes timeout + retry to handle flaky WS/RPC transports (matches
+    // the external path in setupNetwork.ts).
     const embeddedWaitForTransaction = async (tx: Hex) => {
-      const receipt = await setupResult.network.publicClient.waitForTransactionReceipt({
-        hash: tx,
-        pollingInterval: 150,
-      });
+      const maxRetries = 3;
+      let receipt: Awaited<ReturnType<typeof setupResult.network.publicClient.waitForTransactionReceipt>> | undefined;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          receipt = await setupResult.network.publicClient.waitForTransactionReceipt({
+            hash: tx,
+            pollingInterval: 250,
+            timeout: 30_000,
+          });
+          break;
+        } catch (e) {
+          const isReceiptNotFound =
+            e instanceof Error &&
+            (e.message.includes('could not be found') || e.message.includes('timed out'));
+          if (isReceiptNotFound && attempt < maxRetries - 1) {
+            console.warn(
+              `[TX][EMBEDDED] waitForTransaction retry ${attempt + 1}/${maxRetries} for ${tx}: ${(e as Error).message.slice(0, 100)}`,
+            );
+            await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+            continue;
+          }
+          throw e;
+        }
+      }
+
+      if (!receipt) {
+        throw new Error(`Failed to get receipt for ${tx} after ${maxRetries} attempts`);
+      }
 
       if (receipt.status === 'success') {
         await applyReceiptToStore(receipt, setupResult.network.publicClient, setupResult.network.worldContract.address as Hex);
