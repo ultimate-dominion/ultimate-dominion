@@ -53,8 +53,10 @@ const BADGE_CONTRACT_ADDRESS = import.meta.env.VITE_BADGE_CONTRACT_ADDRESS || ''
 // Adventurer badge token ID base (actual ID = 1_000_000 + characterTokenId)
 const ADVENTURER_BADGE_BASE = 1;
 
-// Announcements (drops, sales, offers) older than this are filtered out of chat
+// Rare drops and gold offers older than this are filtered out of chat
 const ANNOUNCEMENT_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
+// Marketplace sales persist longer — low-volume, high-signal events
+const MARKETPLACE_ANNOUNCEMENT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 type Message = {
   delivered: boolean;
@@ -283,7 +285,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
 
   // Rare+ marketplace transactions only
   const rareMarketplaceSales: Message[] = useMemo(() => {
-    const cutoff = Date.now() - ANNOUNCEMENT_MAX_AGE_MS;
+    const cutoff = Date.now() - MARKETPLACE_ANNOUNCEMENT_MAX_AGE_MS;
     return Object.values(marketplaceSaleRows)
     .map(data => {
       const { buyer, itemId, timestamp } = data;
@@ -295,7 +297,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       const item = allItems.find(i => i.tokenId === itemId!.toString());
       if (!item || item.rarity === undefined || item.rarity < Rarity.Rare) return null;
 
-      const buyerCharacter = allCharacters.find(character => character.owner === buyer);
+      const buyerCharacter = allCharacters.find(character => character.owner.toLowerCase() === String(buyer).toLowerCase());
       if (!buyerCharacter?.name) return null;
 
       const rarityColor = RARITY_COLORS[item.rarity];
@@ -336,8 +338,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     .filter((m): m is Message => m !== null);
   }, [marketplaceSaleRows, allCharacters, allItems]);
 
-  // Stable "first seen" timestamps for gold offers so they age out naturally
+  // Stable "first seen" timestamps for marketplace listings so they age out naturally
   const offerTimestamps = useRef<Map<string, number>>(new Map());
+  const listingTimestamps = useRef<Map<string, number>>(new Map());
 
   // Gold offer broadcasts for Rare+ items (buy orders)
   const goldOfferAnnouncements: Message[] = useMemo(() => {
@@ -424,14 +427,99 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     return result;
   }, [activeOrders, allCharacters, allItems, goldToken]);
 
+  // Rare+ sell listing broadcasts (item listed for gold)
+  const sellListingAnnouncements: Message[] = useMemo(() => {
+    if (!goldToken) return [];
+    const now = Date.now();
+    const cutoff = now - ANNOUNCEMENT_MAX_AGE_MS;
+
+    const result = activeOrders
+      .filter(order => {
+        // Offer side is an ERC1155 item (sell listing)
+        if (order.offer.tokenType !== TokenType.ERC1155) return false;
+        // Consideration side is Gold (ERC20)
+        if (order.consideration.tokenType !== TokenType.ERC20) return false;
+        if (order.consideration.token.toLowerCase() !== goldToken.toLowerCase()) return false;
+        // Check item rarity >= Rare
+        const item = allItems.find(i => i.tokenId === order.offer.identifier.toString());
+        if (!item || item.rarity === undefined || item.rarity < Rarity.Rare) return false;
+        // Offerer must have a character in the current world
+        const offerer = allCharacters.find(c => c.owner.toLowerCase() === order.offerer.toLowerCase());
+        if (!offerer?.name) return false;
+        return true;
+      })
+      .map(order => {
+        if (!listingTimestamps.current.has(order.orderHash)) {
+          listingTimestamps.current.set(order.orderHash, now);
+        }
+        const ts = listingTimestamps.current.get(order.orderHash)!;
+        if (ts < cutoff) return null;
+
+        const item = allItems.find(i => i.tokenId === order.offer.identifier.toString())!;
+        const offererCharacter = allCharacters.find(c => c.owner.toLowerCase() === order.offerer.toLowerCase())!;
+        const playerName = offererCharacter.name;
+        const offererNameColor = CLASS_COLORS[offererCharacter.entityClass] ?? '#E8DCC8';
+        const goldAmount = formatEther(order.consideration.amount);
+        const rarityColor = RARITY_COLORS[item.rarity!];
+
+        return {
+          delivered: true,
+          from: zeroAddress,
+          jsx: (
+            <Text fontWeight={500} size="xs" textAlign="center">
+              <Text
+                as={RouterLink}
+                color={offererNameColor}
+                fontWeight={700}
+                to={`${CHARACTERS_PATH}/${offererCharacter.id}`}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                {playerName}
+              </Text>{' '}
+              listed{' '}
+              <Text
+                as={RouterLink}
+                color={rarityColor}
+                fontWeight={700}
+                to={`${ITEM_PATH}/${item.tokenId}`}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                {item.name}
+              </Text>{' '}
+              for{' '}
+              <Text as="span" color="#D4A54A" fontWeight={700}>
+                {goldAmount} Gold
+              </Text>
+              !
+            </Text>
+          ),
+          message: '',
+          rarityColor,
+          timestamp: ts,
+        };
+      })
+      .filter((m): m is Message => m !== null);
+
+    // Clean up stale entries
+    const activeHashes = new Set(activeOrders.map(o => o.orderHash));
+    for (const hash of listingTimestamps.current.keys()) {
+      if (!activeHashes.has(hash) || listingTimestamps.current.get(hash)! < cutoff) {
+        listingTimestamps.current.delete(hash);
+      }
+    }
+
+    return result;
+  }, [activeOrders, allCharacters, allItems, goldToken]);
+
   const messagesAndEvents = useMemo(() => {
     return [
       ...messages,
       ...rareDropAnnouncements,
       ...rareMarketplaceSales,
       ...goldOfferAnnouncements,
+      ...sellListingAnnouncements,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [goldOfferAnnouncements, rareDropAnnouncements, rareMarketplaceSales, messages]);
+  }, [goldOfferAnnouncements, rareDropAnnouncements, rareMarketplaceSales, sellListingAnnouncements, messages]);
 
   // Track unread messages using last-seen timestamp (persists across refreshes)
   useEffect(() => {
