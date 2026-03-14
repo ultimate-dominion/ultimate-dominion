@@ -755,7 +755,7 @@ const CharacterCreationInner = (): JSX.Element => {
                   </FormControl>
                   <FormControl>
                     <Input
-                      accept=".png, .jpg, .jpeg, .webp, .svg"
+                      accept=".png, .jpg, .jpeg, .webp, .svg, .gif"
                       id="avatarInput"
                       isDisabled={isCreating}
                       onChange={e =>

@@ -231,7 +231,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                   </FormControl>
                   <FormControl isInvalid={showError && !(avatar || image)}>
                     <Input
-                      accept=".png, .jpg, .jpeg, .webp, .svg"
+                      accept=".png, .jpg, .jpeg, .webp, .svg, .gif"
                       id="avatarInput"
                       isDisabled={isUpdating}
                       onChange={e => setAvatar(e.target.files?.[0] ?? null)}

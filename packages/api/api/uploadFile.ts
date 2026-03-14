@@ -2,7 +2,7 @@ import formidable from "formidable";
 import sharp from "sharp";
 import { Request, Response } from "express";
 import { join } from "path";
-import { mkdtemp, writeFile } from "fs/promises";
+import { mkdtemp, readFile, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 
 import { uploadFileToPinata } from "../lib/fileStorage.js";
@@ -43,10 +43,13 @@ export default async function uploadFile(
       return res.status(400).json({ error: "Only image files are allowed" });
     }
 
-    // Process image with sharp
-    const processedImageBuffer = await sharp(file.filepath)
-      .resize(800, 800, { fit: 'inside' })
-      .toBuffer();
+    // Process image with sharp (skip for GIFs to preserve animation without bloat)
+    const isGif = file.mimetype === 'image/gif';
+    const processedImageBuffer = isGif
+      ? await readFile(file.filepath)
+      : await sharp(file.filepath)
+          .resize(800, 800, { fit: 'inside' })
+          .toBuffer();
 
     // Create temporary directory
     const tempDir = await mkdtemp(join(tmpdir(), 'ultimate-dominion-'));
