@@ -270,7 +270,7 @@ contract UpdateMonsterInventories is Script {
         _setInventory(9, _paleStalker());
         // --- Mob 10: Dusk Drake (L10) ---
         _setInventory(10, _duskDrake());
-        // --- Mob 11: Basilisk (L10 Boss) ---
+        // --- Mob 11: Basilisk (L12 Boss) ---
         // Basilisk uses a fresh MonsterStats (V3 data may not abi.decode cleanly)
         _setBasiliskInventory();
 
@@ -298,8 +298,8 @@ contract UpdateMonsterInventories is Script {
             level: 10,
             strength: 20
         });
-        Mobs.setMobStats(12, abi.encode(stats));
-        console.log("  Updated mob", 12, "items:", 23);
+        Mobs.setMobStats(11, abi.encode(stats));
+        console.log("  Updated mob", 11, "items:", 23);
     }
 
     // =========================================================================

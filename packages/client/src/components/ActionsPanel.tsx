@@ -33,36 +33,17 @@ import { ItemConsumeModal } from './ItemConsumeModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 
 export const MONSTER_MOVE_MAPPING: Record<string, string> = {
-  '1': 'Razor Claws',      // Rock Beetle
-  '2': 'Razor Claws',      // Cave Rat
-  '3': 'Dark Magic',       // Glowcap Sprite
-  '4': 'Razor Claws',      // Tunnel Crawler
-  '5': 'Razor Claws',      // Shadow Bat
-  '6': 'Elemental Burst',  // Fungal Shaman
-  '7': 'Stone Fist',       // Cavern Brute
-  '8': 'Venomous Bite',    // Cave Spider
-  '9': 'Dark Magic',       // Dark Wisp
-  '10': 'Stone Fist',      // Stone Golem Shard
-  '11': 'Venomous Bite',   // Giant Scorpion
-  '12': 'Elemental Burst', // Crystal Elemental
-  '13': 'Crushing Slam',   // Cave Troll
-  '14': 'Razor Claws',     // Stalker
-  '15': 'Dark Magic',      // Shadow Caster
-  '16': 'Stone Fist',      // Iron Golem
-  '17': 'Venomous Bite',   // Phase Spider
-  '18': 'Dark Magic',      // Void Whisper
-  '19': 'Crushing Slam',   // Cavern Ogre
-  '20': 'Venomous Bite',   // Assassin Bug
-  '21': 'Dark Magic',      // Lich Acolyte
-  '22': 'Crushing Slam',   // Stone Giant
-  '23': 'Shadow Strike',   // Tunnel Wraith
-  '24': 'Dark Magic',      // Dark Sorcerer
-  '25': 'Crushing Slam',   // Mountain Troll
-  '26': 'Shadow Strike',   // Shadow Stalker
-  '27': 'Dark Magic',      // Abyssal Channeler
-  '28': 'Crushing Slam',   // Cavern Lord
-  '29': 'Shadow Strike',   // Cave Wyvern
-  '30': 'Elemental Burst', // Shadow Dragon
+  '1': 'Razor Claws',      // Dire Rat
+  '2': 'Elemental Burst',  // Fungal Shaman
+  '3': 'Stone Fist',       // Cavern Brute
+  '4': 'Elemental Burst',  // Crystal Elemental
+  '5': 'Crushing Slam',    // Ironhide Troll
+  '6': 'Venomous Bite',    // Phase Spider
+  '7': 'Dark Magic',       // Bonecaster
+  '8': 'Crushing Slam',    // Rock Golem
+  '9': 'Shadow Strike',    // Pale Stalker
+  '10': 'Elemental Burst', // Dusk Drake
+  '11': 'Basilisk Fangs',  // Basilisk (boss)
 };
 
 export const ActionsPanel = (): JSX.Element => {
