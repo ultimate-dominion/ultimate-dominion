@@ -55,10 +55,11 @@ export const config = {
   // Fund endpoint authentication — required to prevent ETH drain
   fundApiKey: process.env.FUND_API_KEY || '',
 
-  // Lifeline config (for level 3+ players with gold < fee AND near-zero ETH)
-  lifelineAmount: BigInt(process.env.LIFELINE_AMOUNT || '300000000000000'),        // 0.0003 ETH (~5-10 battles)
-  lifelineCooldownMs: parseInt(process.env.LIFELINE_COOLDOWN_MS || '3600000', 10), // 1 hour (was 24h)
-  lifelineMinBalance: BigInt(process.env.LIFELINE_MIN_BALANCE || '50000000000000'), // 0.00005 ETH — truly stuck threshold
+  // Pool funder config (deployer wallet auto-funds pool wallets)
+  funderPrivateKey: (process.env.FUNDER_PRIVATE_KEY || '') as Hex,
+  poolMinBalance: BigInt(process.env.POOL_MIN_BALANCE || '5000000000000000'),     // 0.005 ETH — trigger top-up
+  poolTargetBalance: BigInt(process.env.POOL_TARGET_BALANCE || '10000000000000000'), // 0.01 ETH — refill to
+  poolFundCheckIntervalMs: parseInt(process.env.POOL_FUND_CHECK_INTERVAL_MS || '300000', 10), // 5 min
 
   // Data persistence directory
   dataDir: process.env.DATA_DIR || './data',

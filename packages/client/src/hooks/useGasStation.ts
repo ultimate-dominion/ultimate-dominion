@@ -4,26 +4,39 @@ import { parseEther } from 'viem';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 
-import { useToast } from './useToast';
-
 const GAS_THRESHOLD = parseEther('0.0003'); // 0.0003 ETH — swap before wallet drains
-const DEFAULT_GOLD_PER_SWAP = parseEther('2'); // 2 Gold per auto-swap (~1 battle)
+const MAX_GOLD_PER_SWAP = parseEther('100'); // Cap to avoid huge slippage
+const MIN_GOLD_FOR_SWAP = parseEther('1'); // Minimum to avoid dust reverts
 const MIN_SWAP_INTERVAL_MS = 30_000; // 30 seconds — Base gas is cheap, swap often
-const EMBEDDED_LOW_GOLD_THRESHOLD = parseEther('5'); // Warn if gold drops below 5
+
+/**
+ * Calculate how much gold to swap: all available up to MAX, null if below MIN.
+ */
+export function calculateSwapAmount(goldBalance: bigint): bigint | null {
+  if (goldBalance < MIN_GOLD_FOR_SWAP) return null;
+  return goldBalance > MAX_GOLD_PER_SWAP ? MAX_GOLD_PER_SWAP : goldBalance;
+}
+
+/**
+ * Calculate minimum ETH output for slippage protection.
+ * ~0.8e-6 ETH per Gold (80% of naive rate) — generous floor to avoid reverts.
+ */
+export function calculateMinEthOutput(goldAmount: bigint): bigint {
+  // 800000 wei per 1e18 Gold = 0.8e-6 ETH per Gold
+  return goldAmount * 800000n / 1000000000000000000n;
+}
 
 /**
  * Auto-swaps Gold for ETH when the player's balance drops below a threshold.
  * Only active for level 3+ characters with Gold available.
  *
- * - Watches burnerBalance (already polled every 5s by MUDContext)
- * - When below GAS_THRESHOLD, calls UD__buyGas() with a fixed Gold amount
- * - Rate-limited to once per MIN_SWAP_INTERVAL_MS
- * - Shows a toast notification on successful swap
+ * - Watches burnerBalance (already polled every 15s by MUDContext)
+ * - When below GAS_THRESHOLD, calls UD__buyGas() with available Gold
+ * - Rate-limited to once per MIN_SWAP_INTERVAL_MS (only on success)
  */
 export const useGasStation = (): void => {
   const { authMethod, burnerBalance, systemCalls } = useMUD();
   const { character } = useCharacter();
-  const { renderSuccess, renderWarning } = useToast();
   const lastSwapRef = useRef(0);
   const swappingRef = useRef(false);
 
@@ -34,41 +47,41 @@ export const useGasStation = (): void => {
     // Only for level 3+
     if (character.level < 3n) return;
 
-    // Check if enough Gold to swap
-    if (character.externalGoldBalance < DEFAULT_GOLD_PER_SWAP) {
-      // Not enough gold for a full swap — skip silently
-      return;
-    }
+    // Calculate dynamic swap amount
+    const swapAmount = calculateSwapAmount(character.externalGoldBalance);
+    if (!swapAmount) return;
 
-    // Client-side rate limit
+    // Client-side rate limit — only enforced after successful swaps
     const now = Date.now();
     if (now - lastSwapRef.current < MIN_SWAP_INTERVAL_MS) return;
 
     swappingRef.current = true;
-    lastSwapRef.current = now;
 
     try {
+      const minEthOutput = calculateMinEthOutput(swapAmount);
       const { success, error } = await systemCalls.buyGas(
         character.id,
-        DEFAULT_GOLD_PER_SWAP,
+        swapAmount,
+        minEthOutput,
       );
 
       if (success) {
-        renderSuccess('Auto-swapped Gold for gas (ETH).');
+        lastSwapRef.current = Date.now();
       } else if (error) {
-        // Don't spam errors — just log
+        // Don't rate-limit on failure — retry on next poll
         console.warn('[GasStation] Auto-swap failed:', error);
       }
     } catch (e) {
+      // Don't rate-limit on failure — retry on next poll
       console.warn('[GasStation] Auto-swap error:', e);
     } finally {
       swappingRef.current = false;
     }
-  }, [character, renderSuccess, systemCalls]);
+  }, [character, systemCalls]);
 
   useEffect(() => {
     // Both embedded (Privy) and external (MetaMask) wallets manage their own gas.
-    // Auto-swap gold→ETH via on-chain buyGas() when balance is low.
+    // Auto-swap gold->ETH via on-chain buyGas() when balance is low.
     try {
       const balanceWei = parseEther(burnerBalance);
       if (balanceWei < GAS_THRESHOLD && balanceWei >= 0n) {
@@ -77,5 +90,5 @@ export const useGasStation = (): void => {
     } catch {
       // Invalid balance string — ignore
     }
-  }, [authMethod, attemptSwap, burnerBalance, character, renderWarning]);
+  }, [authMethod, attemptSwap, burnerBalance, character]);
 };

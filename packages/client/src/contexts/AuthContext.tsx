@@ -25,14 +25,20 @@ import { base } from '../lib/mud/supportedChains';
  *
  * - 'wait': user already has a wallet server-side → recovery in progress, don't create
  * - 'create': truly new user with no wallet → call createWallet()
- * - 'skip': createWallet() already in flight → do nothing
+ * - 'skip': createWallet() already in flight OR not confirmed as new user → do nothing
  */
 export function resolveWalletAction(
   userWallet: { address: string } | undefined | null,
   isCreatingWallet: boolean,
+  isConfirmedNewUser: boolean,
 ): 'wait' | 'create' | 'skip' {
   if (userWallet) return 'wait';
   if (isCreatingWallet) return 'skip';
+  // Only create a wallet when the OAuth callback has explicitly confirmed this
+  // is a new user. This prevents a race condition where user.wallet is briefly
+  // undefined during Privy's async hydration for returning users, which would
+  // otherwise trigger createWallet() and orphan their original wallet/character.
+  if (!isConfirmedNewUser) return 'skip';
   return 'create';
 }
 
@@ -75,9 +81,11 @@ export const AuthProvider = ({
   const { wallets } = useWallets();
   const { createWallet } = useCreateWallet();
   const isCreatingWallet = useRef(false);
+  const [isConfirmedNewUser, setIsConfirmedNewUser] = useState(false);
   const { initOAuth } = useLoginWithOAuth({
     onComplete: ({ user: privyUser, isNewUser }) => {
       console.info('[Auth] OAuth complete:', { email: privyUser?.google?.email, isNewUser });
+      setIsConfirmedNewUser(!!isNewUser);
     },
     onError: (error) => {
       console.error('[Auth] OAuth error:', error);
@@ -128,7 +136,7 @@ export const AuthProvider = ({
     }
 
     if (!privyWallet) {
-      const action = resolveWalletAction(user?.wallet, isCreatingWallet.current);
+      const action = resolveWalletAction(user?.wallet, isCreatingWallet.current, isConfirmedNewUser);
       if (action === 'wait') {
         console.info('[Auth] User already has wallet on server, waiting for recovery...', { serverWallet: serverWalletAddress });
         // Start a recovery timeout — if wallet doesn't appear in 15s, mark failed
@@ -221,27 +229,65 @@ export const AuthProvider = ({
 
     init();
     return () => { cancelled = true; };
-  }, [ready, authenticated, wallets, user]);
+  }, [ready, authenticated, wallets, user, isConfirmedNewUser]);
 
-  // Gas funding — call /fund on every page load to ensure relayer tracks this player.
+  // Gas funding — call /fund with retry + periodic re-registration.
   // Relayer handles dedup (skips if already funded + balance sufficient).
-  // No localStorage gate — relayer redeploys wipe tracking state, so we must re-register.
+  // Re-registers every 10 min to survive relayer redeploys wiping tracking state.
   useEffect(() => {
     if (!embeddedAddress || !RELAYER_URL) return;
 
-    fetch(`${RELAYER_URL}/fund`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(FUND_API_KEY ? { 'x-api-key': FUND_API_KEY } : {}),
-      },
-      body: JSON.stringify({ address: embeddedAddress }),
-    })
-      .then(res => res.json())
-      .then(data => {
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    const callFund = async (): Promise<boolean> => {
+      try {
+        const res = await fetch(`${RELAYER_URL}/fund`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(FUND_API_KEY ? { 'x-api-key': FUND_API_KEY } : {}),
+          },
+          body: JSON.stringify({ address: embeddedAddress }),
+        });
+        const data = await res.json();
         console.info('[Gas] Fund response:', data.status);
-      })
-      .catch(err => console.warn('[Gas] Funding failed:', err));
+        return res.ok;
+      } catch (err) {
+        console.warn('[Gas] Funding failed:', err);
+        return false;
+      }
+    };
+
+    const fundWithRetry = async () => {
+      const delays = [0, 5_000, 10_000, 20_000]; // immediate, then 5s, 10s, 20s
+      for (let i = 0; i < delays.length; i++) {
+        if (cancelled) return;
+        if (i > 0) {
+          await new Promise<void>(resolve => {
+            const t = setTimeout(resolve, delays[i]);
+            timers.push(t);
+          });
+        }
+        if (cancelled) return;
+        const ok = await callFund();
+        if (ok) return;
+      }
+    };
+
+    // Initial fund with retry
+    fundWithRetry();
+
+    // Periodic re-registration every 10 minutes
+    const reRegInterval = setInterval(() => {
+      if (!cancelled) callFund();
+    }, 600_000);
+
+    return () => {
+      cancelled = true;
+      timers.forEach(t => clearTimeout(t));
+      clearInterval(reRegInterval);
+    };
   }, [embeddedAddress]);
 
   const connectWithGoogle = useCallback(async () => {
@@ -281,6 +327,7 @@ export const AuthProvider = ({
       if (recoveryTimerRef.current) { clearTimeout(recoveryTimerRef.current); recoveryTimerRef.current = null; }
       initAddressRef.current = null;
       isCreatingWallet.current = false;
+      setIsConfirmedNewUser(false);
     }
     if (wagmiConnected) {
       wagmiDisconnect();

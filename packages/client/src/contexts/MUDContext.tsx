@@ -452,7 +452,7 @@ const MUDProviderInner = ({
     getBurnerBalance();
 
     let interval: ReturnType<typeof setInterval> | null = null;
-    const start = () => { if (!interval) interval = setInterval(getBurnerBalance, 30000); };
+    const start = () => { if (!interval) interval = setInterval(getBurnerBalance, 15000); };
     const stop = () => { if (interval) { clearInterval(interval); interval = null; } };
     const onVisibility = () => { if (document.hidden) stop(); else { getBurnerBalance(); start(); } };
 

@@ -1301,7 +1301,7 @@ export function createSystemCalls(
   const buyGas = async (
     characterId: string,
     goldAmount: bigint,
-    minEthOutput: bigint = 0n,
+    minEthOutput: bigint = 1n,
   ): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterId, 'buyGas');
     if (ownershipError) return ownershipError;

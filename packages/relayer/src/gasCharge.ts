@@ -14,6 +14,9 @@ import { getCharacterId } from './chainReader.js';
 /** Pending ETH funded per player since last flush (in wei) */
 const pendingCharges = new Map<Address, bigint>();
 
+/** Retry count per player — dead-letter after 3 failures */
+const chargeRetries = new Map<Address, number>();
+
 let chargeTimer: ReturnType<typeof setInterval> | null = null;
 let swapTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -121,12 +124,24 @@ export async function flushCharges(): Promise<void> {
     });
 
     console.log(`[gasCharge] Batch charge tx: ${txHash} (${players.length} players)`);
+
+    // Clear retry counts on success
+    for (const player of snapshot.keys()) {
+      chargeRetries.delete(player);
+    }
   } catch (err) {
-    console.error('[gasCharge] Batch charge failed, re-queuing:', err);
-    // Re-add charges for next flush
+    console.error('[gasCharge] Batch charge failed:', err);
+    // Re-queue with retry tracking — dead-letter after 3 failures
     for (const [player, ethFunded] of snapshot) {
-      const existing = pendingCharges.get(player) || 0n;
-      pendingCharges.set(player, existing + ethFunded);
+      const retries = (chargeRetries.get(player) || 0) + 1;
+      if (retries >= 3) {
+        console.warn(`[gasCharge] Dead-lettering charge for ${player} after ${retries} failures (${formatEther(ethFunded)} ETH)`);
+        chargeRetries.delete(player);
+      } else {
+        chargeRetries.set(player, retries);
+        const existing = pendingCharges.get(player) || 0n;
+        pendingCharges.set(player, existing + ethFunded);
+      }
     }
   }
 }
@@ -247,6 +262,14 @@ export function stopSchedulers(): void {
     clearInterval(swapTimer);
     swapTimer = null;
   }
+}
+
+// ==================== Testing ====================
+
+/** Reset internal state — test use only */
+export function _resetForTesting(): void {
+  pendingCharges.clear();
+  chargeRetries.clear();
 }
 
 // ==================== Health ====================
