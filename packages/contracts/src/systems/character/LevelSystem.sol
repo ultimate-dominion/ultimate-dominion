@@ -3,6 +3,7 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {
+    Admin,
     Levels,
     Stats,
     Characters,
@@ -10,17 +11,21 @@ import {
     StatsData,
     ZoneCompletions,
     CharacterZoneCompletion,
-    ZoneConfig
+    ZoneConfig,
+    UltimateDominionConfig
 } from "@codegen/index.sol";
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
 import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGE_FOUNDER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE, POWER_SOURCE_BONUS_LEVEL} from "../../../constants.sol";
-import {IERC721Mintable} from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
-import {UltimateDominionConfig} from "@codegen/index.sol";
+import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
+import {Balances as ERC721Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
+import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
+import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
 import {_requireAccess} from "../../utils.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {PauseLib} from "../../libraries/PauseLib.sol";
+import {NotAdmin} from "../../Errors.sol";
 
 /**
  * @title LevelSystem
@@ -187,27 +192,10 @@ contract LevelSystem is System {
      * @param characterId The character that reached the badge level
      */
     function _mintAdventurerBadge(bytes32 characterId) internal {
-        address badgeToken = UltimateDominionConfig.getBadgeToken();
-        if (badgeToken == address(0)) return;
-
         address owner = Characters.getOwner(characterId);
-        IERC721Mintable badges = IERC721Mintable(badgeToken);
-
-        // Check if owner already has the badge (prevent double mint)
-        try badges.ownerOf(BADGE_ADVENTURER) returns (address existingOwner) {
-            // Badge already exists, check if same owner
-            if (existingOwner == owner) return;
-            // Different owner - this badge ID is taken, would need unique IDs per player
-            // For now, we use a unique token ID per player: BADGE_ADVENTURER + characterTokenId
-        } catch {
-            // Badge doesn't exist yet, mint it
-        }
-
-        // Mint badge with unique ID: base badge ID + character token ID
         uint256 tokenId = Characters.getTokenId(characterId);
         uint256 badgeId = (BADGE_ADVENTURER * 1_000_000) + tokenId;
-
-        badges.mint(owner, badgeId);
+        _mintBadgeDirect(owner, badgeId);
     }
 
     /**
@@ -219,14 +207,12 @@ contract LevelSystem is System {
         uint256 founderWindowEnd = UltimateDominionConfig.getFounderWindowEnd();
         if (founderWindowEnd == 0 || block.timestamp >= founderWindowEnd) return;
 
-        address badgeToken = UltimateDominionConfig.getBadgeToken();
-        if (badgeToken == address(0)) return;
-
         address owner = Characters.getOwner(characterId);
         uint256 tokenId = Characters.getTokenId(characterId);
         uint256 badgeId = (BADGE_FOUNDER * 1_000_000) + tokenId;
 
-        try IERC721Mintable(badgeToken).mint(owner, badgeId) {} catch {}
+        // try/catch in case badge already exists
+        try this._mintBadgeExternal(owner, badgeId) {} catch {}
     }
 
     /**
@@ -279,22 +265,58 @@ contract LevelSystem is System {
     }
 
     /**
+     * @dev Admin function to retroactively trigger zone completion for characters
+     *      that reached max level before the zone completion system was deployed.
+     *      Badge minting is wrapped in try/catch because the puppet callFrom delegation
+     *      may not be configured. Badges can be minted separately by namespace owner.
+     * @param characterId The character to backfill zone completion for
+     */
+    function backfillZoneCompletion(bytes32 characterId) public {
+        if (!Admin.get(_msgSender())) revert NotAdmin();
+        if (!IWorld(_world()).UD__isValidCharacterId(characterId)) {
+            revert LevelSystem_CharacterNotFound();
+        }
+        uint256 level = Stats.getLevel(characterId);
+        _checkZoneCompletion(characterId, level);
+    }
+
+    /**
      * @dev Mints a Zone Conqueror badge to a character's owner
      * @param characterId The character that completed the zone
      * @param zoneId The zone that was completed
      */
     function _mintZoneConquerorBadge(bytes32 characterId, uint256 zoneId) internal {
-        address badgeToken = UltimateDominionConfig.getBadgeToken();
-        if (badgeToken == address(0)) return;
-
         address owner = Characters.getOwner(characterId);
         uint256 tokenId = Characters.getTokenId(characterId);
-
-        // Badge ID: (badgeBase * 1_000_000) + tokenId
         uint256 badgeBase = ZoneConfig.getBadgeBase(zoneId);
         uint256 badgeId = (badgeBase * 1_000_000) + tokenId;
+        _mintBadgeDirect(owner, badgeId);
+    }
 
-        IERC721Mintable(badgeToken).mint(owner, badgeId);
+    /**
+     * @dev Mints a badge by writing directly to the Badges ERC721 tables.
+     *      Bypasses the puppet's _requireOwner() check which blocks non-owner systems.
+     *      LevelSystem has ResourceAccess to the Badges tables via EnsureAccess.
+     */
+    function _mintBadgeDirect(address to, uint256 badgeId) internal {
+        ResourceId ownersTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Owners");
+        ResourceId balancesTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Balances");
+
+        // Revert if badge already exists
+        address existing = ERC721Owners.get(ownersTableId, badgeId);
+        require(existing == address(0), "Badge already minted");
+
+        ERC721Owners.set(ownersTableId, badgeId, to);
+        uint256 currentBalance = ERC721Balances.get(balancesTableId, to);
+        ERC721Balances.set(balancesTableId, to, currentBalance + 1);
+    }
+
+    /**
+     * @dev External wrapper for _mintBadgeDirect so it can be called via try/catch
+     */
+    function _mintBadgeExternal(address to, uint256 badgeId) external {
+        _requireAccess(address(this), _msgSender());
+        _mintBadgeDirect(to, badgeId);
     }
 
     /**

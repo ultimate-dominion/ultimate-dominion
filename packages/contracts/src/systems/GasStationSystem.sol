@@ -14,7 +14,8 @@ import {
     Stats,
     CharacterOwner,
     CharacterOwnerData,
-    UltimateDominionConfig
+    UltimateDominionConfig,
+    AdventureEscrow
 } from "@codegen/index.sol";
 import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {TotalSupply as ERC20TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
@@ -92,10 +93,25 @@ contract GasStationSystem is System {
         uint256 maxGold = GasStationConfig.getMaxGoldPerSwap();
         if (goldAmount > maxGold) revert GasStationMaxSwapExceeded();
 
-        // Check player has sufficient gold
+        // Check player has sufficient gold (wallet + escrow fallback)
         ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
         uint256 currentGold = ERC20Balances.get(balancesTableId, caller);
-        if (currentGold < goldAmount) revert InsufficientBalance();
+
+        // If wallet balance insufficient, promote escrow gold to ERC20 balance
+        if (currentGold < goldAmount) {
+            uint256 shortfall = goldAmount - currentGold;
+            uint256 escrowBalance = AdventureEscrow.get(characterId);
+            if (currentGold + escrowBalance < goldAmount) revert InsufficientBalance();
+
+            // Move escrow → ERC20 (mint into supply since escrow is virtual)
+            AdventureEscrow.set(characterId, escrowBalance - shortfall);
+            currentGold += shortfall;
+            ERC20Balances.set(balancesTableId, caller, currentGold);
+
+            ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
+            uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
+            ERC20TotalSupply.set(totalSupplyTableId, currentSupply + shortfall);
+        }
 
         // Update cooldown
         GasStationCooldown.setLastSwap(caller, block.timestamp);
@@ -234,15 +250,37 @@ contract GasStationSystem is System {
         // Get charge amount
         uint256 chargeAmount = GasStationSwapConfig.getGoldPerGasCharge();
 
-        // Check player has sufficient gold
         ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
         uint256 playerGold = ERC20Balances.get(balancesTableId, player);
-        if (playerGold < chargeAmount) revert InsufficientBalance();
 
-        // Transfer gold: player → relayer (total supply unchanged)
-        ERC20Balances.set(balancesTableId, player, playerGold - chargeAmount);
-        uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
-        ERC20Balances.set(balancesTableId, relayer, relayerGold + chargeAmount);
+        if (playerGold >= chargeAmount) {
+            // Wallet covers full charge — transfer (no supply change)
+            ERC20Balances.set(balancesTableId, player, playerGold - chargeAmount);
+            uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
+            ERC20Balances.set(balancesTableId, relayer, relayerGold + chargeAmount);
+        } else {
+            // Wallet insufficient — take what's there, pull remainder from escrow
+            uint256 shortfall = chargeAmount - playerGold;
+            uint256 escrowBalance = AdventureEscrow.get(characterId);
+            if (escrowBalance < shortfall) revert InsufficientBalance();
+
+            // Deduct wallet
+            if (playerGold > 0) {
+                ERC20Balances.set(balancesTableId, player, 0);
+            }
+
+            // Deduct escrow
+            AdventureEscrow.set(characterId, escrowBalance - shortfall);
+
+            // Credit relayer full charge amount
+            uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
+            ERC20Balances.set(balancesTableId, relayer, relayerGold + chargeAmount);
+
+            // Escrow gold was burned on deposit — mint the shortfall back into supply
+            ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
+            uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
+            ERC20TotalSupply.set(totalSupplyTableId, currentSupply + shortfall);
+        }
     }
 
     /**
@@ -270,6 +308,7 @@ contract GasStationSystem is System {
 
         charged = new uint256[](players.length);
         uint256 totalRelayerCredit;
+        uint256 totalMinted;
 
         for (uint256 i = 0; i < players.length; i++) {
             // Skip: no character or wrong characterId
@@ -285,19 +324,46 @@ contract GasStationSystem is System {
             // Calculate max charge for this player
             uint256 fullCharge = counts[i] * chargePerTx;
             uint256 playerGold = ERC20Balances.get(balancesTableId, players[i]);
-            if (playerGold == 0) continue;
 
-            // Partial charge: take what they can afford
-            uint256 actual = playerGold < fullCharge ? playerGold : fullCharge;
-            ERC20Balances.set(balancesTableId, players[i], playerGold - actual);
+            uint256 fromWallet;
+            uint256 fromEscrow;
+
+            if (playerGold >= fullCharge) {
+                fromWallet = fullCharge;
+            } else {
+                fromWallet = playerGold;
+                uint256 shortfall = fullCharge - playerGold;
+                uint256 escrowBal = AdventureEscrow.get(characterIds[i]);
+                fromEscrow = escrowBal < shortfall ? escrowBal : shortfall;
+                if (fromEscrow > 0) {
+                    AdventureEscrow.set(characterIds[i], escrowBal - fromEscrow);
+                }
+            }
+
+            uint256 actual = fromWallet + fromEscrow;
+            if (actual == 0) continue;
+
+            // Deduct wallet
+            if (fromWallet > 0) {
+                ERC20Balances.set(balancesTableId, players[i], playerGold - fromWallet);
+            }
+
             charged[i] = actual;
             totalRelayerCredit += actual;
+            totalMinted += fromEscrow;
         }
 
         // Single relayer balance write
         if (totalRelayerCredit > 0) {
             uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
             ERC20Balances.set(balancesTableId, relayer, relayerGold + totalRelayerCredit);
+        }
+
+        // Mint for escrow-sourced gold (increase total supply)
+        if (totalMinted > 0) {
+            ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
+            uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
+            ERC20TotalSupply.set(totalSupplyTableId, currentSupply + totalMinted);
         }
     }
 
