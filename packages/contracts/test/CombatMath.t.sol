@@ -131,16 +131,55 @@ contract CombatMathTest is Test {
         assertTrue(damage > 0);
     }
 
-    function testAddStatBonus() public {
-        int256 damage = CombatMath.addStatBonus(
-            15, // attackerStat
-            10, // defenderStat
-            100, // baseDamage
-            ATTACK_MODIFIER
-        );
+    function testAddStatBonus_AttackerAdvantage() public {
+        // attackerStat=15, defenderStat=10, baseDamage=5 WAD
+        // baseDiff = 15*1.2e18 - 10*1e18 = 18e18 - 10e18 = 8e18
+        // damage = (8e18/2 + 5e18) / 1e18 = 9e18 / 1e18 = 9
+        int256 damage = CombatMath.addStatBonus(15, 10, 5 ether, ATTACK_MODIFIER);
+        assertEq(damage, 9);
+    }
 
-        // Should be positive damage
-        assertTrue(damage > 0);
+    function testAddStatBonus_DefenderAdvantage_PenaltyApplied() public {
+        // Cavern Brute scenario: attacker STR=9, defender STR=12
+        // baseDamage = 2 * 1.2e18 = 2.4e18 (weapon roll of 2 with ATTACK_MODIFIER)
+        // baseDiff = 9*1.2e18 - 12*1e18 = 10.8e18 - 12e18 = -1.2e18
+        // damage = (2.4e18 + (-1.2e18/2)) / 1e18 = (2.4e18 - 0.6e18) / 1e18 = 1.8e18 / 1e18 = 1
+        int256 damage = CombatMath.addStatBonus(9, 12, 2.4 ether, ATTACK_MODIFIER);
+        assertEq(damage, 1);
+    }
+
+    function testAddStatBonus_DefenderAdvantage_FloorAt1() public {
+        // Big defender advantage with small weapon: should floor at 1
+        // attacker=5, defender=20, baseDamage=1.2e18
+        // baseDiff = 5*1.2e18 - 20*1e18 = 6e18 - 20e18 = -14e18
+        // damage = (1.2e18 + (-14e18/2)) / 1e18 = (1.2e18 - 7e18) / 1e18 = -5.8e18 -> floor at 1
+        int256 damage = CombatMath.addStatBonus(5, 20, 1.2 ether, ATTACK_MODIFIER);
+        assertEq(damage, 1);
+    }
+
+    function testAddStatBonus_EqualStats() public {
+        // Equal stats: no bonus or penalty, just base damage
+        // attacker=10, defender=10, baseDamage=3.6e18
+        // baseDiff = 10*1.2e18 - 10*1e18 = 12e18 - 10e18 = 2e18 > 0 (attacker gets slight edge from 1.2x modifier)
+        int256 damage = CombatMath.addStatBonus(10, 10, 3.6 ether, ATTACK_MODIFIER);
+        assertTrue(damage >= 3, "equal stats with 1.2x modifier should give slight bonus");
+    }
+
+    function testAddStatBonus_ModerateDefenderAdvantage_NotIgnored() public {
+        // Previously this fell into the dead zone (no penalty). Now penalty always applies.
+        // attacker=9, defender=14, baseDamage=2.4e18
+        // baseDiff = 9*1.2e18 - 14*1e18 = 10.8e18 - 14e18 = -3.2e18
+        // damage = (2.4e18 + (-3.2e18/2)) / 1e18 = (2.4e18 - 1.6e18) / 1e18 = 0.8e18 / 1e18 = 0 -> floor at 1
+        int256 damage = CombatMath.addStatBonus(9, 14, 2.4 ether, ATTACK_MODIFIER);
+        assertEq(damage, 1);
+    }
+
+    function testAddStatBonus_SmallDefenderAdvantage() public {
+        // attacker=10, defender=13, baseDamage=6e18
+        // baseDiff = 10*1.2e18 - 13*1e18 = 12e18 - 13e18 = -1e18
+        // damage = (6e18 + (-1e18/2)) / 1e18 = 5.5e18 / 1e18 = 5
+        int256 damage = CombatMath.addStatBonus(10, 13, 6 ether, ATTACK_MODIFIER);
+        assertEq(damage, 5);
     }
 
     function testGetStatModifier() public {
@@ -450,5 +489,41 @@ contract CombatMathTest is Test {
         assertTrue(CombatMath.calculateBlock(15, 9));
         // rnChunk=10 -> 10 < 10 is false
         assertFalse(CombatMath.calculateBlock(15, 10));
+    }
+
+    // === Minimum damage floor tests ===
+    // CombatMath.calculateFinalPhysicalDamage can return 0 when armor > damage.
+    // The floor of 1 is enforced in PhysicalCombat/MagicCombat (the System layer).
+    // These tests verify the CombatMath behavior that the System floor catches.
+
+    function testFinalPhysicalDamage_ArmorExceedsDamage_ReturnsZero() public {
+        // baseDamage=2, armor=10, armorPen=0, no crit
+        // armorModifier = min((10-0)*DEFENSE_MOD/WAD, 2) = 2 (capped at damage)
+        // damageAfterArmor = 2 - 2 = 0
+        int256 damage = CombatMath.calculateFinalPhysicalDamage(2, 10, 0, false);
+        assertEq(damage, 0, "CombatMath returns 0 when armor fully absorbs - System layer floors to 1");
+    }
+
+    function testFinalPhysicalDamage_ArmorPenReducesArmor() public {
+        // baseDamage=5, armor=10, armorPen=8, no crit
+        // effective armor = 10-8 = 2 -> armorMod = 2*DEFENSE_MOD/WAD = 2
+        // damageAfterArmor = 5 - 2 = 3
+        int256 damage = CombatMath.calculateFinalPhysicalDamage(5, 10, 8, false);
+        assertEq(damage, 3, "armor pen should reduce effective armor");
+    }
+
+    function testFinalMagicDamage_ZeroBaseDamage() public {
+        // baseDamage=0: should return 0 (System layer floors to 1)
+        int256 damage = CombatMath.calculateFinalMagicDamage(0, 50, 100, false);
+        assertEq(damage, 0, "CombatMath returns 0 for zero base - System layer floors to 1");
+    }
+
+    function testAddStatBonus_MassiveDefenderAdvantage_FlooredAt1() public {
+        // attacker=1, defender=50, baseDamage=1.2e18
+        // baseDiff = 1*1.2e18 - 50*1e18 = 1.2e18 - 50e18 = -48.8e18
+        // abs(baseDiff/WAD) = 48 >= attackerStat(1) -> penalty branch
+        // baseDamage + baseDiff = 1.2e18 + (-48.8e18) < 0 -> floor at 1
+        int256 damage = CombatMath.addStatBonus(1, 50, 1.2 ether, ATTACK_MODIFIER);
+        assertEq(damage, 1, "massive stat disadvantage should floor at 1");
     }
 }

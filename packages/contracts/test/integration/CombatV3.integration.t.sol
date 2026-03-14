@@ -386,4 +386,5 @@ contract CombatV3IntegrationTest is V3SetUp {
 
         assertTrue(world.UD__getEncounter(encounterId).end != 0, "encounter should have ended");
     }
+
 }
