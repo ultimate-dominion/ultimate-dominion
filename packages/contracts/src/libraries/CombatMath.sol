@@ -199,18 +199,16 @@ library CombatMath {
     {
         int256 baseDifference = (attackerStat * int256(attackModifier)) - (defenderStat * int256(WAD));
         if (baseDifference > 0) {
-            // Halve the stat bonus to prevent one-shot kills at high stat advantages
+            // Attacker advantage: add half the stat diff as bonus damage
             int256 _unroundedDamage = (baseDifference / 2) + baseDamage;
             totalDamage = Math.roundInt(_unroundedDamage, int256(WAD)) / int256(WAD);
-        } else if (
-            baseDamage > int256(0) && baseDifference < int256(0)
-                && Math.absolute(baseDifference / int256(WAD)) >= uint256(attackerStat)
-        ) {
-            // if the stat difference is equal to or greater than the attackers base stat subtract difference from damage
-            if (baseDamage + baseDifference > int256(0)) {
-                totalDamage = (baseDamage + baseDifference) / int256(WAD);
+        } else if (baseDifference < 0) {
+            // Defender advantage: subtract half the stat diff from damage, floor at 1
+            int256 _unroundedDamage = baseDamage + (baseDifference / 2);
+            if (_unroundedDamage > 0) {
+                totalDamage = _unroundedDamage / int256(WAD);
+                if (totalDamage < 1) totalDamage = 1;
             } else {
-                // if damage is negative minimum damage is 1
                 totalDamage = 1;
             }
         } else {
