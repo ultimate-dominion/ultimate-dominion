@@ -13,6 +13,14 @@
  * Also fixes Sporecap Wand and Bone Staff which have [physical, magic] — removes
  * the physical effect so they're pure magic (matching sim behavior).
  *
+ * Also fixes Phasefang, Drakescale Staff, and Smoldering Rod — weapons created
+ * via BalancePatchV3 that inherited the bugged effect ID (BalancePatchV3 read
+ * magicEffects from Cracked Wand on-chain, which itself had the physical effect).
+ *
+ * NOTE: Monster magic weapons (Dark Magic, Elemental Burst, Petrifying Gaze) also
+ * have the wrong effect but are excluded — fixing them changes mob combat balance
+ * and needs separate evaluation.
+ *
  * Usage:
  *   npx tsx scripts/admin/fix-magic-weapon-effects.ts                    # dry run
  *   npx tsx scripts/admin/fix-magic-weapon-effects.ts --apply            # live
@@ -42,6 +50,9 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const PHYSICAL_EFFECT_ID = '0xbeeab8b096ac11af000000000000000000000000000000000000000000000000' as Hex;
 const MAGIC_EFFECT_ID    = '0xeee09063621624b3000000000000000000000000000000000000000000000000' as Hex;
+
+// Status effect IDs for multi-effect weapons are read from on-chain
+// (not hardcoded — BalancePatchV3 used different effect names than items.json)
 
 // ============ Weapons to fix ============
 // Stats from items.json (confirmed correct by session 15 on-chain audit).
@@ -209,6 +220,73 @@ const WEAPONS_TO_FIX: WeaponFix[] = [
   },
 ];
 
+// --- Multi-effect weapons that need effect[0] swapped from physical → magic ---
+// These weapons have additional effects (poison, blind, stupify) that must be preserved.
+// We read their current effects on-chain and only swap [0].
+interface MultiEffectWeaponFix {
+  name: string;
+  metadataUri: string;
+  dropChance: bigint;
+  price: bigint;
+  rarity: bigint;
+  // Full template WITH placeholder effects — effects[0] will be replaced with MAGIC,
+  // effects[1:] will be read from on-chain to preserve existing status effect IDs.
+  template: WeaponFix['template'];
+}
+
+const MULTI_EFFECT_WEAPONS: MultiEffectWeaponFix[] = [
+  {
+    name: 'Phasefang',
+    metadataUri: 'weapon:phasefang',
+    dropChance: 2n,
+    price: 350000000000000000000n,
+    rarity: 4n,
+    template: {
+      name: 'Phasefang',
+      metadataUri: 'weapon:phasefang',
+      dropChance: 2,
+      initialSupply: 0,
+      price: 0,
+      stats: {
+        agiModifier: 4,
+        effects: [MAGIC_EFFECT_ID], // placeholder — will be rebuilt from on-chain
+        hpModifier: 5,
+        intModifier: 3,
+        maxDamage: 8,
+        minDamage: 4,
+        minLevel: 0,
+        strModifier: 0,
+      },
+      statRestrictions: { minAgility: 16, minIntelligence: 11, minStrength: 0 },
+    },
+  },
+  {
+    name: 'Drakescale Staff',
+    metadataUri: 'weapon:drakescale_staff',
+    dropChance: 2n,
+    price: 350000000000000000000n,
+    rarity: 4n,
+    template: {
+      name: 'Drakescale Staff',
+      metadataUri: 'weapon:drakescale_staff',
+      dropChance: 2,
+      initialSupply: 0,
+      price: 0,
+      stats: {
+        agiModifier: 0,
+        effects: [MAGIC_EFFECT_ID], // placeholder — will be rebuilt from on-chain
+        hpModifier: 5,
+        intModifier: 3,
+        maxDamage: 8,
+        minDamage: 5,
+        minLevel: 0,
+        strModifier: 2,
+      },
+      statRestrictions: { minAgility: 0, minIntelligence: 11, minStrength: 12 },
+    },
+  },
+];
+
 // ============ MUD Helpers ============
 
 function tableResourceId(namespace: string, name: string): Hex {
@@ -353,6 +431,53 @@ async function main() {
     console.log('');
   }
 
+  // Step 2b: Check multi-effect weapons (only swap effect[0], preserve rest)
+  const multiEffectFixData = new Map<string, { itemId: bigint; onChainEffects: Hex[]; needsFix: boolean }>();
+
+  for (const weapon of MULTI_EFFECT_WEAPONS) {
+    const itemId = uriToId.get(weapon.metadataUri);
+    console.log(`${weapon.name} (${weapon.metadataUri})`);
+
+    if (!itemId) {
+      console.log(`  ERROR: Item not found on-chain!\n`);
+      allFound = false;
+      continue;
+    }
+
+    console.log(`  Item ID: #${itemId}`);
+
+    try {
+      const [, , dynamicData] = await publicClient.readContract({
+        address: worldAddress,
+        abi: worldAbi,
+        functionName: 'getRecord',
+        args: [WEAPON_STATS_TABLE_ID, keyTuple(itemId)],
+      });
+
+      const currentEffects = decodeEffects(dynamicData as Hex);
+      const hasPhysical = currentEffects.some(e => e.toLowerCase() === PHYSICAL_EFFECT_ID.toLowerCase());
+      const hasMagic = currentEffects.some(e => e.toLowerCase() === MAGIC_EFFECT_ID.toLowerCase());
+
+      console.log(`  Current effects: [${currentEffects.map(e => e.slice(0, 18) + '...').join(', ')}]`);
+      console.log(`  Has physical: ${hasPhysical}, Has magic: ${hasMagic}`);
+
+      if (!hasPhysical && hasMagic) {
+        console.log(`  Already correct — no change needed`);
+        multiEffectFixData.set(weapon.metadataUri, { itemId, onChainEffects: currentEffects, needsFix: false });
+      } else {
+        // Build corrected effects: swap [0] to magic, keep [1:]
+        const correctedEffects = [MAGIC_EFFECT_ID, ...currentEffects.slice(1)];
+        console.log(`  → Will set effects[0] to magic, preserve ${currentEffects.length - 1} status effects`);
+        console.log(`    New effects: [${correctedEffects.map(e => e.slice(0, 18) + '...').join(', ')}]`);
+        multiEffectFixData.set(weapon.metadataUri, { itemId, onChainEffects: currentEffects, needsFix: true });
+      }
+    } catch (e: any) {
+      console.log(`  Could not read current effects: ${e.message?.slice(0, 100)}`);
+    }
+
+    console.log('');
+  }
+
   if (!allFound) {
     console.error('Some items not found on-chain. Aborting.');
     process.exit(1);
@@ -428,6 +553,82 @@ async function main() {
     const nowHasMagic = newEffects.some(e => e.toLowerCase() === MAGIC_EFFECT_ID.toLowerCase());
     const nowHasPhysical = newEffects.some(e => e.toLowerCase() === PHYSICAL_EFFECT_ID.toLowerCase());
     console.log(`  Verified: magic=${nowHasMagic}, physical=${nowHasPhysical}`);
+
+    if (nowHasPhysical || !nowHasMagic) {
+      console.warn(`  WARNING: Verification read stale data — tx succeeded, continuing`);
+    } else {
+      console.log(`  OK`);
+    }
+
+    console.log('');
+  }
+
+  // Step 4: Apply multi-effect weapon fixes
+  for (const weapon of MULTI_EFFECT_WEAPONS) {
+    const fixData = multiEffectFixData.get(weapon.metadataUri);
+    if (!fixData || !fixData.needsFix) {
+      console.log(`${weapon.name} — already correct, skipping`);
+      continue;
+    }
+
+    const itemId = fixData.itemId;
+
+    // Re-check if already fixed
+    const [, , dynamicData] = await publicClient.readContract({
+      address: worldAddress,
+      abi: worldAbi,
+      functionName: 'getRecord',
+      args: [WEAPON_STATS_TABLE_ID, keyTuple(itemId)],
+    });
+    const currentEffects = decodeEffects(dynamicData as Hex);
+    const hasPhysical = currentEffects.some(e => e.toLowerCase() === PHYSICAL_EFFECT_ID.toLowerCase());
+    const hasMagic = currentEffects.some(e => e.toLowerCase() === MAGIC_EFFECT_ID.toLowerCase());
+
+    if (!hasPhysical && hasMagic) {
+      console.log(`${weapon.name} — already correct, skipping`);
+      continue;
+    }
+
+    // Build corrected effects: swap [0] to magic, keep rest from on-chain
+    const correctedEffects: Hex[] = [MAGIC_EFFECT_ID, ...currentEffects.slice(1)];
+    const template = { ...weapon.template, stats: { ...weapon.template.stats, effects: correctedEffects } };
+
+    console.log(`Updating ${weapon.name} (item #${itemId})...`);
+    console.log(`  Effects: [${correctedEffects.map(e => e.slice(0, 18) + '...').join(', ')}]`);
+
+    const encodedStats = encodeWeaponStats(template);
+
+    const hash = await walletClient.writeContract({
+      address: worldAddress,
+      abi: worldAbi,
+      functionName: 'UD__adminUpdateItemStats',
+      args: [itemId, weapon.dropChance, weapon.price, weapon.rarity, encodedStats],
+      nonce: currentNonce++,
+    });
+
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    console.log(`  tx: ${hash}`);
+    console.log(`  block: ${receipt.blockNumber}, status: ${receipt.status}`);
+
+    if (receipt.status !== 'success') {
+      console.error(`  TX REVERTED!`);
+      process.exit(1);
+    }
+
+    await sleep(5000);
+
+    // Verify
+    const [, , verifyDynamic] = await publicClient.readContract({
+      address: worldAddress,
+      abi: worldAbi,
+      functionName: 'getRecord',
+      args: [WEAPON_STATS_TABLE_ID, keyTuple(itemId)],
+    });
+    const newEffects = decodeEffects(verifyDynamic as Hex);
+    const nowHasMagic = newEffects.some(e => e.toLowerCase() === MAGIC_EFFECT_ID.toLowerCase());
+    const nowHasPhysical = newEffects.some(e => e.toLowerCase() === PHYSICAL_EFFECT_ID.toLowerCase());
+    console.log(`  Verified: magic=${nowHasMagic}, physical=${nowHasPhysical}`);
+    console.log(`  All effects: [${newEffects.map(e => e.slice(0, 18) + '...').join(', ')}]`);
 
     if (nowHasPhysical || !nowHasMagic) {
       console.warn(`  WARNING: Verification read stale data — tx succeeded, continuing`);

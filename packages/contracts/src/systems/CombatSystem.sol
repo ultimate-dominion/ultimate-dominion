@@ -318,6 +318,9 @@ contract CombatSystem is System {
                     damage = damage * 45 / 100;
                 }
 
+                // Minimum damage floor — landed hits always deal at least 1
+                if (damage < 1) damage = 1;
+
                 // Evasion (all physical attacks — AGI dodge check, STR reduces dodge)
                 if (CombatMath.calculateEvasionDodge(defender.agility, attacker.agility, attacker.strength, defender.strength, rnChunks[3])) {
                     damage = 0;
@@ -441,6 +444,9 @@ contract CombatSystem is System {
                         damage = damage * 70 / 100;
                     }
                 }
+
+                // Minimum damage floor — landed hits always deal at least 1
+                if (damage < 1) damage = 1;
             } else {
                 damage = 0;
                 hit = false;
