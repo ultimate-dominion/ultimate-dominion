@@ -223,12 +223,11 @@ export const AuthProvider = ({
     return () => { cancelled = true; };
   }, [ready, authenticated, wallets, user]);
 
-  // First-login gas funding
+  // Gas funding — call /fund on every page load to ensure relayer tracks this player.
+  // Relayer handles dedup (skips if already funded + balance sufficient).
+  // No localStorage gate — relayer redeploys wipe tracking state, so we must re-register.
   useEffect(() => {
-    console.info('[Gas] Funding check:', { embeddedAddress, RELAYER_URL, hasKey: embeddedAddress ? !!localStorage.getItem(`ud:gasFunded:${embeddedAddress}`) : null });
     if (!embeddedAddress || !RELAYER_URL) return;
-    const key = `ud:gasFunded:${embeddedAddress}`;
-    if (localStorage.getItem(key)) return;
 
     fetch(`${RELAYER_URL}/fund`, {
       method: 'POST',
@@ -239,7 +238,9 @@ export const AuthProvider = ({
       body: JSON.stringify({ address: embeddedAddress }),
     })
       .then(res => res.json())
-      .then(data => { if (data.txHash) localStorage.setItem(key, '1'); })
+      .then(data => {
+        console.info('[Gas] Fund response:', data.status);
+      })
       .catch(err => console.warn('[Gas] Funding failed:', err));
   }, [embeddedAddress]);
 
