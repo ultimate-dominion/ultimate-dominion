@@ -150,7 +150,14 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
             'Something went wrong uploading your character metadata',
           );
 
-        const { cid: characterMetadataCid } = await res.json();
+        const { url: metadataUrl } = await res.json();
+        if (!metadataUrl)
+          throw new Error(
+            'Something went wrong uploading your character metadata',
+          );
+
+        // Extract CID from the IPFS gateway URL
+        const characterMetadataCid = metadataUrl.split('/').pop();
         if (!characterMetadataCid)
           throw new Error(
             'Something went wrong uploading your character metadata',
