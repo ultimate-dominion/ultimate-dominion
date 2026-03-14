@@ -266,6 +266,226 @@ contract WeaponSystemTest is SetUp {
         assertEq(weaponEffects[1], bytes32(uint256(2)));
     }
 
+    function testCheckWeaponRequirements_UsesTotalStatsNotBase() public {
+        // Create a character with LOW base stats but HIGH total stats (from equipment)
+        bytes32 cid = bytes32(uint256(0xBEEF));
+
+        // Set Characters table with low base stats encoded
+        StatsData memory lowBaseStats = StatsData({
+            strength: 8,
+            agility: 6,
+            class: Classes.Warrior,
+            intelligence: 5,
+            maxHp: 100,
+            currentHp: 100,
+            experience: 0,
+            level: 5,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
+        });
+        Characters.set(cid, CharactersData({
+            tokenId: 99,
+            owner: player,
+            name: bytes32(uint256(uint160(bytes20("TotalStatsTest")))),
+            locked: true,
+            originalStats: "",
+            baseStats: abi.encode(lowBaseStats)
+        }));
+
+        // Stats table stores TOTAL stats (base + equipment bonuses)
+        // Simulating: base STR 8 + equipment bonus STR 5 = total STR 13
+        Stats.set(cid, StatsData({
+            strength: 13,
+            agility: 10,
+            class: Classes.Warrior,
+            intelligence: 8,
+            maxHp: 110,
+            currentHp: 110,
+            experience: 0,
+            level: 5,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
+        }));
+
+        // Weapon requires STR 12 — above base (8) but below total (13)
+        uint256 epicWeaponId = 999;
+        Items.set(epicWeaponId, ItemsData({
+            itemType: ItemType.Weapon,
+            dropChance: 1000,
+            price: 500,
+            rarity: 3,
+            stats: ""
+        }));
+        WeaponStats.set(epicWeaponId, WeaponStatsData({
+            agiModifier: 0,
+            intModifier: 0,
+            hpModifier: 0,
+            maxDamage: 30,
+            minDamage: 15,
+            minLevel: 5,
+            strModifier: 3,
+            effects: new bytes32[](0)
+        }));
+        StatRestrictions.set(epicWeaponId, StatRestrictionsData({
+            minStrength: 12,
+            minAgility: 0,
+            minIntelligence: 0
+        }));
+
+        // Should PASS: total STR (13) >= required STR (12)
+        assertTrue(weaponSystem.checkWeaponRequirements(cid, epicWeaponId),
+            "Should meet requirements using total stats (base + equipment)");
+    }
+
+    function testCheckWeaponRequirements_FailsWhenTotalStatsTooLow() public {
+        // Even with equipment bonuses, if total stats are still below requirements, should fail
+        bytes32 cid = bytes32(uint256(0xDEAD));
+
+        Characters.set(cid, CharactersData({
+            tokenId: 98,
+            owner: player,
+            name: bytes32(uint256(uint160(bytes20("LowTotalTest")))),
+            locked: true,
+            originalStats: "",
+            baseStats: ""
+        }));
+
+        // Total stats still below the requirement
+        Stats.set(cid, StatsData({
+            strength: 10,
+            agility: 8,
+            class: Classes.Warrior,
+            intelligence: 6,
+            maxHp: 100,
+            currentHp: 100,
+            experience: 0,
+            level: 5,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
+        }));
+
+        // Weapon requires STR 15 — above total stats (10)
+        uint256 epicWeaponId = 998;
+        Items.set(epicWeaponId, ItemsData({
+            itemType: ItemType.Weapon,
+            dropChance: 1000,
+            price: 500,
+            rarity: 3,
+            stats: ""
+        }));
+        WeaponStats.set(epicWeaponId, WeaponStatsData({
+            agiModifier: 0,
+            intModifier: 0,
+            hpModifier: 0,
+            maxDamage: 30,
+            minDamage: 15,
+            minLevel: 5,
+            strModifier: 3,
+            effects: new bytes32[](0)
+        }));
+        StatRestrictions.set(epicWeaponId, StatRestrictionsData({
+            minStrength: 15,
+            minAgility: 0,
+            minIntelligence: 0
+        }));
+
+        // Should FAIL: total STR (10) < required STR (15)
+        assertFalse(weaponSystem.checkWeaponRequirements(cid, epicWeaponId),
+            "Should fail when total stats are below requirements");
+    }
+
+    function testCheckWeaponRequirements_MultipleStatRequirements() public {
+        // Test that all three stats use total (not just STR)
+        bytes32 cid = bytes32(uint256(0xCAFE));
+
+        Characters.set(cid, CharactersData({
+            tokenId: 97,
+            owner: player,
+            name: bytes32(uint256(uint160(bytes20("MultiStatTest")))),
+            locked: true,
+            originalStats: "",
+            baseStats: abi.encode(StatsData({
+                strength: 5,
+                agility: 5,
+                class: Classes.Mage,
+                intelligence: 5,
+                maxHp: 80,
+                currentHp: 80,
+                experience: 0,
+                level: 5,
+                powerSource: PowerSource.None,
+                race: Race.None,
+                startingArmor: ArmorType.None,
+                advancedClass: AdvancedClass.None,
+                hasSelectedAdvancedClass: false
+            }))
+        }));
+
+        // Total stats boosted by equipment
+        Stats.set(cid, StatsData({
+            strength: 12,
+            agility: 10,
+            class: Classes.Mage,
+            intelligence: 14,
+            maxHp: 100,
+            currentHp: 100,
+            experience: 0,
+            level: 5,
+            powerSource: PowerSource.None,
+            race: Race.None,
+            startingArmor: ArmorType.None,
+            advancedClass: AdvancedClass.None,
+            hasSelectedAdvancedClass: false
+        }));
+
+        // Weapon requires all three stats above base but below total
+        uint256 epicWeaponId = 997;
+        Items.set(epicWeaponId, ItemsData({
+            itemType: ItemType.Weapon,
+            dropChance: 1000,
+            price: 500,
+            rarity: 3,
+            stats: ""
+        }));
+        WeaponStats.set(epicWeaponId, WeaponStatsData({
+            agiModifier: 0,
+            intModifier: 0,
+            hpModifier: 0,
+            maxDamage: 30,
+            minDamage: 15,
+            minLevel: 5,
+            strModifier: 3,
+            effects: new bytes32[](0)
+        }));
+        StatRestrictions.set(epicWeaponId, StatRestrictionsData({
+            minStrength: 10,
+            minAgility: 8,
+            minIntelligence: 12
+        }));
+
+        // Should PASS: all total stats meet requirements
+        assertTrue(weaponSystem.checkWeaponRequirements(cid, epicWeaponId),
+            "Should meet multi-stat requirements using total stats");
+
+        // Now test AGI fails while others pass
+        StatRestrictions.set(epicWeaponId, StatRestrictionsData({
+            minStrength: 10,
+            minAgility: 11,  // total AGI is 10, so this should fail
+            minIntelligence: 12
+        }));
+        assertFalse(weaponSystem.checkWeaponRequirements(cid, epicWeaponId),
+            "Should fail when total AGI is below requirement");
+    }
+
     function testRevertWhenNotCharacterOwner() public {
         vm.startPrank(address(0x2)); // Different address
         

@@ -109,14 +109,16 @@ contract WeaponSystem is System {
     function checkWeaponRequirements(bytes32 characterId, uint256 weaponId) public view returns (bool canUse) {
         ItemsData memory itemData = Items.get(weaponId);
         require(itemData.itemType == ItemType.Weapon, "WEAPON: Not a weapon");
-        
-        StatsData memory character = abi.decode(Characters.getBaseStats(characterId), (StatsData));
+
+        // Use Stats table (total stats = base + equipment bonuses) so that
+        // wearing stat-boosting gear lets you equip higher-tier weapons
+        StatsData memory character = Stats.get(characterId);
         StatRestrictionsData memory statRestrictions = StatRestrictions.get(weaponId);
         WeaponStatsData memory weaponStats = WeaponStats.get(weaponId);
 
         bool isLevel = character.level >= weaponStats.minLevel;
         bool hasStats = true;
-        
+
         if (statRestrictions.minAgility > character.agility) hasStats = false;
         if (statRestrictions.minStrength > character.strength) hasStats = false;
         if (statRestrictions.minIntelligence > character.intelligence) hasStats = false;

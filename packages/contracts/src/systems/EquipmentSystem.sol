@@ -116,7 +116,9 @@ contract EquipmentSystem is System {
 
     function checkRequirements(bytes32 characterId, uint256 itemId) public view returns (bool canUse) {
         ItemsData memory itemData = Items.get(itemId);
-        StatsData memory character = abi.decode(Characters.getBaseStats(characterId), (StatsData));
+        // Use Stats table (total stats = base + equipment bonuses) so that
+        // wearing stat-boosting gear lets you equip higher-tier items
+        StatsData memory character = Stats.get(characterId);
         StatRestrictionsData memory statRestrictions = StatRestrictions.get(itemId);
 
         if (itemData.itemType == ItemType.Weapon) {

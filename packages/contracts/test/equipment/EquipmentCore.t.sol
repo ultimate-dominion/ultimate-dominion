@@ -58,6 +58,34 @@ contract EquipmentCoreTest is Test {
         assertTrue(ok, "weapon should be valid for character");
     }
 
+    function test_validateEquipment_usesTotalStats() public {
+        bytes32 cid = bytes32(uint256(10));
+        // Stats table stores total stats (base + equipment bonuses)
+        // base STR would be 7, but with equipment it's 12
+        _makeCharacter(cid, 5, 12, 10, 8);
+
+        uint256 weaponId = 1002;
+        Items.setItemType(weaponId, ItemType.Weapon);
+        WeaponStats.set(weaponId, WeaponStatsData({
+            agiModifier: 0,
+            effects: new bytes32[](0),
+            hpModifier: 0,
+            intModifier: 0,
+            maxDamage: 10,
+            minDamage: 3,
+            minLevel: 5,
+            strModifier: 0
+        }));
+        StatRestrictions.set(weaponId, StatRestrictionsData({
+            minAgility: 0,
+            minIntelligence: 0,
+            minStrength: 10  // above hypothetical base of 7, below total of 12
+        }));
+
+        bool ok = core.validateEquipment(cid, weaponId);
+        assertTrue(ok, "should pass using total stats from Stats table");
+    }
+
     function test_validateEquipment_armor_failsMinLevel() public {
         bytes32 cid = bytes32(uint256(2));
         _makeCharacter(cid, 1, 5, 5, 5);

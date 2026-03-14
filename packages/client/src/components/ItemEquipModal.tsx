@@ -178,17 +178,18 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   const isMissingRequirements = useMemo(() => {
     if (!character) return false;
     if (BigInt(character.level) < BigInt(item.minLevel)) return true;
+    // Use total stats (base + equipment bonuses) to match contract behavior
     if (
-      BigInt(character.baseStats.agility) <
+      BigInt(character.agility) <
       BigInt(item.statRestrictions.minAgility)
     )
       return true;
     if (
-      BigInt(character.baseStats.intelligence) <
+      BigInt(character.intelligence) <
       BigInt(item.statRestrictions.minIntelligence)
     )
       return true;
-    if (character.baseStats.strength < item.statRestrictions.minStrength)
+    if (character.strength < item.statRestrictions.minStrength)
       return true;
     return false;
   }, [character, item]);
@@ -319,22 +320,22 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                   <Text color="grey400" size="sm">(you: {character.level.toString()})</Text>
                 </HStack>
               )}
-              {BigInt(character.baseStats.agility) < BigInt(item.statRestrictions.minAgility) && (
+              {BigInt(character.agility) < BigInt(item.statRestrictions.minAgility) && (
                 <HStack>
                   <Text color="red" size="sm">AGI {item.statRestrictions.minAgility.toString()} required</Text>
-                  <Text color="grey400" size="sm">(you: {character.baseStats.agility.toString()})</Text>
+                  <Text color="grey400" size="sm">(you: {character.agility.toString()})</Text>
                 </HStack>
               )}
-              {BigInt(character.baseStats.intelligence) < BigInt(item.statRestrictions.minIntelligence) && (
+              {BigInt(character.intelligence) < BigInt(item.statRestrictions.minIntelligence) && (
                 <HStack>
                   <Text color="red" size="sm">INT {item.statRestrictions.minIntelligence.toString()} required</Text>
-                  <Text color="grey400" size="sm">(you: {character.baseStats.intelligence.toString()})</Text>
+                  <Text color="grey400" size="sm">(you: {character.intelligence.toString()})</Text>
                 </HStack>
               )}
-              {BigInt(character.baseStats.strength) < BigInt(item.statRestrictions.minStrength) && (
+              {BigInt(character.strength) < BigInt(item.statRestrictions.minStrength) && (
                 <HStack>
                   <Text color="red" size="sm">STR {item.statRestrictions.minStrength.toString()} required</Text>
-                  <Text color="grey400" size="sm">(you: {character.baseStats.strength.toString()})</Text>
+                  <Text color="grey400" size="sm">(you: {character.strength.toString()})</Text>
                 </HStack>
               )}
             </VStack>
