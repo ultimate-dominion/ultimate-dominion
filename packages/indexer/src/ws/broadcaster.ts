@@ -82,7 +82,7 @@ export class Broadcaster {
       if (!logicalName) {
         try {
           const resource = hexToResource(tableId);
-          if (resource.namespace === GAME_NAMESPACE) {
+          if (resource.namespace.toLowerCase() === GAME_NAMESPACE) {
             // Game namespace: just the table name with truncation resolution
             logicalName = resolveResourceName(resource.name);
           } else {
