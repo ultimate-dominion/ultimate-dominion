@@ -303,6 +303,24 @@
   },
   {
     "type": "function",
+    "name": "UD___mintBadgeExternal",
+    "inputs": [
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "badgeId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__adminApplyStatusEffect",
     "inputs": [
       {
@@ -1236,6 +1254,48 @@
         ]
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__autoAdventure",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "x",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "y",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "resultData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__backfillZoneCompletion",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -7117,6 +7177,24 @@
   },
   {
     "type": "function",
+    "name": "UD__updateTokenUri",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenUri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__useCombatConsumableItem",
     "inputs": [
       {
@@ -8942,6 +9020,16 @@
   {
     "type": "error",
     "name": "ArmorSystem_RequirementsNotMet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AutoAdventureCooldownActive",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AutoAdventureNoWeapon",
     "inputs": []
   },
   {
