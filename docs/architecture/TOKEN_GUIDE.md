@@ -175,7 +175,7 @@ Example: Fragment type 3, character #42 = token ID `3_000_042`.
 - Validates fragment was triggered but not yet claimed
 - Writes directly to `Fragments:Owners` and `Fragments:Balances` tables
 - Updates `FragmentProgress` table (claimed flag, timestamp, token ID)
-- Awards `FRAGMENT_XP_REWARD` (100 XP) on claim
+- Awards `FRAGMENT_XP_REWARD` (1 XP) on claim
 - After claiming all 8, auto-mints zone fragment badge
 
 **Systems that write Fragment tables**:

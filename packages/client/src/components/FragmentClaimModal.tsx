@@ -119,7 +119,7 @@ export const FragmentClaimModal = ({
                   fontFamily="mono"
                   color="#A8DEFF"
                 >
-                  +100 XP
+                  +1 XP
                 </Text>
 
                 <Box
