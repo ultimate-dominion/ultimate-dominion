@@ -70,7 +70,7 @@ contract MagicCombat is System {
                 }
             }
 
-            if (damage < 0) damage = 0;
+            if (damage < 1) damage = 1;
         }
     }
 }
