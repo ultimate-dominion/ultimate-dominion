@@ -54,6 +54,8 @@ contract MagicCombat is System {
             int256 base = CombatMath.calculateMagicDamageFromConsumable(
                 attackStats, consumable, rnChunks[2], attacker.intelligence, defender.intelligence, crit
             );
+            // ±25% damage variance so hits don't feel static
+            base = CombatMath.applyDamageVariance(base, rnChunks[1]);
             damage = CombatMath.calculateFinalMagicDamage(base, Stats.getCurrentHp(defenderId), Stats.getMaxHp(defenderId), crit);
 
             // Apply class multipliers (basis points: 1000 = 100%)

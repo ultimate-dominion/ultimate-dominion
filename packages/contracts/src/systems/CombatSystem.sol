@@ -288,6 +288,10 @@ contract CombatSystem is System {
                 damage = CombatMath.calculateWeaponDamage(
                     attackStats, attackerPrimary, defenderPrimary, weapon, rnChunks[2], crit, scalingMod
                 );
+
+                // ±25% damage variance so hits don't feel static
+                damage = CombatMath.applyDamageVariance(damage, rnChunks[0] ^ rnChunks[3]);
+
                 damage = damage - CombatMath.calculateArmorModifier(defender.armor, attackStats.armorPenetration, damage);
                 damage = damage < int256(0) ? int256(0) : damage;
 
@@ -397,6 +401,10 @@ contract CombatSystem is System {
                 damage = CombatMath.calculateMagicDamage(
                     attackStats, magicItem, rnChunks[2], attackerScalingStat, defenderScalingStat, crit, ATTACK_MODIFIER
                 );
+
+                // ±25% damage variance so hits don't feel static
+                damage = CombatMath.applyDamageVariance(damage, rnChunks[1] ^ rnChunks[3]);
+
                 int256 currentHp = Stats.getCurrentHp(defenderId);
                 int256 maxHp = Stats.getMaxHp(defenderId);
                 damage = CombatMath.calculateFinalMagicDamage(damage, currentHp, maxHp, crit);

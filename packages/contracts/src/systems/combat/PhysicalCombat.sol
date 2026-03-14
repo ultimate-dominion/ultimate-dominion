@@ -54,6 +54,8 @@ contract PhysicalCombat is System {
             int256 base = CombatMath.calculateWeaponDamage(
                 attackStats, attacker.strength, defender.strength, weapon, rnChunks[2], crit, ATTACK_MODIFIER
             );
+            // ±25% damage variance so hits don't feel static
+            base = CombatMath.applyDamageVariance(base, rnChunks[1]);
             damage = CombatMath.calculateFinalPhysicalDamage(base, defender.armor, attackStats.armorPenetration, crit);
 
             // Apply class multipliers (basis points: 1000 = 100%)

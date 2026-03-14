@@ -253,9 +253,9 @@ describe("combat", () => {
       const weapon = makeWeapon({ minDamage: 5, maxDamage: 5, scaling: "agi", isMagic: false });
       const attacker = makeCombatant({ agi: 25, str: 5, weapon, dominantType: "AGI", dominantStat: 25 });
       const defender = makeCombatant({ agi: 5, str: 15, armor: 0, dominantType: "STR", dominantStat: 15 });
-      // no crit (100), damage roll middle, double strike PROC (1), no block (100)
-      const rngNoDs = sequenceRng([100, 5, 100, 100]); // no ds
-      const rngDs = sequenceRng([100, 5, 1, 100]);    // ds procs
+      // no crit (100), damage roll (5), variance neutral (100), double strike PROC/MISS, no block (100)
+      const rngNoDs = sequenceRng([100, 5, 100, 100, 100]); // no ds
+      const rngDs = sequenceRng([100, 5, 100, 1, 100]);    // ds procs
       const dmgNoDs = resolveAttack(attacker, defender, CC, rngNoDs);
       const dmgDs = resolveAttack(attacker, defender, CC, rngDs);
       // Double strike adds damage/2, so dmgDs should be ~1.5x dmgNoDs
@@ -266,10 +266,10 @@ describe("combat", () => {
       const weapon = makeWeapon({ minDamage: 10, maxDamage: 10, isMagic: false });
       const attacker = makeCombatant({ str: 15, agi: 20, weapon });
       const defender = makeCombatant({ str: 20, agi: 5, armor: 0 }); // str>10 so block possible
-      // no crit (100), no double strike (100), block PROC (1)
-      const rngBlock = sequenceRng([100, 100, 1]);
-      // no crit (100), no double strike (100), block MISS (100)
-      const rngNoBlock = sequenceRng([100, 100, 100]);
+      // no crit (100), damage (100), variance neutral (100), block PROC (1)
+      const rngBlock = sequenceRng([100, 100, 100, 1]);
+      // no crit (100), damage (100), variance neutral (100), block MISS (100)
+      const rngNoBlock = sequenceRng([100, 100, 100, 100]);
       const dmgBlock = resolveAttack(attacker, defender, CC, rngBlock);
       const dmgNoBlock = resolveAttack(attacker, defender, CC, rngNoBlock);
       expect(dmgBlock).toBeLessThan(dmgNoBlock);
@@ -285,6 +285,32 @@ describe("combat", () => {
       const dmg1 = resolveAttack(base, defender, CC, rng1);
       const dmg2 = resolveAttack(buffed, defender, CC, rng2);
       expect(dmg2).toBeGreaterThan(dmg1);
+    });
+
+    it("applies ±25% damage variance", () => {
+      const weapon = makeWeapon({ minDamage: 5, maxDamage: 5, isMagic: false });
+      const attacker = makeCombatant({ str: 15, agi: 20, weapon });
+      const defender = makeCombatant({ str: 15, agi: 5, armor: 0 });
+      // Collect damage values over many seeded rolls — should see more than the old 1-2 unique values
+      const rng = seededRng(42);
+      const damages = new Set<number>();
+      for (let i = 0; i < 1000; i++) {
+        const dmg = resolveAttack(attacker, defender, CC, rng);
+        if (dmg > 0) damages.add(dmg);
+      }
+      // With ±25% variance, equal-stat matchup should produce many distinct values
+      expect(damages.size).toBeGreaterThan(3);
+    });
+
+    it("variance keeps damage >= 1", () => {
+      const weapon = makeWeapon({ minDamage: 1, maxDamage: 1, isMagic: false });
+      const attacker = makeCombatant({ str: 5, agi: 20, weapon });
+      const defender = makeCombatant({ str: 20, agi: 5, armor: 10 }); // high armor
+      const rng = seededRng(99);
+      for (let i = 0; i < 1000; i++) {
+        const dmg = resolveAttack(attacker, defender, CC, rng);
+        expect(dmg).toBeGreaterThanOrEqual(1);
+      }
     });
 
     it("combat triangle adds damage bonus", () => {

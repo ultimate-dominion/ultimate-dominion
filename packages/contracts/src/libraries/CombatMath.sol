@@ -328,6 +328,17 @@ library CombatMath {
     }
 
     /**
+     * @notice Apply ±25% random variance to damage so hits don't feel static
+     * @param damage Base damage before variance
+     * @param rnChunk Random number chunk for the roll
+     * @return variedDamage Damage after variance (75-125% of input)
+     */
+    function applyDamageVariance(int256 damage, uint64 rnChunk) internal pure returns (int256) {
+        uint256 roll = (uint256(rnChunk) % 51) + 75; // 75 to 125 inclusive
+        return (damage * int256(roll)) / 100;
+    }
+
+    /**
      * @notice Apply critical hit multiplier to damage
      * @param damage Base damage
      * @param crit Whether this is a critical hit

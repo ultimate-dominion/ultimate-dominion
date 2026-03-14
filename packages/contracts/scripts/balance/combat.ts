@@ -166,6 +166,10 @@ export function resolveAttack(
     damage = Math.max(1, damage + statDiff / 2);
   }
 
+  // ±25% damage variance so hits don't feel static
+  const varianceRoll = rng(75, 125);
+  damage = damage * varianceRoll / 100;
+
   // Armor reduction (physical only)
   if (!w.isMagic) {
     const armorReduction = Math.max(0, defender.armor);
@@ -240,6 +244,10 @@ export function resolveDualMagicHit(
     damage = Math.max(1, damage + statDiff / 2);
   }
 
+  // ±25% damage variance
+  const dualVarianceRoll = rng(75, 125);
+  damage = damage * dualVarianceRoll / 100;
+
   const resistPct = Math.min(defender.int * cc.magicResistPerInt, cc.magicResistCap);
   damage = Math.max(1, damage * (1 - resistPct / 100));
 
@@ -259,6 +267,10 @@ export function resolveBreathAttack(
 
   const statDiff = attacker.int - defender.int;
   let damage = rawDmg + statDiff / 2;
+
+  // ±25% damage variance
+  const breathVarianceRoll = rng(75, 125);
+  damage = damage * breathVarianceRoll / 100;
 
   const resistPct = Math.min(defender.int * cc.magicResistPerInt, cc.magicResistCap);
   damage = Math.max(1, damage * (1 - resistPct / 100));
