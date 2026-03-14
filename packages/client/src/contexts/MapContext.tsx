@@ -249,9 +249,27 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           m => m.mobId === mobId.toString(),
         );
 
+        // Use spawned stats (includes ±10% variance and 1.3x elite boost)
+        // instead of template stats for accurate color coding and stat display
+        const spawnedStrength = statsData?.strength != null
+          ? toBigInt(statsData.strength)
+          : monsterTemplate?.strength ?? BigInt(0);
+        const spawnedAgility = statsData?.agility != null
+          ? toBigInt(statsData.agility)
+          : monsterTemplate?.agility ?? BigInt(0);
+        const spawnedIntelligence = statsData?.intelligence != null
+          ? toBigInt(statsData.intelligence)
+          : monsterTemplate?.intelligence ?? BigInt(0);
+        const spawnedMaxHp = statsData?.maxHp != null
+          ? toBigInt(statsData.maxHp)
+          : monsterTemplate?.hitPoints ?? BigInt(0);
+
         return {
           ...monsterTemplate,
-          maxHp: monsterTemplate?.hitPoints ?? BigInt(0),
+          strength: spawnedStrength,
+          agility: spawnedAgility,
+          intelligence: spawnedIntelligence,
+          maxHp: spawnedMaxHp,
           currentHp,
           id: entity,
           inBattle,
