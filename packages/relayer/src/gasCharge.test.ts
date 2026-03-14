@@ -21,11 +21,12 @@ vi.mock('./config.js', () => ({
     chargeIntervalMs: 300_000,
     swapIntervalMs: 3_600_000,
     swapThreshold: 100_000_000_000_000_000_000n,
+    fundingAmount: 500_000_000_000_000n, // 0.0005 ETH — matches prod
   },
   gasChargingEnabled: true,
 }));
 
-const mockSendPrimaryTx = vi.fn<() => Promise<`0x${string}`>>();
+const mockSendPrimaryTx = vi.fn<(args: { to: string; calldata: string }) => Promise<`0x${string}`>>();
 
 vi.mock('./tx.js', () => ({
   publicClient: {
@@ -34,7 +35,7 @@ vi.mock('./tx.js', () => ({
     getBalance: () => Promise.resolve(0n),
   },
   relayerAddress: '0x0000000000000000000000000000000000000099',
-  sendPrimaryTx: () => mockSendPrimaryTx(),
+  sendPrimaryTx: (args: unknown) => mockSendPrimaryTx(args as { to: string; calldata: string }),
 }));
 
 // ==================== Import ====================
@@ -53,6 +54,75 @@ function uniquePlayer(): Address {
 }
 
 // ==================== Tests ====================
+
+describe('gasCharge count calculation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    _resetForTesting();
+    mockGetCharacterId.mockResolvedValue(CHARACTER_ID);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  it('produces correct counts for multiple top-ups at 0.0005 ETH', async () => {
+    const player = uniquePlayer();
+    const topUpAmount = 500_000_000_000_000n; // 0.0005 ETH
+
+    // Simulate 10 top-ups
+    for (let i = 0; i < 10; i++) {
+      recordFunding(player, topUpAmount);
+    }
+
+    mockSendPrimaryTx.mockResolvedValueOnce('0xhash' as `0x${string}`);
+    await flushCharges();
+
+    expect(mockSendPrimaryTx).toHaveBeenCalledTimes(1);
+    const calldata = mockSendPrimaryTx.mock.calls[0][0].calldata;
+
+    // Decode the calldata to verify counts
+    // batchChargeGasGoldWithCounts(address[], bytes32[], uint256[])
+    // The counts array should contain [10n], not [1n]
+    const { decodeFunctionData, parseAbi } = await import('viem');
+    const abi = parseAbi([
+      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
+    ]);
+    const decoded = decodeFunctionData({ abi, data: calldata as `0x${string}` });
+    const counts = decoded.args[2];
+    expect(counts).toEqual([10n]);
+  });
+
+  it('produces count of 1 for a single top-up', async () => {
+    const player = uniquePlayer();
+    recordFunding(player, 500_000_000_000_000n);
+
+    mockSendPrimaryTx.mockResolvedValueOnce('0xhash' as `0x${string}`);
+    await flushCharges();
+
+    const calldata = mockSendPrimaryTx.mock.calls[0][0].calldata;
+    const { decodeFunctionData, parseAbi } = await import('viem');
+    const abi = parseAbi([
+      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
+    ]);
+    const decoded = decodeFunctionData({ abi, data: calldata as `0x${string}` });
+    expect(decoded.args[2]).toEqual([1n]);
+  });
+
+  it('floors to minimum 1 for sub-unit amounts', async () => {
+    const player = uniquePlayer();
+    // Fund less than 1 top-up unit
+    recordFunding(player, 100_000_000_000_000n); // 0.0001 ETH < 0.0005 ETH
+
+    mockSendPrimaryTx.mockResolvedValueOnce('0xhash' as `0x${string}`);
+    await flushCharges();
+
+    const calldata = mockSendPrimaryTx.mock.calls[0][0].calldata;
+    const { decodeFunctionData, parseAbi } = await import('viem');
+    const abi = parseAbi([
+      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
+    ]);
+    const decoded = decodeFunctionData({ abi, data: calldata as `0x${string}` });
+    expect(decoded.args[2]).toEqual([1n]);
+  });
+});
 
 describe('gasCharge dead-letter', () => {
   beforeEach(() => {

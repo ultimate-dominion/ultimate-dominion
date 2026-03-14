@@ -91,7 +91,7 @@ export async function flushCharges(): Promise<void> {
     const characterIds: Hex[] = [];
     const counts: bigint[] = [];
 
-    const countPerUnit = 1_000_000_000_000_000n; // 0.001 ETH
+    const countPerUnit = config.fundingAmount; // matches actual top-up amount
 
     for (const [player, ethFunded] of snapshot) {
       const charId = await getCharacterId(player);
@@ -101,7 +101,7 @@ export async function flushCharges(): Promise<void> {
       }
       players.push(player);
       characterIds.push(charId);
-      // At least 1 count per funding event
+      // 1 count per top-up — minimum 1
       const count = ethFunded / countPerUnit;
       counts.push(count > 0n ? count : 1n);
     }
