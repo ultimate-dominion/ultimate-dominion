@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Box,
   Button,
+  Image,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -16,6 +17,7 @@ import SafeTypist from './SafeTypist';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments, type FragmentStatus } from '../contexts/FragmentContext';
+import { getFragmentImage } from '../utils/fragmentImages';
 import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
 
 type FragmentClaimModalProps = {
@@ -66,20 +68,33 @@ export const FragmentClaimModal = ({
             {!isClaimed ? (
               <>
                 {/* Pre-claim: artwork + title only */}
-                <Box
-                  bg="whiteAlpha.100"
-                  borderRadius="md"
-                  h="200px"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  border="1px solid"
-                  borderColor="whiteAlpha.200"
-                >
-                  <Text color="gray.500" fontSize="md">
-                    Fragment {getRomanNumeral(fragment.fragmentType)} Artwork
-                  </Text>
-                </Box>
+                {getFragmentImage(fragment.name) ? (
+                  <Image
+                    src={getFragmentImage(fragment.name)}
+                    alt={fragment.name}
+                    borderRadius="md"
+                    maxH="250px"
+                    mx="auto"
+                    objectFit="cover"
+                    border="1px solid"
+                    borderColor="whiteAlpha.200"
+                  />
+                ) : (
+                  <Box
+                    bg="whiteAlpha.100"
+                    borderRadius="md"
+                    h="200px"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    border="1px solid"
+                    borderColor="whiteAlpha.200"
+                  >
+                    <Text color="gray.500" fontSize="md">
+                      Fragment {getRomanNumeral(fragment.fragmentType)} Artwork
+                    </Text>
+                  </Box>
+                )}
 
                 <Text
                   textAlign="center"

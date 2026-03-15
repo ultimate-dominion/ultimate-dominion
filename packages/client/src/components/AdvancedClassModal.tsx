@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Grid,
+  Image,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -17,6 +18,7 @@ import { useCallback, useState } from 'react';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { getClassImage } from '../utils/classImages';
 import { AdvancedClass } from '../utils/types';
 
 // Advanced class info with descriptions and bonuses
@@ -185,7 +187,17 @@ export const AdvancedClassModal = ({
                   transition="all 0.2s"
                 >
                   <VStack spacing={2} align="center">
-                    <Text fontSize="3xl">{info.icon}</Text>
+                    {getClassImage(info.name) ? (
+                      <Image
+                        src={getClassImage(info.name)}
+                        alt={info.name}
+                        boxSize="64px"
+                        objectFit="cover"
+                        borderRadius="md"
+                      />
+                    ) : (
+                      <Text fontSize="3xl">{info.icon}</Text>
+                    )}
                     <Text fontWeight={700} fontSize="lg">
                       {info.name}
                     </Text>

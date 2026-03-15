@@ -1,40 +1,110 @@
 /**
  * Maps item names to their bundled image paths.
- * Images are in /public/images/items/ as PNG files.
+ * Images are in /public/images/items/ as optimized WebP files.
  */
 const ITEM_IMAGES: Record<string, string> = {
-  'Broken Sword': '/images/items/broken-sword.png',
-  'Worn Shortbow': '/images/items/worn-shortbow.png',
-  'Cracked Wand': '/images/items/cracked-wand.png',
-  'Hunting Bow': '/images/items/hunting-bow.png',
-  'Iron Axe': '/images/items/iron-axe.png',
-  'Apprentice Staff': '/images/items/apprentice-staff.png',
-  'Light Mace': '/images/items/steel-mace.png',
-  'Shortbow': '/images/items/recurve-bow.png',
-  'Channeling Rod': '/images/items/channeling-rod.png',
-  'Runesword': '/images/items/runesword.png',
-  'Warhammer': '/images/items/warhammer.png',
-  'Longbow': '/images/items/longbow.png',
-  'Dire Rat Fang': '/images/items/rat-kings-fang.png',
-  'Sporecap Wand': '/images/items/sporecap-wand.png',
-  'Notched Cleaver': '/images/items/brutes-cleaver.png',
-  'Crystal Shard': '/images/items/crystal-blade.png',
-  'Gnarled Cudgel': '/images/items/trolls-bonebreaker.png',
-  'Webspinner Bow': '/images/items/webspinner-bow.png',
-  'Necrotic Staff': '/images/items/necrotic-staff.png',
-  'Earthshaker Maul': '/images/items/earthshaker-maul.png',
-  'Dragonfire Scepter': '/images/items/dragonfire-scepter.png',
-  // Dark Cave armor
-  'Tattered Cloth': '/images/items/tattered-cloth.png',
-  'Worn Leather Vest': '/images/items/worn-leather-vest.png',
-  'Rusty Chainmail': '/images/items/rusty-chainmail.png',
-  'Padded Armor': '/images/items/padded-armor.png',
-  'Leather Jerkin': '/images/items/leather-jerkin.png',
-  'Apprentice Robes': '/images/items/apprentice-robes.png',
-  'Studded Leather': '/images/items/studded-leather.png',
-  'Scout Armor': '/images/items/scout-armor.png',
-  'Acolyte Vestments': '/images/items/acolyte-vestments.png',
-  'Ranger Leathers': '/images/items/ranger-leathers.png',
+  // --- Weapons ---
+  // r0
+  'Broken Sword': '/images/items/broken-sword.webp',
+  'Worn Shortbow': '/images/items/worn-shortbow.webp',
+  'Cracked Wand': '/images/items/cracked-wand.webp',
+  // r1
+  'Iron Axe': '/images/items/iron-axe.webp',
+  'Hunting Bow': '/images/items/hunting-bow.webp',
+  'Apprentice Staff': '/images/items/apprentice-staff.webp',
+  'Light Mace': '/images/items/light-mace.webp',
+  'Shortbow': '/images/items/shortbow.webp',
+  'Channeling Rod': '/images/items/channeling-rod.webp',
+  'Notched Blade': '/images/items/notched-blade.webp',
+  // r2
+  'Warhammer': '/images/items/warhammer.webp',
+  'Longbow': '/images/items/longbow.webp',
+  'Mage Staff': '/images/items/mage-staff.webp',
+  'Sporecap Wand': '/images/items/sporecap-wand.webp',
+  'Notched Cleaver': '/images/items/notched-cleaver.webp',
+  'Webspinner Bow': '/images/items/webspinner-bow.webp',
+  'Crystal Shard': '/images/items/crystal-shard.webp',
+  // r3
+  'Dire Rat Fang': '/images/items/dire-rat-fang.webp',
+  'Bone Staff': '/images/items/bone-staff.webp',
+  'Darkwood Bow': '/images/items/darkwood-bow.webp',
+  'Smoldering Rod': '/images/items/smoldering-rod.webp',
+  'Stone Maul': '/images/items/stone-maul.webp',
+  'Gnarled Cudgel': '/images/items/gnarled-cudgel.webp',
+  // r4
+  'Trollhide Cleaver': '/images/items/trollhide-cleaver.webp',
+  'Phasefang': '/images/items/phasefang.webp',
+  'Drakescale Staff': '/images/items/drakescale-staff.webp',
+
+  // --- Armor ---
+  // r0
+  'Tattered Cloth': '/images/items/tattered-cloth.webp',
+  'Worn Leather Vest': '/images/items/worn-leather-vest.webp',
+  'Rusty Chainmail': '/images/items/rusty-chainmail.webp',
+  // r1
+  'Padded Armor': '/images/items/padded-armor.webp',
+  'Leather Jerkin': '/images/items/leather-jerkin.webp',
+  'Apprentice Robes': '/images/items/apprentice-robes.webp',
+  'Studded Leather': '/images/items/studded-leather.webp',
+  'Scout Armor': '/images/items/scout-armor.webp',
+  'Acolyte Vestments': '/images/items/acolyte-vestments.webp',
+  // r2
+  'Etched Chainmail': '/images/items/etched-chainmail.webp',
+  'Ranger Leathers': '/images/items/ranger-leathers.webp',
+  'Mage Robes': '/images/items/mage-robes.webp',
+  'Spider Silk Wraps': '/images/items/spider-silk-wraps.webp',
+  // r3
+  'Carved Stone Plate': '/images/items/carved-stone-plate.webp',
+  "Stalker's Cloak": '/images/items/stalkers-vest.webp',
+  'Scorched Scale Vest': '/images/items/scorched-scale-vest.webp',
+  "Drake's Cowl": '/images/items/drakes-cowl.webp',
+
+  // --- Consumables ---
+  // Trophy drops (r0)
+  'Rat Tooth': '/images/items/rat-tooth.webp',
+  'Cave Moss': '/images/items/cave-moss.webp',
+  'Cracked Bone': '/images/items/cracked-bone.webp',
+  'Dull Crystal': '/images/items/dull-crystal.webp',
+  'Tattered Hide': '/images/items/tattered-hide.webp',
+  'Bent Nail': '/images/items/bent-nail.webp',
+  // Potions & buffs (r1)
+  'Minor Health Potion': '/images/items/minor-health-potion.webp',
+  'Health Potion': '/images/items/health-potion.webp',
+  'Greater Health Potion': '/images/items/greater-health-potion.webp',
+  'Fortifying Stew': '/images/items/fortifying-stew.webp',
+  'Quickening Berries': '/images/items/quickening-berries.webp',
+  'Focusing Tea': '/images/items/focusing-tea.webp',
+  'Bloodrage Tonic': '/images/items/bloodrage-tonic.webp',
+  'Stoneskin Salve': '/images/items/stoneskin-salve.webp',
+  'Trollblood Ale': '/images/items/trollblood-ale.webp',
+  'Venom Vial': '/images/items/venom-vial.webp',
+  'Spore Cloud': '/images/items/spore-cloud.webp',
+  'Sapping Poison': '/images/items/sapping-poison.webp',
+  'Antidote': '/images/items/antidote.webp',
+  // r2
+  'Flashpowder': '/images/items/flashpowder.webp',
+
+  // --- Spells ---
+  'Battle Cry': '/images/spells/battle-cry.webp',
+  'Divine Shield': '/images/spells/divine-shield.webp',
+  'Marked Shot': '/images/spells/marked-shot.webp',
+  'Soul Drain': '/images/spells/soul-drain.webp',
+  'Arcane Blast': '/images/spells/arcane-blast.webp',
+  'Arcane Infusion': '/images/spells/arcane-infusion.webp',
+  'Expose Weakness': '/images/spells/expose-weakness.webp',
+  'Entangle': '/images/spells/entangle.webp',
+  'Blessing': '/images/spells/blessing.webp',
+
+  // --- Monster weapons ---
+  'Razor Claws': '/images/monster-weapons/razor-claws.webp',
+  'Elemental Burst': '/images/monster-weapons/elemental-burst.webp',
+  'Venomous Bite': '/images/monster-weapons/venomous-bite.webp',
+  'Crushing Slam': '/images/monster-weapons/crushing-slam.webp',
+  'Dark Magic': '/images/monster-weapons/dark-magic.webp',
+  'Stone Fist': '/images/monster-weapons/stone-fist.webp',
+  'Shadow Strike': '/images/monster-weapons/shadow-strike.webp',
+  'Basilisk Fangs': '/images/monster-weapons/basilisk-fangs.webp',
+  'Petrifying Gaze': '/images/monster-weapons/petrifying-gaze.webp',
 };
 
 /**
@@ -53,7 +123,7 @@ const CONSUMABLE_EMOJIS: Record<string, string> = {
 };
 
 /**
- * Fallback icons from game-icons.net (CC BY 3.0) for items without custom PNGs.
+ * Fallback icons from game-icons.net (CC BY 3.0) for items without custom art.
  * See /public/ICON_CREDITS.md for attribution.
  */
 const FALLBACK_ICONS: Record<string, string> = {
@@ -87,62 +157,7 @@ const FALLBACK_ICONS: Record<string, string> = {
   'quickening berries': '/images/icons/berries-bowl.svg',
   'focusing tea': '/images/icons/tea.svg',
   'beer': '/images/icons/beer-stein.svg',
-  // Dark Cave armor
-  'Tattered Cloth': '/images/icons/robe.svg',
-  'Worn Leather Vest': '/images/icons/leather-vest.svg',
-  'Rusty Chainmail': '/images/icons/chain-mail.svg',
-  'Padded Armor': '/images/icons/breastplate.svg',
-  'Leather Jerkin': '/images/icons/leather-vest.svg',
-  'Apprentice Robes': '/images/icons/robe.svg',
-  'Studded Leather': '/images/icons/leather-vest.svg',
-  'Scout Armor': '/images/icons/leather-vest.svg',
-  'Acolyte Vestments': '/images/icons/robe.svg',
-  'Etched Chainmail': '/images/icons/chain-mail.svg',
-  'Ranger Leathers': '/images/icons/leather-vest.svg',
-  'Mage Robes': '/images/icons/robe.svg',
-  'Spider Silk Wraps': '/images/icons/leather-vest.svg',
-  'Carved Stone Plate': '/images/icons/breastplate.svg',
-  "Stalker's Cloak": '/images/icons/hood.svg',
-  'Scorched Scale Vest': '/images/icons/fish-scales.svg',
-  // Dark Cave weapons
-  'Notched Blade': '/images/icons/plain-dagger.svg',
-  'Mage Staff': '/images/icons/wizard-staff.svg',
-  'Bone Staff': '/images/icons/bone-gnawer.svg',
-  'Stone Maul': '/images/icons/wood-club.svg',
-  'Darkwood Bow': '/images/icons/high-shot.svg',
-  'Smoldering Rod': '/images/icons/orb-wand.svg',
-  // V3 epic weapons
-  'Trollhide Cleaver': '/images/icons/battle-axe.svg',
-  'Phasefang': '/images/icons/plain-dagger.svg',
-  'Drakescale Staff': '/images/icons/wizard-staff.svg',
-  // V3 armor
-  "Drake's Cowl": '/images/icons/hood.svg',
-  // Basilisk weapons
-  'Basilisk Fangs': '/images/icons/fangs.svg',
-  'Petrifying Gaze': '/images/icons/evil-book.svg',
-  // Dark Cave monster weapons
-  'Venomous Bite': '/images/icons/fangs.svg',
-  'Crushing Slam': '/images/icons/fist.svg',
-  'Razor Claws': '/images/icons/wolverine-claws.svg',
-  'Dark Magic': '/images/icons/evil-book.svg',
-  'Elemental Burst': '/images/icons/fire-ring.svg',
-  'Stone Fist': '/images/icons/rock.svg',
-  'Shadow Strike': '/images/icons/hooded-assassin.svg',
-  // Dark Cave consumables
-  'Minor Health Potion': '/images/icons/health-potion.svg',
-  'Health Potion': '/images/icons/health-potion.svg',
-  'Greater Health Potion': '/images/icons/health-potion.svg',
-  'Fortifying Stew': '/images/icons/hot-meal.svg',
-  'Quickening Berries': '/images/icons/berries-bowl.svg',
-  'Focusing Tea': '/images/icons/tea.svg',
-  'Antidote': '/images/icons/vial.svg',
   'Smoke Bomb': '/images/icons/smoke-bomb.svg',
-  'Rat Tooth': '/images/icons/fang.svg',
-  'Cave Moss': '/images/icons/grass.svg',
-  'Cracked Bone': '/images/icons/bone.svg',
-  'Dull Crystal': '/images/icons/crystal-growth.svg',
-  'Tattered Hide': '/images/icons/animal-hide.svg',
-  'Bent Nail': '/images/icons/nail.svg',
   // Bug Pit armor
   'Duct Tape Patch': '/images/icons/sticky-boot.svg',
   'Cardboard Box Armor': '/images/icons/cardboard-box.svg',
