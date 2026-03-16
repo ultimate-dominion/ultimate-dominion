@@ -54,9 +54,8 @@ export const MovementProvider = ({
 }: MovementProviderProps): JSX.Element => {
   const { pathname } = useLocation();
   const {
-    authMethod,
     delegatorAddress,
-    systemCalls: { autoAdventure, move },
+    systemCalls: { move },
   } = useMUD();
 
   const {
@@ -109,10 +108,7 @@ export const MovementProvider = ({
       if (isMovementDisabled) return;
       if (isMoving) return;
       if (!isSpawned) return;
-      // In grind mode, skip the currentBattle guard — combat is resolved in the
-      // same tx, so the client never sees an "active" encounter state. The store
-      // will have a completed CombatEncounter + CombatOutcome from the receipt.
-      if (!grindMode && currentBattle) return;
+      if (currentBattle) return;
       if (isMessageInputFocused) return;
 
       if (!delegatorAddress) return;
@@ -141,19 +137,13 @@ export const MovementProvider = ({
       }
 
       setIsMoving(true);
-      if (grindMode) {
-        await moveTx.execute(() => autoAdventure(character.id, direction));
-      } else {
-        await moveTx.execute(() => move(character.id, direction));
-      }
+      await moveTx.execute(() => move(character.id, direction));
       setIsMoving(false);
     },
     [
-      autoAdventure,
       character,
       currentBattle,
       delegatorAddress,
-      grindMode,
       isMessageInputFocused,
       isMoveEquipped,
       isMovementDisabled,
@@ -177,7 +167,7 @@ export const MovementProvider = ({
       if (isMovementDisabled) return;
       if (isMoving) return;
       if (!isSpawned) return;
-      if (!grindMode && currentBattle) return;
+      if (currentBattle) return;
       if (isMessageInputFocused) return;
 
       switch (event.key) {
