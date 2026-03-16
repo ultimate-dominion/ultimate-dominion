@@ -207,9 +207,10 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     render(<ActionsPanel />);
 
     expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
-    expect(screen.getByText(/\+50 XP/)).toBeTruthy();
-    expect(screen.getByText(/\+1\.00 Gold/)).toBeTruthy();
-    // Items shown as inline text, not cards
+    expect(screen.getByText(/You earned/)).toBeTruthy();
+    expect(screen.getByText(/50 XP/)).toBeTruthy();
+    expect(screen.getByText(/1\.00 Gold/)).toBeTruthy();
+    expect(screen.getByText(/Picked up/)).toBeTruthy();
     expect(screen.getByText('Iron Shield')).toBeTruthy();
   });
 
@@ -220,8 +221,8 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     render(<ActionsPanel />);
 
     expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
-    expect(screen.getByText(/\+50 XP/)).toBeTruthy();
-    expect(screen.queryByText('Iron Shield')).toBeNull();
+    expect(screen.getByText(/50 XP/)).toBeTruthy();
+    expect(screen.queryByText(/Picked up/)).toBeNull();
   });
 
   it('shows Draw text on draw', () => {

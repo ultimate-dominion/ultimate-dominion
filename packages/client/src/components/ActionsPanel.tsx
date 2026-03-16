@@ -887,14 +887,20 @@ export const ActionsPanel = (): JSX.Element => {
               </Text>
               {result.winner === character?.id && (
                 <>
-                  {result.expDropped > 0n && (
-                    <Text size="xs" color="green" fontFamily="mono">
-                      +{result.expDropped.toString()} XP
-                    </Text>
-                  )}
-                  {result.goldDropped > 0n && (
-                    <Text size="xs" color="gold" fontFamily="mono">
-                      +{etherToFixedNumber(result.goldDropped)} Gold
+                  {(result.expDropped > 0n || result.goldDropped > 0n) && (
+                    <Text size="xs">
+                      You earned{' '}
+                      {result.expDropped > 0n && (
+                        <Text as="span" color="green" fontFamily="mono">
+                          {result.expDropped.toString()} XP
+                        </Text>
+                      )}
+                      {result.expDropped > 0n && result.goldDropped > 0n && ', '}
+                      {result.goldDropped > 0n && (
+                        <Text as="span" color="gold" fontFamily="mono">
+                          {etherToFixedNumber(result.goldDropped)} Gold
+                        </Text>
+                      )}
                     </Text>
                   )}
                   {result.expDropped === 0n && result.goldDropped === 0n && result.items.length === 0 && (
@@ -909,19 +915,24 @@ export const ActionsPanel = (): JSX.Element => {
                   -{etherToFixedNumber(result.goldDropped)} Gold
                 </Text>
               )}
-              {result.items.map(item => (
-                <Text
-                  key={`inline-loot-${result.encounterId}-${item.tokenId}`}
-                  as="button"
-                  size="xs"
-                  color={RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS] ?? '#C4B89E'}
-                  fontWeight={600}
-                  onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
-                  _hover={{ textDecoration: 'underline', cursor: 'pointer' }}
-                >
-                  {item.name}
+              {result.items.length > 0 && (
+                <Text size="xs">
+                  Picked up{' '}
+                  {result.items.map((item, idx) => (
+                    <Text
+                      key={`inline-loot-${result.encounterId}-${item.tokenId}`}
+                      as="span"
+                      role="button"
+                      color={RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS] ?? '#C4B89E'}
+                      fontWeight={600}
+                      onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
+                      _hover={{ textDecoration: 'underline', cursor: 'pointer' }}
+                    >
+                      {item.name}{idx < result.items.length - 1 ? ', ' : ''}
+                    </Text>
+                  ))}
                 </Text>
-              ))}
+              )}
             </HStack>
           ))}
         </Stack>
