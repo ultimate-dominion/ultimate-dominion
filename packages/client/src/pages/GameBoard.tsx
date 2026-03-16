@@ -15,12 +15,13 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { GiPerson } from 'react-icons/gi';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getCachedDelegator } from '../lib/delegatorCache';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
@@ -81,13 +82,29 @@ export const GameBoard = (): JSX.Element => {
   const hydrated = useGameStore((s) => s.hydrated);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
+  // Grace period: cached session lets player land here before auth resolves.
+  // Wait up to 5s for auth to catch up before redirecting.
+  const hasCachedSession = useMemo(() => {
+    return !!getCachedDelegator(import.meta.env.VITE_WORLD_ADDRESS || '');
+  }, []);
+
+  const [authGraceExpired, setAuthGraceExpired] = useState(false);
+  useEffect(() => {
+    if (!hasCachedSession) return;
+    const timer = setTimeout(() => setAuthGraceExpired(true), 5000);
+    return () => clearTimeout(timer);
+  }, [hasCachedSession]);
+
   // Redirect to home if synced, but missing other requirements.
   // IMPORTANT: Wait for each loading phase to complete before making
   // redirect decisions. Premature redirects cause refresh-to-home bugs.
   useEffect(() => {
+    const inGracePeriod = hasCachedSession && !authGraceExpired;
+
     // Phase 1: Wait for auth to resolve (isConnecting is true during auto-reconnect)
     if (isConnecting) return;
     if (!isConnected) {
+      if (inGracePeriod) return;
       navigate(isMapFull ? WAITING_ROOM_PATH : HOME_PATH);
       return;
     }
@@ -97,6 +114,7 @@ export const GameBoard = (): JSX.Element => {
 
     // Phase 3: Wait for delegation (external path)
     if (!delegatorAddress) {
+      if (inGracePeriod) return;
       navigate(HOME_PATH);
       return;
     }
@@ -127,8 +145,10 @@ export const GameBoard = (): JSX.Element => {
       }
     }
   }, [
+    authGraceExpired,
     character,
     delegatorAddress,
+    hasCachedSession,
     hydrated,
     isConnected,
     isConnecting,

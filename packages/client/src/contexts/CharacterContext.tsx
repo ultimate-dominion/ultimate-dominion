@@ -7,8 +7,9 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { hexToString, zeroHash } from 'viem';
+import { type Address, hexToString, zeroHash } from 'viem';
 
+import { getCachedDelegator } from '../lib/delegatorCache';
 import {
   encodeAddressKey,
   encodeCompositeKey,
@@ -96,9 +97,18 @@ const CharacterProviderInner = ({
   children: ReactNode;
 }): JSX.Element => {
   const {
-    delegatorAddress,
+    delegatorAddress: liveDelegatorAddress,
     network: { publicClient, worldContract },
   } = useMUD();
+
+  // Fast-path: use cached delegator address from localStorage so character
+  // resolves immediately from snapshot cache, before auth chain completes.
+  const cachedDelegatorAddress = useMemo(() => {
+    if (liveDelegatorAddress) return null;
+    return getCachedDelegator(import.meta.env.VITE_WORLD_ADDRESS || '') as Address | null;
+  }, [liveDelegatorAddress]);
+
+  const delegatorAddress = liveDelegatorAddress ?? cachedDelegatorAddress;
 
   const {
     armorTemplates,

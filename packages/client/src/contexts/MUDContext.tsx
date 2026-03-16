@@ -35,6 +35,7 @@ import {
   NetworkResult,
   SystemCallsResult,
 } from '../lib/mud/setup';
+import { clearCachedDelegator, setCachedDelegator } from '../lib/delegatorCache';
 
 import { useAuth } from './AuthContext';
 
@@ -362,6 +363,9 @@ const MUDProviderInner = ({
     });
 
     setIsSynced(true);
+
+    // Cache delegator address for fast-path on refresh
+    setCachedDelegator(setupResult.network.worldContract.address, ownerAddress);
   }, [
     authMethod,
     embeddedSetup,
@@ -486,6 +490,9 @@ const MUDProviderInner = ({
       const newBurner = createBurner(setupResult.network, externalWalletClient.account.address);
       setBurner(newBurner);
 
+      // Cache delegator address for fast-path on refresh
+      setCachedDelegator(setupResult.network.worldContract.address, externalWalletClient.account.address);
+
       // Register burner→delegator with relayer for gas monitoring (fire-and-forget)
       const relayerUrl = import.meta.env.VITE_RELAYER_URL;
       const fundApiKey = import.meta.env.VITE_FUND_API_KEY;
@@ -589,6 +596,9 @@ const MUDProviderInner = ({
     }
 
     clearBurnerWallet();
+
+    // Clear cached delegator for fast-path
+    clearCachedDelegator(setupResult.network.worldContract.address);
   }, [authMethod, externalWalletClient, setupResult.network]);
 
   // =============================================

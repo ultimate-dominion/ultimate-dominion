@@ -17,6 +17,7 @@ import {
 import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
 import { usePrivy, useWallets, useLoginWithOAuth, useCreateWallet } from '@privy-io/react-auth';
 
+import { clearCachedDelegator } from '../lib/delegatorCache';
 import { base } from '../lib/mud/supportedChains';
 
 /**
@@ -314,6 +315,9 @@ export const AuthProvider = ({
   }, [authenticated, initOAuth]);
 
   const disconnect = useCallback(async () => {
+    // Clear cached delegator for fast-path
+    clearCachedDelegator(import.meta.env.VITE_WORLD_ADDRESS || '');
+
     if (authenticated) {
       try {
         await logout();

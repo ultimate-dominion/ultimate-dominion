@@ -16,6 +16,7 @@ import SafeTypist from '../components/SafeTypist';
 import { API_URL } from '../utils/constants';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
+import { getCachedDelegator } from '../lib/delegatorCache';
 import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -87,6 +88,16 @@ export const Welcome = (): JSX.Element => {
       sessionStorage.setItem('ud:inviteCode', inviteCode);
     }
   }, [searchParams]);
+
+  // Fast-path redirect for returning players: uses cached delegator address
+  // to resolve character from snapshot without waiting for full auth chain.
+  useEffect(() => {
+    if (!hydrated || isRefreshing) return;
+    if (!getCachedDelegator(import.meta.env.VITE_WORLD_ADDRESS || '')) return;
+    if (character?.locked) {
+      navigate(GAME_BOARD_PATH);
+    }
+  }, [character?.locked, hydrated, isRefreshing, navigate]);
 
   // Auto-navigate when fully set up (returning players, or just signed in).
   // Must wait for GameStore hydration — without it, character is null because
