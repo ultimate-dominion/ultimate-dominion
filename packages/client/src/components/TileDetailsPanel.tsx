@@ -216,6 +216,14 @@ export const TileDetailsPanel = (): JSX.Element => {
     }
   }, [currentBattle, opponent, userCharacterForBattleRendering, isWaitingForBattle]);
 
+  // Auto adventure: clear loading screen when battle outcome is ready to display
+  useEffect(() => {
+    if (autoAdventureMode && pendingOpponent && lastestBattleOutcome && currentBattle &&
+        currentBattle.encounterId === lastestBattleOutcome.encounterId) {
+      setPendingOpponent(null);
+    }
+  }, [autoAdventureMode, pendingOpponent, lastestBattleOutcome, currentBattle]);
+
   // Safety timeout — clear if battle never starts (10s)
   useEffect(() => {
     if (!isWaitingForBattle) return;
@@ -326,10 +334,13 @@ export const TileDetailsPanel = (): JSX.Element => {
           return true;
         });
 
-        setPendingOpponent(null);
-
         if (result !== undefined) {
+          // Don't clear pendingOpponent here — effect below clears
+          // when battle outcome data is ready, preventing a stale UI flash.
           refreshCharacter();
+        } else {
+          // TX failed — clear immediately so loading screen disappears
+          setPendingOpponent(null);
         }
         return;
       }
@@ -963,7 +974,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (isWaitingForBattle || encounterTx.isLoading || (!autoAdventureMode && currentBattle && (!opponent || !userCharacterForBattleRendering))) {
+  if (isWaitingForBattle || encounterTx.isLoading || pendingOpponent || (!autoAdventureMode && currentBattle && (!opponent || !userCharacterForBattleRendering))) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
         <style>
