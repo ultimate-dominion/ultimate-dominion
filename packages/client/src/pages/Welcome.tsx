@@ -20,6 +20,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
+import { useGameStore } from '../lib/gameStore/store';
 import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, GUIDE_PATH, MANIFESTO_PATH, WAITING_ROOM_PATH } from '../Routes';
 
 const torchGlow = keyframes`
@@ -39,6 +40,7 @@ export const Welcome = (): JSX.Element => {
   const { delegatorAddress, isSynced } = useMUD();
   const { character, isRefreshing } = useCharacter();
   const { isMapFull, statsLoaded } = useQueue();
+  const hydrated = useGameStore((s) => s.hydrated);
 
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -86,9 +88,11 @@ export const Welcome = (): JSX.Element => {
     }
   }, [searchParams]);
 
-  // Auto-navigate when fully set up (returning players, or just signed in)
+  // Auto-navigate when fully set up (returning players, or just signed in).
+  // Must wait for GameStore hydration — without it, character is null because
+  // the Characters table hasn't loaded, not because the player is new.
   useEffect(() => {
-    if (isRefreshing) return;
+    if (!hydrated || isRefreshing) return;
     if (!isAuthenticated) return;
     if (!statsLoaded) return; // Wait for queue stats before deciding
 
@@ -101,7 +105,7 @@ export const Welcome = (): JSX.Element => {
     } else {
       navigate(CHARACTER_CREATION_PATH);
     }
-  }, [authMethod, character?.locked, delegatorAddress, isAuthenticated, isMapFull, isRefreshing, navigate, statsLoaded]);
+  }, [authMethod, character?.locked, delegatorAddress, hydrated, isAuthenticated, isMapFull, isRefreshing, navigate, statsLoaded]);
 
   // Auto-open delegation modal for external wallets that haven't delegated yet.
   // Only when user explicitly clicked Enter (isOpen is already true), not on page load.

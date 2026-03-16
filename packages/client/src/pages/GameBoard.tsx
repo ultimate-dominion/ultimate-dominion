@@ -39,6 +39,7 @@ import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
+import { useGameStore } from '../lib/gameStore/store';
 import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 
@@ -77,6 +78,7 @@ export const GameBoard = (): JSX.Element => {
   const { attackProgress, continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
   const { moveProgress } = useMovement();
   const { isMapFull, queueStatus } = useQueue();
+  const hydrated = useGameStore((s) => s.hydrated);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   // Redirect to home if synced, but missing other requirements.
@@ -99,8 +101,11 @@ export const GameBoard = (): JSX.Element => {
       return;
     }
 
-    // Phase 4: Wait for character data to load before deciding
-    if (isRefreshing) return;
+    // Phase 4: Wait for game data to load before deciding.
+    // hydrated = GameStore has received its initial snapshot from the indexer.
+    // Without it, character is null because the Characters table is empty, not
+    // because the player hasn't created one.
+    if (!hydrated || isRefreshing) return;
 
     if (!character?.locked) {
       navigate(CHARACTER_CREATION_PATH);
@@ -124,6 +129,7 @@ export const GameBoard = (): JSX.Element => {
   }, [
     character,
     delegatorAddress,
+    hydrated,
     isConnected,
     isConnecting,
     isMapFull,
