@@ -194,6 +194,13 @@ export const ActionsPanel = (): JSX.Element => {
     [currentBattle, lastestBattleOutcome],
   );
 
+  // Scroll to top when battle ends so outcome is immediately visible
+  useEffect(() => {
+    if (battleOver && parentDivRef.current) {
+      parentDivRef.current.scrollTop = 0;
+    }
+  }, [battleOver]);
+
   const userTurn = useMemo(() => {
     if (!(character && currentBattle)) return false;
 
@@ -385,6 +392,58 @@ export const ActionsPanel = (): JSX.Element => {
 
   return (
     <Box fontWeight={500} maxH="100%" overflowY="auto" ref={parentDivRef}>
+      {battleOver && currentBattle && !autoAdventureMode && (
+        <VStack
+          bgColor="#1C1814"
+          position="sticky"
+          top={0}
+          w="100%"
+          zIndex={1}
+          py={{ base: 2, lg: 3 }}
+          px={{ base: 2, lg: 4 }}
+          spacing={2}
+        >
+          {battleDraw ? (
+            <Text
+              fontWeight="bold"
+              size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              textAlign="center"
+            >
+              The battle ended in a draw.
+            </Text>
+          ) : (
+            <Text
+              fontWeight="bold"
+              size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              textAlign="center"
+            >
+              {lastestBattleOutcome?.winner === character?.id &&
+              lastestBattleOutcome?.playerFled
+                ? `${opponentDisplayName} fled!`
+                : ''}
+              {lastestBattleOutcome?.winner !== character?.id &&
+              lastestBattleOutcome?.playerFled
+                ? 'You fled!'
+                : ''}
+              {lastestBattleOutcome?.winner === character?.id &&
+              !lastestBattleOutcome?.playerFled
+                ? 'You won!'
+                : ''}
+              {lastestBattleOutcome?.winner !== character?.id &&
+              !lastestBattleOutcome?.playerFled
+                ? 'You died...'
+                : ''}
+            </Text>
+          )}
+          <Button
+            onClick={() => onContinueToBattleOutcome(true)}
+            size="sm"
+            variant="white"
+          >
+            View Results
+          </Button>
+        </VStack>
+      )}
       {currentBattle && equippedSpellsAndWeapons.length === 0 && (
         <VStack p={{ base: 2, lg: 4 }} spacing={3}>
           <Text color="red" fontWeight={700}>
@@ -976,65 +1035,6 @@ export const ActionsPanel = (): JSX.Element => {
             </HStack>
           ))}
         </Stack>
-      )}
-      {battleOver && currentBattle && !autoAdventureMode && (
-          <Stack py={4} spacing={4}>
-            <Box
-              backgroundColor="rgba(196,184,158,0.08)"
-              boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-              h="1px"
-              w="100%"
-            />
-            <HStack justifyContent="space-between" px={{ base: 2, lg: 4 }}>
-              <SafeTypist
-                avgTypingDelay={10}
-                cursor={{ show: false }}
-                stdTypingDelay={10}
-              >
-                {battleDraw ? (
-                  <Text
-                    fontWeight="bold"
-                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                    textAlign="center"
-                  >
-                    The battle ended in a draw.
-                  </Text>
-                ) : (
-                  <Text
-                    fontWeight="bold"
-                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                    textAlign="center"
-                  >
-                    {lastestBattleOutcome?.winner === character?.id &&
-                    lastestBattleOutcome?.playerFled
-                      ? `${opponentDisplayName} fled!`
-                      : ''}
-                    {lastestBattleOutcome?.winner !== character?.id &&
-                    lastestBattleOutcome?.playerFled
-                      ? 'You fled!'
-                      : ''}
-                    {lastestBattleOutcome?.winner === character?.id &&
-                    !lastestBattleOutcome?.playerFled
-                      ? 'You won!'
-                      : ''}
-                    {lastestBattleOutcome?.winner !== character?.id &&
-                    !lastestBattleOutcome?.playerFled
-                      ? 'You died...'
-                      : ''}
-                  </Text>
-                )}
-              </SafeTypist>
-              <HStack justifyContent="center">
-                <Button
-                  onClick={() => onContinueToBattleOutcome(true)}
-                  size="sm"
-                  variant="white"
-                >
-                  View Results
-                </Button>
-              </HStack>
-            </HStack>
-          </Stack>
       )}
       {selectedItem && (
         <ItemEquipModal
