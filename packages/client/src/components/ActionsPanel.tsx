@@ -602,6 +602,38 @@ export const ActionsPanel = (): JSX.Element => {
           </VStack>
         )}
 
+        {autoAdventureMode && character && Number(character.maxHp) > 0 && (() => {
+          const hpRatio = Number(character.currentHp) / Number(character.maxHp);
+          if (hpRatio <= 0.4) {
+            const isCritical = hpRatio <= 0.2;
+            return (
+              <Box
+                bg={isCritical ? 'rgba(139,32,32,0.25)' : 'rgba(200,122,42,0.15)'}
+                border="1px solid"
+                borderColor={isCritical ? '#8B2020' : '#C87A2A'}
+                borderRadius="md"
+                px={3}
+                py={2}
+                w="100%"
+              >
+                <Text
+                  color={isCritical ? '#E05050' : '#C87A2A'}
+                  fontWeight={700}
+                  size="xs"
+                >
+                  {isCritical ? 'HP Critical' : 'HP Low'} — {character.currentHp.toString()}/{character.maxHp.toString()}
+                </Text>
+                <Text color={isCritical ? '#C08080' : '#8A7E6A'} size="2xs">
+                  {isCritical
+                    ? 'You are close to death. Heal before your next fight.'
+                    : 'Consider using a potion before continuing.'}
+                </Text>
+              </Box>
+            );
+          }
+          return null;
+        })()}
+
         {!autoAdventureMode && opponent &&
           (() => {
             const seenDotTurns = new Set<string>();

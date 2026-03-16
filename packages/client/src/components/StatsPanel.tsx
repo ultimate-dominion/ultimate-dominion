@@ -184,9 +184,14 @@ export const StatsPanel = (): JSX.Element => {
           <Box
             bg="#14120F"
             borderRadius="md"
-            boxShadow={DARK_INSET_SHADOW}
+            boxShadow={
+              Number(currentHpWithFloor) / Number(maxHp) <= 0.3
+                ? `${DARK_INSET_SHADOW}, 0 0 6px 1px rgba(139,32,32,0.5)`
+                : DARK_INSET_SHADOW
+            }
             h="10px"
             overflow="hidden"
+            transition="box-shadow 0.3s ease"
             w="100%"
           >
             <Box
@@ -199,7 +204,7 @@ export const StatsPanel = (): JSX.Element => {
               }
               borderRadius="md"
               h="100%"
-              transition="width 0.5s ease, background-color 0.5s ease"
+              transition="width 0.25s ease-out, background-color 0.25s ease-out"
               w={`${(Number(currentHpWithFloor) / Number(maxHp)) * 100}%`}
             />
           </Box>

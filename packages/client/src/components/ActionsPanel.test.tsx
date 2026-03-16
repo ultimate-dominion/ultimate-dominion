@@ -343,3 +343,84 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     expect(screen.getByText(/Auto Adventure/)).toBeTruthy();
   });
 });
+
+describe('ActionsPanel — Low HP Warning', () => {
+  beforeEach(() => {
+    setDefaults();
+    vi.useFakeTimers();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('shows low HP warning when HP is at 40% in auto adventure mode', () => {
+    characterState.character = { ...defaultCharacter, currentHp: 40n, maxHp: 100n };
+
+    render(<ActionsPanel />);
+
+    expect(screen.getByText(/HP Low/)).toBeTruthy();
+    expect(screen.getByText(/40\/100/)).toBeTruthy();
+    expect(screen.getByText(/Consider using a potion/)).toBeTruthy();
+  });
+
+  it('shows critical HP warning when HP is at 20% in auto adventure mode', () => {
+    characterState.character = { ...defaultCharacter, currentHp: 20n, maxHp: 100n };
+
+    render(<ActionsPanel />);
+
+    expect(screen.getByText(/HP Critical/)).toBeTruthy();
+    expect(screen.getByText(/20\/100/)).toBeTruthy();
+    expect(screen.getByText(/close to death/)).toBeTruthy();
+  });
+
+  it('does not show warning when HP is above 40%', () => {
+    characterState.character = { ...defaultCharacter, currentHp: 50n, maxHp: 100n };
+
+    render(<ActionsPanel />);
+
+    expect(screen.queryByText(/HP Low/)).toBeNull();
+    expect(screen.queryByText(/HP Critical/)).toBeNull();
+  });
+
+  it('does not show warning when auto adventure mode is off', () => {
+    movementState.autoAdventureMode = false;
+    characterState.character = { ...defaultCharacter, currentHp: 10n, maxHp: 100n };
+
+    render(<ActionsPanel />);
+
+    expect(screen.queryByText(/HP Low/)).toBeNull();
+    expect(screen.queryByText(/HP Critical/)).toBeNull();
+  });
+
+  it('shows critical warning at exactly 20% threshold', () => {
+    characterState.character = { ...defaultCharacter, currentHp: 20n, maxHp: 100n };
+
+    render(<ActionsPanel />);
+
+    expect(screen.getByText(/HP Critical/)).toBeTruthy();
+  });
+
+  it('shows low warning at exactly 40% threshold', () => {
+    characterState.character = { ...defaultCharacter, currentHp: 40n, maxHp: 100n };
+
+    render(<ActionsPanel />);
+
+    expect(screen.getByText(/HP Low/)).toBeTruthy();
+    expect(screen.queryByText(/HP Critical/)).toBeNull();
+  });
+
+  it('shows warning between inline results and controls', () => {
+    characterState.character = { ...defaultCharacter, currentHp: 30n, maxHp: 100n };
+    battleState.currentBattle = normalBattle;
+    battleState.lastestBattleOutcome = winOutcome;
+
+    render(<ActionsPanel />);
+
+    // Both warning and results should be visible
+    expect(screen.getByText(/HP Low/)).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+  });
+});
