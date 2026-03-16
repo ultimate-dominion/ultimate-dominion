@@ -57,6 +57,7 @@ type MUDContextType = {
   network: NetworkResult;
   onCloseWalletDetailsModal: () => void;
   onOpenWalletDetailsModal: () => void;
+  ready: boolean;
   systemCalls: SystemCallsResult;
 };
 
@@ -72,7 +73,59 @@ type Props = {
   setupPromise: Promise<SetupResult>;
 };
 
-// Outer component: resolves setupPromise, shows loading/error states.
+// --- Loading stubs for non-blocking render ---
+const notReady = async () => ({ success: false as const, error: 'Game not ready' });
+const LOADING_SYSTEM_CALLS: SystemCallsResult = {
+  autoAdventure: notReady, buy: notReady, buyGas: notReady,
+  cancelOrder: notReady, checkCombatFragmentTriggers: notReady,
+  chooseRace: notReady, choosePowerSource: notReady,
+  claimFragment: notReady, triggerFragment: notReady,
+  createEncounter: notReady, createOrder: notReady,
+  depositToEscrow: notReady, endShopEncounter: notReady,
+  endWorldEncounter: notReady, endTurn: notReady,
+  enterGame: notReady, equipItems: notReady, fleePvp: notReady,
+  fulfillOrder: notReady, autoFight: notReady,
+  levelCharacter: notReady, mintCharacter: notReady,
+  move: notReady, removeEntityFromBoard: notReady,
+  rest: notReady, restock: notReady,
+  rollBaseStats: notReady, rollStats: notReady,
+  selectAdvancedClass: notReady, sell: notReady,
+  spawn: notReady, unequipItem: notReady,
+  updateTokenUri: notReady, useWorldConsumableItem: notReady,
+  withdrawFromEscrow: notReady,
+} as unknown as SystemCallsResult;
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
+const LOADING_NETWORK = {
+  publicClient: null as any,
+  walletClient: null as any,
+  worldContract: { address: ZERO_ADDRESS } as any,
+  waitForTransaction: async () => { throw new Error('Not ready'); },
+  write$: { pipe: () => ({ subscribe: () => ({ unsubscribe: () => {} }) }) } as any,
+} as NetworkResult;
+
+const LOADING_CONTEXT_VALUE: MUDContextType = {
+  ready: false,
+  authMethod: null,
+  burnerAddress: ZERO_ADDRESS,
+  burnerBalance: '0',
+  burnerBalanceFetched: false,
+  delegatorAddress: null,
+  delegatorEntity: null,
+  getBurner: () => {},
+  getBurnerBalance: () => {},
+  handleLogoutRevoke: async () => {},
+  handleRevokeDelegation: async () => {},
+  isRevokingDelegation: false,
+  isSynced: false,
+  isWalletDetailsModalOpen: false,
+  network: LOADING_NETWORK,
+  onCloseWalletDetailsModal: () => {},
+  onOpenWalletDetailsModal: () => {},
+  systemCalls: LOADING_SYSTEM_CALLS,
+};
+
+// Outer component: resolves setupPromise, renders children immediately with loading stubs.
 export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
   const [setupResult, setSetupResult] = useState<SetupResult | null>(null);
   const [setupError, setSetupError] = useState<Error | null>(null);
@@ -100,10 +153,9 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
 
   if (!setupResult) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '1rem' }}>
-        <img src="/images/ultimate-dominion-logo.svg" alt="Ultimate Dominion" style={{ width: '200px', opacity: 0.8 }} />
-        <p style={{ color: '#C4B89E', fontSize: '1.25rem' }}>Loading...</p>
-      </div>
+      <MUDContext.Provider value={LOADING_CONTEXT_VALUE}>
+        {children}
+      </MUDContext.Provider>
     );
   }
 
@@ -569,6 +621,7 @@ const MUDProviderInner = ({
         network: embeddedSetup.network,
         onCloseWalletDetailsModal,
         onOpenWalletDetailsModal,
+        ready: true,
         systemCalls: embeddedSetup.systemCalls,
       };
     }
@@ -592,6 +645,7 @@ const MUDProviderInner = ({
         network: setupResult.network,
         onCloseWalletDetailsModal,
         onOpenWalletDetailsModal,
+        ready: true,
         systemCalls: setupResult.systemCalls,
       };
     }
@@ -606,6 +660,7 @@ const MUDProviderInner = ({
         ? makeDelegatorEntity(burner.delegatorAddress)
         : null,
       getBurner,
+      getBurnerBalance,
       handleLogoutRevoke,
       handleRevokeDelegation,
       isRevokingDelegation,
@@ -614,6 +669,7 @@ const MUDProviderInner = ({
       network: burner.network,
       onCloseWalletDetailsModal,
       onOpenWalletDetailsModal,
+      ready: true,
       systemCalls: burner.systemCalls,
     };
   }, [

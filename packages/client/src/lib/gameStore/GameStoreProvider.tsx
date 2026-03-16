@@ -26,10 +26,9 @@ async function fetchSnapshot(): Promise<FullSnapshot> {
  * 1. Fetches full snapshot via REST (replaces RECS event replay)
  * 2. Connects WebSocket for real-time updates
  * 3. Re-hydrates on tab wake after idle to prevent stale state
- * 4. Children render once store is hydrated
+ * 4. Children render immediately (consumers check `hydrated` flag as needed)
  */
 export function GameStoreProvider({ children }: Props) {
-  const hydrated = useGameStore((s) => s.hydrated);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WSClient | null>(null);
   const hiddenAtRef = useRef<number | null>(null);
@@ -108,14 +107,6 @@ export function GameStoreProvider({ children }: Props) {
         <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
           Retry
         </button>
-      </div>
-    );
-  }
-
-  if (!hydrated) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
-        Loading game state...
       </div>
     );
   }
