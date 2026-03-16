@@ -151,6 +151,14 @@ contract AutoAdventureSystem is System {
                 IWorld(_world()).UD__executePvECombat(rng, encounterId, actions);
                 rng = uint256(keccak256(abi.encode(rng, r)));
             }
+
+            // Safety net: if combat didn't resolve within MAX_AUTO_COMBAT_ROUNDS,
+            // force-end the encounter so the character doesn't get stuck.
+            if (CombatEncounter.getEnd(encounterId) == 0) {
+                // Treat unresolved combat as a draw — player doesn't win or die,
+                // no rewards. Just clean up the encounter state.
+                IWorld(_world()).UD__endEncounter(encounterId, rng, false);
+            }
         }
 
         // Read results
