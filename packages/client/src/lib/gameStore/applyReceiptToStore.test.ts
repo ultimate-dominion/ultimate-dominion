@@ -5,12 +5,14 @@ import mudConfig from 'contracts/mud.config';
 // Track store calls
 const mockSetRow = vi.fn();
 const mockDeleteRow = vi.fn();
+const mockApplyBatch = vi.fn();
 
 vi.mock('./store', () => ({
   useGameStore: {
     getState: () => ({
       setRow: mockSetRow,
       deleteRow: mockDeleteRow,
+      applyBatch: mockApplyBatch,
     }),
   },
 }));
@@ -114,7 +116,7 @@ describe('applyReceiptToStore', () => {
     });
   });
 
-  it('applies delete events from receipt logs for known tables', async () => {
+  it('applies delete events via applyBatch for known tables', async () => {
     const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
     const log = encodeDeleteLog(testTableId, keyTuple);
     const receipt = makeReceipt([log]);
@@ -122,7 +124,10 @@ describe('applyReceiptToStore', () => {
     await applyReceiptToStore(receipt);
 
     const expectedKeyBytes = '0x' + keyTuple[0].slice(2);
-    expect(mockDeleteRow).toHaveBeenCalledWith(testTableLabel, expectedKeyBytes);
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    expect(mockApplyBatch).toHaveBeenCalledWith([
+      { type: 'delete', table: testTableLabel, keyBytes: expectedKeyBytes },
+    ]);
   });
 
   it('ignores delete events for unknown tables', async () => {
@@ -133,10 +138,10 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    expect(mockDeleteRow).not.toHaveBeenCalled();
+    expect(mockApplyBatch).not.toHaveBeenCalled();
   });
 
-  it('decodes SetRecord events from receipt logs for UD-namespace tables', async () => {
+  it('decodes SetRecord events via applyBatch for UD-namespace tables', async () => {
     const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
     const log = encodeSetRecordLog(testTableId, keyTuple);
     const receipt = makeReceipt([log]);
@@ -145,9 +150,12 @@ describe('applyReceiptToStore', () => {
 
     // logToRecord was called to decode the record
     expect(mockLogToRecord).toHaveBeenCalled();
-    // setRow was called with serialized result
+    // applyBatch was called with the serialized result
     const expectedKeyBytes = '0x' + keyTuple[0].slice(2);
-    expect(mockSetRow).toHaveBeenCalledWith(testTableLabel, expectedKeyBytes, { name: 'TestHero', level: '5' });
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    expect(mockApplyBatch).toHaveBeenCalledWith([
+      { type: 'set', table: testTableLabel, keyBytes: expectedKeyBytes, data: { name: 'TestHero', level: '5' } },
+    ]);
   });
 
   it('ignores SetRecord events for non-UD tables (handled by delta)', async () => {
@@ -159,8 +167,7 @@ describe('applyReceiptToStore', () => {
     await applyReceiptToStore(receipt);
 
     expect(mockLogToRecord).not.toHaveBeenCalled();
-    // setRow should not be called from local decoding (delta may call it later)
-    expect(mockSetRow).not.toHaveBeenCalled();
+    expect(mockApplyBatch).not.toHaveBeenCalled();
   });
 
   it('fires background delta fetch without blocking', async () => {
@@ -182,7 +189,7 @@ describe('applyReceiptToStore', () => {
     await expect(applyReceiptToStore(receipt)).resolves.not.toThrow();
   });
 
-  it('processes both SetRecord and DeleteRecord in same receipt', async () => {
+  it('batches both SetRecord and DeleteRecord from same receipt into a single applyBatch call', async () => {
     const setKeyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
     const deleteKeyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000002'];
 
@@ -192,8 +199,12 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    expect(mockSetRow).toHaveBeenCalledTimes(1);
-    expect(mockDeleteRow).toHaveBeenCalledTimes(1);
+    // Both updates in a single applyBatch call — no intermediate states
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    const batchArg = mockApplyBatch.mock.calls[0][0];
+    expect(batchArg).toHaveLength(2);
+    expect(batchArg[0].type).toBe('set');
+    expect(batchArg[1].type).toBe('delete');
   });
 
   it('handles logToRecord decode failure gracefully', async () => {
@@ -209,10 +220,47 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    // Should not throw, should not set the row
-    expect(mockSetRow).not.toHaveBeenCalled();
+    // Should not throw, batch should be empty (no valid updates)
+    expect(mockApplyBatch).not.toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalled();
 
     consoleSpy.mockRestore();
+  });
+
+  it('does not call setRow or deleteRow individually (all updates go through applyBatch)', async () => {
+    const setKeyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
+    const deleteKeyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000002'];
+
+    const setLog = encodeSetRecordLog(testTableId, setKeyTuple);
+    const deleteLog = encodeDeleteLog(testTableId, deleteKeyTuple);
+    const receipt = makeReceipt([setLog, deleteLog]);
+
+    await applyReceiptToStore(receipt);
+
+    // Individual setRow/deleteRow should never be called from receipt processing
+    expect(mockSetRow).not.toHaveBeenCalled();
+    expect(mockDeleteRow).not.toHaveBeenCalled();
+    // Only applyBatch should be used
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles multiple SetRecord logs atomically', async () => {
+    // Simulate a move TX with multiple table updates (Position, Spawned, Stats)
+    const key1: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
+    const key2: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000002'];
+    const key3: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000003'];
+
+    const log1 = encodeSetRecordLog(testTableId, key1);
+    const log2 = encodeSetRecordLog(testTableId, key2);
+    const log3 = encodeSetRecordLog(testTableId, key3);
+    const receipt = makeReceipt([log1, log2, log3]);
+
+    await applyReceiptToStore(receipt);
+
+    // All 3 updates in a single batch — no intermediate renders
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    const batchArg = mockApplyBatch.mock.calls[0][0];
+    expect(batchArg).toHaveLength(3);
+    expect(batchArg.every((u: { type: string }) => u.type === 'set')).toBe(true);
   });
 });

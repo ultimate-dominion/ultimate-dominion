@@ -23,7 +23,7 @@ import {
   decodeEventLog,
 } from 'viem';
 
-import { useGameStore } from './store';
+import { useGameStore, type BatchUpdate } from './store';
 import type { TableRow } from './types';
 
 const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
@@ -112,22 +112,28 @@ async function resolveSpliceEvents(
     });
 
     const serialized = serializeRecord(record as Record<string, unknown>);
-    useGameStore.getState().setRow(table.label, keyBytes, serialized);
-    return table.label;
+    return { table: table.label, keyBytes, data: serialized };
   };
 
   const entries = [...unique.values()];
   const results = await Promise.allSettled(entries.map(readRecord));
 
-  const resolved = results.filter(r => r.status === 'fulfilled');
-  if (resolved.length > 0) {
-    console.info(
-      `[TX][RECEIPT] Resolved ${resolved.length} splice(s): ${resolved.map(r => (r as PromiseFulfilledResult<string>).value).join(', ')}`,
-    );
+  // Batch all resolved splice reads into a single store update
+  const batch: BatchUpdate[] = [];
+  const resolvedNames: string[] = [];
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      batch.push({ type: 'set', table: r.value.table, keyBytes: r.value.keyBytes, data: r.value.data });
+      resolvedNames.push(r.value.table);
+    } else {
+      console.warn('[TX][RECEIPT] Splice read failed:', r.reason);
+    }
   }
-
-  for (const f of results.filter(r => r.status === 'rejected')) {
-    console.warn('[TX][RECEIPT] Splice read failed:', (f as PromiseRejectedResult).reason);
+  if (batch.length > 0) {
+    useGameStore.getState().applyBatch(batch);
+    console.info(
+      `[TX][RECEIPT] Resolved ${batch.length} splice(s): ${resolvedNames.join(', ')}`,
+    );
   }
 }
 
@@ -158,17 +164,17 @@ function fetchDeltaBackground(blockNumber: number): void {
         return;
       }
 
-      // Apply non-UD tables only — UD tables already injected from receipt
-      const store = useGameStore.getState();
-      let count = 0;
+      // Apply non-UD tables only — UD tables already injected from receipt.
+      // Batch all updates to avoid intermediate-state re-renders.
+      const updates: BatchUpdate[] = [];
       for (const [tableName, rows] of Object.entries(delta.tables)) {
         for (const [keyBytes, rowData] of Object.entries(rows)) {
-          store.setRow(tableName, keyBytes, rowData as Record<string, unknown>);
-          count++;
+          updates.push({ type: 'set', table: tableName, keyBytes, data: rowData as Record<string, unknown> });
         }
       }
-      if (count > 0) {
-        console.info(`[TX][DELTA] Applied ${count} update(s) from indexer delta at block ${delta.block}`);
+      if (updates.length > 0) {
+        useGameStore.getState().applyBatch(updates);
+        console.info(`[TX][DELTA] Applied ${updates.length} update(s) from indexer delta at block ${delta.block}`);
       }
     } catch {
       if (n < DELTA_MAX_ATTEMPTS - 1) {
@@ -198,7 +204,11 @@ export async function applyReceiptToStore(
     keyBytes: string;
   }[] = [];
 
-  // Step 1: Decode SetRecord + DeleteRecord from receipt logs (instant)
+  // Step 1: Decode SetRecord + DeleteRecord from receipt logs.
+  // Collect all updates into a batch to apply atomically — prevents
+  // intermediate-state re-renders that cause UI jitter during movement.
+  const batch: BatchUpdate[] = [];
+
   for (const log of receipt.logs) {
     let decoded;
     try {
@@ -224,7 +234,7 @@ export async function applyReceiptToStore(
 
         const keyBytes = '0x' + keyTuple.map((k: Hex) => k.slice(2)).join('');
         const serialized = serializeRecord(record as Record<string, unknown>);
-        useGameStore.getState().setRow(table.label, keyBytes, serialized);
+        batch.push({ type: 'set', table: table.label, keyBytes, data: serialized });
         applied++;
       } catch (err) {
         console.warn(`[TX][RECEIPT] Failed to decode ${table.label}:`, err);
@@ -254,9 +264,14 @@ export async function applyReceiptToStore(
       if (!table) continue;
 
       const keyBytes = '0x' + keyTuple.map((k: Hex) => k.slice(2)).join('');
-      useGameStore.getState().deleteRow(table.label, keyBytes);
+      batch.push({ type: 'delete', table: table.label, keyBytes });
       applied++;
     }
+  }
+
+  // Apply all receipt updates in a single atomic batch
+  if (batch.length > 0) {
+    useGameStore.getState().applyBatch(batch);
   }
 
   if (applied > 0 || skippedSplice > 0) {
