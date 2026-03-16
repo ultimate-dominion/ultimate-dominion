@@ -1,5 +1,5 @@
 import { Box, Center, HStack, Image, Spinner, Text, Tooltip, VStack } from '@chakra-ui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -135,9 +135,6 @@ export const EquippedLoadout = (): JSX.Element | null => {
   const { currentBattle } = useBattle();
   const { isLoading: isLoadingItemTemplates } = useItems();
 
-  // Force re-render when slot order changes via promoteToFirst
-  const [, setRenderKey] = useState(0);
-
   const storageKey = character ? `${SLOT_ORDER_KEY_PREFIX}${character.id}` : '';
 
   const attackItems = useMemo(
@@ -159,7 +156,6 @@ export const EquippedLoadout = (): JSX.Element | null => {
       // Only attack items (not consumables) can be promoted
       if (index >= orderedAttackItems.length) return;
       promoteToFirst(index);
-      setRenderKey(k => k + 1);
     },
     [orderedAttackItems.length, promoteToFirst],
   );

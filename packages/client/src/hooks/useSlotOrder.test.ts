@@ -132,18 +132,15 @@ describe('useSlotOrder', () => {
     expect(localStorage.getItem(KEY)).toBeNull();
   });
 
-  it('dispatches slot-order-changed event on promote', () => {
-    const listener = vi.fn();
-    window.addEventListener('slot-order-changed', listener);
-
+  it('re-renders with new order after promoteToFirst', () => {
     const { result } = renderHook(() => useSlotOrder(KEY, [sword, staff]));
+    expect(result.current.orderedItems).toEqual([sword, staff]);
 
     act(() => {
       result.current.promoteToFirst(1);
     });
 
-    expect(listener).toHaveBeenCalledTimes(1);
-    window.removeEventListener('slot-order-changed', listener);
+    expect(result.current.orderedItems).toEqual([staff, sword]);
   });
 });
 

@@ -1,4 +1,40 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+
+function reconcile<T extends { tokenId: string }>(
+  storageKey: string,
+  defaultItems: T[],
+): T[] {
+  if (defaultItems.length === 0) return [];
+
+  const raw = localStorage.getItem(storageKey);
+  if (!raw) return defaultItems;
+
+  let savedOrder: string[];
+  try {
+    savedOrder = JSON.parse(raw);
+  } catch {
+    return defaultItems;
+  }
+
+  if (!Array.isArray(savedOrder)) return defaultItems;
+
+  const itemMap = new Map(defaultItems.map(item => [item.tokenId, item]));
+
+  const ordered: T[] = [];
+  for (const id of savedOrder) {
+    const item = itemMap.get(id);
+    if (item) {
+      ordered.push(item);
+      itemMap.delete(id);
+    }
+  }
+
+  for (const item of itemMap.values()) {
+    ordered.push(item);
+  }
+
+  return ordered;
+}
 
 /**
  * Generic hook for ordering equipment slots by tokenId.
@@ -8,40 +44,13 @@ export function useSlotOrder<T extends { tokenId: string }>(
   storageKey: string,
   defaultItems: T[],
 ): { orderedItems: T[]; promoteToFirst: (index: number) => void } {
-  const orderedItems = useMemo(() => {
-    if (defaultItems.length === 0) return [];
+  const [version, setVersion] = useState(0);
 
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return defaultItems;
-
-    let savedOrder: string[];
-    try {
-      savedOrder = JSON.parse(raw);
-    } catch {
-      return defaultItems;
-    }
-
-    if (!Array.isArray(savedOrder)) return defaultItems;
-
-    const itemMap = new Map(defaultItems.map(item => [item.tokenId, item]));
-
-    // Ordered items that still exist in current equipment
-    const ordered: T[] = [];
-    for (const id of savedOrder) {
-      const item = itemMap.get(id);
-      if (item) {
-        ordered.push(item);
-        itemMap.delete(id);
-      }
-    }
-
-    // Append any new items not in saved order
-    for (const item of itemMap.values()) {
-      ordered.push(item);
-    }
-
-    return ordered;
-  }, [storageKey, defaultItems]);
+  const orderedItems = useMemo(
+    () => reconcile(storageKey, defaultItems),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [storageKey, defaultItems, version],
+  );
 
   const promoteToFirst = useCallback(
     (index: number) => {
@@ -50,10 +59,7 @@ export function useSlotOrder<T extends { tokenId: string }>(
       const [promoted] = ids.splice(index, 1);
       ids.unshift(promoted);
       localStorage.setItem(storageKey, JSON.stringify(ids));
-      // Force re-render by dispatching a storage event won't work in same tab,
-      // so the caller should trigger a state update. We write to localStorage
-      // and the component will re-read on next render cycle.
-      window.dispatchEvent(new Event('slot-order-changed'));
+      setVersion(v => v + 1);
     },
     [storageKey, orderedItems],
   );
