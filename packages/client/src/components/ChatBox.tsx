@@ -62,7 +62,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
     }
   }, []);
 
-  const scrollToBottom = useCallback(() => {}, []);
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     adjustTextareaHeight();
