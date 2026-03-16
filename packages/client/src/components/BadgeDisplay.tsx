@@ -77,7 +77,7 @@ export const BadgeShowcase = ({ badges }: { badges: Badge[] }): JSX.Element => {
           No badges earned yet
         </Text>
       ) : (
-        <HStack spacing={3} flexWrap="wrap">
+        <HStack spacing={2} rowGap={2} flexWrap="wrap">
           {badges.map((badge) => {
             const Icon = BADGE_ICONS[badge.type];
             return (

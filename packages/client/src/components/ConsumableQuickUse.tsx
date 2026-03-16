@@ -76,7 +76,7 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
   return (
     <VStack spacing={0} w="100%">
       {usableConsumables.length > 0 ? (
-        <HStack spacing={1.5} justify="center" w="100%">
+        <HStack spacing={1.5} rowGap={1.5} justify="center" flexWrap="wrap" w="100%">
           {usableConsumables.map(({ consumable, isEquipped }) => {
             const name = removeEmoji(consumable.name);
             const imageSrc = getItemImage(name);

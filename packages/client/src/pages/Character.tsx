@@ -205,6 +205,7 @@ export const CharacterPage = (): JSX.Element => {
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            order={{ base: 2, lg: 1 }}
           >
             <PolygonalCard clipPath="none" p={6} position="relative">
               <VStack alignItems="start" spacing={0}>
@@ -279,12 +280,14 @@ export const CharacterPage = (): JSX.Element => {
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
+            order={{ base: 3, lg: 2 }}
           >
             <LevelingPanel canLevel={canLevel} character={character} />
           </GridItem>
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+            order={{ base: 1, lg: 3 }}
           >
             <PolygonalCard
               bgColor="#14120F"
@@ -293,13 +296,17 @@ export const CharacterPage = (): JSX.Element => {
               p={6}
               position="relative"
             >
-              <HStack spacing={4}>
-                <Avatar size="lg" src={character.image} />
-                <Text fontWeight={700} mt={1} size="xl">
-                  {character.name}
-                </Text>
-                <ClassSymbol advancedClass={character.advancedClass} entityClass={character.entityClass} />
-                <BadgeIcons badges={badges} />
+              <HStack spacing={3} alignItems="center">
+                <Avatar size={{ base: 'md', lg: 'lg' }} src={character.image} />
+                <VStack alignItems="start" spacing={1}>
+                  <HStack spacing={2} flexWrap="wrap">
+                    <Text fontWeight={700} size={{ base: 'lg', sm: 'xl' }}>
+                      {character.name}
+                    </Text>
+                    <ClassSymbol advancedClass={character.advancedClass} entityClass={character.entityClass} />
+                  </HStack>
+                  <BadgeIcons badges={badges} />
+                </VStack>
                 {isOwner && Number(character.level) >= 10 && !character.hasSelectedAdvancedClass && (
                   <Button size="xs" variant="outline" colorScheme="blue" onClick={onOpenClassModal}>
                     Choose Class
@@ -310,7 +317,7 @@ export const CharacterPage = (): JSX.Element => {
                 {character.description}
               </Text>
               {badges.length > 0 && (
-                <Box mb={8}>
+                <Box mb={12}>
                   <BadgeShowcase badges={badges} />
                 </Box>
               )}
