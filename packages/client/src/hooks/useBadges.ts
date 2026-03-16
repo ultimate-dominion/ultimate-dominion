@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { erc721Abi } from 'viem';
 import { useMUD } from '../contexts/MUDContext';
-
-const BADGE_CONTRACT_ADDRESS = import.meta.env.VITE_BADGE_CONTRACT_ADDRESS || '';
+import { useGameConfig } from '../lib/gameStore';
 
 // Badge base IDs from contracts/constants.sol
 const BADGE_ADVENTURER = 1;
@@ -60,11 +59,15 @@ export const useBadges = (
     network: { publicClient },
   } = useMUD();
 
+  // Read badge contract address from on-chain config (no env var needed)
+  const config = useGameConfig('UltimateDominionConfig');
+  const badgeContractAddress = config?.badgeToken as string | undefined;
+
   const [badges, setBadges] = useState<Badge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!characterOwner || !characterTokenId || !publicClient || !BADGE_CONTRACT_ADDRESS) {
+    if (!characterOwner || !characterTokenId || !publicClient || !badgeContractAddress) {
       setBadges([]);
       setIsLoading(false);
       return;
@@ -81,7 +84,7 @@ export const useBadges = (
           try {
             const badgeTokenId = BigInt(def.base) * BigInt(1_000_000) + BigInt(characterTokenId);
             const owner = await publicClient.readContract({
-              address: BADGE_CONTRACT_ADDRESS as `0x${string}`,
+              address: badgeContractAddress as `0x${string}`,
               abi: erc721Abi,
               functionName: 'ownerOf',
               args: [badgeTokenId],
@@ -114,7 +117,7 @@ export const useBadges = (
     return () => {
       cancelled = true;
     };
-  }, [characterOwner, characterTokenId, publicClient]);
+  }, [characterOwner, characterTokenId, publicClient, badgeContractAddress]);
 
   return { badges, isLoading };
 };
