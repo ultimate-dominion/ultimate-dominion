@@ -62,6 +62,23 @@ import {
   type Weapon,
 } from '../utils/types';
 
+/**
+ * Determines whether character creation should be blocked pending wallet funding.
+ * - External (MetaMask): user must manually deposit → show "Fund Your Session"
+ * - Embedded (Google auth): relayer funds automatically → show loading spinner
+ */
+export function getFundingGate(
+  authMethod: 'embedded' | 'external' | null,
+  burnerBalanceFetched: boolean,
+  burnerBalance: string,
+): { needsFunding: boolean; awaitingFunding: boolean } {
+  const zeroBalance = burnerBalanceFetched && burnerBalance === '0';
+  return {
+    needsFunding: authMethod === 'external' && zeroBalance,
+    awaitingFunding: authMethod === 'embedded' && zeroBalance,
+  };
+}
+
 // Must match MAX_STAT_ROLLS in contracts/constants.sol
 const MAX_STAT_ROLLS = 4; // 1 initial roll + 3 re-rolls
 
@@ -587,7 +604,7 @@ const CharacterCreationInner = (): JSX.Element => {
     );
   }, [avatar, delegatorAddress]);
 
-  const needsFunding = authMethod === 'external' && burnerBalanceFetched && burnerBalance === '0';
+  const { needsFunding, awaitingFunding } = getFundingGate(authMethod, burnerBalanceFetched, burnerBalance);
 
   // Only block on sync — items load in background and are needed at the
   // starterItems step, not for race/powerSource/stats steps
@@ -613,6 +630,17 @@ const CharacterCreationInner = (): JSX.Element => {
         <Button onClick={onOpenWalletDetailsModal} variant="amber" px={10} py={5}>
           Deposit ETH
         </Button>
+      </Center>
+    );
+  }
+
+  if (awaitingFunding) {
+    return (
+      <Center h="100vh" flexDirection="column" gap={4} px={4}>
+        <Spinner size="lg" color="#D4A54A" />
+        <Text color="#C4B89E" fontSize="sm">
+          Loading...
+        </Text>
       </Center>
     );
   }

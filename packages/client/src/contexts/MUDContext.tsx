@@ -484,15 +484,19 @@ const MUDProviderInner = ({
     if (!activeWalletAddress) return () => {};
     getBurnerBalance();
 
+    // Poll aggressively (2s) while balance is 0 (waiting for relayer funding),
+    // then drop to normal interval (15s) once funded.
+    const pollMs = burnerBalance === '0' ? 2000 : 15000;
+
     let interval: ReturnType<typeof setInterval> | null = null;
-    const start = () => { if (!interval) interval = setInterval(getBurnerBalance, 15000); };
+    const start = () => { if (!interval) interval = setInterval(getBurnerBalance, pollMs); };
     const stop = () => { if (interval) { clearInterval(interval); interval = null; } };
     const onVisibility = () => { if (document.hidden) stop(); else { getBurnerBalance(); start(); } };
 
     if (!document.hidden) start();
     document.addEventListener('visibilitychange', onVisibility);
     return () => { stop(); document.removeEventListener('visibilitychange', onVisibility); };
-  }, [activeWalletAddress, getBurnerBalance]);
+  }, [activeWalletAddress, burnerBalance, getBurnerBalance]);
 
   // =============================================
   // Revoke delegation
