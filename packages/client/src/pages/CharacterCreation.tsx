@@ -445,9 +445,13 @@ const CharacterCreationInner = (): JSX.Element => {
 
     setSelectedRace(race);
 
-    const result = await raceTx.execute(() => chooseRace(character.id, race));
+    const result = await raceTx.execute(async () => {
+      const r = await chooseRace(character.id, race);
+      if (!r.success) throw new Error(r.error || 'Race selection failed');
+      return r;
+    });
 
-    if (result) {
+    if (result?.success) {
       await refreshCharacter();
       setCreationStep('powerSource');
     } else {
@@ -460,9 +464,13 @@ const CharacterCreationInner = (): JSX.Element => {
 
     setSelectedPowerSource(powerSource);
 
-    const result = await powerSourceTx.execute(() => choosePowerSource(character.id, powerSource));
+    const result = await powerSourceTx.execute(async () => {
+      const r = await choosePowerSource(character.id, powerSource);
+      if (!r.success) throw new Error(r.error || 'Power source selection failed');
+      return r;
+    });
 
-    if (result) {
+    if (result?.success) {
       await refreshCharacter();
       setCreationStep('stats');
     } else {
@@ -473,9 +481,13 @@ const CharacterCreationInner = (): JSX.Element => {
   const onRollStats = useCallback(async () => {
     if (!delegatorAddress || !character) return;
 
-    const result = await rollStatsTx.execute(() => rollBaseStats(character.id));
+    const result = await rollStatsTx.execute(async () => {
+      const r = await rollBaseStats(character.id);
+      if (!r.success) throw new Error(r.error || 'Stat roll failed');
+      return r;
+    });
 
-    if (result) {
+    if (result?.success) {
       await refreshCharacter();
     }
   }, [character, delegatorAddress, refreshCharacter, rollBaseStats, rollStatsTx]);
@@ -497,11 +509,13 @@ const CharacterCreationInner = (): JSX.Element => {
       return;
     }
 
-    const result = await enterGameTx.execute(() =>
-      enterGame(character.id, selectedStarterWeaponId, selectedStarterArmorId),
-    );
+    const result = await enterGameTx.execute(async () => {
+      const r = await enterGame(character.id, selectedStarterWeaponId, selectedStarterArmorId);
+      if (!r.success) throw new Error(r.error || 'Enter game failed');
+      return r;
+    });
 
-    if (result) {
+    if (result?.success) {
       await refreshCharacter();
       navigate(GAME_BOARD_PATH);
     }

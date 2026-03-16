@@ -17,6 +17,7 @@ const RETRYABLE_PATTERNS = [
   'fetch failed',
   'failed to fetch',
   'rate limit',
+  'replacement transaction underpriced',
   '429',
   '502',
   '503',
