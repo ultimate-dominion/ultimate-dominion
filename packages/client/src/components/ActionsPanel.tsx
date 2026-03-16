@@ -320,6 +320,7 @@ export const ActionsPanel = (): JSX.Element => {
     goldDropped: bigint;
     isDraw: boolean;
     encounterId: string;
+    monsterName: string;
     items: (Armor | Spell | Weapon)[];
   };
 
@@ -352,13 +353,14 @@ export const ActionsPanel = (): JSX.Element => {
       goldDropped: lastestBattleOutcome.goldDropped,
       isDraw: currentBattle.maxTurns === currentBattle.currentTurn,
       encounterId: lastestBattleOutcome.encounterId,
+      monsterName: opponent?.name ?? 'a monster',
       items,
     }, ...prev].slice(0, 5));
 
     // Immediately free BattleContext so next battle can proceed
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, lastestBattleOutcome.encounterId);
     onContinueToBattleOutcome(false);
-  }, [autoAdventureMode, battleOver, currentBattle, lastestBattleOutcome, inlineResults, armorTemplates, spellTemplates, weaponTemplates, onContinueToBattleOutcome]);
+  }, [autoAdventureMode, battleOver, currentBattle, lastestBattleOutcome, inlineResults, armorTemplates, spellTemplates, weaponTemplates, onContinueToBattleOutcome, opponent]);
 
   // Clear history when auto-adventure is turned off
   useEffect(() => {
@@ -878,10 +880,10 @@ export const ActionsPanel = (): JSX.Element => {
             <HStack key={result.encounterId} opacity={i === 0 ? 1 : 0.6} spacing={3} flexWrap="wrap">
               <Text fontWeight={700} size="xs">
                 {result.isDraw
-                  ? 'Draw'
+                  ? `Draw — ${result.monsterName}`
                   : result.winner === character?.id
-                    ? 'Victory!'
-                    : 'Defeat...'}
+                    ? `Defeated ${result.monsterName}.`
+                    : `Defeated by ${result.monsterName}.`}
               </Text>
               {result.winner === character?.id && (
                 <>
@@ -893,6 +895,11 @@ export const ActionsPanel = (): JSX.Element => {
                   {result.goldDropped > 0n && (
                     <Text size="xs" color="gold" fontFamily="mono">
                       +{etherToFixedNumber(result.goldDropped)} Gold
+                    </Text>
+                  )}
+                  {result.expDropped === 0n && result.goldDropped === 0n && result.items.length === 0 && (
+                    <Text size="xs" color="gray.500">
+                      No rewards — above level range
                     </Text>
                   )}
                 </>

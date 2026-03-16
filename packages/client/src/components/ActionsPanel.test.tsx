@@ -200,26 +200,26 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
   // --- Happy paths ---
 
-  it('shows Victory with gold, XP, and item names on win with items', () => {
+  it('shows Defeated monster with gold, XP, and item names on win with items', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('Victory!')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
     expect(screen.getByText(/\+50 XP/)).toBeTruthy();
     expect(screen.getByText(/\+1\.00 Gold/)).toBeTruthy();
     // Items shown as inline text, not cards
     expect(screen.getByText('Iron Shield')).toBeTruthy();
   });
 
-  it('shows Victory without items when no items dropped', () => {
+  it('shows Defeated monster without items when no items dropped', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = { ...winOutcome, itemsDropped: [] };
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('Victory!')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
     expect(screen.getByText(/\+50 XP/)).toBeTruthy();
     expect(screen.queryByText('Iron Shield')).toBeNull();
   });
@@ -230,18 +230,18 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('Draw')).toBeTruthy();
+    expect(screen.getByText('Draw — Dire Rat')).toBeTruthy();
   });
 
   // --- Unhappy paths ---
 
-  it('shows Defeat and lost gold on loss', () => {
+  it('shows Defeated by monster and lost gold on loss', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = lossOutcome;
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('Defeat...')).toBeTruthy();
+    expect(screen.getByText('Defeated by Dire Rat.')).toBeTruthy();
     expect(screen.getByText(/-0\.50 Gold/)).toBeTruthy();
   });
 
@@ -252,8 +252,8 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     render(<ActionsPanel />);
 
     expect(screen.getByText(/Auto Adventure/)).toBeTruthy();
-    expect(screen.queryByText('Victory!')).toBeNull();
-    expect(screen.queryByText('Defeat...')).toBeNull();
+    expect(screen.queryByText('Defeated Dire Rat.')).toBeNull();
+    expect(screen.queryByText('Defeated by Dire Rat.')).toBeNull();
   });
 
   // --- Edge cases ---
@@ -268,7 +268,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     expect(mockOnContinueToBattleOutcome).toHaveBeenCalledWith(false);
     expect(localStorage.getItem('latest-battle-outcome-seen')).toBe('0xenc1');
     // But results still visible (persisted in local state)
-    expect(screen.getByText('Victory!')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
   });
 
   it('keeps rolling history of results', () => {
@@ -276,7 +276,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     battleState.lastestBattleOutcome = winOutcome;
 
     const { rerender } = render(<ActionsPanel />);
-    expect(screen.getByText('Victory!')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
 
     // Simulate second battle result arriving
     mockOnContinueToBattleOutcome.mockClear();
@@ -286,10 +286,10 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     act(() => { rerender(<ActionsPanel />); });
 
     // Both results should be visible
-    expect(screen.getAllByText('Victory!')).toHaveLength(2);
+    expect(screen.getAllByText('Defeated Dire Rat.')).toHaveLength(2);
   });
 
-  it('hides gold and XP lines when amounts are zero', () => {
+  it('shows no-rewards message when XP, gold, and items are all zero', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = {
       ...winOutcome,
@@ -300,7 +300,8 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('Victory!')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+    expect(screen.getByText(/No rewards/)).toBeTruthy();
     expect(screen.queryByText(/XP/)).toBeNull();
     expect(screen.queryByText(/Gold/)).toBeNull();
   });
@@ -314,7 +315,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     // Standard flow shows "View Results" button, not inline results
     expect(screen.getByText('View Results')).toBeTruthy();
-    expect(screen.queryByText('Victory!')).toBeNull();
+    expect(screen.queryByText('Defeated Dire Rat.')).toBeNull();
   });
 
   it('clicking an item name opens the equip modal', async () => {
@@ -336,7 +337,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     render(<ActionsPanel />);
 
     // Results should show
-    expect(screen.getByText('Victory!')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
     // Auto-adventure controls should ALSO be visible (additive, not replaced)
     expect(screen.getByText(/Auto Adventure/)).toBeTruthy();
   });
