@@ -194,12 +194,6 @@ export const ActionsPanel = (): JSX.Element => {
     [currentBattle, lastestBattleOutcome],
   );
 
-  // Scroll to top when battle ends so outcome is immediately visible
-  useEffect(() => {
-    if (battleOver && parentDivRef.current) {
-      parentDivRef.current.scrollTop = 0;
-    }
-  }, [battleOver]);
 
   const userTurn = useMemo(() => {
     if (!(character && currentBattle)) return false;

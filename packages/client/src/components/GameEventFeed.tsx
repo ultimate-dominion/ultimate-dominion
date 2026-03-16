@@ -1,20 +1,10 @@
 import { Box, Text, VStack } from '@chakra-ui/react';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useQueue } from '../contexts/QueueContext';
 
 export const GameEventFeed = (): JSX.Element => {
   const { gameEvents } = useQueue();
   const bottomRef = useRef<HTMLDivElement>(null);
-  const initialLoadRef = useRef(true);
-
-  // Auto-scroll to bottom when NEW events arrive (skip initial load to avoid page jump)
-  useEffect(() => {
-    if (initialLoadRef.current) {
-      initialLoadRef.current = false;
-      return;
-    }
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [gameEvents.length]);
 
   if (gameEvents.length === 0) {
     return (

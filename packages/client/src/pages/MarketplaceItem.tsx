@@ -375,7 +375,6 @@ export const MarketplaceItem = (): JSX.Element => {
 
   const onScrollToTabs = useCallback(() => {
     setTabIndex(orderType === OrderType.Buying ? 0 : 1);
-    tabsRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [orderType]);
 
   useEffect(() => {
