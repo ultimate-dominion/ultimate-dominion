@@ -111,7 +111,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   useEffect(() => {
     if (attackButton1Ref.current) {
-      attackButton1Ref.current.focus();
+      attackButton1Ref.current.focus({ preventScroll: true });
       setAttackButtonFocus(0);
     }
   }, [attackOutcomes]);
@@ -121,34 +121,34 @@ export const ActionsPanel = (): JSX.Element => {
       switch (event.key) {
         case 'ArrowLeft':
           if (attackButtonFocus === 1 && attackButton2Ref.current) {
-            attackButton1Ref.current?.focus();
+            attackButton1Ref.current?.focus({ preventScroll: true });
             setAttackButtonFocus(0);
           }
           if (attackButtonFocus === 2 && attackButton3Ref.current) {
-            attackButton2Ref.current?.focus();
+            attackButton2Ref.current?.focus({ preventScroll: true });
             setAttackButtonFocus(1);
           }
           if (attackButtonFocus === 3 && attackButton4Ref.current) {
-            attackButton3Ref.current?.focus();
+            attackButton3Ref.current?.focus({ preventScroll: true });
             setAttackButtonFocus(2);
           }
           break;
         case 'ArrowRight':
           if (attackButtonFocus === 0 && attackButton1Ref.current) {
-            attackButton2Ref.current?.focus();
+            attackButton2Ref.current?.focus({ preventScroll: true });
             setAttackButtonFocus(1);
           }
           if (attackButtonFocus === 1 && attackButton2Ref.current) {
-            attackButton3Ref.current?.focus();
+            attackButton3Ref.current?.focus({ preventScroll: true });
             setAttackButtonFocus(2);
           }
           if (attackButtonFocus === 2 && attackButton3Ref.current) {
-            attackButton4Ref.current?.focus();
+            attackButton4Ref.current?.focus({ preventScroll: true });
             setAttackButtonFocus(3);
           }
           break;
         case '1':
-          attackButton1Ref.current?.focus();
+          attackButton1Ref.current?.focus({ preventScroll: true });
           setAttackButtonFocus(1);
           if (attackButton1Ref.current?.disabled) {
             break;
@@ -156,7 +156,7 @@ export const ActionsPanel = (): JSX.Element => {
           attackButton1Ref.current?.click();
           break;
         case '2':
-          attackButton2Ref.current?.focus();
+          attackButton2Ref.current?.focus({ preventScroll: true });
           setAttackButtonFocus(2);
           if (attackButton2Ref.current?.disabled) {
             break;
@@ -164,7 +164,7 @@ export const ActionsPanel = (): JSX.Element => {
           attackButton2Ref.current?.click();
           break;
         case '3':
-          attackButton3Ref.current?.focus();
+          attackButton3Ref.current?.focus({ preventScroll: true });
           setAttackButtonFocus(3);
           if (attackButton3Ref.current?.disabled) {
             break;
@@ -172,7 +172,7 @@ export const ActionsPanel = (): JSX.Element => {
           attackButton3Ref.current?.click();
           break;
         case '4':
-          attackButton4Ref.current?.focus();
+          attackButton4Ref.current?.focus({ preventScroll: true });
           setAttackButtonFocus(4);
           if (attackButton4Ref.current?.disabled) {
             break;
