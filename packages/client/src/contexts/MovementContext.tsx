@@ -11,6 +11,7 @@ import { IoIosWarning } from 'react-icons/io';
 import { Link, useLocation } from 'react-router-dom';
 
 import { InfoModal } from '../components/InfoModal';
+import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import type { TransactionProgress } from '../hooks/useTransactionProgress';
 import { GAME_BOARD_PATH } from '../Routes';
@@ -68,6 +69,7 @@ export const MovementProvider = ({
   const { isSpawned, position } = useMap();
   const { currentBattle } = useBattle();
   const { isMessageInputFocused } = useChat();
+  const { renderError } = useToast();
 
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
@@ -87,7 +89,7 @@ export const MovementProvider = ({
   const moveTx = useTransaction({
     actionName: autoAdventureMode ? 'adventuring' : 'moving',
     silent: true,
-    maxAttempts: 2,
+    maxAttempts: 1,
     estimatedDurationMs: 1000,
   });
 
@@ -137,7 +139,10 @@ export const MovementProvider = ({
       }
 
       setIsMoving(true);
-      await moveTx.execute(() => move(character.id, direction));
+      const result = await moveTx.execute(() => move(character.id, direction));
+      if (result && !result.success && result.error) {
+        renderError(result.error);
+      }
       setIsMoving(false);
     },
     [
@@ -153,6 +158,7 @@ export const MovementProvider = ({
       moveTx,
       onOpenNoMoveEquippedModal,
       position,
+      renderError,
     ],
   );
 

@@ -618,8 +618,11 @@ export function createSystemCalls(
   const MOVE_GAS_LIMIT = BigInt(8_000_000);
 
   // On-chain retry: if the receipt reverts, retry after a short delay.
+  // Keep retries at 0 — the diagnostic handler updates the store position,
+  // and the next user-initiated move uses the correct coordinates. Retrying
+  // wastes gas when the position was stale (InvalidMove reverts again).
   const ON_CHAIN_RETRY_DELAY_MS = 500;
-  const MAX_ON_CHAIN_RETRIES = 2;
+  const MAX_ON_CHAIN_RETRIES = 0;
 
   type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -790,7 +793,7 @@ export function createSystemCalls(
 
             console.warn(`[move] On-chain revert — max retries reached (target: ${x},${y})`);
             lastMoveCompletedMs = Date.now();
-            return { success: false, error: 'Move failed — tap again to continue.' };
+            return { success: false, error: 'Something went wrong. Try moving again.' };
           }
           lastMoveCompletedMs = Date.now();
           return { success: true };
@@ -801,7 +804,7 @@ export function createSystemCalls(
           };
         }
       }
-      return { success: false, error: 'Move failed after retries.' };
+      return { success: false, error: 'Something went wrong. Try moving again.' };
     } finally {
       isMovePending = false;
     }

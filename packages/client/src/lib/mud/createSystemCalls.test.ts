@@ -732,21 +732,15 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
     expect(waitFn).toHaveBeenCalledTimes(1);
   });
 
-  it('retries when diagnostic re-simulation passes (transient revert)', async () => {
+  it('does not retry after on-chain revert (MAX_ON_CHAIN_RETRIES=0)', async () => {
     const mockReceipt = { status: 'reverted', blockNumber: BigInt(100), gasUsed: BigInt(100000) };
-    const successReceipt = { status: 'success', blockNumber: BigInt(101), gasUsed: BigInt(100000) };
     const { network } = createMockNetwork();
     mockOwnership();
 
-    let receiptCount = 0;
-    const waitFn = vi.fn().mockImplementation(() => {
-      receiptCount++;
-      // First TX reverts, second succeeds
-      return Promise.resolve(receiptCount === 1 ? mockReceipt : successReceipt);
-    });
+    const waitFn = vi.fn().mockResolvedValue(mockReceipt);
     network.waitForTransaction = waitFn;
 
-    // All write calls succeed (return TX hash)
+    // All write calls succeed (return TX hash) — diagnostic sim passes
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: () => vi.fn().mockResolvedValue(FAKE_TX_HASH),
     });
@@ -754,8 +748,8 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
     const calls = createSystemCalls(network);
 
     const result = await calls.move(TEST_ENTITY, 'right');
-    expect(result.success).toBe(true);
-    // Two TXs: first reverted, diagnostic sim passed, retry succeeded
-    expect(waitFn).toHaveBeenCalledTimes(2);
+    // Should fail without retrying — one TX only
+    expect(result.success).toBe(false);
+    expect(waitFn).toHaveBeenCalledTimes(1);
   });
 });

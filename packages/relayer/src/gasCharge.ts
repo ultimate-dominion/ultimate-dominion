@@ -180,6 +180,10 @@ export async function swapGoldForEth(): Promise<void> {
     });
     console.log(`[gasCharge] Approve tx: ${approveTx}`);
 
+    // Wait for approve to be included before swapping — otherwise the swap's
+    // gas estimation runs against stale allowance and reverts with STF.
+    await publicClient.waitForTransactionReceipt({ hash: approveTx, timeout: 30_000 });
+
     // 2. Swap Gold → WETH via exactInputSingle
     const swapCalldata = encodeFunctionData({
       abi: swapRouterAbi,
