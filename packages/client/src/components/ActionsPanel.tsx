@@ -311,37 +311,63 @@ export const ActionsPanel = (): JSX.Element => {
   }, [currentBattle]);
 
   // --- Auto adventure inline results ---
+  // Results are captured in local state so they survive BattleContext fluctuations
+  // (e.g. previous battle's auto-dismiss clearing currentBattle while new TX is in flight).
 
-  const inlineResultItems = useMemo(() => {
-    if (!autoAdventureMode || !lastestBattleOutcome?.itemsDropped?.length) return [];
-    const ids = lastestBattleOutcome.itemsDropped;
-    const armor = armorTemplates.filter(a => ids.includes(a.tokenId)).map(a => ({
-      ...a, balance: 1n, itemId: zeroHash, owner: zeroAddress,
-    }));
-    const spells = spellTemplates.filter(s => ids.includes(s.tokenId)).map(s => ({
-      ...s, balance: 1n, itemId: zeroHash, owner: zeroAddress,
-    }));
-    const weapons = weaponTemplates.filter(w => ids.includes(w.tokenId)).map(w => ({
-      ...w, balance: 1n, itemId: zeroHash, owner: zeroAddress,
-    }));
-    return [...armor, ...spells, ...weapons].sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
-  }, [autoAdventureMode, lastestBattleOutcome, armorTemplates, spellTemplates, weaponTemplates]);
+  const [inlineResult, setInlineResult] = useState<{
+    winner: string;
+    expDropped: bigint;
+    goldDropped: bigint;
+    isDraw: boolean;
+    encounterId: string;
+    items: (Armor | Spell | Weapon)[];
+  } | null>(null);
 
   const [selectedItem, setSelectedItem] = useState<Armor | Spell | Weapon | null>(null);
   const { isOpen: isItemModalOpen, onClose: onCloseItemModal, onOpen: onOpenItemModal } = useDisclosure();
 
-  // Auto-dismiss inline results after 3s (wins only — loss = death = auto adventure disables)
+  // Capture results when a new outcome arrives
   useEffect(() => {
     if (!(autoAdventureMode && battleOver && currentBattle && lastestBattleOutcome)) return;
-    if (lastestBattleOutcome.winner !== character?.id) return;
+    // Don't re-capture if we already have this outcome
+    if (inlineResult?.encounterId === lastestBattleOutcome.encounterId) return;
+
+    const ids = lastestBattleOutcome.itemsDropped ?? [];
+    const items = [
+      ...armorTemplates.filter(a => ids.includes(a.tokenId)).map(a => ({
+        ...a, balance: 1n, itemId: zeroHash, owner: zeroAddress,
+      })),
+      ...spellTemplates.filter(s => ids.includes(s.tokenId)).map(s => ({
+        ...s, balance: 1n, itemId: zeroHash, owner: zeroAddress,
+      })),
+      ...weaponTemplates.filter(w => ids.includes(w.tokenId)).map(w => ({
+        ...w, balance: 1n, itemId: zeroHash, owner: zeroAddress,
+      })),
+    ].sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
+
+    setInlineResult({
+      winner: lastestBattleOutcome.winner,
+      expDropped: lastestBattleOutcome.expDropped,
+      goldDropped: lastestBattleOutcome.goldDropped,
+      isDraw: currentBattle.maxTurns === currentBattle.currentTurn,
+      encounterId: lastestBattleOutcome.encounterId,
+      items,
+    });
+  }, [autoAdventureMode, battleOver, currentBattle, lastestBattleOutcome, inlineResult?.encounterId, armorTemplates, spellTemplates, weaponTemplates]);
+
+  // Auto-dismiss inline results after 3s (wins only — loss = death = auto adventure disables)
+  useEffect(() => {
+    if (!inlineResult) return;
+    if (inlineResult.winner !== character?.id) return;
 
     const timer = setTimeout(() => {
-      localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, lastestBattleOutcome.encounterId);
+      setInlineResult(null);
+      localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, inlineResult.encounterId);
       onContinueToBattleOutcome(false);
       refreshCharacter();
     }, 3000);
     return () => clearTimeout(timer);
-  }, [autoAdventureMode, battleOver, currentBattle, lastestBattleOutcome, character?.id, onContinueToBattleOutcome, refreshCharacter]);
+  }, [inlineResult, character?.id, onContinueToBattleOutcome, refreshCharacter]);
 
   if (isItemTemplatesLoading) {
     return (
@@ -850,49 +876,49 @@ export const ActionsPanel = (): JSX.Element => {
           });
           })()}
       </Stack>
-      {battleOver && currentBattle && (
-        autoAdventureMode ? (
-          <Stack py={3} spacing={2} px={{ base: 2, lg: 4 }}>
-            <Text fontWeight={700} size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-              {battleDraw
-                ? 'Draw'
-                : lastestBattleOutcome?.winner === character?.id
-                  ? 'Victory!'
-                  : 'Defeat...'}
+      {inlineResult && autoAdventureMode && (
+        <Stack py={3} spacing={2} px={{ base: 2, lg: 4 }}>
+          <Text fontWeight={700} size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+            {inlineResult.isDraw
+              ? 'Draw'
+              : inlineResult.winner === character?.id
+                ? 'Victory!'
+                : 'Defeat...'}
+          </Text>
+          {inlineResult.winner === character?.id && (
+            <HStack spacing={3} flexWrap="wrap">
+              {inlineResult.expDropped > 0n && (
+                <Text size="xs" color="green" fontFamily="mono">
+                  +{inlineResult.expDropped.toString()} XP
+                </Text>
+              )}
+              {inlineResult.goldDropped > 0n && (
+                <Text size="xs" color="gold" fontFamily="mono">
+                  +{etherToFixedNumber(inlineResult.goldDropped)} Gold
+                </Text>
+              )}
+            </HStack>
+          )}
+          {inlineResult.winner !== character?.id && inlineResult.goldDropped > 0n && (
+            <Text size="xs" color="red" fontFamily="mono">
+              -{etherToFixedNumber(inlineResult.goldDropped)} Gold
             </Text>
-            {lastestBattleOutcome?.winner === character?.id && lastestBattleOutcome && (
-              <HStack spacing={3} flexWrap="wrap">
-                {lastestBattleOutcome.expDropped > 0n && (
-                  <Text size="xs" color="green" fontFamily="mono">
-                    +{lastestBattleOutcome.expDropped.toString()} XP
-                  </Text>
-                )}
-                {lastestBattleOutcome.goldDropped > 0n && (
-                  <Text size="xs" color="gold" fontFamily="mono">
-                    +{etherToFixedNumber(lastestBattleOutcome.goldDropped)} Gold
-                  </Text>
-                )}
-              </HStack>
-            )}
-            {lastestBattleOutcome != null && lastestBattleOutcome.winner !== character?.id && lastestBattleOutcome.goldDropped > 0n && (
-              <Text size="xs" color="red" fontFamily="mono">
-                -{etherToFixedNumber(lastestBattleOutcome.goldDropped)} Gold
-              </Text>
-            )}
-            {inlineResultItems.length > 0 && lastestBattleOutcome?.winner === character?.id && (
-              <VStack spacing={1} align="stretch">
-                <Text size="2xs" color="#8A7E6A">Loot:</Text>
-                {inlineResultItems.map(item => (
-                  <ItemCard
-                    key={`inline-loot-${item.tokenId}`}
-                    onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
-                    {...item}
-                  />
-                ))}
-              </VStack>
-            )}
-          </Stack>
-        ) : (
+          )}
+          {inlineResult.items.length > 0 && inlineResult.winner === character?.id && (
+            <VStack spacing={1} align="stretch">
+              <Text size="2xs" color="#8A7E6A">Loot:</Text>
+              {inlineResult.items.map(item => (
+                <ItemCard
+                  key={`inline-loot-${item.tokenId}`}
+                  onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
+                  {...item}
+                />
+              ))}
+            </VStack>
+          )}
+        </Stack>
+      )}
+      {battleOver && currentBattle && !autoAdventureMode && (
           <Stack py={4} spacing={4}>
             <Box
               backgroundColor="rgba(196,184,158,0.08)"
@@ -950,7 +976,6 @@ export const ActionsPanel = (): JSX.Element => {
               </HStack>
             </HStack>
           </Stack>
-        )
       )}
       {selectedItem && (
         <ItemEquipModal
