@@ -311,26 +311,28 @@ export const ActionsPanel = (): JSX.Element => {
   }, [currentBattle]);
 
   // --- Auto adventure inline results ---
-  // Results are captured in local state so they survive BattleContext fluctuations
-  // (e.g. previous battle's auto-dismiss clearing currentBattle while new TX is in flight).
+  // Rolling history of last 5 battle results. Captured in local state so they
+  // survive BattleContext fluctuations. BattleContext is dismissed immediately
+  // when results are captured so the next battle can proceed.
 
-  const [inlineResult, setInlineResult] = useState<{
+  type InlineResult = {
     winner: string;
     expDropped: bigint;
     goldDropped: bigint;
     isDraw: boolean;
     encounterId: string;
     items: (Armor | Spell | Weapon)[];
-  } | null>(null);
+  };
+
+  const [inlineResults, setInlineResults] = useState<InlineResult[]>([]);
 
   const [selectedItem, setSelectedItem] = useState<Armor | Spell | Weapon | null>(null);
   const { isOpen: isItemModalOpen, onClose: onCloseItemModal, onOpen: onOpenItemModal } = useDisclosure();
 
-  // Capture results when a new outcome arrives
+  // Capture results when a new outcome arrives, dismiss from BattleContext immediately
   useEffect(() => {
     if (!(autoAdventureMode && battleOver && currentBattle && lastestBattleOutcome)) return;
-    // Don't re-capture if we already have this outcome
-    if (inlineResult?.encounterId === lastestBattleOutcome.encounterId) return;
+    if (inlineResults.some(r => r.encounterId === lastestBattleOutcome.encounterId)) return;
 
     const ids = lastestBattleOutcome.itemsDropped ?? [];
     const items = [
@@ -345,29 +347,24 @@ export const ActionsPanel = (): JSX.Element => {
       })),
     ].sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
 
-    setInlineResult({
+    setInlineResults(prev => [{
       winner: lastestBattleOutcome.winner,
       expDropped: lastestBattleOutcome.expDropped,
       goldDropped: lastestBattleOutcome.goldDropped,
       isDraw: currentBattle.maxTurns === currentBattle.currentTurn,
       encounterId: lastestBattleOutcome.encounterId,
       items,
-    });
-  }, [autoAdventureMode, battleOver, currentBattle, lastestBattleOutcome, inlineResult?.encounterId, armorTemplates, spellTemplates, weaponTemplates]);
+    }, ...prev].slice(0, 5));
 
-  // Auto-dismiss inline results after 3s (wins only — loss = death = auto adventure disables)
+    // Immediately free BattleContext so next battle can proceed
+    localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, lastestBattleOutcome.encounterId);
+    onContinueToBattleOutcome(false);
+  }, [autoAdventureMode, battleOver, currentBattle, lastestBattleOutcome, inlineResults, armorTemplates, spellTemplates, weaponTemplates, onContinueToBattleOutcome]);
+
+  // Clear history when auto-adventure is turned off
   useEffect(() => {
-    if (!inlineResult) return;
-    if (inlineResult.winner !== character?.id) return;
-
-    const timer = setTimeout(() => {
-      setInlineResult(null);
-      localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, inlineResult.encounterId);
-      onContinueToBattleOutcome(false);
-      refreshCharacter();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [inlineResult, character?.id, onContinueToBattleOutcome, refreshCharacter]);
+    if (!autoAdventureMode) setInlineResults([]);
+  }, [autoAdventureMode]);
 
   if (isItemTemplatesLoading) {
     return (
@@ -876,46 +873,52 @@ export const ActionsPanel = (): JSX.Element => {
           });
           })()}
       </Stack>
-      {inlineResult && autoAdventureMode && (
+      {inlineResults.length > 0 && autoAdventureMode && (
         <Stack py={3} spacing={2} px={{ base: 2, lg: 4 }}>
-          <Text fontWeight={700} size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-            {inlineResult.isDraw
-              ? 'Draw'
-              : inlineResult.winner === character?.id
-                ? 'Victory!'
-                : 'Defeat...'}
-          </Text>
-          {inlineResult.winner === character?.id && (
-            <HStack spacing={3} flexWrap="wrap">
-              {inlineResult.expDropped > 0n && (
-                <Text size="xs" color="green" fontFamily="mono">
-                  +{inlineResult.expDropped.toString()} XP
+          {inlineResults.map((result, i) => (
+            <Box key={result.encounterId} opacity={i === 0 ? 1 : 0.6}>
+              <HStack spacing={3} flexWrap="wrap">
+                <Text fontWeight={700} size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                  {result.isDraw
+                    ? 'Draw'
+                    : result.winner === character?.id
+                      ? 'Victory!'
+                      : 'Defeat...'}
                 </Text>
+                {result.winner === character?.id && (
+                  <>
+                    {result.expDropped > 0n && (
+                      <Text size="xs" color="green" fontFamily="mono">
+                        +{result.expDropped.toString()} XP
+                      </Text>
+                    )}
+                    {result.goldDropped > 0n && (
+                      <Text size="xs" color="gold" fontFamily="mono">
+                        +{etherToFixedNumber(result.goldDropped)} Gold
+                      </Text>
+                    )}
+                  </>
+                )}
+                {result.winner !== character?.id && result.goldDropped > 0n && (
+                  <Text size="xs" color="red" fontFamily="mono">
+                    -{etherToFixedNumber(result.goldDropped)} Gold
+                  </Text>
+                )}
+              </HStack>
+              {result.items.length > 0 && result.winner === character?.id && (
+                <VStack spacing={1} align="stretch" mt={1}>
+                  <Text size="2xs" color="#8A7E6A">Loot:</Text>
+                  {result.items.map(item => (
+                    <ItemCard
+                      key={`inline-loot-${result.encounterId}-${item.tokenId}`}
+                      onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
+                      {...item}
+                    />
+                  ))}
+                </VStack>
               )}
-              {inlineResult.goldDropped > 0n && (
-                <Text size="xs" color="gold" fontFamily="mono">
-                  +{etherToFixedNumber(inlineResult.goldDropped)} Gold
-                </Text>
-              )}
-            </HStack>
-          )}
-          {inlineResult.winner !== character?.id && inlineResult.goldDropped > 0n && (
-            <Text size="xs" color="red" fontFamily="mono">
-              -{etherToFixedNumber(inlineResult.goldDropped)} Gold
-            </Text>
-          )}
-          {inlineResult.items.length > 0 && inlineResult.winner === character?.id && (
-            <VStack spacing={1} align="stretch">
-              <Text size="2xs" color="#8A7E6A">Loot:</Text>
-              {inlineResult.items.map(item => (
-                <ItemCard
-                  key={`inline-loot-${item.tokenId}`}
-                  onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
-                  {...item}
-                />
-              ))}
-            </VStack>
-          )}
+            </Box>
+          ))}
         </Stack>
       )}
       {battleOver && currentBattle && !autoAdventureMode && (

@@ -235,7 +235,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
   // --- Unhappy paths ---
 
-  it('shows Defeat and lost gold on loss, does NOT auto-dismiss', () => {
+  it('shows Defeat and lost gold on loss', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = lossOutcome;
 
@@ -243,10 +243,6 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     expect(screen.getByText('Defeat...')).toBeTruthy();
     expect(screen.getByText(/-0\.50 Gold/)).toBeTruthy();
-
-    // Advance past auto-dismiss timer — should NOT fire
-    act(() => { vi.advanceTimersByTime(5000); });
-    expect(mockOnContinueToBattleOutcome).not.toHaveBeenCalled();
   });
 
   it('shows idle state when no battle (autoFight TX not started)', () => {
@@ -262,42 +258,35 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
   // --- Edge cases ---
 
-  it('auto-dismiss fires after 3s on win', () => {
+  it('immediately dismisses from BattleContext when results are captured', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
 
     render(<ActionsPanel />);
 
-    expect(mockOnContinueToBattleOutcome).not.toHaveBeenCalled();
-
-    act(() => { vi.advanceTimersByTime(3000); });
-
+    // Results captured on first render — BattleContext dismissed immediately
     expect(mockOnContinueToBattleOutcome).toHaveBeenCalledWith(false);
-    expect(mockRefreshCharacter).toHaveBeenCalled();
     expect(localStorage.getItem('latest-battle-outcome-seen')).toBe('0xenc1');
+    // But results still visible (persisted in local state)
+    expect(screen.getByText('Victory!')).toBeTruthy();
   });
 
-  it('new outcome resets the dismiss timer', () => {
+  it('keeps rolling history of results', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
 
-    const { rerender, unmount } = render(<ActionsPanel />);
+    const { rerender } = render(<ActionsPanel />);
+    expect(screen.getByText('Victory!')).toBeTruthy();
 
-    // Advance 2s — not yet dismissed
-    act(() => { vi.advanceTimersByTime(2000); });
-    expect(mockOnContinueToBattleOutcome).not.toHaveBeenCalled();
-
-    // Remount with new outcome (must also update currentBattle encounterId to match)
-    unmount();
-    const newOutcome = { ...winOutcome, encounterId: '0xenc2' };
-    battleState.lastestBattleOutcome = newOutcome;
+    // Simulate second battle result arriving
+    mockOnContinueToBattleOutcome.mockClear();
     battleState.currentBattle = { ...normalBattle, encounterId: '0xenc2' };
-    render(<ActionsPanel />);
+    battleState.lastestBattleOutcome = { ...winOutcome, encounterId: '0xenc2', expDropped: 99n };
 
-    // Full 3s from new outcome
-    act(() => { vi.advanceTimersByTime(3000); });
-    expect(mockOnContinueToBattleOutcome).toHaveBeenCalledWith(false);
-    expect(localStorage.getItem('latest-battle-outcome-seen')).toBe('0xenc2');
+    act(() => { rerender(<ActionsPanel />); });
+
+    // Both results should be visible
+    expect(screen.getAllByText('Victory!')).toHaveLength(2);
   });
 
   it('hides gold and XP lines when amounts are zero', () => {
