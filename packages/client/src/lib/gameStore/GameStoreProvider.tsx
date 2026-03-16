@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGameStore } from './store';
 import { WSClient } from './wsClient';
 import type { FullSnapshot } from './types';
-import { writeCachedSnapshot } from './snapshotCache';
+import { writeCachedCharacters, writeCachedSnapshot } from './snapshotCache';
 
 const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
 const INDEXER_WS_URL = import.meta.env.VITE_INDEXER_WS_URL || 'ws://localhost:3001/ws';
@@ -55,9 +55,14 @@ export function GameStoreProvider({ children }: Props) {
         console.log(`[gameStore] Hydrating with ${Object.keys(snapshot.tables).length} tables at block ${snapshot.block}`);
         useGameStore.getState().hydrate(snapshot);
 
-        // 3. Cache the fresh snapshot
+        // 3. Cache for next refresh
         if (WORLD_ADDRESS) {
           writeCachedSnapshot(WORLD_ADDRESS, snapshot);
+          // Also cache just Characters table (~50KB) as fallback when
+          // full snapshot (24MB+) is too large for localStorage.
+          if (snapshot.tables.Characters) {
+            writeCachedCharacters(WORLD_ADDRESS, snapshot.tables.Characters);
+          }
         }
 
         // 4. Connect WebSocket from fresh block

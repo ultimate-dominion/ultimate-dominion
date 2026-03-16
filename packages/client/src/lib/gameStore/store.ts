@@ -1,15 +1,18 @@
 import { create } from 'zustand';
 import type { TableRow, TableData, FullSnapshot } from './types';
-import { readCachedSnapshot } from './snapshotCache';
+import { readCachedCharacters, readCachedSnapshot } from './snapshotCache';
 
 // Pre-hydrate from localStorage cache at module load time (before any React render).
-// This ensures the store has data on the very first render, enabling the fast-path
-// redirect for returning players without a blank frame.
+// Full snapshot (24MB+) usually can't fit in localStorage, so we fall back to
+// loading just the Characters table (~50KB) which is all the fast-path needs.
 const WORLD_ADDRESS = (import.meta.env.VITE_WORLD_ADDRESS || '') as string;
 const cachedSnapshot = WORLD_ADDRESS ? readCachedSnapshot(WORLD_ADDRESS) : null;
+const cachedCharacters = !cachedSnapshot && WORLD_ADDRESS
+  ? readCachedCharacters(WORLD_ADDRESS)
+  : null;
 
-/** True if the store was pre-hydrated from a cached snapshot at module load time. */
-export const wasPreHydrated = !!cachedSnapshot;
+/** True if the store has enough pre-loaded data for the fast-path redirect. */
+export const wasPreHydrated = !!(cachedSnapshot || cachedCharacters);
 
 export type BatchUpdate = {
   type: 'set' | 'delete';
@@ -37,8 +40,12 @@ export type GameStore = {
   setCurrentBlock: (block: number) => void;
 };
 
+// Initial tables: full snapshot > characters-only > empty
+const initialTables = cachedSnapshot?.tables
+  ?? (cachedCharacters ? { Characters: cachedCharacters } : {});
+
 export const useGameStore = create<GameStore>((set, get) => ({
-  tables: cachedSnapshot?.tables ?? {},
+  tables: initialTables,
   connected: false,
   currentBlock: cachedSnapshot?.block ?? 0,
   hydrated: !!cachedSnapshot,

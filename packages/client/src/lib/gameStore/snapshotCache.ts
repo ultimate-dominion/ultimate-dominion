@@ -1,7 +1,35 @@
-import type { FullSnapshot } from './types';
+import type { FullSnapshot, TableRow } from './types';
 
 const CACHE_VERSION = 1;
 const CACHE_KEY_PREFIX = 'ud:snapshot';
+
+// ─── Lightweight characters-only cache for fast-path ────────
+// The full snapshot is 24MB+ and can't fit in localStorage.
+// Cache just the Characters table (~50KB) so the fast-path can
+// find the character and redirect before the full snapshot arrives.
+const CHAR_CACHE_KEY = 'ud:characters:v1';
+
+function charCacheKey(worldAddress: string): string {
+  return `${CHAR_CACHE_KEY}:${worldAddress.toLowerCase()}`;
+}
+
+export function readCachedCharacters(worldAddress: string): Record<string, TableRow> | null {
+  try {
+    if (!worldAddress) return null;
+    const raw = localStorage.getItem(charCacheKey(worldAddress));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+    return parsed;
+  } catch { return null; }
+}
+
+export function writeCachedCharacters(worldAddress: string, characters: Record<string, TableRow>): void {
+  try {
+    if (!worldAddress) return;
+    localStorage.setItem(charCacheKey(worldAddress), JSON.stringify(characters));
+  } catch { /* quota or unavailable — non-critical */ }
+}
 
 export function cacheKey(worldAddress: string): string {
   return `${CACHE_KEY_PREFIX}:v${CACHE_VERSION}:${worldAddress.toLowerCase()}`;

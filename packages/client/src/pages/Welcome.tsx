@@ -89,15 +89,17 @@ export const Welcome = (): JSX.Element => {
     }
   }, [searchParams]);
 
-  // Fast-path redirect for returning players: uses cached delegator address
-  // to resolve character from snapshot without waiting for full auth chain.
+  // Fast-path redirect for returning players: uses cached delegator +
+  // pre-loaded Characters table to resolve character before full snapshot.
+  // Does NOT require hydrated — Characters table is pre-loaded from a
+  // lightweight cache even when the full 24MB snapshot can't be cached.
   useEffect(() => {
-    if (!hydrated || isRefreshing) return;
+    if (isRefreshing) return;
     if (!getCachedDelegator(import.meta.env.VITE_WORLD_ADDRESS || '')) return;
     if (character?.locked) {
       navigate(GAME_BOARD_PATH);
     }
-  }, [character?.locked, hydrated, isRefreshing, navigate]);
+  }, [character?.locked, isRefreshing, navigate]);
 
   // Auto-navigate when fully set up (returning players, or just signed in).
   // Must wait for GameStore hydration — without it, character is null because
