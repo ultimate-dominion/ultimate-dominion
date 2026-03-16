@@ -1312,6 +1312,45 @@
   },
   {
     "type": "function",
+    "name": "UD__autoFight",
+    "inputs": [
+      {
+        "name": "cid",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "monsterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "weaponId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "playerWon",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "playerDied",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__backfillZoneCompletion",
     "inputs": [
       {
