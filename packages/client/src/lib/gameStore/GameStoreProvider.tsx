@@ -3,6 +3,8 @@ import { useGameStore } from './store';
 import { WSClient } from './wsClient';
 import type { FullSnapshot } from './types';
 import { writeCachedCharacters, writeCachedSnapshot } from './snapshotCache';
+import { writeSnapshotToIDB } from './idbSnapshotCache';
+import { idbSnapshotPromise } from './store';
 
 const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
 const INDEXER_WS_URL = import.meta.env.VITE_INDEXER_WS_URL || 'ws://localhost:3001/ws';
@@ -40,14 +42,19 @@ export function GameStoreProvider({ children }: Props) {
 
     async function init() {
       try {
-        // Cache hydration now happens at store creation time (store.ts)
-        // so data is available on the very first render. Skip the redundant
-        // read here — just log if we were pre-hydrated.
         if (useGameStore.getState().hydrated) {
-          console.log('[gameStore] Pre-hydrated from cache at block', useGameStore.getState().currentBlock);
+          console.log('[gameStore] Pre-hydrated from localStorage at block', useGameStore.getState().currentBlock);
         }
 
-        // Fetch fresh snapshot
+        // Try IndexedDB cache (~10-50ms) — holds the full 24MB snapshot
+        // that localStorage can't. Hydrates the store before the network fetch.
+        const idbSnapshot = await idbSnapshotPromise;
+        if (idbSnapshot && !cancelled) {
+          useGameStore.getState().hydrate(idbSnapshot);
+          console.log('[gameStore] Hydrated from IndexedDB at block', idbSnapshot.block);
+        }
+
+        // Fetch fresh snapshot from indexer
         console.log('[gameStore] Fetching snapshot from', INDEXER_API_URL);
         const snapshot = await fetchSnapshot();
         if (cancelled) return;
@@ -55,14 +62,16 @@ export function GameStoreProvider({ children }: Props) {
         console.log(`[gameStore] Hydrating with ${Object.keys(snapshot.tables).length} tables at block ${snapshot.block}`);
         useGameStore.getState().hydrate(snapshot);
 
-        // 3. Cache for next refresh
+        // Cache for next refresh
         if (WORLD_ADDRESS) {
-          writeCachedSnapshot(WORLD_ADDRESS, snapshot);
-          // Also cache just Characters table (~50KB) as fallback when
-          // full snapshot (24MB+) is too large for localStorage.
+          // IndexedDB: full snapshot (24MB+ is fine, no size limit issues)
+          writeSnapshotToIDB(WORLD_ADDRESS, snapshot);
+          // localStorage: Characters table only (~50KB) for synchronous fast-path
           if (snapshot.tables.Characters) {
             writeCachedCharacters(WORLD_ADDRESS, snapshot.tables.Characters);
           }
+          // localStorage: full snapshot (will fail silently if too large)
+          writeCachedSnapshot(WORLD_ADDRESS, snapshot);
         }
 
         // 4. Connect WebSocket from fresh block
@@ -94,6 +103,7 @@ export function GameStoreProvider({ children }: Props) {
               if (cancelled) return;
               useGameStore.getState().hydrate(snapshot);
               if (WORLD_ADDRESS) {
+                writeSnapshotToIDB(WORLD_ADDRESS, snapshot);
                 writeCachedSnapshot(WORLD_ADDRESS, snapshot);
               }
               // Reconnect WS from new block so we don't replay old updates

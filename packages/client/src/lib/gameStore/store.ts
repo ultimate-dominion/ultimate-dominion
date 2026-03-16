@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import type { TableRow, TableData, FullSnapshot } from './types';
 import { readCachedCharacters, readCachedSnapshot } from './snapshotCache';
+import { readSnapshotFromIDB } from './idbSnapshotCache';
 
 // Pre-hydrate from localStorage cache at module load time (before any React render).
 // Full snapshot (24MB+) usually can't fit in localStorage, so we fall back to
 // loading just the Characters table (~50KB) which is all the fast-path needs.
+// The full snapshot is also read from IndexedDB (async, ~10-50ms) for complete data.
 const WORLD_ADDRESS = (import.meta.env.VITE_WORLD_ADDRESS || '') as string;
 const cachedSnapshot = WORLD_ADDRESS ? readCachedSnapshot(WORLD_ADDRESS) : null;
 const cachedCharacters = !cachedSnapshot && WORLD_ADDRESS
@@ -13,6 +15,12 @@ const cachedCharacters = !cachedSnapshot && WORLD_ADDRESS
 
 /** True if the store has enough pre-loaded data for the fast-path redirect. */
 export const wasPreHydrated = !!(cachedSnapshot || cachedCharacters);
+
+/** IndexedDB read kicked off at module load time — resolves in ~10-50ms. */
+export const idbSnapshotPromise: Promise<FullSnapshot | null> =
+  !cachedSnapshot && WORLD_ADDRESS
+    ? readSnapshotFromIDB(WORLD_ADDRESS)
+    : Promise.resolve(null);
 
 export type BatchUpdate = {
   type: 'set' | 'delete';
