@@ -11,7 +11,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { DARK_INSET_SHADOW } from '../utils/theme';
-import { useGameValue, getTableEntries, encodeUint256Key, toBigInt } from '../lib/gameStore';
+import { useGameValue, useGameTable, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useMemo } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import {
@@ -38,11 +38,11 @@ export const StatsPanel = (): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const leaderboardRank = useLeaderboardRank();
 
+  const levelsTable = useGameTable('Levels');
   const maxLevelXpRequirement = useMemo(() => {
-    const levelsEntries = getTableEntries('Levels');
-    const maxLevelKey = Object.keys(levelsEntries).sort().slice(-1)[0];
+    const maxLevelKey = Object.keys(levelsTable).sort().slice(-1)[0];
     return maxLevelKey ? BigInt(maxLevelKey) : BigInt(0);
-  }, []);
+  }, [levelsTable]);
 
   const maxed = useMemo(() => {
     if (!character) return false;
