@@ -198,9 +198,13 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     );
   }, [armor, spells, weapons]);
 
+  // Look up the specific encounter for this outcome — using currentBattle is
+  // unsafe because it can be null or point to a different encounter.
+  const encounter = useGameValue('CombatEncounter', battleOutcome.encounterId);
   const battleDraw = useMemo(() => {
-    return currentBattle?.maxTurns === currentBattle?.currentTurn;
-  }, [currentBattle]);
+    if (!encounter) return false;
+    return toBigInt(encounter.maxTurns) === toBigInt(encounter.currentTurn);
+  }, [encounter]);
 
   if (!character) {
     return <Box />;

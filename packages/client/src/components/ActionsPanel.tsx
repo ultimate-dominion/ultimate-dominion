@@ -8,7 +8,6 @@ import {
   Stack,
   Text,
   useBreakpointValue,
-  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -20,7 +19,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
-import { Consumable, EncounterType, Monster } from '../utils/types';
+import { EncounterType, Monster } from '../utils/types';
 import { Switch } from '@chakra-ui/react';
 
 import {
@@ -30,7 +29,6 @@ import {
 import { getItemImage } from '../utils/itemImages';
 import { removeEmoji } from '../utils/helpers';
 import { ConsumableQuickUse } from './ConsumableQuickUse';
-import { ItemConsumeModal } from './ItemConsumeModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 
 export const MONSTER_MOVE_MAPPING: Record<string, string> = {
@@ -72,14 +70,7 @@ export const ActionsPanel = (): JSX.Element => {
     weaponTemplates,
   } = useItems();
 
-  const {
-    isOpen: isConsumeModalOpen,
-    onOpen: onOpenConsumeModal,
-    onClose: onCloseConsumeModal,
-  } = useDisclosure();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const [selectedConsumable, setSelectedConsumable] =
-    useState<Consumable | null>(null);
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
@@ -262,13 +253,19 @@ export const ActionsPanel = (): JSX.Element => {
     [equippedConsumables],
   );
 
-  const onUsePotion = useCallback(
-    (consumable: Consumable) => {
-      setSelectedConsumable(consumable);
-      onOpenConsumeModal();
-    },
-    [onOpenConsumeModal],
-  );
+  const actionItems = useMemo(() => [
+    ...equippedSpellsAndWeapons.map(item => ({
+      tokenId: item.tokenId,
+      name: item.name,
+      type: 'attack' as const,
+    })),
+    ...combatConsumables.map(item => ({
+      tokenId: item.tokenId,
+      name: item.name,
+      type: 'consumable' as const,
+      balance: item.balance,
+    })),
+  ], [equippedSpellsAndWeapons, combatConsumables]);
 
   const spellAndWeaponTemplates = useMemo(
     () => [...spellTemplates, ...weaponTemplates],
@@ -303,7 +300,8 @@ export const ActionsPanel = (): JSX.Element => {
   }, [character, statusEffectActions]);
 
   const battleDraw = useMemo(() => {
-    return currentBattle?.maxTurns === currentBattle?.currentTurn;
+    if (!currentBattle) return false;
+    return currentBattle.maxTurns === currentBattle.currentTurn;
   }, [currentBattle]);
 
   if (isItemTemplatesLoading) {
@@ -415,7 +413,7 @@ export const ActionsPanel = (): JSX.Element => {
                 />
               )}
               <HStack spacing={0} w="100%" flexWrap={{ base: 'wrap', lg: 'nowrap' }}>
-                {equippedSpellsAndWeapons.map((item, index) => {
+                {actionItems.map((item, index) => {
                   const icon = getItemImage(removeEmoji(item.name));
                   return (
                     <Button
@@ -433,12 +431,12 @@ export const ActionsPanel = (): JSX.Element => {
                         attackingItemId !== null || !canAttack || isFleeing
                       }
                       isLoading={attackingItemId === item.tokenId}
-                      key={`equipped-item-${index}`}
+                      key={`action-item-${index}`}
                       loadingText=""
                       onClick={() => onAttack(item.tokenId)}
                       ref={getButtonRef(index)}
                       fontSize={
-                        equippedSpellsAndWeapons.length > 2 ? '2xs' : 'xs'
+                        actionItems.length > 2 ? '2xs' : 'xs'
                       }
                       size={{ base: 'sm', sm: 'sm', lg: 'md' }}
                       py={{ base: 5, sm: 4, lg: 'unset' }}
@@ -451,69 +449,48 @@ export const ActionsPanel = (): JSX.Element => {
                             [{index + 1}]
                           </Text>
                         )}
-                        {icon && <Image src={icon} boxSize="20px" mr={1} />}
+                        {icon ? (
+                          <Image src={icon} boxSize="20px" mr={1} />
+                        ) : item.type === 'consumable' ? (
+                          <PotionSvg size={3} theme="dark" mr={1} />
+                        ) : null}
                         {removeEmoji(item.name)}
+                        {item.type === 'consumable' && 'balance' in item && (
+                          <Text as="span" fontSize="2xs" ml={1} opacity={0.7}>
+                            (x{item.balance.toString()})
+                          </Text>
+                        )}
                       </>
                     </Button>
                   );
                 })}
               </HStack>
             </HStack>
-            {isDesktop && equippedSpellsAndWeapons.length > 0 && (
+            {isDesktop && actionItems.length > 0 && (
               <Text fontSize="2xs" color="grey400" textAlign="center" mt={1}>
-                Use 1-{Math.min(equippedSpellsAndWeapons.length, 4)} keys to attack
+                Use 1-{Math.min(actionItems.length, 4)} keys to act
               </Text>
             )}
-            {(combatConsumables.length > 0 || canFlee) && (
+            {canFlee && (
               <HStack mt={{ base: 2, lg: 0 }} spacing={0} w="100%">
-                {combatConsumables.map((consumable, index) => {
-                  const consumableIcon = getItemImage(removeEmoji(consumable.name));
-                  return (
-                    <Button
-                      borderLeft={index === 0 ? 'none' : '2px'}
-                      borderRadius={0}
-                      borderRight="none"
-                      borderTop="none"
-                      isDisabled={
-                        attackingItemId !== null || !canAttack || isFleeing
-                      }
-                      key={`consumable-${index}`}
-                      onClick={() => onUsePotion(consumable)}
-                      fontSize="xs"
-                      size={{ base: 'sm', sm: 'sm', lg: 'md' }}
-                      py={{ base: 5, sm: 4, lg: 'unset' }}
-                      variant="outline"
-                      w="100%"
-                    >
-                      {consumableIcon ? (
-                        <Image src={consumableIcon} boxSize="20px" mr={1} />
-                      ) : (
-                        <PotionSvg size={3} theme="dark" mr={1} />
-                      )}
-                      {removeEmoji(consumable.name)} (x{consumable.balance.toString()})
-                    </Button>
-                  );
-                })}
-                {canFlee && (
-                  <Button
-                    borderLeft={combatConsumables.length > 0 ? '2px' : 'none'}
-                    borderRadius={0}
-                    borderRight="none"
-                    borderTop="none"
-                    isLoading={isFleeing}
-                    fontSize="xs"
-                    size={{ base: 'sm', sm: 'sm', lg: 'md' }}
-                    py={{ base: 5, sm: 4, lg: 'unset' }}
-                    onClick={onFleePvp}
-                    variant="outline"
-                    color="#A0522D"
-                    borderColor="#A0522D"
-                    _hover={{ bg: 'rgba(160,82,45,0.15)' }}
-                    w="100%"
-                  >
-                    Flee
-                  </Button>
-                )}
+                <Button
+                  borderLeft="none"
+                  borderRadius={0}
+                  borderRight="none"
+                  borderTop="none"
+                  isLoading={isFleeing}
+                  fontSize="xs"
+                  size={{ base: 'sm', sm: 'sm', lg: 'md' }}
+                  py={{ base: 5, sm: 4, lg: 'unset' }}
+                  onClick={onFleePvp}
+                  variant="outline"
+                  color="#A0522D"
+                  borderColor="#A0522D"
+                  _hover={{ bg: 'rgba(160,82,45,0.15)' }}
+                  w="100%"
+                >
+                  Flee
+                </Button>
               </HStack>
             )}
           </VStack>
@@ -596,6 +573,33 @@ export const ActionsPanel = (): JSX.Element => {
               .filter(Boolean);
 
             const isPlayerAttack = attack.attackerId === character?.id;
+
+            // Consumable self-use: contract writes attackerId === defenderId
+            const isSelfUse = attack.attackerId.toLowerCase() === attack.defenderId.toLowerCase();
+            if (isSelfUse) {
+              const consumable = combatConsumables.find(c => c.tokenId === attack.itemId);
+              const isPlayer = attack.attackerId.toLowerCase() === character?.id.toLowerCase();
+              return (
+                <Box key={`battle-attack-${i}`}>
+                  <SafeTypist
+                    avgTypingDelay={10}
+                    cursor={{ show: false }}
+                    stdTypingDelay={10}
+                  >
+                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                      {isPlayer ? 'You' : opponent.name} used{' '}
+                      <Text as="span" color="green">
+                        {consumable ? removeEmoji(consumable.name) : 'a potion'}
+                      </Text>
+                      .{isPlayer && consumable?.hpRestoreAmount
+                        ? ` Restored ${consumable.hpRestoreAmount.toString()} HP.`
+                        : ''}
+                    </Text>
+                  </SafeTypist>
+                </Box>
+              );
+            }
+
             const hasOnlyStatusEffects =
               attack.attackerDamageDelt === 0n &&
               attack.effectIds.length > 0 &&
@@ -865,14 +869,6 @@ export const ActionsPanel = (): JSX.Element => {
             </HStack>
           </HStack>
         </Stack>
-      )}
-      {selectedConsumable && (
-        <ItemConsumeModal
-          {...selectedConsumable}
-          isEquipped
-          isOpen={isConsumeModalOpen}
-          onClose={onCloseConsumeModal}
-        />
       )}
     </Box>
   );

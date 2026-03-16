@@ -55,9 +55,9 @@ type BattleContextType = {
   onContinueToBattleOutcome: (cont: boolean) => void;
   onFleePvp: () => void;
   opponent: Character | Monster | null;
-  opponentPredictedHp: bigint;
+  opponentHp: bigint;
   statusEffectActions: StatusAction[];
-  userPredictedHp: bigint;
+  userHp: bigint;
   userCharacterForBattleRendering: Character | null;
 };
 
@@ -75,9 +75,9 @@ const BattleContext = createContext<BattleContextType>({
   onContinueToBattleOutcome: () => {},
   onFleePvp: () => {},
   opponent: null,
-  opponentPredictedHp: 0n,
+  opponentHp: 0n,
   statusEffectActions: [],
-  userPredictedHp: 0n,
+  userHp: 0n,
   userCharacterForBattleRendering: null,
 });
 
@@ -93,7 +93,7 @@ export const BattleProvider = ({
     delegatorAddress,
     systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp },
   } = useMUD();
-  const { character, equippedSpells, equippedWeapons } = useCharacter();
+  const { character } = useCharacter();
   const { allMonsters, position } = useMap();
 
   const { renderError } = useToast();
@@ -258,15 +258,18 @@ export const BattleProvider = ({
     checkCombatFragmentTriggers,
   ]);
 
-  // Auto adventure: auto-trigger the outcome modal when a new battle result arrives.
-  // Normally the player clicks "View Results" in ActionsPanel, but auto adventure
-  // suppresses the battle screen so we skip straight to the outcome.
+  // Auto adventure: debounce the outcome modal so rapid fights don't spam it.
+  // Each new outcome resets the timer. The modal only opens once fights settle.
   useEffect(() => {
     if (localStorage.getItem('ud_auto_adventure') !== 'true') return;
     if (!lastestBattleOutcome) return;
     const seen = localStorage.getItem(BATTLE_OUTCOME_SEEN_KEY);
     if (seen === lastestBattleOutcome.encounterId) return;
-    setContinueToBattleOutcome(true);
+
+    const timer = setTimeout(() => {
+      setContinueToBattleOutcome(true);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [lastestBattleOutcome]);
 
   // Derive opponent entity ID for PvP (characters only — monsters use allMonsters)
@@ -378,47 +381,12 @@ export const BattleProvider = ({
     [allAttackOutcomes, currentBattle],
   );
 
-  const opponentPredictedHp = useMemo(() => {
-    if (!opponent) return 0n;
-    const storeHp = opponent.currentHp ?? 0n;
-    let totalDamage = 0n;
-    for (const outcome of currentBattleAttackOutcomes) {
-      if (outcome.defenderId.toLowerCase() === opponent.id.toLowerCase()) {
-        totalDamage += outcome.attackerDamageDelt;
-      }
-    }
-    // Include DoT damage (entityId = victim)
-    for (const dot of dotActions) {
-      if (dot.entityId.toLowerCase() === opponent.id.toLowerCase()) {
-        totalDamage += dot.totalDamage;
-      }
-    }
-    const predicted = opponent.maxHp - totalDamage;
-    const clamped = predicted > 0n ? predicted : 0n;
-    // Use whichever is lower: prediction or store value
-    return clamped < storeHp ? clamped : storeHp;
-  }, [currentBattleAttackOutcomes, dotActions, opponent]);
+  const opponentHp = useMemo(() => opponent?.currentHp ?? 0n, [opponent]);
 
-  const userPredictedHp = useMemo(() => {
-    if (!character) return 0n;
-    const storeHp = character.currentHp ?? 0n;
-    let totalDamage = 0n;
-    for (const outcome of currentBattleAttackOutcomes) {
-      if (outcome.defenderId.toLowerCase() === character.id.toLowerCase()) {
-        totalDamage += outcome.attackerDamageDelt;
-      }
-    }
-    // Include DoT damage (entityId = victim)
-    for (const dot of dotActions) {
-      if (dot.entityId.toLowerCase() === character.id.toLowerCase()) {
-        totalDamage += dot.totalDamage;
-      }
-    }
-    const predicted = character.maxHp - totalDamage;
-    const clamped = predicted > 0n ? predicted : 0n;
-    // Use whichever is lower: prediction (damage not yet confirmed) or store.
-    return clamped < storeHp ? clamped : storeHp;
-  }, [currentBattleAttackOutcomes, dotActions, character]);
+  const userHp = useMemo(
+    () => userCharacterForBattleRendering?.currentHp ?? 0n,
+    [userCharacterForBattleRendering],
+  );
 
   // Reactive: re-renders when any EncounterEntity row changes (status effects applied)
   const encounterEntityTable = useGameTable('EncounterEntity');
@@ -540,34 +508,6 @@ export const BattleProvider = ({
     return () => clearTimeout(timeout);
   }, [attackingItemId, failAttackProgress]);
 
-  // Auto adventure auto-attack: when auto adventure is on and there's an active
-  // battle, auto-submit endTurn with the first equipped weapon/spell.
-  // Re-fires each time attackingItemId clears (previous attack resolved).
-  useEffect(() => {
-    if (localStorage.getItem('ud_auto_adventure') !== 'true') return;
-    if (!currentBattle || currentBattle.end !== BigInt(0)) return;
-    if (attackingItemId !== null) return; // attack in flight
-    if (!opponent || !character || !delegatorAddress) return;
-
-    const firstWeapon = equippedWeapons[0] ?? equippedSpells[0];
-    if (!firstWeapon) return;
-
-    // Small delay so React state settles after previous attack resolves
-    const timer = setTimeout(() => {
-      onAttack(firstWeapon.tokenId);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [
-    attackingItemId,
-    character,
-    currentBattle,
-    delegatorAddress,
-    equippedSpells,
-    equippedWeapons,
-    onAttack,
-    opponent,
-  ]);
-
   const onFleePvp = useCallback(async () => {
     if (!character || !delegatorAddress || !currentBattle) return;
 
@@ -589,10 +529,10 @@ export const BattleProvider = ({
       onContinueToBattleOutcome,
       onFleePvp,
       opponent,
-      opponentPredictedHp,
+      opponentHp,
       statusEffectActions,
       userCharacterForBattleRendering,
-      userPredictedHp,
+      userHp,
     }),
     [
       attackProgress,
@@ -607,10 +547,10 @@ export const BattleProvider = ({
       onContinueToBattleOutcome,
       onFleePvp,
       opponent,
-      opponentPredictedHp,
+      opponentHp,
       statusEffectActions,
       userCharacterForBattleRendering,
-      userPredictedHp,
+      userHp,
     ],
   );
 
