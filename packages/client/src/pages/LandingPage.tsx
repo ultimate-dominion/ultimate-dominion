@@ -141,7 +141,7 @@ export const LandingPage = (): JSX.Element => {
           <Text
             color="#8A7E6A"
             fontFamily="'Cinzel', serif"
-            fontSize={{ base: '11px', sm: '13px' }}
+            fontSize={{ base: '13px', sm: '15px' }}
             fontStyle="italic"
             letterSpacing="0.3em"
             textAlign="center"
@@ -188,7 +188,7 @@ export const LandingPage = (): JSX.Element => {
               <VStack spacing={2}>
                 <Text
                   color="rgba(196, 184, 158, 0.7)"
-                  fontSize="14px"
+                  fontSize="16px"
                   fontWeight={500}
                   letterSpacing="0.05em"
                 >
@@ -196,7 +196,7 @@ export const LandingPage = (): JSX.Element => {
                 </Text>
                 <Text
                   color="rgba(196, 184, 158, 0.4)"
-                  fontSize="13px"
+                  fontSize="15px"
                   fontStyle="italic"
                 >
                   We&apos;ll find you when it&apos;s time to rise.
@@ -208,7 +208,7 @@ export const LandingPage = (): JSX.Element => {
                   <Text
                     color="rgba(196, 184, 158, 0.5)"
                     fontFamily="'Cinzel', serif"
-                    fontSize={{ base: '11px', sm: '12px' }}
+                    fontSize={{ base: '13px', sm: '14px' }}
                     letterSpacing="0.15em"
                     textTransform="uppercase"
                   >
@@ -221,7 +221,7 @@ export const LandingPage = (): JSX.Element => {
                       borderColor="rgba(196, 184, 158, 0.2)"
                       borderRadius="0"
                       color="rgba(232, 220, 200, 0.8)"
-                      fontSize="14px"
+                      fontSize="16px"
                       h="44px"
                       onChange={e => setEmail(e.target.value)}
                       placeholder="your@email.com"
@@ -245,7 +245,7 @@ export const LandingPage = (): JSX.Element => {
                       color="rgba(232, 220, 200, 0.9)"
                       cursor={isSubmitting ? 'wait' : 'pointer'}
                       flexShrink={0}
-                      fontSize="12px"
+                      fontSize="14px"
                       fontWeight={600}
                       h="44px"
                       letterSpacing="0.15em"
@@ -265,7 +265,7 @@ export const LandingPage = (): JSX.Element => {
                   {errorMsg && (
                     <Text
                       color="rgba(200, 100, 100, 0.8)"
-                      fontSize="13px"
+                      fontSize="15px"
                       mt={1}
                       textAlign="center"
                     >
@@ -279,7 +279,7 @@ export const LandingPage = (): JSX.Element => {
 
           <HStack
             fontFamily="'Cinzel', serif"
-            fontSize={{ base: '11px', sm: '13px' }}
+            fontSize={{ base: '13px', sm: '15px' }}
             spacing={3}
           >
             <Link

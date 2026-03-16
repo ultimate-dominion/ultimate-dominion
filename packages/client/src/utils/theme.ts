@@ -14,7 +14,7 @@ export const globalStyles = css`
     background: #12100E;
     color: #C4B89E;
     font-family: 'Cormorant Garamond', 'Inter', Georgia, serif;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
   }
 
   .game-image {
@@ -219,13 +219,13 @@ const Heading = {
   },
   sizes: {
     sm: {
-      fontSize: '18px',
+      fontSize: '22px',
     },
     md: {
-      fontSize: '24px',
+      fontSize: '28px',
     },
     lg: {
-      fontSize: '48px',
+      fontSize: '54px',
     },
   },
 };
@@ -295,6 +295,7 @@ const Modal = {
     },
     header: {
       color: '#D4A54A',
+      fontSize: '22px',
       fontWeight: 700,
       px: 4,
       py: 8,
@@ -381,31 +382,31 @@ const Tabs = {
 const Text = {
   sizes: {
     '4xs': {
-      fontSize: '6px',
-    },
-    '3xs': {
       fontSize: '8px',
     },
-    '2xs': {
+    '3xs': {
       fontSize: '10px',
     },
-    xs: {
+    '2xs': {
       fontSize: '12px',
     },
-    sm: {
+    xs: {
       fontSize: '14px',
     },
-    md: {
+    sm: {
       fontSize: '16px',
     },
-    lg: {
+    md: {
       fontSize: '18px',
     },
+    lg: {
+      fontSize: '21px',
+    },
     xl: {
-      fontSize: '24px',
+      fontSize: '28px',
     },
     '2xl': {
-      fontSize: '32px',
+      fontSize: '38px',
     },
   },
 };

@@ -226,7 +226,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
               {etherToFixedNumber(character.escrowGoldBalance)} Gold
             </Text>
           </Text>
-          <Text textAlign="center" fontSize="60px">
+          <Text textAlign="center" fontSize="68px">
             💰
           </Text>
           <Text mt={4} size={{ base: 'xs', sm: 'sm' }}>

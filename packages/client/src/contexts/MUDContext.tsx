@@ -93,7 +93,7 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white', flexDirection: 'column', gap: '1rem' }}>
         <p>Failed to initialize game</p>
-        <p style={{ fontSize: '0.875rem', opacity: 0.7 }}>{setupError.message}</p>
+        <p style={{ fontSize: '1rem', opacity: 0.7 }}>{setupError.message}</p>
       </div>
     );
   }
@@ -102,7 +102,7 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '1rem' }}>
         <img src="/images/ultimate-dominion-logo.svg" alt="Ultimate Dominion" style={{ width: '200px', opacity: 0.8 }} />
-        <p style={{ color: '#C4B89E', fontSize: '1.125rem' }}>Loading...</p>
+        <p style={{ color: '#C4B89E', fontSize: '1.25rem' }}>Loading...</p>
       </div>
     );
   }

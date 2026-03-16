@@ -136,7 +136,7 @@ export const Header = (): JSX.Element => {
       <Box
         bg="#C87A2A"
         color="#1C1814"
-        fontSize="11px"
+        fontSize="13px"
         fontWeight={700}
         letterSpacing="0.1em"
         py="2px"
@@ -179,7 +179,7 @@ export const Header = (): JSX.Element => {
                     color={active ? '#E8DCC8' : '#8A7E6A'}
                     cursor="pointer"
                     fontFamily="Cinzel, serif"
-                    fontSize="13px"
+                    fontSize="15px"
                     fontWeight={600}
                     letterSpacing="0.05em"
                     onClick={() => shopGuardedNavigate(item.path)}
@@ -200,7 +200,7 @@ export const Header = (): JSX.Element => {
                 color={pathname.startsWith(GUIDE_PATH) ? '#E8DCC8' : '#6A6050'}
                 cursor="pointer"
                 fontFamily="Cinzel, serif"
-                fontSize="13px"
+                fontSize="15px"
                 fontWeight={600}
                 letterSpacing="0.05em"
                 onClick={() => shopGuardedNavigate(GUIDE_PATH)}
@@ -215,7 +215,7 @@ export const Header = (): JSX.Element => {
                 borderBottom="2px solid transparent"
                 color="#6A6050"
                 fontFamily="Cinzel, serif"
-                fontSize="13px"
+                fontSize="15px"
                 fontWeight={600}
                 href={BLOG_URL}
                 isExternal
@@ -231,7 +231,7 @@ export const Header = (): JSX.Element => {
                 borderBottom="2px solid transparent"
                 color="#6A6050"
                 fontFamily="Cinzel, serif"
-                fontSize="13px"
+                fontSize="15px"
                 fontWeight={600}
                 href={TAVERN_URL}
                 isExternal

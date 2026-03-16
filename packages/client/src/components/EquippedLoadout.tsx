@@ -129,7 +129,7 @@ export const EquippedLoadout = (): JSX.Element | null => {
           {armor ? <FilledSlot item={armor} /> : <EmptySlot label="Armor — empty" />}
           <Text
             color="#5A5040"
-            fontSize="4px"
+            fontSize="6px"
             fontWeight={700}
             letterSpacing="wider"
             position="absolute"

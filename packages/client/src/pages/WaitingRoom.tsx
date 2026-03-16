@@ -224,7 +224,7 @@ export const WaitingRoom = (): JSX.Element => {
               animation={`${positionPulse} 3s ease-in-out infinite`}
               color="#C87A2A"
               fontFamily="Cinzel, serif"
-              fontSize={{ base: '72px', md: '108px' }}
+              fontSize={{ base: '80px', md: '120px' }}
               fontWeight={700}
               lineHeight={1}
               mb={2}
@@ -349,7 +349,7 @@ export const WaitingRoom = (): JSX.Element => {
             <Text
               color="#C87A2A"
               fontFamily="Cinzel, serif"
-              fontSize={{ base: '64px', md: '96px' }}
+              fontSize={{ base: '72px', md: '108px' }}
               fontWeight={700}
               lineHeight={1}
               mb={1}

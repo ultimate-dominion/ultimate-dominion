@@ -564,7 +564,7 @@ export const MarketplaceItem = (): JSX.Element => {
                 size="2xl"
                 w={{ base: '80px', md: '100px' }}
               >
-                <Text fontSize={{ base: '48px', md: '60px' }}>
+                <Text fontSize={{ base: '54px', md: '68px' }}>
                   {getEmoji(selectedItem.name)}
                 </Text>
               </Avatar>
@@ -575,7 +575,7 @@ export const MarketplaceItem = (): JSX.Element => {
           <VStack align={{ base: 'center', md: 'start' }} spacing={2} flex={1}>
             <Heading
               color="#E8DCC8"
-              fontSize={{ base: '22px', md: '28px' }}
+              fontSize={{ base: '26px', md: '32px' }}
               letterSpacing="0.5px"
             >
               {itemName}
@@ -589,7 +589,7 @@ export const MarketplaceItem = (): JSX.Element => {
                   borderColor={`${rarityColor}60`}
                   borderRadius="4px"
                   color={rarityColor}
-                  fontSize="11px"
+                  fontSize="13px"
                   fontWeight={600}
                   letterSpacing="0.8px"
                   px={2}
@@ -664,7 +664,7 @@ export const MarketplaceItem = (): JSX.Element => {
             <Text color="#8A7E6A" size="xs" textTransform="uppercase" letterSpacing="1px">
               Your Balance
             </Text>
-            <Text color="yellow" fontFamily="'Fira Code', monospace" fontWeight={700} fontSize="18px">
+            <Text color="yellow" fontFamily="'Fira Code', monospace" fontWeight={700} fontSize="20px">
               {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
             </Text>
           </VStack>
@@ -947,7 +947,7 @@ export const MarketplaceItem = (): JSX.Element => {
                   bg="rgba(200,122,42,0.15)"
                   borderRadius="full"
                   color="#C87A2A"
-                  fontSize="10px"
+                  fontSize="12px"
                   ml={2}
                   px={2}
                 >
@@ -965,7 +965,7 @@ export const MarketplaceItem = (): JSX.Element => {
                   bg="rgba(200,122,42,0.15)"
                   borderRadius="full"
                   color="#C87A2A"
-                  fontSize="10px"
+                  fontSize="12px"
                   ml={2}
                   px={2}
                 >
@@ -983,7 +983,7 @@ export const MarketplaceItem = (): JSX.Element => {
                   bg="rgba(200,122,42,0.15)"
                   borderRadius="full"
                   color="#C87A2A"
-                  fontSize="10px"
+                  fontSize="12px"
                   ml={2}
                   px={2}
                 >

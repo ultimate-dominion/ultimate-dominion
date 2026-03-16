@@ -101,7 +101,7 @@ const TavernCard = ({
             <Text
               color="#E8DCC8"
               fontFamily="'Cinzel', serif"
-              fontSize={{ base: '15px', sm: '17px' }}
+              fontSize={{ base: '17px', sm: '19px' }}
               fontWeight={600}
               letterSpacing="0.05em"
             >
@@ -109,7 +109,7 @@ const TavernCard = ({
             </Text>
             <Text
               color="rgba(200,122,42,0.6)"
-              fontSize="10px"
+              fontSize="12px"
               fontWeight={500}
               letterSpacing="0.2em"
               mt={1}
@@ -119,7 +119,7 @@ const TavernCard = ({
             </Text>
           </Box>
           <Box bg="rgba(200,122,42,0.08)" h="1px" w="100%" />
-          <Text color="#8A7E6A" fontSize={{ base: '13px', sm: '14px' }} lineHeight="1.8">
+          <Text color="#8A7E6A" fontSize={{ base: '15px', sm: '16px' }} lineHeight="1.8">
             {description}
           </Text>
         </VStack>
@@ -146,7 +146,7 @@ const Bulletin = ({
       <Text
         color="#C87A2A"
         fontFamily="'Cinzel', serif"
-        fontSize="13px"
+        fontSize="15px"
         fontWeight={600}
         letterSpacing="0.15em"
         textTransform="uppercase"
@@ -163,14 +163,14 @@ const Bulletin = ({
           pb={i < items.length - 1 ? 3 : 0}
           spacing={3}
         >
-          <Text color="rgba(200,122,42,0.4)" fontSize="12px" fontWeight={600} mt="2px">
+          <Text color="rgba(200,122,42,0.4)" fontSize="14px" fontWeight={600} mt="2px">
             {String(i + 1).padStart(2, '0')}
           </Text>
           <Box>
-            <Text color="#C4B89E" fontSize="13px" fontWeight={500} lineHeight="1.6">
+            <Text color="#C4B89E" fontSize="15px" fontWeight={500} lineHeight="1.6">
               {item.text}
             </Text>
-            <Text color="#8A7E6A" fontSize="12px" fontStyle="italic" lineHeight="1.6" mt={0.5}>
+            <Text color="#8A7E6A" fontSize="14px" fontStyle="italic" lineHeight="1.6" mt={0.5}>
               {item.detail}
             </Text>
           </Box>
@@ -232,7 +232,7 @@ export const Tavern = (): JSX.Element => (
         <Text
           color="rgba(200,122,42,0.5)"
           fontFamily="'Cinzel', serif"
-          fontSize={{ base: '10px', sm: '11px' }}
+          fontSize={{ base: '12px', sm: '13px' }}
           fontWeight={400}
           letterSpacing="0.4em"
           textTransform="uppercase"
@@ -242,7 +242,7 @@ export const Tavern = (): JSX.Element => (
         <Heading
           color="#E8DCC8"
           fontFamily="'Cinzel', serif"
-          fontSize={{ base: '26px', sm: '34px', md: '42px' }}
+          fontSize={{ base: '30px', sm: '38px', md: '48px' }}
           fontWeight={500}
           letterSpacing="0.06em"
           textAlign="center"
@@ -251,7 +251,7 @@ export const Tavern = (): JSX.Element => (
         </Heading>
         <Text
           color="rgba(196,184,158,0.55)"
-          fontSize={{ base: '14px', sm: '15px', md: '16px' }}
+          fontSize={{ base: '16px', sm: '17px', md: '18px' }}
           fontStyle="italic"
           lineHeight="1.9"
           maxW="600px"
@@ -311,7 +311,7 @@ export const Tavern = (): JSX.Element => (
         <Text
           color="rgba(200,122,42,0.5)"
           fontFamily="'Cinzel', serif"
-          fontSize={{ base: '10px', sm: '11px' }}
+          fontSize={{ base: '12px', sm: '13px' }}
           fontWeight={400}
           letterSpacing="0.3em"
           mb={2}
@@ -377,7 +377,7 @@ export const Tavern = (): JSX.Element => (
           <Text
             color="rgba(200,122,42,0.5)"
             fontFamily="'Cinzel', serif"
-            fontSize="10px"
+            fontSize="12px"
             fontWeight={400}
             letterSpacing="0.3em"
             textTransform="uppercase"
@@ -386,7 +386,7 @@ export const Tavern = (): JSX.Element => (
           </Text>
           <Text
             color="rgba(196,184,158,0.5)"
-            fontSize={{ base: '14px', sm: '15px' }}
+            fontSize={{ base: '16px', sm: '17px' }}
             fontStyle="italic"
             lineHeight="2"
             maxW="550px"
@@ -397,7 +397,7 @@ export const Tavern = (): JSX.Element => (
             This cave &mdash; it&apos;s not natural. It&apos;s what&apos;s
             left when a god bleeds.&rdquo;
           </Text>
-          <Text color="rgba(196,184,158,0.3)" fontSize="12px" fontStyle="italic">
+          <Text color="rgba(196,184,158,0.3)" fontSize="14px" fontStyle="italic">
             &mdash; An unnamed drinker, several cups deep
           </Text>
         </VStack>
@@ -410,7 +410,7 @@ export const Tavern = (): JSX.Element => (
           as={RouterLink}
           color="#8A7E6A"
           fontFamily="'Cinzel', serif"
-          fontSize="12px"
+          fontSize="14px"
           letterSpacing="0.15em"
           textTransform="uppercase"
           to={HOME_PATH}

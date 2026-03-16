@@ -116,7 +116,7 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
                     border="1px solid"
                     borderColor="#3A3428"
                     borderRadius="full"
-                    fontSize="7px"
+                    fontSize="9px"
                     fontFamily="mono"
                     fontWeight={700}
                     color="#8A7E6A"

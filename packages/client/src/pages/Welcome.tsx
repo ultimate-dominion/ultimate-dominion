@@ -243,7 +243,7 @@ export const Welcome = (): JSX.Element => {
           <Text
             color="#8A7E6A"
             fontFamily="'Cinzel', serif"
-            fontSize={{ base: '11px', sm: '13px' }}
+            fontSize={{ base: '13px', sm: '15px' }}
             fontStyle="italic"
             letterSpacing="0.3em"
             textAlign="center"
@@ -301,7 +301,7 @@ export const Welcome = (): JSX.Element => {
               <VStack spacing={1}>
                 <Text
                   color="rgba(196, 184, 158, 0.7)"
-                  fontSize="14px"
+                  fontSize="16px"
                   fontWeight={500}
                   letterSpacing="0.05em"
                 >
@@ -309,7 +309,7 @@ export const Welcome = (): JSX.Element => {
                 </Text>
                 <Text
                   color="rgba(196, 184, 158, 0.4)"
-                  fontSize="13px"
+                  fontSize="15px"
                   fontStyle="italic"
                 >
                   We&apos;ll find you when it&apos;s time to rise.
@@ -321,7 +321,7 @@ export const Welcome = (): JSX.Element => {
                   <Text
                     color="rgba(196, 184, 158, 0.45)"
                     fontFamily="'Cinzel', serif"
-                    fontSize={{ base: '10px', sm: '11px' }}
+                    fontSize={{ base: '12px', sm: '13px' }}
                     letterSpacing="0.15em"
                     textTransform="uppercase"
                   >
@@ -334,7 +334,7 @@ export const Welcome = (): JSX.Element => {
                       borderColor="rgba(196, 184, 158, 0.15)"
                       borderRadius="0"
                       color="rgba(232, 220, 200, 0.8)"
-                      fontSize="14px"
+                      fontSize="16px"
                       h="40px"
                       onChange={e => setEmail(e.target.value)}
                       placeholder="your@email.com"
@@ -357,7 +357,7 @@ export const Welcome = (): JSX.Element => {
                       color="rgba(232, 220, 200, 0.85)"
                       cursor={isSubmitting ? 'wait' : 'pointer'}
                       flexShrink={0}
-                      fontSize="11px"
+                      fontSize="13px"
                       fontWeight={600}
                       h="40px"
                       letterSpacing="0.15em"
@@ -377,7 +377,7 @@ export const Welcome = (): JSX.Element => {
                   {emailError && (
                     <Text
                       color="rgba(200, 100, 100, 0.8)"
-                      fontSize="13px"
+                      fontSize="15px"
                       textAlign="center"
                     >
                       {emailError}
@@ -390,7 +390,7 @@ export const Welcome = (): JSX.Element => {
 
           <HStack
             fontFamily="'Cinzel', serif"
-            fontSize={{ base: '11px', sm: '13px' }}
+            fontSize={{ base: '13px', sm: '15px' }}
             spacing={3}
           >
             <Link

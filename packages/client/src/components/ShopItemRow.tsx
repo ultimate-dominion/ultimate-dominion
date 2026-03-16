@@ -357,7 +357,7 @@ export const ShopItemRow = ({
           <PolygonalCard isModal />
           <ModalCloseButton />
           <ModalHeader>
-            <Text fontWeight={700} fontSize={24}>
+            <Text fontWeight={700} fontSize={28}>
               {orderType == OrderType.Buying ? 'Buy' : 'Sell'}{' '}
               {name ? removeEmoji(name.toString()) : ''}
             </Text>

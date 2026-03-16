@@ -42,7 +42,7 @@ const DarkManifesto = (): JSX.Element => (
     >
       <Text
         color="rgba(196, 184, 158, 0.5)"
-        fontSize={{ base: '11px', sm: '12px' }}
+        fontSize={{ base: '13px', sm: '14px' }}
         fontWeight={600}
         letterSpacing="0.25em"
         textTransform="uppercase"
@@ -53,7 +53,7 @@ const DarkManifesto = (): JSX.Element => (
       <VStack spacing={6}>
         <Text
           color="rgba(196, 184, 158, 0.6)"
-          fontSize={{ base: '14px', sm: '16px' }}
+          fontSize={{ base: '16px', sm: '18px' }}
           fontStyle="italic"
           fontWeight={400}
           lineHeight="1.9"
@@ -64,7 +64,7 @@ const DarkManifesto = (): JSX.Element => (
         </Text>
         <Text
           color="rgba(196, 184, 158, 0.45)"
-          fontSize={{ base: '13px', sm: '15px' }}
+          fontSize={{ base: '15px', sm: '17px' }}
           fontWeight={400}
           lineHeight="1.9"
           textAlign="center"
@@ -77,7 +77,7 @@ const DarkManifesto = (): JSX.Element => (
         </Text>
         <Text
           color="rgba(196, 184, 158, 0.45)"
-          fontSize={{ base: '13px', sm: '15px' }}
+          fontSize={{ base: '15px', sm: '17px' }}
           fontWeight={400}
           lineHeight="1.9"
           textAlign="center"
@@ -89,7 +89,7 @@ const DarkManifesto = (): JSX.Element => (
         </Text>
         <Text
           color="rgba(196, 184, 158, 0.45)"
-          fontSize={{ base: '13px', sm: '15px' }}
+          fontSize={{ base: '15px', sm: '17px' }}
           fontWeight={400}
           lineHeight="1.9"
           textAlign="center"
@@ -99,7 +99,7 @@ const DarkManifesto = (): JSX.Element => (
         </Text>
         <Text
           color="rgba(196, 184, 158, 0.6)"
-          fontSize={{ base: '13px', sm: '15px' }}
+          fontSize={{ base: '15px', sm: '17px' }}
           fontWeight={500}
           lineHeight="1.9"
           textAlign="center"
@@ -112,7 +112,7 @@ const DarkManifesto = (): JSX.Element => (
       <Box
         as={RouterLink}
         color="rgba(196, 184, 158, 0.35)"
-        fontSize="12px"
+        fontSize="14px"
         letterSpacing="0.15em"
         mt={4}
         textDecoration="none"
@@ -145,7 +145,7 @@ const PlaceholderPage = ({
     >
       <Text
         color="rgba(196, 184, 158, 0.5)"
-        fontSize={{ base: '11px', sm: '12px' }}
+        fontSize={{ base: '13px', sm: '14px' }}
         fontWeight={600}
         letterSpacing="0.25em"
         textTransform="uppercase"
@@ -154,7 +154,7 @@ const PlaceholderPage = ({
       </Text>
       <Text
         color="rgba(196, 184, 158, 0.4)"
-        fontSize={{ base: '14px', sm: '16px' }}
+        fontSize={{ base: '16px', sm: '18px' }}
         fontStyle="italic"
         fontWeight={400}
         lineHeight="1.9"
@@ -166,7 +166,7 @@ const PlaceholderPage = ({
       <Box
         as={RouterLink}
         color="rgba(196, 184, 158, 0.35)"
-        fontSize="12px"
+        fontSize="14px"
         letterSpacing="0.15em"
         mt={4}
         textDecoration="none"

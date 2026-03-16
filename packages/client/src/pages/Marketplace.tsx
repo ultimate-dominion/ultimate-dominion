@@ -541,7 +541,7 @@ export const Marketplace = (): JSX.Element => {
           onClose={onAcknowledgeMarketplaceInfo}
         >
           <VStack>
-            <Text alignSelf="center" fontSize="60px">
+            <Text alignSelf="center" fontSize="68px">
               🤝
             </Text>
             <VStack spacing={4}>

@@ -73,7 +73,7 @@ export const SignInModal = ({
               border="1px solid rgba(0, 0, 0, 0.15)"
               borderRadius="4px"
               color="#3c4043"
-              fontSize="15px"
+              fontSize="17px"
               fontWeight={500}
               h="48px"
               isLoading={isConnecting}
@@ -115,7 +115,7 @@ export const SignInModal = ({
                 </VStack>
               </Box>
             )}
-            <Text color="#8A7E6A" fontSize="10px" textAlign="center">
+            <Text color="#8A7E6A" fontSize="12px" textAlign="center">
               By signing in you agree to the{' '}
               <Link href="https://ultimatedominion.com/terms" isExternal color="#C4B89E" textDecoration="underline">
                 Terms of Service

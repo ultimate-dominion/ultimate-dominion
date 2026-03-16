@@ -176,10 +176,8 @@ export const TileDetailsPanel = (): JSX.Element => {
     dotActions,
     lastestBattleOutcome,
     opponent,
-    opponentPredictedHp,
     statusEffectActions,
     userCharacterForBattleRendering,
-    userPredictedHp,
   } = useBattle();
   const { autoAdventureMode, isRefreshing } = useMovement();
 
@@ -583,7 +581,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     displayedHp: userDisplayedHp,
     isDotTicking: isUserDotTicking,
   } = useBattleHpAnimation({
-    actualHp: currentBattle ? userPredictedHp : (userCharacterForBattleRendering?.currentHp ?? 0n),
+    actualHp: userCharacterForBattleRendering?.currentHp ?? 0n,
     dotDamage: latestUserDot?.totalDamage ?? 0n,
     dotTurnNumber: latestUserDot?.turnNumber ?? 0n,
     isInBattle: !!currentBattle,
@@ -593,7 +591,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     displayedHp: opponentDisplayedHp,
     isDotTicking: isOpponentDotTicking,
   } = useBattleHpAnimation({
-    actualHp: currentBattle ? opponentPredictedHp : (opponent?.currentHp ?? 0n),
+    actualHp: opponent?.currentHp ?? 0n,
     dotDamage: latestOpponentDot?.totalDamage ?? 0n,
     dotTurnNumber: latestOpponentDot?.turnNumber ?? 0n,
     isInBattle: !!currentBattle,
@@ -814,7 +812,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                           animation={
                             isMonsterHit ? 'flicker .7s infinite' : 'none'
                           }
-                          fontSize="36px"
+                          fontSize="42px"
                         >
                           {getEmoji(opponent.name)}
                         </Text>
