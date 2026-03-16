@@ -546,6 +546,32 @@ describe('applyReceiptToStore — splice integration', () => {
     expect(deferredBatch[0].table).toBe('Stats');
   });
 
+  it('delta fetch skips UD-namespace tables to prevent stale overwrites', async () => {
+    // Delta returns both a UD table (Paused) and a non-UD table (Gold)
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        block: 100,
+        tables: {
+          Paused: { '0xaa': { paused: false } },
+          Gold: { '0xbb': { amount: '500' } },
+        },
+      }),
+    });
+
+    const receipt = makeReceipt([], 100n);
+    await applyReceiptToStore(receipt);
+
+    // Wait for delta fetch to resolve
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // applyBatch called once (delta), with only non-UD table
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    const deltaArgs = mockApplyBatch.mock.calls[0][0];
+    expect(deltaArgs).toHaveLength(1);
+    expect(deltaArgs[0].table).toBe('Gold');
+  });
+
   it('SpliceDynamicData still uses RPC fallback', async () => {
     const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
     const keyBytes = '0x' + keyTuple[0].slice(2);

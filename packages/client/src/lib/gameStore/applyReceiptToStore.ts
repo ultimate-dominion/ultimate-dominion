@@ -35,8 +35,10 @@ const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhos
 type TableEntry = (typeof mudConfig.tables)[keyof typeof mudConfig.tables];
 
 const tableRegistry = new Map<Hex, TableEntry>();
+const udTableLabels = new Set<string>();
 for (const table of Object.values(mudConfig.tables)) {
   tableRegistry.set(table.tableId as Hex, table as TableEntry);
+  udTableLabels.add(table.label);
 }
 
 // ---------------------------------------------------------------------------
@@ -158,9 +160,11 @@ function fetchDeltaBackground(blockNumber: number): void {
       }
 
       // Apply non-UD tables only — UD tables already injected from receipt.
-      // Batch all updates to avoid intermediate-state re-renders.
+      // Previous move deltas can resolve after newer receipts, so applying
+      // UD tables here would overwrite fresh Position data with stale values.
       const updates: BatchUpdate[] = [];
       for (const [tableName, rows] of Object.entries(delta.tables)) {
+        if (udTableLabels.has(tableName)) continue;
         for (const [keyBytes, rowData] of Object.entries(rows)) {
           updates.push({ type: 'set', table: tableName, keyBytes, data: rowData as Record<string, unknown> });
         }
