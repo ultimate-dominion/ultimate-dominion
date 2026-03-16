@@ -472,7 +472,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           owner: character.owner,
         } as Armor;
       })
-      .filter(a => a.balance !== BigInt(0));
+      .filter(a => a.balance !== BigInt(0))
+      .sort((a, b) => {
+        const rarityDiff = (b.rarity ?? 0) - (a.rarity ?? 0);
+        if (rarityDiff !== 0) return rarityDiff;
+        return Number(b.armorModifier - a.armorModifier);
+      });
   }, [armorTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
 
   const inventoryConsumables = useMemo(() => {
@@ -488,7 +493,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           owner: character.owner,
         } as Consumable;
       })
-      .filter(c => c.balance !== BigInt(0));
+      .filter(c => c.balance !== BigInt(0))
+      .sort((a, b) => {
+        const rarityDiff = (b.rarity ?? 0) - (a.rarity ?? 0);
+        if (rarityDiff !== 0) return rarityDiff;
+        return Number(b.hpRestoreAmount - a.hpRestoreAmount);
+      });
   }, [consumableTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
 
   const inventorySpells = useMemo(() => {
@@ -504,7 +514,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           owner: character.owner,
         } as Spell;
       })
-      .filter(s => s.balance !== BigInt(0));
+      .filter(s => s.balance !== BigInt(0))
+      .sort((a, b) => {
+        const rarityDiff = (b.rarity ?? 0) - (a.rarity ?? 0);
+        if (rarityDiff !== 0) return rarityDiff;
+        return Number(b.maxDamage - a.maxDamage);
+      });
   }, [spellTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
 
   const inventoryWeapons = useMemo(() => {
@@ -520,7 +535,12 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           owner: character.owner,
         } as Weapon;
       })
-      .filter(w => w.balance !== BigInt(0));
+      .filter(w => w.balance !== BigInt(0))
+      .sort((a, b) => {
+        const rarityDiff = (b.rarity ?? 0) - (a.rarity ?? 0);
+        if (rarityDiff !== 0) return rarityDiff;
+        return Number(b.maxDamage - a.maxDamage);
+      });
   }, [weaponTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
 
   // Equipped items derived from inventory + equipment IDs — fully synchronous
