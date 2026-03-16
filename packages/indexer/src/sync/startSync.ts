@@ -99,13 +99,15 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
   console.log('[sync] Waiting for initial table discovery...');
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  const refreshTableMap = async (label: string) => {
+  const refreshTableMap = async (label: string, verbose = true) => {
     handle.tables = await discoverTables();
     handle.tableNameMap = buildTableNameMap(handle.tables);
     broadcaster.setTableNameMap(handle.tableNameMap);
-    console.log(`[sync] ${label}: discovered ${handle.tables.size} tables`);
-    for (const [logical, physical] of handle.tableNameMap) {
-      console.log(`  ${logical} → ${physical}`);
+    if (verbose) {
+      console.log(`[sync] ${label}: discovered ${handle.tables.size} tables`);
+      for (const [logical, physical] of handle.tableNameMap) {
+        console.log(`  ${logical} → ${physical}`);
+      }
     }
   };
 
@@ -130,6 +132,27 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
     // Safety: don't poll forever if something goes wrong
     setTimeout(() => clearInterval(checkInterval), 120_000);
   }
+
+  // Periodic table rediscovery — catches tables created by mid-run deploys
+  const TABLE_POLL_INTERVAL = 60_000;
+  const tablePoller = setInterval(async () => {
+    try {
+      const prevCount = handle.tables.size;
+      await refreshTableMap('Periodic rediscovery', false);
+      if (handle.tables.size !== prevCount) {
+        console.log(`[sync] Table count changed: ${prevCount} → ${handle.tables.size}`);
+      }
+    } catch (err) {
+      console.error('[sync] Periodic table rediscovery failed:', err);
+    }
+  }, TABLE_POLL_INTERVAL);
+
+  // Wrap stopSync to clean up the poller
+  const originalStop = handle.stopSync;
+  handle.stopSync = () => {
+    clearInterval(tablePoller);
+    originalStop();
+  };
 
   return handle;
 }
