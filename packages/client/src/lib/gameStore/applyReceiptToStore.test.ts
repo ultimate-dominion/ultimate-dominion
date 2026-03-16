@@ -9,6 +9,7 @@ const mockApplyBatch = vi.fn();
 // Mutable tables state for splice tests
 let mockTables: Record<string, Record<string, Record<string, unknown>>> = {};
 
+const mockMarkReceiptRows = vi.fn();
 vi.mock('./store', () => ({
   useGameStore: {
     getState: () => ({
@@ -18,6 +19,7 @@ vi.mock('./store', () => ({
       tables: mockTables,
     }),
   },
+  markReceiptRows: (...args: unknown[]) => mockMarkReceiptRows(...args),
 }));
 
 // Mock logToRecord — returns a simple decoded record
@@ -570,6 +572,27 @@ describe('applyReceiptToStore — splice integration', () => {
     const deltaArgs = mockApplyBatch.mock.calls[0][0];
     expect(deltaArgs).toHaveLength(1);
     expect(deltaArgs[0].table).toBe('Gold');
+  });
+
+  it('calls markReceiptRows after applying immediate batch', async () => {
+    const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
+    const log = encodeSetRecordLog(testTableId, keyTuple);
+    const receipt = makeReceipt([log], 42069n);
+
+    await applyReceiptToStore(receipt);
+
+    expect(mockMarkReceiptRows).toHaveBeenCalledTimes(1);
+    const [entries, block] = mockMarkReceiptRows.mock.calls[0];
+    expect(block).toBe(42069);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].table).toBe(testTableLabel);
+    expect(entries[0].keyBytes).toBe('0x' + keyTuple[0].slice(2));
+  });
+
+  it('does not call markReceiptRows when no batch is applied', async () => {
+    const receipt = makeReceipt([], 100n);
+    await applyReceiptToStore(receipt);
+    expect(mockMarkReceiptRows).not.toHaveBeenCalled();
   });
 
   it('SpliceDynamicData still uses RPC fallback', async () => {

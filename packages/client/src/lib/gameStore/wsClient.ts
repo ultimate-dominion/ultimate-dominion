@@ -1,5 +1,6 @@
 import type { ServerMessage, ClientMessage } from './types';
 import type { GameStore, BatchUpdate } from './store';
+import { isStaleForRow } from './store';
 
 const RECONNECT_BASE_DELAY = 1000;
 const RECONNECT_MAX_DELAY = 30000;
@@ -98,7 +99,11 @@ export class WSClient {
         break;
 
       case 'update':
-        this.queueUpdate({ type: 'set', table: msg.table, keyBytes: msg.keyBytes, data: msg.value });
+        // Skip if a receipt already applied a newer value for this row —
+        // WS lags behind receipts and would overwrite with stale data.
+        if (!isStaleForRow(msg.table, msg.keyBytes, msg.block)) {
+          this.queueUpdate({ type: 'set', table: msg.table, keyBytes: msg.keyBytes, data: msg.value });
+        }
         if (msg.block > this.lastBlock) {
           this.lastBlock = msg.block;
           this.store.setCurrentBlock(msg.block);

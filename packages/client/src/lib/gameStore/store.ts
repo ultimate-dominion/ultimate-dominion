@@ -169,3 +169,47 @@ export function getTableValue(table: string, keyBytes: string): TableRow | undef
 export function getTableEntries(table: string): Record<string, TableRow> {
   return useGameStore.getState().tables[table] || {};
 }
+
+// ---------------------------------------------------------------------------
+// Receipt protection — prevents WS from overwriting receipt-derived data
+// with stale values from blocks the indexer hasn't caught up to yet.
+// Receipt updates are always ahead of WS; without protection, rapid moves
+// cause the WS to deliver intermediate Position values that snap the UI back.
+// ---------------------------------------------------------------------------
+const _receiptProtection = new Map<string, number>(); // `table:keyBytes` → block
+
+/** Mark rows as protected at a given block (called by receipt processing). */
+export function markReceiptRows(
+  entries: { table: string; keyBytes: string }[],
+  block: number,
+): void {
+  for (const { table, keyBytes } of entries) {
+    _receiptProtection.set(`${table}:${keyBytes}`, block);
+  }
+  // Lazy cleanup when map grows large
+  if (_receiptProtection.size > 500) {
+    const currentBlock = useGameStore.getState().currentBlock;
+    for (const [key, protBlock] of _receiptProtection) {
+      if (protBlock <= currentBlock) _receiptProtection.delete(key);
+    }
+  }
+}
+
+/**
+ * Check if a WS/delta update at `sourceBlock` is stale for a given row.
+ * Returns true if the row was updated by a receipt at a block >= sourceBlock.
+ */
+export function isStaleForRow(
+  table: string,
+  keyBytes: string,
+  sourceBlock: number,
+): boolean {
+  const protBlock = _receiptProtection.get(`${table}:${keyBytes}`);
+  if (protBlock === undefined) return false;
+  if (sourceBlock > protBlock) {
+    // WS caught up past the receipt block — remove protection
+    _receiptProtection.delete(`${table}:${keyBytes}`);
+    return false;
+  }
+  return true;
+}

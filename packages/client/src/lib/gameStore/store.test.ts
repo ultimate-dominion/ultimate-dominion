@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useGameStore } from './store';
+import { useGameStore, markReceiptRows, isStaleForRow } from './store';
 import type { FullSnapshot } from './types';
 
 function makeSnapshot(block: number, overrides?: Record<string, Record<string, Record<string, unknown>>>): FullSnapshot {
@@ -207,5 +207,52 @@ describe('dedup — setRow and applyBatch skip identical data', () => {
     const stateAfter = useGameStore.getState();
 
     expect(stateBefore.tables).toBe(stateAfter.tables);
+  });
+});
+
+// ─── receipt protection ──────────────────────────────────────
+
+describe('receipt protection — markReceiptRows / isStaleForRow', () => {
+  it('unprotected rows are never stale', () => {
+    expect(isStaleForRow('Position', '0xA', 50)).toBe(false);
+  });
+
+  it('WS update at block <= receipt block is stale', () => {
+    markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 100);
+    expect(isStaleForRow('Position', '0xA', 99)).toBe(true);
+    expect(isStaleForRow('Position', '0xA', 100)).toBe(true);
+  });
+
+  it('WS update at block > receipt block is NOT stale and clears protection', () => {
+    markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 100);
+    expect(isStaleForRow('Position', '0xA', 101)).toBe(false);
+    // Protection removed — subsequent check at old block is also not stale
+    expect(isStaleForRow('Position', '0xA', 99)).toBe(false);
+  });
+
+  it('different rows are independent', () => {
+    markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 100);
+    expect(isStaleForRow('Position', '0xA', 50)).toBe(true);
+    expect(isStaleForRow('Position', '0xB', 50)).toBe(false);
+    expect(isStaleForRow('Stats', '0xA', 50)).toBe(false);
+  });
+
+  it('newer receipt overwrites older protection', () => {
+    markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 100);
+    markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 200);
+    expect(isStaleForRow('Position', '0xA', 150)).toBe(true);
+    expect(isStaleForRow('Position', '0xA', 200)).toBe(true);
+    expect(isStaleForRow('Position', '0xA', 201)).toBe(false);
+  });
+
+  it('marks multiple rows in a single call', () => {
+    markReceiptRows([
+      { table: 'Position', keyBytes: '0xA' },
+      { table: 'Stats', keyBytes: '0xA' },
+      { table: 'Spawned', keyBytes: '0xA' },
+    ], 100);
+    expect(isStaleForRow('Position', '0xA', 100)).toBe(true);
+    expect(isStaleForRow('Stats', '0xA', 100)).toBe(true);
+    expect(isStaleForRow('Spawned', '0xA', 100)).toBe(true);
   });
 });

@@ -617,12 +617,11 @@ export function createSystemCalls(
   // significantly more gas due to EntitiesAtPosition reads + multiple mob writes.
   const MOVE_GAS_LIMIT = BigInt(8_000_000);
 
-  // On-chain retry: if the receipt reverts, retry after a short delay.
-  // Keep retries at 0 — the diagnostic handler updates the store position,
-  // and the next user-initiated move uses the correct coordinates. Retrying
-  // wastes gas when the position was stale (InvalidMove reverts again).
+  // On-chain retry: if the receipt reverts, diagnose then retry once.
+  // Transient reverts (stale RPC, same-block timing) are common during rapid
+  // movement — the diagnostic simulation confirms the move is now valid.
   const ON_CHAIN_RETRY_DELAY_MS = 500;
-  const MAX_ON_CHAIN_RETRIES = 0;
+  const MAX_ON_CHAIN_RETRIES = 1;
 
   type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -731,11 +730,13 @@ export function createSystemCalls(
           if (receipt.status === 'reverted') {
             console.error(`[move] TX REVERTED — hash: ${tx}, gasUsed: ${receipt.gasUsed}, block: ${receipt.blockNumber} (target: ${x},${y})`);
 
-            // Diagnose the revert by re-simulating against current RPC state
+            // Diagnose the revert by simulating against current RPC state
             // instead of blindly retrying (which wastes gas if the character
             // was despawned by idle timeout while the store was stale).
+            // NOTE: use simulate (eth_call) not write — write would send an
+            // orphaned tx whose receipt nobody waits for.
             try {
-              await worldContract.write.UD__move(args);
+              await worldContract.simulate.UD__move(args);
               // Simulation passed — was transient, retry with gas
               if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
                 onChainRetries++;

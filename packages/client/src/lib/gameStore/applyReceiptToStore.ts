@@ -23,7 +23,7 @@ import {
   decodeEventLog,
 } from 'viem';
 
-import { useGameStore, type BatchUpdate } from './store';
+import { useGameStore, markReceiptRows, type BatchUpdate } from './store';
 import type { TableRow } from './types';
 import { buildStaticFieldLayout, applySplice } from './decodeSplice';
 
@@ -300,6 +300,12 @@ export async function applyReceiptToStore(
   // These are decodable in <1ms — no reason to block on RPC.
   if (batch.length > 0) {
     useGameStore.getState().applyBatch(batch);
+    // Protect these rows from stale WS overwrites — WS lags behind receipts
+    // and can deliver intermediate Position values that snap the UI back.
+    markReceiptRows(
+      batch.filter(u => u.type === 'set').map(u => ({ table: u.table, keyBytes: u.keyBytes })),
+      Number(receipt.blockNumber),
+    );
   }
 
   // Step 3: Fire-and-forget splice resolution for deferred events (SpliceDynamicData,
@@ -309,6 +315,10 @@ export async function applyReceiptToStore(
       .then((spliceUpdates) => {
         if (spliceUpdates.length > 0) {
           useGameStore.getState().applyBatch(spliceUpdates);
+          markReceiptRows(
+            spliceUpdates.map(u => ({ table: u.table, keyBytes: u.keyBytes })),
+            Number(receipt.blockNumber),
+          );
           console.info(`[TX][RECEIPT] Deferred splice batch: ${spliceUpdates.length} update(s)`);
         }
       })
