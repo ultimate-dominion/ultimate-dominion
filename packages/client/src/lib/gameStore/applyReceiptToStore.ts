@@ -1,17 +1,17 @@
 /**
- * Hybrid receipt-based store injection:
+ * Synchronous receipt-based store injection:
  *
  * 1. Decode Store_SetRecord + Store_DeleteRecord from receipt logs for
- *    UD-namespace tables (mudConfig) → instant (~0ms) store updates.
+ *    UD-namespace tables (mudConfig).
  * 2. Resolve Store_SpliceStaticData/SpliceDynamicData by reading the full
  *    record from the chain via getRecord RPC (~100-300ms).
- * 3. Fire-and-forget delta fetch from the indexer to catch non-UD namespace
- *    tables (gold, items, characters ERC modules). Not awaited — WS is the
- *    backup if delta fails.
+ * 3. Apply ALL decoded + splice-resolved data in a SINGLE atomic batch.
+ *    This prevents multi-render jitter during movement.
+ * 4. Fire-and-forget delta fetch from the indexer to catch non-UD namespace
+ *    tables (gold, items, characters ERC modules). WS is the backup.
  *
- * This gives instant UI updates for all critical game state (position,
- * encounters, combat, stats) while still covering ERC module tables via
- * the indexer. WebSocket delivers all updates as idempotent overwrites.
+ * The store's applyBatch uses shallowEqual dedup, so when WS or delta
+ * delivers the same data later, it's a no-op (no React re-render).
  */
 import { storeEventsAbi } from '@latticexyz/store';
 import { logToRecord } from '@latticexyz/store/internal';
@@ -76,13 +76,13 @@ function serializeRecord(record: Record<string, unknown>): TableRow {
 }
 
 // ---------------------------------------------------------------------------
-// Async splice resolution: read full records from chain
+// Async splice resolution: read full records from chain → returns updates
 // ---------------------------------------------------------------------------
 async function resolveSpliceEvents(
   spliceReads: { table: TableEntry; keyTuple: readonly Hex[]; keyBytes: string }[],
   publicClient: PublicClient,
   worldAddress: Hex,
-): Promise<void> {
+): Promise<BatchUpdate[]> {
   // Deduplicate by table+keyBytes (a single tx can splice the same row multiple times)
   const unique = new Map<string, (typeof spliceReads)[0]>();
   for (const r of spliceReads) {
@@ -118,23 +118,15 @@ async function resolveSpliceEvents(
   const entries = [...unique.values()];
   const results = await Promise.allSettled(entries.map(readRecord));
 
-  // Batch all resolved splice reads into a single store update
   const batch: BatchUpdate[] = [];
-  const resolvedNames: string[] = [];
   for (const r of results) {
     if (r.status === 'fulfilled') {
       batch.push({ type: 'set', table: r.value.table, keyBytes: r.value.keyBytes, data: r.value.data });
-      resolvedNames.push(r.value.table);
     } else {
       console.warn('[TX][RECEIPT] Splice read failed:', r.reason);
     }
   }
-  if (batch.length > 0) {
-    useGameStore.getState().applyBatch(batch);
-    console.info(
-      `[TX][RECEIPT] Resolved ${batch.length} splice(s): ${resolvedNames.join(', ')}`,
-    );
-  }
+  return batch;
 }
 
 // ---------------------------------------------------------------------------
@@ -204,9 +196,7 @@ export async function applyReceiptToStore(
     keyBytes: string;
   }[] = [];
 
-  // Step 1: Decode SetRecord + DeleteRecord from receipt logs.
-  // Collect all updates into a batch to apply atomically — prevents
-  // intermediate-state re-renders that cause UI jitter during movement.
+  // Step 1: Decode SetRecord + DeleteRecord + collect splice reads from receipt logs.
   const batch: BatchUpdate[] = [];
 
   for (const log of receipt.logs) {
@@ -269,26 +259,32 @@ export async function applyReceiptToStore(
     }
   }
 
-  // Apply all receipt updates in a single atomic batch
+  // Step 2: Resolve splice events from chain (~100-300ms, awaited).
+  // Collect into the same batch so everything applies in ONE store update.
+  if (spliceReads.length > 0 && publicClient && worldAddress) {
+    try {
+      const spliceUpdates = await resolveSpliceEvents(spliceReads, publicClient, worldAddress);
+      batch.push(...spliceUpdates);
+    } catch (err) {
+      console.warn('[TX][RECEIPT] Splice resolution failed:', err);
+    }
+  }
+
+  // Step 3: Apply ALL updates (receipt + splices) in a single atomic batch.
+  // One store update → one React render → no jitter.
   if (batch.length > 0) {
     useGameStore.getState().applyBatch(batch);
   }
 
   if (applied > 0 || skippedSplice > 0) {
     console.info(
-      `[TX][RECEIPT] Injected ${applied} update(s) from receipt logs (${skippedSplice} splice(s) resolving...)`,
+      `[TX][RECEIPT] Applied ${batch.length} update(s) in single batch (${applied} from logs, ${skippedSplice} splice(s))`,
     );
   }
 
-  // Step 2: Resolve splice events from chain (~100-300ms, awaited)
-  if (spliceReads.length > 0 && publicClient && worldAddress) {
-    await resolveSpliceEvents(spliceReads, publicClient, worldAddress).catch(err => {
-      console.warn('[TX][RECEIPT] Splice resolution failed:', err);
-    });
-  }
-
-  // Step 3: Background delta fetch for non-UD namespace tables (fire-and-forget).
+  // Step 4: Background delta fetch for non-UD namespace tables (fire-and-forget).
   // Gold, items, characters ERC modules, etc. — not critical for immediate UI.
   // WS delivers these as well, so delta is a faster-than-WS supplement.
+  // The store's shallowEqual dedup prevents re-renders for duplicate data.
   fetchDeltaBackground(Number(receipt.blockNumber));
 }

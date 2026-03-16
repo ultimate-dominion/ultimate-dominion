@@ -131,3 +131,81 @@ describe('hydration sequence', () => {
     expect(useGameStore.getState().tables.Characters['0x01'].level).toBe(10);
   });
 });
+
+// ─── dedup (shallowEqual) ──────────────────────────────────
+
+describe('dedup — setRow and applyBatch skip identical data', () => {
+  it('setRow with identical data does not create a new table reference', () => {
+    useGameStore.getState().setRow('Position', '0xA', { x: 3, y: 4 });
+    const ref1 = useGameStore.getState().tables.Position;
+
+    useGameStore.getState().setRow('Position', '0xA', { x: 3, y: 4 });
+    const ref2 = useGameStore.getState().tables.Position;
+
+    // Same reference — no Zustand set() was called
+    expect(ref1).toBe(ref2);
+  });
+
+  it('setRow with different data creates a new table reference', () => {
+    useGameStore.getState().setRow('Position', '0xA', { x: 3, y: 4 });
+    const ref1 = useGameStore.getState().tables.Position;
+
+    useGameStore.getState().setRow('Position', '0xA', { x: 5, y: 4 });
+    const ref2 = useGameStore.getState().tables.Position;
+
+    expect(ref1).not.toBe(ref2);
+    expect(useGameStore.getState().tables.Position['0xA']).toEqual({ x: 5, y: 4 });
+  });
+
+  it('applyBatch with all-identical data returns same state', () => {
+    useGameStore.getState().setRow('Stats', '0xB', { hp: 100, str: 10 });
+    const stateBefore = useGameStore.getState();
+
+    useGameStore.getState().applyBatch([
+      { type: 'set', table: 'Stats', keyBytes: '0xB', data: { hp: 100, str: 10 } },
+    ]);
+    const stateAfter = useGameStore.getState();
+
+    // tables reference unchanged — React won't re-render
+    expect(stateBefore.tables).toBe(stateAfter.tables);
+  });
+
+  it('applyBatch with mixed identical/new data only clones changed tables', () => {
+    useGameStore.getState().setRow('Position', '0xA', { x: 1, y: 2 });
+    useGameStore.getState().setRow('Stats', '0xA', { hp: 50 });
+    const posRef = useGameStore.getState().tables.Position;
+
+    // Position identical, Stats changed
+    useGameStore.getState().applyBatch([
+      { type: 'set', table: 'Position', keyBytes: '0xA', data: { x: 1, y: 2 } },
+      { type: 'set', table: 'Stats', keyBytes: '0xA', data: { hp: 75 } },
+    ]);
+
+    // Position table reference preserved (data unchanged)
+    expect(useGameStore.getState().tables.Position).toBe(posRef);
+    // Stats table reference is new (data changed)
+    expect(useGameStore.getState().tables.Stats['0xA']).toEqual({ hp: 75 });
+  });
+
+  it('deleteRow on non-existent row is a no-op', () => {
+    useGameStore.getState().setRow('Position', '0xA', { x: 1, y: 2 });
+    const stateBefore = useGameStore.getState();
+
+    useGameStore.getState().deleteRow('Position', '0xNonExistent');
+    const stateAfter = useGameStore.getState();
+
+    expect(stateBefore.tables).toBe(stateAfter.tables);
+  });
+
+  it('applyBatch delete on non-existent row is a no-op', () => {
+    useGameStore.getState().setRow('Position', '0xA', { x: 1, y: 2 });
+    const stateBefore = useGameStore.getState();
+
+    useGameStore.getState().applyBatch([
+      { type: 'delete', table: 'Position', keyBytes: '0xNonExistent' },
+    ]);
+    const stateAfter = useGameStore.getState();
+
+    expect(stateBefore.tables).toBe(stateAfter.tables);
+  });
+});

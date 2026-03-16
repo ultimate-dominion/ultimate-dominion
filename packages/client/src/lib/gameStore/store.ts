@@ -51,6 +51,20 @@ export type GameStore = {
   setCurrentBlock: (block: number) => void;
 };
 
+// ---------------------------------------------------------------------------
+// Shallow equality for table rows — prevents duplicate WS/delta/splice
+// updates from creating new object references and triggering React re-renders.
+// ---------------------------------------------------------------------------
+function shallowEqual(a: TableRow, b: TableRow): boolean {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (a[key] !== b[key]) return false;
+  }
+  return true;
+}
+
 // Initial tables: full snapshot > characters-only > empty
 const initialTables = cachedSnapshot?.tables
   ?? (cachedCharacters ? { Characters: cachedCharacters } : {});
@@ -61,8 +75,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentBlock: cachedSnapshot?.block ?? 0,
   hydrated: false, // only network fetch sets this — cache data is for rendering, not redirect decisions
 
-  setRow: (table, keyBytes, data) =>
-    set((state) => ({
+  setRow: (table, keyBytes, data) => {
+    const state = get();
+    const existing = state.tables[table]?.[keyBytes];
+    if (existing && shallowEqual(existing, data)) return;
+    set({
       tables: {
         ...state.tables,
         [table]: {
@@ -70,10 +87,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
           [keyBytes]: data,
         },
       },
-    })),
+    });
+  },
 
   deleteRow: (table, keyBytes) =>
     set((state) => {
+      if (!state.tables[table]?.[keyBytes]) return state;
       const tableData = { ...state.tables[table] };
       delete tableData[keyBytes];
       return {
@@ -87,18 +106,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
   applyBatch: (updates) =>
     set((state) => {
       const newTables = { ...state.tables };
+      let anyChanged = false;
+      // Track which tables have been cloned to avoid double-spreading
+      const cloned = new Set<string>();
+
       for (const update of updates) {
         if (update.type === 'set') {
-          newTables[update.table] = {
-            ...(newTables[update.table] || {}),
-            [update.keyBytes]: update.data!,
-          };
+          const existing = newTables[update.table]?.[update.keyBytes];
+          if (existing && shallowEqual(existing, update.data!)) continue;
+
+          if (!cloned.has(update.table)) {
+            newTables[update.table] = { ...(newTables[update.table] || {}) };
+            cloned.add(update.table);
+          }
+          newTables[update.table][update.keyBytes] = update.data!;
+          anyChanged = true;
         } else {
-          const copy = { ...(newTables[update.table] || {}) };
-          delete copy[update.keyBytes];
-          newTables[update.table] = copy;
+          if (!newTables[update.table]?.[update.keyBytes]) continue;
+
+          if (!cloned.has(update.table)) {
+            newTables[update.table] = { ...(newTables[update.table] || {}) };
+            cloned.add(update.table);
+          }
+          delete newTables[update.table][update.keyBytes];
+          anyChanged = true;
         }
       }
+
+      if (!anyChanged) return state;
       return { tables: newTables };
     }),
 
