@@ -263,6 +263,17 @@ export const BattleProvider = ({
     checkCombatFragmentTriggers,
   ]);
 
+  // Grind mode: auto-trigger the outcome modal when a new battle result arrives.
+  // Normally the player clicks "View Results" in ActionsPanel, but grind mode
+  // suppresses the battle screen so we skip straight to the outcome.
+  useEffect(() => {
+    if (localStorage.getItem('ud_grind_mode') !== 'true') return;
+    if (!lastestBattleOutcome) return;
+    const seen = localStorage.getItem(BATTLE_OUTCOME_SEEN_KEY);
+    if (seen === lastestBattleOutcome.encounterId) return;
+    setContinueToBattleOutcome(true);
+  }, [lastestBattleOutcome]);
+
   // Derive opponent entity ID for PvP (characters only — monsters use allMonsters)
   const opponentEntityId = useMemo(() => {
     if (!character || !currentBattle) return undefined;

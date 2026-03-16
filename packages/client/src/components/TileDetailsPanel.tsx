@@ -139,7 +139,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     userCharacterForBattleRendering,
     userPredictedHp,
   } = useBattle();
-  const { isRefreshing } = useMovement();
+  const { grindMode, isRefreshing } = useMovement();
 
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
@@ -1132,6 +1132,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   <OpponentRow
                     encounterType={EncounterType.PvE}
                     onClick={() => {
+                      if (grindMode) return;
                       if (isMoveEquipped) {
                         onInitiateCombat(monster, EncounterType.PvE);
                       } else {
