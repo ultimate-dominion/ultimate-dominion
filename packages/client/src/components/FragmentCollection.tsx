@@ -2,6 +2,7 @@ import {
   Box,
   Grid,
   GridItem,
+  Image,
   keyframes,
   Text,
   Tooltip,
@@ -9,7 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useState } from 'react';
-import { FaCheck, FaQuestion } from 'react-icons/fa';
+import { FaCheck, FaLock } from 'react-icons/fa';
 
 const fragmentGlow = keyframes`
   0%, 100% {
@@ -38,6 +39,7 @@ import {
   useFragments,
   type FragmentStatus,
 } from '../contexts/FragmentContext';
+import { getFragmentImage } from '../utils/fragmentImages';
 import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
 
 import { FragmentClaimModal } from './FragmentClaimModal';
@@ -136,6 +138,7 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
   const isClaimed = fragment.claimed;
   const isTriggered = fragment.triggered;
   const isClickable = isClaimed || isTriggered;
+  const imageSrc = getFragmentImage(fragment.name);
 
   const tooltipLabel = isClaimed
     ? `${fragment.name} - Click to read`
@@ -152,9 +155,7 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
       color="white"
     >
       <Box
-        bg={isClaimed ? 'green.900' : isTriggered ? 'yellow.900' : 'gray.700'}
         borderRadius="md"
-        p={3}
         aspectRatio="1/1"
         display="flex"
         flexDirection="column"
@@ -165,12 +166,12 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
         border="2px solid"
         borderColor={
           isClaimed
-            ? 'green.500'
+            ? 'rgba(74, 222, 128, 0.5)'
             : isTriggered
               ? 'yellow.500'
-              : 'transparent'
+              : 'rgba(255,255,255,0.06)'
         }
-        transition="all 0.2s"
+        transition="all 0.25s ease"
         animation={
           isTriggered && !isClaimed
             ? `${fragmentGlow} 2s ease-in-out infinite, ${fragmentPulse} 2s ease-in-out infinite`
@@ -179,17 +180,69 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
         _hover={
           isClickable
             ? {
-                transform: 'scale(1.08)',
+                transform: 'scale(1.05)',
                 borderColor: isClaimed ? 'green.400' : 'yellow.400',
-                boxShadow: isTriggered
-                  ? '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)'
-                  : undefined,
+                boxShadow: isClaimed
+                  ? '0 0 12px rgba(74, 222, 128, 0.3)'
+                  : isTriggered
+                    ? '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)'
+                    : undefined,
               }
             : {}
         }
         position="relative"
+        overflow="hidden"
+        bg={isClaimed ? 'transparent' : isTriggered ? 'yellow.900' : '#1a1816'}
       >
-        {isClaimed ? (
+        {/* Claimed: show fragment artwork */}
+        {isClaimed && imageSrc ? (
+          <>
+            <Image
+              src={imageSrc}
+              alt={fragment.name}
+              position="absolute"
+              inset={0}
+              w="100%"
+              h="100%"
+              objectFit="cover"
+              borderRadius="md"
+            />
+            {/* Gradient overlay for legibility */}
+            <Box
+              position="absolute"
+              inset={0}
+              bgGradient="linear(to-t, blackAlpha.700, transparent 50%)"
+              borderRadius="md"
+            />
+            {/* Roman numeral label */}
+            <Text
+              position="absolute"
+              bottom={1}
+              fontSize="xs"
+              fontWeight="bold"
+              color="green.300"
+              textShadow="0 1px 3px rgba(0,0,0,0.8)"
+              zIndex={1}
+            >
+              {getRomanNumeral(fragment.fragmentType)}
+            </Text>
+            {/* Claimed check */}
+            <Box
+              position="absolute"
+              top={1}
+              right={1}
+              color="green.400"
+              bg="blackAlpha.600"
+              borderRadius="full"
+              p="3px"
+              lineHeight={1}
+              zIndex={1}
+            >
+              <FaCheck size={10} />
+            </Box>
+          </>
+        ) : isClaimed ? (
+          /* Claimed but no image (fallback) */
           <>
             <Box color="green.400" mb={1}>
               <FaCheck size={20} />
@@ -200,10 +253,7 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
           </>
         ) : isTriggered ? (
           <>
-            <Box
-              color="yellow.400"
-              mb={1}
-            >
+            <Box color="yellow.400" mb={1}>
               <Text
                 fontSize="xl"
                 fontWeight="bold"
@@ -223,10 +273,10 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
           </>
         ) : (
           <>
-            <Box color="gray.500" mb={1}>
-              <FaQuestion size={16} />
+            <Box color="gray.600" mb={1} opacity={0.5}>
+              <FaLock size={14} />
             </Box>
-            <Text fontSize="xs" color="gray.500">
+            <Text fontSize="xs" color="gray.600">
               {getRomanNumeral(fragment.fragmentType)}
             </Text>
           </>

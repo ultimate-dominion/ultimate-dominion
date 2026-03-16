@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Image,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -13,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 
 import { type FragmentStatus } from '../contexts/FragmentContext';
+import { getFragmentImage } from '../utils/fragmentImages';
 import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
 
 type FragmentReadModalProps = {
@@ -47,35 +49,63 @@ export const FragmentReadModal = ({
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={6} align="stretch">
-            {/* Fragment artwork placeholder */}
-            <Box
-              bg="whiteAlpha.100"
-              borderRadius="md"
-              h="150px"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              border="1px solid"
-              borderColor="green.500"
-              position="relative"
-            >
-              <Text color="gray.500" fontSize="sm">
-                Fragment {getRomanNumeral(fragment.fragmentType)} Artwork
-              </Text>
-              <Box
-                position="absolute"
-                top={2}
-                right={2}
-                bg="green.500"
-                px={2}
-                py={0.5}
-                borderRadius="sm"
-              >
-                <Text fontSize="xs" fontWeight="bold">
-                  CLAIMED
-                </Text>
+            {/* Fragment artwork */}
+            {getFragmentImage(fragment.name) ? (
+              <Box position="relative">
+                <Image
+                  src={getFragmentImage(fragment.name)}
+                  alt={fragment.name}
+                  borderRadius="md"
+                  maxH="250px"
+                  mx="auto"
+                  objectFit="cover"
+                  border="1px solid"
+                  borderColor="whiteAlpha.200"
+                />
+                <Box
+                  position="absolute"
+                  top={2}
+                  right={2}
+                  bg="green.500"
+                  px={2}
+                  py={0.5}
+                  borderRadius="sm"
+                >
+                  <Text fontSize="xs" fontWeight="bold">
+                    CLAIMED
+                  </Text>
+                </Box>
               </Box>
-            </Box>
+            ) : (
+              <Box
+                bg="whiteAlpha.100"
+                borderRadius="md"
+                h="150px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                border="1px solid"
+                borderColor="green.500"
+                position="relative"
+              >
+                <Text color="gray.500" fontSize="sm">
+                  Fragment {getRomanNumeral(fragment.fragmentType)} Artwork
+                </Text>
+                <Box
+                  position="absolute"
+                  top={2}
+                  right={2}
+                  bg="green.500"
+                  px={2}
+                  py={0.5}
+                  borderRadius="sm"
+                >
+                  <Text fontSize="xs" fontWeight="bold">
+                    CLAIMED
+                  </Text>
+                </Box>
+              </Box>
+            )}
 
             {/* Fragment title */}
             <Text
@@ -133,13 +163,12 @@ export const FragmentReadModal = ({
         <ModalFooter justifyContent="center" pt={4}>
           <Button
             onClick={onClose}
-            colorScheme="gray"
             variant="outline"
-            size="lg"
-            px={12}
-            isDisabled
+            colorScheme="whiteAlpha"
+            size="md"
+            px={8}
           >
-            CLAIMED
+            Close
           </Button>
         </ModalFooter>
       </ModalContent>
