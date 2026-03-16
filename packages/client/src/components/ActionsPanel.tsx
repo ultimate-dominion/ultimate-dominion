@@ -21,11 +21,13 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
+import { useSlotOrder } from '../hooks/useSlotOrder';
 import { type Armor, EncounterType, type Monster, RARITY_COLORS, type Spell, type Weapon } from '../utils/types';
 import { Switch } from '@chakra-ui/react';
 
 import {
   BATTLE_OUTCOME_SEEN_KEY,
+  SLOT_ORDER_KEY_PREFIX,
   STATUS_EFFECT_NAME_MAPPING,
   STATUS_EFFECT_DESCRIPTION_MAPPING,
 } from '../utils/constants';
@@ -257,10 +259,16 @@ export const ActionsPanel = (): JSX.Element => {
     return false;
   }, [currentBattle, userTurn, turnTimeLeft]);
 
-  const equippedSpellsAndWeapons = useMemo(
-    () => [...equippedSpells, ...equippedWeapons],
-    [equippedSpells, equippedWeapons],
+  const weaponsAndSpells = useMemo(
+    () => [...equippedWeapons, ...equippedSpells],
+    [equippedWeapons, equippedSpells],
   );
+
+  const storageKey = character ? `${SLOT_ORDER_KEY_PREFIX}${character.id}` : '';
+  const { orderedItems: orderedAttackItems } = useSlotOrder(storageKey, weaponsAndSpells);
+
+  // Keep legacy alias so the rest of the file (battle log, empty-weapon check) still works
+  const equippedSpellsAndWeapons = orderedAttackItems;
 
   const combatConsumables = useMemo(
     () => equippedConsumables.filter(c => c.hpRestoreAmount !== BigInt(0) && c.balance > 0n),
@@ -268,7 +276,7 @@ export const ActionsPanel = (): JSX.Element => {
   );
 
   const actionItems = useMemo(() => [
-    ...equippedSpellsAndWeapons.map(item => ({
+    ...orderedAttackItems.map(item => ({
       tokenId: item.tokenId,
       name: item.name,
       type: 'attack' as const,
@@ -279,7 +287,7 @@ export const ActionsPanel = (): JSX.Element => {
       type: 'consumable' as const,
       balance: item.balance,
     })),
-  ], [equippedSpellsAndWeapons, combatConsumables]);
+  ], [orderedAttackItems, combatConsumables]);
 
   const spellAndWeaponTemplates = useMemo(
     () => [...spellTemplates, ...weaponTemplates],

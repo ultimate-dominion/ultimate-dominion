@@ -23,8 +23,10 @@ import {
   BATTLE_OUTCOME_SEEN_KEY,
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
+  SLOT_ORDER_KEY_PREFIX,
   STATUS_EFFECT_NAME_MAPPING,
 } from '../utils/constants';
+import { getFirstSlotItem } from '../hooks/useSlotOrder';
 import { decodeAppliedStatusEffectId } from '../utils/helpers';
 import {
   type AttackOutcomeType,
@@ -484,7 +486,10 @@ export const BattleProvider = ({
     if (attackingItemId !== null) return; // attack in flight
     if (!opponent || !character || !delegatorAddress) return;
 
-    const firstWeapon = equippedWeapons[0] ?? equippedSpells[0];
+    const allAttackItems = [...equippedWeapons, ...equippedSpells];
+    const firstWeapon = character
+      ? getFirstSlotItem(`${SLOT_ORDER_KEY_PREFIX}${character.id}`, allAttackItems)
+      : allAttackItems[0];
     if (!firstWeapon) return;
 
     // Small delay so React state settles after previous attack resolves

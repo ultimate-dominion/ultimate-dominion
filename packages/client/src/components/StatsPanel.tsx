@@ -27,6 +27,7 @@ import { etherToFixedNumber } from '../utils/helpers';
 import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
 
 import { ClassSymbol } from './ClassSymbol';
+import { EquippedLoadout } from './EquippedLoadout';
 import { Level } from './Level';
 
 export const StatsPanel = (): JSX.Element => {
@@ -382,6 +383,10 @@ export const StatsPanel = (): JSX.Element => {
               })}
             </HStack>
           </VStack>
+          <Divider borderColor="grey300" />
+          <Box px={4} py={3} w="100%">
+            <EquippedLoadout />
+          </Box>
         </>
       )}
     </VStack>

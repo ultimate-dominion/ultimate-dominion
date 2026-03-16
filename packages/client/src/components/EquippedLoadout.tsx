@@ -1,9 +1,12 @@
 import { Box, Center, HStack, Image, Spinner, Text, Tooltip, VStack } from '@chakra-ui/react';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
+import { useBattle } from '../contexts/BattleContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useSlotOrder } from '../hooks/useSlotOrder';
+import { SLOT_ORDER_KEY_PREFIX } from '../utils/constants';
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
 import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
 import { getRarityAnimation, getRarityColor } from '../utils/rarityHelpers';
@@ -59,13 +62,28 @@ const getItemTooltip = (item: SlotItem): string => {
   return name;
 };
 
-const FilledSlot = ({ item }: { item: SlotItem }): JSX.Element => {
+const FilledSlot = ({
+  item,
+  slotNumber,
+  onClick,
+  isInBattle,
+}: {
+  item: SlotItem;
+  slotNumber: number;
+  onClick?: () => void;
+  isInBattle: boolean;
+}): JSX.Element => {
   const rarityColor = getRarityColor(item.rarity);
   const rarityAnimation = getRarityAnimation(item.rarity);
   const imageSrc = getItemImage(removeEmoji(item.name));
+  const canClick = onClick && !isInBattle;
 
   return (
-    <Tooltip hasArrow label={getItemTooltip(item)} placement="top">
+    <Tooltip
+      hasArrow
+      label={`${getItemTooltip(item)}${canClick ? ' — tap to set as #1' : ''}`}
+      placement="top"
+    >
       <Center
         animation={rarityAnimation}
         border="2px solid"
@@ -74,7 +92,11 @@ const FilledSlot = ({ item }: { item: SlotItem }): JSX.Element => {
         h={SLOT_SIZE}
         w={SLOT_SIZE}
         flexShrink={0}
-        cursor="default"
+        cursor={canClick ? 'pointer' : 'default'}
+        onClick={canClick ? onClick : undefined}
+        position="relative"
+        _hover={canClick ? { opacity: 0.8, transform: 'scale(1.05)' } : undefined}
+        transition="transform 0.1s ease, opacity 0.1s ease"
       >
         {imageSrc ? (
           <Image
@@ -90,6 +112,18 @@ const FilledSlot = ({ item }: { item: SlotItem }): JSX.Element => {
               : getEmoji(item.name)}
           </Text>
         )}
+        <Text
+          color="#8A7E6A"
+          fontFamily="mono"
+          fontSize="7px"
+          fontWeight={700}
+          position="absolute"
+          bottom="-1px"
+          right="2px"
+          lineHeight={1}
+        >
+          {slotNumber}
+        </Text>
       </Center>
     </Tooltip>
   );
@@ -98,11 +132,36 @@ const FilledSlot = ({ item }: { item: SlotItem }): JSX.Element => {
 export const EquippedLoadout = (): JSX.Element | null => {
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons } =
     useCharacter();
+  const { currentBattle } = useBattle();
   const { isLoading: isLoadingItemTemplates } = useItems();
 
+  // Force re-render when slot order changes via promoteToFirst
+  const [, setRenderKey] = useState(0);
+
+  const storageKey = character ? `${SLOT_ORDER_KEY_PREFIX}${character.id}` : '';
+
+  const attackItems = useMemo(
+    () => [...equippedWeapons, ...equippedSpells] as SlotItem[],
+    [equippedWeapons, equippedSpells],
+  );
+
+  const { orderedItems: orderedAttackItems, promoteToFirst } = useSlotOrder(storageKey, attackItems);
+
   const actionSlots = useMemo(
-    () => [...equippedWeapons, ...equippedSpells, ...equippedConsumables] as SlotItem[],
-    [equippedWeapons, equippedSpells, equippedConsumables],
+    () => [...orderedAttackItems, ...equippedConsumables] as SlotItem[],
+    [orderedAttackItems, equippedConsumables],
+  );
+
+  const isInBattle = currentBattle !== null && currentBattle.end === BigInt(0);
+
+  const handlePromote = useCallback(
+    (index: number) => {
+      // Only attack items (not consumables) can be promoted
+      if (index >= orderedAttackItems.length) return;
+      promoteToFirst(index);
+      setRenderKey(k => k + 1);
+    },
+    [orderedAttackItems.length, promoteToFirst],
   );
 
   if (!character) return null;
@@ -144,7 +203,11 @@ export const EquippedLoadout = (): JSX.Element | null => {
       <HStack spacing={1.5} justify="center">
         {/* Slot 0: Armor */}
         <Box position="relative">
-          {armor ? <FilledSlot item={armor} /> : <EmptySlot label="Armor — empty" />}
+          {armor ? (
+            <FilledSlot item={armor} slotNumber={0} isInBattle={isInBattle} />
+          ) : (
+            <EmptySlot label="Armor — empty" />
+          )}
           <Text
             color="#5A5040"
             fontSize="6px"
@@ -168,7 +231,12 @@ export const EquippedLoadout = (): JSX.Element | null => {
         {[0, 1, 2, 3].map(i => (
           <Box key={i}>
             {actionSlots[i] ? (
-              <FilledSlot item={actionSlots[i]} />
+              <FilledSlot
+                item={actionSlots[i]}
+                slotNumber={i + 1}
+                onClick={i > 0 && i < orderedAttackItems.length ? () => handlePromote(i) : undefined}
+                isInBattle={isInBattle}
+              />
             ) : (
               <EmptySlot />
             )}
