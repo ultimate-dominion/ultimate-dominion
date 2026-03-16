@@ -25,7 +25,7 @@ export default async function uploadFile(
     return res.status(400).json({ error: "Invalid file name" });
   }
 
-  const form = formidable({ maxFileSize: 1 * 1024 * 1024 }); // 1MB limit
+  const form = formidable({ maxFileSize: 10 * 1024 * 1024 }); // 10MB limit (sharp compresses before IPFS upload)
 
   try {
     const [fields, files] = await form.parse(req);
@@ -43,12 +43,13 @@ export default async function uploadFile(
       return res.status(400).json({ error: "Only image files are allowed" });
     }
 
-    // Process image with sharp (skip for GIFs to preserve animation without bloat)
+    // Process image with sharp (skip for GIFs to preserve animation)
     const isGif = file.mimetype === 'image/gif';
     const processedImageBuffer = isGif
       ? await readFile(file.filepath)
       : await sharp(file.filepath)
-          .resize(800, 800, { fit: 'inside' })
+          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+          .webp({ quality: 80 })
           .toBuffer();
 
     // Create temporary directory

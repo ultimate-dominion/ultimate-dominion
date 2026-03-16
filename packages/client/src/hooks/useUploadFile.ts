@@ -36,8 +36,8 @@ export const useUploadFile = ({
     try {
       setIsUploading(true);
 
-      if (file.size > 1048576) {
-        throw new Error('Max file size exceeded');
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('Max file size exceeded (10MB)');
       }
       const formData = new FormData();
       formData.set(fileName, file);
