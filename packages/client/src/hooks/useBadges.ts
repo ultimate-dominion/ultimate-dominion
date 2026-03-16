@@ -67,7 +67,8 @@ export const useBadges = (
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!characterOwner || !characterTokenId || !publicClient || !badgeContractAddress) {
+    if (!characterOwner || !characterTokenId || !publicClient || !badgeContractAddress ||
+        badgeContractAddress === '0x0000000000000000000000000000000000000000') {
       setBadges([]);
       setIsLoading(false);
       return;
@@ -89,7 +90,7 @@ export const useBadges = (
               functionName: 'ownerOf',
               args: [badgeTokenId],
             });
-            if (owner === characterOwner) {
+            if (owner.toLowerCase() === characterOwner.toLowerCase()) {
               found.push({
                 type: def.type,
                 label: def.label,
