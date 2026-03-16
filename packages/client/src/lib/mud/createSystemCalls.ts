@@ -816,17 +816,23 @@ export function createSystemCalls(
     characterEntity: string,
     direction: Direction,
   ): SystemCallReturn => {
+    console.log('[autoAdventure] called', { characterEntity, direction, isMovePending });
     if (isMovePending) {
+      console.warn('[autoAdventure] blocked by isMovePending');
       return { success: false, error: 'Action in progress.' };
     }
 
     const ownershipError = validateCharacterOwnership(characterEntity, 'autoAdventure');
-    if (ownershipError) return ownershipError;
+    if (ownershipError) {
+      console.warn('[autoAdventure] ownership check failed', ownershipError);
+      return ownershipError;
+    }
 
     // Same store-based position read as move — uses Zustand (updated from receipts)
     const pos = getTableValue('Position', characterEntity) as
       | { x: number; y: number } | undefined;
     if (!pos) {
+      console.warn('[autoAdventure] position not found');
       return { success: false, error: 'Position not found.' };
     }
 
@@ -839,6 +845,8 @@ export function createSystemCalls(
       case 'right': x += 1; break;
     }
 
+    console.log('[autoAdventure] sending tx', { from: `${x},${y}`, to: `${x},${y}`, cid: characterEntity });
+
     isMovePending = true;
     try {
       await waitForMoveCooldown();
@@ -850,8 +858,10 @@ export function createSystemCalls(
         [characterEntity as `0x${string}`, x, y],
         { gas: AUTO_ADVENTURE_GAS_LIMIT },
       );
+      console.log('[autoAdventure] tx sent', tx);
 
       const receipt = await waitForTransaction(tx);
+      console.log('[autoAdventure] receipt', receipt.status);
       lastMoveCompletedMs = Date.now();
 
       if (receipt.status === 'reverted') {
