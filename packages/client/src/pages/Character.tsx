@@ -100,7 +100,7 @@ export const CharacterPage = (): JSX.Element => {
   const character = isOwner ? userCharacter : reactiveCharacter;
   const isLoadingCharacter = !isSynced || (!character && !!id);
 
-  const { badges } = useBadges(character?.owner, character?.tokenId);
+  const { badges } = useBadges(character);
 
   useEffect(() => {
     if (isConnecting) return;
