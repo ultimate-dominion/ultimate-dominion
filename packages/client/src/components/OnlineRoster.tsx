@@ -178,12 +178,11 @@ const OnlineRosterDrawer = ({
   const [search, setSearch] = useState('');
   const { delegatorAddress } = useMUD();
 
-  // Exclude current player, sort by level desc
+  // Sort by level desc, keep current player in list
   const sortedPlayers = useMemo(() => {
     return [...players]
-      .filter((c) => c.owner.toLowerCase() !== delegatorAddress?.toLowerCase())
       .sort((a, b) => Number(b.level) - Number(a.level));
-  }, [players, delegatorAddress]);
+  }, [players]);
 
   // Apply filter + search
   const filteredPlayers = useMemo(() => {
@@ -212,6 +211,9 @@ const OnlineRosterDrawer = ({
     const entry = rankedPlayers.find((r) => r.player.id === playerId);
     return entry?.rank ?? 0;
   };
+
+  const isCurrentPlayer = (c: Character): boolean =>
+    c.owner.toLowerCase() === delegatorAddress?.toLowerCase();
 
   const count = sortedPlayers.length;
   const mode: 'expanded' | 'compact' | 'dense' =
@@ -341,6 +343,7 @@ const OnlineRosterDrawer = ({
               players={filteredPlayers}
               mode={mode}
               getRank={getRank}
+              isCurrentPlayer={isCurrentPlayer}
             />
           ) : (
             filteredPlayers.map((p) => (
@@ -349,6 +352,7 @@ const OnlineRosterDrawer = ({
                 character={p}
                 mode={mode}
                 rank={getRank(p.id)}
+                isSelf={isCurrentPlayer(p)}
               />
             ))
           )}
@@ -402,10 +406,12 @@ const GroupedPlayerList = ({
   players,
   mode,
   getRank,
+  isCurrentPlayer,
 }: {
   players: Character[];
   mode: 'compact' | 'dense';
   getRank: (id: string) => number;
+  isCurrentPlayer: (c: Character) => boolean;
 }) => {
   const groups = useMemo(() => {
     if (mode === 'dense') {
@@ -465,6 +471,7 @@ const GroupedPlayerList = ({
                 character={p}
                 mode={mode}
                 rank={getRank(p.id)}
+                isSelf={isCurrentPlayer(p)}
               />
             ))}
           </Box>
@@ -480,10 +487,12 @@ const PlayerRow = ({
   character,
   mode,
   rank,
+  isSelf = false,
 }: {
   character: Character;
   mode: 'expanded' | 'compact' | 'dense';
   rank: number;
+  isSelf?: boolean;
 }) => {
   const navigate = useNavigate();
   const status = getPlayerStatus(character);
@@ -545,6 +554,17 @@ const PlayerRow = ({
           >
             {character.name}
           </Text>
+          {isSelf && (
+            <Text
+              fontFamily="mono"
+              fontSize="9px"
+              color="#5A8A3E"
+              opacity={0.7}
+              flexShrink={0}
+            >
+              You
+            </Text>
+          )}
           {status && (
             <Text
               fontFamily="mono"

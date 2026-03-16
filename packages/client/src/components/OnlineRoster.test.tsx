@@ -165,21 +165,19 @@ describe('OnlineRoster', () => {
       expect(screen.getByText('Thornveil')).toBeTruthy();
     });
 
-    it('excludes current player from roster', () => {
+    it('shows current player with You tag', () => {
       mapState.allCharacters = [
         makeCharacter({ name: 'Me', owner: '0xcurrentplayer' }),
         makeCharacter({ name: 'Other', owner: '0xother1' }),
       ];
 
       render(<OnlineLink />);
-      // Link shows total spawned (2), including current player
-      expect(screen.getByText('2 Players Online')).toBeTruthy();
-
       fireEvent.click(screen.getByText('2 Players Online'));
 
-      // Roster should exclude current player
-      expect(screen.queryByText('Me')).toBeNull();
+      // Both players visible, current player tagged
+      expect(screen.getByText('Me')).toBeTruthy();
       expect(screen.getByText('Other')).toBeTruthy();
+      expect(screen.getByText('You')).toBeTruthy();
     });
   });
 
