@@ -40,6 +40,7 @@ import {
 import { useCharacter } from './CharacterContext';
 import { useMap } from './MapContext';
 import { useMUD } from './MUDContext';
+import { resolveCurrentBattle } from './resolveCurrentBattle';
 
 type BattleContextType = {
   attackOutcomes: AttackOutcomeType[];
@@ -151,31 +152,8 @@ export const BattleProvider = ({
   }, []);
 
   const currentBattle = useMemo(() => {
-    // A battle is "active" if end===0 AND no CombatOutcome exists yet.
-    // (CombatOutcome arrives via Store_SetRecord (sync) while CombatEncounter.end
-    // arrives via splice event (async ~100-300ms). Using CombatOutcome as the
-    // primary "battle over" signal avoids a timing gap.)
-    const activeBattle = allBattles
-      .filter(b => b.end === BigInt(0) && !combatOutcomeTable[b.encounterId])
-      .pop();
-
-    const latestBattle = activeBattle ?? allBattles[allBattles.length - 1];
-    if (!latestBattle) return null;
-
-    // Battle is over if end is set OR CombatOutcome exists
-    const hasOutcome = !!combatOutcomeTable[latestBattle.encounterId];
-    if (latestBattle.end !== BigInt(0) || hasOutcome) {
-      // Outcome not synced yet — hide battle until it arrives
-      if (!hasOutcome) return null;
-    }
-
-    const latestBattleOutcomeSeen = localStorage.getItem(
-      BATTLE_OUTCOME_SEEN_KEY,
-    );
-
-    if (latestBattleOutcomeSeen === latestBattle?.encounterId) return null;
-
-    return latestBattle;
+    const lastSeenEncounterId = localStorage.getItem(BATTLE_OUTCOME_SEEN_KEY);
+    return resolveCurrentBattle(allBattles, combatOutcomeTable, lastSeenEncounterId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allBattles, combatOutcomeTable, acknowledgeVersion]);
 
