@@ -634,17 +634,6 @@ const CharacterCreationInner = (): JSX.Element => {
     );
   }
 
-  if (awaitingFunding) {
-    return (
-      <Center h="100vh" flexDirection="column" gap={4} px={4}>
-        <Spinner size="lg" color="#D4A54A" />
-        <Text color="#C4B89E" fontSize="sm">
-          Loading...
-        </Text>
-      </Center>
-    );
-  }
-
   return (
     <Stack
       direction={{ base: 'column', lg: 'row' }}
@@ -822,6 +811,7 @@ const CharacterCreationInner = (): JSX.Element => {
             {!isSmallScreen && (
               <Box bottom={6} left={0} position="absolute" px={10} right={0}>
                 <Button
+                  isDisabled={awaitingFunding}
                   isLoading={isCreating}
                   loadingText="Creating..."
                   type="submit"
@@ -835,6 +825,7 @@ const CharacterCreationInner = (): JSX.Element => {
           {isSmallScreen && (
             <Box px={4}>
               <Button
+                isDisabled={awaitingFunding}
                 isLoading={isCreating || isRefreshing}
                 loadingText="Creating..."
                 mb={4}
