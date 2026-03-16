@@ -21,7 +21,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
-import { type Armor, EncounterType, type Monster, type Spell, type Weapon } from '../utils/types';
+import { type Armor, EncounterType, type Monster, RARITY_COLORS, type Spell, type Weapon } from '../utils/types';
 import { Switch } from '@chakra-ui/react';
 
 import {
@@ -32,7 +32,6 @@ import {
 import { getItemImage } from '../utils/itemImages';
 import { etherToFixedNumber, removeEmoji } from '../utils/helpers';
 import { ConsumableQuickUse } from './ConsumableQuickUse';
-import { ItemCard } from './ItemCard';
 import { ItemEquipModal } from './ItemEquipModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 
@@ -876,48 +875,47 @@ export const ActionsPanel = (): JSX.Element => {
       {inlineResults.length > 0 && autoAdventureMode && (
         <Stack py={3} spacing={2} px={{ base: 2, lg: 4 }}>
           {inlineResults.map((result, i) => (
-            <Box key={result.encounterId} opacity={i === 0 ? 1 : 0.6}>
-              <HStack spacing={3} flexWrap="wrap">
-                <Text fontWeight={700} size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                  {result.isDraw
-                    ? 'Draw'
-                    : result.winner === character?.id
-                      ? 'Victory!'
-                      : 'Defeat...'}
-                </Text>
-                {result.winner === character?.id && (
-                  <>
-                    {result.expDropped > 0n && (
-                      <Text size="xs" color="green" fontFamily="mono">
-                        +{result.expDropped.toString()} XP
-                      </Text>
-                    )}
-                    {result.goldDropped > 0n && (
-                      <Text size="xs" color="gold" fontFamily="mono">
-                        +{etherToFixedNumber(result.goldDropped)} Gold
-                      </Text>
-                    )}
-                  </>
-                )}
-                {result.winner !== character?.id && result.goldDropped > 0n && (
-                  <Text size="xs" color="red" fontFamily="mono">
-                    -{etherToFixedNumber(result.goldDropped)} Gold
-                  </Text>
-                )}
-              </HStack>
-              {result.items.length > 0 && result.winner === character?.id && (
-                <VStack spacing={1} align="stretch" mt={1}>
-                  <Text size="2xs" color="#8A7E6A">Loot:</Text>
-                  {result.items.map(item => (
-                    <ItemCard
-                      key={`inline-loot-${result.encounterId}-${item.tokenId}`}
-                      onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
-                      {...item}
-                    />
-                  ))}
-                </VStack>
+            <HStack key={result.encounterId} opacity={i === 0 ? 1 : 0.6} spacing={3} flexWrap="wrap">
+              <Text fontWeight={700} size="xs">
+                {result.isDraw
+                  ? 'Draw'
+                  : result.winner === character?.id
+                    ? 'Victory!'
+                    : 'Defeat...'}
+              </Text>
+              {result.winner === character?.id && (
+                <>
+                  {result.expDropped > 0n && (
+                    <Text size="xs" color="green" fontFamily="mono">
+                      +{result.expDropped.toString()} XP
+                    </Text>
+                  )}
+                  {result.goldDropped > 0n && (
+                    <Text size="xs" color="gold" fontFamily="mono">
+                      +{etherToFixedNumber(result.goldDropped)} Gold
+                    </Text>
+                  )}
+                </>
               )}
-            </Box>
+              {result.winner !== character?.id && result.goldDropped > 0n && (
+                <Text size="xs" color="red" fontFamily="mono">
+                  -{etherToFixedNumber(result.goldDropped)} Gold
+                </Text>
+              )}
+              {result.items.map(item => (
+                <Text
+                  key={`inline-loot-${result.encounterId}-${item.tokenId}`}
+                  as="button"
+                  size="xs"
+                  color={RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS] ?? '#C4B89E'}
+                  fontWeight={600}
+                  onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
+                  _hover={{ textDecoration: 'underline', cursor: 'pointer' }}
+                >
+                  {item.name}
+                </Text>
+              ))}
+            </HStack>
           ))}
         </Stack>
       )}

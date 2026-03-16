@@ -200,7 +200,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
   // --- Happy paths ---
 
-  it('shows Victory with gold, XP, and item cards on win with items', () => {
+  it('shows Victory with gold, XP, and item names on win with items', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
 
@@ -209,11 +209,11 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     expect(screen.getByText('Victory!')).toBeTruthy();
     expect(screen.getByText(/\+50 XP/)).toBeTruthy();
     expect(screen.getByText(/\+1\.00 Gold/)).toBeTruthy();
-    expect(screen.getByText('Loot:')).toBeTruthy();
-    expect(screen.getByTestId('item-card-Iron Shield')).toBeTruthy();
+    // Items shown as inline text, not cards
+    expect(screen.getByText('Iron Shield')).toBeTruthy();
   });
 
-  it('shows Victory without loot section when no items dropped', () => {
+  it('shows Victory without items when no items dropped', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = { ...winOutcome, itemsDropped: [] };
 
@@ -221,7 +221,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     expect(screen.getByText('Victory!')).toBeTruthy();
     expect(screen.getByText(/\+50 XP/)).toBeTruthy();
-    expect(screen.queryByText('Loot:')).toBeNull();
+    expect(screen.queryByText('Iron Shield')).toBeNull();
   });
 
   it('shows Draw text on draw', () => {
@@ -317,14 +317,14 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     expect(screen.queryByText('Victory!')).toBeNull();
   });
 
-  it('clicking an item card opens the equip modal', async () => {
+  it('clicking an item name opens the equip modal', async () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
 
     render(<ActionsPanel />);
 
-    const itemCard = screen.getByTestId('item-card-Iron Shield');
-    fireEvent.click(itemCard);
+    const itemText = screen.getByText('Iron Shield');
+    fireEvent.click(itemText);
 
     expect(screen.getByTestId('item-equip-modal')).toBeTruthy();
   });
