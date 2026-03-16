@@ -151,6 +151,10 @@ export const BattleProvider = ({
   }, []);
 
   const currentBattle = useMemo(() => {
+    // Grind mode: combat auto-resolves in one tx — suppress the battle screen
+    // entirely. The flag is in localStorage (set by MovementContext).
+    if (localStorage.getItem('ud_grind_mode') === 'true') return null;
+
     // Prefer an active (ongoing) battle; fall back to most recent completed.
     // A battle is "active" if end===0 AND no CombatOutcome exists yet.
     // (CombatOutcome arrives via Store_SetRecord (sync) while CombatEncounter.end
@@ -161,12 +165,6 @@ export const BattleProvider = ({
       .pop();
     const latestBattle = activeBattle ?? allBattles[allBattles.length - 1];
     if (!latestBattle) return null;
-
-    // Auto-resolved encounters (grind mode): start === end means the encounter
-    // was created and resolved in the same block/tx. Skip the battle screen.
-    if (latestBattle.start !== BigInt(0) && latestBattle.start === latestBattle.end) {
-      return null;
-    }
 
     // Battle is over if end is set OR CombatOutcome exists
     const hasOutcome = !!combatOutcomeTable[latestBattle.encounterId];
