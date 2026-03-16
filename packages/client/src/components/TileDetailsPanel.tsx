@@ -1132,7 +1132,6 @@ export const TileDetailsPanel = (): JSX.Element => {
                   <OpponentRow
                     encounterType={EncounterType.PvE}
                     onClick={() => {
-                      if (grindMode) return;
                       if (isMoveEquipped) {
                         onInitiateCombat(monster, EncounterType.PvE);
                       } else {
