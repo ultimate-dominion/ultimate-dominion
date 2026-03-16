@@ -133,9 +133,7 @@ export const MovementProvider = ({
 
       setIsMoving(true);
       if (grindMode) {
-        console.log('[MovementContext] grind mode — calling autoAdventure', { characterId: character.id, direction });
-        const result = await moveTx.execute(() => autoAdventure(character.id, direction));
-        console.log('[MovementContext] autoAdventure result', result);
+        await moveTx.execute(() => autoAdventure(character.id, direction));
       } else {
         await moveTx.execute(() => move(character.id, direction));
       }

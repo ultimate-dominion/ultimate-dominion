@@ -162,6 +162,12 @@ export const BattleProvider = ({
     const latestBattle = activeBattle ?? allBattles[allBattles.length - 1];
     if (!latestBattle) return null;
 
+    // Auto-resolved encounters (grind mode): start === end means the encounter
+    // was created and resolved in the same block/tx. Skip the battle screen.
+    if (latestBattle.start !== BigInt(0) && latestBattle.start === latestBattle.end) {
+      return null;
+    }
+
     // Battle is over if end is set OR CombatOutcome exists
     const hasOutcome = !!combatOutcomeTable[latestBattle.encounterId];
     if (latestBattle.end !== BigInt(0) || hasOutcome) {
