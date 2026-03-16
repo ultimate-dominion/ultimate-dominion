@@ -8,10 +8,12 @@ import {
   Stack,
   Text,
   useBreakpointValue,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { zeroAddress, zeroHash } from 'viem';
 import SafeTypist from './SafeTypist';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -19,16 +21,19 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
-import { EncounterType, Monster } from '../utils/types';
+import { type Armor, EncounterType, type Monster, type Spell, type Weapon } from '../utils/types';
 import { Switch } from '@chakra-ui/react';
 
 import {
+  BATTLE_OUTCOME_SEEN_KEY,
   STATUS_EFFECT_NAME_MAPPING,
   STATUS_EFFECT_DESCRIPTION_MAPPING,
 } from '../utils/constants';
 import { getItemImage } from '../utils/itemImages';
-import { removeEmoji } from '../utils/helpers';
+import { etherToFixedNumber, removeEmoji } from '../utils/helpers';
 import { ConsumableQuickUse } from './ConsumableQuickUse';
+import { ItemCard } from './ItemCard';
+import { ItemEquipModal } from './ItemEquipModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 
 export const MONSTER_MOVE_MAPPING: Record<string, string> = {
@@ -46,7 +51,7 @@ export const MONSTER_MOVE_MAPPING: Record<string, string> = {
 };
 
 export const ActionsPanel = (): JSX.Element => {
-  const { character, equippedConsumables, equippedSpells, equippedWeapons } =
+  const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
   const { isSpawned, monstersOnTile, position } = useMap();
   const {
@@ -65,6 +70,7 @@ export const ActionsPanel = (): JSX.Element => {
   } = useBattle();
   const { autoAdventureMode, isRefreshing, onToggleAutoAdventure } = useMovement();
   const {
+    armorTemplates,
     isLoading: isItemTemplatesLoading,
     spellTemplates,
     weaponTemplates,
@@ -304,6 +310,39 @@ export const ActionsPanel = (): JSX.Element => {
     return currentBattle.maxTurns === currentBattle.currentTurn;
   }, [currentBattle]);
 
+  // --- Auto adventure inline results ---
+
+  const inlineResultItems = useMemo(() => {
+    if (!autoAdventureMode || !lastestBattleOutcome?.itemsDropped?.length) return [];
+    const ids = lastestBattleOutcome.itemsDropped;
+    const armor = armorTemplates.filter(a => ids.includes(a.tokenId)).map(a => ({
+      ...a, balance: 1n, itemId: zeroHash, owner: zeroAddress,
+    }));
+    const spells = spellTemplates.filter(s => ids.includes(s.tokenId)).map(s => ({
+      ...s, balance: 1n, itemId: zeroHash, owner: zeroAddress,
+    }));
+    const weapons = weaponTemplates.filter(w => ids.includes(w.tokenId)).map(w => ({
+      ...w, balance: 1n, itemId: zeroHash, owner: zeroAddress,
+    }));
+    return [...armor, ...spells, ...weapons].sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
+  }, [autoAdventureMode, lastestBattleOutcome, armorTemplates, spellTemplates, weaponTemplates]);
+
+  const [selectedItem, setSelectedItem] = useState<Armor | Spell | Weapon | null>(null);
+  const { isOpen: isItemModalOpen, onClose: onCloseItemModal, onOpen: onOpenItemModal } = useDisclosure();
+
+  // Auto-dismiss inline results after 3s (wins only — loss = death = auto adventure disables)
+  useEffect(() => {
+    if (!(autoAdventureMode && battleOver && currentBattle && lastestBattleOutcome)) return;
+    if (lastestBattleOutcome.winner !== character?.id) return;
+
+    const timer = setTimeout(() => {
+      localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, lastestBattleOutcome.encounterId);
+      onContinueToBattleOutcome(false);
+      refreshCharacter();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [autoAdventureMode, battleOver, currentBattle, lastestBattleOutcome, character?.id, onContinueToBattleOutcome, refreshCharacter]);
+
   if (isItemTemplatesLoading) {
     return (
       <VStack mt={12}>
@@ -539,7 +578,7 @@ export const ActionsPanel = (): JSX.Element => {
           </VStack>
         )}
 
-        {opponent &&
+        {!autoAdventureMode && opponent &&
           (() => {
             const seenDotTurns = new Set<string>();
             return [...attackOutcomes].reverse().map((attack, reverseIndex) => {
@@ -812,63 +851,116 @@ export const ActionsPanel = (): JSX.Element => {
           })()}
       </Stack>
       {battleOver && currentBattle && (
-        <Stack py={4} spacing={4}>
-          <Box
-            backgroundColor="rgba(196,184,158,0.08)"
-            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-            h="1px"
-            w="100%"
-          />
-          <HStack justifyContent="space-between" px={{ base: 2, lg: 4 }}>
-            <SafeTypist
-              avgTypingDelay={10}
-              cursor={{ show: false }}
-              stdTypingDelay={10}
-            >
-              {battleDraw ? (
-                <Text
-                  fontWeight="bold"
-                  size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                  textAlign="center"
-                >
-                  The battle ended in a draw.
-                </Text>
-              ) : (
-                <Text
-                  fontWeight="bold"
-                  size={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                  textAlign="center"
-                >
-                  {lastestBattleOutcome?.winner === character?.id &&
-                  lastestBattleOutcome?.playerFled
-                    ? `${opponent?.name} fled!`
-                    : ''}
-                  {lastestBattleOutcome?.winner !== character?.id &&
-                  lastestBattleOutcome?.playerFled
-                    ? 'You fled!'
-                    : ''}
-                  {lastestBattleOutcome?.winner === character?.id &&
-                  !lastestBattleOutcome?.playerFled
-                    ? 'You won!'
-                    : ''}
-                  {lastestBattleOutcome?.winner !== character?.id &&
-                  !lastestBattleOutcome?.playerFled
-                    ? 'You died...'
-                    : ''}
-                </Text>
-              )}
-            </SafeTypist>
-            <HStack justifyContent="center">
-              <Button
-                onClick={() => onContinueToBattleOutcome(true)}
-                size="sm"
-                variant="white"
+        autoAdventureMode ? (
+          <Stack py={3} spacing={2} px={{ base: 2, lg: 4 }}>
+            <Text fontWeight={700} size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+              {battleDraw
+                ? 'Draw'
+                : lastestBattleOutcome?.winner === character?.id
+                  ? 'Victory!'
+                  : 'Defeat...'}
+            </Text>
+            {lastestBattleOutcome?.winner === character?.id && lastestBattleOutcome && (
+              <HStack spacing={3} flexWrap="wrap">
+                {lastestBattleOutcome.expDropped > 0n && (
+                  <Text size="xs" color="green" fontFamily="mono">
+                    +{lastestBattleOutcome.expDropped.toString()} XP
+                  </Text>
+                )}
+                {lastestBattleOutcome.goldDropped > 0n && (
+                  <Text size="xs" color="gold" fontFamily="mono">
+                    +{etherToFixedNumber(lastestBattleOutcome.goldDropped)} Gold
+                  </Text>
+                )}
+              </HStack>
+            )}
+            {lastestBattleOutcome != null && lastestBattleOutcome.winner !== character?.id && lastestBattleOutcome.goldDropped > 0n && (
+              <Text size="xs" color="red" fontFamily="mono">
+                -{etherToFixedNumber(lastestBattleOutcome.goldDropped)} Gold
+              </Text>
+            )}
+            {inlineResultItems.length > 0 && lastestBattleOutcome?.winner === character?.id && (
+              <VStack spacing={1} align="stretch">
+                <Text size="2xs" color="#8A7E6A">Loot:</Text>
+                {inlineResultItems.map(item => (
+                  <ItemCard
+                    key={`inline-loot-${item.tokenId}`}
+                    onClick={() => { setSelectedItem(item); onOpenItemModal(); }}
+                    {...item}
+                  />
+                ))}
+              </VStack>
+            )}
+          </Stack>
+        ) : (
+          <Stack py={4} spacing={4}>
+            <Box
+              backgroundColor="rgba(196,184,158,0.08)"
+              boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+              h="1px"
+              w="100%"
+            />
+            <HStack justifyContent="space-between" px={{ base: 2, lg: 4 }}>
+              <SafeTypist
+                avgTypingDelay={10}
+                cursor={{ show: false }}
+                stdTypingDelay={10}
               >
-                View Results
-              </Button>
+                {battleDraw ? (
+                  <Text
+                    fontWeight="bold"
+                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                    textAlign="center"
+                  >
+                    The battle ended in a draw.
+                  </Text>
+                ) : (
+                  <Text
+                    fontWeight="bold"
+                    size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+                    textAlign="center"
+                  >
+                    {lastestBattleOutcome?.winner === character?.id &&
+                    lastestBattleOutcome?.playerFled
+                      ? `${opponent?.name} fled!`
+                      : ''}
+                    {lastestBattleOutcome?.winner !== character?.id &&
+                    lastestBattleOutcome?.playerFled
+                      ? 'You fled!'
+                      : ''}
+                    {lastestBattleOutcome?.winner === character?.id &&
+                    !lastestBattleOutcome?.playerFled
+                      ? 'You won!'
+                      : ''}
+                    {lastestBattleOutcome?.winner !== character?.id &&
+                    !lastestBattleOutcome?.playerFled
+                      ? 'You died...'
+                      : ''}
+                  </Text>
+                )}
+              </SafeTypist>
+              <HStack justifyContent="center">
+                <Button
+                  onClick={() => onContinueToBattleOutcome(true)}
+                  size="sm"
+                  variant="white"
+                >
+                  View Results
+                </Button>
+              </HStack>
             </HStack>
-          </HStack>
-        </Stack>
+          </Stack>
+        )
+      )}
+      {selectedItem && (
+        <ItemEquipModal
+          isEquipped={[...equippedArmor, ...equippedSpells, ...equippedWeapons].some(
+            i => i.name === selectedItem.name
+          )}
+          isOpen={isItemModalOpen}
+          onClose={() => { refreshCharacter(); onCloseItemModal(); }}
+          {...{ ...selectedItem, owner: character?.owner ?? '' }}
+        />
       )}
     </Box>
   );

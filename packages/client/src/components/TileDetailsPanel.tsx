@@ -311,6 +311,11 @@ export const TileDetailsPanel = (): JSX.Element => {
 
         if (!bestWeapon) return; // no weapons equipped
 
+        setPendingOpponent({
+          name: opponent.name,
+          image: getMonsterImage(opponent.name),
+        });
+
         const result = await encounterTx.execute(async () => {
           const { error, success } = await autoFight(
             character.id,
@@ -320,6 +325,8 @@ export const TileDetailsPanel = (): JSX.Element => {
           if (error && !success) throw new Error(error);
           return true;
         });
+
+        setPendingOpponent(null);
 
         if (result !== undefined) {
           refreshCharacter();
@@ -956,7 +963,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (!autoAdventureMode && (isWaitingForBattle || encounterTx.isLoading || (currentBattle && (!opponent || !userCharacterForBattleRendering)))) {
+  if (isWaitingForBattle || encounterTx.isLoading || (!autoAdventureMode && currentBattle && (!opponent || !userCharacterForBattleRendering))) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
         <style>

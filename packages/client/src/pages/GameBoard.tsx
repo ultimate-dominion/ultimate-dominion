@@ -76,7 +76,7 @@ export const GameBoard = (): JSX.Element => {
   const { character, isMoveEquipped, isRefreshing } = useCharacter();
   const { inSafetyZone, isSpawned, position } = useMap();
   const { attackProgress, continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
-  const { moveProgress } = useMovement();
+  const { autoAdventureMode, moveProgress } = useMovement();
   const { isMapFull, queueStatus } = useQueue();
   const hydrated = useGameStore((s) => s.hydrated);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
@@ -329,7 +329,7 @@ export const GameBoard = (): JSX.Element => {
         </VStack>
       </InfoModal>
 
-      {lastestBattleOutcome && (
+      {lastestBattleOutcome && !autoAdventureMode && (
         <BattleOutcomeModal
           key={lastestBattleOutcome.encounterId}
           battleOutcome={lastestBattleOutcome}

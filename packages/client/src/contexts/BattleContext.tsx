@@ -258,20 +258,6 @@ export const BattleProvider = ({
     checkCombatFragmentTriggers,
   ]);
 
-  // Auto adventure: debounce the outcome modal so rapid fights don't spam it.
-  // Each new outcome resets the timer. The modal only opens once fights settle.
-  useEffect(() => {
-    if (localStorage.getItem('ud_auto_adventure') !== 'true') return;
-    if (!lastestBattleOutcome) return;
-    const seen = localStorage.getItem(BATTLE_OUTCOME_SEEN_KEY);
-    if (seen === lastestBattleOutcome.encounterId) return;
-
-    const timer = setTimeout(() => {
-      setContinueToBattleOutcome(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [lastestBattleOutcome]);
-
   // Derive opponent entity ID for PvP (characters only — monsters use allMonsters)
   const opponentEntityId = useMemo(() => {
     if (!character || !currentBattle) return undefined;
