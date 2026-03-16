@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGameStore } from './store';
 import { WSClient } from './wsClient';
 import type { FullSnapshot } from './types';
+import { readCachedSnapshot, writeCachedSnapshot } from './snapshotCache';
 
 const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
 const INDEXER_WS_URL = import.meta.env.VITE_INDEXER_WS_URL || 'ws://localhost:3001/ws';
+const WORLD_ADDRESS = import.meta.env.VITE_WORLD_ADDRESS || '';
 
 /** Re-hydrate if tab was hidden longer than this (ms) */
 const STALE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
@@ -38,7 +40,16 @@ export function GameStoreProvider({ children }: Props) {
 
     async function init() {
       try {
-        // 1. Fetch snapshot
+        // 1. Synchronous cache hydration (before any async work)
+        if (WORLD_ADDRESS) {
+          const cached = readCachedSnapshot(WORLD_ADDRESS);
+          if (cached) {
+            useGameStore.getState().hydrate(cached);
+            console.log('[gameStore] Hydrated from cache at block', cached.block);
+          }
+        }
+
+        // 2. Fetch fresh snapshot
         console.log('[gameStore] Fetching snapshot from', INDEXER_API_URL);
         const snapshot = await fetchSnapshot();
         if (cancelled) return;
@@ -46,7 +57,12 @@ export function GameStoreProvider({ children }: Props) {
         console.log(`[gameStore] Hydrating with ${Object.keys(snapshot.tables).length} tables at block ${snapshot.block}`);
         useGameStore.getState().hydrate(snapshot);
 
-        // 2. Connect WebSocket
+        // 3. Cache the fresh snapshot
+        if (WORLD_ADDRESS) {
+          writeCachedSnapshot(WORLD_ADDRESS, snapshot);
+        }
+
+        // 4. Connect WebSocket from fresh block
         const store = useGameStore.getState();
         const ws = new WSClient(INDEXER_WS_URL, store, snapshot.block);
         wsRef.current = ws;
@@ -74,6 +90,9 @@ export function GameStoreProvider({ children }: Props) {
             .then((snapshot) => {
               if (cancelled) return;
               useGameStore.getState().hydrate(snapshot);
+              if (WORLD_ADDRESS) {
+                writeCachedSnapshot(WORLD_ADDRESS, snapshot);
+              }
               // Reconnect WS from new block so we don't replay old updates
               if (wsRef.current) {
                 wsRef.current.dispose();
