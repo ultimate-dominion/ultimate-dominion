@@ -550,7 +550,7 @@ export const ActionsPanel = (): JSX.Element => {
             </Text>
           </SafeTypist>
         )}
-        {!currentBattle && isSpawned && position && (
+        {((!currentBattle || autoAdventureMode) && isSpawned && position) && (
           <VStack spacing={3} w="100%">
             {isDesktop && <ConsumableQuickUse />}
             <HStack justify="space-between" w="100%">

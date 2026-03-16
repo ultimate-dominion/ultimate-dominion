@@ -339,4 +339,16 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     expect(screen.getByTestId('item-equip-modal')).toBeTruthy();
   });
+
+  it('auto-adventure controls persist when results are showing', () => {
+    battleState.currentBattle = normalBattle;
+    battleState.lastestBattleOutcome = winOutcome;
+
+    render(<ActionsPanel />);
+
+    // Results should show
+    expect(screen.getByText('Victory!')).toBeTruthy();
+    // Auto-adventure controls should ALSO be visible (additive, not replaced)
+    expect(screen.getByText(/Auto Adventure/)).toBeTruthy();
+  });
 });

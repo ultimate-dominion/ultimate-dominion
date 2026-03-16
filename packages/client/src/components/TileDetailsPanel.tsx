@@ -216,20 +216,13 @@ export const TileDetailsPanel = (): JSX.Element => {
     }
   }, [currentBattle, opponent, userCharacterForBattleRendering, isWaitingForBattle]);
 
-  // Auto adventure: hold loading screen until battle results are fully dismissed.
-  // currentBattle goes null when ActionsPanel's auto-dismiss timer fires (3s after results show).
-  // That's the signal that results have been displayed and dismissed.
-  const battleWasActiveRef = useRef(false);
-
+  // Auto adventure: clear loading screen when battle outcome arrives
   useEffect(() => {
-    if (pendingOpponent && currentBattle) {
-      battleWasActiveRef.current = true;
-    }
-    if (pendingOpponent && battleWasActiveRef.current && !currentBattle) {
+    if (autoAdventureMode && pendingOpponent && lastestBattleOutcome && currentBattle &&
+        currentBattle.encounterId === lastestBattleOutcome.encounterId) {
       setPendingOpponent(null);
-      battleWasActiveRef.current = false;
     }
-  }, [pendingOpponent, currentBattle]);
+  }, [autoAdventureMode, pendingOpponent, lastestBattleOutcome, currentBattle]);
 
   // Safety timeout — clear if battle never starts (10s)
   useEffect(() => {
@@ -243,7 +236,6 @@ export const TileDetailsPanel = (): JSX.Element => {
     if (!pendingOpponent) return;
     const timeout = setTimeout(() => {
       setPendingOpponent(null);
-      battleWasActiveRef.current = false;
     }, 5000);
     return () => clearTimeout(timeout);
   }, [pendingOpponent]);
@@ -352,8 +344,6 @@ export const TileDetailsPanel = (): JSX.Element => {
         });
 
         if (result !== undefined) {
-          // Don't clear pendingOpponent here — effect below clears
-          // when battle outcome data is ready, preventing a stale UI flash.
           refreshCharacter();
         } else {
           // TX failed — clear immediately so loading screen disappears
@@ -991,10 +981,6 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  // Battle is resolved when outcome matches current encounter — spinner should stop
-  const battleResolved = !!(pendingOpponent && lastestBattleOutcome && currentBattle &&
-    currentBattle.encounterId === lastestBattleOutcome.encounterId);
-
   if (isWaitingForBattle || encounterTx.isLoading || pendingOpponent || (!autoAdventureMode && currentBattle && (!opponent || !userCharacterForBattleRendering))) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
@@ -1026,24 +1012,20 @@ export const TileDetailsPanel = (): JSX.Element => {
               name={pendingOpponent.name}
               animation="slideIn 0.3s ease-out"
               border="3px solid"
-              borderColor={battleResolved ? 'green.500' : 'red.600'}
+              borderColor="red.600"
             />
           )}
           <Text
-            animation={battleResolved ? undefined : 'battlePulse 1.5s ease-in-out infinite'}
-            color={battleResolved ? 'green.300' : 'red.400'}
+            animation="battlePulse 1.5s ease-in-out infinite"
+            color="red.400"
             fontWeight={700}
             letterSpacing="wider"
             size={{ base: 'md', lg: 'xl' }}
             textTransform="uppercase"
           >
-            {battleResolved && pendingOpponent
-              ? `${pendingOpponent.name} defeated`
-              : pendingOpponent ? `Fighting ${pendingOpponent.name}` : 'Initiating battle'}
+            {pendingOpponent ? `Fighting ${pendingOpponent.name}` : 'Initiating battle'}
           </Text>
-          {!battleResolved && (
-            <Spinner color="red.400" size="lg" thickness="3px" speed="0.8s" />
-          )}
+          <Spinner color="red.400" size="lg" thickness="3px" speed="0.8s" />
         </VStack>
       </Box>
     );

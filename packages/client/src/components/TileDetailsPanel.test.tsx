@@ -291,7 +291,7 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
     expect(screen.getByText('Fighting Dire Rat')).toBeTruthy();
   });
 
-  it('holds loading screen when currentBattle arrives (does not drop early)', async () => {
+  it('holds loading screen when currentBattle arrives without outcome', async () => {
     const { rerender } = render(<TileDetailsPanel />);
 
     // Click monster to set pendingOpponent
@@ -302,7 +302,7 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
 
     expect(screen.getByText('Fighting Dire Rat')).toBeTruthy();
 
-    // Simulate store sync: currentBattle arrives
+    // Simulate store sync: currentBattle arrives but NO outcome yet
     battleState.currentBattle = normalBattle;
     battleState.opponent = { ...testMonster, currentHp: 20n, worldStatusEffects: [] };
     battleState.userCharacterForBattleRendering = { ...defaultCharacter, currentHp: 45n, worldStatusEffects: [] };
@@ -311,12 +311,11 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
       rerender(<TileDetailsPanel />);
     });
 
-    // Loading screen should STILL be showing — not dropped early
-    // pendingOpponent is still set, battleWasActiveRef is now true
-    expect(screen.queryByText('Fighting Dire Rat') || screen.queryByText('Dire Rat defeated')).toBeTruthy();
+    // Loading screen should STILL be showing — outcome hasn't arrived yet
+    expect(screen.getByText('Fighting Dire Rat')).toBeTruthy();
   });
 
-  it('shows "defeated" text and hides spinner when battle is resolved', async () => {
+  it('drops loading screen when battle outcome arrives', async () => {
     const { rerender } = render(<TileDetailsPanel />);
 
     // Click monster
@@ -325,57 +324,18 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
       fireEvent.click(monsterButton!);
     });
 
-    // Simulate store sync: battle + outcome arrive
+    // Simulate store sync: battle + outcome arrive together
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
     battleState.opponent = { ...testMonster, currentHp: 0n, worldStatusEffects: [] };
     battleState.userCharacterForBattleRendering = { ...defaultCharacter, currentHp: 45n, worldStatusEffects: [] };
-
-    await act(async () => {
-      rerender(<TileDetailsPanel />);
-    });
-
-    // Should show "defeated" text instead of "fighting"
-    expect(screen.getByText('Dire Rat defeated')).toBeTruthy();
-    // Spinner should not be present
-    expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
-  });
-
-  it('drops loading screen when currentBattle goes null (auto-dismiss fires)', async () => {
-    const { rerender } = render(<TileDetailsPanel />);
-
-    // Click monster
-    const monsterButton = screen.getByText('Dire Rat').closest('button');
-    await act(async () => {
-      fireEvent.click(monsterButton!);
-    });
-
-    // Step 1: currentBattle arrives (battleWasActiveRef = true)
-    battleState.currentBattle = normalBattle;
-    battleState.lastestBattleOutcome = winOutcome;
-    battleState.opponent = { ...testMonster, currentHp: 0n, worldStatusEffects: [] };
-    battleState.userCharacterForBattleRendering = { ...defaultCharacter, currentHp: 45n, worldStatusEffects: [] };
-
-    await act(async () => {
-      rerender(<TileDetailsPanel />);
-    });
-
-    // Loading screen should still be up
-    expect(screen.getByText('Dire Rat defeated')).toBeTruthy();
-
-    // Step 2: auto-dismiss fires in ActionsPanel → currentBattle goes null
-    battleState.currentBattle = null;
-    battleState.opponent = null;
-    battleState.userCharacterForBattleRendering = null;
 
     await act(async () => {
       rerender(<TileDetailsPanel />);
     });
 
     // Loading screen should be gone — monster list should show
-    expect(screen.queryByText('Dire Rat defeated')).toBeNull();
     expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
-    // Monster list is visible again
     expect(screen.getByText('Dire Rat')).toBeTruthy();
   });
 
