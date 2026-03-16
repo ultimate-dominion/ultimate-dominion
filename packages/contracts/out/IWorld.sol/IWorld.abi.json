@@ -1261,7 +1261,7 @@
     "name": "UD__autoAdventure",
     "inputs": [
       {
-        "name": "characterId",
+        "name": "cid",
         "type": "bytes32",
         "internalType": "bytes32"
       },
@@ -1278,9 +1278,34 @@
     ],
     "outputs": [
       {
-        "name": "resultData",
-        "type": "bytes",
-        "internalType": "bytes"
+        "name": "combatOccurred",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "playerWon",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "playerDied",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "xpGained",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "goldGained",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "encounterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "stateMutability": "nonpayable"
@@ -9025,11 +9050,6 @@
   {
     "type": "error",
     "name": "AutoAdventureCooldownActive",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "AutoAdventureNoWeapon",
     "inputs": []
   },
   {

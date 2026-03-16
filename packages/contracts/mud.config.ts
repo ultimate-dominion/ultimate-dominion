@@ -202,6 +202,10 @@ export default defineWorld({
       name: "GasStationSys",
       openAccess: true,
     },
+    AutoAdventureSystem: {
+      name: "AutoAdventureSy",
+      openAccess: true,
+    },
   },
   enums: {
     // Legacy class enum - kept for backward compatibility
@@ -1012,6 +1016,16 @@ export default defineWorld({
         goldPerGasCharge: "uint256", // Gold charged per relayer tx
       },
     },
+    ///////////////////////////////////// AUTO ADVENTURE ///////////////////////////////////
+
+    AutoAdventureCooldown: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        lastTime: "uint256",
+      },
+    },
+
     ///////////////////////////////////// FRAGMENTS (Lore NFTs) ///////////////////////////////////
     // Track trigger progress and claims per character
     FragmentProgress: {

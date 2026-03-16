@@ -23,20 +23,26 @@ import { useMUD } from './MUDContext';
 
 const PREVENT_DEFAULT_KEYS = ['ArrowUp', 'ArrowDown'];
 
+const GRIND_MODE_KEY = 'ud_grind_mode';
+
 type MovementContextType = {
+  grindMode: boolean;
   isRefreshing: boolean;
   moveProgress: TransactionProgress;
   moveStatusMessage: string;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSetIsMovementDisabled: (isDisabled: boolean) => void;
+  onToggleGrindMode: () => void;
 };
 
 const MovementContext = createContext<MovementContextType>({
+  grindMode: false,
   isRefreshing: false,
   moveProgress: { phase: 'idle', percent: 0, transitionMs: 0 },
   moveStatusMessage: '',
   onMove: () => {},
   onSetIsMovementDisabled: () => {},
+  onToggleGrindMode: () => {},
 });
 
 export type MovementProviderProps = {
@@ -50,7 +56,7 @@ export const MovementProvider = ({
   const {
     authMethod,
     delegatorAddress,
-    systemCalls: { move },
+    systemCalls: { autoAdventure, move },
   } = useMUD();
 
   const {
@@ -66,9 +72,12 @@ export const MovementProvider = ({
 
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
+  const [grindMode, setGrindMode] = useState(
+    () => localStorage.getItem(GRIND_MODE_KEY) === 'true',
+  );
 
   const moveTx = useTransaction({
-    actionName: 'moving',
+    actionName: grindMode ? 'adventuring' : 'moving',
     silent: true,
     maxAttempts: 2,
     estimatedDurationMs: 1000,
@@ -78,12 +87,23 @@ export const MovementProvider = ({
     setIsMovementDisabled(isDisabled);
   }, []);
 
+  const onToggleGrindMode = useCallback(() => {
+    setGrindMode(prev => {
+      const next = !prev;
+      localStorage.setItem(GRIND_MODE_KEY, String(next));
+      return next;
+    });
+  }, []);
+
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       if (isMovementDisabled) return;
       if (isMoving) return;
       if (!isSpawned) return;
-      if (currentBattle) return;
+      // In grind mode, skip the currentBattle guard — combat is resolved in the
+      // same tx, so the client never sees an "active" encounter state. The store
+      // will have a completed CombatEncounter + CombatOutcome from the receipt.
+      if (!grindMode && currentBattle) return;
       if (isMessageInputFocused) return;
 
       if (!delegatorAddress) return;
@@ -112,13 +132,19 @@ export const MovementProvider = ({
       }
 
       setIsMoving(true);
-      await moveTx.execute(() => move(character.id, direction));
+      if (grindMode) {
+        await moveTx.execute(() => autoAdventure(character.id, direction));
+      } else {
+        await moveTx.execute(() => move(character.id, direction));
+      }
       setIsMoving(false);
     },
     [
+      autoAdventure,
       character,
       currentBattle,
       delegatorAddress,
+      grindMode,
       isMessageInputFocused,
       isMoveEquipped,
       isMovementDisabled,
@@ -142,7 +168,7 @@ export const MovementProvider = ({
       if (isMovementDisabled) return;
       if (isMoving) return;
       if (!isSpawned) return;
-      if (currentBattle) return;
+      if (!grindMode && currentBattle) return;
       if (isMessageInputFocused) return;
 
       switch (event.key) {
@@ -180,6 +206,7 @@ export const MovementProvider = ({
     return () => window.removeEventListener('keydown', listener);
   }, [
     currentBattle,
+    grindMode,
     isMessageInputFocused,
     isMovementDisabled,
     isMoving,
@@ -191,11 +218,13 @@ export const MovementProvider = ({
   return (
     <MovementContext.Provider
       value={{
+        grindMode,
         isRefreshing: isMoving,
         moveProgress: moveTx.progress,
-        moveStatusMessage: moveTx.statusMessage || 'Moving...',
+        moveStatusMessage: moveTx.statusMessage || (grindMode ? 'Adventuring...' : 'Moving...'),
         onMove,
         onSetIsMovementDisabled,
+        onToggleGrindMode,
       }}
     >
       {children}

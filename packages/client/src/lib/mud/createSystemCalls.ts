@@ -807,6 +807,85 @@ export function createSystemCalls(
     }
   };
 
+  // --- Auto Adventure (grind mode) ---
+  // Gas limit for autoAdventure — covers move + spawn + full combat loop + rewards.
+  // Higher than MOVE_GAS_LIMIT because combat resolution is included in the same tx.
+  const AUTO_ADVENTURE_GAS_LIMIT = BigInt(12_000_000);
+
+  const autoAdventure = async (
+    characterEntity: string,
+    direction: Direction,
+  ): SystemCallReturn => {
+    if (isMovePending) {
+      return { success: false, error: 'Action in progress.' };
+    }
+
+    const ownershipError = validateCharacterOwnership(characterEntity, 'autoAdventure');
+    if (ownershipError) return ownershipError;
+
+    // Same store-based position read as move — uses Zustand (updated from receipts)
+    const pos = getTableValue('Position', characterEntity) as
+      | { x: number; y: number } | undefined;
+    if (!pos) {
+      return { success: false, error: 'Position not found.' };
+    }
+
+    let x = Number(pos.x);
+    let y = Number(pos.y);
+    switch (direction) {
+      case 'up': y += 1; break;
+      case 'down': y -= 1; break;
+      case 'left': x -= 1; break;
+      case 'right': x += 1; break;
+    }
+
+    isMovePending = true;
+    try {
+      await waitForMoveCooldown();
+
+      // Skip simulation — send with hardcoded gas limit (same pattern as move retries).
+      // AutoAdventure is always a bigger tx than move, so we skip sim to avoid
+      // the extra RPC round-trip (~100-200ms latency saved per action).
+      const tx = await worldContract.write.UD__autoAdventure(
+        [characterEntity as `0x${string}`, x, y],
+        { gas: AUTO_ADVENTURE_GAS_LIMIT },
+      );
+
+      const receipt = await waitForTransaction(tx);
+      lastMoveCompletedMs = Date.now();
+
+      if (receipt.status === 'reverted') {
+        // Diagnose: check for NotSpawned (idle timeout)
+        try {
+          await worldContract.simulate.UD__autoAdventure(
+            [characterEntity as `0x${string}`, x, y],
+          );
+        } catch (diagError) {
+          if (isNotSpawnedError(diagError)) {
+            useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
+            return { success: false, error: 'Session expired — respawn to continue.' };
+          }
+          return { success: false, error: getContractError(diagError) };
+        }
+        return { success: false, error: 'Auto adventure failed — try again.' };
+      }
+
+      // Receipt is decoded by applyReceiptToStore automatically — same tables
+      // (Position, CombatEncounter, ActionOutcome, CombatOutcome, Stats, etc.)
+      // are written by AutoAdventureSystem, so the existing receipt log decoding
+      // pipeline updates the Zustand store at ~0ms. No special handling needed.
+      return { success: true };
+    } catch (e) {
+      lastMoveCompletedMs = Date.now();
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    } finally {
+      isMovePending = false;
+    }
+  };
+
   const removeEntityFromBoard = async (entity: string): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(entity, 'removeEntityFromBoard');
     if (ownershipError) return ownershipError;
@@ -1324,6 +1403,7 @@ export function createSystemCalls(
   };
 
   return {
+    autoAdventure,
     buy,
     buyGas,
     cancelOrder,

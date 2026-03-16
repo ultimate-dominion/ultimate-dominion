@@ -21,6 +21,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { Consumable, EncounterType, Monster } from '../utils/types';
+import { Switch } from '@chakra-ui/react';
 
 import {
   STATUS_EFFECT_NAME_MAPPING,
@@ -64,7 +65,7 @@ export const ActionsPanel = (): JSX.Element => {
     opponent,
     statusEffectActions,
   } = useBattle();
-  const { isRefreshing } = useMovement();
+  const { grindMode, isRefreshing, onToggleGrindMode } = useMovement();
   const {
     isLoading: isItemTemplatesLoading,
     spellTemplates,
@@ -536,13 +537,28 @@ export const ActionsPanel = (): JSX.Element => {
         {!currentBattle && isSpawned && position && (
           <VStack spacing={3} w="100%">
             {isDesktop && <ConsumableQuickUse />}
-            <Text color="#8A7E6A" fontStyle="italic" size="xs">
-              {position.x === 0 && position.y === 0
-                ? 'Move to a new tile to find monsters.'
-                : monstersOnTile.length === 0
-                  ? 'No monsters here. Try another tile.'
-                  : 'Click on a monster to battle.'}
-            </Text>
+            <HStack justify="space-between" w="100%">
+              <Text color="#8A7E6A" fontStyle="italic" size="xs">
+                {position.x === 0 && position.y === 0
+                  ? 'Move to a new tile to find monsters.'
+                  : grindMode
+                    ? 'Grind mode — combat auto-resolves on move.'
+                    : monstersOnTile.length === 0
+                      ? 'No monsters here. Try another tile.'
+                      : 'Click on a monster to battle.'}
+              </Text>
+              <HStack spacing={2} flexShrink={0}>
+                <Text color="#8A7E6A" fontSize="2xs" whiteSpace="nowrap">
+                  Grind
+                </Text>
+                <Switch
+                  size="sm"
+                  isChecked={grindMode}
+                  onChange={onToggleGrindMode}
+                  colorScheme="orange"
+                />
+              </HStack>
+            </HStack>
           </VStack>
         )}
 
