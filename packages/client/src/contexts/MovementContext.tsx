@@ -23,26 +23,26 @@ import { useMUD } from './MUDContext';
 
 const PREVENT_DEFAULT_KEYS = ['ArrowUp', 'ArrowDown'];
 
-const GRIND_MODE_KEY = 'ud_grind_mode';
+const AUTO_ADVENTURE_KEY = 'ud_auto_adventure';
 
 type MovementContextType = {
-  grindMode: boolean;
+  autoAdventureMode: boolean;
   isRefreshing: boolean;
   moveProgress: TransactionProgress;
   moveStatusMessage: string;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSetIsMovementDisabled: (isDisabled: boolean) => void;
-  onToggleGrindMode: () => void;
+  onToggleAutoAdventure: () => void;
 };
 
 const MovementContext = createContext<MovementContextType>({
-  grindMode: false,
+  autoAdventureMode: false,
   isRefreshing: false,
   moveProgress: { phase: 'idle', percent: 0, transitionMs: 0 },
   moveStatusMessage: '',
   onMove: () => {},
   onSetIsMovementDisabled: () => {},
-  onToggleGrindMode: () => {},
+  onToggleAutoAdventure: () => {},
 });
 
 export type MovementProviderProps = {
@@ -71,21 +71,21 @@ export const MovementProvider = ({
 
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
-  const [grindMode, setGrindMode] = useState(
-    () => localStorage.getItem(GRIND_MODE_KEY) === 'true',
+  const [autoAdventureMode, setAutoAdventureMode] = useState(
+    () => localStorage.getItem(AUTO_ADVENTURE_KEY) === 'true',
   );
 
-  // Auto-disable grind mode when character dies — ensures the death/respawn
+  // Auto-disable auto adventure when character dies — ensures the death/respawn
   // screen renders instead of being suppressed by BattleContext.
   useEffect(() => {
-    if (grindMode && !isSpawned) {
-      setGrindMode(false);
-      localStorage.setItem(GRIND_MODE_KEY, 'false');
+    if (autoAdventureMode && !isSpawned) {
+      setAutoAdventureMode(false);
+      localStorage.setItem(AUTO_ADVENTURE_KEY, 'false');
     }
-  }, [grindMode, isSpawned]);
+  }, [autoAdventureMode, isSpawned]);
 
   const moveTx = useTransaction({
-    actionName: grindMode ? 'adventuring' : 'moving',
+    actionName: autoAdventureMode ? 'adventuring' : 'moving',
     silent: true,
     maxAttempts: 2,
     estimatedDurationMs: 1000,
@@ -95,10 +95,10 @@ export const MovementProvider = ({
     setIsMovementDisabled(isDisabled);
   }, []);
 
-  const onToggleGrindMode = useCallback(() => {
-    setGrindMode(prev => {
+  const onToggleAutoAdventure = useCallback(() => {
+    setAutoAdventureMode(prev => {
       const next = !prev;
-      localStorage.setItem(GRIND_MODE_KEY, String(next));
+      localStorage.setItem(AUTO_ADVENTURE_KEY, String(next));
       return next;
     });
   }, []);
@@ -205,7 +205,7 @@ export const MovementProvider = ({
     return () => window.removeEventListener('keydown', listener);
   }, [
     currentBattle,
-    grindMode,
+    autoAdventureMode,
     isMessageInputFocused,
     isMovementDisabled,
     isMoving,
@@ -217,13 +217,13 @@ export const MovementProvider = ({
   return (
     <MovementContext.Provider
       value={{
-        grindMode,
+        autoAdventureMode,
         isRefreshing: isMoving,
         moveProgress: moveTx.progress,
-        moveStatusMessage: moveTx.statusMessage || (grindMode ? 'Adventuring...' : 'Moving...'),
+        moveStatusMessage: moveTx.statusMessage || (autoAdventureMode ? 'Adventuring...' : 'Moving...'),
         onMove,
         onSetIsMovementDisabled,
-        onToggleGrindMode,
+        onToggleAutoAdventure,
       }}
     >
       {children}

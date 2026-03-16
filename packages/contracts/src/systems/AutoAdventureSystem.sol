@@ -22,11 +22,11 @@ import {EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {DEFAULT_MAX_TURNS} from "../../constants.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
-import {OnlyCharacters, Unauthorized, NotSpawned, InEncounter, OutOfBounds, InvalidMove, EntityNotAtPosition, NoWeaponsEquipped} from "../Errors.sol";
+import {OnlyCharacters, Unauthorized, NotSpawned, InEncounter, OutOfBounds, InvalidMove, EntityNotAtPosition, NoWeaponsEquipped, InvalidCombatEntity} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
 /// @title AutoAdventureSystem
-/// @notice Single-tx move + combat for grind mode. Delegates combat to existing PvESystem
+/// @notice Single-tx move + combat for auto adventure. Delegates combat to existing PvESystem
 ///         so all MUD table writes (ActionOutcome, CombatOutcome, etc.) happen through the
 ///         same code path as manual combat. Receipt log decoding works unchanged.
 contract AutoAdventureSystem is System {
@@ -168,5 +168,99 @@ contract AutoAdventureSystem is System {
 
         // xpGained/goldGained are in CombatOutcome (written by endEncounter → distributePveRewards)
         // Return 0 here — client reads from CombatOutcome table via receipt decoding
+    }
+
+    /// @notice Single-tx targeted combat for auto adventure mode. No movement — player clicks a
+    ///         specific monster on their current tile and the entire fight resolves in one tx.
+    ///         No cooldown — gas cost is the natural rate limiter for rapid farming.
+    function autoFight(bytes32 cid, bytes32 monsterId, uint256 weaponId)
+        public
+        returns (bool playerWon, bool playerDied, bytes32 encounterId)
+    {
+        PauseLib.requireNotPaused();
+
+        // Validate character
+        address owner = Characters.getOwner(cid);
+        if (!IWorld(_world()).UD__isValidCharacterId(cid)) revert OnlyCharacters();
+        if (_msgSender() != owner) {
+            ResourceId did = UserDelegationControl.getDelegationControlId(owner, _msgSender());
+            if (ResourceId.unwrap(did) == bytes32(0)) revert Unauthorized();
+        }
+        if (!Spawned.getSpawned(cid)) revert NotSpawned();
+        if (EncounterEntity.getEncounterId(cid) != bytes32(0)) revert InEncounter();
+
+        // Validate monster: same tile, is a mob, alive
+        (uint16 cx, uint16 cy) = Position.get(cid);
+        (uint16 mx, uint16 my) = Position.get(monsterId);
+        if (cx != mx || cy != my) revert EntityNotAtPosition();
+        if (IWorld(_world()).UD__isValidCharacterId(monsterId)) revert InvalidCombatEntity();
+        if (Stats.getCurrentHp(monsterId) <= 0 || !Spawned.getSpawned(monsterId)) revert InvalidCombatEntity();
+
+        // Update session timer (prevents idle timeout during auto adventure)
+        SessionTimer.set(cid, block.timestamp);
+
+        // Validate weapon is equipped (in weapons or spells slots)
+        uint256 pw = weaponId;
+        {
+            bool found;
+            uint256 wc = CharacterEquipment.lengthEquippedWeapons(cid);
+            for (uint256 i; i < wc; i++) {
+                if (CharacterEquipment.getItemEquippedWeapons(cid, i) == weaponId) { found = true; break; }
+            }
+            if (!found) {
+                uint256 sc = CharacterEquipment.lengthEquippedSpells(cid);
+                for (uint256 i; i < sc; i++) {
+                    if (CharacterEquipment.getItemEquippedSpells(cid, i) == weaponId) { found = true; break; }
+                }
+            }
+            if (!found) revert NoWeaponsEquipped();
+        }
+
+        // Create encounter
+        bytes32[] memory players = new bytes32[](1);
+        players[0] = cid;
+        bytes32[] memory mobs = new bytes32[](1);
+        mobs[0] = monsterId;
+
+        bytes32[] memory attackers;
+        bytes32[] memory defenders;
+        bool attackersAreMobs;
+        if (Stats.getAgility(monsterId) > Stats.getAgility(cid)) {
+            attackers = mobs; defenders = players; attackersAreMobs = true;
+        } else {
+            attackers = players; defenders = mobs;
+        }
+
+        encounterId = keccak256(abi.encode(EncounterType.PvE, attackers, defenders, block.timestamp));
+        CombatEncounter.set(encounterId, CombatEncounterData({
+            encounterType: EncounterType.PvE, start: block.timestamp, end: 0,
+            rewardsDistributed: false, currentTurn: 1, currentTurnTimer: block.timestamp,
+            maxTurns: DEFAULT_MAX_TURNS, attackersAreMobs: attackersAreMobs,
+            defenders: defenders, attackers: attackers
+        }));
+        EncounterEntity.setEncounterId(cid, encounterId);
+        EncounterEntity.setEncounterId(monsterId, encounterId);
+
+        // Execute combat loop — same path as autoAdventure
+        {
+            Action[] memory actions = new Action[](1);
+            actions[0] = Action({attackerEntityId: cid, defenderEntityId: monsterId, itemId: pw});
+            uint256 rng = uint256(keccak256(abi.encode(block.prevrandao, cid, block.timestamp)));
+
+            for (uint256 r; r < MAX_AUTO_COMBAT_ROUNDS; r++) {
+                if (CombatEncounter.getEnd(encounterId) != 0) break;
+                IWorld(_world()).UD__executePvECombat(rng, encounterId, actions);
+                rng = uint256(keccak256(abi.encode(rng, r)));
+            }
+
+            if (CombatEncounter.getEnd(encounterId) == 0) {
+                IWorld(_world()).UD__endEncounter(encounterId, rng, false);
+            }
+        }
+
+        // Read results
+        playerDied = EncounterEntity.getDied(cid);
+        playerWon = !playerDied;
+        if (playerDied) Spawned.set(cid, false);
     }
 }

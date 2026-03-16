@@ -8,6 +8,7 @@ import {IWorld} from "@codegen/world/IWorld.sol";
 import {
     AutoAdventureCooldown,
     Characters,
+    CharacterEquipment,
     CombatEncounter,
     CombatOutcome,
     EncounterEntity,
@@ -25,7 +26,9 @@ import {
     InEncounter,
     OutOfBounds,
     InvalidMove,
-    NoWeaponsEquipped
+    NoWeaponsEquipped,
+    EntityNotAtPosition,
+    InvalidCombatEntity
 } from "../src/Errors.sol";
 
 /// @notice Tests for AutoAdventureSystem
@@ -304,6 +307,193 @@ contract Test_AutoAdventureSystem is Test {
             assertTrue(Spawned.getSpawned(aliceCharacterId), "spawned should be true after respawn");
             assertFalse(EncounterEntity.getDied(aliceCharacterId), "died should be false after respawn");
         }
+    }
+
+    // ============================
+    // autoFight tests
+    // ============================
+
+    /// @dev Helper: move alice to a tile with a living mob and return the mob entity ID.
+    ///      Returns bytes32(0) if no mob found after walking 5 tiles.
+    function _findMobOnTile() internal returns (bytes32 mobId, uint16 tileX) {
+        vm.startPrank(alice);
+        for (uint16 i = 1; i <= 5; i++) {
+            if (!Spawned.getSpawned(aliceCharacterId)) break;
+            vm.warp(block.timestamp + 6);
+            // Use autoAdventure to move (includes mob spawning via spawnOnTileEnter)
+            (bool combat,,,,, bytes32 eid) = world.UD__autoAdventure(aliceCharacterId, i, 0);
+            if (combat) {
+                // Combat already happened — we need a fresh mob. Move on.
+                // But the encounter is now resolved. Continue to next tile.
+                continue;
+            }
+            // Check if any living mobs are on this tile
+            bytes32[] memory ents = EntitiesAtPosition.getEntities(i, 0);
+            for (uint256 j; j < ents.length; j++) {
+                if (ents[j] != aliceCharacterId && !world.UD__isValidCharacterId(ents[j])) {
+                    if (Stats.getCurrentHp(ents[j]) > 0 && Spawned.getSpawned(ents[j])) {
+                        vm.stopPrank();
+                        return (ents[j], i);
+                    }
+                }
+            }
+        }
+        vm.stopPrank();
+        return (bytes32(0), 0);
+    }
+
+    function _getFirstWeapon(bytes32 cid) internal view returns (uint256) {
+        uint256 wc = CharacterEquipment.lengthEquippedWeapons(cid);
+        if (wc > 0) return CharacterEquipment.getItemEquippedWeapons(cid, 0);
+        return CharacterEquipment.getItemEquippedSpells(cid, 0);
+    }
+
+    function test_autoFight_basic() public {
+        (bytes32 mobId, uint16 tileX) = _findMobOnTile();
+        if (mobId == bytes32(0)) return; // no mob found due to RNG — skip
+
+        uint256 weaponId = _getFirstWeapon(aliceCharacterId);
+        vm.startPrank(alice);
+        (bool playerWon, bool playerDied, bytes32 encounterId) = world.UD__autoFight(aliceCharacterId, mobId, weaponId);
+        vm.stopPrank();
+
+        // Fight should have resolved fully
+        assertTrue(playerWon || playerDied, "fight should have resolved");
+        assertTrue(encounterId != bytes32(0), "encounter ID should be set");
+
+        // Encounter should be cleaned up (only happens after CombatOutcome is written)
+        assertEq(EncounterEntity.getEncounterId(aliceCharacterId), bytes32(0), "encounter should be cleared");
+
+        // Position should not have changed (no movement in autoFight)
+        (uint16 x, uint16 y) = Position.get(aliceCharacterId);
+        assertEq(x, tileX, "x should be unchanged");
+        assertEq(y, 0, "y should be unchanged");
+    }
+
+    function test_autoFight_noCooldown() public {
+        // autoFight has no cooldown — rapid fights should work
+        (bytes32 mobId1,) = _findMobOnTile();
+        if (mobId1 == bytes32(0)) return;
+
+        uint256 wid = _getFirstWeapon(aliceCharacterId);
+        vm.startPrank(alice);
+        world.UD__autoFight(aliceCharacterId, mobId1, wid);
+
+        // Immediately try another fight — should not revert
+        // (Need a new mob though — the first one is dead)
+        (uint16 cx, uint16 cy) = Position.get(aliceCharacterId);
+        bytes32[] memory ents = EntitiesAtPosition.getEntities(cx, cy);
+        bytes32 mobId2;
+        for (uint256 i; i < ents.length; i++) {
+            if (ents[i] != aliceCharacterId && !world.UD__isValidCharacterId(ents[i])) {
+                if (Stats.getCurrentHp(ents[i]) > 0 && Spawned.getSpawned(ents[i])) {
+                    mobId2 = ents[i];
+                    break;
+                }
+            }
+        }
+
+        if (mobId2 != bytes32(0)) {
+            // No revert expected — no cooldown
+            world.UD__autoFight(aliceCharacterId, mobId2, wid);
+        }
+        vm.stopPrank();
+    }
+
+    function test_autoFight_wrongTile() public {
+        address bob = _getUser();
+        vm.startPrank(bob);
+        bytes32 bobCharId = world.UD__mintCharacter(bob, bytes32("AutoFightBob"), "ipfs://test");
+        world.UD__enterGame(bobCharId, 1, 1);
+        world.UD__spawn(bobCharId);
+        world.UD__move(bobCharId, 1, 0);
+        vm.stopPrank();
+
+        uint256 wid = _getFirstWeapon(aliceCharacterId);
+        vm.startPrank(alice);
+        vm.expectRevert(InvalidCombatEntity.selector);
+        world.UD__autoFight(aliceCharacterId, bobCharId, wid);
+        vm.stopPrank();
+    }
+
+    function test_autoFight_notSpawned() public {
+        uint256 wid = _getFirstWeapon(aliceCharacterId);
+        vm.startPrank(alice);
+        world.UD__removeEntityFromBoard(aliceCharacterId);
+
+        vm.expectRevert(NotSpawned.selector);
+        world.UD__autoFight(aliceCharacterId, bytes32(uint256(1)), wid);
+        vm.stopPrank();
+    }
+
+    function test_autoFight_notOwner() public {
+        uint256 wid = _getFirstWeapon(aliceCharacterId);
+        address bob = _getUser();
+        vm.startPrank(bob);
+        vm.expectRevert(Unauthorized.selector);
+        world.UD__autoFight(aliceCharacterId, bytes32(uint256(1)), wid);
+        vm.stopPrank();
+    }
+
+    function test_autoFight_death() public {
+        (bytes32 mobId,) = _findMobOnTile();
+        if (mobId == bytes32(0)) return;
+
+        uint256 wid = _getFirstWeapon(aliceCharacterId);
+
+        // Set alice HP to 1 to force death
+        vm.startPrank(deployer);
+        Stats.setCurrentHp(aliceCharacterId, 1);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        (, bool playerDied,) = world.UD__autoFight(aliceCharacterId, mobId, wid);
+        vm.stopPrank();
+
+        if (playerDied) {
+            assertFalse(Spawned.getSpawned(aliceCharacterId), "spawned should be false after death");
+            assertTrue(EncounterEntity.getDied(aliceCharacterId), "died flag should be set");
+        }
+    }
+
+    function test_autoFight_gas() public {
+        (bytes32 mobId,) = _findMobOnTile();
+        if (mobId == bytes32(0)) return;
+
+        uint256 wid = _getFirstWeapon(aliceCharacterId);
+        vm.startPrank(alice);
+        uint256 gasBefore = gasleft();
+        world.UD__autoFight(aliceCharacterId, mobId, wid);
+        uint256 gasUsed = gasBefore - gasleft();
+        vm.stopPrank();
+
+        emit log_named_uint("Gas used (autoFight)", gasUsed);
+        assertLt(gasUsed, 12_000_000, "autoFight gas should be under 12M");
+    }
+
+    function test_autoFight_withDelegation() public {
+        (bytes32 mobId,) = _findMobOnTile();
+        if (mobId == bytes32(0)) return;
+
+        uint256 wid = _getFirstWeapon(aliceCharacterId);
+        address burner = _getUser();
+        vm.label(burner, "autoFightBurner");
+
+        vm.startPrank(alice);
+        ResourceId gameDelegationId = WorldResourceIdLib.encode(
+            RESOURCE_SYSTEM,
+            "UD",
+            "GameDelegation"
+        );
+        world.registerDelegation(burner, gameDelegationId, new bytes(0));
+        vm.stopPrank();
+
+        vm.startPrank(burner);
+        (bool playerWon, bool playerDied, bytes32 encounterId) = world.UD__autoFight(aliceCharacterId, mobId, wid);
+        vm.stopPrank();
+
+        assertTrue(playerWon || playerDied, "fight should resolve via delegation");
+        assertTrue(encounterId != bytes32(0), "encounter ID should be set");
     }
 
     // --- Helpers ---

@@ -258,11 +258,11 @@ export const BattleProvider = ({
     checkCombatFragmentTriggers,
   ]);
 
-  // Grind mode: auto-trigger the outcome modal when a new battle result arrives.
-  // Normally the player clicks "View Results" in ActionsPanel, but grind mode
+  // Auto adventure: auto-trigger the outcome modal when a new battle result arrives.
+  // Normally the player clicks "View Results" in ActionsPanel, but auto adventure
   // suppresses the battle screen so we skip straight to the outcome.
   useEffect(() => {
-    if (localStorage.getItem('ud_grind_mode') !== 'true') return;
+    if (localStorage.getItem('ud_auto_adventure') !== 'true') return;
     if (!lastestBattleOutcome) return;
     const seen = localStorage.getItem(BATTLE_OUTCOME_SEEN_KEY);
     if (seen === lastestBattleOutcome.encounterId) return;
@@ -416,7 +416,7 @@ export const BattleProvider = ({
     }
     const predicted = character.maxHp - totalDamage;
     const clamped = predicted > 0n ? predicted : 0n;
-    // Use whichever is lower: prediction or store value
+    // Use whichever is lower: prediction (damage not yet confirmed) or store.
     return clamped < storeHp ? clamped : storeHp;
   }, [currentBattleAttackOutcomes, dotActions, character]);
 
@@ -540,11 +540,11 @@ export const BattleProvider = ({
     return () => clearTimeout(timeout);
   }, [attackingItemId, failAttackProgress]);
 
-  // Grind mode auto-attack: when grind mode is on and there's an active
+  // Auto adventure auto-attack: when auto adventure is on and there's an active
   // battle, auto-submit endTurn with the first equipped weapon/spell.
   // Re-fires each time attackingItemId clears (previous attack resolved).
   useEffect(() => {
-    if (localStorage.getItem('ud_grind_mode') !== 'true') return;
+    if (localStorage.getItem('ud_auto_adventure') !== 'true') return;
     if (!currentBattle || currentBattle.end !== BigInt(0)) return;
     if (attackingItemId !== null) return; // attack in flight
     if (!opponent || !character || !delegatorAddress) return;

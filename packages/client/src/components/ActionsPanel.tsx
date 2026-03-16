@@ -65,7 +65,7 @@ export const ActionsPanel = (): JSX.Element => {
     opponent,
     statusEffectActions,
   } = useBattle();
-  const { grindMode, isRefreshing, onToggleGrindMode } = useMovement();
+  const { autoAdventureMode, isRefreshing, onToggleAutoAdventure } = useMovement();
   const {
     isLoading: isItemTemplatesLoading,
     spellTemplates,
@@ -541,20 +541,20 @@ export const ActionsPanel = (): JSX.Element => {
               <Text color="#8A7E6A" fontStyle="italic" size="xs">
                 {position.x === 0 && position.y === 0
                   ? 'Move to a new tile to find monsters.'
-                  : grindMode
-                    ? 'Grind mode — combat auto-resolves on move.'
+                  : autoAdventureMode
+                    ? 'Auto Adventure — combat resolves instantly.'
                     : monstersOnTile.length === 0
                       ? 'No monsters here. Try another tile.'
                       : 'Click on a monster to battle.'}
               </Text>
               <HStack spacing={2} flexShrink={0}>
                 <Text color="#8A7E6A" fontSize="2xs" whiteSpace="nowrap">
-                  Grind
+                  Auto
                 </Text>
                 <Switch
                   size="sm"
-                  isChecked={grindMode}
-                  onChange={onToggleGrindMode}
+                  isChecked={autoAdventureMode}
+                  onChange={onToggleAutoAdventure}
                   colorScheme="orange"
                 />
               </HStack>

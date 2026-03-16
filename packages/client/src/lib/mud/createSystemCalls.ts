@@ -807,7 +807,7 @@ export function createSystemCalls(
     }
   };
 
-  // --- Auto Adventure (grind mode) ---
+  // --- Auto Adventure (move + auto-fight first mob, deprecated) ---
   // Gas limit for autoAdventure — covers move + spawn + full combat loop + rewards.
   // Higher than MOVE_GAS_LIMIT because combat resolution is included in the same tx.
   const AUTO_ADVENTURE_GAS_LIMIT = BigInt(12_000_000);
@@ -883,6 +883,50 @@ export function createSystemCalls(
       };
     } finally {
       isMovePending = false;
+    }
+  };
+
+  // --- Auto Fight (single-tx targeted combat for auto adventure mode) ---
+  // Same gas limit as autoAdventure — covers full combat loop + rewards.
+  const AUTO_FIGHT_GAS_LIMIT = BigInt(12_000_000);
+
+  const autoFight = async (
+    characterEntity: string,
+    monsterId: string,
+    weaponId: string,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'autoFight');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await worldContract.write.UD__autoFight(
+        [characterEntity as `0x${string}`, monsterId as `0x${string}`, BigInt(weaponId)],
+        { gas: AUTO_FIGHT_GAS_LIMIT },
+      );
+
+      const receipt = await waitForTransaction(tx);
+
+      if (receipt.status === 'reverted') {
+        try {
+          await worldContract.simulate.UD__autoFight(
+            [characterEntity as `0x${string}`, monsterId as `0x${string}`, BigInt(weaponId)],
+          );
+        } catch (diagError) {
+          if (isNotSpawnedError(diagError)) {
+            useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
+            return { success: false, error: 'Session expired — respawn to continue.' };
+          }
+          return { success: false, error: getContractError(diagError) };
+        }
+        return { success: false, error: 'Auto fight failed — try again.' };
+      }
+
+      return { success: true };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
     }
   };
 
@@ -1422,6 +1466,7 @@ export function createSystemCalls(
     equipItems,
     fleePvp,
     fulfillOrder,
+    autoFight,
     levelCharacter,
     mintCharacter,
     move,

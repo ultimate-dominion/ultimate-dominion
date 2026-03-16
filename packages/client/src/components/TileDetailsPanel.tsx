@@ -48,6 +48,8 @@ import {
   type Character,
   EncounterType,
   type Monster,
+  StatsClasses,
+  type WeaponTemplate,
 } from '../utils/types';
 
 import { getRomanNumeral } from '../utils/fragmentNarratives';
@@ -60,6 +62,44 @@ import { InfoModal } from './InfoModal';
 import { ShopRow } from './ShopRow';
 
 const ROW_HEIGHT = { base: 10, md: 8 };
+
+/**
+ * Pick the best weapon for a monster based on the combat triangle.
+ * STR > AGI > INT > STR — so use INT weapons vs Warriors, STR vs Rogues, AGI vs Mages.
+ * Weapon type is determined by its highest stat modifier.
+ * Returns undefined if no matching weapon found.
+ */
+const pickWeaponForMonster = (
+  monsterClass: StatsClasses,
+  weapons: WeaponTemplate[],
+): WeaponTemplate | undefined => {
+  if (weapons.length === 0) return undefined;
+
+  // Which stat modifier should be highest to counter this monster?
+  // vs Warrior(STR) → use INT weapon, vs Rogue(AGI) → use STR weapon, vs Mage(INT) → use AGI weapon
+  const counterStat: 'intModifier' | 'strModifier' | 'agiModifier' =
+    monsterClass === StatsClasses.Strength ? 'intModifier'
+      : monsterClass === StatsClasses.Agility ? 'strModifier'
+        : 'agiModifier';
+
+  // Find weapon where the counter stat modifier is the highest modifier
+  const counterWeapons = weapons.filter(w => {
+    const str = Number(w.strModifier ?? 0n);
+    const agi = Number(w.agiModifier ?? 0n);
+    const int = Number(w.intModifier ?? 0n);
+    const counter = Number(w[counterStat] ?? 0n);
+    return counter > 0 && counter >= str && counter >= agi && counter >= int;
+  });
+
+  // Return the counter weapon with the highest base damage
+  if (counterWeapons.length > 0) {
+    return counterWeapons.reduce((best, w) =>
+      (w.maxDamage ?? 0n) > (best.maxDamage ?? 0n) ? w : best,
+    );
+  }
+
+  return undefined; // caller falls back to first weapon
+};
 
 const REST_FLAVOR = [
   'The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.',
@@ -94,7 +134,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const {
     delegatorAddress,
-    systemCalls: { createEncounter, rest },
+    systemCalls: { createEncounter, autoFight, rest },
   } = useMUD();
   const { pendingEcho } = useFragments();
 
@@ -116,6 +156,8 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const {
     character,
+    equippedSpells,
+    equippedWeapons,
     isMoveEquipped,
     isRefreshing: isRefreshingCharacter,
     refreshCharacter,
@@ -139,7 +181,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     userCharacterForBattleRendering,
     userPredictedHp,
   } = useBattle();
-  const { grindMode, isRefreshing } = useMovement();
+  const { autoAdventureMode, isRefreshing } = useMovement();
 
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
@@ -261,6 +303,32 @@ export const TileDetailsPanel = (): JSX.Element => {
       if (!character) return;
       if (!delegatorAddress) return;
 
+      // Auto adventure + PvE: single-tx fight, no battle screen
+      if (autoAdventureMode && encounterType === EncounterType.PvE) {
+        // Auto-select weapon based on combat triangle (STR > AGI > INT > STR)
+        const monster = opponent as Monster;
+        const allWeapons = [...equippedWeapons, ...equippedSpells] as WeaponTemplate[];
+        const bestWeapon = pickWeaponForMonster(monster.entityClass, allWeapons)
+          ?? allWeapons[0];
+
+        if (!bestWeapon) return; // no weapons equipped
+
+        const result = await encounterTx.execute(async () => {
+          const { error, success } = await autoFight(
+            character.id,
+            opponent.id,
+            bestWeapon.tokenId,
+          );
+          if (error && !success) throw new Error(error);
+          return true;
+        });
+
+        if (result !== undefined) {
+          refreshCharacter();
+        }
+        return;
+      }
+
       setIsWaitingForBattle(true);
       setPendingOpponent({
         name: opponent.name,
@@ -289,10 +357,14 @@ export const TileDetailsPanel = (): JSX.Element => {
       }
     },
     [
+      autoAdventureMode,
+      autoFight,
       character,
       createEncounter,
       delegatorAddress,
       encounterTx,
+      equippedSpells,
+      equippedWeapons,
       refreshCharacter,
     ],
   );
@@ -577,7 +649,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (currentBattle && opponent && userCharacterForBattleRendering && !grindMode) {
+  if (currentBattle && opponent && userCharacterForBattleRendering && !autoAdventureMode) {
     return (
       <Box h="100%" position="relative">
         <style>
@@ -886,7 +958,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (!grindMode && (isWaitingForBattle || encounterTx.isLoading || (currentBattle && (!opponent || !userCharacterForBattleRendering)))) {
+  if (!autoAdventureMode && (isWaitingForBattle || encounterTx.isLoading || (currentBattle && (!opponent || !userCharacterForBattleRendering)))) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
         <style>
