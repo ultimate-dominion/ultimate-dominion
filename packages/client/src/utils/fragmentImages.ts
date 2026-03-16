@@ -4,7 +4,7 @@
  */
 const FRAGMENT_IMAGES: Record<string, string> = {
   'The Awakening': '/images/fragments/the-awakening.webp',
-  "The Betrayer's Truth": '/images/fragments/the-betrayers-truth.webp',
+  "Betrayer's Truth": '/images/fragments/the-betrayers-truth.webp',
   'The Quartermaster': '/images/fragments/the-quartermaster.webp',
   'The Restless': '/images/fragments/the-restless.webp',
   'The Wound': '/images/fragments/the-wound.webp',
