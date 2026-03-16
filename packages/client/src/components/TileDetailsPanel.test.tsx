@@ -276,77 +276,59 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
 
   // --- Happy paths ---
 
-  it('shows loading screen with spinner when monster is clicked in auto-adventure', async () => {
-    const { container } = render(<TileDetailsPanel />);
+  it('shows loading screen while TX is in flight, clears when TX completes', async () => {
+    // Make execute hang (never resolve) to simulate in-flight TX
+    let resolveExecute!: (value: unknown) => void;
+    mockEncounterExecute.mockImplementation(() => new Promise(resolve => {
+      resolveExecute = resolve;
+    }));
 
-    // Find and click the monster row
+    render(<TileDetailsPanel />);
+
     const monsterButton = screen.getByText('Dire Rat').closest('button');
     expect(monsterButton).toBeTruthy();
 
-    await act(async () => {
-      fireEvent.click(monsterButton!);
-    });
-
-    // Loading screen should show with "Fighting Dire Rat" text
-    expect(screen.getByText('Fighting Dire Rat')).toBeTruthy();
-  });
-
-  it('holds loading screen when currentBattle arrives without outcome', async () => {
-    const { rerender } = render(<TileDetailsPanel />);
-
-    // Click monster to set pendingOpponent
-    const monsterButton = screen.getByText('Dire Rat').closest('button');
-    await act(async () => {
+    // Click starts the TX — loading screen should show while TX is in flight
+    act(() => {
       fireEvent.click(monsterButton!);
     });
 
     expect(screen.getByText('Fighting Dire Rat')).toBeTruthy();
 
-    // Simulate store sync: currentBattle arrives but NO outcome yet
-    battleState.currentBattle = normalBattle;
-    battleState.opponent = { ...testMonster, currentHp: 20n, worldStatusEffects: [] };
-    battleState.userCharacterForBattleRendering = { ...defaultCharacter, currentHp: 45n, worldStatusEffects: [] };
-
+    // TX completes — loading screen drops
     await act(async () => {
-      rerender(<TileDetailsPanel />);
+      resolveExecute(true);
     });
 
-    // Loading screen should STILL be showing — outcome hasn't arrived yet
-    expect(screen.getByText('Fighting Dire Rat')).toBeTruthy();
-  });
-
-  it('drops loading screen when battle outcome arrives', async () => {
-    const { rerender } = render(<TileDetailsPanel />);
-
-    // Click monster
-    const monsterButton = screen.getByText('Dire Rat').closest('button');
-    await act(async () => {
-      fireEvent.click(monsterButton!);
-    });
-
-    // Simulate store sync: battle + outcome arrive together
-    battleState.currentBattle = normalBattle;
-    battleState.lastestBattleOutcome = winOutcome;
-    battleState.opponent = { ...testMonster, currentHp: 0n, worldStatusEffects: [] };
-    battleState.userCharacterForBattleRendering = { ...defaultCharacter, currentHp: 45n, worldStatusEffects: [] };
-
-    await act(async () => {
-      rerender(<TileDetailsPanel />);
-    });
-
-    // Loading screen should be gone — monster list should show
     expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
+    expect(screen.getByText('Dire Rat')).toBeTruthy();
+  });
+
+  it('drops loading screen when TX completes (not waiting for store sync)', async () => {
+    render(<TileDetailsPanel />);
+
+    // Click monster — setPendingOpponent then execute, both resolve immediately
+    const monsterButton = screen.getByText('Dire Rat').closest('button');
+    await act(async () => {
+      fireEvent.click(monsterButton!);
+    });
+
+    // Loading screen should be gone — pendingOpponent cleared when execute resolved
+    expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
+    // Monster list is visible
     expect(screen.getByText('Dire Rat')).toBeTruthy();
   });
 
   // --- Edge cases ---
 
-  it('safety timeout clears loading screen after 15s if store sync never arrives', async () => {
+  it('safety timeout clears loading screen after 5s if TX hangs', async () => {
+    // Make execute never resolve to simulate hung TX
+    mockEncounterExecute.mockImplementation(() => new Promise(() => {}));
+
     render(<TileDetailsPanel />);
 
-    // Click monster
     const monsterButton = screen.getByText('Dire Rat').closest('button');
-    await act(async () => {
+    act(() => {
       fireEvent.click(monsterButton!);
     });
 

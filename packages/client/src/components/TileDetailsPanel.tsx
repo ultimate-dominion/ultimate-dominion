@@ -216,14 +216,6 @@ export const TileDetailsPanel = (): JSX.Element => {
     }
   }, [currentBattle, opponent, userCharacterForBattleRendering, isWaitingForBattle]);
 
-  // Auto adventure: clear loading screen when battle outcome arrives
-  useEffect(() => {
-    if (autoAdventureMode && pendingOpponent && lastestBattleOutcome && currentBattle &&
-        currentBattle.encounterId === lastestBattleOutcome.encounterId) {
-      setPendingOpponent(null);
-    }
-  }, [autoAdventureMode, pendingOpponent, lastestBattleOutcome, currentBattle]);
-
   // Safety timeout — clear if battle never starts (10s)
   useEffect(() => {
     if (!isWaitingForBattle) return;
@@ -343,11 +335,11 @@ export const TileDetailsPanel = (): JSX.Element => {
           return true;
         });
 
+        // Always clear loading screen when TX completes — results appear
+        // independently in ActionsPanel via store sync.
+        setPendingOpponent(null);
         if (result !== undefined) {
           refreshCharacter();
-        } else {
-          // TX failed — clear immediately so loading screen disappears
-          setPendingOpponent(null);
         }
         return;
       }
