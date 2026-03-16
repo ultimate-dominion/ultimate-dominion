@@ -127,25 +127,12 @@ const CharacterProviderInner = ({
 
   // Find the character owned by the current delegator
   const characterEntry = useMemo(() => {
-    if (!delegatorAddress) {
-      console.warn('[CharacterCtx] No delegatorAddress', { live: liveDelegatorAddress, cached: cachedDelegatorAddress });
-      return null;
-    }
+    if (!delegatorAddress) return null;
     const ownerLower = delegatorAddress.toLowerCase();
-    const entries = Object.entries(charactersTable);
-    if (entries.length === 0) {
-      console.warn('[CharacterCtx] Characters table empty', { delegatorAddress, hydrated: true });
-    }
-    for (const [keyBytes, data] of entries) {
+    for (const [keyBytes, data] of Object.entries(charactersTable)) {
       if (String(data.owner).toLowerCase() === ownerLower) {
         return { keyBytes, data };
       }
-    }
-    if (entries.length > 0) {
-      console.warn('[CharacterCtx] No character match', {
-        delegatorAddress: ownerLower,
-        owners: entries.slice(0, 3).map(([, d]) => String(d.owner).toLowerCase()),
-      });
     }
     return null;
   }, [charactersTable, delegatorAddress]);

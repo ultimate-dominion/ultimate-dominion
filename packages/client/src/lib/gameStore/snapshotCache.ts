@@ -28,15 +28,30 @@ export function readCachedSnapshot(worldAddress: string): FullSnapshot | null {
 }
 
 export function writeCachedSnapshot(worldAddress: string, snapshot: FullSnapshot): void {
+  const key = cacheKey(worldAddress);
+
+  // Strip empty tables to reduce size (103 tables → only non-empty ones)
+  const trimmedTables: typeof snapshot.tables = {};
+  for (const [name, rows] of Object.entries(snapshot.tables)) {
+    if (rows && Object.keys(rows).length > 0) {
+      trimmedTables[name] = rows;
+    }
+  }
+  const trimmed: FullSnapshot = { block: snapshot.block, tables: trimmedTables };
+  const serialized = JSON.stringify(trimmed);
+
   try {
-    localStorage.setItem(cacheKey(worldAddress), JSON.stringify(snapshot));
+    // Remove existing entry first to free space for the replacement
+    localStorage.removeItem(key);
+    localStorage.setItem(key, serialized);
   } catch (err) {
     if (err instanceof DOMException && err.name === 'QuotaExceededError') {
       clearStaleEntries(worldAddress);
       try {
-        localStorage.setItem(cacheKey(worldAddress), JSON.stringify(snapshot));
+        localStorage.setItem(key, serialized);
       } catch {
-        console.warn('[snapshotCache] Write failed after clearing stale entries');
+        console.warn('[snapshotCache] Write failed — snapshot too large for localStorage (' +
+          Math.round(serialized.length / 1024) + 'KB)');
       }
     } else {
       console.warn('[snapshotCache] Write failed:', err);

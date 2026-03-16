@@ -40,7 +40,7 @@ import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
-import { useGameStore } from '../lib/gameStore/store';
+import { useGameStore, wasPreHydrated } from '../lib/gameStore/store';
 import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 
@@ -224,10 +224,11 @@ export const GameBoard = (): JSX.Element => {
     }
   }, [continueToBattleOutcome, onOpenBattleOutcomeModal, lastestBattleOutcome]);
 
-  // Fast-path: cached session means character is resolving from snapshot.
-  // Show loading skeleton instead of blank so the player sees progress.
+  // Only show loading text when we're on the fast-path (store was pre-hydrated
+  // from cache). During the normal flow, character resolves before we get here
+  // so the brief null is invisible as <Box />.
   if (!character?.locked) {
-    if (hasCachedSession) {
+    if (hasCachedSession && wasPreHydrated) {
       return (
         <Box display="flex" justifyContent="center" alignItems="center" minH="calc(100vh - 125px)">
           <Text color="rgba(196, 184, 158, 0.5)" fontSize="sm">Loading game...</Text>

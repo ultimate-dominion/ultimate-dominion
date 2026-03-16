@@ -8,6 +8,9 @@ import { readCachedSnapshot } from './snapshotCache';
 const WORLD_ADDRESS = (import.meta.env.VITE_WORLD_ADDRESS || '') as string;
 const cachedSnapshot = WORLD_ADDRESS ? readCachedSnapshot(WORLD_ADDRESS) : null;
 
+/** True if the store was pre-hydrated from a cached snapshot at module load time. */
+export const wasPreHydrated = !!cachedSnapshot;
+
 export type BatchUpdate = {
   type: 'set' | 'delete';
   table: string;
