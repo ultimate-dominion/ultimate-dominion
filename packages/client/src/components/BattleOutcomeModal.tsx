@@ -29,6 +29,7 @@ import {
   type Armor,
   type CombatOutcomeType,
   EncounterType,
+  type Monster,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -62,6 +63,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     refreshCharacter,
   } = useCharacter();
   const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
+
+  const opponentDisplayName = useMemo(() => {
+    if (!opponent) return 'a monster';
+    const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
+    return isElite ? `Elite ${opponent.name}` : opponent.name;
+  }, [opponent]);
   const leaderboardRank = useLeaderboardRank();
 
   const [armor, setArmor] = useState<Armor[]>([]);
@@ -223,8 +230,8 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
             <VStack alignItems="center" pb={8} spacing={4}>
               <Text>
                 {winner === character.id
-                  ? `${opponent?.name} fled!`
-                  : `You fled from ${opponent?.name}.`}
+                  ? `${opponentDisplayName} fled!`
+                  : `You fled from ${opponentDisplayName}.`}
               </Text>
               {winner === character.id ? (
                 <Text>
@@ -278,8 +285,8 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
               <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
                 <Text>
                   {winner === character.id
-                    ? `You defeated ${opponent?.name}!`
-                    : `You were killed by ${opponent?.name}.`}
+                    ? `You defeated ${opponentDisplayName}!`
+                    : `You were killed by ${opponentDisplayName}.`}
                 </Text>
                 {winner !== character.id && goldDropped > 0n && (
                   <Text>

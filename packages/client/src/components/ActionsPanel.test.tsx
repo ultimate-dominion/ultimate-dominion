@@ -151,7 +151,7 @@ function setDefaults() {
     onAttack: vi.fn(),
     onContinueToBattleOutcome: mockOnContinueToBattleOutcome,
     onFleePvp: vi.fn(),
-    opponent: { id: '0xmonster', name: 'Dire Rat', mobId: '1' },
+    opponent: { id: '0xmonster', name: 'Dire Rat', mobId: '1', isElite: false },
     statusEffectActions: [],
   };
 
@@ -206,7 +206,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
     expect(screen.getByText(/You earned/)).toBeTruthy();
     expect(screen.getByText(/50 XP/)).toBeTruthy();
     expect(screen.getByText(/1\.00 Gold/)).toBeTruthy();
@@ -220,7 +220,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
     expect(screen.getByText(/50 XP/)).toBeTruthy();
     expect(screen.queryByText(/Picked up/)).toBeNull();
   });
@@ -253,7 +253,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     render(<ActionsPanel />);
 
     expect(screen.getByText(/Auto Adventure/)).toBeTruthy();
-    expect(screen.queryByText('Defeated Dire Rat.')).toBeNull();
+    expect(screen.queryByText('Defeated Dire Rat!')).toBeNull();
     expect(screen.queryByText('Defeated by Dire Rat.')).toBeNull();
   });
 
@@ -269,7 +269,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     expect(mockOnContinueToBattleOutcome).toHaveBeenCalledWith(false);
     expect(localStorage.getItem('latest-battle-outcome-seen')).toBe('0xenc1');
     // But results still visible (persisted in local state)
-    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
   });
 
   it('keeps rolling history of results', () => {
@@ -277,7 +277,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     battleState.lastestBattleOutcome = winOutcome;
 
     const { rerender } = render(<ActionsPanel />);
-    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
 
     // Simulate second battle result arriving
     mockOnContinueToBattleOutcome.mockClear();
@@ -287,7 +287,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     act(() => { rerender(<ActionsPanel />); });
 
     // Both results should be visible
-    expect(screen.getAllByText('Defeated Dire Rat.')).toHaveLength(2);
+    expect(screen.getAllByText('Defeated Dire Rat!')).toHaveLength(2);
   });
 
   it('shows no-rewards message when XP, gold, and items are all zero', () => {
@@ -301,7 +301,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
     expect(screen.getByText(/No rewards/)).toBeTruthy();
     expect(screen.queryByText(/XP/)).toBeNull();
     expect(screen.queryByText(/Gold/)).toBeNull();
@@ -316,7 +316,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     // Standard flow shows "View Results" button, not inline results
     expect(screen.getByText('View Results')).toBeTruthy();
-    expect(screen.queryByText('Defeated Dire Rat.')).toBeNull();
+    expect(screen.queryByText('Defeated Dire Rat!')).toBeNull();
   });
 
   it('clicking an item name opens the equip modal', async () => {
@@ -338,7 +338,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     render(<ActionsPanel />);
 
     // Results should show
-    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
     // Auto-adventure controls should ALSO be visible (additive, not replaced)
     expect(screen.getByText(/Auto Adventure/)).toBeTruthy();
   });
@@ -421,6 +421,50 @@ describe('ActionsPanel — Low HP Warning', () => {
 
     // Both warning and results should be visible
     expect(screen.getByText(/HP Low/)).toBeTruthy();
-    expect(screen.getByText('Defeated Dire Rat.')).toBeTruthy();
+    expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
+  });
+});
+
+describe('ActionsPanel — Elite Mob Display', () => {
+  beforeEach(() => {
+    setDefaults();
+    vi.useFakeTimers();
+    mockOnContinueToBattleOutcome.mockClear();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('shows "Elite" prefix in auto adventure inline results for elite mobs', () => {
+    battleState.opponent = { id: '0xmonster', name: 'Dire Rat', mobId: '1', isElite: true };
+    battleState.currentBattle = normalBattle;
+    battleState.lastestBattleOutcome = winOutcome;
+
+    render(<ActionsPanel />);
+
+    expect(screen.getByText('Defeated Elite Dire Rat!')).toBeTruthy();
+  });
+
+  it('does not show "Elite" prefix for normal mobs', () => {
+    battleState.currentBattle = normalBattle;
+    battleState.lastestBattleOutcome = winOutcome;
+
+    render(<ActionsPanel />);
+
+    expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
+    expect(screen.queryByText(/Elite/)).toBeNull();
+  });
+
+  it('shows "Elite" prefix in defeat text for elite mobs', () => {
+    battleState.opponent = { id: '0xmonster', name: 'Dire Rat', mobId: '1', isElite: true };
+    battleState.currentBattle = normalBattle;
+    battleState.lastestBattleOutcome = lossOutcome;
+
+    render(<ActionsPanel />);
+
+    expect(screen.getByText('Defeated by Elite Dire Rat.')).toBeTruthy();
   });
 });

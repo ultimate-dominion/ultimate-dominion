@@ -68,6 +68,14 @@ export const ActionsPanel = (): JSX.Element => {
     statusEffectActions,
   } = useBattle();
   const { autoAdventureMode, isRefreshing, onToggleAutoAdventure } = useMovement();
+
+  // Display name prefixed with "Elite" for elite mobs
+  const opponentDisplayName = useMemo(() => {
+    if (!opponent) return 'a monster';
+    const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
+    return isElite ? `Elite ${opponent.name}` : opponent.name;
+  }, [opponent]);
+
   const {
     armorTemplates,
     isLoading: isItemTemplatesLoading,
@@ -353,7 +361,7 @@ export const ActionsPanel = (): JSX.Element => {
       goldDropped: lastestBattleOutcome.goldDropped,
       isDraw: currentBattle.maxTurns === currentBattle.currentTurn,
       encounterId: lastestBattleOutcome.encounterId,
-      monsterName: opponent?.name ?? 'a monster',
+      monsterName: opponentDisplayName,
       items,
     }, ...prev].slice(0, 5));
 
@@ -682,7 +690,7 @@ export const ActionsPanel = (): JSX.Element => {
                     stdTypingDelay={10}
                   >
                     <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                      {isPlayer ? 'You' : opponent.name} used{' '}
+                      {isPlayer ? 'You' : opponentDisplayName} used{' '}
                       <Text as="span" color="green">
                         {consumable ? removeEmoji(consumable.name) : 'a potion'}
                       </Text>
@@ -722,7 +730,7 @@ export const ActionsPanel = (): JSX.Element => {
                   damage to{' '}
                   {dotForTurn.entityId.toLowerCase() === character?.id.toLowerCase()
                     ? 'you'
-                    : opponent.name}
+                    : opponentDisplayName}
                   .
                 </Text>
               </SafeTypist>
@@ -740,14 +748,14 @@ export const ActionsPanel = (): JSX.Element => {
                       <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                         You missed{' '}
                         <Text as="span" color="green">
-                          {opponent.name}
+                          {opponentDisplayName}
                         </Text>{' '}
                         with {itemName}.
                       </Text>
                     ) : (
                       <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                         <Text as="span" color="green">
-                          {opponent.name}
+                          {opponentDisplayName}
                         </Text>{' '}
                         missed you with {itemName}.
                       </Text>
@@ -775,9 +783,9 @@ export const ActionsPanel = (): JSX.Element => {
               const affectedText = isPlayerAttack
                 ? (isSelfBuff
                     ? `You are affected by ${possibleStatusEffectAttack.name}.`
-                    : `${opponent.name} is affected by ${possibleStatusEffectAttack.name}.`)
+                    : `${opponentDisplayName} is affected by ${possibleStatusEffectAttack.name}.`)
                 : (isSelfBuff
-                    ? `${opponent.name} is affected by ${possibleStatusEffectAttack.name}.`
+                    ? `${opponentDisplayName} is affected by ${possibleStatusEffectAttack.name}.`
                     : `You are affected by ${possibleStatusEffectAttack.name}.`);
 
               attackContent = (
@@ -791,7 +799,7 @@ export const ActionsPanel = (): JSX.Element => {
                           <Text as="span">
                             {' '}on{' '}
                             <Text as="span" color="green">
-                              {opponent.name}
+                              {opponentDisplayName}
                             </Text>
                           </Text>
                         )}
@@ -799,7 +807,7 @@ export const ActionsPanel = (): JSX.Element => {
                     ) : (
                       <Text as="span">
                         <Text as="span" color="green">
-                          {opponent.name}
+                          {opponentDisplayName}
                         </Text>{' '}
                         cast {itemName}
                       </Text>
@@ -827,10 +835,10 @@ export const ActionsPanel = (): JSX.Element => {
               attackContent = (
                 <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                   {isPlayerAttack ? 'You' : (
-                    <Text as="span" color="green">{opponent.name}</Text>
+                    <Text as="span" color="green">{opponentDisplayName}</Text>
                   )} cast {itemName} on{' '}
                   {isPlayerAttack ? (
-                    <Text as="span" color="green">{opponent.name}</Text>
+                    <Text as="span" color="green">{opponentDisplayName}</Text>
                   ) : 'you'}
                   .
                   {effectNames[0] &&
@@ -850,10 +858,10 @@ export const ActionsPanel = (): JSX.Element => {
               attackContent = (
                 <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                   {isPlayerAttack ? 'You' : (
-                    <Text as="span" color="green">{opponent.name}</Text>
+                    <Text as="span" color="green">{opponentDisplayName}</Text>
                   )} cast {itemName} on{' '}
                   {isPlayerAttack ? (
-                    <Text as="span" color="green">{opponent.name}</Text>
+                    <Text as="span" color="green">{opponentDisplayName}</Text>
                   ) : 'you'}
                   .{' '}
                   {effectNames[0]
@@ -866,7 +874,7 @@ export const ActionsPanel = (): JSX.Element => {
                 <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                   {critText}You attacked{' '}
                   <Text as="span" color="green">
-                    {opponent.name}
+                    {opponentDisplayName}
                   </Text>{' '}
                   with {itemName} for{' '}
                   <Text as="span" color="red" fontFamily="mono">
@@ -880,7 +888,7 @@ export const ActionsPanel = (): JSX.Element => {
                 <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
                   {critText}
                   <Text as="span" color="green">
-                    {opponent.name}
+                    {opponentDisplayName}
                   </Text>{' '}
                   attacked you with {itemName} for{' '}
                   <Text as="span" color="red" fontFamily="mono">
@@ -914,7 +922,7 @@ export const ActionsPanel = (): JSX.Element => {
                 {result.isDraw
                   ? `Draw — ${result.monsterName}`
                   : result.winner === character?.id
-                    ? `Defeated ${result.monsterName}.`
+                    ? `Defeated ${result.monsterName}!`
                     : `Defeated by ${result.monsterName}.`}
               </Text>
               {result.winner === character?.id && (
@@ -999,7 +1007,7 @@ export const ActionsPanel = (): JSX.Element => {
                   >
                     {lastestBattleOutcome?.winner === character?.id &&
                     lastestBattleOutcome?.playerFled
-                      ? `${opponent?.name} fled!`
+                      ? `${opponentDisplayName} fled!`
                       : ''}
                     {lastestBattleOutcome?.winner !== character?.id &&
                     lastestBattleOutcome?.playerFled
