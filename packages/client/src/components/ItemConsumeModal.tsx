@@ -53,7 +53,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   const { renderSuccess } = useToast();
   const {
     delegatorAddress,
-    systemCalls: { equipItems, unequipItem, useCombatConsumableItem, useWorldConsumableItem },
+    systemCalls: { equipItems, unequipItem, useWorldConsumableItem },
   } = useMUD();
   const { character, equippedConsumables, equippedSpells, equippedWeapons } =
     useCharacter();
@@ -109,9 +109,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
 
     setStatusText(`Consuming ${item.name}...`);
     const result = await consumeTx.execute(async () => {
-      const { error, success } = currentBattle
-        ? await useCombatConsumableItem(character.id, item.tokenId)
-        : await useWorldConsumableItem(character.id, item.tokenId);
+      const { error, success } = await useWorldConsumableItem(character.id, item.tokenId);
       if (error && !success) throw new Error(error);
       return true;
     });
@@ -126,14 +124,12 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     authMethod,
     character,
     consumeTx,
-    currentBattle,
     delegatorAddress,
     ensureItemsAllowance,
     item,
     itemsLootManagerAllowance,
     onOpenAllowanceModal,
     renderSuccess,
-    useCombatConsumableItem,
     useWorldConsumableItem,
   ]);
 
@@ -237,22 +233,16 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     return effectsAtMaxStacks.length > 0;
   }, [character, isOwner, item]);
 
-  // Check if this is an instant heal consumable (can be used in combat)
-  const isInstantHeal = useMemo(
-    () => item.hpRestoreAmount !== BigInt(0),
-    [item.hpRestoreAmount],
-  );
-
   const isConsumeDisabled = useMemo(() => {
     if (!isOwner) return false;
-    // Only allow instant heal items during combat
-    if (currentBattle && !isInstantHeal) return true;
+    // All consumables go through battle panel during combat
+    if (currentBattle) return true;
     if (isHealthFull) return true;
     if (!isSpawned) return true;
     if (maxStacksReached) return true;
 
     return false;
-  }, [currentBattle, isHealthFull, isInstantHeal, isOwner, isSpawned, maxStacksReached]);
+  }, [currentBattle, isHealthFull, isOwner, isSpawned, maxStacksReached]);
 
   const isAnyLoading = consumeTx.isLoading || equipTx.isLoading || unequipTx.isLoading;
 
@@ -298,14 +288,9 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               {statusText}
             </Text>
           )}
-          {!!currentBattle && isOwner && !isInstantHeal && (
-            <Text color="red" fontWeight="bold" mt={4} size="sm">
-              You cannot consume this during battle.
-            </Text>
-          )}
-          {!!currentBattle && isOwner && isInstantHeal && (
-            <Text color="green" fontWeight="bold" mt={4} size="sm">
-              This healing item can be used during combat!
+          {!!currentBattle && isOwner && (
+            <Text color="orange" fontWeight="bold" mt={4} size="sm">
+              Use consumables through the battle panel during combat.
             </Text>
           )}
           {isOwner && !isSpawned && (

@@ -21,7 +21,7 @@ import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
-import {_requireAccess} from "../utils.sol";
+import {_requireAccess, _requireSystemOrAdmin} from "../utils.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {EffectProcessor} from "@libraries/EffectProcessor.sol";
 import {
@@ -151,34 +151,23 @@ contract WorldActionSystem is System {
         return ResourceId.unwrap(delegationId) != bytes32(0);
     }
 
-    /**
-     * @dev Use a healing or antidote consumable during combat.
-     *      Healing: maxDamage == minDamage && maxDamage < 0
-     *      Antidote: maxDamage == 0 && minDamage == 0 && effects.length > 0
-     * @param characterId The character using the consumable
-     * @param itemId The consumable item ID
-     */
-    function useCombatConsumableItem(bytes32 characterId, uint256 itemId) public {
-        PauseLib.requireNotPaused();
-        // Items are owned by the character owner (delegator), not the caller (session wallet)
-        address characterOwner = IWorld(_world()).UD__getOwner(characterId);
-        if (!IWorld(_world()).UD__isItemOwner(itemId, characterOwner)) revert NotItemOwner();
+    /// @dev Deprecated — potions must now go through endTurn so they cost a turn.
+    function useCombatConsumableItem(bytes32, uint256) public pure {
+        revert("Use potions through endTurn");
+    }
 
-        // Get consumable stats
-        ConsumableStatsData memory consumableStats = IWorld(_world()).UD__getConsumableStats(itemId);
+    /// @notice Apply a healing consumable and consume it. System-only.
+    function applyCombatHeal(bytes32 characterId, uint256 itemId) public returns (int256 healAmount) {
+        _requireSystemOrAdmin(_msgSender());
+        healAmount = _applyHealingPotion(characterId, characterId, itemId);
+        IWorld(_world()).UD__consumeItem(characterId, itemId);
+    }
 
-        if (consumableStats.maxDamage == consumableStats.minDamage && consumableStats.maxDamage < 0) {
-            // Instant healing
-            _applyHealingPotion(characterId, characterId, itemId);
-        } else if (consumableStats.maxDamage == 0 && consumableStats.minDamage == 0
-                   && consumableStats.effects.length > 0) {
-            // Antidote — cleanse matching effects
-            _cleanseEffects(characterId, consumableStats.effects);
-        } else {
-            revert OnlyHealingInCombat();
-        }
-
-        // Consume the item
+    /// @notice Apply an antidote consumable and consume it. System-only.
+    function applyCombatCleanse(bytes32 characterId, uint256 itemId) public {
+        _requireSystemOrAdmin(_msgSender());
+        ConsumableStatsData memory cs = IWorld(_world()).UD__getConsumableStats(itemId);
+        _cleanseEffects(characterId, cs.effects);
         IWorld(_world()).UD__consumeItem(characterId, itemId);
     }
 

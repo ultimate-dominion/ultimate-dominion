@@ -249,7 +249,7 @@ export const ActionsPanel = (): JSX.Element => {
   );
 
   const combatConsumables = useMemo(
-    () => equippedConsumables.filter(c => c.hpRestoreAmount !== BigInt(0)),
+    () => equippedConsumables.filter(c => c.hpRestoreAmount !== BigInt(0) && c.balance > 0n),
     [equippedConsumables],
   );
 

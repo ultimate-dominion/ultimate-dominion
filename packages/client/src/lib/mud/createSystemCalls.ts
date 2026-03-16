@@ -1163,31 +1163,6 @@ export function createSystemCalls(
     }
   };
 
-  const useCombatConsumableItem = async (
-    entity: string,
-    tokenId: string,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(entity, 'useCombatConsumableItem');
-    if (ownershipError) return ownershipError;
-
-    try {
-      const characterId = entity as `0x${string}`;
-
-      const tx = await worldContract.write.UD__useCombatConsumableItem([
-        characterId,
-        BigInt(tokenId),
-      ]);
-
-      const receipt = await waitForTransaction(tx);
-      return { success: receipt.status === 'success' };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
   const withdrawFromEscrow = async (
     characterEntity: string,
     previousAmount: bigint,
@@ -1480,7 +1455,6 @@ export function createSystemCalls(
     spawn,
     unequipItem,
     updateTokenUri,
-    useCombatConsumableItem,
     useWorldConsumableItem,
     withdrawFromEscrow,
   };

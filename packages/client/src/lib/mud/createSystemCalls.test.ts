@@ -173,10 +173,6 @@ describe('createSystemCalls — receipt awaiting regression guard', () => {
     await expectFailure(calls.useWorldConsumableItem(TEST_ENTITY, '1'));
   });
 
-  it('useCombatConsumableItem returns failure when receipt is reverted', async () => {
-    await expectFailure(calls.useCombatConsumableItem(TEST_ENTITY, '1'));
-  });
-
   it('checkCombatFragmentTriggers returns failure when receipt is reverted', async () => {
     await expectFailure(
       calls.checkCombatFragmentTriggers([TEST_ENTITY], [TEST_ENTITY_2], 0, 0, true),

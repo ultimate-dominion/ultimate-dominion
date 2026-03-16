@@ -16,9 +16,12 @@ import {
     Spawned,
     ActionOutcome,
     ActionOutcomeData,
-    AdventureEscrow
+    AdventureEscrow,
+    Items,
+    ConsumableStats,
+    ConsumableStatsData
 } from "@codegen/index.sol";
-import {EncounterType} from "@codegen/common.sol";
+import {EncounterType, ItemType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID} from "../../constants.sol";
 import {
@@ -28,7 +31,8 @@ import {
     CanOnlyFleeFirstTurn,
     InvalidFlee,
     UnrecognizedEncounterType,
-    InvalidAction
+    InvalidAction,
+    OnlyHealingInCombat
 } from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
@@ -118,6 +122,39 @@ contract PvPSystem is System {
         // execute attacker effects
         for (uint256 i; i < effects.length; i++) {
             Action memory currentAction = effects[i];
+
+            // Consumable heal/cleanse — skip combat pipeline, apply directly
+            if (Items.getItemType(currentAction.itemId) == ItemType.Consumable) {
+                ConsumableStatsData memory cs = ConsumableStats.get(currentAction.itemId);
+                if (cs.maxDamage == cs.minDamage && cs.maxDamage < 0) {
+                    IWorld(_world()).UD__applyCombatHeal(currentAction.attackerEntityId, currentAction.itemId);
+                } else if (cs.maxDamage == 0 && cs.minDamage == 0 && cs.effects.length > 0) {
+                    IWorld(_world()).UD__applyCombatCleanse(currentAction.attackerEntityId, currentAction.itemId);
+                } else {
+                    revert OnlyHealingInCombat();
+                }
+                // Write ActionOutcome so client can render the heal in battle log
+                ActionOutcomeData memory outcome = ActionOutcomeData({
+                    effectIds: new bytes32[](0),
+                    itemId: currentAction.itemId,
+                    attackerId: currentAction.attackerEntityId,
+                    defenderId: currentAction.attackerEntityId, // self-target signal
+                    damagePerHit: new int256[](1),
+                    hit: new bool[](1),
+                    miss: new bool[](1),
+                    crit: new bool[](1),
+                    attackerDamageDelt: 0,
+                    defenderDamageDelt: 0,
+                    attackerDied: false,
+                    defenderDied: false,
+                    blockNumber: block.number,
+                    timestamp: block.timestamp
+                });
+                outcome.hit[0] = true;
+                ActionOutcome.set(encounterId, encounterData.currentTurn, i, outcome);
+                continue;
+            }
+
             randomNumber =
                 uint256(keccak256(abi.encode(prevRandao, currentAction.attackerEntityId, encounterData.currentTurn)));
 

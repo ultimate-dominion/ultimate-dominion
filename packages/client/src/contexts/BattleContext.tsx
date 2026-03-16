@@ -93,7 +93,7 @@ export const BattleProvider = ({
     delegatorAddress,
     systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp },
   } = useMUD();
-  const { character } = useCharacter();
+  const { character, equippedSpells, equippedWeapons } = useCharacter();
   const { allMonsters, position } = useMap();
 
   const { renderError } = useToast();
@@ -507,6 +507,34 @@ export const BattleProvider = ({
     }, 10000);
     return () => clearTimeout(timeout);
   }, [attackingItemId, failAttackProgress]);
+
+  // Auto adventure auto-attack: when auto adventure is on and there's an active
+  // battle, auto-submit endTurn with the first equipped weapon/spell.
+  // Re-fires each time attackingItemId clears (previous attack resolved).
+  useEffect(() => {
+    if (localStorage.getItem('ud_auto_adventure') !== 'true') return;
+    if (!currentBattle || currentBattle.end !== BigInt(0)) return;
+    if (attackingItemId !== null) return; // attack in flight
+    if (!opponent || !character || !delegatorAddress) return;
+
+    const firstWeapon = equippedWeapons[0] ?? equippedSpells[0];
+    if (!firstWeapon) return;
+
+    // Small delay so React state settles after previous attack resolves
+    const timer = setTimeout(() => {
+      onAttack(firstWeapon.tokenId);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [
+    attackingItemId,
+    character,
+    currentBattle,
+    delegatorAddress,
+    equippedSpells,
+    equippedWeapons,
+    onAttack,
+    opponent,
+  ]);
 
   const onFleePvp = useCallback(async () => {
     if (!character || !delegatorAddress || !currentBattle) return;
