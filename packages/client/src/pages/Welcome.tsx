@@ -137,11 +137,11 @@ export const Welcome = (): JSX.Element => {
     return () => clearTimeout(connectTimerRef.current);
   }, [isConnecting, isAuthenticated]);
 
-  // Blank while: (a) Privy still connecting, or (b) auth done but MUD still syncing
-  // (returning player fast path — they'll auto-redirect once MUD resolves).
-  // Safety net: 3s timeout ensures the page is never permanently blank.
-  const showBlank = !connectTimeout && !isOpen && (
-    (isConnecting && !isAuthenticated) ||
+  // Blank while: (a) Privy still connecting (timeout = safety net if Privy hangs),
+  // or (b) auth done but MUD still syncing (no timeout — MUDProvider error screen
+  // handles setup failures, and getBurner always resolves isSynced).
+  const showBlank = !isOpen && (
+    (!connectTimeout && isConnecting && !isAuthenticated) ||
     (isAuthenticated && !isSynced)
   );
   if (showBlank) {
