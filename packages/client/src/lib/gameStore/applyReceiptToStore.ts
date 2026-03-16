@@ -3,10 +3,10 @@
  *
  * 1. Decode Store_SetRecord + Store_DeleteRecord from receipt logs for
  *    UD-namespace tables (mudConfig).
- * 2. Resolve Store_SpliceStaticData/SpliceDynamicData by reading the full
- *    record from the chain via getRecord RPC (~100-300ms).
- * 3. Apply ALL decoded + splice-resolved data in a SINGLE atomic batch.
- *    This prevents multi-render jitter during movement.
+ * 2. Apply sync-decodable data (SetRecord, sync SpliceStaticData, DeleteRecord)
+ *    immediately — no reason to block on RPC.
+ * 3. Fire-and-forget resolution for deferred splices (SpliceDynamicData,
+ *    SpliceStaticData that can't be sync-decoded). Applied when RPC resolves.
  * 4. Fire-and-forget delta fetch from the indexer to catch non-UD namespace
  *    tables (gold, items, characters ERC modules). WS is the backup.
  *
@@ -292,26 +292,30 @@ export async function applyReceiptToStore(
     }
   }
 
-  // Step 2: Resolve splice events from chain (~100-300ms, awaited).
-  // Collect into the same batch so everything applies in ONE store update.
-  if (spliceReads.length > 0 && publicClient && worldAddress) {
-    try {
-      const spliceUpdates = await resolveSpliceEvents(spliceReads, publicClient, worldAddress);
-      batch.push(...spliceUpdates);
-    } catch (err) {
-      console.warn('[TX][RECEIPT] Splice resolution failed:', err);
-    }
-  }
-
-  // Step 3: Apply ALL updates (receipt + splices) in a single atomic batch.
-  // One store update → one React render → no jitter.
+  // Step 2: Apply immediate batch (SetRecord, sync SpliceStaticData, DeleteRecord).
+  // These are decodable in <1ms — no reason to block on RPC.
   if (batch.length > 0) {
     useGameStore.getState().applyBatch(batch);
   }
 
+  // Step 3: Fire-and-forget splice resolution for deferred events (SpliceDynamicData,
+  // SpliceStaticData that couldn't be sync-decoded). Applied when RPC resolves.
+  if (spliceReads.length > 0 && publicClient && worldAddress) {
+    resolveSpliceEvents(spliceReads, publicClient, worldAddress)
+      .then((spliceUpdates) => {
+        if (spliceUpdates.length > 0) {
+          useGameStore.getState().applyBatch(spliceUpdates);
+          console.info(`[TX][RECEIPT] Deferred splice batch: ${spliceUpdates.length} update(s)`);
+        }
+      })
+      .catch((err) => {
+        console.warn('[TX][RECEIPT] Splice resolution failed:', err);
+      });
+  }
+
   if (applied > 0 || skippedSplice > 0 || spliceSyncCount > 0) {
     console.info(
-      `[TX][RECEIPT] Applied ${batch.length} update(s) in single batch (${applied} from logs, ${spliceSyncCount} splice-sync, ${skippedSplice} splice-async)`,
+      `[TX][RECEIPT] Immediate batch: ${batch.length} update(s) (${applied} from logs, ${spliceSyncCount} splice-sync), deferred: ${skippedSplice} splice-async`,
     );
   }
 

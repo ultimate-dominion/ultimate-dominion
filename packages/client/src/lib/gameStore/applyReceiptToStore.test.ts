@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { type Hex, type TransactionReceipt, keccak256, encodeAbiParameters, toHex } from 'viem';
+import { type Hex, type PublicClient, type TransactionReceipt, keccak256, encodeAbiParameters, toHex } from 'viem';
 
 // Track store calls
 const mockSetRow = vi.fn();
@@ -499,6 +499,51 @@ describe('applyReceiptToStore — splice integration', () => {
     expect(batchArg[1].type).toBe('set');
     expect(batchArg[1].table).toBe('Stats');
     expect(batchArg[1].data.currentHp).toBe('50');
+  });
+
+  it('applies SetRecord immediately even when SpliceDynamic events are pending', async () => {
+    const setKeyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
+    const spliceKeyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000002'];
+
+    const setLog = encodeSetRecordLog(testTableId, setKeyTuple);
+    const spliceLog = encodeSpliceDynamicLog(statsTableId, spliceKeyTuple);
+    const receipt = makeReceipt([setLog, spliceLog]);
+
+    // Mock publicClient with delayed readContract
+    let resolveRpc!: (value: [Hex, Hex, Hex]) => void;
+    const rpcPromise = new Promise<[Hex, Hex, Hex]>((resolve) => { resolveRpc = resolve; });
+
+    const mockPublicClient = {
+      readContract: vi.fn().mockReturnValue(rpcPromise),
+    } as unknown as PublicClient;
+
+    const worldAddress = '0x0000000000000000000000000000000000000001' as Hex;
+
+    await applyReceiptToStore(receipt, mockPublicClient, worldAddress);
+
+    // Immediate batch applied with SetRecord only — not blocked by pending RPC
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    const immediateBatch = mockApplyBatch.mock.calls[0][0];
+    expect(immediateBatch).toHaveLength(1);
+    expect(immediateBatch[0].type).toBe('set');
+    expect(immediateBatch[0].table).toBe(testTableLabel);
+
+    // Now resolve the RPC
+    resolveRpc([
+      '0x00' as Hex,
+      '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
+      '0x00' as Hex,
+    ]);
+
+    // Flush promise chain
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Second batch with deferred splice data
+    expect(mockApplyBatch).toHaveBeenCalledTimes(2);
+    const deferredBatch = mockApplyBatch.mock.calls[1][0];
+    expect(deferredBatch).toHaveLength(1);
+    expect(deferredBatch[0].type).toBe('set');
+    expect(deferredBatch[0].table).toBe('Stats');
   });
 
   it('SpliceDynamicData still uses RPC fallback', async () => {
