@@ -497,8 +497,12 @@ const CharacterProviderInner = ({
     // Equipment data hasn't loaded from store yet — assume equipped
     // (all characters are minted with starter weapons)
     if (!equipmentData) return true;
+    // Item templates still loading — inventory arrays are empty but that
+    // doesn't mean the player has nothing equipped. Assume equipped until
+    // templates resolve so we don't flash "no equipment" on slow connections.
+    if (isLoadingItemTemplates) return true;
     return equippedSpells.length + equippedWeapons.length > 0;
-  }, [equipmentData, equippedSpells, equippedWeapons]);
+  }, [equipmentData, isLoadingItemTemplates, equippedSpells, equippedWeapons]);
 
   // Suppress unused variable warnings for publicClient and worldContract
   void publicClient;

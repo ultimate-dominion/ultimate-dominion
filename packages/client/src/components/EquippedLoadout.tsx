@@ -1,8 +1,9 @@
-import { Box, Center, HStack, Image, Text, Tooltip, VStack } from '@chakra-ui/react';
+import { Box, Center, HStack, Image, Spinner, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { useCharacter } from '../contexts/CharacterContext';
+import { useItems } from '../contexts/ItemsContext';
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
 import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
 import { getRarityAnimation, getRarityColor } from '../utils/rarityHelpers';
@@ -97,6 +98,7 @@ const FilledSlot = ({ item }: { item: SlotItem }): JSX.Element => {
 export const EquippedLoadout = (): JSX.Element | null => {
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons } =
     useCharacter();
+  const { isLoading: isLoadingItemTemplates } = useItems();
 
   const actionSlots = useMemo(
     () => [...equippedWeapons, ...equippedSpells, ...equippedConsumables] as SlotItem[],
@@ -104,6 +106,22 @@ export const EquippedLoadout = (): JSX.Element | null => {
   );
 
   if (!character) return null;
+
+  // Don't render empty slots while item templates are still loading —
+  // equipped arrays are empty during this window, not because the player
+  // has nothing equipped.
+  if (isLoadingItemTemplates) {
+    return (
+      <VStack spacing={1.5} w="100%">
+        <Text color="#5A5040" fontSize="2xs" fontWeight={700} letterSpacing="wider" textTransform="uppercase">
+          Loadout
+        </Text>
+        <Center h="44px">
+          <Spinner size="xs" color="#5A5040" />
+        </Center>
+      </VStack>
+    );
+  }
 
   const armor = equippedArmor[0] ?? null;
 
