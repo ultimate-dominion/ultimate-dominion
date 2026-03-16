@@ -36,13 +36,16 @@ export type GameStore = {
   connected: boolean;
   /** Latest indexed block number */
   currentBlock: number;
-  /** Whether the store has been hydrated with initial data */
+  /** Whether the store has been hydrated with fresh data from the network */
   hydrated: boolean;
 
   // Actions
   setRow: (table: string, keyBytes: string, data: TableRow) => void;
   deleteRow: (table: string, keyBytes: string) => void;
   applyBatch: (updates: BatchUpdate[]) => void;
+  /** Load cached data into tables without setting hydrated (for cache pre-loading) */
+  preloadTables: (snapshot: FullSnapshot) => void;
+  /** Hydrate with fresh network data — sets hydrated: true, enabling redirect logic */
   hydrate: (snapshot: FullSnapshot) => void;
   setConnected: (connected: boolean) => void;
   setCurrentBlock: (block: number) => void;
@@ -56,7 +59,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   tables: initialTables,
   connected: false,
   currentBlock: cachedSnapshot?.block ?? 0,
-  hydrated: !!cachedSnapshot,
+  hydrated: false, // only network fetch sets this — cache data is for rendering, not redirect decisions
 
   setRow: (table, keyBytes, data) =>
     set((state) => ({
@@ -97,6 +100,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
       return { tables: newTables };
+    }),
+
+  preloadTables: (snapshot) =>
+    set({
+      tables: snapshot.tables,
+      currentBlock: snapshot.block,
+      // hydrated stays false — cache data drives rendering, not redirects
     }),
 
   hydrate: (snapshot) =>

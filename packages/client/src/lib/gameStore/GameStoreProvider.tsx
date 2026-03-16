@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useGameStore } from './store';
+import { useGameStore, wasPreHydrated } from './store';
 import { WSClient } from './wsClient';
 import type { FullSnapshot } from './types';
 import { writeCachedCharacters, writeCachedSnapshot } from './snapshotCache';
@@ -42,16 +42,18 @@ export function GameStoreProvider({ children }: Props) {
 
     async function init() {
       try {
-        if (useGameStore.getState().hydrated) {
-          console.log('[gameStore] Pre-hydrated from localStorage at block', useGameStore.getState().currentBlock);
+        if (wasPreHydrated) {
+          console.log('[gameStore] Pre-loaded from cache at block', useGameStore.getState().currentBlock);
         }
 
         // Try IndexedDB cache (~10-50ms) — holds the full 24MB snapshot
-        // that localStorage can't. Hydrates the store before the network fetch.
+        // that localStorage can't. Pre-loads tables for rendering but does NOT
+        // set hydrated — only the network fetch should flip that flag to prevent
+        // stale cache data from driving redirect decisions (shop/battle redirects).
         const idbSnapshot = await idbSnapshotPromise;
         if (idbSnapshot && !cancelled) {
-          useGameStore.getState().hydrate(idbSnapshot);
-          console.log('[gameStore] Hydrated from IndexedDB at block', idbSnapshot.block);
+          useGameStore.getState().preloadTables(idbSnapshot);
+          console.log('[gameStore] Pre-loaded from IndexedDB at block', idbSnapshot.block);
         }
 
         // Fetch fresh snapshot from indexer
