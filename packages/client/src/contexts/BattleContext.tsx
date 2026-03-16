@@ -159,11 +159,6 @@ export const BattleProvider = ({
       .filter(b => b.end === BigInt(0) && !combatOutcomeTable[b.encounterId])
       .pop();
 
-    // Grind mode: suppress the battle screen for auto-resolved encounters.
-    // BUT if there's an active unresolved encounter (e.g. createEncounter
-    // succeeded but endTurn failed due to nonce error), show it so the player
-    // can fight their way out instead of being permanently stuck.
-    if (localStorage.getItem('ud_grind_mode') === 'true' && !activeBattle) return null;
     const latestBattle = activeBattle ?? allBattles[allBattles.length - 1];
     if (!latestBattle) return null;
 

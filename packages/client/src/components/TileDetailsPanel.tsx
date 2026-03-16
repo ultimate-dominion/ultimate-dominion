@@ -577,7 +577,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (currentBattle && opponent && userCharacterForBattleRendering) {
+  if (currentBattle && opponent && userCharacterForBattleRendering && !grindMode) {
     return (
       <Box h="100%" position="relative">
         <style>
@@ -886,7 +886,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (isWaitingForBattle || encounterTx.isLoading || (currentBattle && (!opponent || !userCharacterForBattleRendering))) {
+  if (!grindMode && (isWaitingForBattle || encounterTx.isLoading || (currentBattle && (!opponent || !userCharacterForBattleRendering)))) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
         <style>
