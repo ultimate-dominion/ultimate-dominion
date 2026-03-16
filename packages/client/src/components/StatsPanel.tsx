@@ -24,6 +24,8 @@ import { useFragments } from '../contexts/FragmentContext';
 import { useGoldMerchant } from '../contexts/GoldMerchantContext';
 import { etherToFixedNumber } from '../utils/helpers';
 
+import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
+
 import { ClassSymbol } from './ClassSymbol';
 import { Level } from './Level';
 
@@ -34,6 +36,7 @@ export const StatsPanel = (): JSX.Element => {
   const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const leaderboardRank = useLeaderboardRank();
 
   const maxLevelXpRequirement = useMemo(() => {
     const levelsEntries = getTableEntries('Levels');
@@ -231,6 +234,23 @@ export const StatsPanel = (): JSX.Element => {
             </Text>
           </Text>
         </HStack>
+
+        {leaderboardRank && (
+          <HStack justifyContent="center" px={2} py={1} spacing={1.5}>
+            <Text color="#C87A2A" fontFamily="mono" fontWeight={700} size="xs">
+              #{leaderboardRank.statsRank}
+            </Text>
+            <Text color="#5A5040" size="xs">Stats</Text>
+            <Text color="#5A5040" size="xs">·</Text>
+            <Text color="#D4A54A" fontFamily="mono" fontWeight={700} size="xs">
+              #{leaderboardRank.goldRank}
+            </Text>
+            <Text color="#5A5040" size="xs">Gold</Text>
+            <Text color="#5A5040" size="xs">
+              of {leaderboardRank.totalPlayers}
+            </Text>
+          </HStack>
+        )}
       </VStack>
 
       <Divider borderColor="grey300" mt={2} />

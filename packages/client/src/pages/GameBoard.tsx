@@ -24,6 +24,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 import { ActionsPanel } from '../components/ActionsPanel';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
+import { RankChangeToast } from '../components/RankChangeToast';
 import { ConsumableQuickUse } from '../components/ConsumableQuickUse';
 import { EquippedLoadout } from '../components/EquippedLoadout';
 import { InfoModal } from '../components/InfoModal';
@@ -330,6 +331,7 @@ export const GameBoard = (): JSX.Element => {
           onClose={onCloseBattleOutcomeModal}
         />
       )}
+      <RankChangeToast />
     </Grid>
     </>
   );

@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Divider,
+  HStack,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -32,6 +33,8 @@ import {
   type Weapon,
 } from '../utils/types';
 
+import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
+
 import { ItemCard } from './ItemCard';
 import { ItemEquipModal } from './ItemEquipModal';
 import { LevelUpBanner } from './LevelUpBanner';
@@ -59,6 +62,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     refreshCharacter,
   } = useCharacter();
   const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
+  const leaderboardRank = useLeaderboardRank();
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
@@ -303,6 +307,24 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     </Text>{' '}
                     Gold.
                   </Text>
+                )}
+                {winner === character.id && leaderboardRank && (
+                  <HStack justifyContent="center" spacing={1}>
+                    <Text color="#8A7E6A" fontFamily="mono" size="sm">
+                      Rank: #{leaderboardRank.statsRank} of {leaderboardRank.totalPlayers}
+                    </Text>
+                    {leaderboardRank.statsRankDelta !== 0 && (
+                      <Text
+                        color={leaderboardRank.statsRankDelta > 0 ? '#5A8A3E' : '#8B2020'}
+                        fontFamily="mono"
+                        fontWeight={700}
+                        size="sm"
+                      >
+                        ({leaderboardRank.statsRankDelta > 0 ? '\u25B2' : '\u25BC'}
+                        {Math.abs(leaderboardRank.statsRankDelta)})
+                      </Text>
+                    )}
+                  </HStack>
                 )}
                 {/* Level-up banner — only on victory when this battle triggered eligibility */}
                 {winner === character.id && (hasLeveledUp || justBecameEligible) && (
