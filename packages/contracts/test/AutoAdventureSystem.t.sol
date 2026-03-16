@@ -261,6 +261,51 @@ contract Test_AutoAdventureSystem is Test {
         assertEq(y, 0, "y should be 0 via delegation");
     }
 
+    // --- Death scenario ---
+
+    function test_playerDeath_stateCleanup() public {
+        vm.startPrank(alice);
+
+        // Move across map until combat occurs, tracking death
+        bool died;
+        for (uint16 i = 1; i <= 9; i++) {
+            if (!Spawned.getSpawned(aliceCharacterId)) {
+                died = true;
+                break;
+            }
+            vm.warp(block.timestamp + 6);
+
+            // Set player HP to 1 to force death on first hit
+            vm.stopPrank();
+            vm.startPrank(deployer);
+            Stats.setCurrentHp(aliceCharacterId, 1);
+            vm.stopPrank();
+            vm.startPrank(alice);
+
+            (bool combat,, bool playerDied,,, ) = world.UD__autoAdventure(aliceCharacterId, i, 0);
+            if (combat && playerDied) {
+                died = true;
+                break;
+            }
+        }
+        vm.stopPrank();
+
+        if (died) {
+            // Verify death state
+            assertFalse(Spawned.getSpawned(aliceCharacterId), "spawned should be false after death");
+            assertTrue(EncounterEntity.getDied(aliceCharacterId), "died should be true after death");
+            assertEq(EncounterEntity.getEncounterId(aliceCharacterId), bytes32(0), "encounterId should be cleared");
+
+            // Verify respawn resets died flag
+            vm.startPrank(alice);
+            world.UD__enterGame(aliceCharacterId, 1, 1);
+            vm.stopPrank();
+
+            assertTrue(Spawned.getSpawned(aliceCharacterId), "spawned should be true after respawn");
+            assertFalse(EncounterEntity.getDied(aliceCharacterId), "died should be false after respawn");
+        }
+    }
+
     // --- Helpers ---
 
     function _getUser() internal returns (address payable) {

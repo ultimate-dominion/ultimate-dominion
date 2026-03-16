@@ -76,6 +76,15 @@ export const MovementProvider = ({
     () => localStorage.getItem(GRIND_MODE_KEY) === 'true',
   );
 
+  // Auto-disable grind mode when character dies — ensures the death/respawn
+  // screen renders instead of being suppressed by BattleContext.
+  useEffect(() => {
+    if (grindMode && !isSpawned) {
+      setGrindMode(false);
+      localStorage.setItem(GRIND_MODE_KEY, 'false');
+    }
+  }, [grindMode, isSpawned]);
+
   const moveTx = useTransaction({
     actionName: grindMode ? 'adventuring' : 'moving',
     silent: true,
