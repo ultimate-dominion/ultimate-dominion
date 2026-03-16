@@ -4,8 +4,15 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 
-const posts = (await getCollection('posts', ({ data }) => !data.draft))
+const allPosts = (await getCollection('posts', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const featuredPosts = allPosts.filter((p) => p.data.featured);
+const archivePosts = allPosts.filter((p) => !p.data.featured);
+
+// Hero post: "The Game That Faded Away" or first featured
+const heroPost = featuredPosts.find((p) => p.slug === 'the-game-that-faded-away') ?? featuredPosts[0];
+const secondaryFeatured = featuredPosts.filter((p) => p.slug !== heroPost?.slug);
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
@@ -36,55 +43,102 @@ function formatDate(date: Date): string {
   <Header />
 
   <main>
-    <!-- Hero -->
-    <section class="relative overflow-hidden border-b border-border">
-      <div class="absolute inset-0 bg-gradient-to-b from-accent/5 to-transparent"></div>
-      <div class="absolute inset-0" style="background: radial-gradient(ellipse at center, transparent 0%, rgba(18,16,14,0.7) 100%);"></div>
+    <!-- Hero Feature -->
+    {heroPost && (
+      <section class="relative overflow-hidden border-b border-border">
+        <!-- Layered atmosphere -->
+        <div class="absolute inset-0 bg-gradient-to-b from-accent/[0.03] via-transparent to-transparent"></div>
+        <div class="absolute inset-0" style="background: radial-gradient(ellipse at 30% 50%, rgba(200,122,42,0.06) 0%, transparent 60%);"></div>
+        <div class="absolute inset-0" style="background: radial-gradient(ellipse at center bottom, rgba(18,16,14,0.8) 0%, transparent 100%);"></div>
 
-      <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 text-center">
-        <p class="font-display text-text-secondary text-[11px] tracking-[0.3em] uppercase mb-6">
-          Dispatches from the Dark
-        </p>
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-display font-semibold text-parchment mb-5 tracking-tight" style="letter-spacing: 0.06em;">
-          Blog
-        </h1>
-        <p class="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto font-sans" style="line-height: 1.8;">
-          Development updates, game design deep dives, and transmissions from the world of Ultimate Dominion.
-        </p>
-      </div>
-    </section>
+        <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
+          <div class="flex flex-col gap-8">
+            <!-- Kicker -->
+            <div class="flex items-center gap-4">
+              <div class="h-px w-12 bg-accent/40"></div>
+              <span class="font-display text-accent-gold text-[11px] tracking-[0.35em] uppercase">Featured</span>
+            </div>
 
-    <!-- Posts -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-      {posts.length === 0 ? (
-        <div class="text-center py-20">
-          <p class="text-text-secondary text-lg font-sans italic">The scribes are still writing. Check back soon.</p>
+            <!-- Title -->
+            <a href={`/blog/${heroPost.slug}`} class="group no-underline block">
+              <h1 class="text-4xl sm:text-5xl lg:text-[3.5rem] font-display font-semibold text-parchment leading-[1.15] tracking-tight group-hover:text-accent-gold transition-colors duration-500" style="letter-spacing: 0.04em; text-shadow: 0 0 40px rgba(200,122,42,0.2);">
+                {heroPost.data.title}
+              </h1>
+            </a>
+
+            <!-- Pull quote / description -->
+            <p class="text-xl sm:text-2xl font-sans text-text-primary/80 max-w-3xl leading-relaxed" style="line-height: 1.7;">
+              {heroPost.data.description}
+            </p>
+
+            <!-- Meta -->
+            <div class="flex items-center gap-4 pt-2">
+              <time class="text-sm font-mono text-text-secondary" datetime={heroPost.data.date.toISOString()}>
+                {formatDate(heroPost.data.date)}
+              </time>
+              <span class="text-text-secondary/30">/</span>
+              <a href={`/blog/${heroPost.slug}`} class="font-display text-accent-gold text-sm tracking-wider uppercase no-underline hover:text-accent-glow transition-colors">
+                Read
+              </a>
+            </div>
+          </div>
         </div>
-      ) : (
-        <div class="flex flex-col gap-6">
-          {posts.map((post) => (
-            <a href={`/blog/${post.slug}`} class="blog-card-hover group no-underline block">
-              <div class="flex flex-col gap-3">
-                <div class="flex items-center gap-3 flex-wrap">
-                  <time class="text-xs font-mono text-text-secondary" datetime={post.data.date.toISOString()}>
+      </section>
+    )}
+
+    <!-- Secondary Featured -->
+    {secondaryFeatured.length > 0 && (
+      <section class="border-b border-border">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          {secondaryFeatured.map((post) => (
+            <a href={`/blog/${post.slug}`} class="group no-underline block">
+              <div class="blog-card-hover p-6 sm:p-8">
+                <div class="flex flex-col gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="h-px w-8 bg-accent/30"></div>
+                    <span class="font-display text-accent-gold/70 text-[10px] tracking-[0.3em] uppercase">Latest</span>
+                  </div>
+                  <h2 class="text-2xl sm:text-3xl font-display font-semibold text-parchment group-hover:text-accent-gold transition-colors duration-300 m-0" style="text-shadow: none; letter-spacing: 0.03em;">
+                    {post.data.title}
+                  </h2>
+                  <p class="text-text-secondary font-sans m-0 leading-relaxed max-w-2xl">
+                    {post.data.description}
+                  </p>
+                  <time class="text-xs font-mono text-text-secondary/60 pt-1" datetime={post.data.date.toISOString()}>
                     {formatDate(post.data.date)}
                   </time>
-                  {post.data.tags.map((tag: string) => (
-                    <span class="tag">{tag}</span>
-                  ))}
                 </div>
-                <h2 class="text-xl sm:text-2xl font-display font-semibold text-parchment group-hover:text-accent transition-colors m-0" style="text-shadow: none; letter-spacing: 0.03em;">
-                  {post.data.title}
-                </h2>
-                <p class="text-text-secondary font-sans m-0 leading-relaxed">
-                  {post.data.description}
-                </p>
               </div>
             </a>
           ))}
         </div>
-      )}
-    </section>
+      </section>
+    )}
+
+    <!-- Archive -->
+    {archivePosts.length > 0 && (
+      <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div class="flex items-center gap-4 mb-8">
+          <h2 class="text-sm font-display text-text-secondary tracking-[0.2em] uppercase m-0" style="text-shadow: none;">Archive</h2>
+          <div class="h-px flex-1 bg-border"></div>
+        </div>
+
+        <div class="flex flex-col">
+          {archivePosts.map((post) => (
+            <a href={`/blog/${post.slug}`} class="group no-underline block py-4 border-b border-border/50 last:border-b-0 hover:bg-surface/50 -mx-3 px-3 transition-colors duration-200" style="border-radius: 2px;">
+              <div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4">
+                <time class="text-xs font-mono text-text-secondary/50 shrink-0 sm:w-32" datetime={post.data.date.toISOString()}>
+                  {formatDate(post.data.date)}
+                </time>
+                <h3 class="text-base font-display font-medium text-text-primary group-hover:text-accent-gold transition-colors duration-200 m-0" style="text-shadow: none; letter-spacing: 0.01em;">
+                  {post.data.title}
+                </h3>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
   </main>
 
   <Footer />

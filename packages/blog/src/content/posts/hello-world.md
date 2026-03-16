@@ -4,6 +4,7 @@ description: "Ultimate Dominion is live. A persistent dark fantasy MUD where eve
 date: 2026-03-10
 tags: ["announcement"]
 draft: false
+featured: true
 ---
 
 You wake in a cave with no memory and no name. Everything after that is yours.

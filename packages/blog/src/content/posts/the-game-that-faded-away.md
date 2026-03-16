@@ -4,6 +4,7 @@ description: "Ultimate Dominion started as a browser RPG I played in 2005. It fa
 date: 2026-03-10
 tags: ["origins", "game-design"]
 draft: false
+featured: true
 ---
 
 There was a browser game I played around 2005 called Ultimate Dominion. Maybe 2,000 concurrent users at peak. No graphics at all. A dark grid, text everywhere, the kind of thing you'd alt-tab to between homework assignments and hope nobody looked over your shoulder because it definitely didn't look like much from the outside.
