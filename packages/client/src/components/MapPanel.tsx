@@ -7,6 +7,7 @@ import {
   HStack,
   IconButton,
   Stack,
+  Switch,
   Text,
   Tooltip,
   useBreakpointValue,
@@ -62,7 +63,7 @@ const COMPASS_DIRECTIONS: {
 export const MapPanel = (): JSX.Element => {
   const { allCharacters, allMonsters, allShops, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { currentBattle } = useBattle();
-  const { isRefreshing, onMove } = useMovement();
+  const { autoAdventureMode, isRefreshing, onMove, onToggleAutoAdventure } = useMovement();
   const { delegatorAddress } = useMUD();
   const navigate = useNavigate();
   const {
@@ -119,12 +120,40 @@ export const MapPanel = (): JSX.Element => {
       {/* Compass — above map on mobile, below on desktop */}
       <Box order={{ base: 0, lg: 2 }} w="100%">
         {isSpawned ? (
-          <NavigationCompass
-            adjacentTiles={adjacentTiles}
-            isDisabled={!!currentBattle || isRefreshing}
-            onMove={onMove}
-            position={position}
-          />
+          <>
+            <NavigationCompass
+              adjacentTiles={adjacentTiles}
+              isDisabled={!!currentBattle || isRefreshing}
+              onMove={onMove}
+              position={position}
+            />
+            {/* Mobile-only auto adventure toggle */}
+            {!isDesktop && (
+              <HStack
+                justify="center"
+                spacing={2.5}
+                pt={1}
+                pb={0.5}
+              >
+                <Text
+                  color={autoAdventureMode ? '#C87A2A' : '#5A5248'}
+                  fontFamily="mono"
+                  fontSize="11px"
+                  fontWeight={500}
+                  letterSpacing="0.5px"
+                  transition="color 0.2s"
+                >
+                  Auto Adventure
+                </Text>
+                <Switch
+                  size="sm"
+                  isChecked={autoAdventureMode}
+                  onChange={onToggleAutoAdventure}
+                  colorScheme="orange"
+                />
+              </HStack>
+            )}
+          </>
         ) : (
           <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
             {isMapFull && queueStatus === 'idle' && !showCaptcha && (

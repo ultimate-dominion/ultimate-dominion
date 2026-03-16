@@ -280,7 +280,7 @@ export const GameBoard = (): JSX.Element => {
           minH={0}
           overflow="hidden"
           display={
-            !isDesktop && !currentBattle && isSpawned && position
+            !isDesktop && !currentBattle && !autoAdventureMode && isSpawned && position
               ? 'none'
               : undefined
           }

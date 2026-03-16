@@ -31,6 +31,7 @@ import {
 import {
   AdvancedClass,
   ArmorType,
+  getDominantStatClass,
   ItemType,
   PowerSource,
   Race,
@@ -347,7 +348,11 @@ const CharacterProviderInner = ({
       // EntityStats fields
       agility: toBigInt(statsData?.agility),
       currentHp: toBigInt(statsData?.currentHp),
-      entityClass: toNumber(statsData?.class),
+      entityClass: getDominantStatClass(
+        toBigInt(statsData?.strength),
+        toBigInt(statsData?.agility),
+        toBigInt(statsData?.intelligence),
+      ),
       experience: toBigInt(statsData?.experience),
       intelligence: toBigInt(statsData?.intelligence),
       level: toBigInt(statsData?.level),

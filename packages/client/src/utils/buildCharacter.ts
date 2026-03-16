@@ -9,6 +9,7 @@ import {
 import {
   AdvancedClass,
   type Character,
+  getDominantStatClass,
   type Metadata,
   type WorldStatusEffect,
 } from './types';
@@ -117,7 +118,11 @@ export function buildCharacter(
     agility: toBigInt(statsData.agility),
     baseStats: decodedBaseStats as any,
     currentHp: toBigInt(statsData.currentHp),
-    entityClass: toNumber(statsData.class),
+    entityClass: getDominantStatClass(
+      toBigInt(statsData.strength),
+      toBigInt(statsData.agility),
+      toBigInt(statsData.intelligence),
+    ),
     escrowGoldBalance,
     experience: toBigInt(statsData.experience),
     hasSelectedAdvancedClass: Boolean(statsData.hasSelectedAdvancedClass),

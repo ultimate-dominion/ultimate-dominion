@@ -59,6 +59,20 @@ export enum StatsClasses {
   Intelligence,
 }
 
+/** Derive dominant stat class from actual stats (used pre-L10 before advanced class selection). */
+export function getDominantStatClass(
+  strength: bigint | number,
+  agility: bigint | number,
+  intelligence: bigint | number,
+): StatsClasses {
+  const s = Number(strength);
+  const a = Number(agility);
+  const i = Number(intelligence);
+  if (i >= s && i >= a) return StatsClasses.Intelligence;
+  if (a >= s) return StatsClasses.Agility;
+  return StatsClasses.Strength;
+}
+
 // Implicit Class System enums
 export enum Race {
   None,
