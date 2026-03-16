@@ -350,12 +350,14 @@ export const CharacterPage = (): JSX.Element => {
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            order={{ base: 4, lg: 4 }}
           >
             <ItemsPanel character={character} />
           </GridItem>
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            order={{ base: 5, lg: 5 }}
           >
             <FragmentCollection />
           </GridItem>
