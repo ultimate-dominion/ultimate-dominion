@@ -345,12 +345,15 @@ export const BattleProvider = ({
     [allAttackOutcomes, currentBattle],
   );
 
-  const opponentHp = useMemo(() => opponent?.currentHp ?? 0n, [opponent]);
+  // HP is now decoded synchronously from splice events — no optimistic
+  // derivation needed. Simple passthrough from the store.
+  const opponentHp = useMemo(() => {
+    return opponent?.currentHp ?? 0n;
+  }, [opponent]);
 
-  const userHp = useMemo(
-    () => userCharacterForBattleRendering?.currentHp ?? 0n,
-    [userCharacterForBattleRendering],
-  );
+  const userHp = useMemo(() => {
+    return userCharacterForBattleRendering?.currentHp ?? 0n;
+  }, [userCharacterForBattleRendering]);
 
   // Reactive: re-renders when any EncounterEntity row changes (status effects applied)
   const encounterEntityTable = useGameTable('EncounterEntity');

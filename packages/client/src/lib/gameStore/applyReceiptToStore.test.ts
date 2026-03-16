@@ -1,11 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { type Hex, type TransactionReceipt, keccak256, encodeAbiParameters, toHex } from 'viem';
-import mudConfig from 'contracts/mud.config';
 
 // Track store calls
 const mockSetRow = vi.fn();
 const mockDeleteRow = vi.fn();
 const mockApplyBatch = vi.fn();
+
+// Mutable tables state for splice tests
+let mockTables: Record<string, Record<string, Record<string, unknown>>> = {};
 
 vi.mock('./store', () => ({
   useGameStore: {
@@ -13,6 +15,7 @@ vi.mock('./store', () => ({
       setRow: mockSetRow,
       deleteRow: mockDeleteRow,
       applyBatch: mockApplyBatch,
+      tables: mockTables,
     }),
   },
 }));
@@ -23,16 +26,105 @@ vi.mock('@latticexyz/store/internal', () => ({
   logToRecord: (...args: unknown[]) => mockLogToRecord(...args),
 }));
 
+// Mock @latticexyz/store to avoid viem version mismatch during module init.
+// Provide the storeEventsAbi inline so decodeEventLog works.
+vi.mock('@latticexyz/store', () => ({
+  storeEventsAbi: [
+    {
+      type: 'event',
+      name: 'Store_SetRecord',
+      inputs: [
+        { name: 'tableId', type: 'bytes32', indexed: true, internalType: 'ResourceId' },
+        { name: 'keyTuple', type: 'bytes32[]', indexed: false },
+        { name: 'staticData', type: 'bytes', indexed: false },
+        { name: 'encodedLengths', type: 'bytes32', indexed: false, internalType: 'EncodedLengths' },
+        { name: 'dynamicData', type: 'bytes', indexed: false },
+      ],
+    },
+    {
+      type: 'event',
+      name: 'Store_SpliceStaticData',
+      inputs: [
+        { name: 'tableId', type: 'bytes32', indexed: true, internalType: 'ResourceId' },
+        { name: 'keyTuple', type: 'bytes32[]', indexed: false },
+        { name: 'start', type: 'uint48', indexed: false },
+        { name: 'data', type: 'bytes', indexed: false },
+      ],
+    },
+    {
+      type: 'event',
+      name: 'Store_SpliceDynamicData',
+      inputs: [
+        { name: 'tableId', type: 'bytes32', indexed: true, internalType: 'ResourceId' },
+        { name: 'keyTuple', type: 'bytes32[]', indexed: false },
+        { name: 'dynamicFieldIndex', type: 'uint8', indexed: false },
+        { name: 'start', type: 'uint48', indexed: false },
+        { name: 'deleteCount', type: 'uint40', indexed: false },
+        { name: 'encodedLengths', type: 'bytes32', indexed: false, internalType: 'EncodedLengths' },
+        { name: 'data', type: 'bytes', indexed: false },
+      ],
+    },
+    {
+      type: 'event',
+      name: 'Store_DeleteRecord',
+      inputs: [
+        { name: 'tableId', type: 'bytes32', indexed: true, internalType: 'ResourceId' },
+        { name: 'keyTuple', type: 'bytes32[]', indexed: false },
+      ],
+    },
+  ],
+}));
+
+// Inline test table config — avoids importing mudConfig which triggers the
+// @latticexyz/store module init (broken keccak256/viem version mismatch).
+// This is the first UD-namespace table: Paused.
+const testTableId = '0x7462554400000000000000000000000050617573656400000000000000000000' as Hex;
+const testTableLabel = 'Paused';
+
+// Stats table for splice tests
+const statsTableId = '0x7462554400000000000000000000000053746174730000000000000000000000' as Hex;
+
+vi.mock('contracts/mud.config', () => {
+  const tables = {
+    UD__Paused: {
+      label: 'Paused',
+      tableId: '0x7462554400000000000000000000000050617573656400000000000000000000',
+      key: ['id'],
+      schema: {
+        id: { type: 'bytes32', internalType: 'bytes32' },
+        paused: { type: 'bool', internalType: 'bool' },
+      },
+    },
+    UD__Stats: {
+      label: 'Stats',
+      tableId: '0x7462554400000000000000000000000053746174730000000000000000000000',
+      key: ['entityId'],
+      schema: {
+        entityId: { type: 'bytes32', internalType: 'bytes32' },
+        strength: { type: 'int256', internalType: 'int256' },
+        agility: { type: 'int256', internalType: 'int256' },
+        class: { type: 'uint8', internalType: 'Classes' },
+        intelligence: { type: 'int256', internalType: 'int256' },
+        maxHp: { type: 'int256', internalType: 'int256' },
+        currentHp: { type: 'int256', internalType: 'int256' },
+        experience: { type: 'uint256', internalType: 'uint256' },
+        level: { type: 'uint256', internalType: 'uint256' },
+        powerSource: { type: 'uint8', internalType: 'PowerSource' },
+        race: { type: 'uint8', internalType: 'Race' },
+        startingArmor: { type: 'uint8', internalType: 'ArmorType' },
+        advancedClass: { type: 'uint8', internalType: 'AdvancedClass' },
+        hasSelectedAdvancedClass: { type: 'bool', internalType: 'bool' },
+      },
+    },
+  };
+  return { default: { tables } };
+});
+
 // Mock fetch for background delta
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 import { applyReceiptToStore } from './applyReceiptToStore';
-
-// Helper: pick a known UD-namespace table from mudConfig
-const testTable = Object.values(mudConfig.tables)[0];
-const testTableId = testTable.tableId as Hex;
-const testTableLabel = testTable.label;
 
 // Helper: build a mock receipt with specific logs
 function makeReceipt(
@@ -66,11 +158,11 @@ function makeReceipt(
   };
 }
 
-// Store_DeleteRecord(bytes32 indexed tableId, bytes32[] keyTuple)
+// Event signatures
 const DELETE_EVENT_SIG = keccak256(toHex('Store_DeleteRecord(bytes32,bytes32[])'));
-
-// Store_SetRecord(bytes32 indexed tableId, bytes32[] keyTuple, bytes staticData, bytes32 encodedLengths, bytes dynamicData)
 const SET_RECORD_EVENT_SIG = keccak256(toHex('Store_SetRecord(bytes32,bytes32[],bytes,bytes32,bytes)'));
+const SPLICE_STATIC_EVENT_SIG = keccak256(toHex('Store_SpliceStaticData(bytes32,bytes32[],uint48,bytes)'));
+const SPLICE_DYNAMIC_EVENT_SIG = keccak256(toHex('Store_SpliceDynamicData(bytes32,bytes32[],uint8,uint48,uint40,bytes32,bytes)'));
 
 function encodeDeleteLog(tableId: Hex, keyTuple: Hex[]) {
   const data = encodeAbiParameters(
@@ -104,12 +196,54 @@ function encodeSetRecordLog(tableId: Hex, keyTuple: Hex[]) {
   };
 }
 
+function encodeSpliceStaticLog(tableId: Hex, keyTuple: Hex[], start: number, spliceData: Hex) {
+  const data = encodeAbiParameters(
+    [
+      { name: 'keyTuple', type: 'bytes32[]' },
+      { name: 'start', type: 'uint48' },
+      { name: 'data', type: 'bytes' },
+    ],
+    [keyTuple, start, spliceData],
+  );
+  return {
+    data,
+    topics: [SPLICE_STATIC_EVENT_SIG, tableId] as [Hex, ...Hex[]],
+  };
+}
+
+function encodeSpliceDynamicLog(tableId: Hex, keyTuple: Hex[]) {
+  const data = encodeAbiParameters(
+    [
+      { name: 'keyTuple', type: 'bytes32[]' },
+      { name: 'dynamicFieldIndex', type: 'uint8' },
+      { name: 'start', type: 'uint48' },
+      { name: 'deleteCount', type: 'uint40' },
+      { name: 'encodedLengths', type: 'bytes32' },
+      { name: 'data', type: 'bytes' },
+    ],
+    [
+      keyTuple,
+      0,
+      0,
+      0,
+      '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
+      '0x00' as Hex,
+    ],
+  );
+  return {
+    data,
+    topics: [SPLICE_DYNAMIC_EVENT_SIG, tableId] as [Hex, ...Hex[]],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Original tests
+// ---------------------------------------------------------------------------
 describe('applyReceiptToStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset logToRecord mock to return a decodable record
+    mockTables = {};
     mockLogToRecord.mockReturnValue({ name: 'TestHero', level: '5' });
-    // Default: delta fetch succeeds but returns empty (fire-and-forget, not awaited)
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ block: 100, tables: {} }),
@@ -148,9 +282,7 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    // logToRecord was called to decode the record
     expect(mockLogToRecord).toHaveBeenCalled();
-    // applyBatch was called with the serialized result
     const expectedKeyBytes = '0x' + keyTuple[0].slice(2);
     expect(mockApplyBatch).toHaveBeenCalledTimes(1);
     expect(mockApplyBatch).toHaveBeenCalledWith([
@@ -175,7 +307,6 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    // Delta fetch was initiated
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/delta?block=42069')
     );
@@ -185,7 +316,6 @@ describe('applyReceiptToStore', () => {
     mockFetch.mockRejectedValue(new Error('Network error'));
     const receipt = makeReceipt([], 100n);
 
-    // Should not throw — delta is fire-and-forget
     await expect(applyReceiptToStore(receipt)).resolves.not.toThrow();
   });
 
@@ -199,7 +329,6 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    // Both updates in a single applyBatch call — no intermediate states
     expect(mockApplyBatch).toHaveBeenCalledTimes(1);
     const batchArg = mockApplyBatch.mock.calls[0][0];
     expect(batchArg).toHaveLength(2);
@@ -220,7 +349,6 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    // Should not throw, batch should be empty (no valid updates)
     expect(mockApplyBatch).not.toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalled();
 
@@ -237,15 +365,12 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    // Individual setRow/deleteRow should never be called from receipt processing
     expect(mockSetRow).not.toHaveBeenCalled();
     expect(mockDeleteRow).not.toHaveBeenCalled();
-    // Only applyBatch should be used
     expect(mockApplyBatch).toHaveBeenCalledTimes(1);
   });
 
   it('handles multiple SetRecord logs atomically', async () => {
-    // Simulate a move TX with multiple table updates (Position, Spawned, Stats)
     const key1: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
     const key2: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000002'];
     const key3: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000003'];
@@ -257,10 +382,141 @@ describe('applyReceiptToStore', () => {
 
     await applyReceiptToStore(receipt);
 
-    // All 3 updates in a single batch — no intermediate renders
     expect(mockApplyBatch).toHaveBeenCalledTimes(1);
     const batchArg = mockApplyBatch.mock.calls[0][0];
     expect(batchArg).toHaveLength(3);
     expect(batchArg.every((u: { type: string }) => u.type === 'set')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Splice integration tests
+// ---------------------------------------------------------------------------
+describe('applyReceiptToStore — splice integration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTables = {};
+    mockLogToRecord.mockReturnValue({ name: 'TestHero', level: '5' });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ block: 100, tables: {} }),
+    });
+  });
+
+  it('decodes SpliceStaticData synchronously when row exists in store (no RPC)', async () => {
+    const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
+    const keyBytes = '0x' + keyTuple[0].slice(2);
+
+    // Pre-populate store with existing row
+    mockTables.Stats = {
+      [keyBytes]: {
+        strength: '10',
+        agility: '8',
+        class: 1,
+        intelligence: '12',
+        maxHp: '100',
+        currentHp: '100',
+        experience: '500',
+        level: '5',
+        powerSource: 2,
+        race: 1,
+        startingArmor: 3,
+        advancedClass: 0,
+        hasSelectedAdvancedClass: false,
+      },
+    };
+
+    // Splice currentHp (offset 129, 32 bytes) to 75
+    const newHpHex = '0x' + (75n).toString(16).padStart(64, '0');
+    const log = encodeSpliceStaticLog(statsTableId, keyTuple, 129, newHpHex as Hex);
+    const receipt = makeReceipt([log]);
+
+    await applyReceiptToStore(receipt);
+
+    // Should have applied synchronously via applyBatch
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    const batchArg = mockApplyBatch.mock.calls[0][0];
+    expect(batchArg).toHaveLength(1);
+    expect(batchArg[0].type).toBe('set');
+    expect(batchArg[0].table).toBe('Stats');
+    expect(batchArg[0].data.currentHp).toBe('75');
+    // Other fields preserved
+    expect(batchArg[0].data.strength).toBe('10');
+    expect(batchArg[0].data.maxHp).toBe('100');
+  });
+
+  it('falls back to RPC when row not in store', async () => {
+    const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
+
+    const newHpHex = '0x' + (75n).toString(16).padStart(64, '0');
+    const log = encodeSpliceStaticLog(statsTableId, keyTuple, 129, newHpHex as Hex);
+    const receipt = makeReceipt([log]);
+
+    // No publicClient provided, so RPC path won't execute but splice should be queued
+    await applyReceiptToStore(receipt);
+
+    // No sync decode happened, no batch (no RPC client to resolve)
+    expect(mockApplyBatch).not.toHaveBeenCalled();
+  });
+
+  it('batches SetRecord + SpliceStaticData from same receipt into single batch', async () => {
+    const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
+    const spliceKeyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000099'];
+    const spliceKeyBytes = '0x' + spliceKeyTuple[0].slice(2);
+
+    // Pre-populate store for the splice target
+    mockTables.Stats = {
+      [spliceKeyBytes]: {
+        strength: '10',
+        agility: '8',
+        class: 1,
+        intelligence: '12',
+        maxHp: '100',
+        currentHp: '100',
+        experience: '500',
+        level: '5',
+        powerSource: 2,
+        race: 1,
+        startingArmor: 3,
+        advancedClass: 0,
+        hasSelectedAdvancedClass: false,
+      },
+    };
+
+    const setLog = encodeSetRecordLog(testTableId, keyTuple);
+    const newHpHex = '0x' + (50n).toString(16).padStart(64, '0');
+    const spliceLog = encodeSpliceStaticLog(statsTableId, spliceKeyTuple, 129, newHpHex as Hex);
+    const receipt = makeReceipt([setLog, spliceLog]);
+
+    await applyReceiptToStore(receipt);
+
+    // Both updates in single batch
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    const batchArg = mockApplyBatch.mock.calls[0][0];
+    expect(batchArg).toHaveLength(2);
+    expect(batchArg[0].type).toBe('set');
+    expect(batchArg[0].table).toBe(testTableLabel);
+    expect(batchArg[1].type).toBe('set');
+    expect(batchArg[1].table).toBe('Stats');
+    expect(batchArg[1].data.currentHp).toBe('50');
+  });
+
+  it('SpliceDynamicData still uses RPC fallback', async () => {
+    const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
+    const keyBytes = '0x' + keyTuple[0].slice(2);
+
+    // Even with row in store, dynamic splices go to RPC
+    mockTables.Stats = {
+      [keyBytes]: { strength: '10', currentHp: '100' },
+    };
+
+    const log = encodeSpliceDynamicLog(statsTableId, keyTuple);
+    const receipt = makeReceipt([log]);
+
+    // No publicClient → RPC won't execute, but it should NOT sync-decode
+    await applyReceiptToStore(receipt);
+
+    // No batch applied (dynamic splice with no RPC client)
+    expect(mockApplyBatch).not.toHaveBeenCalled();
   });
 });

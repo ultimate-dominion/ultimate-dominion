@@ -25,6 +25,7 @@ import {
 
 import { useGameStore, type BatchUpdate } from './store';
 import type { TableRow } from './types';
+import { buildStaticFieldLayout, applySplice } from './decodeSplice';
 
 const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
 
@@ -188,6 +189,7 @@ export async function applyReceiptToStore(
 ): Promise<void> {
   let applied = 0;
   let skippedSplice = 0;
+  let spliceSyncCount = 0;
 
   // Collect splice events for async on-chain reads
   const spliceReads: {
@@ -231,10 +233,41 @@ export async function applyReceiptToStore(
       }
     }
 
-    if (
-      decoded.eventName === 'Store_SpliceStaticData' ||
-      decoded.eventName === 'Store_SpliceDynamicData'
-    ) {
+    if (decoded.eventName === 'Store_SpliceStaticData') {
+      const { tableId, keyTuple, start, data } = decoded.args as {
+        tableId: Hex;
+        keyTuple: readonly Hex[];
+        start: number | bigint;
+        data: Hex;
+      };
+      const table = tableRegistry.get(tableId);
+      if (table) {
+        const keyBytes = '0x' + keyTuple.map((k: Hex) => k.slice(2)).join('');
+        const existingRow = useGameStore.getState().tables[table.label]?.[keyBytes];
+
+        if (existingRow) {
+          const layout = buildStaticFieldLayout(
+            table as { tableId: string; key: readonly string[]; schema: Record<string, { type: string; internalType: string }> },
+          );
+          const merged = applySplice(layout, existingRow, Number(start), data);
+
+          if (merged) {
+            batch.push({ type: 'set', table: table.label, keyBytes, data: merged });
+            spliceSyncCount++;
+          } else {
+            // Partial field coverage — fall back to RPC
+            spliceReads.push({ table, keyTuple, keyBytes });
+            skippedSplice++;
+          }
+        } else {
+          // Row not in store yet — fall back to RPC
+          spliceReads.push({ table, keyTuple, keyBytes });
+          skippedSplice++;
+        }
+      }
+    }
+
+    if (decoded.eventName === 'Store_SpliceDynamicData') {
       const { tableId, keyTuple } = decoded.args;
       const table = tableRegistry.get(tableId as Hex);
       if (table) {
@@ -276,9 +309,9 @@ export async function applyReceiptToStore(
     useGameStore.getState().applyBatch(batch);
   }
 
-  if (applied > 0 || skippedSplice > 0) {
+  if (applied > 0 || skippedSplice > 0 || spliceSyncCount > 0) {
     console.info(
-      `[TX][RECEIPT] Applied ${batch.length} update(s) in single batch (${applied} from logs, ${skippedSplice} splice(s))`,
+      `[TX][RECEIPT] Applied ${batch.length} update(s) in single batch (${applied} from logs, ${spliceSyncCount} splice-sync, ${skippedSplice} splice-async)`,
     );
   }
 
