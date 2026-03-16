@@ -224,7 +224,18 @@ export const GameBoard = (): JSX.Element => {
     }
   }, [continueToBattleOutcome, onOpenBattleOutcomeModal, lastestBattleOutcome]);
 
-  if (!character?.locked) return <Box />;
+  // Fast-path: cached session means character is resolving from snapshot.
+  // Show loading skeleton instead of blank so the player sees progress.
+  if (!character?.locked) {
+    if (hasCachedSession) {
+      return (
+        <Box display="flex" justifyContent="center" alignItems="center" minH="calc(100vh - 125px)">
+          <Text color="rgba(196, 184, 158, 0.5)" fontSize="sm">Loading game...</Text>
+        </Box>
+      );
+    }
+    return <Box />;
+  }
 
   return (
     <>

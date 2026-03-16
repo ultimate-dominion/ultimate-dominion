@@ -1,5 +1,12 @@
 import { create } from 'zustand';
 import type { TableRow, TableData, FullSnapshot } from './types';
+import { readCachedSnapshot } from './snapshotCache';
+
+// Pre-hydrate from localStorage cache at module load time (before any React render).
+// This ensures the store has data on the very first render, enabling the fast-path
+// redirect for returning players without a blank frame.
+const WORLD_ADDRESS = (import.meta.env.VITE_WORLD_ADDRESS || '') as string;
+const cachedSnapshot = WORLD_ADDRESS ? readCachedSnapshot(WORLD_ADDRESS) : null;
 
 export type BatchUpdate = {
   type: 'set' | 'delete';
@@ -28,10 +35,10 @@ export type GameStore = {
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  tables: {},
+  tables: cachedSnapshot?.tables ?? {},
   connected: false,
-  currentBlock: 0,
-  hydrated: false,
+  currentBlock: cachedSnapshot?.block ?? 0,
+  hydrated: !!cachedSnapshot,
 
   setRow: (table, keyBytes, data) =>
     set((state) => ({

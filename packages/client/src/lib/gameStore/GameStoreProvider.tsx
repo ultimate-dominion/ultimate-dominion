@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGameStore } from './store';
 import { WSClient } from './wsClient';
 import type { FullSnapshot } from './types';
-import { readCachedSnapshot, writeCachedSnapshot } from './snapshotCache';
+import { writeCachedSnapshot } from './snapshotCache';
 
 const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
 const INDEXER_WS_URL = import.meta.env.VITE_INDEXER_WS_URL || 'ws://localhost:3001/ws';
@@ -40,16 +40,14 @@ export function GameStoreProvider({ children }: Props) {
 
     async function init() {
       try {
-        // 1. Synchronous cache hydration (before any async work)
-        if (WORLD_ADDRESS) {
-          const cached = readCachedSnapshot(WORLD_ADDRESS);
-          if (cached) {
-            useGameStore.getState().hydrate(cached);
-            console.log('[gameStore] Hydrated from cache at block', cached.block);
-          }
+        // Cache hydration now happens at store creation time (store.ts)
+        // so data is available on the very first render. Skip the redundant
+        // read here — just log if we were pre-hydrated.
+        if (useGameStore.getState().hydrated) {
+          console.log('[gameStore] Pre-hydrated from cache at block', useGameStore.getState().currentBlock);
         }
 
-        // 2. Fetch fresh snapshot
+        // Fetch fresh snapshot
         console.log('[gameStore] Fetching snapshot from', INDEXER_API_URL);
         const snapshot = await fetchSnapshot();
         if (cancelled) return;
