@@ -26,6 +26,7 @@ import { useGameConfig } from '../lib/gameStore';
 import { WAITING_ROOM_PATH } from '../Routes';
 import { CaptchaGate } from './CaptchaGate';
 import { ChatBox } from './ChatBox';
+import { OnlineLink } from './OnlineRoster';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassArrowSvg, CompassRoseOrnamentSvg } from './SVGs/CompassRoseSvg';
@@ -319,10 +320,7 @@ export const MapPanel = (): JSX.Element => {
             mt={0.5}
             px={{ base: 1, sm: 2 }}
           >
-            <Text color="#8A7E6A" fontWeight={500} size={{ base: '2xs', sm: 'xs' }}>
-              {currentPlayersSpawned} Player
-              {currentPlayersSpawned === 1 ? '' : 's'}
-            </Text>
+            <OnlineLink />
           </HStack>
         </PolygonalCard>
       </Box>
