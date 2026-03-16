@@ -17,11 +17,9 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { FaMedal } from 'react-icons/fa';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
-import { erc721Abi } from 'viem';
 import {
   encodeAddressKey,
   encodeCompositeKey,
@@ -31,8 +29,10 @@ import {
   useGameTable,
   useGameValue,
 } from '../lib/gameStore';
+import { useBadges } from '../hooks/useBadges';
 import { useReactiveEntity } from '../hooks/useReactiveEntity';
 import { AdvancedClassModal } from '../components/AdvancedClassModal';
+import { BadgeIcons, BadgeShowcase } from '../components/BadgeDisplay';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { FragmentCollection } from '../components/FragmentCollection';
@@ -65,19 +65,12 @@ import {
   type Weapon,
 } from '../utils/types';
 
-// Badge contract address - get from environment
-const BADGE_CONTRACT_ADDRESS = import.meta.env.VITE_BADGE_CONTRACT_ADDRESS || '';
-const ADVENTURER_BADGE_BASE = 1;
-
 export const CharacterPage = (): JSX.Element => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
-  const {
-    isSynced,
-    network: { publicClient },
-  } = useMUD();
+  const { isSynced } = useMUD();
   const { character: userCharacter, refreshCharacter } = useCharacter();
   const { onOpen: onOpenChat } = useChat();
 
@@ -95,7 +88,6 @@ export const CharacterPage = (): JSX.Element => {
 
   // Reactive character data for any entity ID
   const reactiveCharacter = useReactiveEntity(id);
-  const [hasBadge, setHasBadge] = useState(false);
 
   const isOwner = useMemo(() => {
     if (!(id && userCharacter)) return false;
@@ -108,6 +100,8 @@ export const CharacterPage = (): JSX.Element => {
   const character = isOwner ? userCharacter : reactiveCharacter;
   const isLoadingCharacter = !isSynced || (!character && !!id);
 
+  const { badges } = useBadges(character?.owner, character?.tokenId);
+
   useEffect(() => {
     if (isConnecting) return;
 
@@ -115,36 +109,6 @@ export const CharacterPage = (): JSX.Element => {
       navigate(HOME_PATH);
     }
   }, [isConnected, isConnecting, navigate]);
-
-  // Check if character has Adventurer badge
-  useEffect(() => {
-    const checkBadge = async () => {
-      if (!character || !publicClient || !BADGE_CONTRACT_ADDRESS) {
-        setHasBadge(false);
-        return;
-      }
-
-      try {
-        const badgeTokenId =
-          BigInt(ADVENTURER_BADGE_BASE) * BigInt(1_000_000) +
-          BigInt(character.tokenId);
-
-        const owner = await publicClient.readContract({
-          address: BADGE_CONTRACT_ADDRESS as `0x${string}`,
-          abi: erc721Abi,
-          functionName: 'ownerOf',
-          args: [badgeTokenId],
-        });
-
-        setHasBadge(owner === character.owner);
-      } catch {
-        // Badge doesn't exist or other error
-        setHasBadge(false);
-      }
-    };
-
-    checkBadge();
-  }, [character, publicClient]);
 
   // Auto-open advanced class modal when level >= 10 and no class selected
   useEffect(() => {
@@ -334,29 +298,22 @@ export const CharacterPage = (): JSX.Element => {
                 <Text fontWeight={700} mt={1} size="xl">
                   {character.name}
                 </Text>
-                {hasBadge && (
-                  <Tooltip
-                    bg="#14120F"
-                    hasArrow
-                    label="Adventurer Badge - Earned at Level 3"
-                    placement="top"
-                    shouldWrapChildren
-                  >
-                    <Box color="gold">
-                      <FaMedal size={20} />
-                    </Box>
-                  </Tooltip>
-                )}
                 <ClassSymbol advancedClass={character.advancedClass} entityClass={character.entityClass} />
+                <BadgeIcons badges={badges} />
                 {isOwner && Number(character.level) >= 10 && !character.hasSelectedAdvancedClass && (
                   <Button size="xs" variant="outline" colorScheme="blue" onClick={onOpenClassModal}>
                     Choose Class
                   </Button>
                 )}
               </HStack>
-              <Text fontWeight={500} my={12} size={{ base: 'sm', sm: 'md' }}>
+              <Text fontWeight={500} mt={6} mb={badges.length > 0 ? 4 : 12} size={{ base: 'sm', sm: 'md' }}>
                 {character.description}
               </Text>
+              {badges.length > 0 && (
+                <Box mb={8}>
+                  <BadgeShowcase badges={badges} />
+                </Box>
+              )}
               {isOwner ? (
                 <Button
                   borderRadius="4px"
