@@ -1,6 +1,6 @@
 import { useDisclosure } from '@chakra-ui/react';
 import { type ContractWrite } from '@latticexyz/common';
-import { writeObserver } from '@latticexyz/common/actions';
+import { transactionQueue, writeObserver } from '@latticexyz/common/actions';
 import IWorldAbi from 'contracts/out/IWorld.sol/IWorld.abi.json';
 import {
   createContext,
@@ -176,8 +176,11 @@ const MUDProviderInner = ({
       return;
     }
 
-    // Privy WalletClient signs locally — extend with writeObserver for logging
+    // Privy WalletClient signs locally — extend with transactionQueue (nonce
+    // management + serialization) and writeObserver for logging.  Matches the
+    // external/burner path in setupNetwork.ts / createBurner.ts.
     const walletClient = (embeddedWalletClient as any)
+      .extend(transactionQueue())
       .extend(writeObserver({ onWrite: (write: ContractWrite) => write$.next(write) }));
 
     const rawWorldContract = getContract({
