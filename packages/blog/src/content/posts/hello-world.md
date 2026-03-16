@@ -3,7 +3,7 @@ title: "The Dark Cave Awaits"
 description: "Ultimate Dominion is live. A persistent dark fantasy MUD where everything you earn is yours forever — no downloads, no shortcuts, no resets."
 date: 2026-03-10
 tags: ["announcement"]
-draft: true
+draft: false
 ---
 
 You wake in a cave with no memory and no name. Everything after that is yours.

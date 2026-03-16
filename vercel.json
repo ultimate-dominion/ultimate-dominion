@@ -21,7 +21,15 @@
       "destination": "https://ud-guide.vercel.app/guide/:path*"
     },
     {
-      "source": "/((?!guide|api|_vercel).*)",
+      "source": "/blog",
+      "destination": "https://blog-seven-taupe-89.vercel.app/blog"
+    },
+    {
+      "source": "/blog/:path*",
+      "destination": "https://blog-seven-taupe-89.vercel.app/blog/:path*"
+    },
+    {
+      "source": "/((?!guide|blog|api|_vercel).*)",
       "destination": "/index.html"
     }
   ]
