@@ -84,8 +84,8 @@ export type MapProviderProps = {
   children: ReactNode;
 };
 
-/** Idle timeout — matches on-chain SessionConfig (5 minutes) */
-const SESSION_IDLE_MS = 5 * 60 * 1000;
+/** Idle timeout — despawn after 10 minutes of no user interaction */
+const SESSION_IDLE_MS = 10 * 60 * 1000;
 const IDLE_CHECK_INTERVAL_MS = 30 * 1000;
 
 export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
