@@ -32,9 +32,15 @@ jobs:
       - name: Stub missing AccessControlLib.sol (ERC1155-puppet expects newer MUD)
         run: |
           mkdir -p packages/contracts/node_modules/@latticexyz/world-modules/src/utils
-          echo "// SPDX-License-Identifier: MIT
+          cat > packages/contracts/node_modules/@latticexyz/world-modules/src/utils/AccessControlLib.sol << 'SOLEOF'
+          // SPDX-License-Identifier: MIT
           pragma solidity >=0.8.24;
-          library AccessControlLib {}" > packages/contracts/node_modules/@latticexyz/world-modules/src/utils/AccessControlLib.sol
+          import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
+          library AccessControlLib {
+            function requireOwner(ResourceId, address) internal view {}
+            function requireAccess(ResourceId, address) internal view {}
+          }
+          SOLEOF
       - name: Run fork-mode tests against beta world
         working-directory: packages/contracts
         env:
