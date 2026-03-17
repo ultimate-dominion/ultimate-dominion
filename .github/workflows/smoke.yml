@@ -3,6 +3,8 @@ name: Smoke Tests (Fork Mode)
 on:
   push:
     branches: [dev]
+  pull_request:
+    branches: [dev]
 
 concurrency:
   group: smoke-${{ github.ref }}

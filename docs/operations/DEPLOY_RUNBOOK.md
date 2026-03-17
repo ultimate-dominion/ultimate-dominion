@@ -482,30 +482,33 @@ cast send $WORLD_ADDRESS "UD__setPaused(bool)" false \
 
 ### Pipeline Flow
 
+`dev` is the integration branch. All work lands on `dev` first, gets tested on beta, then promoted to `main` (production).
+
 ```
-Feature branch → PR to main → CI (Tier 1) → Merge to main
-                                                  ↓
-                                            Push main → dev
-                                                  ↓
-                                         CI (Tier 1) + Smoke (Tier 2)
-                                                  ↓
-                                     [If contracts changed] Deploy beta
-                                                  ↓
-                                         PostDeploySmoke (Tier 2.5)
-                                                  ↓
-                                      Playtest on beta (Tier 3)
-                                                  ↓
-                                     [Manual] Deploy prod from main
-                                                  ↓
-                                      PostDeploySmoke against prod
+Feature branch → PR to dev → CI + Smoke → Merge to dev
+                                              ↓
+                                    Beta client rebuilds (Vercel)
+                                    [If contracts] Deploy-beta workflow
+                                    Playtest on beta.ultimatedominion.com
+                                              ↓
+                                    PR dev → main → CI → Merge
+                                              ↓
+                                    Prod client rebuilds (Vercel)
+                                    [If contracts] pnpm deploy:mainnet
 ```
+
+**Day-to-day:**
+- Branch off `dev` for all work
+- Push/PR to `dev` — CI + smoke tests run automatically
+- Only merge `dev` → `main` when beta is verified
+- Quick hotfixes can go straight to `main` if prod is broken
 
 ### Testing Tiers
 
 | Tier | What | Trigger | Duration |
 |------|------|---------|----------|
-| **1** | Client vitest, indexer vitest, relayer vitest, pure Solidity unit tests | Push to main/dev, PRs | ~3 min |
-| **2** | PostDeploySmoke + fork-mode integration tests against beta world | Push to dev | ~2 min |
+| **1** | Client vitest, indexer vitest, relayer vitest, pure Solidity unit tests | Push/PR to main or dev | ~3 min |
+| **2** | PostDeploySmoke + fork-mode integration tests against beta world | Push/PR to dev | ~2 min |
 | **2.5** | PostDeploySmoke against beta after contract deploy | After deploy-beta workflow | ~1 min |
 | **3** | Manual playtest on beta.ultimatedominion.com | After beta is live | Variable |
 
@@ -548,17 +551,25 @@ cd packages/contracts && pnpm test:fork:beta
 ### Deploy Playbook (Updated)
 
 ```
-1. git status                          # Clean working tree
-2. Push to main via PR                 # CI runs automatically
-3. Merge PR                            # CI must pass
-4. git checkout dev && git merge main  # Sync dev
-5. git push origin dev                 # Triggers Smoke tests + Vercel beta deploy
-6. [If contracts changed] Run deploy-beta workflow in GitHub Actions
-7. Playtest on beta.ultimatedominion.com
-8. [Production] pnpm deploy:mainnet    # Manual, with confirmation
-9. PostDeploySmoke against prod        # Verify
+# Development (daily)
+1. git checkout -b feat/my-change dev  # Branch off dev
+2. Make changes, commit
+3. Push branch, open PR to dev         # CI + Smoke run on PR
+4. Merge to dev                        # Beta client rebuilds on Vercel
+5. [If contracts changed] Run deploy-beta workflow in GitHub Actions
+6. Playtest on beta.ultimatedominion.com
+
+# Promotion to production
+7. Open PR: dev → main                 # CI runs
+8. Merge to main                       # Prod client rebuilds on Vercel
+9. [If contracts changed] pnpm deploy:mainnet  # Manual, with confirmation
+10. PostDeploySmoke against prod       # Verify
+
+# Hotfix (prod is broken)
+1. Push fix directly to main           # Bypass normal flow
+2. Sync back: git checkout dev && git merge main && git push origin dev
 ```
 
 ---
 
-*Last updated: March 16, 2026*
+*Last updated: March 17, 2026*
