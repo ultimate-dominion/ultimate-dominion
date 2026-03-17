@@ -37,6 +37,11 @@ function makeEntry(
 
 function flush() {
   if (buffer.length === 0) return;
+  // Skip if no telemetry URL configured (default /api/errors returns 404)
+  if (!import.meta.env.VITE_TELEMETRY_URL) {
+    buffer.length = 0;
+    return;
+  }
   const batch = buffer.splice(0, MAX_BATCH);
   const body = JSON.stringify({ errors: batch });
 

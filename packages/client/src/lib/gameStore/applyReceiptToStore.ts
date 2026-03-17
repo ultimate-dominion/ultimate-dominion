@@ -218,7 +218,6 @@ function fetchDeltaBackground(blockNumber: number): void {
       }
       if (updates.length > 0) {
         useGameStore.getState().applyBatch(updates);
-        console.info(`[TX][DELTA] Applied ${updates.length} update(s) from indexer delta at block ${delta.block}`);
       }
     } catch {
       if (n < DELTA_MAX_ATTEMPTS - 1) {

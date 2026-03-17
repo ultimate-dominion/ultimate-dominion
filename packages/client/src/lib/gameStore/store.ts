@@ -134,10 +134,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       if (!anyChanged) {
-        console.log(`[store] applyBatch: NO CHANGES from ${updates.length} updates`);
         return state;
       }
-      console.log(`[store] applyBatch: changed tables: ${[...cloned].join(', ')} (${updates.length} updates)`);
       return { tables: newTables };
     }),
 
