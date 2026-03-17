@@ -24,7 +24,6 @@ import {
   encodeAddressKey,
   encodeCompositeKey,
   encodeUint256Key,
-  getTableEntries,
   toBigInt,
   useGameTable,
   useGameValue,
@@ -51,6 +50,7 @@ import { HOME_PATH } from '../Routes';
 import {
   MAX_EQUIPPED_ARMOR,
   MAX_EQUIPPED_WEAPONS,
+  MAX_LEVEL,
 } from '../utils/constants';
 import {
   decodeCharacterId,
@@ -139,8 +139,14 @@ export const CharacterPage = (): JSX.Element => {
   const nextLevelData = useGameValue('Levels', nextLevelKey);
   const nextLevelXpRequirement = toBigInt(nextLevelData?.experience);
 
+  const maxed = useMemo(() => {
+    if (!character) return false;
+    return Number(character.level) >= MAX_LEVEL;
+  }, [character]);
+
   const levelPercent = useMemo(() => {
     if (!character) return 0;
+    if (maxed) return 100;
 
     const xpEarnedSinceLastLevel =
       BigInt(character.experience) - currentLevelXpRequirement;
@@ -150,23 +156,7 @@ export const CharacterPage = (): JSX.Element => {
     const percent =
       (100 * Number(xpEarnedSinceLastLevel)) / Number(xpNeededSinceLastLevel);
     return percent > 100 ? 100 : percent;
-  }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
-
-  const maxLevelXpRequirement = useMemo(() => {
-    const entries = getTableEntries('Levels');
-    const keys = Object.keys(entries);
-    if (keys.length === 0) return BigInt(0);
-    // Keys are hex-encoded uint256 level values; find the highest
-    return keys.reduce((max, key) => {
-      const level = BigInt(key);
-      return level > max ? level : max;
-    }, BigInt(0));
-  }, []);
-
-  const maxed = useMemo(() => {
-    if (!character) return false;
-    return maxLevelXpRequirement <= BigInt(character.level);
-  }, [character, maxLevelXpRequirement]);
+  }, [character, maxed, currentLevelXpRequirement, nextLevelXpRequirement]);
 
   const canLevel = useMemo(() => {
     if (!character) return false;
@@ -229,22 +219,30 @@ export const CharacterPage = (): JSX.Element => {
                     </Tooltip>
                   </HStack>
                   <Text size={{ base: 'sm', sm: 'md' }}>
-                    <Text
-                      as="span"
-                      color={
-                        BigInt(character.experience) >= nextLevelXpRequirement
-                          ? 'green'
-                          : 'black'
-                      }
-                      fontWeight={
-                        BigInt(character.experience) >= nextLevelXpRequirement
-                          ? 'bold'
-                          : 'normal'
-                      }
-                    >
-                      {character.experience.toString()}
-                    </Text>
-                    /{nextLevelXpRequirement.toString()} XP
+                    {maxed ? (
+                      <Text as="span" color="green" fontWeight="bold">
+                        {character.experience.toString()} XP (MAX)
+                      </Text>
+                    ) : (
+                      <>
+                        <Text
+                          as="span"
+                          color={
+                            BigInt(character.experience) >= nextLevelXpRequirement
+                              ? 'green'
+                              : 'black'
+                          }
+                          fontWeight={
+                            BigInt(character.experience) >= nextLevelXpRequirement
+                              ? 'bold'
+                              : 'normal'
+                          }
+                        >
+                          {character.experience.toString()}
+                        </Text>
+                        /{nextLevelXpRequirement.toString()} XP
+                      </>
+                    )}
                   </Text>
                 </HStack>
                 <HStack>

@@ -11,7 +11,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { DARK_INSET_SHADOW } from '../utils/theme';
-import { useGameValue, useGameTable, encodeUint256Key, toBigInt } from '../lib/gameStore';
+import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useMemo } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import {
@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
 import { useGoldMerchant } from '../contexts/GoldMerchantContext';
+import { MAX_LEVEL } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
 
 import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
@@ -39,16 +40,10 @@ export const StatsPanel = (): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const leaderboardRank = useLeaderboardRank();
 
-  const levelsTable = useGameTable('Levels');
-  const maxLevelXpRequirement = useMemo(() => {
-    const maxLevelKey = Object.keys(levelsTable).sort().slice(-1)[0];
-    return maxLevelKey ? BigInt(maxLevelKey) : BigInt(0);
-  }, [levelsTable]);
-
   const maxed = useMemo(() => {
     if (!character) return false;
-    return maxLevelXpRequirement <= BigInt(character.level);
-  }, [character, maxLevelXpRequirement]);
+    return Number(character.level) >= MAX_LEVEL;
+  }, [character]);
 
   const currentLevelRow = useGameValue(
     'Levels',
@@ -68,6 +63,7 @@ export const StatsPanel = (): JSX.Element => {
 
   const levelPercent = useMemo(() => {
     if (!character) return 0;
+    if (maxed) return 100;
 
     const xpEarnedSinceLastLevel =
       BigInt(character.experience) - currentLevelXpRequirement;
@@ -77,7 +73,7 @@ export const StatsPanel = (): JSX.Element => {
     const percent =
       (100 * Number(xpEarnedSinceLastLevel)) / Number(xpNeededSinceLastLevel);
     return percent > 100 ? 100 : percent;
-  }, [character, currentLevelXpRequirement, nextLevelXpRequirement]);
+  }, [character, maxed, currentLevelXpRequirement, nextLevelXpRequirement]);
 
   const expiredEffectModifications: {
     agiModifier: bigint;
@@ -270,18 +266,26 @@ export const StatsPanel = (): JSX.Element => {
         <HStack justifyContent="space-between" mt={1}>
           <Text color="#8A7E6A" fontWeight={600} size="xs">XP</Text>
           <Text fontFamily="mono" fontWeight={700} size="xs">
-            <Text
-              as="span"
-              color={
-                BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
-              }
-            >
-              {experience.toString()}
-            </Text>
-            <Text as="span" color="grey500">
-              {' / '}
-              {nextLevelXpRequirement.toString()}
-            </Text>
+            {maxed ? (
+              <Text as="span" color="green">
+                {experience.toString()} (MAX)
+              </Text>
+            ) : (
+              <>
+                <Text
+                  as="span"
+                  color={
+                    BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
+                  }
+                >
+                  {experience.toString()}
+                </Text>
+                <Text as="span" color="grey500">
+                  {' / '}
+                  {nextLevelXpRequirement.toString()}
+                </Text>
+              </>
+            )}
           </Text>
         </HStack>
       </Box>

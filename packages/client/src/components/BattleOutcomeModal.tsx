@@ -15,7 +15,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useGameValue, getTableEntries, encodeUint256Key, toBigInt } from '../lib/gameStore';
+import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { zeroAddress, zeroHash } from 'viem';
 
@@ -23,7 +23,7 @@ import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useToast } from '../hooks/useToast';
-import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
+import { BATTLE_OUTCOME_SEEN_KEY, MAX_LEVEL } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
 import {
   type Armor,
@@ -118,27 +118,21 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   );
   const nextLevelXpRequirement = toBigInt(nextLevelRow?.experience);
 
-  const maxLevel = useMemo(() => {
-    const entries = getTableEntries('Levels');
-    const maxKey = Object.keys(entries).sort().slice(-1)[0];
-    return maxKey ? BigInt(maxKey) : BigInt(0);
-  }, []);
-
   const canLevel = useMemo(() => {
     if (!character) return false;
-    if (BigInt(character.level) >= maxLevel) return false;
+    if (Number(character.level) >= MAX_LEVEL) return false;
     if (nextLevelXpRequirement === BigInt(0)) return false;
     return BigInt(character.experience) >= nextLevelXpRequirement;
-  }, [character, maxLevel, nextLevelXpRequirement]);
+  }, [character, nextLevelXpRequirement]);
 
   // Did THIS battle's XP gain push the player over the level-up threshold?
   // False if they were already eligible before this battle started or already at max level.
   const justBecameEligible = useMemo(() => {
     if (!character || initialExperience == null) return false;
-    if (BigInt(character.level) >= maxLevel) return false;
+    if (Number(character.level) >= MAX_LEVEL) return false;
     return initialExperience < nextLevelXpRequirement &&
       BigInt(character.experience) >= nextLevelXpRequirement;
-  }, [character, initialExperience, maxLevel, nextLevelXpRequirement]);
+  }, [character, initialExperience, nextLevelXpRequirement]);
 
   const fetchLootedItems = useCallback(
     (_lootedItemIds: string[]) => {
