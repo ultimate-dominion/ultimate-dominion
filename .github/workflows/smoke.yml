@@ -29,8 +29,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build contracts only (skip client env validation)
         run: pnpm --filter contracts run build
-      - name: Remove ERC1155-puppet submodule (incompatible with MUD v2.2.23 in clean builds)
-        run: rm -rf packages/contracts/lib/ERC1155-puppet
+      - name: Stub missing AccessControlLib.sol (ERC1155-puppet expects newer MUD)
+        run: |
+          mkdir -p packages/contracts/node_modules/@latticexyz/world-modules/src/utils
+          echo "// SPDX-License-Identifier: MIT
+          pragma solidity >=0.8.24;
+          library AccessControlLib {}" > packages/contracts/node_modules/@latticexyz/world-modules/src/utils/AccessControlLib.sol
       - name: Run fork-mode tests against beta world
         working-directory: packages/contracts
         env:
