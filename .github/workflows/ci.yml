@@ -73,8 +73,8 @@ jobs:
         run: pnpm --filter contracts run build
       - name: Run pure Solidity unit tests (no RPC needed)
         working-directory: packages/contracts
-        run: forge test --match-contract "CombatMathTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance" -vvv
+        run: forge test --match-contract "CombatMathTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance" --skip "ERC1155-puppet" -vvv
       - name: Run balance validation tests (non-blocking)
         working-directory: packages/contracts
         continue-on-error: true
-        run: forge test --match-contract "CombatBalanceTest" -vvv
+        run: forge test --match-contract "CombatBalanceTest" --skip "ERC1155-puppet" -vvv

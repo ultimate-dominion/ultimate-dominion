@@ -37,5 +37,5 @@ jobs:
           forge test
           --fork-url ${{ secrets.BASE_RPC_URL }}
           --match-contract "PostDeploySmoke|ForkTest"
-          --skip script
+          --skip "script|ERC1155-puppet"
           -vv
