@@ -88,7 +88,9 @@ const classifyError = (error: unknown): { category: ErrorCategory; message: stri
       // If ABI couldn't decode, try matching the raw selector against known errors
       const selector = extractRevertSelector(error);
       const knownMsg = selector ? KNOWN_ERROR_SIGNATURES[selector] : undefined;
-      const reason = errorName ?? knownMsg ?? (args[0] as string) ?? `Unknown revert (${selector ?? 'no selector'})`;
+      // "Error" is the generic ABI type for require(condition, "message") — prefer args[0] which has the actual message
+      const requireMessage = errorName === 'Error' && args[0] ? (args[0] as string) : undefined;
+      const reason = requireMessage ?? knownMsg ?? (errorName && errorName !== 'Error' ? errorName : undefined) ?? (args[0] as string) ?? `Unknown revert (${selector ?? 'no selector'})`;
       return { category: 'REVERT', message: reason, selector: selector ?? undefined };
     }
 
@@ -393,7 +395,28 @@ export function createSystemCalls(
       );
 
       const receipt = await waitForTransaction(tx);
-      return { success: receipt.status === 'success' };
+      if (receipt.status !== 'success') {
+        // TX reverted on-chain — simulate to extract revert reason
+        console.error(`[TX_ERROR][ON_CHAIN_REVERT] endTurn reverted, tx=${tx}`);
+        try {
+          await publicClient.simulateContract({
+            address: worldContract.address,
+            abi: worldContract.abi,
+            functionName: 'UD__endTurn',
+            args: [
+              encounterId as `0x${string}`,
+              playerId as `0x${string}`,
+              actions,
+            ],
+            account: walletClient?.account,
+          });
+        } catch (simErr) {
+          const revertMsg = getContractError(simErr);
+          return { error: revertMsg, success: false };
+        }
+        return { error: 'Attack reverted on-chain (unknown reason)', success: false };
+      }
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
