@@ -846,7 +846,7 @@ export function createSystemCalls(
   // --- Auto Adventure (move + auto-fight first mob, deprecated) ---
   // Gas limit for autoAdventure — covers move + spawn + full combat loop + rewards.
   // Higher than MOVE_GAS_LIMIT because combat resolution is included in the same tx.
-  const AUTO_ADVENTURE_GAS_LIMIT = BigInt(25_000_000);
+  const AUTO_ADVENTURE_GAS_LIMIT = BigInt(50_000_000);
 
   const autoAdventure = async (
     characterEntity: string,
@@ -923,8 +923,10 @@ export function createSystemCalls(
   };
 
   // --- Auto Fight (single-tx targeted combat for auto adventure mode) ---
-  // Same gas limit as autoAdventure — covers full combat loop + rewards.
-  const AUTO_FIGHT_GAS_LIMIT = BigInt(25_000_000);
+  // Gas limit covers full combat loop + rewards. Weapons with multiple effects
+  // (e.g. Phasefang: PhysDmg + poison_dot + blind) need ~1.6M gas/round × 15
+  // rounds = ~24M. 50M gives comfortable headroom within Base's 60M block limit.
+  const AUTO_FIGHT_GAS_LIMIT = BigInt(50_000_000);
 
   const autoFight = async (
     characterEntity: string,
