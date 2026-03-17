@@ -71,10 +71,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build contracts only
         run: pnpm --filter contracts run build
+      - name: Remove ERC1155-puppet submodule (incompatible with MUD v2.2.23 in clean builds)
+        run: rm -rf packages/contracts/lib/ERC1155-puppet
       - name: Run pure Solidity unit tests (no RPC needed)
         working-directory: packages/contracts
-        run: forge test --match-contract "CombatMathTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance" --skip "ERC1155-puppet" -vvv
+        run: forge test --match-contract "CombatMathTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance" -vvv
       - name: Run balance validation tests (non-blocking)
         working-directory: packages/contracts
         continue-on-error: true
-        run: forge test --match-contract "CombatBalanceTest" --skip "ERC1155-puppet" -vvv
+        run: forge test --match-contract "CombatBalanceTest" -vvv
