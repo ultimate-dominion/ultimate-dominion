@@ -77,8 +77,8 @@ describe('fetchMetadataFromUri', () => {
 
     const promise = fetchMetadataFromUri('ipfs://QmTestHash123');
 
-    // Advance past the timeout for each gateway (6 gateways × 5s each)
-    for (let i = 0; i < 6; i++) {
+    // Advance past the timeout for each gateway (3 max attempts × 5s each)
+    for (let i = 0; i < 3; i++) {
       await vi.advanceTimersByTimeAsync(METADATA_FETCH_TIMEOUT_MS + 100);
     }
 
@@ -86,8 +86,8 @@ describe('fetchMetadataFromUri', () => {
 
     // All gateways failed — should return default empty metadata
     expect(result).toEqual({ name: '', description: '', image: '' });
-    // Should have tried all 6 IPFS gateways
-    expect(fetchSpy).toHaveBeenCalledTimes(6);
+    // Should have tried max 3 IPFS gateways (capped from 6)
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it('falls back to next gateway when first times out, second succeeds', async () => {
@@ -129,7 +129,7 @@ describe('fetchMetadataFromUri', () => {
     const result = await fetchMetadataFromUri('ipfs://QmAllFail');
 
     expect(result).toEqual({ name: '', description: '', image: '' });
-    expect(fetchSpy).toHaveBeenCalledTimes(6);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it('returns default metadata when all gateways return non-ok', async () => {
@@ -138,7 +138,7 @@ describe('fetchMetadataFromUri', () => {
     const result = await fetchMetadataFromUri('ipfs://QmServerError');
 
     expect(result).toEqual({ name: '', description: '', image: '' });
-    expect(fetchSpy).toHaveBeenCalledTimes(6);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it('uses cache for repeated calls', async () => {

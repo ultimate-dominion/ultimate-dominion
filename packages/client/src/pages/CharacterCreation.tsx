@@ -523,9 +523,11 @@ const CharacterCreationInner = (): JSX.Element => {
     selectedStarterArmorId,
   ]);
 
-  const isDisabled = useMemo(() => {
-    return !character || !delegatorAddress || isCreating || enterGameTx.isLoading || rollStatsTx.isLoading || raceTx.isLoading || powerSourceTx.isLoading;
-  }, [character, delegatorAddress, isCreating, enterGameTx.isLoading, rollStatsTx.isLoading, raceTx.isLoading, powerSourceTx.isLoading]);
+  const baseDisabled = !character || !delegatorAddress || isCreating;
+  const isRaceDisabled = baseDisabled || raceTx.isLoading;
+  const isPowerSourceDisabled = baseDisabled || powerSourceTx.isLoading;
+  const isStatsDisabled = baseDisabled || rollStatsTx.isLoading;
+  const isEnterGameDisabled = baseDisabled || enterGameTx.isLoading;
 
   // Check if race and power source have been chosen (armor is chosen via starter item selection)
   const hasCompletedChoices = useMemo(() => {
@@ -923,7 +925,7 @@ const CharacterCreationInner = (): JSX.Element => {
                       leftIcon={<Text fontSize="xl">{RACE_INFO[race].icon}</Text>}
                       bgColor={selectedRace === race ? 'grey500' : undefined}
                       color={selectedRace === race ? 'white' : undefined}
-                      isDisabled={isDisabled}
+                      isDisabled={isRaceDisabled}
                       isLoading={raceTx.isLoading && selectedRace === race}
                       onClick={() => onChooseRace(race)}
                       size="sm"
@@ -965,7 +967,7 @@ const CharacterCreationInner = (): JSX.Element => {
                       leftIcon={<Text fontSize="xl">{POWER_SOURCE_INFO[ps].icon}</Text>}
                       bgColor={selectedPowerSource === ps ? 'grey500' : undefined}
                       color={selectedPowerSource === ps ? 'white' : undefined}
-                      isDisabled={isDisabled}
+                      isDisabled={isPowerSourceDisabled}
                       isLoading={powerSourceTx.isLoading && selectedPowerSource === ps}
                       onClick={() => onChoosePowerSource(ps)}
                       size="sm"
@@ -1007,7 +1009,7 @@ const CharacterCreationInner = (): JSX.Element => {
               )}
               <Box px={{ base: 4, sm: 10 }} w="100%">
                 <Button
-                  isDisabled={isDisabled || !hasCompletedChoices || rollsExhausted}
+                  isDisabled={isStatsDisabled || !hasCompletedChoices || rollsExhausted}
                   isLoading={rollStatsTx.isLoading}
                   loadingText="Rolling..."
                   onClick={onRollStats}
@@ -1210,7 +1212,7 @@ const CharacterCreationInner = (): JSX.Element => {
           <Box mt={4} px={{ base: 4, sm: 10 }}>
             {creationStep === 'stats' && rolledOnce && (
               <Button
-                isDisabled={isDisabled}
+                isDisabled={baseDisabled}
                 onClick={() => setCreationStep('starterItems')}
                 size="sm"
                 type="button"
@@ -1221,7 +1223,7 @@ const CharacterCreationInner = (): JSX.Element => {
             )}
             {creationStep === 'starterItems' && (
               <Button
-                isDisabled={isDisabled || !selectedStarterWeaponId || !selectedStarterArmorId}
+                isDisabled={isEnterGameDisabled || !selectedStarterWeaponId || !selectedStarterArmorId}
                 isLoading={enterGameTx.isLoading}
                 loadingText="Waking..."
                 onClick={onEnterGame}

@@ -419,49 +419,22 @@ export const ItemsProvider = ({
           .filter(({ itemType }) => itemType === ItemType.Spell)
           .map(({ itemId }) => itemId);
 
-        const TEMPLATE_LOAD_TIMEOUT_MS = 10_000;
-        const [armorResult, weaponResult, consumableResult, spellResult] =
-          await Promise.race([
-            Promise.allSettled([
-              fetchAllArmor(armorIds, uriOverrides),
-              fetchAllWeapons(weaponIds, uriOverrides),
-              fetchAllConsumables(consumableIds, uriOverrides),
-              fetchAllSpells(spellIds, uriOverrides),
-            ]),
-            new Promise<[PromiseSettledResult<ArmorTemplate[]>, PromiseSettledResult<WeaponTemplate[]>, PromiseSettledResult<ConsumableTemplate[]>, PromiseSettledResult<SpellTemplate[]>]>((resolve) =>
-              setTimeout(() => {
-                console.warn('[ItemsContext] Template load timed out after', TEMPLATE_LOAD_TIMEOUT_MS, 'ms');
-                const timeout = { status: 'rejected' as const, reason: new Error('timeout') };
-                resolve([timeout, timeout, timeout, timeout]);
-              }, TEMPLATE_LOAD_TIMEOUT_MS)
-            ),
-          ]);
-
-        if (cancelled) return;
-
-        if (armorResult.status === 'fulfilled') {
-          setArmorTemplates(armorResult.value);
-        } else {
-          console.error('[ItemsContext] Error fetching armor:', armorResult.reason);
-        }
-
-        if (weaponResult.status === 'fulfilled') {
-          setWeaponTemplates(weaponResult.value);
-        } else {
-          console.error('[ItemsContext] Error fetching weapons:', weaponResult.reason);
-        }
-
-        if (consumableResult.status === 'fulfilled') {
-          setConsumableTemplates(consumableResult.value);
-        } else {
-          console.error('[ItemsContext] Error fetching consumables:', consumableResult.reason);
-        }
-
-        if (spellResult.status === 'fulfilled') {
-          setSpellTemplates(spellResult.value);
-        } else {
-          console.error('[ItemsContext] Error fetching spells:', spellResult.reason);
-        }
+        // Each category loads independently — fast categories aren't blocked by slow ones.
+        // This prevents one slow IPFS fetch from leaving ALL template arrays empty.
+        await Promise.allSettled([
+          fetchAllArmor(armorIds, uriOverrides)
+            .then(result => { if (!cancelled) setArmorTemplates(result); })
+            .catch(e => console.error('[ItemsContext] Error fetching armor:', e)),
+          fetchAllWeapons(weaponIds, uriOverrides)
+            .then(result => { if (!cancelled) setWeaponTemplates(result); })
+            .catch(e => console.error('[ItemsContext] Error fetching weapons:', e)),
+          fetchAllConsumables(consumableIds, uriOverrides)
+            .then(result => { if (!cancelled) setConsumableTemplates(result); })
+            .catch(e => console.error('[ItemsContext] Error fetching consumables:', e)),
+          fetchAllSpells(spellIds, uriOverrides)
+            .then(result => { if (!cancelled) setSpellTemplates(result); })
+            .catch(e => console.error('[ItemsContext] Error fetching spells:', e)),
+        ]);
       } catch (e) {
         if (!cancelled) {
           renderError(

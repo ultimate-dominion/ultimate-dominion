@@ -307,8 +307,9 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
   }
 
   let lastError: Error | null = null;
+  const MAX_GATEWAY_ATTEMPTS = 3;
 
-  for (const url of urls) {
+  for (const url of urls.slice(0, MAX_GATEWAY_ATTEMPTS)) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), METADATA_FETCH_TIMEOUT_MS);
     try {
