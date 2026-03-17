@@ -935,19 +935,25 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
+      console.info(`[autoFight] Sending TX — char=${characterEntity.slice(0, 10)} monster=${monsterId.slice(0, 10)} weapon=${weaponId} gas=${AUTO_FIGHT_GAS_LIMIT}`);
       const tx = await worldContract.write.UD__autoFight(
         [characterEntity as `0x${string}`, monsterId as `0x${string}`, BigInt(weaponId)],
         { gas: AUTO_FIGHT_GAS_LIMIT },
       );
+      console.info(`[autoFight] TX sent: ${tx}`);
 
       const receipt = await waitForTransaction(tx);
+      console.info(`[autoFight] Receipt: status=${receipt.status} gasUsed=${receipt.gasUsed} block=${receipt.blockNumber}`);
 
       if (receipt.status === 'reverted') {
+        console.error(`[autoFight] ON-CHAIN REVERT — gasUsed=${receipt.gasUsed}/${AUTO_FIGHT_GAS_LIMIT} (${Number(receipt.gasUsed) * 100 / Number(AUTO_FIGHT_GAS_LIMIT)}%)`);
         try {
           await worldContract.simulate.UD__autoFight(
             [characterEntity as `0x${string}`, monsterId as `0x${string}`, BigInt(weaponId)],
           );
+          console.warn('[autoFight] Diagnostic simulation PASSED — was transient');
         } catch (diagError) {
+          console.error('[autoFight] Diagnostic simulation FAILED:', diagError);
           if (isNotSpawnedError(diagError)) {
             useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
             return { success: false, error: 'Session expired — respawn to continue.' };
@@ -959,6 +965,7 @@ export function createSystemCalls(
 
       return { success: true };
     } catch (e) {
+      console.error('[autoFight] WRITE THREW (pre-send or submission error):', e);
       return {
         error: getContractError(e),
         success: false,
