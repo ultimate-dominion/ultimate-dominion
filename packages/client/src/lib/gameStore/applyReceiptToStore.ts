@@ -307,10 +307,19 @@ export async function applyReceiptToStore(
 
   // Step 2: Apply immediate batch (SetRecord, sync SpliceStaticData, DeleteRecord).
   // These are decodable in <1ms — no reason to block on RPC.
+  //
+  // Track which rows the immediate batch updated — deferred splice results for
+  // these rows must be skipped because getRecord reads `latest` from the RPC
+  // which can return stale data (RPC behind chain head) that overwrites the
+  // correct values from the receipt events.
+  const immediateBatchRows = new Set<string>();
   if (batch.length > 0) {
     useGameStore.getState().applyBatch(batch);
     // Protect these rows from stale WS overwrites — WS lags behind receipts
     // and can deliver intermediate Position values that snap the UI back.
+    for (const u of batch) {
+      if (u.type === 'set') immediateBatchRows.add(`${u.table}:${u.keyBytes}`);
+    }
     markReceiptRows(
       batch.filter(u => u.type === 'set').map(u => ({ table: u.table, keyBytes: u.keyBytes })),
       Number(receipt.blockNumber),
@@ -320,17 +329,23 @@ export async function applyReceiptToStore(
   // Step 3: Fire-and-forget splice resolution for deferred events (SpliceDynamicData,
   // SpliceStaticData that couldn't be sync-decoded). Applied when RPC resolves.
   //
-  // IMPORTANT: getRecord reads `latest` on-chain state, which may include data from
-  // transactions mined AFTER this receipt's tx. Guard against this by checking if a
-  // newer receipt has already updated each row (via receipt protection block numbers).
+  // IMPORTANT: getRecord reads `latest` on-chain state — not at the receipt's block.
+  // This can return stale data when the RPC is behind, or data from a NEWER tx.
+  // Two guards:
+  // 1. Skip rows already in the immediate batch (RPC's full-row read would overwrite
+  //    correct receipt-derived static fields with stale values).
+  // 2. Skip rows protected by a newer receipt (cross-receipt race).
+  // Dynamic field data lost here will arrive via WS within seconds.
   if (spliceReads.length > 0 && publicClient && worldAddress) {
     const receiptBlock = Number(receipt.blockNumber);
     resolveSpliceEvents(spliceReads, publicClient, worldAddress)
       .then((spliceUpdates) => {
-        // Filter out rows that have been superseded by a newer receipt
-        const freshUpdates = spliceUpdates.filter(
-          u => !isProtectedByNewerBlock(u.table, u.keyBytes, receiptBlock),
-        );
+        const freshUpdates = spliceUpdates.filter(u => {
+          const key = `${u.table}:${u.keyBytes}`;
+          if (immediateBatchRows.has(key)) return false;
+          if (isProtectedByNewerBlock(u.table, u.keyBytes, receiptBlock)) return false;
+          return true;
+        });
         const skipped = spliceUpdates.length - freshUpdates.length;
 
         if (freshUpdates.length > 0) {
@@ -342,7 +357,7 @@ export async function applyReceiptToStore(
           console.info(`[TX][RECEIPT] Deferred splice batch: ${freshUpdates.length} update(s)`);
         }
         if (skipped > 0) {
-          console.info(`[TX][RECEIPT] Deferred splice: skipped ${skipped} stale update(s) superseded by newer receipt`);
+          console.info(`[TX][RECEIPT] Deferred splice: skipped ${skipped} update(s) (already in immediate batch or superseded)`);
         }
       })
       .catch((err) => {

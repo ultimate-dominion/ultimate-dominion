@@ -655,6 +655,41 @@ describe('applyReceiptToStore — splice integration', () => {
     mockIsProtectedByNewerBlock.mockReturnValue(false);
   });
 
+  it('deferred splice skips rows already in the immediate batch (same receipt)', async () => {
+    // Scenario: SetRecord creates EncounterEntity, SpliceDynamic for same row deferred.
+    // The deferred getRecord reads stale RPC data. Should be skipped.
+    const keyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
+
+    const setLog = encodeSetRecordLog(statsTableId, keyTuple);
+    const spliceLog = encodeSpliceDynamicLog(statsTableId, keyTuple); // SAME table+key
+    const receipt = makeReceipt([setLog, spliceLog], 100n);
+
+    let resolveRpc!: (value: [Hex, Hex, Hex]) => void;
+    const rpcPromise = new Promise<[Hex, Hex, Hex]>((resolve) => { resolveRpc = resolve; });
+
+    const mockPublicClient = {
+      readContract: vi.fn().mockReturnValue(rpcPromise),
+    } as unknown as PublicClient;
+
+    const worldAddress = '0x0000000000000000000000000000000000000001' as Hex;
+
+    await applyReceiptToStore(receipt, mockPublicClient, worldAddress);
+
+    // Immediate batch: SetRecord for Stats
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+
+    // Resolve the RPC (returns stale data — doesn't matter, should be skipped)
+    resolveRpc([
+      '0x00' as Hex,
+      '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
+      '0x00' as Hex,
+    ]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Deferred splice should be SKIPPED — same table:keyBytes was in immediate batch
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1); // still 1, no second call
+  });
+
   it('SpliceStaticData uses pending SetRecord data when row is not in store', async () => {
     const keyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000042'];
     const keyBytes = '0x' + keyTuple[0].slice(2);
