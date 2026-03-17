@@ -16,8 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -27,20 +25,8 @@ jobs:
         with:
           version: v0.3.0
       - run: pnpm install --frozen-lockfile
-      - name: Build contracts only (skip client env validation)
+      - name: Build contracts (mud build handles ERC1155-puppet via codegen)
         run: pnpm --filter contracts run build
-      - name: Stub missing AccessControlLib.sol (ERC1155-puppet expects newer MUD)
-        run: |
-          mkdir -p packages/contracts/node_modules/@latticexyz/world-modules/src/utils
-          cat > packages/contracts/node_modules/@latticexyz/world-modules/src/utils/AccessControlLib.sol << 'SOLEOF'
-          // SPDX-License-Identifier: MIT
-          pragma solidity >=0.8.24;
-          import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
-          library AccessControlLib {
-            function requireOwner(ResourceId, address) internal view {}
-            function requireAccess(ResourceId, address) internal view {}
-          }
-          SOLEOF
       - name: Run fork-mode tests against beta world
         working-directory: packages/contracts
         env:
