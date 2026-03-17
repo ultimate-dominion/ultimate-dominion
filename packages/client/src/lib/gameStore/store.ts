@@ -206,7 +206,9 @@ export function markReceiptRows(
 
 /**
  * Check if a WS/delta update at `sourceBlock` is stale for a given row.
- * Returns true if the row was updated by a receipt at a block >= sourceBlock.
+ * Returns true if the row was updated by a receipt at a block > sourceBlock.
+ * Same-block updates (sourceBlock === protBlock) are allowed through as a
+ * safety net — the WS may carry correct data when a deferred splice couldn't.
  */
 export function isStaleForRow(
   table: string,
@@ -215,8 +217,10 @@ export function isStaleForRow(
 ): boolean {
   const protBlock = _receiptProtection.get(`${table}:${keyBytes}`);
   if (protBlock === undefined) return false;
-  if (sourceBlock > protBlock) {
-    // WS caught up past the receipt block — remove protection
+  if (sourceBlock >= protBlock) {
+    // WS caught up to or past the receipt block — remove protection.
+    // Same-block WS updates are allowed through as a safety net for
+    // deferred splice reads that may have returned stale data.
     _receiptProtection.delete(`${table}:${keyBytes}`);
     return false;
   }

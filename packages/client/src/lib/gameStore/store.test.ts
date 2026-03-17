@@ -217,10 +217,16 @@ describe('receipt protection — markReceiptRows / isStaleForRow', () => {
     expect(isStaleForRow('Position', '0xA', 50)).toBe(false);
   });
 
-  it('WS update at block <= receipt block is stale', () => {
+  it('WS update at block < receipt block is stale', () => {
     markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 100);
     expect(isStaleForRow('Position', '0xA', 99)).toBe(true);
-    expect(isStaleForRow('Position', '0xA', 100)).toBe(true);
+  });
+
+  it('WS update at same block as receipt is NOT stale (safety net) and clears protection', () => {
+    markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 100);
+    expect(isStaleForRow('Position', '0xA', 100)).toBe(false);
+    // Protection removed — subsequent check at old block is also not stale
+    expect(isStaleForRow('Position', '0xA', 99)).toBe(false);
   });
 
   it('WS update at block > receipt block is NOT stale and clears protection', () => {
@@ -241,8 +247,8 @@ describe('receipt protection — markReceiptRows / isStaleForRow', () => {
     markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 100);
     markReceiptRows([{ table: 'Position', keyBytes: '0xA' }], 200);
     expect(isStaleForRow('Position', '0xA', 150)).toBe(true);
-    expect(isStaleForRow('Position', '0xA', 200)).toBe(true);
-    expect(isStaleForRow('Position', '0xA', 201)).toBe(false);
+    // Same block as receipt — allowed through (>= comparison)
+    expect(isStaleForRow('Position', '0xA', 200)).toBe(false);
   });
 
   it('marks multiple rows in a single call', () => {
@@ -251,9 +257,10 @@ describe('receipt protection — markReceiptRows / isStaleForRow', () => {
       { table: 'Stats', keyBytes: '0xA' },
       { table: 'Spawned', keyBytes: '0xA' },
     ], 100);
-    expect(isStaleForRow('Position', '0xA', 100)).toBe(true);
-    expect(isStaleForRow('Stats', '0xA', 100)).toBe(true);
-    expect(isStaleForRow('Spawned', '0xA', 100)).toBe(true);
+    // All protected — blocks below receipt block are stale
+    expect(isStaleForRow('Position', '0xA', 99)).toBe(true);
+    expect(isStaleForRow('Stats', '0xA', 99)).toBe(true);
+    expect(isStaleForRow('Spawned', '0xA', 99)).toBe(true);
   });
 });
 
@@ -286,8 +293,8 @@ describe('isProtectedByNewerBlock — guards deferred splices against newer rece
     // Call multiple times — protection should persist
     expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 100)).toBe(true);
     expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 150)).toBe(true);
-    // isStaleForRow still sees the protection
-    expect(isStaleForRow('EncounterEntity', '0xA', 200)).toBe(true);
+    // isStaleForRow at a block below protection still sees it
+    expect(isStaleForRow('EncounterEntity', '0xA', 199)).toBe(true);
   });
 
   it('works with multiple rows independently', () => {

@@ -532,6 +532,11 @@ describe('applyReceiptToStore — splice integration', () => {
     expect(immediateBatch[0].type).toBe('set');
     expect(immediateBatch[0].table).toBe(testTableLabel);
 
+    // Verify readContract was called with blockNumber (pinned to receipt block)
+    expect(mockPublicClient.readContract).toHaveBeenCalledWith(
+      expect.objectContaining({ blockNumber: 100n }),
+    );
+
     // Now resolve the RPC
     resolveRpc([
       '0x00' as Hex,
@@ -655,9 +660,10 @@ describe('applyReceiptToStore — splice integration', () => {
     mockIsProtectedByNewerBlock.mockReturnValue(false);
   });
 
-  it('deferred splice skips rows already in the immediate batch (same receipt)', async () => {
-    // Scenario: SetRecord creates EncounterEntity, SpliceDynamic for same row deferred.
-    // The deferred getRecord reads stale RPC data. Should be skipped.
+  it('deferred splice applies even when same row is in immediate batch (block-pinned read is correct)', async () => {
+    // Scenario: SetRecord creates row, SpliceDynamic for same row deferred.
+    // With block-pinned getRecord, the deferred read returns full post-tx state
+    // (including dynamic fields). Safe to apply — overwrites partial immediate data.
     const keyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
 
     const setLog = encodeSetRecordLog(statsTableId, keyTuple);
@@ -678,7 +684,7 @@ describe('applyReceiptToStore — splice integration', () => {
     // Immediate batch: SetRecord for Stats
     expect(mockApplyBatch).toHaveBeenCalledTimes(1);
 
-    // Resolve the RPC (returns stale data — doesn't matter, should be skipped)
+    // Resolve the RPC (block-pinned read returns correct post-tx state)
     resolveRpc([
       '0x00' as Hex,
       '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
@@ -686,8 +692,48 @@ describe('applyReceiptToStore — splice integration', () => {
     ]);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // Deferred splice should be SKIPPED — same table:keyBytes was in immediate batch
-    expect(mockApplyBatch).toHaveBeenCalledTimes(1); // still 1, no second call
+    // Deferred splice should be APPLIED — block-pinned read is authoritative
+    expect(mockApplyBatch).toHaveBeenCalledTimes(2);
+    const deferredBatch = mockApplyBatch.mock.calls[1][0];
+    expect(deferredBatch).toHaveLength(1);
+    expect(deferredBatch[0].table).toBe('Stats');
+  });
+
+  it('deferred splice falls back to latest when block-pinned read fails', async () => {
+    const keyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
+    const spliceLog = encodeSpliceDynamicLog(statsTableId, keyTuple);
+    const receipt = makeReceipt([spliceLog], 100n);
+
+    // First call (block-pinned) rejects, second call (latest fallback) resolves
+    const mockPublicClient = {
+      readContract: vi.fn()
+        .mockRejectedValueOnce(new Error('block not found'))
+        .mockResolvedValueOnce([
+          '0x00' as Hex,
+          '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
+          '0x00' as Hex,
+        ]),
+    } as unknown as PublicClient;
+
+    const worldAddress = '0x0000000000000000000000000000000000000001' as Hex;
+
+    await applyReceiptToStore(receipt, mockPublicClient, worldAddress);
+
+    // Flush promise chain
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // readContract called twice: block-pinned (failed) + latest (fallback)
+    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(2);
+    // First call has blockNumber
+    expect(mockPublicClient.readContract).toHaveBeenNthCalledWith(1,
+      expect.objectContaining({ blockNumber: 100n }),
+    );
+    // Second call has no blockNumber (latest)
+    expect(mockPublicClient.readContract).toHaveBeenNthCalledWith(2,
+      expect.not.objectContaining({ blockNumber: expect.anything() }),
+    );
+    // Deferred splice should have been applied via fallback
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
   });
 
   it('SpliceStaticData uses pending SetRecord data when row is not in store', async () => {
