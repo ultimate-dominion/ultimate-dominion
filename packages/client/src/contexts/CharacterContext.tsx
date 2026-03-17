@@ -115,7 +115,6 @@ const CharacterProviderInner = ({
   const {
     armorTemplates,
     consumableTemplates,
-    isLoading: isLoadingItemTemplates,
     spellTemplates,
     weaponTemplates,
   } = useItems();
@@ -405,7 +404,7 @@ const CharacterProviderInner = ({
   );
 
   const inventoryArmor = useMemo(() => {
-    if (!character || !characterOwnerKey || isLoadingItemTemplates) return [];
+    if (!character || !characterOwnerKey) return [];
     return armorTemplates
       .map(armor => {
         const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(armor.tokenId)));
@@ -413,10 +412,10 @@ const CharacterProviderInner = ({
         return { ...armor, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Armor;
       })
       .filter(a => a.balance !== BigInt(0));
-  }, [armorTemplates, itemsOwnersTable, characterOwnerKey, character, isLoadingItemTemplates]);
+  }, [armorTemplates, itemsOwnersTable, characterOwnerKey, character]);
 
   const inventoryConsumables = useMemo(() => {
-    if (!character || !characterOwnerKey || isLoadingItemTemplates) return [];
+    if (!character || !characterOwnerKey) return [];
     return consumableTemplates
       .map(consumable => {
         const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(consumable.tokenId)));
@@ -424,10 +423,10 @@ const CharacterProviderInner = ({
         return { ...consumable, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Consumable;
       })
       .filter(c => c.balance !== BigInt(0));
-  }, [consumableTemplates, itemsOwnersTable, characterOwnerKey, character, isLoadingItemTemplates]);
+  }, [consumableTemplates, itemsOwnersTable, characterOwnerKey, character]);
 
   const inventorySpells = useMemo(() => {
-    if (!character || !characterOwnerKey || isLoadingItemTemplates) return [];
+    if (!character || !characterOwnerKey) return [];
     return spellTemplates
       .map(spell => {
         const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(spell.tokenId)));
@@ -435,10 +434,10 @@ const CharacterProviderInner = ({
         return { ...spell, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Spell;
       })
       .filter(s => s.balance !== BigInt(0));
-  }, [spellTemplates, itemsOwnersTable, characterOwnerKey, character, isLoadingItemTemplates]);
+  }, [spellTemplates, itemsOwnersTable, characterOwnerKey, character]);
 
   const inventoryWeapons = useMemo(() => {
-    if (!character || !characterOwnerKey || isLoadingItemTemplates) return [];
+    if (!character || !characterOwnerKey) return [];
     return weaponTemplates
       .map(weapon => {
         const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(weapon.tokenId)));
@@ -446,7 +445,7 @@ const CharacterProviderInner = ({
         return { ...weapon, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Weapon;
       })
       .filter(w => w.balance !== BigInt(0));
-  }, [weaponTemplates, itemsOwnersTable, characterOwnerKey, character, isLoadingItemTemplates]);
+  }, [weaponTemplates, itemsOwnersTable, characterOwnerKey, character]);
 
   // Equipment IDs from reactive store — synchronous
   const equippedArmorIds = useMemo(() => {
@@ -505,12 +504,10 @@ const CharacterProviderInner = ({
     // Equipment data hasn't loaded from store yet — assume equipped
     // (all characters are minted with starter weapons)
     if (!equipmentData) return true;
-    // Item templates still loading — inventory arrays are empty but that
-    // doesn't mean the player has nothing equipped. Assume equipped until
-    // templates resolve so we don't flash "no equipment" on slow connections.
-    if (isLoadingItemTemplates) return true;
-    return equippedSpells.length + equippedWeapons.length > 0;
-  }, [equipmentData, isLoadingItemTemplates, equippedSpells, equippedWeapons]);
+    // Check on-chain equipment IDs directly — these are available from the store
+    // immediately, independent of template loading.
+    return equippedSpellIds.length + equippedWeaponIds.length > 0;
+  }, [equipmentData, equippedSpellIds, equippedWeaponIds]);
 
   // Suppress unused variable warnings for publicClient and worldContract
   void publicClient;
