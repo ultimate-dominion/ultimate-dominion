@@ -14,6 +14,7 @@ import {
   toBigInt,
   toNumber,
   useGameTable,
+  useGameValue,
 } from '../lib/gameStore';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
@@ -238,20 +239,23 @@ export const BattleProvider = ({
     checkCombatFragmentTriggers,
   ]);
 
-  // Derive opponent entity ID for PvP (characters only — monsters use allMonsters)
-  const opponentEntityId = useMemo(() => {
+  // Derive the opponent entity ID from battle participants.
+  // For PvP this feeds useReactiveEntity; for PvE it feeds the Stats subscription.
+  const battleOpponentId = useMemo(() => {
     if (!character || !currentBattle) return undefined;
     const participants = [
       ...currentBattle.attackers,
       ...currentBattle.defenders,
     ];
-    const isMonsterFight = allMonsters.some(m => participants.includes(m.id));
-    if (isMonsterFight) return undefined;
     return participants.find(id => id.toLowerCase() !== character.id.toLowerCase());
-  }, [character, currentBattle, allMonsters]);
+  }, [character, currentBattle]);
 
-  // Fully reactive PvP opponent data
-  const reactiveOpponent = useReactiveEntity(opponentEntityId);
+  // PvP-only: full reactive Character data (needs Characters table, so monsters return null)
+  const reactiveOpponent = useReactiveEntity(battleOpponentId);
+
+  // Reactive Stats subscription — works for both monsters and characters.
+  // Keeps delivering currentHp updates even after the mob despawns from allMonsters.
+  const reactiveOpponentStats = useGameValue('Stats', battleOpponentId);
 
   const liveOpponent = useMemo(() => {
     if (!character || !currentBattle) return null;
@@ -269,14 +273,27 @@ export const BattleProvider = ({
   if (liveOpponent) {
     cachedOpponentRef.current = liveOpponent;
   }
-  // Clear the cache when the battle is dismissed (acknowledgeVersion bumps)
+  // Clear the cache when the battle is dismissed
   useEffect(() => {
     if (!currentBattle) {
       cachedOpponentRef.current = null;
     }
   }, [currentBattle]);
 
-  const opponent = liveOpponent ?? cachedOpponentRef.current;
+  // Use live opponent when available; fall back to cached opponent with reactive HP
+  const opponent = useMemo(() => {
+    if (liveOpponent) return liveOpponent;
+    const cached = cachedOpponentRef.current;
+    if (!cached) return null;
+    // Overlay reactive HP from the store onto the cached opponent
+    if (reactiveOpponentStats) {
+      const hp = toBigInt(reactiveOpponentStats.currentHp);
+      if (hp !== cached.currentHp) {
+        return { ...cached, currentHp: hp };
+      }
+    }
+    return cached;
+  }, [liveOpponent, reactiveOpponentStats]);
 
   // Fully reactive user character for battle rendering
   const userCharacterForBattleRendering = useReactiveEntity(character?.id);
