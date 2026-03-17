@@ -81,6 +81,16 @@ function serializeRecord(record: Record<string, unknown>): TableRow {
 // ---------------------------------------------------------------------------
 // Async splice resolution: read full records from chain → returns updates
 // ---------------------------------------------------------------------------
+// Module-level flag: block-pinned eth_call fails on Base RPCs (flashblocks
+// aren't available for historical queries). After the first failure, skip
+// the block-pinned attempt to avoid spamming 400 errors across all transports.
+let _blockPinnedReadSupported = true;
+
+/** Exposed for testing. */
+export function __resetBlockPinnedFlag(): void {
+  _blockPinnedReadSupported = true;
+}
+
 async function resolveSpliceEvents(
   spliceReads: { table: TableEntry; keyTuple: readonly Hex[]; keyBytes: string }[],
   publicClient: PublicClient,
@@ -95,26 +105,48 @@ async function resolveSpliceEvents(
 
   const readRecord = async ({ table, keyTuple, keyBytes }: (typeof spliceReads)[0]) => {
     let staticData: Hex, encodedLengths: Hex, dynamicData: Hex;
-    try {
-      // Pin to receipt block to get post-tx state, not stale RPC `latest`
-      [staticData, encodedLengths, dynamicData] =
-        await publicClient.readContract({
-          address: worldAddress,
-          abi: getRecordAbi,
-          functionName: 'getRecord',
-          args: [table.tableId as Hex, [...keyTuple]],
-          blockNumber,
+
+    if (_blockPinnedReadSupported) {
+      try {
+        // Pin to receipt block to get post-tx state, not stale RPC `latest`
+        [staticData, encodedLengths, dynamicData] =
+          await publicClient.readContract({
+            address: worldAddress,
+            abi: getRecordAbi,
+            functionName: 'getRecord',
+            args: [table.tableId as Hex, [...keyTuple]],
+            blockNumber,
+          });
+
+        // Block-pinned read succeeded — use this data
+        const record = logToRecord({
+          table: table as { schema: typeof table.schema; key: typeof table.key },
+          log: {
+            args: {
+              tableId: table.tableId as Hex,
+              keyTuple: [...keyTuple],
+              staticData,
+              encodedLengths,
+              dynamicData,
+            },
+          },
         });
-    } catch {
-      // Fallback to `latest` if RPC doesn't support eth_call at specific block
-      [staticData, encodedLengths, dynamicData] =
-        await publicClient.readContract({
-          address: worldAddress,
-          abi: getRecordAbi,
-          functionName: 'getRecord',
-          args: [table.tableId as Hex, [...keyTuple]],
-        });
+        return { table: table.label, keyBytes, data: serializeRecord(record as Record<string, unknown>) };
+      } catch {
+        // RPC doesn't support eth_call at this block (Base flashblocks).
+        // Disable for all future calls to avoid spamming 400s.
+        _blockPinnedReadSupported = false;
+      }
     }
+
+    // Fallback to `latest` — WS at same block (>= check) corrects any staleness
+    [staticData, encodedLengths, dynamicData] =
+      await publicClient.readContract({
+        address: worldAddress,
+        abi: getRecordAbi,
+        functionName: 'getRecord',
+        args: [table.tableId as Hex, [...keyTuple]],
+      });
 
     const record = logToRecord({
       table: table as { schema: typeof table.schema; key: typeof table.key },

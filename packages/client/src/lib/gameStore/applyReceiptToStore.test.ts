@@ -128,7 +128,7 @@ vi.mock('contracts/mud.config', () => {
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
-import { applyReceiptToStore } from './applyReceiptToStore';
+import { applyReceiptToStore, __resetBlockPinnedFlag } from './applyReceiptToStore';
 
 // Helper: build a mock receipt with specific logs
 function makeReceipt(
@@ -252,6 +252,7 @@ describe('applyReceiptToStore', () => {
       ok: true,
       json: () => Promise.resolve({ block: 100, tables: {} }),
     });
+    __resetBlockPinnedFlag();
   });
 
   it('applies delete events via applyBatch for known tables', async () => {
@@ -405,6 +406,7 @@ describe('applyReceiptToStore — splice integration', () => {
       ok: true,
       json: () => Promise.resolve({ block: 100, tables: {} }),
     });
+    __resetBlockPinnedFlag();
   });
 
   it('decodes SpliceStaticData synchronously when row exists in store (no RPC)', async () => {
@@ -734,6 +736,54 @@ describe('applyReceiptToStore — splice integration', () => {
     );
     // Deferred splice should have been applied via fallback
     expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips block-pinned read after first failure (no repeated 400s)', async () => {
+    // First tx: block-pinned fails → flag set to false
+    const keyTuple1: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
+    const spliceLog1 = encodeSpliceDynamicLog(statsTableId, keyTuple1);
+    const receipt1 = makeReceipt([spliceLog1], 100n);
+
+    const mockPublicClient = {
+      readContract: vi.fn()
+        .mockRejectedValueOnce(new Error('block not found'))
+        .mockResolvedValue([
+          '0x00' as Hex,
+          '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
+          '0x00' as Hex,
+        ]),
+    } as unknown as PublicClient;
+
+    const worldAddress = '0x0000000000000000000000000000000000000001' as Hex;
+
+    await applyReceiptToStore(receipt1, mockPublicClient, worldAddress);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // 2 calls: block-pinned (failed) + latest (fallback)
+    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(2);
+
+    // Second tx: should skip block-pinned entirely, go straight to latest
+    vi.clearAllMocks();
+    mockApplyBatch.mockClear();
+    const keyTuple2: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000002'];
+    const spliceLog2 = encodeSpliceDynamicLog(statsTableId, keyTuple2);
+    const receipt2 = makeReceipt([spliceLog2], 101n);
+
+    // Reset readContract mock — should only be called once (latest only)
+    (mockPublicClient.readContract as ReturnType<typeof vi.fn>).mockResolvedValue([
+      '0x00' as Hex,
+      '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
+      '0x00' as Hex,
+    ]);
+
+    await applyReceiptToStore(receipt2, mockPublicClient, worldAddress);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Only 1 call: straight to latest, no block-pinned attempt
+    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(1);
+    expect(mockPublicClient.readContract).toHaveBeenCalledWith(
+      expect.not.objectContaining({ blockNumber: expect.anything() }),
+    );
   });
 
   it('SpliceStaticData uses pending SetRecord data when row is not in store', async () => {
