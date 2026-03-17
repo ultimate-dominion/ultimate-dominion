@@ -70,7 +70,11 @@ jobs:
       - name: Build contracts (mud build handles ERC1155-puppet via codegen)
         run: pnpm --filter contracts run build
       - name: Remove ERC1155-puppet submodule (incompatible with MUD v2.2.23)
-        run: rm -rf packages/contracts/lib/ERC1155-puppet && rm -f .gitmodules
+        run: |
+          rm -rf packages/contracts/lib/ERC1155-puppet
+          rm -rf .git/modules/packages/contracts/lib/ERC1155-puppet
+          git config --remove-section submodule.packages/contracts/lib/ERC1155-puppet 2>/dev/null || true
+          rm -f .gitmodules
       - name: Run pure Solidity unit tests (no RPC needed)
         working-directory: packages/contracts
         run: forge test --match-contract "CombatMathTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance" --no-auto-detect -vvv
