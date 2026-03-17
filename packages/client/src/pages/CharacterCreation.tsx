@@ -442,39 +442,27 @@ const CharacterCreationInner = (): JSX.Element => {
     if (!delegatorAddress || !character) return;
 
     setSelectedRace(race);
-    setCreationStep('powerSource');
 
-    const result = await raceTx.execute(async () => {
+    await raceTx.execute(async () => {
       const r = await chooseRace(character.id, race);
       if (!r.success) throw new Error(r.error || 'Race selection failed');
       return r;
     });
-
-    if (!result?.success) {
-      setSelectedRace(Race.None);
-      setCreationStep('race');
-      renderError('Race selection failed. Please try again.');
-    }
-  }, [character, chooseRace, delegatorAddress, raceTx, renderError]);
+    // Step advancement handled by sync useEffect when character.race updates via store
+  }, [character, chooseRace, delegatorAddress, raceTx]);
 
   const onChoosePowerSource = useCallback(async (powerSource: PowerSource) => {
     if (!delegatorAddress || !character) return;
 
     setSelectedPowerSource(powerSource);
-    setCreationStep('stats');
 
-    const result = await powerSourceTx.execute(async () => {
+    await powerSourceTx.execute(async () => {
       const r = await choosePowerSource(character.id, powerSource);
       if (!r.success) throw new Error(r.error || 'Power source selection failed');
       return r;
     });
-
-    if (!result?.success) {
-      setSelectedPowerSource(PowerSource.None);
-      setCreationStep('powerSource');
-      renderError('Power source selection failed. Please try again.');
-    }
-  }, [character, choosePowerSource, delegatorAddress, powerSourceTx, renderError]);
+    // Step advancement handled by sync useEffect when character.powerSource updates via store
+  }, [character, choosePowerSource, delegatorAddress, powerSourceTx]);
 
   const onRollStats = useCallback(async () => {
     if (!delegatorAddress || !character) return;
