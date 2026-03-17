@@ -536,8 +536,10 @@ const CharacterCreationInner = (): JSX.Element => {
   const baseDisabled = !character || !delegatorAddress || isCreating;
   const isRaceDisabled = baseDisabled || raceTx.isLoading;
   const isPowerSourceDisabled = baseDisabled || powerSourceTx.isLoading;
-  const isStatsDisabled = baseDisabled || rollStatsTx.isLoading;
-  const isEnterGameDisabled = baseDisabled || enterGameTx.isLoading;
+  // Block stats roll until race + power source txs are confirmed on-chain,
+  // otherwise gas estimation fails against state that doesn't have them yet.
+  const isStatsDisabled = baseDisabled || rollStatsTx.isLoading || raceTx.isLoading || powerSourceTx.isLoading;
+  const isEnterGameDisabled = baseDisabled || enterGameTx.isLoading || rollStatsTx.isLoading;
 
   // Check if race and power source have been chosen (armor is chosen via starter item selection)
   const hasCompletedChoices = useMemo(() => {

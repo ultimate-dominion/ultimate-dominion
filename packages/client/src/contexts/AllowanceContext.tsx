@@ -172,6 +172,9 @@ export const AllowanceProvider = ({
     if (!isSynced) return;
     if (isRefreshing) return;
     if (!character) return;
+    // Defer auto-approvals until the character has entered the game (level >= 1).
+    // Firing during creation causes nonce conflicts with the creation tx queue.
+    if (character.level === BigInt(0)) return;
 
     const init = async () => {
       await fetchAllowances();
