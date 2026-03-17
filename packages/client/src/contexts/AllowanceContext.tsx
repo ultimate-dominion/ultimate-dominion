@@ -185,49 +185,66 @@ export const AllowanceProvider = ({
       setIsAutoApproving(true);
 
       try {
-        const approveGoldIfNeeded = async (spender: string) => {
-          const current = await publicClient.readContract({
-            address: goldTokenAddress as Address,
-            abi: erc20Abi,
-            functionName: 'allowance',
-            args: [character.owner as Address, spender as Address],
-          });
-          if (current > 0n) return;
-          const { request } = await publicClient.simulateContract({
-            address: goldTokenAddress as Address,
-            abi: erc20Abi,
-            functionName: 'approve',
-            args: [spender as Address, maxUint256],
-          });
-          const txHash = await approvalClient.writeContract(request);
-          await publicClient.waitForTransactionReceipt({ hash: txHash });
-        };
-
-        const approveItemsIfNeeded = async (spender: string) => {
-          const current = await publicClient.readContract({
-            address: itemsAddress as Address,
-            abi: ERC_1155_ABI,
-            functionName: 'isApprovedForAll',
-            args: [character.owner as Address, spender as Address],
-          }) as boolean;
-          if (current) return;
-          const { request } = await publicClient.simulateContract({
-            address: itemsAddress as Address,
-            abi: ERC_1155_ABI,
-            functionName: 'setApprovalForAll',
-            args: [spender as Address, true],
-          });
-          const txHash = await approvalClient.writeContract(request);
-          await publicClient.waitForTransactionReceipt({ hash: txHash });
-        };
-
-        // Run approvals sequentially to avoid nonce collisions.
-        // Each writeContract call needs the previous tx confirmed
-        // so the provider picks up the correct next nonce.
+        const owner = character.owner as Address;
         const spenders = [shopAddress, lootManagerAddress, marketplaceAddress].filter(Boolean) as string[];
-        for (const spender of spenders) {
-          try { await approveGoldIfNeeded(spender); } catch {}
-          try { await approveItemsIfNeeded(spender); } catch {}
+
+        // 1. Check all allowances in parallel
+        const checks = await Promise.all(
+          spenders.flatMap(spender => [
+            publicClient.readContract({
+              address: goldTokenAddress as Address,
+              abi: erc20Abi,
+              functionName: 'allowance',
+              args: [owner, spender as Address],
+            }),
+            publicClient.readContract({
+              address: itemsAddress as Address,
+              abi: ERC_1155_ABI,
+              functionName: 'isApprovedForAll',
+              args: [owner, spender as Address],
+            }) as Promise<boolean>,
+          ]),
+        );
+
+        // 2. Build list of needed approval writes
+        type ApprovalCall = { address: Address; abi: readonly any[]; functionName: string; args: readonly any[]; account: Address };
+        const needed: ApprovalCall[] = [];
+        for (let i = 0; i < spenders.length; i++) {
+          const goldAllowance = checks[i * 2] as bigint;
+          const itemsApproved = checks[i * 2 + 1] as boolean;
+          if (goldAllowance === 0n) {
+            needed.push({
+              address: goldTokenAddress as Address,
+              abi: erc20Abi,
+              functionName: 'approve',
+              args: [spenders[i] as Address, maxUint256],
+              account: owner,
+            });
+          }
+          if (!itemsApproved) {
+            needed.push({
+              address: itemsAddress as Address,
+              abi: ERC_1155_ABI,
+              functionName: 'setApprovalForAll',
+              args: [spenders[i] as Address, true],
+              account: owner,
+            });
+          }
+        }
+
+        if (needed.length > 0) {
+          // 3. Get base nonce and fire all writes with explicit nonces
+          const baseNonce = await publicClient.getTransactionCount({ address: owner });
+          const txHashes = await Promise.all(
+            needed.map((call, i) =>
+              approvalClient.writeContract({ ...call, nonce: baseNonce + i } as any),
+            ),
+          );
+
+          // 4. Wait for all receipts in parallel
+          await Promise.all(
+            txHashes.map(hash => publicClient.waitForTransactionReceipt({ hash })),
+          );
         }
 
         await fetchAllowances();
