@@ -5,6 +5,11 @@ import { isStaleForRow } from './store';
 const RECONNECT_BASE_DELAY = 1000;
 const RECONNECT_MAX_DELAY = 30000;
 const HEARTBEAT_INTERVAL = 25000;
+const CONSECUTIVE_FAILURES_THRESHOLD = 3;
+
+export type WSClientOptions = {
+  onRequestSnapshot?: () => void;
+};
 
 export class WSClient {
   private ws: WebSocket | null = null;
@@ -20,11 +25,14 @@ export class WSClient {
   private visibilityHandler: (() => void) | null = null;
   private wsMessageCount = 0;
   private wsUpdateCount = 0;
+  private consecutiveFailures = 0;
+  private onRequestSnapshot?: () => void;
 
-  constructor(url: string, store: GameStore, initialBlock = 0) {
+  constructor(url: string, store: GameStore, initialBlock = 0, options?: WSClientOptions) {
     this.url = url;
     this.store = store;
     this.lastBlock = initialBlock;
+    this.onRequestSnapshot = options?.onRequestSnapshot;
   }
 
   connect() {
@@ -42,6 +50,7 @@ export class WSClient {
     this.ws.onopen = () => {
       console.log('[ws] Connected to indexer');
       this.reconnectAttempts = 0;
+      this.consecutiveFailures = 0;
       this.store.setConnected(true);
       this.startHeartbeat();
 
@@ -64,6 +73,12 @@ export class WSClient {
       this.store.setConnected(false);
       this.stopHeartbeat();
       if (!this.disposed) {
+        this.consecutiveFailures++;
+        if (this.consecutiveFailures >= CONSECUTIVE_FAILURES_THRESHOLD && this.onRequestSnapshot) {
+          console.warn(`[ws] ${this.consecutiveFailures} consecutive failures — requesting snapshot re-fetch`);
+          this.onRequestSnapshot();
+          this.consecutiveFailures = 0;
+        }
         this.scheduleReconnect();
       }
     };

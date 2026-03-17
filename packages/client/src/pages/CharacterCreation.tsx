@@ -181,7 +181,7 @@ const CharacterCreationInner = (): JSX.Element => {
     isLoading: isLoadingItemTemplates,
     weaponTemplates,
   } = useItems();
-  const { character, isRefreshing, refreshCharacter } = useCharacter();
+  const { character, isRefreshing } = useCharacter();
   const {
     file: avatar,
     isUploading,
@@ -412,7 +412,6 @@ const CharacterCreationInner = (): JSX.Element => {
             throw new Error(error);
           }
 
-          await refreshCharacter();
           renderSuccess('Character created!');
         } catch (error) {
           debug.error('Error creating character', error);
@@ -431,7 +430,6 @@ const CharacterCreationInner = (): JSX.Element => {
       mintCharacter,
       name,
       onUpload,
-      refreshCharacter,
       renderError,
       renderSuccess,
       renderWarning,
@@ -444,6 +442,7 @@ const CharacterCreationInner = (): JSX.Element => {
     if (!delegatorAddress || !character) return;
 
     setSelectedRace(race);
+    setCreationStep('powerSource');
 
     const result = await raceTx.execute(async () => {
       const r = await chooseRace(character.id, race);
@@ -451,18 +450,18 @@ const CharacterCreationInner = (): JSX.Element => {
       return r;
     });
 
-    if (result?.success) {
-      await refreshCharacter();
-      setCreationStep('powerSource');
-    } else {
+    if (!result?.success) {
       setSelectedRace(Race.None);
+      setCreationStep('race');
+      renderError('Race selection failed. Please try again.');
     }
-  }, [character, chooseRace, delegatorAddress, raceTx, refreshCharacter]);
+  }, [character, chooseRace, delegatorAddress, raceTx, renderError]);
 
   const onChoosePowerSource = useCallback(async (powerSource: PowerSource) => {
     if (!delegatorAddress || !character) return;
 
     setSelectedPowerSource(powerSource);
+    setCreationStep('stats');
 
     const result = await powerSourceTx.execute(async () => {
       const r = await choosePowerSource(character.id, powerSource);
@@ -470,27 +469,22 @@ const CharacterCreationInner = (): JSX.Element => {
       return r;
     });
 
-    if (result?.success) {
-      await refreshCharacter();
-      setCreationStep('stats');
-    } else {
+    if (!result?.success) {
       setSelectedPowerSource(PowerSource.None);
+      setCreationStep('powerSource');
+      renderError('Power source selection failed. Please try again.');
     }
-  }, [character, choosePowerSource, delegatorAddress, powerSourceTx, refreshCharacter]);
+  }, [character, choosePowerSource, delegatorAddress, powerSourceTx, renderError]);
 
   const onRollStats = useCallback(async () => {
     if (!delegatorAddress || !character) return;
 
-    const result = await rollStatsTx.execute(async () => {
+    await rollStatsTx.execute(async () => {
       const r = await rollBaseStats(character.id);
       if (!r.success) throw new Error(r.error || 'Stat roll failed');
       return r;
     });
-
-    if (result?.success) {
-      await refreshCharacter();
-    }
-  }, [character, delegatorAddress, refreshCharacter, rollBaseStats, rollStatsTx]);
+  }, [character, delegatorAddress, rollBaseStats, rollStatsTx]);
 
   const rolledOnce = useMemo(() => {
     if (!character) return false;
@@ -516,7 +510,6 @@ const CharacterCreationInner = (): JSX.Element => {
     });
 
     if (result?.success) {
-      await refreshCharacter();
       navigate(GAME_BOARD_PATH);
     }
   }, [
@@ -524,7 +517,6 @@ const CharacterCreationInner = (): JSX.Element => {
     enterGame,
     enterGameTx,
     navigate,
-    refreshCharacter,
     renderWarning,
     rolledOnce,
     selectedStarterWeaponId,
@@ -1044,9 +1036,16 @@ const CharacterCreationInner = (): JSX.Element => {
               <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
                 Step 4: Choose Your Starter Equipment
               </Heading>
-              <Text px={{ base: 4, sm: 10 }} fontSize="md" color="#C4B89E">
-                Select one weapon and one armor to begin your adventure.
-              </Text>
+              {isLoadingItemTemplates ? (
+                <VStack py={8} spacing={3}>
+                  <Spinner color="#C4B89E" size="lg" />
+                  <Text fontSize="md" color="#9A9080">Loading available equipment...</Text>
+                </VStack>
+              ) : (
+                <Text px={{ base: 4, sm: 10 }} fontSize="md" color="#C4B89E">
+                  Select one weapon and one armor to begin your adventure.
+                </Text>
+              )}
             </VStack>
           )}
           <VStack mt={{ base: 8, sm: 12 }} spacing={4}>

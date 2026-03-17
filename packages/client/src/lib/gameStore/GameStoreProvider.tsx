@@ -11,7 +11,7 @@ const INDEXER_WS_URL = import.meta.env.VITE_INDEXER_WS_URL || 'ws://localhost:30
 const WORLD_ADDRESS = import.meta.env.VITE_WORLD_ADDRESS || '';
 
 /** Re-hydrate if tab was hidden longer than this (ms) */
-const STALE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+const STALE_THRESHOLD = 2 * 60 * 1000; // 2 minutes
 
 type Props = {
   children: ReactNode;
@@ -78,7 +78,21 @@ export function GameStoreProvider({ children }: Props) {
 
         // 4. Connect WebSocket from fresh block
         const store = useGameStore.getState();
-        const ws = new WSClient(INDEXER_WS_URL, store, snapshot.block);
+        const ws = new WSClient(INDEXER_WS_URL, store, snapshot.block, {
+          onRequestSnapshot: () => {
+            console.log('[gameStore] WS requested snapshot re-fetch after repeated failures');
+            fetchSnapshot()
+              .then((snap) => {
+                if (cancelled) return;
+                useGameStore.getState().hydrate(snap);
+                if (WORLD_ADDRESS) {
+                  writeSnapshotToIDB(WORLD_ADDRESS, snap);
+                  writeCachedSnapshot(WORLD_ADDRESS, snap);
+                }
+              })
+              .catch((err) => console.error('[gameStore] Snapshot re-fetch failed:', err));
+          },
+        });
         wsRef.current = ws;
         ws.connect();
       } catch (err) {
@@ -113,7 +127,21 @@ export function GameStoreProvider({ children }: Props) {
                 wsRef.current.dispose();
               }
               const store = useGameStore.getState();
-              const ws = new WSClient(INDEXER_WS_URL, store, snapshot.block);
+              const ws = new WSClient(INDEXER_WS_URL, store, snapshot.block, {
+                onRequestSnapshot: () => {
+                  console.log('[gameStore] WS requested snapshot re-fetch after repeated failures');
+                  fetchSnapshot()
+                    .then((snap) => {
+                      if (cancelled) return;
+                      useGameStore.getState().hydrate(snap);
+                      if (WORLD_ADDRESS) {
+                        writeSnapshotToIDB(WORLD_ADDRESS, snap);
+                        writeCachedSnapshot(WORLD_ADDRESS, snap);
+                      }
+                    })
+                    .catch((err) => console.error('[gameStore] Snapshot re-fetch failed:', err));
+                },
+              });
               wsRef.current = ws;
               ws.connect();
             })

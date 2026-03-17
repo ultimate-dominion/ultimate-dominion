@@ -203,6 +203,7 @@ export const isTextOnlyUri = (uri: string): boolean => {
 };
 
 const METADATA_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+export const METADATA_FETCH_TIMEOUT_MS = 5000;
 
 const getCachedMetadata = (uri: string): Metadata | null => {
   try {
@@ -262,7 +263,14 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
       const localUrl = `${apiUrl}/files/${filename}`;
       console.log(`Development mode: Fetching from local API at ${localUrl}`);
 
-      const res = await fetch(localUrl);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), METADATA_FETCH_TIMEOUT_MS);
+      let res: Response;
+      try {
+        res = await fetch(localUrl, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       if (!res.ok) {
         throw new Error(`Failed to fetch from local API: ${localUrl}`);
       }
@@ -301,8 +309,11 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
   let lastError: Error | null = null;
 
   for (const url of urls) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), METADATA_FETCH_TIMEOUT_MS);
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (!res.ok) {
         lastError = new Error(`Failed to fetch from ${url}`);
         console.error(`Failed to fetch from ${url}`);
@@ -317,13 +328,15 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
       setCachedMetadata(uri, metadata);
       return metadata;
     } catch (error) {
+      clearTimeout(timeoutId);
       lastError = error as Error;
       console.error(`Failed to fetch from ${url}:`, error);
       continue;
     }
   }
 
-  throw lastError || new Error('Failed to fetch from all URLs');
+  console.warn('[fetchMetadataFromUri] All gateways failed for', uri, lastError);
+  return { name: '', description: '', image: '' };
 };
 
 const IPFS_GATEWAYS = [

@@ -81,7 +81,7 @@ export const ItemsProvider = ({
       const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
-      return Promise.all(
+      const results = await Promise.allSettled(
         armorIds.map(async (armorId) => {
           const keyBytes = encodeUint256Key(armorId);
 
@@ -123,6 +123,9 @@ export const ItemsProvider = ({
           } as ArmorTemplate;
         }),
       );
+      return results
+        .filter((r): r is PromiseFulfilledResult<ArmorTemplate> => r.status === 'fulfilled')
+        .map(r => r.value);
     },
     [baseURIRow, itemsTable],
   );
@@ -136,7 +139,7 @@ export const ItemsProvider = ({
       const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
-      return Promise.all(
+      const results = await Promise.allSettled(
         consumableIds.map(async (consumableId) => {
           const keyBytes = encodeUint256Key(consumableId);
 
@@ -216,6 +219,9 @@ export const ItemsProvider = ({
           } as ConsumableTemplate;
         }),
       );
+      return results
+        .filter((r): r is PromiseFulfilledResult<ConsumableTemplate> => r.status === 'fulfilled')
+        .map(r => r.value);
     },
     [baseURIRow, itemsTable],
   );
@@ -227,7 +233,7 @@ export const ItemsProvider = ({
       const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
-      return Promise.all(
+      const results = await Promise.allSettled(
         spellIds.map(async (spellId) => {
           const keyBytes = encodeUint256Key(spellId);
 
@@ -272,6 +278,9 @@ export const ItemsProvider = ({
           } as SpellTemplate;
         }),
       );
+      return results
+        .filter((r): r is PromiseFulfilledResult<SpellTemplate> => r.status === 'fulfilled')
+        .map(r => r.value);
     },
     [baseURIRow, itemsTable],
   );
@@ -283,7 +292,7 @@ export const ItemsProvider = ({
       const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
-      return Promise.all(
+      const results = await Promise.allSettled(
         weaponIds.map(async (weaponId) => {
           const keyBytes = encodeUint256Key(weaponId);
 
@@ -331,6 +340,9 @@ export const ItemsProvider = ({
           } as WeaponTemplate;
         }),
       );
+      return results
+        .filter((r): r is PromiseFulfilledResult<WeaponTemplate> => r.status === 'fulfilled')
+        .map(r => r.value);
     },
     [baseURIRow, itemsTable],
   );
@@ -407,12 +419,22 @@ export const ItemsProvider = ({
           .filter(({ itemType }) => itemType === ItemType.Spell)
           .map(({ itemId }) => itemId);
 
+        const TEMPLATE_LOAD_TIMEOUT_MS = 10_000;
         const [armorResult, weaponResult, consumableResult, spellResult] =
-          await Promise.allSettled([
-            fetchAllArmor(armorIds, uriOverrides),
-            fetchAllWeapons(weaponIds, uriOverrides),
-            fetchAllConsumables(consumableIds, uriOverrides),
-            fetchAllSpells(spellIds, uriOverrides),
+          await Promise.race([
+            Promise.allSettled([
+              fetchAllArmor(armorIds, uriOverrides),
+              fetchAllWeapons(weaponIds, uriOverrides),
+              fetchAllConsumables(consumableIds, uriOverrides),
+              fetchAllSpells(spellIds, uriOverrides),
+            ]),
+            new Promise<[PromiseSettledResult<ArmorTemplate[]>, PromiseSettledResult<WeaponTemplate[]>, PromiseSettledResult<ConsumableTemplate[]>, PromiseSettledResult<SpellTemplate[]>]>((resolve) =>
+              setTimeout(() => {
+                console.warn('[ItemsContext] Template load timed out after', TEMPLATE_LOAD_TIMEOUT_MS, 'ms');
+                const timeout = { status: 'rejected' as const, reason: new Error('timeout') };
+                resolve([timeout, timeout, timeout, timeout]);
+              }, TEMPLATE_LOAD_TIMEOUT_MS)
+            ),
           ]);
 
         if (cancelled) return;
