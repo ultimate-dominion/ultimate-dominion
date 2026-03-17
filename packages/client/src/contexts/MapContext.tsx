@@ -93,7 +93,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const {
     delegatorAddress,
     isSynced,
-    systemCalls: { spawn },
+    systemCalls: { spawn, removeEntityFromBoard },
   } = useMUD();
   const { monsterTemplates } = useMonsters();
   const { character, refreshCharacter } = useCharacter();
@@ -154,7 +154,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const allMonsterEntities = useMemo(() => {
     console.log('[MapCtx] recomputing allMonsterEntities');
     return Object.keys(spawnedTable).filter(key =>
-      statsTable[key] && !charactersTable[key] && positionTable[key]
+      spawnedTable[key]?.spawned && statsTable[key] && !charactersTable[key] && positionTable[key]
     );
   }, [spawnedTable, statsTable, charactersTable, positionTable]);
 
@@ -402,15 +402,15 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   }, [isWaitingForSpawn]);
 
   // ============================================================
-  // Idle timeout — reload page after 5 min of no user interaction
-  // Matches on-chain SessionConfig (300s). Reloading re-syncs all
-  // state from the indexer, handles stale WS, and shows the spawn
-  // button if the character was despawned while idle.
+  // Idle timeout — despawn character after 5 min of no user interaction
+  // Matches on-chain SessionConfig (300s). Calls removeEntityFromBoard
+  // to actually despawn on-chain, then reloads to re-sync state.
   // ============================================================
   useEffect(() => {
-    if (!isSpawned) return;
+    if (!isSpawned || !character) return;
 
     let lastActivity = Date.now();
+    let despawning = false;
 
     const resetActivity = () => {
       lastActivity = Date.now();
@@ -419,9 +419,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     const events = ['mousedown', 'keydown', 'touchstart', 'wheel'] as const;
     events.forEach((e) => window.addEventListener(e, resetActivity, { passive: true }));
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
+      if (despawning) return;
       if (Date.now() - lastActivity >= SESSION_IDLE_MS) {
-        console.log('[MapContext] Session idle timeout — reloading');
+        despawning = true;
+        console.log('[MapContext] Session idle timeout — despawning character');
+        clearInterval(interval);
+        events.forEach((e) => window.removeEventListener(e, resetActivity));
+        try {
+          await removeEntityFromBoard(character.id);
+        } catch (e) {
+          console.warn('[MapContext] Idle despawn failed:', e);
+        }
         window.location.reload();
       }
     }, IDLE_CHECK_INTERVAL_MS);
@@ -430,7 +439,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       events.forEach((e) => window.removeEventListener(e, resetActivity));
       clearInterval(interval);
     };
-  }, [isSpawned]);
+  }, [isSpawned, character, removeEntityFromBoard]);
 
   const onSpawn = useCallback(async () => {
     if (!delegatorAddress || !character) return;
