@@ -10,6 +10,7 @@ const mockApplyBatch = vi.fn();
 let mockTables: Record<string, Record<string, Record<string, unknown>>> = {};
 
 const mockMarkReceiptRows = vi.fn();
+const mockIsProtectedByNewerBlock = vi.fn().mockReturnValue(false);
 vi.mock('./store', () => ({
   useGameStore: {
     getState: () => ({
@@ -20,6 +21,7 @@ vi.mock('./store', () => ({
     }),
   },
   markReceiptRows: (...args: unknown[]) => mockMarkReceiptRows(...args),
+  isProtectedByNewerBlock: (...args: unknown[]) => mockIsProtectedByNewerBlock(...args),
 }));
 
 // Mock logToRecord — returns a simple decoded record
@@ -612,5 +614,75 @@ describe('applyReceiptToStore — splice integration', () => {
 
     // No batch applied (dynamic splice with no RPC client)
     expect(mockApplyBatch).not.toHaveBeenCalled();
+  });
+
+  it('deferred splice skips rows protected by a newer receipt block', async () => {
+    const keyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
+    const spliceLog = encodeSpliceDynamicLog(statsTableId, keyTuple);
+    const receipt = makeReceipt([spliceLog], 100n);
+
+    // Simulate: a newer receipt (block 200) already protected this row
+    mockIsProtectedByNewerBlock.mockImplementation(
+      (_table: string, _keyBytes: string, block: number) => block < 200,
+    );
+
+    let resolveRpc!: (value: [Hex, Hex, Hex]) => void;
+    const rpcPromise = new Promise<[Hex, Hex, Hex]>((resolve) => { resolveRpc = resolve; });
+
+    const mockPublicClient = {
+      readContract: vi.fn().mockReturnValue(rpcPromise),
+    } as unknown as PublicClient;
+
+    const worldAddress = '0x0000000000000000000000000000000000000001' as Hex;
+
+    await applyReceiptToStore(receipt, mockPublicClient, worldAddress);
+
+    // No immediate batch (only dynamic splice, no SetRecord)
+    expect(mockApplyBatch).not.toHaveBeenCalled();
+
+    // Resolve RPC
+    resolveRpc([
+      '0x00' as Hex,
+      '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
+      '0x00' as Hex,
+    ]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Deferred splice should be SKIPPED because row is protected by newer block
+    expect(mockApplyBatch).not.toHaveBeenCalled();
+
+    // Reset mock
+    mockIsProtectedByNewerBlock.mockReturnValue(false);
+  });
+
+  it('SpliceStaticData uses pending SetRecord data when row is not in store', async () => {
+    const keyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000042'];
+    const keyBytes = '0x' + keyTuple[0].slice(2);
+
+    // Row NOT in store — but SetRecord comes first in the same receipt
+    mockTables = {};
+
+    // SetRecord creates the row, then SpliceStaticData modifies a field
+    const setLog = encodeSetRecordLog(statsTableId, keyTuple);
+    // Splice at offset 0 (first static field: strength, uint256 = 32 bytes)
+    const spliceLog = encodeSpliceStaticLog(statsTableId, keyTuple, 0, '0x' + '00'.repeat(31) + '63' as Hex); // strength = 99
+
+    const receipt = makeReceipt([setLog, spliceLog]);
+
+    // logToRecord returns initial row data for SetRecord
+    mockLogToRecord.mockReturnValue({ strength: '10', currentHp: '100' });
+
+    await applyReceiptToStore(receipt);
+
+    // Both should be in the same batch (SetRecord + sync SpliceStatic from pending)
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    const batch = mockApplyBatch.mock.calls[0][0];
+    // Batch has 2 entries: SetRecord data + spliced data
+    expect(batch.length).toBeGreaterThanOrEqual(2);
+    // The last entry for this key should have the spliced value
+    const lastEntryForKey = [...batch].reverse().find(
+      (u: { table: string; keyBytes: string }) => u.table === 'Stats' && u.keyBytes === keyBytes,
+    );
+    expect(lastEntryForKey).toBeDefined();
   });
 });

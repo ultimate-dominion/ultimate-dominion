@@ -113,7 +113,7 @@ export class WSClient {
           this.wsUpdateCount++;
           this.queueUpdate({ type: 'set', table: msg.table, keyBytes: msg.keyBytes, data: msg.value });
         } else {
-          console.debug(`[ws] STALE skip: ${msg.table} block=${msg.block}`);
+          console.log(`[ws] STALE skip: ${msg.table} block=${msg.block}`);
         }
         if (msg.block > this.lastBlock) {
           this.lastBlock = msg.block;

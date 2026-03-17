@@ -107,10 +107,10 @@ export const MovementProvider = ({
 
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
-      if (isMovementDisabled) return;
-      if (isMoving) return;
-      if (!isSpawned) return;
-      if (currentBattle) return;
+      if (isMovementDisabled) { console.log('[move] blocked: isMovementDisabled'); return; }
+      if (isMoving) { console.log('[move] blocked: isMoving'); return; }
+      if (!isSpawned) { console.log('[move] blocked: not spawned'); return; }
+      if (currentBattle) { console.log(`[move] blocked: currentBattle ${currentBattle.encounterId.slice(0, 10)}... end=${currentBattle.end}`); return; }
       if (isMessageInputFocused) return;
 
       if (!delegatorAddress) return;

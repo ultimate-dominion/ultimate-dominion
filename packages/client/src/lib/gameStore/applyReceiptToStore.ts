@@ -23,7 +23,7 @@ import {
   decodeEventLog,
 } from 'viem';
 
-import { useGameStore, markReceiptRows, type BatchUpdate } from './store';
+import { useGameStore, markReceiptRows, isProtectedByNewerBlock, type BatchUpdate } from './store';
 import type { TableRow } from './types';
 import { buildStaticFieldLayout, applySplice } from './decodeSplice';
 
@@ -203,7 +203,11 @@ export async function applyReceiptToStore(
   }[] = [];
 
   // Step 1: Decode SetRecord + DeleteRecord + collect splice reads from receipt logs.
+  // pendingRecords tracks SetRecord data from this receipt so that SpliceStaticData
+  // events for newly-created rows can be decoded synchronously instead of falling
+  // back to an async RPC read (which races with subsequent transactions).
   const batch: BatchUpdate[] = [];
+  const pendingRecords = new Map<string, TableRow>(); // `table:keyBytes` → row data
 
   for (const log of receipt.logs) {
     let decoded;
@@ -231,6 +235,7 @@ export async function applyReceiptToStore(
         const keyBytes = '0x' + keyTuple.map((k: Hex) => k.slice(2)).join('');
         const serialized = serializeRecord(record as Record<string, unknown>);
         batch.push({ type: 'set', table: table.label, keyBytes, data: serialized });
+        pendingRecords.set(`${table.label}:${keyBytes}`, serialized);
         applied++;
       } catch (err) {
         console.warn(`[TX][RECEIPT] Failed to decode ${table.label}:`, err);
@@ -247,7 +252,9 @@ export async function applyReceiptToStore(
       const table = tableRegistry.get(tableId);
       if (table) {
         const keyBytes = '0x' + keyTuple.map((k: Hex) => k.slice(2)).join('');
-        const existingRow = useGameStore.getState().tables[table.label]?.[keyBytes];
+        // Check store first, then pending SetRecord data from this receipt
+        const existingRow = useGameStore.getState().tables[table.label]?.[keyBytes]
+          ?? pendingRecords.get(`${table.label}:${keyBytes}`);
 
         if (existingRow) {
           const layout = buildStaticFieldLayout(
@@ -257,6 +264,8 @@ export async function applyReceiptToStore(
 
           if (merged) {
             batch.push({ type: 'set', table: table.label, keyBytes, data: merged });
+            // Update pending so subsequent splices on the same row build on this result
+            pendingRecords.set(`${table.label}:${keyBytes}`, merged);
             spliceSyncCount++;
           } else {
             // Partial field coverage — fall back to RPC
@@ -264,7 +273,7 @@ export async function applyReceiptToStore(
             skippedSplice++;
           }
         } else {
-          // Row not in store yet — fall back to RPC
+          // Row not in store yet and no pending SetRecord — fall back to RPC
           spliceReads.push({ table, keyTuple, keyBytes });
           skippedSplice++;
         }
@@ -310,16 +319,30 @@ export async function applyReceiptToStore(
 
   // Step 3: Fire-and-forget splice resolution for deferred events (SpliceDynamicData,
   // SpliceStaticData that couldn't be sync-decoded). Applied when RPC resolves.
+  //
+  // IMPORTANT: getRecord reads `latest` on-chain state, which may include data from
+  // transactions mined AFTER this receipt's tx. Guard against this by checking if a
+  // newer receipt has already updated each row (via receipt protection block numbers).
   if (spliceReads.length > 0 && publicClient && worldAddress) {
+    const receiptBlock = Number(receipt.blockNumber);
     resolveSpliceEvents(spliceReads, publicClient, worldAddress)
       .then((spliceUpdates) => {
-        if (spliceUpdates.length > 0) {
-          useGameStore.getState().applyBatch(spliceUpdates);
+        // Filter out rows that have been superseded by a newer receipt
+        const freshUpdates = spliceUpdates.filter(
+          u => !isProtectedByNewerBlock(u.table, u.keyBytes, receiptBlock),
+        );
+        const skipped = spliceUpdates.length - freshUpdates.length;
+
+        if (freshUpdates.length > 0) {
+          useGameStore.getState().applyBatch(freshUpdates);
           markReceiptRows(
-            spliceUpdates.map(u => ({ table: u.table, keyBytes: u.keyBytes })),
-            Number(receipt.blockNumber),
+            freshUpdates.map(u => ({ table: u.table, keyBytes: u.keyBytes })),
+            receiptBlock,
           );
-          console.info(`[TX][RECEIPT] Deferred splice batch: ${spliceUpdates.length} update(s)`);
+          console.info(`[TX][RECEIPT] Deferred splice batch: ${freshUpdates.length} update(s)`);
+        }
+        if (skipped > 0) {
+          console.info(`[TX][RECEIPT] Deferred splice: skipped ${skipped} stale update(s) superseded by newer receipt`);
         }
       })
       .catch((err) => {

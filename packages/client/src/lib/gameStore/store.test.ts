@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useGameStore, markReceiptRows, isStaleForRow } from './store';
+import { useGameStore, markReceiptRows, isStaleForRow, isProtectedByNewerBlock } from './store';
 import type { FullSnapshot } from './types';
 
 function makeSnapshot(block: number, overrides?: Record<string, Record<string, Record<string, unknown>>>): FullSnapshot {
@@ -254,5 +254,48 @@ describe('receipt protection — markReceiptRows / isStaleForRow', () => {
     expect(isStaleForRow('Position', '0xA', 100)).toBe(true);
     expect(isStaleForRow('Stats', '0xA', 100)).toBe(true);
     expect(isStaleForRow('Spawned', '0xA', 100)).toBe(true);
+  });
+});
+
+// ─── isProtectedByNewerBlock (deferred splice guard) ──────────
+
+describe('isProtectedByNewerBlock — guards deferred splices against newer receipts', () => {
+  it('returns false when no protection exists', () => {
+    expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 100)).toBe(false);
+  });
+
+  it('returns false when protection is at the same block', () => {
+    markReceiptRows([{ table: 'EncounterEntity', keyBytes: '0xA' }], 100);
+    expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 100)).toBe(false);
+  });
+
+  it('returns false when protection is at an earlier block', () => {
+    markReceiptRows([{ table: 'EncounterEntity', keyBytes: '0xA' }], 50);
+    expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 100)).toBe(false);
+  });
+
+  it('returns true when protection is at a newer block (deferred splice is stale)', () => {
+    // Tx at block 200 already processed and protected this row.
+    // Deferred splice from block 100 should be skipped.
+    markReceiptRows([{ table: 'EncounterEntity', keyBytes: '0xA' }], 200);
+    expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 100)).toBe(true);
+  });
+
+  it('does not clear protection (unlike isStaleForRow)', () => {
+    markReceiptRows([{ table: 'EncounterEntity', keyBytes: '0xA' }], 200);
+    // Call multiple times — protection should persist
+    expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 100)).toBe(true);
+    expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 150)).toBe(true);
+    // isStaleForRow still sees the protection
+    expect(isStaleForRow('EncounterEntity', '0xA', 200)).toBe(true);
+  });
+
+  it('works with multiple rows independently', () => {
+    markReceiptRows([{ table: 'EncounterEntity', keyBytes: '0xA' }], 200);
+    markReceiptRows([{ table: 'CombatEncounter', keyBytes: '0xB' }], 100);
+    // EncounterEntity protected at 200, deferred splice from 100 is stale
+    expect(isProtectedByNewerBlock('EncounterEntity', '0xA', 100)).toBe(true);
+    // CombatEncounter protected at 100, deferred splice from 100 is NOT stale (same block)
+    expect(isProtectedByNewerBlock('CombatEncounter', '0xB', 100)).toBe(false);
   });
 });

@@ -134,10 +134,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       if (!anyChanged) {
-        console.debug(`[store] applyBatch: NO CHANGES from ${updates.length} updates`);
+        console.log(`[store] applyBatch: NO CHANGES from ${updates.length} updates`);
         return state;
       }
-      console.debug(`[store] applyBatch: changed tables: ${[...cloned].join(', ')} (${updates.length} updates)`);
+      console.log(`[store] applyBatch: changed tables: ${[...cloned].join(', ')} (${updates.length} updates)`);
       return { tables: newTables };
     }),
 
@@ -221,4 +221,18 @@ export function isStaleForRow(
     return false;
   }
   return true;
+}
+
+/**
+ * Check if a row is protected by a receipt at a block NEWER than `block`.
+ * Used by deferred splice resolution to skip results that have been
+ * superseded by a more recent receipt's immediate batch.
+ */
+export function isProtectedByNewerBlock(
+  table: string,
+  keyBytes: string,
+  block: number,
+): boolean {
+  const protBlock = _receiptProtection.get(`${table}:${keyBytes}`);
+  return protBlock !== undefined && protBlock > block;
 }
