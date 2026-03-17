@@ -32,7 +32,9 @@
     "solhint": "solhint --config ./.solhint.json 'src/**/*.sol' --fix",
     "test": "mud build && forge t -vvv --rpc-url http://127.0.0.1:8545",
     "match-test": "forge t -vvv --rpc-url http://127.0.0.1:8545 --match-test",
-    "test:balance": "vitest run scripts/balance/"
+    "test:balance": "vitest run scripts/balance/",
+    "test:unit": "forge test --match-contract 'CombatMathTest|CombatBalanceTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance' --skip 'RevokeBadge|MapSpawnBoss|MobInventoryTrim|PveRewardBonus|PveRewardLevelCap|PvpRewardLevelCap' -vvv",
+    "test:fork:beta": "bash -c 'source .env.testnet && WORLD_ADDRESS=$WORLD_ADDRESS forge test --fork-url $RPC_URL --match-contract \"PostDeploySmoke|ForkTest\" --skip script -vv'"
   },
   "dependencies": {
     "@latticexyz/cli": "^2.2.23",

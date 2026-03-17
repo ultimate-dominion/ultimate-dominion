@@ -68,9 +68,14 @@ function createMockNetwork(overrides: {
     get: () => vi.fn().mockResolvedValue(BigInt(0)),
   };
 
+  const simulateHandler: ProxyHandler<Record<string, unknown>> = {
+    get: () => vi.fn().mockResolvedValue({ result: undefined }),
+  };
+
   const worldContract = {
     write: new Proxy({} as Record<string, unknown>, writeHandler),
     read: new Proxy({} as Record<string, unknown>, readHandler),
+    simulate: new Proxy({} as Record<string, unknown>, simulateHandler),
   };
 
   const publicClient = {
@@ -721,6 +726,11 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
       },
     });
 
+    // Simulate rejects with NotSpawned so diagnosis detects despawn
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(new Error('0xbd45e4f6')),
+    });
+
     const calls = createSystemCalls(network);
 
     const result = await calls.move(TEST_ENTITY, 'up');
@@ -728,11 +738,9 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
     expect(result.error).toContain('respawn');
     // Store should be updated with spawned=false
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_ENTITY, { spawned: false });
-    // Should NOT send more than 1 TX (the first reverted one)
-    expect(waitFn).toHaveBeenCalledTimes(1);
   });
 
-  it('does not retry after on-chain revert (MAX_ON_CHAIN_RETRIES=0)', async () => {
+  it('retries once then fails after persistent on-chain revert (MAX_ON_CHAIN_RETRIES=1)', async () => {
     const mockReceipt = { status: 'reverted', blockNumber: BigInt(100), gasUsed: BigInt(100000) };
     const { network } = createMockNetwork();
     mockOwnership();
@@ -748,8 +756,8 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
     const calls = createSystemCalls(network);
 
     const result = await calls.move(TEST_ENTITY, 'right');
-    // Should fail without retrying — one TX only
     expect(result.success).toBe(false);
-    expect(waitFn).toHaveBeenCalledTimes(1);
+    // With MAX_ON_CHAIN_RETRIES=1: first attempt reverts, sim passes, retries once, second attempt also reverts
+    expect(waitFn).toHaveBeenCalledTimes(2);
   });
 });

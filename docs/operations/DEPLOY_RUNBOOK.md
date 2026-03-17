@@ -478,8 +478,87 @@ cast send $WORLD_ADDRESS "UD__setPaused(bool)" false \
 9. git add & commit deploy artifacts   # worlds.json, broadcast/
 ```
 
-Currently deploying directly to production (no players yet). When beta pipeline resumes, use `pnpm deploy:testnet` and `item:sync:testnet` on the `dev` branch first.
+## CI/CD Pipeline
+
+### Pipeline Flow
+
+```
+Feature branch → PR to main → CI (Tier 1) → Merge to main
+                                                  ↓
+                                            Push main → dev
+                                                  ↓
+                                         CI (Tier 1) + Smoke (Tier 2)
+                                                  ↓
+                                     [If contracts changed] Deploy beta
+                                                  ↓
+                                         PostDeploySmoke (Tier 2.5)
+                                                  ↓
+                                      Playtest on beta (Tier 3)
+                                                  ↓
+                                     [Manual] Deploy prod from main
+                                                  ↓
+                                      PostDeploySmoke against prod
+```
+
+### Testing Tiers
+
+| Tier | What | Trigger | Duration |
+|------|------|---------|----------|
+| **1** | Client vitest, indexer vitest, relayer vitest, pure Solidity unit tests | Push to main/dev, PRs | ~3 min |
+| **2** | PostDeploySmoke + fork-mode integration tests against beta world | Push to dev | ~2 min |
+| **2.5** | PostDeploySmoke against beta after contract deploy | After deploy-beta workflow | ~1 min |
+| **3** | Manual playtest on beta.ultimatedominion.com | After beta is live | Variable |
+
+### GitHub Actions Workflows
+
+| Workflow | File | Trigger |
+|----------|------|---------|
+| CI | `.github/workflows/ci.yml` | Push to main/dev, PRs |
+| Smoke Tests | `.github/workflows/smoke.yml` | Push to dev |
+| Deploy Beta | `.github/workflows/deploy-beta.yml` | Manual (workflow_dispatch) |
+| Sync main→dev | `.github/workflows/sync-dev.yml` | Weekly Monday 06:00 UTC, manual |
+
+### Required GitHub Secrets
+
+| Secret | Used by |
+|--------|---------|
+| `BETA_WORLD_ADDRESS` | smoke.yml, deploy-beta.yml |
+| `BASE_RPC_URL` | smoke.yml, deploy-beta.yml |
+| `DEPLOYER_PRIVATE_KEY` | deploy-beta.yml |
+
+### Local Test Commands
+
+```bash
+# Client tests
+pnpm --filter client run test
+
+# Indexer tests
+pnpm --filter @ud/indexer run test
+
+# Relayer tests
+pnpm --filter @ud/relayer run test
+
+# Pure Solidity unit tests (no RPC needed)
+cd packages/contracts && pnpm test:unit
+
+# Fork-mode tests against beta
+cd packages/contracts && pnpm test:fork:beta
+```
+
+### Deploy Playbook (Updated)
+
+```
+1. git status                          # Clean working tree
+2. Push to main via PR                 # CI runs automatically
+3. Merge PR                            # CI must pass
+4. git checkout dev && git merge main  # Sync dev
+5. git push origin dev                 # Triggers Smoke tests + Vercel beta deploy
+6. [If contracts changed] Run deploy-beta workflow in GitHub Actions
+7. Playtest on beta.ultimatedominion.com
+8. [Production] pnpm deploy:mainnet    # Manual, with confirmation
+9. PostDeploySmoke against prod        # Verify
+```
 
 ---
 
-*Last updated: March 11, 2026*
+*Last updated: March 16, 2026*

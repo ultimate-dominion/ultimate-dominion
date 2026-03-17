@@ -1,0 +1,50 @@
+name: Sync main → dev
+
+on:
+  schedule:
+    # Weekly on Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Merge main into dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Attempt merge
+        id: merge
+        run: |
+          git fetch origin main
+          if git merge origin/main --no-edit; then
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+            git push origin dev
+          else
+            git merge --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open PR on conflict
+        if: steps.merge.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if a sync PR already exists
+          existing=$(gh pr list --head main --base dev --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -z "$existing" ]; then
+            gh pr create \
+              --title "chore: sync main → dev (conflicts)" \
+              --body "Automated sync failed due to merge conflicts. Please resolve manually." \
+              --head main \
+              --base dev
+          fi
