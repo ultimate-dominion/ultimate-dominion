@@ -326,6 +326,13 @@ export const ActionsPanel = (): JSX.Element => {
     return currentBattle.maxTurns === currentBattle.currentTurn;
   }, [currentBattle]);
 
+  // Track the last known opponent name so auto-adventure results can capture it
+  // even after the dead monster is pruned from allMonsters (opponent goes null).
+  const lastOpponentNameRef = useRef(opponentDisplayName);
+  useEffect(() => {
+    if (opponent) lastOpponentNameRef.current = opponentDisplayName;
+  }, [opponent, opponentDisplayName]);
+
   // --- Auto adventure inline results ---
   // Rolling history of last 5 battle results. Captured in local state so they
   // survive BattleContext fluctuations. BattleContext is dismissed immediately
@@ -370,7 +377,7 @@ export const ActionsPanel = (): JSX.Element => {
       goldDropped: lastestBattleOutcome.goldDropped,
       isDraw: currentBattle.maxTurns === currentBattle.currentTurn,
       encounterId: lastestBattleOutcome.encounterId,
-      monsterName: opponentDisplayName,
+      monsterName: lastOpponentNameRef.current,
       items,
     }, ...prev].slice(0, 5));
 

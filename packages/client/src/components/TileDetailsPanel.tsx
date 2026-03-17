@@ -973,7 +973,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (isWaitingForBattle || encounterTx.isLoading || pendingOpponent || (!autoAdventureMode && currentBattle && (!opponent || !userCharacterForBattleRendering))) {
+  if (isWaitingForBattle || encounterTx.isLoading || pendingOpponent || (!autoAdventureMode && currentBattle && (!opponent || !userCharacterForBattleRendering) && currentBattle.encounterId !== lastestBattleOutcome?.encounterId)) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
         <style>

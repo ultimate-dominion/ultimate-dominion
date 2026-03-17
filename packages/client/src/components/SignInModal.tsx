@@ -13,11 +13,19 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { IoClose } from 'react-icons/io5';
+import { IoCopyOutline } from 'react-icons/io5';
 
 import { useAuth } from '../contexts/AuthContext';
+
+/** Detect in-app browsers (Telegram, Instagram, Facebook, etc.) that block Google OAuth. */
+function isEmbeddedWebView(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|Instagram|Twitter|Telegram|TelegramBot|Line\/|KAKAOTALK|MicroMessenger|wv\b/i.test(ua);
+}
 
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { PolygonalCard } from './PolygonalCard';
@@ -38,6 +46,26 @@ export const SignInModal = ({
   } = useAuth();
 
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const inAppBrowser = useMemo(() => isEmbeddedWebView(), []);
+
+  const handleCopyUrl = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback — select text for manual copy
+      const el = document.createElement('textarea');
+      el.value = window.location.href;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, []);
 
   const handleGoogle = useCallback(async () => {
     setError(null);
@@ -68,6 +96,36 @@ export const SignInModal = ({
         </ModalCloseButton>
         <ModalBody pb={8}>
           <VStack spacing={6}>
+            {inAppBrowser && (
+              <Box
+                bg="rgba(200, 122, 42, 0.12)"
+                border="1px solid rgba(200, 122, 42, 0.3)"
+                borderRadius="md"
+                px={4}
+                py={3}
+                w="100%"
+              >
+                <Text color="#C87A2A" fontWeight={600} fontSize="sm" mb={1}>
+                  Open in your browser
+                </Text>
+                <Text color="rgba(196, 184, 158, 0.7)" fontSize="xs" mb={3}>
+                  Google sign-in doesn&apos;t work in app browsers.
+                  Copy the link below and open it in Chrome or Safari.
+                </Text>
+                <Button
+                  leftIcon={<IoCopyOutline />}
+                  onClick={handleCopyUrl}
+                  size="sm"
+                  variant="outline"
+                  color="#C87A2A"
+                  borderColor="rgba(200, 122, 42, 0.4)"
+                  w="100%"
+                  _hover={{ bg: 'rgba(200, 122, 42, 0.15)' }}
+                >
+                  {copied ? 'Copied!' : 'Copy link'}
+                </Button>
+              </Box>
+            )}
             <Button
               bg="white"
               border="1px solid rgba(0, 0, 0, 0.15)"
