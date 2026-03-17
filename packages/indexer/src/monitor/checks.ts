@@ -133,18 +133,22 @@ export async function checkRelayer(url: string): Promise<ServiceCheckResult> {
       totalInflight: data.totalInflight,
     };
 
-    // Check for low balances (< 0.005 ETH)
-    const lowBalanceCount = (data.wallets || []).filter(w => {
-      const ethStr = w.balance?.replace(' ETH', '') || '0';
-      return parseFloat(ethStr) < 0.005;
-    }).length;
+    // Balance checks require authenticated response (wallets array present).
+    // Without auth, we can only confirm the service is reachable.
+    if (data.wallets && data.poolSize && data.poolSize > 0) {
+      const lowBalanceCount = data.wallets.filter(w => {
+        const ethStr = w.balance?.replace(' ETH', '') || '0';
+        return parseFloat(ethStr) < 0.005;
+      }).length;
 
-    if (lowBalanceCount > 0) details.lowBalanceWallets = lowBalanceCount;
+      if (lowBalanceCount > 0) details.lowBalanceWallets = lowBalanceCount;
+
+      if (lowBalanceCount === data.poolSize) {
+        return { status: 'degraded', latencyMs: ms, details, error: 'All wallets low balance' };
+      }
+    }
 
     const highInflight = (data.totalInflight ?? 0) > 10;
-    if (lowBalanceCount === (data.poolSize ?? 0)) {
-      return { status: 'degraded', latencyMs: ms, details, error: 'All wallets low balance' };
-    }
     if (highInflight) {
       return { status: 'degraded', latencyMs: ms, details, error: 'High inflight tx count' };
     }

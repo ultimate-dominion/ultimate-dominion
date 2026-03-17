@@ -14,6 +14,7 @@ import { sendSlotOpenEmail } from './lib/slotEmail.js';
 import { startMilestoneWatcher } from './queue/milestoneWatcher.js';
 import { startEventFeed } from './queue/eventFeed.js';
 import { startMonitor } from './monitor/monitor.js';
+import { startPruner } from './db/pruner.js';
 
 async function main() {
   console.log('=== Ultimate Dominion Indexer ===');
@@ -45,6 +46,9 @@ async function main() {
 
   // Start infrastructure monitor
   startMonitor(syncHandle, broadcaster);
+
+  // Start periodic pruner — cleans stale combat logs and dead entities from Postgres
+  startPruner(() => syncHandle.latestStoredBlockNumber);
 
   // WebSocket server
   createWSServer(httpServer, broadcaster, () => syncHandle.latestBlockNumber);

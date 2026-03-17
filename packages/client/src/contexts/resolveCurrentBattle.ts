@@ -33,11 +33,14 @@ export function resolveCurrentBattle(
   // Already dismissed this battle
   if (lastSeenEncounterId === latestBattle.encounterId) return null;
 
-  // If the player has dismissed a battle that isn't in the store yet, the
-  // store data is stale (indexer behind chain head). Suppress completed
-  // battles to prevent cycling through old encounters as the store catches up.
-  // Only genuinely active battles (end===0, no outcome) should show.
+  // If the dismissed encounter isn't in allBattles, the indexer either hasn't
+  // synced it yet (stale store) or it was pruned from the snapshot. In either
+  // case, suppress old completed encounters to avoid cycling — but allow NEW
+  // completed battles with outcomes through (delivered via receipt/WS, not stale).
   if (lastSeenEncounterId && !allBattles.some(b => b.encounterId === lastSeenEncounterId)) {
+    if (hasOutcome && latestBattle.encounterId !== lastSeenEncounterId) {
+      return latestBattle;
+    }
     return activeBattle;
   }
 

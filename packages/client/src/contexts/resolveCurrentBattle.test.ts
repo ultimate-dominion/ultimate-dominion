@@ -72,16 +72,6 @@ describe('resolveCurrentBattle — completed battles', () => {
 // ─── Stale store — the key fix ───────────────────────────────
 
 describe('resolveCurrentBattle — stale store (indexer behind)', () => {
-  it('suppresses completed battles when lastSeen encounter is missing from store', () => {
-    // Player dismissed battle C, but store only has A and B
-    const battleA = makeBattle('0xa', 100, 150);
-    const battleB = makeBattle('0xb', 200, 250);
-    const outcomes = { ...makeOutcome('0xa'), ...makeOutcome('0xb') };
-
-    const result = resolveCurrentBattle([battleA, battleB], outcomes, '0xc');
-    expect(result).toBeNull(); // no active battle, so null
-  });
-
   it('still shows genuinely active battle when store is stale', () => {
     // Store has old completed A and new active D, but lastSeen is C (not in store)
     const battleA = makeBattle('0xa', 100, 150);
@@ -107,6 +97,24 @@ describe('resolveCurrentBattle — stale store (indexer behind)', () => {
 
     const result = resolveCurrentBattle(battles, outcomes, '0xb');
     expect(result).toEqual(battles[2]); // show battle C
+  });
+
+  it('shows new completed battle with outcome when lastSeen was pruned', () => {
+    // LastSeen points to a battle pruned from snapshot. New battle B completed
+    // with outcome should show — not be suppressed by the stale guard.
+    const battleB = makeBattle('0xb', 200, 250);
+    const outcomes = makeOutcome('0xb');
+
+    const result = resolveCurrentBattle([battleB], outcomes, '0xold_pruned');
+    expect(result).toEqual(battleB);
+  });
+
+  it('suppresses completed battles without outcome when lastSeen is missing', () => {
+    // Stale store: old battles appearing without outcomes. No active battle.
+    const battleA = makeBattle('0xa', 100, 150);
+
+    const result = resolveCurrentBattle([battleA], {}, '0xc');
+    expect(result).toBeNull();
   });
 });
 
