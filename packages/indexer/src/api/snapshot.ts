@@ -33,10 +33,13 @@ function shouldExcludeRow(
   logicalName: string,
   serialized: Record<string, unknown>,
   deadEntityKeys: Set<string>,
+  characterEntityKeys: Set<string>,
   keyBytes: string,
 ): boolean {
-  // Dead entity — only filter mob-specific tables, not player-persistent ones
-  if (DEAD_ENTITY_FILTERED_TABLES.has(logicalName) && deadEntityKeys.has(keyBytes)) return true;
+  // Dead entity — only filter mob-specific tables, not player-persistent ones.
+  // Character entities are never considered "dead" — offline players share
+  // position (0,0) and spawned=false with dead mobs but must keep their Stats.
+  if (DEAD_ENTITY_FILTERED_TABLES.has(logicalName) && deadEntityKeys.has(keyBytes) && !characterEntityKeys.has(keyBytes)) return true;
 
   // Zeroed EncounterEntity — encounter ended, record never deleted
   if (logicalName === 'EncounterEntity') {
@@ -113,6 +116,25 @@ export function createSnapshotRouter(syncHandle: SyncHandle): Router {
         }
       }
 
+      // Step 1c: Build character entity key set so dead-entity filtering
+      // never strips Stats/WorldStatusEffects for offline players.
+      // Offline characters share position (0,0) + spawned=false with dead mobs,
+      // but their Stats must remain in the snapshot for the leaderboard.
+      const characterEntityKeys = new Set<string>();
+      const charactersTable = syncHandle.tableNameMap.get('Characters');
+      if (charactersTable) {
+        try {
+          const charRows = await sql.unsafe(
+            `SELECT * FROM "${mudSchema}"."${charactersTable}"`
+          );
+          for (const row of charRows) {
+            characterEntityKeys.add(extractKeyBytes(row as Record<string, unknown>));
+          }
+        } catch (err) {
+          console.error('[snapshot] Error querying Characters for key set:', (err as Error).message);
+        }
+      }
+
       // Step 2: Iterate remaining tables with filtering
       for (const [logicalName, pgTableName] of syncHandle.tableNameMap) {
         if (logicalName === pgTableName && logicalName.includes('__')) continue;
@@ -129,7 +151,7 @@ export function createSnapshotRouter(syncHandle: SyncHandle): Router {
             const keyBytes = extractKeyBytes(row as Record<string, unknown>);
             const serialized = serializeRow(row as Record<string, unknown>);
 
-            if (shouldExcludeRow(logicalName, serialized, deadEntityKeys, keyBytes)) continue;
+            if (shouldExcludeRow(logicalName, serialized, deadEntityKeys, characterEntityKeys, keyBytes)) continue;
 
             tableData[keyBytes] = serialized;
           }
