@@ -63,6 +63,15 @@ const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0x63754e43': 'In encounter — finish the battle first.',
   '0x72af8dba': 'Stats cannot be negative.',
   '0x03dee4c5': 'You don\'t have enough of this item to sell.',
+  '0xadee4371': 'Invalid combat — monster may have moved or died. Try again.',
+  '0xbd45e4f6': 'Character is not spawned.',
+  '0xbd0f4934': 'Entity not at this position.',
+  '0x1af235ec': 'This monster cannot be fought.',
+  '0xa17bea2c': 'Auto adventure on cooldown — wait a moment.',
+  '0x0769bef0': 'Already in an encounter.',
+  '0xb4120f14': 'Out of bounds.',
+  '0x87822d34': 'Invalid move.',
+  '0xb8a03426': 'Only characters can do this.',
 };
 
 // Extract the raw 4-byte error selector from a viem error chain.

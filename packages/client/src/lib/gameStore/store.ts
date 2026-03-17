@@ -38,6 +38,8 @@ export type GameStore = {
   currentBlock: number;
   /** Whether the store has been hydrated with fresh data from the network */
   hydrated: boolean;
+  /** True while re-fetching snapshot after tab return — gates game actions */
+  isReconnecting: boolean;
 
   // Actions
   setRow: (table: string, keyBytes: string, data: TableRow) => void;
@@ -49,6 +51,7 @@ export type GameStore = {
   hydrate: (snapshot: FullSnapshot) => void;
   setConnected: (connected: boolean) => void;
   setCurrentBlock: (block: number) => void;
+  setReconnecting: (reconnecting: boolean) => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -74,6 +77,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   connected: false,
   currentBlock: cachedSnapshot?.block ?? 0,
   hydrated: false, // only network fetch sets this — cache data is for rendering, not redirect decisions
+  isReconnecting: false,
 
   setRow: (table, keyBytes, data) => {
     const state = get();
@@ -155,6 +159,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setConnected: (connected) => set({ connected }),
   setCurrentBlock: (block) => set({ currentBlock: block }),
+  setReconnecting: (reconnecting) => set({ isReconnecting: reconnecting }),
 }));
 
 /**

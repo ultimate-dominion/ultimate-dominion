@@ -80,6 +80,7 @@ export const GameBoard = (): JSX.Element => {
   const { autoAdventureMode, moveProgress } = useMovement();
   const { isMapFull, queueStatus } = useQueue();
   const hydrated = useGameStore((s) => s.hydrated);
+  const isReconnecting = useGameStore((s) => s.isReconnecting);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   // Grace period: cached session lets player land here before auth resolves.
@@ -243,6 +244,25 @@ export const GameBoard = (): JSX.Element => {
     <Helmet>
       <title>Play | Ultimate Dominion</title>
     </Helmet>
+    {isReconnecting && (
+      <Box
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bg="blackAlpha.700"
+        zIndex={9999}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        pointerEvents="all"
+      >
+        <Text color="rgba(196, 184, 158, 0.8)" fontSize="md" fontWeight="medium">
+          Reconnecting...
+        </Text>
+      </Box>
+    )}
     <Grid
       gap={2}
       h={{ base: 'auto', md: 'calc(100vh - 125px)' }}

@@ -114,10 +114,12 @@ export function GameStoreProvider({ children }: Props) {
         hiddenAtRef.current = null;
         if (hiddenAt && Date.now() - hiddenAt > STALE_THRESHOLD) {
           console.log('[gameStore] Tab was idle, re-hydrating...');
+          useGameStore.getState().setReconnecting(true);
           fetchSnapshot()
             .then((snapshot) => {
               if (cancelled) return;
               useGameStore.getState().hydrate(snapshot);
+              useGameStore.getState().setReconnecting(false);
               if (WORLD_ADDRESS) {
                 writeSnapshotToIDB(WORLD_ADDRESS, snapshot);
                 writeCachedSnapshot(WORLD_ADDRESS, snapshot);
@@ -147,6 +149,7 @@ export function GameStoreProvider({ children }: Props) {
             })
             .catch((err) => {
               console.error('[gameStore] Re-hydration failed:', err);
+              useGameStore.getState().setReconnecting(false);
             });
         }
       }
