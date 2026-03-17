@@ -84,8 +84,8 @@ contract PveRewardSystem is System {
                     uint256 _calculatedExp =
                         ((_baseExp / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)) / WAD;
                     if (
-                        currentExp >= maxLevelExp || _baseExp == uint256(0)
-                            || distTemps.livingPlayers == uint256(0)
+                        statsTemp.level >= MAX_LEVEL || currentExp >= maxLevelExp
+                            || _baseExp == uint256(0) || distTemps.livingPlayers == uint256(0)
                     ) {
                         //do nothing
                     } else if (_calculatedExp + currentExp <= maxLevelExp) {

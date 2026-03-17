@@ -75,7 +75,7 @@ contract PvpRewardSystem is System {
             uint256 currentExp = winnerStats.experience;
             uint256 xpToGrant = baseExp / livingWinners;
 
-            if (currentExp >= maxLevelExp) continue;
+            if (winnerStats.level >= MAX_LEVEL || currentExp >= maxLevelExp) continue;
 
             if (currentExp + xpToGrant > maxLevelExp) {
                 xpToGrant = maxLevelExp - currentExp;
