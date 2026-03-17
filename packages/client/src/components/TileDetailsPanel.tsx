@@ -315,8 +315,22 @@ export const TileDetailsPanel = (): JSX.Element => {
         // Auto-select weapon based on combat triangle (STR > AGI > INT > STR)
         const monster = opponent as Monster;
         const allWeapons = [...equippedWeapons, ...equippedSpells] as WeaponTemplate[];
-        const bestWeapon = pickWeaponForMonster(monster.entityClass, allWeapons)
-          ?? allWeapons[0];
+        const counterResult = pickWeaponForMonster(monster.entityClass, allWeapons);
+        const bestWeapon = counterResult ?? allWeapons[0];
+
+        console.info('[autoFight] DEBUG', {
+          monsterClass: monster.entityClass,
+          monsterName: monster.name,
+          monsterId: monster.id,
+          characterId: character.id,
+          counterWeapon: counterResult ? { tokenId: counterResult.tokenId, name: counterResult.name } : 'NONE (using fallback)',
+          selectedWeapon: bestWeapon ? { tokenId: bestWeapon.tokenId, name: bestWeapon.name } : 'NONE',
+          allWeaponsCount: allWeapons.length,
+          equippedWeaponsCount: equippedWeapons.length,
+          equippedSpellsCount: equippedSpells.length,
+          autoAdventureMode,
+          path: 'autoFight',
+        });
 
         if (!bestWeapon) return; // no weapons equipped
 
@@ -343,6 +357,14 @@ export const TileDetailsPanel = (): JSX.Element => {
         }
         return;
       }
+
+      console.warn('[createEncounter] DEBUG — manual path taken!', {
+        autoAdventureMode,
+        encounterType,
+        opponentName: opponent.name,
+        opponentId: opponent.id,
+        characterId: character.id,
+      });
 
       setIsWaitingForBattle(true);
       setPendingOpponent({
