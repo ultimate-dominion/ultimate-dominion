@@ -23,7 +23,7 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -182,6 +182,9 @@ const CharacterCreationInner = (): JSX.Element => {
     weaponTemplates,
   } = useItems();
   const { character, isRefreshing } = useCharacter();
+  // Ref tracks live character state for rollback checks after tx completes
+  const characterRef = useRef(character);
+  characterRef.current = character;
   const {
     file: avatar,
     isUploading,
@@ -442,26 +445,45 @@ const CharacterCreationInner = (): JSX.Element => {
     if (!delegatorAddress || !character) return;
 
     setSelectedRace(race);
+    setCreationStep('powerSource');
 
-    await raceTx.execute(async () => {
+    const result = await raceTx.execute(async () => {
       const r = await chooseRace(character.id, race);
       if (!r.success) throw new Error(r.error || 'Race selection failed');
       return r;
     });
-    // Step advancement handled by sync useEffect when character.race updates via store
+
+    // Only revert if on-chain state didn't change (tx truly failed).
+    // If retry reported failure but tx actually succeeded, characterRef
+    // already reflects the receipt — don't revert.
+    if (!result?.success) {
+      const current = characterRef.current;
+      if (!current?.race || current.race === Race.None) {
+        setSelectedRace(Race.None);
+        setCreationStep('race');
+      }
+    }
   }, [character, chooseRace, delegatorAddress, raceTx]);
 
   const onChoosePowerSource = useCallback(async (powerSource: PowerSource) => {
     if (!delegatorAddress || !character) return;
 
     setSelectedPowerSource(powerSource);
+    setCreationStep('stats');
 
-    await powerSourceTx.execute(async () => {
+    const result = await powerSourceTx.execute(async () => {
       const r = await choosePowerSource(character.id, powerSource);
       if (!r.success) throw new Error(r.error || 'Power source selection failed');
       return r;
     });
-    // Step advancement handled by sync useEffect when character.powerSource updates via store
+
+    if (!result?.success) {
+      const current = characterRef.current;
+      if (!current?.powerSource || current.powerSource === PowerSource.None) {
+        setSelectedPowerSource(PowerSource.None);
+        setCreationStep('powerSource');
+      }
+    }
   }, [character, choosePowerSource, delegatorAddress, powerSourceTx]);
 
   const onRollStats = useCallback(async () => {
