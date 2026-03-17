@@ -9,6 +9,7 @@ import { createApiRouter } from './api/router.js';
 import { createDashboardRouter } from './api/dashboard.js';
 import { closeDb } from './db/connection.js';
 import { initQueueTables, advanceQueue, expireReadyEntries, cleanupStaleEntries, getQueueStats, getPlayerEmail, shouldNotifyAndMark } from './db/queueSchema.js';
+import { initCheckpointTable, saveCheckpoint } from './db/checkpoint.js';
 import { sendSlotOpenEmail } from './lib/slotEmail.js';
 import { startMilestoneWatcher } from './queue/milestoneWatcher.js';
 import { startEventFeed } from './queue/eventFeed.js';
@@ -27,8 +28,9 @@ async function main() {
 
   const httpServer = createServer(app);
 
-  // Initialize queue tables
+  // Initialize queue tables and checkpoint
   await initQueueTables();
+  await initCheckpointTable();
 
   // Broadcaster for WebSocket
   const broadcaster = new Broadcaster();
@@ -141,6 +143,15 @@ async function main() {
   // Graceful shutdown
   const shutdown = async () => {
     console.log('\n[server] Shutting down...');
+    // Save final checkpoint before stopping sync
+    if (syncHandle.latestStoredBlockNumber > 0) {
+      try {
+        await saveCheckpoint(BigInt(syncHandle.latestStoredBlockNumber));
+        console.log(`[server] Final checkpoint saved: block ${syncHandle.latestStoredBlockNumber}`);
+      } catch (err) {
+        console.error('[server] Failed to save final checkpoint:', err);
+      }
+    }
     syncHandle.stopSync();
     httpServer.close();
     await closeDb();

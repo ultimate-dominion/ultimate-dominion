@@ -4,6 +4,8 @@ import { base } from 'viem/chains';
 import { config } from '../config.js';
 import { db, discoverTables } from '../db/connection.js';
 import { pgNameToMudName, snakeToPascal, fixAbbreviations } from '../naming.js';
+import { getCheckpoint, saveCheckpoint, bootstrapCheckpoint } from '../db/checkpoint.js';
+import { mudSchema } from '../db/connection.js';
 import type { Broadcaster } from '../ws/broadcaster.js';
 
 export type SyncHandle = {
@@ -36,14 +38,26 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
     pollingInterval: 250,
   });
 
-  console.log(`[sync] Starting sync from block ${config.world.startBlock} for world ${config.world.address}`);
+  // Determine effective start block from checkpoint
+  const SAFETY_BUFFER = 100n;
+  const checkpoint = await bootstrapCheckpoint(mudSchema) ?? await getCheckpoint();
+  let effectiveStartBlock = config.world.startBlock;
+  if (checkpoint !== null) {
+    const buffered = checkpoint - SAFETY_BUFFER;
+    effectiveStartBlock = buffered > config.world.startBlock ? buffered : config.world.startBlock;
+    console.log(`[sync] Checkpoint: ${checkpoint}, effective start block: ${effectiveStartBlock}`);
+  } else {
+    console.log(`[sync] No checkpoint found, starting from env START_BLOCK: ${config.world.startBlock}`);
+  }
+
+  console.log(`[sync] Starting sync from block ${effectiveStartBlock} for world ${config.world.address}`);
   console.log(`[sync] RPC: ${config.chain.rpcWsUrl || config.chain.rpcHttpUrl}`);
 
   const sync = await syncToPostgres({
     database: db,
     publicClient,
     address: config.world.address,
-    startBlock: config.world.startBlock,
+    startBlock: effectiveStartBlock,
     maxBlockRange: 10000n,
   });
 
@@ -68,10 +82,22 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
   // Subscribe to stored block logs for WS broadcasting.
   // This fires AFTER data is committed to Postgres, so latestStoredBlockNumber
   // is safe to use for delta queries (unlike latestBlockNumber$ which can race ahead).
+  const CHECKPOINT_INTERVAL_MS = 30_000;
+  let lastCheckpointSave = Date.now();
+
   sync.storedBlockLogs$.subscribe({
     next: async ({ blockNumber, logs }) => {
       handle.latestBlockNumber = Number(blockNumber);
       handle.latestStoredBlockNumber = Number(blockNumber);
+
+      // Periodic checkpoint save (every 30s, fire-and-forget)
+      const now = Date.now();
+      if (now - lastCheckpointSave >= CHECKPOINT_INTERVAL_MS) {
+        lastCheckpointSave = now;
+        saveCheckpoint(BigInt(blockNumber)).catch((err) =>
+          console.error('[sync] Checkpoint save failed:', err),
+        );
+      }
 
       if (logs.length === 0) return;
 
