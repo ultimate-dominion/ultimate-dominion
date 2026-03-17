@@ -13,6 +13,7 @@ export const config = {
   },
   chain: {
     rpcHttpUrl: required('RPC_HTTP_URL'),
+    rpcFallbackHttpUrl: process.env.RPC_FALLBACK_HTTP_URL || '',
     rpcWsUrl: process.env.RPC_WS_URL || '',
     chainId: parseInt(process.env.CHAIN_ID || '8453', 10),
   },

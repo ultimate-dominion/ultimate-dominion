@@ -25,12 +25,15 @@ export type SyncHandle = {
  * Returns the sync handle with observables and table metadata.
  */
 export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
-  // Build transport with WS primary, HTTP fallback
+  // Build transport with WS primary, HTTP fallback, optional Alchemy fallback
   const transports = [];
   if (config.chain.rpcWsUrl) {
     transports.push(webSocket(config.chain.rpcWsUrl, { retryCount: 5 }));
   }
   transports.push(http(config.chain.rpcHttpUrl, { retryCount: 3 }));
+  if (config.chain.rpcFallbackHttpUrl) {
+    transports.push(http(config.chain.rpcFallbackHttpUrl, { retryCount: 3 }));
+  }
 
   const publicClient = createPublicClient({
     chain: base,
