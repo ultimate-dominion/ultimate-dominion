@@ -152,6 +152,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   }, [positionTable, spawnedTable, shopsTable, charactersTable]);
 
   const allMonsterEntities = useMemo(() => {
+    console.debug('[MapCtx] recomputing allMonsterEntities');
     return Object.keys(spawnedTable).filter(key =>
       statsTable[key] && !charactersTable[key] && positionTable[key]
     );
@@ -357,12 +358,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   const monstersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
-    return allMonsters.filter(
+    const result = allMonsters.filter(
       m =>
         Number(m.currentHp) > 0 &&
         m.position.x === position.x &&
         m.position.y === position.y,
     );
+    console.debug(`[MapCtx] monstersOnTile: ${result.length} at (${position.x},${position.y})`);
+    return result;
   }, [allMonsters, position]);
 
   const shopsOnTile = useMemo(() => {

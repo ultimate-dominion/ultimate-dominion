@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { type Address, hexToString, zeroHash } from 'viem';
@@ -165,6 +166,13 @@ const CharacterProviderInner = ({
   const encounterId: string = String(encounterData?.encounterId ?? zeroHash);
   const inBattle = !!encounterId && encounterId !== zeroHash;
   const pvpCooldownTimer = toBigInt(encounterData?.pvpTimer);
+
+  // Diagnostic: log encounter state changes
+  const prevInBattle = useRef(inBattle);
+  if (prevInBattle.current !== inBattle) {
+    console.log(`[CharCtx] inBattle: ${prevInBattle.current} → ${inBattle} (encounterId: ${encounterId.slice(0, 10)}...)`);
+    prevInBattle.current = inBattle;
+  }
 
   const externalGoldBalance = toBigInt(goldData?.value);
   const escrowGoldBalance = toBigInt(escrowData?.balance);

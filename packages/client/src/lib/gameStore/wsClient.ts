@@ -18,6 +18,8 @@ export class WSClient {
   private pendingUpdates: BatchUpdate[] = [];
   private flushScheduled = false;
   private visibilityHandler: (() => void) | null = null;
+  private wsMessageCount = 0;
+  private wsUpdateCount = 0;
 
   constructor(url: string, store: GameStore, initialBlock = 0) {
     this.url = url;
@@ -92,6 +94,12 @@ export class WSClient {
       return;
     }
 
+    this.wsMessageCount++;
+    // Log WS traffic every 50 messages
+    if (this.wsMessageCount % 50 === 0) {
+      console.log(`[ws] msgs=${this.wsMessageCount} updates=${this.wsUpdateCount} block=${this.lastBlock}`);
+    }
+
     switch (msg.type) {
       case 'connected':
         this.lastBlock = msg.block;
@@ -102,7 +110,10 @@ export class WSClient {
         // Skip if a receipt already applied a newer value for this row —
         // WS lags behind receipts and would overwrite with stale data.
         if (!isStaleForRow(msg.table, msg.keyBytes, msg.block)) {
+          this.wsUpdateCount++;
           this.queueUpdate({ type: 'set', table: msg.table, keyBytes: msg.keyBytes, data: msg.value });
+        } else {
+          console.debug(`[ws] STALE skip: ${msg.table} block=${msg.block}`);
         }
         if (msg.block > this.lastBlock) {
           this.lastBlock = msg.block;

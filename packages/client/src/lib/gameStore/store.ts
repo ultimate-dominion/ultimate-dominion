@@ -133,7 +133,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
-      if (!anyChanged) return state;
+      if (!anyChanged) {
+        console.debug(`[store] applyBatch: NO CHANGES from ${updates.length} updates`);
+        return state;
+      }
+      console.debug(`[store] applyBatch: changed tables: ${[...cloned].join(', ')} (${updates.length} updates)`);
       return { tables: newTables };
     }),
 
@@ -161,6 +165,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
  */
 export function getTableValue(table: string, keyBytes: string): TableRow | undefined {
   return useGameStore.getState().tables[table]?.[keyBytes];
+}
+
+// Debug: expose store to console for diagnostics
+if (typeof window !== 'undefined') {
+  (window as any).__gameStore = useGameStore;
 }
 
 /**
