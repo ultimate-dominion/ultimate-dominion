@@ -604,17 +604,23 @@ export const TileDetailsPanel = (): JSX.Element => {
     isInBattle: !!currentBattle,
   });
 
+  const battleOver = currentBattle?.encounterId === lastestBattleOutcome?.encounterId;
+
+  // When the battle is over, the loser's HP should show 0. The cached opponent
+  // ref may hold a stale HP from the last render before the mob despawned.
+  const opponentWon = battleOver && lastestBattleOutcome?.winner !== character?.id && !lastestBattleOutcome?.playerFled;
+  const playerWon = battleOver && lastestBattleOutcome?.winner === character?.id && !lastestBattleOutcome?.playerFled;
+
   const {
     displayedHp: opponentDisplayedHp,
     isDotTicking: isOpponentDotTicking,
   } = useBattleHpAnimation({
-    actualHp: opponent?.currentHp ?? 0n,
+    actualHp: playerWon ? 0n : (opponent?.currentHp ?? 0n),
     dotDamage: latestOpponentDot?.totalDamage ?? 0n,
     dotTurnNumber: latestOpponentDot?.turnNumber ?? 0n,
     isInBattle: !!currentBattle,
   });
 
-  const battleOver = currentBattle?.encounterId === lastestBattleOutcome?.encounterId;
   const opponentDefeated = opponentDisplayedHp <= 0n && battleOver;
   const userDefeated = userDisplayedHp <= 0n && battleOver;
 
