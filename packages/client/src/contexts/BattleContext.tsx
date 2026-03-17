@@ -253,7 +253,7 @@ export const BattleProvider = ({
   // Fully reactive PvP opponent data
   const reactiveOpponent = useReactiveEntity(opponentEntityId);
 
-  const opponent = useMemo(() => {
+  const liveOpponent = useMemo(() => {
     if (!character || !currentBattle) return null;
     const participants = [
       ...currentBattle.attackers,
@@ -261,6 +261,22 @@ export const BattleProvider = ({
     ];
     return allMonsters.find(m => participants.includes(m.id)) ?? reactiveOpponent;
   }, [character, currentBattle, allMonsters, reactiveOpponent]);
+
+  // Cache the opponent so it survives monster despawn after the killing blow.
+  // Without this, opponent goes null when the dead mob is pruned from allMonsters,
+  // which tears down the battle UI before the player can see the final moves.
+  const cachedOpponentRef = useRef<typeof liveOpponent>(null);
+  if (liveOpponent) {
+    cachedOpponentRef.current = liveOpponent;
+  }
+  // Clear the cache when the battle is dismissed (acknowledgeVersion bumps)
+  useEffect(() => {
+    if (!currentBattle) {
+      cachedOpponentRef.current = null;
+    }
+  }, [currentBattle]);
+
+  const opponent = liveOpponent ?? cachedOpponentRef.current;
 
   // Fully reactive user character for battle rendering
   const userCharacterForBattleRendering = useReactiveEntity(character?.id);
