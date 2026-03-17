@@ -27,12 +27,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build contracts (mud build handles ERC1155-puppet via codegen)
         run: pnpm --filter contracts run build
-      - name: Remove ERC1155-puppet submodule (incompatible with MUD v2.2.23)
+      - name: Prevent forge from compiling ERC1155-puppet submodule
         run: |
           rm -rf packages/contracts/lib/ERC1155-puppet
           rm -rf .git/modules/packages/contracts/lib/ERC1155-puppet
-          git config --remove-section submodule.packages/contracts/lib/ERC1155-puppet 2>/dev/null || true
           rm -f .gitmodules
+          sed -i 's/libs = \["node_modules", "lib"\]/libs = ["node_modules"]/' packages/contracts/foundry.toml
       - name: Run fork-mode tests against beta world
         working-directory: packages/contracts
         env:
