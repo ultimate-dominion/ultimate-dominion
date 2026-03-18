@@ -278,88 +278,9 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
   }
 
   console.log(`[eventFeed] Backfilled ${recent.length} events (from ${allEvents.length} candidates)`);
-
-  // Seed dedup sets so the live scanner doesn't re-emit existing DB rows.
-  // Query all existing key_bytes for each event source.
-  await seedDedupSets(syncHandle);
-}
-
-/** Pre-populate dedup sets from existing DB state to prevent live scanner re-emits */
-async function seedDedupSets(syncHandle: SyncHandle) {
-  const statsTable = syncHandle.tableNameMap.get('Stats');
-  const charactersTable = syncHandle.tableNameMap.get('Characters');
-  const fragmentTable = syncHandle.tableNameMap.get('FragmentProgress');
-  const outcomeTable = syncHandle.tableNameMap.get('CombatOutcome');
-  const shopSaleTable = syncHandle.tableNameMap.get('ShopSale');
-
-  // Level-ups: seed with current level for each character
-  if (statsTable) {
-    try {
-      const rows = await sql.unsafe(`SELECT "__key_bytes", "level" FROM "${mudSchema}"."${statsTable}" WHERE "level" IS NOT NULL AND "level" >= 2`);
-      for (const row of rows) {
-        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-        emittedLevelUps.add(`${keyHex}:${Number(row.level)}`);
-      }
-    } catch { /* ignore */ }
-  }
-
-  // Class selections
-  if (statsTable) {
-    try {
-      const rows = await sql.unsafe(`SELECT "__key_bytes", "advanced_class" FROM "${mudSchema}"."${statsTable}" WHERE "advanced_class" IS NOT NULL AND "advanced_class" > 0`);
-      for (const row of rows) {
-        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-        emittedClassSelections.add(`${keyHex}:${Number(row.advanced_class)}`);
-      }
-    } catch { /* ignore */ }
-  }
-
-  // Combat outcomes
-  if (outcomeTable) {
-    try {
-      const rows = await sql.unsafe(`SELECT "__key_bytes" FROM "${mudSchema}"."${outcomeTable}"`);
-      for (const row of rows) {
-        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-        emittedCombat.add(keyHex);
-        emittedLoot.add(keyHex); // loot uses same key
-      }
-    } catch { /* ignore */ }
-  }
-
-  // Characters
-  if (charactersTable) {
-    try {
-      const rows = await sql.unsafe(`SELECT "__key_bytes" FROM "${mudSchema}"."${charactersTable}" WHERE "name" IS NOT NULL`);
-      for (const row of rows) {
-        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-        emittedCharacters.add(keyHex);
-      }
-    } catch { /* ignore */ }
-  }
-
-  // Fragments
-  if (fragmentTable) {
-    try {
-      const rows = await sql.unsafe(`SELECT "__key_bytes" FROM "${mudSchema}"."${fragmentTable}" WHERE "triggered" = true`);
-      for (const row of rows) {
-        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-        emittedFragments.add(keyHex);
-      }
-    } catch { /* ignore */ }
-  }
-
-  // Shop sales
-  if (shopSaleTable) {
-    try {
-      const rows = await sql.unsafe(`SELECT "__key_bytes" FROM "${mudSchema}"."${shopSaleTable}"`);
-      for (const row of rows) {
-        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-        emittedShopSales.add(keyHex);
-      }
-    } catch { /* ignore */ }
-  }
-
-  console.log(`[eventFeed] Dedup sets seeded: levelUps=${emittedLevelUps.size}, classes=${emittedClassSelections.size}, combat=${emittedCombat.size}, chars=${emittedCharacters.size}, frags=${emittedFragments.size}, shops=${emittedShopSales.size}`);
+  // Note: dedup sets are NOT pre-seeded. The live scanner already skips old blocks
+  // via the initial `lastScannedBlock = currentBlock` guard. Seeding dedup sets
+  // from the full DB was suppressing all live events.
 }
 
 /**
