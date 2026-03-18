@@ -38,8 +38,10 @@ export function createLeaderboardRouter(syncHandle: SyncHandle): Router {
       const rankColumn = rankBy === 'stats' ? 'stats_rank' : 'gold_rank';
 
       // GoldBalances and AdventureEscrow may not exist yet — handle with LEFT JOINs
+      // GoldBalances.__key_bytes is 32 bytes (ABI-encoded address), but
+      // Characters.owner is 20 bytes (raw address). Pad owner with 12 zero bytes.
       const goldJoin = goldTable
-        ? `LEFT JOIN "${mudSchema}"."${goldTable}" g ON c."owner" = g."__key_bytes"`
+        ? `LEFT JOIN "${mudSchema}"."${goldTable}" g ON g."__key_bytes" = (E'\\\\x000000000000000000000000'::bytea || c."owner")`
         : '';
       const escrowJoin = escrowTable
         ? `LEFT JOIN "${mudSchema}"."${escrowTable}" e ON c."character_id" = e."character_id"`
@@ -74,6 +76,7 @@ export function createLeaderboardRouter(syncHandle: SyncHandle): Router {
         SELECT r.*, (SELECT count(*) FROM ranked) AS total_players
         FROM ranked r, target t
         WHERE r.${rankColumn} BETWEEN t.${rankColumn} - 2 AND t.${rankColumn} + 2
+           OR r.character_id = $1
         ORDER BY r.${rankColumn} ASC
       `;
 
@@ -118,6 +121,7 @@ export function createLeaderboardRouter(syncHandle: SyncHandle): Router {
         totalPlayers: Number(rows[0].total_players),
         selfStatsRank: selfRow ? Number(selfRow.stats_rank) : null,
         selfGoldRank: selfRow ? Number(selfRow.gold_rank) : null,
+        rankBy,
       });
     } catch (err) {
       console.error('[api/leaderboard] Error:', err);

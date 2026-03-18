@@ -15,19 +15,22 @@ import { etherToFixedNumber } from '../utils/helpers';
 
 import { PolygonalCard } from './PolygonalCard';
 
-type MiniLeaderboardProps = Pick<NearbyRanksResult, 'nearby' | 'isLoading' | 'rankBy' | 'setRankBy'>;
+type MiniLeaderboardProps = Pick<NearbyRanksResult, 'nearby' | 'isLoading' | 'rankBy' | 'dataRankBy' | 'setRankBy'>;
 
-export const MiniLeaderboard = ({ nearby, isLoading, rankBy, setRankBy }: MiniLeaderboardProps): JSX.Element | null => {
+export const MiniLeaderboard = ({ nearby, isLoading, rankBy, dataRankBy, setRankBy }: MiniLeaderboardProps): JSX.Element | null => {
   const navigate = useNavigate();
+
+  // Use dataRankBy for sorting/display — this is the mode the current data was fetched with
+  const displayMode = dataRankBy;
 
   const rows = useMemo(() => {
     const sorted = [...nearby].sort((a, b) => {
-      const rankA = rankBy === 'stats' ? a.statsRank : a.goldRank;
-      const rankB = rankBy === 'stats' ? b.statsRank : b.goldRank;
+      const rankA = displayMode === 'stats' ? a.statsRank : a.goldRank;
+      const rankB = displayMode === 'stats' ? b.statsRank : b.goldRank;
       return rankA - rankB;
     });
     return sorted.slice(0, 5);
-  }, [nearby, rankBy]);
+  }, [nearby, displayMode]);
 
   if (isLoading || rows.length === 0) return null;
 
@@ -96,7 +99,7 @@ export const MiniLeaderboard = ({ nearby, isLoading, rankBy, setRankBy }: MiniLe
             >
               <Text
                 color={
-                  (rankBy === 'stats' ? player.statsRank : player.goldRank) <= 3
+                  (displayMode === 'stats' ? player.statsRank : player.goldRank) <= 3
                     ? '#C87A2A'
                     : '#8A7E6A'
                 }
@@ -120,7 +123,7 @@ export const MiniLeaderboard = ({ nearby, isLoading, rankBy, setRankBy }: MiniLe
                 Lv {player.level}
               </Text>
               <Text color="#D4A54A" fontFamily="mono" fontWeight={600} size="xs" textAlign="right">
-                {rankBy === 'stats'
+                {displayMode === 'stats'
                   ? player.totalStats
                   : etherToFixedNumber(player.totalGold)}
               </Text>

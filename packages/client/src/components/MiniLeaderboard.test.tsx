@@ -8,6 +8,7 @@ let mockProps: any = {
   nearby: [],
   isLoading: true,
   rankBy: 'gold' as const,
+  dataRankBy: 'gold' as const,
   setRankBy: vi.fn(),
 };
 

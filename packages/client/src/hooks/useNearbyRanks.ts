@@ -25,6 +25,8 @@ export type NearbyRanksResult = {
   selfGoldRank: number | null;
   isLoading: boolean;
   rankBy: 'stats' | 'gold';
+  /** The rankBy mode the current data was fetched with */
+  dataRankBy: 'stats' | 'gold';
   setRankBy: (mode: 'stats' | 'gold') => void;
 };
 
@@ -36,6 +38,7 @@ export const useNearbyRanks = (): NearbyRanksResult => {
   const [selfGoldRank, setSelfGoldRank] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [rankBy, setRankBy] = useState<'stats' | 'gold'>('gold');
+  const [dataRankBy, setDataRankBy] = useState<'stats' | 'gold'>('gold');
   const hasLoadedOnce = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -53,6 +56,7 @@ export const useNearbyRanks = (): NearbyRanksResult => {
       setTotalPlayers(data.totalPlayers);
       setSelfStatsRank(data.selfStatsRank);
       setSelfGoldRank(data.selfGoldRank);
+      setDataRankBy(data.rankBy ?? rankBy);
     } catch {
       // Silent — ambient data
     } finally {
@@ -78,6 +82,7 @@ export const useNearbyRanks = (): NearbyRanksResult => {
     selfGoldRank,
     isLoading,
     rankBy,
+    dataRankBy,
     setRankBy,
   };
 };

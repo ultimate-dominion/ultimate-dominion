@@ -41,7 +41,7 @@ export const StatsPanel = (): JSX.Element => {
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const leaderboardRank = useLeaderboardRank();
-  const { nearby, isLoading: nearbyLoading, rankBy, setRankBy } = useNearbyRanks();
+  const { nearby, isLoading: nearbyLoading, rankBy, dataRankBy, setRankBy } = useNearbyRanks();
 
   const chasingPlayer = useMemo(() => {
     if (!nearby || nearby.length === 0) return null;
@@ -416,7 +416,7 @@ export const StatsPanel = (): JSX.Element => {
           </Box>
           <Divider borderColor="grey300" />
           <Box w="100%">
-            <MiniLeaderboard nearby={nearby} isLoading={nearbyLoading} rankBy={rankBy} setRankBy={setRankBy} />
+            <MiniLeaderboard nearby={nearby} isLoading={nearbyLoading} rankBy={rankBy} dataRankBy={dataRankBy} setRankBy={setRankBy} />
           </Box>
         </>
       )}
