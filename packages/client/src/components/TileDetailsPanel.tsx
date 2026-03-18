@@ -1279,17 +1279,35 @@ export const TileDetailsPanel = (): JSX.Element => {
               ))}
             {monstersOnTile.length === 0 && (
               stage <= OnboardingStage.FIRST_BLOOD ? (
-                <Text
-                  color="#A8DEFF"
-                  fontFamily="Cinzel, serif"
-                  fontSize="xs"
-                  fontStyle="italic"
-                  opacity={0.8}
-                  p={3}
-                  textAlign="center"
+                <VStack
+                  align="center"
+                  justify="center"
+                  py={6}
+                  px={4}
+                  spacing={2}
+                  flex={1}
                 >
-                  Explore the Dark Cave
-                </Text>
+                  <Text
+                    animation={`${explorePulse} 3s ease-in-out infinite`}
+                    color="#A8DEFF"
+                    fontFamily="Cinzel, serif"
+                    fontSize={{ base: 'md', lg: 'lg' }}
+                    fontWeight={600}
+                    letterSpacing="0.1em"
+                    textAlign="center"
+                    textShadow="0 0 20px rgba(168, 222, 255, 0.4), 0 0 40px rgba(168, 222, 255, 0.15)"
+                  >
+                    Explore the Dark Cave
+                  </Text>
+                  <Text
+                    color="#5A5040"
+                    fontSize="2xs"
+                    letterSpacing="0.15em"
+                    textTransform="uppercase"
+                  >
+                    Use the compass to move
+                  </Text>
+                </VStack>
               ) : (
                 <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
                   No monsters in this area
@@ -1640,6 +1658,11 @@ const OpponentRow = ({
     </HStack>
   );
 };
+
+const explorePulse = keyframes`
+  0%, 100% { text-shadow: 0 0 20px rgba(168, 222, 255, 0.3), 0 0 40px rgba(168, 222, 255, 0.1); }
+  50%      { text-shadow: 0 0 25px rgba(168, 222, 255, 0.6), 0 0 50px rgba(168, 222, 255, 0.25); }
+`;
 
 const echoPulse = keyframes`
   0%, 100% { filter: brightness(0.8); }

@@ -370,8 +370,8 @@ export const MapPanel = (): JSX.Element => {
 
 
 const compassPulse = keyframes`
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
 `;
 
 const WASD_MAP: Record<string, string> = { N: 'W', W: 'A', S: 'S', E: 'D' };
@@ -481,9 +481,16 @@ const NavigationCompass = ({
           justifyContent="center"
           pointerEvents="none"
         >
+          <Box
+            position="absolute"
+            w="100px"
+            h="100px"
+            borderRadius="50%"
+            bg="radial-gradient(circle, rgba(200, 122, 42, 0.12) 0%, transparent 70%)"
+          />
           <CompassRoseOrnamentSvg
             boxSize="130px"
-            opacity={0.35}
+            opacity={0.55}
           />
         </Box>
 
@@ -520,7 +527,7 @@ const NavigationCompass = ({
                   icon={
                     <VStack spacing={0}>
                       <Text
-                        color="#8A7E6A"
+                        color="#C4B89E"
                         fontSize="2xs"
                         fontWeight={700}
                         lineHeight={1}
@@ -546,7 +553,7 @@ const NavigationCompass = ({
                       : undefined
                   }
                   opacity={isDisabled || isOob ? 0.2 : 1}
-                  _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.15)' }}
+                  _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.25)' }}
                 />
               </Tooltip>
             </GridItem>
@@ -579,25 +586,26 @@ const NavigationCompass = ({
 
       {/* WASD / Arrow key hint — desktop only, early players */}
       {isDesktop && stage < OnboardingStage.SETTLING_IN && (
-        <HStack justify="center" mt={1} spacing={3}>
+        <HStack justify="center" mt={2} spacing={3}>
           {['N', 'W', 'S', 'E'].map(dir => (
             <HStack key={dir} spacing={1}>
               <Box
-                bg="rgba(168, 222, 255, 0.08)"
-                border="1px solid rgba(168, 222, 255, 0.2)"
-                borderRadius="3px"
+                bg="rgba(168, 222, 255, 0.12)"
+                border="1px solid rgba(168, 222, 255, 0.35)"
+                borderRadius="4px"
+                boxShadow="0 0 6px rgba(168, 222, 255, 0.1), inset 0 1px 0 rgba(255,255,255,0.05)"
                 color="#A8DEFF"
                 fontFamily="mono"
-                fontSize="2xs"
+                fontSize="xs"
                 fontWeight={700}
-                h="18px"
-                lineHeight="18px"
+                h="22px"
+                lineHeight="22px"
                 textAlign="center"
-                w="18px"
+                w="22px"
               >
                 {WASD_MAP[dir]}
               </Box>
-              <Text color="#5A5040" fontSize="2xs" lineHeight={1}>
+              <Text color="#8A7E6A" fontSize="xs" lineHeight={1}>
                 {ARROW_MAP[dir]}
               </Text>
             </HStack>
