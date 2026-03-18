@@ -1607,21 +1607,23 @@ const OpponentRow = ({
 
 const echoGlow = keyframes`
   0%, 100% {
+    transform: scaleY(1);
     box-shadow:
-      0 0 10px rgba(168, 222, 255, 0.35),
-      0 0 20px rgba(168, 222, 255, 0.15),
-      inset 0 0 10px rgba(168, 222, 255, 0.1);
-    border-color: rgba(168, 222, 255, 0.5);
+      0 0 6px 2px rgba(168, 222, 255, 0.3),
+      0 0 12px 4px rgba(168, 222, 255, 0.12),
+      inset 0 0 8px rgba(168, 222, 255, 0.08);
+    border-color: rgba(168, 222, 255, 0.45);
     background: linear-gradient(90deg, rgba(168, 222, 255, 0.1) 0%, rgba(168, 222, 255, 0.03) 100%);
   }
   50% {
+    transform: scaleY(1.08);
     box-shadow:
-      0 0 16px rgba(168, 222, 255, 0.6),
-      0 0 32px rgba(168, 222, 255, 0.3),
-      0 0 48px rgba(168, 222, 255, 0.1),
-      inset 0 0 14px rgba(168, 222, 255, 0.2);
-    border-color: rgba(168, 222, 255, 0.85);
-    background: linear-gradient(90deg, rgba(168, 222, 255, 0.18) 0%, rgba(168, 222, 255, 0.06) 100%);
+      0 0 12px 6px rgba(168, 222, 255, 0.5),
+      0 0 24px 10px rgba(168, 222, 255, 0.2),
+      0 0 36px 16px rgba(168, 222, 255, 0.08),
+      inset 0 0 12px rgba(168, 222, 255, 0.15);
+    border-color: rgba(168, 222, 255, 0.8);
+    background: linear-gradient(90deg, rgba(168, 222, 255, 0.16) 0%, rgba(168, 222, 255, 0.05) 100%);
   }
 `;
 

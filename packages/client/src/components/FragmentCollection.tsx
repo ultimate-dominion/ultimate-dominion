@@ -12,27 +12,24 @@ import {
 import { useState } from 'react';
 import { FaCheck, FaLock } from 'react-icons/fa';
 
-const fragmentGlow = keyframes`
+const fragmentPulse = keyframes`
   0%, 100% {
+    transform: scale(1);
     box-shadow:
-      0 0 10px rgba(168, 222, 255, 0.35),
-      0 0 20px rgba(168, 222, 255, 0.15),
-      inset 0 0 8px rgba(168, 222, 255, 0.08);
-    border-color: rgba(168, 222, 255, 0.55);
+      0 0 6px 2px rgba(168, 222, 255, 0.3),
+      0 0 12px 4px rgba(168, 222, 255, 0.15),
+      inset 0 0 6px rgba(168, 222, 255, 0.08);
+    border-color: rgba(168, 222, 255, 0.45);
   }
   50% {
+    transform: scale(1.06);
     box-shadow:
-      0 0 16px rgba(168, 222, 255, 0.6),
-      0 0 32px rgba(168, 222, 255, 0.3),
-      0 0 48px rgba(168, 222, 255, 0.1),
-      inset 0 0 12px rgba(168, 222, 255, 0.18);
-    border-color: rgba(168, 222, 255, 0.9);
+      0 0 12px 6px rgba(168, 222, 255, 0.5),
+      0 0 24px 12px rgba(168, 222, 255, 0.25),
+      0 0 40px 18px rgba(168, 222, 255, 0.1),
+      inset 0 0 10px rgba(168, 222, 255, 0.15);
+    border-color: rgba(168, 222, 255, 0.8);
   }
-`;
-
-const fragmentPulse = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
 `;
 
 import {
@@ -174,7 +171,7 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
         transition="all 0.25s ease"
         animation={
           isTriggered && !isClaimed
-            ? `${fragmentGlow} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite, ${fragmentPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`
+            ? `${fragmentPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`
             : undefined
         }
         _hover={
