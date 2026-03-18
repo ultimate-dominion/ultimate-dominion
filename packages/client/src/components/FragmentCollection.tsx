@@ -15,18 +15,18 @@ import { FaCheck, FaLock } from 'react-icons/fa';
 const fragmentGlow = keyframes`
   0%, 100% {
     box-shadow:
-      0 0 8px rgba(255, 215, 0, 0.4),
-      0 0 16px rgba(255, 215, 0, 0.2),
-      inset 0 0 8px rgba(255, 215, 0, 0.1);
-    border-color: rgba(234, 179, 8, 0.7);
+      0 0 8px rgba(168, 222, 255, 0.4),
+      0 0 16px rgba(168, 222, 255, 0.2),
+      inset 0 0 8px rgba(168, 222, 255, 0.1);
+    border-color: rgba(168, 222, 255, 0.7);
   }
   50% {
     box-shadow:
-      0 0 14px rgba(255, 215, 0, 0.7),
-      0 0 28px rgba(255, 215, 0, 0.4),
-      0 0 42px rgba(255, 215, 0, 0.15),
-      inset 0 0 12px rgba(255, 215, 0, 0.2);
-    border-color: rgba(250, 204, 21, 1);
+      0 0 14px rgba(168, 222, 255, 0.7),
+      0 0 28px rgba(168, 222, 255, 0.4),
+      0 0 42px rgba(168, 222, 255, 0.15),
+      inset 0 0 12px rgba(168, 222, 255, 0.2);
+    border-color: rgba(168, 222, 255, 1);
   }
 `;
 
@@ -166,9 +166,9 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
         border="2px solid"
         borderColor={
           isClaimed
-            ? 'rgba(74, 222, 128, 0.5)'
+            ? 'rgba(168, 222, 255, 0.4)'
             : isTriggered
-              ? 'yellow.500'
+              ? 'rgba(168, 222, 255, 0.7)'
               : 'rgba(255,255,255,0.06)'
         }
         transition="all 0.25s ease"
@@ -181,18 +181,18 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
           isClickable
             ? {
                 transform: 'scale(1.05)',
-                borderColor: isClaimed ? 'green.400' : 'yellow.400',
+                borderColor: 'rgba(168, 222, 255, 0.9)',
                 boxShadow: isClaimed
-                  ? '0 0 12px rgba(74, 222, 128, 0.3)'
+                  ? '0 0 12px rgba(168, 222, 255, 0.3)'
                   : isTriggered
-                    ? '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4)'
+                    ? '0 0 20px rgba(168, 222, 255, 0.8), 0 0 40px rgba(168, 222, 255, 0.4)'
                     : undefined,
               }
             : {}
         }
         position="relative"
         overflow="hidden"
-        bg={isClaimed ? 'transparent' : isTriggered ? 'yellow.900' : '#1a1816'}
+        bg={isClaimed ? 'transparent' : isTriggered ? 'rgba(168, 222, 255, 0.06)' : '#1a1816'}
       >
         {/* Claimed: show fragment artwork */}
         {isClaimed && imageSrc ? (
@@ -220,7 +220,7 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
               bottom={1}
               fontSize="xs"
               fontWeight="bold"
-              color="green.300"
+              color="#A8DEFF"
               textShadow="0 1px 3px rgba(0,0,0,0.8)"
               zIndex={1}
             >
@@ -231,7 +231,7 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
               position="absolute"
               top={1}
               right={1}
-              color="green.400"
+              color="#A8DEFF"
               bg="blackAlpha.600"
               borderRadius="full"
               p="3px"
@@ -244,29 +244,29 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
         ) : isClaimed ? (
           /* Claimed but no image (fallback) */
           <>
-            <Box color="green.400" mb={1}>
+            <Box color="#A8DEFF" mb={1}>
               <FaCheck size={20} />
             </Box>
-            <Text fontSize="xs" color="green.300" fontWeight="bold">
+            <Text fontSize="xs" color="#A8DEFF" fontWeight="bold">
               {getRomanNumeral(fragment.fragmentType)}
             </Text>
           </>
         ) : isTriggered ? (
           <>
-            <Box color="yellow.400" mb={1}>
+            <Box color="#A8DEFF" mb={1}>
               <Text
                 fontSize="xl"
                 fontWeight="bold"
-                textShadow="0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4)"
+                textShadow="0 0 10px rgba(168, 222, 255, 0.8), 0 0 20px rgba(168, 222, 255, 0.4)"
               >
                 !
               </Text>
             </Box>
             <Text
               fontSize="xs"
-              color="yellow.300"
+              color="#A8DEFF"
               fontWeight="bold"
-              textShadow="0 0 6px rgba(255, 215, 0, 0.5)"
+              textShadow="0 0 6px rgba(168, 222, 255, 0.5)"
             >
               {getRomanNumeral(fragment.fragmentType)}
             </Text>
