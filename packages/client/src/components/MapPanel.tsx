@@ -315,8 +315,7 @@ export const MapPanel = (): JSX.Element => {
                 >
                   {stage < OnboardingStage.VETERAN && (col >= 5 || row >= 5) && (
                     <Box
-                      bg="rgba(10, 8, 6, 0.65)"
-                      backgroundImage="radial-gradient(ellipse at 30% 40%, rgba(20, 16, 12, 0.8) 0%, transparent 70%)"
+                      bg="#0A0806"
                       inset={0}
                       pointerEvents="none"
                       position="absolute"
