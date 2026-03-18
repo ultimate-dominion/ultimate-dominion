@@ -3,6 +3,37 @@ import type { SyncHandle } from '../sync/startSync.js';
 import type { Broadcaster } from '../ws/broadcaster.js';
 import type { GameEvent } from '../ws/protocol.js';
 import crypto from 'crypto';
+import { formatEther } from 'viem';
+
+/** Format a raw wei price to a human-readable gold amount */
+function formatGold(rawPrice: unknown): string {
+  try {
+    const val = BigInt(String(rawPrice));
+    if (val === 0n) return '0';
+    const formatted = formatEther(val);
+    // Strip trailing zeros after decimal: "5.000" → "5", "2.50" → "2.5"
+    return formatted.replace(/\.?0+$/, '') || '0';
+  } catch {
+    return String(rawPrice);
+  }
+}
+
+/** Event description templates — emotive language for the world feed */
+const eventDesc = {
+  levelUp: (name: string, level: number) => `${name} reached Level ${level}`,
+  classSelection: (name: string, className: string) => `${name} became a ${className}`,
+  fragmentFound: (name: string) => `${name} uncovered a lost fragment...`,
+  characterCreated: (name: string) => `${name} awakens in the Dark Cave`,
+  pvpKill: (winner: string, loser: string) => `${winner} defeated ${loser} in PvP`,
+  death: (name: string, mobName: string) => `${name} was slain by ${mobName}`,
+  lootDrop: (name: string, itemDesc: string) => `${name} found ${itemDesc}`,
+  marketplaceSale: (itemDesc: string, gold: string) =>
+    gold !== '0' ? `${itemDesc} was sold for ${gold} gold` : `${itemDesc} was sold on the marketplace`,
+  shopBuy: (name: string, itemDesc: string, gold: string) =>
+    gold !== '0' ? `${name} bought ${itemDesc} for ${gold} gold` : `${name} bought ${itemDesc}`,
+  shopSell: (name: string, itemDesc: string, gold: string) =>
+    gold !== '0' ? `${name} sold ${itemDesc} for ${gold} gold` : `${name} sold ${itemDesc}`,
+};
 
 /** Ring buffer of recent game events (serves as history for new clients) */
 const eventBuffer: GameEvent[] = [];
@@ -80,7 +111,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
       if (!name || level <= 1) continue;
       allEvents.push({
         block: Number(row.block),
-        event: { id: crypto.randomUUID(), eventType: 'level_up', playerName: name, description: `${name} reached Level ${level}`, timestamp: 0 },
+        event: { id: crypto.randomUUID(), eventType: 'level_up', playerName: name, description: eventDesc.levelUp(name, level), timestamp: 0 },
       });
     }
   } catch { /* table may not exist */ }
@@ -102,7 +133,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
       const className = ADVANCED_CLASS_NAMES[classValue] || `Class ${classValue}`;
       allEvents.push({
         block: Number(row.block),
-        event: { id: crypto.randomUUID(), eventType: 'class_selection', playerName: name, description: `${name} became a ${className}`, timestamp: 0 },
+        event: { id: crypto.randomUUID(), eventType: 'class_selection', playerName: name, description: eventDesc.classSelection(name, className), timestamp: 0 },
       });
     }
   } catch { /* table may not exist */ }
@@ -122,7 +153,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
         const name = decodeCharacterName(row.name) || 'An adventurer';
         allEvents.push({
           block: Number(row.block),
-          event: { id: crypto.randomUUID(), eventType: 'fragment_found', playerName: name, description: `${name} discovered a lost fragment...`, timestamp: 0 },
+          event: { id: crypto.randomUUID(), eventType: 'fragment_found', playerName: name, description: eventDesc.fragmentFound(name), timestamp: 0 },
         });
       }
     } catch { /* table may not exist */ }
@@ -148,7 +179,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
       if (!name) continue;
       allEvents.push({
         block: Number(row.block),
-        event: { id: crypto.randomUUID(), eventType: 'character_created', playerName: name, description: `${name} has entered the world`, timestamp: 0 },
+        event: { id: crypto.randomUUID(), eventType: 'character_created', playerName: name, description: eventDesc.characterCreated(name), timestamp: 0 },
       });
     }
   } catch { /* table may not exist */ }
@@ -191,7 +222,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
           const loser = playerWon ? opponentName : playerName;
           allEvents.push({
             block: Number(row.block),
-            event: { id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: winner, description: `${winner} defeated ${loser} in PvP`, timestamp: 0 },
+            event: { id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: winner, description: eventDesc.pvpKill(winner, loser), timestamp: 0 },
           });
         } else if (!attackersWin) {
           // PvE death — player lost
@@ -205,7 +236,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
           }
           allEvents.push({
             block: Number(row.block),
-            event: { id: crypto.randomUUID(), eventType: 'death', playerName: playerName, description: `${playerName} was killed by ${mobName}`, timestamp: 0 },
+            event: { id: crypto.randomUUID(), eventType: 'death', playerName: playerName, description: eventDesc.death(playerName, mobName), timestamp: 0 },
           });
         }
         // PvE wins are skipped (too noisy)
@@ -250,7 +281,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
         const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
         allEvents.push({
           block: Number(row.block),
-          event: { id: crypto.randomUUID(), eventType, playerName: name, description: `${name} found ${itemDesc}`, timestamp: 0 },
+          event: { id: crypto.randomUUID(), eventType, playerName: name, description: eventDesc.lootDrop(name, itemDesc), timestamp: 0 },
         });
       }
     } catch { /* table may not exist */ }
@@ -269,7 +300,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
 
       for (const row of rows) {
         const name = decodeCharacterName(row.name) || 'An adventurer';
-        const price = Number(row.price || 0);
+        const goldAmount = formatGold(row.price);
         const buying = row.buying;
         let itemDesc = 'an item';
 
@@ -285,8 +316,8 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
         }
 
         const desc = buying
-          ? (price > 0 ? `${name} purchased ${itemDesc} for ${price.toLocaleString()} gold` : `${name} purchased ${itemDesc}`)
-          : (price > 0 ? `${name} sold ${itemDesc} for ${price.toLocaleString()} gold` : `${name} sold ${itemDesc}`);
+          ? eventDesc.shopBuy(name, itemDesc, goldAmount)
+          : eventDesc.shopSell(name, itemDesc, goldAmount);
 
         allEvents.push({
           block: Number(row.block),
@@ -296,9 +327,18 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     } catch { /* table may not exist */ }
   }
 
-  // Sort all events by block (oldest first), take the most recent BACKFILL_LIMIT
-  allEvents.sort((a, b) => a.block - b.block);
-  const recent = allEvents.slice(-BACKFILL_LIMIT);
+  // Deduplicate by description (same event can appear from overlapping queries)
+  const seen = new Set<string>();
+  const deduped = allEvents.filter(e => {
+    const key = `${e.event.eventType}:${e.event.description}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Sort by block (oldest first), take the most recent BACKFILL_LIMIT
+  deduped.sort((a, b) => a.block - b.block);
+  const recent = deduped.slice(-BACKFILL_LIMIT);
 
   // Assign staggered timestamps so they display in correct order
   const now = Date.now();
@@ -400,7 +440,7 @@ async function scanLevelUps(
         id: crypto.randomUUID(),
         eventType: 'level_up',
         playerName: name,
-        description: `${name} reached Level ${level}`,
+        description: eventDesc.levelUp(name, level),
         timestamp: Date.now(),
       };
       addEvent(event);
@@ -516,7 +556,7 @@ async function scanCombatOutcomes(
           id: crypto.randomUUID(),
           eventType: 'pvp_kill',
           playerName: winner,
-          description: `${winner} defeated ${loser} in PvP`,
+          description: eventDesc.pvpKill(winner, loser),
           timestamp: Date.now(),
         };
         addEvent(event);
@@ -549,7 +589,7 @@ async function scanCombatOutcomes(
           id: crypto.randomUUID(),
           eventType: 'death',
           playerName: playerName,
-          description: `${playerName} was killed by ${mobName}`,
+          description: eventDesc.death(playerName, mobName),
           timestamp: Date.now(),
         };
         addEvent(event);
@@ -632,7 +672,7 @@ async function scanLootDrops(
         id: crypto.randomUUID(),
         eventType,
         playerName: name,
-        description: `${name} found ${itemDesc}`,
+        description: eventDesc.lootDrop(name, itemDesc),
         timestamp: Date.now(),
       };
       addEvent(event);
@@ -668,7 +708,7 @@ async function scanMarketplaceSales(
       if (emittedSales.has(keyHex)) continue;
       emittedSales.add(keyHex);
 
-      const price = Number(row.price || 0);
+      const goldAmount = formatGold(row.price);
       let itemDesc = 'an item';
 
       // Look up item details
@@ -694,9 +734,7 @@ async function scanMarketplaceSales(
         id: crypto.randomUUID(),
         eventType: 'marketplace_sale',
         playerName: '',
-        description: price > 0
-          ? `${itemDesc} was sold for ${price.toLocaleString()} gold`
-          : `${itemDesc} was sold on the marketplace`,
+        description: eventDesc.marketplaceSale(itemDesc, goldAmount),
         timestamp: Date.now(),
       };
       addEvent(event);
@@ -747,7 +785,7 @@ async function scanNewCharacters(
         id: crypto.randomUUID(),
         eventType: 'character_created',
         playerName: name,
-        description: `${name} has entered the world`,
+        description: eventDesc.characterCreated(name),
         timestamp: Date.now(),
       };
       addEvent(event);
@@ -787,7 +825,7 @@ async function scanShopPurchases(
       emittedShopSales.add(keyHex);
 
       const name = decodeCharacterName(row.name) || 'An adventurer';
-      const price = Number(row.price || 0);
+      const goldAmount = formatGold(row.price);
       const buying = row.buying;
       let itemDesc = 'an item';
 
@@ -810,8 +848,8 @@ async function scanShopPurchases(
       }
 
       const desc = buying
-        ? (price > 0 ? `${name} purchased ${itemDesc} for ${price.toLocaleString()} gold` : `${name} purchased ${itemDesc}`)
-        : (price > 0 ? `${name} sold ${itemDesc} for ${price.toLocaleString()} gold` : `${name} sold ${itemDesc}`);
+        ? (goldAmount !== '0' ? `${name} purchased ${itemDesc} for ${goldAmount} gold` : `${name} purchased ${itemDesc}`)
+        : (goldAmount !== '0' ? `${name} sold ${itemDesc} for ${goldAmount} gold` : `${name} sold ${itemDesc}`);
 
       const event: GameEvent = {
         id: crypto.randomUUID(),
@@ -865,7 +903,7 @@ async function scanQuestCompletions(
         id: crypto.randomUUID(),
         eventType: 'quest_complete',
         playerName: name,
-        description: `${name} completed a quest`,
+        description: `${name} completed a quest!`,
         timestamp: Date.now(),
       };
       addEvent(event);
@@ -918,7 +956,7 @@ async function scanAdvancedClassSelections(
         id: crypto.randomUUID(),
         eventType: 'class_selection',
         playerName: name,
-        description: `${name} became a ${className}`,
+        description: eventDesc.classSelection(name, className),
         timestamp: Date.now(),
       };
       addEvent(event);
@@ -962,7 +1000,7 @@ async function scanFragmentDiscoveries(
         id: crypto.randomUUID(),
         eventType: 'fragment_found',
         playerName: name,
-        description: `${name} discovered a lost fragment...`,
+        description: eventDesc.fragmentFound(name),
         timestamp: Date.now(),
       };
       addEvent(event);

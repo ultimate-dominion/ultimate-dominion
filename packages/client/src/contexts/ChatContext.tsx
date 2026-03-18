@@ -756,13 +756,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       ...(CHAT_ENABLED ? messages : []),
       ...rareDropAnnouncements,
       ...rareMarketplaceSales,
-      ...goldOfferAnnouncements,
-      ...sellListingAnnouncements,
       ...bossSpawnAnnouncements,
       ...bossKillAnnouncements,
       ...indexerEventAnnouncements,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [goldOfferAnnouncements, indexerEventAnnouncements, rareDropAnnouncements, rareMarketplaceSales, sellListingAnnouncements, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
+  }, [indexerEventAnnouncements, rareDropAnnouncements, rareMarketplaceSales, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
 
   // Track unread events using last-seen timestamp (persists across refreshes)
   useEffect(() => {
