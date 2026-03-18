@@ -1278,41 +1278,9 @@ export const TileDetailsPanel = (): JSX.Element => {
                 </Box>
               ))}
             {monstersOnTile.length === 0 && (
-              stage <= OnboardingStage.FIRST_BLOOD ? (
-                <VStack
-                  align="center"
-                  justify="center"
-                  py={6}
-                  px={4}
-                  spacing={2}
-                  flex={1}
-                >
-                  <Text
-                    animation={`${explorePulse} 3s ease-in-out infinite`}
-                    color="#A8DEFF"
-                    fontFamily="Cinzel, serif"
-                    fontSize={{ base: 'md', lg: 'lg' }}
-                    fontWeight={600}
-                    letterSpacing="0.1em"
-                    textAlign="center"
-                    textShadow="0 0 20px rgba(168, 222, 255, 0.4), 0 0 40px rgba(168, 222, 255, 0.15)"
-                  >
-                    Explore the Dark Cave
-                  </Text>
-                  <Text
-                    color="#5A5040"
-                    fontSize="2xs"
-                    letterSpacing="0.15em"
-                    textTransform="uppercase"
-                  >
-                    Use the compass to move
-                  </Text>
-                </VStack>
-              ) : (
-                <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
-                  No monsters in this area
-                </Text>
-              )
+              <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
+                No monsters in this area
+              </Text>
             )}
           </GridItem>
         )}
@@ -1324,7 +1292,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
-          {isHomeTile && stage <= OnboardingStage.FIRST_BLOOD && (
+          {stage <= OnboardingStage.FIRST_BLOOD && monstersOnTile.length === 0 && (
             <VStack
               align="center"
               justify="center"
