@@ -115,9 +115,23 @@ export function GameStoreProvider({ children }: Props) {
         if (hiddenAt && Date.now() - hiddenAt > STALE_THRESHOLD) {
           console.log('[gameStore] Tab was idle, re-hydrating...');
           useGameStore.getState().setReconnecting(true);
+          // Safety: force-clear reconnecting after 10s in case the fetch hangs
+          const reconnectTimeout = setTimeout(() => {
+            if (useGameStore.getState().isReconnecting) {
+              console.warn('[gameStore] Reconnect timeout — force-clearing overlay');
+              useGameStore.getState().setReconnecting(false);
+            }
+          }, 10000);
           fetchSnapshot()
             .then((snapshot) => {
-              if (cancelled) return;
+              clearTimeout(reconnectTimeout);
+              if (cancelled) {
+                // Still clear reconnecting even if cancelled — the Zustand store
+                // is global, so a stale isReconnecting=true would block the UI
+                // on remount with the "Reconnecting..." overlay.
+                useGameStore.getState().setReconnecting(false);
+                return;
+              }
               useGameStore.getState().hydrate(snapshot);
               useGameStore.getState().setReconnecting(false);
               if (WORLD_ADDRESS) {
@@ -148,6 +162,7 @@ export function GameStoreProvider({ children }: Props) {
               ws.connect();
             })
             .catch((err) => {
+              clearTimeout(reconnectTimeout);
               console.error('[gameStore] Re-hydration failed:', err);
               useGameStore.getState().setReconnecting(false);
             });

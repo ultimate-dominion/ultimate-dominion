@@ -218,17 +218,15 @@ export const MapPanel = (): JSX.Element => {
                 </Button>
               </>
             )}
-            {!isMapFull && (
-              <Button
-                isDisabled={!!currentBattle}
-                isLoading={isSpawning}
-                loadingText="Spawning..."
-                onClick={onSpawn}
-                size="sm"
-              >
-                Spawn
-              </Button>
-            )}
+            <Button
+              isDisabled={!!currentBattle}
+              isLoading={isSpawning}
+              loadingText="Spawning..."
+              onClick={onSpawn}
+              size="sm"
+            >
+              Spawn
+            </Button>
           </VStack>
         )}
       </Box>
