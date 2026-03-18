@@ -29,7 +29,16 @@ export const MiniLeaderboard = ({ nearby, isLoading, rankBy, dataRankBy, setRank
       const rankB = displayMode === 'stats' ? b.statsRank : b.goldRank;
       return rankA - rankB;
     });
-    return sorted.slice(0, 5);
+    if (sorted.length <= 5) return sorted;
+
+    // Guarantee self is in the visible 5 rows
+    const selfIdx = sorted.findIndex(p => p.isSelf);
+    if (selfIdx === -1 || selfIdx < 5) return sorted.slice(0, 5);
+
+    // Self is beyond position 4 — build window around self
+    // Show 2 above self, self, then fill remaining from below
+    const start = Math.max(0, selfIdx - 2);
+    return sorted.slice(start, start + 5);
   }, [nearby, displayMode]);
 
   if (isLoading || rows.length === 0) return null;
