@@ -35,6 +35,7 @@ import {
 } from '../utils/types';
 
 import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
+import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 
 import { ItemCard } from './ItemCard';
 import { ItemEquipModal } from './ItemEquipModal';
@@ -70,6 +71,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     return isElite ? `Elite ${opponent.name}` : opponent.name;
   }, [opponent]);
   const leaderboardRank = useLeaderboardRank();
+  const stage = useOnboardingStage();
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
@@ -332,7 +334,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {winner === character.id && (hasLeveledUp || justBecameEligible) && (
                   <LevelUpBanner level={canLevel ? BigInt(character.level) + 1n : character.level} />
                 )}
-                {winner === character.id && canLevel && (
+                {winner === character.id && canLevel && stage >= OnboardingStage.ESTABLISHED && (
                   <LevelingPanel canLevel character={character} compact />
                 )}
                 {(hasLeveledUp || justBecameEligible || canLevel) &&

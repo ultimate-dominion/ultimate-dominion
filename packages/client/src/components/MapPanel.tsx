@@ -367,7 +367,7 @@ export const MapPanel = (): JSX.Element => {
         </PolygonalCard>
       </Box>
 
-      {isDesktop && stage >= OnboardingStage.SETTLING_IN && (
+      {isDesktop && stage >= OnboardingStage.ESTABLISHED && (
         <Box order={3} w="100%" flex={1} minH="100px" mt={2}>
           <WorldFeed inline />
         </Box>

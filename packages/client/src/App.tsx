@@ -32,6 +32,7 @@ import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
 import { QueueProvider } from './contexts/QueueContext';
 import { useGasStation } from './hooks/useGasStation';
+import { OnboardingStage, useOnboardingStage } from './hooks/useOnboardingStage';
 import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
 
@@ -75,6 +76,7 @@ const AppInner = (): JSX.Element => {
   } = useMUD();
   const { isOpen: isFeedOpen, onOpen: onOpenFeed, unreadCount } = useChat();
   const { character } = useCharacter();
+  const stage = useOnboardingStage();
   const {
     isOpen: isGoldMerchantOpen,
     onClose: onCloseGoldMerchant,
@@ -153,7 +155,7 @@ const AppInner = (): JSX.Element => {
         <AppRoutes />
       </Box>
       {isDesktop && pathname !== HOME_PATH && <Footer />}
-      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && !isDesktop && (
+      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && !isDesktop && stage >= OnboardingStage.ESTABLISHED && (
         <>
           <Box
             bottom={2}
