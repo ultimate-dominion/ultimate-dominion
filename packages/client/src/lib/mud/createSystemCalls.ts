@@ -600,9 +600,16 @@ export function createSystemCalls(
 
   let isMovePending = false;
 
-  // Minimum gap (ms) between consecutive moves — debounce to prevent
-  // accidental double-taps. The isMovePending mutex is the real guard.
-  const MIN_MOVE_GAP_MS = 200;
+  // Adaptive move throttle: starts at BASE_MOVE_GAP_MS, widens to
+  // BACKPRESSURE_MOVE_GAP_MS after a revert (state was stale — give the
+  // RPC time to catch up), then decays back after DECAY_AFTER_SUCCESSES
+  // consecutive successful moves. Prevents burning relayer gas on repeated
+  // reverts while keeping movement snappy when healthy.
+  const BASE_MOVE_GAP_MS = 200;
+  const BACKPRESSURE_MOVE_GAP_MS = 500;
+  const DECAY_AFTER_SUCCESSES = 3;
+  let currentMoveGapMs = BASE_MOVE_GAP_MS;
+  let consecutiveSuccesses = 0;
 
   // Local timestamp (ms) of the last move completion (success or revert).
   let lastMoveCompletedMs = 0;
@@ -621,17 +628,35 @@ export function createSystemCalls(
   };
 
   /**
-   * Small debounce between consecutive moves.
-   * On-chain cooldown is 0 — this just prevents queueing moves faster
-   * than the pipeline can process them.
+   * Adaptive debounce between consecutive moves.
+   * On-chain cooldown is 0 — this prevents queueing moves faster than the
+   * pipeline can process them. Widens after reverts, decays after successes.
    */
   const waitForMoveCooldown = async () => {
     if (lastMoveCompletedMs > 0) {
       const elapsedMs = Date.now() - lastMoveCompletedMs;
-      if (elapsedMs < MIN_MOVE_GAP_MS) {
-        const delayMs = MIN_MOVE_GAP_MS - elapsedMs;
+      if (elapsedMs < currentMoveGapMs) {
+        const delayMs = currentMoveGapMs - elapsedMs;
         await new Promise(r => setTimeout(r, delayMs));
       }
+    }
+  };
+
+  const onMoveSuccess = () => {
+    lastMoveCompletedMs = Date.now();
+    consecutiveSuccesses++;
+    if (consecutiveSuccesses >= DECAY_AFTER_SUCCESSES && currentMoveGapMs > BASE_MOVE_GAP_MS) {
+      currentMoveGapMs = BASE_MOVE_GAP_MS;
+      console.info(`[move] Throttle decayed to ${BASE_MOVE_GAP_MS}ms after ${consecutiveSuccesses} successes`);
+    }
+  };
+
+  const onMoveRevert = () => {
+    lastMoveCompletedMs = Date.now();
+    consecutiveSuccesses = 0;
+    if (currentMoveGapMs < BACKPRESSURE_MOVE_GAP_MS) {
+      currentMoveGapMs = BACKPRESSURE_MOVE_GAP_MS;
+      console.warn(`[move] Throttle widened to ${BACKPRESSURE_MOVE_GAP_MS}ms after revert`);
     }
   };
 
@@ -759,7 +784,7 @@ export function createSystemCalls(
             if (diagResult === 'not_spawned') {
               console.warn('[move] Character is not spawned — updating store');
               useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
-              lastMoveCompletedMs = Date.now();
+              onMoveRevert();
               return { success: false, error: 'Session expired — respawn to continue.' };
             }
 
@@ -796,14 +821,14 @@ export function createSystemCalls(
             // Timeout, transient, MoveTooFast, or retries exhausted — warn and let player retry
             if (diagResult === 'error' && diagError) {
               console.error(`[move] Diagnostic error:`, diagError);
-              lastMoveCompletedMs = Date.now();
+              onMoveRevert();
               return { success: false, error: getContractError(diagError) };
             }
             console.warn(`[move] On-chain revert — ${diagResult} (target: ${x},${y})`);
-            lastMoveCompletedMs = Date.now();
+            onMoveRevert();
             return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
           }
-          lastMoveCompletedMs = Date.now();
+          onMoveSuccess();
           return { success: true };
         } catch (e) {
           // Stale-state / transient errors → yellow warning, not red error

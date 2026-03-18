@@ -27,14 +27,24 @@ export function createViemClientConfig(chain: MUDChain): {
   // HTTP first — more reliable for request/response patterns (receipt polling,
   // gas estimation, contract reads). WS can hang if the endpoint is unreachable
   // or returns 403, blocking the fallback chain.
+  //
+  // Primary (self-hosted Base node) gets a 3s timeout — with 200ms flashblocks,
+  // anything slower means degradation. Fallbacks get 8s. rank: true lets viem
+  // track transport health and auto-deprioritize degraded endpoints — if the
+  // Base node goes down, Alchemy takes over after ~3s on the first request,
+  // then subsequent requests go straight to Alchemy until the node recovers.
   const transports = [
-    ...httpUrls.map(url => http(url, { retryCount: 2, timeout: 10_000 })),
-    ...wsUrls.map(url => webSocket(url, { retryCount: 0, timeout: 5_000 })),
+    ...httpUrls.map((url, i) =>
+      http(url, { retryCount: 1, timeout: i === 0 ? 3_000 : 8_000 }),
+    ),
+    ...wsUrls.map(url => webSocket(url, { retryCount: 0, timeout: 3_000 })),
   ];
 
   return {
     chain,
-    transport: transportObserver(fallback(transports.length > 0 ? transports : [http()])),
+    transport: transportObserver(
+      fallback(transports.length > 0 ? transports : [http()], { rank: true }),
+    ),
     pollingInterval: 250,
   } as const satisfies ClientConfig;
 }
