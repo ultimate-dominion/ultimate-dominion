@@ -6,6 +6,7 @@ const makeCharacter = (
   id: string,
   stats: { agi: bigint; str: bigint; int: bigint },
   gold: bigint = 0n,
+  escrowGold: bigint = 0n,
 ): Character =>
   ({
     id,
@@ -15,6 +16,7 @@ const makeCharacter = (
       intelligence: stats.int,
     },
     externalGoldBalance: gold,
+    escrowGoldBalance: escrowGold,
   }) as Character;
 
 describe('computeRanks', () => {
@@ -49,7 +51,7 @@ describe('computeRanks', () => {
     expect(computeRanks(chars, 'low')?.statsRank).toBe(3);
   });
 
-  it('computes correct gold rank by externalGoldBalance', () => {
+  it('computes correct gold rank by total gold (external + escrow)', () => {
     const chars = [
       makeCharacter('poor', { agi: 1n, str: 1n, int: 1n }, 10n),
       makeCharacter('middle', { agi: 1n, str: 1n, int: 1n }, 500n),
@@ -108,5 +110,36 @@ describe('computeRanks', () => {
     const weakRich = computeRanks(chars, 'weak-rich');
     expect(weakRich?.statsRank).toBe(2);
     expect(weakRich?.goldRank).toBe(1);
+  });
+
+  it('escrow gold contributes to gold rank', () => {
+    const chars = [
+      // Player A: 1 external, 100 escrow = 101 total
+      makeCharacter('escrow-heavy', { agi: 1n, str: 1n, int: 1n }, 1n, 100n),
+      // Player B: 50 external, 0 escrow = 50 total
+      makeCharacter('external-only', { agi: 1n, str: 1n, int: 1n }, 50n, 0n),
+    ];
+    expect(computeRanks(chars, 'escrow-heavy')?.goldRank).toBe(1);
+    expect(computeRanks(chars, 'external-only')?.goldRank).toBe(2);
+  });
+
+  it('tied total gold (different split) shares same rank', () => {
+    const chars = [
+      // 5 external + 5 escrow = 10 total
+      makeCharacter('split', { agi: 1n, str: 1n, int: 1n }, 5n, 5n),
+      // 10 external + 0 escrow = 10 total
+      makeCharacter('external', { agi: 1n, str: 1n, int: 1n }, 10n, 0n),
+    ];
+    expect(computeRanks(chars, 'split')?.goldRank).toBe(1);
+    expect(computeRanks(chars, 'external')?.goldRank).toBe(1);
+  });
+
+  it('zero escrow does not affect ranking vs external-only', () => {
+    const chars = [
+      makeCharacter('a', { agi: 1n, str: 1n, int: 1n }, 100n, 0n),
+      makeCharacter('b', { agi: 1n, str: 1n, int: 1n }, 50n, 0n),
+    ];
+    expect(computeRanks(chars, 'a')?.goldRank).toBe(1);
+    expect(computeRanks(chars, 'b')?.goldRank).toBe(2);
   });
 });
