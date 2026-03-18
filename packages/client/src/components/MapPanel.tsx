@@ -26,7 +26,7 @@ import { useQueue } from '../contexts/QueueContext';
 import { useGameConfig } from '../lib/gameStore';
 import { WAITING_ROOM_PATH } from '../Routes';
 import { CaptchaGate } from './CaptchaGate';
-import { ChatBox } from './ChatBox';
+import { WorldFeed } from './WorldFeed';
 import { OnlineLink } from './OnlineRoster';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
@@ -356,7 +356,7 @@ export const MapPanel = (): JSX.Element => {
 
       {isDesktop && isSpawned && (
         <Box order={3} w="100%" flex={1} minH="100px" mt={2}>
-          <ChatBox inline />
+          <WorldFeed inline />
         </Box>
       )}
     </Stack>

@@ -7,11 +7,11 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { useEffect } from 'react';
-import { IoChatbubble } from 'react-icons/io5';
+import { GiScrollUnfurled } from 'react-icons/gi';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
 import { BetaBanner } from './components/BetaBanner';
-import { ChatBox } from './components/ChatBox';
+import { WorldFeed } from './components/WorldFeed';
 import { FeedbackButton } from './components/FeedbackButton';
 import { Footer } from './components/Footer';
 import { GoldMerchantModal } from './components/GoldMerchantModal';
@@ -74,7 +74,7 @@ const AppInner = (): JSX.Element => {
     onOpenWalletDetailsModal,
   } = useMUD();
   const { isSpawned } = useMap();
-  const { isOpen: isChatBoxOpen, onOpen: onOpenChatBox, unreadCount } = useChat();
+  const { isOpen: isFeedOpen, onOpen: onOpenFeed, unreadCount } = useChat();
   const { character } = useCharacter();
   const {
     isOpen: isGoldMerchantOpen,
@@ -125,16 +125,16 @@ const AppInner = (): JSX.Element => {
   useEffect(() => {
     if (!isSpawned) return;
     if (CHAT_NOT_ALLOWED_PATHS.includes(pathname)) return;
-    // Only auto-open on desktop (inline chat). On mobile, let user tap the button
-    // so unread badge can show new messages.
+    // Only auto-open on desktop (inline feed). On mobile, let user tap the button
+    // so unread badge can show new events.
     if (!isDesktop) return;
 
-    const isChatBoxOpen = localStorage.getItem(IS_CHAT_BOX_OPEN_KEY);
-    if (!isChatBoxOpen || isChatBoxOpen === 'true') {
+    const isFeedOpen = localStorage.getItem(IS_CHAT_BOX_OPEN_KEY);
+    if (!isFeedOpen || isFeedOpen === 'true') {
       localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'true');
-      onOpenChatBox();
+      onOpenFeed();
     }
-  }, [isDesktop, isSpawned, onOpenChatBox, pathname]);
+  }, [isDesktop, isSpawned, onOpenFeed, pathname]);
 
   return (
     <Grid
@@ -163,16 +163,16 @@ const AppInner = (): JSX.Element => {
             right={2}
             zIndex={10}
           >
-            <ScaleFade initialScale={0.9} in={!isChatBoxOpen}>
+            <ScaleFade initialScale={0.9} in={!isFeedOpen}>
               <Button
-                onClick={onOpenChatBox}
-                opacity={isChatBoxOpen ? 0 : 1}
+                onClick={onOpenFeed}
+                opacity={isFeedOpen ? 0 : 1}
                 position="relative"
                 px={4}
                 py={5}
                 transition="opacity 0.3s ease"
               >
-                <IoChatbubble size={24} />
+                <GiScrollUnfurled size={24} />
                 {unreadCount > 0 && (
                   <Box
                     alignItems="center"
@@ -196,12 +196,12 @@ const AppInner = (): JSX.Element => {
             </ScaleFade>
           </Box>
           <Box
-            bottom={isChatBoxOpen ? 2 : -1}
+            bottom={isFeedOpen ? 2 : -1}
             position="fixed"
             right={2}
             zIndex={10}
           >
-            <ChatBox />
+            <WorldFeed />
           </Box>
         </>
       )}

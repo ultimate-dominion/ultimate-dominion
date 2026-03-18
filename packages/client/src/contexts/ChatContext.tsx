@@ -33,6 +33,10 @@ import { useItems } from './ItemsContext';
 import { useMap } from './MapContext';
 
 import { useOrders } from './OrdersContext';
+import { useQueue } from '../contexts/QueueContext';
+
+// Feature flag: set VITE_ENABLE_CHAT=true to re-enable Push Protocol chat
+const CHAT_ENABLED = import.meta.env.VITE_ENABLE_CHAT === 'true';
 
 // Push Protocol environment: 'prod' for production, 'staging' for beta + localhost
 // Values match @pushprotocol/restapi CONSTANTS.ENV — inlined to avoid static import
@@ -58,6 +62,20 @@ const ADVENTURER_BADGE_BASE = 1;
 const BOSS_MOB_ID = '12';
 const BOSS_NAME = 'Basilisk';
 const BOSS_COLOR = '#E04040';
+
+// Color mapping for indexer game events rendered in the world feed
+const GAME_EVENT_COLORS: Record<string, string> = {
+  level_up: '#4A8B4A',        // green
+  death: '#8B4040',           // dark red
+  pvp_kill: '#B85C3A',        // burnt orange — PvP victory
+  character_created: '#9B8EC4', // purple
+  shop_purchase: '#8A9E7A',   // sage
+  class_selection: '#D4A54A', // gold
+  fragment_found: '#A8DEFF',  // light blue
+};
+
+// Indexer events that should NOT be merged (client-side handles with richer JSX, or not applicable)
+const EXCLUDED_INDEXER_EVENTS = new Set(['rare_find', 'marketplace_sale', 'loot_drop', 'quest_complete']);
 
 // Rare drops and gold offers older than this are filtered out of chat
 const ANNOUNCEMENT_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
@@ -146,6 +164,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const { allCharacters, allMonsters, isSpawned } = useMap();
   const { character: currentCharacter } = useCharacter();
   const { activeOrders } = useOrders();
+  const { gameEvents } = useQueue();
 
   const configValue = useGameConfig('UltimateDominionConfig');
   const goldToken = configValue ? String(configValue.goldToken) : null;
@@ -250,7 +269,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
             const found = allItems.find(item => item.tokenId === itemId!.toString());
             return found;
           })
-          .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Rare);
+          .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Uncommon);
 
         if (rareDrops.length === 0) return null;
 
@@ -639,23 +658,37 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       .filter((m): m is Message => m !== null);
   }, [combatOutcomeRows, allCharacters]);
 
+  // Convert indexer game events to feed Messages
+  const indexerEventAnnouncements: Message[] = useMemo(() => {
+    return gameEvents
+      .filter(e => !EXCLUDED_INDEXER_EVENTS.has(e.eventType))
+      .map(event => ({
+        delivered: true,
+        from: zeroAddress,
+        message: event.description,
+        rarityColor: GAME_EVENT_COLORS[event.eventType] || '#8A7E6A',
+        timestamp: event.timestamp,
+      }));
+  }, [gameEvents]);
+
   const messagesAndEvents = useMemo(() => {
     return [
-      ...messages,
+      ...(CHAT_ENABLED ? messages : []),
       ...rareDropAnnouncements,
       ...rareMarketplaceSales,
       ...goldOfferAnnouncements,
       ...sellListingAnnouncements,
       ...bossSpawnAnnouncements,
       ...bossKillAnnouncements,
+      ...indexerEventAnnouncements,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [goldOfferAnnouncements, rareDropAnnouncements, rareMarketplaceSales, sellListingAnnouncements, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
+  }, [goldOfferAnnouncements, indexerEventAnnouncements, rareDropAnnouncements, rareMarketplaceSales, sellListingAnnouncements, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
 
-  // Track unread messages using last-seen timestamp (persists across refreshes)
+  // Track unread events using last-seen timestamp (persists across refreshes)
   useEffect(() => {
     if (isOpen) {
       setUnreadCount(0);
-      if (messages.length > 0) {
+      if (messagesAndEvents.length > 0) {
         localStorage.setItem('chat_last_seen', Date.now().toString());
       }
     } else {
@@ -663,15 +696,16 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         localStorage.getItem('chat_last_seen') || Date.now().toString(),
         10,
       );
-      const unread = messages.filter(
+      const unread = messagesAndEvents.filter(
         m => m.timestamp > lastSeen && m.delivered,
       ).length;
       setUnreadCount(unread);
     }
-  }, [isOpen, messages]);
+  }, [isOpen, messagesAndEvents]);
 
   const onLogin = useCallback(async (options?: { silent?: boolean }) => {
     try {
+      if (!CHAT_ENABLED) return;
       if (user) return;
       if (!data) return;
 
@@ -798,6 +832,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // First-time users click the Login button manually.
   // Failures are silent — chat is non-critical and Push backend can be flaky.
   useEffect(() => {
+    if (!CHAT_ENABLED) return;
     const hasCachedKey = sessionStorage.getItem('push_pgp_key');
     if (hasCachedKey && isSpawned && data && !user && !isLoggingIn) {
       onLogin({ silent: true }).catch(() => {
@@ -821,6 +856,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   // Poll for new messages as fallback (Push streams are unreliable)
   // Pauses when tab is hidden to save resources
   useEffect(() => {
+    if (!CHAT_ENABLED) return;
     if (!user || !isGroupMember) return;
 
     let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -958,6 +994,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   }, [newMessage, renderError, user]);
 
   useEffect(() => {
+    if (!CHAT_ENABLED) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
       if (!isMessageInputFocused) return;

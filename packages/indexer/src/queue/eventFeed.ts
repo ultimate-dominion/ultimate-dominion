@@ -19,6 +19,8 @@ const emittedSales = new Set<string>();        // "keyBytes"
 const emittedCharacters = new Set<string>();   // "keyBytes"
 const emittedShopSales = new Set<string>();    // "shopId:customerId:itemId:timestamp"
 const emittedQuests = new Set<string>();       // "characterId:questId"
+const emittedClassSelections = new Set<string>(); // "keyBytes:classValue"
+const emittedFragments = new Set<string>();       // "keyBytes"
 
 function addEvent(event: GameEvent) {
   eventBuffer.push(event);
@@ -59,6 +61,8 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
       await scanNewCharacters(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanShopPurchases(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanQuestCompletions(syncHandle, scanFrom, currentBlock, broadcaster);
+      await scanAdvancedClassSelections(syncHandle, scanFrom, currentBlock, broadcaster);
+      await scanFragmentDiscoveries(syncHandle, scanFrom, currentBlock, broadcaster);
 
       loggedMissing = true;
       lastScannedBlock = currentBlock;
@@ -126,7 +130,39 @@ async function scanLevelUps(
   }
 }
 
-/** Scan for PvP/PvE combat outcomes */
+// EncounterType enum (must match mud.config): PvP=0, PvE=1, World=2
+const ENCOUNTER_TYPE_PVP = 0;
+
+/** Decode mob ID from first 4 bytes of a mob instance entity (bytes32) */
+function decodeMobIdFromEntity(entity: Buffer | Uint8Array): number {
+  const buf = Buffer.isBuffer(entity) ? entity : Buffer.from(entity);
+  if (buf.length < 4) return 0;
+  return buf.readUInt32BE(0);
+}
+
+/** Look up a mob's display name from the Mobs table */
+async function getMobName(mobId: number, mobsTable: string): Promise<string> {
+  try {
+    const rows = await sql.unsafe(`
+      SELECT "mob_metadata" FROM "${mudSchema}"."${mobsTable}"
+      WHERE "mob_id" = $1 LIMIT 1
+    `, [mobId.toString()]);
+    if (rows.length > 0 && rows[0].mob_metadata) {
+      const uri = String(rows[0].mob_metadata);
+      // Parse text URI like "monster:dire_rat" → "Dire Rat"
+      const parts = uri.split(':');
+      if (parts.length >= 2) {
+        return parts.slice(1).join(':')
+          .split('_')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+      }
+    }
+  } catch { /* fall through */ }
+  return 'a monster';
+}
+
+/** Scan for PvP kills and PvE deaths */
 async function scanCombatOutcomes(
   syncHandle: SyncHandle,
   fromBlock: number,
@@ -134,55 +170,110 @@ async function scanCombatOutcomes(
   broadcaster: Broadcaster,
 ) {
   const outcomeTable = syncHandle.tableNameMap.get('CombatOutcome');
+  const combatEncTable = syncHandle.tableNameMap.get('CombatEncounter');
   const worldEncTable = syncHandle.tableNameMap.get('WorldEncounter');
   const charactersTable = syncHandle.tableNameMap.get('Characters');
+  const mobsTable = syncHandle.tableNameMap.get('Mobs');
   logMissing('Combat', [['CombatOutcome', outcomeTable], ['WorldEncounter', worldEncTable], ['Characters', charactersTable]]);
   if (!outcomeTable || !worldEncTable || !charactersTable) return;
 
   try {
+    // Join CombatEncounter (if available) for encounter_type and defenders
+    const hasCE = !!combatEncTable;
     const rows = await sql.unsafe(`
-      SELECT co."__key_bytes", co."exp_dropped", co."gold_dropped", co."attackers_win", c."name"
+      SELECT co."__key_bytes", co."attackers_win",
+             c."name" as player_name,
+             we."character" as player_entity
+             ${hasCE ? `, ce."encounter_type", ce."defenders", ce."attackers"` : ''}
       FROM "${mudSchema}"."${outcomeTable}" co
       JOIN "${mudSchema}"."${worldEncTable}" we
         ON co."__key_bytes" = we."__key_bytes"
       LEFT JOIN "${mudSchema}"."${charactersTable}" c
         ON we."character" = c."__key_bytes"
+      ${hasCE ? `LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"` : ''}
       WHERE co."__last_updated_block_number" >= $1
         AND co."__last_updated_block_number" <= $2
     `, [fromBlock.toString(), toBlock.toString()]);
 
     for (const row of rows) {
-      const name = decodeCharacterName(row.name);
-      if (!name) continue;
+      const playerName = decodeCharacterName(row.player_name);
+      if (!playerName) continue;
 
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
       if (emittedCombat.has(keyHex)) continue;
       emittedCombat.add(keyHex);
 
-      const xpGained = Number(row.exp_dropped || 0);
-      const goldGained = Number(row.gold_dropped || 0);
-      const won = row.attackers_win;
+      const attackersWin = Boolean(row.attackers_win);
+      const isPvP = hasCE && Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
 
-      let desc: string;
-      if (won && xpGained > 0 && goldGained > 0) {
-        desc = `${name} won a battle (+${xpGained} XP, +${goldGained} gold)`;
-      } else if (won && xpGained > 0) {
-        desc = `${name} won a battle (+${xpGained} XP)`;
-      } else if (won) {
-        desc = `${name} emerged victorious in combat`;
+      if (isPvP) {
+        // PvP: emit one event per combat — "{Winner} defeated {Loser}"
+        // Player is always in attackers (WorldEncounter.character starts the fight)
+        const playerWon = attackersWin;
+        // The opponent is the first entity in the other side
+        const opponentEntities: Buffer[] = playerWon
+          ? (row.defenders || [])
+          : (row.attackers || []);
+        let opponentName = 'an opponent';
+        if (opponentEntities.length > 0) {
+          const oppEntity = opponentEntities[0];
+          try {
+            const oppRow = await sql.unsafe(`
+              SELECT "name" FROM "${mudSchema}"."${charactersTable}"
+              WHERE "__key_bytes" = $1 LIMIT 1
+            `, [oppEntity]);
+            if (oppRow.length > 0) {
+              opponentName = decodeCharacterName(oppRow[0].name) || 'an opponent';
+            }
+          } catch { /* fall through */ }
+        }
+
+        const winner = playerWon ? playerName : opponentName;
+        const loser = playerWon ? opponentName : playerName;
+
+        const event: GameEvent = {
+          id: crypto.randomUUID(),
+          eventType: 'pvp_kill',
+          playerName: winner,
+          description: `${winner} defeated ${loser} in PvP`,
+          timestamp: Date.now(),
+        };
+        addEvent(event);
+        broadcaster.broadcastGameEvent(event);
       } else {
-        desc = `${name} fell in battle`;
-      }
+        // PvE: only emit deaths (player killed by monster)
+        if (attackersWin) continue; // Player won PvE — skip (too noisy)
 
-      const event: GameEvent = {
-        id: crypto.randomUUID(),
-        eventType: won ? 'pvp_kill' : 'death',
-        playerName: name,
-        description: desc,
-        timestamp: Date.now(),
-      };
-      addEvent(event);
-      broadcaster.broadcastGameEvent(event);
+        // Find the mob that killed the player
+        let mobName = 'a monster';
+        if (hasCE && mobsTable) {
+          const defenderEntities: Buffer[] = row.defenders || [];
+          // Mobs are in defenders when attackers_are_mobs is false
+          // But player is attacker, so defenders = mobs
+          // Actually, player attacks → player is in attackers, mob is in defenders
+          // If player lost (attackersWin=false), the mob (defender) won
+          // The mob entity is in defenders (or attackers if mob attacked)
+          const mobEntities: Buffer[] = row.attackers_are_mobs
+            ? (row.attackers || [])
+            : defenderEntities;
+          if (mobEntities.length > 0) {
+            const mobId = decodeMobIdFromEntity(mobEntities[0]);
+            if (mobId > 0) {
+              mobName = await getMobName(mobId, mobsTable);
+            }
+          }
+        }
+
+        const event: GameEvent = {
+          id: crypto.randomUUID(),
+          eventType: 'death',
+          playerName: playerName,
+          description: `${playerName} was killed by ${mobName}`,
+          timestamp: Date.now(),
+        };
+        addEvent(event);
+        broadcaster.broadcastGameEvent(event);
+      }
     }
   } catch (err) {
     // Table might not exist yet
@@ -494,6 +585,103 @@ async function scanQuestCompletions(
         eventType: 'quest_complete',
         playerName: name,
         description: `${name} completed a quest`,
+        timestamp: Date.now(),
+      };
+      addEvent(event);
+      broadcaster.broadcastGameEvent(event);
+    }
+  } catch {
+    // Table might not exist yet
+  }
+}
+
+// Advanced class enum names (must match mud.config AdvancedClass)
+const ADVANCED_CLASS_NAMES = ['', 'Paladin', 'Sorcerer', 'Warrior', 'Druid', 'Warlock', 'Ranger', 'Cleric', 'Wizard', 'Rogue'];
+
+/** Scan for advanced class selections (level 10 class picks) */
+async function scanAdvancedClassSelections(
+  syncHandle: SyncHandle,
+  fromBlock: number,
+  toBlock: number,
+  broadcaster: Broadcaster,
+) {
+  const statsTable = syncHandle.tableNameMap.get('Stats');
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  if (!statsTable || !charactersTable) return;
+
+  try {
+    const rows = await sql.unsafe(`
+      SELECT s."__key_bytes", s."advanced_class", c."name"
+      FROM "${mudSchema}"."${statsTable}" s
+      JOIN "${mudSchema}"."${charactersTable}" c
+        ON s."__key_bytes" = c."__key_bytes"
+      WHERE s."__last_updated_block_number" >= $1
+        AND s."__last_updated_block_number" <= $2
+        AND s."advanced_class" IS NOT NULL
+        AND s."advanced_class" > 0
+    `, [fromBlock.toString(), toBlock.toString()]);
+
+    for (const row of rows) {
+      const name = decodeCharacterName(row.name);
+      const classValue = Number(row.advanced_class);
+      if (!name || classValue <= 0) continue;
+
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      const dedupKey = `${keyHex}:${classValue}`;
+      if (emittedClassSelections.has(dedupKey)) continue;
+      emittedClassSelections.add(dedupKey);
+
+      const className = ADVANCED_CLASS_NAMES[classValue] || `Class ${classValue}`;
+
+      const event: GameEvent = {
+        id: crypto.randomUUID(),
+        eventType: 'class_selection',
+        playerName: name,
+        description: `${name} became a ${className}`,
+        timestamp: Date.now(),
+      };
+      addEvent(event);
+      broadcaster.broadcastGameEvent(event);
+    }
+  } catch {
+    // Table might not exist yet
+  }
+}
+
+/** Scan for fragment discoveries (triggered = true) */
+async function scanFragmentDiscoveries(
+  syncHandle: SyncHandle,
+  fromBlock: number,
+  toBlock: number,
+  broadcaster: Broadcaster,
+) {
+  const fragmentTable = syncHandle.tableNameMap.get('FragmentProgress');
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  if (!fragmentTable || !charactersTable) return;
+
+  try {
+    const rows = await sql.unsafe(`
+      SELECT fp."__key_bytes", fp."character_id", c."name"
+      FROM "${mudSchema}"."${fragmentTable}" fp
+      LEFT JOIN "${mudSchema}"."${charactersTable}" c
+        ON fp."character_id" = c."__key_bytes"
+      WHERE fp."__last_updated_block_number" >= $1
+        AND fp."__last_updated_block_number" <= $2
+        AND fp."triggered" = true
+    `, [fromBlock.toString(), toBlock.toString()]);
+
+    for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      if (emittedFragments.has(keyHex)) continue;
+      emittedFragments.add(keyHex);
+
+      const name = decodeCharacterName(row.name) || 'An adventurer';
+
+      const event: GameEvent = {
+        id: crypto.randomUUID(),
+        eventType: 'fragment_found',
+        playerName: name,
+        description: `${name} discovered a lost fragment...`,
         timestamp: Date.now(),
       };
       addEvent(event);
