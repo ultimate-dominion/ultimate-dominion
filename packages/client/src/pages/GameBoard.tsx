@@ -291,20 +291,18 @@ export const GameBoard = (): JSX.Element => {
       templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
       templateRows={{ base: 'auto', lg: 'repeat(12, 1fr)' }}
     >
-      {stage >= OnboardingStage.FIRST_BLOOD && (
-        <GridItem
-          colSpan={{ base: 1, lg: 4 }}
-          display={{ base: 'none', lg: 'block' }}
-          rowSpan={{ base: 'auto', lg: 12 }}
-        >
-          <PolygonalCard className="data-dense" clipPath="none" overflowY="auto">
-            <StatsPanel />
-          </PolygonalCard>
-        </GridItem>
-      )}
       <GridItem
-        colSpan={{ base: 1, lg: stage >= OnboardingStage.FIRST_BLOOD ? 8 : 12 }}
-        colStart={{ base: 0, lg: stage >= OnboardingStage.FIRST_BLOOD ? 5 : 1 }}
+        colSpan={{ base: 1, lg: 4 }}
+        display={{ base: 'none', lg: stage >= OnboardingStage.FIRST_BLOOD ? 'block' : 'none' }}
+        rowSpan={{ base: 'auto', lg: 12 }}
+      >
+        <PolygonalCard className="data-dense" clipPath="none" overflowY="auto">
+          <StatsPanel />
+        </PolygonalCard>
+      </GridItem>
+      <GridItem
+        colSpan={{ base: 1, lg: 8 }}
+        colStart={{ base: 0, lg: 5 }}
         rowSpan={{ base: 'auto', lg: 12 }}
         rowStart={{ base: 0, lg: 0 }}
         display="flex"
