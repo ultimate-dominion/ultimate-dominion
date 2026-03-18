@@ -704,11 +704,14 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
         }
 
         // Class selection: link the class name to the class page
+        // Description format: "{name} charges into battle as a Warrior!"
         if (event.eventType === 'class_selection') {
-          const classMatch = suffix.match(/^ became a (.+)$/);
+          const classMatch = suffix.match(/ as a (\w+)!?$/);
           if (classMatch) {
             const className = classMatch[1];
             const classSlug = className.toLowerCase();
+            // Everything between player name and class name
+            const middleText = suffix.slice(0, suffix.indexOf(` as a ${className}`)) + ' as a ';
             return {
               delivered: true,
               from: zeroAddress,
@@ -719,8 +722,9 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
                   ) : (
                     <Text as="span" color={nameColor} fontWeight={700}>{event.playerName}</Text>
                   )}
-                  {' became a '}
+                  {middleText}
                   <Text as={RouterLink} color={rarityColor} fontWeight={700} to={`${CLASS_PAGE_PATH}/${classSlug}`} _hover={{ textDecoration: 'underline' }}>{className}</Text>
+                  {'!'}
                 </Text>
               ),
               message: '',

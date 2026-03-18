@@ -18,21 +18,35 @@ function formatGold(rawPrice: unknown): string {
   }
 }
 
+/** Per-class emotive flavor for class selection events */
+const CLASS_FLAVOR: Record<string, string> = {
+  Warrior: 'charges into battle as a Warrior!',
+  Paladin: 'takes a holy oath as a Paladin!',
+  Ranger: 'walks the wild path of the Ranger!',
+  Rogue: 'vanishes into the shadows as a Rogue!',
+  Druid: 'embraces the balance as a Druid!',
+  Warlock: 'binds dark power as a Warlock!',
+  Wizard: 'channels the arcane as a Wizard!',
+  Cleric: 'answers a divine calling as a Cleric!',
+  Sorcerer: 'unleashes raw magic as a Sorcerer!',
+};
+
 /** Event description templates — emotive language for the world feed */
 const eventDesc = {
-  levelUp: (name: string, level: number) => `${name} reached Level ${level}`,
-  classSelection: (name: string, className: string) => `${name} became a ${className}`,
+  levelUp: (name: string, level: number) => `${name} reached Level ${level}!`,
+  classSelection: (name: string, className: string) =>
+    `${name} ${CLASS_FLAVOR[className] || `became a ${className}!`}`,
   fragmentFound: (name: string) => `${name} uncovered a lost fragment...`,
-  characterCreated: (name: string) => `${name} awakens in the Dark Cave`,
-  pvpKill: (winner: string, loser: string) => `${winner} defeated ${loser} in PvP`,
-  death: (name: string, mobName: string) => `${name} was slain by ${mobName}`,
-  lootDrop: (name: string, itemDesc: string) => `${name} found ${itemDesc}`,
+  characterCreated: (name: string) => `${name} awakens in the Dark Cave.`,
+  pvpKill: (winner: string, loser: string) => `${winner} defeated ${loser} in PvP!`,
+  death: (name: string, mobName: string) => `${name} was slain by ${mobName}.`,
+  lootDrop: (name: string, itemDesc: string) => `${name} found ${itemDesc}!`,
   marketplaceSale: (itemDesc: string, gold: string) =>
-    gold !== '0' ? `${itemDesc} was sold for ${gold} gold` : `${itemDesc} was sold on the marketplace`,
+    gold !== '0' ? `${itemDesc} sold for ${gold} gold!` : `${itemDesc} sold on the marketplace!`,
   shopBuy: (name: string, itemDesc: string, gold: string) =>
-    gold !== '0' ? `${name} bought ${itemDesc} for ${gold} gold` : `${name} bought ${itemDesc}`,
+    gold !== '0' ? `${name} bought ${itemDesc} for ${gold} gold.` : `${name} bought ${itemDesc}.`,
   shopSell: (name: string, itemDesc: string, gold: string) =>
-    gold !== '0' ? `${name} sold ${itemDesc} for ${gold} gold` : `${name} sold ${itemDesc}`,
+    gold !== '0' ? `${name} sold ${itemDesc} for ${gold} gold.` : `${name} sold ${itemDesc}.`,
 };
 
 /** Ring buffer of recent game events (serves as history for new clients) */
@@ -89,56 +103,12 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     return;
   }
 
-  // Collect events from each source, then sort and take the most recent
-  const allEvents: { block: number; event: GameEvent }[] = [];
+  // Collect events from event-oriented tables only.
+  // Stats/Characters are cumulative state — they show current level, not level-up history.
+  // Level-ups and class selections will appear once the live scanner picks them up.
+  const allEvents: { block: number; event: GameEvent; dedupKey?: string }[] = [];
 
-  // Helper: stagger timestamps so events display in order
-  const makeTimestamp = (block: number) => block; // use block as sort key, fix timestamps at end
-
-  // 1. Level-ups
-  try {
-    const rows = await sql.unsafe(`
-      SELECT s."__last_updated_block_number" as block, s."level", c."name"
-      FROM "${mudSchema}"."${statsTable}" s
-      JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
-      WHERE s."level" IS NOT NULL AND s."level" >= 2
-      ORDER BY s."__last_updated_block_number" DESC
-      LIMIT ${BACKFILL_LIMIT}
-    `);
-    for (const row of rows) {
-      const name = decodeCharacterName(row.name);
-      const level = Number(row.level);
-      if (!name || level <= 1) continue;
-      allEvents.push({
-        block: Number(row.block),
-        event: { id: crypto.randomUUID(), eventType: 'level_up', playerName: name, description: eventDesc.levelUp(name, level), timestamp: 0 },
-      });
-    }
-  } catch { /* table may not exist */ }
-
-  // 2. Class selections
-  try {
-    const rows = await sql.unsafe(`
-      SELECT s."__last_updated_block_number" as block, s."advanced_class", c."name"
-      FROM "${mudSchema}"."${statsTable}" s
-      JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
-      WHERE s."advanced_class" IS NOT NULL AND s."advanced_class" > 0
-      ORDER BY s."__last_updated_block_number" DESC
-      LIMIT ${BACKFILL_LIMIT}
-    `);
-    for (const row of rows) {
-      const name = decodeCharacterName(row.name);
-      const classValue = Number(row.advanced_class);
-      if (!name || classValue <= 0) continue;
-      const className = ADVANCED_CLASS_NAMES[classValue] || `Class ${classValue}`;
-      allEvents.push({
-        block: Number(row.block),
-        event: { id: crypto.randomUUID(), eventType: 'class_selection', playerName: name, description: eventDesc.classSelection(name, className), timestamp: 0 },
-      });
-    }
-  } catch { /* table may not exist */ }
-
-  // 3. Fragment discoveries
+  // 1. Fragment discoveries (discrete event table)
   if (fragmentTable) {
     try {
       const rows = await sql.unsafe(`
@@ -159,7 +129,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     } catch { /* table may not exist */ }
   }
 
-  // 4. Character creations
+  // 2. Character creations (level=1 is a real discrete event)
   try {
     const query = statsTable
       ? `SELECT c."__last_updated_block_number" as block, c."name"
@@ -184,7 +154,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     }
   } catch { /* table may not exist */ }
 
-  // 5. Combat outcomes (PvP kills + PvE deaths)
+  // 3. Combat outcomes (PvP kills + PvE deaths)
   if (outcomeTable && worldEncTable) {
     try {
       const hasCE = !!combatEncTable;
@@ -246,7 +216,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     }
   }
 
-  // 6. Loot drops (uncommon+)
+  // 4. Loot drops
   if (outcomeTable && worldEncTable) {
     try {
       const rows = await sql.unsafe(`
@@ -287,7 +257,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     } catch { /* table may not exist */ }
   }
 
-  // 7. Shop purchases
+  // 5. Shop purchases
   if (shopSaleTable) {
     try {
       const rows = await sql.unsafe(`
@@ -348,6 +318,88 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
   }
 
   console.log(`[eventFeed] Backfilled ${recent.length} events (from ${allEvents.length} candidates)`);
+
+  // Seed dedup sets so the live scanner doesn't re-emit existing DB rows.
+  // Query all existing key_bytes for each event source.
+  await seedDedupSets(syncHandle);
+}
+
+/** Pre-populate dedup sets from existing DB state to prevent live scanner re-emits */
+async function seedDedupSets(syncHandle: SyncHandle) {
+  const statsTable = syncHandle.tableNameMap.get('Stats');
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  const fragmentTable = syncHandle.tableNameMap.get('FragmentProgress');
+  const outcomeTable = syncHandle.tableNameMap.get('CombatOutcome');
+  const shopSaleTable = syncHandle.tableNameMap.get('ShopSale');
+
+  // Level-ups: seed with current level for each character
+  if (statsTable) {
+    try {
+      const rows = await sql.unsafe(`SELECT "__key_bytes", "level" FROM "${mudSchema}"."${statsTable}" WHERE "level" IS NOT NULL AND "level" >= 2`);
+      for (const row of rows) {
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+        emittedLevelUps.add(`${keyHex}:${Number(row.level)}`);
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Class selections
+  if (statsTable) {
+    try {
+      const rows = await sql.unsafe(`SELECT "__key_bytes", "advanced_class" FROM "${mudSchema}"."${statsTable}" WHERE "advanced_class" IS NOT NULL AND "advanced_class" > 0`);
+      for (const row of rows) {
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+        emittedClassSelections.add(`${keyHex}:${Number(row.advanced_class)}`);
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Combat outcomes
+  if (outcomeTable) {
+    try {
+      const rows = await sql.unsafe(`SELECT "__key_bytes" FROM "${mudSchema}"."${outcomeTable}"`);
+      for (const row of rows) {
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+        emittedCombat.add(keyHex);
+        emittedLoot.add(keyHex); // loot uses same key
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Characters
+  if (charactersTable) {
+    try {
+      const rows = await sql.unsafe(`SELECT "__key_bytes" FROM "${mudSchema}"."${charactersTable}" WHERE "name" IS NOT NULL`);
+      for (const row of rows) {
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+        emittedCharacters.add(keyHex);
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Fragments
+  if (fragmentTable) {
+    try {
+      const rows = await sql.unsafe(`SELECT "__key_bytes" FROM "${mudSchema}"."${fragmentTable}" WHERE "triggered" = true`);
+      for (const row of rows) {
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+        emittedFragments.add(keyHex);
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Shop sales
+  if (shopSaleTable) {
+    try {
+      const rows = await sql.unsafe(`SELECT "__key_bytes" FROM "${mudSchema}"."${shopSaleTable}"`);
+      for (const row of rows) {
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+        emittedShopSales.add(keyHex);
+      }
+    } catch { /* ignore */ }
+  }
+
+  console.log(`[eventFeed] Dedup sets seeded: levelUps=${emittedLevelUps.size}, classes=${emittedClassSelections.size}, combat=${emittedCombat.size}, chars=${emittedCharacters.size}, frags=${emittedFragments.size}, shops=${emittedShopSales.size}`);
 }
 
 /**
