@@ -360,7 +360,7 @@ export const GameBoard = (): JSX.Element => {
             <DrawerHeader>Stats</DrawerHeader>
             <DrawerBody className="data-dense" overflowY="auto" pb={6}>
               <StatsPanel />
-              {isSpawned && !currentBattle && stage >= OnboardingStage.FIRST_BLOOD && (
+              {isSpawned && !currentBattle && stage >= OnboardingStage.SETTLING_IN && (
                 <>
                   <Divider borderColor="grey300" my={4} />
                   <EquippedLoadout />
