@@ -310,14 +310,6 @@ export const MovementProvider = ({
           >
             {outerRealmsNarrative}
           </Text>
-          <Text
-            color="#5A5040"
-            fontSize="xs"
-            letterSpacing="0.1em"
-            textAlign="center"
-          >
-            Reach Level 5 to enter the Outer Realms.
-          </Text>
         </VStack>
       </InfoModal>
     </MovementContext.Provider>
