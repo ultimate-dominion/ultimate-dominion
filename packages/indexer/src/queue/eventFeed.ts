@@ -85,7 +85,7 @@ export function getRecentEvents(): GameEvent[] {
  * Queries ALL event types — the compute happens here on the server.
  */
 async function backfillRecentEvents(syncHandle: SyncHandle) {
-  const BACKFILL_LIMIT = 25;
+  const BACKFILL_LIMIT = 50;
   console.log(`[eventFeed] Backfilling last ${BACKFILL_LIMIT} events from DB...`);
 
   const statsTable = syncHandle.tableNameMap.get('Stats');
@@ -257,46 +257,6 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     } catch { /* table may not exist */ }
   }
 
-  // 5. Shop purchases
-  if (shopSaleTable) {
-    try {
-      const rows = await sql.unsafe(`
-        SELECT ss."__last_updated_block_number" as block, ss."buying", ss."price", ss."item_id", c."name"
-        FROM "${mudSchema}"."${shopSaleTable}" ss
-        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON ss."customer_id" = c."__key_bytes"
-        ORDER BY ss."__last_updated_block_number" DESC
-        LIMIT ${BACKFILL_LIMIT}
-      `);
-
-      for (const row of rows) {
-        const name = decodeCharacterName(row.name) || 'An adventurer';
-        const goldAmount = formatGold(row.price);
-        const buying = row.buying;
-        let itemDesc = 'an item';
-
-        if (itemsTable) {
-          try {
-            const itemRow = await sql.unsafe(`SELECT "item_type", "rarity" FROM "${mudSchema}"."${itemsTable}" WHERE "item_id" = $1::numeric LIMIT 1`, [row.item_id]);
-            if (itemRow.length > 0) {
-              const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-              const rarityName = RARITY_NAMES[Number(itemRow[0].rarity)] || '';
-              itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
-            }
-          } catch { /* fall back */ }
-        }
-
-        const desc = buying
-          ? eventDesc.shopBuy(name, itemDesc, goldAmount)
-          : eventDesc.shopSell(name, itemDesc, goldAmount);
-
-        allEvents.push({
-          block: Number(row.block),
-          event: { id: crypto.randomUUID(), eventType: 'shop_purchase', playerName: name, description: desc, timestamp: 0 },
-        });
-      }
-    } catch { /* table may not exist */ }
-  }
-
   // Deduplicate by description (same event can appear from overlapping queries)
   const seen = new Set<string>();
   const deduped = allEvents.filter(e => {
@@ -430,9 +390,7 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
       await scanLevelUps(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanCombatOutcomes(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanLootDrops(syncHandle, scanFrom, currentBlock, broadcaster);
-      await scanMarketplaceSales(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanNewCharacters(syncHandle, scanFrom, currentBlock, broadcaster);
-      await scanShopPurchases(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanQuestCompletions(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanAdvancedClassSelections(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanFragmentDiscoveries(syncHandle, scanFrom, currentBlock, broadcaster);

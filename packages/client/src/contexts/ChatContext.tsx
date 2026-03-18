@@ -75,7 +75,7 @@ const GAME_EVENT_COLORS: Record<string, string> = {
 };
 
 // Indexer events that should NOT be merged (client-side handles with richer JSX, or not applicable)
-const EXCLUDED_INDEXER_EVENTS = new Set(['rare_find', 'marketplace_sale', 'loot_drop', 'quest_complete']);
+const EXCLUDED_INDEXER_EVENTS = new Set(['rare_find', 'marketplace_sale', 'loot_drop', 'quest_complete', 'shop_purchase']);
 
 // Rare drops and gold offers older than this are filtered out of chat
 const ANNOUNCEMENT_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
@@ -759,12 +759,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     return [
       ...(CHAT_ENABLED ? messages : []),
       ...rareDropAnnouncements,
-      ...rareMarketplaceSales,
       ...bossSpawnAnnouncements,
       ...bossKillAnnouncements,
       ...indexerEventAnnouncements,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [indexerEventAnnouncements, rareDropAnnouncements, rareMarketplaceSales, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
+  }, [indexerEventAnnouncements, rareDropAnnouncements, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
 
   // Track unread events using last-seen timestamp (persists across refreshes)
   useEffect(() => {
