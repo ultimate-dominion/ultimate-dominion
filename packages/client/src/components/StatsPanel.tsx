@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { DARK_INSET_SHADOW } from '../utils/theme';
 import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import {
   IoIosArrowForward,
@@ -30,6 +30,7 @@ import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage
 
 import { ClassSymbol } from './ClassSymbol';
 import { EquippedLoadout } from './EquippedLoadout';
+import { LevelUpModal } from './LevelUpModal';
 import { MiniLeaderboard } from './MiniLeaderboard';
 import { Level } from './Level';
 
@@ -42,6 +43,7 @@ export const StatsPanel = (): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const { nearby, isLoading: nearbyLoading, rankBy, dataRankBy, setRankBy } = useNearbyRanks();
   const stage = useOnboardingStage();
+  const [isLevelUpOpen, setIsLevelUpOpen] = useState(false);
 
   const maxed = useMemo(() => {
     if (!character) return false;
@@ -352,7 +354,7 @@ export const StatsPanel = (): JSX.Element => {
             </Button>
             {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
               <Button
-                onClick={() => navigate(`/characters/${character.id}`)}
+                onClick={() => setIsLevelUpOpen(true)}
                 size="xs"
                 variant="gold"
               >
@@ -361,6 +363,14 @@ export const StatsPanel = (): JSX.Element => {
             )}
           </HStack>
         </>
+      )}
+
+      {character && (
+        <LevelUpModal
+          character={character}
+          isOpen={isLevelUpOpen}
+          onClose={() => setIsLevelUpOpen(false)}
+        />
       )}
 
       {isDesktop && (

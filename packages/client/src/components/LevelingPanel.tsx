@@ -42,10 +42,12 @@ export const LevelingPanel = ({
   canLevel,
   character,
   compact = false,
+  onLevelComplete,
 }: {
   canLevel: boolean;
   character: Character;
   compact?: boolean;
+  onLevelComplete?: () => void;
 }): JSX.Element => {
   const { renderSuccess, renderWarning } = useToast();
   const {
@@ -257,19 +259,23 @@ export const LevelingPanel = ({
       }
       await refreshCharacter();
 
-      const newLevel = Number(character.level) + 1;
-      if (newLevel === 5) {
-        const bonusMsg: Record<number, string> = {
-          [PowerSource.Divine]: '+2 HP from your Divine power',
-          [PowerSource.Weave]: '+1 INT from the Weave',
-          [PowerSource.Physical]: 'Physical bonus point allocated',
-        };
-        const msg = bonusMsg[character.baseStats.powerSource];
-        renderSuccess(`Level 5!${msg ? ` ${msg}.` : ''}`);
-      } else if (newLevel === 3) {
-        renderSuccess('Level 3! You earned the Adventurer Badge!');
+      if (onLevelComplete) {
+        onLevelComplete();
       } else {
-        renderSuccess('Character leveled up!');
+        const newLevel = Number(character.level) + 1;
+        if (newLevel === 5) {
+          const bonusMsg: Record<number, string> = {
+            [PowerSource.Divine]: '+2 HP from your Divine power',
+            [PowerSource.Weave]: '+1 INT from the Weave',
+            [PowerSource.Physical]: 'Physical bonus point allocated',
+          };
+          const msg = bonusMsg[character.baseStats.powerSource];
+          renderSuccess(`Level 5!${msg ? ` ${msg}.` : ''}`);
+        } else if (newLevel === 3) {
+          renderSuccess('Level 3! You earned the Adventurer Badge!');
+        } else {
+          renderSuccess('Character leveled up!');
+        }
       }
     }
   }, [
@@ -281,6 +287,7 @@ export const LevelingPanel = ({
     newAgility,
     newIntelligence,
     newStrength,
+    onLevelComplete,
     refreshCharacter,
     renderSuccess,
     renderWarning,
