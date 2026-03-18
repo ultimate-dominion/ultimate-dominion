@@ -23,7 +23,7 @@ allow_paths = [
 ]
 extra_output_files = ["abi", "evm.bytecode"]
 fs_permissions = [{ access = "read-write", path = "./" }]
-libs = ["node_modules", "lib"]
+libs = ["node_modules"]
 
 [profile.base-mainnet]
 # eth_rpc_url sourced from ETH_RPC_URL env var (set in .env.testnet / .env.mainnet)

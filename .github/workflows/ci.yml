@@ -58,8 +58,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -71,13 +69,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Generate MUD codegen (IWorld, tables)
         run: pnpm --filter contracts run build
-      - name: Stub missing AccessControlLib.sol (not shipped in MUD v2.2.23)
-        run: |
-          cat > packages/contracts/node_modules/@latticexyz/world-modules/src/utils/AccessControlLib.sol << 'SOL'
-          // SPDX-License-Identifier: MIT
-          pragma solidity >=0.8.24;
-          library AccessControlLib {}
-          SOL
       - name: Run pure Solidity unit tests (no RPC needed)
         working-directory: packages/contracts
         run: forge test --match-contract "CombatMathTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance" --no-auto-detect -vvv
