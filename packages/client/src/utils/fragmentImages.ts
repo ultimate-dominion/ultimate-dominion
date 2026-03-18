@@ -16,3 +16,19 @@ const FRAGMENT_IMAGES: Record<string, string> = {
 export const getFragmentImage = (title: string): string | undefined => {
   return FRAGMENT_IMAGES[title];
 };
+
+/** Per-fragment thematic glow colors */
+const FRAGMENT_COLORS: Record<string, string> = {
+  'The Awakening': '#A8DEFF',       // pale ice blue — waking in cold stone
+  'The Quartermaster': '#C87A2A',   // amber lantern — the old merchant's shop
+  'The Restless': '#7B68AE',        // spectral violet — memories of the dead
+  'Souls That Linger': '#5EC4D4',   // crystal teal — shattered elemental core
+  'The Wound': '#CC3333',           // blood red — the pulsing heart beneath
+  'Death of the Death God': '#E8DCC8', // bone white — a god's remains
+  "Betrayer's Truth": '#8BC34A',    // sickly green — hidden knowledge, poison truth
+  'Blood Price': '#D4A54A',         // dark gold — the cost of every soul
+};
+
+export const getFragmentColor = (title: string): string => {
+  return FRAGMENT_COLORS[title] || '#A8DEFF';
+};
