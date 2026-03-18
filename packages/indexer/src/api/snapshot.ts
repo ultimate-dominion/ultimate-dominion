@@ -61,12 +61,31 @@ export function createSnapshotRouter(syncHandle: SyncHandle): Router {
     try {
       const snapshot: Record<string, Record<string, Record<string, unknown>>> = {};
 
-      // Step 1: Build dead entity set from Position and Spawned tables.
+      // Step 1a: Build character entity key set FIRST so Position/Spawned
+      // filtering never strips data for player characters.
+      // Characters at (0,0) are legitimate (that's the spawn point) — only
+      // dead mobs at (0,0) should be filtered.
+      const characterEntityKeys = new Set<string>();
+      const charactersTable = syncHandle.tableNameMap.get('Characters');
+      if (charactersTable) {
+        try {
+          const charRows = await sql.unsafe(
+            `SELECT * FROM "${mudSchema}"."${charactersTable}"`
+          );
+          for (const row of charRows) {
+            characterEntityKeys.add(extractKeyBytes(row as Record<string, unknown>));
+          }
+        } catch (err) {
+          console.error('[snapshot] Error querying Characters for key set:', (err as Error).message);
+        }
+      }
+
+      // Step 1b: Build dead entity set from Position and Spawned tables.
       // Dead mobs have position (0,0) AND spawned=false. We collect keys from
       // both tables so we can exclude dead entities from Stats, MobStats, etc.
       const deadEntityKeys = new Set<string>();
 
-      // 1a: Position — entities at (0,0) are despawned
+      // Position — entities at (0,0) are despawned (unless they're characters)
       const positionTable = syncHandle.tableNameMap.get('Position');
       if (positionTable) {
         try {
@@ -77,7 +96,7 @@ export function createSnapshotRouter(syncHandle: SyncHandle): Router {
           for (const row of posRows) {
             const keyBytes = extractKeyBytes(row as Record<string, unknown>);
             const serialized = serializeRow(row as Record<string, unknown>);
-            if (serialized.x === 0 && serialized.y === 0) {
+            if (serialized.x === 0 && serialized.y === 0 && !characterEntityKeys.has(keyBytes)) {
               deadEntityKeys.add(keyBytes);
             } else {
               posData[keyBytes] = serialized;
@@ -91,7 +110,7 @@ export function createSnapshotRouter(syncHandle: SyncHandle): Router {
         }
       }
 
-      // 1b: Spawned — entities with spawned=false are dead
+      // 1c: Spawned — entities with spawned=false are dead
       const spawnedTable = syncHandle.tableNameMap.get('Spawned');
       if (spawnedTable) {
         try {
@@ -113,25 +132,6 @@ export function createSnapshotRouter(syncHandle: SyncHandle): Router {
           }
         } catch (err) {
           console.error('[snapshot] Error querying Spawned:', (err as Error).message);
-        }
-      }
-
-      // Step 1c: Build character entity key set so dead-entity filtering
-      // never strips Stats/WorldStatusEffects for offline players.
-      // Offline characters share position (0,0) + spawned=false with dead mobs,
-      // but their Stats must remain in the snapshot for the leaderboard.
-      const characterEntityKeys = new Set<string>();
-      const charactersTable = syncHandle.tableNameMap.get('Characters');
-      if (charactersTable) {
-        try {
-          const charRows = await sql.unsafe(
-            `SELECT * FROM "${mudSchema}"."${charactersTable}"`
-          );
-          for (const row of charRows) {
-            characterEntityKeys.add(extractKeyBytes(row as Record<string, unknown>));
-          }
-        } catch (err) {
-          console.error('[snapshot] Error querying Characters for key set:', (err as Error).message);
         }
       }
 

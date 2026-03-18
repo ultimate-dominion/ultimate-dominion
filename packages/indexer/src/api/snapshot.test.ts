@@ -61,9 +61,9 @@ function makeSyncHandle(overrides?: Partial<SyncHandle>): SyncHandle {
 }
 
 // Helper to set up sql.unsafe mock responses in the expected query order:
-// 1. Position table
-// 2. Spawned table
-// 3. Characters table (for character key set)
+// 1. Characters table (for character key set — queried first now)
+// 2. Position table
+// 3. Spawned table
 // 4+ Remaining tables in tableNameMap iteration order
 type MockRows = Record<string, unknown>[];
 
@@ -78,12 +78,12 @@ function mockDbQueries(opts: {
 }) {
   const mockSql = vi.mocked(sql.unsafe);
 
-  // First pass: Position
-  mockSql.mockResolvedValueOnce((opts.position ?? []) as any);
-  // First pass: Spawned
-  mockSql.mockResolvedValueOnce((opts.spawned ?? []) as any);
-  // First pass: Characters (for key set)
+  // Step 1a: Characters (for key set — queried first)
   mockSql.mockResolvedValueOnce((opts.characters ?? []) as any);
+  // Step 1b: Position
+  mockSql.mockResolvedValueOnce((opts.position ?? []) as any);
+  // Step 1c: Spawned
+  mockSql.mockResolvedValueOnce((opts.spawned ?? []) as any);
 
   // Step 2: remaining tables in iteration order (Characters, Stats, MobStats, WorldStatusEffects, GoldBalances)
   // Characters is NOT in FIRST_PASS_TABLES, so it gets queried again in step 2
@@ -229,11 +229,11 @@ describe('GET /snapshot', () => {
     });
 
     const mockSql = vi.mocked(sql.unsafe);
+    // Characters (key set)
+    mockSql.mockResolvedValueOnce([] as any);
     // Position
     mockSql.mockResolvedValueOnce([] as any);
     // Spawned
-    mockSql.mockResolvedValueOnce([] as any);
-    // Characters (key set)
     mockSql.mockResolvedValueOnce([] as any);
     // Characters (main loop)
     mockSql.mockResolvedValueOnce([] as any);
@@ -266,9 +266,9 @@ describe('GET /snapshot', () => {
     });
 
     const mockSql = vi.mocked(sql.unsafe);
+    mockSql.mockResolvedValueOnce([] as any); // Characters key set
     mockSql.mockResolvedValueOnce([] as any); // Position
     mockSql.mockResolvedValueOnce([] as any); // Spawned
-    mockSql.mockResolvedValueOnce([] as any); // Characters key set
     mockSql.mockResolvedValueOnce([] as any); // Characters main
     mockSql.mockResolvedValueOnce([
       { __key_bytes: '0xactive_enc', end: '0', start: '100' },
@@ -300,9 +300,9 @@ describe('GET /snapshot', () => {
     });
 
     const mockSql = vi.mocked(sql.unsafe);
+    mockSql.mockResolvedValueOnce([] as any); // Characters key set
     mockSql.mockResolvedValueOnce([] as any); // Position
     mockSql.mockResolvedValueOnce([] as any); // Spawned
-    mockSql.mockResolvedValueOnce([] as any); // Characters key set
     mockSql.mockResolvedValueOnce([] as any); // Characters main
 
     // ActionOutcome and CombatOutcome should never be queried
@@ -310,7 +310,7 @@ describe('GET /snapshot', () => {
     const res = await request(app).get('/snapshot');
 
     expect(res.status).toBe(200);
-    // Only 4 sql calls: Position, Spawned, Characters key set, Characters main
+    // Only 4 sql calls: Characters key set, Position, Spawned, Characters main
     expect(mockSql).toHaveBeenCalledTimes(4);
   });
 
@@ -338,13 +338,50 @@ describe('GET /snapshot', () => {
     expect(res.body.tables.Spawned?.['0xdead']).toBeUndefined();
   });
 
+  it('preserves character Position at (0,0) — spawn point is valid', async () => {
+    const charKey = '0xplayer_at_spawn';
+    const deadMobKey = '0x00000001_dead_mob';
+
+    mockDbQueries({
+      position: [
+        // Character at spawn point (0,0) — should be KEPT
+        { __key_bytes: charKey, x: 0, y: 0 },
+        // Dead mob at (0,0) — should be filtered
+        { __key_bytes: deadMobKey, x: 0, y: 0 },
+      ],
+      spawned: [
+        // Character is spawned
+        { __key_bytes: charKey, spawned: true },
+        // Dead mob not spawned
+        { __key_bytes: deadMobKey, spawned: false },
+      ],
+      characters: [
+        { __key_bytes: charKey, name: 'Hero', locked: true },
+      ],
+    });
+
+    const app = createApp(makeSyncHandle());
+    const res = await request(app).get('/snapshot');
+
+    expect(res.status).toBe(200);
+
+    // Character at (0,0) should have Position preserved
+    expect(res.body.tables.Position[charKey]).toEqual({ x: 0, y: 0 });
+    // Character should be in Spawned
+    expect(res.body.tables.Spawned[charKey]).toEqual({ spawned: true });
+
+    // Dead mob at (0,0) should be filtered from both
+    expect(res.body.tables.Position?.[deadMobKey]).toBeUndefined();
+    expect(res.body.tables.Spawned?.[deadMobKey]).toBeUndefined();
+  });
+
   it('handles query errors gracefully', async () => {
     const mockSql = vi.mocked(sql.unsafe);
+    // Characters key set errors
+    mockSql.mockRejectedValueOnce(new Error('connection refused'));
     // Position errors
     mockSql.mockRejectedValueOnce(new Error('connection refused'));
     // Spawned errors
-    mockSql.mockRejectedValueOnce(new Error('connection refused'));
-    // Characters key set errors
     mockSql.mockRejectedValueOnce(new Error('connection refused'));
     // Rest return empty
     mockSql.mockResolvedValue([] as any);
