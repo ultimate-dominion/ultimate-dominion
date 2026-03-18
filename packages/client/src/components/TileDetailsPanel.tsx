@@ -1605,9 +1605,9 @@ const OpponentRow = ({
   );
 };
 
-const echoGlowPulse = keyframes`
-  0%, 100% { opacity: 0.4; transform: scaleX(1) scaleY(1); }
-  50%      { opacity: 1;   transform: scaleX(1.01) scaleY(1.12); }
+const echoPulse = keyframes`
+  0%, 100% { filter: brightness(0.8); }
+  50%      { filter: brightness(1.3); }
 `;
 
 const FragmentEchoRow = ({
@@ -1624,21 +1624,9 @@ const FragmentEchoRow = ({
       borderBottom="2px solid rgba(168, 222, 255, 0.5)"
       h={ROW_HEIGHT}
       spacing={0}
-      bg="linear-gradient(90deg, rgba(168, 222, 255, 0.12) 0%, rgba(168, 222, 255, 0.04) 100%)"
-      position="relative"
-      overflow="visible"
-      css={{
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          inset: '-3px',
-          borderRadius: '4px',
-          boxShadow: '0 0 12px 5px rgba(168, 222, 255, 0.45), 0 0 28px 10px rgba(168, 222, 255, 0.2), 0 0 44px 18px rgba(168, 222, 255, 0.08)',
-          animation: `${echoGlowPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`,
-          pointerEvents: 'none',
-          zIndex: -1,
-        },
-      }}
+      bg="linear-gradient(90deg, rgba(168, 222, 255, 0.15) 0%, rgba(168, 222, 255, 0.05) 100%)"
+      boxShadow="0 0 12px 4px rgba(168, 222, 255, 0.3), 0 0 24px 8px rgba(168, 222, 255, 0.12), inset 0 0 12px rgba(168, 222, 255, 0.1)"
+      animation={`${echoPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`}
       _active={{
         borderBottom: '2px solid rgba(168, 222, 255, 1)',
       }}
