@@ -81,21 +81,35 @@ export const FragmentReadModal = ({
       onClose={onClose}
       size={modalSize}
       isCentered
-      motionPreset="scale"
+      motionPreset="none"
     >
       <ModalOverlay
         bg="blackAlpha.800"
-        backdropFilter="blur(8px)"
+        backdropFilter="blur(10px)"
+        css={{
+          animation: 'fadeOverlay 0.4s ease-out',
+          '@keyframes fadeOverlay': {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          },
+        }}
       />
       <ModalContent
         bg="#1C1814"
         color="#E8DCC8"
         borderRadius={{ base: 0, md: 'lg' }}
         border="1px solid"
-        borderColor={`${color}25`}
-        boxShadow={`0 0 60px 8px ${color}12, 0 0 120px 20px ${color}06`}
+        borderColor={`${color}20`}
+        boxShadow={`0 0 80px 12px ${color}15, 0 0 160px 30px ${color}08`}
         maxH={{ base: '100dvh', md: '90vh' }}
         overflow="hidden"
+        css={{
+          animation: 'modalEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+          '@keyframes modalEnter': {
+            from: { opacity: 0, transform: 'scale(0.92) translateY(20px)' },
+            to: { opacity: 1, transform: 'scale(1) translateY(0)' },
+          },
+        }}
       >
         <ModalBody p={0} overflowY="auto"
           css={{
@@ -116,7 +130,7 @@ export const FragmentReadModal = ({
                   src={imageSrc}
                   alt={fragment.name}
                   w="100%"
-                  maxH={{ base: '45vh', md: '400px' }}
+                  maxH={{ base: '50vh', md: '420px' }}
                   objectFit="cover"
                   objectPosition="center top"
                 />
