@@ -152,8 +152,8 @@ export const FragmentClaimModal = ({
                     alt={fragment.name}
                     w="100%"
                     maxH={{ base: '50vh', md: '420px' }}
-                    objectFit="cover"
-                    objectPosition="center top"
+                    objectFit="contain"
+                    bg="#0A0908"
                   />
                   {/* Bottom fade */}
                   <Box
