@@ -22,6 +22,7 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useCombatPacing } from '../hooks/useCombatPacing';
+import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { useSlotOrder } from '../hooks/useSlotOrder';
 import { type Armor, EncounterType, type Monster, RARITY_COLORS, type Spell, type Weapon } from '../utils/types';
 import {
@@ -69,6 +70,7 @@ export const ActionsPanel = (): JSX.Element => {
     statusEffectActions,
   } = useBattle();
   const { autoAdventureMode, isRefreshing, onToggleAutoAdventure } = useMovement();
+  const stage = useOnboardingStage();
 
   const { visibleOutcomes, pendingTurn } = useCombatPacing({
     attackOutcomes,
@@ -655,7 +657,7 @@ export const ActionsPanel = (): JSX.Element => {
             </Text>
           </SafeTypist>
         )}
-        {((!currentBattle || autoAdventureMode) && isSpawned && position) && (
+        {((!currentBattle || autoAdventureMode) && isSpawned && position && stage >= OnboardingStage.FIRST_STEPS) && (
           <VStack spacing={3} w="100%">
             {isDesktop && <ConsumableQuickUse />}
             <HStack justify="space-between" w="100%">

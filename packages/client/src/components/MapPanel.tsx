@@ -122,7 +122,7 @@ export const MapPanel = (): JSX.Element => {
     <Stack alignItems="center" className="data-dense" h="100%">
       {/* Compass — above map on mobile, below on desktop */}
       <Box order={{ base: 0, lg: 2 }} w="100%">
-        {isSpawned ? (
+        {isSpawned && stage >= OnboardingStage.FIRST_STEPS ? (
           <>
             <NavigationCompass
               adjacentTiles={adjacentTiles}
@@ -158,7 +158,7 @@ export const MapPanel = (): JSX.Element => {
               </HStack>
             )}
           </>
-        ) : (
+        ) : !isSpawned ? (
           <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
             {isMapFull && queueStatus === 'idle' && !showCaptcha && (
               <>
@@ -228,7 +228,7 @@ export const MapPanel = (): JSX.Element => {
               Spawn
             </Button>
           </VStack>
-        )}
+        ) : null}
       </Box>
 
       {/* Map grid */}

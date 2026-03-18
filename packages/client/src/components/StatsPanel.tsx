@@ -211,7 +211,7 @@ export const StatsPanel = (): JSX.Element => {
         </Box>
 
         {/* Stats — compact single row */}
-        {stage >= OnboardingStage.FIRST_BLOOD && (
+        {stage >= OnboardingStage.FIRST_STEPS && (
           <HStack
             justifyContent="center"
             px={2}
@@ -244,7 +244,7 @@ export const StatsPanel = (): JSX.Element => {
 
       </VStack>
 
-      {stage >= OnboardingStage.FIRST_BLOOD && (
+      {stage >= OnboardingStage.FIRST_STEPS && (
         <>
           <Divider borderColor="grey300" mt={2} />
 
@@ -280,7 +280,11 @@ export const StatsPanel = (): JSX.Element => {
               </Text>
             </HStack>
           </Box>
+        </>
+      )}
 
+      {stage >= OnboardingStage.FIRST_BLOOD && (
+        <>
           <Divider borderColor="grey300" mt={2} />
 
           <VStack mt={2} px={2} spacing={1} w="100%">

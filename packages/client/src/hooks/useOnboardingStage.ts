@@ -1,15 +1,17 @@
 import { useMemo } from 'react';
 
 import { useCharacter } from '../contexts/CharacterContext';
+import { useFragments } from '../contexts/FragmentContext';
 import { useMap } from '../contexts/MapContext';
 
 export enum OnboardingStage {
   PRE_SPAWN = 0,
-  FIRST_STEPS = 1,
-  FIRST_BLOOD = 2,
-  SETTLING_IN = 3,
-  ESTABLISHED = 4,
-  VETERAN = 5,
+  JUST_SPAWNED = 1,
+  FIRST_STEPS = 2,
+  FIRST_BLOOD = 3,
+  SETTLING_IN = 4,
+  ESTABLISHED = 5,
+  VETERAN = 6,
 }
 
 /**
@@ -20,23 +22,31 @@ export const computeStage = (
   isSpawned: boolean,
   level: bigint | undefined,
   experience: bigint | undefined,
+  hasClaimedFragment: boolean,
 ): OnboardingStage => {
   if (!isSpawned) return OnboardingStage.PRE_SPAWN;
-  if (level === undefined || experience === undefined) return OnboardingStage.FIRST_STEPS;
+  if (level === undefined || experience === undefined) return OnboardingStage.JUST_SPAWNED;
 
   if (level >= 5n) return OnboardingStage.VETERAN;
   if (level >= 3n) return OnboardingStage.ESTABLISHED;
   if (level >= 2n) return OnboardingStage.SETTLING_IN;
   if (experience > 0n) return OnboardingStage.FIRST_BLOOD;
-  return OnboardingStage.FIRST_STEPS;
+  if (hasClaimedFragment) return OnboardingStage.FIRST_STEPS;
+  return OnboardingStage.JUST_SPAWNED;
 };
 
 export const useOnboardingStage = (): OnboardingStage => {
   const { character } = useCharacter();
   const { isSpawned } = useMap();
+  const { fragments } = useFragments();
+
+  const hasClaimedFragment = useMemo(
+    () => fragments?.some(f => f.claimed) ?? false,
+    [fragments],
+  );
 
   return useMemo(
-    () => computeStage(isSpawned, character?.level, character?.experience),
-    [isSpawned, character?.level, character?.experience],
+    () => computeStage(isSpawned, character?.level, character?.experience, hasClaimedFragment),
+    [isSpawned, character?.level, character?.experience, hasClaimedFragment],
   );
 };

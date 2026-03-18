@@ -293,7 +293,7 @@ export const GameBoard = (): JSX.Element => {
     >
       <GridItem
         colSpan={{ base: 1, lg: 4 }}
-        display={{ base: 'none', lg: stage >= OnboardingStage.FIRST_BLOOD ? 'block' : 'none' }}
+        display={{ base: 'none', lg: stage >= OnboardingStage.JUST_SPAWNED ? 'block' : 'none' }}
         rowSpan={{ base: 'auto', lg: 12 }}
       >
         <PolygonalCard className="data-dense" clipPath="none" overflowY="auto">
@@ -360,7 +360,7 @@ export const GameBoard = (): JSX.Element => {
             <DrawerHeader>Stats</DrawerHeader>
             <DrawerBody className="data-dense" overflowY="auto" pb={6}>
               <StatsPanel />
-              {isSpawned && !currentBattle && (
+              {isSpawned && !currentBattle && stage >= OnboardingStage.FIRST_BLOOD && (
                 <>
                   <Divider borderColor="grey300" my={4} />
                   <EquippedLoadout />
