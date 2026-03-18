@@ -3,6 +3,7 @@ import {
   CloseButton,
   Heading,
   HStack,
+  keyframes,
   ScaleFade,
   Text,
   VStack,
@@ -13,6 +14,25 @@ import { useChat } from '../contexts/ChatContext';
 
 import { PolygonalCard } from './PolygonalCard';
 
+// Ember glow: a warm pulse from the left border that fades out.
+// Uses CSS custom property --glow for per-event color.
+const emberGlow = keyframes`
+  0% {
+    box-shadow: inset 5px 0 14px -3px var(--glow, #C4A54A),
+                0 0 6px -1px var(--glow, #C4A54A);
+  }
+  40% {
+    box-shadow: inset 3px 0 8px -2px var(--glow, #C4A54A),
+                0 0 3px -1px var(--glow, #C4A54A);
+  }
+  100% {
+    box-shadow: none;
+  }
+`;
+
+// How recently a message must be to get the glow (ms)
+const RECENT_THRESHOLD = 12_000;
+
 type WorldFeedProps = { inline?: boolean };
 
 export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
@@ -22,6 +42,8 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
     onClose,
   } = useChat();
 
+  // Track mount time so initial load doesn't glow everything
+  const mountedAt = useRef(Date.now());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -35,6 +57,7 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
   }, [inline, isOpen, messages, scrollToBottom]);
 
   const isVisible = inline || isOpen;
+  const now = Date.now();
 
   const content = (
     <PolygonalCard
@@ -80,6 +103,12 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
               !prevMessage ||
               message.timestamp - prevMessage.timestamp > 1000 * 60 * 30;
 
+            // Glow new events that arrived after component mounted
+            const isRecent =
+              message.timestamp > mountedAt.current - 2000 &&
+              now - message.timestamp < RECENT_THRESHOLD;
+            const glowColor = message.rarityColor || '#C4A54A';
+
             return (
               <VStack key={`event-${message.timestamp}-${index}`} w="100%" spacing={0}>
                 {showTimestamp && (
@@ -103,6 +132,8 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
                   py={0.5}
                   w="100%"
                   fontSize="xs"
+                  style={isRecent ? { '--glow': glowColor } as React.CSSProperties : undefined}
+                  animation={isRecent ? `${emberGlow} 2s ease-out forwards` : undefined}
                   sx={{ '& p, & a, & span': { fontSize: 'inherit' } }}
                 >
                   {message.jsx || (
