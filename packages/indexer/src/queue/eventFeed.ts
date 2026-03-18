@@ -103,12 +103,52 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     return;
   }
 
-  // Collect events from event-oriented tables only.
-  // Stats/Characters are cumulative state — they show current level, not level-up history.
-  // Level-ups and class selections will appear once the live scanner picks them up.
-  const allEvents: { block: number; event: GameEvent; dedupKey?: string }[] = [];
+  const allEvents: { block: number; event: GameEvent }[] = [];
 
-  // 1. Fragment discoveries (discrete event table)
+  // 1. Level-ups (current state from Stats — shows recent player progression)
+  try {
+    const rows = await sql.unsafe(`
+      SELECT s."__last_updated_block_number" as block, s."level", c."name"
+      FROM "${mudSchema}"."${statsTable}" s
+      JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
+      WHERE s."level" IS NOT NULL AND s."level" >= 2
+      ORDER BY s."__last_updated_block_number" DESC
+      LIMIT ${BACKFILL_LIMIT}
+    `);
+    for (const row of rows) {
+      const name = decodeCharacterName(row.name);
+      const level = Number(row.level);
+      if (!name || level <= 1) continue;
+      allEvents.push({
+        block: Number(row.block),
+        event: { id: crypto.randomUUID(), eventType: 'level_up', playerName: name, description: eventDesc.levelUp(name, level), timestamp: 0 },
+      });
+    }
+  } catch (err) { console.error('[eventFeed] Backfill level-ups error:', err); }
+
+  // 2. Class selections
+  try {
+    const rows = await sql.unsafe(`
+      SELECT s."__last_updated_block_number" as block, s."advanced_class", c."name"
+      FROM "${mudSchema}"."${statsTable}" s
+      JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
+      WHERE s."advanced_class" IS NOT NULL AND s."advanced_class" > 0
+      ORDER BY s."__last_updated_block_number" DESC
+      LIMIT ${BACKFILL_LIMIT}
+    `);
+    for (const row of rows) {
+      const name = decodeCharacterName(row.name);
+      const classValue = Number(row.advanced_class);
+      if (!name || classValue <= 0) continue;
+      const className = ADVANCED_CLASS_NAMES[classValue] || `Class ${classValue}`;
+      allEvents.push({
+        block: Number(row.block),
+        event: { id: crypto.randomUUID(), eventType: 'class_selection', playerName: name, description: eventDesc.classSelection(name, className), timestamp: 0 },
+      });
+    }
+  } catch (err) { console.error('[eventFeed] Backfill class selections error:', err); }
+
+  // 3. Fragment discoveries
   if (fragmentTable) {
     try {
       const rows = await sql.unsafe(`
@@ -126,10 +166,10 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
           event: { id: crypto.randomUUID(), eventType: 'fragment_found', playerName: name, description: eventDesc.fragmentFound(name), timestamp: 0 },
         });
       }
-    } catch { /* table may not exist */ }
+    } catch (err) { console.error('[eventFeed] Backfill fragments error:', err); }
   }
 
-  // 2. Character creations (level=1 is a real discrete event)
+  // 4. Character creations (level=1 is a real discrete event)
   try {
     const query = statsTable
       ? `SELECT c."__last_updated_block_number" as block, c."name"
@@ -152,9 +192,9 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
         event: { id: crypto.randomUUID(), eventType: 'character_created', playerName: name, description: eventDesc.characterCreated(name), timestamp: 0 },
       });
     }
-  } catch { /* table may not exist */ }
+  } catch (err) { console.error('[eventFeed] Backfill char creation error:', err); }
 
-  // 3. Combat outcomes (PvP kills + PvE deaths)
+  // 5. Combat outcomes (PvP kills + PvE deaths)
   if (outcomeTable && worldEncTable) {
     try {
       const hasCE = !!combatEncTable;
@@ -254,7 +294,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
           event: { id: crypto.randomUUID(), eventType, playerName: name, description: eventDesc.lootDrop(name, itemDesc), timestamp: 0 },
         });
       }
-    } catch { /* table may not exist */ }
+    } catch (err) { console.error('[eventFeed] Backfill loot error:', err); }
   }
 
   // Deduplicate by description (same event can appear from overlapping queries)
