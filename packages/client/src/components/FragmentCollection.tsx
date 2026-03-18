@@ -15,18 +15,18 @@ import { FaCheck, FaLock } from 'react-icons/fa';
 const fragmentGlow = keyframes`
   0%, 100% {
     box-shadow:
-      0 0 8px rgba(168, 222, 255, 0.4),
-      0 0 16px rgba(168, 222, 255, 0.2),
-      inset 0 0 8px rgba(168, 222, 255, 0.1);
-    border-color: rgba(168, 222, 255, 0.7);
+      0 0 10px rgba(168, 222, 255, 0.35),
+      0 0 20px rgba(168, 222, 255, 0.15),
+      inset 0 0 8px rgba(168, 222, 255, 0.08);
+    border-color: rgba(168, 222, 255, 0.55);
   }
   50% {
     box-shadow:
-      0 0 14px rgba(168, 222, 255, 0.7),
-      0 0 28px rgba(168, 222, 255, 0.4),
-      0 0 42px rgba(168, 222, 255, 0.15),
-      inset 0 0 12px rgba(168, 222, 255, 0.2);
-    border-color: rgba(168, 222, 255, 1);
+      0 0 16px rgba(168, 222, 255, 0.6),
+      0 0 32px rgba(168, 222, 255, 0.3),
+      0 0 48px rgba(168, 222, 255, 0.1),
+      inset 0 0 12px rgba(168, 222, 255, 0.18);
+    border-color: rgba(168, 222, 255, 0.9);
   }
 `;
 
@@ -174,7 +174,7 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
         transition="all 0.25s ease"
         animation={
           isTriggered && !isClaimed
-            ? `${fragmentGlow} 2s ease-in-out infinite, ${fragmentPulse} 2s ease-in-out infinite`
+            ? `${fragmentGlow} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite, ${fragmentPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`
             : undefined
         }
         _hover={

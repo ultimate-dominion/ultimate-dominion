@@ -1608,20 +1608,20 @@ const OpponentRow = ({
 const echoGlow = keyframes`
   0%, 100% {
     box-shadow:
-      0 0 8px rgba(168, 222, 255, 0.4),
-      0 0 16px rgba(168, 222, 255, 0.2),
-      inset 0 0 10px rgba(168, 222, 255, 0.15);
-    border-color: rgba(168, 222, 255, 0.6);
-    background: linear-gradient(90deg, rgba(168, 222, 255, 0.12) 0%, rgba(168, 222, 255, 0.04) 100%);
+      0 0 10px rgba(168, 222, 255, 0.35),
+      0 0 20px rgba(168, 222, 255, 0.15),
+      inset 0 0 10px rgba(168, 222, 255, 0.1);
+    border-color: rgba(168, 222, 255, 0.5);
+    background: linear-gradient(90deg, rgba(168, 222, 255, 0.1) 0%, rgba(168, 222, 255, 0.03) 100%);
   }
   50% {
     box-shadow:
-      0 0 14px rgba(168, 222, 255, 0.7),
-      0 0 28px rgba(168, 222, 255, 0.35),
-      0 0 42px rgba(168, 222, 255, 0.12),
-      inset 0 0 14px rgba(168, 222, 255, 0.25);
-    border-color: rgba(168, 222, 255, 1);
-    background: linear-gradient(90deg, rgba(168, 222, 255, 0.22) 0%, rgba(168, 222, 255, 0.08) 100%);
+      0 0 16px rgba(168, 222, 255, 0.6),
+      0 0 32px rgba(168, 222, 255, 0.3),
+      0 0 48px rgba(168, 222, 255, 0.1),
+      inset 0 0 14px rgba(168, 222, 255, 0.2);
+    border-color: rgba(168, 222, 255, 0.85);
+    background: linear-gradient(90deg, rgba(168, 222, 255, 0.18) 0%, rgba(168, 222, 255, 0.06) 100%);
   }
 `;
 
@@ -1640,7 +1640,7 @@ const FragmentEchoRow = ({
       h={ROW_HEIGHT}
       spacing={0}
       bg="linear-gradient(90deg, rgba(168, 222, 255, 0.15) 0%, rgba(168, 222, 255, 0.05) 100%)"
-      animation={`${echoGlow} 1.8s ease-in-out infinite`}
+      animation={`${echoGlow} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`}
       _active={{
         borderBottom: '2px solid rgba(168, 222, 255, 1)',
       }}
