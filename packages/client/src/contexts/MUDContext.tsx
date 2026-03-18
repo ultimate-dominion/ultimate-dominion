@@ -196,10 +196,15 @@ const MUDProviderInner = ({
   } | null>(null);
   const embeddedSetupDone = useRef(false);
 
-  // Fixed gas limits for functions with variable gas costs.
-  // Prevents estimation misses (spawnOnTileEnter uses block.prevrandao).
+  // Fixed gas limits — skip estimation for functions where the Privy RPC
+  // serves stale state (Base flashblocks propagate faster than block headers).
+  // Without this, gas estimation reverts against stale state and the TX never sends.
   const FIXED_GAS: Record<string, bigint> = {
     UD__move: 4_000_000n,
+    UD__rollBaseStats: 4_000_000n,
+    UD__chooseRace: 500_000n,
+    UD__choosePowerSource: 500_000n,
+    UD__enterGame: 8_000_000n,
   };
 
   // =============================================
@@ -462,6 +467,45 @@ const MUDProviderInner = ({
     }
   }, [externalWalletClient, setupResult.network]);
 
+  // =============================================
+  // Relayer registration for external (MetaMask) burners.
+  // Retry on failure + periodic re-registration to survive relayer redeploys.
+  // =============================================
+  const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
+  const FUND_API_KEY = import.meta.env.VITE_FUND_API_KEY;
+
+  const callRelayerFund = useCallback(async (
+    burnerAddress: string,
+    delegatorAddress: string,
+  ): Promise<boolean> => {
+    if (!RELAYER_URL || !FUND_API_KEY) return false;
+    try {
+      const res = await fetch(`${RELAYER_URL}/fund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': FUND_API_KEY },
+        body: JSON.stringify({ address: burnerAddress, delegatorAddress }),
+      });
+      const data = await res.json();
+      console.info('[Gas] MetaMask fund response:', data.status);
+      return res.ok;
+    } catch (err) {
+      console.warn('[Gas] MetaMask funding failed:', err);
+      return false;
+    }
+  }, [RELAYER_URL, FUND_API_KEY]);
+
+  const registerBurnerWithRelayer = useCallback(async (
+    burnerAddress: string,
+    delegatorAddress: string,
+  ) => {
+    const delays = [0, 5_000, 10_000, 20_000];
+    for (let i = 0; i < delays.length; i++) {
+      if (i > 0) await new Promise<void>(r => setTimeout(r, delays[i]));
+      const ok = await callRelayerFund(burnerAddress, delegatorAddress);
+      if (ok) return;
+    }
+  }, [callRelayerFund]);
+
   const getBurner = useCallback(async (forceCreate?: boolean) => {
     if (!(externalWalletClient && setupResult.network)) {
       console.warn('[MUD][getBurner] Missing wallet or network');
@@ -493,24 +537,17 @@ const MUDProviderInner = ({
       // Cache delegator address for fast-path on refresh
       setCachedDelegator(setupResult.network.worldContract.address, externalWalletClient.account.address);
 
-      // Register burner→delegator with relayer for gas monitoring (fire-and-forget)
-      const relayerUrl = import.meta.env.VITE_RELAYER_URL;
-      const fundApiKey = import.meta.env.VITE_FUND_API_KEY;
-      if (relayerUrl && fundApiKey) {
-        fetch(`${relayerUrl}/fund`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': fundApiKey },
-          body: JSON.stringify({
-            address: newBurner.walletClient.account.address,
-            delegatorAddress: externalWalletClient.account.address,
-          }),
-        }).catch(() => {});
-      }
+      // Register burner→delegator with relayer for gas monitoring.
+      // Retry + periodic re-registration handled by a dedicated effect below.
+      registerBurnerWithRelayer(
+        newBurner.walletClient.account.address,
+        externalWalletClient.account.address,
+      );
     } else {
       console.warn('[MUD][getBurner] No delegation found — burner NOT created');
     }
     setIsSynced(true);
-  }, [burner, checkDelegation, externalWalletClient, setupResult]);
+  }, [burner, checkDelegation, externalWalletClient, registerBurnerWithRelayer, setupResult]);
 
   // Auto-check delegation on mount for external path
   useEffect(() => {
@@ -519,6 +556,22 @@ const MUDProviderInner = ({
 
     getBurner();
   }, [authMethod, getBurner, isSynced]);
+
+  // Periodic re-registration for external burners (mirrors gauth's 10-min interval).
+  // Survives relayer redeploys that wipe in-memory tracking state.
+  useEffect(() => {
+    if (authMethod !== 'external') return;
+    if (!burner || !externalWalletClient) return;
+
+    const burnerAddress = burner.walletClient.account.address;
+    const delegatorAddress = externalWalletClient.account.address;
+
+    const interval = setInterval(() => {
+      callRelayerFund(burnerAddress, delegatorAddress);
+    }, 600_000); // 10 minutes
+
+    return () => clearInterval(interval);
+  }, [authMethod, burner, callRelayerFund, externalWalletClient]);
 
   // =============================================
   // Burner balance polling (shared, works for both paths)

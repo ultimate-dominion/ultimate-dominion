@@ -9,7 +9,6 @@ const baseHttpRpcs = [
   import.meta.env.VITE_HTTPS_RPC_URL,
   import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL,
   'https://base.drpc.org',
-  'https://mainnet.base.org',
 ].filter(Boolean) as string[];
 
 const baseWsRpcs = [

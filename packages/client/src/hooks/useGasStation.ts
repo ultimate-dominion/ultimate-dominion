@@ -80,8 +80,13 @@ export const useGasStation = (): void => {
   }, [character, systemCalls]);
 
   useEffect(() => {
-    // Both embedded (Privy) and external (MetaMask) wallets manage their own gas.
-    // Auto-swap gold->ETH via on-chain buyGas() when balance is low.
+    // External (MetaMask) wallets use the relayer for gas top-ups — the on-chain
+    // buyGas() sends ETH to _msgSender() which resolves to the delegator (MetaMask
+    // address) via callFrom, not the burner that actually needs it. Skip to avoid
+    // wasting the burner's already-low gas on a no-op.
+    if (authMethod === 'external') return;
+
+    // Embedded (Privy) wallets: auto-swap gold->ETH via on-chain buyGas().
     try {
       const balanceWei = parseEther(burnerBalance);
       if (balanceWei < GAS_THRESHOLD && balanceWei >= 0n) {
