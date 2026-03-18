@@ -21,7 +21,7 @@ import { usePublicClient } from 'wagmi';
 
 import { useToast } from '../hooks/useToast';
 import { useGameConfig, useGameTable, getTableValue, toNumber } from '../lib/gameStore';
-import { CHARACTERS_PATH, ITEM_PATH } from '../Routes';
+import { CHARACTERS_PATH, CLASS_PAGE_PATH, ITEM_PATH } from '../Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from '../utils/constants';
 import { decodeMobInstanceId } from '../utils/helpers';
 
@@ -694,6 +694,33 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
                     <Text as="span" color={loserColor} fontWeight={700}>{loserName}</Text>
                   )}
                   {' in PvP'}
+                </Text>
+              ),
+              message: '',
+              rarityColor,
+              timestamp: event.timestamp,
+            };
+          }
+        }
+
+        // Class selection: link the class name to the class page
+        if (event.eventType === 'class_selection') {
+          const classMatch = suffix.match(/^ became a (.+)$/);
+          if (classMatch) {
+            const className = classMatch[1];
+            const classSlug = className.toLowerCase();
+            return {
+              delivered: true,
+              from: zeroAddress,
+              jsx: (
+                <Text fontWeight={500} size="xs">
+                  {char ? (
+                    <Text as={RouterLink} color={nameColor} fontWeight={700} to={`${CHARACTERS_PATH}/${char.id}`} _hover={{ textDecoration: 'underline' }}>{event.playerName}</Text>
+                  ) : (
+                    <Text as="span" color={nameColor} fontWeight={700}>{event.playerName}</Text>
+                  )}
+                  {' became a '}
+                  <Text as={RouterLink} color={rarityColor} fontWeight={700} to={`${CLASS_PAGE_PATH}/${classSlug}`} _hover={{ textDecoration: 'underline' }}>{className}</Text>
                 </Text>
               ),
               message: '',

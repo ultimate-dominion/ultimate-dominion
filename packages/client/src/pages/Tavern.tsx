@@ -345,6 +345,15 @@ export const Tavern = (): JSX.Element => (
           </GridItem>
           <GridItem>
             <TavernCard
+              accentColor="rgba(212,165,74,0.5)"
+              description="Nine paths diverge at Level 10. Learn the strengths, spells, and strategies of every advanced class."
+              subtitle="Advanced Classes"
+              title="Classes"
+              to="/guide/classes/warrior"
+            />
+          </GridItem>
+          <GridItem>
+            <TavernCard
               accentColor="rgba(196,184,158,0.3)"
               description="The principles that shape this world. What we believe and why we built it."
               subtitle="Our Creed"

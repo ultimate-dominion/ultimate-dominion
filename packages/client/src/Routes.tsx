@@ -92,6 +92,9 @@ const Terms = lazyWithReload(() =>
 const FAQ = lazyWithReload(() =>
   import('./pages/FAQ').then(m => ({ default: m.FAQ })),
 );
+const ClassPage = lazyWithReload(() =>
+  import('./pages/ClassPage').then(m => ({ default: m.ClassPage })),
+);
 
 export const HOME_PATH = '/';
 export const MANIFESTO_PATH = '/manifesto';
@@ -103,6 +106,7 @@ export const MARKETPLACE_PATH = '/marketplace';
 export const ITEM_PATH = MARKETPLACE_PATH + '/items';
 export const SHOP_PATH = '/shops';
 export const GUIDE_PATH = '/guide';
+export const CLASS_PAGE_PATH = '/guide/classes';
 export const WAITING_ROOM_PATH = '/waiting-room';
 export const PRIVACY_PATH = '/privacy';
 export const TERMS_PATH = '/terms';
@@ -136,6 +140,7 @@ const AppRoutes: React.FC = () => {
           <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
           <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
           <Route path={GUIDE_PATH} element={<Guide />} />
+          <Route path={CLASS_PAGE_PATH + '/:className'} element={<ClassPage />} />
           <Route path={WAITING_ROOM_PATH} element={<WaitingRoom />} />
           <Route path={PRIVACY_PATH} element={<Privacy />} />
           <Route path={TERMS_PATH} element={<Terms />} />

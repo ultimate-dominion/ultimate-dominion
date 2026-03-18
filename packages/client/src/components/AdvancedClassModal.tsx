@@ -3,6 +3,7 @@ import {
   Button,
   Grid,
   Image,
+  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -14,10 +15,12 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { CLASS_PAGE_PATH } from '../Routes';
 import { getClassImage } from '../utils/classImages';
 import { AdvancedClass } from '../utils/types';
 
@@ -222,6 +225,16 @@ export const AdvancedClassModal = ({
                         </Text>
                       )}
                     </Box>
+                    <Link
+                      as={RouterLink}
+                      to={`${CLASS_PAGE_PATH}/${info.name.toLowerCase()}`}
+                      fontSize="xs"
+                      color="grey500"
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      _hover={{ color: 'blue.300', textDecoration: 'underline' }}
+                    >
+                      Learn more
+                    </Link>
                   </VStack>
                 </Box>
               );
