@@ -289,8 +289,12 @@ export const GameBoard = (): JSX.Element => {
         gap={0}
         overflow="hidden"
       >
-        <Box flex="1" minH={0} overflow="hidden">
-          <PolygonalCard className="data-dense" clipPath="none" h="100%">
+        <Box
+          flex={!isDesktop && currentBattle ? 'none' : '1'}
+          minH={0}
+          overflow="hidden"
+        >
+          <PolygonalCard className="data-dense" clipPath="none" h={!isDesktop && currentBattle ? 'auto' : '100%'}>
             <TileDetailsPanel />
           </PolygonalCard>
         </Box>

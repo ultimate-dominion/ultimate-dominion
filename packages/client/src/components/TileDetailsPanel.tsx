@@ -688,7 +688,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   if (currentBattle && opponent && userCharacterForBattleRendering && !autoAdventureMode) {
     return (
-      <Box h="100%" position="relative">
+      <Box h={{ base: 'auto', lg: '100%' }} position="relative">
         <style>
           {`
           @keyframes flicker {
@@ -707,7 +707,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         </HStack>
         <Box
           bgColor="blue500"
-          h="100%"
+          h={{ base: 'auto', lg: '100%' }}
           position="absolute"
           top={0}
           transform="translateX(50%)"
@@ -715,8 +715,8 @@ export const TileDetailsPanel = (): JSX.Element => {
           w="6px"
         />
         <Box
-          h={{ base: 'calc(100% - 40px)', md: 'calc(100% - 66px)' }}
-          overflowY="auto"
+          h={{ base: 'auto', md: 'calc(100% - 66px)' }}
+          overflowY={{ base: 'visible', md: 'auto' }}
         >
           <HStack alignItems="start" spacing={0} w="100%">
             <VStack w="50%">

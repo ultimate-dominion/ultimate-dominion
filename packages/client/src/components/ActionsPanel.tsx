@@ -23,8 +23,6 @@ import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useSlotOrder } from '../hooks/useSlotOrder';
 import { type Armor, EncounterType, type Monster, RARITY_COLORS, type Spell, type Weapon } from '../utils/types';
-import { Switch } from '@chakra-ui/react';
-
 import {
   BATTLE_OUTCOME_SEEN_KEY,
   SLOT_ORDER_KEY_PREFIX,
@@ -657,23 +655,11 @@ export const ActionsPanel = (): JSX.Element => {
               <Text color="#8A7E6A" fontStyle="italic" size="xs">
                 {position.x === 0 && position.y === 0
                   ? 'Move to a new tile to find monsters.'
-                  : autoAdventureMode
-                    ? 'Auto Adventure — combat resolves instantly.'
-                    : monstersOnTile.length === 0
-                      ? 'No monsters here. Try another tile.'
-                      : 'Click on a monster to battle.'}
+                  : monstersOnTile.length === 0
+                    ? 'No monsters here. Try another tile.'
+                    : 'Click on a monster to battle.'}
               </Text>
-              <HStack spacing={2} flexShrink={0}>
-                <Text color="#8A7E6A" fontSize="2xs" whiteSpace="nowrap">
-                  Auto
-                </Text>
-                <Switch
-                  size="sm"
-                  isChecked={autoAdventureMode}
-                  onChange={onToggleAutoAdventure}
-                  colorScheme="orange"
-                />
-              </HStack>
+              {/* Auto-adventure paused — hidden until re-enabled */}
             </HStack>
           </VStack>
         )}
