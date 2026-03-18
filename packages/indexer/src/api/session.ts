@@ -34,7 +34,7 @@ export function createSessionRouter(syncHandle: SyncHandle): Router {
       }
 
       const now = Math.floor(Date.now() / 1000);
-      const SESSION_TIMEOUT = 300; // 5 minutes
+      const SESSION_TIMEOUT = 600; // 10 minutes
 
       // Find expired characters that are still spawned
       const expired = await sql.unsafe(`

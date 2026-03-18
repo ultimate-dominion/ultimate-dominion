@@ -15,8 +15,8 @@ contract SetSessionConfig is Script {
 
         vm.startBroadcast(privateKey);
 
-        SessionConfig.setSessionTimeout(300); // 5 minutes
-        console.log("SessionConfig.sessionTimeout set to 300 seconds");
+        SessionConfig.setSessionTimeout(600); // 10 minutes
+        console.log("SessionConfig.sessionTimeout set to 600 seconds");
 
         vm.stopBroadcast();
     }
