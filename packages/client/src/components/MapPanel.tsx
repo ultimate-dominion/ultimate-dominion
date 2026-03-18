@@ -483,14 +483,14 @@ const NavigationCompass = ({
         >
           <Box
             position="absolute"
-            w="100px"
-            h="100px"
+            w="120px"
+            h="120px"
             borderRadius="50%"
-            bg="radial-gradient(circle, rgba(200, 122, 42, 0.12) 0%, transparent 70%)"
+            bg="radial-gradient(circle, rgba(212, 165, 74, 0.1) 0%, transparent 70%)"
           />
           <CompassRoseOrnamentSvg
             boxSize="130px"
-            opacity={0.55}
+            opacity={0.65}
           />
         </Box>
 
@@ -527,7 +527,7 @@ const NavigationCompass = ({
                   icon={
                     <VStack spacing={0}>
                       <Text
-                        color="#C4B89E"
+                        color="#D4A54A"
                         fontSize="2xs"
                         fontWeight={700}
                         lineHeight={1}

@@ -1324,6 +1324,36 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
+          {isHomeTile && stage <= OnboardingStage.FIRST_BLOOD && (
+            <VStack
+              align="center"
+              justify="center"
+              py={8}
+              px={4}
+              spacing={2}
+            >
+              <Text
+                animation={`${explorePulse} 3s ease-in-out infinite`}
+                color="#A8DEFF"
+                fontFamily="Cinzel, serif"
+                fontSize={{ base: 'md', lg: 'lg' }}
+                fontWeight={600}
+                letterSpacing="0.1em"
+                textAlign="center"
+                textShadow="0 0 20px rgba(168, 222, 255, 0.4), 0 0 40px rgba(168, 222, 255, 0.15)"
+              >
+                Explore the Dark Cave
+              </Text>
+              <Text
+                color="#5A5040"
+                fontSize="2xs"
+                letterSpacing="0.15em"
+                textTransform="uppercase"
+              >
+                Use the compass to move
+              </Text>
+            </VStack>
+          )}
           {stage >= OnboardingStage.ESTABLISHED && (
             <>
               <HStack h={ROW_HEIGHT} justifyContent="end" px={4}>
