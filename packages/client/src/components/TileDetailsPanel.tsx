@@ -1605,26 +1605,9 @@ const OpponentRow = ({
   );
 };
 
-const echoGlow = keyframes`
-  0%, 100% {
-    transform: scaleY(1);
-    box-shadow:
-      0 0 6px 2px rgba(168, 222, 255, 0.3),
-      0 0 12px 4px rgba(168, 222, 255, 0.12),
-      inset 0 0 8px rgba(168, 222, 255, 0.08);
-    border-color: rgba(168, 222, 255, 0.45);
-    background: linear-gradient(90deg, rgba(168, 222, 255, 0.1) 0%, rgba(168, 222, 255, 0.03) 100%);
-  }
-  50% {
-    transform: scaleY(1.08);
-    box-shadow:
-      0 0 12px 6px rgba(168, 222, 255, 0.5),
-      0 0 24px 10px rgba(168, 222, 255, 0.2),
-      0 0 36px 16px rgba(168, 222, 255, 0.08),
-      inset 0 0 12px rgba(168, 222, 255, 0.15);
-    border-color: rgba(168, 222, 255, 0.8);
-    background: linear-gradient(90deg, rgba(168, 222, 255, 0.16) 0%, rgba(168, 222, 255, 0.05) 100%);
-  }
+const echoGlowPulse = keyframes`
+  0%, 100% { opacity: 0.4; transform: scaleX(1) scaleY(1); }
+  50%      { opacity: 1;   transform: scaleX(1.01) scaleY(1.12); }
 `;
 
 const FragmentEchoRow = ({
@@ -1638,17 +1621,30 @@ const FragmentEchoRow = ({
 }) => {
   return (
     <HStack
-      borderBottom="2px solid rgba(168, 222, 255, 0.6)"
+      borderBottom="2px solid rgba(168, 222, 255, 0.5)"
       h={ROW_HEIGHT}
       spacing={0}
-      bg="linear-gradient(90deg, rgba(168, 222, 255, 0.15) 0%, rgba(168, 222, 255, 0.05) 100%)"
-      animation={`${echoGlow} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`}
+      bg="linear-gradient(90deg, rgba(168, 222, 255, 0.12) 0%, rgba(168, 222, 255, 0.04) 100%)"
+      position="relative"
+      overflow="visible"
+      css={{
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: '-3px',
+          borderRadius: '4px',
+          boxShadow: '0 0 12px 5px rgba(168, 222, 255, 0.45), 0 0 28px 10px rgba(168, 222, 255, 0.2), 0 0 44px 18px rgba(168, 222, 255, 0.08)',
+          animation: `${echoGlowPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`,
+          pointerEvents: 'none',
+          zIndex: -1,
+        },
+      }}
       _active={{
         borderBottom: '2px solid rgba(168, 222, 255, 1)',
       }}
       _hover={{
         borderBottom: '2px solid rgba(168, 222, 255, 1)',
-        bg: 'linear-gradient(90deg, rgba(168, 222, 255, 0.3) 0%, rgba(168, 222, 255, 0.12) 100%)',
+        bg: 'linear-gradient(90deg, rgba(168, 222, 255, 0.25) 0%, rgba(168, 222, 255, 0.1) 100%)',
       }}
     >
       <HStack

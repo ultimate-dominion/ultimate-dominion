@@ -12,24 +12,16 @@ import {
 import { useState } from 'react';
 import { FaCheck, FaLock } from 'react-icons/fa';
 
+/* Scale + opacity only — both GPU-composited for 60fps.
+   The actual glow lives on a ::before pseudo with a fixed box-shadow;
+   we just scale and fade the pseudo in sync with the tile. */
 const fragmentPulse = keyframes`
-  0%, 100% {
-    transform: scale(1);
-    box-shadow:
-      0 0 6px 2px rgba(168, 222, 255, 0.3),
-      0 0 12px 4px rgba(168, 222, 255, 0.15),
-      inset 0 0 6px rgba(168, 222, 255, 0.08);
-    border-color: rgba(168, 222, 255, 0.45);
-  }
-  50% {
-    transform: scale(1.06);
-    box-shadow:
-      0 0 12px 6px rgba(168, 222, 255, 0.5),
-      0 0 24px 12px rgba(168, 222, 255, 0.25),
-      0 0 40px 18px rgba(168, 222, 255, 0.1),
-      inset 0 0 10px rgba(168, 222, 255, 0.15);
-    border-color: rgba(168, 222, 255, 0.8);
-  }
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+`;
+const glowPulse = keyframes`
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.08); }
 `;
 
 import {
@@ -179,17 +171,24 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
             ? {
                 transform: 'scale(1.05)',
                 borderColor: 'rgba(168, 222, 255, 0.9)',
-                boxShadow: isClaimed
-                  ? '0 0 12px rgba(168, 222, 255, 0.3)'
-                  : isTriggered
-                    ? '0 0 20px rgba(168, 222, 255, 0.8), 0 0 40px rgba(168, 222, 255, 0.4)'
-                    : undefined,
               }
             : {}
         }
         position="relative"
-        overflow="hidden"
+        overflow="visible"
         bg={isClaimed ? 'transparent' : isTriggered ? 'rgba(168, 222, 255, 0.06)' : '#1a1816'}
+        css={isTriggered && !isClaimed ? {
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: '-4px',
+            borderRadius: 'inherit',
+            boxShadow: '0 0 14px 6px rgba(168, 222, 255, 0.5), 0 0 30px 12px rgba(168, 222, 255, 0.25), 0 0 50px 20px rgba(168, 222, 255, 0.1)',
+            animation: `${glowPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`,
+            pointerEvents: 'none',
+            zIndex: -1,
+          },
+        } : undefined}
       >
         {/* Claimed: show fragment artwork */}
         {isClaimed && imageSrc ? (
