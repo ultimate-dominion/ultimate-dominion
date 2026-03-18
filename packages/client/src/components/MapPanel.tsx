@@ -385,6 +385,8 @@ const compassPulse = keyframes`
 const WASD_MAP: Record<string, string> = { N: 'W', W: 'A', S: 'S', E: 'D' };
 const ARROW_MAP: Record<string, string> = { N: '\u2191', W: '\u2190', S: '\u2193', E: '\u2192' };
 
+const COMPASS_COLLAPSED_KEY = 'ud_compass_collapsed';
+
 const NavigationCompass = ({
   adjacentTiles,
   isDisabled,
@@ -399,12 +401,23 @@ const NavigationCompass = ({
   stage: OnboardingStage;
 }): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const useFullCompass = !isDesktop || stage < OnboardingStage.SETTLING_IN;
-  const btnSize = isDesktop && !useFullCompass ? '32px' : '44px';
-  const arrowSize = isDesktop && !useFullCompass ? '14px' : '18px';
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(COMPASS_COLLAPSED_KEY) === 'true';
+  });
+  const btnSize = '44px';
+  const arrowSize = '18px';
 
-  if (isDesktop && !useFullCompass) {
-    // Desktop veteran: compact horizontal arrow bar — N W [coords] E S
+  const toggleCollapsed = useCallback(() => {
+    setIsCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem(COMPASS_COLLAPSED_KEY, String(next));
+      return next;
+    });
+  }, []);
+
+  if (isDesktop && isCollapsed) {
+    // Collapsed: compact horizontal arrow bar with expand toggle
     return (
       <VStack spacing={0} w="100%">
         <HStack justify="center" py={1} spacing={1} w="100%">
@@ -461,8 +474,18 @@ const NavigationCompass = ({
             </Text>
           )}
         </HStack>
-        <Text color="#5A5040" fontSize="2xs" lineHeight={1} pb={1}>
-          WASD or Arrow Keys to move
+        <Text
+          as="button"
+          color="#5A5040"
+          fontSize="2xs"
+          lineHeight={1}
+          pb={1}
+          onClick={toggleCollapsed}
+          cursor="pointer"
+          _hover={{ color: '#8A7E6A' }}
+          transition="color 0.2s"
+        >
+          Expand compass
         </Text>
       </VStack>
     );
@@ -619,6 +642,25 @@ const NavigationCompass = ({
             </HStack>
           ))}
         </HStack>
+      )}
+
+      {/* Collapse toggle — desktop only, after early stages */}
+      {isDesktop && stage >= OnboardingStage.SETTLING_IN && (
+        <Text
+          as="button"
+          color="#5A5040"
+          fontSize="2xs"
+          lineHeight={1}
+          mt={1}
+          onClick={toggleCollapsed}
+          cursor="pointer"
+          _hover={{ color: '#8A7E6A' }}
+          transition="color 0.2s"
+          textAlign="center"
+          w="100%"
+        >
+          Collapse
+        </Text>
       )}
     </Box>
   );
