@@ -108,6 +108,21 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   const [gameEvents, setGameEvents] = useState<GameEvent[]>([]);
   const [statsLoaded, setStatsLoaded] = useState(false);
 
+  // Fetch recent event history from the indexer on mount
+  const historyFetched = useRef(false);
+  useEffect(() => {
+    if (historyFetched.current) return;
+    historyFetched.current = true;
+    fetch(`${INDEXER_URL}/api/events`)
+      .then(res => res.ok ? res.json() : [])
+      .then((events: GameEvent[]) => {
+        if (events.length > 0) {
+          setGameEvents(events);
+        }
+      })
+      .catch(() => {/* ignore — live events will still work */});
+  }, []);
+
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -172,8 +187,10 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 
           case 'game:event':
             setGameEvents((prev) => {
+              // Dedupe by event id (history fetch may overlap with live events)
+              if (prev.some(e => e.id === msg.event.id)) return prev;
               const next = [...prev, msg.event];
-              return next.length > 50 ? next.slice(-50) : next;
+              return next.length > 200 ? next.slice(-200) : next;
             });
             break;
         }

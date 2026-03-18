@@ -15,6 +15,7 @@ import { createDeltaRouter } from './delta.js';
 import { createQueueRouter } from './queue.js';
 import { createInviteRouter } from './invite.js';
 import { createStatusRouter } from './status.js';
+import { createEventsRouter } from './events.js';
 
 export function createApiRouter(syncHandle: SyncHandle, broadcaster: Broadcaster): Router {
   const router = Router();
@@ -33,6 +34,7 @@ export function createApiRouter(syncHandle: SyncHandle, broadcaster: Broadcaster
   router.use('/queue', createQueueRouter(syncHandle, broadcaster));
   router.use('/invite', createInviteRouter());
   router.use('/status', createStatusRouter());
+  router.use('/events', createEventsRouter());
 
   return router;
 }

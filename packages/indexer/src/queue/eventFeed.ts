@@ -4,9 +4,9 @@ import type { Broadcaster } from '../ws/broadcaster.js';
 import type { GameEvent } from '../ws/protocol.js';
 import crypto from 'crypto';
 
-/** Ring buffer of recent game events */
+/** Ring buffer of recent game events (serves as history for new clients) */
 const eventBuffer: GameEvent[] = [];
-const MAX_EVENTS = 50;
+const MAX_EVENTS = 200;
 
 /** Track last-seen block for incremental scanning */
 let lastScannedBlock = 0;
