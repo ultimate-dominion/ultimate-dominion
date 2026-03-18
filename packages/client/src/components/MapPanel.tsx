@@ -20,6 +20,7 @@ import { FaStoreAlt } from 'react-icons/fa';
 
 import { useNavigate } from 'react-router-dom';
 import { useBattle } from '../contexts/BattleContext';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -64,6 +65,7 @@ const COMPASS_DIRECTIONS: {
 
 export const MapPanel = (): JSX.Element => {
   const { allCharacters, allMonsters, allShops, isSpawned, isSpawning, onSpawn, position } = useMap();
+  const { character } = useCharacter();
   const { currentBattle } = useBattle();
   const { autoAdventureMode, isRefreshing, onMove, onToggleAutoAdventure } = useMovement();
   const { delegatorAddress } = useMUD();
@@ -88,6 +90,8 @@ export const MapPanel = (): JSX.Element => {
   const configValue = useGameConfig('UltimateDominionConfig');
   const maxPlayers = configValue?.maxPlayers ? BigInt(configValue.maxPlayers as string) : BigInt(0);
 
+  const playerLevel = character?.level ? Number(character.level) : 1;
+
   const adjacentTiles = useMemo(() => {
     if (!position) return null;
 
@@ -101,7 +105,11 @@ export const MapPanel = (): JSX.Element => {
         result[dir.label] = null;
       } else {
         const monsters = allMonsters.filter(
-          m => m.position.x === tx && m.position.y === ty && m.currentHp > BigInt(0),
+          m =>
+            m.position.x === tx &&
+            m.position.y === ty &&
+            m.currentHp > BigInt(0) &&
+            (playerLevel >= 3 || Number(m.level) <= playerLevel),
         ).length;
 
         const players = allCharacters.filter(
@@ -116,7 +124,7 @@ export const MapPanel = (): JSX.Element => {
     }
 
     return result;
-  }, [allMonsters, allCharacters, delegatorAddress, position]);
+  }, [allMonsters, allCharacters, delegatorAddress, position, playerLevel]);
 
   return (
     <Stack alignItems="center" className="data-dense" h="100%">

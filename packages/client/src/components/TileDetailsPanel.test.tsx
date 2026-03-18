@@ -235,6 +235,7 @@ function setDefaults() {
     otherCharactersOnTile: [],
     position: { x: 1, y: 1 },
     shopsOnTile: [],
+    visibleMonstersOnTile: [testMonster],
   };
 
   fragmentState = {

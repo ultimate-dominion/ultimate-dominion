@@ -54,7 +54,7 @@ export const MONSTER_MOVE_MAPPING: Record<string, string> = {
 export const ActionsPanel = (): JSX.Element => {
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
-  const { isSpawned, monstersOnTile, position } = useMap();
+  const { isSpawned, visibleMonstersOnTile, position } = useMap();
   const {
     attackOutcomes,
     attackingItemId,
@@ -664,7 +664,7 @@ export const ActionsPanel = (): JSX.Element => {
               <Text color="#8A7E6A" fontStyle="italic" size="xs">
                 {position.x === 0 && position.y === 0
                   ? 'Move to a new tile to find monsters.'
-                  : monstersOnTile.length === 0
+                  : visibleMonstersOnTile.length === 0
                     ? 'No monsters here. Try another tile.'
                     : 'Click on a monster to battle.'}
               </Text>

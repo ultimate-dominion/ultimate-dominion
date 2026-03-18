@@ -172,6 +172,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     otherCharactersOnTile,
     position,
     shopsOnTile,
+    visibleMonstersOnTile,
   } = useMap();
   const {
     attackOutcomes,
@@ -1250,8 +1251,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                 />
               </>
             )}
-            {monstersOnTile.length > 0 &&
-              monstersOnTile.map((monster, i) => (
+            {visibleMonstersOnTile.length > 0 &&
+              visibleMonstersOnTile.map((monster, i) => (
                 <Box key={`tile-monster-${i}-${monster.name}`}>
                   <OpponentRow
                     encounterType={EncounterType.PvE}
@@ -1277,7 +1278,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                 </Box>
               ))}
-            {monstersOnTile.length === 0 && (
+            {visibleMonstersOnTile.length === 0 && (
               <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
                 No monsters in this area
               </Text>
@@ -1292,7 +1293,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
-          {stage <= OnboardingStage.FIRST_BLOOD && monstersOnTile.length === 0 && (
+          {stage <= OnboardingStage.FIRST_BLOOD && visibleMonstersOnTile.length === 0 && (
             <VStack
               align="center"
               justify="center"

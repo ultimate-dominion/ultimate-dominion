@@ -62,6 +62,7 @@ type MapContextType = {
   position: { x: number; y: number } | null;
   refreshEntities: () => void;
   shopsOnTile: Shop[];
+  visibleMonstersOnTile: Monster[];
 };
 
 const MapContext = createContext<MapContextType>({
@@ -78,6 +79,7 @@ const MapContext = createContext<MapContextType>({
   position: null,
   refreshEntities: () => {},
   shopsOnTile: [],
+  visibleMonstersOnTile: [],
 });
 
 export type MapProviderProps = {
@@ -366,6 +368,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     return result;
   }, [allMonsters, position]);
 
+  const playerLevel = character?.level ? Number(character.level) : 1;
+
+  const visibleMonstersOnTile = useMemo(() => {
+    if (playerLevel >= 3) return monstersOnTile;
+    return monstersOnTile.filter(m => Number(m.level) <= playerLevel);
+  }, [monstersOnTile, playerLevel]);
+
   const shopsOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
     return allShops.filter(
@@ -482,6 +491,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         position,
         refreshEntities,
         shopsOnTile,
+        visibleMonstersOnTile,
       }}
     >
       {children}
