@@ -82,9 +82,10 @@ function serializeRecord(record: Record<string, unknown>): TableRow {
 // Async splice resolution: read full records from chain → returns updates
 // ---------------------------------------------------------------------------
 // Module-level flag: block-pinned eth_call fails on Base RPCs (flashblocks
-// aren't available for historical queries). After the first failure, skip
-// the block-pinned attempt to avoid spamming 400 errors across all transports.
-let _blockPinnedReadSupported = true;
+// aren't available for historical queries). Disabled by default on Base to
+// avoid spamming 400 errors across all transports — concurrent splice reads
+// race past the flag before the first failure can turn it off.
+let _blockPinnedReadSupported = false;
 
 /** Exposed for testing. */
 export function __resetBlockPinnedFlag(): void {

@@ -10,6 +10,7 @@ const mockMove = vi.fn().mockResolvedValue({ success: true });
 const mockAutoAdventure = vi.fn().mockResolvedValue({ success: true });
 const mockExecute = vi.fn();
 const mockRenderError = vi.fn();
+const mockRenderWarning = vi.fn();
 
 let mudState: Record<string, unknown> = {};
 let battleState: Record<string, unknown> = {};
@@ -43,7 +44,7 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('../hooks/useToast', () => ({
-  useToast: () => ({ renderError: mockRenderError, renderSuccess: vi.fn() }),
+  useToast: () => ({ renderError: mockRenderError, renderWarning: mockRenderWarning, renderSuccess: vi.fn() }),
 }));
 
 vi.mock('../hooks/useTransaction', () => ({
@@ -77,6 +78,7 @@ describe('MovementContext', () => {
     mockAutoAdventure.mockClear();
     mockExecute.mockClear();
     mockRenderError.mockClear();
+    mockRenderWarning.mockClear();
 
     mudState = {
       delegatorAddress: '0xowner',
@@ -166,8 +168,8 @@ describe('MovementContext', () => {
     expect(mockMove).not.toHaveBeenCalled();
   });
 
-  it('shows error toast when move fails', async () => {
-    mockMove.mockResolvedValue({ success: false, error: 'Something went wrong. Try moving again.' });
+  it('shows error toast when move fails with error severity', async () => {
+    mockMove.mockResolvedValue({ success: false, error: 'Character is locked and cannot be modified.' });
 
     render(
       <MovementProvider>
@@ -180,7 +182,30 @@ describe('MovementContext', () => {
     });
 
     expect(mockMove).toHaveBeenCalledWith('0xplayer', 'right');
-    expect(mockRenderError).toHaveBeenCalledWith('Something went wrong. Try moving again.');
+    expect(mockRenderError).toHaveBeenCalledWith('Character is locked and cannot be modified.');
+    expect(mockRenderWarning).not.toHaveBeenCalled();
+  });
+
+  it('shows warning toast when move fails with warning severity (stale state)', async () => {
+    mockMove.mockResolvedValue({
+      success: false,
+      error: "You're moving too fast! Take a moment and try again.",
+      severity: 'warning',
+    });
+
+    render(
+      <MovementProvider>
+        <ContextCapture />
+      </MovementProvider>,
+    );
+
+    await act(async () => {
+      await capturedContext!.onMove('right');
+    });
+
+    expect(mockMove).toHaveBeenCalledWith('0xplayer', 'right');
+    expect(mockRenderWarning).toHaveBeenCalledWith("You're moving too fast! Take a moment and try again.");
+    expect(mockRenderError).not.toHaveBeenCalled();
   });
 
   it('does not move when not spawned', async () => {

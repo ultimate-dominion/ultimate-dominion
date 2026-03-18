@@ -37,6 +37,7 @@ export type SystemCalls = ReturnType<typeof createSystemCalls>;
 type SystemCallReturn = Promise<{
   success: boolean;
   error?: string;
+  severity?: 'error' | 'warning';
 }>;
 
 type ErrorCategory = 'REVERT' | 'FUNDS' | 'RPC' | 'GAS' | 'NONCE' | 'SPONSOR' | 'UNKNOWN';
@@ -644,6 +645,14 @@ export function createSystemCalls(
     return msg.includes(MOVE_TOO_FAST_SELECTOR) || msg.includes('movetoofast');
   };
 
+  // Transient RPC/network errors — not the player's fault, just stale state.
+  const isTransientRpcError = (e: unknown): boolean => {
+    const msg = String(e).toLowerCase();
+    return /failed to fetch|timeout|network|econnrefused|econnreset|socket hang up|rate limit|429|502|503|504/.test(msg);
+  };
+
+  const MOVE_STALE_STATE_WARNING = "You're moving too fast! Take a moment and try again.";
+
   // Gas limit for moves that skip simulation (covers spawnOnTileEnter worst case).
   // Tiles accumulate mobs across sessions; spawning into a dense tile requires
   // significantly more gas due to EntitiesAtPosition reads + multiple mob writes.
@@ -702,142 +711,112 @@ export function createSystemCalls(
       let args: readonly [`0x${string}`, number, number] = [characterEntity as `0x${string}`, x, y];
       let onChainRetries = 0;
 
-      // First attempt: simulate then send (catches real errors like InvalidMove).
-      // If sim returns MoveTooFast (stale RPC, safe to skip since MOVE_COOLDOWN=0),
-      // send without simulation using a generous gas limit.
-      // Retries after on-chain revert always bypass simulation with high gas.
+      // Always skip simulation for moves. MOVE_COOLDOWN is 0 on-chain, but
+      // Base flashblocks propagate state faster than block headers — eth_call
+      // simulation sees a new SessionTimer but an old block.timestamp, causing
+      // MoveTooFast 100% of the time during rapid play. Client-side already
+      // validates boundaries, spawned state, and encounters. Sending with a
+      // generous gas limit; real errors are caught via receipt + diagnostic.
       for (let attempt = 0; attempt < 1 + MAX_ON_CHAIN_RETRIES; attempt++) {
         try {
           let tx: `0x${string}`;
 
           if (onChainRetries > 0) {
-            // Retries: skip simulation, use high gas limit
             console.warn(`[move] Retry ${onChainRetries} — sending with gas ${MOVE_GAS_LIMIT} (target: ${x},${y})`);
-            tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
-          } else {
-            try {
-              // Default path: simulate then send
-              tx = await worldContract.write.UD__move(args);
-            } catch (simError) {
-              if (isMoveTooFastError(simError)) {
-                // Stale RPC timestamp — safe to skip simulation
-                console.warn(`[move] Sim returned MoveTooFast (stale RPC) — sending with gas ${MOVE_GAS_LIMIT} (target: ${x},${y})`);
-                tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
-              } else if (isInvalidMoveError(simError)) {
-                // Store position doesn't match on-chain — fetch correct position and retry
-                console.warn(`[move] InvalidMove — refreshing position from chain (stale target: ${x},${y})`);
-                try {
-                  const [chainX, chainY] = await worldContract.read.UD__getEntityPosition([
-                    characterEntity as `0x${string}`,
-                  ]);
-                  const cx = Number(chainX);
-                  const cy = Number(chainY);
-
-                  // Update store so the UI and subsequent moves use correct position
-                  useGameStore.getState().setRow('Position', characterEntity, { x: cx, y: cy });
-
-                  // Recompute target from the correct on-chain position
-                  let rx = cx, ry = cy;
-                  switch (direction) {
-                    case 'up': ry += 1; break;
-                    case 'down': ry -= 1; break;
-                    case 'left': rx -= 1; break;
-                    case 'right': rx += 1; break;
-                  }
-                  console.info(`[move] Position refreshed: (${cx},${cy}) → target (${rx},${ry})`);
-                  tx = await worldContract.write.UD__move(
-                    [characterEntity as `0x${string}`, rx, ry],
-                  );
-                } catch (refreshError) {
-                  lastMoveCompletedMs = Date.now();
-                  return { success: false, error: getContractError(refreshError) };
-                }
-              } else {
-                throw simError;
-              }
-            }
           }
+          tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
 
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
             console.error(`[move] TX REVERTED — hash: ${tx}, gasUsed: ${receipt.gasUsed}, block: ${receipt.blockNumber} (target: ${x},${y})`);
 
-            // Diagnose the revert by simulating against current RPC state
-            // instead of blindly retrying (which wastes gas if the character
-            // was despawned by idle timeout while the store was stale).
-            // NOTE: use simulate (eth_call) not write — write would send an
-            // orphaned tx whose receipt nobody waits for.
+            // Fast diagnostic: race the simulation against a 1.5s timeout.
+            // The full RPC fallback chain can take 10-30s if endpoints are
+            // returning 400/429 — we'd rather return a warning quickly and
+            // let the player retry than lock them out.
+            const DIAG_TIMEOUT_MS = 1500;
+            let diagResult: 'pass' | 'not_spawned' | 'invalid_move' | 'transient' | 'timeout' | 'error' = 'error';
+            let diagError: unknown;
+
             try {
-              await worldContract.simulate.UD__move(args);
-              // Simulation passed — was transient, retry with gas
-              if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
+              await Promise.race([
+                worldContract.simulate.UD__move(args).then(() => { diagResult = 'pass'; }),
+                new Promise<void>((_, reject) => setTimeout(() => {
+                  diagResult = 'timeout';
+                  reject(new Error('diag timeout'));
+                }, DIAG_TIMEOUT_MS)),
+              ]);
+            } catch (e) {
+              if (diagResult !== 'timeout') {
+                diagError = e;
+                if (isNotSpawnedError(e)) diagResult = 'not_spawned';
+                else if (isInvalidMoveError(e)) diagResult = 'invalid_move';
+                else if (isMoveTooFastError(e) || isTransientRpcError(e)) diagResult = 'transient';
+                else diagResult = 'error';
+              }
+            }
+
+            if (diagResult === 'not_spawned') {
+              console.warn('[move] Character is not spawned — updating store');
+              useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
+              lastMoveCompletedMs = Date.now();
+              return { success: false, error: 'Session expired — respawn to continue.' };
+            }
+
+            if (diagResult === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
+              console.warn(`[move] Position stale after revert — refreshing from chain`);
+              try {
+                const [cx, cy] = await worldContract.read.UD__getEntityPosition([
+                  characterEntity as `0x${string}`,
+                ]);
+                x = Number(cx);
+                y = Number(cy);
+                useGameStore.getState().setRow('Position', characterEntity, { x, y });
+                switch (direction) {
+                  case 'up': y += 1; break;
+                  case 'down': y -= 1; break;
+                  case 'left': x -= 1; break;
+                  case 'right': x += 1; break;
+                }
+                args = [characterEntity as `0x${string}`, x, y] as const;
                 onChainRetries++;
-                console.warn(`[move] Simulation now passes — retrying (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
-                await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
                 continue;
+              } catch {
+                // Chain read failed — fall through
               }
-            } catch (diagError) {
-              if (isNotSpawnedError(diagError)) {
-                // Character was despawned (idle timeout) — update store so UI shows spawn button
-                console.warn('[move] Character is not spawned — updating store');
-                useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
-                lastMoveCompletedMs = Date.now();
-                return { success: false, error: 'Session expired — respawn to continue.' };
-              }
-              if (isInvalidMoveError(diagError)) {
-                // Position stale — refresh from chain
-                console.warn(`[move] Position stale after revert — refreshing from chain`);
-                try {
-                  const [cx, cy] = await worldContract.read.UD__getEntityPosition([
-                    characterEntity as `0x${string}`,
-                  ]);
-                  x = Number(cx);
-                  y = Number(cy);
-                  useGameStore.getState().setRow('Position', characterEntity, { x, y });
-                  // Recompute target
-                  switch (direction) {
-                    case 'up': y += 1; break;
-                    case 'down': y -= 1; break;
-                    case 'left': x -= 1; break;
-                    case 'right': x += 1; break;
-                  }
-                  args = [characterEntity as `0x${string}`, x, y] as const;
-                  if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
-                    onChainRetries++;
-                    continue;
-                  }
-                } catch {
-                  // Chain read failed — fall through to failure
-                }
-              }
-              if (isMoveTooFastError(diagError)) {
-                // Still transient RPC issue — retry with gas
-                if (onChainRetries < MAX_ON_CHAIN_RETRIES) {
-                  onChainRetries++;
-                  console.warn(`[move] Still MoveTooFast — retrying (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
-                  await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
-                  continue;
-                }
-              }
-              // Any other error — return it
+            }
+
+            if (diagResult === 'pass' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
+              onChainRetries++;
+              console.warn(`[move] Simulation now passes — retrying (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
+              await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
+              continue;
+            }
+
+            // Timeout, transient, MoveTooFast, or retries exhausted — warn and let player retry
+            if (diagResult === 'error' && diagError) {
+              console.error(`[move] Diagnostic error:`, diagError);
               lastMoveCompletedMs = Date.now();
               return { success: false, error: getContractError(diagError) };
             }
-
-            console.warn(`[move] On-chain revert — max retries reached (target: ${x},${y})`);
+            console.warn(`[move] On-chain revert — ${diagResult} (target: ${x},${y})`);
             lastMoveCompletedMs = Date.now();
-            return { success: false, error: 'Something went wrong. Try moving again.' };
+            return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
           }
           lastMoveCompletedMs = Date.now();
           return { success: true };
         } catch (e) {
+          // Stale-state / transient errors → yellow warning, not red error
+          if (isMoveTooFastError(e) || isTransientRpcError(e)) {
+            return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
+          }
           return {
             error: getContractError(e),
             success: false,
           };
         }
       }
-      return { success: false, error: 'Something went wrong. Try moving again.' };
+      return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
     } finally {
       isMovePending = false;
     }

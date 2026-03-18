@@ -69,7 +69,7 @@ export const MovementProvider = ({
   const { isSpawned, position } = useMap();
   const { currentBattle } = useBattle();
   const { isMessageInputFocused } = useChat();
-  const { renderError } = useToast();
+  const { renderError, renderWarning } = useToast();
 
   const [isMovementDisabled, setIsMovementDisabled] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
@@ -141,7 +141,11 @@ export const MovementProvider = ({
       setIsMoving(true);
       const result = await moveTx.execute(() => move(character.id, direction));
       if (result && !result.success && result.error) {
-        renderError(result.error);
+        if (result.severity === 'warning') {
+          renderWarning(result.error);
+        } else {
+          renderError(result.error);
+        }
       }
       setIsMoving(false);
     },
@@ -159,6 +163,7 @@ export const MovementProvider = ({
       onOpenNoMoveEquippedModal,
       position,
       renderError,
+      renderWarning,
     ],
   );
 
