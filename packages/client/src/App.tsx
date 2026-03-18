@@ -27,7 +27,7 @@ import {
   GoldMerchantProvider,
   useGoldMerchant,
 } from './contexts/GoldMerchantContext';
-import { MapProvider, useMap } from './contexts/MapContext';
+import { MapProvider } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
 import { QueueProvider } from './contexts/QueueContext';
@@ -73,7 +73,6 @@ const AppInner = (): JSX.Element => {
     onCloseWalletDetailsModal,
     onOpenWalletDetailsModal,
   } = useMUD();
-  const { isSpawned } = useMap();
   const { isOpen: isFeedOpen, onOpen: onOpenFeed, unreadCount } = useChat();
   const { character } = useCharacter();
   const {
@@ -123,7 +122,6 @@ const AppInner = (): JSX.Element => {
   ]);
 
   useEffect(() => {
-    if (!isSpawned) return;
     if (CHAT_NOT_ALLOWED_PATHS.includes(pathname)) return;
     // Only auto-open on desktop (inline feed). On mobile, let user tap the button
     // so unread badge can show new events.
@@ -134,7 +132,7 @@ const AppInner = (): JSX.Element => {
       localStorage.setItem(IS_CHAT_BOX_OPEN_KEY, 'true');
       onOpenFeed();
     }
-  }, [isDesktop, isSpawned, onOpenFeed, pathname]);
+  }, [isDesktop, onOpenFeed, pathname]);
 
   return (
     <Grid
