@@ -27,12 +27,14 @@ const PREVENT_DEFAULT_KEYS = ['ArrowUp', 'ArrowDown'];
 const AUTO_ADVENTURE_KEY = 'ud_auto_adventure';
 
 const OUTER_REALMS_NARRATIVES = [
-  'You press your hands against the cave wall. Something pulses beneath the stone — warm, almost alive. But the way forward is sealed.',
-  'A sound echoes from beyond the boundary — skittering claws on rock, then silence. Whatever lives out there, it knows you\'re not ready.',
-  'The air grows cold at the threshold. Shadows twist into shapes you can\'t quite make out. A voice, barely a whisper: "Not yet."',
-  'You reach for the passage ahead, but the darkness pushes back. The cave has decided — you haven\'t earned this path.',
-  'The ground trembles beneath your feet. Through a crack in the wall, you glimpse something vast moving in the dark. You step back.',
-  'A bitter wind howls from the depths beyond. You smell iron and ash. Every instinct says: turn around.',
+  'You press your hands against the stone. Something pulses beneath it — warm, almost alive. Your fingers pull away on their own.',
+  'Skittering. Fast, deliberate, close. Then nothing. The silence that follows is worse.',
+  'The air turns to ice at the threshold. Shadows coil at the edges of your torchlight, twisting into shapes that shouldn\'t exist.',
+  'A whisper slithers through the crack in the wall. Not words — older than words. The hairs on your neck stand on end.',
+  'The ground trembles. Through a fissure in the rock, something vast shifts in the dark. A single eye, pale and unblinking, finds yours.',
+  'A bitter wind howls from the depths. It carries the smell of iron and old bone. Something down there is breathing.',
+  'You step forward and the darkness pushes back — thick, deliberate, aware. It does not want you here.',
+  'Scratching from the other side of the wall. Rhythmic. Patient. As though something has been waiting a very long time.',
 ];
 
 type MovementContextType = {
