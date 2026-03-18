@@ -8,7 +8,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 
 import { useChat } from '../contexts/ChatContext';
 
@@ -44,17 +44,9 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
 
   // Track mount time so initial load doesn't glow everything
   const mountedAt = useRef(Date.now());
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
-
-  useEffect(() => {
-    if (isOpen || inline) {
-      scrollToBottom();
-    }
-  }, [inline, isOpen, messages, scrollToBottom]);
+  // Newest first — reverse the chronological order from ChatContext
+  const reversed = [...messages].reverse();
 
   const isVisible = inline || isOpen;
   const now = Date.now();
@@ -92,16 +84,16 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
         transition={inline ? undefined : 'height 0.3s ease'}
       >
         <VStack bg="#14120F" className="data-dense" flex="1" overflowY="auto" px={1.5} py={1} spacing={0.5}>
-          {messages.length === 0 && (
+          {reversed.length === 0 && (
             <Text color="#5A5347" fontStyle="italic" mt={4} fontSize="xs" textAlign="center">
               Waiting for world events...
             </Text>
           )}
-          {messages.map((message, index) => {
-            const prevMessage = messages[index - 1];
+          {reversed.map((message, index) => {
+            const nextMessage = reversed[index + 1];
             const showTimestamp =
-              !prevMessage ||
-              message.timestamp - prevMessage.timestamp > 1000 * 60 * 30;
+              !nextMessage ||
+              message.timestamp - nextMessage.timestamp > 1000 * 60 * 30;
 
             // Glow new events that arrived after component mounted
             const isRecent =
@@ -111,14 +103,6 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
 
             return (
               <VStack key={`event-${message.timestamp}-${index}`} w="100%" spacing={0}>
-                {showTimestamp && (
-                  <Text color="#3A3228" fontSize="9px" py={0.5}>
-                    {new Date(message.timestamp).toLocaleTimeString([], {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}
-                  </Text>
-                )}
                 <Box
                   bg="#1A1610"
                   borderLeft={
@@ -142,10 +126,17 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
                     </Text>
                   )}
                 </Box>
+                {showTimestamp && (
+                  <Text color="#3A3228" fontSize="9px" py={0.5}>
+                    {new Date(message.timestamp).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </Text>
+                )}
               </VStack>
             );
           })}
-          <Box ref={messagesEndRef} />
         </VStack>
       </Box>
     </PolygonalCard>
