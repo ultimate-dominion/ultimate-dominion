@@ -16,7 +16,6 @@ import { createQueueRouter } from './queue.js';
 import { createInviteRouter } from './invite.js';
 import { createStatusRouter } from './status.js';
 import { createEventsRouter } from './events.js';
-import { createLeaderboardRouter } from './leaderboard.js';
 
 export function createApiRouter(syncHandle: SyncHandle, broadcaster: Broadcaster): Router {
   const router = Router();
@@ -36,7 +35,6 @@ export function createApiRouter(syncHandle: SyncHandle, broadcaster: Broadcaster
   router.use('/invite', createInviteRouter());
   router.use('/status', createStatusRouter());
   router.use('/events', createEventsRouter());
-  router.use('/leaderboard', createLeaderboardRouter(syncHandle));
 
   return router;
 }
