@@ -7,6 +7,7 @@ import {
   GridItem,
   Heading,
   HStack,
+  keyframes,
   Menu,
   MenuButton,
   MenuItem,
@@ -1604,6 +1605,17 @@ const OpponentRow = ({
   );
 };
 
+const echoGlow = keyframes`
+  0%, 100% {
+    box-shadow: inset 0 0 12px rgba(120, 200, 255, 0.1), 0 0 8px rgba(120, 200, 255, 0.08);
+    border-color: rgba(120, 200, 255, 0.2);
+  }
+  50% {
+    box-shadow: inset 0 0 20px rgba(120, 200, 255, 0.2), 0 0 16px rgba(120, 200, 255, 0.15);
+    border-color: rgba(120, 200, 255, 0.5);
+  }
+`;
+
 const FragmentEchoRow = ({
   fragmentName,
   fragmentType,
@@ -1615,10 +1627,11 @@ const FragmentEchoRow = ({
 }) => {
   return (
     <HStack
-      borderBottom="2px solid transparent"
+      borderBottom="2px solid rgba(120, 200, 255, 0.2)"
       h={ROW_HEIGHT}
       spacing={0}
       bg="linear-gradient(90deg, rgba(120, 200, 255, 0.15) 0%, rgba(120, 200, 255, 0.05) 100%)"
+      animation={`${echoGlow} 3s ease-in-out infinite`}
       _active={{
         borderBottom: '2px solid rgba(120, 200, 255, 0.8)',
       }}
