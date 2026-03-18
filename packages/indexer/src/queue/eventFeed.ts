@@ -35,11 +35,138 @@ export function getRecentEvents(): GameEvent[] {
 }
 
 /**
+ * Backfill the event buffer with recent history from the database.
+ * Runs once on startup so the feed isn't empty after a deploy/restart.
+ */
+async function backfillRecentEvents(syncHandle: SyncHandle) {
+  const BACKFILL_LIMIT = 25;
+  console.log(`[eventFeed] Backfilling last ${BACKFILL_LIMIT} events from DB...`);
+
+  const statsTable = syncHandle.tableNameMap.get('Stats');
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  const fragmentTable = syncHandle.tableNameMap.get('FragmentProgress');
+  const mobsTable = syncHandle.tableNameMap.get('Mobs');
+
+  if (!statsTable || !charactersTable) {
+    console.log('[eventFeed] Backfill skipped — tables not ready');
+    return;
+  }
+
+  try {
+    // Build UNION of recent events from each table, ordered by block desc
+    const parts: string[] = [];
+
+    // Level-ups (level >= 2)
+    parts.push(`
+      SELECT s."__last_updated_block_number" as block, 'level_up' as event_type,
+             c."name", s."level", NULL::bytea as extra1, NULL::bytea[] as extra2,
+             NULL::integer as extra3
+      FROM "${mudSchema}"."${statsTable}" s
+      JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
+      WHERE s."level" IS NOT NULL AND s."level" >= 2
+    `);
+
+    // Class selections
+    parts.push(`
+      SELECT s."__last_updated_block_number" as block, 'class_selection' as event_type,
+             c."name", NULL::integer as level, NULL::bytea as extra1, NULL::bytea[] as extra2,
+             s."advanced_class" as extra3
+      FROM "${mudSchema}"."${statsTable}" s
+      JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
+      WHERE s."advanced_class" IS NOT NULL AND s."advanced_class" > 0
+    `);
+
+    // Fragment discoveries
+    if (fragmentTable) {
+      parts.push(`
+        SELECT fp."__last_updated_block_number" as block, 'fragment_found' as event_type,
+               c."name", NULL::integer as level, NULL::bytea as extra1, NULL::bytea[] as extra2,
+               NULL::integer as extra3
+        FROM "${mudSchema}"."${fragmentTable}" fp
+        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON fp."character_id" = c."__key_bytes"
+        WHERE fp."triggered" = true
+      `);
+    }
+
+    const query = `
+      SELECT * FROM (${parts.join(' UNION ALL ')}) combined
+      ORDER BY block DESC
+      LIMIT ${BACKFILL_LIMIT}
+    `;
+
+    const rows = await sql.unsafe(query);
+
+    // Process in chronological order (oldest first) so the buffer has newest at end
+    const chronological = rows.reverse();
+    let count = 0;
+
+    for (const row of chronological) {
+      const name = decodeCharacterName(row.name);
+      if (!name) continue;
+
+      let event: GameEvent;
+
+      switch (row.event_type) {
+        case 'level_up': {
+          const level = Number(row.level);
+          if (level <= 1) continue;
+          event = {
+            id: crypto.randomUUID(),
+            eventType: 'level_up',
+            playerName: name,
+            description: `${name} reached Level ${level}`,
+            timestamp: Date.now() - (chronological.length - count) * 1000, // stagger timestamps
+          };
+          break;
+        }
+        case 'class_selection': {
+          const classValue = Number(row.extra3);
+          if (classValue <= 0) continue;
+          const className = ADVANCED_CLASS_NAMES[classValue] || `Class ${classValue}`;
+          event = {
+            id: crypto.randomUUID(),
+            eventType: 'class_selection',
+            playerName: name,
+            description: `${name} became a ${className}`,
+            timestamp: Date.now() - (chronological.length - count) * 1000,
+          };
+          break;
+        }
+        case 'fragment_found': {
+          event = {
+            id: crypto.randomUUID(),
+            eventType: 'fragment_found',
+            playerName: name,
+            description: `${name} discovered a lost fragment...`,
+            timestamp: Date.now() - (chronological.length - count) * 1000,
+          };
+          break;
+        }
+        default:
+          continue;
+      }
+
+      addEvent(event);
+      count++;
+    }
+
+    console.log(`[eventFeed] Backfilled ${count} events`);
+  } catch (err) {
+    console.error('[eventFeed] Backfill error:', err);
+  }
+}
+
+/**
  * Start watching MUD table changes for game events.
  * Polls every 10 seconds for new changes.
  */
 export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster) {
   console.log('[eventFeed] Starting game event feed');
+
+  // Backfill recent history from DB on startup
+  backfillRecentEvents(syncHandle).catch(err =>
+    console.error('[eventFeed] Backfill failed:', err)
+  );
 
   setInterval(async () => {
     try {
