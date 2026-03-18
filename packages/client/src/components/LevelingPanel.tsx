@@ -402,6 +402,79 @@ export const LevelingPanel = ({
             w="100%"
           />
         )}
+
+        {/* Compact stat allocation cards — used in LevelUpModal */}
+        {compact && canLevel && (
+          <VStack spacing={3} px={4} py={4} w="100%">
+            {([
+              { key: 'agi' as const, abbrev: 'AGI', name: 'Agility', color: '#5A8A3E', desc: 'Dodge attacks. Higher crit chance.' },
+              { key: 'int' as const, abbrev: 'INT', name: 'Intelligence', color: '#4A7AB5', desc: 'Spell damage. Arcane force.' },
+              { key: 'str' as const, abbrev: 'STR', name: 'Strength', color: '#B85C3A', desc: 'Physical damage. Raw power.' },
+            ] as const).map(({ key, abbrev, name, color, desc }) => {
+              const value = key === 'agi' ? newAgility : key === 'int' ? newIntelligence : newStrength;
+              const increased = key === 'agi' ? agilityIncreased : key === 'int' ? intelligenceIncreased : strengthIncreased;
+              return (
+                <Box
+                  key={key}
+                  w="100%"
+                  px={5}
+                  py={4}
+                  borderRadius="md"
+                  bg={increased ? 'rgba(196,184,158,0.08)' : 'rgba(196,184,158,0.03)'}
+                  border="1px solid"
+                  borderColor={increased ? 'rgba(212, 165, 74, 0.25)' : 'rgba(196,184,158,0.08)'}
+                  transition="all 0.2s"
+                >
+                  <HStack justify="space-between" w="100%" align="center">
+                    <Text color={color} fontWeight={700} fontSize="xl" fontFamily="mono" letterSpacing="0.05em">
+                      {abbrev}
+                    </Text>
+                    <HStack spacing={3} align="center">
+                      {increased && (
+                        <Button
+                          borderRadius="8px"
+                          borderWidth="1.5px"
+                          onClick={() => onDecrementStat(key)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Text fontWeight={700}>-</Text>
+                        </Button>
+                      )}
+                      <Text
+                        color={increased ? 'green' : '#C4B89E'}
+                        fontWeight={increased ? 'bold' : 'normal'}
+                        fontSize="2xl"
+                        fontFamily="mono"
+                        minW="40px"
+                        textAlign="center"
+                      >
+                        {value.toString()}
+                      </Text>
+                      <Button
+                        borderRadius="8px"
+                        borderWidth="1.5px"
+                        isDisabled={abilityPoints <= 0}
+                        onClick={() => onIncrementStat(key)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <Text fontWeight={700}>+</Text>
+                      </Button>
+                    </HStack>
+                  </HStack>
+                  <Text color="#6A6050" fontSize="sm" fontStyle="italic" mt={1}>
+                    {name} — {desc}
+                  </Text>
+                </Box>
+              );
+            })}
+          </VStack>
+        )}
+
+        {/* Standard stat display — used in StatsPanel and when not allocating in compact mode */}
+        {!(compact && canLevel) && (
+        <>
         <HStack justifyContent="end" mt={4} px={6} w="100%">
           <HStack
             justifyContent={canLevel ? 'center' : 'end'}
@@ -673,6 +746,8 @@ export const LevelingPanel = ({
           h="6px"
           w="100%"
         />
+        </>
+        )}
 
         {canLevel && (
           <Button

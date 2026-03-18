@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
-  HStack,
   keyframes,
   Modal,
   ModalBody,
@@ -10,7 +9,6 @@ import {
   ModalFooter,
   ModalOverlay,
   Text,
-  Tooltip,
   VStack,
 } from '@chakra-ui/react';
 import SafeTypist from './SafeTypist';
@@ -41,6 +39,12 @@ const shimmer = keyframes`
   to   { background-position: 200% center; }
 `;
 
+/* ──────────────────────── Level Background Art ──────────────────────── */
+
+const LEVEL_BACKGROUNDS: Record<number, string> = {
+  2: '/images/levelup/level-2.png',
+};
+
 /* ──────────────────────── Level Narratives ──────────────────────── */
 
 const LEVEL_NARRATIVES: Record<number, { title: string; text: string }> = {
@@ -67,14 +71,6 @@ const DEFAULT_NARRATIVE = {
   text: 'The cave tests you with greater challenges.\n\nYou answer.',
 };
 
-/* ──────────────────────── Stat Descriptions ──────────────────────── */
-
-const STAT_INFO: Record<string, { color: string; desc: string }> = {
-  AGI: { color: '#5A8A3E', desc: 'Strike first, dodge more. Rogues thrive here.' },
-  INT: { color: '#4A7AB5', desc: 'Spell power, arcane force. The Mage\u2019s domain.' },
-  STR: { color: '#B85C3A', desc: 'Hit harder, break through. A Warrior\u2019s strength.' },
-};
-
 /* ──────────────────────── Component ──────────────────────── */
 
 type LevelUpModalProps = {
@@ -93,6 +89,7 @@ export const LevelUpModal = ({
 
   const nextLevel = Number(character.level) + 1;
   const narrative = LEVEL_NARRATIVES[nextLevel] ?? DEFAULT_NARRATIVE;
+  const backgroundImage = LEVEL_BACKGROUNDS[nextLevel];
 
   useEffect(() => {
     if (isOpen) {
@@ -149,14 +146,32 @@ export const LevelUpModal = ({
           },
         }}
       >
-        {/* Atmospheric radial gradient behind content */}
+        {/* Background art layer — one image, styled per phase */}
+        {backgroundImage && (
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            backgroundImage={`url(${backgroundImage})`}
+            backgroundSize="cover"
+            backgroundPosition={phase === 'narrative' ? 'center bottom' : 'center'}
+            backgroundRepeat="no-repeat"
+            opacity={phase === 'allocate' ? 0.06 : 0.15}
+            filter={phase === 'allocate' ? 'blur(4px)' : 'none'}
+            transition="opacity 0.6s ease, filter 0.6s ease, background-position 0.8s ease"
+            pointerEvents="none"
+          />
+        )}
+        {/* Radial gradient overlay for text readability */}
         <Box
           position="absolute"
           top={0}
           left={0}
           right={0}
           bottom={0}
-          bg="radial-gradient(ellipse at center top, rgba(212, 165, 74, 0.06) 0%, transparent 60%)"
+          bg="radial-gradient(ellipse at center, rgba(28, 24, 20, 0.7) 0%, transparent 70%)"
           pointerEvents="none"
         />
 
@@ -245,43 +260,6 @@ export const LevelUpModal = ({
           {/* ── Phase 2: Stat Allocation ── */}
           {phase === 'allocate' && (
             <VStack spacing={0} py={4}>
-              {/* Stat guide — brief descriptions */}
-              <VStack spacing={2} px={6} pb={4} w="100%">
-                <Text
-                  color="rgba(212, 165, 74, 0.6)"
-                  fontFamily="'Cinzel', serif"
-                  fontSize="xs"
-                  letterSpacing="widest"
-                  textTransform="uppercase"
-                  mb={1}
-                >
-                  Choose your path
-                </Text>
-                {Object.entries(STAT_INFO).map(([stat, { color, desc }]) => (
-                  <HStack key={stat} spacing={3} w="100%" maxW="380px">
-                    <Text
-                      color={color}
-                      fontFamily="mono"
-                      fontSize="xs"
-                      fontWeight={700}
-                      minW="32px"
-                    >
-                      {stat}
-                    </Text>
-                    <Text color="#6A6050" fontSize="xs" fontStyle="italic">
-                      {desc}
-                    </Text>
-                  </HStack>
-                ))}
-              </VStack>
-
-              <Box
-                bg="rgba(196,184,158,0.06)"
-                boxShadow="0 1px 0 rgba(196,184,158,0.06), 0 -1px 0 rgba(0,0,0,0.2)"
-                h="1px"
-                w="100%"
-              />
-
               <LevelingPanel
                 canLevel
                 character={character}
@@ -309,9 +287,9 @@ export const LevelUpModal = ({
                 py={5}
               >
                 <SafeTypist
-                  avgTypingDelay={30}
+                  avgTypingDelay={50}
                   cursor={{ show: false }}
-                  stdTypingDelay={15}
+                  stdTypingDelay={25}
                 >
                   <Text
                     fontSize={{ base: 'sm', md: 'md' }}
