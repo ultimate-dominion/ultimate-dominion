@@ -658,18 +658,71 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
       .filter((m): m is Message => m !== null);
   }, [combatOutcomeRows, allCharacters]);
 
-  // Convert indexer game events to feed Messages
+  // Convert indexer game events to feed Messages with linked player names
   const indexerEventAnnouncements: Message[] = useMemo(() => {
+    const cutoff = Date.now() - ANNOUNCEMENT_MAX_AGE_MS;
     return gameEvents
       .filter(e => !EXCLUDED_INDEXER_EVENTS.has(e.eventType))
-      .map(event => ({
-        delivered: true,
-        from: zeroAddress,
-        message: event.description,
-        rarityColor: GAME_EVENT_COLORS[event.eventType] || '#8A7E6A',
-        timestamp: event.timestamp,
-      }));
-  }, [gameEvents]);
+      .filter(e => e.timestamp >= cutoff)
+      .map(event => {
+        const char = allCharacters.find(c => c.name === event.playerName);
+        const nameColor = char ? (CLASS_COLORS[char.entityClass] ?? '#E8DCC8') : '#E8DCC8';
+        const suffix = event.description.slice(event.playerName.length);
+        const rarityColor = GAME_EVENT_COLORS[event.eventType] || '#8A7E6A';
+
+        // PvP kills: link both winner and loser names
+        if (event.eventType === 'pvp_kill') {
+          const match = suffix.match(/^ defeated (.+) in PvP$/);
+          if (match) {
+            const loserName = match[1];
+            const loserChar = allCharacters.find(c => c.name === loserName);
+            const loserColor = loserChar ? (CLASS_COLORS[loserChar.entityClass] ?? '#E8DCC8') : '#E8DCC8';
+            return {
+              delivered: true,
+              from: zeroAddress,
+              jsx: (
+                <Text fontWeight={500} size="xs">
+                  {char ? (
+                    <Text as={RouterLink} color={nameColor} fontWeight={700} to={`${CHARACTERS_PATH}/${char.id}`} _hover={{ textDecoration: 'underline' }}>{event.playerName}</Text>
+                  ) : (
+                    <Text as="span" color={nameColor} fontWeight={700}>{event.playerName}</Text>
+                  )}
+                  {' defeated '}
+                  {loserChar ? (
+                    <Text as={RouterLink} color={loserColor} fontWeight={700} to={`${CHARACTERS_PATH}/${loserChar.id}`} _hover={{ textDecoration: 'underline' }}>{loserName}</Text>
+                  ) : (
+                    <Text as="span" color={loserColor} fontWeight={700}>{loserName}</Text>
+                  )}
+                  {' in PvP'}
+                </Text>
+              ),
+              message: '',
+              rarityColor,
+              timestamp: event.timestamp,
+            };
+          }
+        }
+
+        // Default: link the player name, append rest as plain text
+        return {
+          delivered: true,
+          from: zeroAddress,
+          jsx: (
+            <Text fontWeight={500} size="xs">
+              {char ? (
+                <Text as={RouterLink} color={nameColor} fontWeight={700} to={`${CHARACTERS_PATH}/${char.id}`} _hover={{ textDecoration: 'underline' }}>{event.playerName}</Text>
+              ) : (
+                <Text as="span" color={nameColor} fontWeight={700}>{event.playerName}</Text>
+              )}
+              {suffix}
+            </Text>
+          ),
+          message: '',
+          rarityColor,
+          timestamp: event.timestamp,
+        };
+      });
+  }, [gameEvents, allCharacters]);
 
   const messagesAndEvents = useMemo(() => {
     return [

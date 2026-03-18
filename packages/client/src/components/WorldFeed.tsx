@@ -49,17 +49,17 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
         color="#E8DCC8"
         h={
           inline
-            ? '36px'
+            ? '28px'
             : isVisible
-              ? { base: '40px', md: '66px' }
+              ? { base: '36px', md: '44px' }
               : { base: '0', md: '0' }
         }
         justifyContent="space-between"
-        px={4}
+        px={3}
         w="100%"
       >
-        <Heading size={inline ? 'sm' : { base: 'sm', md: 'md' }}>World</Heading>
-        {!inline && <CloseButton onClick={onClose} />}
+        <Heading fontSize={inline ? 'xs' : { base: 'xs', md: 'sm' }} textTransform="uppercase" letterSpacing="wider">World</Heading>
+        {!inline && <CloseButton size="sm" onClick={onClose} />}
       </HStack>
       <Box
         flex={inline ? 1 : undefined}
@@ -68,9 +68,9 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
         overflowY="auto"
         transition={inline ? undefined : 'height 0.3s ease'}
       >
-        <VStack bg="#14120F" className="data-dense" flex="1" overflowY="auto" p={2} spacing={2}>
+        <VStack bg="#14120F" className="data-dense" flex="1" overflowY="auto" px={1.5} py={1} spacing={0.5}>
           {messages.length === 0 && (
-            <Text color="#5A5347" fontStyle="italic" mt={4} size="sm" textAlign="center">
+            <Text color="#5A5347" fontStyle="italic" mt={4} fontSize="xs" textAlign="center">
               Waiting for world events...
             </Text>
           )}
@@ -81,32 +81,32 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
               message.timestamp - prevMessage.timestamp > 1000 * 60 * 30;
 
             return (
-              <VStack key={`event-${message.timestamp}-${index}`} mt={1} w="100%">
+              <VStack key={`event-${message.timestamp}-${index}`} w="100%" spacing={0}>
                 {showTimestamp && (
-                  <Text color="#5A5347" size="2xs">
-                    &mdash;{' '}
+                  <Text color="#3A3228" fontSize="9px" py={0.5}>
                     {new Date(message.timestamp).toLocaleTimeString([], {
                       hour: 'numeric',
                       minute: '2-digit',
-                    })}{' '}
-                    &mdash;
+                    })}
                   </Text>
                 )}
                 <Box
                   bg="#1A1610"
                   borderLeft={
                     message.rarityColor
-                      ? `3px solid ${message.rarityColor}`
+                      ? `2px solid ${message.rarityColor}`
                       : undefined
                   }
-                  borderRadius="md"
-                  boxShadow="2px 2px 6px rgba(0,0,0,0.4)"
+                  borderRadius="sm"
                   color="#E8DCC8"
-                  p={2}
+                  px={2}
+                  py={0.5}
                   w="100%"
+                  fontSize="xs"
+                  sx={{ '& p, & a, & span': { fontSize: 'inherit' } }}
                 >
                   {message.jsx || (
-                    <Text fontWeight={500} size="xs" textAlign="center">
+                    <Text fontWeight={500}>
                       {message.message}
                     </Text>
                   )}

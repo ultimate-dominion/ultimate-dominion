@@ -354,7 +354,7 @@ export const MapPanel = (): JSX.Element => {
         </PolygonalCard>
       </Box>
 
-      {isDesktop && isSpawned && (
+      {isDesktop && isSpawned && position && (
         <Box order={3} w="100%" flex={1} minH="100px" mt={2}>
           <WorldFeed inline />
         </Box>

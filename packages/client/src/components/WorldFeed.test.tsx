@@ -154,9 +154,9 @@ describe('WorldFeed', () => {
     const text = container.textContent || '';
     expect(text).toContain('Old event');
     expect(text).toContain('New event');
-    // The em-dashes indicate timestamp dividers
-    const dashCount = (text.match(/—/g) || []).length;
-    expect(dashCount).toBeGreaterThanOrEqual(4); // 2 dividers x 2 dashes each
+    // Timestamp dividers show time like "9:30 AM" — look for AM/PM indicators
+    const timeMatches = (text.match(/\d{1,2}:\d{2}\s*(AM|PM)/gi) || []);
+    expect(timeMatches.length).toBeGreaterThanOrEqual(2);
   });
 
   it('does not render login, join, or send UI elements', () => {
