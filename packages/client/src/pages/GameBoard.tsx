@@ -29,6 +29,7 @@ import { RankChangeToast } from '../components/RankChangeToast';
 import { ConsumableQuickUse } from '../components/ConsumableQuickUse';
 import { EquippedLoadout } from '../components/EquippedLoadout';
 import { InfoModal } from '../components/InfoModal';
+import { LevelUpModal } from '../components/LevelUpModal';
 import { MapPanel } from '../components/MapPanel';
 import { PolygonalCard } from '../components/PolygonalCard';
 import { StatsPanel } from '../components/StatsPanel';
@@ -43,7 +44,8 @@ import { useQueue } from '../contexts/QueueContext';
 import { useGameStore, wasPreHydrated } from '../lib/gameStore/store';
 import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
-import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
+import { BATTLE_OUTCOME_SEEN_KEY, MAX_LEVEL } from '../utils/constants';
+import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 
 export const GameBoard = (): JSX.Element => {
   const {
@@ -67,6 +69,12 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseStatsDrawer,
   } = useDisclosure();
 
+  const {
+    isOpen: isLevelUpModalOpen,
+    onOpen: onOpenLevelUpModal,
+    onClose: onCloseLevelUpModal,
+  } = useDisclosure();
+
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -84,6 +92,19 @@ export const GameBoard = (): JSX.Element => {
   const isReconnecting = useGameStore((s) => s.isReconnecting);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const stage = useOnboardingStage();
+
+  const nextLevelRow = useGameValue(
+    'Levels',
+    character ? encodeUint256Key(BigInt(character.level)) : undefined,
+  );
+  const nextLevelXpRequirement = toBigInt(nextLevelRow?.experience);
+
+  const canLevel = useMemo(() => {
+    if (!character) return false;
+    if (Number(character.level) >= MAX_LEVEL) return false;
+    if (nextLevelXpRequirement === BigInt(0)) return false;
+    return BigInt(character.experience) >= nextLevelXpRequirement;
+  }, [character, nextLevelXpRequirement]);
 
   // Grace period: cached session lets player land here before auth resolves.
   // Wait up to 5s for auth to catch up before redirecting.
@@ -411,7 +432,20 @@ export const GameBoard = (): JSX.Element => {
           key={lastestBattleOutcome.encounterId}
           battleOutcome={lastestBattleOutcome}
           isOpen={isBattleOutcomeModalOpen}
-          onClose={onCloseBattleOutcomeModal}
+          onClose={() => {
+            onCloseBattleOutcomeModal();
+            if (canLevel && stage < OnboardingStage.ESTABLISHED) {
+              setTimeout(() => onOpenLevelUpModal(), 300);
+            }
+          }}
+        />
+      )}
+
+      {character && (
+        <LevelUpModal
+          character={character}
+          isOpen={isLevelUpModalOpen}
+          onClose={onCloseLevelUpModal}
         />
       )}
       <RankChangeToast />

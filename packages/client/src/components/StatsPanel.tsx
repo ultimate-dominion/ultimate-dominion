@@ -365,13 +365,7 @@ export const StatsPanel = (): JSX.Element => {
         </>
       )}
 
-      {character && (
-        <LevelUpModal
-          character={character}
-          isOpen={isLevelUpOpen}
-          onClose={() => setIsLevelUpOpen(false)}
-        />
-      )}
+
 
       {isDesktop && (
         <>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
+  HStack,
   keyframes,
   Modal,
   ModalBody,
@@ -9,6 +10,7 @@ import {
   ModalFooter,
   ModalOverlay,
   Text,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react';
 import SafeTypist from './SafeTypist';
@@ -44,25 +46,33 @@ const shimmer = keyframes`
 const LEVEL_NARRATIVES: Record<number, { title: string; text: string }> = {
   2: {
     title: 'The cave grows darker.',
-    text: 'Something shifts in the gloom ahead — hunched shapes, larger than any rat, with eyes that gleam with a terrible intelligence. You are not alone down here.',
+    text: 'Something shifts in the gloom ahead \u2014 hunched shapes, larger than any rat, with eyes that gleam with a terrible intelligence.\n\nYou are not alone down here.',
   },
   3: {
     title: 'The depths stir.',
-    text: 'New sounds echo from passages you haven\'t dared explore — scraping claws, crackling energy, the low hum of something ancient. The cave\'s true inhabitants make themselves known.',
+    text: 'New sounds echo from passages you haven\u2019t dared explore \u2014 scraping claws, crackling energy, the low hum of something ancient.\n\nThe cave\u2019s true inhabitants make themselves known.',
   },
   4: {
     title: 'The darkness knows your name.',
-    text: 'You move through the cave with purpose now. The creatures that once seemed fearsome give you a wider berth. But deeper things are watching — waiting to see if you are worthy.',
+    text: 'You move through the cave with purpose now. The creatures that once seemed fearsome give you a wider berth.\n\nBut deeper things are watching \u2014 waiting to see if you are worthy.',
   },
   5: {
     title: 'Beyond the boundary.',
-    text: 'The safety of the inner caves can no longer contain you. Beyond lies the Outer Realms — where other adventurers hunt, and the line between predator and prey blurs.',
+    text: 'The walls that once held you back crumble to dust at your touch. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe line between predator and prey has never been thinner.',
   },
 };
 
 const DEFAULT_NARRATIVE = {
   title: 'You grow stronger.',
-  text: 'The cave tests you with greater challenges. You answer.',
+  text: 'The cave tests you with greater challenges.\n\nYou answer.',
+};
+
+/* ──────────────────────── Stat Descriptions ──────────────────────── */
+
+const STAT_INFO: Record<string, { color: string; desc: string }> = {
+  AGI: { color: '#5A8A3E', desc: 'Strike first, dodge more. Rogues thrive here.' },
+  INT: { color: '#4A7AB5', desc: 'Spell power, arcane force. The Mage\u2019s domain.' },
+  STR: { color: '#B85C3A', desc: 'Hit harder, break through. A Warrior\u2019s strength.' },
 };
 
 /* ──────────────────────── Component ──────────────────────── */
@@ -106,7 +116,7 @@ export const LevelUpModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size={{ base: 'full', md: 'lg' }}
+      size={{ base: 'full', md: 'xl' }}
       isCentered
       motionPreset="none"
       closeOnOverlayClick={false}
@@ -130,6 +140,7 @@ export const LevelUpModal = ({
         boxShadow="0 0 80px 12px rgba(212, 165, 74, 0.1), 0 0 160px 30px rgba(212, 165, 74, 0.05)"
         maxH={{ base: '100dvh', md: '90vh' }}
         overflow="hidden"
+        position="relative"
         css={{
           animation: 'modalEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           '@keyframes modalEnter': {
@@ -138,7 +149,18 @@ export const LevelUpModal = ({
           },
         }}
       >
-        <ModalBody p={0} overflowY="auto">
+        {/* Atmospheric radial gradient behind content */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bg="radial-gradient(ellipse at center top, rgba(212, 165, 74, 0.06) 0%, transparent 60%)"
+          pointerEvents="none"
+        />
+
+        <ModalBody p={0} overflowY="auto" position="relative">
           {/* ── Phase 1: Celebration ── */}
           {phase === 'celebrate' && (
             <VStack
@@ -183,7 +205,7 @@ export const LevelUpModal = ({
                 borderRadius="full"
                 background="linear-gradient(90deg, transparent, #D4A54A, transparent)"
                 backgroundSize="200% 100%"
-                animation={`${shimmer} 3s ease-in-out infinite`}
+                animation={showContent ? `${shimmer} 3s ease-in-out infinite` : undefined}
                 opacity={showContent ? 1 : 0}
                 css={{
                   animation: showContent
@@ -199,6 +221,7 @@ export const LevelUpModal = ({
                 fontFamily="'Cinzel', serif"
                 fontStyle="italic"
                 color="#8A7E6A"
+                maxW="360px"
                 opacity={showContent ? 1 : 0}
                 animation={showContent ? `${fadeUp} 0.6s 0.7s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
               >
@@ -221,14 +244,51 @@ export const LevelUpModal = ({
 
           {/* ── Phase 2: Stat Allocation ── */}
           {phase === 'allocate' && (
-            <Box py={4}>
+            <VStack spacing={0} py={4}>
+              {/* Stat guide — brief descriptions */}
+              <VStack spacing={2} px={6} pb={4} w="100%">
+                <Text
+                  color="rgba(212, 165, 74, 0.6)"
+                  fontFamily="'Cinzel', serif"
+                  fontSize="xs"
+                  letterSpacing="widest"
+                  textTransform="uppercase"
+                  mb={1}
+                >
+                  Choose your path
+                </Text>
+                {Object.entries(STAT_INFO).map(([stat, { color, desc }]) => (
+                  <HStack key={stat} spacing={3} w="100%" maxW="380px">
+                    <Text
+                      color={color}
+                      fontFamily="mono"
+                      fontSize="xs"
+                      fontWeight={700}
+                      minW="32px"
+                    >
+                      {stat}
+                    </Text>
+                    <Text color="#6A6050" fontSize="xs" fontStyle="italic">
+                      {desc}
+                    </Text>
+                  </HStack>
+                ))}
+              </VStack>
+
+              <Box
+                bg="rgba(196,184,158,0.06)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.06), 0 -1px 0 rgba(0,0,0,0.2)"
+                h="1px"
+                w="100%"
+              />
+
               <LevelingPanel
                 canLevel
                 character={character}
                 compact
                 onLevelComplete={handleLevelComplete}
               />
-            </Box>
+            </VStack>
           )}
 
           {/* ── Phase 3: Narrative Tease ── */}
@@ -237,10 +297,17 @@ export const LevelUpModal = ({
               spacing={6}
               py={{ base: 12, md: 16 }}
               px={{ base: 6, md: 10 }}
+              align="center"
             >
               <Box mx="auto" w="60px" h="1px" bg="rgba(212, 165, 74, 0.3)" />
 
-              <Box>
+              <Box
+                maxW="420px"
+                bg="rgba(28, 24, 20, 0.6)"
+                borderRadius="md"
+                px={{ base: 4, md: 6 }}
+                py={5}
+              >
                 <SafeTypist
                   avgTypingDelay={30}
                   cursor={{ show: false }}
@@ -252,6 +319,7 @@ export const LevelUpModal = ({
                     color="#C4B89E"
                     fontStyle="italic"
                     textAlign="center"
+                    whiteSpace="pre-line"
                   >
                     {narrative.text}
                   </Text>
@@ -261,7 +329,7 @@ export const LevelUpModal = ({
           )}
         </ModalBody>
 
-        <ModalFooter justifyContent="center" pb={8}>
+        <ModalFooter justifyContent="center" pb={8} position="relative">
           {phase === 'celebrate' && (
             <Button
               onClick={handleProceedToAllocate}
