@@ -37,6 +37,7 @@ export function getRecentEvents(): GameEvent[] {
 /**
  * Backfill the event buffer with recent history from the database.
  * Runs once on startup so the feed isn't empty after a deploy/restart.
+ * Queries ALL event types — the compute happens here on the server.
  */
 async function backfillRecentEvents(syncHandle: SyncHandle) {
   const BACKFILL_LIMIT = 25;
@@ -46,114 +47,267 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
   const charactersTable = syncHandle.tableNameMap.get('Characters');
   const fragmentTable = syncHandle.tableNameMap.get('FragmentProgress');
   const mobsTable = syncHandle.tableNameMap.get('Mobs');
+  const outcomeTable = syncHandle.tableNameMap.get('CombatOutcome');
+  const worldEncTable = syncHandle.tableNameMap.get('WorldEncounter');
+  const combatEncTable = syncHandle.tableNameMap.get('CombatEncounter');
+  const itemsTable = syncHandle.tableNameMap.get('Items');
+  const shopSaleTable = syncHandle.tableNameMap.get('ShopSale');
 
   if (!statsTable || !charactersTable) {
     console.log('[eventFeed] Backfill skipped — tables not ready');
     return;
   }
 
-  try {
-    // Build UNION of recent events from each table, ordered by block desc
-    const parts: string[] = [];
+  // Collect events from each source, then sort and take the most recent
+  const allEvents: { block: number; event: GameEvent }[] = [];
 
-    // Level-ups (level >= 2)
-    parts.push(`
-      SELECT s."__last_updated_block_number" as block, 'level_up' as event_type,
-             c."name", s."level", NULL::bytea as extra1, NULL::bytea[] as extra2,
-             NULL::integer as extra3
+  // Helper: stagger timestamps so events display in order
+  const makeTimestamp = (block: number) => block; // use block as sort key, fix timestamps at end
+
+  // 1. Level-ups
+  try {
+    const rows = await sql.unsafe(`
+      SELECT s."__last_updated_block_number" as block, s."level", c."name"
       FROM "${mudSchema}"."${statsTable}" s
       JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
       WHERE s."level" IS NOT NULL AND s."level" >= 2
+      ORDER BY s."__last_updated_block_number" DESC
+      LIMIT ${BACKFILL_LIMIT}
     `);
+    for (const row of rows) {
+      const name = decodeCharacterName(row.name);
+      const level = Number(row.level);
+      if (!name || level <= 1) continue;
+      allEvents.push({
+        block: Number(row.block),
+        event: { id: crypto.randomUUID(), eventType: 'level_up', playerName: name, description: `${name} reached Level ${level}`, timestamp: 0 },
+      });
+    }
+  } catch { /* table may not exist */ }
 
-    // Class selections
-    parts.push(`
-      SELECT s."__last_updated_block_number" as block, 'class_selection' as event_type,
-             c."name", NULL::integer as level, NULL::bytea as extra1, NULL::bytea[] as extra2,
-             s."advanced_class" as extra3
+  // 2. Class selections
+  try {
+    const rows = await sql.unsafe(`
+      SELECT s."__last_updated_block_number" as block, s."advanced_class", c."name"
       FROM "${mudSchema}"."${statsTable}" s
       JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
       WHERE s."advanced_class" IS NOT NULL AND s."advanced_class" > 0
+      ORDER BY s."__last_updated_block_number" DESC
+      LIMIT ${BACKFILL_LIMIT}
     `);
+    for (const row of rows) {
+      const name = decodeCharacterName(row.name);
+      const classValue = Number(row.advanced_class);
+      if (!name || classValue <= 0) continue;
+      const className = ADVANCED_CLASS_NAMES[classValue] || `Class ${classValue}`;
+      allEvents.push({
+        block: Number(row.block),
+        event: { id: crypto.randomUUID(), eventType: 'class_selection', playerName: name, description: `${name} became a ${className}`, timestamp: 0 },
+      });
+    }
+  } catch { /* table may not exist */ }
 
-    // Fragment discoveries
-    if (fragmentTable) {
-      parts.push(`
-        SELECT fp."__last_updated_block_number" as block, 'fragment_found' as event_type,
-               c."name", NULL::integer as level, NULL::bytea as extra1, NULL::bytea[] as extra2,
-               NULL::integer as extra3
+  // 3. Fragment discoveries
+  if (fragmentTable) {
+    try {
+      const rows = await sql.unsafe(`
+        SELECT fp."__last_updated_block_number" as block, c."name"
         FROM "${mudSchema}"."${fragmentTable}" fp
         LEFT JOIN "${mudSchema}"."${charactersTable}" c ON fp."character_id" = c."__key_bytes"
         WHERE fp."triggered" = true
+        ORDER BY fp."__last_updated_block_number" DESC
+        LIMIT ${BACKFILL_LIMIT}
       `);
-    }
+      for (const row of rows) {
+        const name = decodeCharacterName(row.name) || 'An adventurer';
+        allEvents.push({
+          block: Number(row.block),
+          event: { id: crypto.randomUUID(), eventType: 'fragment_found', playerName: name, description: `${name} discovered a lost fragment...`, timestamp: 0 },
+        });
+      }
+    } catch { /* table may not exist */ }
+  }
 
-    const query = `
-      SELECT * FROM (${parts.join(' UNION ALL ')}) combined
-      ORDER BY block DESC
-      LIMIT ${BACKFILL_LIMIT}
-    `;
-
+  // 4. Character creations
+  try {
+    const query = statsTable
+      ? `SELECT c."__last_updated_block_number" as block, c."name"
+         FROM "${mudSchema}"."${charactersTable}" c
+         JOIN "${mudSchema}"."${statsTable}" s ON c."__key_bytes" = s."__key_bytes"
+         WHERE c."name" IS NOT NULL AND s."level" = 1
+         ORDER BY c."__last_updated_block_number" DESC
+         LIMIT ${BACKFILL_LIMIT}`
+      : `SELECT "__last_updated_block_number" as block, "name"
+         FROM "${mudSchema}"."${charactersTable}"
+         WHERE "name" IS NOT NULL
+         ORDER BY "__last_updated_block_number" DESC
+         LIMIT ${BACKFILL_LIMIT}`;
     const rows = await sql.unsafe(query);
-
-    // Process in chronological order (oldest first) so the buffer has newest at end
-    const chronological = rows.reverse();
-    let count = 0;
-
-    for (const row of chronological) {
+    for (const row of rows) {
       const name = decodeCharacterName(row.name);
       if (!name) continue;
-
-      let event: GameEvent;
-
-      switch (row.event_type) {
-        case 'level_up': {
-          const level = Number(row.level);
-          if (level <= 1) continue;
-          event = {
-            id: crypto.randomUUID(),
-            eventType: 'level_up',
-            playerName: name,
-            description: `${name} reached Level ${level}`,
-            timestamp: Date.now() - (chronological.length - count) * 1000, // stagger timestamps
-          };
-          break;
-        }
-        case 'class_selection': {
-          const classValue = Number(row.extra3);
-          if (classValue <= 0) continue;
-          const className = ADVANCED_CLASS_NAMES[classValue] || `Class ${classValue}`;
-          event = {
-            id: crypto.randomUUID(),
-            eventType: 'class_selection',
-            playerName: name,
-            description: `${name} became a ${className}`,
-            timestamp: Date.now() - (chronological.length - count) * 1000,
-          };
-          break;
-        }
-        case 'fragment_found': {
-          event = {
-            id: crypto.randomUUID(),
-            eventType: 'fragment_found',
-            playerName: name,
-            description: `${name} discovered a lost fragment...`,
-            timestamp: Date.now() - (chronological.length - count) * 1000,
-          };
-          break;
-        }
-        default:
-          continue;
-      }
-
-      addEvent(event);
-      count++;
+      allEvents.push({
+        block: Number(row.block),
+        event: { id: crypto.randomUUID(), eventType: 'character_created', playerName: name, description: `${name} has entered the world`, timestamp: 0 },
+      });
     }
+  } catch { /* table may not exist */ }
 
-    console.log(`[eventFeed] Backfilled ${count} events`);
-  } catch (err) {
-    console.error('[eventFeed] Backfill error:', err);
+  // 5. Combat outcomes (PvP kills + PvE deaths)
+  if (outcomeTable && worldEncTable) {
+    try {
+      const hasCE = !!combatEncTable;
+      const rows = await sql.unsafe(`
+        SELECT co."__last_updated_block_number" as block, co."attackers_win",
+               c."name" as player_name
+               ${hasCE ? `, ce."encounter_type", ce."defenders", ce."attackers"` : ''}
+        FROM "${mudSchema}"."${outcomeTable}" co
+        JOIN "${mudSchema}"."${worldEncTable}" we ON co."__key_bytes" = we."__key_bytes"
+        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON we."character" = c."__key_bytes"
+        ${hasCE ? `LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"` : ''}
+        ORDER BY co."__last_updated_block_number" DESC
+        LIMIT ${BACKFILL_LIMIT * 2}
+      `);
+
+      for (const row of rows) {
+        const playerName = decodeCharacterName(row.player_name);
+        if (!playerName) continue;
+        const attackersWin = Boolean(row.attackers_win);
+        const isPvP = hasCE && Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
+
+        if (isPvP) {
+          const playerWon = attackersWin;
+          const opponentEntities: Buffer[] = playerWon ? (row.defenders || []) : (row.attackers || []);
+          let opponentName = 'an opponent';
+          if (opponentEntities.length > 0) {
+            try {
+              const oppRow = await sql.unsafe(`
+                SELECT "name" FROM "${mudSchema}"."${charactersTable}" WHERE "__key_bytes" = $1 LIMIT 1
+              `, [opponentEntities[0]]);
+              if (oppRow.length > 0) opponentName = decodeCharacterName(oppRow[0].name) || 'an opponent';
+            } catch { /* fall through */ }
+          }
+          const winner = playerWon ? playerName : opponentName;
+          const loser = playerWon ? opponentName : playerName;
+          allEvents.push({
+            block: Number(row.block),
+            event: { id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: winner, description: `${winner} defeated ${loser} in PvP`, timestamp: 0 },
+          });
+        } else if (!attackersWin) {
+          // PvE death — player lost
+          let mobName = 'a monster';
+          if (hasCE && mobsTable) {
+            const defenderEntities: Buffer[] = row.defenders || [];
+            if (defenderEntities.length > 0) {
+              const mobId = decodeMobIdFromEntity(defenderEntities[0]);
+              if (mobId > 0) mobName = await getMobName(mobId, mobsTable);
+            }
+          }
+          allEvents.push({
+            block: Number(row.block),
+            event: { id: crypto.randomUUID(), eventType: 'death', playerName: playerName, description: `${playerName} was killed by ${mobName}`, timestamp: 0 },
+          });
+        }
+        // PvE wins are skipped (too noisy)
+      }
+    } catch (err) {
+      console.debug('[eventFeed] Backfill combat error:', err);
+    }
   }
+
+  // 6. Loot drops (uncommon+)
+  if (outcomeTable && worldEncTable) {
+    try {
+      const rows = await sql.unsafe(`
+        SELECT co."__last_updated_block_number" as block, co."items_dropped", c."name"
+        FROM "${mudSchema}"."${outcomeTable}" co
+        JOIN "${mudSchema}"."${worldEncTable}" we ON co."__key_bytes" = we."__key_bytes"
+        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON we."character" = c."__key_bytes"
+        WHERE co."items_dropped" IS NOT NULL AND array_length(co."items_dropped", 1) > 0
+        ORDER BY co."__last_updated_block_number" DESC
+        LIMIT ${BACKFILL_LIMIT}
+      `);
+
+      for (const row of rows) {
+        const name = decodeCharacterName(row.name) || 'An adventurer';
+        const itemIds: string[] = Array.isArray(row.items_dropped) ? row.items_dropped : [];
+        if (itemIds.length === 0) continue;
+
+        let itemDesc = `${itemIds.length} item${itemIds.length > 1 ? 's' : ''}`;
+        let rarity = 0;
+        if (itemsTable && itemIds.length > 0) {
+          try {
+            const itemRow = await sql.unsafe(`SELECT "item_type", "rarity" FROM "${mudSchema}"."${itemsTable}" WHERE "__key_bytes" = $1 LIMIT 1`, [itemIds[0]]);
+            if (itemRow.length > 0) {
+              const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+              rarity = Number(itemRow[0].rarity || 0);
+              const rarityName = RARITY_NAMES[rarity] || '';
+              itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+            }
+          } catch { /* fall back */ }
+        }
+
+        const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
+        allEvents.push({
+          block: Number(row.block),
+          event: { id: crypto.randomUUID(), eventType, playerName: name, description: `${name} found ${itemDesc}`, timestamp: 0 },
+        });
+      }
+    } catch { /* table may not exist */ }
+  }
+
+  // 7. Shop purchases
+  if (shopSaleTable) {
+    try {
+      const rows = await sql.unsafe(`
+        SELECT ss."__last_updated_block_number" as block, ss."buying", ss."price", ss."item_id", c."name"
+        FROM "${mudSchema}"."${shopSaleTable}" ss
+        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON ss."customer_id" = c."__key_bytes"
+        ORDER BY ss."__last_updated_block_number" DESC
+        LIMIT ${BACKFILL_LIMIT}
+      `);
+
+      for (const row of rows) {
+        const name = decodeCharacterName(row.name) || 'An adventurer';
+        const price = Number(row.price || 0);
+        const buying = row.buying;
+        let itemDesc = 'an item';
+
+        if (itemsTable) {
+          try {
+            const itemRow = await sql.unsafe(`SELECT "item_type", "rarity" FROM "${mudSchema}"."${itemsTable}" WHERE "item_id" = $1::numeric LIMIT 1`, [row.item_id]);
+            if (itemRow.length > 0) {
+              const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+              const rarityName = RARITY_NAMES[Number(itemRow[0].rarity)] || '';
+              itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+            }
+          } catch { /* fall back */ }
+        }
+
+        const desc = buying
+          ? (price > 0 ? `${name} purchased ${itemDesc} for ${price.toLocaleString()} gold` : `${name} purchased ${itemDesc}`)
+          : (price > 0 ? `${name} sold ${itemDesc} for ${price.toLocaleString()} gold` : `${name} sold ${itemDesc}`);
+
+        allEvents.push({
+          block: Number(row.block),
+          event: { id: crypto.randomUUID(), eventType: 'shop_purchase', playerName: name, description: desc, timestamp: 0 },
+        });
+      }
+    } catch { /* table may not exist */ }
+  }
+
+  // Sort all events by block (oldest first), take the most recent BACKFILL_LIMIT
+  allEvents.sort((a, b) => a.block - b.block);
+  const recent = allEvents.slice(-BACKFILL_LIMIT);
+
+  // Assign staggered timestamps so they display in correct order
+  const now = Date.now();
+  for (let i = 0; i < recent.length; i++) {
+    recent[i].event.timestamp = now - (recent.length - i) * 1000;
+    addEvent(recent[i].event);
+  }
+
+  console.log(`[eventFeed] Backfilled ${recent.length} events (from ${allEvents.length} candidates)`);
 }
 
 /**
