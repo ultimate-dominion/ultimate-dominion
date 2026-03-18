@@ -1108,35 +1108,39 @@ export const TileDetailsPanel = (): JSX.Element => {
         {isHomeTile && (
           <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
             <VStack alignItems="start" minH="76px" p={2}>
-              <HStack>
-                <Text
-                  fontFamily="mono"
-                  fontSize={{ base: '3xs', sm: 'xs' }}
-                  fontWeight={700}
-                  textAlign="start"
-                >
-                  Adventure Escrow balance:{' '}
-                  {etherToFixedNumber(character.escrowGoldBalance)} Gold
-                </Text>
-                <Tooltip
-                  bg="#14120F"
-                  hasArrow
-                  label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
-                  placement="top"
-                  shouldWrapChildren
-                >
-                  <IoMdInformationCircleOutline />
-                </Tooltip>
-              </HStack>
-              {isHomeTile && (
-                <Button
-                  borderRadius="0px"
-                  onClick={onOpenAdventureEscrowModal}
-                  size="xs"
-                  variant="outline"
-                >
-                  Move Gold
-                </Button>
+              {stage >= OnboardingStage.ESTABLISHED && (
+                <>
+                  <HStack>
+                    <Text
+                      fontFamily="mono"
+                      fontSize={{ base: '3xs', sm: 'xs' }}
+                      fontWeight={700}
+                      textAlign="start"
+                    >
+                      Adventure Escrow balance:{' '}
+                      {etherToFixedNumber(character.escrowGoldBalance)} Gold
+                    </Text>
+                    <Tooltip
+                      bg="#14120F"
+                      hasArrow
+                      label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
+                      placement="top"
+                      shouldWrapChildren
+                    >
+                      <IoMdInformationCircleOutline />
+                    </Tooltip>
+                  </HStack>
+                  {isHomeTile && (
+                    <Button
+                      borderRadius="0px"
+                      onClick={onOpenAdventureEscrowModal}
+                      size="xs"
+                      variant="outline"
+                    >
+                      Move Gold
+                    </Button>
+                  )}
+                </>
               )}
               {isHomeTile && !character.inBattle && (
                   <VStack
@@ -1327,17 +1331,21 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
-          <HStack h={ROW_HEIGHT} justifyContent="end" px={4}>
-            <Text size={{ base: '3xs', sm: '2xs', md: 'xs' }} textAlign="right">
-              {inSafetyZone ? 'Safety Zone' : 'Outer Realms'}
-            </Text>
-          </HStack>
-          <Box
-            backgroundColor="rgba(196,184,158,0.08)"
-            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-            h="6px"
-            w="100%"
-          />
+          {stage >= OnboardingStage.ESTABLISHED && (
+            <>
+              <HStack h={ROW_HEIGHT} justifyContent="end" px={4}>
+                <Text size={{ base: '3xs', sm: '2xs', md: 'xs' }} textAlign="right">
+                  {inSafetyZone ? 'Safety Zone' : 'Outer Realms'}
+                </Text>
+              </HStack>
+              <Box
+                backgroundColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                h="6px"
+                w="100%"
+              />
+            </>
+          )}
           {!isHomeTile &&
             shopsOnTile.map((shop, i) => (
               <Box key={`tile-shop-${i}`}>
@@ -1350,35 +1358,39 @@ export const TileDetailsPanel = (): JSX.Element => {
                 />
               </Box>
             ))}
-          {otherCharactersOnTile.length > 0 &&
-            otherCharactersOnTile.map((player, i) => (
-              <Box key={`tile-player-${i}-${player.name}`}>
-                <OpponentRow
-                  encounterType={EncounterType.PvP}
-                  onClick={() =>
-                    inSafetyZone
-                      ? onOpenSafetyZoneInfoModal()
-                      : onInitiateCombat(player, EncounterType.PvP)
-                  }
-                  opponent={player}
-                  playerStats={{
-                    strength: character?.strength ?? 0n,
-                    agility: character?.agility ?? 0n,
-                    intelligence: character?.intelligence ?? 0n,
-                  }}
-                />
-                <Box
-                  backgroundColor="rgba(196,184,158,0.08)"
-                  boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                  h="6px"
-                  w="100%"
-                />
-              </Box>
-            ))}
-          {otherCharactersOnTile.length === 0 && (
-            <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
-              No players in this area
-            </Text>
+          {stage >= OnboardingStage.SETTLING_IN && (
+            <>
+              {otherCharactersOnTile.length > 0 &&
+                otherCharactersOnTile.map((player, i) => (
+                  <Box key={`tile-player-${i}-${player.name}`}>
+                    <OpponentRow
+                      encounterType={EncounterType.PvP}
+                      onClick={() =>
+                        inSafetyZone
+                          ? onOpenSafetyZoneInfoModal()
+                          : onInitiateCombat(player, EncounterType.PvP)
+                      }
+                      opponent={player}
+                      playerStats={{
+                        strength: character?.strength ?? 0n,
+                        agility: character?.agility ?? 0n,
+                        intelligence: character?.intelligence ?? 0n,
+                      }}
+                    />
+                    <Box
+                      backgroundColor="rgba(196,184,158,0.08)"
+                      boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                      h="6px"
+                      w="100%"
+                    />
+                  </Box>
+                ))}
+              {otherCharactersOnTile.length === 0 && (
+                <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
+                  No players in this area
+                </Text>
+              )}
+            </>
           )}
         </GridItem>
       </Grid>

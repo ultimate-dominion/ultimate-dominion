@@ -26,6 +26,7 @@ import { MAX_LEVEL } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
 
 import { useNearbyRanks } from '../hooks/useNearbyRanks';
+import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 
 import { ClassSymbol } from './ClassSymbol';
 import { EquippedLoadout } from './EquippedLoadout';
@@ -40,6 +41,7 @@ export const StatsPanel = (): JSX.Element => {
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const { nearby, isLoading: nearbyLoading, rankBy, dataRankBy, setRankBy } = useNearbyRanks();
+  const stage = useOnboardingStage();
 
   const maxed = useMemo(() => {
     if (!character) return false;
@@ -209,143 +211,153 @@ export const StatsPanel = (): JSX.Element => {
         </Box>
 
         {/* Stats — compact single row */}
-        <HStack
-          justifyContent="center"
-          px={2}
-          py={1.5}
-          spacing={2}
-          w="100%"
-        >
-          <Text color="#5A8A3E" fontFamily="mono" size="sm">
-            AGI{' '}
-            <Text as="span" color="#E8DCC8" fontWeight={700}>
-              {(agility - expiredEffectModifications.agiModifier).toString()}
+        {stage >= OnboardingStage.FIRST_BLOOD && (
+          <HStack
+            justifyContent="center"
+            px={2}
+            py={1.5}
+            spacing={2}
+            w="100%"
+          >
+            <Text color="#5A8A3E" fontFamily="mono" size="sm">
+              AGI{' '}
+              <Text as="span" color="#E8DCC8" fontWeight={700}>
+                {(agility - expiredEffectModifications.agiModifier).toString()}
+              </Text>
             </Text>
-          </Text>
-          <Text color="#5A5040" size="sm">·</Text>
-          <Text color="#4A7AB5" fontFamily="mono" size="sm">
-            INT{' '}
-            <Text as="span" color="#E8DCC8" fontWeight={700}>
-              {(intelligence - expiredEffectModifications.intModifier).toString()}
+            <Text color="#5A5040" size="sm">·</Text>
+            <Text color="#4A7AB5" fontFamily="mono" size="sm">
+              INT{' '}
+              <Text as="span" color="#E8DCC8" fontWeight={700}>
+                {(intelligence - expiredEffectModifications.intModifier).toString()}
+              </Text>
             </Text>
-          </Text>
-          <Text color="#5A5040" size="sm">·</Text>
-          <Text color="#B85C3A" fontFamily="mono" size="sm">
-            STR{' '}
-            <Text as="span" color="#E8DCC8" fontWeight={700}>
-              {(strength - expiredEffectModifications.strModifier).toString()}
+            <Text color="#5A5040" size="sm">·</Text>
+            <Text color="#B85C3A" fontFamily="mono" size="sm">
+              STR{' '}
+              <Text as="span" color="#E8DCC8" fontWeight={700}>
+                {(strength - expiredEffectModifications.strModifier).toString()}
+              </Text>
             </Text>
-          </Text>
-        </HStack>
+          </HStack>
+        )}
 
       </VStack>
 
-      <Divider borderColor="grey300" mt={2} />
+      {stage >= OnboardingStage.FIRST_BLOOD && (
+        <>
+          <Divider borderColor="grey300" mt={2} />
 
-      <Box mt={2} px={4} w="100%">
-        <Level
-          currentLevel={character.level}
-          levelPercent={levelPercent}
-          maxed={maxed}
-        />
-        <HStack justifyContent="space-between" mt={1}>
-          <Text color="#8A7E6A" fontWeight={600} size="xs">XP</Text>
-          <Text fontFamily="mono" fontWeight={700} size="xs">
-            {maxed ? (
-              <Text as="span" color="green">
-                {experience.toString()} (MAX)
-              </Text>
-            ) : (
-              <>
-                <Text
-                  as="span"
-                  color={
-                    BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
-                  }
-                >
-                  {experience.toString()}
-                </Text>
-                <Text as="span" color="grey500">
-                  {' / '}
-                  {nextLevelXpRequirement.toString()}
-                </Text>
-              </>
-            )}
-          </Text>
-        </HStack>
-      </Box>
-
-      <Divider borderColor="grey300" mt={2} />
-
-      <VStack mt={2} px={2} spacing={1} w="100%">
-        <HStack justifyContent="space-between" w="100%">
-          <Tooltip
-            hasArrow
-            label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
-            placement="top"
-            shouldWrapChildren
-          >
-            <HStack spacing={1.5} cursor="default">
-              <GiTwoCoins color="#D4A54A" size={18} />
-              <Text color="yellow" fontWeight={700} size="lg">
-                Gold
+          <Box mt={2} px={4} w="100%">
+            <Level
+              currentLevel={character.level}
+              levelPercent={levelPercent}
+              maxed={maxed}
+            />
+            <HStack justifyContent="space-between" mt={1}>
+              <Text color="#8A7E6A" fontWeight={600} size="xs">XP</Text>
+              <Text fontFamily="mono" fontWeight={700} size="xs">
+                {maxed ? (
+                  <Text as="span" color="green">
+                    {experience.toString()} (MAX)
+                  </Text>
+                ) : (
+                  <>
+                    <Text
+                      as="span"
+                      color={
+                        BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
+                      }
+                    >
+                      {experience.toString()}
+                    </Text>
+                    <Text as="span" color="grey500">
+                      {' / '}
+                      {nextLevelXpRequirement.toString()}
+                    </Text>
+                  </>
+                )}
               </Text>
             </HStack>
-          </Tooltip>
-          <Text
-            color="yellow"
-            fontFamily="mono"
-            fontWeight={700}
-            fontSize="lg"
-          >
-            {etherToFixedNumber(
-              externalGoldBalance + character.escrowGoldBalance,
-            )}
-          </Text>
-        </HStack>
-        <HStack justifyContent="space-between" w="100%" px={2}>
-          <Text color="#6A6050" size="sm">Spendable</Text>
-          <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
-            {etherToFixedNumber(externalGoldBalance)}
-          </Text>
-        </HStack>
-        <HStack justifyContent="space-between" w="100%" px={2}>
-          <HStack>
-            <Text color="#6A6050" size="sm">Escrow</Text>
-            <Tooltip
-              hasArrow
-              label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
-              placement="top"
-              shouldWrapChildren
-            >
-              <IoMdInformationCircleOutline size={12} />
-            </Tooltip>
-          </HStack>
-          <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
-            {etherToFixedNumber(character.escrowGoldBalance)}
-          </Text>
-        </HStack>
-      </VStack>
+          </Box>
 
-      <HStack justifyContent="center" mt={2} spacing={2}>
-        <Button
-          leftIcon={<GiTwoCoins />}
-          onClick={onOpenGoldMerchant}
-          size="xs"
-          variant="gold"
-        >
-          Get Gold
-        </Button>
-        {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
-          <Button
-            onClick={() => navigate(`/characters/${character.id}`)}
-            size="xs"
-            variant="gold"
-          >
-            Level Up!
-          </Button>
-        )}
-      </HStack>
+          <Divider borderColor="grey300" mt={2} />
+
+          <VStack mt={2} px={2} spacing={1} w="100%">
+            <HStack justifyContent="space-between" w="100%">
+              <Tooltip
+                hasArrow
+                label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
+                placement="top"
+                shouldWrapChildren
+              >
+                <HStack spacing={1.5} cursor="default">
+                  <GiTwoCoins color="#D4A54A" size={18} />
+                  <Text color="yellow" fontWeight={700} size="lg">
+                    Gold
+                  </Text>
+                </HStack>
+              </Tooltip>
+              <Text
+                color="yellow"
+                fontFamily="mono"
+                fontWeight={700}
+                fontSize="lg"
+              >
+                {etherToFixedNumber(
+                  externalGoldBalance + character.escrowGoldBalance,
+                )}
+              </Text>
+            </HStack>
+            {stage >= OnboardingStage.ESTABLISHED && (
+              <>
+                <HStack justifyContent="space-between" w="100%" px={2}>
+                  <Text color="#6A6050" size="sm">Spendable</Text>
+                  <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
+                    {etherToFixedNumber(externalGoldBalance)}
+                  </Text>
+                </HStack>
+                <HStack justifyContent="space-between" w="100%" px={2}>
+                  <HStack>
+                    <Text color="#6A6050" size="sm">Escrow</Text>
+                    <Tooltip
+                      hasArrow
+                      label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
+                      placement="top"
+                      shouldWrapChildren
+                    >
+                      <IoMdInformationCircleOutline size={12} />
+                    </Tooltip>
+                  </HStack>
+                  <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
+                    {etherToFixedNumber(character.escrowGoldBalance)}
+                  </Text>
+                </HStack>
+              </>
+            )}
+          </VStack>
+
+          <HStack justifyContent="center" mt={2} spacing={2}>
+            <Button
+              leftIcon={<GiTwoCoins />}
+              onClick={onOpenGoldMerchant}
+              size="xs"
+              variant="gold"
+            >
+              Get Gold
+            </Button>
+            {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
+              <Button
+                onClick={() => navigate(`/characters/${character.id}`)}
+                size="xs"
+                variant="gold"
+              >
+                Level Up!
+              </Button>
+            )}
+          </HStack>
+        </>
+      )}
 
       {isDesktop && (
         <>
@@ -372,14 +384,22 @@ export const StatsPanel = (): JSX.Element => {
               })}
             </HStack>
           </VStack>
-          <Divider borderColor="grey300" />
-          <Box px={4} py={3} w="100%">
-            <EquippedLoadout />
-          </Box>
-          <Divider borderColor="grey300" />
-          <Box w="100%">
-            <MiniLeaderboard nearby={nearby} isLoading={nearbyLoading} rankBy={rankBy} dataRankBy={dataRankBy} setRankBy={setRankBy} />
-          </Box>
+          {stage >= OnboardingStage.FIRST_BLOOD && (
+            <>
+              <Divider borderColor="grey300" />
+              <Box px={4} py={3} w="100%">
+                <EquippedLoadout />
+              </Box>
+            </>
+          )}
+          {stage >= OnboardingStage.VETERAN && (
+            <>
+              <Divider borderColor="grey300" />
+              <Box w="100%">
+                <MiniLeaderboard nearby={nearby} isLoading={nearbyLoading} rankBy={rankBy} dataRankBy={dataRankBy} setRankBy={setRankBy} />
+              </Box>
+            </>
+          )}
         </>
       )}
     </VStack>

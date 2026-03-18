@@ -24,6 +24,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
 import { useGameConfig } from '../lib/gameStore';
+import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { WAITING_ROOM_PATH } from '../Routes';
 import { CaptchaGate } from './CaptchaGate';
 import { WorldFeed } from './WorldFeed';
@@ -75,6 +76,7 @@ export const MapPanel = (): JSX.Element => {
     reportSpawned,
   } = useQueue();
   const [showCaptcha, setShowCaptcha] = useState(false);
+  const stage = useOnboardingStage();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
@@ -128,7 +130,7 @@ export const MapPanel = (): JSX.Element => {
               position={position}
             />
             {/* Mobile-only auto adventure toggle */}
-            {!isDesktop && (
+            {!isDesktop && stage >= OnboardingStage.SETTLING_IN && (
               <HStack
                 justify="center"
                 spacing={2.5}
@@ -311,6 +313,17 @@ export const MapPanel = (): JSX.Element => {
                   key={`map-tile${i}`}
                   position="relative"
                 >
+                  {stage < OnboardingStage.VETERAN && (col >= 5 || row >= 5) && (
+                    <Box
+                      bg="rgba(10, 8, 6, 0.65)"
+                      backgroundImage="radial-gradient(ellipse at 30% 40%, rgba(20, 16, 12, 0.8) 0%, transparent 70%)"
+                      inset={0}
+                      pointerEvents="none"
+                      position="absolute"
+                      zIndex={5}
+                    />
+                  )}
+
                   {(col === 0 || row === 0) && (
                     <TileNumberSvg number={col || row} />
                   )}
@@ -344,17 +357,19 @@ export const MapPanel = (): JSX.Element => {
               );
             })}
           </Box>
-          <HStack
-            justifyContent="end"
-            mt={0.5}
-            px={{ base: 1, sm: 2 }}
-          >
-            <OnlineLink />
-          </HStack>
+          {stage >= OnboardingStage.SETTLING_IN && (
+            <HStack
+              justifyContent="end"
+              mt={0.5}
+              px={{ base: 1, sm: 2 }}
+            >
+              <OnlineLink />
+            </HStack>
+          )}
         </PolygonalCard>
       </Box>
 
-      {isDesktop && (
+      {isDesktop && stage >= OnboardingStage.SETTLING_IN && (
         <Box order={3} w="100%" flex={1} minH="100px" mt={2}>
           <WorldFeed inline />
         </Box>
