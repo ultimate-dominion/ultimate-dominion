@@ -75,6 +75,7 @@ jobs:
           rm -rf .git/modules/packages/contracts/lib/ERC1155-puppet
           rm -f .gitmodules
           sed -i 's/libs = \["node_modules", "lib"\]/libs = ["node_modules"]/' packages/contracts/foundry.toml
+          sed -i '/@erc1155\|ERC1155-puppet/d' packages/contracts/remappings.txt
       - name: Run pure Solidity unit tests (no RPC needed)
         working-directory: packages/contracts
         run: forge test --match-contract "CombatMathTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance" --no-auto-detect -vvv

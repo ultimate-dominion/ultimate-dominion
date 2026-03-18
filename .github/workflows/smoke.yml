@@ -33,6 +33,7 @@ jobs:
           rm -rf .git/modules/packages/contracts/lib/ERC1155-puppet
           rm -f .gitmodules
           sed -i 's/libs = \["node_modules", "lib"\]/libs = ["node_modules"]/' packages/contracts/foundry.toml
+          sed -i '/@erc1155\|ERC1155-puppet/d' packages/contracts/remappings.txt
       - name: Run fork-mode tests against beta world
         working-directory: packages/contracts
         env:
