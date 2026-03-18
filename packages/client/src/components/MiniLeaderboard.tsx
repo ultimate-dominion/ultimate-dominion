@@ -9,17 +9,25 @@ import {
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useNearbyRanks } from '../hooks/useNearbyRanks';
+import { type NearbyRanksResult } from '../hooks/useNearbyRanks';
 import { LEADERBOARD_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
 
 import { PolygonalCard } from './PolygonalCard';
 
-export const MiniLeaderboard = (): JSX.Element | null => {
-  const { nearby, isLoading, rankBy, setRankBy } = useNearbyRanks();
+type MiniLeaderboardProps = Pick<NearbyRanksResult, 'nearby' | 'isLoading' | 'rankBy' | 'setRankBy'>;
+
+export const MiniLeaderboard = ({ nearby, isLoading, rankBy, setRankBy }: MiniLeaderboardProps): JSX.Element | null => {
   const navigate = useNavigate();
 
-  const rows = useMemo(() => nearby.slice(0, 5), [nearby]);
+  const rows = useMemo(() => {
+    const sorted = [...nearby].sort((a, b) => {
+      const rankA = rankBy === 'stats' ? a.statsRank : a.goldRank;
+      const rankB = rankBy === 'stats' ? b.statsRank : b.goldRank;
+      return rankA - rankB;
+    });
+    return sorted.slice(0, 5);
+  }, [nearby, rankBy]);
 
   if (isLoading || rows.length === 0) return null;
 

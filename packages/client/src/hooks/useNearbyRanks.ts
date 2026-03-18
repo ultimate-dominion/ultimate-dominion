@@ -35,7 +35,8 @@ export const useNearbyRanks = (): NearbyRanksResult => {
   const [selfStatsRank, setSelfStatsRank] = useState<number | null>(null);
   const [selfGoldRank, setSelfGoldRank] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [rankBy, setRankBy] = useState<'stats' | 'gold'>('stats');
+  const [rankBy, setRankBy] = useState<'stats' | 'gold'>('gold');
+  const hasLoadedOnce = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchNearby = useCallback(async () => {
@@ -56,11 +57,12 @@ export const useNearbyRanks = (): NearbyRanksResult => {
       // Silent — ambient data
     } finally {
       setIsLoading(false);
+      hasLoadedOnce.current = true;
     }
   }, [character?.id, rankBy]);
 
   useEffect(() => {
-    setIsLoading(true);
+    if (!hasLoadedOnce.current) setIsLoading(true);
     fetchNearby();
 
     intervalRef.current = setInterval(fetchNearby, POLL_INTERVAL_MS);

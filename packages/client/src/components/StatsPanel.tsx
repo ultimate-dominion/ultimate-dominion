@@ -30,6 +30,7 @@ import { useNearbyRanks } from '../hooks/useNearbyRanks';
 
 import { ClassSymbol } from './ClassSymbol';
 import { EquippedLoadout } from './EquippedLoadout';
+import { MiniLeaderboard } from './MiniLeaderboard';
 import { Level } from './Level';
 
 export const StatsPanel = (): JSX.Element => {
@@ -40,7 +41,7 @@ export const StatsPanel = (): JSX.Element => {
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const leaderboardRank = useLeaderboardRank();
-  const { nearby } = useNearbyRanks();
+  const { nearby, isLoading: nearbyLoading, rankBy, setRankBy } = useNearbyRanks();
 
   const chasingPlayer = useMemo(() => {
     if (!nearby || nearby.length === 0) return null;
@@ -412,6 +413,10 @@ export const StatsPanel = (): JSX.Element => {
           <Divider borderColor="grey300" />
           <Box px={4} py={3} w="100%">
             <EquippedLoadout />
+          </Box>
+          <Divider borderColor="grey300" />
+          <Box w="100%">
+            <MiniLeaderboard nearby={nearby} isLoading={nearbyLoading} rankBy={rankBy} setRankBy={setRankBy} />
           </Box>
         </>
       )}

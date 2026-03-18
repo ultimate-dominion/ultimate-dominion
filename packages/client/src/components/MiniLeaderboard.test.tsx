@@ -4,23 +4,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // --- Mutable mock state ---
 
-let mockNearbyRanks: any = {
+let mockProps: any = {
   nearby: [],
-  totalPlayers: 0,
-  selfStatsRank: null,
-  selfGoldRank: null,
   isLoading: true,
-  rankBy: 'stats' as const,
+  rankBy: 'gold' as const,
   setRankBy: vi.fn(),
 };
 
 const mockNavigate = vi.fn();
 
 // --- vi.mock declarations ---
-
-vi.mock('../hooks/useNearbyRanks', () => ({
-  useNearbyRanks: () => mockNearbyRanks,
-}));
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -77,7 +70,7 @@ function makePlayer(
 
 describe('MiniLeaderboard', () => {
   beforeEach(() => {
-    mockNearbyRanks = {
+    mockProps = {
       nearby: [],
       totalPlayers: 0,
       selfStatsRank: null,
@@ -94,24 +87,24 @@ describe('MiniLeaderboard', () => {
   });
 
   it('returns null while loading', () => {
-    mockNearbyRanks.isLoading = true;
-    mockNearbyRanks.nearby = [];
+    mockProps.isLoading = true;
+    mockProps.nearby = [];
 
-    const { container } = render(<MiniLeaderboard />);
+    const { container } = render(<MiniLeaderboard {...mockProps} />);
     expect(container.innerHTML).toBe('');
   });
 
   it('returns null when no nearby players', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.nearby = [];
+    mockProps.isLoading = false;
+    mockProps.nearby = [];
 
-    const { container } = render(<MiniLeaderboard />);
+    const { container } = render(<MiniLeaderboard {...mockProps} />);
     expect(container.innerHTML).toBe('');
   });
 
   it('renders 5 rows when 5 nearby players', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.nearby = [
+    mockProps.isLoading = false;
+    mockProps.nearby = [
       makePlayer('0x01', 'Player1', { statsRank: 1, isSelf: false }),
       makePlayer('0x02', 'Player2', { statsRank: 2, isSelf: false }),
       makePlayer('0x03', 'Self', { statsRank: 3, isSelf: true }),
@@ -119,7 +112,7 @@ describe('MiniLeaderboard', () => {
       makePlayer('0x05', 'Player5', { statsRank: 5, isSelf: false }),
     ];
 
-    render(<MiniLeaderboard />);
+    render(<MiniLeaderboard {...mockProps} />);
 
     expect(screen.getByText('Player1')).toBeDefined();
     expect(screen.getByText('Player2')).toBeDefined();
@@ -129,8 +122,8 @@ describe('MiniLeaderboard', () => {
   });
 
   it('limits to 5 rows even with more data', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.nearby = [
+    mockProps.isLoading = false;
+    mockProps.nearby = [
       makePlayer('0x01', 'P1', { statsRank: 1 }),
       makePlayer('0x02', 'P2', { statsRank: 2 }),
       makePlayer('0x03', 'P3', { statsRank: 3, isSelf: true }),
@@ -140,7 +133,7 @@ describe('MiniLeaderboard', () => {
       makePlayer('0x07', 'P7', { statsRank: 7 }),
     ];
 
-    render(<MiniLeaderboard />);
+    render(<MiniLeaderboard {...mockProps} />);
 
     expect(screen.getByText('P1')).toBeDefined();
     expect(screen.getByText('P5')).toBeDefined();
@@ -149,77 +142,77 @@ describe('MiniLeaderboard', () => {
   });
 
   it('displays rank numbers with # prefix', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.rankBy = 'stats';
-    mockNearbyRanks.nearby = [
+    mockProps.isLoading = false;
+    mockProps.rankBy = 'stats';
+    mockProps.nearby = [
       makePlayer('0x01', 'Player1', { statsRank: 1 }),
       makePlayer('0x02', 'Self', { statsRank: 2, isSelf: true }),
     ];
 
-    render(<MiniLeaderboard />);
+    render(<MiniLeaderboard {...mockProps} />);
 
     expect(screen.getByText('#1')).toBeDefined();
     expect(screen.getByText('#2')).toBeDefined();
   });
 
   it('shows gold ranks when rankBy is gold', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.rankBy = 'gold';
-    mockNearbyRanks.nearby = [
+    mockProps.isLoading = false;
+    mockProps.rankBy = 'gold';
+    mockProps.nearby = [
       makePlayer('0x01', 'Rich', { goldRank: 1, statsRank: 5 }),
       makePlayer('0x02', 'Self', { goldRank: 2, statsRank: 3, isSelf: true }),
     ];
 
-    render(<MiniLeaderboard />);
+    render(<MiniLeaderboard {...mockProps} />);
 
     expect(screen.getByText('#1')).toBeDefined();
     expect(screen.getByText('#2')).toBeDefined();
   });
 
   it('navigates to character page when clicking a row', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.nearby = [
+    mockProps.isLoading = false;
+    mockProps.nearby = [
       makePlayer('0xchar1', 'ClickMe', { statsRank: 1 }),
     ];
 
-    render(<MiniLeaderboard />);
+    render(<MiniLeaderboard {...mockProps} />);
 
     fireEvent.click(screen.getByText('ClickMe'));
     expect(mockNavigate).toHaveBeenCalledWith('/characters/0xchar1');
   });
 
   it('navigates to leaderboard when clicking heading', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.nearby = [
+    mockProps.isLoading = false;
+    mockProps.nearby = [
       makePlayer('0x01', 'Player1', { statsRank: 1 }),
     ];
 
-    render(<MiniLeaderboard />);
+    render(<MiniLeaderboard {...mockProps} />);
 
     fireEvent.click(screen.getByText('Nearby Ranks'));
     expect(mockNavigate).toHaveBeenCalledWith('/leaderboard');
   });
 
   it('calls setRankBy when clicking tab buttons', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.rankBy = 'stats';
-    mockNearbyRanks.nearby = [
+    mockProps.isLoading = false;
+    mockProps.rankBy = 'stats';
+    mockProps.nearby = [
       makePlayer('0x01', 'Player1', { statsRank: 1 }),
     ];
 
-    render(<MiniLeaderboard />);
+    render(<MiniLeaderboard {...mockProps} />);
 
     fireEvent.click(screen.getByText('Gold'));
-    expect(mockNearbyRanks.setRankBy).toHaveBeenCalledWith('gold');
+    expect(mockProps.setRankBy).toHaveBeenCalledWith('gold');
   });
 
   it('renders with fewer than 5 players', () => {
-    mockNearbyRanks.isLoading = false;
-    mockNearbyRanks.nearby = [
+    mockProps.isLoading = false;
+    mockProps.nearby = [
       makePlayer('0x01', 'OnlyPlayer', { statsRank: 1, isSelf: true }),
     ];
 
-    render(<MiniLeaderboard />);
+    render(<MiniLeaderboard {...mockProps} />);
 
     expect(screen.getByText('OnlyPlayer')).toBeDefined();
   });
