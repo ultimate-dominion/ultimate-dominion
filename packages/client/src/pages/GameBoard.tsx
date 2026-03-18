@@ -228,11 +228,30 @@ export const GameBoard = (): JSX.Element => {
   // Only show loading text when we're on the fast-path (store was pre-hydrated
   // from cache). During the normal flow, character resolves before we get here
   // so the brief null is invisible as <Box />.
+  //
+  // After 3s of loading, show a reload button so returning players aren't stuck
+  // staring at a blank screen when the store/auth fails to re-hydrate.
+  const [loadingTooLong, setLoadingTooLong] = useState(false);
+  useEffect(() => {
+    if (character?.locked) { setLoadingTooLong(false); return; }
+    const timer = setTimeout(() => setLoadingTooLong(true), 3000);
+    return () => clearTimeout(timer);
+  }, [character?.locked]);
+
   if (!character?.locked) {
     if (hasCachedSession && wasPreHydrated) {
       return (
-        <Box display="flex" justifyContent="center" alignItems="center" minH="calc(100vh - 125px)">
+        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minH="calc(100vh - 125px)" gap={4}>
           <Text color="rgba(196, 184, 158, 0.5)" fontSize="sm">Loading game...</Text>
+          {loadingTooLong && (
+            <Button
+              onClick={() => window.location.reload()}
+              size="sm"
+              variant="outline"
+            >
+              Reload
+            </Button>
+          )}
         </Box>
       );
     }

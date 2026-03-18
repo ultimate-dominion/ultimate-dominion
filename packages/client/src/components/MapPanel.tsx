@@ -249,16 +249,17 @@ export const MapPanel = (): JSX.Element => {
             border="0.5px solid"
             borderColor="grey500"
             display="grid"
-            gridTemplateColumns="repeat(10, 1fr)"
-            gridTemplateRows="repeat(10, 1fr)"
+            gridTemplateColumns={stage >= OnboardingStage.VETERAN ? 'repeat(10, 1fr)' : 'repeat(5, 1fr)'}
+            gridTemplateRows={stage >= OnboardingStage.VETERAN ? 'repeat(10, 1fr)' : 'repeat(5, 1fr)'}
             maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
             maxW="100%"
             m="0 auto"
             mt={1}
           >
-            {[...Array(100)].map((_, i) => {
-              const row = 9 - Math.floor(i / 10); // Reverse the row
-              const col = i % 10;
+            {[...Array(stage >= OnboardingStage.VETERAN ? 100 : 25)].map((_, i) => {
+              const gridSize = stage >= OnboardingStage.VETERAN ? MAP_SIZE : 5;
+              const row = (gridSize - 1) - Math.floor(i / gridSize);
+              const col = i % gridSize;
               const currentTile = position?.x === col && position?.y === row;
 
               const hasSafeZoneTopBorder =
@@ -313,16 +314,6 @@ export const MapPanel = (): JSX.Element => {
                   key={`map-tile${i}`}
                   position="relative"
                 >
-                  {stage < OnboardingStage.VETERAN && (col >= 5 || row >= 5) && (
-                    <Box
-                      bg="#0A0806"
-                      inset={0}
-                      pointerEvents="none"
-                      position="absolute"
-                      zIndex={5}
-                    />
-                  )}
-
                   {(col === 0 || row === 0) && (
                     <TileNumberSvg number={col || row} />
                   )}
