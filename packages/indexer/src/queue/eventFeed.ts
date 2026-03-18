@@ -57,6 +57,49 @@ export function getRecentEvents(): GameEvent[] {
 }
 
 /**
+ * Pre-seed dedup sets from current DB state so that cumulative-state events
+ * (milestone levels, class selections) are never re-emitted after a restart.
+ * Stats rows update on ANY stat change (HP, equip, etc.), so without seeding,
+ * the empty dedup sets would let old milestones re-fire.
+ */
+async function seedDedupSets(syncHandle: SyncHandle) {
+  const statsTable = syncHandle.tableNameMap.get('Stats');
+  if (!statsTable) return;
+
+  // Seed milestone level-ups
+  try {
+    const rows = await sql.unsafe(`
+      SELECT "__key_bytes", "level"
+      FROM "${mudSchema}"."${statsTable}"
+      WHERE "level" IN (3, 5, 7)
+    `);
+    for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      emittedLevelUps.add(`${keyHex}:${Number(row.level)}`);
+    }
+    console.log(`[eventFeed] Seeded ${rows.length} milestone level-ups into dedup set`);
+  } catch (err) {
+    console.error('[eventFeed] Failed to seed level-up dedup set:', err);
+  }
+
+  // Seed advanced class selections
+  try {
+    const rows = await sql.unsafe(`
+      SELECT "__key_bytes", "advanced_class"
+      FROM "${mudSchema}"."${statsTable}"
+      WHERE "advanced_class" IS NOT NULL AND "advanced_class" > 0
+    `);
+    for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
+      emittedClassSelections.add(`${keyHex}:${Number(row.advanced_class)}`);
+    }
+    console.log(`[eventFeed] Seeded ${rows.length} class selections into dedup set`);
+  } catch (err) {
+    console.error('[eventFeed] Failed to seed class selection dedup set:', err);
+  }
+}
+
+/**
  * Backfill the event buffer with recent history from the database.
  * Runs once on startup so the feed isn't empty after a deploy/restart.
  * Queries ALL event types — the compute happens here on the server.
@@ -267,6 +310,12 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
   // blocks that backfill already covered
   lastScannedBlock = syncHandle.latestBlockNumber;
 
+  // Seed dedup sets from current DB state so stale cumulative-state events
+  // (level-ups, class selections) aren't re-emitted after restart
+  seedDedupSets(syncHandle).catch(err =>
+    console.error('[eventFeed] Dedup seed failed:', err)
+  );
+
   // Backfill recent history from DB on startup
   backfillRecentEvents(syncHandle).catch(err =>
     console.error('[eventFeed] Backfill failed:', err)
@@ -323,7 +372,7 @@ async function scanLevelUps(
         ON s."__key_bytes" = c."__key_bytes"
       WHERE s."__last_updated_block_number" >= $1
         AND s."__last_updated_block_number" <= $2
-        AND s."level" IN (3, 5, 7, 10)
+        AND s."level" IN (3, 5, 7)
     `, [fromBlock.toString(), toBlock.toString()]);
 
     for (const row of rows) {
@@ -416,6 +465,10 @@ async function scanCombatOutcomes(
         AND co."__last_updated_block_number" <= $2
     `, [fromBlock.toString(), toBlock.toString()]);
 
+    if (rows.length > 0) {
+      console.log(`[eventFeed] Combat scan: ${rows.length} outcome(s) in blocks ${fromBlock}-${toBlock}`);
+    }
+
     for (const row of rows) {
       const playerName = decodeCharacterName(row.player_name);
       if (!playerName) continue;
@@ -497,8 +550,7 @@ async function scanCombatOutcomes(
       }
     }
   } catch (err) {
-    // Table might not exist yet
-    console.debug('[eventFeed] Combat scan error:', err);
+    console.error('[eventFeed] Combat scan error:', err);
   }
 }
 
@@ -534,6 +586,10 @@ async function scanLootDrops(
         AND co."items_dropped" IS NOT NULL
         AND array_length(co."items_dropped", 1) > 0
     `, [fromBlock.toString(), toBlock.toString()]);
+
+    if (rows.length > 0) {
+      console.log(`[eventFeed] Loot scan: ${rows.length} drop(s) in blocks ${fromBlock}-${toBlock}`);
+    }
 
     for (const row of rows) {
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
@@ -578,8 +634,8 @@ async function scanLootDrops(
       addEvent(event);
       broadcaster.broadcastGameEvent(event);
     }
-  } catch {
-    // Table might not exist yet
+  } catch (err) {
+    console.error('[eventFeed] Loot scan error:', err);
   }
 }
 
