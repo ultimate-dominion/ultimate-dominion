@@ -3,20 +3,6 @@ import type { SyncHandle } from '../sync/startSync.js';
 import type { Broadcaster } from '../ws/broadcaster.js';
 import type { GameEvent } from '../ws/protocol.js';
 import crypto from 'crypto';
-import { formatEther } from 'viem';
-
-/** Format a raw wei price to a human-readable gold amount */
-function formatGold(rawPrice: unknown): string {
-  try {
-    const val = BigInt(String(rawPrice));
-    if (val === 0n) return '0';
-    const formatted = formatEther(val);
-    // Strip trailing zeros after decimal: "5.000" → "5", "2.50" → "2.5"
-    return formatted.replace(/\.?0+$/, '') || '0';
-  } catch {
-    return String(rawPrice);
-  }
-}
 
 /** Per-class emotive flavor for class selection events */
 const CLASS_FLAVOR: Record<string, string> = {
@@ -41,12 +27,6 @@ const eventDesc = {
   pvpKill: (winner: string, loser: string) => `${winner} defeated ${loser} in PvP!`,
   death: (name: string, mobName: string) => `${name} was slain by ${mobName}.`,
   lootDrop: (name: string, itemDesc: string) => `${name} found ${itemDesc}!`,
-  marketplaceSale: (itemDesc: string, gold: string) =>
-    gold !== '0' ? `${itemDesc} sold for ${gold} gold!` : `${itemDesc} sold on the marketplace!`,
-  shopBuy: (name: string, itemDesc: string, gold: string) =>
-    gold !== '0' ? `${name} bought ${itemDesc} for ${gold} gold.` : `${name} bought ${itemDesc}.`,
-  shopSell: (name: string, itemDesc: string, gold: string) =>
-    gold !== '0' ? `${name} sold ${itemDesc} for ${gold} gold.` : `${name} sold ${itemDesc}.`,
 };
 
 /** Ring buffer of recent game events (serves as history for new clients) */
@@ -60,10 +40,7 @@ let lastScannedBlock = 0;
 const emittedLevelUps = new Set<string>();    // "keyBytes:level"
 const emittedCombat = new Set<string>();       // "keyBytes"
 const emittedLoot = new Set<string>();         // "keyBytes"
-const emittedSales = new Set<string>();        // "keyBytes"
 const emittedCharacters = new Set<string>();   // "keyBytes"
-const emittedShopSales = new Set<string>();    // "shopId:customerId:itemId:timestamp"
-const emittedQuests = new Set<string>();       // "characterId:questId"
 const emittedClassSelections = new Set<string>(); // "keyBytes:classValue"
 const emittedFragments = new Set<string>();       // "keyBytes"
 
@@ -96,7 +73,6 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
   const worldEncTable = syncHandle.tableNameMap.get('WorldEncounter');
   const combatEncTable = syncHandle.tableNameMap.get('CombatEncounter');
   const itemsTable = syncHandle.tableNameMap.get('Items');
-  const shopSaleTable = syncHandle.tableNameMap.get('ShopSale');
 
   if (!statsTable || !charactersTable) {
     console.log('[eventFeed] Backfill skipped — tables not ready');
@@ -105,50 +81,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
 
   const allEvents: { block: number; event: GameEvent }[] = [];
 
-  // 1. Level-ups (current state from Stats — shows recent player progression)
-  try {
-    const rows = await sql.unsafe(`
-      SELECT s."__last_updated_block_number" as block, s."level", c."name"
-      FROM "${mudSchema}"."${statsTable}" s
-      JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
-      WHERE s."level" IS NOT NULL AND s."level" >= 2
-      ORDER BY s."__last_updated_block_number" DESC
-      LIMIT ${BACKFILL_LIMIT}
-    `);
-    for (const row of rows) {
-      const name = decodeCharacterName(row.name);
-      const level = Number(row.level);
-      if (!name || level <= 1) continue;
-      allEvents.push({
-        block: Number(row.block),
-        event: { id: crypto.randomUUID(), eventType: 'level_up', playerName: name, description: eventDesc.levelUp(name, level), timestamp: 0 },
-      });
-    }
-  } catch (err) { console.error('[eventFeed] Backfill level-ups error:', err); }
-
-  // 2. Class selections
-  try {
-    const rows = await sql.unsafe(`
-      SELECT s."__last_updated_block_number" as block, s."advanced_class", c."name"
-      FROM "${mudSchema}"."${statsTable}" s
-      JOIN "${mudSchema}"."${charactersTable}" c ON s."__key_bytes" = c."__key_bytes"
-      WHERE s."advanced_class" IS NOT NULL AND s."advanced_class" > 0
-      ORDER BY s."__last_updated_block_number" DESC
-      LIMIT ${BACKFILL_LIMIT}
-    `);
-    for (const row of rows) {
-      const name = decodeCharacterName(row.name);
-      const classValue = Number(row.advanced_class);
-      if (!name || classValue <= 0) continue;
-      const className = ADVANCED_CLASS_NAMES[classValue] || `Class ${classValue}`;
-      allEvents.push({
-        block: Number(row.block),
-        event: { id: crypto.randomUUID(), eventType: 'class_selection', playerName: name, description: eventDesc.classSelection(name, className), timestamp: 0 },
-      });
-    }
-  } catch (err) { console.error('[eventFeed] Backfill class selections error:', err); }
-
-  // 3. Fragment discoveries
+  // 1. Fragment discoveries
   if (fragmentTable) {
     try {
       const rows = await sql.unsafe(`
@@ -330,6 +263,10 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
 export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster) {
   console.log('[eventFeed] Starting game event feed');
 
+  // Set the scan cursor BEFORE backfill so the live scanner doesn't re-process
+  // blocks that backfill already covered
+  lastScannedBlock = syncHandle.latestBlockNumber;
+
   // Backfill recent history from DB on startup
   backfillRecentEvents(syncHandle).catch(err =>
     console.error('[eventFeed] Backfill failed:', err)
@@ -340,19 +277,12 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
       const currentBlock = syncHandle.latestBlockNumber;
       if (currentBlock <= lastScannedBlock) return;
 
-      const scanFrom = lastScannedBlock > 0 ? lastScannedBlock + 1 : currentBlock;
-
-      // Skip initial scan (would flood with old events)
-      if (lastScannedBlock === 0) {
-        lastScannedBlock = currentBlock;
-        return;
-      }
+      const scanFrom = lastScannedBlock + 1;
 
       await scanLevelUps(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanCombatOutcomes(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanLootDrops(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanNewCharacters(syncHandle, scanFrom, currentBlock, broadcaster);
-      await scanQuestCompletions(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanAdvancedClassSelections(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanFragmentDiscoveries(syncHandle, scanFrom, currentBlock, broadcaster);
 
@@ -393,8 +323,7 @@ async function scanLevelUps(
         ON s."__key_bytes" = c."__key_bytes"
       WHERE s."__last_updated_block_number" >= $1
         AND s."__last_updated_block_number" <= $2
-        AND s."level" IS NOT NULL
-        AND s."level" >= 2
+        AND s."level" IN (3, 5, 7, 10)
     `, [fromBlock.toString(), toBlock.toString()]);
 
     for (const row of rows) {
@@ -654,68 +583,6 @@ async function scanLootDrops(
   }
 }
 
-/** Scan for marketplace sales */
-async function scanMarketplaceSales(
-  syncHandle: SyncHandle,
-  fromBlock: number,
-  toBlock: number,
-  broadcaster: Broadcaster,
-) {
-  const saleTable = syncHandle.tableNameMap.get('MarketplaceSale');
-  const itemsTable = syncHandle.tableNameMap.get('Items');
-  const charactersTable = syncHandle.tableNameMap.get('Characters');
-  if (!saleTable) return;
-
-  try {
-    const rows = await sql.unsafe(`
-      SELECT ms."__key_bytes", ms."item_id", ms."price", ms."buyer", ms."seller"
-      FROM "${mudSchema}"."${saleTable}" ms
-      WHERE ms."__last_updated_block_number" >= $1
-        AND ms."__last_updated_block_number" <= $2
-    `, [fromBlock.toString(), toBlock.toString()]);
-
-    for (const row of rows) {
-      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-      if (emittedSales.has(keyHex)) continue;
-      emittedSales.add(keyHex);
-
-      const goldAmount = formatGold(row.price);
-      let itemDesc = 'an item';
-
-      // Look up item details
-      if (itemsTable) {
-        try {
-          const itemRow = await sql.unsafe(`
-            SELECT "item_type", "rarity"
-            FROM "${mudSchema}"."${itemsTable}"
-            WHERE "__key_bytes" = $1
-            LIMIT 1
-          `, [row.item_id]);
-          if (itemRow.length > 0) {
-            const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-            const rarityName = RARITY_NAMES[Number(itemRow[0].rarity)] || '';
-            itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
-          }
-        } catch {
-          // Fall back to generic description
-        }
-      }
-
-      const event: GameEvent = {
-        id: crypto.randomUUID(),
-        eventType: 'marketplace_sale',
-        playerName: '',
-        description: eventDesc.marketplaceSale(itemDesc, goldAmount),
-        timestamp: Date.now(),
-      };
-      addEvent(event);
-      broadcaster.broadcastGameEvent(event);
-    }
-  } catch {
-    // Table might not exist yet
-  }
-}
-
 /** Scan for new character creations (level 1 characters that just appeared) */
 async function scanNewCharacters(
   syncHandle: SyncHandle,
@@ -757,124 +624,6 @@ async function scanNewCharacters(
         eventType: 'character_created',
         playerName: name,
         description: eventDesc.characterCreated(name),
-        timestamp: Date.now(),
-      };
-      addEvent(event);
-      broadcaster.broadcastGameEvent(event);
-    }
-  } catch {
-    // Table might not exist yet
-  }
-}
-
-/** Scan for NPC shop purchases */
-async function scanShopPurchases(
-  syncHandle: SyncHandle,
-  fromBlock: number,
-  toBlock: number,
-  broadcaster: Broadcaster,
-) {
-  const shopSaleTable = syncHandle.tableNameMap.get('ShopSale');
-  const charactersTable = syncHandle.tableNameMap.get('Characters');
-  const itemsTable = syncHandle.tableNameMap.get('Items');
-  logMissing('ShopSale', [['ShopSale', shopSaleTable], ['Characters', charactersTable]]);
-  if (!shopSaleTable || !charactersTable) return;
-
-  try {
-    const rows = await sql.unsafe(`
-      SELECT ss."__key_bytes", ss."customer_id", ss."item_id", ss."buying", ss."price", c."name"
-      FROM "${mudSchema}"."${shopSaleTable}" ss
-      LEFT JOIN "${mudSchema}"."${charactersTable}" c
-        ON ss."customer_id" = c."__key_bytes"
-      WHERE ss."__last_updated_block_number" >= $1
-        AND ss."__last_updated_block_number" <= $2
-    `, [fromBlock.toString(), toBlock.toString()]);
-
-    for (const row of rows) {
-      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-      if (emittedShopSales.has(keyHex)) continue;
-      emittedShopSales.add(keyHex);
-
-      const name = decodeCharacterName(row.name) || 'An adventurer';
-      const goldAmount = formatGold(row.price);
-      const buying = row.buying;
-      let itemDesc = 'an item';
-
-      if (itemsTable) {
-        try {
-          const itemRow = await sql.unsafe(`
-            SELECT "item_type", "rarity"
-            FROM "${mudSchema}"."${itemsTable}"
-            WHERE "item_id" = $1::numeric
-            LIMIT 1
-          `, [row.item_id]);
-          if (itemRow.length > 0) {
-            const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-            const rarityName = RARITY_NAMES[Number(itemRow[0].rarity)] || '';
-            itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
-          }
-        } catch {
-          // Fall back to generic
-        }
-      }
-
-      const desc = buying
-        ? (goldAmount !== '0' ? `${name} purchased ${itemDesc} for ${goldAmount} gold` : `${name} purchased ${itemDesc}`)
-        : (goldAmount !== '0' ? `${name} sold ${itemDesc} for ${goldAmount} gold` : `${name} sold ${itemDesc}`);
-
-      const event: GameEvent = {
-        id: crypto.randomUUID(),
-        eventType: 'shop_purchase',
-        playerName: name,
-        description: desc,
-        timestamp: Date.now(),
-      };
-      addEvent(event);
-      broadcaster.broadcastGameEvent(event);
-    }
-  } catch {
-    // Table might not exist yet
-  }
-}
-
-// QuestStatus enum values (must match mud.config QuestStatus)
-const QUEST_STATUS_COMPLETED = 3;
-
-/** Scan for quest completions */
-async function scanQuestCompletions(
-  syncHandle: SyncHandle,
-  fromBlock: number,
-  toBlock: number,
-  broadcaster: Broadcaster,
-) {
-  const questTable = syncHandle.tableNameMap.get('QuestProgress');
-  const charactersTable = syncHandle.tableNameMap.get('Characters');
-  logMissing('Quest', [['QuestProgress', questTable], ['Characters', charactersTable]]);
-  if (!questTable || !charactersTable) return;
-
-  try {
-    const rows = await sql.unsafe(`
-      SELECT qp."__key_bytes", qp."character_id", qp."quest_id", c."name"
-      FROM "${mudSchema}"."${questTable}" qp
-      LEFT JOIN "${mudSchema}"."${charactersTable}" c
-        ON qp."character_id" = c."__key_bytes"
-      WHERE qp."__last_updated_block_number" >= $1
-        AND qp."__last_updated_block_number" <= $2
-        AND qp."status" = $3
-    `, [fromBlock.toString(), toBlock.toString(), QUEST_STATUS_COMPLETED.toString()]);
-
-    for (const row of rows) {
-      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-      if (emittedQuests.has(keyHex)) continue;
-      emittedQuests.add(keyHex);
-
-      const name = decodeCharacterName(row.name) || 'An adventurer';
-
-      const event: GameEvent = {
-        id: crypto.randomUUID(),
-        eventType: 'quest_complete',
-        playerName: name,
-        description: `${name} completed a quest!`,
         timestamp: Date.now(),
       };
       addEvent(event);

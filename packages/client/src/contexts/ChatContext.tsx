@@ -69,13 +69,12 @@ const GAME_EVENT_COLORS: Record<string, string> = {
   death: '#8B4040',           // dark red
   pvp_kill: '#B85C3A',        // burnt orange — PvP victory
   character_created: '#9B8EC4', // purple
-  shop_purchase: '#8A9E7A',   // sage
   class_selection: '#D4A54A', // gold
   fragment_found: '#A8DEFF',  // light blue
 };
 
 // Indexer events that should NOT be merged (client-side handles with richer JSX, or not applicable)
-const EXCLUDED_INDEXER_EVENTS = new Set(['rare_find', 'marketplace_sale', 'loot_drop', 'quest_complete', 'shop_purchase']);
+const EXCLUDED_INDEXER_EVENTS = new Set(['rare_find', 'loot_drop']);
 
 // Rare drops and gold offers older than this are filtered out of chat
 const ANNOUNCEMENT_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
