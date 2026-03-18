@@ -158,20 +158,23 @@ export const LevelUpModal = ({
             backgroundSize="cover"
             backgroundPosition={phase === 'narrative' ? 'center bottom' : 'center'}
             backgroundRepeat="no-repeat"
-            opacity={phase === 'allocate' ? 0.06 : 0.15}
+            opacity={phase === 'allocate' ? 0.06 : phase === 'narrative' ? 0.25 : 0.15}
             filter={phase === 'allocate' ? 'blur(4px)' : 'none'}
             transition="opacity 0.6s ease, filter 0.6s ease, background-position 0.8s ease"
             pointerEvents="none"
           />
         )}
-        {/* Radial gradient overlay for text readability */}
+        {/* Radial gradient overlay for text readability — softer on narrative */}
         <Box
           position="absolute"
           top={0}
           left={0}
           right={0}
           bottom={0}
-          bg="radial-gradient(ellipse at center, rgba(28, 24, 20, 0.7) 0%, transparent 70%)"
+          bg={phase === 'narrative'
+            ? 'radial-gradient(ellipse at center, rgba(28, 24, 20, 0.4) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse at center, rgba(28, 24, 20, 0.7) 0%, transparent 70%)'}
+          transition="background 0.6s ease"
           pointerEvents="none"
         />
 
@@ -281,10 +284,11 @@ export const LevelUpModal = ({
 
               <Box
                 maxW="420px"
-                bg="rgba(28, 24, 20, 0.6)"
+                bg="rgba(28, 24, 20, 0.85)"
                 borderRadius="md"
-                px={{ base: 4, md: 6 }}
-                py={5}
+                border="1px solid rgba(196, 184, 158, 0.06)"
+                px={{ base: 5, md: 7 }}
+                py={6}
               >
                 <SafeTypist
                   avgTypingDelay={50}
@@ -294,10 +298,11 @@ export const LevelUpModal = ({
                   <Text
                     fontSize={{ base: 'sm', md: 'md' }}
                     lineHeight="1.85"
-                    color="#C4B89E"
+                    color="#D4C8B0"
                     fontStyle="italic"
                     textAlign="center"
                     whiteSpace="pre-line"
+                    textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
                   >
                     {narrative.text}
                   </Text>

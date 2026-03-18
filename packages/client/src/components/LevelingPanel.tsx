@@ -420,9 +420,9 @@ export const LevelingPanel = ({
                   px={5}
                   py={4}
                   borderRadius="md"
-                  bg={increased ? 'rgba(196,184,158,0.08)' : 'rgba(196,184,158,0.03)'}
+                  bg={increased ? 'rgba(196,184,158,0.12)' : 'rgba(196,184,158,0.06)'}
                   border="1px solid"
-                  borderColor={increased ? 'rgba(212, 165, 74, 0.25)' : 'rgba(196,184,158,0.08)'}
+                  borderColor={increased ? 'rgba(212, 165, 74, 0.3)' : 'rgba(196,184,158,0.12)'}
                   transition="all 0.2s"
                 >
                   <HStack justify="space-between" w="100%" align="center">
@@ -463,7 +463,7 @@ export const LevelingPanel = ({
                       </Button>
                     </HStack>
                   </HStack>
-                  <Text color="#6A6050" fontSize="sm" fontStyle="italic" mt={1}>
+                  <Text color="#8A7E6A" fontSize="sm" fontStyle="italic" mt={1}>
                     {name} — {desc}
                   </Text>
                 </Box>
