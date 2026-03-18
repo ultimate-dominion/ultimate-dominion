@@ -6,6 +6,7 @@ import {
   Heading,
   HStack,
   IconButton,
+  keyframes,
   Stack,
   Switch,
   Text,
@@ -128,6 +129,7 @@ export const MapPanel = (): JSX.Element => {
               isDisabled={!!currentBattle || isRefreshing}
               onMove={onMove}
               position={position}
+              stage={stage}
             />
             {/* Mobile-only auto adventure toggle */}
             {!isDesktop && stage >= OnboardingStage.SETTLING_IN && (
@@ -369,23 +371,34 @@ export const MapPanel = (): JSX.Element => {
 };
 
 
+const compassPulse = keyframes`
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+`;
+
+const WASD_MAP: Record<string, string> = { N: 'W', W: 'A', S: 'S', E: 'D' };
+const ARROW_MAP: Record<string, string> = { N: '\u2191', W: '\u2190', S: '\u2193', E: '\u2192' };
+
 const NavigationCompass = ({
   adjacentTiles,
   isDisabled,
   onMove,
   position,
+  stage,
 }: {
   adjacentTiles: Record<string, TileInfo> | null;
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   position: { x: number; y: number } | null;
+  stage: OnboardingStage;
 }): JSX.Element => {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const btnSize = isDesktop ? '32px' : '44px';
-  const arrowSize = isDesktop ? '14px' : '18px';
+  const useFullCompass = !isDesktop || stage < OnboardingStage.SETTLING_IN;
+  const btnSize = isDesktop && !useFullCompass ? '32px' : '44px';
+  const arrowSize = isDesktop && !useFullCompass ? '14px' : '18px';
 
-  if (isDesktop) {
-    // Desktop: compact horizontal arrow bar — N W [coords] E S
+  if (isDesktop && !useFullCompass) {
+    // Desktop veteran: compact horizontal arrow bar — N W [coords] E S
     return (
       <VStack spacing={0} w="100%">
         <HStack justify="center" py={1} spacing={1} w="100%">
@@ -449,7 +462,7 @@ const NavigationCompass = ({
     );
   }
 
-  // Mobile: full compass rose with scout pips
+  // Full compass rose — mobile always, desktop for early players
   return (
     <Box py={2} w="100%">
       <Grid
@@ -480,6 +493,7 @@ const NavigationCompass = ({
         {COMPASS_DIRECTIONS.map(({ label, direction, rotate, gridRow, gridCol }) => {
           const info = adjacentTiles?.[label] ?? null;
           const isOob = adjacentTiles ? adjacentTiles[label] === null : false;
+          const isActive = !isDisabled && !isOob;
 
           return (
             <GridItem
@@ -528,7 +542,12 @@ const NavigationCompass = ({
                   minW={0}
                   variant="ghost"
                   size="xs"
-                  opacity={isDisabled ? 0.4 : 1}
+                  animation={
+                    stage < OnboardingStage.SETTLING_IN && isActive
+                      ? `${compassPulse} 2s ease-in-out infinite`
+                      : undefined
+                  }
+                  opacity={isDisabled || isOob ? 0.2 : 1}
                   _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.15)' }}
                 />
               </Tooltip>
@@ -559,6 +578,34 @@ const NavigationCompass = ({
           )}
         </GridItem>
       </Grid>
+
+      {/* WASD / Arrow key hint — desktop only, early players */}
+      {isDesktop && stage < OnboardingStage.SETTLING_IN && (
+        <HStack justify="center" mt={1} spacing={3}>
+          {['N', 'W', 'S', 'E'].map(dir => (
+            <HStack key={dir} spacing={1}>
+              <Box
+                bg="rgba(168, 222, 255, 0.08)"
+                border="1px solid rgba(168, 222, 255, 0.2)"
+                borderRadius="3px"
+                color="#A8DEFF"
+                fontFamily="mono"
+                fontSize="2xs"
+                fontWeight={700}
+                h="18px"
+                lineHeight="18px"
+                textAlign="center"
+                w="18px"
+              >
+                {WASD_MAP[dir]}
+              </Box>
+              <Text color="#5A5040" fontSize="2xs" lineHeight={1}>
+                {ARROW_MAP[dir]}
+              </Text>
+            </HStack>
+          ))}
+        </HStack>
+      )}
     </Box>
   );
 };

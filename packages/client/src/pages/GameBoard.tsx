@@ -42,6 +42,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
 import { useGameStore, wasPreHydrated } from '../lib/gameStore/store';
 import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
+import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { BATTLE_OUTCOME_SEEN_KEY } from '../utils/constants';
 
 export const GameBoard = (): JSX.Element => {
@@ -82,6 +83,7 @@ export const GameBoard = (): JSX.Element => {
   const hydrated = useGameStore((s) => s.hydrated);
   const isReconnecting = useGameStore((s) => s.isReconnecting);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const stage = useOnboardingStage();
 
   // Grace period: cached session lets player land here before auth resolves.
   // Wait up to 5s for auth to catch up before redirecting.
@@ -289,18 +291,20 @@ export const GameBoard = (): JSX.Element => {
       templateColumns={{ base: '1fr', lg: 'repeat(16, 1fr)' }}
       templateRows={{ base: 'auto', lg: 'repeat(12, 1fr)' }}
     >
+      {stage >= OnboardingStage.FIRST_BLOOD && (
+        <GridItem
+          colSpan={{ base: 1, lg: 4 }}
+          display={{ base: 'none', lg: 'block' }}
+          rowSpan={{ base: 'auto', lg: 12 }}
+        >
+          <PolygonalCard className="data-dense" clipPath="none" overflowY="auto">
+            <StatsPanel />
+          </PolygonalCard>
+        </GridItem>
+      )}
       <GridItem
-        colSpan={{ base: 1, lg: 4 }}
-        display={{ base: 'none', lg: 'block' }}
-        rowSpan={{ base: 'auto', lg: 12 }}
-      >
-        <PolygonalCard className="data-dense" clipPath="none" overflowY="auto">
-          <StatsPanel />
-        </PolygonalCard>
-      </GridItem>
-      <GridItem
-        colSpan={{ base: 1, lg: 8 }}
-        colStart={{ base: 0, lg: 5 }}
+        colSpan={{ base: 1, lg: stage >= OnboardingStage.FIRST_BLOOD ? 8 : 12 }}
+        colStart={{ base: 0, lg: stage >= OnboardingStage.FIRST_BLOOD ? 5 : 1 }}
         rowSpan={{ base: 'auto', lg: 12 }}
         rowStart={{ base: 0, lg: 0 }}
         display="flex"
