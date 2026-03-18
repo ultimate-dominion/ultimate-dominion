@@ -26,6 +26,15 @@ const PREVENT_DEFAULT_KEYS = ['ArrowUp', 'ArrowDown'];
 
 const AUTO_ADVENTURE_KEY = 'ud_auto_adventure';
 
+const OUTER_REALMS_NARRATIVES = [
+  'You press your hands against the cave wall. Something pulses beneath the stone — warm, almost alive. But the way forward is sealed.',
+  'A sound echoes from beyond the boundary — skittering claws on rock, then silence. Whatever lives out there, it knows you\'re not ready.',
+  'The air grows cold at the threshold. Shadows twist into shapes you can\'t quite make out. A voice, barely a whisper: "Not yet."',
+  'You reach for the passage ahead, but the darkness pushes back. The cave has decided — you haven\'t earned this path.',
+  'The ground trembles beneath your feet. Through a crack in the wall, you glimpse something vast moving in the dark. You step back.',
+  'A bitter wind howls from the depths beyond. You smell iron and ash. Every instinct says: turn around.',
+];
+
 type MovementContextType = {
   autoAdventureMode: boolean;
   isRefreshing: boolean;
@@ -64,6 +73,14 @@ export const MovementProvider = ({
     onClose: onCloseNoMoveEquippedModal,
     onOpen: onOpenNoMoveEquippedModal,
   } = useDisclosure();
+
+  const {
+    isOpen: isOuterRealmsBlockedOpen,
+    onClose: onCloseOuterRealmsBlocked,
+    onOpen: onOpenOuterRealmsBlocked,
+  } = useDisclosure();
+
+  const [outerRealmsNarrative, setOuterRealmsNarrative] = useState('');
 
   const { character, isMoveEquipped } = useCharacter();
   const { isSpawned, position } = useMap();
@@ -126,6 +143,19 @@ export const MovementProvider = ({
         (direction === 'right' && x === 9)
       ) {
         return;
+      }
+
+      // Block entry into Outer Realms for players under level 5
+      const playerLevel = character.level ? Number(character.level) : 1;
+      if (playerLevel < 5) {
+        const targetX = direction === 'right' ? x + 1 : direction === 'left' ? x - 1 : x;
+        const targetY = direction === 'up' ? y + 1 : direction === 'down' ? y - 1 : y;
+        if (targetX >= 5 || targetY >= 5) {
+          const narrative = OUTER_REALMS_NARRATIVES[Math.floor(Math.random() * OUTER_REALMS_NARRATIVES.length)];
+          setOuterRealmsNarrative(narrative);
+          onOpenOuterRealmsBlocked();
+          return;
+        }
       }
 
       if (!isMoveEquipped) {
@@ -263,6 +293,30 @@ export const MovementProvider = ({
               character page
             </Text>{' '}
             to equip a move.
+          </Text>
+        </VStack>
+      </InfoModal>
+      <InfoModal
+        heading="The Way is Sealed"
+        isOpen={isOuterRealmsBlockedOpen}
+        onClose={onCloseOuterRealmsBlocked}
+      >
+        <VStack p={4} spacing={4}>
+          <Text
+            color="#C4B89E"
+            fontStyle="italic"
+            lineHeight="1.8"
+            textAlign="center"
+          >
+            {outerRealmsNarrative}
+          </Text>
+          <Text
+            color="#5A5040"
+            fontSize="xs"
+            letterSpacing="0.1em"
+            textAlign="center"
+          >
+            Reach Level 5 to enter the Outer Realms.
           </Text>
         </VStack>
       </InfoModal>
