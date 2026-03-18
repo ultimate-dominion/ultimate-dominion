@@ -121,18 +121,13 @@ export const Leaderboard = (): JSX.Element => {
         Number(entryB.baseStats.intelligence);
 
       switch (sort.sorted) {
-        case 'byGold':
+        case 'byGold': {
+          const totalGoldA = entryA.externalGoldBalance + entryA.escrowGoldBalance;
+          const totalGoldB = entryB.externalGoldBalance + entryB.escrowGoldBalance;
           return sort.reversed
-            ? Number(
-                formatEther(
-                  entryA.externalGoldBalance - entryB.externalGoldBalance,
-                ),
-              )
-            : Number(
-                formatEther(
-                  entryB.externalGoldBalance - entryA.externalGoldBalance,
-                ),
-              );
+            ? Number(formatEther(totalGoldA - totalGoldB))
+            : Number(formatEther(totalGoldB - totalGoldA));
+        }
         case 'byLevel':
           return sort.reversed
             ? Number(entryA.level) - Number(entryB.level)
@@ -141,12 +136,11 @@ export const Leaderboard = (): JSX.Element => {
           return sort.reversed
             ? Number(totalStatsA) - Number(totalStatsB)
             : Number(totalStatsB) - Number(totalStatsA);
-        default:
-          return Number(
-            formatEther(
-              entryB.externalGoldBalance - entryA.externalGoldBalance,
-            ),
-          );
+        default: {
+          const defTotalGoldA = entryA.externalGoldBalance + entryA.escrowGoldBalance;
+          const defTotalGoldB = entryB.externalGoldBalance + entryB.escrowGoldBalance;
+          return Number(formatEther(defTotalGoldB - defTotalGoldA));
+        }
       }
     });
     entriesCopy = [...entriesCopy].filter(entry => {

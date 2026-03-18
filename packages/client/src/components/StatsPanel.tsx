@@ -26,6 +26,7 @@ import { MAX_LEVEL } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
 
 import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
+import { useNearbyRanks } from '../hooks/useNearbyRanks';
 
 import { ClassSymbol } from './ClassSymbol';
 import { EquippedLoadout } from './EquippedLoadout';
@@ -39,6 +40,17 @@ export const StatsPanel = (): JSX.Element => {
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const leaderboardRank = useLeaderboardRank();
+  const { nearby } = useNearbyRanks();
+
+  const chasingPlayer = useMemo(() => {
+    if (!nearby || nearby.length === 0) return null;
+    const self = nearby.find(p => p.isSelf);
+    if (!self) return null;
+    const above = nearby
+      .filter(p => !p.isSelf && p.statsRank < self.statsRank)
+      .sort((a, b) => b.statsRank - a.statsRank);
+    return above[0] ?? null;
+  }, [nearby]);
 
   const maxed = useMemo(() => {
     if (!character) return false;
@@ -251,6 +263,16 @@ export const StatsPanel = (): JSX.Element => {
             <Text color="#5A5040" size="xs">
               of {leaderboardRank.totalPlayers}
             </Text>
+          </HStack>
+        )}
+
+        {chasingPlayer && (
+          <HStack justify="center" px={2} py={0.5} spacing={1}>
+            <Text color="#5A5040" size="2xs">Chasing</Text>
+            <Text color="#D4A54A" fontFamily="mono" fontWeight={700} size="2xs">
+              {chasingPlayer.name}
+            </Text>
+            <Text color="#5A5040" size="2xs">(#{chasingPlayer.statsRank})</Text>
           </HStack>
         )}
       </VStack>
