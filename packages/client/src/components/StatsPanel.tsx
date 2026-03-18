@@ -283,7 +283,7 @@ export const StatsPanel = (): JSX.Element => {
         </>
       )}
 
-      {stage >= OnboardingStage.SETTLING_IN && (
+      {stage >= OnboardingStage.FIRST_BLOOD && (
         <>
           <Divider borderColor="grey300" mt={2} />
 
@@ -388,7 +388,7 @@ export const StatsPanel = (): JSX.Element => {
               })}
             </HStack>
           </VStack>
-          {stage >= OnboardingStage.SETTLING_IN && (
+          {stage >= OnboardingStage.FIRST_BLOOD && (
             <>
               <Divider borderColor="grey300" />
               <Box px={4} py={3} w="100%">

@@ -659,7 +659,7 @@ export const ActionsPanel = (): JSX.Element => {
         )}
         {((!currentBattle || autoAdventureMode) && isSpawned && position && stage >= OnboardingStage.FIRST_STEPS) && (
           <VStack spacing={3} w="100%">
-            {isDesktop && stage >= OnboardingStage.SETTLING_IN && <ConsumableQuickUse />}
+            {isDesktop && stage >= OnboardingStage.FIRST_BLOOD && <ConsumableQuickUse />}
             <HStack justify="space-between" w="100%">
               <Text color="#8A7E6A" fontStyle="italic" size="xs">
                 {position.x === 0 && position.y === 0
