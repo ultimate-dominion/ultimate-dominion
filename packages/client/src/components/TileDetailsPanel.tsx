@@ -35,6 +35,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useBattleHpAnimation } from '../hooks/useBattleHpAnimation';
 import { useCombatPacing } from '../hooks/useCombatPacing';
+import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import {
@@ -182,6 +183,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     userCharacterForBattleRendering,
   } = useBattle();
   const { autoAdventureMode, isRefreshing } = useMovement();
+  const stage = useOnboardingStage();
 
   const { isCounterattackPending, pendingCounterattackDamage } = useCombatPacing({
     attackOutcomes,
@@ -1272,9 +1274,48 @@ export const TileDetailsPanel = (): JSX.Element => {
                 </Box>
               ))}
             {monstersOnTile.length === 0 && (
-              <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
-                No monsters in this area
-              </Text>
+              stage <= OnboardingStage.FIRST_BLOOD ? (
+                <VStack
+                  animation={`${movementHintPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`}
+                  py={4}
+                  spacing={3}
+                >
+                  <HStack spacing={2}>
+                    {['W', 'A', 'S', 'D'].map(key => (
+                      <Box
+                        key={key}
+                        alignItems="center"
+                        bg="rgba(168, 222, 255, 0.12)"
+                        border="1px solid rgba(168, 222, 255, 0.3)"
+                        borderRadius="4px"
+                        color="#A8DEFF"
+                        display="flex"
+                        fontFamily="Cinzel, serif"
+                        fontSize={{ base: 'sm', lg: 'md' }}
+                        fontWeight={700}
+                        h={{ base: '28px', lg: '32px' }}
+                        justifyContent="center"
+                        w={{ base: '28px', lg: '32px' }}
+                      >
+                        {key}
+                      </Box>
+                    ))}
+                  </HStack>
+                  <Text
+                    color="#A8DEFF"
+                    fontFamily="Cinzel, serif"
+                    fontSize="xs"
+                    fontStyle="italic"
+                    opacity={0.8}
+                  >
+                    Explore the Dark Cave
+                  </Text>
+                </VStack>
+              ) : (
+                <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
+                  No monsters in this area
+                </Text>
+              )
             )}
           </GridItem>
         )}
@@ -1616,6 +1657,11 @@ const OpponentRow = ({
 const echoPulse = keyframes`
   0%, 100% { filter: brightness(0.8); }
   50%      { filter: brightness(1.3); }
+`;
+
+const movementHintPulse = keyframes`
+  0%, 100% { filter: brightness(0.85); }
+  50%      { filter: brightness(1.2); }
 `;
 
 const FragmentEchoRow = ({
