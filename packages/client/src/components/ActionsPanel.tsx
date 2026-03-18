@@ -21,6 +21,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
+import { useCombatPacing } from '../hooks/useCombatPacing';
 import { useSlotOrder } from '../hooks/useSlotOrder';
 import { type Armor, EncounterType, type Monster, RARITY_COLORS, type Spell, type Weapon } from '../utils/types';
 import {
@@ -68,6 +69,12 @@ export const ActionsPanel = (): JSX.Element => {
     statusEffectActions,
   } = useBattle();
   const { autoAdventureMode, isRefreshing, onToggleAutoAdventure } = useMovement();
+
+  const { visibleOutcomes, pendingTurn } = useCombatPacing({
+    attackOutcomes,
+    characterId: character?.id,
+    isInBattle: !!currentBattle,
+  });
 
   // Display name prefixed with "Elite" for elite mobs
   const opponentDisplayName = useMemo(() => {
@@ -699,8 +706,8 @@ export const ActionsPanel = (): JSX.Element => {
         {!autoAdventureMode && opponent &&
           (() => {
             const seenDotTurns = new Set<string>();
-            return [...attackOutcomes].reverse().map((attack, reverseIndex) => {
-            const i = attackOutcomes.length - 1 - reverseIndex;
+            return [...visibleOutcomes].reverse().map((attack, reverseIndex) => {
+            const i = visibleOutcomes.length - 1 - reverseIndex;
             const attackItem = spellAndWeaponTemplates.find(
               item => item.tokenId === attack.itemId,
             );
@@ -763,10 +770,13 @@ export const ActionsPanel = (): JSX.Element => {
               !possibleStatusEffectAttack;
 
             // Check if there's a DoT message for this turn (show once per turn)
+            // Suppress DoT text while counterattack is still hidden (reveals together at T+600ms)
             const turnKey = attack.currentTurn.toString();
-            const dotForTurn = !seenDotTurns.has(turnKey)
-              ? dotActions.find(d => d.turnNumber === attack.currentTurn && d.totalDamage > 0n)
-              : null;
+            const dotForTurn = (pendingTurn && attack.currentTurn === pendingTurn)
+              ? null
+              : !seenDotTurns.has(turnKey)
+                ? dotActions.find(d => d.turnNumber === attack.currentTurn && d.totalDamage > 0n)
+                : null;
             if (dotForTurn) seenDotTurns.add(turnKey);
 
             const dotMessageElement = dotForTurn ? (

@@ -64,6 +64,9 @@ export function useBattleHpAnimation({
     }
 
     // No DoT or already animated this turn — snap to actual HP
+    // Clear any in-flight timeouts to prevent stale values overwriting
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (safetyRef.current) clearTimeout(safetyRef.current);
     setDisplayedHp(actualHp);
   }, [actualHp, dotDamage, dotTurnNumber, isInBattle]);
 

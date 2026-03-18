@@ -34,6 +34,7 @@ import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useBattleHpAnimation } from '../hooks/useBattleHpAnimation';
+import { useCombatPacing } from '../hooks/useCombatPacing';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import {
@@ -182,6 +183,12 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useBattle();
   const { autoAdventureMode, isRefreshing } = useMovement();
 
+  const { isCounterattackPending, pendingCounterattackDamage } = useCombatPacing({
+    attackOutcomes,
+    characterId: character?.id,
+    isInBattle: !!currentBattle,
+  });
+
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
   });
@@ -237,6 +244,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   const [isMonsterHit, setIsMonsterHit] = useState(false);
 
   useEffect(() => {
+    if (isCounterattackPending) return;
     if (!(attackOutcomes[0] && currentBattle && opponent)) return;
 
     const attackIndex = attackOutcomes.findLastIndex(
@@ -269,7 +277,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         attackIndex.toString(),
       );
     }
-  }, [attackOutcomes, currentBattle, opponent]);
+  }, [attackOutcomes, currentBattle, opponent, isCounterattackPending]);
 
   useEffect(() => {
     if (!(attackOutcomes[0] && character && currentBattle)) return;
@@ -621,7 +629,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     displayedHp: userDisplayedHp,
     isDotTicking: isUserDotTicking,
   } = useBattleHpAnimation({
-    actualHp: userCharacterForBattleRendering?.currentHp ?? 0n,
+    actualHp: (userCharacterForBattleRendering?.currentHp ?? 0n) + pendingCounterattackDamage,
     dotDamage: latestUserDot?.totalDamage ?? 0n,
     dotTurnNumber: latestUserDot?.turnNumber ?? 0n,
     isInBattle: !!currentBattle,
