@@ -494,6 +494,25 @@ export const ActionsPanel = (): JSX.Element => {
                 : ''}
             </Text>
           )}
+          {lastestBattleOutcome && lastestBattleOutcome.winner === character?.id &&
+            !lastestBattleOutcome.playerFled &&
+            (lastestBattleOutcome.expDropped > 0n || lastestBattleOutcome.goldDropped > 0n) && (
+            <HStack spacing={2} justifyContent="center">
+              {lastestBattleOutcome.expDropped > 0n && (
+                <Text color="#5A8A3E" fontFamily="mono" fontWeight={600} size="xs">
+                  +{lastestBattleOutcome.expDropped.toString()} XP
+                </Text>
+              )}
+              {lastestBattleOutcome.expDropped > 0n && lastestBattleOutcome.goldDropped > 0n && (
+                <Text color="#8A7E6A" size="xs">·</Text>
+              )}
+              {lastestBattleOutcome.goldDropped > 0n && (
+                <Text color="#D4A54A" fontFamily="mono" fontWeight={600} size="xs">
+                  +{etherToFixedNumber(lastestBattleOutcome.goldDropped)} Gold
+                </Text>
+              )}
+            </HStack>
+          )}
           <Button
             onClick={() => onContinueToBattleOutcome(true)}
             size="sm"
@@ -1002,9 +1021,9 @@ export const ActionsPanel = (): JSX.Element => {
             } else if (isPlayerAttack) {
               attackContent = (
                 <Text size={logSize}>
-                  {isCrit && (
+                  {isCrit ? (
                     <Text as="span" color="#C87A2A" fontWeight={700}>Critical hit! </Text>
-                  )}
+                  ) : ''}
                   You attacked{' '}
                   <Text as="span" color="green">
                     {opponentDisplayName}
@@ -1027,9 +1046,9 @@ export const ActionsPanel = (): JSX.Element => {
             } else {
               attackContent = (
                 <Text size={logSize}>
-                  {isCrit && (
+                  {isCrit ? (
                     <Text as="span" color="#C87A2A" fontWeight={700}>Critical hit! </Text>
-                  )}
+                  ) : ''}
                   <Text as="span" color="green">
                     {opponentDisplayName}
                   </Text>{' '}
@@ -1066,27 +1085,6 @@ export const ActionsPanel = (): JSX.Element => {
               </Box>
             );
           });
-          if (battleOver && lastestBattleOutcome && lastestBattleOutcome.winner === character?.id &&
-              (lastestBattleOutcome.expDropped > 0n || lastestBattleOutcome.goldDropped > 0n)) {
-            const outcome = lastestBattleOutcome;
-            elements.push(
-              <HStack key="battle-rewards-summary" spacing={2} mt={1}>
-                {outcome.expDropped > 0n && (
-                  <Text color="#5A8A3E" fontFamily="mono" fontWeight={600} size={logSize}>
-                    +{outcome.expDropped.toString()} XP
-                  </Text>
-                )}
-                {outcome.expDropped > 0n && outcome.goldDropped > 0n && (
-                  <Text color="#8A7E6A" size={logSize}>·</Text>
-                )}
-                {outcome.goldDropped > 0n && (
-                  <Text color="#D4A54A" fontFamily="mono" fontWeight={600} size={logSize}>
-                    +{etherToFixedNumber(outcome.goldDropped)} Gold
-                  </Text>
-                )}
-              </HStack>
-            );
-          }
           return elements;
           })()}
       </Stack>
