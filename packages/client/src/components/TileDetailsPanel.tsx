@@ -772,73 +772,26 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                 )}
 
-                <Box mt={4} w="100%">
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#5A8A3E">AGI</Text>
-                    {(() => {
-                      const base = userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier;
-                      const mod = activeUserBattleEffectModifications.agiModifier;
+                <Box mt={2} w="100%">
+                  <Box backgroundColor="rgba(196,184,158,0.08)" boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)" h="1px" w="100%" />
+                  <HStack justifyContent="center" spacing={{ base: 3, lg: 4 }} px={2} py={1} w="100%">
+                    {([
+                      { label: 'AGI', color: '#5A8A3E', base: userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier, mod: activeUserBattleEffectModifications.agiModifier },
+                      { label: 'INT', color: '#4A7AB5', base: userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier, mod: activeUserBattleEffectModifications.intModifier },
+                      { label: 'STR', color: '#B85C3A', base: userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier, mod: activeUserBattleEffectModifications.strModifier },
+                    ] as const).map(({ label, color, base, mod }) => {
                       const effective = base + mod;
-                      const color = mod > 0n ? 'cyan.300' : mod < 0n ? 'orange.300' : undefined;
                       return (
-                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
-                          {effective.toString()}{mod > 0n && ` (+${mod.toString()})`}{mod < 0n && ` (${mod.toString()})`}
-                        </Text>
+                        <HStack key={label} spacing={1}>
+                          <Text size={{ base: '2xs', lg: 'xs' }} color={color} fontWeight={600}>{label}</Text>
+                          <Text fontFamily="mono" size={{ base: '2xs', lg: 'xs' }}>
+                            {effective.toString()}{mod > 0n && <Text as="span" color="cyan.300">{` (+${mod.toString()})`}</Text>}{mod < 0n && <Text as="span" color="orange.300">{` (${mod.toString()})`}</Text>}
+                          </Text>
+                        </HStack>
                       );
-                    })()}
+                    })}
                   </HStack>
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#4A7AB5">INT</Text>
-                    {(() => {
-                      const base = userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier;
-                      const mod = activeUserBattleEffectModifications.intModifier;
-                      const effective = base + mod;
-                      const color = mod > 0n ? 'cyan.300' : mod < 0n ? 'orange.300' : undefined;
-                      return (
-                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
-                          {effective.toString()}{mod > 0n && ` (+${mod.toString()})`}{mod < 0n && ` (${mod.toString()})`}
-                        </Text>
-                      );
-                    })()}
-                  </HStack>
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#B85C3A">STR</Text>
-                    {(() => {
-                      const base = userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier;
-                      const mod = activeUserBattleEffectModifications.strModifier;
-                      const effective = base + mod;
-                      const color = mod > 0n ? 'cyan.300' : mod < 0n ? 'orange.300' : undefined;
-                      return (
-                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
-                          {effective.toString()}{mod > 0n && ` (+${mod.toString()})`}{mod < 0n && ` (${mod.toString()})`}
-                        </Text>
-                      );
-                    })()}
-                  </HStack>
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
-                    w="100%"
-                  />
+                  <Box backgroundColor="rgba(196,184,158,0.08)" boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)" h="1px" w="100%" />
                 </Box>
               </VStack>
             </VStack>
@@ -931,73 +884,28 @@ export const TileDetailsPanel = (): JSX.Element => {
                   />
                 )}
 
-                <Box mt={4} w="100%">
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#5A8A3E">AGI</Text>
-                    {!!opponent.agility && (() => {
-                      const base = opponent.agility - expiredOpponentEffectModifications.agiModifier;
-                      const mod = activeBattleEffectModifications.agiModifier;
-                      const effective = base + mod;
-                      const color = mod < 0n ? 'orange.300' : mod > 0n ? 'cyan.300' : undefined;
+                <Box mt={2} w="100%">
+                  <Box backgroundColor="rgba(196,184,158,0.08)" boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)" h="1px" w="100%" />
+                  <HStack justifyContent="center" spacing={{ base: 3, lg: 4 }} px={2} py={1} w="100%">
+                    {([
+                      { label: 'AGI', color: '#5A8A3E', stat: opponent.agility, expiredMod: expiredOpponentEffectModifications.agiModifier, activeMod: activeBattleEffectModifications.agiModifier },
+                      { label: 'INT', color: '#4A7AB5', stat: opponent.intelligence, expiredMod: expiredOpponentEffectModifications.intModifier, activeMod: activeBattleEffectModifications.intModifier },
+                      { label: 'STR', color: '#B85C3A', stat: opponent.strength, expiredMod: expiredOpponentEffectModifications.strModifier, activeMod: activeBattleEffectModifications.strModifier },
+                    ] as const).map(({ label, color, stat, expiredMod, activeMod }) => {
+                      if (!stat) return null;
+                      const base = stat - expiredMod;
+                      const effective = base + activeMod;
                       return (
-                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
-                          {effective.toString()}{mod !== 0n && ` (${mod > 0n ? '+' : ''}${mod.toString()})`}
-                        </Text>
+                        <HStack key={label} spacing={1}>
+                          <Text size={{ base: '2xs', lg: 'xs' }} color={color} fontWeight={600}>{label}</Text>
+                          <Text fontFamily="mono" size={{ base: '2xs', lg: 'xs' }}>
+                            {effective.toString()}{activeMod > 0n && <Text as="span" color="cyan.300">{` (+${activeMod.toString()})`}</Text>}{activeMod < 0n && <Text as="span" color="orange.300">{` (${activeMod.toString()})`}</Text>}
+                          </Text>
+                        </HStack>
                       );
-                    })()}
+                    })}
                   </HStack>
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#4A7AB5">INT</Text>
-                    {!!opponent.intelligence && (() => {
-                      const base = opponent.intelligence - expiredOpponentEffectModifications.intModifier;
-                      const mod = activeBattleEffectModifications.intModifier;
-                      const effective = base + mod;
-                      const color = mod < 0n ? 'orange.300' : mod > 0n ? 'cyan.300' : undefined;
-                      return (
-                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
-                          {effective.toString()}{mod !== 0n && ` (${mod > 0n ? '+' : ''}${mod.toString()})`}
-                        </Text>
-                      );
-                    })()}
-                  </HStack>
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
-                    w="100%"
-                  />
-                  <HStack justifyContent="space-between" px={8} w="100%">
-                    <Text isTruncated size={{ base: '2xs', lg: 'sm' }} color="#B85C3A">STR</Text>
-                    {!!opponent.strength && (() => {
-                      const base = opponent.strength - expiredOpponentEffectModifications.strModifier;
-                      const mod = activeBattleEffectModifications.strModifier;
-                      const effective = base + mod;
-                      const color = mod < 0n ? 'orange.300' : mod > 0n ? 'cyan.300' : undefined;
-                      return (
-                        <Text fontFamily="mono" size={{ base: '2xs', lg: 'sm' }} color={color}>
-                          {effective.toString()}{mod !== 0n && ` (${mod > 0n ? '+' : ''}${mod.toString()})`}
-                        </Text>
-                      );
-                    })()}
-                  </HStack>
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
-                    w="100%"
-                  />
+                  <Box backgroundColor="rgba(196,184,158,0.08)" boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)" h="1px" w="100%" />
                 </Box>
               </VStack>
             </VStack>
@@ -1293,7 +1201,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
-          {stage <= OnboardingStage.FIRST_BLOOD && visibleMonstersOnTile.length === 0 && (
+          {stage === OnboardingStage.FIRST_STEPS && visibleMonstersOnTile.length === 0 && (
             <VStack
               align="center"
               justify="center"

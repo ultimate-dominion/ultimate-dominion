@@ -24,7 +24,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useCombatPacing } from '../hooks/useCombatPacing';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { useSlotOrder } from '../hooks/useSlotOrder';
-import { type Armor, EncounterType, type Monster, RARITY_COLORS, type Spell, type Weapon } from '../utils/types';
+import { type Armor, CLASS_COLORS, EncounterType, type Monster, RARITY_COLORS, type Spell, StatsClasses, type Weapon } from '../utils/types';
 import {
   BATTLE_OUTCOME_SEEN_KEY,
   SLOT_ORDER_KEY_PREFIX,
@@ -301,6 +301,49 @@ export const ActionsPanel = (): JSX.Element => {
     [spellTemplates, weaponTemplates],
   );
 
+  const STAT_LABELS: Record<StatsClasses, string> = {
+    [StatsClasses.Strength]: 'STR',
+    [StatsClasses.Agility]: 'AGI',
+    [StatsClasses.Intelligence]: 'INT',
+  };
+
+  const weaponMatchups = useMemo(() => {
+    if (!opponent) return {};
+    const result: Record<string, { matchup: 'strong' | 'weak' | 'neutral'; statType: StatsClasses }> = {};
+    for (const item of orderedAttackItems) {
+      const isSpell = spellTemplates.some(s => s.tokenId === item.tokenId);
+      let statType: StatsClasses;
+      if (isSpell) {
+        statType = StatsClasses.Intelligence;
+      } else {
+        const w = item as Weapon;
+        const str = Number(w.strModifier ?? 0n);
+        const agi = Number(w.agiModifier ?? 0n);
+        const int = Number(w.intModifier ?? 0n);
+        if (int >= str && int >= agi) statType = StatsClasses.Intelligence;
+        else if (agi >= str) statType = StatsClasses.Agility;
+        else statType = StatsClasses.Strength;
+      }
+      const opClass = opponent.entityClass;
+      let matchup: 'strong' | 'weak' | 'neutral' = 'neutral';
+      if (
+        (statType === StatsClasses.Strength && opClass === StatsClasses.Agility) ||
+        (statType === StatsClasses.Agility && opClass === StatsClasses.Intelligence) ||
+        (statType === StatsClasses.Intelligence && opClass === StatsClasses.Strength)
+      ) {
+        matchup = 'strong';
+      } else if (
+        (statType === StatsClasses.Strength && opClass === StatsClasses.Intelligence) ||
+        (statType === StatsClasses.Agility && opClass === StatsClasses.Strength) ||
+        (statType === StatsClasses.Intelligence && opClass === StatsClasses.Agility)
+      ) {
+        matchup = 'weak';
+      }
+      result[item.tokenId] = { matchup, statType };
+    }
+    return result;
+  }, [opponent, orderedAttackItems, spellTemplates]);
+
   const canFlee = useMemo(() => {
     if (!character) return false;
     if (!currentBattle) return false;
@@ -561,6 +604,9 @@ export const ActionsPanel = (): JSX.Element => {
               <HStack spacing={0} w="100%" flexWrap={{ base: 'wrap', lg: 'nowrap' }}>
                 {actionItems.map((item, index) => {
                   const icon = getItemImage(removeEmoji(item.name));
+                  const matchupData = item.type === 'attack' ? weaponMatchups[item.tokenId] : undefined;
+                  const matchup = matchupData?.matchup;
+                  const statType = matchupData?.statType;
                   return (
                     <Button
                       borderLeft={{
@@ -587,6 +633,7 @@ export const ActionsPanel = (): JSX.Element => {
                       size={{ base: 'sm', sm: 'sm', lg: 'md' }}
                       py={{ base: 5, sm: 4, lg: 'unset' }}
                       variant="outline"
+                      bg={matchup === 'strong' ? 'rgba(90,138,62,0.08)' : matchup === 'weak' ? 'rgba(184,92,58,0.08)' : undefined}
                       w={{ base: '50%', lg: '100%' }}
                     >
                       <>
@@ -601,6 +648,17 @@ export const ActionsPanel = (): JSX.Element => {
                           <PotionSvg size={3} theme="dark" mr={1} />
                         ) : null}
                         {removeEmoji(item.name)}
+                        {matchup === 'strong' && (
+                          <Text as="span" color="#5A8A3E" fontSize="2xs" ml={1}>▲</Text>
+                        )}
+                        {matchup === 'weak' && (
+                          <Text as="span" color="#B85C3A" fontSize="2xs" ml={1}>▼</Text>
+                        )}
+                        {statType !== undefined && (
+                          <Text as="span" fontSize="2xs" ml={1} color={CLASS_COLORS[statType]} opacity={0.7}>
+                            {STAT_LABELS[statType]}
+                          </Text>
+                        )}
                         {item.type === 'consumable' && 'balance' in item && (
                           <Text as="span" fontSize="2xs" ml={1} opacity={0.7}>
                             (x{item.balance.toString()})
@@ -708,7 +766,8 @@ export const ActionsPanel = (): JSX.Element => {
         {!autoAdventureMode && opponent &&
           (() => {
             const seenDotTurns = new Set<string>();
-            return [...visibleOutcomes].reverse().map((attack, reverseIndex) => {
+            const logSize = { base: '2xs' as const, sm: 'xs' as const, lg: 'sm' as const };
+            const elements = [...visibleOutcomes].reverse().map((attack, reverseIndex) => {
             const i = visibleOutcomes.length - 1 - reverseIndex;
             const attackItem = spellAndWeaponTemplates.find(
               item => item.tokenId === attack.itemId,
@@ -752,7 +811,7 @@ export const ActionsPanel = (): JSX.Element => {
                     cursor={{ show: false }}
                     stdTypingDelay={10}
                   >
-                    <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                    <Text size={logSize}>
                       {isPlayer ? 'You' : opponentDisplayName} used{' '}
                       <Text as="span" color="green">
                         {consumable ? removeEmoji(consumable.name) : 'a potion'}
@@ -788,7 +847,7 @@ export const ActionsPanel = (): JSX.Element => {
                 key={`battle-dot-${i}`}
                 stdTypingDelay={10}
               >
-                <Text color="purple.300" size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                <Text color="purple.300" fontStyle="italic" size={{ base: '2xs', sm: '2xs', lg: 'xs' }}>
                   Poison deals{' '}
                   <Text as="span" fontFamily="mono">
                     {dotForTurn.totalDamage.toString()}
@@ -804,23 +863,26 @@ export const ActionsPanel = (): JSX.Element => {
 
             if (attack.miss[0]) {
               return (
-                <Box key={`battle-attack-${i}`}>
+                <Box
+                  key={`battle-attack-${i}`}
+                  {...(!isPlayerAttack && { pl: 3, borderLeft: '2px solid rgba(184,92,58,0.3)' })}
+                >
                   <SafeTypist
                     avgTypingDelay={10}
                     cursor={{ show: false }}
                     stdTypingDelay={10}
                   >
                     {isPlayerAttack ? (
-                      <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                      <Text size={logSize} color="#5A5248" fontStyle="italic">
                         You missed{' '}
-                        <Text as="span" color="green">
+                        <Text as="span" color="#5A5248">
                           {opponentDisplayName}
                         </Text>{' '}
                         with {itemName}.
                       </Text>
                     ) : (
-                      <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                        <Text as="span" color="green">
+                      <Text size={logSize} color="#5A5248" fontStyle="italic">
+                        <Text as="span" color="#5A5248">
                           {opponentDisplayName}
                         </Text>{' '}
                         missed you with {itemName}.
@@ -832,7 +894,7 @@ export const ActionsPanel = (): JSX.Element => {
               );
             }
 
-            const critText = attack.crit[0] ? 'Critical hit! ' : '';
+            const isCrit = attack.crit[0];
 
             // Compute the single content element to avoid multiple conditional
             // children inside Typist. react-typist crashes (Array.from(null))
@@ -856,8 +918,10 @@ export const ActionsPanel = (): JSX.Element => {
 
               attackContent = (
                 <Box>
-                  <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                    {critText}
+                  <Text size={logSize}>
+                    {isCrit && (
+                      <Text as="span" color="#C87A2A" fontWeight={700}>Critical hit! </Text>
+                    )}
                     {isPlayerAttack ? (
                       <Text as="span">
                         You cast {itemName}
@@ -887,7 +951,7 @@ export const ActionsPanel = (): JSX.Element => {
                     possibleStatusEffectAttack.name
                   ] && (
                     <Text
-                      size={{ base: '2xs', sm: 'xs', lg: 'sm' }}
+                      size={{ base: '2xs', sm: '2xs', lg: 'xs' }}
                       color={effectColor}
                     >
                       {STATUS_EFFECT_DESCRIPTION_MAPPING[
@@ -899,7 +963,7 @@ export const ActionsPanel = (): JSX.Element => {
               );
             } else if (hasOnlyStatusEffects && !alreadyAffected) {
               attackContent = (
-                <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                <Text size={logSize}>
                   {isPlayerAttack ? 'You' : (
                     <Text as="span" color="green">{opponentDisplayName}</Text>
                   )} cast {itemName} on{' '}
@@ -922,7 +986,7 @@ export const ActionsPanel = (): JSX.Element => {
               );
             } else if (alreadyAffected) {
               attackContent = (
-                <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
+                <Text size={logSize}>
                   {isPlayerAttack ? 'You' : (
                     <Text as="span" color="green">{opponentDisplayName}</Text>
                   )} cast {itemName} on{' '}
@@ -937,13 +1001,24 @@ export const ActionsPanel = (): JSX.Element => {
               );
             } else if (isPlayerAttack) {
               attackContent = (
-                <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                  {critText}You attacked{' '}
+                <Text size={logSize}>
+                  {isCrit && (
+                    <Text as="span" color="#C87A2A" fontWeight={700}>Critical hit! </Text>
+                  )}
+                  You attacked{' '}
                   <Text as="span" color="green">
                     {opponentDisplayName}
                   </Text>{' '}
                   with {itemName} for{' '}
-                  <Text as="span" color="red" fontFamily="mono">
+                  <Text
+                    as="span"
+                    color="#D4A54A"
+                    fontFamily="mono"
+                    {...(isCrit && {
+                      fontSize: { base: 'xs', sm: 'sm', lg: 'md' },
+                      textShadow: '0 0 8px rgba(200,122,42,0.5)',
+                    })}
+                  >
                     {attack.attackerDamageDelt.toString()}
                   </Text>{' '}
                   damage.
@@ -951,13 +1026,23 @@ export const ActionsPanel = (): JSX.Element => {
               );
             } else {
               attackContent = (
-                <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-                  {critText}
+                <Text size={logSize}>
+                  {isCrit && (
+                    <Text as="span" color="#C87A2A" fontWeight={700}>Critical hit! </Text>
+                  )}
                   <Text as="span" color="green">
                     {opponentDisplayName}
                   </Text>{' '}
                   attacked you with {itemName} for{' '}
-                  <Text as="span" color="red" fontFamily="mono">
+                  <Text
+                    as="span"
+                    color="#B85C3A"
+                    fontFamily="mono"
+                    {...(isCrit && {
+                      fontSize: { base: 'xs', sm: 'sm', lg: 'md' },
+                      textShadow: '0 0 8px rgba(200,122,42,0.5)',
+                    })}
+                  >
                     {attack.attackerDamageDelt.toString()}
                   </Text>{' '}
                   damage.
@@ -966,7 +1051,10 @@ export const ActionsPanel = (): JSX.Element => {
             }
 
             return (
-              <Box key={`battle-attack-${i}`}>
+              <Box
+                key={`battle-attack-${i}`}
+                {...(!isPlayerAttack && { pl: 3, borderLeft: '2px solid rgba(184,92,58,0.3)' })}
+              >
                 <SafeTypist
                   avgTypingDelay={10}
                   cursor={{ show: false }}
@@ -978,6 +1066,28 @@ export const ActionsPanel = (): JSX.Element => {
               </Box>
             );
           });
+          if (battleOver && lastestBattleOutcome && lastestBattleOutcome.winner === character?.id &&
+              (lastestBattleOutcome.expDropped > 0n || lastestBattleOutcome.goldDropped > 0n)) {
+            const outcome = lastestBattleOutcome;
+            elements.push(
+              <HStack key="battle-rewards-summary" spacing={2} mt={1}>
+                {outcome.expDropped > 0n && (
+                  <Text color="#5A8A3E" fontFamily="mono" fontWeight={600} size={logSize}>
+                    +{outcome.expDropped.toString()} XP
+                  </Text>
+                )}
+                {outcome.expDropped > 0n && outcome.goldDropped > 0n && (
+                  <Text color="#8A7E6A" size={logSize}>·</Text>
+                )}
+                {outcome.goldDropped > 0n && (
+                  <Text color="#D4A54A" fontFamily="mono" fontWeight={600} size={logSize}>
+                    +{etherToFixedNumber(outcome.goldDropped)} Gold
+                  </Text>
+                )}
+              </HStack>
+            );
+          }
+          return elements;
           })()}
       </Stack>
       {inlineResults.length > 0 && autoAdventureMode && (

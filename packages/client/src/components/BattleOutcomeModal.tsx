@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   Divider,
-  HStack,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -30,14 +29,18 @@ import {
   type CombatOutcomeType,
   EncounterType,
   type Monster,
+  Rarity,
+  RARITY_NAMES,
   type Spell,
   type Weapon,
 } from '../utils/types';
 
-import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 
 import { ItemCard } from './ItemCard';
+import { getItemImage } from '../utils/itemImages';
+import { getMonsterImage } from '../utils/monsterImages';
+import { ShareButton } from './ShareButton';
 import { ItemEquipModal } from './ItemEquipModal';
 import { LevelUpBanner } from './LevelUpBanner';
 import { LevelingPanel } from './LevelingPanel';
@@ -70,7 +73,6 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
     return isElite ? `Elite ${opponent.name}` : opponent.name;
   }, [opponent]);
-  const leaderboardRank = useLeaderboardRank();
   const stage = useOnboardingStage();
 
   const [armor, setArmor] = useState<Armor[]>([]);
@@ -272,13 +274,13 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           <ModalCloseButton />
           <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
             {battleDraw ? (
-              <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
+              <VStack alignItems="center" pb={4} spacing={4}>
                 <Text>
                   The battle ended in a draw! You both fled the battlefield.
                 </Text>
               </VStack>
             ) : (
-              <VStack alignItems="center" pb={canLevel ? 4 : 8} spacing={4}>
+              <VStack alignItems="center" pb={4} spacing={4}>
                 <Text>
                   {winner === character.id
                     ? `You defeated ${opponentDisplayName}!`
@@ -299,36 +301,22 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     respawn at the Town Square.
                   </Text>
                 )}
-                {winner === character.id && (
-                  <Text>
-                    You earned{' '}
-                    <Text as="span" color="green" fontFamily="mono" fontWeight="bold">
-                      {expDropped.toString()}
-                    </Text>{' '}
-                    experience and your Adventure Escrow gained{' '}
-                    <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
-                      {etherToFixedNumber(goldDropped)}
-                    </Text>{' '}
-                    Gold.
-                  </Text>
-                )}
-                {winner === character.id && leaderboardRank && (
-                  <HStack justifyContent="center" spacing={1}>
-                    <Text color="#8A7E6A" fontFamily="mono" size="sm">
-                      Rank: #{leaderboardRank.statsRank} of {leaderboardRank.totalPlayers}
-                    </Text>
-                    {leaderboardRank.statsRankDelta !== 0 && (
-                      <Text
-                        color={leaderboardRank.statsRankDelta > 0 ? '#5A8A3E' : '#8B2020'}
-                        fontFamily="mono"
-                        fontWeight={700}
-                        size="sm"
-                      >
-                        ({leaderboardRank.statsRankDelta > 0 ? '\u25B2' : '\u25BC'}
-                        {Math.abs(leaderboardRank.statsRankDelta)})
-                      </Text>
-                    )}
-                  </HStack>
+                {winner === character.id && !battleDraw && (
+                  <ShareButton
+                    text={
+                      currentBattle?.encounterType === EncounterType.PvP
+                        ? `Defeated ${opponentDisplayName} in PvP combat in Ultimate Dominion.`
+                        : `Slew ${opponentDisplayName} in the Dark Cave.`
+                    }
+                    shareParams={{
+                      type: currentBattle?.encounterType === EncounterType.PvP ? 'pvp' : 'kill',
+                      ...(currentBattle?.encounterType === EncounterType.PvP
+                        ? { winner: character.name, loser: opponentDisplayName }
+                        : { monster: opponentDisplayName, player: character.name, level: character.level.toString() }),
+                    }}
+                    imageSrc={currentBattle?.encounterType !== EncounterType.PvP && opponent ? getMonsterImage(opponent.name) : undefined}
+                    colorAccent={currentBattle?.encounterType === EncounterType.PvP ? '#B85C3A' : '#6B8E6B'}
+                  />
                 )}
                 {/* Level-up banner — only on victory when this battle triggered eligibility */}
                 {winner === character.id && (hasLeveledUp || justBecameEligible) && (
@@ -371,6 +359,19 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                           />
                         </Box>
                       ))}
+                    {winner === character.id && sortedLoot.length > 0 && (sortedLoot[0].rarity ?? 0) >= Rarity.Uncommon && (
+                      <ShareButton
+                        text={`Found ${sortedLoot[0].rarity !== undefined ? `a ${RARITY_NAMES[sortedLoot[0].rarity]} ` : ''}${sortedLoot[0].name} in Ultimate Dominion. Every item is permanent, on-chain, and mine.`}
+                        shareParams={{
+                          type: 'drop',
+                          item: sortedLoot[0].name,
+                          rarity: (sortedLoot[0].rarity ?? 0).toString(),
+                          player: character.name,
+                        }}
+                        imageSrc={getItemImage(sortedLoot[0].name)}
+                        colorAccent={sortedLoot[0].rarity !== undefined ? ('#C4A54A') : '#8A7E6A'}
+                      />
+                    )}
                   </>
                 )}
               </VStack>
