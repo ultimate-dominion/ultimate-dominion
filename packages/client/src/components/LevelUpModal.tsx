@@ -39,10 +39,37 @@ const shimmer = keyframes`
   to   { background-position: 200% center; }
 `;
 
+const badgePulse = keyframes`
+  0%, 100% { box-shadow: 0 0 20px rgba(106, 138, 176, 0.3), 0 0 40px rgba(106, 138, 176, 0.1), inset 0 0 15px rgba(106, 138, 176, 0.05); }
+  50%      { box-shadow: 0 0 30px rgba(106, 138, 176, 0.5), 0 0 60px rgba(106, 138, 176, 0.2), inset 0 0 20px rgba(106, 138, 176, 0.1); }
+`;
+
+const badgeReveal = keyframes`
+  from { opacity: 0; transform: scale(0.6) rotate(-10deg); }
+  40%  { opacity: 1; transform: scale(1.08) rotate(2deg); }
+  70%  { transform: scale(0.97) rotate(-1deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+`;
+
+const gateDissolve = keyframes`
+  0%   { opacity: 1; clip-path: inset(0 0 0 0); }
+  40%  { opacity: 0.8; clip-path: inset(5% 3% 5% 3%); }
+  70%  { opacity: 0.4; clip-path: inset(15% 10% 15% 10%); filter: blur(2px); }
+  100% { opacity: 0; clip-path: inset(40% 30% 40% 30%); filter: blur(6px); }
+`;
+
 /* ──────────────────────── Level Background Art ──────────────────────── */
 
 const LEVEL_BACKGROUNDS: Record<number, string> = {
   2: '/images/levelup/level-2.png',
+  3: '/images/levelup/level-3.png',
+  4: '/images/levelup/level-4.png',
+  5: '/images/levelup/level-5.png',
+  6: '/images/levelup/level-6.png',
+  7: '/images/levelup/level-7.png',
+  8: '/images/levelup/level-8.png',
+  9: '/images/levelup/level-9.png',
+  10: '/images/levelup/level-10.png',
 };
 
 /* ──────────────────────── Level Narratives ──────────────────────── */
@@ -86,20 +113,23 @@ export const LevelUpModal = ({
 }: LevelUpModalProps): JSX.Element => {
   const [phase, setPhase] = useState<'celebrate' | 'allocate' | 'narrative'>('celebrate');
   const [showContent, setShowContent] = useState(false);
+  // Capture target level when modal opens — character.level updates after TX
+  // but we need the level they're reaching, not the post-refresh level
+  const [targetLevel, setTargetLevel] = useState(0);
 
-  const nextLevel = Number(character.level) + 1;
-  const narrative = LEVEL_NARRATIVES[nextLevel] ?? DEFAULT_NARRATIVE;
-  const backgroundImage = LEVEL_BACKGROUNDS[nextLevel];
+  const narrative = LEVEL_NARRATIVES[targetLevel] ?? DEFAULT_NARRATIVE;
+  const backgroundImage = LEVEL_BACKGROUNDS[targetLevel];
 
   useEffect(() => {
     if (isOpen) {
       setPhase('celebrate');
       setShowContent(false);
+      setTargetLevel(Number(character.level) + 1);
       const t = setTimeout(() => setShowContent(true), 150);
       return () => clearTimeout(t);
     }
     setShowContent(false);
-  }, [isOpen]);
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleProceedToAllocate = () => {
     setPhase('allocate');
@@ -212,7 +242,7 @@ export const LevelUpModal = ({
                   lineHeight="1"
                   animation={`${goldGlow} 3s ease-in-out infinite`}
                 >
-                  Level {nextLevel}
+                  Level {targetLevel}
                 </Text>
               </Box>
 
@@ -272,8 +302,189 @@ export const LevelUpModal = ({
             </VStack>
           )}
 
-          {/* ── Phase 3: Narrative Tease ── */}
-          {phase === 'narrative' && (
+          {/* ── Phase 3: Narrative / Milestone ── */}
+          {phase === 'narrative' && targetLevel === 3 && (
+            /* ── Level 3: Adventurer Badge ── */
+            <VStack
+              spacing={6}
+              py={{ base: 12, md: 16 }}
+              px={{ base: 6, md: 10 }}
+              align="center"
+            >
+              {/* Badge emblem */}
+              <Box
+                w="90px"
+                h="90px"
+                borderRadius="50%"
+                border="3px solid #6A8AB0"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                position="relative"
+                animation={`${badgeReveal} 1s cubic-bezier(0.16, 1, 0.3, 1) forwards, ${badgePulse} 3s ease-in-out 1s infinite`}
+                opacity={0}
+                _after={{
+                  content: '""',
+                  position: 'absolute',
+                  inset: '4px',
+                  borderRadius: '50%',
+                  border: '1px solid rgba(106, 138, 176, 0.3)',
+                }}
+              >
+                <Box
+                  position="absolute"
+                  inset={0}
+                  borderRadius="50%"
+                  bg="radial-gradient(circle, rgba(106, 138, 176, 0.12) 0%, transparent 70%)"
+                />
+                <Text
+                  fontSize="3xl"
+                  fontFamily="'Cinzel', serif"
+                  fontWeight={700}
+                  color="#6A8AB0"
+                  textShadow="0 0 12px rgba(106, 138, 176, 0.4)"
+                  zIndex={1}
+                >
+                  A
+                </Text>
+              </Box>
+
+              {/* Title */}
+              <Text
+                fontFamily="'Cinzel', serif"
+                fontSize={{ base: 'xl', md: '2xl' }}
+                fontWeight={700}
+                color="#6A8AB0"
+                letterSpacing="0.15em"
+                textTransform="uppercase"
+                textShadow="0 0 20px rgba(106, 138, 176, 0.3)"
+                animation={`${fadeUp} 0.6s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both`}
+              >
+                Adventurer
+              </Text>
+
+              <Box mx="auto" w="60px" h="1px" bg="rgba(106, 138, 176, 0.3)" />
+
+              {/* Badge narrative */}
+              <Box
+                maxW="420px"
+                bg="rgba(28, 24, 20, 0.85)"
+                borderRadius="md"
+                border="1px solid rgba(106, 138, 176, 0.1)"
+                px={{ base: 5, md: 7 }}
+                py={6}
+                animation={`${fadeUp} 0.6s 1s cubic-bezier(0.16, 1, 0.3, 1) both`}
+              >
+                <SafeTypist
+                  avgTypingDelay={50}
+                  cursor={{ show: false }}
+                  stdTypingDelay={25}
+                  startDelay={1200}
+                >
+                  <Text
+                    fontSize={{ base: 'sm', md: 'md' }}
+                    lineHeight="1.85"
+                    color="#D4C8B0"
+                    fontStyle="italic"
+                    textAlign="center"
+                    whiteSpace="pre-line"
+                    textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                  >
+                    {'The cave has tested you, and you have not broken.\n\nFew earn this mark. Fewer still survive what comes next.'}
+                  </Text>
+                </SafeTypist>
+              </Box>
+            </VStack>
+          )}
+
+          {phase === 'narrative' && targetLevel === 5 && (
+            /* ── Level 5: Outer Realms Unlock ── */
+            <VStack
+              spacing={6}
+              py={{ base: 12, md: 16 }}
+              px={{ base: 6, md: 10 }}
+              align="center"
+            >
+              {/* Gate dissolving visual */}
+              <Box position="relative" w="200px" h="60px">
+                <Box
+                  position="absolute"
+                  inset={0}
+                  border="2px solid rgba(212, 165, 74, 0.4)"
+                  borderRadius="sm"
+                  bg="linear-gradient(180deg, rgba(212, 165, 74, 0.08) 0%, rgba(212, 165, 74, 0.02) 100%)"
+                  animation={`${gateDissolve} 2s 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards`}
+                />
+                <Box
+                  position="absolute"
+                  inset={0}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  opacity={0}
+                  animation={`${fadeUp} 0.8s 2s cubic-bezier(0.16, 1, 0.3, 1) both`}
+                >
+                  <Text
+                    fontFamily="'Cinzel', serif"
+                    fontSize="xs"
+                    letterSpacing="0.2em"
+                    textTransform="uppercase"
+                    color="rgba(212, 165, 74, 0.5)"
+                  >
+                    The way is open
+                  </Text>
+                </Box>
+              </Box>
+
+              {/* Title */}
+              <Text
+                fontFamily="'Cinzel', serif"
+                fontSize={{ base: 'xl', md: '2xl' }}
+                fontWeight={700}
+                color="#D4A54A"
+                letterSpacing="0.1em"
+                textShadow="0 0 20px rgba(212, 165, 74, 0.3)"
+                animation={`${fadeUp} 0.6s 2.2s cubic-bezier(0.16, 1, 0.3, 1) both`}
+              >
+                The Outer Realms
+              </Text>
+
+              <Box mx="auto" w="60px" h="1px" bg="rgba(212, 165, 74, 0.3)" />
+
+              {/* Narrative */}
+              <Box
+                maxW="420px"
+                bg="rgba(28, 24, 20, 0.85)"
+                borderRadius="md"
+                border="1px solid rgba(196, 184, 158, 0.06)"
+                px={{ base: 5, md: 7 }}
+                py={6}
+                animation={`${fadeUp} 0.6s 2.5s cubic-bezier(0.16, 1, 0.3, 1) both`}
+              >
+                <SafeTypist
+                  avgTypingDelay={50}
+                  cursor={{ show: false }}
+                  stdTypingDelay={25}
+                  startDelay={3000}
+                >
+                  <Text
+                    fontSize={{ base: 'sm', md: 'md' }}
+                    lineHeight="1.85"
+                    color="#D4C8B0"
+                    fontStyle="italic"
+                    textAlign="center"
+                    whiteSpace="pre-line"
+                    textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                  >
+                    {'The ancient ward crumbles at your approach. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe full map is yours now. Tread carefully.'}
+                  </Text>
+                </SafeTypist>
+              </Box>
+            </VStack>
+          )}
+
+          {phase === 'narrative' && targetLevel !== 3 && targetLevel !== 5 && (
+            /* ── Generic narrative for other levels ── */
             <VStack
               spacing={6}
               py={{ base: 12, md: 16 }}
