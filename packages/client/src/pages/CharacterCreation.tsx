@@ -158,6 +158,14 @@ const POWER_SOURCE_INFO: Record<PowerSource, {
 };
 
 
+// Title suffixes for the identity button
+const POWER_SOURCE_TITLE: Record<PowerSource, string> = {
+  [PowerSource.Divine]: 'the Divine',
+  [PowerSource.Weave]: 'the Weave',
+  [PowerSource.Physical]: 'Iron Will',
+  [PowerSource.None]: '',
+};
+
 // Wrapper component that checks if store data is ready
 export const CharacterCreation = (): JSX.Element => {
   const { isSynced } = useMUD();
@@ -865,10 +873,12 @@ const CharacterCreationInner = (): JSX.Element => {
                   size="lg"
                   isDisabled={!name || selectedRace === Race.None || selectedPowerSource === PowerSource.None || awaitingFunding}
                   isLoading={isCreating || identityStep > 0}
-                  loadingText="Entering the cave..."
+                  loadingText="Awakening..."
                   onClick={onSubmitIdentity}
                 >
-                  I Am {name || '...'}
+                  {name && selectedRace !== Race.None && selectedPowerSource !== PowerSource.None
+                    ? `I Am ${name}, ${RACE_INFO[selectedRace].name} of ${POWER_SOURCE_TITLE[selectedPowerSource]}`
+                    : `I Am ${name || '...'}`}
                 </Button>
                 {/* Progress dots */}
                 {identityStep > 0 && (
