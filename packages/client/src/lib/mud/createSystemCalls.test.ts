@@ -126,6 +126,43 @@ function mockOwnership(owner: string = TEST_WALLET) {
   });
 }
 
+const TEST_MONSTER = '0x000000000000000000000000000000000000000000000000000000000000dead';
+
+/**
+ * Set up getTableValue so ownership passes AND monster state is controllable.
+ * monsterState: 'alive' | 'dead' | 'despawned' controls EncounterEntity/Spawned
+ */
+function mockOwnershipWithMonster(
+  monsterState: 'alive' | 'dead' | 'despawned',
+  owner: string = TEST_WALLET,
+) {
+  mockedGetTableValue.mockImplementation((table: string, entity: string) => {
+    if (table === 'Characters' && entity === TEST_ENTITY) {
+      return { owner } as ReturnType<typeof getTableValue>;
+    }
+    if (table === 'SessionTimer') {
+      return { lastAction: 0 } as ReturnType<typeof getTableValue>;
+    }
+    if (table === 'WorldEncounter') {
+      return { end: '0' } as ReturnType<typeof getTableValue>;
+    }
+    if (table === 'CombatEncounter') {
+      return { end: '0' } as ReturnType<typeof getTableValue>;
+    }
+    if (table === 'Position') {
+      return { x: 1, y: 1 } as ReturnType<typeof getTableValue>;
+    }
+    if (table === 'EncounterEntity' && entity === TEST_MONSTER) {
+      return monsterState === 'dead' ? { died: true } : undefined;
+    }
+    if (table === 'EncounterEntity') return undefined;
+    if (table === 'Spawned' && entity === TEST_MONSTER) {
+      return monsterState === 'despawned' ? { spawned: false } : { spawned: true };
+    }
+    return undefined;
+  });
+}
+
 // ── Suite A: Receipt Awaiting (Regression Guard) ────────────────────
 //
 // The core test: when waitForTransaction returns { status: 'reverted' },
@@ -759,5 +796,172 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
     expect(result.success).toBe(false);
     // With MAX_ON_CHAIN_RETRIES=1: first attempt reverts, sim passes, retries once, second attempt also reverts
     expect(waitFn).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ── Suite F: Ghost Monster Pre-flight (Layer 3) ─────────────────────
+
+describe('createSystemCalls — ghost monster pre-flight validation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('autoFight returns early + evicts when monster died=true', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnershipWithMonster('dead');
+    const calls = createSystemCalls(network);
+
+    const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(result.error).toContain('already dead');
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', TEST_MONSTER, expect.objectContaining({ died: true }));
+    expect(waitForTransaction).not.toHaveBeenCalled();
+  });
+
+  it('autoFight returns early + evicts when monster spawned=false', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnershipWithMonster('despawned');
+    const calls = createSystemCalls(network);
+
+    const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(waitForTransaction).not.toHaveBeenCalled();
+  });
+
+  it('autoFight proceeds normally when monster is alive', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnershipWithMonster('alive');
+    const calls = createSystemCalls(network);
+
+    const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
+    expect(result.success).toBe(true);
+    expect(waitForTransaction).toHaveBeenCalled();
+  });
+
+  it('createEncounter returns early + evicts ghost PvE target', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnershipWithMonster('dead');
+    const calls = createSystemCalls(network);
+
+    const result = await calls.createEncounter(
+      EncounterType.PvE,
+      [TEST_ENTITY],
+      [TEST_MONSTER],
+    );
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(result.error).toContain('already dead');
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+    expect(waitForTransaction).not.toHaveBeenCalled();
+  });
+
+  it('createEncounter skips validation for PvP encounters', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    // Even with a dead "monster" ID, PvP should not trigger pre-flight
+    mockOwnershipWithMonster('dead');
+    const calls = createSystemCalls(network);
+
+    const result = await calls.createEncounter(
+      EncounterType.PvP,
+      [TEST_ENTITY],
+      [TEST_MONSTER],
+    );
+    // Should go through to the chain call (no pre-flight for PvP)
+    expect(waitForTransaction).toHaveBeenCalled();
+  });
+});
+
+// ── Suite G: Ghost Monster Error Recovery (Layer 4) ─────────────────
+
+describe('createSystemCalls — ghost monster error recovery', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('autoFight evicts monster on InvalidCombatEntity revert (write throw)', async () => {
+    const { network } = createMockNetwork();
+    mockOwnershipWithMonster('alive');
+
+    // Make the write throw with the InvalidCombatEntity selector
+    const ghostError = new Error('execution reverted: 0x1af235ec');
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(ghostError),
+    });
+    const calls = createSystemCalls(network);
+
+    const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+  });
+
+  it('autoFight evicts monster on InvalidPvE revert during diagnostic simulation', async () => {
+    const { network } = createMockNetwork({ receiptStatus: 'reverted' });
+    mockOwnershipWithMonster('alive');
+
+    // Diagnostic simulation throws InvalidPvE selector
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(new Error('0xadee4371')),
+    });
+    const calls = createSystemCalls(network);
+
+    const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(result.error).toContain('already dead');
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+  });
+
+  it('createEncounter evicts group2 on InvalidCombatEntity revert (PvE)', async () => {
+    const { network } = createMockNetwork();
+    mockOwnershipWithMonster('alive');
+
+    const ghostError = new Error('execution reverted: 0x1af235ec');
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(ghostError),
+    });
+    const calls = createSystemCalls(network);
+
+    const result = await calls.createEncounter(
+      EncounterType.PvE,
+      [TEST_ENTITY],
+      [TEST_MONSTER],
+    );
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+  });
+});
+
+// ── Suite H: Error Messaging Fix (Layer 2) ──────────────────────────
+
+describe('createSystemCalls — error messaging selector extraction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('getContractError extracts selector and maps to friendly message for EstimateGasExecutionError', async () => {
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    // Simulate an EstimateGasExecutionError — the message says "execution
+    // reverted for an unknown reason" but the full error string contains
+    // the selector in a data field.
+    const estimateError = new Error(
+      'EstimateGasExecutionError: execution reverted for an unknown reason. data: "0xadee4371"',
+    );
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(estimateError),
+    });
+    const calls = createSystemCalls(network);
+
+    // Use a function that goes through getContractError — rest is simplest
+    const result = await calls.rest(TEST_ENTITY);
+    expect(result.success).toBe(false);
+    // Should get the friendly message, not the raw error
+    expect(result.error).toBe('Invalid combat — monster may have moved or died. Try again.');
   });
 });

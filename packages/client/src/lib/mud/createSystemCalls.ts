@@ -144,12 +144,12 @@ const getContractError = (error: unknown): string => {
 
   if (category === 'FUNDS') return INSUFFICIENT_FUNDS_MESSAGE;
 
-  // Match error selectors in various viem error formats:
-  // - ContractFunctionRevertedError: signature "0x9e4b2685"
-  // - EstimateGasExecutionError:     data: "0x9e4b2685"
-  const sigMatch = message.match(/(?:signature|data)[:\s]+"?(0x[0-9a-f]{8})/i);
-  if (sigMatch) {
-    const friendly = KNOWN_ERROR_SIGNATURES[sigMatch[1].toLowerCase()];
+  // Extract the 4-byte selector directly from the raw error — works for ALL
+  // viem error types (ContractFunctionRevertedError, EstimateGasExecutionError,
+  // etc.) regardless of where the selector appears in the error chain.
+  const selector = extractRevertSelector(error);
+  if (selector) {
+    const friendly = KNOWN_ERROR_SIGNATURES[selector];
     if (friendly) return friendly;
   }
 
@@ -168,6 +168,36 @@ export function createSystemCalls(
     delegatorAddress,
   }: SetupNetworkResult & { delegatorAddress?: Address },
 ) {
+  // Check whether a monster is alive in the local store.
+  const isMonsterAlive = (monsterId: string): boolean => {
+    const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean } | undefined;
+    const sp = getTableValue('Spawned', monsterId) as { spawned?: boolean } | undefined;
+    return !ee?.died && sp?.spawned !== false;
+  };
+
+  // Mark a ghost monster as dead/despawned in the local store so it
+  // disappears from the UI immediately (MapContext filters on these).
+  const evictGhostMonster = (monsterId: string) => {
+    const store = useGameStore.getState();
+    store.setRow('Spawned', monsterId, { spawned: false });
+    store.setRow('EncounterEntity', monsterId, {
+      ...(getTableValue('EncounterEntity', monsterId) ?? {}),
+      died: true,
+    });
+    console.warn(`[ghost] Evicted ghost monster ${monsterId.slice(0, 10)}`);
+  };
+
+  // Selectors for ghost monster revert errors (InvalidCombatEntity / InvalidPvE).
+  const INVALID_COMBAT_ENTITY_SELECTOR = '1af235ec';
+  const INVALID_PVE_SELECTOR = 'adee4371';
+
+  const isGhostMonsterError = (e: unknown): boolean => {
+    const msg = String(e).toLowerCase();
+    return msg.includes(INVALID_COMBAT_ENTITY_SELECTOR) ||
+      msg.includes(INVALID_PVE_SELECTOR) ||
+      msg.includes('invalidcombatentity');
+  };
+
   // Validates character ownership by reading from the Zustand game store.
   const validateCharacterOwnership = (
     characterEntity: string,
@@ -246,6 +276,19 @@ export function createSystemCalls(
     group1: string[],
     group2: string[],
   ): SystemCallReturn => {
+    // Pre-flight: for PvE, verify all opponents are still alive in the store.
+    if (encounterType === EncounterType.PvE) {
+      const deadTargets = group2.filter(id => !isMonsterAlive(id));
+      if (deadTargets.length > 0) {
+        deadTargets.forEach(evictGhostMonster);
+        return {
+          success: false,
+          error: 'That monster is already dead — refreshing the map.',
+          severity: 'warning',
+        };
+      }
+    }
+
     try {
       const tx = await worldContract.write.UD__createEncounter([
         encounterType,
@@ -259,6 +302,10 @@ export function createSystemCalls(
         success: receipt.status !== 'reverted',
       };
     } catch (e) {
+      if (encounterType === EncounterType.PvE && isGhostMonsterError(e)) {
+        group2.forEach(evictGhostMonster);
+        return { success: false, error: 'That monster is already dead — refreshing the map.', severity: 'warning' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -940,6 +987,16 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'autoFight');
     if (ownershipError) return ownershipError;
 
+    // Pre-flight: verify monster is still alive in the store.
+    if (!isMonsterAlive(monsterId)) {
+      evictGhostMonster(monsterId);
+      return {
+        success: false,
+        error: 'That monster is already dead — refreshing the map.',
+        severity: 'warning',
+      };
+    }
+
     try {
       console.info(`[autoFight] Sending TX — char=${characterEntity.slice(0, 10)} monster=${monsterId.slice(0, 10)} weapon=${weaponId} gas=${AUTO_FIGHT_GAS_LIMIT}`);
       const tx = await worldContract.write.UD__autoFight(
@@ -964,6 +1021,10 @@ export function createSystemCalls(
             useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
             return { success: false, error: 'Session expired — respawn to continue.' };
           }
+          if (isGhostMonsterError(diagError)) {
+            evictGhostMonster(monsterId);
+            return { success: false, error: 'That monster is already dead — refreshing the map.', severity: 'warning' };
+          }
           return { success: false, error: getContractError(diagError) };
         }
         return { success: false, error: 'Auto fight failed — try again.' };
@@ -972,6 +1033,10 @@ export function createSystemCalls(
       return { success: true };
     } catch (e) {
       console.error('[autoFight] WRITE THREW (pre-send or submission error):', e);
+      if (isGhostMonsterError(e)) {
+        evictGhostMonster(monsterId);
+        return { success: false, error: 'That monster is already dead — refreshing the map.', severity: 'warning' };
+      }
       return {
         error: getContractError(e),
         success: false,

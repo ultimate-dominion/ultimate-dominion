@@ -322,6 +322,14 @@ export const TileDetailsPanel = (): JSX.Element => {
       if (!character) return;
       if (!delegatorAddress) return;
 
+      // Click-time validation: re-read store to catch ghosts that slipped
+      // through the reactive filter (race condition between render and click).
+      if (encounterType === EncounterType.PvE) {
+        const ee = getTableValue('EncounterEntity', opponent.id) as { died?: boolean } | undefined;
+        const sp = getTableValue('Spawned', opponent.id) as { spawned?: boolean } | undefined;
+        if (ee?.died || sp?.spawned === false) return;
+      }
+
       // Auto adventure + PvE: single-tx fight, no battle screen
       if (autoAdventureMode && encounterType === EncounterType.PvE) {
         // Auto-select weapon based on combat triangle (STR > AGI > INT > STR)
