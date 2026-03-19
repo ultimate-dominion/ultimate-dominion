@@ -278,9 +278,9 @@ export const MovementProvider = ({
         <VStack p={4} spacing={4}>
           <IoIosWarning color="orange" size={40} />
           <Text>
-            You cannot enter the{' '}
+            You cannot enter{' '}
             <Text as="span" fontWeight={700}>
-              Outer Realms
+              the Winding Dark
             </Text>{' '}
             without at least 1 weapon or spell equipped. Go to your{' '}
             <Text

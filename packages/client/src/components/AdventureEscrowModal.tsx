@@ -232,7 +232,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           <Text mt={4} size={{ base: 'xs', sm: 'sm' }}>
             Your Adventure Escrow is where Gold goes when you win battles.
             Leaving Gold in your escrow will help you level up faster, but in
-            the Outer Realms, you run the risk of losing it all against other
+            the Winding Dark, you run the risk of losing it all against other
             players.
           </Text>
           <HStack mt={8}>

@@ -398,7 +398,7 @@ export const LevelUpModal = ({
           )}
 
           {phase === 'narrative' && targetLevel === 5 && (
-            /* ── Level 5: Outer Realms Unlock ── */
+            /* ── Level 5: The Winding Dark Unlock ── */
             <VStack
               spacing={6}
               py={{ base: 12, md: 16 }}
@@ -446,7 +446,7 @@ export const LevelUpModal = ({
                 textShadow="0 0 20px rgba(212, 165, 74, 0.3)"
                 animation={`${fadeUp} 0.6s 2.2s cubic-bezier(0.16, 1, 0.3, 1) both`}
               >
-                The Outer Realms
+                The Winding Dark
               </Text>
 
               <Box mx="auto" w="60px" h="1px" bg="rgba(212, 165, 74, 0.3)" />

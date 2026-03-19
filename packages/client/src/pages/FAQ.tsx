@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: 'Is there PvP in Ultimate Dominion?',
-    a: 'Yes. The world is divided into safe zones and danger zones. In danger zones, any player on the same tile can attack you. PvP uses a gold escrow system — you deposit gold before entering the danger zone, and the winner claims a portion of the loser\'s escrowed gold. Your main balance is always safe.',
+    a: 'Yes. The Dark Cave is divided into the Alcove (safe) and the Winding Dark (dangerous). In the Winding Dark, any player on the same tile can attack you. PvP uses a gold escrow system — you deposit gold before entering, and the winner claims a portion of the loser\'s escrowed gold. Your main balance is always safe.',
   },
   {
     q: 'What blockchain is Ultimate Dominion on?',

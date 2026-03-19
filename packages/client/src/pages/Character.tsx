@@ -258,7 +258,7 @@ export const CharacterPage = (): JSX.Element => {
                   <Tooltip
                     bg="#14120F"
                     hasArrow
-                    label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+                    label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Winding Dark, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
                     placement="top"
                     shouldWrapChildren
                   >

@@ -401,12 +401,12 @@ export const GameBoard = (): JSX.Element => {
       >
         <Text>
           Your character is ready. Spawn onto the map to begin exploring the
-          Dark Cave. Move carefully — monsters lurk beyond the safety zone, and
+          Dark Cave. Move carefully — monsters lurk beyond the Alcove, and
           death has consequences.
         </Text>
       </InfoModal>
       <InfoModal
-        heading="Careful! You're about to enter the Outer Realms!"
+        heading="Careful! You're about to enter the Winding Dark!"
         isOpen={isOuterRealmsInfoModalOpen}
         onClose={onAcknowledgeOuterRealmsWarning}
       >
@@ -415,7 +415,7 @@ export const GameBoard = (): JSX.Element => {
           <Text mt={4}>
             The{' '}
             <Text as="span" fontWeight={700}>
-              Outer Realms
+              Winding Dark
             </Text>{' '}
             is a dangerous place for a level 1 character. Any other player could
             attack you at any time.

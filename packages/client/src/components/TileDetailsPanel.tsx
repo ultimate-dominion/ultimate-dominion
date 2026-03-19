@@ -1124,7 +1124,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     <Tooltip
                       bg="#14120F"
                       hasArrow
-                      label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
+                      label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Winding Dark, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
                       placement="top"
                       shouldWrapChildren
                     >
@@ -1327,7 +1327,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             <>
               <HStack h={ROW_HEIGHT} justifyContent="end" px={4}>
                 <Text size={{ base: '3xs', sm: '2xs', md: 'xs' }} textAlign="right">
-                  {inSafetyZone ? 'Safety Zone' : 'Outer Realms'}
+                  {inSafetyZone ? 'The Alcove' : 'The Winding Dark'}
                 </Text>
               </HStack>
               <Box
@@ -1418,23 +1418,23 @@ export const TileDetailsPanel = (): JSX.Element => {
       </InfoModal>
 
       <InfoModal
-        heading="Cannot Battle in the Safety Zone"
+        heading="Cannot Battle in the Alcove"
         isOpen={isSafetyZoneInfoModalOpen}
         onClose={onCloseSafetyZoneInfoModal}
       >
         <VStack p={4} spacing={4}>
           <IoIosWarning color="orange" size={40} />
           <Text mt={4}>
-            You are currently in the{' '}
+            You are currently in{' '}
             <Text as="span" fontWeight={700}>
-              Safety Zone
+              the Alcove
             </Text>
             .
           </Text>
           <Text textAlign="center">
-            In order to battle other players, you must enter the{' '}
+            In order to battle other players, you must enter{' '}
             <Text as="span" fontWeight={700}>
-              Outer Realms
+              the Winding Dark
             </Text>
             .
           </Text>

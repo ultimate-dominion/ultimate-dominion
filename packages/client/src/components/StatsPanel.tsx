@@ -328,7 +328,7 @@ export const StatsPanel = (): JSX.Element => {
                     <Text color="#6A6050" size="sm">Escrow</Text>
                     <Tooltip
                       hasArrow
-                      label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Outer Realms, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
+                      label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Winding Dark, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
                       placement="top"
                       shouldWrapChildren
                     >
