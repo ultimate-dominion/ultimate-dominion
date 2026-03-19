@@ -226,15 +226,22 @@ export const MapPanel = (): JSX.Element => {
                 </Button>
               </>
             )}
-            <Button
-              isDisabled={!!currentBattle}
-              isLoading={isSpawning}
-              loadingText="Spawning..."
-              onClick={onSpawn}
-              size="sm"
+            <Tooltip
+              label="Spawn onto the map. Monsters lurk beyond the Alcove — tread carefully."
+              isOpen={stage === OnboardingStage.PRE_SPAWN}
+              placement="left"
+              hasArrow
             >
-              Spawn
-            </Button>
+              <Button
+                isDisabled={!!currentBattle}
+                isLoading={isSpawning}
+                loadingText="Spawning..."
+                onClick={onSpawn}
+                size="sm"
+              >
+                Spawn
+              </Button>
+            </Tooltip>
           </VStack>
         ) : null}
       </Box>
@@ -367,7 +374,7 @@ export const MapPanel = (): JSX.Element => {
         </PolygonalCard>
       </Box>
 
-      {isDesktop && stage >= OnboardingStage.ESTABLISHED && (
+      {isDesktop && stage >= OnboardingStage.VETERAN && (
         <Box order={3} w="100%" flex={1} minH="100px" mt={2}>
           <WorldFeed inline />
         </Box>

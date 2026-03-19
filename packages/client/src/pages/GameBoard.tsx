@@ -50,11 +50,6 @@ import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 
 export const GameBoard = (): JSX.Element => {
   const {
-    isOpen: isEquipInfoModalOpen,
-    onOpen: onOpenEquipInfoModal,
-    onClose: onCloseEquipInfoModal,
-  } = useDisclosure();
-  const {
     isOpen: isOuterRealmsInfoModalOpen,
     onOpen: onOpenOuterRealmsInfoModal,
     onClose: onCloseOuterRealmsInfoModal,
@@ -195,26 +190,6 @@ export const GameBoard = (): JSX.Element => {
     navigate,
     queueStatus,
   ]);
-
-  // Show welcome modal for brand-new characters
-  useEffect(() => {
-    if (!character) return;
-
-    const welcomeSeenKey = `welcome-seen-${worldContract.address}-${character.id}`;
-    if (localStorage.getItem(welcomeSeenKey)) return;
-
-    if (character.experience === BigInt(0)) {
-      onOpenEquipInfoModal();
-    }
-  }, [character, onOpenEquipInfoModal, worldContract]);
-
-  const onAcknowledgeEquipInfo = useCallback(() => {
-    if (!character) return;
-
-    const welcomeSeenKey = `welcome-seen-${worldContract.address}-${character.id}`;
-    localStorage.setItem(welcomeSeenKey, 'true');
-    onCloseEquipInfoModal();
-  }, [character, onCloseEquipInfoModal, worldContract]);
 
   // Open Outer Realms warning modal if character is level 1 and entered Outer Realms
   useEffect(() => {
@@ -405,17 +380,6 @@ export const GameBoard = (): JSX.Element => {
         </Drawer>
       </Box>
 
-      <InfoModal
-        heading="Welcome to Ultimate Dominion"
-        isOpen={isEquipInfoModalOpen}
-        onClose={onAcknowledgeEquipInfo}
-      >
-        <Text>
-          Your character is ready. Spawn onto the map to begin exploring the
-          Dark Cave. Move carefully — monsters lurk beyond the Alcove, and
-          death has consequences.
-        </Text>
-      </InfoModal>
       <InfoModal
         heading="Careful! You're about to enter the Winding Dark!"
         isOpen={isOuterRealmsInfoModalOpen}

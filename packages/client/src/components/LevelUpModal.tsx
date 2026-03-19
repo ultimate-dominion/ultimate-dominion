@@ -16,6 +16,7 @@ import SafeTypist from './SafeTypist';
 
 import { type Character } from '../utils/types';
 import { LevelingPanel } from './LevelingPanel';
+import { ShareButton } from './ShareButton';
 
 /* ──────────────────────── Animations ──────────────────────── */
 
@@ -382,25 +383,37 @@ export const LevelUpModal = ({
                 px={{ base: 5, md: 7 }}
                 py={6}
                 animation={`${fadeUp} 0.6s 1s cubic-bezier(0.16, 1, 0.3, 1) both`}
+                position="relative"
               >
-                <SafeTypist
-                  avgTypingDelay={50}
-                  cursor={{ show: false }}
-                  stdTypingDelay={25}
-                  startDelay={1200}
+                <Text
+                  fontSize={{ base: 'sm', md: 'md' }}
+                  lineHeight="1.85"
+                  visibility="hidden"
+                  aria-hidden="true"
+                  whiteSpace="pre-line"
                 >
-                  <Text
-                    fontSize={{ base: 'sm', md: 'md' }}
-                    lineHeight="1.85"
-                    color="#D4C8B0"
-                    fontStyle="italic"
-                    textAlign="center"
-                    whiteSpace="pre-line"
-                    textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                  {'The cave has tested you, and you have not broken.\n\nFew earn this mark. Fewer still survive what comes next.'}
+                </Text>
+                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                  <SafeTypist
+                    avgTypingDelay={50}
+                    cursor={{ show: false }}
+                    stdTypingDelay={25}
+                    startDelay={1200}
                   >
-                    {'The cave has tested you, and you have not broken.\n\nFew earn this mark. Fewer still survive what comes next.'}
-                  </Text>
-                </SafeTypist>
+                    <Text
+                      fontSize={{ base: 'sm', md: 'md' }}
+                      lineHeight="1.85"
+                      color="#D4C8B0"
+                      fontStyle="italic"
+                      textAlign="center"
+                      whiteSpace="pre-line"
+                      textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                    >
+                      {'The cave has tested you, and you have not broken.\n\nFew earn this mark. Fewer still survive what comes next.'}
+                    </Text>
+                  </SafeTypist>
+                </Box>
               </Box>
             </VStack>
           )}
@@ -468,25 +481,37 @@ export const LevelUpModal = ({
                 px={{ base: 5, md: 7 }}
                 py={6}
                 animation={`${fadeUp} 0.6s 2.5s cubic-bezier(0.16, 1, 0.3, 1) both`}
+                position="relative"
               >
-                <SafeTypist
-                  avgTypingDelay={50}
-                  cursor={{ show: false }}
-                  stdTypingDelay={25}
-                  startDelay={3000}
+                <Text
+                  fontSize={{ base: 'sm', md: 'md' }}
+                  lineHeight="1.85"
+                  visibility="hidden"
+                  aria-hidden="true"
+                  whiteSpace="pre-line"
                 >
-                  <Text
-                    fontSize={{ base: 'sm', md: 'md' }}
-                    lineHeight="1.85"
-                    color="#D4C8B0"
-                    fontStyle="italic"
-                    textAlign="center"
-                    whiteSpace="pre-line"
-                    textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                  {'The ancient ward crumbles at your approach. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe full map is yours now. Tread carefully.'}
+                </Text>
+                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                  <SafeTypist
+                    avgTypingDelay={50}
+                    cursor={{ show: false }}
+                    stdTypingDelay={25}
+                    startDelay={3000}
                   >
-                    {'The ancient ward crumbles at your approach. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe full map is yours now. Tread carefully.'}
-                  </Text>
-                </SafeTypist>
+                    <Text
+                      fontSize={{ base: 'sm', md: 'md' }}
+                      lineHeight="1.85"
+                      color="#D4C8B0"
+                      fontStyle="italic"
+                      textAlign="center"
+                      whiteSpace="pre-line"
+                      textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                    >
+                      {'The ancient ward crumbles at your approach. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe full map is yours now. Tread carefully.'}
+                    </Text>
+                  </SafeTypist>
+                </Box>
               </Box>
             </VStack>
           )}
@@ -508,24 +533,36 @@ export const LevelUpModal = ({
                 border="1px solid rgba(196, 184, 158, 0.06)"
                 px={{ base: 5, md: 7 }}
                 py={6}
+                position="relative"
               >
-                <SafeTypist
-                  avgTypingDelay={50}
-                  cursor={{ show: false }}
-                  stdTypingDelay={25}
+                <Text
+                  fontSize={{ base: 'sm', md: 'md' }}
+                  lineHeight="1.85"
+                  visibility="hidden"
+                  aria-hidden="true"
+                  whiteSpace="pre-line"
                 >
-                  <Text
-                    fontSize={{ base: 'sm', md: 'md' }}
-                    lineHeight="1.85"
-                    color="#D4C8B0"
-                    fontStyle="italic"
-                    textAlign="center"
-                    whiteSpace="pre-line"
-                    textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                  {narrative.text}
+                </Text>
+                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                  <SafeTypist
+                    avgTypingDelay={50}
+                    cursor={{ show: false }}
+                    stdTypingDelay={25}
                   >
-                    {narrative.text}
-                  </Text>
-                </SafeTypist>
+                    <Text
+                      fontSize={{ base: 'sm', md: 'md' }}
+                      lineHeight="1.85"
+                      color="#D4C8B0"
+                      fontStyle="italic"
+                      textAlign="center"
+                      whiteSpace="pre-line"
+                      textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                    >
+                      {narrative.text}
+                    </Text>
+                  </SafeTypist>
+                </Box>
               </Box>
             </VStack>
           )}
@@ -544,13 +581,25 @@ export const LevelUpModal = ({
             </Button>
           )}
           {phase === 'narrative' && (
-            <Button
-              onClick={onClose}
-              variant="gold"
-              size="md"
-            >
-              Continue
-            </Button>
+            <VStack spacing={3}>
+              <Button
+                onClick={onClose}
+                variant="gold"
+                size="md"
+              >
+                Continue
+              </Button>
+              <ShareButton
+                text={`Reached Level ${targetLevel} in Ultimate Dominion.`}
+                shareParams={{
+                  type: 'levelup',
+                  level: targetLevel.toString(),
+                  player: character.name,
+                }}
+                imageSrc={backgroundImage}
+                colorAccent="#D4A54A"
+              />
+            </VStack>
           )}
         </ModalFooter>
       </ModalContent>

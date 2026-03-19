@@ -1,38 +1,22 @@
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Avatar,
   Box,
   Button,
-  ButtonGroup,
   Center,
-  FormControl,
-  FormHelperText,
-  Heading,
   HStack,
+  Image,
   Input,
-  Link,
+  keyframes,
   Spinner,
-  Stack,
   Text,
-  Textarea,
-  Tooltip,
-  useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
 import { useAuth } from '../contexts/AuthContext';
 
-import { ItemCardSmall } from '../components/ItemCard';
 import { PolygonalCard } from '../components/PolygonalCard';
-import { MageSvg, RogueSvg, WarriorSvg } from '../components/SVGs';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -42,25 +26,30 @@ import { useUploadFile } from '../hooks/useUploadFile';
 import {
   decodeUint256FromKey,
   encodeBytes32Key,
-  encodeUint256Key,
-  toBigInt,
   toNumber,
   useGameConfig,
   useGameTable,
   useGameValue,
 } from '../lib/gameStore';
-import { DEFAULT_CHAIN_ID, EXPLORER_URLS } from '../lib/web3';
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import { debug } from '../utils/debug';
-import { shortenAddress } from '../utils/helpers';
+import { getItemImage } from '../utils/itemImages';
 import {
   type Armor,
-  ArmorType,
   PowerSource,
   Race,
   type Weapon,
 } from '../utils/types';
+
+const torchGlow = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(200,122,42,0.3), inset 0 0 8px rgba(200,122,42,0.1);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(200,122,42,0.5), inset 0 0 12px rgba(200,122,42,0.15);
+  }
+`;
 
 /**
  * Determines whether character creation should be blocked pending wallet funding.
@@ -96,41 +85,75 @@ const getDominantStat = (
   return 'STR';
 };
 
-// Race descriptions and stat bonuses
-const RACE_INFO = {
+const STAT_COLORS: Record<string, string> = {
+  STR: '#B85C3A',
+  AGI: '#5A8A3E',
+  INT: '#4A7AB5',
+};
+
+// Race descriptions, stat bonuses, and display info
+const RACE_INFO: Record<Race, {
+  name: string;
+  description: string;
+  icon: string;
+  bonuses: { hp: number; str: number; agi: number; int: number };
+}> = {
   [Race.Human]: {
     name: 'Human',
-    description: 'Balanced and versatile. +1 STR, +1 AGI, +1 INT',
+    description: 'Balanced and versatile',
     icon: '🧑',
+    bonuses: { hp: 0, str: 1, agi: 1, int: 1 },
   },
   [Race.Elf]: {
     name: 'Elf',
-    description: 'Graceful and wise. +2 AGI, +1 INT, -1 STR, -1 HP',
+    description: 'Graceful and wise',
     icon: '🧝',
+    bonuses: { hp: -1, str: -1, agi: 2, int: 1 },
   },
   [Race.Dwarf]: {
     name: 'Dwarf',
-    description: 'Sturdy and strong. +2 STR, +1 HP, -1 AGI',
+    description: 'Sturdy and strong',
     icon: '🧔',
+    bonuses: { hp: 1, str: 2, agi: -1, int: 0 },
+  },
+  [Race.None]: {
+    name: 'None',
+    description: '',
+    icon: '',
+    bonuses: { hp: 0, str: 0, agi: 0, int: 0 },
   },
 };
 
 // Power source descriptions
-const POWER_SOURCE_INFO = {
+const POWER_SOURCE_INFO: Record<PowerSource, {
+  name: string;
+  description: string;
+  icon: string;
+  playstyle: string;
+}> = {
   [PowerSource.Divine]: {
     name: 'Divine',
-    description: 'Something answers when you call. The gods are dead, but the channels they carved still carry power.',
+    description: 'Something answers when you call. Something old.',
     icon: '✨',
+    playstyle: 'Faith',
   },
   [PowerSource.Weave]: {
     name: 'Weave',
-    description: 'The fabric of reality has threads. Most people can\'t see them. You can. Pull the right one and fire blooms.',
+    description: 'The fabric of reality has threads. You can see them.',
     icon: '🔮',
+    playstyle: 'Magic',
   },
   [PowerSource.Physical]: {
     name: 'Physical',
-    description: 'No magic. No prayers. Just you \u2014 your body, your weapon, your will.',
+    description: 'No magic. No prayers. Just your body, your weapon, your will.',
     icon: '⚔️',
+    playstyle: 'Martial',
+  },
+  [PowerSource.None]: {
+    name: 'None',
+    description: '',
+    icon: '',
+    playstyle: '',
   },
 };
 
@@ -153,15 +176,15 @@ export const CharacterCreation = (): JSX.Element => {
   return <CharacterCreationInner />;
 };
 
+type CreationPhase = 'identity' | 'stats' | 'equipment' | 'celebration';
+
 const CharacterCreationInner = (): JSX.Element => {
   useEffect(() => {
     console.info('[CharacterCreation] Inner component mounted');
   }, []);
   const navigate = useNavigate();
-  const { renderError, renderSuccess, renderWarning } = useToast();
-  const isSmallScreen = useBreakpointValue({ base: true, lg: false });
+  const { renderError, renderWarning } = useToast();
   const { authMethod, isAuthenticated: isConnected, isConnecting } = useAuth();
-  const chainId = DEFAULT_CHAIN_ID;
   const {
     burnerBalance,
     burnerBalanceFetched,
@@ -181,20 +204,16 @@ const CharacterCreationInner = (): JSX.Element => {
     isLoading: isLoadingItemTemplates,
     weaponTemplates,
   } = useItems();
-  const { character, isRefreshing } = useCharacter();
+  const { character } = useCharacter();
   // Ref tracks live character state for rollback checks after tx completes
   const characterRef = useRef(character);
   characterRef.current = character;
   const {
     file: avatar,
-    isUploading,
-    onRemove,
     onUpload,
-    setFile: setAvatar,
   } = useUploadFile({ fileName: 'characterAvatar' });
 
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
   // Reactive query: re-renders when StarterItemPool records arrive via store sync
   const starterItemPoolTable = useGameTable('StarterItemPool');
 
@@ -208,24 +227,31 @@ const CharacterCreationInner = (): JSX.Element => {
   // Implicit class system state
   const [selectedRace, setSelectedRace] = useState<Race>(Race.None);
   const [selectedPowerSource, setSelectedPowerSource] = useState<PowerSource>(PowerSource.None);
-  const [creationStep, setCreationStep] = useState<'race' | 'powerSource' | 'stats' | 'starterItems'>('race');
   // Starter item selection state
   const [selectedStarterWeaponId, setSelectedStarterWeaponId] = useState<bigint | null>(null);
   const [selectedStarterArmorId, setSelectedStarterArmorId] = useState<bigint | null>(null);
 
   const [isCreating, setIsCreating] = useState(false);
-  const [showError, setShowError] = useState(false);
+
+  // Phase management
+  const [phase, setPhase] = useState<CreationPhase>('identity');
+  // Identity submission progress (3 dots: mint, race, powerSource)
+  const [identityStep, setIdentityStep] = useState(0);
+  // Track previous stats for comparison arrows on re-roll
+  const [prevStats, setPrevStats] = useState<{ hp: bigint; str: bigint; agi: bigint; int: bigint } | null>(null);
+  // Celebration screen
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const raceTx = useTransaction({
     actionName: 'choose race',
     maxAttempts: 3,
-    showSuccessToast: true,
+    showSuccessToast: false,
   });
 
   const powerSourceTx = useTransaction({
     actionName: 'choose power source',
     maxAttempts: 3,
-    showSuccessToast: true,
+    showSuccessToast: false,
   });
 
   const rollStatsTx = useTransaction({
@@ -238,17 +264,8 @@ const CharacterCreationInner = (): JSX.Element => {
   const enterGameTx = useTransaction({
     actionName: 'enter game',
     maxAttempts: 3,
-    showSuccessToast: true,
-    successMessage: 'Your character has awakened!',
+    showSuccessToast: false,
   });
-
-  const configData = useGameConfig('UltimateDominionConfig');
-  const characterToken = configData?.characterToken as string | undefined ?? null;
-
-  // Reset showError state when any of the form fields change
-  useEffect(() => {
-    setShowError(false);
-  }, [avatar, description, name]);
 
   // Derive starter items reactively from store query (re-computes when records arrive)
   const { availableStarterWeapons, availableStarterArmors } = useMemo(() => {
@@ -298,23 +315,6 @@ const CharacterCreationInner = (): JSX.Element => {
     weaponTemplates,
   ]);
 
-  const onUploadAvatar = useCallback(() => {
-    const input = document.getElementById('avatarInput');
-
-    if (input) {
-      input.click();
-    }
-  }, []);
-
-  const onRemoveAvatar = useCallback(() => {
-    const input = document.getElementById('avatarInput');
-
-    if (input) {
-      (input as HTMLInputElement).value = '';
-      onRemove();
-    }
-  }, [onRemove]);
-
   const onCreateCharacter = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -328,11 +328,13 @@ const CharacterCreationInner = (): JSX.Element => {
           return;
         }
 
-        if (!(description && name)) {
-          setShowError(true);
-          renderWarning('Missing required fields.');
+        if (!name) {
+          renderWarning('Name is required.');
           return;
         }
+
+        // Auto-generate description from name
+        const description = `A mysterious figure known as ${name.trim()}.`;
 
         let image = `https://effigy.im/a/${delegatorAddress}.svg`;
 
@@ -348,7 +350,7 @@ const CharacterCreationInner = (): JSX.Element => {
 
         const characterMetadata = {
           name: name.trim(),
-          description: description.trim(),
+          description,
           image,
         };
 
@@ -415,7 +417,8 @@ const CharacterCreationInner = (): JSX.Element => {
             throw new Error(error);
           }
 
-          renderSuccess('Character created!');
+          // No success toast — we continue silently to the next step
+          setIdentityStep(1);
         } catch (error) {
           debug.error('Error creating character', error);
           throw error;
@@ -429,12 +432,10 @@ const CharacterCreationInner = (): JSX.Element => {
     [
       avatar,
       delegatorAddress,
-      description,
       mintCharacter,
       name,
       onUpload,
       renderError,
-      renderSuccess,
       renderWarning,
     ],
   );
@@ -445,7 +446,6 @@ const CharacterCreationInner = (): JSX.Element => {
     if (!delegatorAddress || !character) return;
 
     setSelectedRace(race);
-    setCreationStep('powerSource');
 
     const result = await raceTx.execute(async () => {
       const r = await chooseRace(character.id, race);
@@ -460,7 +460,6 @@ const CharacterCreationInner = (): JSX.Element => {
       const current = characterRef.current;
       if (!current?.race || current.race === Race.None) {
         setSelectedRace(Race.None);
-        setCreationStep('race');
       }
     }
   }, [character, chooseRace, delegatorAddress, raceTx]);
@@ -469,7 +468,6 @@ const CharacterCreationInner = (): JSX.Element => {
     if (!delegatorAddress || !character) return;
 
     setSelectedPowerSource(powerSource);
-    setCreationStep('stats');
 
     const result = await powerSourceTx.execute(async () => {
       const r = await choosePowerSource(character.id, powerSource);
@@ -481,13 +479,22 @@ const CharacterCreationInner = (): JSX.Element => {
       const current = characterRef.current;
       if (!current?.powerSource || current.powerSource === PowerSource.None) {
         setSelectedPowerSource(PowerSource.None);
-        setCreationStep('powerSource');
       }
     }
   }, [character, choosePowerSource, delegatorAddress, powerSourceTx]);
 
   const onRollStats = useCallback(async () => {
     if (!delegatorAddress || !character) return;
+
+    // Save current stats for comparison
+    if (character.maxHp !== BigInt(0)) {
+      setPrevStats({
+        hp: character.maxHp,
+        str: character.strength,
+        agi: character.agility,
+        int: character.intelligence,
+      });
+    }
 
     await rollStatsTx.execute(async () => {
       const r = await rollBaseStats(character.id);
@@ -520,7 +527,8 @@ const CharacterCreationInner = (): JSX.Element => {
     });
 
     if (result?.success) {
-      navigate(GAME_BOARD_PATH);
+      setShowCelebration(true);
+      setTimeout(() => navigate(GAME_BOARD_PATH), 3000);
     }
   }, [
     character,
@@ -533,19 +541,30 @@ const CharacterCreationInner = (): JSX.Element => {
     selectedStarterArmorId,
   ]);
 
+  // Orchestrate identity submission: mint → race → powerSource
+  // Step 1→2: character appears in store after mint → fire race tx
+  useEffect(() => {
+    if (identityStep === 1 && character && selectedRace !== Race.None) {
+      setIdentityStep(2);
+      onChooseRace(selectedRace).then(() => {
+        setIdentityStep(3);
+      });
+    }
+  }, [identityStep, character]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Step 3→done: race confirmed → fire power source tx → move to stats phase
+  useEffect(() => {
+    if (identityStep === 3 && character && selectedPowerSource !== PowerSource.None) {
+      onChoosePowerSource(selectedPowerSource).then(() => {
+        setPhase('stats');
+        setIdentityStep(0);
+      });
+    }
+  }, [identityStep]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const baseDisabled = !character || !delegatorAddress || isCreating;
-  const isRaceDisabled = baseDisabled || raceTx.isLoading;
-  const isPowerSourceDisabled = baseDisabled || powerSourceTx.isLoading;
-  // Block stats roll until race + power source txs are confirmed on-chain,
-  // otherwise gas estimation fails against state that doesn't have them yet.
   const isStatsDisabled = baseDisabled || rollStatsTx.isLoading || raceTx.isLoading || powerSourceTx.isLoading;
   const isEnterGameDisabled = baseDisabled || enterGameTx.isLoading || rollStatsTx.isLoading;
-
-  // Check if race and power source have been chosen (armor is chosen via starter item selection)
-  const hasCompletedChoices = useMemo(() => {
-    if (!character) return false;
-    return selectedRace !== Race.None && selectedPowerSource !== PowerSource.None;
-  }, [character, selectedRace, selectedPowerSource]);
 
   // Calculate dominant stat for display
   const dominantStat = useMemo(() => {
@@ -556,6 +575,15 @@ const CharacterCreationInner = (): JSX.Element => {
       character.intelligence,
     );
   }, [character, rolledOnce]);
+
+  // Check if a weapon/armor "fits" the dominant stat
+  const isRecommended = useCallback((item: Weapon | Armor, dominant: string | null) => {
+    if (!dominant) return false;
+    if (dominant === 'STR' && item.strModifier > 0n) return true;
+    if (dominant === 'AGI' && item.agiModifier > 0n) return true;
+    if (dominant === 'INT' && item.intModifier > 0n) return true;
+    return false;
+  }, []);
 
   useEffect(() => {
     if (isConnecting) return;
@@ -571,9 +599,12 @@ const CharacterCreationInner = (): JSX.Element => {
         setSelectedRace(character.race);
         if (character.powerSource && character.powerSource !== PowerSource.None) {
           setSelectedPowerSource(character.powerSource);
-          setCreationStep('stats');
-        } else {
-          setCreationStep('powerSource');
+          // If we have stats, move to stats phase; if locked, go to celebration
+          if (character.maxHp !== BigInt(0)) {
+            if (phase === 'identity') setPhase('stats');
+          } else {
+            if (phase === 'identity') setPhase('stats');
+          }
         }
       }
     }
@@ -598,36 +629,12 @@ const CharacterCreationInner = (): JSX.Element => {
     isSynced,
     navigate,
     rolledOnce,
-  ]);
-
-  const levelsRow = useGameValue('Levels', encodeUint256Key(BigInt(1)));
-  const nextLevelXpRequirement = levelsRow ? toBigInt(levelsRow.experience) : BigInt(0);
-
-  const UploadedAvatar = useMemo(() => {
-    return (
-      <Center
-        border="4px solid"
-        borderColor="grey300"
-        borderRadius="50%"
-        boxShadow="2px 2px 6px rgba(0,0,0,0.5) inset, -1px -1px 3px rgba(60,50,40,0.15) inset"
-        p={1.5}
-      >
-        <Avatar
-          size={{ base: 'lg', sm: 'xl' }}
-          src={
-            avatar
-              ? URL.createObjectURL(avatar)
-              : `https://effigy.im/a/${delegatorAddress}.svg`
-          }
-        />
-      </Center>
-    );
-  }, [avatar, delegatorAddress]);
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { needsFunding, awaitingFunding } = getFundingGate(authMethod, burnerBalanceFetched, burnerBalance);
 
   // Only block on sync — items load in background and are needed at the
-  // starterItems step, not for race/powerSource/stats steps
+  // equipment phase, not for identity/stats phases
   if (!isSynced) {
     console.info('[CharacterCreation] Blocked on sync');
     return (
@@ -654,615 +661,428 @@ const CharacterCreationInner = (): JSX.Element => {
     );
   }
 
+  // Celebration screen — full takeover after entering game
+  if (showCelebration && character) {
+    return (
+      <VStack
+        position="fixed"
+        inset={0}
+        bg="#12100E"
+        zIndex={9999}
+        justify="center"
+        spacing={6}
+      >
+        <Box
+          position="absolute"
+          w="300px"
+          h="300px"
+          borderRadius="full"
+          bg="radial-gradient(circle, rgba(200,122,42,0.15) 0%, transparent 70%)"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          animation={`${torchGlow} 3s ease-in-out infinite`}
+        />
+        <Text
+          fontFamily="'Cinzel', serif"
+          fontSize={{ base: '28px', sm: '36px' }}
+          color="#D4A54A"
+          fontWeight={700}
+          textAlign="center"
+          position="relative"
+        >
+          {character.name}
+        </Text>
+        <HStack spacing={3} position="relative">
+          <Text fontSize="14px" color="#8A7E6A">{RACE_INFO[selectedRace]?.name}</Text>
+          <Text fontSize="14px" color="#3A3228">&middot;</Text>
+          <Text fontSize="14px" color="#8A7E6A">{POWER_SOURCE_INFO[selectedPowerSource]?.name}</Text>
+        </HStack>
+        <HStack spacing={4} position="relative">
+          <Text fontFamily="mono" fontSize="14px" color="#B85C3A">STR {character.strength.toString()}</Text>
+          <Text fontFamily="mono" fontSize="14px" color="#5A8A3E">AGI {character.agility.toString()}</Text>
+          <Text fontFamily="mono" fontSize="14px" color="#4A7AB5">INT {character.intelligence.toString()}</Text>
+        </HStack>
+        <Text
+          fontFamily="'Cinzel', serif"
+          fontSize="16px"
+          color="#8A7E6A"
+          fontStyle="italic"
+          letterSpacing="0.15em"
+          mt={4}
+          position="relative"
+        >
+          Your journey begins.
+        </Text>
+      </VStack>
+    );
+  }
+
+  // Handle the identity submit: batched mint + race + powerSource
+  const onSubmitIdentity = async (e: React.FormEvent) => {
+    if (selectedRace === Race.None || selectedPowerSource === PowerSource.None) {
+      renderWarning('Choose a race and power source.');
+      return;
+    }
+    // Step 1: mint character
+    await onCreateCharacter(e);
+    // Steps 2-3 are handled by useEffect watching identityStep + character
+  };
+
   return (
-    <Stack
-      direction={{ base: 'column', lg: 'row' }}
-      gap={{ base: 4, sm: 6 }}
-      justifyContent="center"
-      mx="auto"
-      w="100%"
-    >
+    <VStack minH="100vh" justify="center" py={{ base: 4, sm: 8 }} px={{ base: 2, sm: 4 }}>
       <Helmet>
         <title>Create Character | Ultimate Dominion</title>
       </Helmet>
-      {character ? (
-        <PolygonalCard
-          clipPath="none"
-          h="initial"
-          p={{ base: 4, sm: 6 }}
-          w={{ base: '100%', lg: '50%' }}
-        >
-          <VStack h="100%" justifyContent="center" spacing={{ base: 4, md: 8 }}>
-            <Center>
-              <Avatar size={{ base: 'lg', sm: 'xl' }} src={character.image} />
-            </Center>
-            {!!characterToken && (
-              <Accordion allowToggle w="100%">
-                <AccordionItem border="none">
-                  <AccordionButton justifyContent="center" px={0}>
-                    <Text fontSize="xs" color="grey400">Advanced Details</Text>
-                    <AccordionIcon ml={1} />
-                  </AccordionButton>
-                  <AccordionPanel pb={2}>
-                    <HStack spacing={4} justifyContent="center">
-                      <Text fontSize={{ base: 'xs', md: 'sm' }}>
-                        Address:{' '}
-                        {chainId && EXPLORER_URLS[chainId] ? (
-                          <Link
-                            color="blue"
-                            fontWeight={700}
-                            href={`${EXPLORER_URLS[chainId]}/token/${characterToken}`}
-                            isExternal
-                          >
-                            {shortenAddress(characterToken)}
-                          </Link>
-                        ) : (
-                          <Text as="span" fontWeight={700}>
-                            {shortenAddress(characterToken)}
-                          </Text>
-                        )}
-                      </Text>
-                      <Text>|</Text>
-                      <Text fontSize={{ base: 'xs', md: 'sm' }}>
-                        Character ID:{' '}
-                        {chainId && EXPLORER_URLS[chainId] ? (
-                          <Link
-                            color="blue"
-                            fontWeight={700}
-                            href={`${EXPLORER_URLS[chainId]}/token/${characterToken}/instance/${character.tokenId}`}
-                            isExternal
-                          >
-                            {character.tokenId.toString()}
-                          </Link>
-                        ) : (
-                          <Text as="span" fontWeight={700}>
-                            {character.tokenId.toString()}
-                          </Text>
-                        )}
-                      </Text>
-                    </HStack>
-                  </AccordionPanel>
-                </AccordionItem>
-              </Accordion>
-            )}
-            <VStack>
-              <Heading>{character.name}</Heading>
-              <Text textAlign="center">{character.description}</Text>
-            </VStack>
-            <VStack spacing={1}>
-              {selectedRace !== Race.None && (
-                <Text fontSize="sm">Race: {RACE_INFO[selectedRace]?.name ?? 'None'}</Text>
-              )}
-              {selectedPowerSource !== PowerSource.None && (
-                <Text fontSize="sm">Power: {POWER_SOURCE_INFO[selectedPowerSource]?.name ?? 'None'}</Text>
-              )}
-              {dominantStat && (
-                <Text fontSize="sm" fontWeight={700} color="blue.500">
-                  Dominant Stat: {dominantStat}
+
+      <PolygonalCard maxW="640px" mx="auto" w="100%" p={{ base: 4, sm: 8 }}>
+        <VStack spacing={8} w="100%">
+
+          {/* ── PHASE: IDENTITY ── */}
+          {phase === 'identity' && (
+            <>
+              {/* Name */}
+              <VStack spacing={3} w="100%">
+                <Text fontFamily="'Cinzel', serif" fontSize="22px" color="#D4A54A" fontWeight={700}>
+                  Who Are You?
                 </Text>
-              )}
-            </VStack>
-          </VStack>
-        </PolygonalCard>
-      ) : (
-        <PolygonalCard
-          as="form"
-          clipPath="none"
-          h="initial"
-          onSubmit={onCreateCharacter}
-          w={{ base: '100%', lg: '50%' }}
-        >
-          <Box
-            h={{ base: 'auto', lg: '100%' }}
-            position="relative"
-            px={{ base: 4, sm: 10 }}
-            py={{ base: 4, sm: 6 }}
-          >
-            <Heading mb={2} size="sm" textAlign="left">
-              Who are you in this dark realm?
-            </Heading>
-            <Text fontSize="xs" mb={6}>
-              Your name, avatar, and description should fit a character you
-              might find in a fantasy world. Something like &quot;Sir
-              Lancelot&quot; or &quot;A young wizard from the east.&quot;
-            </Text>
-            <VStack spacing={8}>
-              <Stack
-                alignItems="start"
-                direction={{ base: 'column-reverse', sm: 'row' }}
-                gap={{ base: 4, sm: 8 }}
-                w="100%"
-              >
-                {UploadedAvatar}
-                <VStack w="100%">
-                  <FormControl isInvalid={showError && !name}>
-                    <Input
-                      isDisabled={isCreating}
-                      maxLength={15}
-                      onChange={e => setName(e.target.value.replace(/[^a-zA-Z0-9 _-]/g, ''))}
-                      placeholder="Name"
-                      type="text"
-                      value={name}
-                    />
-                    {showError && !name && (
-                      <FormHelperText color="red" role="alert">
-                        Name is required
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                  <FormControl>
-                    <Input
-                      accept=".png, .jpg, .jpeg, .webp, .svg, .gif"
-                      id="avatarInput"
-                      isDisabled={isCreating}
-                      onChange={e =>
-                        e.target.files?.[0] && setAvatar(e.target.files?.[0])
-                      }
-                      style={{ display: 'none' }}
-                      type="file"
-                    />
-                    <Button
-                      alignSelf="start"
-                      isDisabled={isCreating}
-                      isLoading={isUploading}
-                      loadingText="Uploading..."
-                      onClick={avatar ? onRemoveAvatar : onUploadAvatar}
-                      size="sm"
-                      type="button"
-                    >
-                      {avatar ? 'Remove Avatar' : 'Upload Avatar Image'}
-                    </Button>
-                  </FormControl>
-                </VStack>
-              </Stack>
-              <FormControl isInvalid={showError && !description}>
-                <Textarea
-                  height="150px"
-                  isDisabled={isCreating}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder="Bio"
-                  value={description}
+                <Input
+                  placeholder="Your name"
+                  maxLength={15}
+                  bg="#14120F"
+                  border="2px solid #3A3228"
+                  borderRadius="8px"
+                  color="#E8DCC8"
+                  fontSize="18px"
+                  textAlign="center"
+                  value={name}
+                  onChange={e => setName(e.target.value.replace(/[^a-zA-Z0-9 _-]/g, ''))}
+                  isDisabled={isCreating || identityStep > 0}
+                  _focus={{ borderColor: '#C87A2A' }}
+                  _placeholder={{ color: '#8A7E6A' }}
                 />
-                {showError && !description && (
-                  <FormHelperText color="red" role="alert">Bio is required</FormHelperText>
-                )}
-              </FormControl>
-            </VStack>
-            {!isSmallScreen && (
-              <Box bottom={6} left={0} position="absolute" px={10} right={0}>
-                <Button
-                  isDisabled={awaitingFunding}
-                  isLoading={isCreating}
-                  loadingText="Creating..."
-                  type="submit"
-                  width="100%"
-                >
-                  Create Character
-                </Button>
-              </Box>
-            )}
-          </Box>
-          {isSmallScreen && (
-            <Box px={4}>
-              <Button
-                isDisabled={awaitingFunding}
-                isLoading={isCreating || isRefreshing}
-                loadingText="Creating..."
-                mb={4}
-                mt={2}
-                type="submit"
-                width="100%"
-              >
-                Create Character
-              </Button>
-            </Box>
-          )}
-        </PolygonalCard>
-      )}
-      <PolygonalCard
-        as="form"
-        clipPath="none"
-        h="initial"
-        onSubmit={(e: React.FormEvent<HTMLDivElement>) => e.preventDefault()}
-        w={{ base: '100%', lg: '50%' }}
-      >
-        <Box position="relative" py={{ base: 4, sm: 6 }}>
-          <HStack px={{ base: 4, sm: 10 }} mb={4} justifyContent="center" spacing={0} w="100%">
-            {['Race', 'Power', 'Stats', 'Equip'].map((label, index) => {
-              const steps = ['race', 'powerSource', 'stats', 'starterItems'];
-              const currentIndex = steps.indexOf(creationStep);
-              const isCompleted = index < currentIndex;
-              const isCurrent = index === currentIndex;
-              return (
-                <HStack key={label} spacing={0} flex={1}>
-                  <VStack spacing={0} flex={0}>
-                    <Box
-                      w={6}
-                      h={6}
-                      borderRadius="50%"
-                      bg={isCompleted ? 'green' : isCurrent ? 'blue400' : 'grey200'}
-                      color="white"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      fontSize="xs"
-                      fontWeight={700}
-                    >
-                      {isCompleted ? '\u2713' : index + 1}
-                    </Box>
-                    <Text
-                      fontSize="xs"
-                      fontWeight={isCurrent ? 700 : 400}
-                      color={isCompleted ? 'green' : isCurrent ? 'blue400' : '#9A9080'}
-                      mt={0.5}
-                    >
-                      {label}
-                    </Text>
-                  </VStack>
-                  {index < 3 && (
-                    <Box
-                      flex={1}
-                      h="2px"
-                      bg={isCompleted ? 'green' : 'grey200'}
-                      mb={4}
-                    />
-                  )}
-                </HStack>
-              );
-            })}
-          </HStack>
-          {/* Step 1: Race Selection */}
-          {creationStep === 'race' && (
-            <VStack alignItems="left" spacing={4}>
-              <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
-                Step 1: Choose Your Race
-              </Heading>
-              <Text px={{ base: 4, sm: 10 }} fontSize="md" color="#C4B89E">
-                Your race determines your innate abilities and stat bonuses.
-              </Text>
-              <ButtonGroup
-                px={{ base: 4, sm: 10 }}
-                flexDirection="column"
-                spacing={2}
-                w="100%"
-              >
-                {[Race.Human, Race.Elf, Race.Dwarf].map((race) => (
-                  <Tooltip
-                    key={race}
-                    bg="#14120F"
-                    label={RACE_INFO[race].description}
-                    placement="top"
-                  >
-                    <Button
-                      leftIcon={<Text fontSize="xl">{RACE_INFO[race].icon}</Text>}
-                      bgColor={selectedRace === race ? 'grey500' : undefined}
-                      color={selectedRace === race ? 'white' : undefined}
-                      isDisabled={isRaceDisabled}
-                      isLoading={raceTx.isLoading && selectedRace === race}
-                      onClick={() => onChooseRace(race)}
-                      size="sm"
-                      variant="white"
-                      w="100%"
-                      justifyContent="flex-start"
-                    >
-                      {RACE_INFO[race].name}
-                    </Button>
-                  </Tooltip>
-                ))}
-              </ButtonGroup>
-            </VStack>
-          )}
-
-          {/* Step 2: Power Source Selection */}
-          {creationStep === 'powerSource' && (
-            <VStack alignItems="left" spacing={4}>
-              <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
-                Step 2: Choose Your Power Source
-              </Heading>
-              <Text px={{ base: 4, sm: 10 }} fontSize="md" color="#C4B89E">
-                Your power source shapes how you channel your abilities.
-              </Text>
-              <ButtonGroup
-                px={{ base: 4, sm: 10 }}
-                flexDirection="column"
-                spacing={2}
-                w="100%"
-              >
-                {[PowerSource.Divine, PowerSource.Weave, PowerSource.Physical].map((ps) => (
-                  <Tooltip
-                    key={ps}
-                    bg="#14120F"
-                    label={POWER_SOURCE_INFO[ps].description}
-                    placement="top"
-                  >
-                    <Button
-                      leftIcon={<Text fontSize="xl">{POWER_SOURCE_INFO[ps].icon}</Text>}
-                      bgColor={selectedPowerSource === ps ? 'grey500' : undefined}
-                      color={selectedPowerSource === ps ? 'white' : undefined}
-                      isDisabled={isPowerSourceDisabled}
-                      isLoading={powerSourceTx.isLoading && selectedPowerSource === ps}
-                      onClick={() => onChoosePowerSource(ps)}
-                      size="sm"
-                      variant="white"
-                      w="100%"
-                      justifyContent="flex-start"
-                    >
-                      {POWER_SOURCE_INFO[ps].name}
-                    </Button>
-                  </Tooltip>
-                ))}
-              </ButtonGroup>
-            </VStack>
-          )}
-
-          {/* Step 3: Stats - shown after race and power source chosen */}
-          {creationStep === 'stats' && (
-            <VStack alignItems="left" spacing={4}>
-              <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
-                Step 3: Roll Your Stats
-              </Heading>
-              <VStack px={{ base: 4, sm: 10 }} spacing={1} alignItems="flex-start">
-                <Text fontSize="md" color="#C4B89E">
-                  Race: <Text as="span" fontWeight={700}>{RACE_INFO[selectedRace]?.name ?? 'None'}</Text>
-                </Text>
-                <Text fontSize="md" color="#C4B89E">
-                  Power: <Text as="span" fontWeight={700}>{POWER_SOURCE_INFO[selectedPowerSource]?.name ?? 'None'}</Text>
-                </Text>
               </VStack>
-              {dominantStat && (
-                <Box px={{ base: 4, sm: 10 }} py={2} bg="grey100" borderRadius="md">
-                  <Text fontSize="md" fontWeight={700} color="#C4B89E">
-                    At Level 10, you can choose any advanced class!
-                  </Text>
-                  <Text fontSize="sm" color="#9A9080">
-                    Current build: {dominantStat}-dominant
-                  </Text>
-                </Box>
-              )}
-              <Box px={{ base: 4, sm: 10 }} w="100%">
+
+              {/* Race */}
+              <VStack spacing={3} w="100%">
+                <Text fontFamily="'Cinzel', serif" fontSize="16px" color="#8A7E6A" letterSpacing="0.1em">
+                  Your Blood
+                </Text>
+                <HStack spacing={3} w="100%" justify="center">
+                  {[Race.Human, Race.Elf, Race.Dwarf].map((race) => {
+                    const info = RACE_INFO[race];
+                    const selected = selectedRace === race;
+                    return (
+                      <VStack
+                        as="button"
+                        key={race}
+                        type="button"
+                        bg={selected ? '#2E2820' : 'transparent'}
+                        border="2px solid"
+                        borderColor={selected ? '#C87A2A' : '#3A3228'}
+                        borderRadius="8px"
+                        cursor={isCreating ? 'not-allowed' : 'pointer'}
+                        p={4}
+                        spacing={1}
+                        flex={1}
+                        transition="all 0.3s"
+                        onClick={() => !isCreating && setSelectedRace(race)}
+                        opacity={isCreating ? 0.6 : 1}
+                        _hover={!isCreating ? { bg: '#2E2820', borderColor: 'rgba(200,122,42,0.5)' } : {}}
+                      >
+                        <Text fontSize="28px">{info.icon}</Text>
+                        <Text fontFamily="'Cinzel', serif" fontSize="14px" color="#E8DCC8" fontWeight={600}>
+                          {info.name}
+                        </Text>
+                        <Text fontSize="12px" color="#8A7E6A">{info.description}</Text>
+                      </VStack>
+                    );
+                  })}
+                </HStack>
+                {/* Live stat preview */}
+                {selectedRace !== Race.None && (
+                  <HStack spacing={4} justify="center">
+                    {(['str', 'agi', 'int'] as const).map(stat => {
+                      const val = RACE_INFO[selectedRace].bonuses[stat];
+                      const labels = { str: 'STR', agi: 'AGI', int: 'INT' };
+                      const colors = { str: '#B85C3A', agi: '#5A8A3E', int: '#4A7AB5' };
+                      return (
+                        <Text key={stat} fontFamily="mono" fontSize="12px" color={colors[stat]}>
+                          {labels[stat]} {val > 0 ? '+' : ''}{val}
+                        </Text>
+                      );
+                    })}
+                  </HStack>
+                )}
+              </VStack>
+
+              {/* Power Source */}
+              <VStack spacing={3} w="100%">
+                <Text fontFamily="'Cinzel', serif" fontSize="16px" color="#8A7E6A" letterSpacing="0.1em">
+                  Your Power
+                </Text>
+                <HStack spacing={3} w="100%" justify="center">
+                  {[PowerSource.Divine, PowerSource.Weave, PowerSource.Physical].map((ps) => {
+                    const info = POWER_SOURCE_INFO[ps];
+                    const selected = selectedPowerSource === ps;
+                    return (
+                      <VStack
+                        as="button"
+                        key={ps}
+                        type="button"
+                        bg={selected ? '#2E2820' : 'transparent'}
+                        border="2px solid"
+                        borderColor={selected ? '#C87A2A' : '#3A3228'}
+                        borderRadius="8px"
+                        cursor={isCreating ? 'not-allowed' : 'pointer'}
+                        p={4}
+                        spacing={1}
+                        flex={1}
+                        transition="all 0.3s"
+                        onClick={() => !isCreating && setSelectedPowerSource(ps)}
+                        opacity={isCreating ? 0.6 : 1}
+                        _hover={!isCreating ? { bg: '#2E2820', borderColor: 'rgba(200,122,42,0.5)' } : {}}
+                      >
+                        <Text fontSize="28px">{info.icon}</Text>
+                        <Text fontFamily="'Cinzel', serif" fontSize="14px" color="#E8DCC8" fontWeight={600}>
+                          {info.name}
+                        </Text>
+                        <Text fontSize="11px" color="#C87A2A" fontWeight={600} letterSpacing="0.1em" textTransform="uppercase">
+                          {info.playstyle}
+                        </Text>
+                        <Text fontSize="12px" color="#8A7E6A" fontStyle="italic">{info.description}</Text>
+                      </VStack>
+                    );
+                  })}
+                </HStack>
+              </VStack>
+
+              {/* Submit */}
+              <VStack spacing={2} w="100%">
                 <Button
-                  isDisabled={isStatsDisabled || !hasCompletedChoices || rollsExhausted}
+                  variant="amber"
+                  w="100%"
+                  size="lg"
+                  isDisabled={!name || selectedRace === Race.None || selectedPowerSource === PowerSource.None || awaitingFunding}
+                  isLoading={isCreating || identityStep > 0}
+                  loadingText="Entering the cave..."
+                  onClick={onSubmitIdentity}
+                >
+                  I Am {name || '...'}
+                </Button>
+                {/* Progress dots */}
+                {identityStep > 0 && (
+                  <HStack spacing={3} justify="center" mt={2}>
+                    <Box w="8px" h="8px" borderRadius="full" bg={identityStep >= 1 ? '#C87A2A' : '#3A3228'} transition="all 0.5s" />
+                    <Box w="8px" h="8px" borderRadius="full" bg={identityStep >= 2 ? '#C87A2A' : '#3A3228'} transition="all 0.5s" />
+                    <Box w="8px" h="8px" borderRadius="full" bg={identityStep >= 3 ? '#C87A2A' : '#3A3228'} transition="all 0.5s" />
+                  </HStack>
+                )}
+              </VStack>
+            </>
+          )}
+
+          {/* ── PHASE: STATS ── */}
+          {phase === 'stats' && character && (
+            <>
+              <VStack spacing={1}>
+                <Text fontFamily="'Cinzel', serif" fontSize="22px" color="#D4A54A" fontWeight={700}>
+                  The Cave Tests You
+                </Text>
+                <HStack spacing={2}>
+                  <Text fontSize="13px" color="#8A7E6A">Race: {RACE_INFO[selectedRace]?.name}</Text>
+                  <Text fontSize="13px" color="#3A3228">|</Text>
+                  <Text fontSize="13px" color="#8A7E6A">Power: {POWER_SOURCE_INFO[selectedPowerSource]?.name}</Text>
+                </HStack>
+              </VStack>
+
+              {/* Stats display */}
+              <HStack spacing={6} justify="center">
+                {[
+                  { label: 'HP', value: character.maxHp, color: '#D4A54A', prev: prevStats?.hp },
+                  { label: 'STR', value: character.strength, color: '#B85C3A', prev: prevStats?.str },
+                  { label: 'AGI', value: character.agility, color: '#5A8A3E', prev: prevStats?.agi },
+                  { label: 'INT', value: character.intelligence, color: '#4A7AB5', prev: prevStats?.int },
+                ].map(({ label, value, color, prev }) => (
+                  <VStack key={label} spacing={0}>
+                    <Text fontFamily="mono" fontSize="28px" color={color} fontWeight={700}>
+                      {rolledOnce ? value.toString() : '\u2014'}
+                    </Text>
+                    <Text fontSize="12px" color={color} fontWeight={600}>{label}</Text>
+                    {prev !== undefined && prev !== value && (
+                      <Text fontSize="11px" color={value > prev ? '#5A8A3E' : '#B83A2A'} fontFamily="mono">
+                        {value > prev ? '\u25B2' : '\u25BC'} {Math.abs(Number(value - prev))}
+                      </Text>
+                    )}
+                  </VStack>
+                ))}
+              </HStack>
+
+              {/* Build indicator */}
+              {dominantStat && (
+                <Text fontSize="13px" color="#8A7E6A" textAlign="center">
+                  Current build: <Text as="span" color={STAT_COLORS[dominantStat]} fontWeight={600}>{dominantStat}-dominant</Text>
+                </Text>
+              )}
+
+              {/* Roll button */}
+              <VStack spacing={2} w="100%">
+                <Button
+                  variant="amber"
+                  w="100%"
+                  size="lg"
+                  isDisabled={isStatsDisabled || rollsExhausted}
                   isLoading={rollStatsTx.isLoading}
                   loadingText="Rolling..."
                   onClick={onRollStats}
-                  size="lg"
-                  width="100%"
                 >
                   {rolledOnce ? 'Re-Roll Stats' : 'Roll Stats'}
                 </Button>
-                {rolledOnce && !rollsExhausted && (
-                  <Text fontSize="xs" color="#9A9080" textAlign="center" mt={2}>
-                    {rollsRemaining} re-roll{rollsRemaining !== 1 ? 's' : ''} remaining — it's free.
-                  </Text>
-                )}
-                {rollsExhausted && (
-                  <Text fontSize="xs" color="#D4A54A" textAlign="center" mt={2}>
-                    No re-rolls remaining. These are your final stats.
-                  </Text>
-                )}
-              </Box>
-            </VStack>
+                <Text fontSize="12px" color="#8A7E6A" textAlign="center">
+                  {rollsExhausted
+                    ? 'No re-rolls remaining'
+                    : rolledOnce
+                      ? `${rollsRemaining} re-roll${rollsRemaining > 1 ? 's' : ''} remaining \u2014 it\u2019s free`
+                      : ''}
+                </Text>
+              </VStack>
+
+              {/* Continue button */}
+              {rolledOnce && (
+                <Button
+                  variant="white"
+                  w="100%"
+                  size="md"
+                  onClick={() => setPhase('equipment')}
+                >
+                  Accept My Fate
+                </Button>
+              )}
+            </>
           )}
 
-          {/* Step 4: Starter Items - shown after rolling stats */}
-          {creationStep === 'starterItems' && (
-            <VStack alignItems="left" spacing={4}>
-              <Heading px={{ base: 4, sm: 10 }} size="sm" textAlign="left">
-                Step 4: Choose Your Starter Equipment
-              </Heading>
+          {/* ── PHASE: EQUIPMENT ── */}
+          {phase === 'equipment' && character && (
+            <>
+              <Text fontFamily="'Cinzel', serif" fontSize="22px" color="#D4A54A" fontWeight={700}>
+                Arm Yourself
+              </Text>
+
               {isLoadingItemTemplates ? (
                 <VStack py={8} spacing={3}>
                   <Spinner color="#C4B89E" size="lg" />
                   <Text fontSize="md" color="#9A9080">Loading available equipment...</Text>
                 </VStack>
               ) : (
-                <Text px={{ base: 4, sm: 10 }} fontSize="md" color="#C4B89E">
-                  Select one weapon and one armor to begin your adventure.
-                </Text>
-              )}
-            </VStack>
-          )}
-          <VStack mt={{ base: 8, sm: 12 }} spacing={4}>
-            <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-              <Heading size="sm" textAlign="left">
-                Stats
-              </Heading>
-            </HStack>
-            <VStack fontWeight={700} spacing={1.5} w="100%" opacity={rolledOnce ? 1 : 0.5}>
-              <Box
-                backgroundColor="rgba(196,184,158,0.08)"
-                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                h="6px"
-                w="100%"
-              />
-              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#D4A54A" fontSize="md">HP - Hit Points</Text>
-                <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
-                  {rolledOnce ? character?.maxHp.toString() : '—'}
-                </Text>
-              </HStack>
-              <Box
-                backgroundColor="rgba(196,184,158,0.08)"
-                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                h="6px"
-                w="100%"
-              />
-              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#B85C3A" fontSize="md">STR - Strength</Text>
-                <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
-                  {rolledOnce ? character?.strength.toString() : '—'}
-                </Text>
-              </HStack>
-              <Box
-                backgroundColor="rgba(196,184,158,0.08)"
-                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                h="6px"
-                w="100%"
-              />
-              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#5A8A3E" fontSize="md">AGI - Agility</Text>
-                <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
-                  {rolledOnce ? character?.agility.toString() : '—'}
-                </Text>
-              </HStack>
-              <Box
-                backgroundColor="rgba(196,184,158,0.08)"
-                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                h="6px"
-                w="100%"
-              />
-              <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-                <Text color="#4A7AB5" fontSize="md">INT - Intelligence</Text>
-                <Text color="#C4B89E" fontFamily="mono" fontSize="lg">
-                  {rolledOnce ? character?.intelligence.toString() : '—'}
-                </Text>
-              </HStack>
-            </VStack>
-          </VStack>
-          <VStack mt={4} spacing={2}>
-            <HStack justify="space-between" px={{ base: 4, sm: 10 }} w="100%">
-              <Text color="yellow" fontFamily="mono" fontWeight={700} fontSize="lg">
-                5 Gold
-              </Text>
-              <Text color="#C4B89E" fontFamily="mono" fontWeight={500} fontSize="lg">
-                0 / {nextLevelXpRequirement.toString()} XP
-              </Text>
-            </HStack>
-            {/* Starter Equipment Selection - only shown in starterItems step */}
-            {creationStep === 'starterItems' && (
-              <>
-                <HStack
-                  mt={4}
-                  justify="space-between"
-                  px={{ base: 4, sm: 10 }}
-                  w="100%"
-                >
-                  <Heading size="sm">Select Weapon</Heading>
-                </HStack>
-                {availableStarterWeapons.length === 0 && (
-                  <Text px={{ base: 4, sm: 10 }} fontSize="sm" color="#9A9080">
-                    No starter weapons available. Zone data may need reloading.
-                  </Text>
-                )}
-                <VStack spacing={0} w="100%">
-                  {availableStarterWeapons.map(weapon => {
-                    const restrictions = weapon.statRestrictions;
-                    const meetsRequirements = character &&
-                      BigInt(character.strength) >= BigInt(restrictions?.minStrength ?? 0) &&
-                      BigInt(character.agility) >= BigInt(restrictions?.minAgility ?? 0) &&
-                      BigInt(character.intelligence) >= BigInt(restrictions?.minIntelligence ?? 0);
-                    return (
-                      <Box
-                        key={`starter-weapon-${weapon.tokenId}`}
-                        w="100%"
-                        cursor={meetsRequirements ? "pointer" : "not-allowed"}
-                        opacity={meetsRequirements ? 1 : 0.5}
-                        onClick={() => meetsRequirements && setSelectedStarterWeaponId(BigInt(weapon.tokenId))}
-                        bg={selectedStarterWeaponId === BigInt(weapon.tokenId) ? 'blue.100' : undefined}
-                        borderLeft={selectedStarterWeaponId === BigInt(weapon.tokenId) ? '4px solid' : undefined}
-                        borderColor="blue.500"
-                      >
-                        <ItemCardSmall {...weapon} />
-                        {!meetsRequirements && (
-                          <Text fontSize="xs" color="red.500" px={4} pb={2}>
-                            Requires: {restrictions?.minStrength ? `${restrictions.minStrength} STR ` : ''}
-                            {restrictions?.minAgility ? `${restrictions.minAgility} AGI ` : ''}
-                            {restrictions?.minIntelligence ? `${restrictions.minIntelligence} INT` : ''}
-                          </Text>
-                        )}
-                      </Box>
-                    );
-                  })}
-                </VStack>
+                <>
+                  {/* Weapons */}
+                  <VStack spacing={2} w="100%">
+                    <Text fontFamily="'Cinzel', serif" fontSize="16px" color="#8A7E6A" letterSpacing="0.1em">
+                      Weapon
+                    </Text>
+                    {availableStarterWeapons.map(weapon => {
+                      const selected = selectedStarterWeaponId === BigInt(weapon.tokenId);
+                      const recommended = isRecommended(weapon, dominantStat);
+                      const weaponImage = getItemImage(weapon.name);
+                      return (
+                        <HStack
+                          as="button"
+                          type="button"
+                          key={`starter-weapon-${weapon.tokenId}`}
+                          bg={selected ? '#2E2820' : 'transparent'}
+                          border="2px solid"
+                          borderColor={selected ? '#C87A2A' : '#3A3228'}
+                          borderLeft={recommended ? '4px solid #5A8A3E' : undefined}
+                          borderRadius="8px"
+                          p={3}
+                          w="100%"
+                          cursor="pointer"
+                          transition="all 0.3s"
+                          onClick={() => setSelectedStarterWeaponId(BigInt(weapon.tokenId))}
+                          _hover={{ bg: '#2E2820' }}
+                        >
+                          {weaponImage && <Image src={weaponImage} boxSize="32px" alt={weapon.name} />}
+                          <VStack align="start" spacing={0} flex={1}>
+                            <Text fontSize="14px" color="#E8DCC8" fontWeight={600}>{weapon.name}</Text>
+                            <HStack spacing={2}>
+                              {weapon.strModifier > 0n && <Text fontFamily="mono" fontSize="11px" color="#B85C3A">STR +{weapon.strModifier.toString()}</Text>}
+                              {weapon.agiModifier > 0n && <Text fontFamily="mono" fontSize="11px" color="#5A8A3E">AGI +{weapon.agiModifier.toString()}</Text>}
+                              {weapon.intModifier > 0n && <Text fontFamily="mono" fontSize="11px" color="#4A7AB5">INT +{weapon.intModifier.toString()}</Text>}
+                            </HStack>
+                          </VStack>
+                          {recommended && (
+                            <Text fontSize="10px" color="#5A8A3E" fontWeight={600} letterSpacing="0.05em" textTransform="uppercase">
+                              Fits your build
+                            </Text>
+                          )}
+                        </HStack>
+                      );
+                    })}
+                  </VStack>
 
-                <HStack
-                  mt={4}
-                  justify="space-between"
-                  px={{ base: 4, sm: 10 }}
-                  w="100%"
-                >
-                  <Heading size="sm">Select Armor</Heading>
-                </HStack>
-                {availableStarterArmors.length === 0 && (
-                  <Text px={{ base: 4, sm: 10 }} fontSize="sm" color="#9A9080">
-                    No starter armor available. Zone data may need reloading.
+                  {/* Combat triangle hint */}
+                  <Text fontSize="11px" color="#8A7E6A" textAlign="center" fontStyle="italic">
+                    STR counters AGI. AGI counters INT. INT counters STR.
                   </Text>
-                )}
-                <VStack spacing={0} w="100%">
-                  {availableStarterArmors.map(armor => {
-                    const restrictions = armor.statRestrictions;
-                    const meetsRequirements = character &&
-                      BigInt(character.strength) >= BigInt(restrictions?.minStrength ?? 0) &&
-                      BigInt(character.agility) >= BigInt(restrictions?.minAgility ?? 0) &&
-                      BigInt(character.intelligence) >= BigInt(restrictions?.minIntelligence ?? 0);
-                    return (
-                      <Box
-                        key={`starter-armor-${armor.tokenId}`}
-                        w="100%"
-                        cursor={meetsRequirements ? "pointer" : "not-allowed"}
-                        opacity={meetsRequirements ? 1 : 0.5}
-                        onClick={() => meetsRequirements && setSelectedStarterArmorId(BigInt(armor.tokenId))}
-                        bg={selectedStarterArmorId === BigInt(armor.tokenId) ? 'blue.100' : undefined}
-                        borderLeft={selectedStarterArmorId === BigInt(armor.tokenId) ? '4px solid' : undefined}
-                        borderColor="blue.500"
-                      >
-                        <ItemCardSmall {...armor} />
-                        {!meetsRequirements && (
-                          <Text fontSize="xs" color="red.500" px={4} pb={2}>
-                            Requires: {restrictions?.minStrength ? `${restrictions.minStrength} STR ` : ''}
-                            {restrictions?.minAgility ? `${restrictions.minAgility} AGI ` : ''}
-                            {restrictions?.minIntelligence ? `${restrictions.minIntelligence} INT` : ''}
-                          </Text>
-                        )}
-                      </Box>
-                    );
-                  })}
-                </VStack>
-              </>
-            )}
-          </VStack>
-          <Box mt={4} px={{ base: 4, sm: 10 }}>
-            {creationStep === 'stats' && rolledOnce && (
-              <Button
-                isDisabled={baseDisabled}
-                onClick={() => setCreationStep('starterItems')}
-                size="sm"
-                type="button"
-                width="100%"
-              >
-                Continue to Starter Items
-              </Button>
-            )}
-            {creationStep === 'starterItems' && (
-              <Button
-                isDisabled={isEnterGameDisabled || !selectedStarterWeaponId || !selectedStarterArmorId}
-                isLoading={enterGameTx.isLoading}
-                loadingText="Waking..."
-                onClick={onEnterGame}
-                size="sm"
-                type="button"
-                width="100%"
-              >
-                Wake Up to the Dark Cave
-              </Button>
-            )}
-          </Box>
-          {!character && (
-            <Box
-              pos="absolute"
-              bg="rgba(0, 0, 0, 0.5)"
-              h="100%"
-              w="100%"
-              top={0}
-              left={0}
-            >
-              <Center h="100%">
-                <FaLock color="white" size="100px" />
-              </Center>
-            </Box>
+
+                  {/* Armor */}
+                  <VStack spacing={2} w="100%">
+                    <Text fontFamily="'Cinzel', serif" fontSize="16px" color="#8A7E6A" letterSpacing="0.1em">
+                      Armor
+                    </Text>
+                    {availableStarterArmors.map(armor => {
+                      const selected = selectedStarterArmorId === BigInt(armor.tokenId);
+                      const armorImage = getItemImage(armor.name);
+                      return (
+                        <HStack
+                          as="button"
+                          type="button"
+                          key={`starter-armor-${armor.tokenId}`}
+                          bg={selected ? '#2E2820' : 'transparent'}
+                          border="2px solid"
+                          borderColor={selected ? '#C87A2A' : '#3A3228'}
+                          borderRadius="8px"
+                          p={3}
+                          w="100%"
+                          cursor="pointer"
+                          transition="all 0.3s"
+                          onClick={() => setSelectedStarterArmorId(BigInt(armor.tokenId))}
+                          _hover={{ bg: '#2E2820' }}
+                        >
+                          {armorImage && <Image src={armorImage} boxSize="32px" alt={armor.name} />}
+                          <VStack align="start" spacing={0} flex={1}>
+                            <Text fontSize="14px" color="#E8DCC8" fontWeight={600}>{armor.name}</Text>
+                            <HStack spacing={2}>
+                              {armor.armorModifier > 0n && <Text fontFamily="mono" fontSize="11px" color="#D4A54A">ARM +{armor.armorModifier.toString()}</Text>}
+                              {armor.strModifier > 0n && <Text fontFamily="mono" fontSize="11px" color="#B85C3A">STR +{armor.strModifier.toString()}</Text>}
+                              {armor.agiModifier > 0n && <Text fontFamily="mono" fontSize="11px" color="#5A8A3E">AGI +{armor.agiModifier.toString()}</Text>}
+                              {armor.intModifier > 0n && <Text fontFamily="mono" fontSize="11px" color="#4A7AB5">INT +{armor.intModifier.toString()}</Text>}
+                            </HStack>
+                          </VStack>
+                        </HStack>
+                      );
+                    })}
+                  </VStack>
+
+                  {/* Enter button */}
+                  <Button
+                    variant="amber"
+                    w="100%"
+                    size="lg"
+                    isDisabled={isEnterGameDisabled || !selectedStarterWeaponId || !selectedStarterArmorId}
+                    isLoading={enterGameTx.isLoading}
+                    loadingText="Waking..."
+                    onClick={onEnterGame}
+                  >
+                    Enter the Dark Cave
+                  </Button>
+                </>
+              )}
+            </>
           )}
-        </Box>
+
+        </VStack>
       </PolygonalCard>
-    </Stack>
+    </VStack>
   );
 };

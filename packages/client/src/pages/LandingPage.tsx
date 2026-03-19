@@ -2,17 +2,14 @@ import {
   Box,
   HStack,
   Image,
-  Input,
   keyframes,
   Link,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { FormEvent, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink } from 'react-router-dom';
 import SafeTypist from '../components/SafeTypist';
-import { API_URL } from '../utils/constants';
 
 const torchGlow = keyframes`
   0%, 100% {
@@ -24,46 +21,6 @@ const torchGlow = keyframes`
 `;
 
 export const LandingPage = (): JSX.Element => {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!email || isSubmitting) return;
-
-    setIsSubmitting(true);
-    setErrorMsg('');
-
-    // localStorage backup — always save locally regardless of API result
-    try {
-      const existing = JSON.parse(localStorage.getItem('ud:signups') || '[]');
-      existing.push({ email, ts: Date.now() });
-      localStorage.setItem('ud:signups', JSON.stringify(existing));
-    } catch { /* localStorage unavailable — not critical */ }
-
-    try {
-      const res = await fetch(`${API_URL}/api/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setErrorMsg(data.error || 'Something went wrong. Try again.');
-        setIsSubmitting(false);
-        return;
-      }
-      setSubmitted(true);
-    } catch {
-      // Network error — still show success since localStorage saved
-      setSubmitted(true);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <Box
       minH="100vh"
@@ -150,27 +107,29 @@ export const LandingPage = (): JSX.Element => {
             Nothing Is Forgotten
           </Text>
 
-          <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
-            <SafeTypist
-              avgTypingDelay={35}
-              stdTypingDelay={20}
-              cursor={{ show: true, blink: true, element: '\u258C', hideWhenDone: true, hideWhenDoneDelay: 500 }}
+          <Box position="relative" w="100%">
+            {/* Invisible spacer — reserves final text height */}
+            <VStack
+              fontWeight={500}
+              maxW="850px"
+              mx="auto"
+              spacing={6}
+              textAlign="center"
+              visibility="hidden"
+              aria-hidden="true"
             >
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
                 As you awaken, your eyes flutter open to the stark, eerie ambiance
                 of a dimly lit cave.
               </Text>
-              <SafeTypist.Delay ms={800} />
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
                 Confusion clouds your mind; the cold, hard ground beneath you
                 offers no comfort. Glimpses of blood and bruises on your body only
                 deepen the mystery, painting a silent story of unseen struggles.
               </Text>
-              <SafeTypist.Delay ms={600} />
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
                 Where are you? How did you end up here?
               </Text>
-              <SafeTypist.Delay ms={1000} />
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
                 The shadows around you hold secrets, whispering tales of survival
                 and discovery. Gathering your strength, you rise, the weight of
@@ -179,103 +138,66 @@ export const LandingPage = (): JSX.Element => {
                 into the unknown, embarking on a journey where every choice carves
                 your path through the darkness.
               </Text>
-            </SafeTypist>
-          </VStack>
-
-          {/* Email signup — replaces the "Enter" button */}
-          <VStack spacing={4} w="100%">
-            {submitted ? (
-              <VStack spacing={2}>
-                <Text
-                  color="rgba(196, 184, 158, 0.7)"
-                  fontSize="16px"
-                  fontWeight={500}
-                  letterSpacing="0.05em"
+            </VStack>
+            {/* Typing animation overlaid at exact same position */}
+            <Box position="absolute" top={0} left={0} right={0}>
+              <VStack fontWeight={500} maxW="850px" mx="auto" spacing={6} textAlign="center">
+                <SafeTypist
+                  avgTypingDelay={35}
+                  stdTypingDelay={20}
+                  cursor={{ show: true, blink: true, element: '\u258C', hideWhenDone: true, hideWhenDoneDelay: 500 }}
                 >
-                  You won&apos;t be forgotten.
-                </Text>
-                <Text
-                  color="rgba(196, 184, 158, 0.4)"
-                  fontSize="15px"
-                  fontStyle="italic"
-                >
-                  We&apos;ll find you when it&apos;s time to rise.
-                </Text>
-              </VStack>
-            ) : (
-              <Box as="form" maxW="420px" mx="auto" onSubmit={onSubmit} w="100%">
-                <VStack spacing={3}>
-                  <Text
-                    color="rgba(196, 184, 158, 0.5)"
-                    fontFamily="'Cinzel', serif"
-                    fontSize={{ base: '13px', sm: '14px' }}
-                    letterSpacing="0.15em"
-                    textTransform="uppercase"
-                  >
-                    Be there when the world awakens
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
+                    As you awaken, your eyes flutter open to the stark, eerie ambiance
+                    of a dimly lit cave.
                   </Text>
-                  <HStack spacing={0} w="100%">
-                    <Input
-                      bg="rgba(196, 184, 158, 0.06)"
-                      border="1px solid"
-                      borderColor="rgba(196, 184, 158, 0.2)"
-                      borderRadius="0"
-                      color="rgba(232, 220, 200, 0.8)"
-                      fontSize="16px"
-                      h="44px"
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      type="email"
-                      value={email}
-                      _focus={{
-                        borderColor: 'rgba(200, 122, 42, 0.6)',
-                        boxShadow: 'none',
-                      }}
-                      _placeholder={{
-                        color: 'rgba(196, 184, 158, 0.3)',
-                      }}
-                    />
-                    <Box
-                      as="button"
-                      animation={isSubmitting ? undefined : `${torchGlow} 3s ease-in-out infinite`}
-                      bg={isSubmitting ? 'rgba(200, 122, 42, 0.3)' : 'rgba(200, 122, 42, 0.5)'}
-                      border="1px solid"
-                      borderColor="rgba(200, 122, 42, 0.5)"
-                      borderLeft="none"
-                      color="rgba(232, 220, 200, 0.9)"
-                      cursor={isSubmitting ? 'wait' : 'pointer'}
-                      flexShrink={0}
-                      fontSize="14px"
-                      fontWeight={600}
-                      h="44px"
-                      letterSpacing="0.15em"
-                      opacity={isSubmitting ? 0.6 : 1}
-                      px={6}
-                      textTransform="uppercase"
-                      transition="all 0.2s ease"
-                      type="submit"
-                      _hover={{
-                        bg: isSubmitting ? undefined : 'rgba(200, 122, 42, 0.7)',
-                        color: '#E8DCC8',
-                      }}
-                    >
-                      {isSubmitting ? '...' : 'Awaken'}
-                    </Box>
-                  </HStack>
-                  {errorMsg && (
-                    <Text
-                      color="rgba(200, 100, 100, 0.8)"
-                      fontSize="15px"
-                      mt={1}
-                      textAlign="center"
-                    >
-                      {errorMsg}
-                    </Text>
-                  )}
-                </VStack>
-              </Box>
-            )}
-          </VStack>
+                  <SafeTypist.Delay ms={800} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    Confusion clouds your mind; the cold, hard ground beneath you
+                    offers no comfort. Glimpses of blood and bruises on your body only
+                    deepen the mystery, painting a silent story of unseen struggles.
+                  </Text>
+                  <SafeTypist.Delay ms={600} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    Where are you? How did you end up here?
+                  </Text>
+                  <SafeTypist.Delay ms={1000} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    The shadows around you hold secrets, whispering tales of survival
+                    and discovery. Gathering your strength, you rise, the weight of
+                    uncertainty heavy on your shoulders — yet igniting a spark of
+                    determination within. With a deep breath, you take your first step
+                    into the unknown, embarking on a journey where every choice carves
+                    your path through the darkness.
+                  </Text>
+                </SafeTypist>
+              </VStack>
+            </Box>
+          </Box>
+
+          <Box
+            as={RouterLink}
+            to="/character-creation"
+            animation={`${torchGlow} 3s ease-in-out infinite`}
+            bg="rgba(200, 122, 42, 0.5)"
+            border="1px solid rgba(200, 122, 42, 0.5)"
+            color="#E8DCC8"
+            cursor="pointer"
+            display="inline-block"
+            fontFamily="'Cinzel', serif"
+            fontSize={{ base: '14px', sm: '16px' }}
+            fontWeight={600}
+            letterSpacing="0.3em"
+            px={{ base: 10, sm: 12 }}
+            py={3}
+            textAlign="center"
+            textDecoration="none"
+            textTransform="uppercase"
+            transition="all 0.3s"
+            _hover={{ bg: 'rgba(200, 122, 42, 0.7)', color: '#E8DCC8', textDecoration: 'none' }}
+          >
+            Enter
+          </Box>
 
           <HStack
             fontFamily="'Cinzel', serif"
