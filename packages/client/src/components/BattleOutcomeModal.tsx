@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Divider,
+  Image,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -286,6 +287,16 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     ? `You defeated ${opponentDisplayName}!`
                     : `You were killed by ${opponentDisplayName}.`}
                 </Text>
+                {opponent && currentBattle?.encounterType !== EncounterType.PvP && getMonsterImage(opponent.name) && (
+                  <Image
+                    src={getMonsterImage(opponent.name)}
+                    alt={opponent.name}
+                    boxSize={{ base: '100px', sm: '120px' }}
+                    objectFit="contain"
+                    opacity={winner === character.id ? 1 : 0.4}
+                    filter={winner !== character.id ? 'grayscale(0.6)' : undefined}
+                  />
+                )}
                 {winner !== character.id && goldDropped > 0n && (
                   <Text>
                     You lost{' '}
