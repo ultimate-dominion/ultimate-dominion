@@ -102,6 +102,7 @@ export const AuthProvider = ({
   const [hasInjectedWallet, setHasInjectedWallet] = useState(false);
   const [walletRecoveryFailed, setWalletRecoveryFailed] = useState(false);
   const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const newUserFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initAddressRef = useRef<string | null>(null);
 
   // Detect injected wallet (MetaMask etc.)
@@ -150,8 +151,23 @@ export const AuthProvider = ({
         }
         return;
       }
-      if (action === 'skip') return;
-      // action === 'create': truly new user
+      if (action === 'skip') {
+        // Fallback: on mobile redirect flows, onComplete may not fire so
+        // isConfirmedNewUser stays false. If authenticated with no server
+        // wallet after 3s, treat as new user and create wallet anyway.
+        if (!user?.wallet && !newUserFallbackRef.current && !isCreatingWallet.current) {
+          newUserFallbackRef.current = setTimeout(() => {
+            console.info('[Auth] New-user fallback: onComplete did not fire, forcing wallet creation');
+            setIsConfirmedNewUser(true);
+          }, 3_000);
+        }
+        return;
+      }
+      // action === 'create': truly new user (or fallback triggered)
+      if (newUserFallbackRef.current) {
+        clearTimeout(newUserFallbackRef.current);
+        newUserFallbackRef.current = null;
+      }
       isCreatingWallet.current = true;
       console.info('[Auth] New user with no wallet — creating one...', { walletTypes: wallets.map(w => w.walletClientType) });
       createWallet()
@@ -329,6 +345,7 @@ export const AuthProvider = ({
       setSignedInEmail(null);
       setWalletRecoveryFailed(false);
       if (recoveryTimerRef.current) { clearTimeout(recoveryTimerRef.current); recoveryTimerRef.current = null; }
+      if (newUserFallbackRef.current) { clearTimeout(newUserFallbackRef.current); newUserFallbackRef.current = null; }
       initAddressRef.current = null;
       isCreatingWallet.current = false;
       setIsConfirmedNewUser(false);
