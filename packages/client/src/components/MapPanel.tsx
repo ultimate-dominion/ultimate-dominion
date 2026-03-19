@@ -229,7 +229,7 @@ export const MapPanel = (): JSX.Element => {
             <Tooltip
               label="Spawn onto the map. Monsters lurk beyond the Alcove — tread carefully."
               isOpen={stage === OnboardingStage.PRE_SPAWN}
-              placement="left"
+              placement="top"
               hasArrow
             >
               <Button
