@@ -11,6 +11,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { GiCrossedSwords } from 'react-icons/gi';
 import SafeTypist from './SafeTypist';
 
 import { type Character } from '../utils/types';
@@ -311,42 +312,29 @@ export const LevelUpModal = ({
               px={{ base: 6, md: 10 }}
               align="center"
             >
-              {/* Badge emblem */}
+              {/* Badge emblem — matches character page badge style */}
               <Box
-                w="90px"
-                h="90px"
-                borderRadius="50%"
-                border="3px solid #6A8AB0"
+                w="100px"
+                h="100px"
+                borderRadius="16px"
+                border="2px solid rgba(106, 138, 176, 0.4)"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
                 position="relative"
+                bg="rgba(106, 138, 176, 0.08)"
                 animation={`${badgeReveal} 1s cubic-bezier(0.16, 1, 0.3, 1) forwards, ${badgePulse} 3s ease-in-out 1s infinite`}
                 opacity={0}
-                _after={{
-                  content: '""',
-                  position: 'absolute',
-                  inset: '4px',
-                  borderRadius: '50%',
-                  border: '1px solid rgba(106, 138, 176, 0.3)',
-                }}
               >
                 <Box
                   position="absolute"
                   inset={0}
-                  borderRadius="50%"
-                  bg="radial-gradient(circle, rgba(106, 138, 176, 0.12) 0%, transparent 70%)"
+                  borderRadius="16px"
+                  bg="radial-gradient(circle, rgba(106, 138, 176, 0.15) 0%, transparent 70%)"
                 />
-                <Text
-                  fontSize="3xl"
-                  fontFamily="'Cinzel', serif"
-                  fontWeight={700}
-                  color="#6A8AB0"
-                  textShadow="0 0 12px rgba(106, 138, 176, 0.4)"
-                  zIndex={1}
-                >
-                  A
-                </Text>
+                <Box color="#6A8AB0" zIndex={1} filter="drop-shadow(0 0 12px rgba(106, 138, 176, 0.5))">
+                  <GiCrossedSwords size={48} />
+                </Box>
               </Box>
 
               {/* Title */}
