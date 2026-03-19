@@ -367,7 +367,7 @@ export const StatsPanel = (): JSX.Element => {
 
 
 
-      {isDesktop && (
+      {isDesktop && stage >= OnboardingStage.FIRST_BLOOD && (
         <>
           {/* Fragment progress dots */}
           <Divider borderColor="grey300" mt={1} />
