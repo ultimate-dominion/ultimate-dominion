@@ -434,7 +434,7 @@ export const GameBoard = (): JSX.Element => {
           isOpen={isBattleOutcomeModalOpen}
           onClose={() => {
             onCloseBattleOutcomeModal();
-            if (canLevel && stage < OnboardingStage.ESTABLISHED) {
+            if (canLevel) {
               setTimeout(() => onOpenLevelUpModal(), 300);
             }
           }}

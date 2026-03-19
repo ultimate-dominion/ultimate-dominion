@@ -334,9 +334,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {winner === character.id && (hasLeveledUp || justBecameEligible) && (
                   <LevelUpBanner level={canLevel ? BigInt(character.level) + 1n : character.level} />
                 )}
-                {winner === character.id && canLevel && stage >= OnboardingStage.ESTABLISHED && (
-                  <LevelingPanel canLevel character={character} compact />
-                )}
+                {/* Inline LevelingPanel removed — all levels use the full LevelUpModal */}
                 {(hasLeveledUp || justBecameEligible || canLevel) &&
                   winner === character.id &&
                   sortedLoot.length > 0 && (
