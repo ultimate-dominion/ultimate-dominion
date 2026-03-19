@@ -158,7 +158,7 @@ const AppInner = (): JSX.Element => {
         <AppRoutes />
       </Box>
       {isDesktop && pathname !== HOME_PATH && <Footer />}
-      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && !isDesktop && stage >= OnboardingStage.ESTABLISHED && (
+      {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && !isDesktop && stage >= OnboardingStage.VETERAN && (
         <>
           <Box
             bottom={2}
