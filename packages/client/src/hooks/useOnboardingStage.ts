@@ -30,8 +30,9 @@ export const computeStage = (
   if (level >= 5n) return OnboardingStage.VETERAN;
   if (level >= 3n) return OnboardingStage.ESTABLISHED;
   if (level >= 2n) return OnboardingStage.SETTLING_IN;
-  if (experience > 0n) return OnboardingStage.FIRST_BLOOD;
-  if (hasClaimedFragment) return OnboardingStage.FIRST_STEPS;
+  // Fragment claim gives +1 XP — FIRST_BLOOD requires actual combat XP (> 1)
+  if (experience > 1n) return OnboardingStage.FIRST_BLOOD;
+  if (hasClaimedFragment || experience > 0n) return OnboardingStage.FIRST_STEPS;
   return OnboardingStage.JUST_SPAWNED;
 };
 
