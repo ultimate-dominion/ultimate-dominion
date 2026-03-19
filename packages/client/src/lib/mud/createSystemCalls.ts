@@ -168,6 +168,12 @@ export function createSystemCalls(
     delegatorAddress,
   }: SetupNetworkResult & { delegatorAddress?: Address },
 ) {
+  // Account to use for diagnostic simulations (eth_call).
+  // Without this, simulate() runs with from=address(0), which causes
+  // _msgSender() inside the contract to be zero — every auth check fails
+  // with Unauthorized() and masks the real revert reason.
+  const diagAccount = delegatorAddress ?? walletClient?.account?.address;
+
   // Check whether a monster is alive in the local store.
   const isMonsterAlive = (monsterId: string): boolean => {
     const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean } | undefined;
@@ -319,7 +325,7 @@ export function createSystemCalls(
             encounterType,
             group1 as `0x${string}`[],
             group2 as `0x${string}`[],
-          ]);
+          ], { account: diagAccount });
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
             group2.forEach(evictGhostMonster);
@@ -347,7 +353,7 @@ export function createSystemCalls(
             encounterType,
             group1 as `0x${string}`[],
             group2 as `0x${string}`[],
-          ]);
+          ], { account: diagAccount });
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
             group2.forEach(evictGhostMonster);
@@ -862,7 +868,7 @@ export function createSystemCalls(
 
             try {
               await Promise.race([
-                worldContract.simulate.UD__move(args).then(() => { diagResult = 'pass'; }),
+                worldContract.simulate.UD__move(args, { account: diagAccount }).then(() => { diagResult = 'pass'; }),
                 new Promise<void>((_, reject) => setTimeout(() => {
                   diagResult = 'timeout';
                   reject(new Error('diag timeout'));
@@ -996,6 +1002,7 @@ export function createSystemCalls(
         try {
           await worldContract.simulate.UD__autoAdventure(
             [characterEntity as `0x${string}`, x, y],
+            { account: diagAccount },
           );
         } catch (diagError) {
           if (isNotSpawnedError(diagError)) {
@@ -1063,6 +1070,7 @@ export function createSystemCalls(
         try {
           await worldContract.simulate.UD__autoFight(
             [characterEntity as `0x${string}`, monsterId as `0x${string}`, BigInt(weaponId)],
+            { account: diagAccount },
           );
           console.warn('[autoFight] Diagnostic simulation PASSED — was transient');
         } catch (diagError) {
@@ -1307,7 +1315,7 @@ export function createSystemCalls(
       if (receipt.status === 'reverted') {
         // Diagnostic simulation to get the actual revert reason
         try {
-          await worldContract.simulate.UD__rest([characterId]);
+          await worldContract.simulate.UD__rest([characterId], { account: diagAccount });
         } catch (diagError) {
           return { success: false, error: getContractError(diagError) };
         }
