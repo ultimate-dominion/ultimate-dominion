@@ -1209,7 +1209,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
-          {stage === OnboardingStage.FIRST_STEPS && visibleMonstersOnTile.length === 0 && (
+          {stage <= OnboardingStage.FIRST_STEPS && visibleMonstersOnTile.length === 0 && (
             <VStack
               align="center"
               justify="center"
