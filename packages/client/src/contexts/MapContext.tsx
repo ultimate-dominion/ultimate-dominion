@@ -155,9 +155,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   const allMonsterEntities = useMemo(() => {
     return Object.keys(spawnedTable).filter(key =>
-      spawnedTable[key]?.spawned && statsTable[key] && !charactersTable[key] && positionTable[key]
+      spawnedTable[key]?.spawned &&
+      statsTable[key] &&
+      !charactersTable[key] &&
+      positionTable[key] &&
+      !encounterEntityTable[key]?.died
     );
-  }, [spawnedTable, statsTable, charactersTable, positionTable]);
+  }, [spawnedTable, statsTable, charactersTable, positionTable, encounterEntityTable]);
 
   const allCharacterEntities = useMemo(() => {
     return Object.keys(charactersTable).filter(key => statsTable[key]);
@@ -361,6 +365,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
     const result = allMonsters.filter(
       m =>
+        m.isSpawned &&
         Number(m.currentHp) > 0 &&
         m.position.x === position.x &&
         m.position.y === position.y,
