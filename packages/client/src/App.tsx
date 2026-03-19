@@ -31,6 +31,7 @@ import { MapProvider } from './contexts/MapContext';
 import { MovementProvider } from './contexts/MovementContext';
 import { useMUD } from './contexts/MUDContext';
 import { QueueProvider } from './contexts/QueueContext';
+import { SoundProvider } from './contexts/SoundContext';
 import { useGasStation } from './hooks/useGasStation';
 import { OnboardingStage, useOnboardingStage } from './hooks/useOnboardingStage';
 import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
@@ -38,6 +39,7 @@ import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
 
 export const App = (): JSX.Element => {
   return (
+    <SoundProvider>
     <Router>
       <QueueProvider>
         <MapProvider>
@@ -55,6 +57,7 @@ export const App = (): JSX.Element => {
         </MapProvider>
       </QueueProvider>
     </Router>
+    </SoundProvider>
   );
 };
 

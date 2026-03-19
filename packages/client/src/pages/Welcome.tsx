@@ -16,6 +16,7 @@ import SafeTypist from '../components/SafeTypist';
 import { API_URL } from '../utils/constants';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
+import { SoundToggle } from '../components/SoundToggle';
 import { getCachedDelegator } from '../lib/delegatorCache';
 import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -308,16 +309,19 @@ export const Welcome = (): JSX.Element => {
             </SafeTypist>
           </VStack>
 
-          <Button
-            animation={`${torchGlow} 4s ease-in-out infinite`}
-            color="#12100E"
-            letterSpacing="0.15em"
-            onClick={onPlay}
-            px={{ base: 16, sm: 24 }}
-            textTransform="uppercase"
-          >
-            Enter
-          </Button>
+          <VStack spacing={3}>
+            <Button
+              animation={`${torchGlow} 4s ease-in-out infinite`}
+              color="#12100E"
+              letterSpacing="0.15em"
+              onClick={onPlay}
+              px={{ base: 16, sm: 24 }}
+              textTransform="uppercase"
+            >
+              Enter
+            </Button>
+            <SoundToggle />
+          </VStack>
 
           {/* Email signup */}
           <VStack spacing={3} w="100%">

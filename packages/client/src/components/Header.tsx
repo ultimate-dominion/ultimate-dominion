@@ -23,6 +23,7 @@ import { IoMdMenu } from 'react-icons/io';
 import { IoSettingsOutline } from 'react-icons/io5';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
+import { SoundToggle } from './SoundToggle';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
@@ -260,6 +261,7 @@ export const Header = (): JSX.Element => {
                 width={{ base: '200px', sm: '225px' }}
               />
             </Button>
+            <SoundToggle />
             {pathname !== HOME_PATH && (
               <IconButton
                 aria-label="Settings"
@@ -391,6 +393,10 @@ export const Header = (): JSX.Element => {
                 >
                   About
                 </Link>
+                <HStack spacing={2} mt={2}>
+                  <Text color="#8A7E6A" fontSize="sm">Sound</Text>
+                  <SoundToggle />
+                </HStack>
               </Stack>
             </DrawerBody>
 
