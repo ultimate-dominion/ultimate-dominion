@@ -31,6 +31,7 @@ import { EquippedLoadout } from '../components/EquippedLoadout';
 import { InfoModal } from '../components/InfoModal';
 import { LevelUpModal } from '../components/LevelUpModal';
 import { MapPanel } from '../components/MapPanel';
+import { MapRevealOverlay } from '../components/MapRevealOverlay';
 import { PolygonalCard } from '../components/PolygonalCard';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
@@ -75,6 +76,8 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseLevelUpModal,
   } = useDisclosure();
 
+  const [showMapReveal, setShowMapReveal] = useState(false);
+
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -105,6 +108,14 @@ export const GameBoard = (): JSX.Element => {
     if (nextLevelXpRequirement === BigInt(0)) return false;
     return BigInt(character.experience) >= nextLevelXpRequirement;
   }, [character, nextLevelXpRequirement]);
+
+  const handleLevelUpClose = useCallback(() => {
+    onCloseLevelUpModal();
+    const key = `map-reveal-seen-${worldContract.address}-${character?.id}`;
+    if (character && Number(character.level) >= 5 && !localStorage.getItem(key)) {
+      setTimeout(() => setShowMapReveal(true), 500);
+    }
+  }, [character, onCloseLevelUpModal, worldContract.address]);
 
   // Grace period: cached session lets player land here before auth resolves.
   // Wait up to 5s for auth to catch up before redirecting.
@@ -445,7 +456,17 @@ export const GameBoard = (): JSX.Element => {
         <LevelUpModal
           character={character}
           isOpen={isLevelUpModalOpen}
-          onClose={onCloseLevelUpModal}
+          onClose={handleLevelUpClose}
+        />
+      )}
+
+      {showMapReveal && (
+        <MapRevealOverlay
+          onComplete={() => {
+            setShowMapReveal(false);
+            const key = `map-reveal-seen-${worldContract.address}-${character?.id}`;
+            localStorage.setItem(key, 'true');
+          }}
         />
       )}
       <RankChangeToast />
