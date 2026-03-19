@@ -307,7 +307,7 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
 
   // Set the scan cursor BEFORE backfill so the live scanner doesn't re-process
   // blocks that backfill already covered
-  lastScannedBlock = syncHandle.latestBlockNumber;
+  lastScannedBlock = syncHandle.latestStoredBlockNumber;
 
   // Seed dedup sets from current DB state so stale cumulative-state events
   // (level-ups, class selections) aren't re-emitted after restart
@@ -322,7 +322,7 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
 
   setInterval(async () => {
     try {
-      const currentBlock = syncHandle.latestBlockNumber;
+      const currentBlock = syncHandle.latestStoredBlockNumber;
       if (currentBlock <= lastScannedBlock) return;
 
       const scanFrom = lastScannedBlock + 1;

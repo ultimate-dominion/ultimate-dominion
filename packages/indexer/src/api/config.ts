@@ -29,7 +29,7 @@ export function createConfigRouter(syncHandle: SyncHandle): Router {
       res.json({
         config: configRows[0] ? serializeRow(configRows[0] as Record<string, unknown>) : null,
         gasStationConfig: gasConfigRows[0] ? serializeRow(gasConfigRows[0] as Record<string, unknown>) : null,
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
       });
     } catch (err) {
       console.error('[api/config] Error:', err);

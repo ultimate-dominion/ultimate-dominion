@@ -16,7 +16,7 @@ export function createItemsRouter(syncHandle: SyncHandle): Router {
   router.get('/', async (_req, res) => {
     try {
       // Return cache if fresh (within 100 blocks)
-      if (cachedItems && syncHandle.latestBlockNumber - cacheBlock < 100) {
+      if (cachedItems && syncHandle.latestStoredBlockNumber - cacheBlock < 100) {
         return res.json(cachedItems);
       }
 
@@ -67,11 +67,11 @@ export function createItemsRouter(syncHandle: SyncHandle): Router {
         items: joined,
         effects: Object.fromEntries(effectMap),
         effectValidity: Object.fromEntries(effectValidityMap),
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
       };
 
       cachedItems = result;
-      cacheBlock = syncHandle.latestBlockNumber;
+      cacheBlock = syncHandle.latestStoredBlockNumber;
 
       res.json(result);
     } catch (err) {

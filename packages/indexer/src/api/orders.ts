@@ -26,7 +26,7 @@ export function createOrdersRouter(syncHandle: SyncHandle): Router {
       );
 
       if (activeOrders.length === 0) {
-        return res.json({ orders: [], block: syncHandle.latestBlockNumber });
+        return res.json({ orders: [], block: syncHandle.latestStoredBlockNumber });
       }
 
       // Get order hashes for batch lookup
@@ -65,7 +65,7 @@ export function createOrdersRouter(syncHandle: SyncHandle): Router {
 
       res.json({
         orders: joined,
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
       });
     } catch (err) {
       console.error('[api/orders] Error:', err);

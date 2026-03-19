@@ -67,7 +67,7 @@ export function createBattleRouter(syncHandle: SyncHandle): Router {
         encounterEntity,
         outcomes: (outcomeRows as Record<string, unknown>[]).map((r) => serializeRow(r)),
         combatOutcome: combatOutcomeRows[0] ? serializeRow(combatOutcomeRows[0] as Record<string, unknown>) : null,
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
       });
     } catch (err) {
       console.error('[api/battle] Error:', err);
