@@ -15,7 +15,7 @@ export function createMonstersRouter(syncHandle: SyncHandle): Router {
    */
   router.get('/', async (_req, res) => {
     try {
-      if (cachedMonsters && syncHandle.latestBlockNumber - cacheBlock < 100) {
+      if (cachedMonsters && syncHandle.latestStoredBlockNumber - cacheBlock < 100) {
         return res.json(cachedMonsters);
       }
 
@@ -43,11 +43,11 @@ export function createMonstersRouter(syncHandle: SyncHandle): Router {
       const result = {
         monsters: joined,
         mobsByLevel,
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
       };
 
       cachedMonsters = result;
-      cacheBlock = syncHandle.latestBlockNumber;
+      cacheBlock = syncHandle.latestStoredBlockNumber;
 
       res.json(result);
     } catch (err) {

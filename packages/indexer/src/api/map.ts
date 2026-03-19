@@ -18,19 +18,31 @@ export function createMapRouter(syncHandle: SyncHandle): Router {
       const spawnedTable = t('Spawned');
       const charsTable = t('Characters');
       const shopsTable = t('Shops');
+      const encounterEntityTable = t('EncounterEntity');
 
       if (!posTable || !spawnedTable) {
         return res.status(503).json({ error: 'Tables not yet synced' });
       }
 
-      // Get all spawned entities with positions
-      const spawnedPositions = await sql.unsafe(`
-        SELECT p.*, s."spawned"
-        FROM "${mudSchema}"."${posTable}" p
-        JOIN "${mudSchema}"."${spawnedTable}" s
-          ON p."__key_bytes" = s."__key_bytes"
-        WHERE s."spawned" = true
-      `);
+      // Get all spawned entities with positions, excluding dead entities
+      const spawnedPositions = encounterEntityTable
+        ? await sql.unsafe(`
+            SELECT p.*, s."spawned"
+            FROM "${mudSchema}"."${posTable}" p
+            JOIN "${mudSchema}"."${spawnedTable}" s
+              ON p."__key_bytes" = s."__key_bytes"
+            LEFT JOIN "${mudSchema}"."${encounterEntityTable}" ee
+              ON p."__key_bytes" = ee."__key_bytes"
+            WHERE s."spawned" = true
+              AND (ee."died" IS NULL OR ee."died" = false)
+          `)
+        : await sql.unsafe(`
+            SELECT p.*, s."spawned"
+            FROM "${mudSchema}"."${posTable}" p
+            JOIN "${mudSchema}"."${spawnedTable}" s
+              ON p."__key_bytes" = s."__key_bytes"
+            WHERE s."spawned" = true
+          `);
 
       // Get character and shop data for type identification
       const [characters, shops] = await Promise.all([
@@ -71,7 +83,7 @@ export function createMapRouter(syncHandle: SyncHandle): Router {
 
       res.json({
         entities,
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
       });
     } catch (err) {
       console.error('[api/map] Error:', err);

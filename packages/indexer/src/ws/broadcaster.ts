@@ -192,7 +192,7 @@ export class Broadcaster {
       }
 
       try {
-        const rows = await queryUpdatedRows(pgTableName, BigInt(client.lastBlock + 1));
+        const rows = await queryUpdatedRows(pgTableName, BigInt(client.lastBlock));
 
         for (const row of rows) {
           const keyBytes = extractKeyBytes(row as Record<string, unknown>);

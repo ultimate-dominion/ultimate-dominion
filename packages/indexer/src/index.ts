@@ -51,7 +51,7 @@ async function main() {
   startPruner(() => syncHandle.latestStoredBlockNumber);
 
   // WebSocket server
-  createWSServer(httpServer, broadcaster, () => syncHandle.latestBlockNumber);
+  createWSServer(httpServer, broadcaster, () => syncHandle.latestStoredBlockNumber);
 
   // REST API
   app.use('/api', createApiRouter(syncHandle, broadcaster));

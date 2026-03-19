@@ -70,7 +70,7 @@ export function createCharacterRouter(syncHandle: SyncHandle): Router {
         effects,
         session,
         classMultipliers,
-        block: syncHandle.latestBlockNumber,
+        block: syncHandle.latestStoredBlockNumber,
       });
     } catch (err) {
       console.error('[api/character] Error:', err);
