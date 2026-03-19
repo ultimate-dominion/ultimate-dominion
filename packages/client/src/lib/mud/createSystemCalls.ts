@@ -271,6 +271,12 @@ export function createSystemCalls(
     }
   };
 
+  // Gas limit for PvE encounter creation — skip eth_estimateGas because
+  // Privy's RPC returns "execution reverted" with no selector on ghost
+  // monsters, making it impossible to identify the error. Let the TX go
+  // on-chain and diagnose from the receipt via eth_call simulation.
+  const CREATE_ENCOUNTER_GAS_LIMIT = BigInt(10_000_000);
+
   const createEncounter = async (
     encounterType: EncounterType,
     group1: string[],
@@ -290,13 +296,40 @@ export function createSystemCalls(
     }
 
     try {
-      const tx = await worldContract.write.UD__createEncounter([
-        encounterType,
-        group1 as `0x${string}`[],
-        group2 as `0x${string}`[],
-      ]);
+      // For PvE, skip gas estimation to avoid EstimateGasExecutionError on
+      // ghost monsters (Privy RPC strips revert selectors from eth_estimateGas).
+      const gasOverride = encounterType === EncounterType.PvE
+        ? { gas: CREATE_ENCOUNTER_GAS_LIMIT }
+        : {};
+
+      const tx = await worldContract.write.UD__createEncounter(
+        [
+          encounterType,
+          group1 as `0x${string}`[],
+          group2 as `0x${string}`[],
+        ],
+        gasOverride,
+      );
 
       const receipt = await waitForTransaction(tx);
+      if (receipt.status === 'reverted' && encounterType === EncounterType.PvE) {
+        // Diagnostic simulation — eth_call DOES return revert selectors
+        try {
+          await worldContract.simulate.UD__createEncounter([
+            encounterType,
+            group1 as `0x${string}`[],
+            group2 as `0x${string}`[],
+          ]);
+        } catch (diagError) {
+          if (isGhostMonsterError(diagError)) {
+            group2.forEach(evictGhostMonster);
+            return { success: false, error: 'That monster is already dead — refreshing the map.', severity: 'warning' };
+          }
+          return { success: false, error: getContractError(diagError) };
+        }
+        return { success: false, error: 'Failed to create encounter.' };
+      }
+
       return {
         error: receipt.status === 'reverted' ? 'Failed to create encounter.' : undefined,
         success: receipt.status !== 'reverted',
@@ -305,6 +338,23 @@ export function createSystemCalls(
       if (encounterType === EncounterType.PvE && isGhostMonsterError(e)) {
         group2.forEach(evictGhostMonster);
         return { success: false, error: 'That monster is already dead — refreshing the map.', severity: 'warning' };
+      }
+      // Fallback: if gas estimation somehow leaks through (shouldn't with gas
+      // override), try simulation to extract the real revert reason.
+      if (encounterType === EncounterType.PvE) {
+        try {
+          await worldContract.simulate.UD__createEncounter([
+            encounterType,
+            group1 as `0x${string}`[],
+            group2 as `0x${string}`[],
+          ]);
+        } catch (diagError) {
+          if (isGhostMonsterError(diagError)) {
+            group2.forEach(evictGhostMonster);
+            return { success: false, error: 'That monster is already dead — refreshing the map.', severity: 'warning' };
+          }
+          return { success: false, error: getContractError(diagError) };
+        }
       }
       return {
         error: getContractError(e),

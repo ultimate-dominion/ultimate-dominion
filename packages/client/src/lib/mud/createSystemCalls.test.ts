@@ -915,10 +915,11 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
   });
 
-  it('createEncounter evicts group2 on InvalidCombatEntity revert (PvE)', async () => {
+  it('createEncounter evicts group2 on InvalidCombatEntity revert (PvE write throw)', async () => {
     const { network } = createMockNetwork();
     mockOwnershipWithMonster('alive');
 
+    // Write throws with selector — caught by isGhostMonsterError directly
     const ghostError = new Error('execution reverted: 0x1af235ec');
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: () => vi.fn().mockRejectedValue(ghostError),
@@ -932,6 +933,57 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     );
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+  });
+
+  it('createEncounter evicts group2 on on-chain revert via diagnostic simulation (PvE)', async () => {
+    // TX goes on-chain (gas estimation skipped), reverts, then diagnostic
+    // simulation finds ghost monster error
+    const { network, waitForTransaction } = createMockNetwork({ receiptStatus: 'reverted' });
+    mockOwnershipWithMonster('alive');
+
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(new Error('0x1af235ec')),
+    });
+    const calls = createSystemCalls(network);
+
+    const result = await calls.createEncounter(
+      EncounterType.PvE,
+      [TEST_ENTITY],
+      [TEST_MONSTER],
+    );
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(result.error).toContain('already dead');
+    expect(waitForTransaction).toHaveBeenCalled(); // TX was sent (gas est skipped)
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+  });
+
+  it('createEncounter fallback: diagnoses ghost from EstimateGasExecutionError via simulation', async () => {
+    // Edge case: gas estimation somehow leaks through (e.g. PvP → PvE mismatch
+    // or future code path). The catch block does a fallback simulation.
+    const { network } = createMockNetwork();
+    mockOwnershipWithMonster('alive');
+
+    // Write throws a generic error (no ghost selector)
+    const genericError = new Error('execution reverted for an unknown reason');
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(genericError),
+    });
+    // Simulation reveals the ghost monster error
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(new Error('0xadee4371')),
+    });
+    const calls = createSystemCalls(network);
+
+    const result = await calls.createEncounter(
+      EncounterType.PvE,
+      [TEST_ENTITY],
+      [TEST_MONSTER],
+    );
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(result.error).toContain('already dead');
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
   });
 });
