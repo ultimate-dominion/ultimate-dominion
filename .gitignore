@@ -30,3 +30,8 @@ packages/guide/.astro/
 # IDE / editor junk
 .windsurf/
 windsurfrules.json
+
+# Local working files (not for git)
+local/
+SESSION.md
+.DS_Store

@@ -1,0 +1,497 @@
+Balance Layer 3: Weapons & Combat Viability
+  Max rounds: 8 (≈ 16 on-chain turns). --rounds N to change.
+Simulating with 500 iterations per matchup...
+
+
+============================================================================================================================================
+  GEAR LOADOUT: Best equippable weapon per archetype at each level
+============================================================================================================================================
+
+--- Level 1 ---
+ID     Name          Path Weapon                   Dmg Scale  STR  AGI  INT   HP  Notes
+--------------------------------------------------------------------------------------------------------------
+WAR-S  Tank          STR  Warhammer                4-7   STR   13    3    6   22  
+WAR-A  Fury          AGI  Crystal Shard            6-9   STR    5   13    7   19  
+WAR-I  Battlemage    INT  Mage Staff               3-5 magic    3    9   12   19  
+PAL-S  Crusader      STR  Warhammer                4-7   STR   13    3    6   22  
+PAL-A  Avenger       AGI  Crystal Shard            6-9   STR    5   13    7   19  
+PAL-I  Templar       INT  Mage Staff               3-5 magic    3    9   12   19  
+RAN-S  Beastmaster   STR  Warhammer                4-7   STR   13    3    6   22  
+RAN-A  Sharpshooter  AGI  Crystal Shard            6-9   STR    5   13    7   19  
+RAN-I  ArcaneArcher  INT  Mage Staff               3-5 magic    3    9   12   19  
+ROG-S  Thug          STR  Warhammer                4-7   STR   13    3    6   22  
+ROG-A  Assassin      AGI  Crystal Shard            6-9   STR    5   13    7   19  
+ROG-I  Trickster     INT  Mage Staff               3-5 magic    3    9   12   19  
+DRU-S  Bear          STR  Warhammer                4-7   STR   13    3    6   22  
+DRU-A  Cat           AGI  Crystal Shard            6-9   STR    5   13    7   19  
+DRU-I  Caster        INT  Mage Staff               3-5 magic    3    9   12   19  
+WLK-S  Hexblade      STR  Warhammer                4-7   STR   13    3    6   22  
+WLK-A  Shadow        AGI  Crystal Shard            6-9   STR    5   13    7   19  
+WLK-I  VoidMage      INT  Mage Staff               3-5 magic    3    9   12   19  
+WIZ-S  WarMage       STR  Warhammer                4-7   STR   13    3    6   22  
+WIZ-A  Spellblade    AGI  Crystal Shard            6-9   STR    5   13    7   19  
+WIZ-I  Archmage      INT  Mage Staff               3-5 magic    3    9   12   19  
+CLR-S  BattlePriest  STR  Warhammer                4-7   STR   13    3    6   22  
+CLR-A  WindCleric    AGI  Crystal Shard            6-9   STR    5   13    7   19  
+CLR-I  HighPriest    INT  Mage Staff               3-5 magic    3    9   12   19  
+SOR-S  Spellsword    STR  Warhammer                4-7   STR   13    3    6   22  
+SOR-A  StormMage     AGI  Crystal Shard            6-9   STR    5   13    7   19  
+SOR-I  Elementalist  INT  Mage Staff               3-5 magic    3    9   12   19  
+
+--- Level 3 ---
+ID     Name          Path Weapon                   Dmg Scale  STR  AGI  INT   HP  Notes
+--------------------------------------------------------------------------------------------------------------
+WAR-S  Tank          STR  Stone Maul               5-7   STR   15    3    6   26  
+WAR-A  Fury          AGI  Crystal Shard            6-9   STR    5   15    7   23  
+WAR-I  Battlemage    INT  Bone Staff               3-5 magic    3    9   14   23  
+PAL-S  Crusader      STR  Stone Maul               5-7   STR   15    3    6   26  
+PAL-A  Avenger       AGI  Crystal Shard            6-9   STR    5   15    7   23  
+PAL-I  Templar       INT  Bone Staff               3-5 magic    3    9   14   23  
+RAN-S  Beastmaster   STR  Stone Maul               5-7   STR   15    3    6   26  
+RAN-A  Sharpshooter  AGI  Crystal Shard            6-9   STR    5   15    7   23  
+RAN-I  ArcaneArcher  INT  Bone Staff               3-5 magic    3    9   14   23  
+ROG-S  Thug          STR  Stone Maul               5-7   STR   15    3    6   26  
+ROG-A  Assassin      AGI  Crystal Shard            6-9   STR    5   15    7   23  
+ROG-I  Trickster     INT  Bone Staff               3-5 magic    3    9   14   23  
+DRU-S  Bear          STR  Stone Maul               5-7   STR   15    3    6   26  
+DRU-A  Cat           AGI  Crystal Shard            6-9   STR    5   15    7   23  
+DRU-I  Caster        INT  Bone Staff               3-5 magic    3    9   14   23  
+WLK-S  Hexblade      STR  Stone Maul               5-7   STR   15    3    6   26  
+WLK-A  Shadow        AGI  Crystal Shard            6-9   STR    5   15    7   23  
+WLK-I  VoidMage      INT  Bone Staff               3-5 magic    3    9   14   23  
+WIZ-S  WarMage       STR  Stone Maul               5-7   STR   15    3    6   26  
+WIZ-A  Spellblade    AGI  Crystal Shard            6-9   STR    5   15    7   23  
+WIZ-I  Archmage      INT  Bone Staff               3-5 magic    3    9   14   23  
+CLR-S  BattlePriest  STR  Stone Maul               5-7   STR   15    3    6   26  
+CLR-A  WindCleric    AGI  Crystal Shard            6-9   STR    5   15    7   23  
+CLR-I  HighPriest    INT  Bone Staff               3-5 magic    3    9   14   23  
+SOR-S  Spellsword    STR  Stone Maul               5-7   STR   15    3    6   26  
+SOR-A  StormMage     AGI  Crystal Shard            6-9   STR    5   15    7   23  
+SOR-I  Elementalist  INT  Bone Staff               3-5 magic    3    9   14   23  
+
+--- Level 5 ---
+ID     Name          Path Weapon                   Dmg Scale  STR  AGI  INT   HP  Notes
+--------------------------------------------------------------------------------------------------------------
+WAR-S  Tank          STR  Stone Maul               5-7   STR   18    3    6   30  
+WAR-A  Fury          AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+WAR-I  Battlemage    INT  Smoldering Rod           5-8 magic    3    9   17   27  
+PAL-S  Crusader      STR  Stone Maul               5-7   STR   18    3    6   30  
+PAL-A  Avenger       AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+PAL-I  Templar       INT  Smoldering Rod           5-8 magic    3    9   17   27  
+RAN-S  Beastmaster   STR  Stone Maul               5-7   STR   18    3    6   30  
+RAN-A  Sharpshooter  AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+RAN-I  ArcaneArcher  INT  Smoldering Rod           5-8 magic    3    9   17   27  
+ROG-S  Thug          STR  Stone Maul               5-7   STR   18    3    6   30  
+ROG-A  Assassin      AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+ROG-I  Trickster     INT  Smoldering Rod           5-8 magic    3    9   17   27  
+DRU-S  Bear          STR  Stone Maul               5-7   STR   18    3    6   30  
+DRU-A  Cat           AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+DRU-I  Caster        INT  Smoldering Rod           5-8 magic    3    9   17   27  
+WLK-S  Hexblade      STR  Stone Maul               5-7   STR   18    3    6   30  
+WLK-A  Shadow        AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+WLK-I  VoidMage      INT  Smoldering Rod           5-8 magic    3    9   17   27  
+WIZ-S  WarMage       STR  Stone Maul               5-7   STR   18    3    6   30  
+WIZ-A  Spellblade    AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+WIZ-I  Archmage      INT  Smoldering Rod           5-8 magic    3    9   17   27  
+CLR-S  BattlePriest  STR  Stone Maul               5-7   STR   18    3    6   30  
+CLR-A  WindCleric    AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+CLR-I  HighPriest    INT  Smoldering Rod           5-8 magic    3    9   17   27  
+SOR-S  Spellsword    STR  Stone Maul               5-7   STR   18    3    6   30  
+SOR-A  StormMage     AGI  Darkwood Bow             6-9   AGI    5   18    7   27  
+SOR-I  Elementalist  INT  Smoldering Rod           5-8 magic    3    9   17   27  
+
+--- Level 7 ---
+ID     Name          Path Weapon                   Dmg Scale  STR  AGI  INT   HP  Notes
+--------------------------------------------------------------------------------------------------------------
+WAR-S  Tank          STR  Stone Maul               5-7   STR   20    3    6   34  
+WAR-A  Fury          AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+WAR-I  Battlemage    INT  Smoldering Rod           5-8 magic    3    9   19   31  
+PAL-S  Crusader      STR  Stone Maul               5-7   STR   20    3    6   34  
+PAL-A  Avenger       AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+PAL-I  Templar       INT  Smoldering Rod           5-8 magic    3    9   19   31  
+RAN-S  Beastmaster   STR  Stone Maul               5-7   STR   20    3    6   34  
+RAN-A  Sharpshooter  AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+RAN-I  ArcaneArcher  INT  Smoldering Rod           5-8 magic    3    9   19   31  
+ROG-S  Thug          STR  Stone Maul               5-7   STR   20    3    6   34  
+ROG-A  Assassin      AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+ROG-I  Trickster     INT  Smoldering Rod           5-8 magic    3    9   19   31  
+DRU-S  Bear          STR  Stone Maul               5-7   STR   20    3    6   34  
+DRU-A  Cat           AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+DRU-I  Caster        INT  Smoldering Rod           5-8 magic    3    9   19   31  
+WLK-S  Hexblade      STR  Stone Maul               5-7   STR   20    3    6   34  
+WLK-A  Shadow        AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+WLK-I  VoidMage      INT  Smoldering Rod           5-8 magic    3    9   19   31  
+WIZ-S  WarMage       STR  Stone Maul               5-7   STR   20    3    6   34  
+WIZ-A  Spellblade    AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+WIZ-I  Archmage      INT  Smoldering Rod           5-8 magic    3    9   19   31  
+CLR-S  BattlePriest  STR  Stone Maul               5-7   STR   20    3    6   34  
+CLR-A  WindCleric    AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+CLR-I  HighPriest    INT  Smoldering Rod           5-8 magic    3    9   19   31  
+SOR-S  Spellsword    STR  Stone Maul               5-7   STR   20    3    6   34  
+SOR-A  StormMage     AGI  Darkwood Bow             6-9   AGI    5   20    7   31  
+SOR-I  Elementalist  INT  Smoldering Rod           5-8 magic    3    9   19   31  
+
+--- Level 10 ---
+ID     Name          Path Weapon                   Dmg Scale  STR  AGI  INT   HP  Notes
+--------------------------------------------------------------------------------------------------------------
+WAR-S  Tank          STR  Stone Maul               5-7   STR   26    3    6   50  
+WAR-A  Fury          AGI  Darkwood Bow             6-9   AGI    8   23    7   47  
+WAR-I  Battlemage    INT  Smoldering Rod           5-8 magic    6    9   22   47  
+PAL-S  Crusader      STR  Stone Maul               5-7   STR   25    3    6   55  
+PAL-A  Avenger       AGI  Darkwood Bow             6-9   AGI    7   23    7   52  
+PAL-I  Templar       INT  Smoldering Rod           5-8 magic    5    9   22   52  
+RAN-S  Beastmaster   STR  Stone Maul               5-7   STR   23    6    6   40  
+RAN-A  Sharpshooter  AGI  Darkwood Bow             6-9   AGI    5   26    7   37  
+RAN-I  ArcaneArcher  INT  Smoldering Rod           5-8 magic    3   12   22   37  
+ROG-S  Thug          STR  Stone Maul               5-7   STR   23    5    7   40  
+ROG-A  Assassin      AGI  Darkwood Bow             6-9   AGI    5   25    8   37  
+ROG-I  Trickster     INT  Smoldering Rod           5-8 magic    3   11   23   37  
+DRU-S  Bear          STR  Stone Maul               5-7   STR   25    5    6   42  
+DRU-A  Cat           AGI  Darkwood Bow             6-9   AGI    7   25    7   38  
+DRU-I  Caster        INT  Smoldering Rod           5-8 magic    5   11   22   38  
+WLK-S  Hexblade      STR  Stone Maul               5-7   STR   23    5    8   40  
+WLK-A  Shadow        AGI  Darkwood Bow             6-9   AGI    5   25    9   37  
+WLK-I  VoidMage      INT  Smoldering Rod           5-8 magic    3   11   24   37  
+WIZ-S  WarMage       STR  Stone Maul               5-7   STR   23    3    9   40  
+WIZ-A  Spellblade    AGI  Darkwood Bow             6-9   AGI    5   23   10   37  
+WIZ-I  Archmage      INT  Smoldering Rod           5-8 magic    3    9   25   37  
+CLR-S  BattlePriest  STR  Stone Maul               5-7   STR   23    3    8   50  
+CLR-A  WindCleric    AGI  Darkwood Bow             6-9   AGI    5   23    9   47  
+CLR-I  HighPriest    INT  Smoldering Rod           5-8 magic    3    9   24   47  
+SOR-S  Spellsword    STR  Stone Maul               5-7   STR   25    3    8   42  
+SOR-A  StormMage     AGI  Darkwood Bow             6-9   AGI    7   23    9   38  
+SOR-I  Elementalist  INT  Smoldering Rod           5-8 magic    5    9   24   38  
+
+==================================================================================================================================
+  PvE COMBAT SIMULATION: Each archetype vs level-appropriate monster
+  500 iterations per matchup. Win rate & avg rounds.
+==================================================================================================================================
+
+--- Level 1 vs Dire Rat (L1, HP=10, ARM=0, AGI) ---
+ID     Name          Class     Weapon             WinRate AvgRnd Dmg/Rnd   HP  Status
+---------------------------------------------------------------------------------------------------------
+WAR-S  Tank          Warrior   Warhammer             100%    1.0    18.1   22  OK
+WAR-A  Fury          Warrior   Crystal Shard         100%    1.0    13.2   19  OK
+WAR-I  Battlemage    Warrior   Mage Staff            100%    1.0    12.5   19  OK
+PAL-S  Crusader      Paladin   Warhammer             100%    1.0    17.5   22  OK
+PAL-A  Avenger       Paladin   Crystal Shard         100%    1.2    12.8   19  OK
+PAL-I  Templar       Paladin   Mage Staff            100%    1.0    12.6   19  OK
+RAN-S  Beastmaster   Ranger    Warhammer             100%    1.0    18.5   22  OK
+RAN-A  Sharpshooter  Ranger    Crystal Shard         100%    1.0    13.3   19  OK
+RAN-I  ArcaneArcher  Ranger    Mage Staff            100%    1.0    13.1   19  OK
+ROG-S  Thug          Rogue     Warhammer             100%    1.0    18.0   22  OK
+ROG-A  Assassin      Rogue     Crystal Shard         100%    1.2    11.5   19  OK
+ROG-I  Trickster     Rogue     Mage Staff            100%    1.0    13.0   19  OK
+DRU-S  Bear          Druid     Warhammer             100%    1.0    18.1   22  OK
+DRU-A  Cat           Druid     Crystal Shard         100%    1.3    12.3   19  OK
+DRU-I  Caster        Druid     Mage Staff            100%    1.0    13.2   19  OK
+WLK-S  Hexblade      Warlock   Warhammer             100%    1.0    17.0   22  OK
+WLK-A  Shadow        Warlock   Crystal Shard         100%    1.2    11.5   19  OK
+WLK-I  VoidMage      Warlock   Mage Staff            100%    1.0    15.3   19  OK
+WIZ-S  WarMage       Wizard    Warhammer             100%    1.0    17.3   22  OK
+WIZ-A  Spellblade    Wizard    Crystal Shard         100%    1.2    11.8   19  OK
+WIZ-I  Archmage      Wizard    Mage Staff            100%    1.0    16.2   19  OK
+CLR-S  BattlePriest  Cleric    Warhammer             100%    1.0    17.2   22  OK
+CLR-A  WindCleric    Cleric    Crystal Shard         100%    1.2    11.9   19  OK
+CLR-I  HighPriest    Cleric    Mage Staff            100%    1.0    12.8   19  OK
+SOR-S  Spellsword    Sorcerer  Warhammer             100%    1.0    17.0   22  OK
+SOR-A  StormMage     Sorcerer  Crystal Shard         100%    1.2    11.7   19  OK
+SOR-I  Elementalist  Sorcerer  Mage Staff            100%    1.0    14.7   19  OK
+
+--- Level 3 vs Cavern Brute (L3, HP=18, ARM=1, STR) ---
+ID     Name          Class     Weapon             WinRate AvgRnd Dmg/Rnd   HP  Status
+---------------------------------------------------------------------------------------------------------
+WAR-S  Tank          Warrior   Stone Maul            100%    2.0    14.9   26  OK
+WAR-A  Fury          Warrior   Crystal Shard         100%    2.7     8.3   23  OK
+WAR-I  Battlemage    Warrior   Bone Staff            100%    1.0    26.2   23  OK
+PAL-S  Crusader      Paladin   Stone Maul            100%    2.0    14.1   26  OK
+PAL-A  Avenger       Paladin   Crystal Shard         100%    2.8     7.7   23  OK
+PAL-I  Templar       Paladin   Bone Staff            100%    1.0    26.5   23  OK
+RAN-S  Beastmaster   Ranger    Stone Maul            100%    1.9    14.9   26  OK
+RAN-A  Sharpshooter  Ranger    Crystal Shard         100%    2.8     8.1   23  OK
+RAN-I  ArcaneArcher  Ranger    Bone Staff            100%    1.0    26.1   23  OK
+ROG-S  Thug          Rogue     Stone Maul            100%    1.9    13.7   26  OK
+ROG-A  Assassin      Rogue     Crystal Shard         100%    2.9     7.6   23  OK
+ROG-I  Trickster     Rogue     Bone Staff            100%    1.0    26.5   23  OK
+DRU-S  Bear          Druid     Stone Maul            100%    1.9    14.3   26  OK
+DRU-A  Cat           Druid     Crystal Shard         100%    2.8     7.9   23  OK
+DRU-I  Caster        Druid     Bone Staff            100%    1.0    27.5   23  OK
+WLK-S  Hexblade      Warlock   Stone Maul            100%    2.0    13.4   26  OK
+WLK-A  Shadow        Warlock   Crystal Shard         100%    3.0     7.4   23  OK
+WLK-I  VoidMage      Warlock   Bone Staff            100%    1.0    31.5   23  OK
+WIZ-S  WarMage       Wizard    Stone Maul            100%    2.0    13.4   26  OK
+WIZ-A  Spellblade    Wizard    Crystal Shard         100%    2.9     7.4   23  OK
+WIZ-I  Archmage      Wizard    Bone Staff            100%    1.0    32.9   23  OK
+CLR-S  BattlePriest  Cleric    Stone Maul            100%    1.9    13.5   26  OK
+CLR-A  WindCleric    Cleric    Crystal Shard         100%    2.9     7.5   23  OK
+CLR-I  HighPriest    Cleric    Bone Staff            100%    1.0    26.3   23  OK
+SOR-S  Spellsword    Sorcerer  Stone Maul            100%    2.0    13.4   26  OK
+SOR-A  StormMage     Sorcerer  Crystal Shard         100%    3.0     7.3   23  OK
+SOR-I  Elementalist  Sorcerer  Bone Staff            100%    1.0    30.6   23  OK
+
+--- Level 5 vs Ironhide Troll (L5, HP=26, ARM=2, STR) ---
+ID     Name          Class     Weapon             WinRate AvgRnd Dmg/Rnd   HP  Status
+---------------------------------------------------------------------------------------------------------
+WAR-S  Tank          Warrior   Stone Maul            100%    2.0    14.5   30  OK
+WAR-A  Fury          Warrior   Darkwood Bow          100%    1.9    19.8   27  OK
+WAR-I  Battlemage    Warrior   Smoldering Rod        100%    1.9    18.6   27  OK
+PAL-S  Crusader      Paladin   Stone Maul            100%    2.2    13.9   30  OK
+PAL-A  Avenger       Paladin   Darkwood Bow          100%    1.9    19.7   27  OK
+PAL-I  Templar       Paladin   Smoldering Rod        100%    1.9    18.7   27  OK
+RAN-S  Beastmaster   Ranger    Stone Maul            100%    2.1    14.2   30  OK
+RAN-A  Sharpshooter  Ranger    Darkwood Bow          100%    1.9    19.8   27  OK
+RAN-I  ArcaneArcher  Ranger    Smoldering Rod        100%    1.9    18.6   27  OK
+ROG-S  Thug          Rogue     Stone Maul            100%    2.6    13.2   30  OK
+ROG-A  Assassin      Rogue     Darkwood Bow          100%    2.0    18.7   27  OK
+ROG-I  Trickster     Rogue     Smoldering Rod        100%    1.9    19.6   27  OK
+DRU-S  Bear          Druid     Stone Maul            100%    2.3    13.6   30  OK
+DRU-A  Cat           Druid     Darkwood Bow          100%    1.9    19.2   27  OK
+DRU-I  Caster        Druid     Smoldering Rod        100%    1.9    19.4   27  OK
+WLK-S  Hexblade      Warlock   Stone Maul            100%    2.6    13.1   30  OK
+WLK-A  Shadow        Warlock   Darkwood Bow          100%    2.0    18.0   27  OK
+WLK-I  VoidMage      Warlock   Smoldering Rod        100%    1.9    22.5   27  OK
+WIZ-S  WarMage       Wizard    Stone Maul            100%    2.6    13.1   30  OK
+WIZ-A  Spellblade    Wizard    Darkwood Bow          100%    2.0    18.2   27  OK
+WIZ-I  Archmage      Wizard    Smoldering Rod        100%    1.9    23.0   27  OK
+CLR-S  BattlePriest  Cleric    Stone Maul            100%    2.6    13.0   30  OK
+CLR-A  WindCleric    Cleric    Darkwood Bow          100%    2.0    18.0   27  OK
+CLR-I  HighPriest    Cleric    Smoldering Rod        100%    1.9    18.7   27  OK
+SOR-S  Spellsword    Sorcerer  Stone Maul            100%    2.6    12.9   30  OK
+SOR-A  StormMage     Sorcerer  Darkwood Bow          100%    2.0    18.4   27  OK
+SOR-I  Elementalist  Sorcerer  Smoldering Rod        100%    1.9    21.4   27  OK
+
+--- Level 7 vs Bonecaster (L7, HP=26, ARM=0, INT) ---
+ID     Name          Class     Weapon             WinRate AvgRnd Dmg/Rnd   HP  Status
+---------------------------------------------------------------------------------------------------------
+WAR-S  Tank          Warrior   Stone Maul            100%    1.9    21.3   34  OK
+WAR-A  Fury          Warrior   Darkwood Bow          100%    1.5    26.9   31  OK
+WAR-I  Battlemage    Warrior   Smoldering Rod        100%    3.0     9.8   31  OK
+PAL-S  Crusader      Paladin   Stone Maul            100%    1.9    20.2   34  OK
+PAL-A  Avenger       Paladin   Darkwood Bow          100%    1.5    25.1   31  OK
+PAL-I  Templar       Paladin   Smoldering Rod        100%    2.9     9.9   31  OK
+RAN-S  Beastmaster   Ranger    Stone Maul            100%    2.0    21.1   34  OK
+RAN-A  Sharpshooter  Ranger    Darkwood Bow          100%    1.6    27.2   31  OK
+RAN-I  ArcaneArcher  Ranger    Smoldering Rod        100%    2.9     9.8   31  OK
+ROG-S  Thug          Rogue     Stone Maul            100%    1.9    19.4   34  OK
+ROG-A  Assassin      Rogue     Darkwood Bow          100%    1.6    24.6   31  OK
+ROG-I  Trickster     Rogue     Smoldering Rod        100%    2.9    10.2   31  OK
+DRU-S  Bear          Druid     Stone Maul            100%    2.0    19.9   34  OK
+DRU-A  Cat           Druid     Darkwood Bow          100%    1.5    25.6   31  OK
+DRU-I  Caster        Druid     Smoldering Rod        100%    2.9    10.4   31  OK
+WLK-S  Hexblade      Warlock   Stone Maul            100%    1.9    19.1   34  OK
+WLK-A  Shadow        Warlock   Darkwood Bow          100%    1.6    24.7   31  OK
+WLK-I  VoidMage      Warlock   Smoldering Rod        100%    2.9    12.0   31  OK
+WIZ-S  WarMage       Wizard    Stone Maul            100%    1.9    19.1   34  OK
+WIZ-A  Spellblade    Wizard    Darkwood Bow          100%    1.6    24.1   31  OK
+WIZ-I  Archmage      Wizard    Smoldering Rod        100%    2.7    12.5   31  OK
+CLR-S  BattlePriest  Cleric    Stone Maul            100%    2.0    18.7   34  OK
+CLR-A  WindCleric    Cleric    Darkwood Bow          100%    1.6    25.1   31  OK
+CLR-I  HighPriest    Cleric    Smoldering Rod        100%    2.9     9.9   31  OK
+SOR-S  Spellsword    Sorcerer  Stone Maul            100%    1.9    19.1   34  OK
+SOR-A  StormMage     Sorcerer  Darkwood Bow          100%    1.6    24.5   31  OK
+SOR-I  Elementalist  Sorcerer  Smoldering Rod        100%    2.9    11.4   31  OK
+
+--- Level 10 vs Dusk Drake (L10, HP=52, ARM=2, INT) ---
+ID     Name          Class     Weapon             WinRate AvgRnd Dmg/Rnd   HP  Status
+---------------------------------------------------------------------------------------------------------
+WAR-S  Tank          Warrior   Stone Maul            100%    3.2    17.7   50  OK
+WAR-A  Fury          Warrior   Darkwood Bow          100%    3.1    20.6   47  OK
+WAR-I  Battlemage    Warrior   Smoldering Rod        100%    5.9     9.7   47  OK
+PAL-S  Crusader      Paladin   Stone Maul            100%    3.9    15.8   55  OK
+PAL-A  Avenger       Paladin   Darkwood Bow          100%    3.3    19.5   52  OK
+RAN-S  Beastmaster   Ranger    Stone Maul            100%    3.8    16.7   40  OK
+RAN-A  Sharpshooter  Ranger    Darkwood Bow          100%    2.8    23.8   37  OK
+RAN-I  ArcaneArcher  Ranger    Smoldering Rod        100%    5.6    10.2   37  OK
+ROG-S  Thug          Rogue     Stone Maul            100%    4.0    14.9   40  OK
+ROG-A  Assassin      Rogue     Darkwood Bow          100%    3.0    21.4   37  OK
+ROG-I  Trickster     Rogue     Smoldering Rod        100%    5.3    11.0   37  OK
+DRU-S  Bear          Druid     Stone Maul            100%    3.7    16.7   42  OK
+DRU-A  Cat           Druid     Darkwood Bow          100%    3.0    21.2   38  OK
+DRU-I  Caster        Druid     Smoldering Rod        100%    5.3    11.0   38  OK
+WLK-S  Hexblade      Warlock   Stone Maul            100%    4.1    14.5   40  OK
+WLK-A  Shadow        Warlock   Darkwood Bow          100%    3.1    20.7   37  OK
+WLK-I  VoidMage      Warlock   Smoldering Rod        100%    4.4    13.7   37  OK
+WIZ-S  WarMage       Wizard    Stone Maul            100%    4.3    13.8   40  OK
+WIZ-A  Spellblade    Wizard    Darkwood Bow          100%    3.3    18.9   37  OK
+WIZ-I  Archmage      Wizard    Smoldering Rod        100%    4.1    13.7   37  OK
+CLR-S  BattlePriest  Cleric    Stone Maul            100%    4.2    14.0   50  OK
+CLR-A  WindCleric    Cleric    Darkwood Bow          100%    3.3    18.9   47  OK
+SOR-S  Spellsword    Sorcerer  Stone Maul            100%    4.1    15.2   42  OK
+SOR-A  StormMage     Sorcerer  Darkwood Bow          100%    3.3    19.0   38  OK
+SOR-I  Elementalist  Sorcerer  Smoldering Rod        100%    4.9    12.1   38  OK
+PAL-I  Templar       Paladin   Smoldering Rod        100%    5.8     9.8   52  OK
+CLR-I  HighPriest    Cleric    Smoldering Rod        100%    5.5    10.5   47  OK
+
+--- Level 10 vs Basilisk (L10, HP=100, ARM=4, STR) ---
+ID     Name          Class     Weapon             WinRate AvgRnd Dmg/Rnd   HP  Status
+---------------------------------------------------------------------------------------------------------
+CLR-A  WindCleric    Cleric    Darkwood Bow            1%    3.0    13.4   47  BLOCKED
+PAL-A  Avenger       Paladin   Darkwood Bow            0%    3.2    13.6   52  BLOCKED
+WAR-A  Fury          Warrior   Darkwood Bow            0%    3.1    14.8   47  BLOCKED
+RAN-A  Sharpshooter  Ranger    Darkwood Bow            0%    2.4    17.0   37  BLOCKED
+WLK-A  Shadow        Warlock   Darkwood Bow            0%    2.4    14.4   37  BLOCKED
+SOR-A  StormMage     Sorcerer  Darkwood Bow            0%    2.6    12.3   38  BLOCKED
+WAR-S  Tank          Warrior   Stone Maul              0%    5.4     9.8   50  BLOCKED
+WAR-I  Battlemage    Warrior   Smoldering Rod          0%    2.9    15.1   47  BLOCKED
+PAL-S  Crusader      Paladin   Stone Maul              0%    5.9     8.5   55  BLOCKED
+PAL-I  Templar       Paladin   Smoldering Rod          0%    3.0    14.8   52  BLOCKED
+RAN-S  Beastmaster   Ranger    Stone Maul              0%    4.5     8.3   40  BLOCKED
+RAN-I  ArcaneArcher  Ranger    Smoldering Rod          0%    2.8    11.4   37  BLOCKED
+ROG-S  Thug          Rogue     Stone Maul              0%    4.6     7.3   40  BLOCKED
+ROG-A  Assassin      Rogue     Darkwood Bow            0%    2.4    15.0   37  BLOCKED
+ROG-I  Trickster     Rogue     Smoldering Rod          0%    2.8    12.0   37  BLOCKED
+DRU-S  Bear          Druid     Stone Maul              0%    4.8     9.1   42  BLOCKED
+DRU-A  Cat           Druid     Darkwood Bow            0%    2.5    14.3   38  BLOCKED
+DRU-I  Caster        Druid     Smoldering Rod          0%    2.8    15.1   38  BLOCKED
+WLK-S  Hexblade      Warlock   Stone Maul              0%    4.7     7.4   40  BLOCKED
+WLK-I  VoidMage      Warlock   Smoldering Rod          0%    2.8    14.4   37  BLOCKED
+WIZ-S  WarMage       Wizard    Stone Maul              0%    4.8     7.0   40  BLOCKED
+WIZ-A  Spellblade    Wizard    Darkwood Bow            0%    2.4    13.6   37  BLOCKED
+WIZ-I  Archmage      Wizard    Smoldering Rod          0%    2.8    14.6   37  BLOCKED
+CLR-S  BattlePriest  Cleric    Stone Maul              0%    5.3     7.2   50  BLOCKED
+CLR-I  HighPriest    Cleric    Smoldering Rod          0%    2.8    16.2   47  BLOCKED
+SOR-S  Spellsword    Sorcerer  Stone Maul              0%    5.0     8.3   42  BLOCKED
+SOR-I  Elementalist  Sorcerer  Smoldering Rod          0%    2.8    16.3   38  BLOCKED
+  !! BLOCKED (< 20% win): CLR-A, PAL-A, WAR-A, RAN-A, WLK-A, SOR-A, WAR-S, WAR-I, PAL-S, PAL-I, RAN-S, RAN-I, ROG-S, ROG-A, ROG-I, DRU-S, DRU-A, DRU-I, WLK-S, WLK-I, WIZ-S, WIZ-A, WIZ-I, CLR-S, CLR-I, SOR-S, SOR-I
+
+==================================================================================================================================
+  PvP COMBAT SIMULATION: All archetypes vs all archetypes at Level 10
+  500 iterations per matchup. Shows win rate for row vs column.
+==================================================================================================================================
+
+--- Aggregate PvP Performance at L10 ---
+ID     Name          Class     Weapon             AvgWin% vsSTR% vsAGI% vsINT% AvgRnd    Best   Worst
+------------------------------------------------------------------------------------------------------------------------
+PAL-S  Crusader      Paladin   Stone Maul             89%    91%    78%    99%    3.5    100%     53%
+WAR-S  Tank          Warrior   Stone Maul             89%    94%    75%    98%    3.2    100%     50%
+PAL-A  Avenger       Paladin   Darkwood Bow           84%    86%    68%    97%    3.5     99%     24%
+WAR-A  Fury          Warrior   Darkwood Bow           82%    89%    58%    96%    3.3     98%     30%
+RAN-A  Sharpshooter  Ranger    Darkwood Bow           82%    59%    93%    94%    2.9     99%     41%
+CLR-A  WindCleric    Cleric    Darkwood Bow           79%    81%    55%    98%    3.5    100%     16%
+DRU-S  Bear          Druid     Stone Maul             79%    73%    68%    95%    3.3    100%     27%
+DRU-A  Cat           Druid     Darkwood Bow           77%    67%    73%    92%    3.1     97%     34%
+SOR-S  Spellsword    Sorcerer  Stone Maul             73%    64%    60%    96%    3.4    100%     11%
+ROG-A  Assassin      Rogue     Darkwood Bow           72%    52%    71%    93%    3.0     98%     35%
+WLK-A  Shadow        Warlock   Darkwood Bow           72%    52%    69%    95%    3.1     97%     30%
+CLR-S  BattlePriest  Cleric    Stone Maul             71%    50%    65%    96%    3.7     99%      6%
+RAN-S  Beastmaster   Ranger    Stone Maul             71%    50%    66%    94%    3.2    100%      6%
+SOR-A  StormMage     Sorcerer  Darkwood Bow           64%    65%    30%    93%    3.2     96%      6%
+WLK-S  Hexblade      Warlock   Stone Maul             62%    33%    57%    92%    3.4     96%      2%
+ROG-S  Thug          Rogue     Stone Maul             61%    35%    56%    90%    3.4     96%      4%
+WIZ-S  WarMage       Wizard    Stone Maul             59%    27%    53%    94%    3.4     99%      1%
+WIZ-A  Spellblade    Wizard    Darkwood Bow           58%    50%    27%    93%    3.1     98%      7%
+WIZ-I  Archmage      Wizard    Smoldering Rod         50%    32%    30%    91%    3.2     97%     13%
+CLR-I  HighPriest    Cleric    Smoldering Rod         47%    51%    22%    71%    4.0     93%      6%
+WLK-I  VoidMage      Warlock   Smoldering Rod         46%    29%    29%    82%    3.4     97%     17%
+SOR-I  Elementalist  Sorcerer  Smoldering Rod         44%    42%    22%    71%    3.5     95%     15%
+PAL-I  Templar       Paladin   Smoldering Rod         35%    36%    22%    49%    4.2     85%      9%
+WAR-I  Battlemage    Warrior   Smoldering Rod         30%    37%    17%    37%    4.1     86%      6%
+DRU-I  Caster        Druid     Smoldering Rod         26%    29%    17%    31%    3.6     72%      4%
+ROG-I  Trickster     Rogue     Smoldering Rod         25%    18%    19%    39%    3.5     80%      9%
+RAN-I  ArcaneArcher  Ranger    Smoldering Rod         17%    14%    16%    23%    3.6     54%      4%
+
+  Fight duration: avg 3.4 rounds, longest avg 4.2 rounds (cap: 8)
+
+--- PvP Win Rate by Stat Path ---
+  STR path avg win rate: 72.7%
+  AGI path avg win rate: 74.4%
+  INT path avg win rate: 35.5%
+
+--- PvP Win Rate by Class (averaged across all 3 paths) ---
+  Paladin      avg win rate: 69.5%
+  Warrior      avg win rate: 66.9%
+  Ranger       avg win rate: 56.5%
+  Cleric       avg win rate: 65.9%
+  Druid        avg win rate: 60.7%
+  Sorcerer     avg win rate: 60.5%
+  Rogue        avg win rate: 52.7%
+  Warlock      avg win rate: 59.8%
+  Wizard       avg win rate: 55.5%
+
+====================================================================================================
+  VIABILITY CHECK: Can every archetype clear every monster?
+  Threshold: >= 50% win rate = viable, < 20% = blocked
+====================================================================================================
+
+  Found 27 problem matchups:
+
+Archetype Monster              Level   Win%  Weapon              Status
+--------------------------------------------------------------------------------
+WAR-S     Basilisk                10     0%  Stone Maul          BLOCKED
+WAR-I     Basilisk                10     0%  Smoldering Rod      BLOCKED
+PAL-S     Basilisk                10     0%  Stone Maul          BLOCKED
+PAL-A     Basilisk                10     0%  Darkwood Bow        BLOCKED
+PAL-I     Basilisk                10     0%  Smoldering Rod      BLOCKED
+RAN-S     Basilisk                10     0%  Stone Maul          BLOCKED
+RAN-A     Basilisk                10     0%  Darkwood Bow        BLOCKED
+RAN-I     Basilisk                10     0%  Smoldering Rod      BLOCKED
+ROG-S     Basilisk                10     0%  Stone Maul          BLOCKED
+ROG-I     Basilisk                10     0%  Smoldering Rod      BLOCKED
+DRU-S     Basilisk                10     0%  Stone Maul          BLOCKED
+DRU-A     Basilisk                10     0%  Darkwood Bow        BLOCKED
+DRU-I     Basilisk                10     0%  Smoldering Rod      BLOCKED
+WLK-S     Basilisk                10     0%  Stone Maul          BLOCKED
+WLK-A     Basilisk                10     0%  Darkwood Bow        BLOCKED
+WLK-I     Basilisk                10     0%  Smoldering Rod      BLOCKED
+WIZ-S     Basilisk                10     0%  Stone Maul          BLOCKED
+WIZ-A     Basilisk                10     0%  Darkwood Bow        BLOCKED
+WIZ-I     Basilisk                10     0%  Smoldering Rod      BLOCKED
+CLR-S     Basilisk                10     0%  Stone Maul          BLOCKED
+CLR-A     Basilisk                10     0%  Darkwood Bow        BLOCKED
+CLR-I     Basilisk                10     0%  Smoldering Rod      BLOCKED
+SOR-S     Basilisk                10     0%  Stone Maul          BLOCKED
+SOR-A     Basilisk                10     0%  Darkwood Bow        BLOCKED
+WAR-A     Basilisk                10     1%  Darkwood Bow        BLOCKED
+ROG-A     Basilisk                10     1%  Darkwood Bow        BLOCKED
+SOR-I     Basilisk                10     1%  Smoldering Rod      BLOCKED
+
+====================================================================================================
+  WEAPON EFFECTIVENESS: Average damage per round by weapon (vs L10 Dusk Drake)
+====================================================================================================
+Weapon                 Dmg Scale  R Price  AvgDPR WinRate  Best For
+-------------------------------------------------------------------------------------
+Broken Sword           1-1   STR  0    5g     2.2      0%  WAR-S
+Worn Shortbow          1-1   AGI  0    5g     0.8      0%  WAR-S
+Cracked Wand           1-1 magic  0    5g     0.8      0%  WAR-S
+Iron Axe               1-2   STR  1   15g     3.0      0%  WAR-S
+Hunting Bow            1-2   AGI  1   15g     3.4      0%  WAR-A
+Apprentice Staff       1-2 magic  1   15g     0.8      0%  WAR-S
+Steel Mace             2-4   STR  1   40g     5.4      0%  WAR-S
+Shortbow               2-3   AGI  1   40g     5.1      0%  WAR-A
+Channeling Rod         2-3 magic  1   40g     8.6      0%  WAR-I
+Notched Blade          2-3   STR  1   50g     4.2      0%  WAR-S
+Brute's Cleaver        2-4   STR  2   60g     5.3      0%  WAR-S
+Sporecap Wand          1-2 magic  2   60g     1.8      0%  WAR-S
+Crystal Shard          6-9   STR  2   70g     9.4      0%  WAR-S
+Webspinner Bow         3-4   AGI  2   90g     6.5      0%  WAR-A
+Warhammer              4-7   STR  2  100g     8.5      0%  WAR-S
+Longbow                4-6   AGI  2  100g     8.2      0%  WAR-A
+Mage Staff             3-5 magic  2  100g    11.2      0%  WAR-I
+Dire Rat Fang          2-3   STR  3  150g     3.5      0%  WAR-S
+Troll's Cudgel         4-6   STR  3  180g     8.3      0%  WAR-S
+Bone Staff             3-5 magic  3  180g    21.1      1%  WAR-I
+Stone Maul             5-7   STR  3  250g     9.9      1%  WAR-S
+Darkwood Bow           6-9   AGI  4  220g    13.8      1%  PAL-A
+Smoldering Rod         5-8 magic  4  300g    16.0      0%  WAR-I
+
+====================================================================================================
+  KEY FINDINGS SUMMARY
+====================================================================================================
+
+--- 1. Weapon Availability by Stat Path at L10 ---
+  STR path: 14 total (10 STR, 1 AGI, 3 magic)
+  AGI path: 15 total (6 STR, 6 AGI, 3 magic)
+  INT path: 15 total (5 STR, 3 AGI, 7 magic)
+
+--- 2. PvE Viability Summary ---
+  297 total matchups
+  27 BLOCKED (< 20% win rate)
+  0 HARD (20-50% win rate)
+  270 OK (>= 50% win rate)
+
+--- 3. Crystal Shard Dominance Check ---
+  WAR-S   Crystal Shard: 100% | Best (Stone Maul): 100%
+  PAL-S   Crystal Shard: 100% | Best (Stone Maul): 100%
+  RAN-S   Crystal Shard: 100% | Best (Stone Maul): 100%
+
+
