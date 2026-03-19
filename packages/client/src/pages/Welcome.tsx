@@ -2,18 +2,16 @@ import {
   Box,
   Button,
   HStack,
-  Input,
   keyframes,
   Link,
   Text,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import SafeTypist from '../components/SafeTypist';
-import { API_URL } from '../utils/constants';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
 import { SoundToggle } from '../components/SoundToggle';
@@ -44,43 +42,6 @@ export const Welcome = (): JSX.Element => {
   const { isMapFull, statsLoaded } = useQueue();
   const hydrated = useGameStore((s) => s.hydrated);
 
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailError, setEmailError] = useState('');
-
-  const onEmailSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!email || isSubmitting) return;
-
-    setIsSubmitting(true);
-    setEmailError('');
-
-    try {
-      const existing = JSON.parse(localStorage.getItem('ud:signups') || '[]');
-      existing.push({ email, ts: Date.now() });
-      localStorage.setItem('ud:signups', JSON.stringify(existing));
-    } catch { /* localStorage unavailable */ }
-
-    try {
-      const res = await fetch(`${API_URL}/api/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setEmailError(data.error || 'Something went wrong. Try again.');
-        setIsSubmitting(false);
-        return;
-      }
-      setSubmitted(true);
-    } catch {
-      setSubmitted(true);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   // Capture invite code from URL params
   useEffect(() => {
@@ -277,27 +238,29 @@ export const Welcome = (): JSX.Element => {
             Nothing Is Forgotten
           </Text>
 
-          <VStack fontWeight={500} maxW="850px" spacing={6} textAlign="center">
-            <SafeTypist
-              avgTypingDelay={35}
-              stdTypingDelay={20}
-              cursor={{ show: true, blink: true, element: '▌', hideWhenDone: true, hideWhenDoneDelay: 500 }}
+          <Box position="relative" w="100%">
+            {/* Invisible spacer — reserves final text height */}
+            <VStack
+              fontWeight={500}
+              maxW="850px"
+              mx="auto"
+              spacing={6}
+              textAlign="center"
+              visibility="hidden"
+              aria-hidden="true"
             >
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
                 As you awaken, your eyes flutter open to the stark, eerie ambiance
                 of a dimly lit cave.
               </Text>
-              <SafeTypist.Delay ms={800} />
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
                 Confusion clouds your mind; the cold, hard ground beneath you
                 offers no comfort. Glimpses of blood and bruises on your body only
                 deepen the mystery, painting a silent story of unseen struggles.
               </Text>
-              <SafeTypist.Delay ms={600} />
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
                 Where are you? How did you end up here?
               </Text>
-              <SafeTypist.Delay ms={1000} />
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
                 The shadows around you hold secrets, whispering tales of survival
                 and discovery. Gathering your strength, you rise, the weight of
@@ -306,8 +269,42 @@ export const Welcome = (): JSX.Element => {
                 into the unknown, embarking on a journey where every choice carves
                 your path through the darkness.
               </Text>
-            </SafeTypist>
-          </VStack>
+            </VStack>
+            {/* Typing animation overlaid at exact same position */}
+            <Box position="absolute" top={0} left={0} right={0}>
+              <VStack fontWeight={500} maxW="850px" mx="auto" spacing={6} textAlign="center">
+                <SafeTypist
+                  avgTypingDelay={35}
+                  stdTypingDelay={20}
+                  cursor={{ show: true, blink: true, element: '\u258C', hideWhenDone: true, hideWhenDoneDelay: 500 }}
+                >
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
+                    As you awaken, your eyes flutter open to the stark, eerie ambiance
+                    of a dimly lit cave.
+                  </Text>
+                  <SafeTypist.Delay ms={800} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    Confusion clouds your mind; the cold, hard ground beneath you
+                    offers no comfort. Glimpses of blood and bruises on your body only
+                    deepen the mystery, painting a silent story of unseen struggles.
+                  </Text>
+                  <SafeTypist.Delay ms={600} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    Where are you? How did you end up here?
+                  </Text>
+                  <SafeTypist.Delay ms={1000} />
+                  <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
+                    The shadows around you hold secrets, whispering tales of survival
+                    and discovery. Gathering your strength, you rise, the weight of
+                    uncertainty heavy on your shoulders — yet igniting a spark of
+                    determination within. With a deep breath, you take your first step
+                    into the unknown, embarking on a journey where every choice carves
+                    your path through the darkness.
+                  </Text>
+                </SafeTypist>
+              </VStack>
+            </Box>
+          </Box>
 
           <VStack spacing={3}>
             <Button
@@ -321,99 +318,6 @@ export const Welcome = (): JSX.Element => {
               Enter
             </Button>
             <SoundToggle />
-          </VStack>
-
-          {/* Email signup */}
-          <VStack spacing={3} w="100%">
-            {submitted ? (
-              <VStack spacing={1}>
-                <Text
-                  color="rgba(196, 184, 158, 0.7)"
-                  fontSize="16px"
-                  fontWeight={500}
-                  letterSpacing="0.05em"
-                >
-                  You won&apos;t be forgotten.
-                </Text>
-                <Text
-                  color="rgba(196, 184, 158, 0.4)"
-                  fontSize="15px"
-                  fontStyle="italic"
-                >
-                  We&apos;ll find you when it&apos;s time to rise.
-                </Text>
-              </VStack>
-            ) : (
-              <Box as="form" maxW="420px" mx="auto" onSubmit={onEmailSubmit} w="100%">
-                <VStack spacing={2}>
-                  <Text
-                    color="rgba(196, 184, 158, 0.45)"
-                    fontFamily="'Cinzel', serif"
-                    fontSize={{ base: '12px', sm: '13px' }}
-                    letterSpacing="0.15em"
-                    textTransform="uppercase"
-                  >
-                    Or leave your name — we&apos;ll send word
-                  </Text>
-                  <HStack spacing={0} w="100%">
-                    <Input
-                      bg="rgba(196, 184, 158, 0.05)"
-                      border="1px solid"
-                      borderColor="rgba(196, 184, 158, 0.15)"
-                      borderRadius="0"
-                      color="rgba(232, 220, 200, 0.8)"
-                      fontSize="16px"
-                      h="40px"
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      type="email"
-                      value={email}
-                      _focus={{
-                        borderColor: 'rgba(200, 122, 42, 0.5)',
-                        boxShadow: 'none',
-                      }}
-                      _placeholder={{
-                        color: 'rgba(196, 184, 158, 0.25)',
-                      }}
-                    />
-                    <Box
-                      as="button"
-                      bg={isSubmitting ? 'rgba(200, 122, 42, 0.2)' : 'rgba(200, 122, 42, 0.35)'}
-                      border="1px solid"
-                      borderColor="rgba(200, 122, 42, 0.4)"
-                      borderLeft="none"
-                      color="rgba(232, 220, 200, 0.85)"
-                      cursor={isSubmitting ? 'wait' : 'pointer'}
-                      flexShrink={0}
-                      fontSize="13px"
-                      fontWeight={600}
-                      h="40px"
-                      letterSpacing="0.15em"
-                      opacity={isSubmitting ? 0.6 : 1}
-                      px={5}
-                      textTransform="uppercase"
-                      transition="all 0.2s ease"
-                      type="submit"
-                      _hover={{
-                        bg: isSubmitting ? undefined : 'rgba(200, 122, 42, 0.55)',
-                        color: '#E8DCC8',
-                      }}
-                    >
-                      {isSubmitting ? '...' : 'Awaken'}
-                    </Box>
-                  </HStack>
-                  {emailError && (
-                    <Text
-                      color="rgba(200, 100, 100, 0.8)"
-                      fontSize="15px"
-                      textAlign="center"
-                    >
-                      {emailError}
-                    </Text>
-                  )}
-                </VStack>
-              </Box>
-            )}
           </VStack>
 
           <HStack
