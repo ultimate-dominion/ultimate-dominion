@@ -225,10 +225,9 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
             event: { id: crypto.randomUUID(), eventType: 'death', playerName: playerName, description: eventDesc.death(playerName, mobName), timestamp: 0 },
           });
         }
-        // PvE wins are skipped (too noisy)
       }
     } catch (err) {
-      console.debug('[eventFeed] Backfill combat error:', err);
+      console.error('[eventFeed] Backfill combat error:', err);
     }
   }
 
@@ -516,17 +515,11 @@ async function scanCombatOutcomes(
         broadcaster.broadcastGameEvent(event);
       } else {
         // PvE: only emit deaths (player killed by monster)
-        if (attackersWin) continue; // Player won PvE — skip (too noisy)
+        if (attackersWin) continue; // Player won PvE — skip
 
-        // Find the mob that killed the player
         let mobName = 'a monster';
         if (hasCE && mobsTable) {
           const defenderEntities: Buffer[] = row.defenders || [];
-          // Mobs are in defenders when attackers_are_mobs is false
-          // But player is attacker, so defenders = mobs
-          // Actually, player attacks → player is in attackers, mob is in defenders
-          // If player lost (attackersWin=false), the mob (defender) won
-          // The mob entity is in defenders (or attackers if mob attacked)
           const mobEntities: Buffer[] = row.attackers_are_mobs
             ? (row.attackers || [])
             : defenderEntities;

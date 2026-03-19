@@ -71,10 +71,11 @@ const GAME_EVENT_COLORS: Record<string, string> = {
   character_created: '#9B8EC4', // purple
   class_selection: '#D4A54A', // gold
   fragment_found: '#A8DEFF',  // light blue
+  loot_drop: '#C4A54A',      // warm gold — item found
 };
 
-// Indexer events that should NOT be merged (client-side handles with richer JSX, or not applicable)
-const EXCLUDED_INDEXER_EVENTS = new Set(['rare_find', 'loot_drop']);
+// Indexer events that should NOT be merged (client-side handles with richer JSX)
+const EXCLUDED_INDEXER_EVENTS = new Set(['rare_find']);
 
 // Rare drops and gold offers older than this are filtered out of chat
 const ANNOUNCEMENT_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
@@ -658,12 +659,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   }, [combatOutcomeRows, allCharacters]);
 
   // Convert indexer game events to feed Messages with linked player names
+  // Show the most recent 25 events — no time cutoff (indexer buffer is already capped at 200)
   const indexerEventAnnouncements: Message[] = useMemo(() => {
-    const cutoff = Date.now() - ANNOUNCEMENT_MAX_AGE_MS;
-    return gameEvents
-      .filter(e => !EXCLUDED_INDEXER_EVENTS.has(e.eventType))
-      .filter(e => e.timestamp >= cutoff)
-      .map(event => {
+    const filtered = gameEvents.filter(e => !EXCLUDED_INDEXER_EVENTS.has(e.eventType));
+    const recent = filtered.slice(-25);
+    return recent.map(event => {
         const char = allCharacters.find(c => c.name === event.playerName);
         const nameColor = char ? (CLASS_COLORS[char.entityClass] ?? '#E8DCC8') : '#E8DCC8';
         const suffix = event.description.slice(event.playerName.length);
