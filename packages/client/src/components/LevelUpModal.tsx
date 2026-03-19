@@ -90,7 +90,27 @@ const LEVEL_NARRATIVES: Record<number, { title: string; text: string }> = {
   },
   5: {
     title: 'Beyond the boundary.',
-    text: 'The walls that once held you back crumble to dust at your touch. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe line between predator and prey has never been thinner.',
+    text: 'The ancient ward crumbles at your approach. Beyond lies the Winding Dark \u2014 where other adventurers hunt, and are hunted.\n\nThe full map is yours now. Tread carefully.',
+  },
+  6: {
+    title: 'The tunnels remember.',
+    text: 'Your footsteps echo differently now \u2014 the cave reshapes itself around you, passages opening where there were none.\n\nYou are becoming part of this place.',
+  },
+  7: {
+    title: 'A reputation precedes you.',
+    text: 'Other adventurers step aside when you pass. The creatures of the deep hesitate before striking.\n\nFear is a currency, and you are wealthy.',
+  },
+  8: {
+    title: 'The cave reveals its secrets.',
+    text: 'In the deepest passages, you find markings older than memory \u2014 warnings left by those who came before.\n\nThey did not leave. You will.',
+  },
+  9: {
+    title: 'Something stirs above.',
+    text: 'A draft. Cold, clean air from somewhere far overhead. The cave is not the whole world \u2014 there is something beyond the stone.\n\nYou are almost ready to find it.',
+  },
+  10: {
+    title: 'The masters take notice.',
+    text: 'You have walked the Winding Dark and survived. You have earned the right to choose what you become.\n\nThis is not an ending. It is a transformation.',
   },
 };
 
