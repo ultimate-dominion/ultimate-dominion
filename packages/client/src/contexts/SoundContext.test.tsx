@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SoundProvider, useGameAudio } from './SoundContext';
@@ -12,6 +12,12 @@ vi.mock('howler', () => {
   }));
   return { Howl: mockHowl };
 });
+
+// Mock useAuth — default to not authenticated
+const mockUseAuth = vi.fn().mockReturnValue({ isAuthenticated: false });
+vi.mock('./AuthContext', () => ({
+  useAuth: () => mockUseAuth(),
+}));
 
 const TestConsumer = () => {
   const { soundEnabled, toggleSound } = useGameAudio();
@@ -36,6 +42,8 @@ const renderWithProvider = () => {
 describe('SoundContext', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
+    mockUseAuth.mockReturnValue({ isAuthenticated: false });
   });
 
   afterEach(() => {
@@ -78,9 +86,45 @@ describe('SoundContext', () => {
 
     expect(Howl).toHaveBeenCalledWith(
       expect.objectContaining({
-        src: ['/audio/cave-ambient.ogg'],
+        src: ['/audio/cave-melody.ogg'],
         loop: true,
       }),
     );
+  });
+
+  it('auto-enables sound on authentication', () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: true });
+    renderWithProvider();
+    expect(screen.getByTestId('status').textContent).toBe('on');
+    expect(localStorage.getItem('ud:sound-enabled')).toBe('true');
+  });
+
+  it('does not auto-enable sound twice in the same session', () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: true });
+    renderWithProvider();
+    expect(screen.getByTestId('status').textContent).toBe('on');
+
+    // User manually toggles off
+    fireEvent.click(screen.getByText('toggle'));
+    expect(screen.getByTestId('status').textContent).toBe('off');
+
+    // Re-render — should NOT re-enable because session flag is set
+    cleanup();
+    renderWithProvider();
+    expect(screen.getByTestId('status').textContent).toBe('off');
+  });
+
+  it('does not auto-enable if user previously had sound on (localStorage)', () => {
+    localStorage.setItem('ud:sound-enabled', 'true');
+    mockUseAuth.mockReturnValue({ isAuthenticated: true });
+    renderWithProvider();
+    // Sound already on from localStorage — auto-start shouldn't interfere
+    expect(screen.getByTestId('status').textContent).toBe('on');
+  });
+
+  it('does not auto-enable when not authenticated', () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: false });
+    renderWithProvider();
+    expect(screen.getByTestId('status').textContent).toBe('off');
   });
 });
