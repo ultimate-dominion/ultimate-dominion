@@ -957,8 +957,8 @@ const CharacterCreationInner = (): JSX.Element => {
                 </Text>
               </VStack>
 
-              {/* Continue button */}
-              {rolledOnce && (
+              {/* Continue button — only after player has rolled at least once */}
+              {rolledOnce && rollCount > 0 && (
                 <Button
                   variant="white"
                   w="100%"
