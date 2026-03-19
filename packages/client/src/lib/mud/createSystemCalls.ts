@@ -1282,17 +1282,38 @@ export function createSystemCalls(
     }
   };
 
+  // Gas limit for rest — skip eth_estimateGas. Deferred splice race can show
+  // the rest button while on-chain the character is still in an encounter;
+  // Privy RPC strips revert selectors from estimation errors.
+  const REST_GAS_LIMIT = BigInt(5_000_000);
+
   const rest = async (entity: string): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(entity, 'rest');
     if (ownershipError) return ownershipError;
 
+    // Store check: if the character appears to be in an encounter, bail early.
+    // (Covers most cases; the on-chain revert path below handles the race.)
+    const ee = getTableValue('EncounterEntity', entity) as { encounterId?: string } | undefined;
+    if (ee?.encounterId && ee.encounterId !== ('0x' + '0'.repeat(64))) {
+      return { success: false, error: 'Finish the battle first.', severity: 'warning' };
+    }
+
     try {
       const characterId = entity as `0x${string}`;
 
-      const tx = await worldContract.write.UD__rest([characterId]);
+      const tx = await worldContract.write.UD__rest([characterId], { gas: REST_GAS_LIMIT });
 
       const receipt = await waitForTransaction(tx);
-      return { success: receipt.status === 'success' };
+      if (receipt.status === 'reverted') {
+        // Diagnostic simulation to get the actual revert reason
+        try {
+          await worldContract.simulate.UD__rest([characterId]);
+        } catch (diagError) {
+          return { success: false, error: getContractError(diagError) };
+        }
+        return { success: false, error: 'Rest failed — try again.' };
+      }
+      return { success: true };
     } catch (e) {
       return {
         error: getContractError(e),
