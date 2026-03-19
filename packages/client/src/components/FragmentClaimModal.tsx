@@ -14,6 +14,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import SafeTypist from './SafeTypist';
+import { ShareButton } from './ShareButton';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments, type FragmentStatus } from '../contexts/FragmentContext';
@@ -362,23 +363,35 @@ export const FragmentClaimModal = ({
               CLAIM FRAGMENT
             </Button>
           ) : (
-            <Button
-              onClick={handleClose}
-              variant="outline"
-              size="md"
-              px={10}
-              color={color}
-              borderColor={`${color}35`}
-              fontFamily="'Cinzel', serif"
-              fontSize="sm"
-              letterSpacing="wide"
-              _hover={{
-                bg: `${color}10`,
-                borderColor: `${color}60`,
-              }}
-            >
-              Close
-            </Button>
+            <VStack spacing={3}>
+              <ShareButton
+                text={`Discovered Fragment ${getRomanNumeral(fragment.fragmentType)}: ${fragment.name} in Ultimate Dominion. The fallen speak in riddles.`}
+                shareParams={{
+                  type: 'fragment',
+                  name: fragment.name,
+                  num: fragment.fragmentType.toString(),
+                }}
+                imageSrc={imageSrc}
+                colorAccent={color}
+              />
+              <Button
+                onClick={handleClose}
+                variant="outline"
+                size="md"
+                px={10}
+                color={color}
+                borderColor={`${color}35`}
+                fontFamily="'Cinzel', serif"
+                fontSize="sm"
+                letterSpacing="wide"
+                _hover={{
+                  bg: `${color}10`,
+                  borderColor: `${color}60`,
+                }}
+              >
+                Close
+              </Button>
+            </VStack>
           )}
         </ModalFooter>
       </ModalContent>

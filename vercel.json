@@ -11,7 +11,16 @@
       ]
     }
   ],
+  "functions": {
+    "api/share.ts": {
+      "runtime": "@vercel/node@3.1.7"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/s",
+      "destination": "/api/share"
+    },
     {
       "source": "/guide",
       "destination": "https://ud-guide.vercel.app/guide"
@@ -29,7 +38,7 @@
       "destination": "https://blog-seven-taupe-89.vercel.app/blog/:path*"
     },
     {
-      "source": "/((?!guide|blog|api|_vercel).*)",
+      "source": "/((?!guide|blog|api|s|_vercel).*)",
       "destination": "/index.html"
     }
   ]

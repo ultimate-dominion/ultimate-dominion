@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/s",
+      "destination": "/api/share"
+    },
+    {
       "source": "/api/errors",
       "destination": "/api/errors"
     },
@@ -17,13 +21,16 @@
       "destination": "https://ud-guide.vercel.app/guide/:path*"
     },
     {
-      "source": "/((?!api|guide).*)",
+      "source": "/((?!api|guide|s).*)",
       "destination": "/index.html"
     }
   ],
   "functions": {
     "api/*.ts": {
       "runtime": "@vercel/node@3.1.7"
+    },
+    "api/og.tsx": {
+      "runtime": "@vercel/edge"
     }
   },
   "headers": [
