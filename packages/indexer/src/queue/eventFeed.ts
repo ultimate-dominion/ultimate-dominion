@@ -508,6 +508,9 @@ async function scanCombatOutcomes(
     }
 
     for (const row of rows) {
+      // DEBUG: log raw attackers column format
+      console.log(`[eventFeed] DEBUG attackers: type=${typeof row.attackers}, isArray=${Array.isArray(row.attackers)}, isBuffer=${Buffer.isBuffer(row.attackers)}, value=${JSON.stringify(row.attackers)?.slice(0, 120)}`);
+
       const playerName = await lookupPlayerName(row.attackers, charactersTable);
       if (!playerName) continue;
 
