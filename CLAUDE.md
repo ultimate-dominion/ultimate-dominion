@@ -25,14 +25,17 @@ Full manifesto: `packages/client/src/pages/Manifesto.tsx`. Core principles: perm
 - Manually set Items table values that bypass items.json
 - Deploy PveRewardSystem from uncommitted code
 
-**After any `mud deploy` that touches PveRewardSystem:**
-- Run `item-sync dark_cave` to verify rates survived the upgrade
+**Effect changes follow the same flow** — `effects.json` is the source of truth:
+1. Edit `effects.json`
+2. Commit the change
+3. Run `effect-sync dark_cave --update` to push to chain
+4. Run `effect-sync dark_cave` (verify mode) — must show 0 mismatches
+
+**After any `mud deploy`:**
+- Run `item-sync dark_cave` to verify items AND effects survived the upgrade
+- Run `effect-sync dark_cave` to deep-verify effect stats if item-sync reports missing effects
 - Tag the deploy: `git tag deploy-prod-$(date +%Y%m%d-%H%M)`
 - Run `npx tsx scripts/drop-sim.ts` to confirm player experience matches expectations
-
-**Current known issues (as of 2026-03-19):**
-- items.json is STALE: R3=3 (chain=4), R4=2 (chain=3), HP pots not updated. Must run `item-sync --pull` before any changes.
-- Deployed PveRewardSystem bytecode does NOT match code on disk. Must redeploy from committed HEAD.
 
 ### Documentation Consistency
 **CRITICAL**: The docs (`docs/`) are the source of truth for game design. Before making any major code change:

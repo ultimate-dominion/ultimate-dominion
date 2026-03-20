@@ -74,12 +74,12 @@
       "effectId": "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000",
       "name": "blind",
       "stats": {
-        "agiModifier": -8,
+        "agiModifier": -5,
         "armorModifier": 0,
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": 0,
-        "resistanceStat": 0,
+        "resistanceStat": 2,
         "strModifier": 0
       },
       "validity": {
@@ -155,7 +155,7 @@
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": 0,
-        "resistanceStat": 0,
+        "resistanceStat": 1,
         "strModifier": -8
       },
       "validity": {
@@ -234,7 +234,7 @@
         "damagePerTick": 0,
         "hpModifier": 0,
         "intModifier": -8,
-        "resistanceStat": 0,
+        "resistanceStat": 3,
         "strModifier": 0
       },
       "validity": {

@@ -94,6 +94,10 @@ export const STATUS_EFFECT_NAME_MAPPING: { [key: string]: string } = {
     'Blessing',
   '0x5db83b18b4d1bdc3000000000000000000000000000000000000000000000000':
     'Smoke Cloak',
+  '0xfa5efa0900000000000000000000000000000000000000000000000000000000':
+    'Venom',
+  '0xba5117e000000000000000000000000000000000000000000000000000000000':
+    'Basilisk Venom',
 };
 
 export const STATUS_EFFECT_DESCRIPTION_MAPPING: Record<string, string> = {
@@ -116,4 +120,6 @@ export const STATUS_EFFECT_DESCRIPTION_MAPPING: Record<string, string> = {
   'Soul Drain': '-3 STR, -3 INT for 3 turns',
   Blessing: '+3 INT, +5 Armor, +5 HP for 3 turns',
   'Smoke Cloak': 'Flee without gold penalty',
+  Venom: '3 damage per turn',
+  'Basilisk Venom': '5 damage per turn',
 };

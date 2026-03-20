@@ -483,13 +483,74 @@ Modes:
     );
   }
 
+  // ── Effect Verification (read-only, uses effect-sync for updates) ──
+  const effectsPath = path.join(__dirname, '..', 'zones', zoneName, 'effects.json');
+  let totalEffects = 0;
+  let matchedEffects = 0;
+  let missingEffects = 0;
+
+  // Table ResourceIds from codegen
+  const EFFECTS_TABLE_ID: Hex = '0x7462554400000000000000000000000045666665637473000000000000000000';
+  const EFFECT_TYPE_NAMES = ['Temporary', 'PhysicalDamage', 'MagicDamage', 'StatusEffect'];
+
+  if (fs.existsSync(effectsPath)) {
+    const effectsJson = JSON.parse(fs.readFileSync(effectsPath, 'utf-8'));
+
+    console.log('\n>>> Effects <<<');
+
+    async function checkEffect(name: string, effectId: Hex, expectedType: number) {
+      totalEffects++;
+      try {
+        const [staticData] = await publicClient.readContract({
+          address: worldAddress!,
+          abi: worldAbi,
+          functionName: 'getRecord',
+          args: [EFFECTS_TABLE_ID, [effectId]],
+        });
+        const hex = (staticData as string).slice(2);
+        const effectType = parseInt(hex.slice(0, 2), 16);
+        const effectExists = parseInt(hex.slice(2, 4), 16) === 1;
+
+        if (!effectExists) {
+          console.log(`  MISSING: ${name}`);
+          missingEffects++;
+        } else if (effectType !== expectedType) {
+          console.log(`  TYPE MISMATCH: ${name} — on-chain=${EFFECT_TYPE_NAMES[effectType]}, expected=${EFFECT_TYPE_NAMES[expectedType]}`);
+          missingEffects++;
+        } else {
+          matchedEffects++;
+        }
+      } catch {
+        console.log(`  MISSING: ${name}`);
+        missingEffects++;
+      }
+    }
+
+    for (const e of effectsJson.physicalDamage || []) {
+      await checkEffect(e.name, e.effectId, 1); // PhysicalDamage
+    }
+    for (const e of effectsJson.magicDamage || []) {
+      await checkEffect(e.name, e.effectId, 2); // MagicDamage
+    }
+    for (const e of effectsJson.statusEffects || []) {
+      await checkEffect(e.name, e.effectId, 3); // StatusEffect
+    }
+
+    if (missingEffects > 0) {
+      console.log(`\n  Run effect-sync to create missing effects: npx tsx scripts/effect-sync.ts ${zoneName} --update`);
+    }
+  }
+
   // Summary
   console.log('\n' + '='.repeat(60));
-  console.log(`  Results: ${matchedItems} matched, ${mismatchedItems} mismatched, ${missingItems} missing (${totalItems} total)`);
+  console.log(`  Items:   ${matchedItems} matched, ${mismatchedItems} mismatched, ${missingItems} missing (${totalItems} total)`);
+  if (totalEffects > 0) {
+    console.log(`  Effects: ${matchedEffects} matched, ${missingEffects} missing (${totalEffects} total)`);
+  }
   console.log('='.repeat(60));
 
-  if (mismatchedItems === 0 && missingItems === 0) {
-    console.log('\nAll items in sync!');
+  if (mismatchedItems === 0 && missingItems === 0 && missingEffects === 0) {
+    console.log('\nAll items and effects in sync!');
     return;
   }
 

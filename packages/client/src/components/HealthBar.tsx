@@ -24,6 +24,8 @@ const STATUS_EFFECT_COLOR_MAPPING: { [key: string]: string } = {
   Entangle: 'green',
   'Soul Drain': 'purple',
   Blessing: 'teal',
+  Venom: 'purple.400',
+  'Basilisk Venom': 'purple.600',
 };
 
 export const HealthBar = ({
