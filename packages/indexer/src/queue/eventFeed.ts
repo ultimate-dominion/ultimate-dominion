@@ -965,11 +965,36 @@ async function lookupPlayerName(attackersRaw: unknown, charactersTable: string):
   return null;
 }
 
-/** Parse a MUD packed hex text column (bytes32[]) into Buffer array */
+/**
+ * Parse a MUD dynamic bytes32[] column into Buffer array.
+ * MUD decoded mode stores these as text containing JSON: '{"json":["0x...","0x..."]}'
+ * postgres.js may also return them as {json: [...]} objects.
+ */
 function parsePackedBytes32(raw: unknown): Buffer[] {
   if (!raw) return [];
-  const hex = String(raw);
-  // Handle both "0x..." packed hex and bytea/Buffer values
+
+  // Unwrap postgres.js {json: [...]} wrapper
+  if (typeof raw === 'object' && raw !== null && !Array.isArray(raw) && 'json' in raw) {
+    raw = (raw as Record<string, unknown>).json;
+  }
+  // Unwrap string-serialized jsonb: '{"json":[...]}'
+  if (typeof raw === 'string' && raw.startsWith('{"json":')) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && 'json' in parsed) raw = parsed.json;
+    } catch { /* fall through */ }
+  }
+  // Handle array of hex strings (most common after unwrapping)
+  if (Array.isArray(raw)) {
+    return raw
+      .map(v => {
+        const h = String(v);
+        if (h.startsWith('0x') && h.length === 66) return Buffer.from(h.slice(2), 'hex');
+        return null;
+      })
+      .filter((b): b is Buffer => b !== null);
+  }
+  // Handle raw Buffer/Uint8Array
   if (Buffer.isBuffer(raw) || raw instanceof Uint8Array) {
     const buf = Buffer.from(raw);
     const elements: Buffer[] = [];
@@ -978,6 +1003,8 @@ function parsePackedBytes32(raw: unknown): Buffer[] {
     }
     return elements;
   }
+  // Handle packed hex string
+  const hex = String(raw);
   if (!hex.startsWith('0x') || hex.length < 66) return [];
   const packed = hex.slice(2);
   const elements: Buffer[] = [];
