@@ -508,9 +508,6 @@ async function scanCombatOutcomes(
     }
 
     for (const row of rows) {
-      // DEBUG: log raw attackers column format
-      console.log(`[eventFeed] DEBUG attackers: type=${typeof row.attackers}, isArray=${Array.isArray(row.attackers)}, isBuffer=${Buffer.isBuffer(row.attackers)}, value=${JSON.stringify(row.attackers)?.slice(0, 120)}`);
-
       const playerName = await lookupPlayerName(row.attackers, charactersTable);
       if (!playerName) continue;
 
@@ -950,33 +947,23 @@ async function scanMarketplaceListings(
 /** Look up a character name from a MUD packed attackers column */
 async function lookupPlayerName(attackersRaw: unknown, charactersTable: string): Promise<string | null> {
   const entities = parsePackedBytes32(attackersRaw);
-  if (entities.length === 0) {
-    console.log(`[eventFeed] lookupPlayerName: parsePackedBytes32 returned empty. raw type=${typeof attackersRaw}, value=${JSON.stringify(attackersRaw)?.slice(0, 100)}`);
-    return null;
-  }
+  if (entities.length === 0) return null;
   try {
     // characterId is 32 bytes: first 20 = wallet address, last 12 = token index
-    // Match on wallet address (first 20 bytes) since that's unique per player
     const walletBytes = entities[0].subarray(0, 20);
     const row = await sql.unsafe(`
       SELECT "name" FROM "${mudSchema}"."${charactersTable}"
       WHERE substring("__key_bytes" from 1 for 20) = $1 LIMIT 1
     `, [walletBytes]);
     if (row.length > 0) return decodeCharacterName(row[0].name);
-    console.log(`[eventFeed] lookupPlayerName: no character found for wallet 0x${walletBytes.toString('hex')}`);
-  } catch (err) {
-    console.error('[eventFeed] lookupPlayerName error:', err);
-  }
+  } catch { /* fall through */ }
   return null;
 }
 
 /** Look up an item's display name from ItemsURIStorage */
 async function lookupItemName(itemId: string | number, syncHandle: SyncHandle): Promise<string | null> {
   const uriTable = syncHandle.tableNameMap.get('ItemsURIStorage');
-  if (!uriTable) {
-    console.log(`[eventFeed] lookupItemName: ItemsURIStorage not in tableNameMap. Available: ${[...syncHandle.tableNameMap.keys()].filter(k => k.toLowerCase().includes('uri')).join(', ')}`);
-    return null;
-  }
+  if (!uriTable) return null;
   try {
     const row = await sql.unsafe(`
       SELECT "uri" FROM "${mudSchema}"."${uriTable}"
@@ -993,10 +980,7 @@ async function lookupItemName(itemId: string | number, syncHandle: SyncHandle): 
           .join(' ');
       }
     }
-    console.log(`[eventFeed] lookupItemName: no URI found for item ${itemId} in ${uriTable}`);
-  } catch (err) {
-    console.error('[eventFeed] lookupItemName error:', err);
-  }
+  } catch { /* fall through */ }
   return null;
 }
 
@@ -1012,12 +996,16 @@ function parsePackedBytes32(raw: unknown): Buffer[] {
   if (typeof raw === 'object' && raw !== null && !Array.isArray(raw) && 'json' in raw) {
     raw = (raw as Record<string, unknown>).json;
   }
-  // Unwrap string-serialized jsonb: '{"json":[...]}'
-  if (typeof raw === 'string' && raw.startsWith('{"json":')) {
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object' && 'json' in parsed) raw = parsed.json;
-    } catch { /* fall through */ }
+  // Unwrap string-serialized jsonb: '{"json":[...]}' or plain JSON array '["0x..."]'
+  if (typeof raw === 'string') {
+    if (raw.startsWith('{"json":')) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && 'json' in parsed) raw = parsed.json;
+      } catch { /* fall through */ }
+    } else if (raw.startsWith('[')) {
+      try { raw = JSON.parse(raw); } catch { /* fall through */ }
+    }
   }
   // Handle array of hex strings (most common after unwrapping)
   if (Array.isArray(raw)) {
