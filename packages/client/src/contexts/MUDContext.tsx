@@ -573,6 +573,26 @@ const MUDProviderInner = ({
     return () => clearInterval(interval);
   }, [authMethod, burner, callRelayerFund, externalWalletClient]);
 
+  // Register embedded wallets with relayer for gas top-ups + periodic re-registration.
+  // Embedded wallets send txs directly (no burner), so burner === delegator.
+  // Fires on setup and every 10 min to survive relayer redeploys.
+  useEffect(() => {
+    if (authMethod !== 'embedded') return;
+    if (!embeddedSetup) return;
+
+    const addr = embeddedSetup.walletAddress;
+
+    // Initial registration
+    callRelayerFund(addr, addr);
+
+    // Re-register every 10 minutes
+    const interval = setInterval(() => {
+      callRelayerFund(addr, addr);
+    }, 600_000);
+
+    return () => clearInterval(interval);
+  }, [authMethod, callRelayerFund, embeddedSetup]);
+
   // =============================================
   // Burner balance polling (shared, works for both paths)
   // =============================================
