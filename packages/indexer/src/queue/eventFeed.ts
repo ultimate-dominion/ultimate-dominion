@@ -154,7 +154,6 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
   const fragmentTable = syncHandle.tableNameMap.get('FragmentProgress');
   const mobsTable = syncHandle.tableNameMap.get('Mobs');
   const outcomeTable = syncHandle.tableNameMap.get('CombatOutcome');
-  const worldEncTable = syncHandle.tableNameMap.get('WorldEncounter');
   const combatEncTable = syncHandle.tableNameMap.get('CombatEncounter');
   const itemsTable = syncHandle.tableNameMap.get('Items');
 
@@ -216,17 +215,15 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
   } catch (err) { console.error('[eventFeed] Backfill char creation error:', err); }
 
   // 3. Combat outcomes (PvP kills + PvE deaths)
-  if (outcomeTable && worldEncTable) {
+  if (outcomeTable && combatEncTable) {
     try {
-      const hasCE = !!combatEncTable;
       const rows = await sql.unsafe(`
         SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."attackers_win",
+               ce."encounter_type", ce."defenders", ce."attackers",
                c."name" as player_name
-               ${hasCE ? `, ce."encounter_type", ce."defenders", ce."attackers"` : ''}
         FROM "${mudSchema}"."${outcomeTable}" co
-        JOIN "${mudSchema}"."${worldEncTable}" we ON co."__key_bytes" = we."__key_bytes"
-        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON we."character" = c."__key_bytes"
-        ${hasCE ? `LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"` : ''}
+        LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"
+        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON ce."attackers"[1] = c."__key_bytes"
         ORDER BY co."__last_updated_block_number" DESC
         LIMIT ${BACKFILL_LIMIT * 2}
       `);
@@ -235,12 +232,12 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
         const playerName = decodeCharacterName(row.player_name);
         if (!playerName) continue;
         const attackersWin = Boolean(row.attackers_win);
-        const isPvP = hasCE && Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
+        const isPvP = Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
         const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
 
         if (isPvP) {
           const playerWon = attackersWin;
-          const opponentEntities: Buffer[] = playerWon ? (row.defenders || []) : (row.attackers || []);
+          const opponentEntities: Buffer[] = row.defenders || [];
           let opponentName = 'an opponent';
           if (opponentEntities.length > 0) {
             try {
@@ -264,10 +261,10 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
         } else if (!attackersWin) {
           // PvE death — player lost
           let mobName = 'a monster';
-          if (hasCE && mobsTable) {
-            const defenderEntities: Buffer[] = row.defenders || [];
-            if (defenderEntities.length > 0) {
-              const mobId = decodeMobIdFromEntity(defenderEntities[0]);
+          if (mobsTable) {
+            const mobEntities: Buffer[] = row.defenders || [];
+            if (mobEntities.length > 0) {
+              const mobId = decodeMobIdFromEntity(mobEntities[0]);
               if (mobId > 0) mobName = await getMobName(mobId, mobsTable);
             }
           }
@@ -288,13 +285,13 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
   }
 
   // 4. Loot drops — iterate ALL items, emit per Uncommon+ item
-  if (outcomeTable && worldEncTable) {
+  if (outcomeTable && combatEncTable) {
     try {
       const rows = await sql.unsafe(`
         SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."items_dropped", c."name"
         FROM "${mudSchema}"."${outcomeTable}" co
-        JOIN "${mudSchema}"."${worldEncTable}" we ON co."__key_bytes" = we."__key_bytes"
-        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON we."character" = c."__key_bytes"
+        LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"
+        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON ce."attackers"[1] = c."__key_bytes"
         WHERE co."items_dropped" IS NOT NULL AND array_length(co."items_dropped", 1) > 0
         ORDER BY co."__last_updated_block_number" DESC
         LIMIT ${BACKFILL_LIMIT}
@@ -395,6 +392,7 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
       if (currentBlock <= lastScannedBlock) return;
 
       const scanFrom = lastScannedBlock + 1;
+      console.log(`[eventFeed] Scanning blocks ${scanFrom}-${currentBlock}`);
 
       await scanLevelUps(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanCombatOutcomes(syncHandle, scanFrom, currentBlock, broadcaster);
@@ -441,7 +439,7 @@ async function scanLevelUps(
       WHERE s."__last_updated_block_number" >= $1
         AND s."__last_updated_block_number" <= $2
         AND s."level" IN (3, 5, 7)
-    `, [fromBlock.toString(), toBlock.toString()]);
+    `, [fromBlock, toBlock]);
 
     for (const row of rows) {
       const name = decodeCharacterName(row.name);
@@ -464,8 +462,8 @@ async function scanLevelUps(
       addEvent(event, toBlock, `level_up:${dedupKey}`);
       broadcaster.broadcastGameEvent(event);
     }
-  } catch {
-    // Table might not exist yet during initial sync
+  } catch (err) {
+    console.error('[eventFeed] Level-up scan error:', err);
   }
 }
 
@@ -510,29 +508,24 @@ async function scanCombatOutcomes(
 ) {
   const outcomeTable = syncHandle.tableNameMap.get('CombatOutcome');
   const combatEncTable = syncHandle.tableNameMap.get('CombatEncounter');
-  const worldEncTable = syncHandle.tableNameMap.get('WorldEncounter');
   const charactersTable = syncHandle.tableNameMap.get('Characters');
   const mobsTable = syncHandle.tableNameMap.get('Mobs');
-  logMissing('Combat', [['CombatOutcome', outcomeTable], ['WorldEncounter', worldEncTable], ['Characters', charactersTable]]);
-  if (!outcomeTable || !worldEncTable || !charactersTable) return;
+  logMissing('Combat', [['CombatOutcome', outcomeTable], ['CombatEncounter', combatEncTable], ['Characters', charactersTable]]);
+  if (!outcomeTable || !combatEncTable || !charactersTable) return;
 
   try {
-    // Join CombatEncounter (if available) for encounter_type and defenders
-    const hasCE = !!combatEncTable;
     const rows = await sql.unsafe(`
       SELECT co."__key_bytes", co."attackers_win",
-             c."name" as player_name,
-             we."character" as player_entity
-             ${hasCE ? `, ce."encounter_type", ce."defenders", ce."attackers"` : ''}
+             ce."encounter_type", ce."defenders", ce."attackers",
+             c."name" as player_name
       FROM "${mudSchema}"."${outcomeTable}" co
-      JOIN "${mudSchema}"."${worldEncTable}" we
-        ON co."__key_bytes" = we."__key_bytes"
+      LEFT JOIN "${mudSchema}"."${combatEncTable}" ce
+        ON co."__key_bytes" = ce."__key_bytes"
       LEFT JOIN "${mudSchema}"."${charactersTable}" c
-        ON we."character" = c."__key_bytes"
-      ${hasCE ? `LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"` : ''}
+        ON ce."attackers"[1] = c."__key_bytes"
       WHERE co."__last_updated_block_number" >= $1
         AND co."__last_updated_block_number" <= $2
-    `, [fromBlock.toString(), toBlock.toString()]);
+    `, [fromBlock, toBlock]);
 
     if (rows.length > 0) {
       console.log(`[eventFeed] Combat scan: ${rows.length} outcome(s) in blocks ${fromBlock}-${toBlock}`);
@@ -547,16 +540,13 @@ async function scanCombatOutcomes(
       emittedCombat.add(keyHex);
 
       const attackersWin = Boolean(row.attackers_win);
-      const isPvP = hasCE && Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
+      const isPvP = Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
 
       if (isPvP) {
         // PvP: emit one event per combat — "{Winner} defeated {Loser}"
-        // Player is always in attackers (WorldEncounter.character starts the fight)
+        // Player (initiator) is always in attackers, opponent in defenders
         const playerWon = attackersWin;
-        // The opponent is the first entity in the other side
-        const opponentEntities: Buffer[] = playerWon
-          ? (row.defenders || [])
-          : (row.attackers || []);
+        const opponentEntities: Buffer[] = row.defenders || [];
         let opponentName = 'an opponent';
         if (opponentEntities.length > 0) {
           const oppEntity = opponentEntities[0];
@@ -589,11 +579,8 @@ async function scanCombatOutcomes(
         if (attackersWin) continue; // Player won PvE — skip
 
         let mobName = 'a monster';
-        if (hasCE && mobsTable) {
-          const defenderEntities: Buffer[] = row.defenders || [];
-          const mobEntities: Buffer[] = row.attackers_are_mobs
-            ? (row.attackers || [])
-            : defenderEntities;
+        if (mobsTable) {
+          const mobEntities: Buffer[] = row.defenders || [];
           if (mobEntities.length > 0) {
             const mobId = decodeMobIdFromEntity(mobEntities[0]);
             if (mobId > 0) {
@@ -632,25 +619,25 @@ async function scanLootDrops(
   broadcaster: Broadcaster,
 ) {
   const outcomeTable = syncHandle.tableNameMap.get('CombatOutcome');
-  const worldEncTable = syncHandle.tableNameMap.get('WorldEncounter');
+  const combatEncTable = syncHandle.tableNameMap.get('CombatEncounter');
   const charactersTable = syncHandle.tableNameMap.get('Characters');
   const itemsTable = syncHandle.tableNameMap.get('Items');
-  if (!outcomeTable || !worldEncTable || !charactersTable) return;
+  if (!outcomeTable || !combatEncTable || !charactersTable) return;
 
   try {
-    // Find combat outcomes with items dropped, joined with character name via WorldEncounter
+    // Find combat outcomes with items dropped, get player name via CombatEncounter.attackers
     const rows = await sql.unsafe(`
       SELECT co."__key_bytes", co."items_dropped", c."name"
       FROM "${mudSchema}"."${outcomeTable}" co
-      JOIN "${mudSchema}"."${worldEncTable}" we
-        ON co."__key_bytes" = we."__key_bytes"
+      LEFT JOIN "${mudSchema}"."${combatEncTable}" ce
+        ON co."__key_bytes" = ce."__key_bytes"
       LEFT JOIN "${mudSchema}"."${charactersTable}" c
-        ON we."character" = c."__key_bytes"
+        ON ce."attackers"[1] = c."__key_bytes"
       WHERE co."__last_updated_block_number" >= $1
         AND co."__last_updated_block_number" <= $2
         AND co."items_dropped" IS NOT NULL
         AND array_length(co."items_dropped", 1) > 0
-    `, [fromBlock.toString(), toBlock.toString()]);
+    `, [fromBlock, toBlock]);
 
     if (rows.length > 0) {
       console.log(`[eventFeed] Loot scan: ${rows.length} drop(s) in blocks ${fromBlock}-${toBlock}`);
@@ -659,7 +646,8 @@ async function scanLootDrops(
     for (const row of rows) {
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
       const name = decodeCharacterName(row.name) || 'An adventurer';
-      const itemIds: string[] = Array.isArray(row.items_dropped) ? row.items_dropped : [];
+      const rawDropped = row.items_dropped;
+      const itemIds: string[] = Array.isArray(rawDropped) ? rawDropped.map(String) : [];
       if (itemIds.length === 0) continue;
 
       // Iterate ALL items — emit one event per Uncommon+ item
@@ -733,7 +721,7 @@ async function scanNewCharacters(
          WHERE "__last_updated_block_number" >= $1
            AND "__last_updated_block_number" <= $2
            AND "name" IS NOT NULL`;
-    const rows = await sql.unsafe(query, [fromBlock.toString(), toBlock.toString()]);
+    const rows = await sql.unsafe(query, [fromBlock, toBlock]);
 
     for (const row of rows) {
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
@@ -753,8 +741,8 @@ async function scanNewCharacters(
       addEvent(event, toBlock, `character:${keyHex}`);
       broadcaster.broadcastGameEvent(event);
     }
-  } catch {
-    // Table might not exist yet
+  } catch (err) {
+    console.error('[eventFeed] New character scan error:', err);
   }
 }
 
@@ -782,7 +770,7 @@ async function scanAdvancedClassSelections(
         AND s."__last_updated_block_number" <= $2
         AND s."advanced_class" IS NOT NULL
         AND s."advanced_class" > 0
-    `, [fromBlock.toString(), toBlock.toString()]);
+    `, [fromBlock, toBlock]);
 
     for (const row of rows) {
       const name = decodeCharacterName(row.name);
@@ -807,8 +795,8 @@ async function scanAdvancedClassSelections(
       addEvent(event, toBlock, `class:${dedupKey}`);
       broadcaster.broadcastGameEvent(event);
     }
-  } catch {
-    // Table might not exist yet
+  } catch (err) {
+    console.error('[eventFeed] Class selection scan error:', err);
   }
 }
 
@@ -832,7 +820,7 @@ async function scanFragmentDiscoveries(
       WHERE fp."__last_updated_block_number" >= $1
         AND fp."__last_updated_block_number" <= $2
         AND fp."triggered" = true
-    `, [fromBlock.toString(), toBlock.toString()]);
+    `, [fromBlock, toBlock]);
 
     for (const row of rows) {
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
@@ -851,8 +839,8 @@ async function scanFragmentDiscoveries(
       addEvent(event, toBlock, `fragment:${keyHex}`);
       broadcaster.broadcastGameEvent(event);
     }
-  } catch {
-    // Table might not exist yet
+  } catch (err) {
+    console.error('[eventFeed] Fragment scan error:', err);
   }
 }
 
