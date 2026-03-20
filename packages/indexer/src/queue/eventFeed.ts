@@ -23,13 +23,13 @@ const eventDesc = {
   levelUp: (name: string, level: number) => `${name} reached Level ${level}!`,
   classSelection: (name: string, className: string) =>
     `${name} ${CLASS_FLAVOR[className] || `became a ${className}!`}`,
-  fragmentFound: (name: string) => `${name} uncovered a lost fragment...`,
+  allFragments: (name: string) => `${name} assembled all 8 Lore Fragments! The cave whispers their name...`,
   characterCreated: (name: string) => `${name} awakens in the Dark Cave.`,
   pvpKill: (winner: string, loser: string) => `${winner} defeated ${loser} in PvP!`,
   death: (name: string, mobName: string) => `${name} was slain by ${mobName}.`,
-  lootDrop: (name: string, itemDesc: string) => `${name} found ${itemDesc}!`,
-  marketplaceListing: (name: string, itemDesc: string, price: string) =>
-    `${name} listed ${itemDesc} on the marketplace for ${price} Gold`,
+  lootDrop: (name: string, itemName: string) => `${name} found ${itemName}!`,
+  marketplaceListing: (name: string, itemName: string, price: string) =>
+    `${name} listed ${itemName} for ${price} Gold`,
 };
 
 /** Ring buffer of recent game events (serves as history for new clients) */
@@ -167,30 +167,7 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
 
   const allEvents: { block: number; event: GameEvent; dedupKey: string }[] = [];
 
-  // 1. Fragment discoveries
-  if (fragmentTable) {
-    try {
-      const rows = await sql.unsafe(`
-        SELECT fp."__key_bytes", fp."__last_updated_block_number" as block, c."name"
-        FROM "${mudSchema}"."${fragmentTable}" fp
-        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON fp."character_id" = c."__key_bytes"
-        WHERE fp."triggered" = true
-        ORDER BY fp."__last_updated_block_number" DESC
-        LIMIT ${BACKFILL_LIMIT}
-      `);
-      for (const row of rows) {
-        const name = decodeCharacterName(row.name) || 'An adventurer';
-        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-        allEvents.push({
-          block: Number(row.block),
-          dedupKey: `fragment:${keyHex}`,
-          event: { id: crypto.randomUUID(), eventType: 'fragment_found', playerName: name, description: eventDesc.fragmentFound(name), timestamp: 0 },
-        });
-      }
-    } catch (err) { console.error('[eventFeed] Backfill fragments error:', err); }
-  }
-
-  // 2. Character creations (level=1 is a real discrete event)
+  // 1. Character creations (level=1 is a real discrete event)
   try {
     const query = statsTable
       ? `SELECT c."__key_bytes", c."__last_updated_block_number" as block, c."name"
@@ -668,16 +645,19 @@ async function scanLootDrops(
 
           const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
           const rarityName = RARITY_NAMES[rarity] || '';
-          const itemDescStr = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+          // Resolve actual item name from on-chain URI metadata
+          const resolvedName = await lookupItemName(itemIds[i], syncHandle);
+          const displayName = resolvedName || `${typeName}`;
+          const fullItemName = rarityName ? `${rarityName} ${displayName}` : displayName;
           const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
 
           const event: GameEvent = {
             id: crypto.randomUUID(),
             eventType,
             playerName: name,
-            description: eventDesc.lootDrop(name, itemDescStr),
+            description: eventDesc.lootDrop(name, fullItemName),
             timestamp: Date.now(),
-            metadata: { itemId: itemIds[i], rarity, itemType: typeName, itemName: `${rarityName} ${typeName}`.trim() },
+            metadata: { itemId: itemIds[i], rarity, itemType: typeName, itemName: fullItemName },
           };
           addEvent(event, toBlock, `loot:${itemDedupKey}`);
           broadcaster.broadcastGameEvent(event);
@@ -796,7 +776,7 @@ async function scanAdvancedClassSelections(
   }
 }
 
-/** Scan for fragment discoveries (triggered = true) */
+/** Scan for players who collected all 8 lore fragments */
 async function scanFragmentDiscoveries(
   syncHandle: SyncHandle,
   fromBlock: number,
@@ -808,20 +788,29 @@ async function scanFragmentDiscoveries(
   if (!fragmentTable || !charactersTable) return;
 
   try {
+    // Find characters who just triggered a fragment in this block range,
+    // then check if they now have all 8 fragments
     const rows = await sql.unsafe(`
-      SELECT fp."__key_bytes", fp."character_id", c."name"
+      SELECT fp."character_id", c."name",
+             (SELECT COUNT(*) FROM "${mudSchema}"."${fragmentTable}" fp2
+              WHERE fp2."character_id" = fp."character_id" AND fp2."triggered" = true) as total_fragments
       FROM "${mudSchema}"."${fragmentTable}" fp
       LEFT JOIN "${mudSchema}"."${charactersTable}" c
         ON fp."character_id" = c."__key_bytes"
       WHERE fp."__last_updated_block_number" >= $1
         AND fp."__last_updated_block_number" <= $2
         AND fp."triggered" = true
+      GROUP BY fp."character_id", c."name"
     `, [fromBlock, toBlock]);
 
     for (const row of rows) {
-      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-      if (emittedFragments.has(keyHex)) continue;
-      emittedFragments.add(keyHex);
+      const totalFragments = Number(row.total_fragments);
+      if (totalFragments < 8) continue; // Only celebrate the full collection
+
+      const charKeyHex = Buffer.isBuffer(row.character_id) ? row.character_id.toString('hex') : String(row.character_id);
+      const dedupKey = `all_fragments:${charKeyHex}`;
+      if (emittedFragments.has(dedupKey)) continue;
+      emittedFragments.add(dedupKey);
 
       const name = decodeCharacterName(row.name) || 'An adventurer';
 
@@ -829,10 +818,11 @@ async function scanFragmentDiscoveries(
         id: crypto.randomUUID(),
         eventType: 'fragment_found',
         playerName: name,
-        description: eventDesc.fragmentFound(name),
+        description: eventDesc.allFragments(name),
         timestamp: Date.now(),
+        metadata: { totalFragments },
       };
-      addEvent(event, toBlock, `fragment:${keyHex}`);
+      addEvent(event, toBlock, dedupKey);
       broadcaster.broadcastGameEvent(event);
     }
   } catch (err) {
@@ -914,10 +904,12 @@ async function scanMarketplaceListings(
 
       const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
       const rarityName = RARITY_NAMES[rarity] || '';
-      const itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+      const resolvedName = await lookupItemName(row.item_id, syncHandle);
+      const displayName = resolvedName || typeName;
+      const fullItemName = rarityName ? `${rarityName} ${displayName}` : displayName;
 
       // Format gold price (18 decimals)
-      let priceStr = '? ';
+      let priceStr = '?';
       if (row.price) {
         try {
           const goldWei = BigInt(row.price);
@@ -933,14 +925,15 @@ async function scanMarketplaceListings(
         id: crypto.randomUUID(),
         eventType: 'marketplace_listing',
         playerName: sellerName,
-        description: eventDesc.marketplaceListing(sellerName, itemDesc, priceStr),
+        description: eventDesc.marketplaceListing(sellerName, fullItemName, priceStr),
         timestamp: Date.now(),
         metadata: {
           itemId: String(row.item_id),
           rarity,
           itemType: typeName,
-          itemName: `${rarityName} ${typeName}`.trim(),
+          itemName: fullItemName,
           price: row.price ? String(row.price) : undefined,
+          orderHash: '0x' + keyHex,
         },
       };
       addEvent(event, toBlock, `listing:${keyHex}`);
@@ -956,11 +949,38 @@ async function lookupPlayerName(attackersRaw: unknown, charactersTable: string):
   const entities = parsePackedBytes32(attackersRaw);
   if (entities.length === 0) return null;
   try {
+    // characterId is 32 bytes: first 20 = wallet address, last 12 = token index
+    // Match on wallet address (first 20 bytes) since that's unique per player
+    const walletBytes = entities[0].subarray(0, 20);
     const row = await sql.unsafe(`
       SELECT "name" FROM "${mudSchema}"."${charactersTable}"
-      WHERE "__key_bytes" = $1 LIMIT 1
-    `, [entities[0]]);
+      WHERE substring("__key_bytes" from 1 for 20) = $1 LIMIT 1
+    `, [walletBytes]);
     if (row.length > 0) return decodeCharacterName(row[0].name);
+  } catch { /* fall through */ }
+  return null;
+}
+
+/** Look up an item's display name from ItemsURIStorage */
+async function lookupItemName(itemId: string | number, syncHandle: SyncHandle): Promise<string | null> {
+  const uriTable = syncHandle.tableNameMap.get('ItemsURIStorage');
+  if (!uriTable) return null;
+  try {
+    const row = await sql.unsafe(`
+      SELECT "uri" FROM "${mudSchema}"."${uriTable}"
+      WHERE "token_id" = $1 LIMIT 1
+    `, [String(itemId)]);
+    if (row.length > 0 && row[0].uri) {
+      // URIs are "type:snake_case_name" e.g. "weapon:dire_rat_fang" → "Dire Rat Fang"
+      const uri = String(row[0].uri);
+      const parts = uri.split(':');
+      if (parts.length >= 2) {
+        return parts.slice(1).join(':')
+          .split('_')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+      }
+    }
   } catch { /* fall through */ }
   return null;
 }
