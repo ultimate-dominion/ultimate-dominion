@@ -42,7 +42,7 @@ import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
-import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
+import { calculateXpBoostPercent, etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getMonsterImage } from '../utils/monsterImages';
 import {
   ADVANCED_CLASS_COLORS,
@@ -1034,13 +1034,18 @@ export const TileDetailsPanel = (): JSX.Element => {
                       fontWeight={700}
                       textAlign="start"
                     >
-                      Adventure Escrow balance:{' '}
+                      Carried Gold:{' '}
                       {etherToFixedNumber(character.escrowGoldBalance)} Gold
+                      {character.escrowGoldBalance > 0n && (
+                        <Text as="span" color="#5A8A3E">
+                          {' '}(+{calculateXpBoostPercent(character.escrowGoldBalance).toFixed(0)}% XP)
+                        </Text>
+                      )}
                     </Text>
                     <Tooltip
                       bg="#14120F"
                       hasArrow
-                      label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Winding Dark, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
+                      label="Carried Gold is earned from battles. Carrying more Gold helps you level up faster, but in the Winding Dark, you risk losing it to other players."
                       placement="top"
                       shouldWrapChildren
                     >

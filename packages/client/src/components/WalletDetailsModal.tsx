@@ -292,13 +292,13 @@ export const WalletDetailsModal = ({
                   </Text>
                   <HStack fontSize="xs" mt={1} spacing={4}>
                     <Text color="#6A6050">
-                      Spendable:{' '}
+                      Stashed:{' '}
                       <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
                         {Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()}
                       </Text>
                     </Text>
                     <Text color="#6A6050">
-                      Escrow:{' '}
+                      Carried:{' '}
                       <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
                         {Number(etherToFixedNumber(character.escrowGoldBalance)).toLocaleString()}
                       </Text>
@@ -377,13 +377,13 @@ export const WalletDetailsModal = ({
                     </Text>
                     <HStack fontSize="xs" mt={1} spacing={4}>
                       <Text color="#6A6050">
-                        Spendable:{' '}
+                        Stashed:{' '}
                         <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
                           {Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()}
                         </Text>
                       </Text>
                       <Text color="#6A6050">
-                        Escrow:{' '}
+                        Carried:{' '}
                         <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
                           {Number(etherToFixedNumber(character.escrowGoldBalance)).toLocaleString()}
                         </Text>

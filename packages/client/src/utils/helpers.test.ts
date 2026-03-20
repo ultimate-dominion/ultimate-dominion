@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchMetadataFromUri, METADATA_FETCH_TIMEOUT_MS } from './helpers';
+import { parseEther } from 'viem';
+import { calculateXpBoostPercent, fetchMetadataFromUri, METADATA_FETCH_TIMEOUT_MS } from './helpers';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -155,5 +156,82 @@ describe('fetchMetadataFromUri', () => {
     expect(first.name).toBe('Cached Item');
     expect(second.name).toBe('Cached Item');
     expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('calculateXpBoostPercent', () => {
+  it('returns 0 for 0 gold', () => {
+    expect(calculateXpBoostPercent(0n)).toBe(0);
+  });
+
+  it('returns 0 for negative gold', () => {
+    expect(calculateXpBoostPercent(-1n)).toBe(0);
+  });
+
+  it('returns ~50% for 100 Gold', () => {
+    // Solidity: sqrt(100e18) = 10e9, multiplier = (10e9 * 1e8 / 2) + 1e18 = 1.5e18 → 50%
+    const boost = calculateXpBoostPercent(parseEther('100'));
+    expect(boost).toBeCloseTo(50, 0);
+  });
+
+  it('returns ~158% for 1000 Gold', () => {
+    const boost = calculateXpBoostPercent(parseEther('1000'));
+    expect(boost).toBeCloseTo(158, 0);
+  });
+
+  it('returns ~433% for 7500 Gold', () => {
+    const boost = calculateXpBoostPercent(parseEther('7500'));
+    expect(boost).toBeCloseTo(433, 0);
+  });
+
+  it('returns ~5% for 1 Gold', () => {
+    // sqrt(1e18) = 1e9, multiplier = (1e9 * 1e8 / 2) + 1e18 = 5e16 + 1e18 → 5%
+    const boost = calculateXpBoostPercent(parseEther('1'));
+    expect(boost).toBeCloseTo(5, 0);
+  });
+
+  it('increases monotonically', () => {
+    const boost10 = calculateXpBoostPercent(parseEther('10'));
+    const boost100 = calculateXpBoostPercent(parseEther('100'));
+    const boost1000 = calculateXpBoostPercent(parseEther('1000'));
+    expect(boost100).toBeGreaterThan(boost10);
+    expect(boost1000).toBeGreaterThan(boost100);
+  });
+
+  it('returns exactly 50% for 100 Gold (Solidity parity)', () => {
+    // sqrt(100e18) = 10e9 exactly (perfect square in wei-space)
+    // multiplier = (10e9 * 1e8 / 2) + 1e18 = 5e17 + 1e18 = 1.5e18
+    // boost = (1.5e18 - 1e18) * 10000 / 1e18 / 100 = 50.00
+    const boost = calculateXpBoostPercent(parseEther('100'));
+    expect(boost).toBe(50);
+  });
+
+  it('handles dust amount (1 wei)', () => {
+    const boost = calculateXpBoostPercent(1n);
+    // sqrt(1) = 1, multiplier = (1 * 1e8 / 2) + 1e18
+    // boost = (5e7) * 10000 / 1e18 → effectively 0
+    expect(boost).toBe(0);
+  });
+
+  it('handles sub-Gold fractional amount (0.5 Gold)', () => {
+    const boost = calculateXpBoostPercent(parseEther('0.5'));
+    // Should be a small positive number, less than 1 Gold boost
+    expect(boost).toBeGreaterThan(0);
+    expect(boost).toBeLessThan(calculateXpBoostPercent(parseEther('1')));
+  });
+
+  it('handles very large values without overflow (100,000 Gold)', () => {
+    const boost = calculateXpBoostPercent(parseEther('100000'));
+    // sqrt(100000e18) ≈ 316227.766e9, should give ~1581%
+    expect(boost).toBeGreaterThan(1500);
+    expect(boost).toBeLessThan(1600);
+    expect(Number.isFinite(boost)).toBe(true);
+  });
+
+  it('handles extremely large value (1 million Gold)', () => {
+    const boost = calculateXpBoostPercent(parseEther('1000000'));
+    expect(boost).toBeGreaterThan(0);
+    expect(Number.isFinite(boost)).toBe(true);
+    expect(Number.isNaN(boost)).toBe(false);
   });
 });

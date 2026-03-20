@@ -398,3 +398,28 @@ export const shortenAddress = (address: string, length = 4): string =>
 export const startsWithVowel = (str: string): boolean => {
   return /^[aeiou]/i.test(str);
 };
+
+function babylonianSqrt(y: bigint): bigint {
+  if (y <= 3n) return y > 0n ? 1n : 0n;
+  let z = y;
+  let x = y / 2n + 1n;
+  while (x < z) {
+    z = x;
+    x = (y / x + x) / 2n;
+  }
+  return z;
+}
+
+/**
+ * Calculate the XP boost percentage from carried gold.
+ * Mirrors PveRewardSystem.calculateExpMultiplier exactly:
+ *   multiplier = (sqrt(escrowBalance) * 1e8 / EXP_MODIFIER) + WAD
+ * where EXP_MODIFIER = 2.
+ */
+export function calculateXpBoostPercent(carriedGoldWei: bigint): number {
+  if (carriedGoldWei <= 0n) return 0;
+  const WAD = 1000000000000000000n;
+  const sqrt = babylonianSqrt(carriedGoldWei);
+  const multiplierWad = (sqrt * 100000000n) / 2n + WAD;
+  return Number((multiplierWad - WAD) * 10000n / WAD) / 100;
+}

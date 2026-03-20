@@ -27,7 +27,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
-import { etherToFixedNumber } from '../utils/helpers';
+import { calculateXpBoostPercent, etherToFixedNumber } from '../utils/helpers';
 import { SystemToAllow } from '../utils/types';
 
 import { LootManagerAllowanceModal } from './LootManagerAllowanceModal';
@@ -189,7 +189,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
-          <ModalHeader>Adventure Escrow</ModalHeader>
+          <ModalHeader>Gold Stash</ModalHeader>
           <ModalCloseButton />
           <ModalBody px={{ base: 6, sm: 8 }}>
             <Text>An error occurred.</Text>
@@ -207,7 +207,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>Adventure Escrow</ModalHeader>
+        <ModalHeader>Gold Stash</ModalHeader>
         <ModalCloseButton />
         <ModalBody
           alignItems="center"
@@ -215,29 +215,33 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           textAlign="center"
         >
           <Text size={{ base: 'xs', sm: 'md' }}>
-            Spendable Gold:{' '}
+            Stashed Gold:{' '}
             <Text as="span" fontWeight="bold">
               {etherToFixedNumber(character.externalGoldBalance)} Gold
             </Text>
           </Text>
           <Text mt={2} size={{ base: 'xs', sm: 'md' }}>
-            Adventure Escrow balance:{' '}
+            Carried Gold:{' '}
             <Text as="span" fontWeight="bold">
               {etherToFixedNumber(character.escrowGoldBalance)} Gold
             </Text>
+            {character.escrowGoldBalance > 0n && (
+              <Text as="span" color="#5A8A3E" fontWeight="bold">
+                {' '}(+{calculateXpBoostPercent(character.escrowGoldBalance).toFixed(0)}% XP)
+              </Text>
+            )}
           </Text>
           <Text textAlign="center" fontSize="68px">
             💰
           </Text>
           <Text mt={4} size={{ base: 'xs', sm: 'sm' }}>
-            Your Adventure Escrow is where Gold goes when you win battles.
-            Leaving Gold in your escrow will help you level up faster, but in
-            the Winding Dark, you run the risk of losing it all against other
-            players.
+            Carried Gold is earned from battles. The more Gold you carry, the
+            faster you level up (up to +433% XP). But in the Winding Dark,
+            other players can take it. Stashed Gold is always safe.
           </Text>
           <HStack mt={8}>
             <FormControl isInvalid={!!depositErrorMessage}>
-              <FormLabel fontSize="xs">Add Gold to Escrow</FormLabel>
+              <FormLabel fontSize="xs">Carry Gold</FormLabel>
               {!!depositErrorMessage && (
                 <FormHelperText
                   color="red"
@@ -272,6 +276,13 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
                   </Button>
                 </InputRightElement>
               </InputGroup>
+              {depositAmount && parseFloat(depositAmount) > 0 && (
+                <Text color="#5A8A3E" fontSize="xs" mt={1} textAlign="left">
+                  XP boost after deposit: +{calculateXpBoostPercent(
+                    character.escrowGoldBalance + parseEther(depositAmount)
+                  ).toFixed(0)}%
+                </Text>
+              )}
             </FormControl>
             <Button
               alignSelf="end"
@@ -285,7 +296,7 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
           <HStack mt={4}>
             <FormControl isInvalid={!!withdrawErrorMessage}>
               <FormLabel fontSize="xs">
-                Take Gold from Escrow
+                Stash Gold
               </FormLabel>
               {!!withdrawErrorMessage && (
                 <FormHelperText
@@ -321,6 +332,13 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
                   </Button>
                 </InputRightElement>
               </InputGroup>
+              {withdrawAmount && parseFloat(withdrawAmount) > 0 && (
+                <Text color="#C87A2A" fontSize="xs" mt={1} textAlign="left">
+                  XP boost after withdraw: +{calculateXpBoostPercent(
+                    character.escrowGoldBalance - parseEther(withdrawAmount)
+                  ).toFixed(0)}%
+                </Text>
+              )}
             </FormControl>
             <Button
               alignSelf="end"
@@ -341,11 +359,11 @@ export const AdventureEscrowModal: React.FC<AdventureEscrowModalProps> = ({
       {authMethod !== 'embedded' && (
         <LootManagerAllowanceModal
           amount={depositAmount}
-          heading="Allow Adventure Escrow"
+          heading="Allow Gold Stash"
           isOpen={isAllowanceModalOpen}
-          message="In order to deposit Gold to your Adventure Escrow, you need to give permission to spend your Gold."
+          message="In order to carry Gold, you need to give permission to spend your Gold."
           onClose={onCloseAllowanceModal}
-          successMessage="You can now deposit Gold to your Adventure Escrow."
+          successMessage="You can now carry Gold into the Dark Cave."
         />
       )}
     </Modal>

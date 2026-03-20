@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: 'Is there PvP in Ultimate Dominion?',
-    a: 'Yes. The Dark Cave is divided into the Alcove (safe) and the Winding Dark (dangerous). In the Winding Dark, any player on the same tile can attack you. PvP uses a gold escrow system — you deposit gold before entering, and the winner claims a portion of the loser\'s escrowed gold. Your main balance is always safe.',
+    a: 'Yes. The Dark Cave is divided into the Alcove (safe) and the Winding Dark (dangerous). In the Winding Dark, any player on the same tile can attack you. PvP uses a carried gold system — Gold you earn from battles is carried with you. Carrying more Gold gives you an XP boost (up to +433%), but the winner of a PvP fight claims a portion of the loser\'s carried gold. Your stashed Gold is always safe.',
   },
   {
     q: 'What blockchain is Ultimate Dominion on?',

@@ -246,7 +246,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                   <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
-                  Gold from your Adventure Escrow.
+                  Carried Gold.
                 </Text>
               )}
             </VStack>
@@ -303,7 +303,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                       {etherToFixedNumber(goldDropped)}
                     </Text>{' '}
-                    Gold from your Adventure Escrow.
+                    Carried Gold.
                   </Text>
                 )}
                 {winner !== character.id && (

@@ -23,7 +23,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
 import { useGoldMerchant } from '../contexts/GoldMerchantContext';
 import { MAX_LEVEL } from '../utils/constants';
-import { etherToFixedNumber } from '../utils/helpers';
+import { calculateXpBoostPercent, etherToFixedNumber } from '../utils/helpers';
 
 import { useNearbyRanks } from '../hooks/useNearbyRanks';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
@@ -293,7 +293,7 @@ export const StatsPanel = (): JSX.Element => {
             <HStack justifyContent="space-between" w="100%">
               <Tooltip
                 hasArrow
-                label="Your Gold balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit Gold into your Adventure Escrow, visit 0,0 on the map."
+                label="Your Gold balance. To move Gold between your stash and carried supply, visit 0,0 on the map."
                 placement="top"
                 shouldWrapChildren
               >
@@ -318,26 +318,33 @@ export const StatsPanel = (): JSX.Element => {
             {stage >= OnboardingStage.ESTABLISHED && (
               <>
                 <HStack justifyContent="space-between" w="100%" px={2}>
-                  <Text color="#6A6050" size="sm">Spendable</Text>
+                  <Text color="#6A6050" size="sm">Stashed</Text>
                   <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
                     {etherToFixedNumber(externalGoldBalance)}
                   </Text>
                 </HStack>
                 <HStack justifyContent="space-between" w="100%" px={2}>
                   <HStack>
-                    <Text color="#6A6050" size="sm">Escrow</Text>
+                    <Text color="#6A6050" size="sm">Carried</Text>
                     <Tooltip
                       hasArrow
-                      label="Your Adventure Escrow is where Gold goes when you win battles. Leaving Gold in your escrow will help you level up faster, but in the Winding Dark, you run the risk of losing it all against other players. You can withdraw your Gold at 0,0 on the map."
+                      label="Carried Gold is earned from battles. Carrying more Gold helps you level up faster, but in the Winding Dark, you risk losing it to other players."
                       placement="top"
                       shouldWrapChildren
                     >
                       <IoMdInformationCircleOutline size={12} />
                     </Tooltip>
                   </HStack>
-                  <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
-                    {etherToFixedNumber(character.escrowGoldBalance)}
-                  </Text>
+                  <HStack spacing={1}>
+                    <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
+                      {etherToFixedNumber(character.escrowGoldBalance)}
+                    </Text>
+                    {character.escrowGoldBalance > 0n && (
+                      <Text color="#5A8A3E" fontFamily="mono" fontWeight={700} size="xs">
+                        +{calculateXpBoostPercent(character.escrowGoldBalance).toFixed(0)}% XP
+                      </Text>
+                    )}
+                  </HStack>
                 </HStack>
               </>
             )}

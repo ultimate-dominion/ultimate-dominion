@@ -53,6 +53,7 @@ import {
   MAX_LEVEL,
 } from '../utils/constants';
 import {
+  calculateXpBoostPercent,
   decodeCharacterId,
   etherToFixedNumber,
 } from '../utils/helpers';
@@ -211,7 +212,7 @@ export const CharacterPage = (): JSX.Element => {
                     <Tooltip
                       bg="#14120F"
                       hasArrow
-                      label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To withdraw from or deposit $GOLD into your Adventure Escrow, visit 0,0 on the map."
+                      label="This is your external wallet's $GOLD balance. You can use this to buy items in the Marketplace and various shops. To move Gold between your stash and carried supply, visit 0,0 on the map."
                       placement="top"
                       shouldWrapChildren
                     >
@@ -252,13 +253,18 @@ export const CharacterPage = (): JSX.Element => {
                     fontWeight="bold"
                     textAlign="start"
                   >
-                    Adventure Escrow balance:{' '}
+                    Carried Gold:{' '}
                     {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
+                    {character.escrowGoldBalance > 0n && (
+                      <Text as="span" color="#5A8A3E">
+                        {' '}(+{calculateXpBoostPercent(character.escrowGoldBalance).toFixed(0)}% XP)
+                      </Text>
+                    )}
                   </Text>
                   <Tooltip
                     bg="#14120F"
                     hasArrow
-                    label="Your Adventure Escrow is where $GOLD goes when you win battles. Leaving $GOLD in your escrow will help you level up faster, but in the Winding Dark, you run the risk of losing it all against other players. You can withdraw your $GOLD at 0,0 on the map."
+                    label="Carried Gold is earned from battles. Carrying more Gold helps you level up faster, but in the Winding Dark, you risk losing it to other players."
                     placement="top"
                     shouldWrapChildren
                   >

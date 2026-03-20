@@ -553,7 +553,7 @@ export const ActionsPanel = (): JSX.Element => {
                 {hasSmokeCover
                   ? 'Smoke Cloak active — flee without gold penalty!'
                   : currentBattle.encounterType === EncounterType.PvP
-                    ? 'First turn only. Costs 25% escrow gold.'
+                    ? 'First turn only. Costs 25% carried gold.'
                     : 'First turn only.'}
               </Text>
             </HStack>
