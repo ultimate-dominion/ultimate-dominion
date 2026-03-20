@@ -239,6 +239,15 @@ export const LandingPage = (): JSX.Element => {
             >
               X
             </Link>
+            <Text color="#3A3228" userSelect="none">|</Text>
+            <Link
+              color="#8A7E6A"
+              href="https://discord.gg/sSkQW36Fvj"
+              isExternal
+              _hover={{ color: '#D4A54A', textDecoration: 'none' }}
+            >
+              Discord
+            </Link>
           </HStack>
         </VStack>
       </Box>

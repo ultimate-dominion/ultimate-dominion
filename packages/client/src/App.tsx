@@ -12,6 +12,7 @@ import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
 import { BetaBanner } from './components/BetaBanner';
 import { WorldFeed } from './components/WorldFeed';
+import { DiscordButton } from './components/DiscordButton';
 import { FeedbackButton } from './components/FeedbackButton';
 import { Footer } from './components/Footer';
 import { GoldMerchantModal } from './components/GoldMerchantModal';
@@ -225,6 +226,7 @@ const AppInner = (): JSX.Element => {
         onClose={onCloseGoldMerchant}
       />
 
+      <DiscordButton />
       {!CHAT_NOT_ALLOWED_PATHS.includes(pathname) && <FeedbackButton />}
     </Grid>
   );
