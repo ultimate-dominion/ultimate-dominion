@@ -9,6 +9,31 @@ Full manifesto: `packages/client/src/pages/Manifesto.tsx`. Core principles: perm
 ### Testing
 **CRITICAL**: Every code change MUST have tests — happy paths, unhappy paths, and edge cases. No exceptions. We deploy directly to production; untested code goes straight to players.
 
+### Item & Drop Rate Changes
+**CRITICAL**: `items.json` is the SINGLE SOURCE OF TRUTH for all item stats, drop rates, and inventories. Violations of this rule have caused production bugs multiple times.
+
+**The only allowed flow:**
+1. Edit `items.json` (or `monsters.json` for inventories)
+2. Commit the change
+3. Run `item-sync dark_cave --update` to push to chain
+4. Run `item-sync dark_cave` (verify mode) — must show 0 mismatches
+5. If verify fails, STOP and investigate
+
+**NEVER do any of these:**
+- Change drop rates on-chain via `cast send` or one-off scripts without updating items.json first
+- Run `item-sync --update` from uncommitted changes
+- Manually set Items table values that bypass items.json
+- Deploy PveRewardSystem from uncommitted code
+
+**After any `mud deploy` that touches PveRewardSystem:**
+- Run `item-sync dark_cave` to verify rates survived the upgrade
+- Tag the deploy: `git tag deploy-prod-$(date +%Y%m%d-%H%M)`
+- Run `npx tsx scripts/drop-sim.ts` to confirm player experience matches expectations
+
+**Current known issues (as of 2026-03-19):**
+- items.json is STALE: R3=3 (chain=4), R4=2 (chain=3), HP pots not updated. Must run `item-sync --pull` before any changes.
+- Deployed PveRewardSystem bytecode does NOT match code on disk. Must redeploy from committed HEAD.
+
 ### Documentation Consistency
 **CRITICAL**: The docs (`docs/`) are the source of truth for game design. Before making any major code change:
 1. Read the relevant doc(s) to verify the change aligns with documented design

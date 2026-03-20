@@ -8,6 +8,7 @@
  * Modes:
  *   item-sync.ts dark_cave           — verify only (show diff)
  *   item-sync.ts dark_cave --update  — verify + push changes on-chain
+ *   item-sync.ts dark_cave --pull    — read on-chain values and update items.json
  *
  * Environment variables:
  *   PRIVATE_KEY     - Private key for the admin account (required for --update)
@@ -284,6 +285,7 @@ Modes:
   let worldAddress: Address | undefined;
   let rpcUrl = process.env.RPC_URL || 'http://127.0.0.1:8545';
   let doUpdate = false;
+  let doPull = false;
 
   for (let i = 1; i < args.length; i++) {
     if (args[i] === '--world' && args[i + 1]) {
@@ -294,6 +296,8 @@ Modes:
       i++;
     } else if (args[i] === '--update') {
       doUpdate = true;
+    } else if (args[i] === '--pull') {
+      doPull = true;
     }
   }
 
@@ -343,7 +347,7 @@ Modes:
   console.log(`Zone: ${zoneName}`);
   console.log(`World: ${worldAddress}`);
   console.log(`RPC: ${rpcUrl}`);
-  console.log(`Mode: ${doUpdate ? 'UPDATE' : 'VERIFY ONLY'}`);
+  console.log(`Mode: ${doPull ? 'PULL (on-chain → items.json)' : doUpdate ? 'UPDATE (items.json → on-chain)' : 'VERIFY ONLY'}`);
   console.log('');
 
   // Discover on-chain items by scanning URIs (avoids dependency on getCurrentItemsCounter
@@ -486,6 +490,65 @@ Modes:
 
   if (mismatchedItems === 0 && missingItems === 0) {
     console.log('\nAll items in sync!');
+    return;
+  }
+
+  // Pull mode: read on-chain values and update items.json
+  if (doPull && mismatchedItems > 0) {
+    console.log(`\nPulling ${mismatchedItems} on-chain values into items.json...`);
+
+    // Read on-chain values for each mismatched item and update the JSON
+    let pullCount = 0;
+
+    async function pullItem(
+      category: 'armor' | 'weapons' | 'consumables',
+      index: number,
+      metadataUri: string,
+    ) {
+      const itemId = uriToId.get(metadataUri);
+      if (itemId === undefined) return;
+
+      const [staticData, , dynamicData] = await publicClient.readContract({
+        address: worldAddress!,
+        abi: worldAbi,
+        functionName: 'getRecord',
+        args: [ITEMS_TABLE_ID, keyTuple(itemId)],
+      });
+
+      const onChain = decodeItemsRecord(staticData, dynamicData);
+      const item = items[category][index] as any;
+      const oldDc = item.dropChance;
+      const oldRarity = item.rarity;
+
+      item.dropChance = Number(onChain.dropChance);
+      item.rarity = Number(onChain.rarity);
+      // Don't pull price — it's in wei and items.json uses wei too, but pulling it
+      // could overwrite intentional price changes staged in JSON
+      // item.price = onChain.price.toString();
+
+      if (oldDc !== item.dropChance || oldRarity !== item.rarity) {
+        console.log(`  ${item.name}: dropChance ${oldDc} → ${item.dropChance}, rarity ${oldRarity} → ${item.rarity}`);
+        pullCount++;
+      }
+    }
+
+    for (let i = 0; i < items.armor.length; i++) {
+      await pullItem('armor', i, items.armor[i].metadataUri);
+    }
+    for (let i = 0; i < items.weapons.length; i++) {
+      await pullItem('weapons', i, items.weapons[i].metadataUri);
+    }
+    for (let i = 0; i < items.consumables.length; i++) {
+      await pullItem('consumables', i, items.consumables[i].metadataUri);
+    }
+
+    if (pullCount > 0) {
+      fs.writeFileSync(itemsPath, JSON.stringify(items, null, 2) + '\n');
+      console.log(`\nUpdated ${pullCount} values in ${itemsPath}`);
+      console.log('Review the changes with `git diff`, then commit.');
+    } else {
+      console.log('\nNo values needed updating.');
+    }
     return;
   }
 
