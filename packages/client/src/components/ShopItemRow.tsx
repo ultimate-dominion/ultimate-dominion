@@ -145,6 +145,11 @@ export const ShopItemRow = ({
     return isEquipped;
   }, [amount, balance, isEquipped, orderType, userCharacter]);
 
+  const shopBroke = useMemo(() => {
+    if (orderType !== OrderType.Selling) return false;
+    return price > BigInt(shop.gold);
+  }, [orderType, price, shop.gold]);
+
   const onBuyOrSell = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -157,6 +162,10 @@ export const ShopItemRow = ({
         return;
       }
       if (unsellableError) {
+        setShowError(true);
+        return;
+      }
+      if (shopBroke) {
         setShowError(true);
         return;
       }
@@ -237,6 +246,7 @@ export const ShopItemRow = ({
       renderSuccess,
       sell,
       shop.shopId,
+      shopBroke,
       shopTx,
       unsellableError,
     ],
@@ -592,7 +602,7 @@ export const ShopItemRow = ({
               flexDirection="column"
               isInvalid={
                 showError &&
-                (insufficientGold || unsellableError || insufficientStock)
+                (insufficientGold || unsellableError || insufficientStock || shopBroke)
               }
             >
               {showError && insufficientStock && (
@@ -608,6 +618,11 @@ export const ShopItemRow = ({
               {showError && unsellableError && (
                 <FormHelperText color="red" m={3}>
                   You can&apos;t sell the last of an equipped item.
+                </FormHelperText>
+              )}
+              {showError && shopBroke && (
+                <FormHelperText color="orange.300" m={3}>
+                  The shopkeeper doesn&apos;t have enough gold. Stock replenishes every 12 hours.
                 </FormHelperText>
               )}
               <HStack gap={3}>

@@ -63,11 +63,26 @@ export const getFriendlyError = (error: unknown): string | null => {
     return 'Connection issue. Check your internet and try again.';
   }
 
-  // Contract reverts — pass through the revert reason if available
+  // Contract reverts — match known error signatures, then revert reason
   if (message.includes('execution reverted') || message.includes('revert')) {
-    const revertMatch = (error as Error)?.message?.match(
-      /reason:\s*(.+?)(?:\n|$)/i,
-    );
+    const raw = (error as Error)?.message ?? '';
+
+    // Known custom error signatures
+    const KNOWN_REVERTS: Record<string, string> = {
+      '0x4a675dad': "The shopkeeper doesn't have enough gold to buy that. Stock replenishes every 12 hours.",
+      '0xade1cb41': 'That item is out of stock. Check back after the shop restocks.',
+      '0x16a8a709': "You don't have enough of that item to sell.",
+      '0xd8deb7b5': 'Invalid encounter. Try leaving and re-entering.',
+      '0x6bbd0237': 'Invalid shop encounter. Try leaving and re-entering.',
+      '0x9d026e7f': "You're not at the shop. Move to the shopkeeper first.",
+      '0x78d73082': "This isn't your shop encounter.",
+    };
+
+    for (const [sig, friendly] of Object.entries(KNOWN_REVERTS)) {
+      if (raw.includes(sig)) return friendly;
+    }
+
+    const revertMatch = raw.match(/reason:\s*(.+?)(?:\n|$)/i);
     if (revertMatch?.[1]) {
       return revertMatch[1].trim();
     }
