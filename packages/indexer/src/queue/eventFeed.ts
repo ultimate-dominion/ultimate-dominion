@@ -601,14 +601,18 @@ async function scanLootDrops(
 
           emittedLoot.add(itemDedupKey);
           const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
+          const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+          const rarityName = RARITY_NAMES[rarity] || '';
+          const itemName = await resolveItemName(itemIds[i], syncHandle) || typeName;
+          const fullName = rarityName ? `${rarityName} ${itemName}` : itemName;
 
           const event: GameEvent = {
             id: crypto.randomUUID(),
             eventType,
             playerName: 'An adventurer',
-            description: 'An adventurer found an item!',
+            description: `An adventurer found ${fullName}!`,
             timestamp: Date.now(),
-            metadata: { itemId: itemIds[i], rarity, walletAddress },
+            metadata: { itemId: itemIds[i], rarity, itemName: fullName, walletAddress },
           };
           addEvent(event, toBlock, `loot:${itemDedupKey}`);
           broadcaster.broadcastGameEvent(event);
@@ -853,15 +857,31 @@ async function scanMarketplaceListings(
         } catch { /* fall through */ }
       }
 
+      const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+      const rarityName = RARITY_NAMES[rarity] || '';
+      const itemName = await resolveItemName(row.item_id, syncHandle) || typeName;
+      const fullName = rarityName ? `${rarityName} ${itemName}` : itemName;
+
+      let priceStr = '?';
+      if (row.price) {
+        try {
+          const goldWei = BigInt(row.price);
+          const gold = Number(goldWei / BigInt(10 ** 18));
+          const frac = Number(goldWei % BigInt(10 ** 18)) / 1e18;
+          priceStr = (gold + frac) > 0 ? String(Math.round((gold + frac) * 10) / 10) : '0';
+        } catch { priceStr = '?'; }
+      }
+
       const event: GameEvent = {
         id: crypto.randomUUID(),
         eventType: 'marketplace_listing',
         playerName: sellerName,
-        description: `${sellerName} listed an item on the marketplace`,
+        description: `${sellerName} listed ${fullName} for ${priceStr} Gold`,
         timestamp: Date.now(),
         metadata: {
           itemId: String(row.item_id),
           rarity,
+          itemName: fullName,
           price: row.price ? String(row.price) : undefined,
           orderHash: '0x' + keyHex,
         },
@@ -872,6 +892,25 @@ async function scanMarketplaceListings(
   } catch (err) {
     console.error('[eventFeed] Marketplace scan error:', err);
   }
+}
+
+/** Resolve item display name from ItemsURIStorage. Falls back to null. */
+async function resolveItemName(itemId: string | number, syncHandle: SyncHandle): Promise<string | null> {
+  const uriTable = syncHandle.tableNameMap.get('ItemsURIStorage');
+  if (!uriTable) return null;
+  try {
+    const row = await sql.unsafe(`
+      SELECT "uri" FROM "${mudSchema}"."${uriTable}" WHERE "token_id" = $1 LIMIT 1
+    `, [String(itemId)]);
+    if (row.length > 0 && row[0].uri) {
+      const parts = String(row[0].uri).split(':');
+      if (parts.length >= 2) {
+        return parts.slice(1).join(':').split('_')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      }
+    }
+  } catch { /* fall through */ }
+  return null;
 }
 
 /**

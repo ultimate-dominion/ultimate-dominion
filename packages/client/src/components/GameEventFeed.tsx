@@ -86,7 +86,7 @@ const EventContent = ({ event }: { event: GameEvent }): JSX.Element => {
   if ((event.eventType === 'loot_drop' || event.eventType === 'rare_find') && meta.itemId) {
     const rarity = meta.rarity as number | undefined;
     const itemColor = rarity !== undefined ? (RARITY_COLORS[rarity] || '#C4B89E') : '#C4B89E';
-    const itemName = resolvedItem?.name || `Item #${meta.itemId}`;
+    const itemName = resolvedItem?.name || meta.itemName as string || `Item #${meta.itemId}`;
     return (
       <>
         <Text as="span" color={nameColor} fontWeight={700}>{playerName}</Text>
