@@ -226,7 +226,7 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
                c."name" as player_name
         FROM "${mudSchema}"."${outcomeTable}" co
         LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"
-        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON ce."attackers"[1] = c."__key_bytes"
+        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON c."__key_bytes" = decode(substring(ce."attackers" from 3 for 64), 'hex')
         ORDER BY co."__last_updated_block_number" DESC
         LIMIT ${BACKFILL_LIMIT * 2}
       `);
@@ -240,7 +240,7 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
 
         if (isPvP) {
           const playerWon = attackersWin;
-          const opponentEntities: Buffer[] = row.defenders || [];
+          const opponentEntities = parsePackedBytes32(row.defenders);
           let opponentName = 'an opponent';
           if (opponentEntities.length > 0) {
             try {
@@ -265,7 +265,7 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
           // PvE death — player lost
           let mobName = 'a monster';
           if (mobsTable) {
-            const mobEntities: Buffer[] = row.defenders || [];
+            const mobEntities = parsePackedBytes32(row.defenders);
             if (mobEntities.length > 0) {
               const mobId = decodeMobIdFromEntity(mobEntities[0]);
               if (mobId > 0) mobName = await getMobName(mobId, mobsTable);
@@ -294,7 +294,7 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
         SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."items_dropped", c."name"
         FROM "${mudSchema}"."${outcomeTable}" co
         LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"
-        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON ce."attackers"[1] = c."__key_bytes"
+        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON c."__key_bytes" = decode(substring(ce."attackers" from 3 for 64), 'hex')
         WHERE co."items_dropped" IS NOT NULL AND array_length(co."items_dropped", 1) > 0
         ORDER BY co."__last_updated_block_number" DESC
         LIMIT ${BACKFILL_LIMIT}
@@ -526,7 +526,7 @@ async function scanCombatOutcomes(
       LEFT JOIN "${mudSchema}"."${combatEncTable}" ce
         ON co."__key_bytes" = ce."__key_bytes"
       LEFT JOIN "${mudSchema}"."${charactersTable}" c
-        ON ce."attackers"[1] = c."__key_bytes"
+        ON c."__key_bytes" = decode(substring(ce."attackers" from 3 for 64), 'hex')
       WHERE co."__last_updated_block_number" >= $1
         AND co."__last_updated_block_number" <= $2
     `, [fromBlock, toBlock]);
@@ -550,15 +550,14 @@ async function scanCombatOutcomes(
         // PvP: emit one event per combat — "{Winner} defeated {Loser}"
         // Player (initiator) is always in attackers, opponent in defenders
         const playerWon = attackersWin;
-        const opponentEntities: Buffer[] = row.defenders || [];
+        const opponentEntities = parsePackedBytes32(row.defenders);
         let opponentName = 'an opponent';
         if (opponentEntities.length > 0) {
-          const oppEntity = opponentEntities[0];
           try {
             const oppRow = await sql.unsafe(`
               SELECT "name" FROM "${mudSchema}"."${charactersTable}"
               WHERE "__key_bytes" = $1 LIMIT 1
-            `, [oppEntity]);
+            `, [opponentEntities[0]]);
             if (oppRow.length > 0) {
               opponentName = decodeCharacterName(oppRow[0].name) || 'an opponent';
             }
@@ -584,7 +583,7 @@ async function scanCombatOutcomes(
 
         let mobName = 'a monster';
         if (mobsTable) {
-          const mobEntities: Buffer[] = row.defenders || [];
+          const mobEntities = parsePackedBytes32(row.defenders);
           if (mobEntities.length > 0) {
             const mobId = decodeMobIdFromEntity(mobEntities[0]);
             if (mobId > 0) {
@@ -636,7 +635,7 @@ async function scanLootDrops(
       LEFT JOIN "${mudSchema}"."${combatEncTable}" ce
         ON co."__key_bytes" = ce."__key_bytes"
       LEFT JOIN "${mudSchema}"."${charactersTable}" c
-        ON ce."attackers"[1] = c."__key_bytes"
+        ON c."__key_bytes" = decode(substring(ce."attackers" from 3 for 64), 'hex')
       WHERE co."__last_updated_block_number" >= $1
         AND co."__last_updated_block_number" <= $2
         AND co."items_dropped" IS NOT NULL
@@ -957,6 +956,21 @@ async function scanMarketplaceListings(
   } catch (err) {
     console.error('[eventFeed] Marketplace scan error:', err);
   }
+}
+
+/** Parse a MUD packed hex text column (bytes32[]) into Buffer array */
+function parsePackedBytes32(raw: unknown): Buffer[] {
+  if (!raw) return [];
+  const hex = String(raw);
+  if (!hex.startsWith('0x') || hex.length < 66) return [];
+  const packed = hex.slice(2);
+  const elements: Buffer[] = [];
+  for (let i = 0; i < packed.length; i += 64) {
+    if (i + 64 <= packed.length) {
+      elements.push(Buffer.from(packed.slice(i, i + 64), 'hex'));
+    }
+  }
+  return elements;
 }
 
 /** Decode a bytes32-encoded character name to string */
