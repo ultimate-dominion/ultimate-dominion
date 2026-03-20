@@ -8,6 +8,7 @@ WORKDIR /app
 COPY package.json ./
 RUN pnpm install
 
+# bust cache: 2026-03-20
 COPY tsconfig.json ./
 COPY src/ ./src/
 RUN pnpm build
