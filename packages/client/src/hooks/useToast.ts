@@ -1,7 +1,6 @@
 import { useToast as useChakraToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 
-import { useMUD } from '../contexts/MUDContext';
 import {
   getError,
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -14,7 +13,6 @@ export const useToast = (): {
   renderSuccess: (msg: string) => void;
 } => {
   const toast = useChakraToast();
-  const { onOpenWalletDetailsModal } = useMUD();
 
   const renderError = useCallback(
     (errorMsg: string, errorLog?: unknown) => {
@@ -33,12 +31,11 @@ export const useToast = (): {
         toast({
           description: (errorLog as Error).message,
           position: 'top',
-          status: 'error',
+          status: 'warning',
           containerStyle: {
-            bg: 'red',
+            bg: 'yellow',
           },
         });
-        onOpenWalletDetailsModal();
         return;
       }
 
@@ -51,7 +48,7 @@ export const useToast = (): {
         },
       });
     },
-    [onOpenWalletDetailsModal, toast],
+    [toast],
   );
 
   const renderWarning = useCallback(

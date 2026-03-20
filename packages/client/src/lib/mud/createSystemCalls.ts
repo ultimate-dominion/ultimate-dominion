@@ -44,35 +44,35 @@ type ErrorCategory = 'REVERT' | 'FUNDS' | 'RPC' | 'GAS' | 'NONCE' | 'SPONSOR' | 
 
 // Map known custom error signatures to user-friendly messages.
 const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
-  '0x9e4b2685': 'That name is already taken. Please choose a different name.',
-  '0x6d187b28': 'Invalid account.',
-  '0x442473f8': 'Invalid token URI.',
-  '0x261fa6d6': 'Character is locked and cannot be modified.',
-  '0x82b42900': 'You are not authorized to perform this action.',
-  '0x8fa2ffa1': 'You need at least one weapon or spell equipped to enter combat.',
-  '0x39f609e8': 'Action not found.',
-  '0x54962c76': 'Item not equipped.',
-  '0xbb1f5f1e': 'Action type not recognized.',
-  '0x0f53fbcc': 'Invalid magic item type.',
-  '0x4a7f394f': 'Invalid action.',
-  '0xd7663649': 'Unrecognized resistance stat.',
-  '0xecea39ab': 'Maximum mob types reached.',
-  '0xdd94cf19': 'Mob array length mismatch.',
-  '0x64b92770': 'Wrong mob type.',
-  '0x326f4b4f': 'Moving too fast — wait a moment.',
-  '0x5ffeddff': 'Maximum mob spawns reached.',
-  '0x63754e43': 'In encounter — finish the battle first.',
-  '0x72af8dba': 'Stats cannot be negative.',
-  '0x03dee4c5': 'You don\'t have enough of this item to sell.',
-  '0xadee4371': 'Invalid combat — monster may have moved or died. Try again.',
-  '0xbd45e4f6': 'Character is not spawned.',
-  '0xbd0f4934': 'Entity not at this position.',
-  '0x1af235ec': 'This monster cannot be fought.',
-  '0xa17bea2c': 'Auto adventure on cooldown — wait a moment.',
-  '0x0769bef0': 'Already in an encounter.',
-  '0xb4120f14': 'Out of bounds.',
-  '0x87822d34': 'Invalid move.',
-  '0xb8a03426': 'Only characters can do this.',
+  '0x9e4b2685': 'That name is already spoken for. Choose another.',
+  '0x6d187b28': 'The cave does not recognize you. Try reconnecting.',
+  '0x442473f8': 'Your character\'s visage is corrupted. Try again.',
+  '0x261fa6d6': 'Your character is bound by an ancient seal and cannot be changed right now.',
+  '0x82b42900': 'The cave wards block your path. You lack the authority for this.',
+  '0x8fa2ffa1': 'You must equip a weapon or spell before entering combat.',
+  '0x39f609e8': 'That ability is unknown to you.',
+  '0x54962c76': 'That item is not equipped.',
+  '0xbb1f5f1e': 'The cave doesn\'t understand that command.',
+  '0x0f53fbcc': 'That item pulses with an unfamiliar magic.',
+  '0x4a7f394f': 'That action is beyond your reach.',
+  '0xd7663649': 'An unknown force resists your effort.',
+  '0xecea39ab': 'The cave cannot sustain more creatures.',
+  '0xdd94cf19': 'The summoning ritual is malformed.',
+  '0x64b92770': 'That creature doesn\'t belong here.',
+  '0x326f4b4f': 'Your legs haven\'t recovered yet. Wait a moment.',
+  '0x5ffeddff': 'The cave is teeming with life. No more creatures can spawn.',
+  '0x63754e43': 'Finish your current battle first!',
+  '0x72af8dba': 'Your body cannot sustain that change.',
+  '0x03dee4c5': 'You don\'t have enough of that item to sell.',
+  '0xadee4371': 'Your target has vanished into the shadows. Try again.',
+  '0xbd45e4f6': 'Your character has not yet entered the world.',
+  '0xbd0f4934': 'There\'s nothing there anymore.',
+  '0x1af235ec': 'That creature cannot be challenged.',
+  '0xa17bea2c': 'You need a moment to catch your breath before adventuring again.',
+  '0x0769bef0': 'You\'re already locked in combat!',
+  '0xb4120f14': 'The cave walls block your path. You cannot go that way.',
+  '0x87822d34': 'The passage ahead is sealed.',
+  '0xb8a03426': 'Only adventurers may do this.',
 };
 
 // Extract the raw 4-byte error selector from a viem error chain.
@@ -131,7 +131,7 @@ const classifyError = (error: unknown): { category: ErrorCategory; message: stri
   if (error instanceof Error) {
     return { category: 'UNKNOWN', message: error.message };
   }
-  return { category: 'UNKNOWN', message: 'An error occurred calling the contract.' };
+  return { category: 'UNKNOWN', message: 'Something stirs in the darkness. Try again.' };
 };
 
 const getContractError = (error: unknown): string => {

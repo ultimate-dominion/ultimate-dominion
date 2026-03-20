@@ -1,6 +1,6 @@
 export const USER_ERRORS = ['User denied signature'];
 export const INSUFFICIENT_FUNDS_MESSAGE =
-  'Insufficient funds. Please top off your session account.';
+  'A bitter cold seeps from the cave walls, freezing you in place. Wait a moment for the chill to pass.';
 
 export const getError = (
   error: unknown,
@@ -35,7 +35,7 @@ export const getFriendlyError = (error: unknown): string | null => {
 
   // Insufficient gas/funds
   if (message.includes('insufficient funds')) {
-    return 'Insufficient funds. Please top off your session account.';
+    return 'A bitter cold seeps from the cave walls, freezing you in place. Wait a moment for the chill to pass.';
   }
 
   // Gas estimation failures
@@ -44,12 +44,12 @@ export const getFriendlyError = (error: unknown): string | null => {
     message.includes('out of gas') ||
     message.includes('gas estimation')
   ) {
-    return "The game couldn't process your action. Please try again.";
+    return 'The ancient wards resist your action. Try again in a moment.';
   }
 
   // Nonce issues (usually resolved by retry)
   if (message.includes('nonce')) {
-    return 'Transaction conflict. Please try again.';
+    return 'Your actions overlapped. Try again.';
   }
 
   // Network issues
@@ -60,7 +60,7 @@ export const getFriendlyError = (error: unknown): string | null => {
     message.includes('failed to fetch') ||
     message.includes('econnrefused')
   ) {
-    return 'Connection issue. Check your internet and try again.';
+    return 'The cave grows dark and the way forward is unclear. Check your connection and try again.';
   }
 
   // Contract reverts — match known error signatures, then revert reason
@@ -69,13 +69,13 @@ export const getFriendlyError = (error: unknown): string | null => {
 
     // Known custom error signatures
     const KNOWN_REVERTS: Record<string, string> = {
-      '0x4a675dad': "The shopkeeper doesn't have enough gold to buy that. Stock replenishes every 12 hours.",
+      '0x4a675dad': "The shopkeeper's coffers are empty. Stock replenishes every 12 hours.",
       '0xade1cb41': 'That item is out of stock. Check back after the shop restocks.',
       '0x16a8a709': "You don't have enough of that item to sell.",
-      '0xd8deb7b5': 'Invalid encounter. Try leaving and re-entering.',
-      '0x6bbd0237': 'Invalid shop encounter. Try leaving and re-entering.',
-      '0x9d026e7f': "You're not at the shop. Move to the shopkeeper first.",
-      '0x78d73082': "This isn't your shop encounter.",
+      '0xd8deb7b5': 'Something feels off about this encounter. Try leaving and re-entering.',
+      '0x6bbd0237': 'The shopkeeper seems confused. Try leaving and re-entering.',
+      '0x9d026e7f': "You're too far from the shopkeeper. Move closer first.",
+      '0x78d73082': "That shopkeeper is busy with another adventurer.",
     };
 
     for (const [sig, friendly] of Object.entries(KNOWN_REVERTS)) {
@@ -86,7 +86,7 @@ export const getFriendlyError = (error: unknown): string | null => {
     if (revertMatch?.[1]) {
       return revertMatch[1].trim();
     }
-    return "That action couldn't be completed. Please try again.";
+    return 'The cave resists your action. Try again.';
   }
 
   // Clean game errors (starts with uppercase, no hex/technical jargon) — pass through
@@ -102,5 +102,5 @@ export const getFriendlyError = (error: unknown): string | null => {
     }
   }
 
-  return 'Something went wrong. Please try again.';
+  return 'Something stirs in the darkness. Try again.';
 };
