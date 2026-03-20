@@ -222,17 +222,15 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
     try {
       const rows = await sql.unsafe(`
         SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."attackers_win",
-               ce."encounter_type", ce."defenders", ce."attackers",
-               c."name" as player_name
+               ce."encounter_type", ce."defenders", ce."attackers"
         FROM "${mudSchema}"."${outcomeTable}" co
         LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"
-        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON c."__key_bytes" = decode(substring(ce."attackers" from 3 for 64), 'hex')
         ORDER BY co."__last_updated_block_number" DESC
         LIMIT ${BACKFILL_LIMIT * 2}
       `);
 
       for (const row of rows) {
-        const playerName = decodeCharacterName(row.player_name);
+        const playerName = await lookupPlayerName(row.attackers, charactersTable);
         if (!playerName) continue;
         const attackersWin = Boolean(row.attackers_win);
         const isPvP = Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
@@ -291,17 +289,17 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
   if (outcomeTable && combatEncTable) {
     try {
       const rows = await sql.unsafe(`
-        SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."items_dropped", c."name"
+        SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."items_dropped",
+               ce."attackers"
         FROM "${mudSchema}"."${outcomeTable}" co
         LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"
-        LEFT JOIN "${mudSchema}"."${charactersTable}" c ON c."__key_bytes" = decode(substring(ce."attackers" from 3 for 64), 'hex')
         WHERE co."items_dropped" IS NOT NULL AND array_length(co."items_dropped", 1) > 0
         ORDER BY co."__last_updated_block_number" DESC
         LIMIT ${BACKFILL_LIMIT}
       `);
 
       for (const row of rows) {
-        const name = decodeCharacterName(row.name) || 'An adventurer';
+        const name = await lookupPlayerName(row.attackers, charactersTable) || 'An adventurer';
         const itemIds: string[] = Array.isArray(row.items_dropped) ? row.items_dropped : [];
         if (itemIds.length === 0) continue;
         const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
@@ -520,13 +518,10 @@ async function scanCombatOutcomes(
   try {
     const rows = await sql.unsafe(`
       SELECT co."__key_bytes", co."attackers_win",
-             ce."encounter_type", ce."defenders", ce."attackers",
-             c."name" as player_name
+             ce."encounter_type", ce."defenders", ce."attackers"
       FROM "${mudSchema}"."${outcomeTable}" co
       LEFT JOIN "${mudSchema}"."${combatEncTable}" ce
         ON co."__key_bytes" = ce."__key_bytes"
-      LEFT JOIN "${mudSchema}"."${charactersTable}" c
-        ON c."__key_bytes" = decode(substring(ce."attackers" from 3 for 64), 'hex')
       WHERE co."__last_updated_block_number" >= $1
         AND co."__last_updated_block_number" <= $2
     `, [fromBlock, toBlock]);
@@ -536,7 +531,7 @@ async function scanCombatOutcomes(
     }
 
     for (const row of rows) {
-      const playerName = decodeCharacterName(row.player_name);
+      const playerName = await lookupPlayerName(row.attackers, charactersTable);
       if (!playerName) continue;
 
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
@@ -628,14 +623,12 @@ async function scanLootDrops(
   if (!outcomeTable || !combatEncTable || !charactersTable) return;
 
   try {
-    // Find combat outcomes with items dropped, get player name via CombatEncounter.attackers
+    // Find combat outcomes with items dropped, get player entity via CombatEncounter.attackers
     const rows = await sql.unsafe(`
-      SELECT co."__key_bytes", co."items_dropped", c."name"
+      SELECT co."__key_bytes", co."items_dropped", ce."attackers"
       FROM "${mudSchema}"."${outcomeTable}" co
       LEFT JOIN "${mudSchema}"."${combatEncTable}" ce
         ON co."__key_bytes" = ce."__key_bytes"
-      LEFT JOIN "${mudSchema}"."${charactersTable}" c
-        ON c."__key_bytes" = decode(substring(ce."attackers" from 3 for 64), 'hex')
       WHERE co."__last_updated_block_number" >= $1
         AND co."__last_updated_block_number" <= $2
         AND co."items_dropped" IS NOT NULL
@@ -648,7 +641,7 @@ async function scanLootDrops(
 
     for (const row of rows) {
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-      const name = decodeCharacterName(row.name) || 'An adventurer';
+      const name = await lookupPlayerName(row.attackers, charactersTable) || 'An adventurer';
       const rawDropped = row.items_dropped;
       const itemIds: string[] = Array.isArray(rawDropped) ? rawDropped.map(String) : [];
       if (itemIds.length === 0) continue;
@@ -958,10 +951,33 @@ async function scanMarketplaceListings(
   }
 }
 
+/** Look up a character name from a MUD packed attackers column */
+async function lookupPlayerName(attackersRaw: unknown, charactersTable: string): Promise<string | null> {
+  const entities = parsePackedBytes32(attackersRaw);
+  if (entities.length === 0) return null;
+  try {
+    const row = await sql.unsafe(`
+      SELECT "name" FROM "${mudSchema}"."${charactersTable}"
+      WHERE "__key_bytes" = $1 LIMIT 1
+    `, [entities[0]]);
+    if (row.length > 0) return decodeCharacterName(row[0].name);
+  } catch { /* fall through */ }
+  return null;
+}
+
 /** Parse a MUD packed hex text column (bytes32[]) into Buffer array */
 function parsePackedBytes32(raw: unknown): Buffer[] {
   if (!raw) return [];
   const hex = String(raw);
+  // Handle both "0x..." packed hex and bytea/Buffer values
+  if (Buffer.isBuffer(raw) || raw instanceof Uint8Array) {
+    const buf = Buffer.from(raw);
+    const elements: Buffer[] = [];
+    for (let i = 0; i < buf.length; i += 32) {
+      if (i + 32 <= buf.length) elements.push(buf.subarray(i, i + 32));
+    }
+    return elements;
+  }
   if (!hex.startsWith('0x') || hex.length < 66) return [];
   const packed = hex.slice(2);
   const elements: Buffer[] = [];
