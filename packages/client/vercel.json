@@ -13,6 +13,14 @@
       "destination": "/api/metrics"
     },
     {
+      "source": "/api/total-supply",
+      "destination": "/api/total-supply"
+    },
+    {
+      "source": "/api/circulating-supply",
+      "destination": "/api/circulating-supply"
+    },
+    {
       "source": "/guide",
       "destination": "https://ud-guide.vercel.app/guide"
     },
