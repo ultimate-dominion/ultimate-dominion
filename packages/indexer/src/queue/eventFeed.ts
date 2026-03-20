@@ -499,11 +499,15 @@ async function scanCombatOutcomes(
       const defenderWallet = extractWalletHex(row.defenders);
 
       if (isPvP) {
+        const atkName = await resolvePlayerName(attackerWallet, charactersTable) || 'A player';
+        const defName = await resolvePlayerName(defenderWallet, charactersTable) || 'an opponent';
+        const winner = attackersWin ? atkName : defName;
+        const loser = attackersWin ? defName : atkName;
         const event: GameEvent = {
           id: crypto.randomUUID(),
           eventType: 'pvp_kill',
-          playerName: 'A player',
-          description: 'PvP combat resolved',
+          playerName: winner,
+          description: `${winner} defeated ${loser} in PvP!`,
           timestamp: Date.now(),
           metadata: { attackerWallet, defenderWallet, attackersWin },
         };
@@ -522,11 +526,12 @@ async function scanCombatOutcomes(
           }
         }
 
+        const deathName = await resolvePlayerName(attackerWallet, charactersTable) || 'An adventurer';
         const event: GameEvent = {
           id: crypto.randomUUID(),
           eventType: 'death',
-          playerName: 'An adventurer',
-          description: `An adventurer was slain by ${mobName}.`,
+          playerName: deathName,
+          description: `${deathName} was slain by ${mobName}.`,
           timestamp: Date.now(),
           metadata: { walletAddress: attackerWallet, mobName },
         };
@@ -606,11 +611,12 @@ async function scanLootDrops(
           const itemName = await resolveItemName(itemIds[i], syncHandle) || typeName;
           const fullName = rarityName ? `${rarityName} ${itemName}` : itemName;
 
+          const playerName = await resolvePlayerName(walletAddress, charactersTable) || 'An adventurer';
           const event: GameEvent = {
             id: crypto.randomUUID(),
             eventType,
-            playerName: 'An adventurer',
-            description: `An adventurer found ${fullName}!`,
+            playerName,
+            description: `${playerName} found ${fullName}!`,
             timestamp: Date.now(),
             metadata: { itemId: itemIds[i], rarity, itemName: fullName, walletAddress },
           };
@@ -892,6 +898,20 @@ async function scanMarketplaceListings(
   } catch (err) {
     console.error('[eventFeed] Marketplace scan error:', err);
   }
+}
+
+/** Resolve player name from a wallet address hex string */
+async function resolvePlayerName(walletHex: string | null, charactersTable: string): Promise<string | null> {
+  if (!walletHex || !walletHex.startsWith('0x') || walletHex.length < 42) return null;
+  try {
+    const walletBytes = Buffer.from(walletHex.slice(2, 42), 'hex');
+    const row = await sql.unsafe(`
+      SELECT "name" FROM "${mudSchema}"."${charactersTable}"
+      WHERE substring("__key_bytes" from 1 for 20) = $1 LIMIT 1
+    `, [walletBytes]);
+    if (row.length > 0) return decodeCharacterName(row[0].name);
+  } catch { /* fall through */ }
+  return null;
 }
 
 /** Resolve item display name from ItemsURIStorage. Falls back to null. */
