@@ -761,8 +761,8 @@
         ],
         "hpModifier": 5,
         "intModifier": 3,
-        "maxDamage": 5,
-        "minDamage": 3,
+        "maxDamage": 6,
+        "minDamage": 4,
         "minLevel": 0,
         "strModifier": 0
       },
@@ -959,8 +959,8 @@
         ],
         "hpModifier": 5,
         "intModifier": 3,
-        "maxDamage": 5,
-        "minDamage": 3,
+        "maxDamage": 6,
+        "minDamage": 4,
         "minLevel": 0,
         "strModifier": 0
       },
@@ -1012,7 +1012,8 @@
       "stats": {
         "agiModifier": 5,
         "effects": [
-          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
+          "0xb1eed00100000000000000000000000000000000000000000000000000000000"
         ],
         "hpModifier": 6,
         "intModifier": 0,
@@ -1037,7 +1038,7 @@
       "price": 300000000000000000000,
       "isStarter": false,
       "stats": {
-        "agiModifier": 2,
+        "agiModifier": 0,
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],

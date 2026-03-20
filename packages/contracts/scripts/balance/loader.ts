@@ -30,6 +30,7 @@ interface ZoneWeapon {
   name: string;
   rarity: number;
   price: number;
+  dropChance: number;
   scalingStat?: string; // "AGI" — absent means STR
   isStarter?: boolean;
   metadataUri?: string;
@@ -236,7 +237,10 @@ function mapArmor(za: ZoneArmor): Armor {
 }
 
 function isMonsterWeapon(zw: ZoneWeapon): boolean {
-  return zw.metadataUri?.startsWith("weapon:monster_") ?? false;
+  if (zw.metadataUri?.startsWith("weapon:monster_")) return true;
+  // Catch non-standard monster weapons (e.g. basilisk_fangs, petrifying_gaze)
+  if (zw.dropChance === 0 && zw.price === 0) return true;
+  return false;
 }
 
 function isPlayerWeapon(zw: ZoneWeapon): boolean {

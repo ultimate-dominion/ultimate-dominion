@@ -74,7 +74,7 @@
       "effectId": "0xd2812fe9b0b2cad2000000000000000000000000000000000000000000000000",
       "name": "blind",
       "stats": {
-        "agiModifier": -5,
+        "agiModifier": -4,
         "armorModifier": 0,
         "damagePerTick": 0,
         "hpModifier": 0,
@@ -86,7 +86,7 @@
         "cooldown": 3,
         "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 8
+        "validTurns": 6
       }
     },
     {
@@ -279,9 +279,28 @@
       },
       "validity": {
         "cooldown": 2,
-        "maxStacks": 2,
+        "maxStacks": 1,
         "validTime": 0,
-        "validTurns": 8
+        "validTurns": 6
+      }
+    },
+    {
+      "effectId": "0xb1eed00100000000000000000000000000000000000000000000000000000000",
+      "name": "bleed",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 2,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 2,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
       }
     },
     {

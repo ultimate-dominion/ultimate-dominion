@@ -131,15 +131,15 @@ export const WEAPONS_BASELINE: Weapon[] = [
   { name: "Webspinner Bow",   minDamage: 3, maxDamage: 4, strMod: 0, agiMod: 3, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },
   { name: "Warhammer",        minDamage: 4, maxDamage: 7, strMod: 3, agiMod: 0, intMod: 0, hpMod: 8, scaling: "str", isMagic: false, minStr: 13, minAgi: 0,  minInt: 0,  rarity: 2, price: 100 },
   { name: "Longbow",          minDamage: 4, maxDamage: 6, strMod: 0, agiMod: 3, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 15, minInt: 0,  rarity: 2, price: 100 },
-  { name: "Mage Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 11, rarity: 2, price: 100 },
+  { name: "Mage Staff",       minDamage: 4, maxDamage: 6, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 11, rarity: 2, price: 100 },
   // R3
   { name: "Dire Rat Fang",    minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
   { name: "Gnarled Cudgel",   minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 12, minAgi: 0,  minInt: 0,  rarity: 3, price: 180 },
-  { name: "Bone Staff",       minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 0, intMod: 3, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 13, rarity: 3, price: 180 },
+  { name: "Bone Staff",       minDamage: 4, maxDamage: 6, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 13, rarity: 3, price: 180 },
   { name: "Stone Maul",       minDamage: 5, maxDamage: 7, strMod: 4, agiMod: 0, intMod: 0, hpMod: 8, scaling: "str", isMagic: false, minStr: 15, minAgi: 0,  minInt: 0,  rarity: 3, price: 250 },
-  // R4
-  { name: "Darkwood Bow",     minDamage: 6, maxDamage: 9, strMod: 2, agiMod: 5, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 18, minInt: 0,  rarity: 4, price: 220 },
-  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 2, intMod: 5, hpMod: 5, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 16, rarity: 4, price: 300 },
+  // R3 (V4c deployed: Darkwood 6-9 w/ bleed, Smoldering agiMod 0)
+  { name: "Darkwood Bow",     minDamage: 6, maxDamage: 9, strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 14, minInt: 0,  rarity: 3, price: 220 },
+  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 7, strMod: 0, agiMod: 0, intMod: 5, hpMod: 6, scaling: "str", isMagic: true,  minStr: 5,  minAgi: 0,  minInt: 13, rarity: 3, price: 300 },
 ];
 
 // ============================================================
@@ -308,10 +308,26 @@ export const MONSTERS_RETUNED: Monster[] = [
 // ============================================================
 
 export const PROPOSED_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
-  // V3 epic weapons
+  // V3 epic weapons (V4c deployed: phasefang_poison 1 stack 6t, blind -4 agi 6t)
   "Phasefang": [
-    { type: "dot", name: "poison", damagePerTick: 2, maxStacks: 2, duration: 8, cooldown: 2 },
-    { type: "stat_debuff", name: "blind", agiMod: -5, duration: 8, cooldown: 3 },
+    { type: "dot", name: "phasefang_poison", damagePerTick: 3, maxStacks: 1, duration: 6, cooldown: 2 },
+    { type: "stat_debuff", name: "blind", agiMod: -4, duration: 6, cooldown: 3 },
+  ],
+  "Trollhide Cleaver": [{ type: "stat_debuff", name: "weaken", strMod: -8, duration: 8, cooldown: 3 }],
+  "Drakescale Staff":   [{ type: "stat_debuff", name: "stupify", intMod: -8, duration: 8, cooldown: 3 }],
+};
+
+// V4 effects — balanced across all R3-R4 weapons
+//   Darkwood Bow gets bleed (AGI phys weapons need an effect to compete)
+//   Phasefang poison 1 stack, blind toned down (-4 AGI 6t, was -5 8t)
+//   Trollhide/Drakescale unchanged
+export const V4_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
+  "Darkwood Bow": [
+    { type: "dot", name: "bleed", damagePerTick: 2, maxStacks: 1, duration: 4, cooldown: 2 },
+  ],
+  "Phasefang": [
+    { type: "dot", name: "phasefang_poison", damagePerTick: 3, maxStacks: 1, duration: 6, cooldown: 2 },
+    { type: "stat_debuff", name: "blind", agiMod: -4, duration: 6, cooldown: 3 },
   ],
   "Trollhide Cleaver": [{ type: "stat_debuff", name: "weaken", strMod: -8, duration: 8, cooldown: 3 }],
   "Drakescale Staff":   [{ type: "stat_debuff", name: "stupify", intMod: -8, duration: 8, cooldown: 3 }],
@@ -326,6 +342,71 @@ export const PROPOSED_MONSTER_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
 };
 
 // ============================================================
+// V4 WEAPONS — balance pass: every path viable, epics=hybrid, blues=pure
+//   - Darkwood Bow nerfed (7-10 → 5-8): R3 pure AGI, was 2x other R3s
+//   - Smoldering Rod buffed (5-7 → 6-8): R3 pure INT ceiling
+//   - Mage Staff buffed (3-5 → 4-6): R2 pure INT, match Warhammer/Longbow
+//   - Bone Staff buffed (3-5 → 4-6): R3 pure INT stepping stone
+//   - Phasefang: damage unchanged but poison removed (effect change above)
+// ============================================================
+
+export const WEAPONS_V4: Weapon[] = [
+  // R0 — unchanged
+  { name: "Broken Sword",     minDamage: 1, maxDamage: 1, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
+  { name: "Worn Shortbow",    minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 1, intMod: 0, hpMod: 0, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
+  { name: "Cracked Wand",     minDamage: 1, maxDamage: 1, strMod: 0, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 0, price: 5 },
+  // R1 cheap — same as V3
+  { name: "Iron Axe",         minDamage: 1, maxDamage: 2, strMod: 1, agiMod: 0, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 5,  minAgi: 0,  minInt: 0,  rarity: 1, price: 15 },
+  { name: "Hunting Bow",      minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2, scaling: "agi", isMagic: false, minStr: 0,  minAgi: 8,  minInt: 0,  rarity: 1, price: 15 },
+  { name: "Apprentice Staff",  minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 6,  rarity: 1, price: 15 },
+  // R1 mid — same as V3
+  { name: "Light Mace",       minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 8,  minAgi: 3,  minInt: 0,  rarity: 1, price: 40 },
+  { name: "Shortbow",      minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 7,  minInt: 0,  rarity: 1, price: 40 },
+  { name: "Channeling Rod",   minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 3,  minAgi: 0,  minInt: 9,  rarity: 1, price: 40 },
+  { name: "Notched Blade",     minDamage: 2, maxDamage: 3, strMod: 1, agiMod: 0, intMod: 1, hpMod: 0, scaling: "str", isMagic: false, minStr: 4,  minAgi: 0,  minInt: 4,  rarity: 1, price: 50 },
+  // R2 — pure path F2P ceiling. INT buffed to match STR/AGI.
+  { name: "Notched Cleaver",  minDamage: 2, maxDamage: 4, strMod: 2, agiMod: 0, intMod: 0, hpMod: 2, scaling: "str", isMagic: false, minStr: 7,  minAgi: 3,  minInt: 0,  rarity: 2, price: 60 },
+  { name: "Sporecap Wand",    minDamage: 1, maxDamage: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: true,  minStr: 0,  minAgi: 0,  minInt: 5,  rarity: 2, price: 60 },
+  { name: "Crystal Shard",    minDamage: 4, maxDamage: 6, strMod: 1, agiMod: 0, intMod: 2, hpMod: 3, scaling: "str", isMagic: false, minStr: 6,  minAgi: 0,  minInt: 6,  rarity: 2, price: 70 },
+  { name: "Webspinner Bow",   minDamage: 3, maxDamage: 5, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4, scaling: "agi", isMagic: false, minStr: 5,  minAgi: 10, minInt: 0,  rarity: 2, price: 90 },
+  { name: "Warhammer",        minDamage: 4, maxDamage: 7, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 11, minAgi: 4,  minInt: 0,  rarity: 2, price: 100 },
+  { name: "Longbow",          minDamage: 4, maxDamage: 7, strMod: 0, agiMod: 3, intMod: 0, hpMod: 5, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 13, minInt: 0,  rarity: 2, price: 100 },
+  { name: "Mage Staff",       minDamage: 4, maxDamage: 6, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 9,  rarity: 2, price: 100 },
+  // R3 — pure path rare drops (damage compressed across paths)
+  { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
+  { name: "Gnarled Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 10, minAgi: 4,  minInt: 0,  rarity: 3, price: 180 },
+  { name: "Bone Staff",       minDamage: 4, maxDamage: 6, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 11, rarity: 3, price: 180 },
+  { name: "Stone Maul",     minDamage: 5, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 13, minAgi: 5,  minInt: 0,  rarity: 3, price: 250 },
+  // R3 — pure path endgame. Darkwood 7-10→6-9, Smoldering stays 5-7 but better mods
+  { name: "Darkwood Bow",     minDamage: 6, maxDamage: 9, strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 14, minInt: 0,  rarity: 3, price: 220 },
+  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 7, strMod: 0, agiMod: 0, intMod: 5, hpMod: 6, scaling: "str", isMagic: true,  minStr: 5,  minAgi: 0,  minInt: 13, rarity: 3, price: 300 },
+  // R4 EPIC — hybrid weapons, marketplace drivers
+  { name: "Trollhide Cleaver", minDamage: 6, maxDamage: 9, strMod: 3, agiMod: 3, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 16, minAgi: 10, minInt: 0,  rarity: 4, price: 350 },
+  { name: "Phasefang",  minDamage: 4, maxDamage: 8, strMod: 0, agiMod: 4, intMod: 3, hpMod: 5, scaling: "agi", isMagic: true,  minStr: 0,  minAgi: 16, minInt: 11, rarity: 4, price: 350 },
+  { name: "Drakescale Staff",   minDamage: 5, maxDamage: 8, strMod: 2, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 12, minAgi: 0,  minInt: 11, rarity: 4, price: 350 },
+];
+
+// ============================================================
+// V4 CLASS SPELLS — rebalanced for turn cost
+//   - Paladin: self_buff → damage_buff (lost turn must deal damage)
+//   - Cleric: self_buff → damage_buff (same logic)
+//   - Wizard: 3 casts → 2 (was +21% benefit, too dominant)
+//   - Druid: stronger debuff (-30% AGI, was -25%)
+// ============================================================
+
+export const CLASS_SPELLS_V4: Record<string, ClassSpell> = {
+  Warrior:  { name: "Battle Cry",    type: "damage_buff",   baseDmgMin: 5, baseDmgMax: 10, dmgPerStr: 0.5, strPct: 0.25, armorMod: 8, hpPct: 0.10, duration: 8, maxUses: 2 },
+  Paladin:  { name: "Divine Shield", type: "damage_buff",   baseDmgMin: 3, baseDmgMax: 6, dmgPerStr: 0.35, strPct: 0.15, armorMod: 10, hpPct: 0.15, duration: 8, maxUses: 2 },
+  Ranger:   { name: "Marked Shot",     type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerAgi: 0.4, agiPct: -0.20, armorMod: -5, duration: 8 },
+  Rogue:    { name: "Expose Weakness", type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerAgi: 0.4, armorMod: -8, strPct: -0.15, duration: 8 },
+  Druid:    { name: "Entangle",      type: "damage_debuff", baseDmgMin: 3, baseDmgMax: 6, dmgPerInt: 0.3, agiPct: -0.30, strPct: -0.15, armorMod: -3, duration: 8 },
+  Warlock:  { name: "Soul Drain",    type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerInt: 0.4, strPct: -0.12, intPct: -0.12, duration: 5, maxUses: 2 },
+  Wizard:   { name: "Arcane Blast",  type: "magic_damage",  baseDmgMin: 5, baseDmgMax: 10, dmgPerInt: 0.5, maxUses: 2 },
+  Sorcerer: { name: "Arcane Infusion", type: "weapon_enchant", baseDmgMin: 3, baseDmgMax: 6, dmgPerInt: 0.25, duration: 10 },
+  Cleric:   { name: "Blessing",      type: "damage_buff",   baseDmgMin: 3, baseDmgMax: 5, dmgPerInt: 0.3, intPct: 0.12, armorMod: 7, hpPct: 0.15, duration: 6, maxUses: 2 },
+};
+
+// ============================================================
 // Apply overrides to loaded game data based on flags
 // ============================================================
 
@@ -333,6 +414,7 @@ export interface SimFlags {
   useRebalanced: boolean;
   useV2: boolean;
   useV3: boolean;
+  useV4: boolean;
   useArmor: boolean;
   useSpells: boolean;
   useRetunedMonsters: boolean;
@@ -353,11 +435,17 @@ export function applyOverrides(data: GameData, flags: SimFlags): GameData {
   result.combatConstants = PROPOSED_COMBAT_CONSTANTS;
   result.levelingConstants = PROPOSED_LEVELING_CONSTANTS;
 
-  // Always use proposed class spells
-  result.classSpells = CLASS_SPELLS;
+  // Class spells — V4 has rebalanced spells, otherwise use V3 spells
+  if (flags.useV4) {
+    result.classSpells = CLASS_SPELLS_V4;
+  } else {
+    result.classSpells = CLASS_SPELLS;
+  }
 
   // Weapon variant selection — default is tuned baseline, not on-chain
-  if (flags.useV3) {
+  if (flags.useV4) {
+    result.weapons = [...WEAPONS_V4];
+  } else if (flags.useV3) {
     result.weapons = [...WEAPONS_V3];
   } else if (flags.useV2) {
     result.weapons = [...WEAPONS_V2];
@@ -367,8 +455,8 @@ export function applyOverrides(data: GameData, flags: SimFlags): GameData {
     result.weapons = [...WEAPONS_BASELINE];
   }
 
-  // Armor with secondary requirements (used when armor flag is on + V2/V3)
-  if (flags.useArmor && (flags.useV2 || flags.useV3)) {
+  // Armor with secondary requirements (used when armor flag is on + V2/V3/V4)
+  if (flags.useArmor && (flags.useV2 || flags.useV3 || flags.useV4)) {
     result.armors = [...ARMORS_WITH_SECONDARY_REQS];
   }
 
@@ -377,10 +465,14 @@ export function applyOverrides(data: GameData, flags: SimFlags): GameData {
     result.monsters = [...MONSTERS_RETUNED];
   }
 
-  // Merge proposed weapon effects (V3 epics + monster specials).
+  // Merge proposed weapon effects (V3/V4 epics + monster specials).
   // Note: this REPLACES per-key, not merges — e.g., proposed "Dire Rat" effects
   // fully replace any on-chain effects loaded for that monster.
-  result.weaponEffects = { ...result.weaponEffects, ...PROPOSED_WEAPON_EFFECTS };
+  if (flags.useV4) {
+    result.weaponEffects = { ...result.weaponEffects, ...V4_WEAPON_EFFECTS };
+  } else {
+    result.weaponEffects = { ...result.weaponEffects, ...PROPOSED_WEAPON_EFFECTS };
+  }
   result.monsterWeaponEffects = { ...result.monsterWeaponEffects, ...PROPOSED_MONSTER_WEAPON_EFFECTS };
 
   return result;
