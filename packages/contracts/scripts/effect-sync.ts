@@ -575,6 +575,35 @@ Modes:
         console.log(`  DIFF: ${effect.name}:`);
         diffs.forEach(d => console.log(d));
         mismatchedEffects++;
+        // Generate writeOps to fix mismatched stats/validity/targeting
+        if (doUpdate) {
+          const s = effect.stats;
+          const v = effect.validity;
+          const statsHex = encodeAbiParameters(
+            [{ type: 'int256' }, { type: 'int256' }, { type: 'int256' }, { type: 'int256' }, { type: 'int256' }],
+            [BigInt(s.agiModifier), BigInt(s.armorModifier), BigInt(s.damagePerTick), BigInt(s.hpModifier), BigInt(s.intModifier)]
+          );
+          const resistanceHex = s.resistanceStat.toString(16).padStart(2, '0');
+          const strModHex = encodeAbiParameters([{ type: 'int256' }], [BigInt(s.strModifier)]).slice(2);
+          writeOps.push({
+            tableId: STATUS_EFFECT_STATS_TABLE, key: effectId,
+            staticData: (statsHex + resistanceHex + strModHex) as Hex,
+            label: `${effect.name} → StatusEffectStats (update)`,
+          });
+          writeOps.push({
+            tableId: STATUS_EFFECT_VALIDITY_TABLE, key: effectId,
+            staticData: encodeAbiParameters(
+              [{ type: 'uint256' }, { type: 'uint256' }, { type: 'uint256' }, { type: 'uint256' }],
+              [BigInt(v.cooldown), BigInt(v.maxStacks), BigInt(v.validTime), BigInt(v.validTurns)]
+            ),
+            label: `${effect.name} → StatusEffectValidity (update)`,
+          });
+          writeOps.push({
+            tableId: STATUS_EFFECT_TARGETING_TABLE, key: effectId,
+            staticData: ('0x' + ((effect.targetsSelf ?? false) ? '01' : '00')) as Hex,
+            label: `${effect.name} → StatusEffectTargeting (update)`,
+          });
+        }
       } else {
         matchedEffects++;
       }
@@ -594,9 +623,8 @@ Modes:
     return;
   }
 
-  if (mismatchedEffects > 0) {
-    console.log(`\nNote: ${mismatchedEffects} effects have stat mismatches. createEffect is idempotent and`);
-    console.log('cannot update existing effects — only missing effects can be created with --update.');
+  if (mismatchedEffects > 0 && !doUpdate) {
+    console.log(`\nNote: ${mismatchedEffects} effects have stat mismatches. Run with --update to fix.`);
   }
 
   // ── Update Mode (direct table writes via setRecord) ──
