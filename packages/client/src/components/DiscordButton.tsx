@@ -20,7 +20,7 @@ export const DiscordButton = (): JSX.Element => {
         bg="linear-gradient(135deg, #3A2E1A 0%, #2A2218 100%)"
         border="1px solid #C87A2A"
         borderRadius="lg"
-        bottom={14}
+        bottom={16}
         boxShadow="0 0 8px rgba(200, 122, 42, 0.3)"
         color="#D4A54A"
         href={DISCORD_URL}
