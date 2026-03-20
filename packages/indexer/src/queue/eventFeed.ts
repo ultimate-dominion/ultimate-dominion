@@ -207,37 +207,23 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
       `);
 
       for (const row of rows) {
-        const playerName = await lookupPlayerName(row.attackers, charactersTable);
-        if (!playerName) continue;
+        const walletAddress = extractWalletHex(row.attackers);
         const attackersWin = Boolean(row.attackers_win);
         const isPvP = Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
         const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
 
+        const defenderWallet = extractWalletHex(row.defenders);
         if (isPvP) {
-          const playerWon = attackersWin;
-          const opponentEntities = parsePackedBytes32(row.defenders);
-          let opponentName = 'an opponent';
-          if (opponentEntities.length > 0) {
-            try {
-              const oppRow = await sql.unsafe(`
-                SELECT "name" FROM "${mudSchema}"."${charactersTable}" WHERE "__key_bytes" = $1 LIMIT 1
-              `, [opponentEntities[0]]);
-              if (oppRow.length > 0) opponentName = decodeCharacterName(oppRow[0].name) || 'an opponent';
-            } catch { /* fall through */ }
-          }
-          const winner = playerWon ? playerName : opponentName;
-          const loser = playerWon ? opponentName : playerName;
           allEvents.push({
             block: Number(row.block),
             dedupKey: `combat:${keyHex}`,
             event: {
-              id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: winner,
-              description: eventDesc.pvpKill(winner, loser), timestamp: 0,
-              metadata: { opponentName: loser },
+              id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: 'A player',
+              description: 'PvP combat resolved', timestamp: 0,
+              metadata: { attackerWallet: walletAddress, defenderWallet, attackersWin },
             },
           });
         } else if (!attackersWin) {
-          // PvE death — player lost
           let mobName = 'a monster';
           if (mobsTable) {
             const mobEntities = parsePackedBytes32(row.defenders);
@@ -250,9 +236,9 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
             block: Number(row.block),
             dedupKey: `combat:${keyHex}`,
             event: {
-              id: crypto.randomUUID(), eventType: 'death', playerName: playerName,
-              description: eventDesc.death(playerName, mobName), timestamp: 0,
-              metadata: { mobName },
+              id: crypto.randomUUID(), eventType: 'death', playerName: 'An adventurer',
+              description: `An adventurer was slain by ${mobName}.`, timestamp: 0,
+              metadata: { walletAddress, mobName },
             },
           });
         }
@@ -276,12 +262,11 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
       `);
 
       for (const row of rows) {
-        const name = await lookupPlayerName(row.attackers, charactersTable) || 'An adventurer';
+        const walletAddress = extractWalletHex(row.attackers);
         const itemIds: string[] = Array.isArray(row.items_dropped) ? row.items_dropped : [];
         if (itemIds.length === 0) continue;
         const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
 
-        // Check each item for rarity
         for (let i = 0; i < itemIds.length; i++) {
           if (!itemsTable) continue;
           try {
@@ -291,20 +276,16 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
             );
             if (itemRow.length === 0) continue;
             const rarity = Number(itemRow[0].rarity || 0);
-            if (rarity < 2) continue; // Skip Worn (0) and Common (1)
-
-            const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-            const rarityName = RARITY_NAMES[rarity] || '';
-            const itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+            if (rarity < 2) continue;
             const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
 
             allEvents.push({
               block: Number(row.block),
               dedupKey: `loot:${keyHex}:${i}`,
               event: {
-                id: crypto.randomUUID(), eventType, playerName: name,
-                description: eventDesc.lootDrop(name, itemDesc), timestamp: 0,
-                metadata: { itemId: itemIds[i], rarity, itemType: typeName, itemName: `${rarityName} ${typeName}`.trim() },
+                id: crypto.randomUUID(), eventType, playerName: 'An adventurer',
+                description: 'An adventurer found an item!', timestamp: 0,
+                metadata: { itemId: itemIds[i], rarity, walletAddress },
               },
             });
           } catch { /* skip item */ }
@@ -508,69 +489,46 @@ async function scanCombatOutcomes(
     }
 
     for (const row of rows) {
-      const playerName = await lookupPlayerName(row.attackers, charactersTable);
-      if (!playerName) continue;
-
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
       if (emittedCombat.has(keyHex)) continue;
       emittedCombat.add(keyHex);
 
       const attackersWin = Boolean(row.attackers_win);
       const isPvP = Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
+      const attackerWallet = extractWalletHex(row.attackers);
+      const defenderWallet = extractWalletHex(row.defenders);
 
       if (isPvP) {
-        // PvP: emit one event per combat — "{Winner} defeated {Loser}"
-        // Player (initiator) is always in attackers, opponent in defenders
-        const playerWon = attackersWin;
-        const opponentEntities = parsePackedBytes32(row.defenders);
-        let opponentName = 'an opponent';
-        if (opponentEntities.length > 0) {
-          try {
-            const oppRow = await sql.unsafe(`
-              SELECT "name" FROM "${mudSchema}"."${charactersTable}"
-              WHERE "__key_bytes" = $1 LIMIT 1
-            `, [opponentEntities[0]]);
-            if (oppRow.length > 0) {
-              opponentName = decodeCharacterName(oppRow[0].name) || 'an opponent';
-            }
-          } catch { /* fall through */ }
-        }
-
-        const winner = playerWon ? playerName : opponentName;
-        const loser = playerWon ? opponentName : playerName;
-
         const event: GameEvent = {
           id: crypto.randomUUID(),
           eventType: 'pvp_kill',
-          playerName: winner,
-          description: eventDesc.pvpKill(winner, loser),
+          playerName: 'A player',
+          description: 'PvP combat resolved',
           timestamp: Date.now(),
-          metadata: { opponentName: loser },
+          metadata: { attackerWallet, defenderWallet, attackersWin },
         };
         addEvent(event, toBlock, `combat:${keyHex}`);
         broadcaster.broadcastGameEvent(event);
       } else {
         // PvE: only emit deaths (player killed by monster)
-        if (attackersWin) continue; // Player won PvE — skip
+        if (attackersWin) continue;
 
         let mobName = 'a monster';
         if (mobsTable) {
           const mobEntities = parsePackedBytes32(row.defenders);
           if (mobEntities.length > 0) {
             const mobId = decodeMobIdFromEntity(mobEntities[0]);
-            if (mobId > 0) {
-              mobName = await getMobName(mobId, mobsTable);
-            }
+            if (mobId > 0) mobName = await getMobName(mobId, mobsTable);
           }
         }
 
         const event: GameEvent = {
           id: crypto.randomUUID(),
           eventType: 'death',
-          playerName: playerName,
-          description: eventDesc.death(playerName, mobName),
+          playerName: 'An adventurer',
+          description: `An adventurer was slain by ${mobName}.`,
           timestamp: Date.now(),
-          metadata: { mobName },
+          metadata: { walletAddress: attackerWallet, mobName },
         };
         addEvent(event, toBlock, `combat:${keyHex}`);
         broadcaster.broadcastGameEvent(event);
@@ -618,7 +576,7 @@ async function scanLootDrops(
 
     for (const row of rows) {
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-      const name = await lookupPlayerName(row.attackers, charactersTable) || 'An adventurer';
+      const walletAddress = extractWalletHex(row.attackers);
       const rawDropped = row.items_dropped;
       const itemIds: string[] = Array.isArray(rawDropped) ? rawDropped.map(String) : [];
       if (itemIds.length === 0) continue;
@@ -642,22 +600,15 @@ async function scanLootDrops(
           if (rarity < 2) continue; // Skip Worn (0) and Common (1)
 
           emittedLoot.add(itemDedupKey);
-
-          const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-          const rarityName = RARITY_NAMES[rarity] || '';
-          // Resolve actual item name from on-chain URI metadata
-          const resolvedName = await lookupItemName(itemIds[i], syncHandle);
-          const displayName = resolvedName || `${typeName}`;
-          const fullItemName = rarityName ? `${rarityName} ${displayName}` : displayName;
           const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
 
           const event: GameEvent = {
             id: crypto.randomUUID(),
             eventType,
-            playerName: name,
-            description: eventDesc.lootDrop(name, fullItemName),
+            playerName: 'An adventurer',
+            description: 'An adventurer found an item!',
             timestamp: Date.now(),
-            metadata: { itemId: itemIds[i], rarity, itemType: typeName, itemName: fullItemName },
+            metadata: { itemId: itemIds[i], rarity, walletAddress },
           };
           addEvent(event, toBlock, `loot:${itemDedupKey}`);
           broadcaster.broadcastGameEvent(event);
@@ -902,36 +853,15 @@ async function scanMarketplaceListings(
         } catch { /* fall through */ }
       }
 
-      const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-      const rarityName = RARITY_NAMES[rarity] || '';
-      const resolvedName = await lookupItemName(row.item_id, syncHandle);
-      const displayName = resolvedName || typeName;
-      const fullItemName = rarityName ? `${rarityName} ${displayName}` : displayName;
-
-      // Format gold price (18 decimals)
-      let priceStr = '?';
-      if (row.price) {
-        try {
-          const goldWei = BigInt(row.price);
-          const gold = Number(goldWei / BigInt(10 ** 18));
-          const frac = Number(goldWei % BigInt(10 ** 18)) / 1e18;
-          priceStr = (gold + frac) > 0 ? String(Math.round((gold + frac) * 10) / 10) : '0';
-        } catch {
-          priceStr = '?';
-        }
-      }
-
       const event: GameEvent = {
         id: crypto.randomUUID(),
         eventType: 'marketplace_listing',
         playerName: sellerName,
-        description: eventDesc.marketplaceListing(sellerName, fullItemName, priceStr),
+        description: `${sellerName} listed an item on the marketplace`,
         timestamp: Date.now(),
         metadata: {
           itemId: String(row.item_id),
           rarity,
-          itemType: typeName,
-          itemName: fullItemName,
           price: row.price ? String(row.price) : undefined,
           orderHash: '0x' + keyHex,
         },
@@ -944,44 +874,27 @@ async function scanMarketplaceListings(
   }
 }
 
-/** Look up a character name from a MUD packed attackers column */
-async function lookupPlayerName(attackersRaw: unknown, charactersTable: string): Promise<string | null> {
-  const entities = parsePackedBytes32(attackersRaw);
-  if (entities.length === 0) return null;
-  try {
-    // characterId is 32 bytes: first 20 = wallet address, last 12 = token index
-    const walletBytes = entities[0].subarray(0, 20);
-    const row = await sql.unsafe(`
-      SELECT "name" FROM "${mudSchema}"."${charactersTable}"
-      WHERE substring("__key_bytes" from 1 for 20) = $1 LIMIT 1
-    `, [walletBytes]);
-    if (row.length > 0) return decodeCharacterName(row[0].name);
-  } catch { /* fall through */ }
-  return null;
-}
-
-/** Look up an item's display name from ItemsURIStorage */
-async function lookupItemName(itemId: string | number, syncHandle: SyncHandle): Promise<string | null> {
-  const uriTable = syncHandle.tableNameMap.get('ItemsURIStorage');
-  if (!uriTable) return null;
-  try {
-    const row = await sql.unsafe(`
-      SELECT "uri" FROM "${mudSchema}"."${uriTable}"
-      WHERE "token_id" = $1 LIMIT 1
-    `, [String(itemId)]);
-    if (row.length > 0 && row[0].uri) {
-      // URIs are "type:snake_case_name" e.g. "weapon:dire_rat_fang" → "Dire Rat Fang"
-      const uri = String(row[0].uri);
-      const parts = uri.split(':');
-      if (parts.length >= 2) {
-        return parts.slice(1).join(':')
-          .split('_')
-          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-          .join(' ');
-      }
-    }
-  } catch { /* fall through */ }
-  return null;
+/**
+ * Extract wallet address hex (0x...) from a MUD bytes32[] column.
+ * The first 20 bytes of a characterId encode the wallet address.
+ * Handles all MUD column formats: JSON array strings, {json:[]} objects, packed hex.
+ */
+function extractWalletHex(raw: unknown): string | null {
+  let hexStr: string | null = null;
+  if (typeof raw === 'string') {
+    if (raw.startsWith('[')) {
+      try { const arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length > 0) hexStr = String(arr[0]); } catch {}
+    } else if (raw.startsWith('{"json":')) {
+      try { const p = JSON.parse(raw); if (p?.json?.[0]) hexStr = String(p.json[0]); } catch {}
+    } else if (raw.startsWith('0x')) hexStr = raw;
+  } else if (typeof raw === 'object' && raw !== null && !Array.isArray(raw) && 'json' in raw) {
+    const arr = (raw as Record<string, unknown>).json;
+    if (Array.isArray(arr) && arr.length > 0) hexStr = String(arr[0]);
+  } else if (Array.isArray(raw) && raw.length > 0) {
+    hexStr = String(raw[0]);
+  }
+  if (!hexStr || !hexStr.startsWith('0x') || hexStr.length < 42) return null;
+  return hexStr.slice(0, 42); // first 20 bytes = wallet address
 }
 
 /**

@@ -1,6 +1,20 @@
 import { Box, Text, VStack } from '@chakra-ui/react';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useQueue } from '../contexts/QueueContext';
+import { useItems } from '../contexts/ItemsContext';
+import { useMap } from '../contexts/MapContext';
+import { RARITY_COLORS } from '../utils/types';
+import { ITEM_PATH } from '../Routes';
+
+type GameEvent = {
+  id: string;
+  eventType: string;
+  playerName: string;
+  description: string;
+  timestamp: number;
+  metadata?: Record<string, unknown>;
+};
 
 export const GameEventFeed = (): JSX.Element => {
   const { gameEvents } = useQueue();
@@ -30,7 +44,7 @@ export const GameEventFeed = (): JSX.Element => {
             lineHeight="1.5"
           >
             <Text as="span" color="#5A5040" mr={1}>{'>'}</Text>
-            {event.description}
+            <EventContent event={event} />
           </Text>
         </Box>
       ))}
@@ -38,6 +52,118 @@ export const GameEventFeed = (): JSX.Element => {
     </VStack>
   );
 };
+
+/** Resolve player name and item name from client game state */
+const EventContent = ({ event }: { event: GameEvent }): JSX.Element => {
+  const { armorTemplates, weaponTemplates, consumableTemplates, spellTemplates } = useItems();
+  const { allCharacters } = useMap();
+
+  const allItems = useMemo(() => [
+    ...armorTemplates, ...weaponTemplates, ...consumableTemplates, ...spellTemplates,
+  ], [armorTemplates, weaponTemplates, consumableTemplates, spellTemplates]);
+
+  const meta = event.metadata || {};
+  const walletAddress = (meta.walletAddress || meta.attackerWallet) as string | undefined;
+
+  // Resolve player name from wallet address
+  const resolvedName = useMemo(() => {
+    if (!walletAddress) return null;
+    const char = allCharacters.find(c => c.owner?.toLowerCase() === walletAddress.toLowerCase());
+    return char?.name || null;
+  }, [walletAddress, allCharacters]);
+
+  // Resolve item from metadata
+  const resolvedItem = useMemo(() => {
+    const itemId = meta.itemId as string | undefined;
+    if (!itemId) return null;
+    return allItems.find(i => i.tokenId === itemId) || null;
+  }, [meta.itemId, allItems]);
+
+  const playerName = resolvedName || event.playerName;
+  const nameColor = '#E8DCC8';
+
+  // Loot drops / rare finds
+  if ((event.eventType === 'loot_drop' || event.eventType === 'rare_find') && meta.itemId) {
+    const rarity = meta.rarity as number | undefined;
+    const itemColor = rarity !== undefined ? (RARITY_COLORS[rarity] || '#C4B89E') : '#C4B89E';
+    const itemName = resolvedItem?.name || `Item #${meta.itemId}`;
+    return (
+      <>
+        <Text as="span" color={nameColor} fontWeight={700}>{playerName}</Text>
+        {' found '}
+        <Text as={RouterLink} to={`${ITEM_PATH}/${meta.itemId}`} color={itemColor} fontWeight={700} _hover={{ textDecoration: 'underline' }}>
+          {itemName}
+        </Text>
+        {'!'}
+      </>
+    );
+  }
+
+  // Marketplace listings
+  if (event.eventType === 'marketplace_listing' && meta.itemId) {
+    const rarity = meta.rarity as number | undefined;
+    const itemColor = rarity !== undefined ? (RARITY_COLORS[rarity] || '#C49B5E') : '#C49B5E';
+    const itemName = resolvedItem?.name || meta.itemName as string || `Item #${meta.itemId}`;
+    const price = meta.price ? formatGold(String(meta.price)) : '?';
+    return (
+      <>
+        <Text as="span" color={nameColor} fontWeight={700}>{playerName}</Text>
+        {' listed '}
+        <Text as={RouterLink} to={`${ITEM_PATH}/${meta.itemId}`} color={itemColor} fontWeight={700} _hover={{ textDecoration: 'underline' }}>
+          {itemName}
+        </Text>
+        {` for ${price} Gold`}
+      </>
+    );
+  }
+
+  // PvP kills
+  if (event.eventType === 'pvp_kill') {
+    const defenderWallet = meta.defenderWallet as string | undefined;
+    const attackersWin = meta.attackersWin as boolean | undefined;
+    const attackerName = resolvedName || 'A player';
+    let defenderName = meta.opponentName as string || 'an opponent';
+    if (defenderWallet) {
+      const defChar = allCharacters.find(c => c.owner?.toLowerCase() === defenderWallet.toLowerCase());
+      if (defChar?.name) defenderName = defChar.name;
+    }
+    const winner = attackersWin ? attackerName : defenderName;
+    const loser = attackersWin ? defenderName : attackerName;
+    return (
+      <>
+        <Text as="span" color="#B85C3A" fontWeight={700}>{winner}</Text>
+        {' defeated '}
+        <Text as="span" color={nameColor} fontWeight={700}>{loser}</Text>
+        {' in PvP!'}
+      </>
+    );
+  }
+
+  // Deaths
+  if (event.eventType === 'death') {
+    const mobName = meta.mobName as string || 'a monster';
+    return (
+      <>
+        <Text as="span" color={nameColor} fontWeight={700}>{playerName}</Text>
+        {` was slain by ${mobName}.`}
+      </>
+    );
+  }
+
+  // Fallback: render description as-is
+  return <>{event.description}</>;
+};
+
+function formatGold(weiStr: string): string {
+  try {
+    const gold = Number(BigInt(weiStr) / BigInt(10 ** 18));
+    const frac = Number(BigInt(weiStr) % BigInt(10 ** 18)) / 1e18;
+    const total = gold + frac;
+    return total > 0 ? String(Math.round(total * 10) / 10) : '0';
+  } catch {
+    return '?';
+  }
+}
 
 function getEventColor(eventType: string): string {
   switch (eventType) {
