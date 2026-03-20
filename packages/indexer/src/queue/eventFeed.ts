@@ -311,7 +311,7 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
           if (!itemsTable) continue;
           try {
             const itemRow = await sql.unsafe(
-              `SELECT "item_type", "rarity" FROM "${mudSchema}"."${itemsTable}" WHERE "__key_bytes" = $1 LIMIT 1`,
+              `SELECT "item_type", "rarity" FROM "${mudSchema}"."${itemsTable}" WHERE "item_id" = $1 LIMIT 1`,
               [itemIds[i]],
             );
             if (itemRow.length === 0) continue;
@@ -672,7 +672,7 @@ async function scanLootDrops(
           const itemRow = await sql.unsafe(`
             SELECT "item_type", "rarity"
             FROM "${mudSchema}"."${itemsTable}"
-            WHERE "__key_bytes" = $1
+            WHERE "item_id" = $1
             LIMIT 1
           `, [itemIds[i]]);
           if (itemRow.length === 0) continue;
