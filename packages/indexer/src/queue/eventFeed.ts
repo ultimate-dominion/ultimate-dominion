@@ -922,13 +922,12 @@ function parsePackedBytes32(raw: unknown): Buffer[] {
   }
   // Handle array of hex strings (most common after unwrapping)
   if (Array.isArray(raw)) {
-    return raw
-      .map(v => {
-        const h = String(v);
-        if (h.startsWith('0x') && h.length === 66) return Buffer.from(h.slice(2), 'hex');
-        return null;
-      })
-      .filter((b): b is Buffer => b !== null);
+    const result: Buffer[] = [];
+    for (const v of raw) {
+      const h = String(v);
+      if (h.startsWith('0x') && h.length === 66) result.push(Buffer.from(h.slice(2), 'hex'));
+    }
+    return result;
   }
   // Handle raw Buffer/Uint8Array
   if (Buffer.isBuffer(raw) || raw instanceof Uint8Array) {
