@@ -29,7 +29,7 @@
       "destination": "https://ud-guide.vercel.app/guide/:path*"
     },
     {
-      "source": "/((?!api|guide|s).*)",
+      "source": "/((?!api|guide).*)",
       "destination": "/index.html"
     }
   ],
