@@ -947,7 +947,10 @@ async function scanMarketplaceListings(
 /** Look up a character name from a MUD packed attackers column */
 async function lookupPlayerName(attackersRaw: unknown, charactersTable: string): Promise<string | null> {
   const entities = parsePackedBytes32(attackersRaw);
-  if (entities.length === 0) return null;
+  if (entities.length === 0) {
+    console.log(`[eventFeed] lookupPlayerName: parsePackedBytes32 returned empty. raw type=${typeof attackersRaw}, value=${JSON.stringify(attackersRaw)?.slice(0, 100)}`);
+    return null;
+  }
   try {
     // characterId is 32 bytes: first 20 = wallet address, last 12 = token index
     // Match on wallet address (first 20 bytes) since that's unique per player
@@ -957,14 +960,20 @@ async function lookupPlayerName(attackersRaw: unknown, charactersTable: string):
       WHERE substring("__key_bytes" from 1 for 20) = $1 LIMIT 1
     `, [walletBytes]);
     if (row.length > 0) return decodeCharacterName(row[0].name);
-  } catch { /* fall through */ }
+    console.log(`[eventFeed] lookupPlayerName: no character found for wallet 0x${walletBytes.toString('hex')}`);
+  } catch (err) {
+    console.error('[eventFeed] lookupPlayerName error:', err);
+  }
   return null;
 }
 
 /** Look up an item's display name from ItemsURIStorage */
 async function lookupItemName(itemId: string | number, syncHandle: SyncHandle): Promise<string | null> {
   const uriTable = syncHandle.tableNameMap.get('ItemsURIStorage');
-  if (!uriTable) return null;
+  if (!uriTable) {
+    console.log(`[eventFeed] lookupItemName: ItemsURIStorage not in tableNameMap. Available: ${[...syncHandle.tableNameMap.keys()].filter(k => k.toLowerCase().includes('uri')).join(', ')}`);
+    return null;
+  }
   try {
     const row = await sql.unsafe(`
       SELECT "uri" FROM "${mudSchema}"."${uriTable}"
@@ -981,7 +990,10 @@ async function lookupItemName(itemId: string | number, syncHandle: SyncHandle): 
           .join(' ');
       }
     }
-  } catch { /* fall through */ }
+    console.log(`[eventFeed] lookupItemName: no URI found for item ${itemId} in ${uriTable}`);
+  } catch (err) {
+    console.error('[eventFeed] lookupItemName error:', err);
+  }
   return null;
 }
 
