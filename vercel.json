@@ -14,6 +14,12 @@
   "functions": {
     "api/share.ts": {
       "runtime": "@vercel/node@3.1.7"
+    },
+    "api/total-supply.ts": {
+      "runtime": "@vercel/node@3.1.7"
+    },
+    "api/circulating-supply.ts": {
+      "runtime": "@vercel/node@3.1.7"
     }
   },
   "rewrites": [
