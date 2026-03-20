@@ -12,6 +12,7 @@ export type GameEvent = {
   playerName: string;
   description: string;
   timestamp: number;
+  metadata?: Record<string, unknown>;
 };
 
 /** Messages from server to client */

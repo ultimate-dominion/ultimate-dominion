@@ -75,9 +75,9 @@ const GAME_EVENT_COLORS: Record<string, string> = {
 };
 
 // Indexer events that should NOT be merged (client-side handles with richer JSX)
-const EXCLUDED_INDEXER_EVENTS = new Set(['rare_find']);
+const EXCLUDED_INDEXER_EVENTS = new Set<string>();
 
-// Rare drops and gold offers older than this are filtered out of chat
+// Gold offers and sell listings older than this are filtered out of chat
 const ANNOUNCEMENT_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
 // Marketplace sales persist longer — low-volume, high-signal events
 const MARKETPLACE_ANNOUNCEMENT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -237,78 +237,6 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
     ...spellTemplates,
     ...weaponTemplates,
   ], [armorTemplates, consumableTemplates, spellTemplates, weaponTemplates]);
-
-  // Rare+ item drop announcements from battle outcomes
-  const rareDropAnnouncements: Message[] = useMemo(() => {
-    const cutoff = Date.now() - ANNOUNCEMENT_MAX_AGE_MS;
-    return Object.entries(combatOutcomeRows)
-      .map(([keyBytes, data]) => {
-        const { itemsDropped } = data;
-        if (!itemsDropped || (itemsDropped as unknown[]).length === 0) return null;
-
-        // Filter out old announcements
-        const ts = toNumber(data.endTime) * 1000;
-        if (ts < cutoff) return null;
-
-        const encounterData = getTableValue('CombatEncounter', keyBytes);
-        if (!encounterData) return null;
-
-        const attackers = encounterData.attackers as string[];
-        const defenders = encounterData.defenders as string[];
-        const attackerId = attackers[0];
-        const defenderId = defenders[0];
-
-        const winner = Boolean(data.attackersWin) ? attackerId : defenderId;
-        const winnerCharacter = allCharacters.find(c => c.id === winner);
-        const winnerName = winnerCharacter?.name;
-        if (!winnerName) return null;
-        const winnerNameColor = winnerCharacter ? (CLASS_COLORS[winnerCharacter.entityClass] ?? '#E8DCC8') : '#E8DCC8';
-
-        const rareDrops = (itemsDropped as unknown[])
-          .map(itemId => {
-            const found = allItems.find(item => item.tokenId === itemId!.toString());
-            return found;
-          })
-          .filter(item => item && item.rarity !== undefined && item.rarity >= Rarity.Uncommon);
-
-        if (rareDrops.length === 0) return null;
-
-        const droppedItem = rareDrops[0]!;
-        const rarityColor = RARITY_COLORS[droppedItem.rarity!];
-
-        return {
-          delivered: true,
-          from: zeroAddress,
-          jsx: (
-            <Text fontWeight={500} size="xs" textAlign="center">
-              <Text
-                as={RouterLink}
-                color={winnerNameColor}
-                fontWeight={700}
-                to={`${CHARACTERS_PATH}/${winner}`}
-                _hover={{ textDecoration: 'underline' }}
-              >
-                {winnerName}
-              </Text>{' '}
-              found{' '}
-              <Text
-                as={RouterLink}
-                color={rarityColor}
-                fontWeight={700}
-                to={`${ITEM_PATH}/${droppedItem.tokenId}`}
-                _hover={{ textDecoration: 'underline' }}
-              >
-                {droppedItem.name}
-              </Text>!
-            </Text>
-          ),
-          message: '',
-          rarityColor,
-          timestamp: toNumber(data.endTime) * 1000,
-        };
-      })
-      .filter((m): m is Message => m !== null);
-  }, [combatOutcomeRows, allCharacters, allItems]);
 
   // Rare+ marketplace transactions only
   const rareMarketplaceSales: Message[] = useMemo(() => {
@@ -659,15 +587,49 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   }, [combatOutcomeRows, allCharacters]);
 
   // Convert indexer game events to feed Messages with linked player names
-  // Show the most recent 25 events — no time cutoff (indexer buffer is already capped at 200)
+  // Show the most recent 50 events — no time cutoff (events are persistent in DB)
   const indexerEventAnnouncements: Message[] = useMemo(() => {
     const filtered = gameEvents.filter(e => !EXCLUDED_INDEXER_EVENTS.has(e.eventType));
-    const recent = filtered.slice(-25);
+    const recent = filtered.slice(-50);
     return recent.map(event => {
         const char = allCharacters.find(c => c.name === event.playerName);
         const nameColor = char ? (CLASS_COLORS[char.entityClass] ?? '#E8DCC8') : '#E8DCC8';
         const suffix = event.description.slice(event.playerName.length);
         const rarityColor = GAME_EVENT_COLORS[event.eventType] || '#8A7E6A';
+
+        // Loot drops / rare finds: use metadata for colored item names with links
+        if ((event.eventType === 'loot_drop' || event.eventType === 'rare_find') && event.metadata) {
+          const itemId = event.metadata.itemId as string | undefined;
+          const rarity = event.metadata.rarity as number | undefined;
+          const itemName = event.metadata.itemName as string | undefined;
+          const itemColor = rarity !== undefined ? (RARITY_COLORS[rarity] || rarityColor) : rarityColor;
+
+          return {
+            delivered: true,
+            from: zeroAddress,
+            jsx: (
+              <Text fontWeight={500} size="xs">
+                {char ? (
+                  <Text as={RouterLink} color={nameColor} fontWeight={700} to={`${CHARACTERS_PATH}/${char.id}`} _hover={{ textDecoration: 'underline' }}>{event.playerName}</Text>
+                ) : (
+                  <Text as="span" color={nameColor} fontWeight={700}>{event.playerName}</Text>
+                )}
+                {' found '}
+                {itemId && itemName ? (
+                  <Text as={RouterLink} color={itemColor} fontWeight={700} to={`${ITEM_PATH}/${itemId}`} _hover={{ textDecoration: 'underline' }}>
+                    {itemName}
+                  </Text>
+                ) : (
+                  <Text as="span" color={itemColor} fontWeight={700}>{itemName || 'an item'}</Text>
+                )}
+                {'!'}
+              </Text>
+            ),
+            message: '',
+            rarityColor: itemColor,
+            timestamp: event.timestamp,
+          };
+        }
 
         // PvP kills: link both winner and loser names
         if (event.eventType === 'pvp_kill') {
@@ -757,12 +719,11 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
   const messagesAndEvents = useMemo(() => {
     return [
       ...(CHAT_ENABLED ? messages : []),
-      ...rareDropAnnouncements,
       ...bossSpawnAnnouncements,
       ...bossKillAnnouncements,
       ...indexerEventAnnouncements,
     ].sort((a, b) => a.timestamp - b.timestamp);
-  }, [indexerEventAnnouncements, rareDropAnnouncements, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
+  }, [indexerEventAnnouncements, bossSpawnAnnouncements, bossKillAnnouncements, messages]);
 
   // Track unread events using last-seen timestamp (persists across refreshes)
   useEffect(() => {

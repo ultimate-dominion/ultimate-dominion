@@ -1,4 +1,5 @@
 import { sql, mudSchema } from '../db/connection.js';
+import { persistEvent, loadRecentEvents } from '../db/eventStore.js';
 import type { SyncHandle } from '../sync/startSync.js';
 import type { Broadcaster } from '../ws/broadcaster.js';
 import type { GameEvent } from '../ws/protocol.js';
@@ -39,15 +40,22 @@ let lastScannedBlock = 0;
 /** Dedup: track already-emitted events to prevent repeats */
 const emittedLevelUps = new Set<string>();    // "keyBytes:level"
 const emittedCombat = new Set<string>();       // "keyBytes"
-const emittedLoot = new Set<string>();         // "keyBytes"
+const emittedLoot = new Set<string>();         // "keyBytes:itemIndex"
 const emittedCharacters = new Set<string>();   // "keyBytes"
 const emittedClassSelections = new Set<string>(); // "keyBytes:classValue"
 const emittedFragments = new Set<string>();       // "keyBytes"
 
-function addEvent(event: GameEvent) {
+function addEvent(event: GameEvent, blockNumber: number | null = null, dedupKey?: string) {
   eventBuffer.push(event);
   if (eventBuffer.length > MAX_EVENTS) {
     eventBuffer.shift();
+  }
+
+  // Persist to DB (fire-and-forget)
+  if (dedupKey) {
+    persistEvent(event, blockNumber, dedupKey, event.metadata).catch(err =>
+      console.error('[eventFeed] Failed to persist event:', err)
+    );
   }
 }
 
@@ -100,13 +108,46 @@ async function seedDedupSets(syncHandle: SyncHandle) {
 }
 
 /**
- * Backfill the event buffer with recent history from the database.
- * Runs once on startup so the feed isn't empty after a deploy/restart.
- * Queries ALL event types — the compute happens here on the server.
+ * Backfill the event buffer — prefers persistent DB, falls back to MUD state reconstruction.
  */
 async function backfillRecentEvents(syncHandle: SyncHandle) {
+  // Try loading from persistent game_events table first
+  try {
+    const dbEvents = await loadRecentEvents(MAX_EVENTS);
+    if (dbEvents.length > 0) {
+      console.log(`[eventFeed] Loaded ${dbEvents.length} events from game_events table`);
+      for (const row of dbEvents) {
+        const event: GameEvent = {
+          id: row.id,
+          eventType: row.eventType as GameEvent['eventType'],
+          playerName: row.playerName,
+          description: row.description,
+          timestamp: row.timestamp,
+          metadata: row.metadata,
+        };
+        eventBuffer.push(event);
+      }
+      if (eventBuffer.length > MAX_EVENTS) {
+        eventBuffer.splice(0, eventBuffer.length - MAX_EVENTS);
+      }
+      return;
+    }
+  } catch (err) {
+    console.error('[eventFeed] Failed to load from game_events, falling back to MUD state:', err);
+  }
+
+  // Fallback: reconstruct from MUD table state (one-time migration)
+  await backfillFromMudState(syncHandle);
+}
+
+/**
+ * Reconstruct events from MUD table state.
+ * Only runs when game_events table is empty (first deploy with persistence).
+ * Results are persisted so this never needs to run again.
+ */
+async function backfillFromMudState(syncHandle: SyncHandle) {
   const BACKFILL_LIMIT = 50;
-  console.log(`[eventFeed] Backfilling last ${BACKFILL_LIMIT} events from DB...`);
+  console.log(`[eventFeed] Backfilling last ${BACKFILL_LIMIT} events from MUD state (one-time migration)...`);
 
   const statsTable = syncHandle.tableNameMap.get('Stats');
   const charactersTable = syncHandle.tableNameMap.get('Characters');
@@ -122,13 +163,13 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     return;
   }
 
-  const allEvents: { block: number; event: GameEvent }[] = [];
+  const allEvents: { block: number; event: GameEvent; dedupKey: string }[] = [];
 
   // 1. Fragment discoveries
   if (fragmentTable) {
     try {
       const rows = await sql.unsafe(`
-        SELECT fp."__last_updated_block_number" as block, c."name"
+        SELECT fp."__key_bytes", fp."__last_updated_block_number" as block, c."name"
         FROM "${mudSchema}"."${fragmentTable}" fp
         LEFT JOIN "${mudSchema}"."${charactersTable}" c ON fp."character_id" = c."__key_bytes"
         WHERE fp."triggered" = true
@@ -137,24 +178,26 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
       `);
       for (const row of rows) {
         const name = decodeCharacterName(row.name) || 'An adventurer';
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
         allEvents.push({
           block: Number(row.block),
+          dedupKey: `fragment:${keyHex}`,
           event: { id: crypto.randomUUID(), eventType: 'fragment_found', playerName: name, description: eventDesc.fragmentFound(name), timestamp: 0 },
         });
       }
     } catch (err) { console.error('[eventFeed] Backfill fragments error:', err); }
   }
 
-  // 4. Character creations (level=1 is a real discrete event)
+  // 2. Character creations (level=1 is a real discrete event)
   try {
     const query = statsTable
-      ? `SELECT c."__last_updated_block_number" as block, c."name"
+      ? `SELECT c."__key_bytes", c."__last_updated_block_number" as block, c."name"
          FROM "${mudSchema}"."${charactersTable}" c
          JOIN "${mudSchema}"."${statsTable}" s ON c."__key_bytes" = s."__key_bytes"
          WHERE c."name" IS NOT NULL AND s."level" = 1
          ORDER BY c."__last_updated_block_number" DESC
          LIMIT ${BACKFILL_LIMIT}`
-      : `SELECT "__last_updated_block_number" as block, "name"
+      : `SELECT "__key_bytes", "__last_updated_block_number" as block, "name"
          FROM "${mudSchema}"."${charactersTable}"
          WHERE "name" IS NOT NULL
          ORDER BY "__last_updated_block_number" DESC
@@ -163,19 +206,21 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     for (const row of rows) {
       const name = decodeCharacterName(row.name);
       if (!name) continue;
+      const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
       allEvents.push({
         block: Number(row.block),
+        dedupKey: `character:${keyHex}`,
         event: { id: crypto.randomUUID(), eventType: 'character_created', playerName: name, description: eventDesc.characterCreated(name), timestamp: 0 },
       });
     }
   } catch (err) { console.error('[eventFeed] Backfill char creation error:', err); }
 
-  // 5. Combat outcomes (PvP kills + PvE deaths)
+  // 3. Combat outcomes (PvP kills + PvE deaths)
   if (outcomeTable && worldEncTable) {
     try {
       const hasCE = !!combatEncTable;
       const rows = await sql.unsafe(`
-        SELECT co."__last_updated_block_number" as block, co."attackers_win",
+        SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."attackers_win",
                c."name" as player_name
                ${hasCE ? `, ce."encounter_type", ce."defenders", ce."attackers"` : ''}
         FROM "${mudSchema}"."${outcomeTable}" co
@@ -191,6 +236,7 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
         if (!playerName) continue;
         const attackersWin = Boolean(row.attackers_win);
         const isPvP = hasCE && Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
 
         if (isPvP) {
           const playerWon = attackersWin;
@@ -208,7 +254,12 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
           const loser = playerWon ? opponentName : playerName;
           allEvents.push({
             block: Number(row.block),
-            event: { id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: winner, description: eventDesc.pvpKill(winner, loser), timestamp: 0 },
+            dedupKey: `combat:${keyHex}`,
+            event: {
+              id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: winner,
+              description: eventDesc.pvpKill(winner, loser), timestamp: 0,
+              metadata: { opponentName: loser },
+            },
           });
         } else if (!attackersWin) {
           // PvE death — player lost
@@ -222,7 +273,12 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
           }
           allEvents.push({
             block: Number(row.block),
-            event: { id: crypto.randomUUID(), eventType: 'death', playerName: playerName, description: eventDesc.death(playerName, mobName), timestamp: 0 },
+            dedupKey: `combat:${keyHex}`,
+            event: {
+              id: crypto.randomUUID(), eventType: 'death', playerName: playerName,
+              description: eventDesc.death(playerName, mobName), timestamp: 0,
+              metadata: { mobName },
+            },
           });
         }
       }
@@ -231,11 +287,11 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
     }
   }
 
-  // 4. Loot drops
+  // 4. Loot drops — iterate ALL items, emit per Uncommon+ item
   if (outcomeTable && worldEncTable) {
     try {
       const rows = await sql.unsafe(`
-        SELECT co."__last_updated_block_number" as block, co."items_dropped", c."name"
+        SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."items_dropped", c."name"
         FROM "${mudSchema}"."${outcomeTable}" co
         JOIN "${mudSchema}"."${worldEncTable}" we ON co."__key_bytes" = we."__key_bytes"
         LEFT JOIN "${mudSchema}"."${charactersTable}" c ON we."character" = c."__key_bytes"
@@ -248,36 +304,45 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
         const name = decodeCharacterName(row.name) || 'An adventurer';
         const itemIds: string[] = Array.isArray(row.items_dropped) ? row.items_dropped : [];
         if (itemIds.length === 0) continue;
+        const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
 
-        let itemDesc = `${itemIds.length} item${itemIds.length > 1 ? 's' : ''}`;
-        let rarity = 0;
-        if (itemsTable && itemIds.length > 0) {
+        // Check each item for rarity
+        for (let i = 0; i < itemIds.length; i++) {
+          if (!itemsTable) continue;
           try {
-            const itemRow = await sql.unsafe(`SELECT "item_type", "rarity" FROM "${mudSchema}"."${itemsTable}" WHERE "__key_bytes" = $1 LIMIT 1`, [itemIds[0]]);
-            if (itemRow.length > 0) {
-              const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-              rarity = Number(itemRow[0].rarity || 0);
-              const rarityName = RARITY_NAMES[rarity] || '';
-              itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
-            }
-          } catch { /* fall back */ }
-        }
+            const itemRow = await sql.unsafe(
+              `SELECT "item_type", "rarity" FROM "${mudSchema}"."${itemsTable}" WHERE "__key_bytes" = $1 LIMIT 1`,
+              [itemIds[i]],
+            );
+            if (itemRow.length === 0) continue;
+            const rarity = Number(itemRow[0].rarity || 0);
+            if (rarity < 2) continue; // Skip Worn (0) and Common (1)
 
-        const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
-        allEvents.push({
-          block: Number(row.block),
-          event: { id: crypto.randomUUID(), eventType, playerName: name, description: eventDesc.lootDrop(name, itemDesc), timestamp: 0 },
-        });
+            const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+            const rarityName = RARITY_NAMES[rarity] || '';
+            const itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+            const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
+
+            allEvents.push({
+              block: Number(row.block),
+              dedupKey: `loot:${keyHex}:${i}`,
+              event: {
+                id: crypto.randomUUID(), eventType, playerName: name,
+                description: eventDesc.lootDrop(name, itemDesc), timestamp: 0,
+                metadata: { itemId: itemIds[i], rarity, itemType: typeName, itemName: `${rarityName} ${typeName}`.trim() },
+              },
+            });
+          } catch { /* skip item */ }
+        }
       }
     } catch (err) { console.error('[eventFeed] Backfill loot error:', err); }
   }
 
-  // Deduplicate by description (same event can appear from overlapping queries)
+  // Deduplicate by dedup key
   const seen = new Set<string>();
   const deduped = allEvents.filter(e => {
-    const key = `${e.event.eventType}:${e.event.description}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
+    if (seen.has(e.dedupKey)) return false;
+    seen.add(e.dedupKey);
     return true;
   });
 
@@ -289,13 +354,17 @@ async function backfillRecentEvents(syncHandle: SyncHandle) {
   const now = Date.now();
   for (let i = 0; i < recent.length; i++) {
     recent[i].event.timestamp = now - (recent.length - i) * 1000;
-    addEvent(recent[i].event);
+    // Add to buffer AND persist to DB (migration)
+    eventBuffer.push(recent[i].event);
+    persistEvent(recent[i].event, recent[i].block, recent[i].dedupKey, recent[i].event.metadata).catch(err =>
+      console.error('[eventFeed] Failed to persist backfill event:', err)
+    );
+  }
+  if (eventBuffer.length > MAX_EVENTS) {
+    eventBuffer.splice(0, eventBuffer.length - MAX_EVENTS);
   }
 
-  console.log(`[eventFeed] Backfilled ${recent.length} events (from ${allEvents.length} candidates)`);
-  // Note: dedup sets are NOT pre-seeded. The live scanner already skips old blocks
-  // via the initial `lastScannedBlock = currentBlock` guard. Seeding dedup sets
-  // from the full DB was suppressing all live events.
+  console.log(`[eventFeed] Backfilled ${recent.length} events from MUD state (from ${allEvents.length} candidates)`);
 }
 
 /**
@@ -390,8 +459,9 @@ async function scanLevelUps(
         playerName: name,
         description: eventDesc.levelUp(name, level),
         timestamp: Date.now(),
+        metadata: { level },
       };
-      addEvent(event);
+      addEvent(event, toBlock, `level_up:${dedupKey}`);
       broadcaster.broadcastGameEvent(event);
     }
   } catch {
@@ -510,8 +580,9 @@ async function scanCombatOutcomes(
           playerName: winner,
           description: eventDesc.pvpKill(winner, loser),
           timestamp: Date.now(),
+          metadata: { opponentName: loser },
         };
-        addEvent(event);
+        addEvent(event, toBlock, `combat:${keyHex}`);
         broadcaster.broadcastGameEvent(event);
       } else {
         // PvE: only emit deaths (player killed by monster)
@@ -537,8 +608,9 @@ async function scanCombatOutcomes(
           playerName: playerName,
           description: eventDesc.death(playerName, mobName),
           timestamp: Date.now(),
+          metadata: { mobName },
         };
-        addEvent(event);
+        addEvent(event, toBlock, `combat:${keyHex}`);
         broadcaster.broadcastGameEvent(event);
       }
     }
@@ -552,7 +624,7 @@ const ITEM_TYPE_NAMES = ['Weapon', 'Armor', 'Spell', 'Consumable', 'QuestItem', 
 // Rarity enum values (must match client Rarity enum)
 const RARITY_NAMES = ['Worn', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];
 
-/** Scan for loot drops from CombatOutcome.itemsDropped */
+/** Scan for loot drops from CombatOutcome.itemsDropped — emits per Uncommon+ item */
 async function scanLootDrops(
   syncHandle: SyncHandle,
   fromBlock: number,
@@ -586,46 +658,49 @@ async function scanLootDrops(
 
     for (const row of rows) {
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-      if (emittedLoot.has(keyHex)) continue;
-      emittedLoot.add(keyHex);
-
       const name = decodeCharacterName(row.name) || 'An adventurer';
       const itemIds: string[] = Array.isArray(row.items_dropped) ? row.items_dropped : [];
       if (itemIds.length === 0) continue;
 
-      // Try to look up item rarity and type for the first item
-      let itemDesc = `${itemIds.length} item${itemIds.length > 1 ? 's' : ''}`;
-      let rarity = 0;
-      if (itemsTable && itemIds.length > 0) {
+      // Iterate ALL items — emit one event per Uncommon+ item
+      for (let i = 0; i < itemIds.length; i++) {
+        const itemDedupKey = `${keyHex}:${i}`;
+        if (emittedLoot.has(itemDedupKey)) continue;
+
+        if (!itemsTable) continue;
         try {
           const itemRow = await sql.unsafe(`
             SELECT "item_type", "rarity"
             FROM "${mudSchema}"."${itemsTable}"
             WHERE "__key_bytes" = $1
             LIMIT 1
-          `, [itemIds[0]]);
-          if (itemRow.length > 0) {
-            const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-            rarity = Number(itemRow[0].rarity || 0);
-            const rarityName = RARITY_NAMES[rarity] || '';
-            itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
-          }
+          `, [itemIds[i]]);
+          if (itemRow.length === 0) continue;
+
+          const rarity = Number(itemRow[0].rarity || 0);
+          if (rarity < 2) continue; // Skip Worn (0) and Common (1)
+
+          emittedLoot.add(itemDedupKey);
+
+          const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+          const rarityName = RARITY_NAMES[rarity] || '';
+          const itemDescStr = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+          const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
+
+          const event: GameEvent = {
+            id: crypto.randomUUID(),
+            eventType,
+            playerName: name,
+            description: eventDesc.lootDrop(name, itemDescStr),
+            timestamp: Date.now(),
+            metadata: { itemId: itemIds[i], rarity, itemType: typeName, itemName: `${rarityName} ${typeName}`.trim() },
+          };
+          addEvent(event, toBlock, `loot:${itemDedupKey}`);
+          broadcaster.broadcastGameEvent(event);
         } catch {
-          // Fall back to generic description
+          // Fall back — skip this item
         }
       }
-
-      const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
-
-      const event: GameEvent = {
-        id: crypto.randomUUID(),
-        eventType,
-        playerName: name,
-        description: eventDesc.lootDrop(name, itemDesc),
-        timestamp: Date.now(),
-      };
-      addEvent(event);
-      broadcaster.broadcastGameEvent(event);
     }
   } catch (err) {
     console.error('[eventFeed] Loot scan error:', err);
@@ -675,7 +750,7 @@ async function scanNewCharacters(
         description: eventDesc.characterCreated(name),
         timestamp: Date.now(),
       };
-      addEvent(event);
+      addEvent(event, toBlock, `character:${keyHex}`);
       broadcaster.broadcastGameEvent(event);
     }
   } catch {
@@ -727,8 +802,9 @@ async function scanAdvancedClassSelections(
         playerName: name,
         description: eventDesc.classSelection(name, className),
         timestamp: Date.now(),
+        metadata: { className },
       };
-      addEvent(event);
+      addEvent(event, toBlock, `class:${dedupKey}`);
       broadcaster.broadcastGameEvent(event);
     }
   } catch {
@@ -772,7 +848,7 @@ async function scanFragmentDiscoveries(
         description: eventDesc.fragmentFound(name),
         timestamp: Date.now(),
       };
-      addEvent(event);
+      addEvent(event, toBlock, `fragment:${keyHex}`);
       broadcaster.broadcastGameEvent(event);
     }
   } catch {

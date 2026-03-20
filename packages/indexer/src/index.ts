@@ -10,6 +10,7 @@ import { createDashboardRouter } from './api/dashboard.js';
 import { closeDb } from './db/connection.js';
 import { initQueueTables, advanceQueue, expireReadyEntries, cleanupStaleEntries, getQueueStats, getPlayerEmail, shouldNotifyAndMark } from './db/queueSchema.js';
 import { initCheckpointTable, saveCheckpoint } from './db/checkpoint.js';
+import { initEventStore } from './db/eventStore.js';
 import { sendSlotOpenEmail } from './lib/slotEmail.js';
 import { startMilestoneWatcher } from './queue/milestoneWatcher.js';
 import { startEventFeed } from './queue/eventFeed.js';
@@ -29,9 +30,10 @@ async function main() {
 
   const httpServer = createServer(app);
 
-  // Initialize queue tables and checkpoint
+  // Initialize queue tables, checkpoint, and event store
   await initQueueTables();
   await initCheckpointTable();
+  await initEventStore();
 
   // Broadcaster for WebSocket
   const broadcaster = new Broadcaster();
