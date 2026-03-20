@@ -308,7 +308,7 @@ contract UpdateMonsterInventories is Script {
     // =========================================================================
 
     function _direRat() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](16);
+        inv = new uint256[](19);
         uint256 i;
         inv[i++] = razorClaws;          // [0] combat weapon
         inv[i++] = brokenSword;
@@ -316,7 +316,9 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = crackedWand;
         inv[i++] = tatteredCloth;
         inv[i++] = wornLeatherVest;
-        inv[i++] = direRatFang;          // signature R3
+        inv[i++] = notchedCleaver;       // R2 — broadened uncommon pool
+        inv[i++] = sporecapWand;         // R2
+        inv[i++] = crystalShard;         // R2
         inv[i++] = minorHp;
         inv[i++] = antidote;
         inv[i++] = fortifyingStew;
@@ -326,10 +328,11 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = caveMoss;
         inv[i++] = crackedBone;
         inv[i++] = bentNail;
+        inv[i++] = tatteredHide;
     }
 
     function _fungalShaman() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](17);
+        inv = new uint256[](19);
         uint256 i;
         inv[i++] = elementalBurst;       // [0] combat weapon
         inv[i++] = crackedWand;
@@ -338,7 +341,9 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = apprenticeRobes;
         inv[i++] = leatherJerkin;
         inv[i++] = sporecapWand;          // signature R2
-        inv[i++] = sporeCloud;            // signature consumable (moved from Drake)
+        inv[i++] = crystalShard;          // R2 — broadened
+        inv[i++] = notchedCleaver;        // R2 — broadened
+        inv[i++] = sporeCloud;            // signature consumable
         inv[i++] = minorHp;
         inv[i++] = antidote;
         inv[i++] = fortifyingStew;
@@ -351,7 +356,7 @@ contract UpdateMonsterInventories is Script {
     }
 
     function _cavernBrute() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](17);
+        inv = new uint256[](19);
         uint256 i;
         inv[i++] = stoneFist;             // [0] combat weapon
         inv[i++] = ironAxe;
@@ -360,6 +365,8 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = rustyChainmail;
         inv[i++] = wornLeatherVest;
         inv[i++] = notchedCleaver;        // signature R2
+        inv[i++] = warhammer;             // R2 — broadened
+        inv[i++] = etchedChainmail;        // R2 — broadened
         inv[i++] = minorHp;
         inv[i++] = antidote;
         inv[i++] = fortifyingStew;
@@ -373,7 +380,7 @@ contract UpdateMonsterInventories is Script {
     }
 
     function _crystalElemental() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](19);
+        inv = new uint256[](21);
         uint256 i;
         inv[i++] = elementalBurst;        // [0] combat weapon
         inv[i++] = channelingRod;
@@ -383,6 +390,8 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = apprenticeRobes;
         inv[i++] = tatteredCloth;
         inv[i++] = crystalShard;           // signature R2
+        inv[i++] = mageStaff;             // R2 — broadened
+        inv[i++] = sporecapWand;           // R2 — broadened
         inv[i++] = minorHp;
         inv[i++] = healthPotion;           // L4 gate
         inv[i++] = antidote;
@@ -397,7 +406,7 @@ contract UpdateMonsterInventories is Script {
     }
 
     function _ironhideTroll() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](28);
+        inv = new uint256[](31);
         uint256 i;
         inv[i++] = crushingSlam;           // [0] combat weapon
         inv[i++] = lightMace;
@@ -407,7 +416,11 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = studdedLeather;
         inv[i++] = paddedArmor;
         inv[i++] = rustyChainmail;
+        inv[i++] = warhammer;             // R2 — broadened
+        inv[i++] = etchedChainmail;        // R2 — broadened
+        inv[i++] = notchedCleaver;         // R2 — broadened
         inv[i++] = gnarledCudgel;          // signature R3
+        inv[i++] = stoneMaul;             // R3 — broadened
         inv[i++] = trollhideCleaver;       // signature R4 epic
         inv[i++] = bloodrageTonic;         // signature consumable
         inv[i++] = trollbloodAle;          // signature consumable
@@ -430,7 +443,7 @@ contract UpdateMonsterInventories is Script {
     }
 
     function _phaseSpider() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](28);
+        inv = new uint256[](31);
         uint256 i;
         inv[i++] = venomousBite;           // [0] combat weapon
         inv[i++] = shortbow;
@@ -441,6 +454,9 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = wornLeatherVest;
         inv[i++] = webspinnerBow;          // signature R2
         inv[i++] = spiderSilkWraps;        // signature R2
+        inv[i++] = longbow;               // R2 — broadened
+        inv[i++] = darkwoodBow;            // R3 — broadened
+        inv[i++] = direRatFang;            // R3 — broadened
         inv[i++] = phasefang;              // signature R4 epic
         inv[i++] = venomVial;              // signature consumable
         inv[i++] = minorHp;
@@ -463,7 +479,7 @@ contract UpdateMonsterInventories is Script {
     }
 
     function _bonecaster() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](30);
+        inv = new uint256[](32);
         uint256 i;
         inv[i++] = darkMagic;             // [0] combat weapon
         inv[i++] = mageStaff;
@@ -474,6 +490,8 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = acolyteVestments;
         inv[i++] = apprenticeRobes;
         inv[i++] = boneStaff;             // signature R3
+        inv[i++] = smolderingRod;          // R3 — broadened
+        inv[i++] = drakescaleStaff;        // R4 — broadened (first R4 at L7)
         inv[i++] = sporecapWand;           // cross-drop R2
         inv[i++] = minorHp;
         inv[i++] = healthPotion;
@@ -498,7 +516,7 @@ contract UpdateMonsterInventories is Script {
     }
 
     function _rockGolem() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](33);
+        inv = new uint256[](34);
         uint256 i;
         inv[i++] = crushingSlam;           // [0] combat weapon
         inv[i++] = warhammer;
@@ -514,6 +532,7 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = carvedStonePlate;       // signature R3
         inv[i++] = stoneskinSalve;         // signature consumable
         inv[i++] = gnarledCudgel;          // cross-drop R3
+        inv[i++] = trollhideCleaver;       // R4 — broadened
         inv[i++] = minorHp;
         inv[i++] = healthPotion;
         inv[i++] = greaterHp;
@@ -536,7 +555,7 @@ contract UpdateMonsterInventories is Script {
     }
 
     function _paleStalker() internal view returns (uint256[] memory inv) {
-        inv = new uint256[](32);
+        inv = new uint256[](33);
         uint256 i;
         inv[i++] = shadowStrike;           // [0] combat weapon
         inv[i++] = longbow;
@@ -552,6 +571,7 @@ contract UpdateMonsterInventories is Script {
         inv[i++] = flashpowder;            // signature consumable
         inv[i++] = webspinnerBow;          // cross-drop R2
         inv[i++] = direRatFang;            // cross-drop R3
+        inv[i++] = phasefang;             // R4 — broadened
         inv[i++] = minorHp;
         inv[i++] = healthPotion;
         inv[i++] = greaterHp;

@@ -57,21 +57,27 @@ const CURRENT_DROPS: Record<number, MobDropProfile> = {
 };
 
 // Proposed: expanded inventories + tuned rates + MobDropBonus
+// Matches UpdateMonsterInventories.s.sol + SetMobDropBonuses.s.sol exactly
 function buildProposalDrops(): Record<number, MobDropProfile> {
-  const R2 = 1500;
-  const R3 = 100;
-  const R4 = 15;
+  const R2 = 1500; // base rate for all R2 items
+  const R3 = 100;  // base rate for all R3 items
+  const R4 = 15;   // base rate for all R4 items
   return {
-    1:  { R2: [R2, R2, R2],              R3: [],                      R4: [] },
-    2:  { R2: [R2, R2, R2],              R3: [],                      R4: [] },
-    3:  { R2: [R2, R2, R2],              R3: [],                      R4: [] },
-    4:  { R2: [R2, R2, R2],              R3: [],                      R4: [] },
-    5:  { R2: [R2, R2, R2],              R3: [R3+300, R3+300],        R4: [R4] },
-    6:  { R2: [R2, R2, R2],              R3: [R3+300, R3+300],        R4: [R4] },
-    7:  { R2: [R2+500, R2+500, R2+500, R2+500], R3: [R3+200, R3+200, R3+200], R4: [R4] },
-    8:  { R2: [R2+500, R2+500, R2+500, R2+500], R3: [R3+100, R3+100, R3+100], R4: [R4] },
-    9:  { R2: [R2+500, R2+500, R2+500, R2+500], R3: [R3+100, R3+100, R3+100], R4: [R4] },
-    10: { R2: [R2+1000, R2+1000, R2+1000, R2+1000, R2+1000, R2+1000], R3: [R3, R3, R3, R3], R4: [R4] },
+    // L1-L4: 3 R2 items each, no R3/R4 (can't game low mobs), no bonuses
+    1:  { R2: [R2, R2, R2],             R3: [],                          R4: [] },
+    2:  { R2: [R2, R2, R2],             R3: [],                          R4: [] },
+    3:  { R2: [R2, R2, R2],             R3: [],                          R4: [] },
+    4:  { R2: [R2, R2, R2],             R3: [],                          R4: [] },
+    // L5-L6: 3 R2, 2 R3 with +300 journey bump, 1 R4 at base
+    5:  { R2: [R2, R2, R2],             R3: [R3+300, R3+300],            R4: [R4] },
+    6:  { R2: [R2, R2, R2],             R3: [R3+300, R3+300],            R4: [R4] },
+    // L7: 4 R2, 2 R3 with +200, 1 R4 at base
+    7:  { R2: [R2, R2, R2, R2],         R3: [R3+200, R3+200],            R4: [R4] },
+    // L8-L9: existing R2, 3 R3 with +100 taper, 1 R4 at base
+    8:  { R2: [R2, R2, R2],             R3: [R3+100, R3+100, R3+100],    R4: [R4] },
+    9:  { R2: [R2, R2, R2, R2],         R3: [R3+100, R3+100, R3+100],    R4: [R4] },
+    // L10: 6 R2, 4 R3 at BASE ONLY (no bonus — endgame stays rare), 1 R4 at base
+    10: { R2: [R2, R2, R2, R2, R2, R2], R3: [R3, R3, R3, R3],            R4: [R4] },
   };
 }
 

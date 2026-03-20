@@ -68,151 +68,128 @@ contract SetMobDropBonuses is Script {
     // =========================================================================
     //  BONUS ARRAYS (parallel to inventory from UpdateMonsterInventories)
     //  All values in /100000 scale (PveRewardSystem rolls % 100000)
-    //  Signature formula: 5x base → bonus = base * 4
-    //  R2 sig: base 100, bonus 400   → effective 500  (0.50%)
-    //  R3 sig: base 3,   bonus 12    → effective 15   (0.015%)
-    //  R4 sig: base 2,   bonus 8     → effective 10   (0.010%)
-    //  Consumable sig: base * 4      → effective 5x base
+    //
+    //  NEW BASE RATES (items.json): R2=1500, R3=100, R4=15
+    //  L1-L4: no R3/R4 in inventory, R2 at base rate (1.5% per item)
+    //  L5-L7: R3 gets +300 "journey bump" bonus (effective 400 = 0.4%)
+    //  L8-L9: R3 gets +100 taper bonus (effective 200 = 0.2%)
+    //  L10:   R3 at base rate only (100 = 0.1%), endgame stays rare
+    //  R4:    base rate only (15 = 0.015%), no bonus except Basilisk
+    //  Consumable sigs: 5x base (unchanged)
     // =========================================================================
 
-    // Mob 1: Dire Rat — 16 items
-    // [6] Dire Rat Fang (R3 sig): +12
+    // Mob 1: Dire Rat — 19 items (expanded: +3 R2)
+    // No bonuses — R2 at base 1500 is enough for L1
     function _direRat(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[6] = 12;    // Dire Rat Fang
         return b;
     }
 
-    // Mob 2: Fungal Shaman — 17 items
-    // [6] Sporecap Wand (R2 sig): +400
-    // [7] Spore Cloud (consumable sig, base 40): +160
+    // Mob 2: Fungal Shaman — 19 items (expanded: +2 R2)
+    // [9] Spore Cloud (consumable sig, base 40): +160
     function _fungalShaman(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[6] = 400;   // Sporecap Wand
-        b[7] = 160;   // Spore Cloud
+        b[9] = 160;   // Spore Cloud
         return b;
     }
 
-    // Mob 3: Cavern Brute — 17 items
-    // [6] Notched Cleaver (R2 sig): +400
+    // Mob 3: Cavern Brute — 19 items (expanded: +2 R2)
+    // No bonuses — R2 at base 1500
     function _cavernBrute(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[6] = 400;   // Notched Cleaver
         return b;
     }
 
-    // Mob 4: Crystal Elemental — 19 items
-    // [7] Crystal Shard (R2 sig): +400
+    // Mob 4: Crystal Elemental — 21 items (expanded: +2 R2)
+    // No bonuses — R2 at base 1500
     function _crystalElemental(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[7] = 400;   // Crystal Shard
         return b;
     }
 
-    // Mob 5: Ironhide Troll — 28 items
-    // [8] Gnarled Cudgel (R3 sig): +12
-    // [9] Trollhide Cleaver (R4 sig): +8
-    // [10] Bloodrage Tonic (consumable sig, base 80): +320
-    // [11] Trollblood Ale (consumable sig, base 80): +320
+    // Mob 5: Ironhide Troll — 31 items (expanded: +3 R2, +1 R3)
+    // [11] Gnarled Cudgel (R3): +300 journey bump
+    // [12] Stone Maul (R3): +300 journey bump
+    // [14] Bloodrage Tonic (consumable sig, base 80): +320
+    // [15] Trollblood Ale (consumable sig, base 80): +320
     function _ironhideTroll(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[8] = 12;    // Gnarled Cudgel
-        b[9] = 8;     // Trollhide Cleaver
-        b[10] = 320;  // Bloodrage Tonic
-        b[11] = 320;  // Trollblood Ale
+        b[11] = 300;  // Gnarled Cudgel — journey bump
+        b[12] = 300;  // Stone Maul — journey bump
+        b[14] = 320;  // Bloodrage Tonic
+        b[15] = 320;  // Trollblood Ale
         return b;
     }
 
-    // Mob 6: Phase Spider — 28 items
-    // [7] Webspinner Bow (R2 sig): +400
-    // [8] Spider Silk Wraps (R2 sig): +400
-    // [9] Phasefang (R4 sig): +8
-    // [10] Venom Vial (consumable sig, base 40): +160
+    // Mob 6: Phase Spider — 31 items (expanded: +1 R2, +2 R3)
+    // [10] Darkwood Bow (R3): +300 journey bump
+    // [11] Dire Rat Fang (R3): +300 journey bump
+    // [13] Venom Vial (consumable sig, base 40): +160
     function _phaseSpider(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[7] = 400;   // Webspinner Bow
-        b[8] = 400;   // Spider Silk Wraps
-        b[9] = 8;     // Phasefang
-        b[10] = 160;  // Venom Vial
+        b[10] = 300;  // Darkwood Bow — journey bump
+        b[11] = 300;  // Dire Rat Fang — journey bump
+        b[13] = 160;  // Venom Vial
         return b;
     }
 
-    // Mob 7: Bonecaster — 30 items
-    // [8] Bone Staff (R3 sig): +12
-    // No cross-drop bonus for Sporecap Wand [9] (base rate only)
+    // Mob 7: Bonecaster — 32 items (expanded: +1 R3, +1 R4)
+    // [8] Bone Staff (R3): +200 (L7 still elevated)
+    // [9] Smoldering Rod (R3): +200
     function _bonecaster(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[8] = 12;    // Bone Staff
+        b[8] = 200;   // Bone Staff
+        b[9] = 200;   // Smoldering Rod
         return b;
     }
 
-    // Mob 8: Rock Golem — 33 items
-    // [10] Stone Maul (R3 sig): +12
-    // [11] Carved Stone Plate (R3 sig): +12
+    // Mob 8: Rock Golem — 34 items (expanded: +1 R4)
+    // [10] Stone Maul (R3 sig): +100 taper
+    // [11] Carved Stone Plate (R3 sig): +100 taper
     // [12] Stoneskin Salve (consumable sig, base 80): +320
-    // No cross-drop bonus for Gnarled Cudgel [13]
     function _rockGolem(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[10] = 12;   // Stone Maul
-        b[11] = 12;   // Carved Stone Plate
+        b[10] = 100;  // Stone Maul — taper
+        b[11] = 100;  // Carved Stone Plate — taper
         b[12] = 320;  // Stoneskin Salve
         return b;
     }
 
-    // Mob 9: Pale Stalker — 32 items
-    // [9] Darkwood Bow (R3 sig): +12
-    // [10] Stalker's Cloak (R3 sig): +12
+    // Mob 9: Pale Stalker — 33 items (expanded: +1 R4)
+    // [9] Darkwood Bow (R3 sig): +100 taper
+    // [10] Stalker's Cloak (R3 sig): +100 taper
     // [11] Flashpowder (consumable sig, base 40): +160
-    // No cross-drop bonus for Webspinner Bow [12] or Dire Rat Fang [13]
     function _paleStalker(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[9] = 12;    // Darkwood Bow
-        b[10] = 12;   // Stalker's Cloak
+        b[9] = 100;   // Darkwood Bow — taper
+        b[10] = 100;  // Stalker's Cloak — taper
         b[11] = 160;  // Flashpowder
         return b;
     }
 
-    // Mob 10: Dusk Drake — 39 items
-    // [14] Smoldering Rod (R3 sig): +12
-    // [15] Scorched Scale Vest (R3 sig): +12
-    // [16] Drakescale Staff (R4 sig): +8
-    // [17] Drake's Cowl (R3 sig): +12
-    // No cross-drop bonus for Bone Staff [18]
+    // Mob 10: Dusk Drake — 39 items (unchanged inventory)
+    // R3 at BASE RATE ONLY (100 = 0.1%) — endgame stays rare, zone 1 winds down
+    // No R3 bonuses. No R4 bonuses.
     function _duskDrake(uint256[] memory b) internal pure returns (uint256[] memory) {
-        b[14] = 12;   // Smoldering Rod
-        b[15] = 12;   // Scorched Scale Vest
-        b[16] = 8;    // Drakescale Staff
-        b[17] = 12;   // Drake's Cowl
+        // No bonuses — endgame rares are rare
         return b;
     }
 
     // Mob 12: Basilisk — 23 items (boss, custom bonuses)
     // Boss loot piñata: high bonuses so every kill is rewarding
-    // All values /100000. Effective %s unchanged from previous /10000 scale.
+    // Effective rates preserved from previous tuning, recalculated for new base rates
+    // NEW BASE: R3=100, R4=15, consumables unchanged
     // [0] Basilisk Fangs: combat, no bonus
     // [1] Petrifying Gaze: combat, no bonus
-    // [2] Trollhide Cleaver (R4): +4998 → effective 5000 (5%)
-    // [3] Phasefang (R4): +4998 → effective 5000 (5%)
-    // [4] Drakescale Staff (R4): +4998 → effective 5000 (5%)
-    // [5] Drake's Cowl (R3): +14997 → effective 15000 (15%)
-    // [6] Carved Stone Plate (R3): +14997 → effective 15000 (15%)
-    // [7] Stalker's Cloak (R3): +14997 → effective 15000 (15%)
-    // [8] Scorched Scale Vest (R3): +14997 → effective 15000 (15%)
-    // [9] Minor HP (base 400): +49600 → effective 50000 (50%)
-    // [10] HP (base 400): +49600 → effective 50000 (50%)
-    // [11] GHP (base 100): +49900 → effective 50000 (50%)
-    // [12] Antidote (base 400): +29600 → effective 30000 (30%)
-    // [13] Fortifying Stew (base 200): +29800 → effective 30000 (30%)
-    // [14] Quickening Berries (base 200): +29800 → effective 30000 (30%)
-    // [15] Focusing Tea (base 200): +29800 → effective 30000 (30%)
-    // [16] Bloodrage Tonic (base 80): +19920 → effective 20000 (20%)
-    // [17] Stoneskin Salve (base 80): +19920 → effective 20000 (20%)
-    // [18] Trollblood Ale (base 80): +19920 → effective 20000 (20%)
-    // [19] Venom Vial (base 40): +19960 → effective 20000 (20%)
-    // [20] Spore Cloud (base 40): +19960 → effective 20000 (20%)
-    // [21] Sapping Poison (base 40): +19960 → effective 20000 (20%)
-    // [22] Flashpowder (base 40): +19960 → effective 20000 (20%)
+    // [2] Trollhide Cleaver (R4 base 15): +4985 → effective 5000 (5%)
+    // [3] Phasefang (R4 base 15): +4985 → effective 5000 (5%)
+    // [4] Drakescale Staff (R4 base 15): +4985 → effective 5000 (5%)
+    // [5] Drake's Cowl (R3 base 100): +14900 → effective 15000 (15%)
+    // [6] Carved Stone Plate (R3 base 100): +14900 → effective 15000 (15%)
+    // [7] Stalker's Cloak (R3 base 100): +14900 → effective 15000 (15%)
+    // [8] Scorched Scale Vest (R3 base 100): +14900 → effective 15000 (15%)
+    // [9-22] Consumables: unchanged (base rates unchanged)
     function _basilisk(uint256[] memory b) internal pure returns (uint256[] memory) {
-        // Gear
-        b[2] = 4998;    // Trollhide Cleaver
-        b[3] = 4998;    // Phasefang
-        b[4] = 4998;    // Drakescale Staff
-        b[5] = 14997;   // Drake's Cowl
-        b[6] = 14997;   // Carved Stone Plate
-        b[7] = 14997;   // Stalker's Cloak
-        b[8] = 14997;   // Scorched Scale Vest
-        // Consumables
+        // Gear (recalculated for new base rates)
+        b[2] = 4985;    // Trollhide Cleaver (R4: 15 + 4985 = 5000)
+        b[3] = 4985;    // Phasefang
+        b[4] = 4985;    // Drakescale Staff
+        b[5] = 14900;   // Drake's Cowl (R3: 100 + 14900 = 15000)
+        b[6] = 14900;   // Carved Stone Plate
+        b[7] = 14900;   // Stalker's Cloak
+        b[8] = 14900;   // Scorched Scale Vest
+        // Consumables (unchanged — base rates didn't change)
         b[9] = 49600;   // Minor HP
         b[10] = 49600;  // HP
         b[11] = 49900;  // GHP

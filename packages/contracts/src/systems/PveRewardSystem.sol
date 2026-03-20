@@ -21,7 +21,7 @@ import {
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 import {InvalidRewardState} from "../Errors.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
-import {BASE_GOLD_DROP, EXP_MODIFIER, MAX_LEVEL, ELITE_REWARD_MULTIPLIER, ELITE_DROP_BONUS} from "../../constants.sol";
+import {BASE_GOLD_DROP, EXP_MODIFIER, MAX_LEVEL, ELITE_REWARD_MULTIPLIER, ELITE_DROP_MULTIPLIER} from "../../constants.sol";
 
 contract PveRewardSystem is System {
     function distributePveRewards(bytes32 encounterId, uint256 randomNumber)
@@ -144,7 +144,7 @@ contract PveRewardSystem is System {
                 dropChance += bonuses[i];
             }
             if (_isElite) {
-                dropChance = dropChance + ELITE_DROP_BONUS;
+                dropChance = dropChance * ELITE_DROP_MULTIPLIER / 100;
             }
             if (dropChance > 100000) dropChance = 100000;
             uint256 roll = uint256(keccak256(abi.encodePacked(randomNumber, i))) % 100000;
