@@ -28,6 +28,8 @@ const eventDesc = {
   pvpKill: (winner: string, loser: string) => `${winner} defeated ${loser} in PvP!`,
   death: (name: string, mobName: string) => `${name} was slain by ${mobName}.`,
   lootDrop: (name: string, itemDesc: string) => `${name} found ${itemDesc}!`,
+  marketplaceListing: (name: string, itemDesc: string, price: string) =>
+    `${name} listed ${itemDesc} on the marketplace for ${price} Gold`,
 };
 
 /** Ring buffer of recent game events (serves as history for new clients) */
@@ -43,6 +45,7 @@ const emittedCombat = new Set<string>();       // "keyBytes"
 const emittedLoot = new Set<string>();         // "keyBytes:itemIndex"
 const emittedCharacters = new Set<string>();   // "keyBytes"
 const emittedClassSelections = new Set<string>(); // "keyBytes:classValue"
+const emittedListings = new Set<string>();          // "orderHash"
 const emittedFragments = new Set<string>();       // "keyBytes"
 
 function addEvent(event: GameEvent, blockNumber: number | null = null, dedupKey?: string) {
@@ -400,6 +403,7 @@ export function startEventFeed(syncHandle: SyncHandle, broadcaster: Broadcaster)
       await scanNewCharacters(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanAdvancedClassSelections(syncHandle, scanFrom, currentBlock, broadcaster);
       await scanFragmentDiscoveries(syncHandle, scanFrom, currentBlock, broadcaster);
+      await scanMarketplaceListings(syncHandle, scanFrom, currentBlock, broadcaster);
 
       loggedMissing = true;
       lastScannedBlock = currentBlock;
@@ -841,6 +845,117 @@ async function scanFragmentDiscoveries(
     }
   } catch (err) {
     console.error('[eventFeed] Fragment scan error:', err);
+  }
+}
+
+/** Scan for new marketplace listings of Uncommon+ items */
+async function scanMarketplaceListings(
+  syncHandle: SyncHandle,
+  fromBlock: number,
+  toBlock: number,
+  broadcaster: Broadcaster,
+) {
+  const ordersTable = syncHandle.tableNameMap.get('Orders');
+  const offersTable = syncHandle.tableNameMap.get('Offers');
+  const considerationsTable = syncHandle.tableNameMap.get('Considerations');
+  const itemsTable = syncHandle.tableNameMap.get('Items');
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  if (!ordersTable || !offersTable || !itemsTable || !charactersTable) return;
+
+  try {
+    // Find newly active orders offering ERC1155 items (tokenType 3 = ERC1155)
+    const query = considerationsTable
+      ? `SELECT o."__key_bytes", o."offerer",
+                f."identifier" as item_id,
+                con."amount" as price
+         FROM "${mudSchema}"."${ordersTable}" o
+         JOIN "${mudSchema}"."${offersTable}" f ON o."__key_bytes" = f."__key_bytes"
+         LEFT JOIN "${mudSchema}"."${considerationsTable}" con ON o."__key_bytes" = con."__key_bytes"
+         WHERE o."__last_updated_block_number" >= $1
+           AND o."__last_updated_block_number" <= $2
+           AND o."order_status" = 1
+           AND f."token_type" = 3`
+      : `SELECT o."__key_bytes", o."offerer",
+                f."identifier" as item_id
+         FROM "${mudSchema}"."${ordersTable}" o
+         JOIN "${mudSchema}"."${offersTable}" f ON o."__key_bytes" = f."__key_bytes"
+         WHERE o."__last_updated_block_number" >= $1
+           AND o."__last_updated_block_number" <= $2
+           AND o."order_status" = 1
+           AND f."token_type" = 3`;
+
+    const rows = await sql.unsafe(query, [fromBlock, toBlock]);
+
+    for (const row of rows) {
+      const keyHex = Buffer.isBuffer(row.__key_bytes)
+        ? row.__key_bytes.toString('hex')
+        : String(row.__key_bytes);
+      if (emittedListings.has(keyHex)) continue;
+
+      // Look up item rarity
+      const itemRow = await sql.unsafe(`
+        SELECT "item_type", "rarity"
+        FROM "${mudSchema}"."${itemsTable}"
+        WHERE "item_id" = $1 LIMIT 1
+      `, [row.item_id]);
+      if (itemRow.length === 0) continue;
+
+      const rarity = Number(itemRow[0].rarity || 0);
+      if (rarity < 2) continue; // Skip Worn and Common
+
+      emittedListings.add(keyHex);
+
+      // Look up seller character name from wallet address
+      let sellerName = 'A player';
+      if (row.offerer) {
+        try {
+          const charRow = await sql.unsafe(`
+            SELECT "name" FROM "${mudSchema}"."${charactersTable}"
+            WHERE substring("__key_bytes" from 1 for 20) = $1
+            LIMIT 1
+          `, [row.offerer]);
+          if (charRow.length > 0) {
+            sellerName = decodeCharacterName(charRow[0].name) || 'A player';
+          }
+        } catch { /* fall through */ }
+      }
+
+      const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+      const rarityName = RARITY_NAMES[rarity] || '';
+      const itemDesc = rarityName ? `a ${rarityName} ${typeName}` : `a ${typeName}`;
+
+      // Format gold price (18 decimals)
+      let priceStr = '? ';
+      if (row.price) {
+        try {
+          const goldWei = BigInt(row.price);
+          const gold = Number(goldWei / BigInt(10 ** 18));
+          const frac = Number(goldWei % BigInt(10 ** 18)) / 1e18;
+          priceStr = (gold + frac) > 0 ? String(Math.round((gold + frac) * 10) / 10) : '0';
+        } catch {
+          priceStr = '?';
+        }
+      }
+
+      const event: GameEvent = {
+        id: crypto.randomUUID(),
+        eventType: 'marketplace_listing',
+        playerName: sellerName,
+        description: eventDesc.marketplaceListing(sellerName, itemDesc, priceStr),
+        timestamp: Date.now(),
+        metadata: {
+          itemId: String(row.item_id),
+          rarity,
+          itemType: typeName,
+          itemName: `${rarityName} ${typeName}`.trim(),
+          price: row.price ? String(row.price) : undefined,
+        },
+      };
+      addEvent(event, toBlock, `listing:${keyHex}`);
+      broadcaster.broadcastGameEvent(event);
+    }
+  } catch (err) {
+    console.error('[eventFeed] Marketplace scan error:', err);
   }
 }
 

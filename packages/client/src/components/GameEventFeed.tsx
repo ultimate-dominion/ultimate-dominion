@@ -53,6 +53,8 @@ function getEventColor(eventType: string): string {
       return '#4A8B4A'; // green
     case 'character_created':
       return '#9B8EC4'; // purple — new arrival
+    case 'marketplace_listing':
+      return '#C49B5E'; // amber — commerce
     default:
       return '#8A7E6A';
   }
