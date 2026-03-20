@@ -67,6 +67,7 @@ export async function setupNetwork() {
         const receipt = await publicClient.waitForTransactionReceipt({
           hash: tx,
           pollingInterval: 150,
+          timeout: 30_000,
         });
         if (receipt.status !== 'reverted') {
           await applyReceiptToStore(receipt, publicClient, networkConfig.worldAddress as Hex);
@@ -74,10 +75,10 @@ export async function setupNetwork() {
         trackTxRoundtrip('waitForTransaction', startMs, true);
         return receipt;
       } catch (e) {
-        const isReceiptNotFound =
+        const isRetryable =
           e instanceof Error &&
-          e.message.includes('could not be found');
-        if (isReceiptNotFound && attempt < maxRetries - 1) {
+          (e.message.includes('could not be found') || e.message.includes('timed out'));
+        if (isRetryable && attempt < maxRetries - 1) {
           debug.log(
             `waitForTransaction retry ${attempt + 1}/${maxRetries} for ${tx}`,
           );
@@ -89,7 +90,7 @@ export async function setupNetwork() {
       }
     }
     // Unreachable, but TypeScript needs it
-    return publicClient.waitForTransactionReceipt({ hash: tx });
+    return publicClient.waitForTransactionReceipt({ hash: tx, timeout: 30_000 });
   };
 
   return {

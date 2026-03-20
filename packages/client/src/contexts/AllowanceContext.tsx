@@ -246,7 +246,7 @@ export const AllowanceProvider = ({
 
           // 4. Wait for all receipts in parallel
           await Promise.all(
-            txHashes.map(hash => publicClient.waitForTransactionReceipt({ hash })),
+            txHashes.map(hash => publicClient.waitForTransactionReceipt({ hash, timeout: 30_000 })),
           );
         }
 
@@ -307,6 +307,7 @@ export const AllowanceProvider = ({
         const txHash = await approvalClient.writeContract(request);
         const { status } = await publicClient.waitForTransactionReceipt({
           hash: txHash,
+          timeout: 30_000,
         });
         if (status !== 'success') return false;
         await fetchAllowances();
@@ -344,6 +345,7 @@ export const AllowanceProvider = ({
         const txHash = await approvalClient.writeContract(request);
         const { status } = await publicClient.waitForTransactionReceipt({
           hash: txHash,
+          timeout: 30_000,
         });
         if (status !== 'success') return false;
         await fetchAllowances();
@@ -393,6 +395,7 @@ export const AllowanceProvider = ({
         const txHash = await approvalClient.writeContract(request);
         const { status } = await publicClient.waitForTransactionReceipt({
           hash: txHash,
+          timeout: 30_000,
         });
 
         if (status !== 'success') {
@@ -453,6 +456,7 @@ export const AllowanceProvider = ({
         const txHash = await approvalClient.writeContract(request);
         const { status } = await publicClient.waitForTransactionReceipt({
           hash: txHash,
+          timeout: 30_000,
         });
 
         if (status !== 'success') {
