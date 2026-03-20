@@ -26,7 +26,6 @@ const eventDesc = {
   allFragments: (name: string) => `${name} assembled all 8 Lore Fragments! The cave whispers their name...`,
   characterCreated: (name: string) => `${name} awakens in the Dark Cave.`,
   pvpKill: (winner: string, loser: string) => `${winner} defeated ${loser} in PvP!`,
-  death: (name: string, mobName: string) => `${name} was slain by ${mobName}.`,
   lootDrop: (name: string, itemName: string) => `${name} found ${itemName}!`,
   marketplaceListing: (name: string, itemName: string, price: string) =>
     `${name} listed ${itemName} for ${price} Gold`,
@@ -194,7 +193,7 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
     }
   } catch (err) { console.error('[eventFeed] Backfill char creation error:', err); }
 
-  // 3. Combat outcomes (PvP kills + PvE deaths)
+  // 3. Combat outcomes (PvP kills only — PvE deaths are too spammy)
   if (outcomeTable && combatEncTable) {
     try {
       const rows = await sql.unsafe(`
@@ -202,46 +201,26 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
                ce."encounter_type", ce."defenders", ce."attackers"
         FROM "${mudSchema}"."${outcomeTable}" co
         LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"
+        WHERE ce."encounter_type" = ${ENCOUNTER_TYPE_PVP}
         ORDER BY co."__last_updated_block_number" DESC
-        LIMIT ${BACKFILL_LIMIT * 2}
+        LIMIT ${BACKFILL_LIMIT}
       `);
 
       for (const row of rows) {
         const walletAddress = extractWalletHex(row.attackers);
         const attackersWin = Boolean(row.attackers_win);
-        const isPvP = Number(row.encounter_type) === ENCOUNTER_TYPE_PVP;
         const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-
         const defenderWallet = extractWalletHex(row.defenders);
-        if (isPvP) {
-          allEvents.push({
-            block: Number(row.block),
-            dedupKey: `combat:${keyHex}`,
-            event: {
-              id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: 'A player',
-              description: 'PvP combat resolved', timestamp: 0,
-              metadata: { attackerWallet: walletAddress, defenderWallet, attackersWin },
-            },
-          });
-        } else if (!attackersWin) {
-          let mobName = 'a monster';
-          if (mobsTable) {
-            const mobEntities = parsePackedBytes32(row.defenders);
-            if (mobEntities.length > 0) {
-              const mobId = decodeMobIdFromEntity(mobEntities[0]);
-              if (mobId > 0) mobName = await getMobName(mobId, mobsTable);
-            }
-          }
-          allEvents.push({
-            block: Number(row.block),
-            dedupKey: `combat:${keyHex}`,
-            event: {
-              id: crypto.randomUUID(), eventType: 'death', playerName: 'An adventurer',
-              description: `An adventurer was slain by ${mobName}.`, timestamp: 0,
-              metadata: { walletAddress, mobName },
-            },
-          });
-        }
+
+        allEvents.push({
+          block: Number(row.block),
+          dedupKey: `combat:${keyHex}`,
+          event: {
+            id: crypto.randomUUID(), eventType: 'pvp_kill', playerName: 'A player',
+            description: 'PvP combat resolved', timestamp: 0,
+            metadata: { attackerWallet: walletAddress, defenderWallet, attackersWin },
+          },
+        });
       }
     } catch (err) {
       console.error('[eventFeed] Backfill combat error:', err);
@@ -498,46 +477,23 @@ async function scanCombatOutcomes(
       const attackerWallet = extractWalletHex(row.attackers);
       const defenderWallet = extractWalletHex(row.defenders);
 
-      if (isPvP) {
-        const atkName = await resolvePlayerName(attackerWallet, charactersTable) || 'A player';
-        const defName = await resolvePlayerName(defenderWallet, charactersTable) || 'an opponent';
-        const winner = attackersWin ? atkName : defName;
-        const loser = attackersWin ? defName : atkName;
-        const event: GameEvent = {
-          id: crypto.randomUUID(),
-          eventType: 'pvp_kill',
-          playerName: winner,
-          description: `${winner} defeated ${loser} in PvP!`,
-          timestamp: Date.now(),
-          metadata: { attackerWallet, defenderWallet, attackersWin },
-        };
-        addEvent(event, toBlock, `combat:${keyHex}`);
-        broadcaster.broadcastGameEvent(event);
-      } else {
-        // PvE: only emit deaths (player killed by monster)
-        if (attackersWin) continue;
+      // Only emit PvP kills — PvE deaths are too frequent and spam the feed
+      if (!isPvP) continue;
 
-        let mobName = 'a monster';
-        if (mobsTable) {
-          const mobEntities = parsePackedBytes32(row.defenders);
-          if (mobEntities.length > 0) {
-            const mobId = decodeMobIdFromEntity(mobEntities[0]);
-            if (mobId > 0) mobName = await getMobName(mobId, mobsTable);
-          }
-        }
-
-        const deathName = await resolvePlayerName(attackerWallet, charactersTable) || 'An adventurer';
-        const event: GameEvent = {
-          id: crypto.randomUUID(),
-          eventType: 'death',
-          playerName: deathName,
-          description: `${deathName} was slain by ${mobName}.`,
-          timestamp: Date.now(),
-          metadata: { walletAddress: attackerWallet, mobName },
-        };
-        addEvent(event, toBlock, `combat:${keyHex}`);
-        broadcaster.broadcastGameEvent(event);
-      }
+      const atkName = await resolvePlayerName(attackerWallet, charactersTable) || 'A player';
+      const defName = await resolvePlayerName(defenderWallet, charactersTable) || 'an opponent';
+      const winner = attackersWin ? atkName : defName;
+      const loser = attackersWin ? defName : atkName;
+      const event: GameEvent = {
+        id: crypto.randomUUID(),
+        eventType: 'pvp_kill',
+        playerName: winner,
+        description: `${winner} defeated ${loser} in PvP!`,
+        timestamp: Date.now(),
+        metadata: { attackerWallet, defenderWallet, attackersWin },
+      };
+      addEvent(event, toBlock, `combat:${keyHex}`);
+      broadcaster.broadcastGameEvent(event);
     }
   } catch (err) {
     console.error('[eventFeed] Combat scan error:', err);
@@ -546,8 +502,6 @@ async function scanCombatOutcomes(
 
 // Item type enum values (must match mud.config ItemType)
 const ITEM_TYPE_NAMES = ['Weapon', 'Armor', 'Spell', 'Consumable', 'QuestItem', 'Accessory'];
-// Rarity enum values (must match client Rarity enum)
-const RARITY_NAMES = ['Worn', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];
 
 /** Scan for loot drops from CombatOutcome.itemsDropped — emits per Uncommon+ item */
 async function scanLootDrops(
@@ -607,18 +561,16 @@ async function scanLootDrops(
           emittedLoot.add(itemDedupKey);
           const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
           const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-          const rarityName = RARITY_NAMES[rarity] || '';
           const itemName = await resolveItemName(itemIds[i], syncHandle) || typeName;
-          const fullName = rarityName ? `${rarityName} ${itemName}` : itemName;
 
           const playerName = await resolvePlayerName(walletAddress, charactersTable) || 'An adventurer';
           const event: GameEvent = {
             id: crypto.randomUUID(),
             eventType,
             playerName,
-            description: `${playerName} found ${fullName}!`,
+            description: `${playerName} found ${itemName}!`,
             timestamp: Date.now(),
-            metadata: { itemId: itemIds[i], rarity, itemName: fullName, walletAddress },
+            metadata: { itemId: itemIds[i], rarity, itemName, walletAddress },
           };
           addEvent(event, toBlock, `loot:${itemDedupKey}`);
           broadcaster.broadcastGameEvent(event);
@@ -864,9 +816,7 @@ async function scanMarketplaceListings(
       }
 
       const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
-      const rarityName = RARITY_NAMES[rarity] || '';
       const itemName = await resolveItemName(row.item_id, syncHandle) || typeName;
-      const fullName = rarityName ? `${rarityName} ${itemName}` : itemName;
 
       let priceStr = '?';
       if (row.price) {
@@ -882,12 +832,12 @@ async function scanMarketplaceListings(
         id: crypto.randomUUID(),
         eventType: 'marketplace_listing',
         playerName: sellerName,
-        description: `${sellerName} listed ${fullName} for ${priceStr} Gold`,
+        description: `${sellerName} listed ${itemName} for ${priceStr} Gold`,
         timestamp: Date.now(),
         metadata: {
           itemId: String(row.item_id),
           rarity,
-          itemName: fullName,
+          itemName,
           price: row.price ? String(row.price) : undefined,
           orderHash: '0x' + keyHex,
         },
