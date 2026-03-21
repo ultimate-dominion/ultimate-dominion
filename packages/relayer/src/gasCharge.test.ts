@@ -18,10 +18,9 @@ vi.mock('./config.js', () => ({
     quoterV2: '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a',
     poolFee: 10000,
     swapSlippageBps: 500,
-    chargeIntervalMs: 300_000,
     swapIntervalMs: 3_600_000,
     swapThreshold: 100_000_000_000_000_000_000n,
-    fundingAmount: 500_000_000_000_000n, // 0.0005 ETH — matches prod
+    fundingAmount: 500_000_000_000_000n,
   },
   gasChargingEnabled: true,
 }));
@@ -40,240 +39,54 @@ vi.mock('./tx.js', () => ({
 
 // ==================== Import ====================
 
-const { recordFunding, flushCharges, getPendingChargeCount, _resetForTesting } = await import('./gasCharge.js');
+const { callFundAndCharge } = await import('./gasCharge.js');
 
 // ==================== Helpers ====================
 
 const CHARACTER_ID = '0x0000000000000000000000000000000000000000000000000000000000000001' as `0x${string}`;
 
-// Use unique numeric-only addresses per test to avoid shared chargeRetries state
-let addrCounter = 1000;
-function uniquePlayer(): Address {
-  addrCounter++;
-  return `0x${addrCounter.toString(16).padStart(40, '0')}` as Address;
-}
-
 // ==================== Tests ====================
 
-describe('gasCharge count calculation', () => {
+describe('callFundAndCharge', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    _resetForTesting();
     mockGetCharacterId.mockResolvedValue(CHARACTER_ID);
     vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
-  it('produces correct counts for multiple top-ups at 0.0005 ETH', async () => {
-    const player = uniquePlayer();
-    const topUpAmount = 500_000_000_000_000n; // 0.0005 ETH
-
-    // Simulate 10 top-ups
-    for (let i = 0; i < 10; i++) {
-      recordFunding(player, topUpAmount);
-    }
-
+  it('calls UD__fundAndCharge on the world contract', async () => {
     mockSendPrimaryTx.mockResolvedValueOnce('0xhash' as `0x${string}`);
-    await flushCharges();
+
+    await callFundAndCharge('0x0000000000000000000000000000000000001234' as Address);
 
     expect(mockSendPrimaryTx).toHaveBeenCalledTimes(1);
-    const calldata = mockSendPrimaryTx.mock.calls[0][0].calldata;
+    expect(mockSendPrimaryTx.mock.calls[0][0].to).toBe('0x0000000000000000000000000000000000000001');
 
-    // Decode the calldata to verify counts
-    // batchChargeGasGoldWithCounts(address[], bytes32[], uint256[])
-    // The counts array should contain [10n], not [1n]
+    // Verify it encodes UD__fundAndCharge
+    const calldata = mockSendPrimaryTx.mock.calls[0][0].calldata as string;
     const { decodeFunctionData, parseAbi } = await import('viem');
     const abi = parseAbi([
-      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
+      'function UD__fundAndCharge(address player, bytes32 characterId)',
     ]);
     const decoded = decodeFunctionData({ abi, data: calldata as `0x${string}` });
-    const counts = decoded.args[2];
-    expect(counts).toEqual([10n]);
+    expect(decoded.args[0].toLowerCase()).toBe('0x0000000000000000000000000000000000001234');
+    expect(decoded.args[1]).toBe(CHARACTER_ID);
   });
 
-  it('produces count of 1 for a single top-up', async () => {
-    const player = uniquePlayer();
-    recordFunding(player, 500_000_000_000_000n);
-
-    mockSendPrimaryTx.mockResolvedValueOnce('0xhash' as `0x${string}`);
-    await flushCharges();
-
-    const calldata = mockSendPrimaryTx.mock.calls[0][0].calldata;
-    const { decodeFunctionData, parseAbi } = await import('viem');
-    const abi = parseAbi([
-      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
-    ]);
-    const decoded = decodeFunctionData({ abi, data: calldata as `0x${string}` });
-    expect(decoded.args[2]).toEqual([1n]);
-  });
-
-  it('floors to minimum 1 for sub-unit amounts', async () => {
-    const player = uniquePlayer();
-    // Fund less than 1 top-up unit
-    recordFunding(player, 100_000_000_000_000n); // 0.0001 ETH < 0.0005 ETH
-
-    mockSendPrimaryTx.mockResolvedValueOnce('0xhash' as `0x${string}`);
-    await flushCharges();
-
-    const calldata = mockSendPrimaryTx.mock.calls[0][0].calldata;
-    const { decodeFunctionData, parseAbi } = await import('viem');
-    const abi = parseAbi([
-      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
-    ]);
-    const decoded = decodeFunctionData({ abi, data: calldata as `0x${string}` });
-    expect(decoded.args[2]).toEqual([1n]);
-  });
-});
-
-describe('gasCharge batch splitting', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    _resetForTesting();
-    mockGetCharacterId.mockResolvedValue(CHARACTER_ID);
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-  });
-
-  it('sends single tx for fewer than 50 players', async () => {
-    for (let i = 0; i < 10; i++) {
-      recordFunding(uniquePlayer(), 500_000_000_000_000n);
-    }
-
-    mockSendPrimaryTx.mockResolvedValue('0xhash' as `0x${string}`);
-    await flushCharges();
-
-    expect(mockSendPrimaryTx).toHaveBeenCalledTimes(1);
-
-    const { decodeFunctionData, parseAbi } = await import('viem');
-    const abi = parseAbi([
-      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
-    ]);
-    const decoded = decodeFunctionData({ abi, data: mockSendPrimaryTx.mock.calls[0][0].calldata as `0x${string}` });
-    expect(decoded.args[0].length).toBe(10);
-  });
-
-  it('splits into 3 txs for 120 players (50+50+20)', async () => {
-    for (let i = 0; i < 120; i++) {
-      recordFunding(uniquePlayer(), 500_000_000_000_000n);
-    }
-
-    mockSendPrimaryTx.mockResolvedValue('0xhash' as `0x${string}`);
-    await flushCharges();
-
-    expect(mockSendPrimaryTx).toHaveBeenCalledTimes(3);
-
-    const { decodeFunctionData, parseAbi } = await import('viem');
-    const abi = parseAbi([
-      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
-    ]);
-
-    const sizes = mockSendPrimaryTx.mock.calls.map((call: unknown[]) => {
-      const decoded = decodeFunctionData({ abi, data: (call[0] as { calldata: string }).calldata as `0x${string}` });
-      return decoded.args[0].length;
-    });
-    expect(sizes).toEqual([50, 50, 20]);
-  });
-
-  it('on partial failure, only failed batch players are re-queued', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    // Create 80 players -> 2 batches (50 + 30)
-    const batch1Players: Address[] = [];
-    const batch2Players: Address[] = [];
-    for (let i = 0; i < 50; i++) {
-      const p = uniquePlayer();
-      batch1Players.push(p);
-      recordFunding(p, 500_000_000_000_000n);
-    }
-    for (let i = 0; i < 30; i++) {
-      const p = uniquePlayer();
-      batch2Players.push(p);
-      recordFunding(p, 500_000_000_000_000n);
-    }
-
-    // Batch 1 succeeds, batch 2 fails
-    mockSendPrimaryTx
-      .mockResolvedValueOnce('0xhash1' as `0x${string}`)
-      .mockRejectedValueOnce(new Error('batch 2 failed'));
-
-    await flushCharges();
-
-    // Only batch 2's 30 players should be re-queued
-    expect(getPendingChargeCount()).toBe(30);
-  });
-});
-
-describe('gasCharge dead-letter', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    _resetForTesting();
-    mockGetCharacterId.mockResolvedValue(CHARACTER_ID);
-  });
-
-  it('re-queues charges on first failure', async () => {
-    const player = uniquePlayer();
-    recordFunding(player, 1_000_000_000_000_000n);
-    expect(getPendingChargeCount()).toBe(1);
-
-    mockSendPrimaryTx.mockRejectedValueOnce(new Error('tx failed'));
-    await flushCharges();
-
-    // Should be re-queued
-    expect(getPendingChargeCount()).toBe(1);
-  });
-
-  it('dead-letters after 3 consecutive failures', async () => {
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('skips if player has no characterId', async () => {
+    mockGetCharacterId.mockResolvedValueOnce(null);
     vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    const player = uniquePlayer();
+    await callFundAndCharge('0x0000000000000000000000000000000000005678' as Address);
 
-    // Failure 1
-    recordFunding(player, 1_000_000_000_000_000n);
-    mockSendPrimaryTx.mockRejectedValueOnce(new Error('tx failed'));
-    await flushCharges();
-    expect(getPendingChargeCount()).toBe(1);
-
-    // Failure 2
-    mockSendPrimaryTx.mockRejectedValueOnce(new Error('tx failed'));
-    await flushCharges();
-    expect(getPendingChargeCount()).toBe(1);
-
-    // Failure 3 — dead-letter
-    mockSendPrimaryTx.mockRejectedValueOnce(new Error('tx failed'));
-    await flushCharges();
-    expect(getPendingChargeCount()).toBe(0);
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Dead-lettering'),
-    );
-
-    consoleSpy.mockRestore();
+    expect(mockSendPrimaryTx).not.toHaveBeenCalled();
   });
 
-  it('clears retry counter on success', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-
-    const player = uniquePlayer();
-
-    // Failure 1
-    recordFunding(player, 1_000_000_000_000_000n);
+  it('propagates errors to caller', async () => {
     mockSendPrimaryTx.mockRejectedValueOnce(new Error('tx failed'));
-    await flushCharges();
-    expect(getPendingChargeCount()).toBe(1);
 
-    // Success — resets retry counter
-    mockSendPrimaryTx.mockResolvedValueOnce('0xsuccesshash' as `0x${string}`);
-    await flushCharges();
-    expect(getPendingChargeCount()).toBe(0);
-
-    // New charge + 3 failures should dead-letter (counter was reset)
-    recordFunding(player, 1_000_000_000_000_000n);
-    mockSendPrimaryTx.mockRejectedValueOnce(new Error('fail 1'));
-    await flushCharges();
-    mockSendPrimaryTx.mockRejectedValueOnce(new Error('fail 2'));
-    await flushCharges();
-    mockSendPrimaryTx.mockRejectedValueOnce(new Error('fail 3'));
-    await flushCharges();
-    expect(getPendingChargeCount()).toBe(0); // dead-lettered after fresh 3
+    await expect(
+      callFundAndCharge('0x0000000000000000000000000000000000009999' as Address)
+    ).rejects.toThrow('tx failed');
   });
 });

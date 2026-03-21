@@ -9,8 +9,8 @@ import {
   sendRelayerTx,
 } from './tx.js';
 import { initializePool, getPoolStatus, allAddresses } from './walletPool.js';
-import { startSchedulers, stopSchedulers, getPendingChargeCount, getTotalPendingEth } from './gasCharge.js';
-import { recordFunding } from './gasCharge.js';
+import { startSwapScheduler, stopSwapScheduler } from './gasCharge.js';
+import { callFundAndCharge } from './gasCharge.js';
 import { gasChargingEnabled } from './config.js';
 import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcManager.js';
 import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, trackPlayer, getFundedCount } from './balanceMonitor.js';
@@ -95,8 +95,8 @@ async function main() {
   const balance = await getRelayerBalance();
   console.log(`Primary balance: ${balance} ETH`);
 
-  // Start gas charge schedulers (no-op if WORLD_ADDRESS/GOLD_TOKEN not set)
-  startSchedulers();
+  // Start Gold→ETH swap scheduler (no-op if WORLD_ADDRESS/GOLD_TOKEN not set)
+  startSwapScheduler();
 
   // Start RPC health monitoring (no-op if RPC_FALLBACK_URL not set)
   startRpcHealthCheck();
@@ -134,8 +134,6 @@ async function main() {
           totalInflight: poolStatus.totalInflight,
           chainId: config.chainId,
           gasCharging: gasChargingEnabled,
-          pendingCharges: getPendingChargeCount(),
-          pendingChargeEth: getTotalPendingEth(),
           fundedPlayers: getFundedCount(),
           poolFunder: getFunderStatus(),
           rpcStatus: getRpcStatus(),
@@ -254,8 +252,10 @@ async function main() {
       ipTimestamps.push(Date.now());
       ipFundings.set(ip, ipTimestamps);
 
-      // Record for gas charging (Gold deduction)
-      recordFunding(delegator as Address, config.fundingAmount);
+      // Charge Gold atomically on-chain (fire-and-forget)
+      callFundAndCharge(delegator as Address).catch(err =>
+        console.error(`[fund] fundAndCharge failed for ${delegator}:`, err)
+      );
 
       console.log(`[fund] Funded ${address} (delegator: ${delegator}) with ${formatEther(config.fundingAmount)} ETH — tx: ${txHash}`);
       res.json({ status: 'funded', txHash, amount: formatEther(config.fundingAmount) });
@@ -361,7 +361,7 @@ async function main() {
   // Graceful shutdown
   const shutdown = () => {
     console.log('\n[server] Shutting down...');
-    stopSchedulers();
+    stopSwapScheduler();
     stopRpcHealthCheck();
     stopBalanceMonitor();
     stopPoolFunder();

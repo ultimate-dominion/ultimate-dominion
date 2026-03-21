@@ -2,7 +2,7 @@ import { type Address, formatEther } from 'viem';
 import { config } from './config.js';
 import { gasChargingEnabled } from './config.js';
 import { publicClient, sendRelayerTx } from './tx.js';
-import { recordFunding } from './gasCharge.js';
+import { callFundAndCharge } from './gasCharge.js';
 import { getCharacterId, getPlayerLevel, getGoldPerGasCharge } from './chainReader.js';
 
 // ==================== State ====================
@@ -102,11 +102,11 @@ async function checkBalances(): Promise<void> {
       // Never leave a player stranded — they'll earn Gold from the next battle.
       await doTopUp(burnerAddress, config.fundingAmount, goldPerCharge ? 'charged' : 'free (no charge config)');
 
-      // Charge Gold if gas charging is configured
+      // Charge Gold atomically on-chain
       if (goldPerCharge) {
-        recordFunding(delegatorAddress, config.fundingAmount);
-        // batchChargeGasGoldWithCounts already handles partial charges —
-        // if player can't afford the full fee, it takes what they have.
+        callFundAndCharge(delegatorAddress).catch(err =>
+          console.error(`[balanceMonitor] fundAndCharge failed for ${delegatorAddress}:`, err)
+        );
       }
 
     } catch (err) {
