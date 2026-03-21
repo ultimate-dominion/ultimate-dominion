@@ -4,6 +4,8 @@
  * ~1KB, zero dependencies, zero impact unless errors actually occur.
  */
 
+import { isStaleChunkError } from './errors';
+
 interface ErrorEntry {
   message: string;
   source?: string;
@@ -92,6 +94,16 @@ export function initErrorReporter() {
     const err = event.reason;
     const message = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack?.slice(0, 2000) : undefined;
+
+    // Stale chunk after deploy — reload once to get fresh JS
+    if (isStaleChunkError(err)) {
+      const key = 'stale-chunk-reload';
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        return;
+      }
+    }
 
     // Detect contract reverts
     const isContractRevert =
