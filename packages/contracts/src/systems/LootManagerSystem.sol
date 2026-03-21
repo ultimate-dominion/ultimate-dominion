@@ -10,7 +10,6 @@ import {
     UltimateDominionConfig,
     AdvancedClassItems,
     AdvancedClassItemsData,
-    AdventureEscrow,
     CharacterEquipment,
     Items
 } from "@codegen/index.sol";
@@ -23,8 +22,7 @@ import {GoldLib} from "../libraries/GoldLib.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {_ownersTableId, _totalSupplyTableId} from "@erc1155/utils.sol";
-import {NotAtSpawn, InsufficientBalance} from "../Errors.sol";
-import {PauseLib} from "../libraries/PauseLib.sol";
+import {InsufficientBalance} from "../Errors.sol";
 
 contract LootManagerSystem is ERC1155Holder, System {
     function supportsInterface(bytes4 interfaceId)
@@ -66,14 +64,6 @@ contract LootManagerSystem is ERC1155Holder, System {
         }
     }
 
-    function dropGoldToEscrow(bytes32 characterId, uint256 amount) public {
-        _requireSystemOrAdmin(_msgSender());
-        // Only update escrow balance - no minting needed since World has pre-minted gold supply
-        // Actual gold transfer happens when player withdraws from escrow at spawn
-        uint256 currentBalance = AdventureEscrow.get(characterId);
-        AdventureEscrow.set(characterId, currentBalance + amount);
-    }
-
     function dropGoldToPlayer(bytes32 characterId, uint256 amount) public {
         _requireSystemOrAdmin(_msgSender());
         address recipient = IWorld(_world()).UD__getOwnerAddress(characterId);
@@ -107,53 +97,6 @@ contract LootManagerSystem is ERC1155Holder, System {
         for (uint256 i; i < itemIds.length; i++) {
             dropItem(characterIds[i], itemIds[i], amounts[i]);
         }
-    }
-
-    function depositToEscrow(bytes32 characterId, uint256 amount) public returns (uint256 _balance) {
-        PauseLib.requireNotPaused();
-        if (IWorld(_world()).UD__isValidOwner(characterId, _msgSender())) {
-            if (!IWorld(_world()).UD__isAtPosition(characterId, 0, 0)) revert NotAtSpawn();
-        } else {
-            _requireAccess(address(this), _msgSender());
-        }
-        // Burn gold from player (escrow is virtual, actual gold burned on deposit)
-        address player = IWorld(_world()).UD__getOwner(characterId);
-        GoldLib.goldBurn(_world(), player, amount);
-        _addEscrowBalance(characterId, amount);
-    }
-
-    function increaseEscrowBalance(bytes32 characterId, uint256 amount) public returns (uint256 newBalance) {
-        _requireSystemOrAdmin(_msgSender());
-        _addEscrowBalance(characterId, amount);
-    }
-
-    function _addEscrowBalance(bytes32 characterId, uint256 amount) internal {
-        uint256 currentBalance = getEscrowBalance(characterId);
-        uint256 balance = currentBalance + amount;
-        AdventureEscrow.set(characterId, (balance));
-    }
-
-    function withdrawFromEscrow(bytes32 characterId, uint256 amount) public returns (uint256 _balance) {
-        PauseLib.requireNotPaused();
-        if (IWorld(_world()).UD__isValidOwner(characterId, _msgSender())) {
-            if (!IWorld(_world()).UD__isAtPosition(characterId, 0, 0)) revert NotAtSpawn();
-        } else {
-            _requireAccess(address(this), _msgSender());
-        }
-        _withdrawEscrowBalance(characterId, amount);
-        // Mint gold to player (escrow is virtual, actual gold minted on withdraw)
-        GoldLib.goldMint(_world(), IWorld(_world()).UD__getOwner(characterId), amount);
-    }
-
-    function _withdrawEscrowBalance(bytes32 characterId, uint256 amount) internal {
-        uint256 currentBalance = getEscrowBalance(characterId);
-        if (currentBalance < amount) revert InsufficientBalance();
-        uint256 balance = currentBalance - amount;
-        AdventureEscrow.set(characterId, (balance));
-    }
-
-    function getEscrowBalance(bytes32 characterId) public view returns (uint256 _balance) {
-        return AdventureEscrow.get(characterId);
     }
 
     function setGoldApproval(address spender, uint256 value) public {

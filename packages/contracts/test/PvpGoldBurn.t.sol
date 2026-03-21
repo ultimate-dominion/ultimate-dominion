@@ -3,7 +3,7 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {Classes, EncounterType} from "@codegen/common.sol";
-import {StatsData, Stats, StarterItemsData, AdventureEscrow, GasReserve} from "@codegen/index.sol";
+import {StatsData, Stats, StarterItemsData, GasReserve} from "@codegen/index.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {_mobSystemId} from "../src/utils.sol";
 

@@ -115,32 +115,6 @@ contract Test_GameDelegationControl is Test {
     }
 
     /**
-     * @notice Test that safe LootManager functions are allowed through delegation.
-     * depositToEscrow operates only on the player's own gold — safe for burner use.
-     */
-    function test_lootManagerSafeFunctionAllowed() public {
-        // First spawn alice's character and give her some gold
-        vm.prank(alice);
-        world.UD__spawn(aliceCharacterId);
-
-        // Mint gold to alice (as deployer/admin)
-        vm.prank(deployer);
-        world.UD__transferGold(alice, 100 ether);
-
-        // Burner calls depositToEscrow on behalf of alice — should succeed
-        vm.prank(burner);
-        world.callFrom(
-            alice,
-            lootManagerSystemId,
-            abi.encodeWithSignature("depositToEscrow(bytes32,uint256)", aliceCharacterId, 10 ether)
-        );
-
-        // Verify escrow balance increased
-        uint256 escrow = world.UD__getEscrowBalance(aliceCharacterId);
-        assertEq(escrow, 10 ether, "Escrow should have 10 gold");
-    }
-
-    /**
      * @notice Test that transferGold is blocked through delegation.
      * transferGold can send gold to arbitrary addresses — must be blocked.
      */

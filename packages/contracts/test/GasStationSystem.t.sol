@@ -12,8 +12,7 @@ import {
     Stats,
     GasStationConfig,
     GasStationCooldown,
-    GasStationSwapConfig,
-    AdventureEscrow
+    GasStationSwapConfig
 } from "@codegen/index.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
@@ -117,10 +116,6 @@ contract Test_GasStationSystem is Test {
     function _giveGold(bytes32 characterId, uint256 amount) internal {
         vm.prank(deployer);
         world.UD__adminDropGold(characterId, amount);
-    }
-
-    function _giveEscrow(bytes32 characterId, uint256 amount) internal {
-        AdventureEscrow.set(characterId, amount);
     }
 
     // ==================== buyGas Tests (Fallback/Treasury Path) ====================
@@ -692,65 +687,13 @@ contract Test_GasStationSystem is Test {
         world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
     }
 
-    // ==================== buyGas Escrow Fallback Tests ====================
-
-    function test_buyGas_escrowOnly() public {
-        _setLevel(bobCharacterId, 3);
-        // No wallet gold, 100 in escrow
-        _giveEscrow(bobCharacterId, 100 ether);
-
-        uint256 ethBefore = bob.balance;
-        uint256 supplyBefore = goldToken.totalSupply();
-        uint256 goldToSwap = 50 ether;
-        uint256 expectedEth = (goldToSwap * DEFAULT_ETH_PER_GOLD) / 1e18;
-
-        vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, goldToSwap, 0);
-
-        assertEq(bob.balance - ethBefore, expectedEth, "ETH not received");
-        assertEq(AdventureEscrow.get(bobCharacterId), 50 ether, "Escrow not deducted");
-        assertEq(goldToken.balanceOf(bob), 0, "Wallet should stay 0 (promoted then burned)");
-        // Treasury path: supply increased by escrow mint, then decreased by burn → net 0
-        assertEq(goldToken.totalSupply(), supplyBefore, "Net supply change should be 0");
-    }
-
-    function test_buyGas_mixedWalletAndEscrow() public {
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 20 ether);
-        _giveEscrow(bobCharacterId, 100 ether);
-
-        uint256 ethBefore = bob.balance;
-        uint256 goldToSwap = 50 ether; // 20 from wallet + 30 from escrow
-
-        vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, goldToSwap, 0);
-
-        uint256 expectedEth = (goldToSwap * DEFAULT_ETH_PER_GOLD) / 1e18;
-        assertEq(bob.balance - ethBefore, expectedEth, "ETH not received");
-        assertEq(AdventureEscrow.get(bobCharacterId), 70 ether, "Escrow should lose 30");
-        assertEq(goldToken.balanceOf(bob), 0, "Wallet drained");
-    }
-
-    function test_buyGas_revertsIfBothInsufficient() public {
+    function test_buyGas_revertsIfInsufficientWallet() public {
         _setLevel(bobCharacterId, 3);
         _giveGold(bobCharacterId, 10 ether);
-        _giveEscrow(bobCharacterId, 20 ether);
 
         vm.prank(bob);
         vm.expectRevert(InsufficientBalance.selector);
-        world.UD__buyGas(bobCharacterId, 50 ether, 0); // needs 50, has 30
-    }
-
-    function test_buyGas_walletSufficientSkipsEscrow() public {
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 100 ether);
-        _giveEscrow(bobCharacterId, 50 ether);
-
-        vm.prank(bob);
-        world.UD__buyGas(bobCharacterId, 50 ether, 0);
-
-        assertEq(goldToken.balanceOf(bob), 50 ether, "Only wallet deducted");
-        assertEq(AdventureEscrow.get(bobCharacterId), 50 ether, "Escrow untouched");
+        world.UD__buyGas(bobCharacterId, 50 ether, 0); // needs 50, has 10
     }
 
     // ==================== Edge Cases ====================
@@ -792,106 +735,58 @@ contract Test_GasStationSystem is Test {
         assertEq(treasuryBefore - gasStationAddress.balance, expectedEth, "Treasury reduction incorrect");
     }
 
-    // ==================== Escrow Fallback Tests (chargeGasGold) ====================
+    // ==================== chargeGasGold Tests ====================
 
-    function test_chargeGasGold_walletOnlyCharge() public {
+    function test_chargeGasGold_walletCharge() public {
         vm.prank(deployer);
         GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
 
         _setLevel(bobCharacterId, 3);
         _giveGold(bobCharacterId, 10 ether);
-        _giveEscrow(bobCharacterId, 50 ether);
 
         uint256 supplyBefore = goldToken.totalSupply();
-        uint256 escrowBefore = AdventureEscrow.get(bobCharacterId);
 
         vm.prank(relayer);
         world.UD__chargeGasGold(bob, bobCharacterId);
 
         assertEq(goldToken.balanceOf(bob), 9 ether, "Wallet should be deducted");
-        assertEq(AdventureEscrow.get(bobCharacterId), escrowBefore, "Escrow should be untouched");
         assertEq(goldToken.totalSupply(), supplyBefore, "Total supply unchanged for wallet charge");
         assertEq(goldToken.balanceOf(relayer), 1 ether, "Relayer credited");
     }
 
-    function test_chargeGasGold_escrowOnlyCharge() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 3);
-        // No wallet gold — all in escrow
-        _giveEscrow(bobCharacterId, 50 ether);
-
-        uint256 supplyBefore = goldToken.totalSupply();
-
-        vm.prank(relayer);
-        world.UD__chargeGasGold(bob, bobCharacterId);
-
-        assertEq(goldToken.balanceOf(bob), 0, "Wallet should stay 0");
-        assertEq(AdventureEscrow.get(bobCharacterId), 49 ether, "Escrow should be deducted by 1");
-        assertEq(goldToken.totalSupply(), supplyBefore + 1 ether, "Total supply increased (escrow mint)");
-        assertEq(goldToken.balanceOf(relayer), 1 ether, "Relayer credited");
-    }
-
-    function test_chargeGasGold_mixedWalletAndEscrow() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 10 ether);
-
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 3 ether); // wallet has 3
-        _giveEscrow(bobCharacterId, 20 ether); // escrow has 20, shortfall = 7
-
-        uint256 supplyBefore = goldToken.totalSupply();
-
-        vm.prank(relayer);
-        world.UD__chargeGasGold(bob, bobCharacterId);
-
-        assertEq(goldToken.balanceOf(bob), 0, "Wallet drained to 0");
-        assertEq(AdventureEscrow.get(bobCharacterId), 13 ether, "Escrow deducted by 7");
-        assertEq(goldToken.totalSupply(), supplyBefore + 7 ether, "Supply increased by escrow portion");
-        assertEq(goldToken.balanceOf(relayer), 10 ether, "Relayer gets full charge");
-    }
-
-    function test_chargeGasGold_revertsIfBothInsufficient() public {
+    function test_chargeGasGold_revertsIfInsufficient() public {
         vm.prank(deployer);
         GasStationSwapConfig.set(address(0), address(0), 0, relayer, 10 ether);
 
         _setLevel(bobCharacterId, 3);
         _giveGold(bobCharacterId, 2 ether);
-        _giveEscrow(bobCharacterId, 3 ether); // total 5, need 10
 
         vm.prank(relayer);
         vm.expectRevert(InsufficientBalance.selector);
         world.UD__chargeGasGold(bob, bobCharacterId);
     }
 
-    function test_chargeGasGold_revertsIfZeroBoth() public {
+    function test_chargeGasGold_revertsIfZeroBalance() public {
         vm.prank(deployer);
         GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
 
         _setLevel(bobCharacterId, 3);
-        // No wallet gold, no escrow
 
         vm.prank(relayer);
         vm.expectRevert(InsufficientBalance.selector);
         world.UD__chargeGasGold(bob, bobCharacterId);
     }
 
-    // ==================== Escrow Fallback Tests (batchChargeGasGoldWithCounts) ====================
+    // ==================== batchChargeGasGoldWithCounts Tests ====================
 
-    function test_batchChargeWithCounts_escrowFallback() public {
+    function test_batchChargeWithCounts_walletCharge() public {
         vm.prank(deployer);
         GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
 
-        // Alice: full wallet charge
         _setLevel(aliceCharacterId, 5);
         _giveGold(aliceCharacterId, 100 ether);
-
-        // Bob: escrow-only charge (gauth player adventuring)
         _setLevel(bobCharacterId, 3);
-        _giveEscrow(bobCharacterId, 50 ether);
-
-        uint256 supplyBefore = goldToken.totalSupply();
+        _giveGold(bobCharacterId, 50 ether);
 
         address[] memory players = new address[](2);
         players[0] = alice;
@@ -907,21 +802,18 @@ contract Test_GasStationSystem is Test {
         uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
 
         assertEq(charged[0], 2 ether, "Alice charged from wallet");
-        assertEq(charged[1], 3 ether, "Bob charged from escrow");
+        assertEq(charged[1], 3 ether, "Bob charged from wallet");
         assertEq(goldToken.balanceOf(alice), 98 ether, "Alice wallet deducted");
-        assertEq(AdventureEscrow.get(bobCharacterId), 47 ether, "Bob escrow deducted");
+        assertEq(goldToken.balanceOf(bob), 47 ether, "Bob wallet deducted");
         assertEq(goldToken.balanceOf(relayer), 5 ether, "Relayer gets total");
-        assertEq(goldToken.totalSupply(), supplyBefore + 3 ether, "Supply increased by Bob's escrow portion");
     }
 
-    function test_batchChargeWithCounts_escrowOnly() public {
+    function test_batchChargeWithCounts_partialWallet() public {
         vm.prank(deployer);
         GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
 
         _setLevel(bobCharacterId, 3);
-        _giveEscrow(bobCharacterId, 100 ether);
-
-        uint256 supplyBefore = goldToken.totalSupply();
+        _giveGold(bobCharacterId, 3 ether); // has 3, owes 5 — capped to 3
 
         address[] memory players = new address[](1);
         players[0] = bob;
@@ -933,43 +825,16 @@ contract Test_GasStationSystem is Test {
         vm.prank(relayer);
         uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
 
-        assertEq(charged[0], 5 ether, "Charged from escrow");
-        assertEq(AdventureEscrow.get(bobCharacterId), 95 ether, "Escrow deducted");
-        assertEq(goldToken.totalSupply(), supplyBefore + 5 ether, "Supply increased");
-    }
-
-    function test_batchChargeWithCounts_partialEscrow() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 1 ether); // 1 wallet
-        _giveEscrow(bobCharacterId, 2 ether); // 2 escrow — total 3, owes 5
-
-        uint256 supplyBefore = goldToken.totalSupply();
-
-        address[] memory players = new address[](1);
-        players[0] = bob;
-        bytes32[] memory characterIds = new bytes32[](1);
-        characterIds[0] = bobCharacterId;
-        uint256[] memory counts = new uint256[](1);
-        counts[0] = 5;
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 3 ether, "Partial charge: 1 wallet + 2 escrow");
+        assertEq(charged[0], 3 ether, "Partial charge capped to wallet balance");
         assertEq(goldToken.balanceOf(bob), 0, "Wallet drained");
-        assertEq(AdventureEscrow.get(bobCharacterId), 0, "Escrow drained");
-        assertEq(goldToken.totalSupply(), supplyBefore + 2 ether, "Supply increased by escrow portion");
     }
 
-    function test_batchChargeWithCounts_skipZeroBothBalances() public {
+    function test_batchChargeWithCounts_skipZeroBalance() public {
         vm.prank(deployer);
         GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
 
         _setLevel(bobCharacterId, 3);
-        // No wallet, no escrow
+        // No wallet gold
 
         address[] memory players = new address[](1);
         players[0] = bob;
@@ -981,37 +846,7 @@ contract Test_GasStationSystem is Test {
         vm.prank(relayer);
         uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
 
-        assertEq(charged[0], 0, "Should skip - no gold anywhere");
+        assertEq(charged[0], 0, "Should skip - no gold");
         assertEq(goldToken.balanceOf(relayer), 0, "Relayer gets nothing");
-    }
-
-    function test_batchChargeWithCounts_multipleEscrowMints() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(aliceCharacterId, 5);
-        _giveEscrow(aliceCharacterId, 20 ether);
-        _setLevel(bobCharacterId, 3);
-        _giveEscrow(bobCharacterId, 30 ether);
-
-        uint256 supplyBefore = goldToken.totalSupply();
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = bob;
-        bytes32[] memory characterIds = new bytes32[](2);
-        characterIds[0] = aliceCharacterId;
-        characterIds[1] = bobCharacterId;
-        uint256[] memory counts = new uint256[](2);
-        counts[0] = 2;
-        counts[1] = 4;
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 2 ether, "Alice charged");
-        assertEq(charged[1], 4 ether, "Bob charged");
-        assertEq(goldToken.totalSupply(), supplyBefore + 6 ether, "Supply increased by total escrow (2 + 4)");
-        assertEq(goldToken.balanceOf(relayer), 6 ether, "Relayer gets total");
     }
 }
