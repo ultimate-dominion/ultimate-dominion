@@ -211,7 +211,7 @@ All environment variables from `.env.example`:
 |---|---|---|
 | `WETH` | `0x4200000000000000000000000000000000000006` | WETH address on Base |
 | `SWAP_ROUTER` | `0x2626664c2603336E57B271c5C0b26F421741e481` | Uniswap V3 SwapRouter02 on Base |
-| `POOL_FEE` | `3000` | Uniswap V3 fee tier (3000 = 0.3%, 10000 = 1%). Must match deployed pool. |
+| `POOL_FEE` | `10000` | Uniswap V3 fee tier (10000 = 1%). Must match deployed pool. |
 
 ### Gold Purchase
 

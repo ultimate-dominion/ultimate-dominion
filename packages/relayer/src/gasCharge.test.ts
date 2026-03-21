@@ -16,7 +16,7 @@ vi.mock('./config.js', () => ({
     weth: '0x4200000000000000000000000000000000000006',
     swapRouter: '0x2626664c2603336E57B271c5C0b26F421741e481',
     quoterV2: '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a',
-    poolFee: 3000,
+    poolFee: 10000,
     swapSlippageBps: 500,
     chargeIntervalMs: 300_000,
     swapIntervalMs: 3_600_000,
