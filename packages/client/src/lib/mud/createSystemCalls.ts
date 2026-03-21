@@ -16,7 +16,7 @@ import {
   toBytes,
 } from 'viem';
 
-import { INSUFFICIENT_FUNDS_MESSAGE } from '../../utils/errors';
+import { INSUFFICIENT_FUNDS_MESSAGE, reloadIfStaleChunk } from '../../utils/errors';
 import { reportError } from '../../utils/errorReporter';
 import {
   AdvancedClass,
@@ -478,6 +478,10 @@ export function createSystemCalls(
         success: receipt.status !== 'reverted',
       };
     } catch (e) {
+      // Stale JS chunk after deploy (e.g. viem CCIP lazy import) — reload to fix
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       if (encounterType === EncounterType.PvE && isGhostMonsterError(e)) {
         group2.forEach(evictGhostMonster);
         return { success: false, error: 'That monster is already dead — refreshing the map.', severity: 'warning' };
@@ -1228,6 +1232,9 @@ export function createSystemCalls(
       return { success: true };
     } catch (e) {
       console.error('[autoFight] WRITE THREW (pre-send or submission error):', e);
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       if (isGhostMonsterError(e)) {
         evictGhostMonster(monsterId);
         return { success: false, error: 'That monster is already dead — refreshing the map.', severity: 'warning' };

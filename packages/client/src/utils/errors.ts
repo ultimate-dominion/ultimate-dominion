@@ -1,3 +1,31 @@
+/**
+ * Detect stale JS chunk errors caused by Vercel deploying new hashes
+ * while a player still has the old bundle loaded. Viem's lazy CCIP
+ * import is the most common trigger.
+ */
+export function isStaleChunkError(error: unknown): boolean {
+  const msg = ((error as Error)?.message ?? '') + (String(error) ?? '');
+  return (
+    msg.includes('dynamically imported module') ||
+    msg.includes('Failed to fetch dynamically imported') ||
+    msg.includes('Loading chunk') ||
+    msg.includes('ChunkLoadError')
+  );
+}
+
+/**
+ * One-shot reload for stale deploys. Uses sessionStorage to prevent
+ * infinite reload loops (only reloads once per session).
+ */
+export function reloadIfStaleChunk(error: unknown): boolean {
+  if (!isStaleChunkError(error)) return false;
+  const key = 'stale-chunk-reload';
+  if (sessionStorage.getItem(key)) return false; // already tried
+  sessionStorage.setItem(key, '1');
+  window.location.reload();
+  return true; // reload initiated (won't actually reach caller)
+}
+
 export const USER_ERRORS = ['User denied signature'];
 export const INSUFFICIENT_FUNDS_MESSAGE =
   'A bitter cold seeps from the cave walls, freezing you in place. Wait a moment for the chill to pass.';
