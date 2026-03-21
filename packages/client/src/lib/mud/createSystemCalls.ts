@@ -529,42 +529,6 @@ export function createSystemCalls(
     }
   };
 
-  const depositToEscrow = async (
-    characterEntity: string,
-    previousAmount: bigint,
-    amount: bigint,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(characterEntity, 'depositToEscrow');
-    if (ownershipError) return ownershipError;
-
-    try {
-      const characterId = characterEntity as `0x${string}`;
-
-      const tx = await wrappedWorldContract.write.UD__depositToEscrow([
-        characterId,
-        BigInt(amount),
-      ]);
-
-      await waitForTransaction(tx);
-
-      const newBalance = await worldContract.read.UD__getEscrowBalance([
-        characterId,
-      ]);
-
-      const success = newBalance === previousAmount + amount;
-
-      return {
-        error: success ? undefined : 'Failed to deposit to escrow.',
-        success,
-      };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
   const endShopEncounter = async (encounterId: string): SystemCallReturn => {
     // Check the store first — if the encounter is already ended (e.g. by moving
     // away), skip the chain call entirely to avoid noisy relayer errors.
@@ -1502,42 +1466,6 @@ export function createSystemCalls(
     }
   };
 
-  const withdrawFromEscrow = async (
-    characterEntity: string,
-    previousAmount: bigint,
-    amount: bigint,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(characterEntity, 'withdrawFromEscrow');
-    if (ownershipError) return ownershipError;
-
-    try {
-      const characterId = characterEntity as `0x${string}`;
-
-      const tx = await wrappedWorldContract.write.UD__withdrawFromEscrow([
-        characterId,
-        amount,
-      ]);
-
-      await waitForTransaction(tx);
-
-      const newBalance = await worldContract.read.UD__getEscrowBalance([
-        characterId,
-      ]);
-
-      const success = newBalance === previousAmount - amount;
-
-      return {
-        error: success ? undefined : 'Failed to withdraw from escrow.',
-        success,
-      };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
   // === Implicit Class System Functions ===
 
   const chooseRace = async (
@@ -1772,7 +1700,6 @@ export function createSystemCalls(
     triggerFragment,
     createEncounter,
     createOrder,
-    depositToEscrow,
     endShopEncounter,
     endWorldEncounter,
     endTurn,
@@ -1795,6 +1722,5 @@ export function createSystemCalls(
     unequipItem,
     updateTokenUri,
     useWorldConsumableItem,
-    withdrawFromEscrow,
   };
 }

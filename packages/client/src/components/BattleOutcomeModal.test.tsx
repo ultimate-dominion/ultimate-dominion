@@ -130,7 +130,6 @@ function makeCharacter(overrides: Record<string, any> = {}) {
     hasSelectedAdvancedClass: false,
     image: '',
     externalGoldBalance: 0n,
-    escrowGoldBalance: 0n,
     worldStatusEffects: [],
     ...overrides,
   };

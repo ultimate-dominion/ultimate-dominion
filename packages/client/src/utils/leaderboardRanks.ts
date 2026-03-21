@@ -9,7 +9,7 @@ export type RankResult = {
 /**
  * Compute a character's stats rank and gold rank among all characters.
  * Stats rank: sorted by sum of base agility + strength + intelligence (desc).
- * Gold rank: sorted by total gold (external + escrow, desc, bigint comparison).
+ * Gold rank: sorted by gold balance (desc, bigint comparison).
  * Ties share the same rank (dense ranking).
  */
 export const computeRanks = (
@@ -25,7 +25,7 @@ export const computeRanks = (
     c.baseStats.agility + c.baseStats.strength + c.baseStats.intelligence;
 
   const targetStats = totalStats(target);
-  const targetGold = target.externalGoldBalance + target.escrowGoldBalance;
+  const targetGold = target.externalGoldBalance;
 
   // Count how many players have strictly higher stats/gold = rank - 1
   let statsAbove = 0;
@@ -33,7 +33,7 @@ export const computeRanks = (
 
   for (const c of allCharacters) {
     if (totalStats(c) > targetStats) statsAbove++;
-    if (c.externalGoldBalance + c.escrowGoldBalance > targetGold) goldAbove++;
+    if (c.externalGoldBalance > targetGold) goldAbove++;
   }
 
   return {

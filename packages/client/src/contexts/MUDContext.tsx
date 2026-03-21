@@ -82,7 +82,7 @@ const LOADING_SYSTEM_CALLS: SystemCallsResult = {
   chooseRace: notReady, choosePowerSource: notReady,
   claimFragment: notReady, triggerFragment: notReady,
   createEncounter: notReady, createOrder: notReady,
-  depositToEscrow: notReady, endShopEncounter: notReady,
+  endShopEncounter: notReady,
   endWorldEncounter: notReady, endTurn: notReady,
   enterGame: notReady, equipItems: notReady, fleePvp: notReady,
   fulfillOrder: notReady, autoFight: notReady,
@@ -93,7 +93,6 @@ const LOADING_SYSTEM_CALLS: SystemCallsResult = {
   selectAdvancedClass: notReady, sell: notReady,
   spawn: notReady, unequipItem: notReady,
   updateTokenUri: notReady, useWorldConsumableItem: notReady,
-  withdrawFromEscrow: notReady,
 } as unknown as SystemCallsResult;
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;

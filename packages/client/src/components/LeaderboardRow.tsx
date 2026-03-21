@@ -21,7 +21,6 @@ export const LeaderboardRow = ({
     advancedClass,
     baseStats: { agility, intelligence, strength },
     entityClass,
-    escrowGoldBalance,
     externalGoldBalance,
     id,
     image,
@@ -136,7 +135,7 @@ export const LeaderboardRow = ({
             textAlign="center"
             w="100%"
           >
-            {etherToFixedNumber(externalGoldBalance + escrowGoldBalance)}
+            {etherToFixedNumber(externalGoldBalance)}
           </Text>
         </HStack>
         <Box display={{ base: 'none', md: 'block' }}>

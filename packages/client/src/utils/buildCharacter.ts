@@ -27,7 +27,6 @@ export function buildCharacter(
   characterData: Record<string, unknown>,
   statsData: Record<string, unknown>,
   goldData: Record<string, unknown> | undefined,
-  escrowData: Record<string, unknown> | undefined,
   encounterData: Record<string, unknown> | undefined,
   posData: Record<string, unknown> | undefined,
   spawnedData: Record<string, unknown> | undefined,
@@ -36,10 +35,6 @@ export function buildCharacter(
 ): Character {
   const externalGoldBalance = goldData
     ? toBigInt(goldData.value)
-    : BigInt(0);
-
-  const escrowGoldBalance = escrowData
-    ? toBigInt(escrowData.balance)
     : BigInt(0);
 
   const encounterId = encounterData?.encounterId ?? zeroHash;
@@ -123,7 +118,6 @@ export function buildCharacter(
       toBigInt(statsData.agility),
       toBigInt(statsData.intelligence),
     ),
-    escrowGoldBalance,
     experience: toBigInt(statsData.experience),
     hasSelectedAdvancedClass: Boolean(statsData.hasSelectedAdvancedClass),
     externalGoldBalance,

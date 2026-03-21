@@ -6,7 +6,6 @@ const makeCharacter = (
   id: string,
   stats: { agi: bigint; str: bigint; int: bigint },
   gold: bigint = 0n,
-  escrowGold: bigint = 0n,
 ): Character =>
   ({
     id,
@@ -16,7 +15,6 @@ const makeCharacter = (
       intelligence: stats.int,
     },
     externalGoldBalance: gold,
-    escrowGoldBalance: escrowGold,
   }) as Character;
 
 describe('computeRanks', () => {
@@ -51,7 +49,7 @@ describe('computeRanks', () => {
     expect(computeRanks(chars, 'low')?.statsRank).toBe(3);
   });
 
-  it('computes correct gold rank by total gold (external + escrow)', () => {
+  it('computes correct gold rank by gold balance', () => {
     const chars = [
       makeCharacter('poor', { agi: 1n, str: 1n, int: 1n }, 10n),
       makeCharacter('middle', { agi: 1n, str: 1n, int: 1n }, 500n),
@@ -112,21 +110,12 @@ describe('computeRanks', () => {
     expect(weakRich?.goldRank).toBe(1);
   });
 
-  it('escrow gold contributes to gold rank', () => {
+  it('tied gold shares same rank', () => {
     const chars = [
-      makeCharacter('escrow-heavy', { agi: 1n, str: 1n, int: 1n }, 1n, 100n),
-      makeCharacter('external-only', { agi: 1n, str: 1n, int: 1n }, 50n, 0n),
+      makeCharacter('a', { agi: 1n, str: 1n, int: 1n }, 10n),
+      makeCharacter('b', { agi: 1n, str: 1n, int: 1n }, 10n),
     ];
-    expect(computeRanks(chars, 'escrow-heavy')?.goldRank).toBe(1);
-    expect(computeRanks(chars, 'external-only')?.goldRank).toBe(2);
-  });
-
-  it('tied total gold (different split) shares same rank', () => {
-    const chars = [
-      makeCharacter('split', { agi: 1n, str: 1n, int: 1n }, 5n, 5n),
-      makeCharacter('external', { agi: 1n, str: 1n, int: 1n }, 10n, 0n),
-    ];
-    expect(computeRanks(chars, 'split')?.goldRank).toBe(1);
-    expect(computeRanks(chars, 'external')?.goldRank).toBe(1);
+    expect(computeRanks(chars, 'a')?.goldRank).toBe(1);
+    expect(computeRanks(chars, 'b')?.goldRank).toBe(1);
   });
 });

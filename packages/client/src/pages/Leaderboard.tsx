@@ -122,8 +122,8 @@ export const Leaderboard = (): JSX.Element => {
 
       switch (sort.sorted) {
         case 'byGold': {
-          const totalGoldA = entryA.externalGoldBalance + entryA.escrowGoldBalance;
-          const totalGoldB = entryB.externalGoldBalance + entryB.escrowGoldBalance;
+          const totalGoldA = entryA.externalGoldBalance;
+          const totalGoldB = entryB.externalGoldBalance;
           return sort.reversed
             ? Number(formatEther(totalGoldA - totalGoldB))
             : Number(formatEther(totalGoldB - totalGoldA));
@@ -137,8 +137,8 @@ export const Leaderboard = (): JSX.Element => {
             ? Number(totalStatsA) - Number(totalStatsB)
             : Number(totalStatsB) - Number(totalStatsA);
         default: {
-          const defTotalGoldA = entryA.externalGoldBalance + entryA.escrowGoldBalance;
-          const defTotalGoldB = entryB.externalGoldBalance + entryB.escrowGoldBalance;
+          const defTotalGoldA = entryA.externalGoldBalance;
+          const defTotalGoldB = entryB.externalGoldBalance;
           return Number(formatEther(defTotalGoldB - defTotalGoldA));
         }
       }

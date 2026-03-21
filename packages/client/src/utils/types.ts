@@ -228,7 +228,6 @@ export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
   baseStats: EntityStats;
-  escrowGoldBalance: bigint;
   externalGoldBalance: bigint;
   id: string;
   inBattle: boolean;

@@ -225,7 +225,7 @@ export const MarketplaceItem = (): JSX.Element => {
   const insufficientGold = useMemo(() => {
     if (!userCharacter) return false;
     if (orderType === OrderType.Selling) return false;
-    return parseEther(orderPrice) > BigInt(userCharacter.externalGoldBalance);
+    return parseEther(orderPrice) > userCharacter.externalGoldBalance;
   }, [orderPrice, orderType, userCharacter]);
 
   const onCreateOrder = useCallback(
@@ -799,7 +799,7 @@ export const MarketplaceItem = (): JSX.Element => {
 
             {/* Buy flow */}
             {orderType === OrderType.Buying &&
-              (userCharacter.externalGoldBalance === BigInt(0) ? (
+              ((userCharacter.externalGoldBalance) === BigInt(0) ? (
                 <Text size="sm" color="#8A7E6A" textAlign="center">
                   You don&apos;t have any $GOLD to place an offer.
                 </Text>
