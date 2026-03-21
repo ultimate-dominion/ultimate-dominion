@@ -45,8 +45,19 @@ export async function sendRelayerTx(params: {
     }
     const tEstimate = Date.now();
 
+    // Pre-flight balance check — catch "total cost exceeds balance" before it hits the RPC
+    const txValue = value ?? 0n;
+    const balance = await publicClient.getBalance({ address: wallet.address });
+    // Rough cost estimate: gas * 0.1 gwei (Base L2 typical) + value + L1 data buffer
+    const estimatedCost = gas * 100_000_000n + txValue;
+    if (balance < estimatedCost) {
+      console.error(
+        `[tx] INSUFFICIENT POOL BALANCE on ${wallet.address.slice(0, 10)} | balance=${formatEther(balance)} ETH | estimated cost=${formatEther(estimatedCost)} ETH (gas=${gas}, value=${formatEther(txValue)})`,
+      );
+    }
+
     console.log(
-      `[tx] Sending via ${wallet.address.slice(0, 10)} | nonce=${nonce} | gas=${gas}${gasOverride ? ' (fixed)' : ''} | acquire=${tAcquire - t0}ms est=${tEstimate - tAcquire}ms`,
+      `[tx] Sending via ${wallet.address.slice(0, 10)} | nonce=${nonce} | gas=${gas}${gasOverride ? ' (fixed)' : ''} | bal=${formatEther(balance)} | acquire=${tAcquire - t0}ms est=${tEstimate - tAcquire}ms`,
     );
 
     const hash = await wallet.walletClient.sendTransaction({
