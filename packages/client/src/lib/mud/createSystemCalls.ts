@@ -193,6 +193,20 @@ const getContractError = (error: unknown): string => {
 
   if (category === 'FUNDS') return INSUFFICIENT_FUNDS_MESSAGE;
 
+  // Map non-revert categories to in-world messages (never leak raw errors)
+  const CATEGORY_MESSAGES: Partial<Record<ErrorCategory, string>> = {
+    GAS: 'The ancient wards resist your action. Try again in a moment.',
+    NONCE: 'Your actions overlapped. Try again.',
+    SPONSOR: 'The cave resists your action. Try again.',
+    RPC: 'The cave grows dark and the way forward is unclear. Try again in a moment.',
+    UNKNOWN: 'Something stirs in the darkness. Try again.',
+  };
+
+  if (category in CATEGORY_MESSAGES) {
+    reportError("contract", error, { category, systemCall: "unknown" });
+    return CATEGORY_MESSAGES[category]!;
+  }
+
   // Extract the 4-byte selector directly from the raw error — works for ALL
   // viem error types (ContractFunctionRevertedError, EstimateGasExecutionError,
   // etc.) regardless of where the selector appears in the error chain.
@@ -204,7 +218,7 @@ const getContractError = (error: unknown): string => {
 
   reportError("contract", error, { category: category, systemCall: "unknown" });
 
-  return message || 'An error occurred calling the contract.';
+  return 'Something stirs in the darkness. Try again.';
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
