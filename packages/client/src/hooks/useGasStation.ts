@@ -5,7 +5,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 
 const GAS_THRESHOLD = parseEther('0.0001'); // 0.0001 ETH — emergency fallback; relayer tops up at 0.0003
-const MAX_GOLD_PER_SWAP = parseEther('100'); // Cap to avoid huge slippage
+const MAX_GOLD_PER_SWAP = parseEther('5'); // Cap to avoid huge slippage
 const MIN_GOLD_FOR_SWAP = parseEther('1'); // Minimum to avoid dust reverts
 const MIN_SWAP_INTERVAL_MS = 30_000; // 30 seconds — Base gas is cheap, swap often
 

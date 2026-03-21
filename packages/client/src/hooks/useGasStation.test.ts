@@ -10,12 +10,12 @@ describe('calculateSwapAmount', () => {
   });
 
   it('returns exact gold when between min and max', () => {
-    const fifty = parseEther('50');
-    expect(calculateSwapAmount(fifty)).toBe(fifty);
+    const three = parseEther('3');
+    expect(calculateSwapAmount(three)).toBe(three);
   });
 
-  it('caps at 100 Gold when above max', () => {
-    expect(calculateSwapAmount(parseEther('200'))).toBe(parseEther('100'));
+  it('caps at 5 Gold when above max', () => {
+    expect(calculateSwapAmount(parseEther('200'))).toBe(parseEther('5'));
   });
 
   it('returns exact gold at exactly 1 (minimum)', () => {
@@ -23,9 +23,9 @@ describe('calculateSwapAmount', () => {
     expect(calculateSwapAmount(one)).toBe(one);
   });
 
-  it('returns max at exactly 100', () => {
-    const hundred = parseEther('100');
-    expect(calculateSwapAmount(hundred)).toBe(hundred);
+  it('returns max at exactly 5', () => {
+    const five = parseEther('5');
+    expect(calculateSwapAmount(five)).toBe(five);
   });
 });
 
