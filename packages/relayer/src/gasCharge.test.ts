@@ -124,6 +124,83 @@ describe('gasCharge count calculation', () => {
   });
 });
 
+describe('gasCharge batch splitting', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    _resetForTesting();
+    mockGetCharacterId.mockResolvedValue(CHARACTER_ID);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  it('sends single tx for fewer than 50 players', async () => {
+    for (let i = 0; i < 10; i++) {
+      recordFunding(uniquePlayer(), 500_000_000_000_000n);
+    }
+
+    mockSendPrimaryTx.mockResolvedValue('0xhash' as `0x${string}`);
+    await flushCharges();
+
+    expect(mockSendPrimaryTx).toHaveBeenCalledTimes(1);
+
+    const { decodeFunctionData, parseAbi } = await import('viem');
+    const abi = parseAbi([
+      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
+    ]);
+    const decoded = decodeFunctionData({ abi, data: mockSendPrimaryTx.mock.calls[0][0].calldata as `0x${string}` });
+    expect(decoded.args[0].length).toBe(10);
+  });
+
+  it('splits into 3 txs for 120 players (50+50+20)', async () => {
+    for (let i = 0; i < 120; i++) {
+      recordFunding(uniquePlayer(), 500_000_000_000_000n);
+    }
+
+    mockSendPrimaryTx.mockResolvedValue('0xhash' as `0x${string}`);
+    await flushCharges();
+
+    expect(mockSendPrimaryTx).toHaveBeenCalledTimes(3);
+
+    const { decodeFunctionData, parseAbi } = await import('viem');
+    const abi = parseAbi([
+      'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
+    ]);
+
+    const sizes = mockSendPrimaryTx.mock.calls.map((call: unknown[]) => {
+      const decoded = decodeFunctionData({ abi, data: (call[0] as { calldata: string }).calldata as `0x${string}` });
+      return decoded.args[0].length;
+    });
+    expect(sizes).toEqual([50, 50, 20]);
+  });
+
+  it('on partial failure, only failed batch players are re-queued', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Create 80 players -> 2 batches (50 + 30)
+    const batch1Players: Address[] = [];
+    const batch2Players: Address[] = [];
+    for (let i = 0; i < 50; i++) {
+      const p = uniquePlayer();
+      batch1Players.push(p);
+      recordFunding(p, 500_000_000_000_000n);
+    }
+    for (let i = 0; i < 30; i++) {
+      const p = uniquePlayer();
+      batch2Players.push(p);
+      recordFunding(p, 500_000_000_000_000n);
+    }
+
+    // Batch 1 succeeds, batch 2 fails
+    mockSendPrimaryTx
+      .mockResolvedValueOnce('0xhash1' as `0x${string}`)
+      .mockRejectedValueOnce(new Error('batch 2 failed'));
+
+    await flushCharges();
+
+    // Only batch 2's 30 players should be re-queued
+    expect(getPendingChargeCount()).toBe(30);
+  });
+});
+
 describe('gasCharge dead-letter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
