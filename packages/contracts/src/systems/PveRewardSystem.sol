@@ -3,7 +3,6 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {Math, WAD} from "@libraries/Math.sol";
 import {
     Items,
     Stats,
@@ -16,12 +15,14 @@ import {
     MobDropBonus,
     EncounterEntity,
     AdventureEscrow,
+    GasReserve,
     UltimateDominionConfig
 } from "@codegen/index.sol";
 import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 import {InvalidRewardState} from "../Errors.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
-import {BASE_GOLD_DROP, EXP_MODIFIER, MAX_LEVEL, ELITE_REWARD_MULTIPLIER, ELITE_DROP_MULTIPLIER} from "../../constants.sol";
+import {GoldLib} from "../libraries/GoldLib.sol";
+import {BASE_GOLD_DROP, MAX_LEVEL, ELITE_REWARD_MULTIPLIER, ELITE_DROP_MULTIPLIER} from "../../constants.sol";
 
 contract PveRewardSystem is System {
     function distributePveRewards(bytes32 encounterId, uint256 randomNumber)
@@ -78,11 +79,17 @@ contract PveRewardSystem is System {
                 statsTemp = Stats.get(distTemps.entityIdTemp);
                 if (statsTemp.currentHp > int256(0)) {
                     if (_goldAmount > uint256(0)) {
-                        IWorld(_world()).UD__dropGoldToEscrow(distTemps.entityIdTemp, (_goldAmount / distTemps.livingPlayers));
+                        uint256 goldPerPlayer = _goldAmount / distTemps.livingPlayers;
+                        uint256 reserveSplit = goldPerPlayer / 20; // 5%
+                        uint256 playerSplit = goldPerPlayer - reserveSplit; // 95%
+
+                        address playerAddress = IWorld(_world()).UD__getOwnerAddress(distTemps.entityIdTemp);
+                        GoldLib.goldMint(_world(), playerAddress, playerSplit);
+                        GoldLib.goldMint(_world(), _world(), reserveSplit);
+                        GasReserve.setBalance(distTemps.entityIdTemp, GasReserve.getBalance(distTemps.entityIdTemp) + reserveSplit);
                     }
                     uint256 currentExp = statsTemp.experience;
-                    uint256 _calculatedExp =
-                        ((_baseExp / distTemps.livingPlayers) * calculateExpMultiplier(distTemps.entityIdTemp)) / WAD;
+                    uint256 _calculatedExp = _baseExp / distTemps.livingPlayers;
                     if (
                         statsTemp.level >= MAX_LEVEL || currentExp >= maxLevelExp
                             || _baseExp == uint256(0) || distTemps.livingPlayers == uint256(0)
@@ -108,11 +115,6 @@ contract PveRewardSystem is System {
             }
         }
         CombatEncounter.setRewardsDistributed(encounterId, true);
-    }
-
-    function calculateExpMultiplier(bytes32 characterId) public view returns (uint256 _expMultiplier) {
-        uint256 escrowBalance = AdventureEscrow.get(characterId);
-        _expMultiplier = ((Math.sqrt(escrowBalance) * 1e8) / (EXP_MODIFIER)) + WAD;
     }
 
     function _calculateGoldDrop(uint256 mobLevel, uint256 randomNumber, bytes32 entityId) internal view returns (uint256 dropAmount) {

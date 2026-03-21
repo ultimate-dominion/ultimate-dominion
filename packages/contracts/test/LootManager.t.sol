@@ -106,16 +106,6 @@ contract Test_LootManagerSystem is SetUp, GasReporter {
         assertEq(goldToken.balanceOf(bob), 4.5 ether);
     }
 
-    function test_calculateExpMultiplier() public {
-        vm.prank(deployer);
-        world.UD__adminDropGold(bobCharacterId, 10 ether);
-        vm.startPrank(bob);
-        goldToken.approve(lootManagerSystem, 10 ether);
-        world.UD__depositToEscrow(bobCharacterId, 10 ether);
-        uint256 expMultiplier = world.UD__calculateExpMultiplier(bobCharacterId);
-        assertEq(expMultiplier, 1158113883000000000);
-    }
-
     function test_expCap() public {
         vm.prank(bob);
         world.UD__move(bobCharacterId, 0, 1);
