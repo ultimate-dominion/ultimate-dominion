@@ -11,7 +11,8 @@ import {
     CombatOutcomeData,
     WorldEncounter,
     WorldEncounterData,
-    WorldStatusEffects
+    WorldStatusEffects,
+    WeaponEnchant
 } from "@codegen/index.sol";
 import {EncounterType} from "@codegen/common.sol";
 import {InvalidEncounter, EncounterAlreadyOver, InvalidEncounterType} from "../Errors.sol";
@@ -88,6 +89,10 @@ contract EncounterResolveSystem is System {
         bytes32[] memory emptyArray = new bytes32[](0);
         for (uint256 i; i < entities.length; i++) {
             bytes32 entityId = entities[i];
+            // Clean up spell system state (weapon enchant + computed effect mods)
+            bytes32[] memory appliedEffects = EncounterEntity.getAppliedStatusEffects(entityId);
+            IWorld(_world()).UD__cleanupEntitySpellState(entityId, appliedEffects);
+
             EncounterEntity.setEncounterId(entityId, bytes32(0));
             EncounterEntity.setAppliedStatusEffects(entityId, emptyArray);
             if (EncounterEntity.getDied(entityId)) {

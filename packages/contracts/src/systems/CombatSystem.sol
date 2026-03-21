@@ -33,6 +33,7 @@ import {
     SpellScaling
 } from "@codegen/index.sol";
 import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
+import {SpellConfig, SpellConfigData, StatusEffectTargeting} from "@codegen/index.sol";
 import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {
@@ -331,6 +332,15 @@ contract CombatSystem is System {
                 if (hit && usesAgi && CombatMath.calculateDoubleStrike(attacker.agility, defender.agility, rnChunks[1])) {
                     damage = damage + damage / int256(DOUBLE_STRIKE_DAMAGE_DIVISOR);
                 }
+
+                // Weapon enchant bonus (Sorcerer's Arcane Infusion)
+                if (hit && damage > 0) {
+                    uint256 enchantRn = uint256(keccak256(abi.encode(randomNumber, "enchant")));
+                    int256 enchantBonus = IWorld(_world()).UD__calculateEnchantBonus(
+                        attackerId, attacker, defender, enchantRn
+                    );
+                    if (enchantBonus > 0) damage += enchantBonus;
+                }
             } else {
                 damage = 0;
                 hit = false;
@@ -447,6 +457,15 @@ contract CombatSystem is System {
 
                 // Minimum damage floor — landed hits always deal at least 1
                 if (damage < 1) damage = 1;
+
+                // Weapon enchant bonus (Sorcerer's Arcane Infusion)
+                if (hit && damage > 0) {
+                    uint256 enchantRn = uint256(keccak256(abi.encode(randomNumber, "enchant")));
+                    int256 enchantBonus = IWorld(_world()).UD__calculateEnchantBonus(
+                        attackerId, attacker, defender, enchantRn
+                    );
+                    if (enchantBonus > 0) damage += enchantBonus;
+                }
             } else {
                 damage = 0;
                 hit = false;
@@ -476,6 +495,19 @@ contract CombatSystem is System {
         PhysicalDamageStatsData memory attackStats;
 
         if (Stats.getCurrentHp(defenderId) > 0) {
+            // Check if this is a percentage-based class spell
+            bool isSpell = IWorld(_world()).UD__hasSpellConfig(effectId);
+
+            if (isSpell) {
+                // Check/consume spell use
+                bytes32 encounterId = EncounterEntity.getEncounterId(attackerId);
+                bool canCast = IWorld(_world()).UD__consumeSpellUse(encounterId, attackerId, effectId);
+                if (!canCast) {
+                    hit = false;
+                    return hit;
+                }
+            }
+
             uint64[] memory rnChunks = LibChunks.get4Chunks(randomNumber);
             if (resistanceStat == ResistanceStat.None) {
                 hit = true;
@@ -511,8 +543,47 @@ contract CombatSystem is System {
             }
 
             if (hit) {
-                bytes32 targetId = StatusEffectTargeting.getTargetsSelf(effectId) ? attackerId : defenderId;
-                IWorld(_world()).UD__applyStatusEffect(targetId, effectId);
+                if (isSpell) {
+                    SpellConfigData memory spellCfg = SpellConfig.get(effectId);
+                    bool targetsSelf = StatusEffectTargeting.getTargetsSelf(effectId);
+                    bytes32 targetId = targetsSelf ? attackerId : defenderId;
+
+                    if (spellCfg.isWeaponEnchant) {
+                        // Weapon enchant — store config, skip normal status effect
+                        uint256 currentTurn = CombatEncounter.getCurrentTurn(
+                            EncounterEntity.getEncounterId(attackerId)
+                        );
+                        IWorld(_world()).UD__applyWeaponEnchant(attackerId, effectId, currentTurn);
+                    } else {
+                        // Compute percentage-based modifiers and store them
+                        AdjustedCombatStats memory sourceStats = targetsSelf ? attacker : defender;
+                        IWorld(_world()).UD__computeAndStoreModifiers(targetId, effectId, sourceStats);
+                        // Apply the status effect (adds to encounter's appliedStatusEffects array)
+                        IWorld(_world()).UD__applyStatusEffect(targetId, effectId);
+                    }
+
+                    // Upfront spell damage
+                    if (spellCfg.spellMinDamage > 0) {
+                        uint256 dmgRn = uint256(keccak256(abi.encode(randomNumber, "spellDmg")));
+                        int256 spellDmg = IWorld(_world()).UD__calculateSpellDamage(
+                            effectId, attackerId, attacker, defender, dmgRn
+                        );
+                        if (spellDmg > 0) {
+                            int256 defHp = Stats.getCurrentHp(defenderId) - spellDmg;
+                            if (defHp < 0) defHp = 0;
+                            Stats.setCurrentHp(defenderId, defHp);
+                        }
+                    }
+
+                    // HP heal on self-buff cast
+                    if (spellCfg.hpPct > 0 && targetsSelf) {
+                        IWorld(_world()).UD__applySpellHeal(attackerId, spellCfg.hpPct, attacker.maxHp);
+                    }
+                } else {
+                    // Original flat path — consumables, monster effects, etc.
+                    bytes32 targetId = StatusEffectTargeting.getTargetsSelf(effectId) ? attackerId : defenderId;
+                    IWorld(_world()).UD__applyStatusEffect(targetId, effectId);
+                }
             }
         }
     }

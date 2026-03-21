@@ -43,6 +43,10 @@ import { MagicDamageStats, MagicDamageStatsData } from "./tables/MagicDamageStat
 import { StatusEffectStats, StatusEffectStatsData } from "./tables/StatusEffectStats.sol";
 import { StatusEffectTargeting } from "./tables/StatusEffectTargeting.sol";
 import { StatusEffectValidity, StatusEffectValidityData } from "./tables/StatusEffectValidity.sol";
+import { SpellConfig, SpellConfigData } from "./tables/SpellConfig.sol";
+import { ComputedEffectMods, ComputedEffectModsData } from "./tables/ComputedEffectMods.sol";
+import { WeaponEnchant, WeaponEnchantData } from "./tables/WeaponEnchant.sol";
+import { SpellUsesTracking, SpellUsesTrackingData } from "./tables/SpellUsesTracking.sol";
 import { CombatEncounter, CombatEncounterData } from "./tables/CombatEncounter.sol";
 import { WorldEncounter, WorldEncounterData } from "./tables/WorldEncounter.sol";
 import { EncounterEntity, EncounterEntityData } from "./tables/EncounterEntity.sol";

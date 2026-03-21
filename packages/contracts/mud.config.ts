@@ -74,6 +74,10 @@ export default defineWorld({
       name: "StatusEffects",
       openAccess: true,
     },
+    SpellCombatSystem: {
+      name: "SpellCombatSys",
+      openAccess: true,
+    },
     // World Action System - consumables and world interactions
     WorldActionSystem: {
       name: "WorldActionSys",
@@ -696,6 +700,77 @@ export default defineWorld({
         maxStacks: "uint256",
         validTime: "uint256",
         validTurns: "uint256",
+      },
+    },
+    ////////////////////////////////// CLASS SPELL SYSTEM ///////////////////////////////////////////////////////////////////////////////
+    /**
+     * Percentage-based spell configuration per effectId.
+     * Percentages in basis points: 2500 = +25%, -2000 = -20%.
+     * dmgPerStat uses ÷1000 scaling: 500 = 0.5 per stat point.
+     */
+    SpellConfig: {
+      key: ["effectId"],
+      schema: {
+        effectId: "bytes32",
+        strPct: "int256",
+        agiPct: "int256",
+        intPct: "int256",
+        hpPct: "int256",
+        armorFlat: "int256",
+        spellMinDamage: "int256",
+        spellMaxDamage: "int256",
+        dmgPerStat: "int256",
+        dmgScalingStat: "ResistanceStat",
+        dmgIsPhysical: "bool",
+        maxUses: "uint256",
+        isWeaponEnchant: "bool",
+      },
+    },
+    /**
+     * Per-entity computed flat modifiers written at cast time.
+     * Each entity gets its own computed values even if sharing the same base effectId.
+     */
+    ComputedEffectMods: {
+      key: ["entityId", "effectId"],
+      schema: {
+        entityId: "bytes32",
+        effectId: "bytes32",
+        strModifier: "int256",
+        agiModifier: "int256",
+        intModifier: "int256",
+        armorModifier: "int256",
+        hpModifier: "int256",
+        exists: "bool",
+      },
+    },
+    /**
+     * Active weapon enchant on entity (Sorcerer's Arcane Infusion).
+     * Raw config values stored; bonus computed each hit using current INT.
+     */
+    WeaponEnchant: {
+      key: ["entityId"],
+      schema: {
+        entityId: "bytes32",
+        effectId: "bytes32",
+        bonusDmgMin: "int256",
+        bonusDmgMax: "int256",
+        dmgPerInt: "int256",
+        turnApplied: "uint256",
+        validTurns: "uint256",
+      },
+    },
+    /**
+     * Per-encounter spell use counter.
+     * Keyed on encounterId so dead data is left behind (no cleanup needed).
+     */
+    SpellUsesTracking: {
+      key: ["encounterId", "entityId", "effectId"],
+      schema: {
+        encounterId: "bytes32",
+        entityId: "bytes32",
+        effectId: "bytes32",
+        usesRemaining: "uint256",
+        initialized: "bool",
       },
     },
     ////////////////////////////////// ENCOUNTERS ///////////////////////////////////////////////////////////////////////////////

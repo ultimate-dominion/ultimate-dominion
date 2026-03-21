@@ -131,6 +131,43 @@
     },
     {
       "namespaceLabel": "UD",
+      "label": "AutoAdventureSystem",
+      "namespace": "UD",
+      "name": "AutoAdventureSy",
+      "systemId": "0x737955440000000000000000000000004175746f416476656e74757265537900",
+      "abi": [
+        "error AutoAdventureCooldownActive()",
+        "error EntityNotAtPosition()",
+        "error GamePaused()",
+        "error InEncounter()",
+        "error InvalidCombatEntity()",
+        "error InvalidMove()",
+        "error NotSpawned()",
+        "error NoWeaponsEquipped()",
+        "error OnlyCharacters()",
+        "error OutOfBounds()",
+        "error Unauthorized()",
+        "function autoAdventure(bytes32 cid, uint16 x, uint16 y) returns (bool combatOccurred, bool playerWon, bool playerDied, uint256 xpGained, uint256 goldGained, bytes32 encounterId)",
+        "function autoFight(bytes32 cid, bytes32 monsterId, uint256 weaponId) returns (bool playerWon, bool playerDied, bytes32 encounterId)"
+      ],
+      "worldAbi": [
+        "error AutoAdventureCooldownActive()",
+        "error EntityNotAtPosition()",
+        "error GamePaused()",
+        "error InEncounter()",
+        "error InvalidCombatEntity()",
+        "error InvalidMove()",
+        "error NotSpawned()",
+        "error NoWeaponsEquipped()",
+        "error OnlyCharacters()",
+        "error OutOfBounds()",
+        "error Unauthorized()",
+        "function UD__autoAdventure(bytes32 cid, uint16 x, uint16 y) returns (bool combatOccurred, bool playerWon, bool playerDied, uint256 xpGained, uint256 goldGained, bytes32 encounterId)",
+        "function UD__autoFight(bytes32 cid, bytes32 monsterId, uint256 weaponId) returns (bool playerWon, bool playerDied, bytes32 encounterId)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
       "label": "CombatSystem",
       "namespace": "UD",
       "name": "CombatSystem",
@@ -842,6 +879,7 @@
         "error InvalidAction()",
         "error NotAuthorizedCaller()",
         "error NoWeaponsEquipped()",
+        "error OnlyHealingInCombat()",
         "function executePvECombat(uint256 randomness, bytes32 encounterId, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] attacks)",
         "function isValidPvE(bytes32[] attackers, bytes32[] defenders, uint16 x, uint16 y) view returns (bool _isValidPvE, bool _attackersAreMobs)"
       ],
@@ -849,6 +887,7 @@
         "error InvalidAction()",
         "error NotAuthorizedCaller()",
         "error NoWeaponsEquipped()",
+        "error OnlyHealingInCombat()",
         "function UD__executePvECombat(uint256 randomness, bytes32 encounterId, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] attacks)",
         "function UD__isValidPvE(bytes32[] attackers, bytes32[] defenders, uint16 x, uint16 y) view returns (bool _isValidPvE, bool _attackersAreMobs)"
       ]
@@ -867,6 +906,7 @@
         "error NotAuthorizedCaller()",
         "error NotInEncounter()",
         "error NoWeaponsEquipped()",
+        "error OnlyHealingInCombat()",
         "error Unauthorized()",
         "error UnrecognizedEncounterType()",
         "function executePvPCombat(uint256 prevRandao, bytes32 encounterId, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] effects)",
@@ -881,6 +921,7 @@
         "error NotAuthorizedCaller()",
         "error NotInEncounter()",
         "error NoWeaponsEquipped()",
+        "error OnlyHealingInCombat()",
         "error Unauthorized()",
         "error UnrecognizedEncounterType()",
         "function UD__executePvPCombat(uint256 prevRandao, bytes32 encounterId, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] effects)",
@@ -1035,12 +1076,14 @@
         "error InEncounter()",
         "error InsufficientItemBalance()",
         "error NotAtRestPosition()",
+        "error NotAuthorizedCaller()",
         "error NotItemOwner()",
-        "error OnlyHealingInCombat()",
         "error Unauthorized()",
+        "function applyCombatCleanse(bytes32 characterId, uint256 itemId)",
+        "function applyCombatHeal(bytes32 characterId, uint256 itemId) returns (int256 healAmount)",
         "function executeWorldRngActions(uint256 randomNumber, bytes32 givingEntity, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] actions)",
         "function rest(bytes32 characterId)",
-        "function useCombatConsumableItem(bytes32 characterId, uint256 itemId)",
+        "function useCombatConsumableItem(bytes32, uint256) pure",
         "function useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId)"
       ],
       "worldAbi": [
@@ -1049,12 +1092,14 @@
         "error InEncounter()",
         "error InsufficientItemBalance()",
         "error NotAtRestPosition()",
+        "error NotAuthorizedCaller()",
         "error NotItemOwner()",
-        "error OnlyHealingInCombat()",
         "error Unauthorized()",
+        "function UD__applyCombatCleanse(bytes32 characterId, uint256 itemId)",
+        "function UD__applyCombatHeal(bytes32 characterId, uint256 itemId) returns (int256 healAmount)",
         "function UD__executeWorldRngActions(uint256 randomNumber, bytes32 givingEntity, (bytes32 attackerEntityId, bytes32 defenderEntityId, uint256 itemId)[] actions)",
         "function UD__rest(bytes32 characterId)",
-        "function UD__useCombatConsumableItem(bytes32 characterId, uint256 itemId)",
+        "function UD__useCombatConsumableItem(bytes32, uint256) pure",
         "function UD__useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId)"
       ]
     },
@@ -1070,12 +1115,14 @@
         "error InvalidTokenUri()",
         "error MaxCharacters()",
         "error NameTaken()",
+        "error Unauthorized()",
         "function getCharacterIdFromOwnerAddress(address ownerAddress) view returns (bytes32)",
         "function getOwner(bytes32 characterId) view returns (address)",
         "function getOwnerAddress(bytes32 characterId) pure returns (address)",
         "function isValidCharacterId(bytes32 characterId) view returns (bool)",
         "function isValidOwner(bytes32 characterId, address owner) view returns (bool)",
-        "function mintCharacter(address account, bytes32 name, string tokenUri) returns (bytes32 characterId)"
+        "function mintCharacter(address account, bytes32 name, string tokenUri) returns (bytes32 characterId)",
+        "function updateTokenUri(bytes32 characterId, string tokenUri)"
       ],
       "worldAbi": [
         "error GamePaused()",
@@ -1083,12 +1130,14 @@
         "error InvalidTokenUri()",
         "error MaxCharacters()",
         "error NameTaken()",
+        "error Unauthorized()",
         "function UD__getCharacterIdFromOwnerAddress(address ownerAddress) view returns (bytes32)",
         "function UD__getOwner(bytes32 characterId) view returns (address)",
         "function UD__getOwnerAddress(bytes32 characterId) pure returns (address)",
         "function UD__isValidCharacterId(bytes32 characterId) view returns (bool)",
         "function UD__isValidOwner(bytes32 characterId, address owner) view returns (bool)",
-        "function UD__mintCharacter(address account, bytes32 name, string tokenUri) returns (bytes32 characterId)"
+        "function UD__mintCharacter(address account, bytes32 name, string tokenUri) returns (bytes32 characterId)",
+        "function UD__updateTokenUri(bytes32 characterId, string tokenUri)"
       ]
     },
     {
@@ -1134,8 +1183,11 @@
         "error LevelSystem_InvalidLevel()",
         "error LevelSystem_InvalidStatChanges()",
         "error LevelSystem_MaxLevelReached()",
+        "error NotAdmin()",
         "event CharacterLeveledUp(bytes32 indexed characterId, uint256 newLevel, uint256 experience)",
         "event LevelBonusApplied(bytes32 indexed characterId, uint256 statType, int256 bonus)",
+        "function _mintBadgeExternal(address to, uint256 badgeId)",
+        "function backfillZoneCompletion(bytes32 characterId)",
         "function calculateLevelBonuses(bytes32 characterId) view returns (int256 statPoints, int256 hpGain)",
         "function UD__getCurrentAvailableLevel(uint256 experience) view returns (uint256 currentAvailableLevel)",
         "function UD__levelCharacter(bytes32 characterId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats)",
@@ -1149,8 +1201,11 @@
         "error LevelSystem_InvalidLevel()",
         "error LevelSystem_InvalidStatChanges()",
         "error LevelSystem_MaxLevelReached()",
+        "error NotAdmin()",
         "event CharacterLeveledUp(bytes32 indexed characterId, uint256 newLevel, uint256 experience)",
         "event LevelBonusApplied(bytes32 indexed characterId, uint256 statType, int256 bonus)",
+        "function UD___mintBadgeExternal(address to, uint256 badgeId)",
+        "function UD__backfillZoneCompletion(bytes32 characterId)",
         "function UD__calculateLevelBonuses(bytes32 characterId) view returns (int256 statPoints, int256 hpGain)",
         "function UD__UD__getCurrentAvailableLevel(uint256 experience) view returns (uint256 currentAvailableLevel)",
         "function UD__UD__levelCharacter(bytes32 characterId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats)",
@@ -1234,6 +1289,35 @@
       "worldAbi": [
         "error IntOverflow()",
         "function UD__physicalAttack(uint256 randomNumber, bytes32 attackerId, bytes32 defenderId, uint256 itemId, bytes32 effectId) view returns (bool hit, bool crit, int256 damage)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "SpellCombatSystem",
+      "namespace": "UD",
+      "name": "SpellCombatSys",
+      "systemId": "0x737955440000000000000000000000005370656c6c436f6d6261745379730000",
+      "abi": [
+        "error NotAuthorizedCaller()",
+        "function applySpellHeal(bytes32 entityId, int256 hpPct, int256 maxHp)",
+        "function applyWeaponEnchant(bytes32 entityId, bytes32 effectId, uint256 currentTurn)",
+        "function calculateEnchantBonus(bytes32 attackerId, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) attackerStats, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) defenderStats, uint256 randomNumber) view returns (int256 bonus)",
+        "function calculateSpellDamage(bytes32 effectId, bytes32 attackerId, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) attackerStats, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) defenderStats, uint256 randomNumber) view returns (int256 damage)",
+        "function cleanupEntitySpellState(bytes32 entityId, bytes32[] appliedEffectIds)",
+        "function computeAndStoreModifiers(bytes32 targetEntityId, bytes32 effectId, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) sourceStats)",
+        "function consumeSpellUse(bytes32 encounterId, bytes32 entityId, bytes32 effectId) returns (bool canCast)",
+        "function hasSpellConfig(bytes32 effectId) view returns (bool)"
+      ],
+      "worldAbi": [
+        "error NotAuthorizedCaller()",
+        "function UD__applySpellHeal(bytes32 entityId, int256 hpPct, int256 maxHp)",
+        "function UD__applyWeaponEnchant(bytes32 entityId, bytes32 effectId, uint256 currentTurn)",
+        "function UD__calculateEnchantBonus(bytes32 attackerId, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) attackerStats, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) defenderStats, uint256 randomNumber) view returns (int256 bonus)",
+        "function UD__calculateSpellDamage(bytes32 effectId, bytes32 attackerId, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) attackerStats, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) defenderStats, uint256 randomNumber) view returns (int256 damage)",
+        "function UD__cleanupEntitySpellState(bytes32 entityId, bytes32[] appliedEffectIds)",
+        "function UD__computeAndStoreModifiers(bytes32 targetEntityId, bytes32 effectId, (int256 strength, int256 agility, int256 intelligence, int256 armor, int256 maxHp, int256 currentHp) sourceStats)",
+        "function UD__consumeSpellUse(bytes32 encounterId, bytes32 entityId, bytes32 effectId) returns (bool canCast)",
+        "function UD__hasSpellConfig(bytes32 effectId) view returns (bool)"
       ]
     },
     {
@@ -1407,5 +1491,5 @@
       ]
     }
   ],
-  "createdAt": 1773415711398
+  "createdAt": 1774048487627
 }

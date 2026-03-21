@@ -16,10 +16,12 @@ import {
     StatusEffectValidityData,
     WorldStatusEffects,
     DamageOverTimeApplied,
-    DamageOverTimeAppliedData
+    DamageOverTimeAppliedData,
+    ComputedEffectMods,
+    ComputedEffectModsData
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {EffectType} from "@codegen/common.sol";
+import {EffectType, ResistanceStat} from "@codegen/common.sol";
 import {AdjustedCombatStats} from "@interfaces/Structs.sol";
 import {EffectProcessor} from "@libraries/EffectProcessor.sol";
 import {NonExistentIndex, InvalidEffect, InvalidEffectApplication, InvalidEffectType, EffectNotApplied, NotEffectType} from "../Errors.sol";
@@ -82,7 +84,24 @@ contract EffectsSystem is System {
         if (encounterData.encounterId != bytes32(0)) {
             for (uint256 i; i < encounterData.appliedStatusEffects.length; i++) {
                 effectId = encounterData.appliedStatusEffects[i];
-                statsData = _getStatusEffectStats(EffectProcessor.getEffectStatId(effectId));
+                bytes32 baseEffectId = EffectProcessor.getEffectStatId(effectId);
+
+                // Check for computed percentage override first (class spells)
+                ComputedEffectModsData memory computed = ComputedEffectMods.get(entityId, baseEffectId);
+                if (computed.exists) {
+                    statsData = StatusEffectStatsData({
+                        strModifier: computed.strModifier,
+                        agiModifier: computed.agiModifier,
+                        intModifier: computed.intModifier,
+                        armorModifier: computed.armorModifier,
+                        hpModifier: computed.hpModifier,
+                        damagePerTick: 0,
+                        resistanceStat: ResistanceStat.None
+                    });
+                } else {
+                    statsData = _getStatusEffectStats(baseEffectId);
+                }
+
                 bytes32 updatedEffectId = expireIfInvalid(entityId, effectId);
                 if (_isNotExpired(updatedEffectId)) {
                     _adjustedStats = EffectProcessor.applyStatusEffectModifiers(_adjustedStats, statsData);
