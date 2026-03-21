@@ -10,7 +10,7 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAllowance } from '../contexts/AllowanceContext';
@@ -75,6 +75,15 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   const [itemBalance, setItemBalance] = useState(item.balance);
   const [isConsumed, setIsConsumed] = useState(false);
   const [statusText, setStatusText] = useState('');
+
+  // Reset consumed state when modal opens so players can consume multiple
+  useEffect(() => {
+    if (isOpen) {
+      setIsConsumed(false);
+      setStatusText('');
+      setItemBalance(item.balance);
+    }
+  }, [isOpen, item.balance]);
 
   const isOwner = useMemo(
     () => character?.owner === item.owner,
