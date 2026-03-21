@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Address } from 'viem';
 
 import { createSystemCalls } from './createSystemCalls';
@@ -1016,4 +1016,216 @@ describe('createSystemCalls — error messaging selector extraction', () => {
     // Should get the friendly message, not the raw error
     expect(result.error).toBe('Invalid combat — monster may have moved or died. Try again.');
   });
+});
+
+// ── Suite: Gas Retry Proxy ──────────────────────────────────────────
+
+describe('createSystemCalls — gas retry on insufficient funds', () => {
+  const originalFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset fetch mock
+    globalThis.fetch = originalFetch;
+    // Set env vars for relayer
+    import.meta.env.VITE_RELAYER_URL = 'https://relay.test';
+    import.meta.env.VITE_FUND_API_KEY = 'test-api-key';
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    delete import.meta.env.VITE_RELAYER_URL;
+    delete import.meta.env.VITE_FUND_API_KEY;
+  });
+
+  function createNetworkWithGasRetry(opts: {
+    writeFailCount?: number;
+  } = {}) {
+    const { writeFailCount = 1 } = opts;
+    const callCounts = new Map<string, number>();
+
+    const mockReceipt = { status: 'success' as const, blockNumber: BigInt(100) };
+    const waitForTransaction = vi.fn().mockResolvedValue(mockReceipt);
+
+    // Track balance for waitForBalance polling
+    let currentBalance = BigInt(0);
+    const publicClient = {
+      getChainId: vi.fn().mockResolvedValue(31337),
+      getBlockNumber: vi.fn().mockResolvedValue(BigInt(200)),
+      getBalance: vi.fn().mockImplementation(async () => currentBalance),
+    };
+
+    const setBalance = (bal: bigint) => { currentBalance = bal; };
+
+    // Write proxy: fail N times with insufficient funds, then succeed
+    const writeHandler: ProxyHandler<Record<string, unknown>> = {
+      get: (_, prop) => {
+        return vi.fn().mockImplementation(async (...args: unknown[]) => {
+          const name = String(prop);
+          const count = (callCounts.get(name) ?? 0) + 1;
+          callCounts.set(name, count);
+
+          if (count <= writeFailCount) {
+            const err = new Error('insufficient funds for intrinsic transaction cost');
+            throw err;
+          }
+          return FAKE_TX_HASH;
+        });
+      },
+    };
+
+    const worldContract = {
+      write: new Proxy({} as Record<string, unknown>, writeHandler),
+      read: new Proxy({} as Record<string, unknown>, {
+        get: () => vi.fn().mockResolvedValue(BigInt(0)),
+      }),
+      simulate: new Proxy({} as Record<string, unknown>, {
+        get: () => vi.fn().mockResolvedValue({ result: undefined }),
+      }),
+    };
+
+    const walletClient = { account: { address: TEST_WALLET } };
+
+    const network = {
+      publicClient,
+      walletClient,
+      waitForTransaction,
+      worldContract,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { network: network as any, setBalance, callCounts };
+  }
+
+  it('retries after requesting emergency funding on insufficient funds', async () => {
+    const { network, setBalance } = createNetworkWithGasRetry({ writeFailCount: 1 });
+    mockOwnership();
+
+    // Mock fetch for relayer /fund call
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
+
+    // Simulate funding arriving: balance increases after fetch
+    const origGetBalance = network.publicClient.getBalance;
+    let balanceCallCount = 0;
+    network.publicClient.getBalance = vi.fn().mockImplementation(async () => {
+      balanceCallCount++;
+      // First call = baseline (0), second call = funded (1 ETH)
+      return balanceCallCount <= 1 ? BigInt(0) : BigInt(1000000000000000);
+    });
+
+    const calls = createSystemCalls(network);
+    const result = await calls.rest(TEST_ENTITY);
+
+    expect(result.success).toBe(true);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://relay.test/fund',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ 'x-api-key': 'test-api-key' }),
+      }),
+    );
+  });
+
+  it('fails if funding request fails', async () => {
+    const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
+    mockOwnership();
+
+    // Mock fetch to fail
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+    const calls = createSystemCalls(network);
+    const result = await calls.rest(TEST_ENTITY);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it('fails if funding arrives but retry also fails', async () => {
+    // Both attempts fail with insufficient funds
+    const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
+    mockOwnership();
+
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
+    let balanceCallCount = 0;
+    network.publicClient.getBalance = vi.fn().mockImplementation(async () => {
+      balanceCallCount++;
+      return balanceCallCount <= 1 ? BigInt(0) : BigInt(1000000000000000);
+    });
+
+    const calls = createSystemCalls(network);
+    const result = await calls.rest(TEST_ENTITY);
+
+    // Retry also throws insufficient funds → still fails
+    expect(result.success).toBe(false);
+  });
+
+  it('does not retry on non-funds errors (reverts)', async () => {
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    const revertError = new Error('execution reverted: Unauthorized');
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(revertError),
+    });
+
+    globalThis.fetch = vi.fn();
+
+    const calls = createSystemCalls(network);
+    const result = await calls.rest(TEST_ENTITY);
+
+    expect(result.success).toBe(false);
+    // Should NOT have called the relayer
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('does not retry when relayer URL is not configured', async () => {
+    delete import.meta.env.VITE_RELAYER_URL;
+
+    const { network } = createNetworkWithGasRetry({ writeFailCount: 1 });
+    mockOwnership();
+
+    globalThis.fetch = vi.fn();
+
+    const calls = createSystemCalls(network);
+    const result = await calls.rest(TEST_ENTITY);
+
+    expect(result.success).toBe(false);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('retries immediately when relayer says player already has funds', async () => {
+    const { network } = createNetworkWithGasRetry({ writeFailCount: 1 });
+    mockOwnership();
+
+    // Relayer returns already_funded — player's balance recovered
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'already_funded' }) });
+
+    const calls = createSystemCalls(network);
+    const result = await calls.rest(TEST_ENTITY);
+
+    // Should retry immediately without waiting for balance
+    expect(result.success).toBe(true);
+    expect(globalThis.fetch).toHaveBeenCalled();
+    // getBalance should NOT be called (no waitForBalance)
+    expect(network.publicClient.getBalance).not.toHaveBeenCalled();
+  });
+
+  it('fails when funding accepted but balance never increases (timeout)', async () => {
+    const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
+    mockOwnership();
+
+    // Relayer accepts the request
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
+    // Balance never increases — stays at 0
+    network.publicClient.getBalance = vi.fn().mockResolvedValue(BigInt(0));
+
+    const calls = createSystemCalls(network);
+    // Use a short timeout so the test doesn't take 8s — override waitForBalance
+    // The real code polls every 1s for 8s; here we just verify the failure path
+    const result = await calls.rest(TEST_ENTITY);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(globalThis.fetch).toHaveBeenCalled();
+  }, 15000); // Allow enough time for the 8s timeout + polling
 });

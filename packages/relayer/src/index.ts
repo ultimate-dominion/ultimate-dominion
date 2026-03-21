@@ -52,6 +52,15 @@ async function getMinimumOutput(tokenIn: Address, tokenOut: Address, amountIn: b
 const fundedAddresses = loadFundedAddresses();
 const recentFundings: number[] = []; // timestamps
 const ipFundings = new Map<string, number[]>(); // ip -> timestamps
+const emergencyFundTimestamps = new Map<string, number>(); // address -> last emergency fund time
+
+const EMERGENCY_FUND_COOLDOWN_MS = 60_000; // 1 per address per 60s
+
+function emergencyFundOk(address: string): boolean {
+  const last = emergencyFundTimestamps.get(address);
+  if (!last) return true;
+  return Date.now() - last >= EMERGENCY_FUND_COOLDOWN_MS;
+}
 
 function rateLimitOk(): boolean {
   const now = Date.now();
@@ -168,30 +177,48 @@ async function main() {
 
     const normalizedAddress = address.toLowerCase();
 
-    // Already funded — no double-fund
+    // Already funded — check if they need emergency gas before rejecting
     if (fundedAddresses.has(normalizedAddress)) {
-      // Still register the player mapping in case it changed
       trackPlayer(address as Address, delegator as Address);
-      res.json({ status: 'already_funded' });
-      return;
-    }
-
-    // Check balance first — skip if already has enough
-    try {
-      const balance = await publicClient.getBalance({ address: address as Address });
-      if (balance >= config.fundingAmount) {
-        fundedAddresses.add(normalizedAddress);
-        saveFundedAddresses(fundedAddresses);
-        trackPlayer(address as Address, delegator as Address);
-        if (delegator !== address) {
-          playerMap.set(normalizedAddress, delegator.toLowerCase());
-          savePlayerMap(playerMap);
+      try {
+        const balance = await publicClient.getBalance({ address: address as Address });
+        if (balance >= config.minPlayerBalance) {
+          res.json({ status: 'already_funded', balance: formatEther(balance) });
+          return;
         }
-        res.json({ status: 'already_funded', balance: formatEther(balance) });
+        // Below minimum — allow emergency re-fund with per-address rate limit
+        if (!emergencyFundOk(normalizedAddress)) {
+          console.warn(`[fund] Emergency re-fund rate limited: ${address} balance=${formatEther(balance)}`);
+          res.status(429).json({ error: 'Emergency re-fund rate limited — try again in 60s' });
+          return;
+        }
+        console.info(`[fund] Emergency re-fund: ${address} balance=${formatEther(balance)} < min=${formatEther(config.minPlayerBalance)}`);
+        // Fall through to funding logic below
+      } catch {
+        // Balance check failed — don't re-fund blindly
+        res.json({ status: 'already_funded' });
         return;
       }
-    } catch {
-      // If balance check fails, proceed with funding
+    }
+
+    // New address: check balance first — skip if already has enough
+    if (!fundedAddresses.has(normalizedAddress)) {
+      try {
+        const balance = await publicClient.getBalance({ address: address as Address });
+        if (balance >= config.fundingAmount) {
+          fundedAddresses.add(normalizedAddress);
+          saveFundedAddresses(fundedAddresses);
+          trackPlayer(address as Address, delegator as Address);
+          if (delegator !== address) {
+            playerMap.set(normalizedAddress, delegator.toLowerCase());
+            savePlayerMap(playerMap);
+          }
+          res.json({ status: 'already_funded', balance: formatEther(balance) });
+          return;
+        }
+      } catch {
+        // If balance check fails, proceed with funding
+      }
     }
 
     // Rate limits
@@ -220,6 +247,7 @@ async function main() {
         savePlayerMap(playerMap);
       }
       recentFundings.push(Date.now());
+      emergencyFundTimestamps.set(normalizedAddress, Date.now());
       const ipTimestamps = ipFundings.get(ip) || [];
       ipTimestamps.push(Date.now());
       ipFundings.set(ip, ipTimestamps);

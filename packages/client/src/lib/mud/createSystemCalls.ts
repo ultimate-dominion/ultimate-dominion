@@ -32,6 +32,54 @@ import {
 import { getTableValue, useGameStore } from '../gameStore';
 import { SetupNetworkResult } from './setupNetwork';
 
+// ==================== Emergency gas funding ====================
+// When a tx fails with "insufficient funds", request an emergency top-up
+// from the relayer and retry once. This closes the gap between the 60s
+// balance monitor cycles where a player could be stranded mid-action.
+
+// Return value: 'funded' = ETH sent, 'has_funds' = already above threshold, false = failed
+type FundingResult = 'funded' | 'has_funds' | false;
+
+async function requestEmergencyFunding(
+  address: string,
+  delegatorAddress?: string,
+): Promise<FundingResult> {
+  // Read lazily so tests can override import.meta.env at runtime
+  const relayerUrl = import.meta.env.VITE_RELAYER_URL as string | undefined;
+  const fundApiKey = import.meta.env.VITE_FUND_API_KEY as string | undefined;
+  if (!relayerUrl || !fundApiKey) return false;
+  try {
+    const res = await fetch(`${relayerUrl}/fund`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': fundApiKey,
+      },
+      body: JSON.stringify({ address, delegatorAddress }),
+    });
+    if (!res.ok) return false;
+    try {
+      const body = await res.json() as { status?: string };
+      if (body.status === 'funded') return 'funded';
+      if (body.status === 'already_funded') return 'has_funds';
+    } catch {
+      // Couldn't parse body — treat 200 as funded
+    }
+    return 'funded';
+  } catch {
+    return false;
+  }
+}
+
+function isInsufficientFundsError(error: unknown): boolean {
+  if (error && typeof error === 'object' && 'walk' in error) {
+    const found = (error as BaseError).walk(e => e instanceof InsufficientFundsError);
+    if (found) return true;
+  }
+  const msg = ((error as Error)?.message ?? '').toLowerCase();
+  return msg.includes('insufficient funds');
+}
+
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
 
 type SystemCallReturn = Promise<{
@@ -73,6 +121,7 @@ const KNOWN_ERROR_SIGNATURES: Record<string, string> = {
   '0xb4120f14': 'The cave walls block your path. You cannot go that way.',
   '0x87822d34': 'The passage ahead is sealed.',
   '0xb8a03426': 'Only adventurers may do this.',
+  '0x0762d547': 'You already have a character. Refreshing...',
 };
 
 // Extract the raw 4-byte error selector from a viem error chain.
@@ -174,6 +223,69 @@ export function createSystemCalls(
   // with Unauthorized() and masks the real revert reason.
   const diagAccount = delegatorAddress ?? walletClient?.account?.address;
 
+  // ==================== Gas retry proxy ====================
+  // Wraps worldContract.write so that ANY system call that fails with
+  // "insufficient funds" automatically requests emergency funding from
+  // the relayer, waits for it to land, then retries once.
+  const gasRetryAddress = walletClient?.account?.address;
+
+  const waitForBalance = async (minIncrease: bigint, timeoutMs = 8000): Promise<boolean> => {
+    if (!gasRetryAddress) return false;
+    const start = Date.now();
+    const baseline = await publicClient.getBalance({ address: gasRetryAddress });
+    while (Date.now() - start < timeoutMs) {
+      await new Promise(r => setTimeout(r, 1000));
+      const current = await publicClient.getBalance({ address: gasRetryAddress });
+      if (current > baseline + minIncrease) return true;
+    }
+    return false;
+  };
+
+  // Proxy worldContract.write: intercept every method call, catch
+  // insufficient funds errors, request funding, wait, retry once.
+  const proxiedWrite = new Proxy(worldContract.write, {
+    get(target, prop, receiver) {
+      const original = Reflect.get(target, prop, receiver);
+      if (typeof original !== 'function') return original;
+
+      return async (...args: unknown[]) => {
+        try {
+          return await (original as (...a: unknown[]) => Promise<unknown>)(...args);
+        } catch (error) {
+          if (!isInsufficientFundsError(error) || !gasRetryAddress) throw error;
+
+          console.info(`[GAS_RETRY] Insufficient funds on ${String(prop)}, requesting emergency top-up`);
+          const fundResult = await requestEmergencyFunding(gasRetryAddress, delegatorAddress);
+          if (!fundResult) {
+            console.warn('[GAS_RETRY] Emergency funding request failed');
+            throw error;
+          }
+
+          if (fundResult === 'has_funds') {
+            // Relayer says we already have enough — retry immediately (balance may
+            // have recovered between our failed tx and the /fund call)
+            console.info('[GAS_RETRY] Relayer says balance is sufficient, retrying immediately');
+            return await (original as (...a: unknown[]) => Promise<unknown>)(...args);
+          }
+
+          // fundResult === 'funded' — ETH was sent, wait for it to land
+          const received = await waitForBalance(1n);
+          if (!received) {
+            console.warn('[GAS_RETRY] Funding did not arrive in time');
+            throw error;
+          }
+
+          console.info('[GAS_RETRY] Funding received, retrying action');
+          return await (original as (...a: unknown[]) => Promise<unknown>)(...args);
+        }
+      };
+    },
+  }) as typeof worldContract.write;
+
+  // Replace worldContract.write for all system calls in this closure.
+  // The original worldContract is unchanged — only our local reference is proxied.
+  const wrappedWorldContract = { ...worldContract, write: proxiedWrite };
+
   // Check whether a monster is alive in the local store.
   const isMonsterAlive = (monsterId: string): boolean => {
     const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean } | undefined;
@@ -240,7 +352,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__buy([
+      const tx = await wrappedWorldContract.write.UD__buy([
         amount,
         shopId as `0x${string}`,
         BigInt(itemIndex),
@@ -262,7 +374,7 @@ export function createSystemCalls(
 
   const cancelOrder = async (orderHash: string): SystemCallReturn => {
     try {
-      const tx = await worldContract.write.UD__cancelOrder([orderHash as Hash]);
+      const tx = await wrappedWorldContract.write.UD__cancelOrder([orderHash as Hash]);
       const txResult = await waitForTransaction(tx);
 
       return {
@@ -308,7 +420,7 @@ export function createSystemCalls(
         ? { gas: CREATE_ENCOUNTER_GAS_LIMIT }
         : {};
 
-      const tx = await worldContract.write.UD__createEncounter(
+      const tx = await wrappedWorldContract.write.UD__createEncounter(
         [
           encounterType,
           group1 as `0x${string}`[],
@@ -371,7 +483,7 @@ export function createSystemCalls(
 
   const createOrder = async (order: NewOrder): SystemCallReturn => {
     try {
-      const tx = await worldContract.write.UD__createOrder([order]);
+      const tx = await wrappedWorldContract.write.UD__createOrder([order]);
       const txResult = await waitForTransaction(tx);
 
       return {
@@ -397,7 +509,7 @@ export function createSystemCalls(
     try {
       const characterId = characterEntity as `0x${string}`;
 
-      const tx = await worldContract.write.UD__depositToEscrow([
+      const tx = await wrappedWorldContract.write.UD__depositToEscrow([
         characterId,
         BigInt(amount),
       ]);
@@ -431,7 +543,7 @@ export function createSystemCalls(
     }
 
     try {
-      const tx = await worldContract.write.UD__endShopEncounter([
+      const tx = await wrappedWorldContract.write.UD__endShopEncounter([
         encounterId as `0x${string}`,
       ]);
 
@@ -456,7 +568,7 @@ export function createSystemCalls(
     }
 
     try {
-      const tx = await worldContract.write.UD__endEncounter([
+      const tx = await wrappedWorldContract.write.UD__endEncounter([
         encounterId as `0x${string}`,
         BigInt(0),
         false,
@@ -496,7 +608,7 @@ export function createSystemCalls(
         },
       ];
 
-      const tx = await worldContract.write.UD__endTurn(
+      const tx = await wrappedWorldContract.write.UD__endTurn(
         [
           encounterId as `0x${string}`,
           playerId as `0x${string}`,
@@ -547,7 +659,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__enterGame([
+      const tx = await wrappedWorldContract.write.UD__enterGame([
         characterEntity as `0x${string}`,
         starterWeaponId,
         starterArmorId,
@@ -575,7 +687,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__equipItems([
+      const tx = await wrappedWorldContract.write.UD__equipItems([
         characterEntity as `0x${string}`,
         itemIds.map(itemId => BigInt(itemId)),
       ]);
@@ -595,7 +707,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__fleePvp([
+      const tx = await wrappedWorldContract.write.UD__fleePvp([
         characterId as `0x${string}`,
       ]);
 
@@ -611,7 +723,7 @@ export function createSystemCalls(
 
   const fulfillOrder = async (orderHash: string): SystemCallReturn => {
     try {
-      const tx = await worldContract.write.UD__fulfillOrder([
+      const tx = await wrappedWorldContract.write.UD__fulfillOrder([
         orderHash as Hash,
       ]);
       const txResult = await waitForTransaction(tx);
@@ -654,7 +766,7 @@ export function createSystemCalls(
         hasSelectedAdvancedClass: entityStats.hasSelectedAdvancedClass ?? false,
       };
 
-      const tx = await worldContract.write.UD__levelCharacter([
+      const tx = await wrappedWorldContract.write.UD__levelCharacter([
         characterId as `0x${string}`,
         formattedNewStats,
       ]);
@@ -681,7 +793,7 @@ export function createSystemCalls(
     try {
       const nameHex = stringToHex(name, { size: 32 });
 
-      const tx = await worldContract.write.UD__mintCharacter([
+      const tx = await wrappedWorldContract.write.UD__mintCharacter([
         account,
         nameHex,
         uri,
@@ -852,7 +964,7 @@ export function createSystemCalls(
           if (onChainRetries > 0) {
             console.warn(`[move] Retry ${onChainRetries} — sending with gas ${MOVE_GAS_LIMIT} (target: ${x},${y})`);
           }
-          tx = await worldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
+          tx = await wrappedWorldContract.write.UD__move(args, { gas: MOVE_GAS_LIMIT });
 
           const receipt = await waitForTransaction(tx);
           if (receipt.status === 'reverted') {
@@ -989,7 +1101,7 @@ export function createSystemCalls(
       // Skip simulation — send with hardcoded gas limit (same pattern as move retries).
       // AutoAdventure is always a bigger tx than move, so we skip sim to avoid
       // the extra RPC round-trip (~100-200ms latency saved per action).
-      const tx = await worldContract.write.UD__autoAdventure(
+      const tx = await wrappedWorldContract.write.UD__autoAdventure(
         [characterEntity as `0x${string}`, x, y],
         { gas: AUTO_ADVENTURE_GAS_LIMIT },
       );
@@ -1056,7 +1168,7 @@ export function createSystemCalls(
 
     try {
       console.info(`[autoFight] Sending TX — char=${characterEntity.slice(0, 10)} monster=${monsterId.slice(0, 10)} weapon=${weaponId} gas=${AUTO_FIGHT_GAS_LIMIT}`);
-      const tx = await worldContract.write.UD__autoFight(
+      const tx = await wrappedWorldContract.write.UD__autoFight(
         [characterEntity as `0x${string}`, monsterId as `0x${string}`, BigInt(weaponId)],
         { gas: AUTO_FIGHT_GAS_LIMIT },
       );
@@ -1107,7 +1219,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__removeEntityFromBoard([
+      const tx = await wrappedWorldContract.write.UD__removeEntityFromBoard([
         entity as `0x${string}`,
       ]);
 
@@ -1132,7 +1244,7 @@ export function createSystemCalls(
           success: true,
         };
       }
-      const tx = await worldContract.write.UD__restock([
+      const tx = await wrappedWorldContract.write.UD__restock([
         shopId as `0x${string}`,
       ]);
 
@@ -1160,7 +1272,7 @@ export function createSystemCalls(
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
 
-      const tx = await worldContract.write.UD__rollStats([
+      const tx = await wrappedWorldContract.write.UD__rollStats([
         userRandomNumber,
         characterEntity as `0x${string}`,
         characterClass,
@@ -1202,7 +1314,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__sellAny([
+      const tx = await wrappedWorldContract.write.UD__sellAny([
         amount,
         shopId as `0x${string}`,
         BigInt(itemId),
@@ -1227,7 +1339,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__spawn([
+      const tx = await wrappedWorldContract.write.UD__spawn([
         characterEntity as `0x${string}`,
       ]);
 
@@ -1252,7 +1364,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__unequipItem([
+      const tx = await wrappedWorldContract.write.UD__unequipItem([
         characterEntity as `0x${string}`,
         BigInt(itemId),
       ]);
@@ -1275,7 +1387,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__updateTokenUri([
+      const tx = await wrappedWorldContract.write.UD__updateTokenUri([
         characterId as `0x${string}`,
         characterMetadataCid,
       ]);
@@ -1309,7 +1421,7 @@ export function createSystemCalls(
     try {
       const characterId = entity as `0x${string}`;
 
-      const tx = await worldContract.write.UD__rest([characterId], { gas: REST_GAS_LIMIT });
+      const tx = await wrappedWorldContract.write.UD__rest([characterId], { gas: REST_GAS_LIMIT });
 
       const receipt = await waitForTransaction(tx);
       if (receipt.status === 'reverted') {
@@ -1340,7 +1452,7 @@ export function createSystemCalls(
     try {
       const characterId = entity as `0x${string}`;
 
-      const tx = await worldContract.write.UD__useWorldConsumableItem([
+      const tx = await wrappedWorldContract.write.UD__useWorldConsumableItem([
         characterId,
         characterId,
         BigInt(tokenId),
@@ -1367,7 +1479,7 @@ export function createSystemCalls(
     try {
       const characterId = characterEntity as `0x${string}`;
 
-      const tx = await worldContract.write.UD__withdrawFromEscrow([
+      const tx = await wrappedWorldContract.write.UD__withdrawFromEscrow([
         characterId,
         amount,
       ]);
@@ -1402,7 +1514,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__chooseRace([
+      const tx = await wrappedWorldContract.write.UD__chooseRace([
         characterEntity as `0x${string}`,
         race,
       ]);
@@ -1429,7 +1541,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__choosePowerSource([
+      const tx = await wrappedWorldContract.write.UD__choosePowerSource([
         characterEntity as `0x${string}`,
         powerSource,
       ]);
@@ -1458,7 +1570,7 @@ export function createSystemCalls(
       const randomString = 'UltimateDominion';
       const userRandomNumber = keccak256(toBytes(randomString));
 
-      const tx = await worldContract.write.UD__rollBaseStats([
+      const tx = await wrappedWorldContract.write.UD__rollBaseStats([
         userRandomNumber,
         characterEntity as `0x${string}`,
       ]);
@@ -1497,7 +1609,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__selectAdvancedClass([
+      const tx = await wrappedWorldContract.write.UD__selectAdvancedClass([
         characterEntity as `0x${string}`,
         advancedClass,
       ]);
@@ -1524,7 +1636,7 @@ export function createSystemCalls(
     defeatedAreMobs: boolean,
   ): SystemCallReturn => {
     try {
-      const tx = await worldContract.write.UD__checkCombatFragmentTriggersForGroup([
+      const tx = await wrappedWorldContract.write.UD__checkCombatFragmentTriggersForGroup([
         winners as `0x${string}`[],
         defeated as `0x${string}`[],
         tileX,
@@ -1549,7 +1661,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__triggerFragment([
+      const tx = await wrappedWorldContract.write.UD__triggerFragment([
         characterId as `0x${string}`,
         fragmentType,
         tileX,
@@ -1574,7 +1686,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__claimFragment([
+      const tx = await wrappedWorldContract.write.UD__claimFragment([
         characterId as `0x${string}`,
         fragmentType,
       ]);
@@ -1598,7 +1710,7 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     try {
-      const tx = await worldContract.write.UD__buyGas([
+      const tx = await wrappedWorldContract.write.UD__buyGas([
         characterId as `0x${string}`,
         goldAmount,
         minEthOutput,

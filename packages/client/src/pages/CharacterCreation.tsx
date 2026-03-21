@@ -732,6 +732,29 @@ const CharacterCreationInner = (): JSX.Element => {
       renderWarning('Choose a race and power source.');
       return;
     }
+
+    // Character already minted (previous session interrupted) — resume from
+    // wherever they left off. Contract reverts on duplicate race/powerSource
+    // calls, so skip steps that are already done.
+    if (character) {
+      const hasRace = character.race != null && character.race !== Race.None;
+      const hasPowerSource = character.powerSource != null && character.powerSource !== PowerSource.None;
+
+      if (hasRace && hasPowerSource) {
+        // Fully set — go straight to stats
+        setPhase('stats');
+        return;
+      }
+      if (hasRace) {
+        // Race done, need powerSource — jump to step 3
+        setIdentityStep(3);
+        return;
+      }
+      // Need race (+ powerSource) — step 1 triggers the chain
+      setIdentityStep(1);
+      return;
+    }
+
     // Step 1: mint character
     await onCreateCharacter(e);
     // Steps 2-3 are handled by useEffect watching identityStep + character
