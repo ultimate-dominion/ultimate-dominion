@@ -43,7 +43,7 @@ export const config = {
   weth: (process.env.WETH || '0x4200000000000000000000000000000000000006') as Address,
   swapRouter: (process.env.SWAP_ROUTER || '0x2626664c2603336E57B271c5C0b26F421741e481') as Address,
   quoterV2: (process.env.QUOTER_V2 || '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a') as Address,
-  poolFee: parseInt(process.env.POOL_FEE || '3000', 10),
+  poolFee: parseInt(process.env.POOL_FEE || '10000', 10), // GOLD/WETH pool is 1% fee tier
   swapSlippageBps: parseInt(process.env.SWAP_SLIPPAGE_BPS || '500', 10), // 5% default
   chargeIntervalMs: parseInt(process.env.CHARGE_INTERVAL_MS || '300000', 10),
   swapIntervalMs: parseInt(process.env.SWAP_INTERVAL_MS || '3600000', 10),

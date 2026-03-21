@@ -192,6 +192,8 @@ async function main() {
           res.status(429).json({ error: 'Emergency re-fund rate limited — try again in 60s' });
           return;
         }
+        // Lock before async work to prevent concurrent duplicate fundings
+        emergencyFundTimestamps.set(normalizedAddress, Date.now());
         console.info(`[fund] Emergency re-fund: ${address} balance=${formatEther(balance)} < min=${formatEther(config.minPlayerBalance)}`);
         // Fall through to funding logic below
       } catch {

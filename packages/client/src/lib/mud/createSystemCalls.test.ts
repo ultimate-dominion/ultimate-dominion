@@ -1228,4 +1228,72 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     expect(result.error).toBeDefined();
     expect(globalThis.fetch).toHaveBeenCalled();
   }, 15000); // Allow enough time for the 8s timeout + polling
+
+  it('deduplicates concurrent emergency funding requests', async () => {
+    // Two actions fail simultaneously — should only trigger one /fund call
+    const callCounts = new Map<string, number>();
+    const mockReceipt = { status: 'success' as const, blockNumber: BigInt(100) };
+    const waitForTransaction = vi.fn().mockResolvedValue(mockReceipt);
+
+    let balanceCallCount = 0;
+    const publicClient = {
+      getChainId: vi.fn().mockResolvedValue(31337),
+      getBlockNumber: vi.fn().mockResolvedValue(BigInt(200)),
+      getBalance: vi.fn().mockImplementation(async () => {
+        balanceCallCount++;
+        // First 2 calls = baseline (0), then funded
+        return balanceCallCount <= 2 ? BigInt(0) : BigInt(1000000000000000);
+      }),
+    };
+
+    // Both writes fail once then succeed
+    const writeHandler: ProxyHandler<Record<string, unknown>> = {
+      get: (_, prop) => {
+        return vi.fn().mockImplementation(async () => {
+          const name = String(prop);
+          const count = (callCounts.get(name) ?? 0) + 1;
+          callCounts.set(name, count);
+          if (count <= 1) {
+            throw new Error('insufficient funds for intrinsic transaction cost');
+          }
+          return FAKE_TX_HASH;
+        });
+      },
+    };
+
+    const worldContract = {
+      write: new Proxy({} as Record<string, unknown>, writeHandler),
+      read: new Proxy({} as Record<string, unknown>, {
+        get: () => vi.fn().mockResolvedValue(BigInt(0)),
+      }),
+      simulate: new Proxy({} as Record<string, unknown>, {
+        get: () => vi.fn().mockResolvedValue({ result: undefined }),
+      }),
+    };
+
+    const walletClient = { account: { address: TEST_WALLET } };
+    const network = { publicClient, walletClient, waitForTransaction, worldContract };
+
+    // Track fetch calls
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: 'funded' }),
+    });
+
+    mockOwnership();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const calls = createSystemCalls(network as any);
+
+    // Fire two actions concurrently — both should fail with insufficient funds
+    const [result1, result2] = await Promise.all([
+      calls.rest(TEST_ENTITY),
+      calls.rest(TEST_ENTITY),
+    ]);
+
+    // Both should eventually succeed after funding
+    expect(result1.success || result2.success).toBe(true);
+
+    // Only ONE /fund request should have been made (deduped)
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  }, 15000);
 });

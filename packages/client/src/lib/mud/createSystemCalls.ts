@@ -257,6 +257,10 @@ export function createSystemCalls(
 
   // Proxy worldContract.write: intercept every method call, catch
   // insufficient funds errors, request funding, wait, retry once.
+  // Dedup: only one emergency funding request at a time — concurrent
+  // insufficient-funds errors share the same inflight promise.
+  let inflightFunding: Promise<FundingResult> | null = null;
+
   const proxiedWrite = new Proxy(worldContract.write, {
     get(target, prop, receiver) {
       const original = Reflect.get(target, prop, receiver);
@@ -269,7 +273,14 @@ export function createSystemCalls(
           if (!isInsufficientFundsError(error) || !gasRetryAddress) throw error;
 
           console.info(`[GAS_RETRY] Insufficient funds on ${String(prop)}, requesting emergency top-up`);
-          const fundResult = await requestEmergencyFunding(gasRetryAddress, delegatorAddress);
+
+          // Dedup concurrent funding requests — share the inflight promise
+          if (!inflightFunding) {
+            inflightFunding = requestEmergencyFunding(gasRetryAddress, delegatorAddress)
+              .finally(() => { inflightFunding = null; });
+          }
+          const fundResult = await inflightFunding;
+
           if (!fundResult) {
             console.warn('[GAS_RETRY] Emergency funding request failed');
             throw error;
