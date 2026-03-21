@@ -15,7 +15,8 @@ import {
     CharacterOwner,
     CharacterOwnerData,
     UltimateDominionConfig,
-    AdventureEscrow
+    AdventureEscrow,
+    GasReserve
 } from "@codegen/index.sol";
 import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {TotalSupply as ERC20TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
@@ -38,6 +39,7 @@ import {
     InsufficientBalance
 } from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {GoldLib} from "../libraries/GoldLib.sol";
 import {_requireOwner} from "../utils.sol";
 
 /**
@@ -365,6 +367,42 @@ contract GasStationSystem is System {
             uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
             ERC20TotalSupply.set(totalSupplyTableId, currentSupply + totalMinted);
         }
+    }
+
+    // ==================== Stateless Gas Charging (Open Economy) ====================
+
+    /**
+     * @notice Atomically charge Gold from a player's gas reserve after funding them with ETH.
+     * @dev Only callable by the configured relayer address. Called after relayer sends ETH to player.
+     *      Deducts from per-character GasReserve and transfers Gold from World to relayer via puppet.
+     *      - Sufficient reserve: charges goldPerGasCharge
+     *      - Partial reserve: charges entire remaining reserve
+     *      - Empty reserve: no-op (free fund for onboarding)
+     *      - Non-existent/mismatched character: no-op
+     * @param player The player's wallet address
+     * @param characterId The player's character ID
+     */
+    function fundAndCharge(address player, bytes32 characterId) public {
+        address relayer = GasStationSwapConfig.getRelayerAddress();
+        if (_msgSender() != relayer) revert GasStationNotRelayer();
+
+        // Non-existent or mismatched character → no-op
+        CharacterOwnerData memory ownerData = CharacterOwner.get(player);
+        if (ownerData.characterId == bytes32(0) || ownerData.characterId != characterId) return;
+
+        // Read reserve — 0 means free fund (onboarding)
+        uint256 reserve = GasReserve.get(characterId);
+        if (reserve == 0) return;
+
+        // Charge up to goldPerGasCharge (partial if reserve < charge)
+        uint256 chargeAmount = GasStationSwapConfig.getGoldPerGasCharge();
+        uint256 toCharge = reserve >= chargeAmount ? chargeAmount : reserve;
+
+        // Deduct from reserve
+        GasReserve.set(characterId, reserve - toCharge);
+
+        // Transfer Gold from World to relayer via ERC20 puppet (emits Transfer event)
+        GoldLib.goldTransfer(_world(), _world(), relayer, toCharge);
     }
 
     // ==================== Admin Functions ====================
