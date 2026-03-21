@@ -19,7 +19,7 @@ vi.mock('./tx.js', () => ({
 
 // ==================== Import ====================
 
-const { getCharacterId, getPlayerLevel, getGoldBalance, getGoldPerGasCharge } = await import('./chainReader.js');
+const { getCharacterId, getPlayerLevel, getGoldBalance, getGoldPerGasCharge, _resetCharacterIdCacheForTesting } = await import('./chainReader.js');
 
 // ==================== Helpers ====================
 
@@ -57,6 +57,7 @@ function buildCharacterOwnerData(characterId: Hex): Hex {
 describe('getCharacterId', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    _resetCharacterIdCacheForTesting();
   });
 
   it('extracts characterId from CharacterOwner staticData', async () => {
@@ -95,6 +96,62 @@ describe('getCharacterId', () => {
 
     const result = await getCharacterId('0x5555555555555555555555555555555555555555' as Address);
     expect(result).toBeNull();
+  });
+
+  it('serves cached value within TTL', async () => {
+    vi.useFakeTimers();
+    const expectedId = '0x000000000000000000000000000000000000000000000000000000000000007b' as Hex;
+    mockReadContract.mockResolvedValue([
+      buildCharacterOwnerData(expectedId),
+      '0x' as Hex,
+      '0x' as Hex,
+    ]);
+
+    const addr = '0x6666666666666666666666666666666666666666' as Address;
+    const first = await getCharacterId(addr);
+    expect(first).toBe(expectedId);
+    expect(mockReadContract).toHaveBeenCalledTimes(1);
+
+    // Advance 30 minutes — still within 1-hour TTL
+    vi.advanceTimersByTime(30 * 60 * 1000);
+    mockReadContract.mockClear();
+
+    const second = await getCharacterId(addr);
+    expect(second).toBe(expectedId);
+    expect(mockReadContract).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
+
+  it('re-fetches after TTL expires', async () => {
+    vi.useFakeTimers();
+    const oldId = '0x000000000000000000000000000000000000000000000000000000000000007b' as Hex;
+    const newId = '0x00000000000000000000000000000000000000000000000000000000000000ff' as Hex;
+
+    mockReadContract.mockResolvedValue([
+      buildCharacterOwnerData(oldId),
+      '0x' as Hex,
+      '0x' as Hex,
+    ]);
+
+    const addr = '0x7777777777777777777777777777777777777777' as Address;
+    const first = await getCharacterId(addr);
+    expect(first).toBe(oldId);
+
+    // Advance past 1-hour TTL
+    vi.advanceTimersByTime(61 * 60 * 1000);
+    mockReadContract.mockClear();
+    mockReadContract.mockResolvedValue([
+      buildCharacterOwnerData(newId),
+      '0x' as Hex,
+      '0x' as Hex,
+    ]);
+
+    const second = await getCharacterId(addr);
+    expect(second).toBe(newId);
+    expect(mockReadContract).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
   });
 });
 

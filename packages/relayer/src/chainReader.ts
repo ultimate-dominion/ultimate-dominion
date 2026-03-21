@@ -44,7 +44,8 @@ const getRecordAbi = parseAbi([
 
 // ==================== Caches ====================
 
-const characterIdCache = new Map<string, Hex>();
+const CHARACTER_ID_TTL = 3_600_000; // 1 hour
+const characterIdCache = new Map<string, { value: Hex; fetchedAt: number }>();
 
 let goldPerGasChargeCache: { value: bigint; fetchedAt: number } | null = null;
 const GOLD_PER_CHARGE_TTL = 300_000; // 5 min
@@ -58,7 +59,9 @@ const GOLD_PER_CHARGE_TTL = 300_000; // 5 min
 export async function getCharacterId(player: Address): Promise<Hex | null> {
   const key = player.toLowerCase();
   const cached = characterIdCache.get(key);
-  if (cached) return cached;
+  if (cached && (Date.now() - cached.fetchedAt) < CHARACTER_ID_TTL) {
+    return cached.value;
+  }
 
   try {
     const keyTuple = [padHex(player, { size: 32 })] as const;
@@ -78,12 +81,17 @@ export async function getCharacterId(player: Address): Promise<Hex | null> {
       return null;
     }
 
-    characterIdCache.set(key, characterId);
+    characterIdCache.set(key, { value: characterId, fetchedAt: Date.now() });
     return characterId;
   } catch (err) {
     console.error(`[chainReader] Failed to look up characterId for ${player}:`, err);
     return null;
   }
+}
+
+/** Reset characterId cache — test use only */
+export function _resetCharacterIdCacheForTesting(): void {
+  characterIdCache.clear();
 }
 
 /**
