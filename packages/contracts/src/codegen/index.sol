@@ -37,6 +37,7 @@ import { StarterItemPool } from "./tables/StarterItemPool.sol";
 import { StarterConsumables, StarterConsumablesData } from "./tables/StarterConsumables.sol";
 import { AdvancedClassItems, AdvancedClassItemsData } from "./tables/AdvancedClassItems.sol";
 import { AdventureEscrow } from "./tables/AdventureEscrow.sol";
+import { GasReserve } from "./tables/GasReserve.sol";
 import { Effects, EffectsData } from "./tables/Effects.sol";
 import { PhysicalDamageStats, PhysicalDamageStatsData } from "./tables/PhysicalDamageStats.sol";
 import { MagicDamageStats, MagicDamageStatsData } from "./tables/MagicDamageStats.sol";

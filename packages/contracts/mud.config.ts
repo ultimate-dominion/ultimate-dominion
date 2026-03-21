@@ -642,6 +642,18 @@ export default defineWorld({
         balance: "uint256",
       },
     },
+    /**
+     * Per-character gas reserve. Funded by a split of PvE Gold rewards.
+     * Used by the relayer's fundAndCharge() to atomically charge players for gas.
+     * Balance is backed by real Gold held by the World contract.
+     */
+    GasReserve: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        balance: "uint256",
+      },
+    },
     /////////////////////////////////// ACTIONS ////////////////////////////////////////////////////////////////////////////
     // Effects apply damage and or status effects
     Effects: {
