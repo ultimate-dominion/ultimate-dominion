@@ -7,13 +7,13 @@ import {
     CombatEncounter,
     CombatEncounterData,
     EncounterEntity,
-    AdventureEscrow,
     Stats,
     StatsData,
     Levels
 } from "@codegen/index.sol";
 import {InvalidRewardState} from "../Errors.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
+import {GoldLib} from "../libraries/GoldLib.sol";
 import {PVP_GOLD_DENOMINATOR, PVP_BASE_XP, MAX_LEVEL} from "../../constants.sol";
 
 contract PvpRewardSystem is System {
@@ -33,22 +33,29 @@ contract PvpRewardSystem is System {
         if (deadDefenders == encounterData.defenders.length) attackersWin = true;
 
         // --- Gold redistribution ---
-        // Losers lose 50% of escrow: 10% burned (permanent sink), 40% to winners
+        // Losers lose 50% of wallet Gold: 10% burned (permanent sink), 40% to winners
         bytes32[] memory winners = attackersWin ? encounterData.attackers : encounterData.defenders;
         bytes32[] memory losers = attackersWin ? encounterData.defenders : encounterData.attackers;
 
         for (uint256 i; i < losers.length; i++) {
-            uint256 currentBalance = AdventureEscrow.get(losers[i]);
-            uint256 toDistribute = currentBalance / PVP_GOLD_DENOMINATOR;
-            _goldAmount += toDistribute;
-            AdventureEscrow.set(losers[i], (currentBalance - toDistribute));
-        }
-        // Burn 20% of pot (= 10% of loser escrow), distribute 80% (= 40% of loser escrow)
-        uint256 burnAmount = _goldAmount / 5;
-        uint256 toWinners = _goldAmount - burnAmount;
-        for (uint256 i; i < winners.length; i++) {
-            uint256 currentBalance = AdventureEscrow.get(winners[i]);
-            AdventureEscrow.set(winners[i], (currentBalance + toWinners / winners.length));
+            address loserAddr = IWorld(_world()).UD__getOwnerAddress(losers[i]);
+            uint256 walletGold = GoldLib.goldBalanceOf(loserAddr);
+            if (walletGold == 0) continue;
+
+            uint256 totalLoss = walletGold / PVP_GOLD_DENOMINATOR; // 50%
+            if (totalLoss == 0) continue;
+
+            uint256 burnAmount = totalLoss / 5; // 20% of pot = 10% of wallet
+            uint256 toWinners = totalLoss - burnAmount; // 80% of pot = 40% of wallet
+            _goldAmount += totalLoss;
+
+            GoldLib.goldBurn(_world(), loserAddr, burnAmount);
+
+            uint256 perWinner = toWinners / winners.length;
+            for (uint256 j; j < winners.length; j++) {
+                address winnerAddr = IWorld(_world()).UD__getOwnerAddress(winners[j]);
+                GoldLib.goldTransfer(_world(), loserAddr, winnerAddr, perWinner);
+            }
         }
 
         // --- XP rewards for winners ---

@@ -60,6 +60,8 @@ contract EnsureAccessSystem is System {
         address itemCreation = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ItemCreationSys"));
         address fragmentSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "FragmentSystem"));
         address pveReward = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PveRewardSystem"));
+        address pvpReward = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PvpRewardSystem"));
+        address pvpSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PvPSystem"));
         address shopSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ShopSystem"));
         address marketplace = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "MarketplaceSys"));
 
@@ -102,6 +104,12 @@ contract EnsureAccessSystem is System {
         // PveRewardSystem — combat gold rewards
         ResourceAccess.set(goldBalances, pveReward, true);
         ResourceAccess.set(goldTotalSupply, pveReward, true);
+        // PvpRewardSystem — PvP gold redistribution
+        ResourceAccess.set(goldBalances, pvpReward, true);
+        ResourceAccess.set(goldTotalSupply, pvpReward, true);
+        // PvPSystem — flee gold burns/transfers
+        ResourceAccess.set(goldBalances, pvpSystem, true);
+        ResourceAccess.set(goldTotalSupply, pvpSystem, true);
         // MarketplaceSystem — gold transfers for trades
         ResourceAccess.set(goldNs, marketplace, true);
         ResourceAccess.set(goldBalances, marketplace, true);

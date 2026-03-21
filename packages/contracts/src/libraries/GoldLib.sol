@@ -6,7 +6,8 @@ import {IWorld} from "@world/IWorld.sol";
 import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IERC20} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20.sol";
 import {Allowances} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/Allowances.sol";
-import {_erc20SystemId, _allowancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
+import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
+import {_erc20SystemId, _allowancesTableId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {GOLD_NAMESPACE} from "../../constants.sol";
 
 /**
@@ -62,5 +63,15 @@ library GoldLib {
 
         ResourceId erc20SystemId = _erc20SystemId(GOLD_NAMESPACE);
         IWorld(world).call(erc20SystemId, abi.encodeCall(IERC20.transferFrom, (from, to, amount)));
+    }
+
+    /**
+     * @notice Read Gold balance for an address. Direct table read — no events.
+     * @param account Address to check
+     * @return balance Gold balance (18 decimals)
+     */
+    function goldBalanceOf(address account) internal view returns (uint256 balance) {
+        ResourceId balancesTableId = _balancesTableId(GOLD_NAMESPACE);
+        balance = ERC20Balances.get(balancesTableId, account);
     }
 }

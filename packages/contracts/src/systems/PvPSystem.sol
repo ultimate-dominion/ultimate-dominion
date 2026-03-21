@@ -16,7 +16,6 @@ import {
     Spawned,
     ActionOutcome,
     ActionOutcomeData,
-    AdventureEscrow,
     Items,
     ConsumableStats,
     ConsumableStatsData
@@ -35,6 +34,7 @@ import {
     OnlyHealingInCombat
 } from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {GoldLib} from "../libraries/GoldLib.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
 
 contract PvPSystem is System {
@@ -194,14 +194,18 @@ contract PvPSystem is System {
         }
         bool hasSmokeCover = _hasStatusEffect(entityId, SMOKE_CLOAK_EFFECT_STAT_ID);
         if (encounterData.encounterType == EncounterType.PvE) {
-            // PvE flee — 5% escrow gold penalty (burned)
+            // PvE flee — burn 5% of wallet Gold (permanent sink)
             // Smoke Cloak (Flashpowder) negates the penalty entirely
-            uint256 escrowBalance = AdventureEscrow.get(entityId);
             uint256 amountToLose;
-            if (!hasSmokeCover && escrowBalance > 20) {
-                amountToLose = escrowBalance / 20;
-                AdventureEscrow.set(entityId, escrowBalance - amountToLose);
-                // Gold is burned (goes to nobody — monsters don't collect gold)
+            if (!hasSmokeCover) {
+                address playerAddr = IWorld(_world()).UD__getOwnerAddress(entityId);
+                uint256 walletGold = GoldLib.goldBalanceOf(playerAddr);
+                if (walletGold > 0) {
+                    amountToLose = walletGold / 20;
+                    if (amountToLose > 0) {
+                        GoldLib.goldBurn(_world(), playerAddr, amountToLose);
+                    }
+                }
             }
 
             CombatOutcomeData memory combatOutcome = CombatOutcomeData({
@@ -227,30 +231,30 @@ contract PvPSystem is System {
         } else if (encounterData.encounterType == EncounterType.PvP) {
             uint256 amountToDrop;
             bool attackersWin;
-            // take 10% of escrow gold — 5% burned (permanent sink), 5% to opponent
+            // take 10% of wallet Gold — 5% burned (permanent sink), 5% to opponent
             // Smoke Cloak negates the penalty entirely
-            uint256 escrowBalance = AdventureEscrow.get(entityId);
-            if (!hasSmokeCover && escrowBalance > 10) {
-                amountToDrop = escrowBalance / 10;
-                AdventureEscrow.set(entityId, (escrowBalance - amountToDrop));
-                // Half to opponents, half burned (stays unallocated)
-                uint256 toOpponents = amountToDrop / 2;
-                // if quitter is attacker
-                if (!entityIsDefender) {
-                    // split the opponent share amongst the defenders
-                    for (uint256 i; i < encounterData.defenders.length; i++) {
-                        IWorld(_world()).UD__increaseEscrowBalance(
-                            encounterData.defenders[i], toOpponents / encounterData.defenders.length
-                        );
-                    }
-                    // if quitter is defender
-                } else if (entityIsDefender) {
-                    attackersWin = true;
-                    // split the opponent share amongst the attackers
-                    for (uint256 i; i < encounterData.attackers.length; i++) {
-                        IWorld(_world()).UD__increaseEscrowBalance(
-                            encounterData.attackers[i], toOpponents / encounterData.attackers.length
-                        );
+            if (!hasSmokeCover) {
+                address playerAddr = IWorld(_world()).UD__getOwnerAddress(entityId);
+                uint256 walletGold = GoldLib.goldBalanceOf(playerAddr);
+                if (walletGold > 0) {
+                    amountToDrop = walletGold / 10;
+                    if (amountToDrop > 0) {
+                        uint256 toBurn = amountToDrop / 2;
+                        uint256 toOpponents = amountToDrop - toBurn;
+
+                        GoldLib.goldBurn(_world(), playerAddr, toBurn);
+
+                        bytes32[] memory opponents;
+                        if (!entityIsDefender) {
+                            opponents = encounterData.defenders;
+                        } else {
+                            attackersWin = true;
+                            opponents = encounterData.attackers;
+                        }
+                        for (uint256 i; i < opponents.length; i++) {
+                            address opAddr = IWorld(_world()).UD__getOwnerAddress(opponents[i]);
+                            GoldLib.goldTransfer(_world(), playerAddr, opAddr, toOpponents / opponents.length);
+                        }
                     }
                 }
             }

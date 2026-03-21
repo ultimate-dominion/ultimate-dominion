@@ -14,7 +14,6 @@ import {
     MobStats,
     MobDropBonus,
     EncounterEntity,
-    AdventureEscrow,
     GasReserve,
     UltimateDominionConfig
 } from "@codegen/index.sol";
@@ -104,11 +103,14 @@ contract PveRewardSystem is System {
                         _expAmount += _expToGive;
                     }
                 } else {
-                    // PvE death penalty: burn 5% of escrow (permanent gold sink)
-                    uint256 deathEscrow = AdventureEscrow.get(distTemps.entityIdTemp);
-                    if (deathEscrow > 20) {
-                        uint256 deathPenalty = deathEscrow / 20;
-                        AdventureEscrow.set(distTemps.entityIdTemp, deathEscrow - deathPenalty);
+                    // PvE death penalty: burn 5% of wallet Gold (permanent sink)
+                    address deadPlayer = IWorld(_world()).UD__getOwnerAddress(distTemps.entityIdTemp);
+                    uint256 walletGold = GoldLib.goldBalanceOf(deadPlayer);
+                    if (walletGold > 0) {
+                        uint256 deathPenalty = walletGold / 20;
+                        if (deathPenalty > 0) {
+                            GoldLib.goldBurn(_world(), deadPlayer, deathPenalty);
+                        }
                     }
                 }
                 Stats.set(distTemps.entityIdTemp, statsTemp);
