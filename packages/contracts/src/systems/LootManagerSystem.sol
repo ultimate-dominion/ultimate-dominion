@@ -18,13 +18,11 @@ import {AdvancedClass, ItemType} from "@codegen/common.sol";
 import {ERC1155Holder} from "@openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {_requireAccess, _requireSystemOrAdmin} from "../utils.sol";
-import {ITEMS_NAMESPACE, GOLD_NAMESPACE} from "../../constants.sol";
+import {ITEMS_NAMESPACE} from "../../constants.sol";
+import {GoldLib} from "../libraries/GoldLib.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {_ownersTableId, _totalSupplyTableId} from "@erc1155/utils.sol";
-import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
-import {TotalSupply as ERC20TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
-import {_balancesTableId as _goldBalancesTableId, _totalSupplyTableId as _goldTotalSupplyTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {NotAtSpawn, InsufficientBalance} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
@@ -78,15 +76,13 @@ contract LootManagerSystem is ERC1155Holder, System {
 
     function dropGoldToPlayer(bytes32 characterId, uint256 amount) public {
         _requireSystemOrAdmin(_msgSender());
-        // Mint gold directly to player (mint-on-demand model - no pre-minted supply needed)
         address recipient = IWorld(_world()).UD__getOwnerAddress(characterId);
-        _mintGoldDirect(recipient, amount);
+        GoldLib.goldMint(_world(), recipient, amount);
     }
 
     function transferGold(address player, uint256 amount) public {
         _requireSystemOrAdmin(_msgSender());
-        // Mint gold directly to player (mint-on-demand model)
-        _mintGoldDirect(player, amount);
+        GoldLib.goldMint(_world(), player, amount);
     }
 
     function dropItem(bytes32 characterId, uint256 itemId, uint256 amount) public {
@@ -122,7 +118,7 @@ contract LootManagerSystem is ERC1155Holder, System {
         }
         // Burn gold from player (escrow is virtual, actual gold burned on deposit)
         address player = IWorld(_world()).UD__getOwner(characterId);
-        _burnGoldDirect(player, amount);
+        GoldLib.goldBurn(_world(), player, amount);
         _addEscrowBalance(characterId, amount);
     }
 
@@ -145,8 +141,8 @@ contract LootManagerSystem is ERC1155Holder, System {
             _requireAccess(address(this), _msgSender());
         }
         _withdrawEscrowBalance(characterId, amount);
-        // Mint gold directly to player (escrow is virtual, actual gold minted on withdraw)
-        _mintGoldDirect(IWorld(_world()).UD__getOwner(characterId), amount);
+        // Mint gold to player (escrow is virtual, actual gold minted on withdraw)
+        GoldLib.goldMint(_world(), IWorld(_world()).UD__getOwner(characterId), amount);
     }
 
     function _withdrawEscrowBalance(bytes32 characterId, uint256 amount) internal {
@@ -198,41 +194,6 @@ contract LootManagerSystem is ERC1155Holder, System {
                 }
             }
         }
-    }
-
-    /**
-     * @dev Mint gold directly via table writes (mint-on-demand model)
-     * No pre-minted supply needed - gold is created when players earn it
-     */
-    function _mintGoldDirect(address to, uint256 amount) internal {
-        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
-        ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
-
-        // Update recipient balance
-        uint256 currentBalance = ERC20Balances.get(balancesTableId, to);
-        ERC20Balances.set(balancesTableId, to, currentBalance + amount);
-
-        // Update total supply
-        uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
-        ERC20TotalSupply.set(totalSupplyTableId, currentSupply + amount);
-    }
-
-    /**
-     * @dev Burn gold directly via table writes
-     * Used when gold exits circulation (deposits to escrow, future gold sinks)
-     */
-    function _burnGoldDirect(address from, uint256 amount) internal {
-        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
-        ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
-
-        // Update sender balance
-        uint256 currentBalance = ERC20Balances.get(balancesTableId, from);
-        if (currentBalance < amount) revert InsufficientBalance();
-        ERC20Balances.set(balancesTableId, from, currentBalance - amount);
-
-        // Update total supply
-        uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
-        ERC20TotalSupply.set(totalSupplyTableId, currentSupply - amount);
     }
 
     /**

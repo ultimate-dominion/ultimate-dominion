@@ -11,21 +11,18 @@ import {TokenType, OrderStatus} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Order, Offer, Consideration} from "@interfaces/Structs.sol";
 import {_lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE, ITEMS_NAMESPACE, GOLD_NAMESPACE} from "../../constants.sol";
+import {WORLD_NAMESPACE, ITEMS_NAMESPACE} from "../../constants.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
 
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {GoldLib} from "../libraries/GoldLib.sol";
 
 // Direct table access for ERC1155 (Items)
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {_ownersTableId} from "@erc1155/utils.sol";
-
-// Direct table access for ERC20 (Gold)
-import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
-import {_balancesTableId as _goldBalancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 
 contract MarketplaceSystem is System, ReentrancyGuard {
     /**
@@ -120,17 +117,17 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         // Transfer gold with fee deduction
         if (o.tokenType == TokenType.ERC20) {
             // Gold was in escrow, distribute from there
-            _transferGoldDirect(_lootManager(), goldReceiver, sellerAmount);
+            GoldLib.goldTransfer(_world(), _lootManager(), goldReceiver, sellerAmount);
             if (feeAmount > 0 && feeRecipient != address(0)) {
-                _transferGoldDirect(_lootManager(), feeRecipient, feeAmount);
+                GoldLib.goldTransfer(_world(), _lootManager(), feeRecipient, feeAmount);
             }
             // Transfer item to buyer
             _transferItemDirect(_msgSender(), itemReceiver, c.identifier, c.amount);
         } else {
             // Gold comes from buyer
-            _transferGoldDirect(goldPayer, goldReceiver, sellerAmount);
+            GoldLib.goldTransfer(_world(), goldPayer, goldReceiver, sellerAmount);
             if (feeAmount > 0 && feeRecipient != address(0)) {
-                _transferGoldDirect(goldPayer, feeRecipient, feeAmount);
+                GoldLib.goldTransfer(_world(), goldPayer, feeRecipient, feeAmount);
             }
             // Transfer item from escrow to buyer
             _transferItemDirect(_lootManager(), itemReceiver, o.identifier, o.amount);
@@ -220,8 +217,8 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         uint256 identifier = isOffer ? o.identifier : c.identifier;
 
         if (tokenType == TokenType.ERC20) {
-            // Direct table writes for Gold transfers (bypasses ERC20System access)
-            _transferGoldDirect(from, to, amount);
+            // Gold transfer via puppet (emits Transfer event)
+            GoldLib.goldTransfer(_world(), from, to, amount);
             return;
         } else if (tokenType == TokenType.ERC1155) {
             // Direct table writes for Item transfers (bypasses ERC1155System access)
@@ -230,22 +227,6 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         } else {
             revert("Token type is not supported");
         }
-    }
-
-    /**
-     * @dev Transfer gold directly via table writes (bypasses ERC20System access checks)
-     */
-    function _transferGoldDirect(address from, address to, uint256 amount) internal {
-        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
-
-        // Decrease sender balance
-        uint256 fromBalance = ERC20Balances.get(balancesTableId, from);
-        require(fromBalance >= amount, "Insufficient gold balance");
-        ERC20Balances.set(balancesTableId, from, fromBalance - amount);
-
-        // Increase recipient balance
-        uint256 toBalance = ERC20Balances.get(balancesTableId, to);
-        ERC20Balances.set(balancesTableId, to, toBalance + amount);
     }
 
     /**
