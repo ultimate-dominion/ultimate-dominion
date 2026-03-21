@@ -28,6 +28,7 @@ import { etherToFixedNumber } from '../utils/helpers';
 import {
   type Armor,
   type CombatOutcomeType,
+  type Consumable,
   EncounterType,
   type Monster,
   Rarity,
@@ -59,10 +60,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   battleOutcome,
 }): JSX.Element => {
   const { renderError } = useToast();
-  const { armorTemplates, spellTemplates, weaponTemplates } = useItems();
+  const { armorTemplates, consumableTemplates, spellTemplates, weaponTemplates } = useItems();
   const {
     character,
     equippedArmor,
+    equippedConsumables,
     equippedSpells,
     equippedWeapons,
     refreshCharacter,
@@ -77,11 +79,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const stage = useOnboardingStage();
 
   const [armor, setArmor] = useState<Armor[]>([]);
+  const [consumables, setConsumables] = useState<Consumable[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [selectedItem, setSelectedItem] = useState<
-    Armor | Spell | Weapon | null
+    Armor | Consumable | Spell | Weapon | null
   >(null);
   const [initialLevel] = useState(() => character?.level);
   const [initialExperience] = useState(() => character?.experience);
@@ -102,6 +105,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
 
   const onAcknowledge = useCallback(async () => {
     setArmor([]);
+    setConsumables([]);
     setSpells([]);
     setWeapons([]);
     localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, battleOutcome.encounterId);
@@ -153,6 +157,17 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
             } as Armor;
           });
 
+        const _consumables = consumableTemplates
+          .filter(c => _lootedItemIds.includes(c.tokenId))
+          .map(consumable => {
+            return {
+              ...consumable,
+              balance: BigInt(1),
+              itemId: zeroHash,
+              owner: zeroAddress,
+            } as Consumable;
+          });
+
         const _spells = spellTemplates
           .filter(s => _lootedItemIds.includes(s.tokenId))
           .map(spell => {
@@ -176,6 +191,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           });
 
         setArmor(_armor);
+        setConsumables(_consumables);
         setSpells(_spells);
         setWeapons(_weapons);
       } catch (e) {
@@ -187,7 +203,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
         setIsLoadingItems(false);
       }
     },
-    [armorTemplates, renderError, spellTemplates, weaponTemplates],
+    [armorTemplates, consumableTemplates, renderError, spellTemplates, weaponTemplates],
   );
 
   useEffect(() => {
@@ -199,10 +215,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   }, [battleOutcome, fetchLootedItems, isOpen]);
 
   const sortedLoot = useMemo(() => {
-    return [...armor, ...spells, ...weapons].sort(
+    return [...armor, ...consumables, ...spells, ...weapons].sort(
       (a, b) => (b.rarity ?? 0) - (a.rarity ?? 0),
     );
-  }, [armor, spells, weapons]);
+  }, [armor, consumables, spells, weapons]);
 
   const battleDraw = useMemo(() => {
     if (!currentBattle) return false;
@@ -354,6 +370,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                             onClick={
                               [
                                 ...equippedArmor,
+                                ...equippedConsumables,
                                 ...equippedSpells,
                                 ...equippedWeapons,
                               ].some(
@@ -397,6 +414,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
         <ItemEquipModal
           isEquipped={[
             ...equippedArmor,
+            ...equippedConsumables,
             ...equippedSpells,
             ...equippedWeapons,
           ].some(item => item.name == selectedItem.name)}

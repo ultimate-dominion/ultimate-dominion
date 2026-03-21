@@ -23,6 +23,7 @@ vi.mock('../contexts/CharacterContext', () => ({
     character: mockCharacter,
     refreshCharacter: mockRefreshCharacter,
     equippedArmor: [],
+    equippedConsumables: [],
     equippedSpells: [],
     equippedWeapons: [],
   }),
