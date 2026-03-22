@@ -50,7 +50,7 @@ async function doTopUp(address: Address, amount: bigint, reason: string): Promis
  * 1. ETH >= minPlayerBalance → skip (has gas)
  * 2. No character → free top-up (new player)
  * 3. Level < 3 → free top-up (onboarding)
- * 4. Level 3+ → top-up + charge gold (batchCharge handles partial/zero gold)
+ * 4. Level 3+ → top-up + charge gold (fundAndCharge handles partial/zero reserve on-chain)
  */
 async function checkBalances(): Promise<void> {
   if (trackedPlayers.size === 0) return;

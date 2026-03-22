@@ -34,7 +34,6 @@ import {
     GasStationZeroAmount,
     GasStationSwapFailed,
     GasStationNotRelayer,
-    GasStationArrayMismatch,
     InsufficientBalance
 } from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
@@ -48,7 +47,6 @@ import {_requireOwner} from "../utils.sol";
  *      1. Uniswap V3 swap: Gold is sold on GOLD/WETH pool → ETH to player (when swapRouter configured)
  *      2. Fallback: Gold burned from supply, ETH from pre-funded treasury (when swapRouter == address(0))
  *
- *      Also provides chargeGasGold() for the self-hosted relayer to charge embedded wallet players.
  *
  *      Namespaced (non-root) system — address(this) is the system contract address.
  *      ETH treasury lives at this system's address (for fallback mode and received WETH unwraps).
@@ -188,124 +186,6 @@ contract GasStationSystem is System {
         if (!success) revert GasStationTransferFailed();
     }
 
-    // ==================== Relayer Gas Charging ====================
-
-    /**
-     * @notice Charge gold from an embedded wallet player on behalf of the relayer.
-     * @dev Only callable by the configured relayer address.
-     *      Transfers gold from player → relayer (direct table writes, total supply unchanged).
-     * @param player The player's wallet address
-     * @param characterId The player's character ID
-     */
-    function chargeGasGold(address player, bytes32 characterId) public {
-        address relayer = GasStationSwapConfig.getRelayerAddress();
-        if (_msgSender() != relayer) revert GasStationNotRelayer();
-
-        _chargeGasGoldSingle(player, characterId, relayer);
-    }
-
-    /**
-     * @notice Batch charge gold from multiple embedded wallet players.
-     * @dev Single tx — amortizes gas across N players.
-     * @param players Array of player wallet addresses
-     * @param characterIds Array of corresponding character IDs
-     */
-    function batchChargeGasGold(address[] calldata players, bytes32[] calldata characterIds) public {
-        if (players.length != characterIds.length) revert GasStationArrayMismatch();
-
-        address relayer = GasStationSwapConfig.getRelayerAddress();
-        if (_msgSender() != relayer) revert GasStationNotRelayer();
-
-        for (uint256 i = 0; i < players.length; i++) {
-            _chargeGasGoldSingle(players[i], characterIds[i], relayer);
-        }
-    }
-
-    /**
-     * @dev Internal: charge gold from a single player → relayer.
-     */
-    function _chargeGasGoldSingle(address player, bytes32 characterId, address relayer) internal {
-        // Verify ownership
-        CharacterOwnerData memory ownerData = CharacterOwner.get(player);
-        require(ownerData.characterId == characterId, "Not character owner");
-
-        // Check level >= 3
-        uint256 level = Stats.getLevel(characterId);
-        if (level < GAS_STATION_MIN_LEVEL) revert GasStationBelowMinLevel();
-
-        // Get charge amount
-        uint256 chargeAmount = GasStationSwapConfig.getGoldPerGasCharge();
-
-        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
-        uint256 playerGold = ERC20Balances.get(balancesTableId, player);
-
-        if (playerGold < chargeAmount) revert InsufficientBalance();
-
-        // Transfer gold from player to relayer (no supply change)
-        ERC20Balances.set(balancesTableId, player, playerGold - chargeAmount);
-        uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
-        ERC20Balances.set(balancesTableId, relayer, relayerGold + chargeAmount);
-    }
-
-    /**
-     * @notice Fault-tolerant batch charge: skips ineligible players, supports per-player tx counts.
-     * @dev Accumulates relayer credit in memory, writes once at end (gas efficient).
-     * @param players Array of player wallet addresses
-     * @param characterIds Array of corresponding character IDs
-     * @param counts Array of tx counts per player (each tx = goldPerGasCharge)
-     * @return charged Actual gold amounts charged per player (0 if skipped)
-     */
-    function batchChargeGasGoldWithCounts(
-        address[] calldata players,
-        bytes32[] calldata characterIds,
-        uint256[] calldata counts
-    ) public returns (uint256[] memory charged) {
-        if (players.length != characterIds.length || players.length != counts.length) {
-            revert GasStationArrayMismatch();
-        }
-
-        address relayer = GasStationSwapConfig.getRelayerAddress();
-        if (_msgSender() != relayer) revert GasStationNotRelayer();
-
-        uint256 chargePerTx = GasStationSwapConfig.getGoldPerGasCharge();
-        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
-
-        charged = new uint256[](players.length);
-        uint256 totalRelayerCredit;
-
-        for (uint256 i = 0; i < players.length; i++) {
-            // Skip: no character or wrong characterId
-            CharacterOwnerData memory ownerData = CharacterOwner.get(players[i]);
-            if (ownerData.characterId != characterIds[i] || ownerData.characterId == bytes32(0)) {
-                continue;
-            }
-
-            // Skip: below level 3
-            uint256 level = Stats.getLevel(characterIds[i]);
-            if (level < GAS_STATION_MIN_LEVEL) continue;
-
-            // Calculate max charge for this player
-            uint256 fullCharge = counts[i] * chargePerTx;
-            uint256 playerGold = ERC20Balances.get(balancesTableId, players[i]);
-
-            // Charge up to what the wallet has
-            uint256 actual = playerGold >= fullCharge ? fullCharge : playerGold;
-            if (actual == 0) continue;
-
-            // Deduct wallet
-            ERC20Balances.set(balancesTableId, players[i], playerGold - actual);
-
-            charged[i] = actual;
-            totalRelayerCredit += actual;
-        }
-
-        // Single relayer balance write
-        if (totalRelayerCredit > 0) {
-            uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
-            ERC20Balances.set(balancesTableId, relayer, relayerGold + totalRelayerCredit);
-        }
-    }
-
     // ==================== Stateless Gas Charging (Open Economy) ====================
 
     /**
@@ -319,7 +199,7 @@ contract GasStationSystem is System {
      * @param player The player's wallet address
      * @param characterId The player's character ID
      */
-    function fundAndCharge(address player, bytes32 characterId) public {
+    function fundAndCharge(address player, bytes32 characterId) public nonReentrant {
         address relayer = GasStationSwapConfig.getRelayerAddress();
         if (_msgSender() != relayer) revert GasStationNotRelayer();
 

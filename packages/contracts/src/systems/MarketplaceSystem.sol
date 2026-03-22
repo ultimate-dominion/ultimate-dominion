@@ -174,6 +174,8 @@ contract MarketplaceSystem is System, ReentrancyGuard {
 
         // send the order item back to the user
         _transfer(_orderHash, true, c.recipient, _lootManager());
+
+        return true;
     }
 
     // increments the order counter for the calling address

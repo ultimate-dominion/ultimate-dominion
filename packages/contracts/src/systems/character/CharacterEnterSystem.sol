@@ -19,7 +19,7 @@ import {ArmorType, ItemType} from "@codegen/common.sol";
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
-import {CHARACTERS_NAMESPACE, GOLD_NAMESPACE, ITEMS_NAMESPACE} from "../../../constants.sol";
+import {CHARACTERS_NAMESPACE, ITEMS_NAMESPACE} from "../../../constants.sol";
 import {
     Unauthorized,
     InvalidAccount,
@@ -29,9 +29,7 @@ import {
     InsufficientStat,
     InvalidArmorType
 } from "../../Errors.sol";
-import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
-import {TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
-import {_totalSupplyTableId as _goldTotalSupplyTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
+import {GoldLib} from "../../libraries/GoldLib.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {PauseLib} from "../../libraries/PauseLib.sol";
@@ -44,10 +42,6 @@ import {PauseLib} from "../../libraries/PauseLib.sol";
 contract CharacterEnterSystem is System {
     function _charsOwnersTableId() internal pure returns (ResourceId) {
         return WorldResourceIdLib.encode(RESOURCE_TABLE, CHARACTERS_NAMESPACE, "Owners");
-    }
-
-    function _goldBalancesTableId() internal pure returns (ResourceId) {
-        return WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
     }
 
     function _itemsOwnersTableId() internal pure returns (ResourceId) {
@@ -117,11 +111,8 @@ contract CharacterEnterSystem is System {
 
         address playerAddress = charData.owner;
 
-        // Mint gold (balance + totalSupply)
-        ResourceId goldTableId = _goldBalancesTableId();
-        Balances.set(goldTableId, playerAddress, Balances.get(goldTableId, playerAddress) + 5 ether);
-        ResourceId supplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
-        TotalSupply.set(supplyTableId, TotalSupply.get(supplyTableId) + 5 ether);
+        // Mint starting Gold via puppet (emits Transfer event)
+        GoldLib.goldMint(_world(), playerAddress, 5 ether);
 
         // Mint starter items
         ResourceId itemsTableId = _itemsOwnersTableId();

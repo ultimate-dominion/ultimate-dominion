@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { type Address, formatEther } from 'viem';
+import { type Address } from 'viem';
 
 // ==================== Mocks ====================
 // Must be defined before importing the module under test.
@@ -36,9 +36,9 @@ vi.mock('./chainReader.js', () => ({
 }));
 
 // Mock gasCharge
-const mockRecordFunding = vi.fn();
+const mockCallFundAndCharge = vi.fn().mockResolvedValue(undefined);
 vi.mock('./gasCharge.js', () => ({
-  recordFunding: (...args: unknown[]) => mockRecordFunding(...args),
+  callFundAndCharge: (player: unknown) => mockCallFundAndCharge(player),
 }));
 
 // ==================== Import module under test ====================
@@ -74,7 +74,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).not.toHaveBeenCalled();
-    expect(mockRecordFunding).not.toHaveBeenCalled();
+    expect(mockCallFundAndCharge).not.toHaveBeenCalled();
   });
 
   it('gives free top-up when gas charging is disabled', async () => {
@@ -87,7 +87,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
-    expect(mockRecordFunding).not.toHaveBeenCalled();
+    expect(mockCallFundAndCharge).not.toHaveBeenCalled();
 
     (configMod as any).gasChargingEnabled = true;
   });
@@ -100,7 +100,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
-    expect(mockRecordFunding).not.toHaveBeenCalled();
+    expect(mockCallFundAndCharge).not.toHaveBeenCalled();
   });
 
   it('gives free top-up when player is below level 3', async () => {
@@ -112,7 +112,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
-    expect(mockRecordFunding).not.toHaveBeenCalled();
+    expect(mockCallFundAndCharge).not.toHaveBeenCalled();
   });
 
   it('tops up and charges level 3+ player', async () => {
@@ -124,7 +124,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
-    expect(mockRecordFunding).toHaveBeenCalledWith(DELEGATOR, 1_000_000_000_000_000n);
+    expect(mockCallFundAndCharge).toHaveBeenCalledWith(DELEGATOR);
   });
 
   it('tops up level 3+ player even with zero gold (no skip zone)', async () => {
@@ -137,7 +137,7 @@ describe('balanceMonitor decision tree', () => {
 
     // Should STILL top up — no more skip zone
     expect(mockSendRelayerTx).toHaveBeenCalled();
-    expect(mockRecordFunding).toHaveBeenCalledWith(DELEGATOR, 1_000_000_000_000_000n);
+    expect(mockCallFundAndCharge).toHaveBeenCalledWith(DELEGATOR);
   });
 
   it('fails open on level read failure — gives free top-up', async () => {
@@ -149,7 +149,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
-    expect(mockRecordFunding).not.toHaveBeenCalled();
+    expect(mockCallFundAndCharge).not.toHaveBeenCalled();
   });
 
   it('charges gold from delegator, not burner (MetaMask path)', async () => {
@@ -163,6 +163,6 @@ describe('balanceMonitor decision tree', () => {
 
     await runOneCheck();
 
-    expect(mockRecordFunding).toHaveBeenCalledWith(mmDelegator, 1_000_000_000_000_000n);
+    expect(mockCallFundAndCharge).toHaveBeenCalledWith(mmDelegator);
   });
 });

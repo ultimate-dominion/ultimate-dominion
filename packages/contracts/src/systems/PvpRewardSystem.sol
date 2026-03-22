@@ -56,6 +56,9 @@ contract PvpRewardSystem is System {
                 address winnerAddr = IWorld(_world()).UD__getOwnerAddress(winners[j]);
                 GoldLib.goldTransfer(_world(), loserAddr, winnerAddr, perWinner);
             }
+            // Burn any rounding dust so loser loses exactly totalLoss
+            uint256 dust = toWinners - perWinner * winners.length;
+            if (dust > 0) GoldLib.goldBurn(_world(), loserAddr, dust);
         }
 
         // --- XP rewards for winners ---

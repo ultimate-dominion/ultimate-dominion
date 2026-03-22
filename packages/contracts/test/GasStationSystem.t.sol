@@ -12,12 +12,14 @@ import {
     Stats,
     GasStationConfig,
     GasStationCooldown,
-    GasStationSwapConfig
+    GasStationSwapConfig,
+    GasReserve
 } from "@codegen/index.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
-import {_balancesTableId as _goldBalancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
+import {TotalSupply as ERC20TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
+import {_balancesTableId as _goldBalancesTableId, _totalSupplyTableId as _goldTotalSupplyTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {
     DEFAULT_ETH_PER_GOLD,
     DEFAULT_MAX_GOLD_PER_SWAP,
@@ -34,7 +36,6 @@ import {
     GasStationTransferFailed,
     GasStationZeroAmount,
     GasStationNotRelayer,
-    GasStationArrayMismatch,
     InsufficientBalance
 } from "../src/Errors.sol";
 
@@ -350,111 +351,6 @@ contract Test_GasStationSystem is Test {
         assertEq(GasStationSwapConfig.getGoldPerGasCharge(), 5e18, "goldPerGasCharge not updated");
     }
 
-    // ==================== chargeGasGold Tests ====================
-
-    function test_chargeGasGold_succeeds() public {
-        // Configure relayer
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 100 ether);
-
-        uint256 playerGoldBefore = goldToken.balanceOf(bob);
-        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
-        uint256 supplyBefore = goldToken.totalSupply();
-
-        vm.prank(relayer);
-        world.UD__chargeGasGold(bob, bobCharacterId);
-
-        assertEq(playerGoldBefore - goldToken.balanceOf(bob), 1 ether, "Player gold not deducted");
-        assertEq(goldToken.balanceOf(relayer) - relayerGoldBefore, 1 ether, "Relayer gold not credited");
-        assertEq(goldToken.totalSupply(), supplyBefore, "Total supply should not change");
-    }
-
-    function test_chargeGasGold_revertsIfNotRelayer() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 100 ether);
-
-        // Alice is not the relayer
-        vm.prank(alice);
-        vm.expectRevert(GasStationNotRelayer.selector);
-        world.UD__chargeGasGold(bob, bobCharacterId);
-    }
-
-    function test_chargeGasGold_revertsIfBelowLevel3() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 2);
-        _giveGold(bobCharacterId, 100 ether);
-
-        vm.prank(relayer);
-        vm.expectRevert(GasStationBelowMinLevel.selector);
-        world.UD__chargeGasGold(bob, bobCharacterId);
-    }
-
-    function test_chargeGasGold_revertsIfInsufficientGold() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 100 ether);
-
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 10 ether); // Less than chargeAmount
-
-        vm.prank(relayer);
-        vm.expectRevert(InsufficientBalance.selector);
-        world.UD__chargeGasGold(bob, bobCharacterId);
-    }
-
-    // ==================== batchChargeGasGold Tests ====================
-
-    function test_batchChargeGasGold_succeeds() public {
-        // Mint alice a character with level 3+
-        _setLevel(aliceCharacterId, 5);
-        _giveGold(aliceCharacterId, 100 ether);
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 100 ether);
-
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 2 ether);
-
-        uint256 aliceGoldBefore = goldToken.balanceOf(alice);
-        uint256 bobGoldBefore = goldToken.balanceOf(bob);
-        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = bob;
-        bytes32[] memory characterIds = new bytes32[](2);
-        characterIds[0] = aliceCharacterId;
-        characterIds[1] = bobCharacterId;
-
-        vm.prank(relayer);
-        world.UD__batchChargeGasGold(players, characterIds);
-
-        assertEq(aliceGoldBefore - goldToken.balanceOf(alice), 2 ether, "Alice gold not deducted");
-        assertEq(bobGoldBefore - goldToken.balanceOf(bob), 2 ether, "Bob gold not deducted");
-        assertEq(goldToken.balanceOf(relayer) - relayerGoldBefore, 4 ether, "Relayer gold not credited for both");
-    }
-
-    function test_batchChargeGasGold_revertsIfArrayMismatch() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = bob;
-        bytes32[] memory characterIds = new bytes32[](1);
-        characterIds[0] = aliceCharacterId;
-
-        vm.prank(relayer);
-        vm.expectRevert(GasStationArrayMismatch.selector);
-        world.UD__batchChargeGasGold(players, characterIds);
-    }
-
     // ==================== Treasury Tests ====================
 
     function test_fundTreasury() public {
@@ -498,193 +394,6 @@ contract Test_GasStationSystem is Test {
     function test_gasTreasuryBalance() public {
         uint256 balance = world.UD__gasTreasuryBalance();
         assertEq(balance, gasStationAddress.balance, "Treasury balance mismatch");
-    }
-
-    // ==================== batchChargeGasGoldWithCounts Tests ====================
-
-    function test_batchChargeWithCounts_normalBatch() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(aliceCharacterId, 5);
-        _giveGold(aliceCharacterId, 100 ether);
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 100 ether);
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = bob;
-        bytes32[] memory characterIds = new bytes32[](2);
-        characterIds[0] = aliceCharacterId;
-        characterIds[1] = bobCharacterId;
-        uint256[] memory counts = new uint256[](2);
-        counts[0] = 3; // 3 Gold
-        counts[1] = 5; // 5 Gold
-
-        uint256 aliceGoldBefore = goldToken.balanceOf(alice);
-        uint256 bobGoldBefore = goldToken.balanceOf(bob);
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 3 ether, "Alice charged wrong amount");
-        assertEq(charged[1], 5 ether, "Bob charged wrong amount");
-        assertEq(aliceGoldBefore - goldToken.balanceOf(alice), 3 ether, "Alice gold not deducted");
-        assertEq(bobGoldBefore - goldToken.balanceOf(bob), 5 ether, "Bob gold not deducted");
-        assertEq(goldToken.balanceOf(relayer), 8 ether, "Relayer total incorrect");
-    }
-
-    function test_batchChargeWithCounts_skipLowLevel() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(aliceCharacterId, 5);
-        _giveGold(aliceCharacterId, 100 ether);
-        _setLevel(bobCharacterId, 2); // Below min level
-        _giveGold(bobCharacterId, 100 ether);
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = bob;
-        bytes32[] memory characterIds = new bytes32[](2);
-        characterIds[0] = aliceCharacterId;
-        characterIds[1] = bobCharacterId;
-        uint256[] memory counts = new uint256[](2);
-        counts[0] = 2;
-        counts[1] = 3;
-
-        uint256 bobGoldBefore = goldToken.balanceOf(bob);
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 2 ether, "Alice should be charged");
-        assertEq(charged[1], 0, "Bob should be skipped (low level)");
-        assertEq(goldToken.balanceOf(bob), bobGoldBefore, "Bob gold should be unchanged");
-    }
-
-    function test_batchChargeWithCounts_skipNoCharacter() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(aliceCharacterId, 5);
-        _giveGold(aliceCharacterId, 100 ether);
-
-        address noCharAddr = address(0xdead);
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = noCharAddr;
-        bytes32[] memory characterIds = new bytes32[](2);
-        characterIds[0] = aliceCharacterId;
-        characterIds[1] = bytes32("fake");
-        uint256[] memory counts = new uint256[](2);
-        counts[0] = 1;
-        counts[1] = 1;
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 1 ether, "Alice should be charged");
-        assertEq(charged[1], 0, "No-character address should be skipped");
-    }
-
-    function test_batchChargeWithCounts_partialCharge() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 3 ether); // Only 3 Gold, but owes 5
-
-        address[] memory players = new address[](1);
-        players[0] = bob;
-        bytes32[] memory characterIds = new bytes32[](1);
-        characterIds[0] = bobCharacterId;
-        uint256[] memory counts = new uint256[](1);
-        counts[0] = 5;
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 3 ether, "Should charge partial (what they can afford)");
-        assertEq(goldToken.balanceOf(bob), 0, "Bob should have 0 Gold left");
-        assertEq(goldToken.balanceOf(relayer), 3 ether, "Relayer should get 3 Gold");
-    }
-
-    function test_batchChargeWithCounts_singleRelayerWrite() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(aliceCharacterId, 5);
-        _giveGold(aliceCharacterId, 100 ether);
-        _setLevel(bobCharacterId, 5);
-        _giveGold(bobCharacterId, 100 ether);
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = bob;
-        bytes32[] memory characterIds = new bytes32[](2);
-        characterIds[0] = aliceCharacterId;
-        characterIds[1] = bobCharacterId;
-        uint256[] memory counts = new uint256[](2);
-        counts[0] = 4;
-        counts[1] = 6;
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        // Relayer should have the sum of all charges
-        uint256 totalCharged = charged[0] + charged[1];
-        assertEq(goldToken.balanceOf(relayer), totalCharged, "Relayer total = sum of all charges");
-        assertEq(totalCharged, 10 ether, "Total should be 4 + 6 = 10 Gold");
-    }
-
-    function test_batchChargeWithCounts_emptyArrays() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        address[] memory players = new address[](0);
-        bytes32[] memory characterIds = new bytes32[](0);
-        uint256[] memory counts = new uint256[](0);
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged.length, 0, "Empty arrays should return empty result");
-    }
-
-    function test_batchChargeWithCounts_revertsIfArrayMismatch() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = bob;
-        bytes32[] memory characterIds = new bytes32[](2);
-        characterIds[0] = aliceCharacterId;
-        characterIds[1] = bobCharacterId;
-        uint256[] memory counts = new uint256[](1); // Mismatch!
-        counts[0] = 1;
-
-        vm.prank(relayer);
-        vm.expectRevert(GasStationArrayMismatch.selector);
-        world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-    }
-
-    function test_batchChargeWithCounts_revertsIfNotRelayer() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        address[] memory players = new address[](1);
-        players[0] = alice;
-        bytes32[] memory characterIds = new bytes32[](1);
-        characterIds[0] = aliceCharacterId;
-        uint256[] memory counts = new uint256[](1);
-        counts[0] = 1;
-
-        vm.prank(alice); // Not the relayer
-        vm.expectRevert(GasStationNotRelayer.selector);
-        world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
     }
 
     function test_buyGas_revertsIfInsufficientWallet() public {
@@ -735,118 +444,128 @@ contract Test_GasStationSystem is Test {
         assertEq(treasuryBefore - gasStationAddress.balance, expectedEth, "Treasury reduction incorrect");
     }
 
-    // ==================== chargeGasGold Tests ====================
+    // ==================== fundAndCharge Tests ====================
 
-    function test_chargeGasGold_walletCharge() public {
-        vm.prank(deployer);
+    /// @dev Sets up relayer config, GasReserve for a character, and mints Gold to worldAddress to back the reserve.
+    function _setupFundAndCharge(bytes32 characterId, uint256 reserveAmount, uint256 worldGoldAmount) internal {
+        vm.startPrank(deployer);
+        // Configure relayer with 1 Gold per gas charge
         GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
 
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 10 ether);
+        // Set up GasReserve for the character
+        GasReserve.setBalance(characterId, reserveAmount);
+
+        // Mint Gold to worldAddress by writing directly to ERC20 tables
+        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
+        ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
+        uint256 currentWorldBalance = ERC20Balances.get(balancesTableId, worldAddress);
+        ERC20Balances.set(balancesTableId, worldAddress, currentWorldBalance + worldGoldAmount);
+        uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
+        ERC20TotalSupply.set(totalSupplyTableId, currentSupply + worldGoldAmount);
+        vm.stopPrank();
+    }
+
+    function test_fundAndCharge_fullReserve() public {
+        uint256 reserveAmount = 5 ether;
+        uint256 chargeAmount = 1 ether; // goldPerGasCharge
+        _setupFundAndCharge(bobCharacterId, reserveAmount, reserveAmount);
+
+        uint256 worldGoldBefore = goldToken.balanceOf(worldAddress);
+        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
+        uint256 supplyBefore = goldToken.totalSupply();
+
+        vm.prank(relayer);
+        world.UD__fundAndCharge(bob, bobCharacterId);
+
+        // Reserve decreased by chargeAmount
+        assertEq(GasReserve.getBalance(bobCharacterId), reserveAmount - chargeAmount, "Reserve not decreased");
+        // Relayer Gold increased by chargeAmount
+        assertEq(goldToken.balanceOf(relayer) - relayerGoldBefore, chargeAmount, "Relayer Gold not credited");
+        // World Gold decreased by chargeAmount
+        assertEq(worldGoldBefore - goldToken.balanceOf(worldAddress), chargeAmount, "World Gold not deducted");
+        // Total supply unchanged (transfer, not mint/burn)
+        assertEq(goldToken.totalSupply(), supplyBefore, "Total supply should not change");
+    }
+
+    function test_fundAndCharge_partialReserve() public {
+        uint256 reserveAmount = 0.5 ether; // Less than 1 ether chargeAmount
+        _setupFundAndCharge(bobCharacterId, reserveAmount, reserveAmount);
+
+        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
+
+        vm.prank(relayer);
+        world.UD__fundAndCharge(bob, bobCharacterId);
+
+        // Reserve should be fully drained
+        assertEq(GasReserve.getBalance(bobCharacterId), 0, "Reserve should be 0 after partial charge");
+        // Relayer gets the partial amount
+        assertEq(goldToken.balanceOf(relayer) - relayerGoldBefore, reserveAmount, "Relayer should get partial amount");
+    }
+
+    function test_fundAndCharge_emptyReserve() public {
+        // Reserve = 0, but still mint some Gold to world so we can verify no movement
+        _setupFundAndCharge(bobCharacterId, 0, 10 ether);
+
+        uint256 worldGoldBefore = goldToken.balanceOf(worldAddress);
+        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
+
+        vm.prank(relayer);
+        world.UD__fundAndCharge(bob, bobCharacterId); // Should no-op, no revert
+
+        // No Gold movement
+        assertEq(goldToken.balanceOf(worldAddress), worldGoldBefore, "World Gold should not change");
+        assertEq(goldToken.balanceOf(relayer), relayerGoldBefore, "Relayer Gold should not change");
+        assertEq(GasReserve.getBalance(bobCharacterId), 0, "Reserve should stay 0");
+    }
+
+    function test_fundAndCharge_noCharacter() public {
+        // Player with no character (address that never minted)
+        address noCharPlayer = _getUser();
+        bytes32 fakeCharId = bytes32("nonexistent");
+        _setupFundAndCharge(fakeCharId, 5 ether, 5 ether);
+
+        uint256 worldGoldBefore = goldToken.balanceOf(worldAddress);
+        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
+
+        vm.prank(relayer);
+        world.UD__fundAndCharge(noCharPlayer, bytes32(0)); // No character — no-op
+
+        assertEq(goldToken.balanceOf(worldAddress), worldGoldBefore, "World Gold should not change");
+        assertEq(goldToken.balanceOf(relayer), relayerGoldBefore, "Relayer Gold should not change");
+    }
+
+    function test_fundAndCharge_mismatchedCharacter() public {
+        // Bob's character exists, but we pass alice's characterId for bob's address
+        _setupFundAndCharge(aliceCharacterId, 5 ether, 5 ether);
+
+        uint256 worldGoldBefore = goldToken.balanceOf(worldAddress);
+        uint256 relayerGoldBefore = goldToken.balanceOf(relayer);
+
+        vm.prank(relayer);
+        world.UD__fundAndCharge(bob, aliceCharacterId); // Mismatched — no-op
+
+        assertEq(goldToken.balanceOf(worldAddress), worldGoldBefore, "World Gold should not change");
+        assertEq(goldToken.balanceOf(relayer), relayerGoldBefore, "Relayer Gold should not change");
+    }
+
+    function test_fundAndCharge_revertsIfNotRelayer() public {
+        _setupFundAndCharge(bobCharacterId, 5 ether, 5 ether);
+
+        vm.prank(alice); // Not the relayer
+        vm.expectRevert(GasStationNotRelayer.selector);
+        world.UD__fundAndCharge(bob, bobCharacterId);
+    }
+
+    function test_fundAndCharge_supplyUnchanged() public {
+        uint256 reserveAmount = 3 ether;
+        _setupFundAndCharge(bobCharacterId, reserveAmount, reserveAmount);
 
         uint256 supplyBefore = goldToken.totalSupply();
 
         vm.prank(relayer);
-        world.UD__chargeGasGold(bob, bobCharacterId);
+        world.UD__fundAndCharge(bob, bobCharacterId);
 
-        assertEq(goldToken.balanceOf(bob), 9 ether, "Wallet should be deducted");
-        assertEq(goldToken.totalSupply(), supplyBefore, "Total supply unchanged for wallet charge");
-        assertEq(goldToken.balanceOf(relayer), 1 ether, "Relayer credited");
-    }
-
-    function test_chargeGasGold_revertsIfInsufficient() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 10 ether);
-
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 2 ether);
-
-        vm.prank(relayer);
-        vm.expectRevert(InsufficientBalance.selector);
-        world.UD__chargeGasGold(bob, bobCharacterId);
-    }
-
-    function test_chargeGasGold_revertsIfZeroBalance() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 3);
-
-        vm.prank(relayer);
-        vm.expectRevert(InsufficientBalance.selector);
-        world.UD__chargeGasGold(bob, bobCharacterId);
-    }
-
-    // ==================== batchChargeGasGoldWithCounts Tests ====================
-
-    function test_batchChargeWithCounts_walletCharge() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(aliceCharacterId, 5);
-        _giveGold(aliceCharacterId, 100 ether);
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 50 ether);
-
-        address[] memory players = new address[](2);
-        players[0] = alice;
-        players[1] = bob;
-        bytes32[] memory characterIds = new bytes32[](2);
-        characterIds[0] = aliceCharacterId;
-        characterIds[1] = bobCharacterId;
-        uint256[] memory counts = new uint256[](2);
-        counts[0] = 2;
-        counts[1] = 3;
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 2 ether, "Alice charged from wallet");
-        assertEq(charged[1], 3 ether, "Bob charged from wallet");
-        assertEq(goldToken.balanceOf(alice), 98 ether, "Alice wallet deducted");
-        assertEq(goldToken.balanceOf(bob), 47 ether, "Bob wallet deducted");
-        assertEq(goldToken.balanceOf(relayer), 5 ether, "Relayer gets total");
-    }
-
-    function test_batchChargeWithCounts_partialWallet() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 3);
-        _giveGold(bobCharacterId, 3 ether); // has 3, owes 5 — capped to 3
-
-        address[] memory players = new address[](1);
-        players[0] = bob;
-        bytes32[] memory characterIds = new bytes32[](1);
-        characterIds[0] = bobCharacterId;
-        uint256[] memory counts = new uint256[](1);
-        counts[0] = 5;
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 3 ether, "Partial charge capped to wallet balance");
-        assertEq(goldToken.balanceOf(bob), 0, "Wallet drained");
-    }
-
-    function test_batchChargeWithCounts_skipZeroBalance() public {
-        vm.prank(deployer);
-        GasStationSwapConfig.set(address(0), address(0), 0, relayer, 1 ether);
-
-        _setLevel(bobCharacterId, 3);
-        // No wallet gold
-
-        address[] memory players = new address[](1);
-        players[0] = bob;
-        bytes32[] memory characterIds = new bytes32[](1);
-        characterIds[0] = bobCharacterId;
-        uint256[] memory counts = new uint256[](1);
-        counts[0] = 3;
-
-        vm.prank(relayer);
-        uint256[] memory charged = world.UD__batchChargeGasGoldWithCounts(players, characterIds, counts);
-
-        assertEq(charged[0], 0, "Should skip - no gold");
-        assertEq(goldToken.balanceOf(relayer), 0, "Relayer gets nothing");
+        // Total supply must not change — it's a transfer, not mint/burn
+        assertEq(goldToken.totalSupply(), supplyBefore, "Total supply must not change on fundAndCharge");
     }
 }

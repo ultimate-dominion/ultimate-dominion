@@ -1,6 +1,5 @@
 import {
   type Address,
-  type Hex,
   encodeFunctionData,
   parseAbi,
   formatEther,

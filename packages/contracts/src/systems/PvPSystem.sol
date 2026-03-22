@@ -251,10 +251,14 @@ contract PvPSystem is System {
                             attackersWin = true;
                             opponents = encounterData.attackers;
                         }
+                        uint256 perOpponent = toOpponents / opponents.length;
                         for (uint256 i; i < opponents.length; i++) {
                             address opAddr = IWorld(_world()).UD__getOwnerAddress(opponents[i]);
-                            GoldLib.goldTransfer(_world(), playerAddr, opAddr, toOpponents / opponents.length);
+                            GoldLib.goldTransfer(_world(), playerAddr, opAddr, perOpponent);
                         }
+                        // Burn rounding dust so fleeing player loses exactly amountToDrop
+                        uint256 fleeDust = toOpponents - perOpponent * opponents.length;
+                        if (fleeDust > 0) GoldLib.goldBurn(_world(), playerAddr, fleeDust);
                     }
                 }
             }

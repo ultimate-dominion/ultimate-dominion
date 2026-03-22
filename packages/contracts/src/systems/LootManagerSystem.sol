@@ -70,6 +70,8 @@ contract LootManagerSystem is ERC1155Holder, System {
         GoldLib.goldMint(_world(), recipient, amount);
     }
 
+    /// @notice Mint Gold to an arbitrary address. Named "transferGold" for backward compatibility
+    ///         with GameDelegationControl's selector-based block (TRANSFER_GOLD_SELECTOR).
     function transferGold(address player, uint256 amount) public {
         _requireSystemOrAdmin(_msgSender());
         GoldLib.goldMint(_world(), player, amount);
