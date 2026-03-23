@@ -439,9 +439,10 @@ export function createSystemCalls(
     }
 
     try {
-      // For PvE, skip gas estimation to avoid EstimateGasExecutionError on
-      // ghost monsters (Privy RPC strips revert selectors from eth_estimateGas).
-      const gasOverride = encounterType === EncounterType.PvE
+      // Skip gas estimation for PvE (ghost monsters) and World encounters
+      // (shop entry). drpc.org 500s during eth_estimateGas corrupt the
+      // fallback transport ranking, causing stale reads that break the TX.
+      const gasOverride = (encounterType === EncounterType.PvE || encounterType === EncounterType.World)
         ? { gas: CREATE_ENCOUNTER_GAS_LIMIT }
         : {};
 
