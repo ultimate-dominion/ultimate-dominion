@@ -40,10 +40,27 @@ contract GoldERC20System is ERC20System {
     }
 
     /**
+     * @notice Transfer Gold between addresses. Requires caller to have access to the Gold namespace.
+     *         Bypasses the ERC20 allowance mechanism — MUD's _msgSender() returns the calling
+     *         system's registered address (not the World), so allowance-based transferFrom fails
+     *         for system-to-system calls.
+     * @param from Sender address
+     * @param to Recipient address
+     * @param value Amount to transfer (18 decimals)
+     */
+    function transferWithAccess(address from, address to, uint256 value) public {
+        _requireNamespaceAccess();
+        if (from == address(0)) revert ERC20InvalidSender(address(0));
+        if (to == address(0)) revert ERC20InvalidReceiver(address(0));
+        _update(from, to, value);
+    }
+
+    /**
      * @dev Check that _msgSender() has access to this system's namespace.
      *      Uses StoreSwitch (not StoreCore) since this is a non-root system.
      */
     function _requireNamespaceAccess() internal view {
         AccessControl.requireAccess(SystemRegistry.get(address(this)), _msgSender());
     }
+
 }

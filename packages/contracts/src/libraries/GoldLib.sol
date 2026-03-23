@@ -3,10 +3,8 @@ pragma solidity >=0.8.24;
 
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {IERC20} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20.sol";
-import {Allowances} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/Allowances.sol";
 import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
-import {_erc20SystemId, _allowancesTableId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
+import {_erc20SystemId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {GOLD_NAMESPACE} from "../../constants.sol";
 import {GoldERC20System} from "../systems/GoldERC20System.sol";
 
@@ -55,14 +53,8 @@ library GoldLib {
      */
     function goldTransfer(address world, address from, address to, uint256 amount) internal {
         if (amount == 0) return;
-        // Grant the World max allowance to transfer from `from`.
-        // This is not a new privilege — the World can already write Gold balances directly.
-        // We set it to enable the ERC20System's transferFrom path which emits proper events.
-        ResourceId allowancesTableId = _allowancesTableId(GOLD_NAMESPACE);
-        Allowances.set(allowancesTableId, from, world, type(uint256).max);
-
         ResourceId erc20SystemId = _erc20SystemId(GOLD_NAMESPACE);
-        IWorld(world).call(erc20SystemId, abi.encodeCall(IERC20.transferFrom, (from, to, amount)));
+        IWorld(world).call(erc20SystemId, abi.encodeCall(GoldERC20System.transferWithAccess, (from, to, amount)));
     }
 
     /**

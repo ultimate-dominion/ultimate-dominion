@@ -181,4 +181,43 @@ contract Test_GoldERC20System is Test {
         assertEq(ERC20Balances.get(balancesTableId, alice), 70 ether);
         assertEq(ERC20Balances.get(balancesTableId, bob), 30 ether);
     }
+
+    // ==================== transferWithAccess ====================
+
+    function test_transferWithAccess_succeeds() public {
+        address bob = makeAddr("bob");
+        uint256 amount = 100 ether;
+        uint256 transferAmount = 40 ether;
+
+        // Mint to alice
+        vm.prank(alice);
+        world.call(goldErc20SystemId, abi.encodeCall(GoldERC20System.mintWithAccess, (alice, amount)));
+
+        // Transfer via access (simulates system-to-system gold transfer)
+        vm.prank(alice);
+        world.call(goldErc20SystemId, abi.encodeCall(GoldERC20System.transferWithAccess, (alice, bob, transferAmount)));
+
+        ResourceId balancesTableId = _balancesTableId(GOLD_NAMESPACE);
+        assertEq(ERC20Balances.get(balancesTableId, alice), amount - transferAmount);
+        assertEq(ERC20Balances.get(balancesTableId, bob), transferAmount);
+    }
+
+    function test_transferWithAccess_revertsWithoutAccess() public {
+        // Mint to unauthorized via deployer
+        vm.prank(deployer);
+        world.call(goldErc20SystemId, abi.encodeCall(IERC20Mintable.mint, (unauthorized, 100 ether)));
+
+        vm.prank(unauthorized);
+        vm.expectRevert();
+        world.call(goldErc20SystemId, abi.encodeCall(GoldERC20System.transferWithAccess, (unauthorized, alice, 50 ether)));
+    }
+
+    function test_transferWithAccess_revertsInsufficientBalance() public {
+        vm.prank(alice);
+        world.call(goldErc20SystemId, abi.encodeCall(GoldERC20System.mintWithAccess, (alice, 10 ether)));
+
+        vm.prank(alice);
+        vm.expectRevert();
+        world.call(goldErc20SystemId, abi.encodeCall(GoldERC20System.transferWithAccess, (alice, makeAddr("bob"), 20 ether)));
+    }
 }
