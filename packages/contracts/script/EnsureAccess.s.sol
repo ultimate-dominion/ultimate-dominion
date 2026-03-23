@@ -14,6 +14,7 @@ import {_erc721SystemId} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {_erc20SystemId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {_erc1155SystemId} from "../src/utils.sol";
 import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, FRAGMENTS_NAMESPACE, WORLD_NAMESPACE} from "../constants.sol";
+import {GoldERC20System} from "../src/systems/GoldERC20System.sol";
 
 /**
  * @title EnsureAccessSystem
@@ -211,6 +212,14 @@ contract EnsureAccess is Script {
             abi.encodeCall(EnsureAccessSystem.ensureAll, (deployer, worldAddress))
         );
         console.log("All cross-namespace access grants applied");
+
+        // Deploy and register GoldERC20System — replaces the default ERC20System
+        // for the Gold namespace with one that checks access instead of ownership
+        // for mint/burn. This enables cross-namespace GoldLib calls.
+        GoldERC20System goldSystem = new GoldERC20System();
+        ResourceId goldErc20SystemId = _erc20SystemId(GOLD_NAMESPACE);
+        IWorld(worldAddress).registerSystem(goldErc20SystemId, goldSystem, true);
+        console.log("Registered GoldERC20System at", address(goldSystem));
 
         vm.stopBroadcast();
     }

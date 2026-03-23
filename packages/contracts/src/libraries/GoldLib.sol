@@ -3,12 +3,12 @@ pragma solidity >=0.8.24;
 
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {IERC20Mintable} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
 import {IERC20} from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20.sol";
 import {Allowances} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/Allowances.sol";
 import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {_erc20SystemId, _allowancesTableId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {GOLD_NAMESPACE} from "../../constants.sol";
+import {GoldERC20System} from "../systems/GoldERC20System.sol";
 
 /**
  * @title GoldLib
@@ -28,7 +28,7 @@ library GoldLib {
     function goldMint(address world, address to, uint256 amount) internal {
         if (amount == 0) return;
         ResourceId erc20SystemId = _erc20SystemId(GOLD_NAMESPACE);
-        IWorld(world).call(erc20SystemId, abi.encodeCall(IERC20Mintable.mint, (to, amount)));
+        IWorld(world).call(erc20SystemId, abi.encodeCall(GoldERC20System.mintWithAccess, (to, amount)));
     }
 
     /**
@@ -41,7 +41,7 @@ library GoldLib {
     function goldBurn(address world, address from, uint256 amount) internal {
         if (amount == 0) return;
         ResourceId erc20SystemId = _erc20SystemId(GOLD_NAMESPACE);
-        IWorld(world).call(erc20SystemId, abi.encodeCall(IERC20Mintable.burn, (from, amount)));
+        IWorld(world).call(erc20SystemId, abi.encodeCall(GoldERC20System.burnWithAccess, (from, amount)));
     }
 
     /**
