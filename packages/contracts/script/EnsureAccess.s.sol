@@ -71,6 +71,7 @@ contract EnsureAccessSystem is System {
         ResourceId goldBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
         ResourceId goldTotalSupply = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "TotalSupply");
         ResourceId goldErc20System = _erc20SystemId(GOLD_NAMESPACE);
+        ResourceId goldAllowances = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Allowances");
 
         ResourceId itemsOwners = WorldResourceIdLib.encode(RESOURCE_TABLE, ITEMS_NAMESPACE, "Owners");
         ResourceId itemsTotalSupply = WorldResourceIdLib.encode(RESOURCE_TABLE, ITEMS_NAMESPACE, "TotalSupply");
@@ -92,31 +93,44 @@ contract EnsureAccessSystem is System {
         // CharacterEnterSystem — starter gold on enterGame (writes Balances + TotalSupply)
         ResourceAccess.set(goldBalances, charEnterSys, true);
         ResourceAccess.set(goldTotalSupply, charEnterSys, true);
+        ResourceAccess.set(goldErc20System, charEnterSys, true);
         // LootManager — gold rewards from combat
         ResourceAccess.set(goldBalances, lootManager, true);
         ResourceAccess.set(goldTotalSupply, lootManager, true);
-        // GasStation — gold→ETH swaps
+        ResourceAccess.set(goldErc20System, lootManager, true);
+        // GasStation — gold→ETH swaps + goldTransfer
         ResourceAccess.set(goldBalances, gasStation, true);
         ResourceAccess.set(goldTotalSupply, gasStation, true);
-        // ShopSystem — purchases
+        ResourceAccess.set(goldErc20System, gasStation, true);
+        ResourceAccess.set(goldAllowances, gasStation, true);
+        // ShopSystem — purchases via GoldLib.goldBurn/goldMint
         ResourceAccess.set(goldBalances, shopSystem, true);
         ResourceAccess.set(goldTotalSupply, shopSystem, true);
-        // PveRewardSystem — combat gold rewards
+        ResourceAccess.set(goldErc20System, shopSystem, true);
+        // PveRewardSystem — combat gold rewards via GoldLib.goldMint
         ResourceAccess.set(goldBalances, pveReward, true);
         ResourceAccess.set(goldTotalSupply, pveReward, true);
-        // PvpRewardSystem — PvP gold redistribution
+        ResourceAccess.set(goldErc20System, pveReward, true);
+        // PvpRewardSystem — PvP gold redistribution via GoldLib.goldBurn/goldTransfer
         ResourceAccess.set(goldBalances, pvpReward, true);
         ResourceAccess.set(goldTotalSupply, pvpReward, true);
-        // PvPSystem — flee gold burns/transfers
+        ResourceAccess.set(goldErc20System, pvpReward, true);
+        ResourceAccess.set(goldAllowances, pvpReward, true);
+        // PvPSystem — flee gold burns/transfers via GoldLib
         ResourceAccess.set(goldBalances, pvpSystem, true);
         ResourceAccess.set(goldTotalSupply, pvpSystem, true);
+        ResourceAccess.set(goldErc20System, pvpSystem, true);
+        ResourceAccess.set(goldAllowances, pvpSystem, true);
         // MarketplaceSystem — gold transfers for trades
         ResourceAccess.set(goldNs, marketplace, true);
         ResourceAccess.set(goldBalances, marketplace, true);
+        ResourceAccess.set(goldErc20System, marketplace, true);
+        ResourceAccess.set(goldAllowances, marketplace, true);
         // World — delegatecall systems need World-level access
         ResourceAccess.set(goldNs, worldAddress, true);
         ResourceAccess.set(goldBalances, worldAddress, true);
         ResourceAccess.set(goldErc20System, worldAddress, true);
+        ResourceAccess.set(goldAllowances, worldAddress, true);
 
         // ================================================================
         // Step 5: Items namespace grants
