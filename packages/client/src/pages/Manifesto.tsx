@@ -1,8 +1,13 @@
-import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, Heading, keyframes, Text, VStack } from '@chakra-ui/react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 
 import { HOME_PATH } from '../Routes';
+
+const dragonPulse = keyframes`
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.045; }
+`;
 
 export const Manifesto = (): JSX.Element => {
   const navigate = useNavigate();
@@ -15,22 +20,36 @@ export const Manifesto = (): JSX.Element => {
       <Box
         border="0.5px solid #3A3228"
         position="relative"
-        _before={{
-          content: '""',
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '60%',
-          height: '60%',
-          backgroundImage: 'url(/images/ultimate-dominion-logo.svg)',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          backgroundSize: 'contain',
-          opacity: 0.02,
-          pointerEvents: 'none',
-        }}
       >
+        {/* Warm glow behind dragon */}
+        <Box
+          background="radial-gradient(ellipse at center, rgba(200,122,42,0.035) 0%, transparent 65%)"
+          height="80%"
+          left="50%"
+          pointerEvents="none"
+          position="absolute"
+          top="50%"
+          transform="translate(-50%, -50%)"
+          width="80%"
+          zIndex={0}
+        />
+        {/* Dragon watermark */}
+        <Box
+          animation={`${dragonPulse} 6s ease-in-out infinite`}
+          backgroundImage="url(/images/ud-dragon.svg)"
+          backgroundPosition="center"
+          backgroundRepeat="no-repeat"
+          backgroundSize="contain"
+          height="60%"
+          left="50%"
+          opacity={0.03}
+          pointerEvents="none"
+          position="absolute"
+          top="50%"
+          transform="translate(-50%, -50%)"
+          width="60%"
+          zIndex={0}
+        />
         <VStack
           justifyContent="center"
           mb={16}

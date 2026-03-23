@@ -20,19 +20,34 @@ const torchGlow = keyframes`
   }
 `;
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const dragonPulse = keyframes`
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.045; }
+`;
+
 export const LandingPage = (): JSX.Element => {
   return (
     <Box
       minH="100vh"
       px={{ base: 2, sm: 12, md: 20 }}
-      py={{ base: 4, lg: 12 }}
+      py={{ base: 4, lg: 8 }}
     >
-    {/* Logo — top right, above the frame */}
-    <Box display="flex" justifyContent="flex-end" mb={2}>
+    {/* Logo — centered above the frame */}
+    <Box
+      display="flex"
+      justifyContent="center"
+      mb={{ base: 3, md: 4 }}
+      animation={`${fadeIn} 1.5s ease-out`}
+    >
       <Image
-        alt="Ultimate Dominion Logo"
-        src="/images/ultimate-dominion-logo.svg"
-        width={{ base: '160px', sm: '200px' }}
+        alt="Ultimate Dominion"
+        src="/images/ud-logo-dark-horizontal.svg"
+        width={{ base: '260px', sm: '340px', md: '400px' }}
       />
     </Box>
 
@@ -40,7 +55,7 @@ export const LandingPage = (): JSX.Element => {
       border="6px solid #3A3228"
       display="flex"
       flexDirection="column"
-      minH={{ base: 'calc(100vh - 32px)', lg: 'calc(100vh - 96px)' }}
+      minH={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 160px)' }}
       p={1.5}
       _after={{
         content: '""',
@@ -69,15 +84,27 @@ export const LandingPage = (): JSX.Element => {
           zIndex: 1,
         }}
       >
-        {/* Dragon watermark */}
+        {/* Warm glow behind dragon */}
         <Box
-          backgroundImage="url(/images/ultimate-dominion-logo.svg)"
+          background="radial-gradient(ellipse at center, rgba(200,122,42,0.035) 0%, transparent 65%)"
+          height="80%"
+          left="50%"
+          pointerEvents="none"
+          position="absolute"
+          top="50%"
+          transform="translate(-50%, -50%)"
+          width="80%"
+          zIndex={0}
+        />
+        {/* Dragon watermark — subtle pulse like firelight */}
+        <Box
+          animation={`${dragonPulse} 6s ease-in-out infinite`}
+          backgroundImage="url(/images/ud-dragon.svg)"
           backgroundPosition="center"
           backgroundRepeat="no-repeat"
           backgroundSize="contain"
           height="60%"
           left="50%"
-          opacity={0.02}
           pointerEvents="none"
           position="absolute"
           top="50%"
@@ -92,20 +119,28 @@ export const LandingPage = (): JSX.Element => {
           mt={{ base: 14, sm: 20 }}
           position="relative"
           px={{ base: 2, sm: 14, md: 18 }}
-          spacing={{ base: 14, md: 18 }}
+          spacing={{ base: 10, md: 14 }}
           zIndex={2}
         >
-          <Text
-            color="#8A7E6A"
-            fontFamily="'Cinzel', serif"
-            fontSize={{ base: '13px', sm: '15px' }}
-            fontStyle="italic"
-            letterSpacing="0.3em"
-            textAlign="center"
-            textTransform="uppercase"
-          >
-            Nothing Is Forgotten
-          </Text>
+          <VStack spacing={{ base: 4, md: 5 }}>
+            <Text
+              color="#8A7E6A"
+              fontFamily="'Cinzel', serif"
+              fontSize={{ base: '13px', sm: '15px' }}
+              fontStyle="italic"
+              letterSpacing="0.3em"
+              textAlign="center"
+              textTransform="uppercase"
+            >
+              Nothing Is Forgotten
+            </Text>
+            {/* Ornamental divider */}
+            <Box
+              bg="linear-gradient(90deg, transparent 0%, rgba(200,122,42,0.15) 30%, rgba(212,165,74,0.4) 50%, rgba(200,122,42,0.15) 70%, transparent 100%)"
+              h="1px"
+              w={{ base: '100px', sm: '140px' }}
+            />
+          </VStack>
 
           <Box position="relative" w="100%">
             {/* Invisible spacer — reserves final text height */}

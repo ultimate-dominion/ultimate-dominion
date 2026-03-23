@@ -32,6 +32,11 @@ const torchGlow = keyframes`
   }
 `;
 
+const dragonPulse = keyframes`
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.045; }
+`;
+
 export const Welcome = (): JSX.Element => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -200,20 +205,32 @@ export const Welcome = (): JSX.Element => {
           zIndex: 1,
         }}
       >
-        {/* Dragon watermark */}
+        {/* Warm glow behind dragon */}
         <Box
+          background="radial-gradient(ellipse at center, rgba(200,122,42,0.035) 0%, transparent 65%)"
+          height="80%"
+          left="50%"
+          pointerEvents="none"
           position="absolute"
           top="50%"
+          transform="translate(-50%, -50%)"
+          width="80%"
+          zIndex={0}
+        />
+        {/* Dragon watermark — subtle pulse like firelight */}
+        <Box
+          animation={`${dragonPulse} 6s ease-in-out infinite`}
+          backgroundImage="url(/images/ud-dragon.svg)"
+          backgroundPosition="center"
+          backgroundRepeat="no-repeat"
+          backgroundSize="contain"
+          height="60%"
           left="50%"
+          pointerEvents="none"
+          position="absolute"
+          top="50%"
           transform="translate(-50%, -50%)"
           width="60%"
-          height="60%"
-          backgroundImage="url(/images/ultimate-dominion-logo.svg)"
-          backgroundRepeat="no-repeat"
-          backgroundPosition="center"
-          backgroundSize="contain"
-          opacity={0.02}
-          pointerEvents="none"
           zIndex={0}
         />
 
@@ -226,17 +243,25 @@ export const Welcome = (): JSX.Element => {
           spacing={{ base: 14, md: 18 }}
           zIndex={2}
         >
-          <Text
-            color="#8A7E6A"
-            fontFamily="'Cinzel', serif"
-            fontSize={{ base: '13px', sm: '15px' }}
-            fontStyle="italic"
-            letterSpacing="0.3em"
-            textAlign="center"
-            textTransform="uppercase"
-          >
-            Nothing Is Forgotten
-          </Text>
+          <VStack spacing={{ base: 4, md: 5 }}>
+            <Text
+              color="#8A7E6A"
+              fontFamily="'Cinzel', serif"
+              fontSize={{ base: '13px', sm: '15px' }}
+              fontStyle="italic"
+              letterSpacing="0.3em"
+              textAlign="center"
+              textTransform="uppercase"
+            >
+              Nothing Is Forgotten
+            </Text>
+            {/* Ornamental divider */}
+            <Box
+              bg="linear-gradient(90deg, transparent 0%, rgba(200,122,42,0.15) 30%, rgba(212,165,74,0.4) 50%, rgba(200,122,42,0.15) 70%, transparent 100%)"
+              h="1px"
+              w={{ base: '100px', sm: '140px' }}
+            />
+          </VStack>
 
           <Box position="relative" w="100%">
             {/* Invisible spacer — reserves final text height */}

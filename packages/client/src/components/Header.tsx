@@ -257,8 +257,8 @@ export const Header = (): JSX.Element => {
             >
               <Image
                 alt="Ultimate Dominion Logo"
-                src="/images/ultimate-dominion-logo.svg"
-                width={{ base: '200px', sm: '225px' }}
+                src="/images/ud-logo-dark-horizontal.svg"
+                width={{ base: '180px', sm: '220px' }}
               />
             </Button>
             <SoundToggle />
