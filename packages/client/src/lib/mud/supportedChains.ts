@@ -4,17 +4,17 @@
 
 import { MUDChain } from '@latticexyz/common/chains';
 
-// Primary RPC from env, then dedicated fallback, then public fallbacks
+// Primary RPC from env, then dedicated fallback, then public fallbacks.
+// drpc.org removed — persistent 500s poison viem's fallback ranking,
+// causing stale reads that break gas estimation and TX execution.
 const baseHttpRpcs = [
   import.meta.env.VITE_HTTPS_RPC_URL,
   import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL,
-  'https://base.drpc.org',
 ].filter(Boolean) as string[];
 
 const baseWsRpcs = [
   import.meta.env.VITE_WS_RPC_URL,
   import.meta.env.VITE_WS_RPC_FALLBACK_URL,
-  'wss://base.drpc.org',
   'wss://base-rpc.publicnode.com',
 ].filter(Boolean) as string[];
 
