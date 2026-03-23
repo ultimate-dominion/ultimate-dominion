@@ -445,6 +445,13 @@ export function createSystemCalls(
         ? { gas: CREATE_ENCOUNTER_GAS_LIMIT }
         : {};
 
+      console.info('[createEncounter] DEBUG', {
+        encounterType,
+        group1,
+        group2,
+        gasOverride,
+      });
+
       const tx = await wrappedWorldContract.write.UD__createEncounter(
         [
           encounterType,
