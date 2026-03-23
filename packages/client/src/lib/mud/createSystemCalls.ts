@@ -445,12 +445,7 @@ export function createSystemCalls(
         ? { gas: CREATE_ENCOUNTER_GAS_LIMIT }
         : {};
 
-      console.info('[createEncounter] DEBUG', {
-        encounterType,
-        group1,
-        group2,
-        gasOverride,
-      });
+      console.info(`[createEncounter] DEBUG type=${encounterType} group1=[${group1.join(',')}] group2=[${group2.join(',')}]`);
 
       const tx = await wrappedWorldContract.write.UD__createEncounter(
         [
