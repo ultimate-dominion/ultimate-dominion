@@ -11,6 +11,7 @@ import { GiScrollUnfurled } from 'react-icons/gi';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
 import { BetaBanner } from './components/BetaBanner';
+import { MaintenanceBanner } from './components/MaintenanceBanner';
 import { WorldFeed } from './components/WorldFeed';
 import { DiscordButton } from './components/DiscordButton';
 import { FeedbackButton } from './components/FeedbackButton';
@@ -147,6 +148,7 @@ const AppInner = (): JSX.Element => {
       templateRows="auto 1fr auto"
       w="100%"
     >
+      <MaintenanceBanner />
       <BetaBanner />
       <Header />
       <Box
