@@ -536,6 +536,9 @@ const CharacterCreationInner = (): JSX.Element => {
 
     if (result?.success) {
       setShowCelebration(true);
+      import('../utils/analytics').then(({ trackCharacterCreated }) =>
+        trackCharacterCreated(RACE_INFO[selectedRace]?.name ?? 'Unknown', name ?? ''),
+      );
       setTimeout(() => navigate(GAME_BOARD_PATH), 3000);
     }
   }, [

@@ -229,6 +229,11 @@ export const AuthProvider = ({
         setEmbeddedWalletClient(walletClient);
         setEmbeddedAddress(privyWallet.address as Address);
 
+        // Track first-time sign-ups (wallet just created = new user)
+        if (isConfirmedNewUser) {
+          import('../utils/analytics').then(({ trackSignUp }) => trackSignUp('google'));
+        }
+
         // Extract email
         const email =
           user?.google?.email ||

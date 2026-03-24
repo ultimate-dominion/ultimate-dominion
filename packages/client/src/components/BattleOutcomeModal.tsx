@@ -16,7 +16,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { zeroAddress, zeroHash } from 'viem';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -213,6 +213,30 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       setIsLoadingItems(false);
     }
   }, [battleOutcome, fetchLootedItems, isOpen]);
+
+  // Analytics: track combat outcome once when modal opens
+  const outcomeTrackedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isOpen || !character) return;
+    if (outcomeTrackedRef.current === battleOutcome.encounterId) return;
+    outcomeTrackedRef.current = battleOutcome.encounterId;
+
+    const isPvp = currentBattle?.encounterType === EncounterType.PvP;
+    const fled = battleOutcome.playerFled;
+    let outcome: 'win' | 'loss' | 'draw' | 'flee';
+    if (fled) {
+      outcome = battleOutcome.winner === character.id ? 'win' : 'flee';
+    } else if (battleOutcome.winner === character.id) {
+      outcome = 'win';
+    } else if (currentBattle && currentBattle.maxTurns === currentBattle.currentTurn) {
+      outcome = 'draw';
+    } else {
+      outcome = 'loss';
+    }
+    import('../utils/analytics').then(({ trackCombatOutcome }) =>
+      trackCombatOutcome(outcome, isPvp ? 'pvp' : 'pve', Number(character.level)),
+    );
+  }, [isOpen, battleOutcome, character, currentBattle]);
 
   const sortedLoot = useMemo(() => {
     return [...armor, ...consumables, ...spells, ...weapons].sort(
