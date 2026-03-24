@@ -4,7 +4,6 @@ description: "Real data from the first 14 days of Ultimate Dominion: 92 players,
 date: 2026-03-24
 tags: ["data", "indie", "launch", "retention"]
 draft: false
-featured: true
 ---
 
 Ultimate Dominion launched on March 10, 2026. Because every action in the game is recorded onchain, we have complete, verifiable data on what happened next. No estimates, no sampling — every monster killed, every item looted, every gold piece earned is a permanent record on Base.
