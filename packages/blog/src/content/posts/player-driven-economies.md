@@ -1,7 +1,7 @@
 ---
 title: "How Player-Driven Economies Work in Games"
 description: "How player-driven game economies work — supply and demand, gold sinks, marketplace design, and inflation control. Examples from EVE Online, RuneScape, Albion Online, and Ultimate Dominion."
-date: 2026-03-12
+date: 2026-03-19
 tags: ["game-design", "economy"]
 draft: false
 ---

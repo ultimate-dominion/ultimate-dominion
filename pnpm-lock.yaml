@@ -41,6 +41,8 @@ importers:
         specifier: 5.3.3
         version: 5.3.3
 
+  packages/analytics: {}
+
   packages/api:
     dependencies:
       '@latticexyz/common':
@@ -119,6 +121,9 @@ importers:
 
   packages/blog:
     dependencies:
+      '@astrojs/sitemap':
+        specifier: ^3.2.1
+        version: 3.2.1
       '@astrojs/tailwind':
         specifier: ^5.1.0
         version: 5.1.5(astro@4.16.19(@types/node@25.4.0)(rollup@4.59.0)(terser@5.31.0)(typescript@5.4.2))(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.4.2))(ts-node@10.9.2(@types/node@25.4.0)(typescript@5.4.2))
@@ -11087,10 +11092,12 @@ packages:
   tar@4.4.18:
     resolution: {integrity: sha512-ZuOtqqmkV9RE1+4odd+MhBpibmCxNP6PJhH/h2OqNuotTX7/XHPZQJv2pKvWMplFH9SIZZhitehh6vBH6LO8Pg==}
     engines: {node: '>=4.5'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   temp-dir@2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}

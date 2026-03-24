@@ -1,7 +1,7 @@
 ---
 title: "Games Like Achaea: 7 Text-Based RPGs Worth Playing in 2026"
 description: "Looking for games like Achaea? Here are 7 text-based RPGs and MUDs with deep combat, player economies, and persistent worlds — from classic MUDs to modern browser-based alternatives."
-date: 2026-03-12
+date: 2026-03-07
 tags: ["recommendations", "MUD", "text-based-games"]
 draft: false
 ---

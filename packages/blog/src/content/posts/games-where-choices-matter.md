@@ -1,7 +1,7 @@
 ---
 title: "Games Where Your Choices Actually Matter — Permanent Consequences in Gaming"
 description: "Games where decisions are permanent and choices have real consequences — from roguelikes with permadeath to on-chain RPGs where your progress can never be reversed or wiped."
-date: 2026-03-12
+date: 2026-03-15
 tags: ["game-design", "recommendations"]
 draft: false
 ---

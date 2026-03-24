@@ -1,7 +1,7 @@
 ---
 title: "What Is a MUD? The Complete Guide to Text-Based MMORPGs in 2026"
 description: "A MUD (Multi-User Dungeon) is a text-based multiplayer RPG where players explore, fight, and interact in a persistent world through text commands. This guide covers what MUDs are, how they work, and the best ones to play in 2026."
-date: 2026-03-12
+date: 2026-03-01
 tags: ["guide", "MUD", "text-based-games"]
 draft: false
 ---

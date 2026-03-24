@@ -1,7 +1,7 @@
 ---
 title: "Best MUD Games to Play in 2026"
 description: "The best MUD games still active in 2026, from classic text-based RPGs like Achaea and Aardwolf to modern browser-based MUDs like Ultimate Dominion. Honest reviews of each."
-date: 2026-03-12
+date: 2026-03-05
 tags: ["guide", "MUD", "recommendations"]
 draft: false
 ---

@@ -1,7 +1,7 @@
 ---
 title: "Games You Can Play at Work (That Run in a Browser Tab)"
 description: "The best games you can discreetly play in a browser tab at work — text-based RPGs, idle games, puzzle games, and strategy games that look like a webpage and don't make noise."
-date: 2026-03-12
+date: 2026-03-16
 tags: ["browser-games", "recommendations"]
 draft: false
 ---
