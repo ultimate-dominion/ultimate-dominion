@@ -88,10 +88,10 @@ const MONSTER_STATS_ABI = [
 const MOBS_FIELD_LAYOUT = '0x0001010201000000000000000000000000000000000000000000000000000000' as Hex;
 
 // SpellConfig: 8×int256(32) + uint8(1) + bool(1) + uint256(32) + bool(1) = 291 static, 12 fields, 0 dynamic
-const SPELL_CONFIG_FIELD_LAYOUT = '0x01230c002020202020202020010120010000000000000000000000000000' as Hex;
+const SPELL_CONFIG_FIELD_LAYOUT = '0x01230c0020202020202020200101200100000000000000000000000000000000' as Hex;
 
 // StatusEffectValidity: 4×uint256 = 128 static, 4 fields, 0 dynamic
-const VALIDITY_FIELD_LAYOUT = '0x008004002020202000000000000000000000000000000000000000000000' as Hex;
+const VALIDITY_FIELD_LAYOUT = '0x0080040020202020000000000000000000000000000000000000000000000000' as Hex;
 
 // ============ Helpers ============
 
@@ -151,7 +151,7 @@ interface MonsterJson {
 
 async function verifyMonsters() {
   console.log('\n=== Monsters ===');
-  const monstersPath = path.resolve(__dirname, '../zones/dark_cave/monsters.json');
+  const monstersPath = path.resolve(__dirname, '../../zones/dark_cave/monsters.json');
   const monsters: MonsterJson[] = JSON.parse(fs.readFileSync(monstersPath, 'utf-8'));
 
   for (let i = 0; i < monsters.length; i++) {
