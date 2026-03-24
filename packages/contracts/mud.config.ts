@@ -1018,6 +1018,7 @@ export default defineWorld({
         defenderDied: "bool",
         blockNumber: "uint256",
         timestamp: "uint256",
+        doubleStrike: "bool",
         damagePerHit: "int256[]",
         effectIds: "bytes32[]",
         hit: "bool[]",

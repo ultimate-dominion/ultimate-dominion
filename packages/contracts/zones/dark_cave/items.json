@@ -761,8 +761,8 @@
         ],
         "hpModifier": 5,
         "intModifier": 3,
-        "maxDamage": 6,
-        "minDamage": 4,
+        "maxDamage": 5,
+        "minDamage": 3,
         "minLevel": 0,
         "strModifier": 0
       },
@@ -959,8 +959,8 @@
         ],
         "hpModifier": 5,
         "intModifier": 3,
-        "maxDamage": 6,
-        "minDamage": 4,
+        "maxDamage": 5,
+        "minDamage": 3,
         "minLevel": 0,
         "strModifier": 0
       },
@@ -1017,8 +1017,8 @@
         ],
         "hpModifier": 6,
         "intModifier": 0,
-        "maxDamage": 9,
-        "minDamage": 6,
+        "maxDamage": 10,
+        "minDamage": 7,
         "minLevel": 0,
         "strModifier": 2
       },
@@ -1038,7 +1038,7 @@
       "price": 300000000000000000000,
       "isStarter": false,
       "stats": {
-        "agiModifier": 0,
+        "agiModifier": 2,
         "effects": [
           "0xeee09063621624b3000000000000000000000000000000000000000000000000"
         ],
@@ -1079,7 +1079,7 @@
         "strModifier": 3
       },
       "statRestrictions": {
-        "minAgility": 13,
+        "minAgility": 10,
         "minIntelligence": 0,
         "minStrength": 16
       },
@@ -1094,7 +1094,7 @@
       "metadataUri": "weapon:phasefang",
       "price": 350000000000000000000,
       "isStarter": false,
-      "scalingStat": "",
+      "scalingStat": "AGI",
       "stats": {
         "agiModifier": 4,
         "effects": [

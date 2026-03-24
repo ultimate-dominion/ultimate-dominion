@@ -61,48 +61,50 @@ contract DeployClassSpellsV2 is Script {
     function _deploySpellConfigs() internal {
         console.log("Deploying SpellConfig entries...");
 
-        // Warrior - Battle Cry: +25% STR buff, +10% maxHp heal, +800 armor, 5-10 phys dmg, 0.5/STR, 2 uses
+        // Warrior - Battle Cry: +25% STR buff, +10% maxHp heal, +8 armor, 5-10 phys dmg, 0.5/STR, 2 uses
         SpellConfig.set(_effectId("battle_cry"), SpellConfigData({
             strPct: 2500, agiPct: 0, intPct: 0, hpPct: 1000,
-            armorFlat: 800, spellMinDamage: 5, spellMaxDamage: 10,
+            armorFlat: 8, spellMinDamage: 5, spellMaxDamage: 10,
             dmgPerStat: 500, dmgScalingStat: ResistanceStat.Strength,
             dmgIsPhysical: true, maxUses: 2, isWeaponEnchant: false
         }));
         console.log("  battle_cry SpellConfig set");
 
-        // Paladin - Divine Shield: +15% STR buff, +15% maxHp heal, +1000 armor, no dmg, 2 uses
+        // Paladin - Divine Shield: +15% STR buff, +15% maxHp heal, +10 armor, no dmg, 2 uses
         SpellConfig.set(_effectId("divine_shield"), SpellConfigData({
             strPct: 1500, agiPct: 0, intPct: 0, hpPct: 1500,
-            armorFlat: 1000, spellMinDamage: 0, spellMaxDamage: 0,
+            armorFlat: 10, spellMinDamage: 0, spellMaxDamage: 0,
             dmgPerStat: 0, dmgScalingStat: ResistanceStat.None,
             dmgIsPhysical: false, maxUses: 2, isWeaponEnchant: false
         }));
         console.log("  divine_shield SpellConfig set");
 
-        // Ranger - Marked Shot: -20% AGI debuff, -500 armor, 4-8 phys dmg, 0.4/AGI, 1 use
-        SpellConfig.set(_effectId("marked_shot"), SpellConfigData({
+        // Ranger - Marked Shot (uses OLD hunters_mark effectId for existing player items):
+        // -20% AGI debuff, -5 armor, 4-8 phys dmg, 0.4/AGI, unlimited uses
+        SpellConfig.set(_effectId("hunters_mark"), SpellConfigData({
             strPct: 0, agiPct: -2000, intPct: 0, hpPct: 0,
-            armorFlat: -500, spellMinDamage: 4, spellMaxDamage: 8,
+            armorFlat: -5, spellMinDamage: 4, spellMaxDamage: 8,
             dmgPerStat: 400, dmgScalingStat: ResistanceStat.Agility,
-            dmgIsPhysical: true, maxUses: 1, isWeaponEnchant: false
+            dmgIsPhysical: true, maxUses: 0, isWeaponEnchant: false
         }));
-        console.log("  marked_shot SpellConfig set");
+        console.log("  hunters_mark -> Marked Shot SpellConfig set");
 
-        // Rogue - Expose Weakness: -15% STR debuff, -800 armor, 4-8 phys dmg, 0.4/AGI, 1 use
-        SpellConfig.set(_effectId("expose_weakness"), SpellConfigData({
+        // Rogue - Expose Weakness (uses OLD shadowstep effectId for existing player items):
+        // -15% STR debuff, -8 armor, 4-8 phys dmg, 0.4/AGI, unlimited uses
+        SpellConfig.set(_effectId("shadowstep"), SpellConfigData({
             strPct: -1500, agiPct: 0, intPct: 0, hpPct: 0,
-            armorFlat: -800, spellMinDamage: 4, spellMaxDamage: 8,
+            armorFlat: -8, spellMinDamage: 4, spellMaxDamage: 8,
             dmgPerStat: 400, dmgScalingStat: ResistanceStat.Agility,
-            dmgIsPhysical: true, maxUses: 1, isWeaponEnchant: false
+            dmgIsPhysical: true, maxUses: 0, isWeaponEnchant: false
         }));
-        console.log("  expose_weakness SpellConfig set");
+        console.log("  shadowstep -> Expose Weakness SpellConfig set");
 
-        // Druid - Entangle: -15% STR, -25% AGI debuff, -300 armor, 3-6 magic dmg, 0.3/INT, 1 use
+        // Druid - Entangle: -15% STR, -25% AGI debuff, -3 armor, 3-6 magic dmg, 0.3/INT, unlimited uses
         SpellConfig.set(_effectId("entangle"), SpellConfigData({
             strPct: -1500, agiPct: -2500, intPct: 0, hpPct: 0,
-            armorFlat: -300, spellMinDamage: 3, spellMaxDamage: 6,
+            armorFlat: -3, spellMinDamage: 3, spellMaxDamage: 6,
             dmgPerStat: 300, dmgScalingStat: ResistanceStat.Intelligence,
-            dmgIsPhysical: false, maxUses: 1, isWeaponEnchant: false
+            dmgIsPhysical: false, maxUses: 0, isWeaponEnchant: false
         }));
         console.log("  entangle SpellConfig set");
 
@@ -115,28 +117,30 @@ contract DeployClassSpellsV2 is Script {
         }));
         console.log("  soul_drain_curse SpellConfig set");
 
-        // Wizard - Arcane Blast: pure damage, 5-10 magic, 0.5/INT, 3 uses
-        // Note: arcane_blast_damage is a MagicDamage effect, not a StatusEffect.
-        // SpellConfig is only for StatusEffect type effects. Wizard uses existing magic damage path.
-        // We set config on arcane_blast_damage anyway for the maxUses tracking if needed.
-        // Actually — Arcane Blast has no status effect, it's pure damage via MagicDamage effect type.
-        // The spell use tracking needs to happen in the MagicDamage path too if we want to limit uses.
-        // For now, Wizard's Arcane Blast works via the existing magic damage path and doesn't need SpellConfig.
-        // Skip — Wizard uses existing MagicDamage effect type directly.
+        // Wizard - Arcane Blast: 5-10 magic dmg, 0.5/INT, 3 uses
+        // Uses MagicDamage effect path. CombatSystem checks hasSpellConfig for maxUses tracking.
+        SpellConfig.set(_effectId("arcane_blast_damage"), SpellConfigData({
+            strPct: 0, agiPct: 0, intPct: 0, hpPct: 0,
+            armorFlat: 0, spellMinDamage: 5, spellMaxDamage: 10,
+            dmgPerStat: 500, dmgScalingStat: ResistanceStat.Intelligence,
+            dmgIsPhysical: false, maxUses: 3, isWeaponEnchant: false
+        }));
+        console.log("  arcane_blast_damage SpellConfig set");
 
-        // Sorcerer - Arcane Infusion: weapon enchant, 3-6 magic, 0.25/INT, 1 use
-        SpellConfig.set(_effectId("arcane_infusion"), SpellConfigData({
+        // Sorcerer - Arcane Infusion (uses OLD arcane_surge_damage effectId for existing player items):
+        // weapon enchant, 3-6 magic, 0.25/INT, unlimited uses
+        SpellConfig.set(_effectId("arcane_surge_damage"), SpellConfigData({
             strPct: 0, agiPct: 0, intPct: 0, hpPct: 0,
             armorFlat: 0, spellMinDamage: 3, spellMaxDamage: 6,
             dmgPerStat: 250, dmgScalingStat: ResistanceStat.Intelligence,
-            dmgIsPhysical: false, maxUses: 1, isWeaponEnchant: true
+            dmgIsPhysical: false, maxUses: 0, isWeaponEnchant: true
         }));
-        console.log("  arcane_infusion SpellConfig set");
+        console.log("  arcane_surge_damage -> Arcane Infusion SpellConfig set");
 
-        // Cleric - Blessing: +12% INT buff, +15% maxHp heal, +700 armor, no dmg, 2 uses
+        // Cleric - Blessing: +12% INT buff, +15% maxHp heal, +7 armor, no dmg, 2 uses
         SpellConfig.set(_effectId("blessing"), SpellConfigData({
             strPct: 0, agiPct: 0, intPct: 1200, hpPct: 1500,
-            armorFlat: 700, spellMinDamage: 0, spellMaxDamage: 0,
+            armorFlat: 7, spellMinDamage: 0, spellMaxDamage: 0,
             dmgPerStat: 0, dmgScalingStat: ResistanceStat.None,
             dmgIsPhysical: false, maxUses: 2, isWeaponEnchant: false
         }));
@@ -146,64 +150,60 @@ contract DeployClassSpellsV2 is Script {
     }
 
     function _updateStatusEffectStats() internal {
-        console.log("Updating StatusEffectStats (flat values as fallback)...");
+        console.log("Updating StatusEffectStats (zero fallbacks for V2 spells)...");
 
-        // For spells with SpellConfig, the flat StatusEffectStats values serve as a fallback.
-        // ComputedEffectMods will override them at runtime.
-        // We still need valid entries for the effects system to not revert.
+        // V2 uses ComputedEffectMods (percentage-based, computed at cast time).
+        // StatusEffectStats serves as fallback — set to zero so V2 path always wins.
+        // Existing V1 entries for battle_cry, divine_shield, entangle, soul_drain_curse,
+        // blessing, hunters_mark, shadowstep already exist from V1 deploy.
+        // arcane_surge_damage is a MagicDamage effect — its StatusEffect fallback for
+        // Arcane Infusion (weapon enchant) needs to exist as StatusEffect type.
 
-        // New effects for redesigned spells (Ranger, Rogue, Sorcerer)
-        // Marked Shot (replaces hunters_mark for Ranger)
-        bytes32 markedShot = _effectId("marked_shot");
-        StatusEffectStats.set(markedShot, StatusEffectStatsData({
-            agiModifier: 0, armorModifier: 0, damagePerTick: 0,
-            hpModifier: 0, intModifier: 0, resistanceStat: ResistanceStat.Agility,
-            strModifier: 0
-        }));
-        StatusEffectTargeting.set(markedShot, false);
-        Effects.set(markedShot, EffectType.StatusEffect, true);
-        console.log("  marked_shot effect created");
-
-        // Expose Weakness (replaces shadowstep for Rogue)
-        bytes32 exposeWeakness = _effectId("expose_weakness");
-        StatusEffectStats.set(exposeWeakness, StatusEffectStatsData({
-            agiModifier: 0, armorModifier: 0, damagePerTick: 0,
-            hpModifier: 0, intModifier: 0, resistanceStat: ResistanceStat.Strength,
-            strModifier: 0
-        }));
-        StatusEffectTargeting.set(exposeWeakness, false);
-        Effects.set(exposeWeakness, EffectType.StatusEffect, true);
-        console.log("  expose_weakness effect created");
-
-        // Arcane Infusion (replaces arcane_surge for Sorcerer)
-        bytes32 arcaneInfusion = _effectId("arcane_infusion");
-        StatusEffectStats.set(arcaneInfusion, StatusEffectStatsData({
+        // Arcane Surge → Arcane Infusion: change effect type from MagicDamage to StatusEffect
+        // so the spell system can process it as a weapon enchant
+        bytes32 arcaneSurge = _effectId("arcane_surge_damage");
+        StatusEffectStats.set(arcaneSurge, StatusEffectStatsData({
             agiModifier: 0, armorModifier: 0, damagePerTick: 0,
             hpModifier: 0, intModifier: 0, resistanceStat: ResistanceStat.None,
             strModifier: 0
         }));
-        StatusEffectTargeting.set(arcaneInfusion, true);
-        Effects.set(arcaneInfusion, EffectType.StatusEffect, true);
-        console.log("  arcane_infusion effect created");
+        StatusEffectTargeting.set(arcaneSurge, true); // self-targeting (weapon enchant)
+        Effects.set(arcaneSurge, EffectType.StatusEffect, true);
+        console.log("  arcane_surge_damage -> StatusEffect (Arcane Infusion)");
 
         console.log("StatusEffectStats updated");
     }
 
     function _updateStatusEffectValidity() internal {
-        console.log("Updating StatusEffectValidity...");
+        console.log("Updating StatusEffectValidity to sim targets...");
 
-        // All existing effects keep their validTurns.
-        // New effects need validity entries.
-        StatusEffectValidity.set(_effectId("marked_shot"), StatusEffectValidityData({
-            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 4
+        // Update ALL spell durations to match sim CLASS_SPELLS values
+        StatusEffectValidity.set(_effectId("battle_cry"), StatusEffectValidityData({
+            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 8
         }));
-
-        StatusEffectValidity.set(_effectId("expose_weakness"), StatusEffectValidityData({
-            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 3
+        StatusEffectValidity.set(_effectId("divine_shield"), StatusEffectValidityData({
+            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 8
         }));
-
-        StatusEffectValidity.set(_effectId("arcane_infusion"), StatusEffectValidityData({
-            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 4
+        StatusEffectValidity.set(_effectId("hunters_mark"), StatusEffectValidityData({
+            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 8
+        }));
+        StatusEffectValidity.set(_effectId("shadowstep"), StatusEffectValidityData({
+            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 8
+        }));
+        StatusEffectValidity.set(_effectId("entangle"), StatusEffectValidityData({
+            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 8
+        }));
+        // Soul Drain: 5t (already correct, but set explicitly)
+        StatusEffectValidity.set(_effectId("soul_drain_curse"), StatusEffectValidityData({
+            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 5
+        }));
+        // Arcane Infusion (on arcane_surge_damage effectId): 10t
+        StatusEffectValidity.set(_effectId("arcane_surge_damage"), StatusEffectValidityData({
+            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 10
+        }));
+        // Blessing: 6t (already correct, but set explicitly)
+        StatusEffectValidity.set(_effectId("blessing"), StatusEffectValidityData({
+            cooldown: 0, maxStacks: 1, validTime: 0, validTurns: 6
         }));
 
         console.log("StatusEffectValidity updated");

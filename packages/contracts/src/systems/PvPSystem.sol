@@ -148,7 +148,8 @@ contract PvPSystem is System {
                     attackerDied: false,
                     defenderDied: false,
                     blockNumber: block.number,
-                    timestamp: block.timestamp
+                    timestamp: block.timestamp,
+                    doubleStrike: false
                 });
                 outcome.hit[0] = true;
                 ActionOutcome.set(encounterId, encounterData.currentTurn, i, outcome);
@@ -346,7 +347,8 @@ contract PvPSystem is System {
             attackerDied: false,
             defenderDied: false,
             blockNumber: block.number,
-            timestamp: block.timestamp
+            timestamp: block.timestamp,
+            doubleStrike: false
         });
     }
 

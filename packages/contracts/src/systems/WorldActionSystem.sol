@@ -106,7 +106,8 @@ contract WorldActionSystem is System {
             attackerDied: false,
             defenderDied: false,
             blockNumber: block.number,
-            timestamp: block.timestamp
+            timestamp: block.timestamp,
+            doubleStrike: false
         });
     }
 

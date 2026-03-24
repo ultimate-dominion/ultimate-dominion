@@ -168,7 +168,7 @@ contract CombatSystem is System {
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
                     // calculate damage
-                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
+                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i], actionOutcomeData.doubleStrike) =
                     _calculatePhysicalEffect(
                         actionOutcomeData.effectIds[i],
                         actionOutcomeData.attackerId,
@@ -259,7 +259,7 @@ contract CombatSystem is System {
         uint256 randomNumber,
         AdjustedCombatStats memory attacker,
         AdjustedCombatStats memory defender
-    ) internal view returns (int256 damage, bool hit, bool crit) {
+    ) internal view returns (int256 damage, bool hit, bool crit, bool doubleStrike) {
         // get weapon stats
         WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
 
@@ -331,6 +331,7 @@ contract CombatSystem is System {
                 // Double strike (AGI weapons only)
                 if (hit && usesAgi && CombatMath.calculateDoubleStrike(attacker.agility, defender.agility, rnChunks[1])) {
                     damage = damage + damage / int256(DOUBLE_STRIKE_DAMAGE_DIVISOR);
+                    doubleStrike = true;
                 }
 
                 // Weapon enchant bonus (Sorcerer's Arcane Infusion)
@@ -360,7 +361,7 @@ contract CombatSystem is System {
         uint256 randomNumber,
         AdjustedCombatStats memory attacker,
         AdjustedCombatStats memory defender
-    ) internal view returns (int256 damage, bool hit, bool crit) {
+    ) internal returns (int256 damage, bool hit, bool crit) {
 
         // Check item type - weapons with magic effects need different handling
         ItemType itemType = Items.getItemType(itemId);
@@ -383,6 +384,15 @@ contract CombatSystem is System {
         }
 
         if (!IWorld(_world()).UD__checkItemEffect(itemId, effectId)) revert InvalidAction();
+
+        // Wizard maxUses: if this MagicDamage effect has a SpellConfig with maxUses, track usage
+        if (IWorld(_world()).UD__hasSpellConfig(effectId)) {
+            bytes32 encounterId = EncounterEntity.getEncounterId(attackerId);
+            bool canCast = IWorld(_world()).UD__consumeSpellUse(encounterId, attackerId, effectId);
+            if (!canCast) {
+                return (0, false, false);
+            }
+        }
 
         MagicDamageStatsData memory attackStats = IWorld(_world()).UD__getMagicDamageStats(effectId);
 
@@ -457,6 +467,13 @@ contract CombatSystem is System {
 
                 // Minimum damage floor — landed hits always deal at least 1
                 if (damage < 1) damage = 1;
+
+                // Spell dodge (AGI defense vs magic — combat triangle: AGI > INT)
+                uint64 spellDodgeRn = uint64(uint256(keccak256(abi.encode(randomNumber, "spellDodge"))));
+                if (CombatMath.calculateSpellDodge(defender.agility, spellDodgeRn)) {
+                    damage = 0;
+                    hit = false;
+                }
 
                 // Weapon enchant bonus (Sorcerer's Arcane Infusion)
                 if (hit && damage > 0) {
