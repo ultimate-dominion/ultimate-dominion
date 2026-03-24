@@ -148,8 +148,7 @@ contract PvPSystem is System {
                     attackerDied: false,
                     defenderDied: false,
                     blockNumber: block.number,
-                    timestamp: block.timestamp,
-                    doubleStrike: false
+                    timestamp: block.timestamp
                 });
                 outcome.hit[0] = true;
                 ActionOutcome.set(encounterId, encounterData.currentTurn, i, outcome);
@@ -162,7 +161,7 @@ contract PvPSystem is System {
             currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
-            currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
+            (currentActionData,) = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
 
             // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
@@ -347,8 +346,7 @@ contract PvPSystem is System {
             attackerDied: false,
             defenderDied: false,
             blockNumber: block.number,
-            timestamp: block.timestamp,
-            doubleStrike: false
+            timestamp: block.timestamp
         });
     }
 

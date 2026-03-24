@@ -124,6 +124,12 @@ struct AdjustedCombatStats {
     int256 currentHp;
 }
 
+struct CombatFlagsResult {
+    bool doubleStrike;
+    bool spellDodged;
+    bool blocked;
+}
+
 /////////////////////////////////// SHOPS /////////////////////////////////////
 
 struct ShopTemplate {

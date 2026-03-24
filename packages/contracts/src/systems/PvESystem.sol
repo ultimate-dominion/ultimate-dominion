@@ -178,7 +178,7 @@ contract PvESystem is System {
                 );
 
                 uint256 randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn, w)));
-                mobAction = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
+                (mobAction,) = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
 
                 // set offchain table
                 ActionOutcome.set(encounterId, encounterData.currentTurn, actionIndex + numberOfExecutedActions, mobAction);
@@ -228,8 +228,7 @@ contract PvESystem is System {
                     attackerDied: false,
                     defenderDied: false,
                     blockNumber: block.number,
-                    timestamp: block.timestamp,
-                    doubleStrike: false
+                    timestamp: block.timestamp
                 });
                 outcome.hit[0] = true;
                 ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, outcome);
@@ -242,7 +241,7 @@ contract PvESystem is System {
             ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
-            currentActionData = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
+            (currentActionData,) = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
             // emit action data to offchain table
             ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, currentActionData);
         }
@@ -283,8 +282,7 @@ contract PvESystem is System {
             attackerDied: false,
             defenderDied: false,
             blockNumber: block.number,
-            timestamp: block.timestamp,
-            doubleStrike: false
+            timestamp: block.timestamp
         });
     }
 

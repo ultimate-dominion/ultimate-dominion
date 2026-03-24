@@ -70,7 +70,7 @@ contract WorldActionSystem is System {
     function _executeWorldActions(uint256 randomNumber, bytes32 givingEntity, Action[] memory actions) internal {
         for (uint256 i; i < actions.length; i++) {
             ActionOutcomeData memory action = _getCurrentActionData(actions[i]);
-            action = IWorld(_world()).UD__executeAction(action, randomNumber);
+            (action,) = IWorld(_world()).UD__executeAction(action, randomNumber);
             ActionOutcome.set(givingEntity, 0, 0, action);
         }
     }
@@ -106,8 +106,7 @@ contract WorldActionSystem is System {
             attackerDied: false,
             defenderDied: false,
             blockNumber: block.number,
-            timestamp: block.timestamp,
-            doubleStrike: false
+            timestamp: block.timestamp
         });
     }
 

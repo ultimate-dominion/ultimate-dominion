@@ -17,6 +17,7 @@ import {
     CombatEncounterData,
     ActionOutcome,
     ActionOutcomeData,
+    CombatFlags,
     WeaponStats,
     Items,
     WeaponStatsData,
@@ -34,7 +35,7 @@ import {
 } from "@codegen/index.sol";
 import {ResistanceStat, EffectType, ItemType} from "@codegen/common.sol";
 import {SpellConfig, SpellConfigData, StatusEffectTargeting} from "@codegen/index.sol";
-import {Action, AdjustedCombatStats} from "@interfaces/Structs.sol";
+import {Action, AdjustedCombatStats, CombatFlagsResult} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {
     DEFENSE_MODIFIER,
@@ -139,8 +140,9 @@ contract CombatSystem is System {
 
     function executeAction(ActionOutcomeData memory actionOutcomeData, uint256 randomNumber)
         public
-        returns (ActionOutcomeData memory)
+        returns (ActionOutcomeData memory, CombatFlagsResult memory)
     {
+        CombatFlagsResult memory flags;
         _requireSystemOrAdmin(_msgSender());
 
         // if the defender is alive and attacker is alive, execute the action
@@ -168,7 +170,7 @@ contract CombatSystem is System {
                 //decode action data according to type
                 if (effectData.effectType == EffectType.PhysicalDamage) {
                     // calculate damage
-                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i], actionOutcomeData.doubleStrike) =
+                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i], flags.doubleStrike) =
                     _calculatePhysicalEffect(
                         actionOutcomeData.effectIds[i],
                         actionOutcomeData.attackerId,
@@ -191,7 +193,7 @@ contract CombatSystem is System {
                     }
                 } else if (effectData.effectType == EffectType.MagicDamage) {
                     // calculate damage
-                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i]) =
+                    (actionOutcomeData.damagePerHit[i], actionOutcomeData.hit[i], actionOutcomeData.crit[i], flags.spellDodged) =
                     _calculateMagicEffect(
                         actionOutcomeData.effectIds[i],
                         actionOutcomeData.attackerId,
@@ -240,7 +242,7 @@ contract CombatSystem is System {
                 EncounterEntity.setDied(actionOutcomeData.attackerId, true);
             }
         }
-        return actionOutcomeData;
+        return (actionOutcomeData, flags);
     }
 
     function getDied(bytes32 entityId) public view returns (bool isDied) {
@@ -361,7 +363,7 @@ contract CombatSystem is System {
         uint256 randomNumber,
         AdjustedCombatStats memory attacker,
         AdjustedCombatStats memory defender
-    ) internal returns (int256 damage, bool hit, bool crit) {
+    ) internal returns (int256 damage, bool hit, bool crit, bool spellDodged) {
 
         // Check item type - weapons with magic effects need different handling
         ItemType itemType = Items.getItemType(itemId);
@@ -390,7 +392,7 @@ contract CombatSystem is System {
             bytes32 encounterId = EncounterEntity.getEncounterId(attackerId);
             bool canCast = IWorld(_world()).UD__consumeSpellUse(encounterId, attackerId, effectId);
             if (!canCast) {
-                return (0, false, false);
+                return (0, false, false, false);
             }
         }
 
@@ -473,6 +475,7 @@ contract CombatSystem is System {
                 if (CombatMath.calculateSpellDodge(defender.agility, spellDodgeRn)) {
                     damage = 0;
                     hit = false;
+                    spellDodged = true;
                 }
 
                 // Weapon enchant bonus (Sorcerer's Arcane Infusion)
