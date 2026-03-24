@@ -1,7 +1,7 @@
 ---
 title: "PvP Games With Real Stakes: Where Losing Actually Costs You Something"
 description: "PvP games where losing has real consequences — from full-loot MMOs and gold escrow systems to permadeath MUDs. Games where winning matters because losing hurts."
-date: 2026-03-12
+date: 2026-03-18
 tags: ["PvP", "recommendations", "game-design"]
 draft: false
 ---

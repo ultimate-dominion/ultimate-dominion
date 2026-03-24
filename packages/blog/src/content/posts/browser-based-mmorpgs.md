@@ -1,7 +1,7 @@
 ---
 title: "Browser-Based MMORPGs: Games You Can Play Right Now With No Download"
 description: "The best browser-based MMORPGs and RPGs you can play right now in 2026 with no downloads. From text-based MUDs to graphical browser games — open a tab and start playing."
-date: 2026-03-12
+date: 2026-03-11
 tags: ["guide", "browser-games", "MMORPG"]
 draft: false
 ---
