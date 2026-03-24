@@ -16,13 +16,14 @@ import {
     Spawned,
     ActionOutcome,
     ActionOutcomeData,
+    CombatFlags,
     Items,
     ConsumableStats,
     ConsumableStatsData
 } from "@codegen/index.sol";
 import {ItemType} from "@codegen/common.sol";
 import {NoWeaponsEquipped, InvalidAction, OnlyHealingInCombat} from "../Errors.sol";
-import {Action, MonsterStats} from "@interfaces/Structs.sol";
+import {Action, MonsterStats, CombatFlagsResult} from "@interfaces/Structs.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
 
 contract PvESystem is System {
@@ -178,10 +179,13 @@ contract PvESystem is System {
                 );
 
                 uint256 randomNumber = uint256(keccak256(abi.encode(randomness, mobAction.attackerId, encounterData.currentTurn, w)));
-                (mobAction,) = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
+                CombatFlagsResult memory mobFlags;
+                (mobAction, mobFlags) = IWorld(_world()).UD__executeAction(mobAction, randomNumber);
 
-                // set offchain table
-                ActionOutcome.set(encounterId, encounterData.currentTurn, actionIndex + numberOfExecutedActions, mobAction);
+                // set offchain tables
+                uint256 mobActionIdx = actionIndex + numberOfExecutedActions;
+                ActionOutcome.set(encounterId, encounterData.currentTurn, mobActionIdx, mobAction);
+                CombatFlags.set(encounterId, encounterData.currentTurn, mobActionIdx, mobFlags.doubleStrike, mobFlags.spellDodged, mobFlags.blocked);
                 actionIndex++;
             }
         }
@@ -231,7 +235,9 @@ contract PvESystem is System {
                     timestamp: block.timestamp
                 });
                 outcome.hit[0] = true;
-                ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, outcome);
+                uint256 consumableIdx = i + numberOfExecutedActions;
+                ActionOutcome.set(encounterId, encounterData.currentTurn, consumableIdx, outcome);
+                CombatFlags.set(encounterId, encounterData.currentTurn, consumableIdx, false, false, false);
                 continue;
             }
 
@@ -241,9 +247,12 @@ contract PvESystem is System {
             ActionOutcomeData memory currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
-            (currentActionData,) = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
-            // emit action data to offchain table
-            ActionOutcome.set(encounterId, encounterData.currentTurn, i + numberOfExecutedActions, currentActionData);
+            CombatFlagsResult memory playerFlags;
+            (currentActionData, playerFlags) = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
+            // emit action data to offchain tables
+            uint256 playerActionIdx = i + numberOfExecutedActions;
+            ActionOutcome.set(encounterId, encounterData.currentTurn, playerActionIdx, currentActionData);
+            CombatFlags.set(encounterId, encounterData.currentTurn, playerActionIdx, playerFlags.doubleStrike, playerFlags.spellDodged, playerFlags.blocked);
         }
     }
 

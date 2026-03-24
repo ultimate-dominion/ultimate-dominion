@@ -16,12 +16,13 @@ import {
     Spawned,
     ActionOutcome,
     ActionOutcomeData,
+    CombatFlags,
     Items,
     ConsumableStats,
     ConsumableStatsData
 } from "@codegen/index.sol";
 import {EncounterType, ItemType} from "@codegen/common.sol";
-import {Action} from "@interfaces/Structs.sol";
+import {Action, CombatFlagsResult} from "@interfaces/Structs.sol";
 import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID} from "../../constants.sol";
 import {
     NoWeaponsEquipped,
@@ -161,10 +162,12 @@ contract PvPSystem is System {
             currentActionData = _getCurrentActionData(currentAction);
 
             // execute action
-            (currentActionData,) = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
+            CombatFlagsResult memory pvpFlags;
+            (currentActionData, pvpFlags) = IWorld(_world()).UD__executeAction(currentActionData, randomNumber);
 
-            // emit action data to offchain table
+            // emit action data to offchain tables
             ActionOutcome.set(encounterId, encounterData.currentTurn, i, currentActionData);
+            CombatFlags.set(encounterId, encounterData.currentTurn, i, pvpFlags.doubleStrike, pvpFlags.spellDodged, pvpFlags.blocked);
         }
 
         encounterData.currentTurnTimer = block.timestamp;

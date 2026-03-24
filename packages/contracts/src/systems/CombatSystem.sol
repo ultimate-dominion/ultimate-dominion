@@ -178,7 +178,8 @@ contract CombatSystem is System {
                         actionOutcomeData.itemId,
                         randomNumber,
                         cachedAttacker,
-                        cachedDefender
+                        cachedDefender,
+                        flags
                     );
                     actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
@@ -201,7 +202,8 @@ contract CombatSystem is System {
                         actionOutcomeData.itemId,
                         randomNumber,
                         cachedAttacker,
-                        cachedDefender
+                        cachedDefender,
+                        flags
                     );
                     actionOutcomeData.attackerDamageDelt += actionOutcomeData.damagePerHit[i];
                     // if hit deduct damage
@@ -260,7 +262,8 @@ contract CombatSystem is System {
         uint256 itemId,
         uint256 randomNumber,
         AdjustedCombatStats memory attacker,
-        AdjustedCombatStats memory defender
+        AdjustedCombatStats memory defender,
+        CombatFlagsResult memory flags
     ) internal view returns (int256 damage, bool hit, bool crit, bool doubleStrike) {
         // get weapon stats
         WeaponStatsData memory weapon = IWorld(_world()).UD__getWeaponStats(itemId);
@@ -319,6 +322,7 @@ contract CombatSystem is System {
                 uint64 blockRn = uint64(uint256(keccak256(abi.encode(randomNumber))));
                 if (CombatMath.calculateBlock(defender.strength, blockRn)) {
                     damage = damage * 45 / 100;
+                    flags.blocked = true;
                 }
 
                 // Minimum damage floor — landed hits always deal at least 1
@@ -362,7 +366,8 @@ contract CombatSystem is System {
         uint256 itemId,
         uint256 randomNumber,
         AdjustedCombatStats memory attacker,
-        AdjustedCombatStats memory defender
+        AdjustedCombatStats memory defender,
+        CombatFlagsResult memory flags
     ) internal returns (int256 damage, bool hit, bool crit, bool spellDodged) {
 
         // Check item type - weapons with magic effects need different handling
@@ -464,6 +469,7 @@ contract CombatSystem is System {
                     uint64 magicBlockRn = uint64(uint256(keccak256(abi.encode(randomNumber, "magicBlock"))));
                     if (CombatMath.calculateBlock(defender.strength, magicBlockRn)) {
                         damage = damage * 70 / 100;
+                        flags.blocked = true;
                     }
                 }
 

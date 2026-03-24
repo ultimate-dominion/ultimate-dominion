@@ -333,6 +333,9 @@ export const BattleProvider = ({
   // Reactive: re-renders when any ActionOutcome row changes
   const actionOutcomeTable = useGameTable('ActionOutcome');
 
+  // Reactive: re-renders when any CombatFlags row changes
+  const combatFlagsTable = useGameTable('CombatFlags');
+
   const allAttackOutcomes = useMemo(() => {
     return Object.entries(actionOutcomeTable)
       .map(([keyBytes, outcome]) => {
@@ -342,6 +345,9 @@ export const BattleProvider = ({
         const currentTurn = BigInt('0x' + (clean.slice(64, 128) || '0'));
         const attackNumber = BigInt('0x' + (clean.slice(128, 192) || '0'));
 
+        // Look up matching CombatFlags row (same composite key)
+        const flagsRow = combatFlagsTable[keyBytes];
+
         const toArray = <T,>(val: unknown, map: (v: unknown) => T): T[] =>
           Array.isArray(val) ? val.map(map) : [map(val)];
 
@@ -350,6 +356,7 @@ export const BattleProvider = ({
           attackerDied: Boolean(outcome.attackerDied),
           attackerId: outcome.attackerId as string,
           attackNumber,
+          blocked: Boolean(flagsRow?.blocked),
           blockNumber: toBigInt(outcome.blockNumber),
           crit: toArray(outcome.crit, Boolean),
           currentTurn,
@@ -357,11 +364,13 @@ export const BattleProvider = ({
           defenderDamageDelt: toBigInt(outcome.defenderDamageDelt),
           defenderDied: Boolean(outcome.defenderDied),
           defenderId: outcome.defenderId as string,
+          doubleStrike: Boolean(flagsRow?.doubleStrike),
           effectIds: (outcome.effectIds as string[]) ?? [],
           encounterId,
           hit: toArray(outcome.hit, Boolean),
           itemId: outcome.itemId != null ? outcome.itemId.toString() : '0',
           miss: toArray(outcome.miss, Boolean),
+          spellDodged: Boolean(flagsRow?.spellDodged),
           timestamp: toBigInt(outcome.timestamp),
         } as AttackOutcomeType;
       })
@@ -370,7 +379,7 @@ export const BattleProvider = ({
           attack.attackerId === character?.id ||
           attack.defenderId === character?.id,
       );
-  }, [actionOutcomeTable, character]);
+  }, [actionOutcomeTable, combatFlagsTable, character]);
 
   const currentBattleAttackOutcomes = useMemo(
     () =>

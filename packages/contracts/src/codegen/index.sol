@@ -66,6 +66,7 @@ import { Shops, ShopsData } from "./tables/Shops.sol";
 import { ShopSale, ShopSaleData } from "./tables/ShopSale.sol";
 import { RngLogs, RngLogsData } from "./tables/RngLogs.sol";
 import { ActionOutcome, ActionOutcomeData } from "./tables/ActionOutcome.sol";
+import { CombatFlags, CombatFlagsData } from "./tables/CombatFlags.sol";
 import { DamageOverTimeApplied, DamageOverTimeAppliedData } from "./tables/DamageOverTimeApplied.sol";
 import { CombatOutcome, CombatOutcomeData } from "./tables/CombatOutcome.sol";
 import { AllowedGameSystems } from "./tables/AllowedGameSystems.sol";

@@ -13,13 +13,14 @@ import {
     ConsumableStats,
     ConsumableStatsData,
     ActionOutcome,
-    ActionOutcomeData
+    ActionOutcomeData,
+    CombatFlags
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {RngRequestType, EncounterType} from "@codegen/common.sol";
-import {Action} from "@interfaces/Structs.sol";
+import {Action, CombatFlagsResult} from "@interfaces/Structs.sol";
 import {IRngSystem} from "@interfaces/IRngSystem.sol";
 import {_requireAccess, _requireSystemOrAdmin} from "../utils.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
@@ -70,8 +71,10 @@ contract WorldActionSystem is System {
     function _executeWorldActions(uint256 randomNumber, bytes32 givingEntity, Action[] memory actions) internal {
         for (uint256 i; i < actions.length; i++) {
             ActionOutcomeData memory action = _getCurrentActionData(actions[i]);
-            (action,) = IWorld(_world()).UD__executeAction(action, randomNumber);
+            CombatFlagsResult memory worldFlags;
+            (action, worldFlags) = IWorld(_world()).UD__executeAction(action, randomNumber);
             ActionOutcome.set(givingEntity, 0, 0, action);
+            CombatFlags.set(givingEntity, 0, 0, worldFlags.doubleStrike, worldFlags.spellDodged, worldFlags.blocked);
         }
     }
 
