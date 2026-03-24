@@ -2,7 +2,7 @@
 /**
  * Retune Cavern Brute (mob ID 3) — reduce tankiness for L2-3 non-STR builds.
  *
- * Changes: HP 18→14, STR 9→7, ARM 1→0
+ * Changes: HP 14→18, STR 7→9, ARM 0→1
  *
  * Usage:
  *   npx tsx scripts/admin/retune-cavern-brute.ts                    # dry run
@@ -31,7 +31,7 @@ const MOB_ID = 3; // Cavern Brute
 const MOB_NAME = 'Cavern Brute';
 
 // Target stats
-const TARGET = { hitPoints: 14n, strength: 7n, armor: 0n };
+const TARGET = { hitPoints: 18n, strength: 9n, armor: 1n };
 
 const MOBS_TABLE_ID = '0x746255440000000000000000000000004d6f6273000000000000000000000000' as Hex;
 const MOBS_FIELD_LAYOUT = '0x0001010201000000000000000000000000000000000000000000000000000000' as Hex;

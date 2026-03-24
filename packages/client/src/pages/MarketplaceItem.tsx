@@ -342,6 +342,9 @@ export const MarketplaceItem = (): JSX.Element => {
         refreshOrders();
         onCloseAllowanceModal();
         onOpenConfirmationModal();
+        import('../utils/analytics').then(({ trackMarketplaceListing }) =>
+          trackMarketplaceListing(selectedItem?.name ?? 'Unknown'),
+        );
       }
     },
     [

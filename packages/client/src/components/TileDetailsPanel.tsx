@@ -368,6 +368,9 @@ export const TileDetailsPanel = (): JSX.Element => {
         setPendingOpponent(null);
         if (result !== undefined) {
           refreshCharacter();
+          import('../utils/analytics').then(({ trackCombatStarted }) =>
+            trackCombatStarted(opponent.name, Number(opponent.level ?? 1n), Number(character.level)),
+          );
         }
         return;
       }
@@ -400,6 +403,15 @@ export const TileDetailsPanel = (): JSX.Element => {
 
       if (result !== undefined) {
         refreshCharacter();
+        if (encounterType === EncounterType.PvE) {
+          import('../utils/analytics').then(({ trackCombatStarted }) =>
+            trackCombatStarted(opponent.name, Number(opponent.level ?? 1n), Number(character.level)),
+          );
+        } else {
+          import('../utils/analytics').then(({ trackPvpStarted }) =>
+            trackPvpStarted(Number(opponent.level ?? 1n), Number(character.level)),
+          );
+        }
         // Don't clear isWaitingForBattle — effect clears when currentBattle arrives
       } else {
         // TX failed, clear immediately

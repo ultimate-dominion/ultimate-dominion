@@ -70,10 +70,10 @@
       "metadataUri": "monster:cavern_brute",
       "stats": {
         "agility": 4,
-        "armor": 0,
+        "armor": 1,
         "class": 0,
         "experience": 550,
-        "hitPoints": 14,
+        "hitPoints": 18,
         "intelligence": 3,
         "inventoryNames": [
           "Stone Fist",
@@ -95,7 +95,7 @@
           "Tattered Hide"
         ],
         "level": 3,
-        "strength": 7
+        "strength": 9
       }
     },
     {

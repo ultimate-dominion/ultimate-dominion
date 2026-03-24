@@ -22,7 +22,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useTransaction } from '../hooks/useTransaction';
 import { CLASS_PAGE_PATH } from '../Routes';
 import { getClassImage } from '../utils/classImages';
-import { AdvancedClass } from '../utils/types';
+import { AdvancedClass, ADVANCED_CLASS_NAMES } from '../utils/types';
 
 // Advanced class info with descriptions and bonuses
 const ADVANCED_CLASS_INFO: Record<AdvancedClass, {
@@ -154,6 +154,9 @@ export const AdvancedClassModal = ({
     if (result !== undefined) {
       onClassSelected();
       setConfirmedClass(selectedClass);
+      import('../utils/analytics').then(({ trackAdvancedClassSelected }) =>
+        trackAdvancedClassSelected(ADVANCED_CLASS_NAMES[selectedClass] ?? 'Unknown'),
+      );
     }
   }, [characterId, selectedClass, onClassSelected, selectAdvancedClass, selectClassTx]);
 

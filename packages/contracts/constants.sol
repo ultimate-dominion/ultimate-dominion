@@ -34,7 +34,7 @@ address constant PLAYER_COUNTER_KEY = address(1);
 // Stable key for the character token counter (must NOT be address(this) — that resets on system upgrades)
 address constant CHARACTER_TOKEN_COUNTER_KEY = address(2);
 
-uint256 constant DEFAULT_MAX_TURNS = 30;
+uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1.2 ether;
 uint256 constant AGI_ATTACK_MODIFIER = 1.0 ether;
@@ -103,7 +103,7 @@ uint256 constant ELITE_STAT_MULTIPLIER = 130; // 1.3x STR/AGI/INT
 uint256 constant ELITE_HP_MULTIPLIER = 150;   // 1.5x HP
 uint256 constant ELITE_REWARD_MULTIPLIER = 150; // 1.5x XP/gold
 uint256 constant ELITE_DROP_MULTIPLIER = 200; // 2x multiplicative drop chance (elite dc = base * 200 / 100)
-uint256 constant STAT_VARIANCE_PCT = 10;      // ±10% variance on all spawns
+uint256 constant STAT_VARIANCE_PCT = 25;      // ±25% variance on all spawns
 
 // Flashpowder / Smoke Cloak — flee without gold penalty
 bytes8 constant SMOKE_CLOAK_EFFECT_STAT_ID = 0x5db83b18b4d1bdc3; // keccak256(abi.encode("smoke_cloak"))[:8]

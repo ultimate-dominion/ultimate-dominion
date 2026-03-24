@@ -1027,6 +1027,20 @@ export default defineWorld({
       key: ["encounterId", "currentTurn", "attackNumber"],
       type: "offchainTable",
     },
+    // Combat flags — companion to ActionOutcome for extensible per-attack metadata.
+    // Separate table because ActionOutcome schema is immutable on the production world.
+    CombatFlags: {
+      key: ["encounterId", "currentTurn", "attackNumber"],
+      schema: {
+        encounterId: "bytes32",
+        currentTurn: "uint256",
+        attackNumber: "uint256",
+        doubleStrike: "bool",
+        spellDodged: "bool",
+        blocked: "bool",
+      },
+      type: "offchainTable",
+    },
     DamageOverTimeApplied: {
       key: ["encounterId", "turnNumber"],
       schema: {
