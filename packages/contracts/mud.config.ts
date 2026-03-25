@@ -150,6 +150,10 @@ export default defineWorld({
       name: "MapRemovalSys",
       openAccess: true,
     },
+    ZoneTransitionSystem: {
+      name: "ZoneTransSys",
+      openAccess: true,
+    },
     ShopSystem: {
       name: "ShopSystem",
       openAccess: true,
@@ -1198,6 +1202,35 @@ export default defineWorld({
         zoneId: "uint256",
         maxLevel: "uint256",
         badgeBase: "uint256",
+      },
+    },
+    // Current zone a character is in (defaults to 0 = unset, treat as zone 1)
+    CharacterZone: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        zoneId: "uint256",
+      },
+    },
+    // Per-zone map configuration (grid dimensions + coordinate origin)
+    ZoneMapConfig: {
+      key: ["zoneId"],
+      schema: {
+        zoneId: "uint256",
+        width: "uint16",
+        height: "uint16",
+        originX: "uint16",
+        originY: "uint16",
+        minLevel: "uint256",
+      },
+    },
+    // Zone-scoped mob pools — replaces MobsByLevel for tile spawning
+    MobsByZoneLevel: {
+      key: ["zoneId", "level"],
+      schema: {
+        zoneId: "uint256",
+        level: "uint256",
+        mobIds: "uint256[]",
       },
     },
     ///////////////////////////////////// GUILDS ///////////////////////////////////

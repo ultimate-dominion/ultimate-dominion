@@ -7,6 +7,7 @@ import {
     Position,
     EntitiesAtPosition,
     MobsByLevel,
+    MobsByZoneLevel,
     Mobs,
     MobsData,
     MobStats,
@@ -38,6 +39,13 @@ contract MobSystem is System {
             MobsByLevel.pushMobIds(newMob.level, mobId);
         }
         return mobId;
+    }
+
+    /// @notice Register a mob template in a zone's level-based spawn pool.
+    /// @dev Called by zone-loader after createMob to populate MobsByZoneLevel.
+    function registerMobInZone(uint256 zoneId, uint256 level, uint256 mobId) public {
+        _requireAccessOrAdmin(address(this), _msgSender());
+        MobsByZoneLevel.pushMobIds(zoneId, level, mobId);
     }
 
     function createMobs(MobType[] calldata mobTypes, bytes[] calldata stats, string[] calldata mobMetadataURIs) external {

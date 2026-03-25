@@ -81,6 +81,9 @@ import { FragmentMetadata, FragmentMetadataData } from "./tables/FragmentMetadat
 import { ZoneCompletions, ZoneCompletionsData } from "./tables/ZoneCompletions.sol";
 import { CharacterZoneCompletion, CharacterZoneCompletionData } from "./tables/CharacterZoneCompletion.sol";
 import { ZoneConfig, ZoneConfigData } from "./tables/ZoneConfig.sol";
+import { CharacterZone } from "./tables/CharacterZone.sol";
+import { ZoneMapConfig, ZoneMapConfigData } from "./tables/ZoneMapConfig.sol";
+import { MobsByZoneLevel } from "./tables/MobsByZoneLevel.sol";
 import { Guild, GuildData } from "./tables/Guild.sol";
 import { GuildMember, GuildMemberData } from "./tables/GuildMember.sol";
 import { CraftingRecipe, CraftingRecipeData } from "./tables/CraftingRecipe.sol";
