@@ -17,7 +17,7 @@ const INDEXER_URL = 'https://indexer-production-d6df.up.railway.app';
 
 // Known addresses for realistic calls
 const DEPLOYER = '0xF282dcCB96301C26fc68AA02e7253F90e7D8770f';
-const BETA_WORLD = '0xD2051EB4F5001d46c11F928BD6578Bd5f7e028A3';
+const BETA_WORLD = '0xeB023E9B5A0C452B202306eDa50255EfaF555426';
 
 // RPC call definitions
 const RPC_CALLS: Record<string, () => object> = {

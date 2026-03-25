@@ -9,7 +9,7 @@ How to deploy every component of Ultimate Dominion, from contracts to infrastruc
 | Environment | Chain | Chain ID | World Address | Branch | Client URL |
 |-------------|-------|----------|---------------|--------|------------|
 | **Local** | Anvil | 31337 | Auto-generated | Any | `http://localhost:3000` |
-| **Beta** | Base Mainnet | 8453 | `0xD2051EB4F5001d46c11F928BD6578Bd5f7e028A3` | `dev` | `https://beta.ultimatedominion.com` |
+| **Beta** | Base Mainnet | 8453 | `0xeB023E9B5A0C452B202306eDa50255EfaF555426` | `dev` | `https://beta.ultimatedominion.com` |
 | **Production** | Base Mainnet | 8453 | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `main` | `https://ultimatedominion.com` |
 
 Both beta and production run on Base Mainnet (chain 8453). They are distinguished **only** by world address. Never mix them.

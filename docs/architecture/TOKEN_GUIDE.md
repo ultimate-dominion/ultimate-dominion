@@ -200,7 +200,7 @@ UltimateDominionConfig.getFragmentToken()
 ```
 
 Production World: `0x99d01939F58B965E6E84a1D167E710Abdf5764b0`
-Beta World: `0xD2051EB4F5001d46c11F928BD6578Bd5f7e028A3`
+Beta World: `0xeB023E9B5A0C452B202306eDa50255EfaF555426`
 
 Query token addresses by calling `UD__getCharacterToken()`, `UD__getGoldToken()`, or `UD__getItemsContract()` on the World.
 
