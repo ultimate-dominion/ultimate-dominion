@@ -65,7 +65,7 @@ int256 constant STAT_POINTS_LATE = 1;        // Levels 51-100 (every 5 levels)
 uint256 constant EARLY_GAME_CAP = 10;
 uint256 constant MID_GAME_CAP = 50;
 uint256 constant EXP_MODIFIER = 2;
-uint256 constant MAX_LEVEL = 10;
+uint256 constant MAX_LEVEL = 20;
 uint256 constant POWER_SOURCE_BONUS_LEVEL = 5;
 
 // Class multipliers (stored as basis points: 1000 = 100%, 1100 = 110%)
@@ -107,6 +107,11 @@ uint256 constant STAT_VARIANCE_PCT = 25;      // ±25% variance on all spawns
 
 // Flashpowder / Smoke Cloak — flee without gold penalty
 bytes8 constant SMOKE_CLOAK_EFFECT_STAT_ID = 0x5db83b18b4d1bdc3; // keccak256(abi.encode("smoke_cloak"))[:8]
+
+// Stable escrow address — decoupled from LootManagerSystem deploys.
+// Deterministic: keccak256("ud.escrow") truncated to 160 bits.
+// No private key exists for this address.
+address constant ESCROW_ADDRESS = address(uint160(uint256(keccak256("ud.escrow"))));
 
 // Character creation
 uint256 constant MAX_STAT_ROLLS = 4; // 1 initial roll + 3 re-rolls

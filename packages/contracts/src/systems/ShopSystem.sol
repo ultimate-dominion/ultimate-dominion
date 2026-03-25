@@ -2,7 +2,6 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
 import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -19,8 +18,7 @@ import {
     UltimateDominionConfig
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {_lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y} from "../../constants.sol";
+import {CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y, ESCROW_ADDRESS} from "../../constants.sol";
 import {Position} from "@codegen/index.sol";
 import {GoldLib} from "../libraries/GoldLib.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
@@ -99,7 +97,7 @@ contract ShopSystem is System, ReentrancyGuard {
         sellTemps.sellableItems = Shops.getSellableItems(shopId);
         {
             address seller = _msgSender();
-            address lootManager = _lootManagerAddress();
+            address lootManager = ESCROW_ADDRESS;
             uint256 itemId = sellTemps.sellableItems[itemIndex];
             bytes14 ns = ITEMS_NAMESPACE;
 
@@ -133,7 +131,7 @@ contract ShopSystem is System, ReentrancyGuard {
 
         {
             address seller = _msgSender();
-            address lootManager = _lootManagerAddress();
+            address lootManager = ESCROW_ADDRESS;
             bytes14 ns = ITEMS_NAMESPACE;
 
             uint256 sellerBalance = ERC1155Owners.getBalance(_ownersTableId(ns), seller, itemId);
@@ -227,10 +225,6 @@ contract ShopSystem is System, ReentrancyGuard {
 
     function shopSystemAddress() external view returns (address) {
         return address(this);
-    }
-
-    function _lootManagerAddress() internal view returns (address) {
-        return Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
     }
 
     function _isValidCharacterId(bytes32 characterId) private view returns (bool) {

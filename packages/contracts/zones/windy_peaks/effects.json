@@ -1,0 +1,445 @@
+{
+  "magicDamage": [
+    {
+      "effectId": "0xeee09063621624b3000000000000000000000000000000000000000000000000",
+      "name": "basic magic attack",
+      "stats": {
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
+    }
+  ],
+  "physicalDamage": [
+    {
+      "effectId": "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000",
+      "name": "basic weapon attack",
+      "stats": {
+        "armorPenetration": 0,
+        "attackModifierBonus": 0,
+        "bonusDamage": 0,
+        "critChanceBonus": 0
+      }
+    }
+  ],
+  "statusEffects": [
+    {
+      "effectId": "0xb7049bad48f2a66c000000000000000000000000000000000000000000000000",
+      "name": "slash_wound",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": -3,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
+      }
+    },
+    {
+      "effectId": "0xf709e38676df7d34000000000000000000000000000000000000000000000000",
+      "name": "cold_touch",
+      "stats": {
+        "agiModifier": -4,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0xac0682fdf2515e0e000000000000000000000000000000000000000000000000",
+      "name": "ground_pound",
+      "stats": {
+        "agiModifier": -3,
+        "armorModifier": -2,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": -3
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0xeebd896a2209e6f4000000000000000000000000000000000000000000000000",
+      "name": "wind_gust",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": -3,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": -4
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0x77349bb3686dc671000000000000000000000000000000000000000000000000",
+      "name": "decay_bite",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 4,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 5
+      }
+    },
+    {
+      "effectId": "0x280fd0d21a0b8fb6000000000000000000000000000000000000000000000000",
+      "name": "corruption",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": -3,
+        "resistanceStat": 0,
+        "strModifier": -3
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
+      }
+    },
+    {
+      "effectId": "0xfec8dcc3e4131d00000000000000000000000000000000000000000000000000",
+      "name": "gore",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 4,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 5
+      }
+    },
+    {
+      "effectId": "0xf43e8cfd4725c1e2000000000000000000000000000000000000000000000000",
+      "name": "burn",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 5
+      }
+    },
+    {
+      "effectId": "0x088fad8bedba635e000000000000000000000000000000000000000000000000",
+      "name": "ground_slam",
+      "stats": {
+        "agiModifier": -3,
+        "armorModifier": -2,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": -3
+      },
+      "validity": {
+        "cooldown": 3,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0x76b175af5f2315c1000000000000000000000000000000000000000000000000",
+      "name": "z2_bleed",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 2,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
+      }
+    },
+    {
+      "effectId": "0x7af0d4bd63319dad000000000000000000000000000000000000000000000000",
+      "name": "hamstring",
+      "stats": {
+        "agiModifier": -3,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0x6a399c7576e37cc8000000000000000000000000000000000000000000000000",
+      "name": "wither",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": -4
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
+      }
+    },
+    {
+      "effectId": "0x1572219e3a77962c000000000000000000000000000000000000000000000000",
+      "name": "deep_wound",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 5
+      }
+    },
+    {
+      "effectId": "0xb24214f6cc85bd9a000000000000000000000000000000000000000000000000",
+      "name": "crush",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": -4,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
+      }
+    },
+    {
+      "effectId": "0x85bbb16cd3db481d000000000000000000000000000000000000000000000000",
+      "name": "lacerate",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 5
+      }
+    },
+    {
+      "effectId": "0xedaadf442c11bf1c000000000000000000000000000000000000000000000000",
+      "name": "enfeeble",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": -3,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": -6
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 5
+      }
+    },
+    {
+      "effectId": "0x8a99d61d1575dcea000000000000000000000000000000000000000000000000",
+      "name": "arcane_burn",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 5
+      }
+    },
+    {
+      "effectId": "0xeb21614602efcccd000000000000000000000000000000000000000000000000",
+      "name": "armor_rend",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": -3,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0x5f454d0c772d2299000000000000000000000000000000000000000000000000",
+      "name": "venom_strike",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 5
+      }
+    },
+    {
+      "effectId": "0xb99c837f09f773ca000000000000000000000000000000000000000000000000",
+      "name": "soulfire",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 2,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
+      }
+    },
+    {
+      "effectId": "0x0351039567033836000000000000000000000000000000000000000000000000",
+      "name": "z2_weaken",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 0,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": -2
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 3
+      }
+    },
+    {
+      "effectId": "0x3621e76cd133d43c000000000000000000000000000000000000000000000000",
+      "name": "z2_hybrid_bleed",
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 0,
+        "damagePerTick": 3,
+        "hpModifier": 0,
+        "intModifier": 0,
+        "resistanceStat": 0,
+        "strModifier": 0
+      },
+      "validity": {
+        "cooldown": 0,
+        "maxStacks": 1,
+        "validTime": 0,
+        "validTurns": 4
+      }
+    }
+  ]
+}

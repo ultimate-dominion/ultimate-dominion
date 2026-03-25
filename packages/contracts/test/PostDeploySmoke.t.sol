@@ -32,7 +32,7 @@ import {_balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-pupp
 import {_erc20SystemId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {_erc1155SystemId} from "../src/utils.sol";
 import {NotAuthorizedCaller} from "../src/utils.sol";
-import {GOLD_NAMESPACE, ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../constants.sol";
+import {GOLD_NAMESPACE, ITEMS_NAMESPACE, WORLD_NAMESPACE, ESCROW_ADDRESS} from "../constants.sol";
 
 contract PostDeploySmoke is Test {
     IWorld public world;
@@ -230,21 +230,18 @@ contract PostDeploySmoke is Test {
     //  can't buy from players, breaking the entire economy.
     // ================================================================
 
-    function test_economicHealth_lootManagerGold() public {
-        console.log("=== Layer 3a: LootManager Gold Balance ===");
-
-        address lootManager = _sysAddr("LootManagerSyste");
-        require(lootManager != address(0), "LootManager not registered");
+    function test_economicHealth_escrowGold() public {
+        console.log("=== Layer 3a: Escrow Gold Balance ===");
 
         ResourceId goldBalancesTableId = _balancesTableId(GOLD_NAMESPACE);
-        uint256 lootManagerGold = ERC20Balances.get(goldBalancesTableId, lootManager);
+        uint256 escrowGold = ERC20Balances.get(goldBalancesTableId, ESCROW_ADDRESS);
 
-        console.log("  LootManager address:", lootManager);
-        console.log("  LootManager gold balance:", lootManagerGold / 1e18, "Gold");
+        console.log("  Escrow address:", ESCROW_ADDRESS);
+        console.log("  Escrow gold balance:", escrowGold / 1e18, "Gold");
 
-        assertGt(lootManagerGold, 0, "LootManager gold balance is 0 - data orphaned after system upgrade?");
+        assertGt(escrowGold, 0, "Escrow gold balance is 0 - migration to stable escrow address incomplete?");
 
-        console.log("[PASS] LootManager has gold");
+        console.log("[PASS] Escrow has gold");
     }
 
     function test_economicHealth_shopGold() public {

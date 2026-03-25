@@ -31,20 +31,20 @@ contract UpdateXpThresholds is Script {
         Levels.setExperience(9, 16000);
         Levels.setExperience(10, 25000);
 
-        // Mid-game: quadratic growth (L11-30)
-        uint256 baseExp = 25000;
-        for (uint256 level = 11; level <= 30; level++) {
-            baseExp += (level * level * 250);
-            Levels.setExperience(level, baseExp);
-        }
-
-        // Late game: cubic growth (L31-50)
-        for (uint256 level = 31; level <= 50; level++) {
-            baseExp += (level * level * level * 10);
-            Levels.setExperience(level, baseExp);
-        }
+        // Z2: gentle linear ramp — 200→400 fights/level, ~60 hours total
+        // Sim values /100 to match on-chain XP scale
+        Levels.setExperience(11, 26600);
+        Levels.setExperience(12, 28800);
+        Levels.setExperience(13, 31680);
+        Levels.setExperience(14, 35320);
+        Levels.setExperience(15, 39800);
+        Levels.setExperience(16, 45200);
+        Levels.setExperience(17, 51600);
+        Levels.setExperience(18, 59300);
+        Levels.setExperience(19, 68800);
+        Levels.setExperience(20, 84800);
 
         vm.stopBroadcast();
-        console.log("XP thresholds updated for levels 1-50");
+        console.log("XP thresholds updated for levels 1-20");
     }
 }

@@ -64,61 +64,61 @@ const __dirname = dirname(__filename);
 const Z2_MONSTERS: Monster[] = [
   // L11 — Rogue. Fast mountain predator. Entry mob. Slash wound debuff.
   // Target: 85-90% WR. Step up from Z1 — HP/damage bump over DC L10.
-  { name: "Z2-L11-Rogue", level: 11, str: 15, agi: 27, int: 7,
+  { name: "Ridge Stalker", level: 11, str: 15, agi: 27, int: 7,
     hp: 95, armor: 4, classType: 1, xp: 800,
     weaponMinDmg: 7, weaponMaxDmg: 12, weaponScaling: "agi", weaponIsMagic: false },
 
   // L12 — Mage. Frost caster. Magic damage + cold debuff (AGI reduction).
   // Target: 80-90% WR. Magic bypasses armor — threatens STR tanks.
-  { name: "Z2-L12-Mage", level: 12, str: 10, agi: 11, int: 28,
+  { name: "Frost Wraith", level: 12, str: 10, agi: 11, int: 28,
     hp: 90, armor: 3, classType: 2, xp: 1000,
     weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "str", weaponIsMagic: true },
 
   // L13 — Warrior. Rock golem. Moderate armor, pure physical. DPS check.
   // Target: 80-85% WR. Tanky but fair.
-  { name: "Z2-L13-Warrior", level: 13, str: 24, agi: 8, int: 5,
+  { name: "Granite Sentinel", level: 13, str: 24, agi: 8, int: 5,
     hp: 100, armor: 5, classType: 0, xp: 1200,
     weaponMinDmg: 8, weaponMaxDmg: 12, weaponScaling: "str", weaponIsMagic: false },
 
   // L14 — Rogue. Wind creature. Very evasive + wind gust debuff.
   // Target: 80-85% WR. Evasion makes hits unreliable, gust strips armor.
-  { name: "Z2-L14-Rogue", level: 14, str: 12, agi: 29, int: 7,
+  { name: "Gale Phantom", level: 14, str: 12, agi: 29, int: 7,
     hp: 100, armor: 4, classType: 1, xp: 1400,
     weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "agi", weaponIsMagic: false },
 
   // L15 — Warrior. Decay-touched beast. HP + poison DoT. Endurance test.
   // Target: 75-85% WR. DoT does the work — base stats don't need to be extreme.
-  { name: "Z2-L15-Warrior", level: 15, str: 25, agi: 10, int: 6,
+  { name: "Blighthorn", level: 15, str: 25, agi: 10, int: 6,
     hp: 100, armor: 5, classType: 0, xp: 1600,
     weaponMinDmg: 7, weaponMaxDmg: 12, weaponScaling: "str", weaponIsMagic: false },
 
   // L16 — Mage. Storm caster. Magic + lightning breath attack. DPS check.
   // Target: 75-85% WR. Breath + base magic = dual damage sources.
-  { name: "Z2-L16-Mage", level: 16, str: 10, agi: 12, int: 29,
+  { name: "Storm Shrike", level: 16, str: 10, agi: 12, int: 29,
     hp: 90, armor: 4, classType: 2, xp: 1800,
     weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "str", weaponIsMagic: true },
 
   // L17 — Rogue. Corrupted faction scout. Dual magic + corruption debuff.
   // Target: 75-80% WR. Dual magic + corruption makes this a gear check.
-  { name: "Z2-L17-Rogue", level: 17, str: 14, agi: 30, int: 10,
+  { name: "Hollow Scout", level: 17, str: 14, agi: 30, int: 10,
     hp: 100, armor: 5, classType: 1, xp: 2000,
     weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "agi", weaponIsMagic: false },
 
-  // L18 — Warrior. Mountain wyvern. Physical + venom DoT.
+  // L18 — Warrior. Mountain beast. Physical + bleed DoT.
   // Target: 70-80% WR. DoT + sustained physical, not stat-wall.
-  { name: "Z2-L18-Warrior", level: 18, str: 27, agi: 14, int: 8,
+  { name: "Ironpeak Charger", level: 18, str: 27, agi: 14, int: 8,
     hp: 105, armor: 6, classType: 0, xp: 2200,
     weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "str", weaponIsMagic: false },
 
-  // L19 — Mage. Frost wyrm. Breath attack + frost DoT. Hard pre-boss.
+  // L19 — Mage. Heat wraith. Breath attack + burn DoT. Hard pre-boss.
   // Target: 70-80% WR. Breath + DoT compound, don't need extreme INT.
-  { name: "Z2-L19-Mage", level: 19, str: 12, agi: 14, int: 29,
+  { name: "Peakfire Wraith", level: 19, str: 12, agi: 14, int: 29,
     hp: 90, armor: 4, classType: 2, xp: 2500,
     weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "str", weaponIsMagic: true },
 
-  // L20 — Warrior. ZONE BOSS. Physical + thunder breath + ground slam debuff.
+  // L20 — Warrior. ZONE BOSS. War-touched soldier. Thunder breath + ground slam.
   // Target: 65-75% WR avg. Low ARM (5) so AGI can penetrate. Moderate breath.
-  { name: "Z2-L20-Boss", level: 20, str: 29, agi: 14, int: 7,
+  { name: "Korrath's Warden", level: 20, str: 29, agi: 14, int: 7,
     hp: 125, armor: 5, classType: 0, xp: 4000,
     weaponMinDmg: 9, weaponMaxDmg: 14, weaponScaling: "str", weaponIsMagic: false },
 ];
@@ -126,46 +126,46 @@ const Z2_MONSTERS: Monster[] = [
 // Monster weapon effects (keyed by monster name)
 // Effects buffed to compound over longer fights — armor strip, DoTs, stat drain
 const Z2_MONSTER_EFFECTS: Record<string, WeaponEffect[]> = {
-  // L11 Rogue: slash wound — strips armor, makes subsequent hits hurt more
-  "Z2-L11-Rogue": [
+  // L11 Ridge Stalker: slash wound — strips armor, makes subsequent hits hurt more
+  "Ridge Stalker": [
     { type: "stat_debuff", name: "Slash Wound", strMod: 0, agiMod: 0, intMod: 0, armorMod: -3, duration: 4 },
   ],
-  // L12 Mage: cold touch — slows target, reduces evasion
-  "Z2-L12-Mage": [
+  // L12 Frost Wraith: cold touch — slows target, reduces evasion
+  "Frost Wraith": [
     { type: "stat_debuff", name: "Cold Touch", agiMod: -4, strMod: 0, intMod: 0, armorMod: 0, duration: 3 },
   ],
-  // L13 Warrior: ground pound — weakens + shakes loose defenses
-  "Z2-L13-Warrior": [
+  // L13 Granite Sentinel: ground pound — weakens + shakes loose defenses
+  "Granite Sentinel": [
     { type: "stat_debuff", name: "Ground Pound", strMod: -3, agiMod: -3, intMod: 0, armorMod: -2, duration: 3 },
   ],
-  // L14 Rogue: wind gust — weakens physical defense + strips armor
-  "Z2-L14-Rogue": [
+  // L14 Gale Phantom: wind gust — weakens physical defense + strips armor
+  "Gale Phantom": [
     { type: "stat_debuff", name: "Wind Gust", strMod: -4, agiMod: 0, intMod: 0, armorMod: -3, duration: 3 },
   ],
-  // L15 Warrior: decay bite — poison DoT, higher tick damage
-  "Z2-L15-Warrior": [
+  // L15 Blighthorn: decay bite — poison DoT, higher tick damage
+  "Blighthorn": [
     { type: "dot", name: "Decay Bite", damagePerTick: 4, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
-  // L16 Mage: lightning breath — harder-hitting magic burst
-  "Z2-L16-Mage": [
+  // L16 Storm Shrike: lightning breath — harder-hitting magic burst
+  "Storm Shrike": [
     { type: "magic_breath", name: "Lightning Bolt", minDmg: 7, maxDmg: 12, cooldown: 2 },
   ],
-  // L17 Rogue: dual magic + corruption debuff (drains STR and INT)
-  "Z2-L17-Rogue": [
+  // L17 Hollow Scout: dual magic + corruption debuff (drains STR and INT)
+  "Hollow Scout": [
     { type: "dual_magic", name: "dual_magic" },
     { type: "stat_debuff", name: "Corruption", strMod: -3, agiMod: 0, intMod: -3, armorMod: 0, duration: 4 },
   ],
-  // L18 Warrior: venom spit — stronger DoT
-  "Z2-L18-Warrior": [
-    { type: "dot", name: "Venom Spit", damagePerTick: 4, maxStacks: 1, duration: 5, cooldown: 0 },
+  // L18 Ironpeak Charger: gore — bleed DoT
+  "Ironpeak Charger": [
+    { type: "dot", name: "Gore", damagePerTick: 4, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
-  // L19 Mage: frost breath + frost DoT — dual threat
-  "Z2-L19-Mage": [
-    { type: "magic_breath", name: "Frost Breath", minDmg: 8, maxDmg: 13, cooldown: 2 },
-    { type: "dot", name: "Frostbite", damagePerTick: 3, maxStacks: 1, duration: 5, cooldown: 0 },
+  // L19 Peakfire Wraith: searing breath + burn DoT — dual threat
+  "Peakfire Wraith": [
+    { type: "magic_breath", name: "Searing Breath", minDmg: 8, maxDmg: 13, cooldown: 2 },
+    { type: "dot", name: "Burn", damagePerTick: 3, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
-  // L20 Boss: thunder breath (moderate — INT 7 limits resist) + ground slam
-  "Z2-L20-Boss": [
+  // L20 Korrath's Warden: thunder breath + ground slam
+  "Korrath's Warden": [
     { type: "magic_breath", name: "Thunder Clap", minDmg: 6, maxDmg: 11, cooldown: 2 },
     { type: "stat_debuff", name: "Ground Slam", strMod: -3, agiMod: -3, intMod: 0, armorMod: -2, duration: 3, cooldown: 3 },
   ],
@@ -179,104 +179,104 @@ const Z2_MONSTER_EFFECTS: Record<string, WeaponEffect[]> = {
 
 const Z2_WEAPONS: Weapon[] = [
   // ---- STR PURE PATH ----
-  { name: "Z2-STR-R1", minDamage: 5, maxDamage: 8, strMod: 1, agiMod: 0, intMod: 0, hpMod: 2,
+  { name: "Ridgestone Hammer", minDamage: 5, maxDamage: 8, strMod: 1, agiMod: 0, intMod: 0, hpMod: 2,
     scaling: "str", isMagic: false, minStr: 16, minAgi: 0, minInt: 0, rarity: 1, price: 40 },
-  { name: "Z2-STR-R2", minDamage: 6, maxDamage: 10, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3,
+  { name: "Peak Cleaver", minDamage: 6, maxDamage: 10, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3,
     scaling: "str", isMagic: false, minStr: 20, minAgi: 0, minInt: 0, rarity: 2, price: 80 },
-  { name: "Z2-STR-R3", minDamage: 7, maxDamage: 12, strMod: 3, agiMod: 0, intMod: 0, hpMod: 4,
+  { name: "Windforged Axe", minDamage: 7, maxDamage: 12, strMod: 3, agiMod: 0, intMod: 0, hpMod: 4,
     scaling: "str", isMagic: false, minStr: 24, minAgi: 0, minInt: 0, rarity: 3, price: 150 },
-  { name: "Z2-STR-R4", minDamage: 9, maxDamage: 14, strMod: 4, agiMod: 0, intMod: 0, hpMod: 5,
+  { name: "Warden's Maul", minDamage: 9, maxDamage: 14, strMod: 4, agiMod: 0, intMod: 0, hpMod: 5,
     scaling: "str", isMagic: false, minStr: 28, minAgi: 0, minInt: 0, rarity: 4, price: 300 },
 
   // ---- AGI PURE PATH — HP mods added to close survivability gap vs STR ----
-  { name: "Z2-AGI-R1", minDamage: 4, maxDamage: 7, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2,
+  { name: "Scrub Bow", minDamage: 4, maxDamage: 7, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2,
     scaling: "agi", isMagic: false, minStr: 0, minAgi: 16, minInt: 0, rarity: 1, price: 40 },
-  { name: "Z2-AGI-R2", minDamage: 5, maxDamage: 9, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3,
+  { name: "Gale Bow", minDamage: 5, maxDamage: 9, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3,
     scaling: "agi", isMagic: false, minStr: 0, minAgi: 20, minInt: 0, rarity: 2, price: 80 },
-  { name: "Z2-AGI-R3", minDamage: 6, maxDamage: 11, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4,
+  { name: "Stormfeather Bow", minDamage: 6, maxDamage: 11, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4,
     scaling: "agi", isMagic: false, minStr: 0, minAgi: 24, minInt: 0, rarity: 3, price: 150 },
-  { name: "Z2-AGI-R4", minDamage: 7, maxDamage: 13, strMod: 0, agiMod: 4, intMod: 0, hpMod: 5,
+  { name: "Peakwind Longbow", minDamage: 7, maxDamage: 13, strMod: 0, agiMod: 4, intMod: 0, hpMod: 5,
     scaling: "agi", isMagic: false, minStr: 0, minAgi: 28, minInt: 0, rarity: 4, price: 300 },
 
   // ---- INT PURE PATH (magic) — HP mods added to close survivability gap vs STR ----
-  { name: "Z2-INT-R1", minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2,
+  { name: "Frozen Shard", minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2,
     scaling: "str", isMagic: true, minStr: 0, minAgi: 0, minInt: 16, rarity: 1, price: 40 },
-  { name: "Z2-INT-R2", minDamage: 6, maxDamage: 10, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3,
+  { name: "Rime Staff", minDamage: 6, maxDamage: 10, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3,
     scaling: "str", isMagic: true, minStr: 0, minAgi: 0, minInt: 20, rarity: 2, price: 80 },
-  { name: "Z2-INT-R3", minDamage: 8, maxDamage: 13, strMod: 0, agiMod: 0, intMod: 3, hpMod: 4,
+  { name: "Stormglass Rod", minDamage: 8, maxDamage: 13, strMod: 0, agiMod: 0, intMod: 3, hpMod: 4,
     scaling: "str", isMagic: true, minStr: 0, minAgi: 0, minInt: 24, rarity: 3, price: 150 },
-  { name: "Z2-INT-R4", minDamage: 10, maxDamage: 15, strMod: 0, agiMod: 0, intMod: 4, hpMod: 6,
+  { name: "Wraith Beacon", minDamage: 10, maxDamage: 15, strMod: 0, agiMod: 0, intMod: 4, hpMod: 6,
     scaling: "str", isMagic: true, minStr: 0, minAgi: 0, minInt: 28, rarity: 4, price: 300 },
 
   // ---- HYBRID WEAPONS (harder to equip, unique effects) ----
 
   // STR/INT hybrid — dual magic (physical + magic hit per round)
   // STR build needs ~4 off-path INT (base 6 → 10)
-  { name: "Z2-STR/INT-Hybrid", minDamage: 5, maxDamage: 9, strMod: 2, agiMod: 0, intMod: 2, hpMod: 2,
+  { name: "Warden's Ember", minDamage: 5, maxDamage: 9, strMod: 2, agiMod: 0, intMod: 2, hpMod: 2,
     scaling: "str", isMagic: false, minStr: 18, minAgi: 0, minInt: 10, rarity: 3, price: 200 },
 
   // AGI/INT hybrid — dual magic (fast strikes + magic burst)
   // AGI build needs ~3 off-path INT (base 7 → 10)
-  { name: "Z2-AGI/INT-Hybrid", minDamage: 4, maxDamage: 8, strMod: 0, agiMod: 2, intMod: 2, hpMod: 0,
+  { name: "Windweaver", minDamage: 4, maxDamage: 8, strMod: 0, agiMod: 2, intMod: 2, hpMod: 0,
     scaling: "agi", isMagic: false, minStr: 0, minAgi: 18, minInt: 10, rarity: 3, price: 200 },
 
   // STR/AGI hybrid — bleed DoT + armor strip
   // STR build needs ~3 off-path AGI (base 3 → 6). Very expensive for Dwarf/Plate builds.
-  { name: "Z2-STR/AGI-Hybrid", minDamage: 6, maxDamage: 10, strMod: 2, agiMod: 2, intMod: 0, hpMod: 3,
+  { name: "Ridgefang", minDamage: 6, maxDamage: 10, strMod: 2, agiMod: 2, intMod: 0, hpMod: 3,
     scaling: "str", isMagic: false, minStr: 18, minAgi: 6, minInt: 0, rarity: 3, price: 200 },
 
   // AGI/STR hybrid — venom strike
   // AGI build needs ~3 off-path STR (base 5 → 8)
-  { name: "Z2-AGI/STR-Hybrid", minDamage: 5, maxDamage: 9, strMod: 2, agiMod: 2, intMod: 0, hpMod: 2,
+  { name: "Viperstrike", minDamage: 5, maxDamage: 9, strMod: 2, agiMod: 2, intMod: 0, hpMod: 2,
     scaling: "agi", isMagic: false, minStr: 8, minAgi: 18, minInt: 0, rarity: 3, price: 200 },
 
   // INT/STR hybrid — spellblade (magic + bleed)
   // INT build needs ~3 off-path STR (base 3 → 6)
-  { name: "Z2-INT/STR-Hybrid", minDamage: 6, maxDamage: 10, strMod: 1, agiMod: 0, intMod: 2, hpMod: 2,
+  { name: "Ashveil Staff", minDamage: 6, maxDamage: 10, strMod: 1, agiMod: 0, intMod: 2, hpMod: 2,
     scaling: "str", isMagic: true, minStr: 6, minAgi: 0, minInt: 18, rarity: 3, price: 200 },
 ];
 
 // Weapon effects for player weapons (keyed by weapon name)
 const Z2_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
   // R3 pure weapons get minor effects
-  "Z2-STR-R3": [
+  "Windforged Axe": [
     { type: "dot", name: "Bleed", damagePerTick: 2, maxStacks: 1, duration: 4, cooldown: 0 },
   ],
-  "Z2-AGI-R3": [
+  "Stormfeather Bow": [
     { type: "stat_debuff", name: "Hamstring", strMod: 0, agiMod: -3, intMod: 0, armorMod: 0, duration: 3 },
   ],
-  "Z2-INT-R3": [
+  "Stormglass Rod": [
     // Anti-STR: reduces STR (cuts damage + block chance). INT's counter to tanks.
     { type: "stat_debuff", name: "Wither", strMod: -4, agiMod: 0, intMod: 0, armorMod: 0, duration: 4 },
   ],
   // R4 pure weapons get strong effects
-  "Z2-STR-R4": [
+  "Warden's Maul": [
     { type: "dot", name: "Deep Wound", damagePerTick: 3, maxStacks: 1, duration: 5, cooldown: 0 },
     { type: "stat_debuff", name: "Crush", strMod: 0, agiMod: 0, intMod: 0, armorMod: -4, duration: 4 },
   ],
-  "Z2-AGI-R4": [
+  "Peakwind Longbow": [
     { type: "dot", name: "Lacerate", damagePerTick: 3, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
-  "Z2-INT-R4": [
+  "Wraith Beacon": [
     // Anti-STR: heavy STR reduction (cuts damage + block) + DoT. INT's tank-buster.
     { type: "stat_debuff", name: "Enfeeble", strMod: -6, agiMod: 0, intMod: 0, armorMod: -3, duration: 5 },
     { type: "dot", name: "Arcane Burn", damagePerTick: 3, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
   // Hybrid weapons — unique effects that justify the off-path cost
-  "Z2-STR/INT-Hybrid": [
+  "Warden's Ember": [
     { type: "dual_magic", name: "dual_magic" },
   ],
-  "Z2-AGI/INT-Hybrid": [
+  "Windweaver": [
     { type: "dual_magic", name: "dual_magic" },
   ],
-  "Z2-STR/AGI-Hybrid": [
+  "Ridgefang": [
     { type: "dot", name: "Bleed", damagePerTick: 3, maxStacks: 1, duration: 4, cooldown: 0 },
     { type: "stat_debuff", name: "Armor Rend", strMod: 0, agiMod: 0, intMod: 0, armorMod: -3, duration: 3 },
   ],
-  "Z2-AGI/STR-Hybrid": [
+  "Viperstrike": [
     { type: "dot", name: "Venom Strike", damagePerTick: 3, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
-  "Z2-INT/STR-Hybrid": [
+  "Ashveil Staff": [
     { type: "dot", name: "Soulfire", damagePerTick: 2, maxStacks: 1, duration: 4, cooldown: 0 },
     { type: "stat_debuff", name: "Weaken", strMod: -2, agiMod: 0, intMod: 0, armorMod: 0, duration: 3 },
   ],
@@ -289,33 +289,33 @@ const Z2_WEAPON_EFFECTS: Record<string, WeaponEffect[]> = {
 
 const Z2_ARMORS: Armor[] = [
   // ---- PLATE (STR builds) ----
-  { name: "Z2-Plate-R1", armorValue: 5, strMod: 1, agiMod: -1, intMod: 0, hpMod: 3,
+  { name: "Peakstone Mail", armorValue: 5, strMod: 1, agiMod: -1, intMod: 0, hpMod: 3,
     minStr: 14, minAgi: 0, minInt: 0, armorType: "Plate", rarity: 1, price: 35 },
-  { name: "Z2-Plate-R2", armorValue: 7, strMod: 2, agiMod: -1, intMod: 0, hpMod: 5,
+  { name: "Ridgeforged Plate", armorValue: 7, strMod: 2, agiMod: -1, intMod: 0, hpMod: 5,
     minStr: 18, minAgi: 0, minInt: 0, armorType: "Plate", rarity: 2, price: 70 },
-  { name: "Z2-Plate-R3", armorValue: 9, strMod: 3, agiMod: -1, intMod: 0, hpMod: 8,
+  { name: "Windsworn Plate", armorValue: 9, strMod: 3, agiMod: -1, intMod: 0, hpMod: 8,
     minStr: 22, minAgi: 0, minInt: 0, armorType: "Plate", rarity: 3, price: 140 },
-  { name: "Z2-Plate-R4", armorValue: 11, strMod: 4, agiMod: -1, intMod: 0, hpMod: 10,
+  { name: "Warden's Bulwark", armorValue: 11, strMod: 4, agiMod: -1, intMod: 0, hpMod: 10,
     minStr: 26, minAgi: 0, minInt: 0, armorType: "Plate", rarity: 4, price: 280 },
 
   // ---- LEATHER (AGI builds) — modest HP to partially close gap vs plate ----
-  { name: "Z2-Leather-R1", armorValue: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 2,
+  { name: "Mountain Hide", armorValue: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 2,
     minStr: 0, minAgi: 14, minInt: 0, armorType: "Leather", rarity: 1, price: 35 },
-  { name: "Z2-Leather-R2", armorValue: 4, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4,
+  { name: "Galebound Leather", armorValue: 4, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4,
     minStr: 0, minAgi: 18, minInt: 0, armorType: "Leather", rarity: 2, price: 70 },
-  { name: "Z2-Leather-R3", armorValue: 5, strMod: 0, agiMod: 4, intMod: 0, hpMod: 6,
+  { name: "Stormhide Vest", armorValue: 5, strMod: 0, agiMod: 4, intMod: 0, hpMod: 6,
     minStr: 0, minAgi: 22, minInt: 0, armorType: "Leather", rarity: 3, price: 140 },
-  { name: "Z2-Leather-R4", armorValue: 6, strMod: 0, agiMod: 5, intMod: 0, hpMod: 8,
+  { name: "Phantom Shroud", armorValue: 6, strMod: 0, agiMod: 5, intMod: 0, hpMod: 8,
     minStr: 0, minAgi: 26, minInt: 0, armorType: "Leather", rarity: 4, price: 280 },
 
   // ---- CLOTH (INT builds) — high HP to compensate for low ARM. Closes survivability gap vs plate. ----
-  { name: "Z2-Cloth-R1", armorValue: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 5,
+  { name: "Frostweave Robe", armorValue: 2, strMod: 0, agiMod: 0, intMod: 2, hpMod: 5,
     minStr: 0, minAgi: 0, minInt: 14, armorType: "Cloth", rarity: 1, price: 35 },
-  { name: "Z2-Cloth-R2", armorValue: 3, strMod: 0, agiMod: 0, intMod: 3, hpMod: 8,
+  { name: "Mistcloak", armorValue: 3, strMod: 0, agiMod: 0, intMod: 3, hpMod: 8,
     minStr: 0, minAgi: 0, minInt: 18, armorType: "Cloth", rarity: 2, price: 70 },
-  { name: "Z2-Cloth-R3", armorValue: 4, strMod: 0, agiMod: 0, intMod: 4, hpMod: 12,
+  { name: "Wraith Vestments", armorValue: 4, strMod: 0, agiMod: 0, intMod: 4, hpMod: 12,
     minStr: 0, minAgi: 0, minInt: 22, armorType: "Cloth", rarity: 3, price: 140 },
-  { name: "Z2-Cloth-R4", armorValue: 5, strMod: 0, agiMod: 0, intMod: 5, hpMod: 16,
+  { name: "Ember Mantle", armorValue: 5, strMod: 0, agiMod: 0, intMod: 5, hpMod: 16,
     minStr: 0, minAgi: 0, minInt: 26, armorType: "Cloth", rarity: 4, price: 280 },
 ];
 
