@@ -76,6 +76,10 @@ error UseFleeFunction();
 error SessionNotTimedOut();
 error MoveTooFast();
 error NotAtRestPosition();
+error ZoneLevelTooLow();
+error ZoneNotConfigured();
+error AlreadyInZone();
+error PrerequisiteZoneIncomplete();
 
 // Items
 error ArrayMismatch();

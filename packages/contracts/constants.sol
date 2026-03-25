@@ -23,6 +23,10 @@ uint256 constant MAX_ZONE_CONQUEROR_BADGES = 10; // Top 10 per zone
 
 // Zone IDs
 uint256 constant ZONE_DARK_CAVE = 1;
+uint256 constant ZONE_WINDY_PEAKS = 2;
+
+// Zone coordinate system — each zone's Y-origin is spaced by this amount
+uint16 constant ZONE_ORIGIN_SPACING = 100;
 
 string constant ERC721_NAME = "UDCharacters";
 string constant ERC721_SYMBOL = "UDC";

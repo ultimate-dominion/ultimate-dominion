@@ -2,48 +2,72 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {MobsByLevel, EntitiesAtPosition, BossSpawnConfig} from "@codegen/index.sol";
+import {MobsByLevel, MobsByZoneLevel, EntitiesAtPosition, BossSpawnConfig, ZoneMapConfig} from "@codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {NoMonsters} from "../Errors.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
+import {ZONE_DARK_CAVE} from "../../constants.sol";
 
 contract MapSpawnSystem is System {
     using LibChunks for uint256;
 
     function spawnOnTileEnter(uint16 x, uint16 y) public {
         _requireSystemOrAdmin(_msgSender());
-        uint256 distanceFromHome = uint256(_chebyshevDistance(0, 0, x, y));
+
+        // Derive zone from tile coordinates
+        uint256 zoneId = _deriveZoneFromPosition(x, y);
+        uint16 originX = 0;
+        uint16 originY = 0;
+        uint16 zoneWidth = ZoneMapConfig.getWidth(zoneId);
+        if (zoneWidth > 0) {
+            originX = ZoneMapConfig.getOriginX(zoneId);
+            originY = ZoneMapConfig.getOriginY(zoneId);
+        }
+
+        // Distance from zone origin (not global 0,0)
+        uint256 distanceFromHome = uint256(_chebyshevDistance(originX, originY, x, y));
         if (distanceFromHome == 0) {
             return;
         }
 
-        uint8 startLevel = 0;
-        uint8 endLevel = 0;
+        // Determine mob level range from zone config
+        uint256 minLevel = ZoneMapConfig.getMinLevel(zoneId);
+        uint256 maxLevel = ZoneMapConfig.getWidth(zoneId) > 0
+            ? minLevel + 10  // Zone's level range spans 10 levels
+            : 11;            // Fallback for unconfigured zones
 
-        if (distanceFromHome < 5) {
-            startLevel = 1;
-            endLevel = 6;
-        } else {
-            startLevel = 6;
-            endLevel = 11;
-        }
+        uint8 startLevel;
+        uint8 endLevel;
 
-        uint256 numOfMobs = 0;
-        for (uint256 i = startLevel; i < endLevel; i++) {
-            numOfMobs += MobsByLevel.lengthMobIds(i);
-        }
-
-        uint256[] memory availableMonsters = new uint256[](numOfMobs);
-        uint256 index = 0;
-
-        for (uint256 i = startLevel; i < endLevel; i++) {
-            uint256[] memory mobIds = MobsByLevel.getMobIds(i);
-            for (uint256 j = 0; j < mobIds.length; j++) {
-                availableMonsters[index] = mobIds[j];
-                index++;
+        if (minLevel == 0) {
+            // Unconfigured zone — use legacy distance-based scaling
+            if (distanceFromHome < 5) {
+                startLevel = 1;
+                endLevel = 6;
+            } else {
+                startLevel = 6;
+                endLevel = 11;
             }
+        } else {
+            // Zone-configured — scale within zone's level range
+            uint256 half = (maxLevel - minLevel) / 2;
+            if (distanceFromHome < 5) {
+                startLevel = uint8(minLevel);
+                endLevel = uint8(minLevel + half);
+            } else {
+                startLevel = uint8(minLevel + half);
+                endLevel = uint8(maxLevel);
+            }
+        }
+
+        // Try zone-scoped mob pool first, fall back to global MobsByLevel
+        uint256[] memory availableMonsters = _getAvailableMonsters(zoneId, startLevel, endLevel);
+
+        if (availableMonsters.length == 0) {
+            // Fallback: try global MobsByLevel (backward compat for Z1 before backfill)
+            availableMonsters = _getAvailableMonstersGlobal(startLevel, endLevel);
         }
 
         if (availableMonsters.length == 0) revert NoMonsters();
@@ -77,6 +101,59 @@ contract MapSpawnSystem is System {
                 }
             }
         }
+    }
+
+    /// @notice Derive zone ID from raw tile coordinates by matching against ZoneMapConfig origins.
+    /// @dev Checks zones 1-10 (expandable). Falls back to ZONE_DARK_CAVE if no match.
+    function _deriveZoneFromPosition(uint16 x, uint16 y) internal view returns (uint256) {
+        // Check configured zones (1-10 for now — cheap reads, no loops over all zones)
+        for (uint256 zId = 1; zId <= 10; zId++) {
+            uint16 w = ZoneMapConfig.getWidth(zId);
+            if (w == 0) continue; // unconfigured
+            uint16 ox = ZoneMapConfig.getOriginX(zId);
+            uint16 oy = ZoneMapConfig.getOriginY(zId);
+            uint16 h = ZoneMapConfig.getHeight(zId);
+            if (x >= ox && x < ox + w && y >= oy && y < oy + h) {
+                return zId;
+            }
+        }
+        return ZONE_DARK_CAVE;
+    }
+
+    function _getAvailableMonsters(uint256 zoneId, uint8 startLevel, uint8 endLevel) internal view returns (uint256[] memory) {
+        uint256 numOfMobs = 0;
+        for (uint256 i = startLevel; i < endLevel; i++) {
+            numOfMobs += MobsByZoneLevel.lengthMobIds(zoneId, i);
+        }
+
+        uint256[] memory monsters = new uint256[](numOfMobs);
+        uint256 idx = 0;
+        for (uint256 i = startLevel; i < endLevel; i++) {
+            uint256[] memory mobIds = MobsByZoneLevel.getMobIds(zoneId, i);
+            for (uint256 j = 0; j < mobIds.length; j++) {
+                monsters[idx] = mobIds[j];
+                idx++;
+            }
+        }
+        return monsters;
+    }
+
+    function _getAvailableMonstersGlobal(uint8 startLevel, uint8 endLevel) internal view returns (uint256[] memory) {
+        uint256 numOfMobs = 0;
+        for (uint256 i = startLevel; i < endLevel; i++) {
+            numOfMobs += MobsByLevel.lengthMobIds(i);
+        }
+
+        uint256[] memory monsters = new uint256[](numOfMobs);
+        uint256 idx = 0;
+        for (uint256 i = startLevel; i < endLevel; i++) {
+            uint256[] memory mobIds = MobsByLevel.getMobIds(i);
+            for (uint256 j = 0; j < mobIds.length; j++) {
+                monsters[idx] = mobIds[j];
+                idx++;
+            }
+        }
+        return monsters;
     }
 
     function _chebyshevDistance(uint256 x1, uint256 y1, uint256 x2, uint256 y2) internal pure returns (uint16) {

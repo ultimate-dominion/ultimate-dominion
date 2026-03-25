@@ -6,6 +6,7 @@ import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {
     Characters,
+    CharacterZone,
     Counters,
     EntitiesAtPosition,
     CharacterEquipment,
@@ -15,9 +16,10 @@ import {
     Stats,
     EncounterEntity,
     SessionTimer,
-    UltimateDominionConfig
+    UltimateDominionConfig,
+    ZoneMapConfig
 } from "../codegen/index.sol";
-import {FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y, MOVE_COOLDOWN, PLAYER_COUNTER_KEY} from "../../constants.sol";
+import {FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y, MOVE_COOLDOWN, PLAYER_COUNTER_KEY, ZONE_DARK_CAVE} from "../../constants.sol";
 import {FragmentProgress} from "@codegen/index.sol";
 import {FragmentType} from "@codegen/common.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
@@ -50,10 +52,25 @@ contract MapSystem is System {
         if (lastAction != 0 && block.timestamp < lastAction + MOVE_COOLDOWN) revert MoveTooFast();
 
         (uint16 currentX, uint16 currentY) = Position.get(entityId);
-        (uint16 height, uint16 width) = MapConfig.get();
 
-        if (x >= width) revert OutOfBounds();
-        if (y >= height) revert OutOfBounds();
+        // Zone-aware bounds checking
+        uint256 zoneId = _getCharacterZone(entityId);
+        uint16 zoneWidth = ZoneMapConfig.getWidth(zoneId);
+
+        if (zoneWidth > 0) {
+            // Zone configured — validate within zone bounds
+            uint16 originX = ZoneMapConfig.getOriginX(zoneId);
+            uint16 originY = ZoneMapConfig.getOriginY(zoneId);
+            uint16 zoneHeight = ZoneMapConfig.getHeight(zoneId);
+            if (x < originX || x >= originX + zoneWidth) revert OutOfBounds();
+            if (y < originY || y >= originY + zoneHeight) revert OutOfBounds();
+        } else {
+            // Fallback to global MapConfig (backward compat for unconfigured zones)
+            (uint16 height, uint16 width) = MapConfig.get();
+            if (x >= width) revert OutOfBounds();
+            if (y >= height) revert OutOfBounds();
+        }
+
         if (_standardDistance(currentX, currentY, x, y) != 1) revert InvalidMove();
         _moveEntity(entityId, currentX, currentY, x, y);
         IWorld(_world()).UD__spawnOnTileEnter(x, y);
@@ -81,8 +98,19 @@ contract MapSystem is System {
             Stats.setCurrentHp(entityId, maxHp);
         }
 
-        // set character position to home point
-        Position.set(entityId, 0, 0);
+        // Determine spawn position from character's zone
+        uint16 homeX = 0;
+        uint16 homeY = 0;
+        if (isCharacter) {
+            uint256 zoneId = _getCharacterZone(entityId);
+            uint16 zoneWidth = ZoneMapConfig.getWidth(zoneId);
+            if (zoneWidth > 0) {
+                homeX = ZoneMapConfig.getOriginX(zoneId);
+                homeY = ZoneMapConfig.getOriginY(zoneId);
+            }
+        }
+
+        Position.set(entityId, homeX, homeY);
         Spawned.setSpawned(entityId, true);
 
         if (isCharacter) {
@@ -97,11 +125,11 @@ contract MapSystem is System {
         // encounter wasn't properly resolved (client crash, failed tx, etc.)
         EncounterEntity.setEncounterId(entityId, bytes32(0));
         EncounterEntity.setDied(entityId, false);
-        EntitiesAtPosition.pushEntities(0, 0, entityId);
+        EntitiesAtPosition.pushEntities(homeX, homeY, entityId);
 
         // Fragment I: The Awakening - triggers on first spawn
         if (isCharacter) {
-            IWorld(_world()).UD__triggerFragment(entityId, 1, 0, 0);
+            IWorld(_world()).UD__triggerFragment(entityId, 1, homeX, homeY);
         }
     }
 
@@ -128,6 +156,11 @@ contract MapSystem is System {
 
     function getEntityPosition(bytes32 entityId) public view returns (uint16 x, uint16 y) {
         (x, y) = Position.get(entityId);
+    }
+
+    function _getCharacterZone(bytes32 entityId) internal view returns (uint256) {
+        uint256 zoneId = CharacterZone.getZoneId(entityId);
+        return zoneId == 0 ? ZONE_DARK_CAVE : zoneId;
     }
 
     function _standardDistance(uint16 fromX, uint16 fromY, uint16 toX, uint16 toY) internal pure returns (uint16) {
