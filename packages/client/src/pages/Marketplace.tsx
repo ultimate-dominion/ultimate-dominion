@@ -42,6 +42,7 @@ import {
   ItemFilterOptions,
   ItemType,
   MarketplaceFilter,
+  type Order,
   OrderType,
   type SpellTemplate,
   TokenType,
@@ -78,6 +79,35 @@ export const Marketplace = (): JSX.Element => {
     refreshOrders,
   } = useOrders();
   const { character, isRefreshing } = useCharacter();
+
+  // Map tokenId -> cheapest for-sale order (for inline Buy button)
+  const cheapestOrderByItem = useMemo(() => {
+    const map: Record<string, Order> = {};
+    for (const order of activeOrders) {
+      if (order.offer.tokenType !== TokenType.ERC1155) continue;
+      const itemId = order.offer.identifier;
+      const price = order.consideration.amount;
+      if (!map[itemId] || price < map[itemId].consideration.amount) {
+        map[itemId] = order;
+      }
+    }
+    return map;
+  }, [activeOrders]);
+
+  // Map tokenId -> highest buy-offer order (for inline Accept button)
+  const highestOfferOrderByItem = useMemo(() => {
+    const map: Record<string, Order> = {};
+    for (const order of activeOrders) {
+      if (order.offer.tokenType !== TokenType.ERC20) continue;
+      if (order.consideration.tokenType !== TokenType.ERC1155) continue;
+      const itemId = order.consideration.identifier;
+      const offerAmount = order.offer.amount;
+      if (!map[itemId] || offerAmount > map[itemId].offer.amount) {
+        map[itemId] = order;
+      }
+    }
+    return map;
+  }, [activeOrders]);
 
   const {
     isOpen: isCreateListingModalOpen,
@@ -485,11 +515,13 @@ export const Marketplace = (): JSX.Element => {
               return (
                 <>
                   <MarketplaceRow
+                    cheapestOrder={cheapestOrderByItem[item.tokenId.toString()]}
                     highestOffer={
                       highestOffers[item.tokenId.toString()]
                         ? formatEther(highestOffers[item.tokenId.toString()])
                         : '0'
                     }
+                    highestOfferOrder={highestOfferOrderByItem[item.tokenId.toString()]}
                     key={`marketplace-row-${i}`}
                     lowestPrice={
                       lowestPrices[item.tokenId.toString()]
