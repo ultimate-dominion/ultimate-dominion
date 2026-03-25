@@ -40,9 +40,11 @@ const NO_FLAGS: SimFlags = {
   useRebalanced: false,
   useV2: false,
   useV3: false,
+  useV4: false,
   useArmor: false,
   useSpells: false,
   useRetunedMonsters: false,
+  useOnchain: false,
 };
 
 describe("overrides", () => {
@@ -136,6 +138,99 @@ describe("overrides", () => {
         expect(result.monsterWeaponEffects[key]).toEqual(PROPOSED_MONSTER_WEAPON_EFFECTS[key]);
       }
       expect(result.monsterWeaponEffects["ExistingMonster"]).toBeDefined();
+    });
+  });
+
+  describe("spell completeness", () => {
+    const ALL_CLASSES = ["Warrior", "Paladin", "Ranger", "Rogue", "Druid", "Warlock", "Wizard", "Sorcerer", "Cleric"];
+
+    it("has a spell for every class", () => {
+      for (const cls of ALL_CLASSES) {
+        expect(CLASS_SPELLS[cls]).toBeDefined();
+        expect(CLASS_SPELLS[cls].name).toBeTruthy();
+      }
+    });
+
+    it("spells have valid types", () => {
+      const validTypes = ["self_buff", "debuff", "magic_damage", "damage_debuff", "damage_buff", "weapon_enchant"];
+      for (const [cls, spell] of Object.entries(CLASS_SPELLS)) {
+        expect(validTypes).toContain(spell.type);
+      }
+    });
+
+    it("damage spells have damage ranges", () => {
+      for (const [cls, spell] of Object.entries(CLASS_SPELLS)) {
+        if (spell.type === "magic_damage" || spell.type === "damage_debuff" || spell.type === "damage_buff") {
+          expect(spell.baseDmgMin).toBeDefined();
+          expect(spell.baseDmgMax).toBeDefined();
+          expect(spell.baseDmgMax! >= spell.baseDmgMin!).toBe(true);
+        }
+      }
+    });
+
+    it("buff spells have durations", () => {
+      for (const [cls, spell] of Object.entries(CLASS_SPELLS)) {
+        if (spell.type === "self_buff" || spell.type === "weapon_enchant") {
+          expect(spell.duration).toBeGreaterThan(0);
+        }
+      }
+    });
+  });
+
+  describe("constant sanity", () => {
+    it("combat constants have no negative values (except triangle flat which can be 0)", () => {
+      const cc = PROPOSED_COMBAT_CONSTANTS;
+      expect(cc.attackModifier).toBeGreaterThan(0);
+      expect(cc.agiAttackModifier).toBeGreaterThan(0);
+      expect(cc.critMultiplier).toBeGreaterThan(0);
+      expect(cc.evasionCap).toBeGreaterThan(0);
+      expect(cc.doubleStrikeCap).toBeGreaterThan(0);
+      expect(cc.magicResistCap).toBeGreaterThan(0);
+      expect(cc.blockChanceCap).toBeGreaterThan(0);
+      expect(cc.classMultiplierBase).toBe(1000);
+    });
+
+    it("caps are greater than per-unit values", () => {
+      const cc = PROPOSED_COMBAT_CONSTANTS;
+      // Magic resist cap should be reachable (cap / perInt = max INT needed)
+      expect(cc.magicResistCap / cc.magicResistPerInt).toBeGreaterThan(5);
+      expect(cc.blockChanceCap / cc.blockChancePerStr).toBeGreaterThan(5);
+    });
+
+    it("leveling constants are positive", () => {
+      const lc = PROPOSED_LEVELING_CONSTANTS;
+      expect(lc.baseHp).toBeGreaterThan(0);
+      expect(lc.earlyGameCap).toBeGreaterThan(0);
+      expect(lc.midGameCap).toBeGreaterThan(lc.earlyGameCap);
+      expect(lc.statPointsEarly).toBeGreaterThanOrEqual(1);
+      expect(lc.hpGainEarly).toBeGreaterThanOrEqual(1);
+    });
+
+    it("all weapons have positive damage ranges", () => {
+      for (const variant of [WEAPONS_BASELINE, WEAPONS_REBALANCED, WEAPONS_V2, WEAPONS_V3]) {
+        for (const w of variant) {
+          expect(w.maxDamage).toBeGreaterThanOrEqual(w.minDamage);
+          expect(w.minDamage).toBeGreaterThanOrEqual(1);
+        }
+      }
+    });
+
+    it("weapon prices scale with rarity", () => {
+      // Within each variant, higher rarity should generally mean higher price
+      for (const variant of [WEAPONS_BASELINE]) {
+        const byRarity: Record<number, number[]> = {};
+        for (const w of variant) {
+          if (!byRarity[w.rarity]) byRarity[w.rarity] = [];
+          byRarity[w.rarity].push(w.price);
+        }
+        const rarities = Object.keys(byRarity).map(Number).sort();
+        for (let i = 1; i < rarities.length; i++) {
+          const prevMax = Math.max(...byRarity[rarities[i - 1]]);
+          const curMin = Math.min(...byRarity[rarities[i]]);
+          // Current rarity's cheapest should be >= previous rarity's cheapest (soft check)
+          expect(curMin).toBeGreaterThanOrEqual(Math.min(...byRarity[rarities[i - 1]]));
+        }
+      }
     });
   });
 

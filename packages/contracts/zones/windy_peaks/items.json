@@ -572,7 +572,7 @@
     },
     {
       "name": "Stormglass Rod",
-      "description": "Glass that survived a lightning strike. The crack inside pulses.",
+      "description": "Glass that survived a lightning strike. The crack inside pulses with light that doesn't match any known spectrum.",
       "rarity": 3,
       "dropChance": 500,
       "initialSupply": "10000000000000000000",
@@ -628,7 +628,7 @@
     },
     {
       "name": "Warden's Ember",
-      "description": "A blade that glows like a coal. The Warden's heat lingers in the steel.",
+      "description": "A blade that glows like a coal. The heat was in the ore before anyone dug it out.",
       "rarity": 3,
       "dropChance": 500,
       "initialSupply": "10000000000000000000",
@@ -684,7 +684,7 @@
     },
     {
       "name": "Ridgefang",
-      "description": "Tooth of something that lived inside the mountain. Cuts and keeps cutting.",
+      "description": "Tooth of something that lived inside the mountain long before anything else did. The cut doesn't close right.",
       "rarity": 3,
       "dropChance": 500,
       "initialSupply": "10000000000000000000",
@@ -1045,6 +1045,134 @@
         "minIntelligence": 0,
         "minStrength": 0
       }
+    }
+  ],
+  "consumables": [
+    {
+      "name": "Corroded Bronze Fragment",
+      "description": "The alloy doesn't match any known smithing tradition. Older than the cave. Older than the mountain.",
+      "rarity": 0,
+      "dropChance": 8000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:corroded_bronze_fragment",
+      "price": 2000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      },
+      "isStarter": false
+    },
+    {
+      "name": "Etched Stone Chip",
+      "description": "Marks on this stone are too regular to be natural. They don't match any script you've seen.",
+      "rarity": 0,
+      "dropChance": 6000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:etched_stone_chip",
+      "price": 3000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      },
+      "isStarter": false
+    },
+    {
+      "name": "Wind-Bleached Bone",
+      "description": "Heavier than it should be. The marrow hums faintly when storms approach.",
+      "rarity": 0,
+      "dropChance": 8000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:wind_bleached_bone",
+      "price": 1000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      },
+      "isStarter": false
+    },
+    {
+      "name": "Shattered Crest",
+      "description": "A fragment of something ceremonial. The design doesn't belong to any faction you know.",
+      "rarity": 0,
+      "dropChance": 6000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:shattered_crest",
+      "price": 3000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      },
+      "isStarter": false
+    },
+    {
+      "name": "Warm Iron Shard",
+      "description": "Still warm after centuries. The heat comes from somewhere deeper than fire.",
+      "rarity": 0,
+      "dropChance": 4000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:warm_iron_shard",
+      "price": 4000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      },
+      "isStarter": false
+    },
+    {
+      "name": "Dried Summit Lichen",
+      "description": "Grows only above the cloud line. Alchemists might want it. Probably not.",
+      "rarity": 0,
+      "dropChance": 8000,
+      "initialSupply": 10000000000000000000,
+      "metadataUri": "consumable:dried_summit_lichen",
+      "price": 1000000000000000000,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      },
+      "isStarter": false
     }
   ]
 }

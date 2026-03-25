@@ -142,6 +142,30 @@ interface ZoneEffectsJson {
   statusEffects: ZoneStatusEffect[];
 }
 
+interface ZoneSpell {
+  className: string;
+  name: string;
+  effectName: string;
+  type: string;
+  strPct: number;
+  agiPct: number;
+  intPct: number;
+  hpPct: number;
+  armorFlat: number;
+  spellMinDamage: number;
+  spellMaxDamage: number;
+  dmgPerStat: number;
+  dmgScalingStat: number; // 0=none, 1=STR, 2=AGI, 3=INT
+  dmgIsPhysical: boolean;
+  maxUses: number;
+  isWeaponEnchant: boolean;
+  validTurns: number;
+}
+
+interface ZoneSpellsJson {
+  spells: ZoneSpell[];
+}
+
 // ============================================================
 // Constants JSON types
 // ============================================================
@@ -435,6 +459,34 @@ function mapConsumable(
   return null;
 }
 
+function mapSpell(zs: ZoneSpell): ClassSpell {
+  // On-chain stores percentages as basis points (2500 = 25%), sim uses decimals (0.25)
+  const spell: ClassSpell = {
+    name: zs.name,
+    type: zs.type as ClassSpell["type"],
+    duration: zs.validTurns || undefined,
+    baseDmgMin: zs.spellMinDamage || undefined,
+    baseDmgMax: zs.spellMaxDamage || undefined,
+    maxUses: zs.maxUses || undefined,
+  };
+
+  if (zs.strPct !== 0) spell.strPct = zs.strPct / 10000;
+  if (zs.agiPct !== 0) spell.agiPct = zs.agiPct / 10000;
+  if (zs.intPct !== 0) spell.intPct = zs.intPct / 10000;
+  if (zs.hpPct !== 0) spell.hpPct = zs.hpPct / 10000;
+  if (zs.armorFlat !== 0) spell.armorMod = zs.armorFlat;
+
+  // Map dmgPerStat to the correct scaling field (basis points → decimal)
+  if (zs.dmgPerStat > 0) {
+    const scaled = zs.dmgPerStat / 1000;
+    if (zs.dmgScalingStat === 1) spell.dmgPerStr = scaled;
+    else if (zs.dmgScalingStat === 2) spell.dmgPerAgi = scaled;
+    else if (zs.dmgScalingStat === 3) spell.dmgPerInt = scaled;
+  }
+
+  return spell;
+}
+
 function mapCombatConstants(c: ConstantsJson["combat"]): CombatConstants {
   return {
     attackModifier: c.damage.attackModifier,
@@ -495,6 +547,15 @@ export function loadGameData(zonePath: string, constantsPath: string): GameData 
   const itemsRaw = JSON.parse(readFileSync(resolve(zonePath, "items.json"), "utf-8")) as ZoneItemsJson;
   const monstersRaw = JSON.parse(readFileSync(resolve(zonePath, "monsters.json"), "utf-8")) as ZoneMonstersJson;
   const effectsRaw = JSON.parse(readFileSync(resolve(zonePath, "effects.json"), "utf-8")) as ZoneEffectsJson;
+
+  // Read spells (optional — zones without spells get empty classSpells)
+  const spellsPath = resolve(zonePath, "spells.json");
+  let spellsRaw: ZoneSpellsJson = { spells: [] };
+  try {
+    spellsRaw = JSON.parse(readFileSync(spellsPath, "utf-8")) as ZoneSpellsJson;
+  } catch {
+    // No spells.json — zone has no class spells
+  }
 
   // Read constants
   const constantsRaw = JSON.parse(readFileSync(resolve(constantsPath), "utf-8")) as ConstantsJson;
@@ -609,6 +670,8 @@ export function loadGameData(zonePath: string, constantsPath: string): GameData 
     classes,
     baseRolls: constantsRaw.baseRolls,
     archetypeConfigs: constantsRaw.archetypes,
-    classSpells: {}, // No class spells on-chain yet — added via overrides
+    classSpells: Object.fromEntries(
+      spellsRaw.spells.map((zs) => [zs.className, mapSpell(zs)])
+    ),
   };
 }

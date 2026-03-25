@@ -171,6 +171,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       label={
         <VStack align="start" spacing={1} p={1}>
           <Text fontWeight="bold" color={rarityColor}>{rarityName}</Text>
+          {item.description && (
+            <Text size="xs" color="#A89A82" fontStyle="italic">{item.description}</Text>
+          )}
           {itemStats}
         </VStack>
       }
