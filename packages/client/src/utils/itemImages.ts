@@ -105,6 +105,63 @@ const ITEM_IMAGES: Record<string, string> = {
   'Shadow Strike': '/images/monster-weapons/shadow-strike.webp',
   'Basilisk Fangs': '/images/monster-weapons/basilisk-fangs.webp',
   'Petrifying Gaze': '/images/monster-weapons/petrifying-gaze.webp',
+
+  // ==========================================
+  // Windy Peaks (Zone 2)
+  // ==========================================
+
+  // --- Z2 Armor ---
+  'Peakstone Mail': '/images/items/peakstone-mail.webp',
+  'Ridgeforged Plate': '/images/items/ridgeforged-plate.webp',
+  'Windsworn Plate': '/images/items/windsworn-plate.webp',
+  "Warden's Bulwark": '/images/items/wardens-bulwark.webp',
+  'Mountain Hide': '/images/items/mountain-hide.webp',
+  'Galebound Leather': '/images/items/galebound-leather.webp',
+  'Stormhide Vest': '/images/items/stormhide-vest.webp',
+  'Phantom Shroud': '/images/items/phantom-shroud.webp',
+  'Frostweave Robe': '/images/items/frostweave-robe.webp',
+  'Mistcloak': '/images/items/mistcloak.webp',
+  'Wraith Vestments': '/images/items/wraith-vestments.webp',
+  'Ember Mantle': '/images/items/ember-mantle.webp',
+
+  // --- Z2 Weapons ---
+  'Ridgestone Hammer': '/images/items/ridgestone-hammer.webp',
+  'Peak Cleaver': '/images/items/peak-cleaver.webp',
+  'Windforged Axe': '/images/items/windforged-axe.webp',
+  "Warden's Maul": '/images/items/wardens-maul.webp',
+  'Scrub Bow': '/images/items/scrub-bow.webp',
+  'Gale Bow': '/images/items/gale-bow.webp',
+  'Stormfeather Bow': '/images/items/stormfeather-bow.webp',
+  'Peakwind Longbow': '/images/items/peakwind-longbow.webp',
+  'Frozen Shard': '/images/items/frozen-shard.webp',
+  'Rime Staff': '/images/items/rime-staff.webp',
+  'Stormglass Rod': '/images/items/stormglass-rod.webp',
+  'Wraith Beacon': '/images/items/wraith-beacon.webp',
+  "Warden's Ember": '/images/items/wardens-ember.webp',
+  'Windweaver': '/images/items/windweaver.webp',
+  'Ridgefang': '/images/items/ridgefang.webp',
+  'Viperstrike': '/images/items/viperstrike.webp',
+  'Ashveil Staff': '/images/items/ashveil-staff.webp',
+
+  // --- Z2 Consumables (trash drops) ---
+  'Corroded Bronze Fragment': '/images/items/corroded-bronze-fragment.webp',
+  'Etched Stone Chip': '/images/items/etched-stone-chip.webp',
+  'Wind-Bleached Bone': '/images/items/wind-bleached-bone.webp',
+  'Shattered Crest': '/images/items/shattered-crest.webp',
+  'Warm Iron Shard': '/images/items/warm-iron-shard.webp',
+  'Dried Summit Lichen': '/images/items/dried-summit-lichen.webp',
+
+  // --- Z2 Monster weapons ---
+  'Ridge Stalker Strike': '/images/monster-weapons/ridge-stalker-strike.webp',
+  'Frost Wraith Strike': '/images/monster-weapons/frost-wraith-strike.webp',
+  'Granite Sentinel Strike': '/images/monster-weapons/granite-sentinel-strike.webp',
+  'Gale Phantom Strike': '/images/monster-weapons/gale-phantom-strike.webp',
+  'Blighthorn Strike': '/images/monster-weapons/blighthorn-strike.webp',
+  'Storm Shrike Strike': '/images/monster-weapons/storm-shrike-strike.webp',
+  'Hollow Scout Strike': '/images/monster-weapons/hollow-scout-strike.webp',
+  'Ironpeak Charger Strike': '/images/monster-weapons/ironpeak-charger-strike.webp',
+  'Peakfire Wraith Strike': '/images/monster-weapons/peakfire-wraith-strike.webp',
+  'Korraths Warden Strike': '/images/monster-weapons/korraths-warden-strike.webp',
 };
 
 /**
@@ -219,8 +276,35 @@ const FALLBACK_ICONS: Record<string, string> = {
   'Outdated README': '/images/icons/book.svg',
 };
 
+/**
+ * IPFS manifest cache — loaded lazily per zone.
+ * Maps item name → IPFS gateway URL.
+ * Populated by loadZoneManifest().
+ */
+const ipfsCache: Record<string, string> = {};
+let manifestsLoaded = false;
+
+/**
+ * Load a zone's IPFS art manifest into the cache.
+ * Manifests live at /images/manifests/<zone>.json.
+ * Call this when a player enters a new zone.
+ */
+export const loadZoneManifest = async (zoneName: string): Promise<void> => {
+  try {
+    const res = await fetch(`/images/manifests/${zoneName}.json`);
+    if (!res.ok) return;
+    const manifest: Record<string, { url: string }> = await res.json();
+    for (const [name, entry] of Object.entries(manifest)) {
+      ipfsCache[name] = entry.url;
+    }
+    manifestsLoaded = true;
+  } catch {
+    // Manifest not available — no-op
+  }
+};
+
 export const getItemImage = (name: string): string | undefined => {
-  return ITEM_IMAGES[name] ?? FALLBACK_ICONS[name];
+  return ITEM_IMAGES[name] ?? FALLBACK_ICONS[name] ?? (manifestsLoaded ? ipfsCache[name] : undefined);
 };
 
 export const getConsumableEmoji = (name: string): string => {

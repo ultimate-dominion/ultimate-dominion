@@ -9,6 +9,8 @@ import {
   useState,
 } from 'react';
 import { zeroHash } from 'viem';
+import { loadZoneManifest } from '../utils/itemImages';
+import { loadMonsterManifest } from '../utils/monsterImages';
 
 import {
   encodeAddressKey,
@@ -165,6 +167,16 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     return zoneId === 0 ? 1 : zoneId;
   }, [characterZoneData]);
   const currentZoneName = ZONE_NAMES[currentZone] ?? `Zone ${currentZone}`;
+
+  // Preload art manifests when zone changes (CDN fallback for missing local art)
+  const ZONE_SLUGS: Record<number, string> = { 1: 'dark_cave', 2: 'windy_peaks' };
+  useEffect(() => {
+    const slug = ZONE_SLUGS[currentZone];
+    if (slug) {
+      loadZoneManifest(slug);
+      loadMonsterManifest(slug);
+    }
+  }, [currentZone]);
 
   // Display position — raw coords converted to zone-relative (0-9)
   const displayPosition = useMemo(() => {
