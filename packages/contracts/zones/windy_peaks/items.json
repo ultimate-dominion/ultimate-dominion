@@ -1,0 +1,1050 @@
+{
+  "armor": [
+    {
+      "name": "Peakstone Mail",
+      "description": "Mountain stone links threaded with iron. Heavy and honest.",
+      "rarity": 1,
+      "dropChance": 4000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:peakstone_mail",
+      "price": "35000000000000000000",
+      "armorType": "Plate",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": -1,
+        "armorModifier": 5,
+        "hpModifier": 3,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 14
+      }
+    },
+    {
+      "name": "Ridgeforged Plate",
+      "description": "Hammered at a ridge forge by someone who stayed too long. Good work.",
+      "rarity": 2,
+      "dropChance": 2000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:ridgeforged_plate",
+      "price": "70000000000000000000",
+      "armorType": "Plate",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": -1,
+        "armorModifier": 7,
+        "hpModifier": 5,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 2
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 18
+      }
+    },
+    {
+      "name": "Windsworn Plate",
+      "description": "Scored by decades of mountain wind. The dents are a map of storms survived.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:windsworn_plate",
+      "price": "140000000000000000000",
+      "armorType": "Plate",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": -1,
+        "armorModifier": 9,
+        "hpModifier": 8,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 3
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 22
+      }
+    },
+    {
+      "name": "Warden's Bulwark",
+      "description": "Taken from the summit. The metal is warm and hums when storms approach.",
+      "rarity": 4,
+      "dropChance": 100,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:wardens_bulwark",
+      "price": "280000000000000000000",
+      "armorType": "Plate",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": -1,
+        "armorModifier": 11,
+        "hpModifier": 10,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 4
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 26
+      }
+    },
+    {
+      "name": "Mountain Hide",
+      "description": "Thick-skinned beast leather, poorly cured. Smells like altitude.",
+      "rarity": 1,
+      "dropChance": 4000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:mountain_hide",
+      "price": "35000000000000000000",
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 2,
+        "armorModifier": 3,
+        "hpModifier": 2,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 14,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Galebound Leather",
+      "description": "Supple and windproof. Made by someone who knew the peaks.",
+      "rarity": 2,
+      "dropChance": 2000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:galebound_leather",
+      "price": "70000000000000000000",
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 3,
+        "armorModifier": 4,
+        "hpModifier": 4,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 18,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Stormhide Vest",
+      "description": "The hide crackles with static. Whatever wore this skin lived in the storms.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:stormhide_vest",
+      "price": "140000000000000000000",
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 4,
+        "armorModifier": 5,
+        "hpModifier": 6,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 22,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Phantom Shroud",
+      "description": "You can see through it in certain light. Or maybe you can't see what's behind it.",
+      "rarity": 4,
+      "dropChance": 100,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:phantom_shroud",
+      "price": "280000000000000000000",
+      "armorType": "Leather",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 5,
+        "armorModifier": 6,
+        "hpModifier": 8,
+        "intModifier": 0,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 26,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Frostweave Robe",
+      "description": "Woven from threads that hold the cold. You feel sharper wearing it.",
+      "rarity": 1,
+      "dropChance": 4000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:frostweave_robe",
+      "price": "35000000000000000000",
+      "armorType": "Cloth",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 2,
+        "hpModifier": 5,
+        "intModifier": 2,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 14,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Mistcloak",
+      "description": "Grey as the mountain mist. Hard to see. Hard to hit.",
+      "rarity": 2,
+      "dropChance": 2000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:mistcloak",
+      "price": "70000000000000000000",
+      "armorType": "Cloth",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 3,
+        "hpModifier": 8,
+        "intModifier": 3,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 18,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Wraith Vestments",
+      "description": "The fabric moves when the air doesn't. Something in the weave still remembers.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:wraith_vestments",
+      "price": "140000000000000000000",
+      "armorType": "Cloth",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 4,
+        "hpModifier": 12,
+        "intModifier": 4,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 22,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Ember Mantle",
+      "description": "Warm without fire. The lining glows faintly where Korrath's heat seeped into the thread.",
+      "rarity": 4,
+      "dropChance": 100,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "armor:ember_mantle",
+      "price": "280000000000000000000",
+      "armorType": "Cloth",
+      "isStarter": false,
+      "stats": {
+        "agiModifier": 0,
+        "armorModifier": 5,
+        "hpModifier": 16,
+        "intModifier": 5,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 26,
+        "minStrength": 0
+      }
+    }
+  ],
+  "weapons": [
+    {
+      "name": "Ridgestone Hammer",
+      "description": "Chipped from the mountain's own rock. Every swing carries the weight of the peak.",
+      "rarity": 1,
+      "dropChance": 4000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:ridgestone_hammer",
+      "price": "40000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 2,
+        "intModifier": 0,
+        "maxDamage": 8,
+        "minDamage": 5,
+        "minLevel": 0,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 16
+      }
+    },
+    {
+      "name": "Peak Cleaver",
+      "description": "Forged at a mountain camp. The edge holds despite the wind.",
+      "rarity": 2,
+      "dropChance": 2000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:peak_cleaver",
+      "price": "80000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 3,
+        "intModifier": 0,
+        "maxDamage": 10,
+        "minDamage": 6,
+        "minLevel": 0,
+        "strModifier": 2
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 20
+      }
+    },
+    {
+      "name": "Windforged Axe",
+      "description": "The blade hums in strong wind. Whoever made it understood the peaks.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:windforged_axe",
+      "price": "150000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 4,
+        "intModifier": 0,
+        "maxDamage": 12,
+        "minDamage": 7,
+        "minLevel": 0,
+        "strModifier": 3
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 24
+      }
+    },
+    {
+      "name": "Warden's Maul",
+      "description": "Pulled from a dead man's hands at the summit. The grip is still warm.",
+      "rarity": 4,
+      "dropChance": 100,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:wardens_maul",
+      "price": "300000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 5,
+        "intModifier": 0,
+        "maxDamage": 14,
+        "minDamage": 9,
+        "minLevel": 0,
+        "strModifier": 4
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 28
+      }
+    },
+    {
+      "name": "Scrub Bow",
+      "description": "Bent from scrub wood that grows sideways in the wind. Shoots true enough.",
+      "rarity": 1,
+      "dropChance": 4000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:scrub_bow",
+      "price": "40000000000000000000",
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 1,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 2,
+        "intModifier": 0,
+        "maxDamage": 7,
+        "minDamage": 4,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 16,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Gale Bow",
+      "description": "The draw is light. Arrows fly like the wind itself carried them.",
+      "rarity": 2,
+      "dropChance": 2000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:gale_bow",
+      "price": "80000000000000000000",
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 2,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 3,
+        "intModifier": 0,
+        "maxDamage": 9,
+        "minDamage": 5,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 20,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Stormfeather Bow",
+      "description": "Fletched with feathers from something that flew through storms. Doesn't miss in wind.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:stormfeather_bow",
+      "price": "150000000000000000000",
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 3,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 4,
+        "intModifier": 0,
+        "maxDamage": 11,
+        "minDamage": 6,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 24,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Peakwind Longbow",
+      "description": "The string sings a note you can feel in your chest. Range that makes the peaks feel small.",
+      "rarity": 4,
+      "dropChance": 100,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:peakwind_longbow",
+      "price": "300000000000000000000",
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 4,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 5,
+        "intModifier": 0,
+        "maxDamage": 13,
+        "minDamage": 7,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 28,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Frozen Shard",
+      "description": "A splinter of ice that won't melt. It cuts the air when you point it.",
+      "rarity": 1,
+      "dropChance": 4000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:frozen_shard",
+      "price": "40000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 2,
+        "intModifier": 1,
+        "maxDamage": 8,
+        "minDamage": 5,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 16,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Rime Staff",
+      "description": "White wood crusted with permanent frost. The cold comes from inside it.",
+      "rarity": 2,
+      "dropChance": 2000,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:rime_staff",
+      "price": "80000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 3,
+        "intModifier": 2,
+        "maxDamage": 10,
+        "minDamage": 6,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 20,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Stormglass Rod",
+      "description": "Glass that survived a lightning strike. The crack inside pulses.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:stormglass_rod",
+      "price": "150000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 4,
+        "intModifier": 3,
+        "maxDamage": 13,
+        "minDamage": 8,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 24,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Wraith Beacon",
+      "description": "It doesn't cast light. It casts attention. Things come when you raise it.",
+      "rarity": 4,
+      "dropChance": 100,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:wraith_beacon",
+      "price": "300000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 6,
+        "intModifier": 4,
+        "maxDamage": 15,
+        "minDamage": 10,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 28,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Warden's Ember",
+      "description": "A blade that glows like a coal. The Warden's heat lingers in the steel.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:wardens_ember",
+      "price": "200000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 2,
+        "intModifier": 2,
+        "maxDamage": 9,
+        "minDamage": 5,
+        "minLevel": 0,
+        "strModifier": 2
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 10,
+        "minStrength": 18
+      }
+    },
+    {
+      "name": "Windweaver",
+      "description": "Light as air, sharp as spite. The magic and the edge are the same thing.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:windweaver",
+      "price": "200000000000000000000",
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 2,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 2,
+        "maxDamage": 8,
+        "minDamage": 4,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 18,
+        "minIntelligence": 10,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Ridgefang",
+      "description": "Tooth of something that lived inside the mountain. Cuts and keeps cutting.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:ridgefang",
+      "price": "200000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 2,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 3,
+        "intModifier": 0,
+        "maxDamage": 10,
+        "minDamage": 6,
+        "minLevel": 0,
+        "strModifier": 2
+      },
+      "statRestrictions": {
+        "minAgility": 6,
+        "minIntelligence": 0,
+        "minStrength": 18
+      }
+    },
+    {
+      "name": "Viperstrike",
+      "description": "Fast and venomous. Named by someone who didn't survive to rename it.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:viperstrike",
+      "price": "200000000000000000000",
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 2,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 2,
+        "intModifier": 0,
+        "maxDamage": 9,
+        "minDamage": 5,
+        "minLevel": 0,
+        "strModifier": 2
+      },
+      "statRestrictions": {
+        "minAgility": 18,
+        "minIntelligence": 0,
+        "minStrength": 8
+      }
+    },
+    {
+      "name": "Ashveil Staff",
+      "description": "Charred wood from a lightning-struck tree. The magic tastes like smoke.",
+      "rarity": 3,
+      "dropChance": 500,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:ashveil_staff",
+      "price": "200000000000000000000",
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 2,
+        "intModifier": 2,
+        "maxDamage": 10,
+        "minDamage": 6,
+        "minLevel": 0,
+        "strModifier": 1
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 18,
+        "minStrength": 6
+      }
+    },
+    {
+      "name": "Ridge Stalker Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_ridge_stalker",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 12,
+        "minDamage": 7,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Frost Wraith Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_frost_wraith",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 13,
+        "minDamage": 8,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Granite Sentinel Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_granite_sentinel",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 12,
+        "minDamage": 8,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Gale Phantom Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_gale_phantom",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 13,
+        "minDamage": 8,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Blighthorn Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_blighthorn",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 12,
+        "minDamage": 7,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Storm Shrike Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_storm_shrike",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 13,
+        "minDamage": 8,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Hollow Scout Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_hollow_scout",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "AGI",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 13,
+        "minDamage": 8,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Ironpeak Charger Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_ironpeak_charger",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 13,
+        "minDamage": 8,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Peakfire Wraith Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_peakfire_wraith",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xeee09063621624b3000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 13,
+        "minDamage": 8,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    },
+    {
+      "name": "Korraths Warden Strike",
+      "description": "",
+      "rarity": 0,
+      "dropChance": 0,
+      "initialSupply": "10000000000000000000",
+      "metadataUri": "weapon:monster_korraths_warden",
+      "price": 0,
+      "isStarter": false,
+      "scalingStat": "",
+      "stats": {
+        "agiModifier": 0,
+        "effects": [
+          "0xbeeab8b096ac11af000000000000000000000000000000000000000000000000"
+        ],
+        "hpModifier": 0,
+        "intModifier": 0,
+        "maxDamage": 14,
+        "minDamage": 9,
+        "minLevel": 0,
+        "strModifier": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      }
+    }
+  ]
+}
