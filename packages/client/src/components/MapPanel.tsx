@@ -64,7 +64,7 @@ const COMPASS_DIRECTIONS: {
 ];
 
 export const MapPanel = (): JSX.Element => {
-  const { allCharacters, allMonsters, allShops, isSpawned, isSpawning, onSpawn, position } = useMap();
+  const { allCharacters, allMonsters, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { character } = useCharacter();
   const { currentBattle } = useBattle();
   const { autoAdventureMode, isRefreshing, onMove, onToggleAutoAdventure } = useMovement();
@@ -93,17 +93,22 @@ export const MapPanel = (): JSX.Element => {
   const playerLevel = character?.level ? Number(character.level) : 1;
 
   const adjacentTiles = useMemo(() => {
-    if (!position) return null;
+    if (!position || !displayPosition) return null;
 
     const result: Record<string, TileInfo> = {};
 
     for (const dir of COMPASS_DIRECTIONS) {
-      const tx = position.x + dir.dx;
-      const ty = position.y + dir.dy;
+      // Display coords for bounds checking (0-9 range)
+      const dtx = displayPosition.x + dir.dx;
+      const dty = displayPosition.y + dir.dy;
 
-      if (tx < 0 || tx >= MAP_SIZE || ty < 0 || ty >= MAP_SIZE) {
+      if (dtx < 0 || dtx >= MAP_SIZE || dty < 0 || dty >= MAP_SIZE) {
         result[dir.label] = null;
       } else {
+        // Raw coords for entity matching (zone-offset)
+        const tx = position.x + dir.dx;
+        const ty = position.y + dir.dy;
+
         const monsters = allMonsters.filter(
           m =>
             m.position.x === tx &&
@@ -124,7 +129,7 @@ export const MapPanel = (): JSX.Element => {
     }
 
     return result;
-  }, [allMonsters, allCharacters, delegatorAddress, position, playerLevel]);
+  }, [allMonsters, allCharacters, delegatorAddress, position, displayPosition, playerLevel]);
 
   return (
     <Stack alignItems="center" className="data-dense" h="100%">
@@ -134,6 +139,7 @@ export const MapPanel = (): JSX.Element => {
           <>
             <NavigationCompass
               adjacentTiles={adjacentTiles}
+              displayPosition={displayPosition}
               isDisabled={!!currentBattle || isRefreshing}
               onMove={onMove}
               position={position}
@@ -256,7 +262,7 @@ export const MapPanel = (): JSX.Element => {
             width="100%"
           >
             <Heading size="sm">
-              Dark Cave
+              {currentZoneName}
             </Heading>
           </HStack>
           <Box
@@ -275,24 +281,26 @@ export const MapPanel = (): JSX.Element => {
               const gridSize = stage >= OnboardingStage.VETERAN ? MAP_SIZE : 5;
               const row = (gridSize - 1) - Math.floor(i / gridSize);
               const col = i % gridSize;
-              const currentTile = position?.x === col && position?.y === row;
+              const currentTile = displayPosition?.x === col && displayPosition?.y === row;
 
-              const hasSafeZoneTopBorder =
+              // Safe zone borders only in Zone 1
+              const showSafeZone = currentZone === 1;
+              const hasSafeZoneTopBorder = showSafeZone &&
                 row === SAFE_ZONE_AREA.topLeft.y &&
                 col >= SAFE_ZONE_AREA.topLeft.x &&
                 col <= SAFE_ZONE_AREA.bottomRight.x;
 
-              const hasSafeZoneRightBorder =
+              const hasSafeZoneRightBorder = showSafeZone &&
                 col === SAFE_ZONE_AREA.bottomRight.x &&
                 row >= SAFE_ZONE_AREA.bottomRight.y &&
                 row <= SAFE_ZONE_AREA.topLeft.y;
 
-              const hasSafeZoneBottomBorder =
+              const hasSafeZoneBottomBorder = showSafeZone &&
                 row === SAFE_ZONE_AREA.bottomRight.y &&
                 col >= SAFE_ZONE_AREA.topLeft.x &&
                 col <= SAFE_ZONE_AREA.bottomRight.x;
 
-              const hasSafeZoneLeftBorder =
+              const hasSafeZoneLeftBorder = showSafeZone &&
                 row >= SAFE_ZONE_AREA.bottomRight.y &&
                 row <= SAFE_ZONE_AREA.topLeft.y &&
                 col === SAFE_ZONE_AREA.topLeft.x;
@@ -300,6 +308,7 @@ export const MapPanel = (): JSX.Element => {
               return (
                 <VStack
                   bgColor={
+                    showSafeZone &&
                     col <= SAFE_ZONE_AREA.topLeft.y &&
                     row <= SAFE_ZONE_AREA.bottomRight.x
                       ? 'rgba(200,122,42,0.06)'
@@ -342,8 +351,12 @@ export const MapPanel = (): JSX.Element => {
                   )}
 
                   {allShops.map((shop, index) => {
-                    const isShopHere =
-                      shop.position.x === col && shop.position.y === row;
+                    // Compare display-relative coords for grid placement
+                    const zoneOriginX = currentZone === 1 ? 0 : 0;
+                    const zoneOriginY = currentZone === 1 ? 0 : (currentZone - 1) * 100;
+                    const shopDisplayX = shop.position.x - zoneOriginX;
+                    const shopDisplayY = shop.position.y - zoneOriginY;
+                    const isShopHere = shopDisplayX === col && shopDisplayY === row;
 
                     return (
                       isShopHere && (
@@ -397,12 +410,14 @@ const COMPASS_PULSE_SEEN_KEY = 'ud_compass_pulse_seen';
 
 const NavigationCompass = ({
   adjacentTiles,
+  displayPosition,
   isDisabled,
   onMove,
   position,
   stage,
 }: {
   adjacentTiles: Record<string, TileInfo> | null;
+  displayPosition: { x: number; y: number } | null;
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   position: { x: number; y: number } | null;
@@ -493,7 +508,7 @@ const NavigationCompass = ({
               fontWeight={700}
               ml={1}
             >
-              {position.x},{position.y}
+              {displayPosition?.x ?? position.x},{displayPosition?.y ?? position.y}
             </Text>
           )}
         </HStack>
@@ -632,7 +647,7 @@ const NavigationCompass = ({
               lineHeight={1}
               textAlign="center"
             >
-              {position.x},{position.y}
+              {displayPosition?.x ?? position.x},{displayPosition?.y ?? position.y}
             </Text>
           )}
         </GridItem>

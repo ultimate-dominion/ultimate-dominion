@@ -32,6 +32,7 @@ import { InfoModal } from '../components/InfoModal';
 import { LevelUpModal } from '../components/LevelUpModal';
 import { MapPanel } from '../components/MapPanel';
 import { MapRevealOverlay } from '../components/MapRevealOverlay';
+import { ZoneTransitionOverlay } from '../components/ZoneTransitionOverlay';
 import { PolygonalCard } from '../components/PolygonalCard';
 import { StatsPanel } from '../components/StatsPanel';
 import { TileDetailsPanel } from '../components/TileDetailsPanel';
@@ -72,6 +73,7 @@ export const GameBoard = (): JSX.Element => {
   } = useDisclosure();
 
   const [showMapReveal, setShowMapReveal] = useState(false);
+  const [showZoneTransition, setShowZoneTransition] = useState(false);
 
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const location = useLocation();
@@ -82,7 +84,7 @@ export const GameBoard = (): JSX.Element => {
     network: { worldContract },
   } = useMUD();
   const { character, isMoveEquipped, isRefreshing } = useCharacter();
-  const { inSafetyZone, isSpawned, position } = useMap();
+  const { currentZone, inSafetyZone, isSpawned, position } = useMap();
   const { attackProgress, continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
   const { autoAdventureMode, moveProgress } = useMovement();
   const { isMapFull, queueStatus } = useQueue();
@@ -429,6 +431,16 @@ export const GameBoard = (): JSX.Element => {
           onComplete={() => {
             setShowMapReveal(false);
             const key = `map-reveal-seen-${worldContract.address}-${character?.id}`;
+            localStorage.setItem(key, 'true');
+          }}
+        />
+      )}
+
+      {showZoneTransition && (
+        <ZoneTransitionOverlay
+          onComplete={() => {
+            setShowZoneTransition(false);
+            const key = `zone-transition-seen-${worldContract.address}-${character?.id}-2`;
             localStorage.setItem(key, 'true');
           }}
         />
