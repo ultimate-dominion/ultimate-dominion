@@ -33,13 +33,6 @@ export const base = {
       http: baseHttpRpcs,
       webSocket: baseWsRpcs,
     },
-    // Override Privy's embedded wallet RPC proxy (base-mainnet.rpc.privy.systems)
-    // with our own RPCs. Without this, Privy ignores default/public and routes
-    // gas estimation + tx submission through their proxy, which misreports
-    // contract reverts as "insufficient funds" errors.
-    privyWalletOverride: {
-      http: baseHttpRpcs,
-    },
   },
   blockExplorers: {
     default: {
