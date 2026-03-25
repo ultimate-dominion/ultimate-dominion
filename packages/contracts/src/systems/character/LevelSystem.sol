@@ -12,7 +12,9 @@ import {
     ZoneCompletions,
     CharacterZoneCompletion,
     ZoneConfig,
-    UltimateDominionConfig
+    UltimateDominionConfig,
+    LevelUnlockItems,
+    LevelUnlockItemsData
 } from "@codegen/index.sol";
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
@@ -184,6 +186,9 @@ contract LevelSystem is System {
         // Check for zone completion (Zone Conqueror badge)
         _checkZoneCompletion(characterId, newLevel);
 
+        // Grant level-gated items (e.g., L15 class spells)
+        _grantLevelUnlockItems(characterId, newLevel);
+
         emit CharacterLeveledUp(characterId, currentStats.level, currentStats.experience);
     }
 
@@ -262,6 +267,23 @@ contract LevelSystem is System {
             if (rank <= MAX_ZONE_CONQUEROR_BADGES) {
                 _mintZoneConquerorBadge(characterId, zoneId);
             }
+        }
+    }
+
+    /**
+     * @dev Grants items configured in LevelUnlockItems for the character's level + class
+     * @param characterId The character that just leveled up
+     * @param newLevel The level just attained
+     */
+    function _grantLevelUnlockItems(bytes32 characterId, uint256 newLevel) internal {
+        AdvancedClass advancedClass = Stats.getAdvancedClass(characterId);
+        if (advancedClass == AdvancedClass.None) return;
+
+        LevelUnlockItemsData memory unlockData = LevelUnlockItems.get(newLevel, advancedClass);
+        if (unlockData.itemIds.length == 0) return;
+
+        for (uint256 i; i < unlockData.itemIds.length; i++) {
+            IWorld(_world()).UD__dropItem(characterId, unlockData.itemIds[i], unlockData.amounts[i]);
         }
     }
 

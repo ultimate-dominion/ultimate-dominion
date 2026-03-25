@@ -84,7 +84,7 @@ const ITEM_IMAGES: Record<string, string> = {
   // r2
   'Flashpowder': '/images/items/flashpowder.webp',
 
-  // --- Spells ---
+  // --- Spells (L10) ---
   'Battle Cry': '/images/spells/battle-cry.webp',
   'Divine Shield': '/images/spells/divine-shield.webp',
   'Marked Shot': '/images/spells/marked-shot.webp',
@@ -94,6 +94,17 @@ const ITEM_IMAGES: Record<string, string> = {
   'Expose Weakness': '/images/spells/expose-weakness.webp',
   'Entangle': '/images/spells/entangle.webp',
   'Blessing': '/images/spells/blessing.webp',
+
+  // --- Spells (L15) ---
+  'Warcry': '/images/spells/warcry.webp',
+  'Judgment': '/images/spells/judgment.webp',
+  'Volley': '/images/spells/volley.webp',
+  'Backstab': '/images/spells/backstab.webp',
+  'Regrowth': '/images/spells/regrowth.webp',
+  'Blight': '/images/spells/blight.webp',
+  'Meteor': '/images/spells/meteor.webp',
+  'Mana Burn': '/images/spells/mana-burn.webp',
+  'Smite': '/images/spells/smite.webp',
 
   // --- Monster weapons ---
   'Razor Claws': '/images/monster-weapons/razor-claws.webp',

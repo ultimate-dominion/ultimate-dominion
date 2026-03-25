@@ -5,6 +5,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useBattle } from '../contexts/BattleContext';
 import { useItems } from '../contexts/ItemsContext';
+import { DurabilityBar } from './DurabilityBar';
 import { useSlotOrder } from '../hooks/useSlotOrder';
 import { SLOT_ORDER_KEY_PREFIX } from '../utils/constants';
 import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
@@ -67,11 +68,13 @@ const FilledSlot = ({
   slotNumber,
   onClick,
   isInBattle,
+  characterId,
 }: {
   item: SlotItem;
   slotNumber: number;
   onClick?: () => void;
   isInBattle: boolean;
+  characterId?: string;
 }): JSX.Element => {
   const rarityColor = getRarityColor(item.rarity);
   const rarityAnimation = getRarityAnimation(item.rarity);
@@ -125,6 +128,12 @@ const FilledSlot = ({
           {slotNumber}
         </Text>
       </Center>
+      {characterId && (
+        <DurabilityBar
+          characterId={characterId}
+          itemId={BigInt(item.tokenId)}
+        />
+      )}
     </Tooltip>
   );
 };
@@ -200,7 +209,7 @@ export const EquippedLoadout = (): JSX.Element | null => {
         {/* Slot 0: Armor */}
         <Box position="relative">
           {armor ? (
-            <FilledSlot item={armor} slotNumber={0} isInBattle={isInBattle} />
+            <FilledSlot item={armor} slotNumber={0} isInBattle={isInBattle} characterId={character.id} />
           ) : (
             <EmptySlot label="Armor — empty" />
           )}
@@ -232,6 +241,7 @@ export const EquippedLoadout = (): JSX.Element | null => {
                 slotNumber={i + 1}
                 onClick={i > 0 && i < orderedAttackItems.length ? () => handlePromote(i) : undefined}
                 isInBattle={isInBattle}
+                characterId={character.id}
               />
             ) : (
               <EmptySlot />

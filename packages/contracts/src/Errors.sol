@@ -136,3 +136,44 @@ error GasStationZeroAmount();
 error GasStationSwapFailed();
 error GasStationNotRelayer();
 error GasStationArrayMismatch();
+
+// Durability
+error ItemBroken();
+error ItemNotDamageable();
+error ItemAlreadyFullDurability();
+error NotAtRepairShop();
+
+// Respec
+error CannotRespecInCombat();
+error InvalidRespecStats();
+error InsufficientGoldForRespec();
+
+// NPC Dialogue
+error NotAtNpcPosition();
+error NpcHasNoDialogue();
+
+// Fragment Chain
+error ChainNotInitialized();
+error ChainAlreadyCompleted();
+error WrongTriggerType();
+error InvalidChainStep();
+
+// Guild
+error AlreadyInGuild();
+error NotInGuild();
+error GuildNotFound();
+error GuildFull();
+error GuildNotOpen();
+error NotGuildLeader();
+error NotGuildOfficer();
+error CannotKickLeader();
+error TaxRateTooHigh();
+error InsufficientTreasury();
+error NoApplicationFound();
+error GuildNameTaken();
+error InvalidGuildTag();
+error LeaderNotInactive();
+
+// PvP Rankings
+error SeasonNotActive();
+error SeasonAlreadyActive();

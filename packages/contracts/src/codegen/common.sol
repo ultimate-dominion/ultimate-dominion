@@ -122,7 +122,21 @@ enum FragmentType {
   TheWound,
   DeathOfDeathGod,
   BetrayersTruth,
-  BloodPrice
+  BloodPrice,
+  FirstLight,
+  TheBladesEdge,
+  DividedGround,
+  TheDirectors,
+  TheStormsMemory,
+  WhatGrows,
+  TheBakersStand,
+  TheLightsBelow
+}
+
+enum FragmentTriggerType {
+  TileVisit,
+  CombatKill,
+  NpcInteract
 }
 
 enum GuildRank {

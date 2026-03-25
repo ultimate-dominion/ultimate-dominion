@@ -176,4 +176,15 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "armor:mistcloak": "Grey as the mountain mist. Hard to see. Hard to hit.",
   "armor:wraith_vestments": "The fabric moves when the air doesn't. Something in the weave still remembers.",
   "armor:ember_mantle": "Warm without fire. The lining glows faintly where Korrath's heat seeped into the thread.",
+
+  // --- Spells (L15) ---
+  "spell:warcry": "A battle roar that sharpens steel and hardens resolve. One cry to turn the tide.",
+  "spell:judgment": "Holy wrath made manifest. The guilty find their strength failing.",
+  "spell:volley": "A rain of arrows. No single shot — a storm.",
+  "spell:backstab": "One strike, placed perfectly. The target never sees it coming.",
+  "spell:regrowth": "The forest mends what battle breaks. Roots knit bone, bark seals wounds.",
+  "spell:blight": "Everything rots. Strength, speed, wit — all of it fades under the curse.",
+  "spell:meteor": "A shard of raw arcane force, called from above. Nothing subtle about it.",
+  "spell:mana_burn": "Drains the weave from your enemy. Their magic gutters like a candle in wind.",
+  "spell:smite": "Holy fire that heals the righteous and scorches the wicked. Both at once.",
 };

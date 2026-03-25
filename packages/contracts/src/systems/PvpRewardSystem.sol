@@ -96,5 +96,15 @@ contract PvpRewardSystem is System {
         }
 
         CombatEncounter.setRewardsDistributed(encounterId, true);
+
+        // Update PvP ratings for Z2+ zones (gas-guarded)
+        if (gasleft() > 50_000 && winners.length > 0 && losers.length > 0) {
+            // Check zone of first winner — all participants should be in same zone
+            try IWorld(_world()).UD__isRankedZone(winners[0]) returns (bool isRanked) {
+                if (isRanked) {
+                    try IWorld(_world()).UD__updateRatings(winners, losers) {} catch {}
+                }
+            } catch {}
+        }
     }
 }

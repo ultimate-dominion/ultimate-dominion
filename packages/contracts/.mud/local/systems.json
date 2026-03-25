@@ -201,6 +201,37 @@
     },
     {
       "namespaceLabel": "UD",
+      "label": "DurabilitySystem",
+      "namespace": "UD",
+      "name": "DurabilitySys",
+      "systemId": "0x737955440000000000000000000000004475726162696c697479537973000000",
+      "abi": [
+        "error GamePaused()",
+        "error ItemAlreadyFullDurability()",
+        "error ItemNotDamageable()",
+        "error NotAdmin()",
+        "error NotAuthorizedCaller()",
+        "function canEquipDurability(bytes32 characterId, uint256 itemId) view returns (bool)",
+        "function degradeEquippedItems(bytes32 characterId)",
+        "function initializeDurability(bytes32 characterId, uint256 itemId)",
+        "function repairItem(bytes32 characterId, uint256 itemId)",
+        "function setMaxDurability(uint256 itemId, uint256 maxDurability)"
+      ],
+      "worldAbi": [
+        "error GamePaused()",
+        "error ItemAlreadyFullDurability()",
+        "error ItemNotDamageable()",
+        "error NotAdmin()",
+        "error NotAuthorizedCaller()",
+        "function UD__canEquipDurability(bytes32 characterId, uint256 itemId) view returns (bool)",
+        "function UD__degradeEquippedItems(bytes32 characterId)",
+        "function UD__initializeDurability(bytes32 characterId, uint256 itemId)",
+        "function UD__repairItem(bytes32 characterId, uint256 itemId)",
+        "function UD__setMaxDurability(uint256 itemId, uint256 maxDurability)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
       "label": "EffectDataSystem",
       "namespace": "UD",
       "name": "EffectDataSys",
@@ -374,6 +405,33 @@
     },
     {
       "namespaceLabel": "UD",
+      "label": "FragmentChainSystem",
+      "namespace": "UD",
+      "name": "FragChainSys",
+      "systemId": "0x7379554400000000000000000000000046726167436861696e53797300000000",
+      "abi": [
+        "error NotAdmin()",
+        "error NotAuthorizedCaller()",
+        "event ChainCompleted(bytes32 indexed characterId, uint8 fragmentType)",
+        "event ChainStepCompleted(bytes32 indexed characterId, uint8 fragmentType, uint256 step, uint256 totalSteps)",
+        "function initializeChain(uint8 fragmentType, uint256 totalSteps)",
+        "function initializeCharacterChain(bytes32 characterId, uint8 fragmentType, uint256 totalSteps)",
+        "function setChainStep(uint8 fragmentType, uint256 stepIndex, uint8 triggerType, bytes triggerData, string narrative)",
+        "function tryAdvanceChain(bytes32 characterId, uint8 fragmentType, uint8 triggerType, bytes triggerData)"
+      ],
+      "worldAbi": [
+        "error NotAdmin()",
+        "error NotAuthorizedCaller()",
+        "event ChainCompleted(bytes32 indexed characterId, uint8 fragmentType)",
+        "event ChainStepCompleted(bytes32 indexed characterId, uint8 fragmentType, uint256 step, uint256 totalSteps)",
+        "function UD__initializeChain(uint8 fragmentType, uint256 totalSteps)",
+        "function UD__initializeCharacterChain(bytes32 characterId, uint8 fragmentType, uint256 totalSteps)",
+        "function UD__setChainStep(uint8 fragmentType, uint256 stepIndex, uint8 triggerType, bytes triggerData, string narrative)",
+        "function UD__tryAdvanceChain(bytes32 characterId, uint8 fragmentType, uint8 triggerType, bytes triggerData)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
       "label": "FragmentCombatSystem",
       "namespace": "UD",
       "name": "FragCombatSys",
@@ -536,6 +594,93 @@
         "function UD__transfer(address to, uint256 value) returns (bool)",
         "function UD__transferFrom(address from, address to, uint256 value) returns (bool)",
         "function UD__transferWithAccess(address from, address to, uint256 value)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "GuildSystem",
+      "namespace": "UD",
+      "name": "GuildSystem",
+      "systemId": "0x737955440000000000000000000000004775696c6453797374656d0000000000",
+      "abi": [
+        "error AlreadyInGuild()",
+        "error CannotKickLeader()",
+        "error GamePaused()",
+        "error GuildFull()",
+        "error GuildNotFound()",
+        "error GuildNotOpen()",
+        "error InsufficientTreasury()",
+        "error InvalidGuildTag()",
+        "error LeaderNotInactive()",
+        "error NoApplicationFound()",
+        "error NotAuthorizedCaller()",
+        "error NotGuildLeader()",
+        "error NotGuildOfficer()",
+        "error NotInGuild()",
+        "error TaxRateTooHigh()",
+        "event GuildCreated(uint256 indexed guildId, bytes32 indexed leader, string name)",
+        "event GuildDisbanded(uint256 indexed guildId)",
+        "event MemberJoined(uint256 indexed guildId, bytes32 indexed characterId)",
+        "event MemberLeft(uint256 indexed guildId, bytes32 indexed characterId)",
+        "event TaxCollected(uint256 indexed guildId, uint256 amount)",
+        "function applyToGuild(bytes32 characterId, uint256 guildId)",
+        "function approveApplication(bytes32 officerCharId, bytes32 applicantCharId)",
+        "function claimLeadership(bytes32 characterId)",
+        "function createGuild(bytes32 characterId, string name, string tag, bool isOpen, string description) returns (uint256 guildId)",
+        "function demoteMember(bytes32 leaderCharId, bytes32 targetCharId)",
+        "function disbandGuild(bytes32 characterId)",
+        "function getGuildBonus() pure returns (uint256 goldBonus, uint256 xpBonus, uint256 dropBonus)",
+        "function isGuildMember(bytes32 characterId) view returns (bool)",
+        "function joinGuild(bytes32 characterId, uint256 guildId)",
+        "function kickMember(bytes32 officerCharId, bytes32 targetCharId)",
+        "function leaveGuild(bytes32 characterId)",
+        "function promoteMember(bytes32 leaderCharId, bytes32 targetCharId)",
+        "function rejectApplication(bytes32 officerCharId, bytes32 applicantCharId)",
+        "function setDescription(bytes32 characterId, string description)",
+        "function setIsOpen(bytes32 characterId, bool isOpen)",
+        "function setTaxRate(bytes32 characterId, uint256 newRate)",
+        "function taxGold(bytes32 characterId, uint256 goldAmount) returns (uint256 taxAmount)",
+        "function withdrawTreasury(bytes32 characterId, uint256 amount)"
+      ],
+      "worldAbi": [
+        "error AlreadyInGuild()",
+        "error CannotKickLeader()",
+        "error GamePaused()",
+        "error GuildFull()",
+        "error GuildNotFound()",
+        "error GuildNotOpen()",
+        "error InsufficientTreasury()",
+        "error InvalidGuildTag()",
+        "error LeaderNotInactive()",
+        "error NoApplicationFound()",
+        "error NotAuthorizedCaller()",
+        "error NotGuildLeader()",
+        "error NotGuildOfficer()",
+        "error NotInGuild()",
+        "error TaxRateTooHigh()",
+        "event GuildCreated(uint256 indexed guildId, bytes32 indexed leader, string name)",
+        "event GuildDisbanded(uint256 indexed guildId)",
+        "event MemberJoined(uint256 indexed guildId, bytes32 indexed characterId)",
+        "event MemberLeft(uint256 indexed guildId, bytes32 indexed characterId)",
+        "event TaxCollected(uint256 indexed guildId, uint256 amount)",
+        "function UD__applyToGuild(bytes32 characterId, uint256 guildId)",
+        "function UD__approveApplication(bytes32 officerCharId, bytes32 applicantCharId)",
+        "function UD__claimLeadership(bytes32 characterId)",
+        "function UD__createGuild(bytes32 characterId, string name, string tag, bool isOpen, string description) returns (uint256 guildId)",
+        "function UD__demoteMember(bytes32 leaderCharId, bytes32 targetCharId)",
+        "function UD__disbandGuild(bytes32 characterId)",
+        "function UD__getGuildBonus() pure returns (uint256 goldBonus, uint256 xpBonus, uint256 dropBonus)",
+        "function UD__isGuildMember(bytes32 characterId) view returns (bool)",
+        "function UD__joinGuild(bytes32 characterId, uint256 guildId)",
+        "function UD__kickMember(bytes32 officerCharId, bytes32 targetCharId)",
+        "function UD__leaveGuild(bytes32 characterId)",
+        "function UD__promoteMember(bytes32 leaderCharId, bytes32 targetCharId)",
+        "function UD__rejectApplication(bytes32 officerCharId, bytes32 applicantCharId)",
+        "function UD__setDescription(bytes32 characterId, string description)",
+        "function UD__setIsOpen(bytes32 characterId, bool isOpen)",
+        "function UD__setTaxRate(bytes32 characterId, uint256 newRate)",
+        "function UD__taxGold(bytes32 characterId, uint256 goldAmount) returns (uint256 taxAmount)",
+        "function UD__withdrawTreasury(bytes32 characterId, uint256 amount)"
       ]
     },
     {
@@ -887,6 +1032,31 @@
     },
     {
       "namespaceLabel": "UD",
+      "label": "NpcDialogueSystem",
+      "namespace": "UD",
+      "name": "NpcDialogueSys",
+      "systemId": "0x737955440000000000000000000000004e70634469616c6f6775655379730000",
+      "abi": [
+        "error GamePaused()",
+        "error NotAdmin()",
+        "error NotAtNpcPosition()",
+        "error NpcHasNoDialogue()",
+        "event NpcInteraction(bytes32 indexed characterId, bytes32 indexed npcId, uint8 fragmentType)",
+        "function setNpcDialogue(bytes32 npcId, uint8 fragmentType, uint256 fragmentStep, uint256 zoneId, string dialogueLines)",
+        "function talkToNpc(bytes32 characterId, bytes32 npcId)"
+      ],
+      "worldAbi": [
+        "error GamePaused()",
+        "error NotAdmin()",
+        "error NotAtNpcPosition()",
+        "error NpcHasNoDialogue()",
+        "event NpcInteraction(bytes32 indexed characterId, bytes32 indexed npcId, uint8 fragmentType)",
+        "function UD__setNpcDialogue(bytes32 npcId, uint8 fragmentType, uint256 fragmentStep, uint256 zoneId, string dialogueLines)",
+        "function UD__talkToNpc(bytes32 characterId, bytes32 npcId)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
       "label": "PauseSystem",
       "namespace": "UD",
       "name": "PauseSystem",
@@ -987,6 +1157,39 @@
     },
     {
       "namespaceLabel": "UD",
+      "label": "PvpRankingSystem",
+      "namespace": "UD",
+      "name": "PvpRankingSys",
+      "systemId": "0x7379554400000000000000000000000050767052616e6b696e67537973000000",
+      "abi": [
+        "error NotAdmin()",
+        "error NotAuthorizedCaller()",
+        "error SeasonAlreadyActive()",
+        "error SeasonNotActive()",
+        "event RatingUpdated(bytes32 indexed characterId, int256 newRating, int256 change)",
+        "event SeasonEnded(uint256 season)",
+        "event SeasonStarted(uint256 season, uint256 seasonEnd)",
+        "function endSeason()",
+        "function isRankedZone(bytes32 characterId) view returns (bool)",
+        "function startSeason(uint256 seasonEnd)",
+        "function updateRatings(bytes32[] winners, bytes32[] losers)"
+      ],
+      "worldAbi": [
+        "error NotAdmin()",
+        "error NotAuthorizedCaller()",
+        "error SeasonAlreadyActive()",
+        "error SeasonNotActive()",
+        "event RatingUpdated(bytes32 indexed characterId, int256 newRating, int256 change)",
+        "event SeasonEnded(uint256 season)",
+        "event SeasonStarted(uint256 season, uint256 seasonEnd)",
+        "function UD__endSeason()",
+        "function UD__isRankedZone(bytes32 characterId) view returns (bool)",
+        "function UD__startSeason(uint256 seasonEnd)",
+        "function UD__updateRatings(bytes32[] winners, bytes32[] losers)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
       "label": "PvpRewardSystem",
       "namespace": "UD",
       "name": "PvpRewardSystem",
@@ -1000,6 +1203,33 @@
         "error InvalidRewardState()",
         "error NotAuthorizedCaller()",
         "function UD__distributePvpRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "RespecSystem",
+      "namespace": "UD",
+      "name": "RespecSystem",
+      "systemId": "0x7379554400000000000000000000000052657370656353797374656d00000000",
+      "abi": [
+        "error CannotRespecInCombat()",
+        "error GamePaused()",
+        "error InvalidRespecStats()",
+        "event FullRespec(bytes32 indexed characterId, uint256 goldCost)",
+        "event StatRespec(bytes32 indexed characterId, uint256 goldCost)",
+        "function fullRespec(bytes32 characterId)",
+        "function getRespecCost(bytes32 characterId) view returns (uint256 statCost, uint256 fullCost)",
+        "function statRespec(bytes32 characterId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats)"
+      ],
+      "worldAbi": [
+        "error CannotRespecInCombat()",
+        "error GamePaused()",
+        "error InvalidRespecStats()",
+        "event FullRespec(bytes32 indexed characterId, uint256 goldCost)",
+        "event StatRespec(bytes32 indexed characterId, uint256 goldCost)",
+        "function UD__fullRespec(bytes32 characterId)",
+        "function UD__getRespecCost(bytes32 characterId) view returns (uint256 statCost, uint256 fullCost)",
+        "function UD__statRespec(bytes32 characterId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats)"
       ]
     },
     {
@@ -1559,5 +1789,5 @@
       ]
     }
   ],
-  "createdAt": 1774458025327
+  "createdAt": 1774478190965
 }

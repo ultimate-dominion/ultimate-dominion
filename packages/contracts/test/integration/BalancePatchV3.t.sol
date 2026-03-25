@@ -30,8 +30,7 @@ contract BalancePatchV3RenameTest is Test {
         deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
         vm.startPrank(deployer);
 
-        string memory json = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/deploys/31337/latest.json")));
-        worldAddress = stdJson.readAddress(json, ".worldAddress");
+        worldAddress = vm.envAddress("WORLD_ADDRESS");
         StoreSwitch.setStoreAddress(worldAddress);
 
         // Seed mobs with old names (simulates production state)

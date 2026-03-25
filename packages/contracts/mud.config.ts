@@ -24,6 +24,31 @@ export default defineWorld({
       name: "EquipmentCore",
       openAccess: true,
     },
+    // Phase 3-5 systems
+    DurabilitySystem: {
+      name: "DurabilitySys",
+      openAccess: true,
+    },
+    RespecSystem: {
+      name: "RespecSystem",
+      openAccess: true,
+    },
+    NpcDialogueSystem: {
+      name: "NpcDialogueSys",
+      openAccess: true,
+    },
+    FragmentChainSystem: {
+      name: "FragChainSys",
+      openAccess: true,
+    },
+    GuildSystem: {
+      name: "GuildSystem",
+      openAccess: true,
+    },
+    PvpRankingSystem: {
+      name: "PvpRankingSys",
+      openAccess: true,
+    },
     // Character Systems (modular) - using existing contract names
     CharacterCore: {
       name: "CharacterCore",
@@ -289,6 +314,20 @@ export default defineWorld({
       "DeathOfDeathGod",   // 6
       "BetrayersTruth",    // 7
       "BloodPrice",        // 8
+      // Zone 2 fragments (IX-XVI)
+      "FirstLight",        // 9
+      "TheBladesEdge",     // 10
+      "DividedGround",     // 11
+      "TheDirectors",      // 12
+      "TheStormsMemory",   // 13
+      "WhatGrows",         // 14
+      "TheBakersStand",    // 15
+      "TheLightsBelow",    // 16
+    ],
+    FragmentTriggerType: [
+      "TileVisit",    // 0
+      "CombatKill",   // 1
+      "NpcInteract",  // 2
     ],
     GuildRank: [
       "None",     // 0
@@ -634,6 +673,16 @@ export default defineWorld({
     AdvancedClassItems: {
       key: ["advancedClass"],
       schema: {
+        advancedClass: "AdvancedClass",
+        itemIds: "uint256[]",
+        amounts: "uint256[]",
+      },
+    },
+    // Items granted at level thresholds (e.g., L15 class spells)
+    LevelUnlockItems: {
+      key: ["level", "advancedClass"],
+      schema: {
+        level: "uint256",
         advancedClass: "AdvancedClass",
         itemIds: "uint256[]",
         amounts: "uint256[]",
@@ -1258,6 +1307,74 @@ export default defineWorld({
         joinedAt: "uint256",
         lastActive: "uint256",       // for auto-succession logic (14-day inactivity)
         seasonJoinedAt: "uint256",   // must be in guild 75% of season for rewards
+      },
+    },
+    // Guild applications (for closed guilds)
+    GuildApplication: {
+      key: ["characterId", "guildId"],
+      schema: {
+        characterId: "bytes32",
+        guildId: "uint256",
+        appliedAt: "uint256",
+      },
+    },
+    // Auto-increment guild ID counter
+    GuildCounter: {
+      key: [],
+      schema: {
+        nextGuildId: "uint256",
+      },
+    },
+    // Guild description (separate to avoid schema width issues)
+    GuildDescription: {
+      key: ["guildId"],
+      schema: {
+        guildId: "uint256",
+        description: "string",
+      },
+    },
+    ///////////////////////////////////// DURABILITY ///////////////////////////////////
+    // Per-character per-item durability tracking
+    CharacterItemDurability: {
+      key: ["characterId", "itemId"],
+      schema: {
+        characterId: "bytes32",
+        itemId: "uint256",
+        currentDurability: "uint256",
+      },
+    },
+    ///////////////////////////////////// NPC DIALOGUE ///////////////////////////////////
+    NpcDialogue: {
+      key: ["npcId"],
+      schema: {
+        npcId: "bytes32",
+        fragmentType: "FragmentType",
+        fragmentStep: "uint256",
+        zoneId: "uint256",
+        dialogueLines: "string",
+      },
+    },
+    ///////////////////////////////////// FRAGMENT CHAINS (Zone 2+) ///////////////////////////////////
+    // Per-character chain progress through multi-step fragments
+    FragmentChainProgress: {
+      key: ["characterId", "fragmentType"],
+      schema: {
+        characterId: "bytes32",
+        fragmentType: "FragmentType",
+        currentStep: "uint256",
+        totalSteps: "uint256",
+        completed: "bool",
+      },
+    },
+    // Per-step trigger configuration for fragment chains
+    FragmentChainStep: {
+      key: ["fragmentType", "stepIndex"],
+      schema: {
+        fragmentType: "FragmentType",
+        stepIndex: "uint256",
+        triggerType: "FragmentTriggerType",
+        triggerData: "bytes",
+        narrative: "string",
       },
     },
     ///////////////////////////////////// CRAFTING ///////////////////////////////////

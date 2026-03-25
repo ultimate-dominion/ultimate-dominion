@@ -28,141 +28,118 @@ import {GoldERC20System} from "../src/systems/GoldERC20System.sol";
  *         if the grant already exists (just costs a small amount of gas).
  */
 contract EnsureAccessSystem is System {
+    function _sys(bytes16 name) internal view returns (address) {
+        return Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, name));
+    }
+
     function ensureAll(address deployer, address worldAddress) public {
-        // ================================================================
-        // Step 1: Restore namespace ownership to deployer
-        // This ensures the deployer can manage grants in future deploys.
-        // Characters namespace is transferred to CharacterCore at the end.
-        // ================================================================
+        _ensureNamespaceOwnership(deployer);
+        _ensureGoldAccess(worldAddress);
+        _ensureItemsAccess(worldAddress);
+        _ensureCharactersAccess(worldAddress);
+        _ensureBadgesAccess(worldAddress);
+        _ensureFragmentsAccess(worldAddress);
+        _transferCharacterNamespace();
+    }
+
+    function _ensureNamespaceOwnership(address deployer) internal {
+        NamespaceOwner.set(WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE), deployer);
+        NamespaceOwner.set(WorldResourceIdLib.encodeNamespace(ITEMS_NAMESPACE), deployer);
+        NamespaceOwner.set(WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE), deployer);
+        NamespaceOwner.set(WorldResourceIdLib.encodeNamespace(BADGES_NAMESPACE), deployer);
+        NamespaceOwner.set(WorldResourceIdLib.encodeNamespace(FRAGMENTS_NAMESPACE), deployer);
+    }
+
+    function _ensureGoldAccess(address worldAddress) internal {
         ResourceId goldNs = WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE);
+        ResourceAccess.set(goldNs, _sys("CharEnterSys"), true);
+        ResourceAccess.set(goldNs, _sys("LootManagerSyste"), true);
+        ResourceAccess.set(goldNs, _sys("GasStationSys"), true);
+        ResourceAccess.set(goldNs, _sys("ShopSystem"), true);
+        ResourceAccess.set(goldNs, _sys("PveRewardSystem"), true);
+        ResourceAccess.set(goldNs, _sys("PvpRewardSystem"), true);
+        ResourceAccess.set(goldNs, _sys("PvPSystem"), true);
+        ResourceAccess.set(goldNs, _sys("MarketplaceSys"), true);
+        // Phase 3-5: DurabilitySystem (repair), RespecSystem (respec), GuildSystem (treasury)
+        ResourceAccess.set(goldNs, _sys("DurabilitySys"), true);
+        ResourceAccess.set(goldNs, _sys("RespecSystem"), true);
+        ResourceAccess.set(goldNs, _sys("GuildSystem"), true);
+        ResourceAccess.set(goldNs, worldAddress, true);
+    }
+
+    function _ensureItemsAccess(address worldAddress) internal {
         ResourceId itemsNs = WorldResourceIdLib.encodeNamespace(ITEMS_NAMESPACE);
-        ResourceId charsNs = WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
-        ResourceId badgesNs = WorldResourceIdLib.encodeNamespace(BADGES_NAMESPACE);
-        ResourceId fragsNs = WorldResourceIdLib.encodeNamespace(FRAGMENTS_NAMESPACE);
-
-        NamespaceOwner.set(goldNs, deployer);
-        NamespaceOwner.set(itemsNs, deployer);
-        NamespaceOwner.set(charsNs, deployer);
-        NamespaceOwner.set(badgesNs, deployer);
-        NamespaceOwner.set(fragsNs, deployer);
-
-        // ================================================================
-        // Step 2: Look up current system addresses from the World
-        // These change after every `mud deploy` — never hardcode them.
-        // ================================================================
-        address characterCore = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "CharacterCore"));
-        address charEnterSys = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "CharEnterSys"));
-        address levelSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "LevelSystem"));
-        address adminSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "AdminSystem"));
-        address statSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "StatSystem"));
-        address lootManager = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "LootManagerSyste"));
-        address gasStation = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "GasStationSys"));
-        address itemsSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ItemsSystem"));
-        address itemCreation = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ItemCreationSys"));
-        address fragmentSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "FragmentSystem"));
-        address pveReward = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PveRewardSystem"));
-        address pvpReward = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PvpRewardSystem"));
-        address pvpSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PvPSystem"));
-        address shopSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ShopSystem"));
-        address marketplace = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "MarketplaceSys"));
-
-        // ================================================================
-        // Step 3: Build cross-namespace resource IDs
-        // ================================================================
-        ResourceId goldBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
-        ResourceId goldTotalSupply = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "TotalSupply");
-        ResourceId goldErc20System = _erc20SystemId(GOLD_NAMESPACE);
-        ResourceId goldAllowances = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Allowances");
-
         ResourceId itemsOwners = WorldResourceIdLib.encode(RESOURCE_TABLE, ITEMS_NAMESPACE, "Owners");
         ResourceId itemsTotalSupply = WorldResourceIdLib.encode(RESOURCE_TABLE, ITEMS_NAMESPACE, "TotalSupply");
         ResourceId itemsErc1155System = _erc1155SystemId(ITEMS_NAMESPACE);
 
-        ResourceId charsErc721System = _erc721SystemId(CHARACTERS_NAMESPACE);
+        address charEnterSys = _sys("CharEnterSys");
+        address lootManager = _sys("LootManagerSyste");
+        address itemsSystem = _sys("ItemsSystem");
+        address itemCreation = _sys("ItemCreationSys");
+        address adminSystem = _sys("AdminSystem");
+        address shopSystem = _sys("ShopSystem");
+        address marketplace = _sys("MarketplaceSys");
 
-        ResourceId badgesErc721System = _erc721SystemId(BADGES_NAMESPACE);
-        ResourceId badgesOwners = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Owners");
-        ResourceId badgesBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Balances");
-
-        ResourceId fragsErc721System = _erc721SystemId(FRAGMENTS_NAMESPACE);
-        ResourceId fragsOwners = WorldResourceIdLib.encode(RESOURCE_TABLE, FRAGMENTS_NAMESPACE, "Owners");
-        ResourceId fragsBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, FRAGMENTS_NAMESPACE, "Balances");
-
-        // ================================================================
-        // Step 4: Gold namespace grants
-        // ================================================================
-        // All systems using GoldLib need Gold namespace access for IWorld.call() routing
-        ResourceAccess.set(goldNs, charEnterSys, true);
-        ResourceAccess.set(goldNs, lootManager, true);
-        ResourceAccess.set(goldNs, gasStation, true);
-        ResourceAccess.set(goldNs, shopSystem, true);
-        ResourceAccess.set(goldNs, pveReward, true);
-        ResourceAccess.set(goldNs, pvpReward, true);
-        ResourceAccess.set(goldNs, pvpSystem, true);
-        ResourceAccess.set(goldNs, marketplace, true);
-        ResourceAccess.set(goldNs, worldAddress, true);
-
-        // ================================================================
-        // Step 5: Items namespace grants
-        // ================================================================
-        // CharacterEnterSystem — starter items on enterGame
         ResourceAccess.set(itemsOwners, charEnterSys, true);
-        // LootManager — loot drops
         ResourceAccess.set(itemsOwners, lootManager, true);
         ResourceAccess.set(itemsTotalSupply, lootManager, true);
-        // ItemsSystem + ItemCreation + Admin — item management
         ResourceAccess.set(itemsNs, itemsSystem, true);
         ResourceAccess.set(itemsNs, itemCreation, true);
         ResourceAccess.set(itemsNs, adminSystem, true);
         ResourceAccess.set(itemsErc1155System, itemsSystem, true);
-        // ShopSystem — selling items
         ResourceAccess.set(itemsOwners, shopSystem, true);
-        // MarketplaceSystem — item trades
         ResourceAccess.set(itemsNs, marketplace, true);
         ResourceAccess.set(itemsErc1155System, marketplace, true);
         ResourceAccess.set(itemsOwners, marketplace, true);
-        // World — delegatecall
         ResourceAccess.set(itemsNs, worldAddress, true);
         ResourceAccess.set(itemsOwners, worldAddress, true);
         ResourceAccess.set(itemsErc1155System, worldAddress, true);
+    }
 
-        // ================================================================
-        // Step 6: Characters namespace grants
-        // ================================================================
-        // CharacterCore gets namespace ownership (transferred in Step 8)
-        // but also needs explicit ERC721System access
-        ResourceAccess.set(charsErc721System, characterCore, true);
-        // World — delegatecall
+    function _ensureCharactersAccess(address worldAddress) internal {
+        ResourceId charsNs = WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
+        ResourceId charsErc721System = _erc721SystemId(CHARACTERS_NAMESPACE);
+        ResourceAccess.set(charsErc721System, _sys("CharacterCore"), true);
         ResourceAccess.set(charsErc721System, worldAddress, true);
         ResourceAccess.set(charsNs, worldAddress, true);
+    }
 
-        // ================================================================
-        // Step 7: Badges namespace grants
-        // ================================================================
-        address zoneTransition = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ZoneTransSys"));
-        address[5] memory badgeWriters = [levelSystem, adminSystem, statSystem, fragmentSystem, zoneTransition];
+    function _ensureBadgesAccess(address worldAddress) internal {
+        ResourceId badgesNs = WorldResourceIdLib.encodeNamespace(BADGES_NAMESPACE);
+        ResourceId badgesErc721System = _erc721SystemId(BADGES_NAMESPACE);
+        ResourceId badgesOwners = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Owners");
+        ResourceId badgesBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Balances");
+
+        address[5] memory writers = [
+            _sys("LevelSystem"), _sys("AdminSystem"), _sys("StatSystem"),
+            _sys("FragmentSystem"), _sys("ZoneTransSys")
+        ];
         for (uint256 i = 0; i < 5; i++) {
-            ResourceAccess.set(badgesErc721System, badgeWriters[i], true);
-            ResourceAccess.set(badgesOwners, badgeWriters[i], true);
-            ResourceAccess.set(badgesBalances, badgeWriters[i], true);
+            ResourceAccess.set(badgesErc721System, writers[i], true);
+            ResourceAccess.set(badgesOwners, writers[i], true);
+            ResourceAccess.set(badgesBalances, writers[i], true);
         }
         ResourceAccess.set(badgesNs, worldAddress, true);
         ResourceAccess.set(badgesErc721System, worldAddress, true);
+    }
 
-        // ================================================================
-        // Step 8: Fragments namespace grants
-        // ================================================================
+    function _ensureFragmentsAccess(address worldAddress) internal {
+        ResourceId fragsNs = WorldResourceIdLib.encodeNamespace(FRAGMENTS_NAMESPACE);
+        ResourceId fragsErc721System = _erc721SystemId(FRAGMENTS_NAMESPACE);
+        ResourceId fragsOwners = WorldResourceIdLib.encode(RESOURCE_TABLE, FRAGMENTS_NAMESPACE, "Owners");
+        ResourceId fragsBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, FRAGMENTS_NAMESPACE, "Balances");
+        address fragmentSystem = _sys("FragmentSystem");
         ResourceAccess.set(fragsErc721System, fragmentSystem, true);
         ResourceAccess.set(fragsOwners, fragmentSystem, true);
         ResourceAccess.set(fragsBalances, fragmentSystem, true);
         ResourceAccess.set(fragsNs, worldAddress, true);
         ResourceAccess.set(fragsErc721System, worldAddress, true);
+    }
 
-        // ================================================================
-        // Step 9: Transfer Characters namespace to CharacterCore
-        // CharacterCore needs namespace ownership to write Characters,
-        // CharacterOwner, NameExists, Counters, and ERC721 tables.
-        // ================================================================
+    function _transferCharacterNamespace() internal {
+        ResourceId charsNs = WorldResourceIdLib.encodeNamespace(CHARACTERS_NAMESPACE);
+        address characterCore = _sys("CharacterCore");
         NamespaceOwner.set(charsNs, characterCore);
         ResourceAccess.set(charsNs, characterCore, true);
     }

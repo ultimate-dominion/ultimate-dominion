@@ -19,7 +19,7 @@ import {
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { FaSearch, FaSortAmountDown, FaSortAmountUp, FaMedal } from 'react-icons/fa';
+import { FaSearch, FaSortAmountDown, FaSortAmountUp, FaMedal, FaCrosshairs } from 'react-icons/fa';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { LeaderboardRow } from '../components/LeaderboardRow';
@@ -33,13 +33,13 @@ import {
 } from '../components/SVGs';
 import { useAuth } from '../contexts/AuthContext';
 import { useMap } from '../contexts/MapContext';
-import { useGameTable } from '../lib/gameStore';
+import { useGameTable, useGameValue, toNumber } from '../lib/gameStore';
 import { CHARACTERS_PATH, HOME_PATH } from '../Routes';
 import { Character, StatsClasses } from '../utils/types';
 
 const PLAYERS_PER_PAGE = 10;
 
-type LeaderboardTab = 'rankings' | 'raceToMax';
+type LeaderboardTab = 'rankings' | 'raceToMax' | 'pvpRankings';
 
 type ZoneCompletionEntry = {
   characterId: string;
@@ -50,12 +50,24 @@ type ZoneCompletionEntry = {
   hasBadge: boolean;
 };
 
+type PvpRankingEntry = {
+  characterId: string;
+  characterName: string;
+  characterImage?: string;
+  elo: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+};
+
 export const Leaderboard = (): JSX.Element => {
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const { allCharacters } = useMap();
   const zoneCompletionTable = useGameTable('CharacterZoneCompletion');
+  const pvpRatingTable = useGameTable('PvpRating');
+  const pvpSeasonData = useGameValue('PvpSeason', '');
 
   const [tab, setTab] = useState<LeaderboardTab>('rankings');
   const [entries, setEntries] = useState<Character[]>([]);
@@ -89,6 +101,45 @@ export const Leaderboard = (): JSX.Element => {
       .filter((e): e is ZoneCompletionEntry => e !== null)
       .sort((a, b) => a.rank - b.rank);
   }, [zoneCompletionTable, allCharacters]);
+
+  // PvP ranking data
+  const pvpRankings: PvpRankingEntry[] = useMemo(() => {
+    if (!pvpRatingTable) return [];
+
+    return Object.entries(pvpRatingTable)
+      .map(([, data]) => {
+        const charId = data.characterId as string;
+        if (!charId) return null;
+        const character = allCharacters.find(c => c.id === charId);
+        const wins = toNumber(data.wins);
+        const losses = toNumber(data.losses);
+        const total = wins + losses;
+        return {
+          characterId: charId,
+          characterName: character?.name ?? 'Unknown',
+          characterImage: character?.image,
+          elo: toNumber(data.elo),
+          wins,
+          losses,
+          winRate: total > 0 ? Math.round((wins / total) * 100) : 0,
+        };
+      })
+      .filter((e): e is PvpRankingEntry => e !== null)
+      .sort((a, b) => b.elo - a.elo);
+  }, [pvpRatingTable, allCharacters]);
+
+  // PvP pagination
+  const [pvpPage, setPvpPage] = useState(1);
+  const [pvpPageLimit, setPvpPageLimit] = useState(1);
+
+  const pagedPvpRankings = useMemo(
+    () =>
+      pvpRankings.slice(
+        (pvpPage - 1) * PLAYERS_PER_PAGE,
+        pvpPage * PLAYERS_PER_PAGE,
+      ),
+    [pvpRankings, pvpPage],
+  );
 
   useEffect(() => {
     if (isConnecting) return;
@@ -212,6 +263,16 @@ export const Leaderboard = (): JSX.Element => {
             variant="white"
           >
             Race to Max
+          </Button>
+          <Button
+            bgColor={tab === 'pvpRankings' ? 'grey500' : undefined}
+            color={tab === 'pvpRankings' ? 'white' : undefined}
+            leftIcon={<FaCrosshairs color={tab === 'pvpRankings' ? '#E85D5D' : undefined} />}
+            onClick={() => setTab('pvpRankings')}
+            size="sm"
+            variant="white"
+          >
+            PvP Rankings
           </Button>
         </HStack>
 
@@ -527,6 +588,195 @@ export const Leaderboard = (): JSX.Element => {
                 {10 - zoneCompletions.length} badge{10 - zoneCompletions.length !== 1 ? 's' : ''} remaining
               </Text>
             )}
+          </VStack>
+        )}
+
+        {tab === 'pvpRankings' && (
+          <VStack px={3} py={4} spacing={3} w="100%">
+            {pvpSeasonData && (
+              <HStack
+                bg="rgba(232,93,93,0.08)"
+                border="1px solid"
+                borderColor="rgba(232,93,93,0.2)"
+                borderRadius="md"
+                justify="center"
+                px={4}
+                py={2}
+                spacing={2}
+                w="100%"
+              >
+                <FaCrosshairs color="#E85D5D" size={14} />
+                <Text color="#E85D5D" fontSize="sm" fontWeight={600}>
+                  Season {toNumber(pvpSeasonData.season)}
+                </Text>
+                {pvpSeasonData.name && (
+                  <Text color="#8A7E6A" fontSize="xs">
+                    — {pvpSeasonData.name as string}
+                  </Text>
+                )}
+              </HStack>
+            )}
+
+            <Text color="#8A7E6A" size="sm" textAlign="center">
+              Players ranked by ELO rating from PvP combat.
+            </Text>
+
+            {/* Column headers */}
+            <Flex align="center" justify="space-between" px={4} w="100%">
+              <HStack flex={1} spacing={3}>
+                <Text color="#565555" fontWeight={400} minW="30px" size="xs">
+                  #
+                </Text>
+                <Text color="#565555" fontWeight={400} size="xs">
+                  Player
+                </Text>
+              </HStack>
+              <HStack spacing={4}>
+                <Text
+                  color="#565555"
+                  display={{ base: 'none', sm: 'block' }}
+                  fontWeight={400}
+                  minW="50px"
+                  size="xs"
+                  textAlign="center"
+                >
+                  W/L
+                </Text>
+                <Text
+                  color="#565555"
+                  display={{ base: 'none', sm: 'block' }}
+                  fontWeight={400}
+                  minW="45px"
+                  size="xs"
+                  textAlign="center"
+                >
+                  Win %
+                </Text>
+                <Text
+                  color="#565555"
+                  fontWeight={400}
+                  minW="50px"
+                  size="xs"
+                  textAlign="right"
+                >
+                  ELO
+                </Text>
+              </HStack>
+            </Flex>
+
+            <VStack spacing={0} w="100%">
+              <Box
+                bgColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                h="5px"
+                w="100%"
+              />
+              {pagedPvpRankings.length > 0 ? (
+                pagedPvpRankings.map((entry, i) => {
+                  const rank = (pvpPage - 1) * PLAYERS_PER_PAGE + i + 1;
+                  return (
+                    <Box key={`pvp-${entry.characterId}`} w="100%">
+                      <HStack
+                        as={RouterLink}
+                        px={4}
+                        py={3}
+                        spacing={3}
+                        to={`${CHARACTERS_PATH}/${entry.characterId}`}
+                        w="100%"
+                        _hover={{ bg: 'rgba(196,184,158,0.06)' }}
+                      >
+                        <Text
+                          color={rank <= 3 ? '#E85D5D' : '#8A7E6A'}
+                          fontFamily="mono"
+                          fontWeight={700}
+                          minW="30px"
+                          size="sm"
+                        >
+                          #{rank}
+                        </Text>
+                        <Avatar size="xs" src={entry.characterImage} />
+                        <Text
+                          color="#E8DCC8"
+                          flex={1}
+                          fontWeight={600}
+                          size="sm"
+                        >
+                          {entry.characterName}
+                        </Text>
+                        <HStack spacing={4}>
+                          <Text
+                            color="#6A6050"
+                            display={{ base: 'none', sm: 'block' }}
+                            fontFamily="mono"
+                            minW="50px"
+                            size="xs"
+                            textAlign="center"
+                          >
+                            {entry.wins}/{entry.losses}
+                          </Text>
+                          <Text
+                            color={
+                              entry.winRate >= 60
+                                ? '#6AAF6A'
+                                : entry.winRate >= 40
+                                  ? '#C8A96E'
+                                  : '#AF6A6A'
+                            }
+                            display={{ base: 'none', sm: 'block' }}
+                            fontFamily="mono"
+                            minW="45px"
+                            size="xs"
+                            textAlign="center"
+                          >
+                            {entry.winRate}%
+                          </Text>
+                          <Text
+                            color="#E8DCC8"
+                            fontFamily="mono"
+                            fontWeight={700}
+                            minW="50px"
+                            size="sm"
+                            textAlign="right"
+                          >
+                            {entry.elo}
+                          </Text>
+                        </HStack>
+                      </HStack>
+                      <Box
+                        bg="rgba(196,184,158,0.08)"
+                        boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                        h="1px"
+                        w="100%"
+                      />
+                    </Box>
+                  );
+                })
+              ) : (
+                <VStack py={8} spacing={2}>
+                  <FaCrosshairs color="#5A5040" size={32} />
+                  <Text color="#8A7E6A" mt={2} size="sm">
+                    No PvP ratings yet.
+                  </Text>
+                  <Text color="#5A5040" size="xs">
+                    Challenge other players to climb the ranks!
+                  </Text>
+                </VStack>
+              )}
+            </VStack>
+
+            <HStack
+              my={3}
+              visibility={pvpRankings.length > PLAYERS_PER_PAGE ? 'visible' : 'hidden'}
+            >
+              <Pagination
+                length={pvpRankings.length}
+                page={pvpPage}
+                pageLimit={pvpPageLimit}
+                perPage={PLAYERS_PER_PAGE}
+                setPage={setPvpPage}
+                setPageLimit={setPvpPageLimit}
+              />
+            </HStack>
           </VStack>
         )}
       </VStack>

@@ -35,6 +35,7 @@ import {
   GAME_BOARD_PATH,
   GUIDE_PATH,
   HOME_PATH,
+  GUILD_PATH,
   LEADERBOARD_PATH,
   MARKETPLACE_PATH,
   WAITING_ROOM_PATH,
@@ -106,6 +107,11 @@ export const Header = (): JSX.Element => {
         label: 'Marketplace',
         path: MARKETPLACE_PATH,
         isActive: (p: string) => p.startsWith(MARKETPLACE_PATH),
+      },
+      {
+        label: 'Guild',
+        path: GUILD_PATH,
+        isActive: (p: string) => p === GUILD_PATH,
       },
       {
         label: 'Leaderboard',

@@ -133,3 +133,29 @@ address constant BASE_SWAP_ROUTER = 0x2626664c2603336E57B271c5C0b26F421741e481;
 uint24 constant DEFAULT_POOL_FEE = 10000;              // 1% fee tier for exotic pairs
 uint256 constant DEFAULT_GOLD_PER_GAS_CHARGE = 1e18;   // 1 gold per relayer gas charge
 uint256 constant UNISWAP_MIN_OUTPUT = 1;               // Accept any output — gas swaps are tiny
+
+// ======== Phase 3: Item Degradation ========
+uint256 constant DURABILITY_LOSS_PER_COMBAT = 1;
+// Repair cost per durability point by rarity (in gold wei)
+uint256 constant REPAIR_COST_R0 = 1 ether;     // Worn
+uint256 constant REPAIR_COST_R1 = 5 ether;     // Common
+uint256 constant REPAIR_COST_R2 = 15 ether;    // Uncommon
+uint256 constant REPAIR_COST_R3 = 50 ether;    // Rare
+uint256 constant REPAIR_COST_R4 = 150 ether;   // Epic
+
+// ======== Phase 3: Respec ========
+uint256 constant STAT_RESPEC_BASE_COST = 50 ether;    // 50 gold at level 1
+uint256 constant FULL_RESPEC_MULTIPLIER = 10;          // full respec = 10x stat respec
+uint256 constant RESPEC_COST_PER_LEVEL = 10 ether;    // +10 gold per level
+
+// ======== Phase 5: Guilds ========
+uint256 constant GUILD_CREATE_COST = 100 ether;        // 100 gold to create
+uint256 constant GUILD_MAX_MEMBERS = 50;
+uint256 constant GUILD_MAX_TAX_RATE = 5000;            // 50% max (basis points)
+uint256 constant GUILD_INACTIVITY_THRESHOLD = 14 days;
+uint256 constant GUILD_BONUS_BPS = 500;                // 5% flat bonus (gold, XP, drops)
+
+// ======== Phase 5: PvP Rankings ========
+int256 constant ELO_DEFAULT_RATING = 1000;
+int256 constant ELO_K_FACTOR = 32;
+int256 constant ELO_SCALE = 400;

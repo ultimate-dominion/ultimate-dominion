@@ -14,9 +14,7 @@ contract StatsRollIntegrationTest is Test {
     address account;
 
     function setUp() public {
-        // Use deployed world from local Anvil deployment
-        string memory json = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/deploys/31337/latest.json")));
-        worldAddress = abi.decode(vm.parseJson(json, ".worldAddress"), (address));
+        worldAddress = vm.envAddress("WORLD_ADDRESS");
         world = IWorld(worldAddress);
         StoreSwitch.setStoreAddress(worldAddress);
 

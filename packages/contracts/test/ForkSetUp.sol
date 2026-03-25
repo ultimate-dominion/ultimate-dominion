@@ -25,7 +25,7 @@ import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
 import {Shops} from "@codegen/index.sol";
 import {Classes} from "@codegen/common.sol";
-import {WORLD_NAMESPACE} from "../../constants.sol";
+import {WORLD_NAMESPACE} from "../constants.sol";
 
 abstract contract ForkSetUp is Test {
     IWorld public world;

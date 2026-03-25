@@ -95,6 +95,9 @@ const FAQ = lazyWithReload(() =>
 const ClassPage = lazyWithReload(() =>
   import('./pages/ClassPage').then(m => ({ default: m.ClassPage })),
 );
+const Guild = lazyWithReload(() =>
+  import('./pages/Guild').then(m => ({ default: m.Guild })),
+);
 
 export const HOME_PATH = '/';
 export const MANIFESTO_PATH = '/manifesto';
@@ -111,6 +114,7 @@ export const WAITING_ROOM_PATH = '/waiting-room';
 export const PRIVACY_PATH = '/privacy';
 export const TERMS_PATH = '/terms';
 export const FAQ_PATH = '/faq';
+export const GUILD_PATH = '/guild';
 export const BLOG_URL = 'https://ultimatedominion.com/blog';
 export const TAVERN_URL = 'https://tavern.ultimatedominion.com';
 
@@ -136,6 +140,7 @@ const AppRoutes: React.FC = () => {
           <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
           <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
           <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
+          <Route path={GUILD_PATH} element={<Guild />} />
           <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
           <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
           <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
