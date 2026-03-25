@@ -96,6 +96,9 @@ contract MobSystem is System {
             // Roll for elite (15% chance)
             bool isElite = (uint32(rng >> 128) % 100) < ELITE_CHANCE;
 
+            // Apply XP variance (±25%, same as stat variance)
+            int256 expVar = Math.variance(int256(monsterStats.experience), uint32(rng >> 160));
+
             StatsData memory statsData = StatsData({
                 strength: monsterStats.strength + strVar,
                 agility: monsterStats.agility + agiVar,
@@ -103,7 +106,7 @@ contract MobSystem is System {
                 maxHp: monsterStats.hitPoints + hpVar,
                 class: monsterStats.class,
                 currentHp: monsterStats.hitPoints + hpVar,
-                experience: monsterStats.experience,
+                experience: uint256(int256(monsterStats.experience) + expVar),
                 level: monsterStats.level,
                 powerSource: PowerSource.None,
                 race: Race.None,

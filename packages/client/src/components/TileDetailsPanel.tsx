@@ -56,6 +56,7 @@ import {
 } from '../utils/types';
 
 import { getRomanNumeral } from '../utils/fragmentNarratives';
+import { getThreatColor } from '../utils/threatAssessment';
 
 import { ClassSymbol } from './ClassSymbol';
 import { FragmentClaimModal } from './FragmentClaimModal';
@@ -1166,6 +1167,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                       strength: character?.strength ?? 0n,
                       agility: character?.agility ?? 0n,
                       intelligence: character?.intelligence ?? 0n,
+                      level: character?.level ?? 1n,
+                      maxHp: character?.maxHp ?? 18n,
                     }}
                   />
                   <Box
@@ -1265,6 +1268,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                         strength: character?.strength ?? 0n,
                         agility: character?.agility ?? 0n,
                         intelligence: character?.intelligence ?? 0n,
+                        level: character?.level ?? 1n,
+                        maxHp: character?.maxHp ?? 18n,
                       }}
                     />
                     <Box
@@ -1345,76 +1350,6 @@ export const TileDetailsPanel = (): JSX.Element => {
   );
 };
 
-/**
- * Get the dominant stat (highest of STR/AGI/INT) — mirrors the on-chain
- * _getDominantStat logic in CombatSystem.sol.
- *
- * Returns: [dominantIndex (0=STR, 1=AGI, 2=INT), dominantValue]
- */
-const getDominantStat = (
-  stats: { strength: bigint; agility: bigint; intelligence: bigint },
-): [number, bigint] => {
-  if (stats.strength >= stats.agility && stats.strength >= stats.intelligence) {
-    return [0, stats.strength];
-  }
-  if (stats.agility > stats.strength && stats.agility >= stats.intelligence) {
-    return [1, stats.agility];
-  }
-  return [2, stats.intelligence];
-};
-
-/**
- * Determine combat advantage color by comparing dominant stats and the
- * combat triangle, mirroring the on-chain CombatSystem logic.
- *
- * Triangle: STR(0) > AGI(1) > INT(2) > STR(0)
- *
- * Returns: 'green' (advantage), 'yellow' (even), 'red' (disadvantage)
- */
-const getAdvantageColor = (
-  player: { strength: bigint; agility: bigint; intelligence: bigint },
-  opponent: { strength: bigint; agility: bigint; intelligence: bigint },
-): string => {
-  // Guard against undefined stats (e.g. monster template not yet loaded)
-  if (
-    opponent.strength == null ||
-    opponent.agility == null ||
-    opponent.intelligence == null
-  ) {
-    return 'yellow';
-  }
-
-  const [playerDom, playerVal] = getDominantStat(player);
-  const [opponentDom, opponentVal] = getDominantStat(opponent);
-
-  // Triangle: 0 beats 1, 1 beats 2, 2 beats 0
-  const playerBeatsOpponent =
-    (playerDom === 0 && opponentDom === 1) ||
-    (playerDom === 1 && opponentDom === 2) ||
-    (playerDom === 2 && opponentDom === 0);
-
-  const opponentBeatsPlayer =
-    (opponentDom === 0 && playerDom === 1) ||
-    (opponentDom === 1 && playerDom === 2) ||
-    (opponentDom === 2 && playerDom === 0);
-
-  const statDiff = Number(playerVal) - Number(opponentVal);
-
-  if (playerBeatsOpponent) {
-    // You have triangle advantage — green unless heavily outstatted
-    return statDiff >= -3 ? 'green' : 'yellow';
-  }
-
-  if (opponentBeatsPlayer) {
-    // They have triangle advantage — red unless you heavily outstat them
-    return statDiff <= 3 ? 'red' : 'yellow';
-  }
-
-  // Same dominant stat — pure stat comparison
-  if (statDiff >= 3) return 'green';
-  if (statDiff <= -3) return 'red';
-  return 'yellow';
-};
 
 const OpponentRow = ({
   encounterType,
@@ -1424,7 +1359,7 @@ const OpponentRow = ({
 }: {
   encounterType: EncounterType;
   opponent: Character | Monster;
-  playerStats: { strength: bigint; agility: bigint; intelligence: bigint };
+  playerStats: { strength: bigint; agility: bigint; intelligence: bigint; level: bigint; maxHp: bigint };
   onClick: () => void;
 }) => {
   const { inBattle, level, name } = opponent;
@@ -1439,10 +1374,15 @@ const OpponentRow = ({
 
   const disableRow = inBattle || inCooldown;
 
-  const nameColor = getAdvantageColor(playerStats, {
+  const monsterData = opponent as Monster;
+  const nameColor = getThreatColor(playerStats, {
     strength: opponent.strength,
     agility: opponent.agility,
     intelligence: opponent.intelligence,
+    level: opponent.level ?? 1n,
+    maxHp: monsterData.maxHp ?? opponent.maxHp ?? 10n,
+    armor: monsterData.armor ?? 0n,
+    isElite: isElite,
   });
 
   return (
