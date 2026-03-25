@@ -63,99 +63,110 @@ const __dirname = dirname(__filename);
 
 const Z2_MONSTERS: Monster[] = [
   // L11 — Rogue. Fast mountain predator. Entry mob. Slash wound debuff.
-  { name: "Z2-L11-Rogue", level: 11, str: 10, agi: 20, int: 5,
-    hp: 60, armor: 2, classType: 1, xp: 800,
-    weaponMinDmg: 4, weaponMaxDmg: 7, weaponScaling: "agi", weaponIsMagic: false },
+  // Target: 85-90% WR. Step up from Z1 — HP/damage bump over DC L10.
+  { name: "Z2-L11-Rogue", level: 11, str: 15, agi: 27, int: 7,
+    hp: 95, armor: 4, classType: 1, xp: 800,
+    weaponMinDmg: 7, weaponMaxDmg: 12, weaponScaling: "agi", weaponIsMagic: false },
 
   // L12 — Mage. Frost caster. Magic damage + cold debuff (AGI reduction).
-  { name: "Z2-L12-Mage", level: 12, str: 7, agi: 8, int: 21,
-    hp: 60, armor: 2, classType: 2, xp: 1000,
-    weaponMinDmg: 5, weaponMaxDmg: 8, weaponScaling: "str", weaponIsMagic: true },
+  // Target: 80-90% WR. Magic bypasses armor — threatens STR tanks.
+  { name: "Z2-L12-Mage", level: 12, str: 10, agi: 11, int: 28,
+    hp: 90, armor: 3, classType: 2, xp: 1000,
+    weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "str", weaponIsMagic: true },
 
-  // L13 — Warrior. Rock golem. Moderate armor, pure physical. Tank check.
-  { name: "Z2-L13-Warrior", level: 13, str: 20, agi: 6, int: 3,
-    hp: 68, armor: 4, classType: 0, xp: 1200,
-    weaponMinDmg: 5, weaponMaxDmg: 9, weaponScaling: "str", weaponIsMagic: false },
+  // L13 — Warrior. Rock golem. Moderate armor, pure physical. DPS check.
+  // Target: 80-85% WR. Tanky but fair.
+  { name: "Z2-L13-Warrior", level: 13, str: 24, agi: 8, int: 5,
+    hp: 100, armor: 5, classType: 0, xp: 1200,
+    weaponMinDmg: 8, weaponMaxDmg: 12, weaponScaling: "str", weaponIsMagic: false },
 
-  // L14 — Rogue. Wind creature. Evasive + wind gust debuff (STR reduction).
-  { name: "Z2-L14-Rogue", level: 14, str: 8, agi: 22, int: 5,
-    hp: 68, armor: 2, classType: 1, xp: 1400,
-    weaponMinDmg: 5, weaponMaxDmg: 9, weaponScaling: "agi", weaponIsMagic: false },
+  // L14 — Rogue. Wind creature. Very evasive + wind gust debuff.
+  // Target: 80-85% WR. Evasion makes hits unreliable, gust strips armor.
+  { name: "Z2-L14-Rogue", level: 14, str: 12, agi: 29, int: 7,
+    hp: 100, armor: 4, classType: 1, xp: 1400,
+    weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "agi", weaponIsMagic: false },
 
-  // L15 — Warrior. Decay-touched beast. High HP + poison DoT. Endurance test.
-  { name: "Z2-L15-Warrior", level: 15, str: 22, agi: 8, int: 4,
-    hp: 72, armor: 4, classType: 0, xp: 1600,
-    weaponMinDmg: 5, weaponMaxDmg: 9, weaponScaling: "str", weaponIsMagic: false },
+  // L15 — Warrior. Decay-touched beast. HP + poison DoT. Endurance test.
+  // Target: 75-85% WR. DoT does the work — base stats don't need to be extreme.
+  { name: "Z2-L15-Warrior", level: 15, str: 25, agi: 10, int: 6,
+    hp: 100, armor: 5, classType: 0, xp: 1600,
+    weaponMinDmg: 7, weaponMaxDmg: 12, weaponScaling: "str", weaponIsMagic: false },
 
   // L16 — Mage. Storm caster. Magic + lightning breath attack. DPS check.
-  { name: "Z2-L16-Mage", level: 16, str: 8, agi: 10, int: 23,
-    hp: 65, armor: 3, classType: 2, xp: 1800,
-    weaponMinDmg: 5, weaponMaxDmg: 9, weaponScaling: "str", weaponIsMagic: true },
+  // Target: 75-85% WR. Breath + base magic = dual damage sources.
+  { name: "Z2-L16-Mage", level: 16, str: 10, agi: 12, int: 29,
+    hp: 90, armor: 4, classType: 2, xp: 1800,
+    weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "str", weaponIsMagic: true },
 
   // L17 — Rogue. Corrupted faction scout. Dual magic + corruption debuff.
-  { name: "Z2-L17-Rogue", level: 17, str: 10, agi: 24, int: 8,
-    hp: 70, armor: 3, classType: 1, xp: 2000,
-    weaponMinDmg: 5, weaponMaxDmg: 9, weaponScaling: "agi", weaponIsMagic: false },
+  // Target: 75-80% WR. Dual magic + corruption makes this a gear check.
+  { name: "Z2-L17-Rogue", level: 17, str: 14, agi: 30, int: 10,
+    hp: 100, armor: 5, classType: 1, xp: 2000,
+    weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "agi", weaponIsMagic: false },
 
   // L18 — Warrior. Mountain wyvern. Physical + venom DoT.
-  { name: "Z2-L18-Warrior", level: 18, str: 23, agi: 12, int: 6,
-    hp: 78, armor: 5, classType: 0, xp: 2200,
-    weaponMinDmg: 6, weaponMaxDmg: 10, weaponScaling: "str", weaponIsMagic: false },
+  // Target: 70-80% WR. DoT + sustained physical, not stat-wall.
+  { name: "Z2-L18-Warrior", level: 18, str: 27, agi: 14, int: 8,
+    hp: 105, armor: 6, classType: 0, xp: 2200,
+    weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "str", weaponIsMagic: false },
 
   // L19 — Mage. Frost wyrm. Breath attack + frost DoT. Hard pre-boss.
-  { name: "Z2-L19-Mage", level: 19, str: 10, agi: 12, int: 24,
-    hp: 68, armor: 3, classType: 2, xp: 2500,
-    weaponMinDmg: 5, weaponMaxDmg: 9, weaponScaling: "str", weaponIsMagic: true },
+  // Target: 70-80% WR. Breath + DoT compound, don't need extreme INT.
+  { name: "Z2-L19-Mage", level: 19, str: 12, agi: 14, int: 29,
+    hp: 90, armor: 4, classType: 2, xp: 2500,
+    weaponMinDmg: 8, weaponMaxDmg: 13, weaponScaling: "str", weaponIsMagic: true },
 
   // L20 — Warrior. ZONE BOSS. Physical + thunder breath + ground slam debuff.
-  { name: "Z2-L20-Boss", level: 20, str: 26, agi: 12, int: 6,
-    hp: 95, armor: 6, classType: 0, xp: 4000,
-    weaponMinDmg: 7, weaponMaxDmg: 11, weaponScaling: "str", weaponIsMagic: false },
+  // Target: 65-75% WR avg. Low ARM (5) so AGI can penetrate. Moderate breath.
+  { name: "Z2-L20-Boss", level: 20, str: 29, agi: 14, int: 7,
+    hp: 125, armor: 5, classType: 0, xp: 4000,
+    weaponMinDmg: 9, weaponMaxDmg: 14, weaponScaling: "str", weaponIsMagic: false },
 ];
 
 // Monster weapon effects (keyed by monster name)
+// Effects buffed to compound over longer fights — armor strip, DoTs, stat drain
 const Z2_MONSTER_EFFECTS: Record<string, WeaponEffect[]> = {
-  // L11 Rogue: slash wound — reduces armor
+  // L11 Rogue: slash wound — strips armor, makes subsequent hits hurt more
   "Z2-L11-Rogue": [
-    { type: "stat_debuff", name: "Slash Wound", strMod: 0, agiMod: 0, intMod: 0, armorMod: -2, duration: 3 },
+    { type: "stat_debuff", name: "Slash Wound", strMod: 0, agiMod: 0, intMod: 0, armorMod: -3, duration: 4 },
   ],
-  // L12 Mage: cold touch — slows target
+  // L12 Mage: cold touch — slows target, reduces evasion
   "Z2-L12-Mage": [
-    { type: "stat_debuff", name: "Cold Touch", agiMod: -3, strMod: 0, intMod: 0, armorMod: 0, duration: 3 },
+    { type: "stat_debuff", name: "Cold Touch", agiMod: -4, strMod: 0, intMod: 0, armorMod: 0, duration: 3 },
   ],
-  // L13 Warrior: ground pound — weakens + minor DoT
+  // L13 Warrior: ground pound — weakens + shakes loose defenses
   "Z2-L13-Warrior": [
-    { type: "stat_debuff", name: "Ground Pound", strMod: -2, agiMod: -2, intMod: 0, armorMod: 0, duration: 3 },
+    { type: "stat_debuff", name: "Ground Pound", strMod: -3, agiMod: -3, intMod: 0, armorMod: -2, duration: 3 },
   ],
-  // L14 Rogue: wind gust — weakens physical defense
+  // L14 Rogue: wind gust — weakens physical defense + strips armor
   "Z2-L14-Rogue": [
-    { type: "stat_debuff", name: "Wind Gust", strMod: -3, agiMod: 0, intMod: 0, armorMod: -2, duration: 3 },
+    { type: "stat_debuff", name: "Wind Gust", strMod: -4, agiMod: 0, intMod: 0, armorMod: -3, duration: 3 },
   ],
-  // L15 Warrior: decay bite — poison DoT
+  // L15 Warrior: decay bite — poison DoT, higher tick damage
   "Z2-L15-Warrior": [
-    { type: "dot", name: "Decay Bite", damagePerTick: 3, maxStacks: 1, duration: 4, cooldown: 0 },
+    { type: "dot", name: "Decay Bite", damagePerTick: 4, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
-  // L16 Mage: lightning breath — extra magic damage
+  // L16 Mage: lightning breath — harder-hitting magic burst
   "Z2-L16-Mage": [
-    { type: "magic_breath", name: "Lightning Bolt", minDmg: 5, maxDmg: 9, cooldown: 2 },
+    { type: "magic_breath", name: "Lightning Bolt", minDmg: 7, maxDmg: 12, cooldown: 2 },
   ],
-  // L17 Rogue: dual magic + corruption debuff
+  // L17 Rogue: dual magic + corruption debuff (drains STR and INT)
   "Z2-L17-Rogue": [
     { type: "dual_magic", name: "dual_magic" },
-    { type: "stat_debuff", name: "Corruption", strMod: -2, agiMod: 0, intMod: -2, armorMod: 0, duration: 3 },
+    { type: "stat_debuff", name: "Corruption", strMod: -3, agiMod: 0, intMod: -3, armorMod: 0, duration: 4 },
   ],
-  // L18 Warrior: venom spit DoT
+  // L18 Warrior: venom spit — stronger DoT
   "Z2-L18-Warrior": [
-    { type: "dot", name: "Venom Spit", damagePerTick: 3, maxStacks: 1, duration: 4, cooldown: 0 },
+    { type: "dot", name: "Venom Spit", damagePerTick: 4, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
-  // L19 Mage: frost breath + frost DoT
+  // L19 Mage: frost breath + frost DoT — dual threat
   "Z2-L19-Mage": [
-    { type: "magic_breath", name: "Frost Breath", minDmg: 5, maxDmg: 9, cooldown: 2 },
-    { type: "dot", name: "Frostbite", damagePerTick: 2, maxStacks: 1, duration: 4, cooldown: 0 },
+    { type: "magic_breath", name: "Frost Breath", minDmg: 8, maxDmg: 13, cooldown: 2 },
+    { type: "dot", name: "Frostbite", damagePerTick: 3, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
-  // L20 Boss: thunder breath + ground slam debuff
+  // L20 Boss: thunder breath (moderate — INT 7 limits resist) + ground slam
   "Z2-L20-Boss": [
-    { type: "magic_breath", name: "Thunder Clap", minDmg: 5, maxDmg: 9, cooldown: 2 },
+    { type: "magic_breath", name: "Thunder Clap", minDmg: 6, maxDmg: 11, cooldown: 2 },
     { type: "stat_debuff", name: "Ground Slam", strMod: -3, agiMod: -3, intMod: 0, armorMod: -2, duration: 3, cooldown: 3 },
   ],
 };
@@ -608,7 +619,9 @@ function buildGearLoadout(arch: Archetype, level: number, data: GameData, availW
           && arch.advClass.physMult >= arch.advClass.spellMult) {
         agiScore += combatAgi * 0.35;
       }
-      const magicBypassScore = weapon.isMagic ? 4.0 : 0;
+      // Magic bypass only valuable if INT is high enough to deal meaningful magic damage.
+      // Scale from 0 (INT ≤ 12) to 4.0 (INT ≥ 20). Prevents STR builds from picking magic weapons.
+      const magicBypassScore = weapon.isMagic ? Math.max(0, Math.min(4.0, (profile.int - 12) * 0.5)) : 0;
       const combatStr = profile.str + weapon.strMod;
       const strDefScore = combatStr > 10 ? (combatStr - 10) * 0.25 : 0;
 
@@ -2047,12 +2060,15 @@ function runJourney() {
     console.log(`  Repair rate: ${(ECONOMY.REPAIR_RATE * 100)}% | Durability loss: ${ECONOMY.DURABILITY_LOSS_PER_FIGHT}/fight | Cycle: ${ECONOMY.FIGHTS_PER_DURABILITY_CYCLE} fights`);
     console.log(`  DAU for inflation projections: ${DAU}`);
 
-    // XP thresholds (from MinimalPostDeploy.s.sol for L1-10, extrapolated for L11-20)
+    // XP thresholds — L1-10 from MinimalPostDeploy.s.sol, L11-20 redesigned
+    // Z2 curve: gentle linear ramp in fights-per-level (200→400 wins).
+    // Target: ~60 hours of combat at 60 fights/hr with ~83% win rate.
+    // Each level takes 4-8 hours — frequent enough to feel progress, slow enough to appreciate.
     const XP_THRESHOLDS: Record<number, number> = {
       1: 500, 2: 2000, 3: 5500, 4: 25000, 5: 85000,
       6: 200000, 7: 450000, 8: 900000, 9: 1600000, 10: 2500000,
-      11: 4000000, 12: 6400000, 13: 10200000, 14: 16300000, 15: 26000000,
-      16: 41600000, 17: 66500000, 18: 106000000, 19: 170000000, 20: 270000000,
+      11: 2660000, 12: 2880000, 13: 3168000, 14: 3532000, 15: 3980000,
+      16: 4520000, 17: 5160000, 18: 5930000, 19: 6880000, 20: 8480000,
     };
 
     // Use imported economy functions
