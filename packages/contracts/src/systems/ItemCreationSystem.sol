@@ -2,7 +2,6 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {
     UltimateDominionConfig,
     Items,
@@ -18,8 +17,8 @@ import {
     ConsumableStatsData
 } from "@codegen/index.sol";
 import {ItemType} from "@codegen/common.sol";
-import {_requireOwner, _requireAccessOrAdmin, _lootManagerSystemId} from "../utils.sol";
-import {ITEMS_NAMESPACE, WORLD_NAMESPACE} from "../../constants.sol";
+import {_requireOwner, _requireAccessOrAdmin} from "../utils.sol";
+import {ITEMS_NAMESPACE, ESCROW_ADDRESS} from "../../constants.sol";
 import {TotalSupply} from "@erc1155/tables/TotalSupply.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
 import {ERC1155URIStorage} from "@erc1155/tables/ERC1155URIStorage.sol";
@@ -58,8 +57,7 @@ contract ItemCreationSystem is System {
             StatRestrictions.set(itemId, statRestrictions);
         }
 
-        address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
-        _mintItemDirect(lootManager, itemId, supply);
+        _mintItemDirect(ESCROW_ADDRESS, itemId, supply);
         _setTokenUri(itemId, itemMetadataURI);
         Items.set(itemId, newItem);
         return itemId;
@@ -68,8 +66,7 @@ contract ItemCreationSystem is System {
     function resupplyLootManager(uint256 itemId, uint256 newSupply) public {
         _requireAccessOrAdmin(address(this), _msgSender());
         if (TotalSupply.getTotalSupply(_totalSupplyTableId(ITEMS_NAMESPACE), itemId) == 0) revert NoSupply();
-        address lootManager = Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
-        _mintItemDirect(lootManager, itemId, newSupply);
+        _mintItemDirect(ESCROW_ADDRESS, itemId, newSupply);
     }
 
     function createItems(

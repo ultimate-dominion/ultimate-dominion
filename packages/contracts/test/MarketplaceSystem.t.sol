@@ -31,14 +31,14 @@ import {_erc1155SystemId} from "@erc1155/utils.sol";
 import {Order, Offer, Consideration} from "@interfaces/Structs.sol";
 import {ResourceIdLib} from "@latticexyz/store/src/ResourceId.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
-import {_itemsSystemId, _lootManagerSystemId} from "../src/utils.sol";
 import {
     GOLD_NAMESPACE,
     CHARACTERS_NAMESPACE,
     ERC721_NAME,
     ERC721_SYMBOL,
     TOKEN_URI,
-    ITEMS_NAMESPACE
+    ITEMS_NAMESPACE,
+    ESCROW_ADDRESS
 } from "../constants.sol";
 import {GasReporter} from "@latticexyz/gas-report/src/GasReporter.sol";
 import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
@@ -48,14 +48,13 @@ import "forge-std/console.sol";
 
 contract Test_MarketplaceSystem is SetUp, GasReporter {
     uint256 MAX_INT = 2 ** 256 - 1;
-    address lootManager;
+    address escrow = ESCROW_ADDRESS;
     address marketplace;
 
     function setUp() public virtual override {
         super.setUp();
         vm.prank(deployer);
         world.UD__setAdmin(address(this), true);
-        lootManager = Systems.getSystem(_lootManagerSystemId("UD"));
         marketplace = world.UD__marketplaceAddress();
         // world.grantAccess(_itemsSystemId("UD"), address(this));
     }
@@ -89,8 +88,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         endGasReport();
         assertEq(items.balanceOf(userA, 1), 0, "user a incorrect items balance");
         assertEq(gold.balanceOf(userA), 0, "user A incorrect gold balance");
-        assertEq(items.balanceOf(lootManager, 1), 10000000000000000000, "incorrect loot manager item balance");
-        assertEq(gold.balanceOf(lootManager), amount, "incorrect loot manager gold balance");
+        assertEq(items.balanceOf(escrow, 1), 10000000000000000000, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(escrow), amount, "incorrect loot manager gold balance");
     }
 
     function test_CreateOrderForERC20() public {
@@ -104,7 +103,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         // give userA an item
         world.UD__adminDropItem(userACharacterID, 1, 1);
         assertEq(items.balanceOf(userA, 1), 1);
-        assertEq(items.balanceOf(lootManager, 1), 10000000000000000000 - 1);
+        assertEq(items.balanceOf(escrow, 1), 10000000000000000000 - 1);
         // have userA set max allowance for their item
         vm.startPrank(userA);
         gold.approve(world.UD__marketplaceAddress(), MAX_INT);
@@ -123,8 +122,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         endGasReport();
         assertEq(items.balanceOf(userA, 1), 0);
         assertEq(gold.balanceOf(userA), 0);
-        assertEq(items.balanceOf(lootManager, 1), 10000000000000000000);
-        assertEq(gold.balanceOf(lootManager), 0);
+        assertEq(items.balanceOf(escrow, 1), 10000000000000000000);
+        assertEq(gold.balanceOf(escrow), 0);
     }
 
     function test_cancelOrderForERC1155Twice() public {
@@ -158,8 +157,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
 
         assertEq(items.balanceOf(userA, 1), 0, "user a incorrect items balance");
         assertEq(gold.balanceOf(userA), amount, "user A incorrect gold balance");
-        assertEq(items.balanceOf(lootManager, 1), 10 ether, "incorrect loot manager item balance");
-        assertEq(gold.balanceOf(lootManager), 0, "incorrect loot manager gold balance");
+        assertEq(items.balanceOf(escrow, 1), 10 ether, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(escrow), 0, "incorrect loot manager gold balance");
     }
 
     function test_cancelOrderForERC20Twice() public {
@@ -193,8 +192,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         endGasReport();
         assertEq(items.balanceOf(userA, 1), 1, "user a incorrect items balance");
         assertEq(gold.balanceOf(userA), 0, "user A incorrect gold balance");
-        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1, "incorrect loot manager item balance");
-        assertEq(gold.balanceOf(lootManager), 0, "incorrect loot manager gold balance");
+        assertEq(items.balanceOf(escrow, 1), 10 ether - 1, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(escrow), 0, "incorrect loot manager gold balance");
     }
 
     function test_cancelOrderForERC1155() public {
@@ -232,8 +231,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
 
         assertEq(items.balanceOf(userA, 1), 0, "user a incorrect items balance");
         assertEq(gold.balanceOf(userA), amount, "user A incorrect gold balance");
-        assertEq(items.balanceOf(lootManager, 1), 10 ether, "incorrect loot manager item balance");
-        assertEq(gold.balanceOf(lootManager), 0, "incorrect loot manager gold balance");
+        assertEq(items.balanceOf(escrow, 1), 10 ether, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(escrow), 0, "incorrect loot manager gold balance");
     }
 
     function test_cancelOrderForERC20() public {
@@ -263,13 +262,13 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         });
 
         bytes32 userAOrder = world.UD__createOrder(Order({offer: oA, consideration: cA, signature: "", offerer: userA}));
-        console.log(lootManager);
+        console.log(escrow);
         world.UD__cancelOrder(userAOrder);
         endGasReport();
         assertEq(items.balanceOf(userA, 1), 1, "user a incorrect items balance");
         assertEq(gold.balanceOf(userA), 0, "user A incorrect gold balance");
-        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1, "incorrect loot manager item balance");
-        assertEq(gold.balanceOf(lootManager), 0, "incorrect loot manager gold balance");
+        assertEq(items.balanceOf(escrow, 1), 10 ether - 1, "incorrect loot manager item balance");
+        assertEq(gold.balanceOf(escrow), 0, "incorrect loot manager gold balance");
     }
 
     function test_fulfillOrderForERC20Twice() public {
@@ -356,8 +355,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         assertEq(gold.balanceOf(userA), 0);
         assertEq(items.balanceOf(userB, 1), 0);
         assertEq(gold.balanceOf(userB), amount);
-        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1);
-        assertEq(gold.balanceOf(lootManager), 0);
+        assertEq(items.balanceOf(escrow, 1), 10 ether - 1);
+        assertEq(gold.balanceOf(escrow), 0);
     }
 
     function test_fulfillOrderForERC1155() public {
@@ -402,8 +401,8 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         assertEq(gold.balanceOf(userA), 0);
         assertEq(items.balanceOf(userB, 1), 0);
         assertEq(gold.balanceOf(userB), amount);
-        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1);
-        assertEq(gold.balanceOf(lootManager), 0);
+        assertEq(items.balanceOf(escrow, 1), 10 ether - 1);
+        assertEq(gold.balanceOf(escrow), 0);
     }
 
     function test_fulfillOrderForERC20() public {
@@ -448,7 +447,7 @@ contract Test_MarketplaceSystem is SetUp, GasReporter {
         assertEq(gold.balanceOf(userA), amount);
         assertEq(items.balanceOf(userB, 1), 1);
         assertEq(gold.balanceOf(userB), 0);
-        assertEq(items.balanceOf(lootManager, 1), 10 ether - 1);
-        assertEq(gold.balanceOf(lootManager), 0);
+        assertEq(items.balanceOf(escrow, 1), 10 ether - 1);
+        assertEq(gold.balanceOf(escrow), 0);
     }
 }

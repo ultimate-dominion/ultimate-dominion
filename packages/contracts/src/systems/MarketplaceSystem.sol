@@ -2,7 +2,6 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceId} from "@latticexyz/store/src/ResourceId.sol";
 import {
     MarketplaceSale, MarketplaceSaleData, Orders, Considerations, ConsiderationsData, Offers, OffersData, UltimateDominionConfig
@@ -10,8 +9,7 @@ import {
 import {TokenType, OrderStatus} from "@codegen/common.sol";
 import {Counters} from "@tables/Counters.sol";
 import {Order, Offer, Consideration} from "@interfaces/Structs.sol";
-import {_lootManagerSystemId} from "../utils.sol";
-import {WORLD_NAMESPACE, ITEMS_NAMESPACE} from "../../constants.sol";
+import {ITEMS_NAMESPACE, ESCROW_ADDRESS} from "../../constants.sol";
 import {IERC1155} from "@erc1155/IERC1155.sol";
 
 import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
@@ -72,7 +70,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         Considerations.set(_orderHash, newConsideration);
 
         // transfer offer items to loot manager contract
-        _transfer(_orderHash, true, _lootManager(), order.offerer);
+        _transfer(_orderHash, true, ESCROW_ADDRESS, order.offerer);
 
         // store order in order table
         Orders.set(_orderHash, order.offerer, 0, OrderStatus.Active);
@@ -97,7 +95,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         if (o.tokenType == TokenType.ERC20) {
             // Offer is Gold (buy order) - offerer put Gold in escrow, wants item
             goldAmount = o.amount;
-            goldPayer = _lootManager(); // Gold is in escrow
+            goldPayer = ESCROW_ADDRESS; // Gold is in escrow
             goldReceiver = _msgSender(); // Seller gets gold (minus fee)
             itemReceiver = c.recipient; // Original offerer gets item
         } else {
@@ -117,9 +115,9 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         // Transfer gold with fee deduction
         if (o.tokenType == TokenType.ERC20) {
             // Gold was in escrow, distribute from there
-            GoldLib.goldTransfer(_world(), _lootManager(), goldReceiver, sellerAmount);
+            GoldLib.goldTransfer(_world(), ESCROW_ADDRESS, goldReceiver, sellerAmount);
             if (feeAmount > 0 && feeRecipient != address(0)) {
-                GoldLib.goldTransfer(_world(), _lootManager(), feeRecipient, feeAmount);
+                GoldLib.goldTransfer(_world(), ESCROW_ADDRESS, feeRecipient, feeAmount);
             }
             // Transfer item to buyer
             _transferItemDirect(_msgSender(), itemReceiver, c.identifier, c.amount);
@@ -130,7 +128,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
                 GoldLib.goldTransfer(_world(), goldPayer, feeRecipient, feeAmount);
             }
             // Transfer item from escrow to buyer
-            _transferItemDirect(_lootManager(), itemReceiver, o.identifier, o.amount);
+            _transferItemDirect(ESCROW_ADDRESS, itemReceiver, o.identifier, o.amount);
         }
 
         // set order status to fulfilled
@@ -173,7 +171,7 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         Orders.setOrderStatus(_orderHash, OrderStatus.Canceled);
 
         // send the order item back to the user
-        _transfer(_orderHash, true, c.recipient, _lootManager());
+        _transfer(_orderHash, true, c.recipient, ESCROW_ADDRESS);
 
         return true;
     }
@@ -260,7 +258,4 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         }
     }
 
-    function _lootManager() internal view returns (address) {
-        return Systems.getSystem(_lootManagerSystemId(WORLD_NAMESPACE));
-    }
 }
