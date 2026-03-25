@@ -1381,6 +1381,32 @@ export function createSystemCalls(
     }
   };
 
+  const transitionZone = async (
+    characterEntity: string,
+    targetZoneId: number,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterEntity, 'transitionZone');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__transitionZone([
+        characterEntity as `0x${string}`,
+        BigInt(targetZoneId),
+      ]);
+
+      const txResult = await waitForTransaction(tx);
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to transition zone.',
+        success: txResult.status === 'success',
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   const unequipItem = async (
     characterEntity: string,
     itemId: string,
@@ -1746,6 +1772,7 @@ export function createSystemCalls(
     selectAdvancedClass,
     sell,
     spawn,
+    transitionZone,
     unequipItem,
     updateTokenUri,
     useWorldConsumableItem,

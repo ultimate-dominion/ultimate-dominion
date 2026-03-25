@@ -48,10 +48,41 @@ const SHOP_POSITION_TO_NAME: Record<string, string> = {
   '9,9': 'Tal',
 };
 
+// ── Zone coordinate system ──
+// Each zone's Y-origin is spaced by ZONE_ORIGIN_SPACING.
+// Zone 1: origin (0, 0), Zone 2: origin (0, 100), etc.
+const ZONE_ORIGIN_SPACING = 100;
+
+const ZONE_ORIGINS: Record<number, { x: number; y: number }> = {
+  1: { x: 0, y: 0 },
+  2: { x: 0, y: ZONE_ORIGIN_SPACING },
+};
+
+const ZONE_NAMES: Record<number, string> = {
+  1: 'Dark Cave',
+  2: 'Windy Peaks',
+};
+
+/** Convert raw on-chain position to display (0-9) coords for the current zone */
+function toDisplayPosition(raw: { x: number; y: number }, zoneId: number): { x: number; y: number } {
+  const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
+  return { x: raw.x - origin.x, y: raw.y - origin.y };
+}
+
+/** Check if a raw position falls within a zone's coordinate bounds */
+function isInZone(rawX: number, rawY: number, zoneId: number, gridSize = 10): boolean {
+  const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
+  return rawX >= origin.x && rawX < origin.x + gridSize
+    && rawY >= origin.y && rawY < origin.y + gridSize;
+}
+
 type MapContextType = {
   allCharacters: Character[];
   allMonsters: Monster[];
   allShops: Shop[];
+  currentZone: number;
+  currentZoneName: string;
+  displayPosition: { x: number; y: number } | null;
   inSafetyZone: boolean;
   isFetchingEntities: boolean;
   isSpawned: boolean;
@@ -69,6 +100,9 @@ const MapContext = createContext<MapContextType>({
   allCharacters: [],
   allMonsters: [],
   allShops: [],
+  currentZone: 1,
+  currentZoneName: 'Dark Cave',
+  displayPosition: null,
   inSafetyZone: false,
   isFetchingEntities: false,
   isSpawned: false,
@@ -124,10 +158,26 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const posData = useGameValue('Position', character?.id);
   const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
 
+  // Zone awareness — read CharacterZone table (0 or unset = zone 1)
+  const characterZoneData = useGameValue('CharacterZone', character?.id);
+  const currentZone = useMemo(() => {
+    const zoneId = characterZoneData ? toNumber(characterZoneData.zoneId) : 0;
+    return zoneId === 0 ? 1 : zoneId;
+  }, [characterZoneData]);
+  const currentZoneName = ZONE_NAMES[currentZone] ?? `Zone ${currentZone}`;
+
+  // Display position — raw coords converted to zone-relative (0-9)
+  const displayPosition = useMemo(() => {
+    if (!position) return null;
+    return toDisplayPosition(position, currentZone);
+  }, [position, currentZone]);
+
   const inSafetyZone = useMemo(() => {
-    if (!position) return false;
-    return position.x < 5 && position.y < 5;
-  }, [position]);
+    if (!displayPosition) return false;
+    // Safety zone only exists in Zone 1 (Dark Cave)
+    if (currentZone !== 1) return false;
+    return displayPosition.x < 5 && displayPosition.y < 5;
+  }, [displayPosition, currentZone]);
 
   const spawnedData = useGameValue('Spawned', character?.id);
   const [spawnConfirmed, setSpawnConfirmed] = useState(false);
@@ -358,9 +408,25 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // Deprecated — reactivity handles updates. Kept for backward compatibility.
   const refreshEntities = useCallback(() => {}, []);
 
+  // Filter entities to current zone only
+  const zonedMonsters = useMemo(() => {
+    return allMonsters.filter(m => isInZone(m.position.x, m.position.y, currentZone));
+  }, [allMonsters, currentZone]);
+
+  const zonedShops = useMemo(() => {
+    return allShops.filter(s => isInZone(s.position.x, s.position.y, currentZone));
+  }, [allShops, currentZone]);
+
+  const zonedCharacters = useMemo(() => {
+    return allCharacters.filter((c: any) => {
+      if (!c.position) return false;
+      return isInZone(c.position.x, c.position.y, currentZone);
+    });
+  }, [allCharacters, currentZone]);
+
   const monstersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
-    const result = allMonsters.filter(
+    const result = zonedMonsters.filter(
       m =>
         m.isSpawned &&
         Number(m.currentHp) > 0 &&
@@ -368,7 +434,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         m.position.y === position.y,
     );
     return result;
-  }, [allMonsters, position]);
+  }, [zonedMonsters, position]);
 
   const playerLevel = character?.level ? Number(character.level) : 1;
 
@@ -379,21 +445,21 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   const shopsOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
-    return allShops.filter(
+    return zonedShops.filter(
       m => m.position.x === position.x && m.position.y === position.y,
     );
-  }, [allShops, position]);
+  }, [zonedShops, position]);
 
   const otherCharactersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
-    return allCharacters.filter(
+    return zonedCharacters.filter(
       (c: any) =>
         c.position.x === position.x &&
         c.position.y === position.y &&
         c.owner !== delegatorAddress &&
         c.isSpawned,
     ) as Character[];
-  }, [allCharacters, delegatorAddress, position]);
+  }, [zonedCharacters, delegatorAddress, position]);
 
   // Clear spawn waiting state when Spawned value updates from store sync
   useEffect(() => {
@@ -480,9 +546,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   return (
     <MapContext.Provider
       value={{
-        allCharacters,
-        allMonsters,
-        allShops,
+        allCharacters: zonedCharacters,
+        allMonsters: zonedMonsters,
+        allShops: zonedShops,
+        currentZone,
+        currentZoneName,
+        displayPosition,
         inSafetyZone,
         isFetchingEntities: false,
         isSpawned,
