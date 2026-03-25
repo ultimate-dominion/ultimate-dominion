@@ -445,6 +445,8 @@ export function createSystemCalls(
         ? { gas: CREATE_ENCOUNTER_GAS_LIMIT }
         : {};
 
+      console.info(`[createEncounter] DEBUG type=${encounterType} group1=[${group1.join(',')}] group2=[${group2.join(',')}]`);
+
       const tx = await wrappedWorldContract.write.UD__createEncounter(
         [
           encounterType,
@@ -518,42 +520,6 @@ export function createSystemCalls(
       return {
         error: txResult.status === 'success' ? undefined : 'Failed to create order.',
         success: txResult.status === 'success',
-      };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
-  const depositToEscrow = async (
-    characterEntity: string,
-    previousAmount: bigint,
-    amount: bigint,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(characterEntity, 'depositToEscrow');
-    if (ownershipError) return ownershipError;
-
-    try {
-      const characterId = characterEntity as `0x${string}`;
-
-      const tx = await wrappedWorldContract.write.UD__depositToEscrow([
-        characterId,
-        BigInt(amount),
-      ]);
-
-      await waitForTransaction(tx);
-
-      const newBalance = await worldContract.read.UD__getEscrowBalance([
-        characterId,
-      ]);
-
-      const success = newBalance === previousAmount + amount;
-
-      return {
-        error: success ? undefined : 'Failed to deposit to escrow.',
-        success,
       };
     } catch (e) {
       return {
@@ -757,11 +723,38 @@ export function createSystemCalls(
       ]);
       const txResult = await waitForTransaction(tx);
 
+      if (txResult.status === 'reverted') {
+        // Diagnostic simulation to extract real revert reason
+        try {
+          await worldContract.simulate.UD__fulfillOrder(
+            [orderHash as Hash],
+            { account: diagAccount },
+          );
+        } catch (diagError) {
+          return { success: false, error: getContractError(diagError) };
+        }
+      }
+
       return {
         error: txResult.status === 'success' ? undefined : 'Failed to fulfill order.',
         success: txResult.status === 'success',
       };
     } catch (e) {
+      // Viem masks contract reverts as InsufficientFundsError when the
+      // player's ETH balance is low. Run diagnostic simulation to get
+      // the real revert reason (if any) before falling back to the gas error.
+      if (isInsufficientFundsError(e)) {
+        try {
+          await worldContract.simulate.UD__fulfillOrder(
+            [orderHash as Hash],
+            { account: diagAccount },
+          );
+          // Simulation passed — genuinely a gas issue, not a revert
+        } catch (diagError) {
+          // Real contract revert found — return that instead
+          return { success: false, error: getContractError(diagError) };
+        }
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -1500,42 +1493,6 @@ export function createSystemCalls(
     }
   };
 
-  const withdrawFromEscrow = async (
-    characterEntity: string,
-    previousAmount: bigint,
-    amount: bigint,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(characterEntity, 'withdrawFromEscrow');
-    if (ownershipError) return ownershipError;
-
-    try {
-      const characterId = characterEntity as `0x${string}`;
-
-      const tx = await wrappedWorldContract.write.UD__withdrawFromEscrow([
-        characterId,
-        amount,
-      ]);
-
-      await waitForTransaction(tx);
-
-      const newBalance = await worldContract.read.UD__getEscrowBalance([
-        characterId,
-      ]);
-
-      const success = newBalance === previousAmount - amount;
-
-      return {
-        error: success ? undefined : 'Failed to withdraw from escrow.',
-        success,
-      };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
   // === Implicit Class System Functions ===
 
   const chooseRace = async (
@@ -1770,7 +1727,6 @@ export function createSystemCalls(
     triggerFragment,
     createEncounter,
     createOrder,
-    depositToEscrow,
     endShopEncounter,
     endWorldEncounter,
     endTurn,
@@ -1793,6 +1749,5 @@ export function createSystemCalls(
     unequipItem,
     updateTokenUri,
     useWorldConsumableItem,
-    withdrawFromEscrow,
   };
 }

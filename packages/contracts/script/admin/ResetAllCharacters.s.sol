@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
-import {Stats, StatsData, Characters, Counters, AdventureEscrow} from "@codegen/index.sol";
+import {Stats, StatsData, Characters, Counters, AdventureEscrow, GasReserve} from "@codegen/index.sol";
 import {AdvancedClass} from "@codegen/common.sol";
 import {CHARACTER_TOKEN_COUNTER_KEY, GOLD_NAMESPACE} from "../../constants.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -126,6 +126,13 @@ contract ResetAllCharacters is Script {
             if (escrow > 0) {
                 AdventureEscrow.set(characterIds[i], 0);
                 console.log("    Escrow: %d -> 0", escrow / 1 ether);
+            }
+
+            // --- GasReserve reset ---
+            uint256 reserve = GasReserve.getBalance(characterIds[i]);
+            if (reserve > 0) {
+                GasReserve.setBalance(characterIds[i], 0);
+                console.log("    GasReserve: %d -> 0", reserve / 1 ether);
             }
         }
 

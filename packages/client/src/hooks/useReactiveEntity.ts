@@ -22,7 +22,6 @@ export function useReactiveEntity(entityId: string | undefined): Character | nul
   const posData = useGameValue('Position', entityId);
   const spawnedData = useGameValue('Spawned', entityId);
   const effectsData = useGameValue('WorldStatusEffects', entityId);
-  const escrowData = useGameValue('AdventureEscrow', entityId);
 
   // Derived keys — only computed when characterData exists
   const ownerKey = useMemo(
@@ -48,7 +47,6 @@ export function useReactiveEntity(entityId: string | undefined): Character | nul
       characterData as Record<string, unknown>,
       statsData as Record<string, unknown>,
       goldData as Record<string, unknown> | undefined,
-      escrowData as Record<string, unknown> | undefined,
       encounterData as Record<string, unknown> | undefined,
       posData as Record<string, unknown> | undefined,
       spawnedData as Record<string, unknown> | undefined,
@@ -60,7 +58,6 @@ export function useReactiveEntity(entityId: string | undefined): Character | nul
     characterData,
     statsData,
     goldData,
-    escrowData,
     encounterData,
     posData,
     spawnedData,

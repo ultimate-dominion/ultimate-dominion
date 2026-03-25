@@ -39,7 +39,6 @@ function makeCharacter(overrides: Partial<Character> = {}): Character {
     startingArmor: ArmorType.Plate,
     advancedClass: AdvancedClass.Warrior,
     hasSelectedAdvancedClass: true,
-    escrowGoldBalance: 0n,
     externalGoldBalance: 0n,
     worldStatusEffects: [],
     baseStats: {

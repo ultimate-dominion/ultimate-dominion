@@ -15,7 +15,7 @@ import {
     CharacterOwner,
     CharacterOwnerData,
     UltimateDominionConfig,
-    AdventureEscrow
+    GasReserve
 } from "@codegen/index.sol";
 import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {TotalSupply as ERC20TotalSupply} from "@latticexyz/world-modules/src/modules/erc20-puppet/tables/TotalSupply.sol";
@@ -34,10 +34,10 @@ import {
     GasStationZeroAmount,
     GasStationSwapFailed,
     GasStationNotRelayer,
-    GasStationArrayMismatch,
     InsufficientBalance
 } from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {GoldLib} from "../libraries/GoldLib.sol";
 import {_requireOwner} from "../utils.sol";
 
 /**
@@ -47,7 +47,6 @@ import {_requireOwner} from "../utils.sol";
  *      1. Uniswap V3 swap: Gold is sold on GOLD/WETH pool → ETH to player (when swapRouter configured)
  *      2. Fallback: Gold burned from supply, ETH from pre-funded treasury (when swapRouter == address(0))
  *
- *      Also provides chargeGasGold() for the self-hosted relayer to charge embedded wallet players.
  *
  *      Namespaced (non-root) system — address(this) is the system contract address.
  *      ETH treasury lives at this system's address (for fallback mode and received WETH unwraps).
@@ -93,25 +92,10 @@ contract GasStationSystem is System {
         uint256 maxGold = GasStationConfig.getMaxGoldPerSwap();
         if (goldAmount > maxGold) revert GasStationMaxSwapExceeded();
 
-        // Check player has sufficient gold (wallet + escrow fallback)
+        // Check player has sufficient gold
         ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
         uint256 currentGold = ERC20Balances.get(balancesTableId, caller);
-
-        // If wallet balance insufficient, promote escrow gold to ERC20 balance
-        if (currentGold < goldAmount) {
-            uint256 shortfall = goldAmount - currentGold;
-            uint256 escrowBalance = AdventureEscrow.get(characterId);
-            if (currentGold + escrowBalance < goldAmount) revert InsufficientBalance();
-
-            // Move escrow → ERC20 (mint into supply since escrow is virtual)
-            AdventureEscrow.set(characterId, escrowBalance - shortfall);
-            currentGold += shortfall;
-            ERC20Balances.set(balancesTableId, caller, currentGold);
-
-            ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
-            uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
-            ERC20TotalSupply.set(totalSupplyTableId, currentSupply + shortfall);
-        }
+        if (currentGold < goldAmount) revert InsufficientBalance();
 
         // Update cooldown
         GasStationCooldown.setLastSwap(caller, block.timestamp);
@@ -202,169 +186,40 @@ contract GasStationSystem is System {
         if (!success) revert GasStationTransferFailed();
     }
 
-    // ==================== Relayer Gas Charging ====================
+    // ==================== Stateless Gas Charging (Open Economy) ====================
 
     /**
-     * @notice Charge gold from an embedded wallet player on behalf of the relayer.
-     * @dev Only callable by the configured relayer address.
-     *      Transfers gold from player → relayer (direct table writes, total supply unchanged).
+     * @notice Atomically charge Gold from a player's gas reserve after funding them with ETH.
+     * @dev Only callable by the configured relayer address. Called after relayer sends ETH to player.
+     *      Deducts from per-character GasReserve and transfers Gold from World to relayer via puppet.
+     *      - Sufficient reserve: charges goldPerGasCharge
+     *      - Partial reserve: charges entire remaining reserve
+     *      - Empty reserve: no-op (free fund for onboarding)
+     *      - Non-existent/mismatched character: no-op
      * @param player The player's wallet address
      * @param characterId The player's character ID
      */
-    function chargeGasGold(address player, bytes32 characterId) public {
+    function fundAndCharge(address player, bytes32 characterId) public nonReentrant {
         address relayer = GasStationSwapConfig.getRelayerAddress();
         if (_msgSender() != relayer) revert GasStationNotRelayer();
 
-        _chargeGasGoldSingle(player, characterId, relayer);
-    }
-
-    /**
-     * @notice Batch charge gold from multiple embedded wallet players.
-     * @dev Single tx — amortizes gas across N players.
-     * @param players Array of player wallet addresses
-     * @param characterIds Array of corresponding character IDs
-     */
-    function batchChargeGasGold(address[] calldata players, bytes32[] calldata characterIds) public {
-        if (players.length != characterIds.length) revert GasStationArrayMismatch();
-
-        address relayer = GasStationSwapConfig.getRelayerAddress();
-        if (_msgSender() != relayer) revert GasStationNotRelayer();
-
-        for (uint256 i = 0; i < players.length; i++) {
-            _chargeGasGoldSingle(players[i], characterIds[i], relayer);
-        }
-    }
-
-    /**
-     * @dev Internal: charge gold from a single player → relayer.
-     */
-    function _chargeGasGoldSingle(address player, bytes32 characterId, address relayer) internal {
-        // Verify ownership
+        // Non-existent or mismatched character → no-op
         CharacterOwnerData memory ownerData = CharacterOwner.get(player);
-        require(ownerData.characterId == characterId, "Not character owner");
+        if (ownerData.characterId == bytes32(0) || ownerData.characterId != characterId) return;
 
-        // Check level >= 3
-        uint256 level = Stats.getLevel(characterId);
-        if (level < GAS_STATION_MIN_LEVEL) revert GasStationBelowMinLevel();
+        // Read reserve — 0 means free fund (onboarding)
+        uint256 reserve = GasReserve.get(characterId);
+        if (reserve == 0) return;
 
-        // Get charge amount
+        // Charge up to goldPerGasCharge (partial if reserve < charge)
         uint256 chargeAmount = GasStationSwapConfig.getGoldPerGasCharge();
+        uint256 toCharge = reserve >= chargeAmount ? chargeAmount : reserve;
 
-        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
-        uint256 playerGold = ERC20Balances.get(balancesTableId, player);
+        // Deduct from reserve
+        GasReserve.set(characterId, reserve - toCharge);
 
-        if (playerGold >= chargeAmount) {
-            // Wallet covers full charge — transfer (no supply change)
-            ERC20Balances.set(balancesTableId, player, playerGold - chargeAmount);
-            uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
-            ERC20Balances.set(balancesTableId, relayer, relayerGold + chargeAmount);
-        } else {
-            // Wallet insufficient — take what's there, pull remainder from escrow
-            uint256 shortfall = chargeAmount - playerGold;
-            uint256 escrowBalance = AdventureEscrow.get(characterId);
-            if (escrowBalance < shortfall) revert InsufficientBalance();
-
-            // Deduct wallet
-            if (playerGold > 0) {
-                ERC20Balances.set(balancesTableId, player, 0);
-            }
-
-            // Deduct escrow
-            AdventureEscrow.set(characterId, escrowBalance - shortfall);
-
-            // Credit relayer full charge amount
-            uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
-            ERC20Balances.set(balancesTableId, relayer, relayerGold + chargeAmount);
-
-            // Escrow gold was burned on deposit — mint the shortfall back into supply
-            ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
-            uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
-            ERC20TotalSupply.set(totalSupplyTableId, currentSupply + shortfall);
-        }
-    }
-
-    /**
-     * @notice Fault-tolerant batch charge: skips ineligible players, supports per-player tx counts.
-     * @dev Accumulates relayer credit in memory, writes once at end (gas efficient).
-     * @param players Array of player wallet addresses
-     * @param characterIds Array of corresponding character IDs
-     * @param counts Array of tx counts per player (each tx = goldPerGasCharge)
-     * @return charged Actual gold amounts charged per player (0 if skipped)
-     */
-    function batchChargeGasGoldWithCounts(
-        address[] calldata players,
-        bytes32[] calldata characterIds,
-        uint256[] calldata counts
-    ) public returns (uint256[] memory charged) {
-        if (players.length != characterIds.length || players.length != counts.length) {
-            revert GasStationArrayMismatch();
-        }
-
-        address relayer = GasStationSwapConfig.getRelayerAddress();
-        if (_msgSender() != relayer) revert GasStationNotRelayer();
-
-        uint256 chargePerTx = GasStationSwapConfig.getGoldPerGasCharge();
-        ResourceId balancesTableId = _goldBalancesTableId(GOLD_NAMESPACE);
-
-        charged = new uint256[](players.length);
-        uint256 totalRelayerCredit;
-        uint256 totalMinted;
-
-        for (uint256 i = 0; i < players.length; i++) {
-            // Skip: no character or wrong characterId
-            CharacterOwnerData memory ownerData = CharacterOwner.get(players[i]);
-            if (ownerData.characterId != characterIds[i] || ownerData.characterId == bytes32(0)) {
-                continue;
-            }
-
-            // Skip: below level 3
-            uint256 level = Stats.getLevel(characterIds[i]);
-            if (level < GAS_STATION_MIN_LEVEL) continue;
-
-            // Calculate max charge for this player
-            uint256 fullCharge = counts[i] * chargePerTx;
-            uint256 playerGold = ERC20Balances.get(balancesTableId, players[i]);
-
-            uint256 fromWallet;
-            uint256 fromEscrow;
-
-            if (playerGold >= fullCharge) {
-                fromWallet = fullCharge;
-            } else {
-                fromWallet = playerGold;
-                uint256 shortfall = fullCharge - playerGold;
-                uint256 escrowBal = AdventureEscrow.get(characterIds[i]);
-                fromEscrow = escrowBal < shortfall ? escrowBal : shortfall;
-                if (fromEscrow > 0) {
-                    AdventureEscrow.set(characterIds[i], escrowBal - fromEscrow);
-                }
-            }
-
-            uint256 actual = fromWallet + fromEscrow;
-            if (actual == 0) continue;
-
-            // Deduct wallet
-            if (fromWallet > 0) {
-                ERC20Balances.set(balancesTableId, players[i], playerGold - fromWallet);
-            }
-
-            charged[i] = actual;
-            totalRelayerCredit += actual;
-            totalMinted += fromEscrow;
-        }
-
-        // Single relayer balance write
-        if (totalRelayerCredit > 0) {
-            uint256 relayerGold = ERC20Balances.get(balancesTableId, relayer);
-            ERC20Balances.set(balancesTableId, relayer, relayerGold + totalRelayerCredit);
-        }
-
-        // Mint for escrow-sourced gold (increase total supply)
-        if (totalMinted > 0) {
-            ResourceId totalSupplyTableId = _goldTotalSupplyTableId(GOLD_NAMESPACE);
-            uint256 currentSupply = ERC20TotalSupply.get(totalSupplyTableId);
-            ERC20TotalSupply.set(totalSupplyTableId, currentSupply + totalMinted);
-        }
+        // Transfer Gold from World to relayer via ERC20 puppet (emits Transfer event)
+        GoldLib.goldTransfer(_world(), _world(), relayer, toCharge);
     }
 
     // ==================== Admin Functions ====================

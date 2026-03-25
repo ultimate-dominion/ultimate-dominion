@@ -115,7 +115,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   // Additional reactive tables for character building
   const goldBalancesTable = useGameTable('GoldBalances');
-  const escrowTable = useGameTable('AdventureEscrow');
   const encounterEntityTable = useGameTable('EncounterEntity');
   const tokenURITable = useGameTable('CharactersTokenURI');
   const worldStatusEffectsTable = useGameTable('WorldStatusEffects');
@@ -182,7 +181,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const ownerKey = encodeAddressKey(characterData.owner as string);
         const tokenIdKey = encodeUint256Key(toBigInt(characterData.tokenId));
         const goldData = goldBalancesTable[ownerKey];
-        const escrowData = escrowTable[entity];
         const encounterData = encounterEntityTable[entity];
         const posData = positionTable[entity];
         const spawnedData = spawnedTable[entity];
@@ -197,7 +195,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           characterData as Record<string, unknown>,
           statsData as Record<string, unknown>,
           goldData as Record<string, unknown> | undefined,
-          escrowData as Record<string, unknown> | undefined,
           encounterData as Record<string, unknown> | undefined,
           posData as Record<string, unknown> | undefined,
           spawnedData as Record<string, unknown> | undefined,
@@ -208,7 +205,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       .filter((c): c is Character => c !== null && Boolean(c.locked));
   }, [
     allCharacterEntities, charactersTable, statsTable, goldBalancesTable,
-    escrowTable, encounterEntityTable, positionTable, spawnedTable,
+    encounterEntityTable, positionTable, spawnedTable,
     tokenURITable, worldStatusEffectsTable, isSynced,
   ]);
 

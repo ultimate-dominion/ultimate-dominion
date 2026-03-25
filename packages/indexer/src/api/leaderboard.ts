@@ -27,7 +27,6 @@ export function createLeaderboardRouter(syncHandle: SyncHandle): Router {
       const charsTable = t('Characters');
       const statsTable = t('Stats');
       const goldTable = t('GoldBalances');
-      const escrowTable = t('AdventureEscrow');
 
       if (!charsTable || !statsTable) {
         return res.status(503).json({ error: 'Tables not yet synced' });
@@ -37,18 +36,14 @@ export function createLeaderboardRouter(syncHandle: SyncHandle): Router {
 
       const rankColumn = rankBy === 'stats' ? 'stats_rank' : 'gold_rank';
 
-      // GoldBalances and AdventureEscrow may not exist yet — handle with LEFT JOINs
+      // GoldBalances may not exist yet — handle with LEFT JOIN
       // GoldBalances.__key_bytes is 32 bytes (ABI-encoded address), but
       // Characters.owner is 20 bytes (raw address). Pad owner with 12 zero bytes.
       const goldJoin = goldTable
         ? `LEFT JOIN "${mudSchema}"."${goldTable}" g ON g."__key_bytes" = (E'\\\\x000000000000000000000000'::bytea || c."owner")`
         : '';
-      const escrowJoin = escrowTable
-        ? `LEFT JOIN "${mudSchema}"."${escrowTable}" e ON c."character_id" = e."character_id"`
-        : '';
 
       const goldExpr = goldTable ? 'COALESCE(g."value", 0)' : '0';
-      const escrowExpr = escrowTable ? 'COALESCE(e."balance", 0)' : '0';
 
       const query = `
         WITH ranked AS (
@@ -59,15 +54,12 @@ export function createLeaderboardRouter(syncHandle: SyncHandle): Router {
             s."level",
             s."agility", s."strength", s."intelligence",
             (s."agility" + s."strength" + s."intelligence") AS total_stats,
-            ${goldExpr} AS external_gold,
-            ${escrowExpr} AS escrow_gold,
-            (${goldExpr} + ${escrowExpr}) AS total_gold,
+            ${goldExpr} AS total_gold,
             DENSE_RANK() OVER (ORDER BY (s."agility" + s."strength" + s."intelligence") DESC) AS stats_rank,
-            DENSE_RANK() OVER (ORDER BY (${goldExpr} + ${escrowExpr}) DESC) AS gold_rank
+            DENSE_RANK() OVER (ORDER BY ${goldExpr} DESC) AS gold_rank
           FROM "${mudSchema}"."${charsTable}" c
           JOIN "${mudSchema}"."${statsTable}" s ON c."character_id" = s."entity_id"
           ${goldJoin}
-          ${escrowJoin}
           WHERE c."locked" = true
         ),
         target AS (

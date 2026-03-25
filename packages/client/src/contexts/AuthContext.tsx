@@ -202,6 +202,70 @@ export const AuthProvider = ({
         // Serialize all send-tx calls through a promise queue.
         let txQueue: Promise<unknown> = Promise.resolve();
 
+        // Privy's embedded wallet routes ALL RPC calls through their proxy
+        // (base-mainnet.rpc.privy.systems). That proxy converts contract reverts
+        // during eth_estimateGas into generic "insufficient funds" errors, breaking
+        // marketplace buys, shop sells, and any other write that reverts during
+        // gas estimation. Route gas estimation + state reads through the game's own
+        // RPCs; only signing (eth_sendTransaction) stays on Privy for MPC.
+        // Game RPCs: Base node primary, Alchemy fallback (matches supportedChains.ts)
+        const gameRpcUrls = [
+          import.meta.env.VITE_HTTPS_RPC_URL as string | undefined,
+          import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL as string | undefined,
+        ].filter(Boolean) as string[];
+
+        // Methods that must go through the game RPC for accurate results.
+        // eth_sendTransaction stays on Privy (MPC signing happens there).
+        const GAME_RPC_METHODS = new Set([
+          'eth_estimateGas',
+          'eth_call',
+          'eth_getBalance',
+          'eth_getTransactionCount',
+          'eth_blockNumber',
+          'eth_getBlockByNumber',
+          'eth_gasPrice',
+          'eth_maxPriorityFeePerGas',
+          'eth_feeHistory',
+        ]);
+
+        let rpcId = 0;
+        const fetchRpc = async (url: string, args: { method: string; params?: unknown[] }) => {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: ++rpcId,
+              method: args.method,
+              params: args.params ?? [],
+            }),
+          });
+          const json = await res.json();
+          if (json.error) {
+            const err = new Error(json.error.message || 'RPC error');
+            (err as any).code = json.error.code;
+            (err as any).data = json.error.data;
+            throw err;
+          }
+          return json.result;
+        };
+
+        // Try Base node first, fall back to Alchemy on network errors
+        const gameRpcRequest = async (args: { method: string; params?: unknown[] }) => {
+          for (let i = 0; i < gameRpcUrls.length; i++) {
+            try {
+              return await fetchRpc(gameRpcUrls[i], args);
+            } catch (err) {
+              // On the last URL, throw. Otherwise, only fall back on network errors
+              // (not contract reverts, which are legitimate and should propagate).
+              if (i === gameRpcUrls.length - 1) throw err;
+              const msg = (err as Error)?.message ?? '';
+              const isNetworkError = /fetch|network|timeout|econnrefused|econnreset|socket|abort/i.test(msg);
+              if (!isNetworkError) throw err;
+            }
+          }
+        };
+
         // viem v2.35 sends `wallet_sendTransaction` but Privy's EthereumProvider
         // only intercepts `eth_sendTransaction` for local MPC signing.
         const wrappedProvider = {
@@ -216,6 +280,11 @@ export const AuthProvider = ({
               txQueue = queued.catch(() => {}); // don't let failures block the queue
               return queued;
             }
+            // Route gas estimation and reads through game RPC to avoid Privy
+            // proxy mangling reverts into "insufficient funds" errors.
+            if (gameRpcUrls.length > 0 && GAME_RPC_METHODS.has(args.method)) {
+              return gameRpcRequest(args);
+            }
             return provider.request(args);
           },
         };
@@ -228,6 +297,11 @@ export const AuthProvider = ({
 
         setEmbeddedWalletClient(walletClient);
         setEmbeddedAddress(privyWallet.address as Address);
+
+        // Track first-time sign-ups (wallet just created = new user)
+        if (isConfirmedNewUser) {
+          import('../utils/analytics').then(({ trackSignUp }) => trackSignUp('google'));
+        }
 
         // Extract email
         const email =

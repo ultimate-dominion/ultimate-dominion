@@ -252,6 +252,7 @@ export const LevelingPanel = ({
     if (result !== undefined) {
       // Poll Zustand store until level reflects the change
       const prevLevel = character.level;
+      const newLevel = Number(character.level) + 1;
       for (let i = 0; i < 30; i++) {
         const stats = getTableValue('Stats', character.id);
         if (stats && stats.level !== prevLevel.toString()) break;
@@ -259,10 +260,17 @@ export const LevelingPanel = ({
       }
       await refreshCharacter();
 
+      // Analytics: level up + milestone tracking
+      import('../utils/analytics').then(({ trackLevelUp, trackMilestone }) => {
+        trackLevelUp(newLevel, character.name);
+        if (newLevel === 3) trackMilestone('level_3_adventurer_badge', newLevel);
+        if (newLevel === 5) trackMilestone('level_5_power_source', newLevel);
+        if (newLevel === 10) trackMilestone('level_10_advanced_class', newLevel);
+      });
+
       if (onLevelComplete) {
         onLevelComplete();
       } else {
-        const newLevel = Number(character.level) + 1;
         if (newLevel === 5) {
           const bonusMsg: Record<number, string> = {
             [PowerSource.Divine]: '+2 HP from your Divine power',

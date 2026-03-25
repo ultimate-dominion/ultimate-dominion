@@ -1,7 +1,7 @@
 ---
 title: "Free RPG Games You Can Play in Your Browser Right Now"
 description: "The best free RPG games you can play directly in your browser in 2026 — no downloads, no installs. Text-based MUDs, idle RPGs, roguelikes, and more."
-date: 2026-03-12
+date: 2026-03-09
 tags: ["recommendations", "browser-games", "free-games"]
 draft: false
 ---

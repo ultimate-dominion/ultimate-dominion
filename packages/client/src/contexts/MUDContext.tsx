@@ -82,7 +82,7 @@ const LOADING_SYSTEM_CALLS: SystemCallsResult = {
   chooseRace: notReady, choosePowerSource: notReady,
   claimFragment: notReady, triggerFragment: notReady,
   createEncounter: notReady, createOrder: notReady,
-  depositToEscrow: notReady, endShopEncounter: notReady,
+  endShopEncounter: notReady,
   endWorldEncounter: notReady, endTurn: notReady,
   enterGame: notReady, equipItems: notReady, fleePvp: notReady,
   fulfillOrder: notReady, autoFight: notReady,
@@ -93,7 +93,6 @@ const LOADING_SYSTEM_CALLS: SystemCallsResult = {
   selectAdvancedClass: notReady, sell: notReady,
   spawn: notReady, unequipItem: notReady,
   updateTokenUri: notReady, useWorldConsumableItem: notReady,
-  withdrawFromEscrow: notReady,
 } as unknown as SystemCallsResult;
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
@@ -196,9 +195,10 @@ const MUDProviderInner = ({
   } | null>(null);
   const embeddedSetupDone = useRef(false);
 
-  // Fixed gas limits — skip estimation for functions where the Privy RPC
-  // serves stale state (Base flashblocks propagate faster than block headers).
-  // Without this, gas estimation reverts against stale state and the TX never sends.
+  // Fixed gas limits for functions with non-deterministic gas (block.prevrandao
+  // in spawnOnTileEnter makes estimateGas unreliable). The broader Privy RPC
+  // proxy issue is fixed at the transport level in AuthContext (game RPCs for
+  // estimation, Privy only for signing).
   const FIXED_GAS: Record<string, bigint> = {
     UD__move: 4_000_000n,
     UD__rollBaseStats: 4_000_000n,

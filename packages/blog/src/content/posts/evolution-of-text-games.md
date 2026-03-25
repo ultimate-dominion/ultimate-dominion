@@ -1,7 +1,7 @@
 ---
 title: "From Zork to Ultimate Dominion: The Evolution of Text Games"
 description: "The history of text-based games from the 1970s to 2026 — from Zork and Adventure to MUDs, interactive fiction, and modern browser-based text RPGs like Ultimate Dominion."
-date: 2026-03-12
+date: 2026-03-03
 tags: ["history", "text-based-games", "MUD"]
 draft: false
 ---

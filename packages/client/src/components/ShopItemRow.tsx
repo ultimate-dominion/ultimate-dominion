@@ -218,6 +218,11 @@ export const ShopItemRow = ({
             ? `Bought ${amount}x ${itemName}`
             : `Sold ${amount}x ${itemName} for ${etherToFixedNumber(price)} $GOLD`,
         );
+        import('../utils/analytics').then(({ trackShopPurchase, trackShopSale }) => {
+          const gold = Number(etherToFixedNumber(price));
+          if (orderType == OrderType.Buying) trackShopPurchase(itemName, gold);
+          else trackShopSale(itemName, gold);
+        });
         onTradeComplete?.(item.tokenId, amount, price, orderType);
         onAllowanceClose();
         onClose();

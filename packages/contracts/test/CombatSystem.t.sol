@@ -273,7 +273,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         StatsData memory startingStats = Stats.get(bobCharacterId);
         // assertEq(startingStats.agility, 15, "incorrect starting stats");
-        uint256 startingGold = world.UD__getEscrowBalance(bobCharacterId);
+        uint256 startingGold = goldToken.balanceOf(bob);
 
         vm.prank(bob);
         bytes32 encounterId = world.UD__createEncounter(EncounterType.PvE, attackers, defenders);
@@ -291,12 +291,12 @@ contract Test_CombatSystem is SetUp, GasReporter {
         }
 
         StatsData memory endingStats = Stats.get(bobCharacterId);
-        uint256 endingGold = world.UD__getEscrowBalance(bobCharacterId);
+        uint256 endingGold = goldToken.balanceOf(bob);
         int256 bobEndingHp = Stats.getCurrentHp(bobCharacterId);
 
         if (bobEndingHp > 0) {
             assertGt(endingStats.experience, startingStats.experience, "incorrect exp");
-            assertGt(world.UD__getEscrowBalance(bobCharacterId), startingGold, "incorrect gold");
+            assertGt(goldToken.balanceOf(bob), startingGold, "incorrect gold");
             assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp, "incorrect hp");
             bytes32[] memory entities = world.UD__getEntitiesAtPosition(0, 1);
             bool entityIsAtPosition;
@@ -388,10 +388,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
 
         world.UD__adminSetStats(bobCharacterId, bobStats);
         world.UD__adminMoveEntity(alicesCharacterId, 0, 0);
-        vm.startPrank(alice);
-        goldToken.approve(lootManagerAddress, 4 ether);
-        world.UD__depositToEscrow(alicesCharacterId, 4 ether);
-        vm.stopPrank();
+        // Alice already has 5 Gold from character creation
         // move entities to pvp zone
         world.UD__adminMoveEntity(bobCharacterId, 5, 5);
         world.UD__adminMoveEntity(alicesCharacterId, 5, 5);
@@ -409,7 +406,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(alice);
         world.UD__fleePvp(alicesCharacterId);
 
-        uint256 afterFlee = world.UD__getEscrowBalance(alicesCharacterId);
+        uint256 afterFlee = goldToken.balanceOf(alice);
 
         vm.prank(bob);
         // test pvp timer

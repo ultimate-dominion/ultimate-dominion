@@ -42,7 +42,7 @@ import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
-import { calculateXpBoostPercent, etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
+import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getMonsterImage } from '../utils/monsterImages';
 import {
   ADVANCED_CLASS_COLORS,
@@ -57,7 +57,6 @@ import {
 
 import { getRomanNumeral } from '../utils/fragmentNarratives';
 
-import { AdventureEscrowModal } from './AdventureEscrowModal';
 import { ClassSymbol } from './ClassSymbol';
 import { FragmentClaimModal } from './FragmentClaimModal';
 import { HealthBar } from './HealthBar';
@@ -118,11 +117,6 @@ export const TileDetailsPanel = (): JSX.Element => {
     isOpen: isSafetyZoneInfoModalOpen,
     onClose: onCloseSafetyZoneInfoModal,
     onOpen: onOpenSafetyZoneInfoModal,
-  } = useDisclosure();
-  const {
-    isOpen: isAdventureEscrowModalOpen,
-    onClose: onCloseAdventureEscrowModal,
-    onOpen: onOpenAdventureEscrowModal,
   } = useDisclosure();
   const {
     isOpen: isNoMoveEquippedModalOpen,
@@ -374,6 +368,9 @@ export const TileDetailsPanel = (): JSX.Element => {
         setPendingOpponent(null);
         if (result !== undefined) {
           refreshCharacter();
+          import('../utils/analytics').then(({ trackCombatStarted }) =>
+            trackCombatStarted(opponent.name, Number(opponent.level ?? 1n), Number(character.level)),
+          );
         }
         return;
       }
@@ -406,6 +403,15 @@ export const TileDetailsPanel = (): JSX.Element => {
 
       if (result !== undefined) {
         refreshCharacter();
+        if (encounterType === EncounterType.PvE) {
+          import('../utils/analytics').then(({ trackCombatStarted }) =>
+            trackCombatStarted(opponent.name, Number(opponent.level ?? 1n), Number(character.level)),
+          );
+        } else {
+          import('../utils/analytics').then(({ trackPvpStarted }) =>
+            trackPvpStarted(Number(opponent.level ?? 1n), Number(character.level)),
+          );
+        }
         // Don't clear isWaitingForBattle — effect clears when currentBattle arrives
       } else {
         // TX failed, clear immediately
@@ -1026,43 +1032,14 @@ export const TileDetailsPanel = (): JSX.Element => {
           <GridItem borderColor="blue500" borderRight="6px solid" colSpan={2}>
             <VStack alignItems="start" minH="76px" p={2}>
               {stage >= OnboardingStage.ESTABLISHED && (
-                <>
-                  <HStack>
-                    <Text
-                      fontFamily="mono"
-                      fontSize={{ base: '3xs', sm: 'xs' }}
-                      fontWeight={700}
-                      textAlign="start"
-                    >
-                      Carried Gold:{' '}
-                      {etherToFixedNumber(character.escrowGoldBalance)} Gold
-                      {character.escrowGoldBalance > 0n && (
-                        <Text as="span" color="#5A8A3E">
-                          {' '}(+{calculateXpBoostPercent(character.escrowGoldBalance).toFixed(0)}% XP)
-                        </Text>
-                      )}
-                    </Text>
-                    <Tooltip
-                      bg="#14120F"
-                      hasArrow
-                      label="Carried Gold is earned from battles. Carrying more Gold helps you level up faster, but in the Winding Dark, you risk losing it to other players."
-                      placement="top"
-                      shouldWrapChildren
-                    >
-                      <IoMdInformationCircleOutline />
-                    </Tooltip>
-                  </HStack>
-                  {isHomeTile && (
-                    <Button
-                      borderRadius="0px"
-                      onClick={onOpenAdventureEscrowModal}
-                      size="xs"
-                      variant="outline"
-                    >
-                      Move Gold
-                    </Button>
-                  )}
-                </>
+                <Text
+                  fontFamily="mono"
+                  fontSize={{ base: '3xs', sm: 'xs' }}
+                  fontWeight={700}
+                  textAlign="start"
+                >
+                  Gold: {etherToFixedNumber(character.externalGoldBalance)} Gold
+                </Text>
               )}
               {isHomeTile && !character.inBattle && (
                   <VStack
@@ -1307,11 +1284,6 @@ export const TileDetailsPanel = (): JSX.Element => {
           )}
         </GridItem>
       </Grid>
-
-      <AdventureEscrowModal
-        isOpen={isAdventureEscrowModalOpen}
-        onClose={onCloseAdventureEscrowModal}
-      />
 
       <InfoModal
         heading="No moves equipped!"

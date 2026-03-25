@@ -23,7 +23,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
 import { useGoldMerchant } from '../contexts/GoldMerchantContext';
 import { MAX_LEVEL } from '../utils/constants';
-import { calculateXpBoostPercent, etherToFixedNumber } from '../utils/helpers';
+import { etherToFixedNumber } from '../utils/helpers';
 
 import { useNearbyRanks } from '../hooks/useNearbyRanks';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
@@ -291,63 +291,21 @@ export const StatsPanel = (): JSX.Element => {
 
           <VStack mt={2} px={2} spacing={1} w="100%">
             <HStack justifyContent="space-between" w="100%">
-              <Tooltip
-                hasArrow
-                label="Your Gold balance. To move Gold between your stash and carried supply, visit 0,0 on the map."
-                placement="top"
-                shouldWrapChildren
-              >
-                <HStack spacing={1.5} cursor="default">
-                  <GiTwoCoins color="#D4A54A" size={18} />
-                  <Text color="yellow" fontWeight={700} size="lg">
-                    Gold
-                  </Text>
-                </HStack>
-              </Tooltip>
+              <HStack spacing={1.5} cursor="default">
+                <GiTwoCoins color="#D4A54A" size={18} />
+                <Text color="yellow" fontWeight={700} size="lg">
+                  Gold
+                </Text>
+              </HStack>
               <Text
                 color="yellow"
                 fontFamily="mono"
                 fontWeight={700}
                 fontSize="lg"
               >
-                {etherToFixedNumber(
-                  externalGoldBalance + character.escrowGoldBalance,
-                )}
+                {etherToFixedNumber(externalGoldBalance)}
               </Text>
             </HStack>
-            {stage >= OnboardingStage.ESTABLISHED && (
-              <>
-                <HStack justifyContent="space-between" w="100%" px={2}>
-                  <Text color="#6A6050" size="sm">Stashed</Text>
-                  <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
-                    {etherToFixedNumber(externalGoldBalance)}
-                  </Text>
-                </HStack>
-                <HStack justifyContent="space-between" w="100%" px={2}>
-                  <HStack>
-                    <Text color="#6A6050" size="sm">Carried</Text>
-                    <Tooltip
-                      hasArrow
-                      label="Carried Gold is earned from battles. Carrying more Gold helps you level up faster, but in the Winding Dark, you risk losing it to other players."
-                      placement="top"
-                      shouldWrapChildren
-                    >
-                      <IoMdInformationCircleOutline size={12} />
-                    </Tooltip>
-                  </HStack>
-                  <HStack spacing={1}>
-                    <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="sm">
-                      {etherToFixedNumber(character.escrowGoldBalance)}
-                    </Text>
-                    {character.escrowGoldBalance > 0n && (
-                      <Text color="#5A8A3E" fontFamily="mono" fontWeight={700} size="xs">
-                        +{calculateXpBoostPercent(character.escrowGoldBalance).toFixed(0)}% XP
-                      </Text>
-                    )}
-                  </HStack>
-                </HStack>
-              </>
-            )}
           </VStack>
 
           <HStack justifyContent="center" mt={2} spacing={2}>

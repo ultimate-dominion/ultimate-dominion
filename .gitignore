@@ -35,3 +35,10 @@ windsurfrules.json
 local/
 SESSION.md
 .DS_Store
+
+# Confidential business docs (moved to ~/Documents/ultimate-dominion/)
+docs/MONETIZATION_RESEARCH.md
+docs/GO_TO_MARKET.md
+docs/PLAYER_ACQUISITION_RESEARCH.md
+docs/GOLD_SUPPLY_PLAN.md
+docs/RETENTION_ANALYSIS_*.md

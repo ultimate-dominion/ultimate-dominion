@@ -34,7 +34,12 @@
     "match-test": "forge t -vvv --rpc-url http://127.0.0.1:8545 --match-test",
     "test:balance": "vitest run scripts/balance/",
     "test:unit": "forge test --match-contract 'CombatMathTest|CombatBalanceTest|StatCalculatorTest|EffectProcessorTest|Test_PveExpVariance' --skip 'RevokeBadge|MapSpawnBoss|MobInventoryTrim|PveRewardBonus|PveRewardLevelCap|PvpRewardLevelCap' -vvv",
-    "test:fork:beta": "bash -c 'source .env.testnet && WORLD_ADDRESS=$WORLD_ADDRESS forge test --fork-url $RPC_URL --match-contract \"PostDeploySmoke|ForkTest\" --skip script -vv'"
+    "test:fork:beta": "bash -c 'source .env.testnet && WORLD_ADDRESS=$WORLD_ADDRESS forge test --fork-url $RPC_URL --match-contract \"PostDeploySmoke|ForkTest\" --skip script -vv'",
+    "test:smoke": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/smoke.test.ts --reporter=verbose'",
+    "test:smoke:scale": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/scale.test.ts --reporter=verbose'",
+    "test:smoke:pvp": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/pvp.test.ts --reporter=verbose'",
+    "test:smoke:balance": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/balance.test.ts --reporter=verbose'",
+    "test:smoke:all": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/ --reporter=verbose --sequence.concurrent=false'"
   },
   "dependencies": {
     "@latticexyz/cli": "^2.2.23",

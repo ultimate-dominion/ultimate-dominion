@@ -14,6 +14,7 @@ import {_erc721SystemId} from "@latticexyz/world-modules/src/modules/erc721-pupp
 import {_erc20SystemId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
 import {_erc1155SystemId} from "../src/utils.sol";
 import {GOLD_NAMESPACE, CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, BADGES_NAMESPACE, FRAGMENTS_NAMESPACE, WORLD_NAMESPACE} from "../constants.sol";
+import {GoldERC20System} from "../src/systems/GoldERC20System.sol";
 
 /**
  * @title EnsureAccessSystem
@@ -60,6 +61,8 @@ contract EnsureAccessSystem is System {
         address itemCreation = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ItemCreationSys"));
         address fragmentSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "FragmentSystem"));
         address pveReward = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PveRewardSystem"));
+        address pvpReward = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PvpRewardSystem"));
+        address pvpSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "PvPSystem"));
         address shopSystem = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ShopSystem"));
         address marketplace = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "MarketplaceSys"));
 
@@ -69,6 +72,7 @@ contract EnsureAccessSystem is System {
         ResourceId goldBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
         ResourceId goldTotalSupply = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "TotalSupply");
         ResourceId goldErc20System = _erc20SystemId(GOLD_NAMESPACE);
+        ResourceId goldAllowances = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Allowances");
 
         ResourceId itemsOwners = WorldResourceIdLib.encode(RESOURCE_TABLE, ITEMS_NAMESPACE, "Owners");
         ResourceId itemsTotalSupply = WorldResourceIdLib.encode(RESOURCE_TABLE, ITEMS_NAMESPACE, "TotalSupply");
@@ -87,28 +91,16 @@ contract EnsureAccessSystem is System {
         // ================================================================
         // Step 4: Gold namespace grants
         // ================================================================
-        // CharacterEnterSystem — starter gold on enterGame (writes Balances + TotalSupply)
-        ResourceAccess.set(goldBalances, charEnterSys, true);
-        ResourceAccess.set(goldTotalSupply, charEnterSys, true);
-        // LootManager — gold rewards from combat
-        ResourceAccess.set(goldBalances, lootManager, true);
-        ResourceAccess.set(goldTotalSupply, lootManager, true);
-        // GasStation — gold→ETH swaps
-        ResourceAccess.set(goldBalances, gasStation, true);
-        ResourceAccess.set(goldTotalSupply, gasStation, true);
-        // ShopSystem — purchases
-        ResourceAccess.set(goldBalances, shopSystem, true);
-        ResourceAccess.set(goldTotalSupply, shopSystem, true);
-        // PveRewardSystem — combat gold rewards
-        ResourceAccess.set(goldBalances, pveReward, true);
-        ResourceAccess.set(goldTotalSupply, pveReward, true);
-        // MarketplaceSystem — gold transfers for trades
+        // All systems using GoldLib need Gold namespace access for IWorld.call() routing
+        ResourceAccess.set(goldNs, charEnterSys, true);
+        ResourceAccess.set(goldNs, lootManager, true);
+        ResourceAccess.set(goldNs, gasStation, true);
+        ResourceAccess.set(goldNs, shopSystem, true);
+        ResourceAccess.set(goldNs, pveReward, true);
+        ResourceAccess.set(goldNs, pvpReward, true);
+        ResourceAccess.set(goldNs, pvpSystem, true);
         ResourceAccess.set(goldNs, marketplace, true);
-        ResourceAccess.set(goldBalances, marketplace, true);
-        // World — delegatecall systems need World-level access
         ResourceAccess.set(goldNs, worldAddress, true);
-        ResourceAccess.set(goldBalances, worldAddress, true);
-        ResourceAccess.set(goldErc20System, worldAddress, true);
 
         // ================================================================
         // Step 5: Items namespace grants
@@ -220,6 +212,14 @@ contract EnsureAccess is Script {
             abi.encodeCall(EnsureAccessSystem.ensureAll, (deployer, worldAddress))
         );
         console.log("All cross-namespace access grants applied");
+
+        // Deploy and register GoldERC20System — replaces the default ERC20System
+        // for the Gold namespace with one that checks access instead of ownership
+        // for mint/burn. This enables cross-namespace GoldLib calls.
+        GoldERC20System goldSystem = new GoldERC20System();
+        ResourceId goldErc20SystemId = _erc20SystemId(GOLD_NAMESPACE);
+        IWorld(worldAddress).registerSystem(goldErc20SystemId, goldSystem, true);
+        console.log("Registered GoldERC20System at", address(goldSystem));
 
         vm.stopBroadcast();
     }

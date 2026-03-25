@@ -209,6 +209,7 @@ export type AttackOutcomeType = {
   attackerDied: boolean;
   attackerId: string;
   attackNumber: bigint;
+  blocked: boolean;
   blockNumber: bigint;
   crit: boolean[];
   currentTurn: bigint;
@@ -216,11 +217,13 @@ export type AttackOutcomeType = {
   defenderDamageDelt: bigint;
   defenderDied: boolean;
   defenderId: string;
+  doubleStrike: boolean;
   effectIds: string[];
   encounterId: string;
   hit: boolean[];
   itemId: string;
   miss: boolean[];
+  spellDodged: boolean;
   timestamp: bigint;
 };
 
@@ -228,7 +231,6 @@ export type Character = CharacterData & EntityStats & Metadata;
 
 export type CharacterData = {
   baseStats: EntityStats;
-  escrowGoldBalance: bigint;
   externalGoldBalance: bigint;
   id: string;
   inBattle: boolean;

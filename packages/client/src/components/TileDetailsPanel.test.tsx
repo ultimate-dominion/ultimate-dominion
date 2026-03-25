@@ -169,10 +169,6 @@ vi.mock('../utils/fragmentNarratives', () => ({
   getRomanNumeral: () => 'I',
 }));
 
-vi.mock('./AdventureEscrowModal', () => ({
-  AdventureEscrowModal: () => null,
-}));
-
 vi.mock('./ClassSymbol', () => ({
   ClassSymbol: () => null,
 }));

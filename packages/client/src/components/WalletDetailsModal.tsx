@@ -287,23 +287,9 @@ export const WalletDetailsModal = ({
                   </HStack>
                   <Text color="#D4A54A" fontFamily="mono" fontSize="2xl" fontWeight={700}>
                     {Number(etherToFixedNumber(
-                      character.externalGoldBalance + character.escrowGoldBalance,
+                      character.externalGoldBalance,
                     )).toLocaleString()}
                   </Text>
-                  <HStack fontSize="xs" mt={1} spacing={4}>
-                    <Text color="#6A6050">
-                      Stashed:{' '}
-                      <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
-                        {Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()}
-                      </Text>
-                    </Text>
-                    <Text color="#6A6050">
-                      Carried:{' '}
-                      <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
-                        {Number(etherToFixedNumber(character.escrowGoldBalance)).toLocaleString()}
-                      </Text>
-                    </Text>
-                  </HStack>
                 </Box>
               )}
             </VStack>
@@ -372,23 +358,9 @@ export const WalletDetailsModal = ({
                     </HStack>
                     <Text color="#D4A54A" fontFamily="mono" fontSize="2xl" fontWeight={700}>
                       {Number(etherToFixedNumber(
-                        character.externalGoldBalance + character.escrowGoldBalance,
+                        character.externalGoldBalance,
                       )).toLocaleString()}
                     </Text>
-                    <HStack fontSize="xs" mt={1} spacing={4}>
-                      <Text color="#6A6050">
-                        Stashed:{' '}
-                        <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
-                          {Number(etherToFixedNumber(character.externalGoldBalance)).toLocaleString()}
-                        </Text>
-                      </Text>
-                      <Text color="#6A6050">
-                        Carried:{' '}
-                        <Text as="span" color="#8A7E6A" fontFamily="mono" fontWeight={600}>
-                          {Number(etherToFixedNumber(character.escrowGoldBalance)).toLocaleString()}
-                        </Text>
-                      </Text>
-                    </HStack>
                   </Box>
                 )}
 

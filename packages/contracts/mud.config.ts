@@ -642,6 +642,18 @@ export default defineWorld({
         balance: "uint256",
       },
     },
+    /**
+     * Per-character gas reserve. Funded by a split of PvE Gold rewards.
+     * Used by the relayer's fundAndCharge() to atomically charge players for gas.
+     * Balance is backed by real Gold held by the World contract.
+     */
+    GasReserve: {
+      key: ["characterId"],
+      schema: {
+        characterId: "bytes32",
+        balance: "uint256",
+      },
+    },
     /////////////////////////////////// ACTIONS ////////////////////////////////////////////////////////////////////////////
     // Effects apply damage and or status effects
     Effects: {
@@ -1013,6 +1025,20 @@ export default defineWorld({
         crit: "bool[]",
       },
       key: ["encounterId", "currentTurn", "attackNumber"],
+      type: "offchainTable",
+    },
+    // Combat flags — companion to ActionOutcome for extensible per-attack metadata.
+    // Separate table because ActionOutcome schema is immutable on the production world.
+    CombatFlags: {
+      key: ["encounterId", "currentTurn", "attackNumber"],
+      schema: {
+        encounterId: "bytes32",
+        currentTurn: "uint256",
+        attackNumber: "uint256",
+        doubleStrike: "bool",
+        spellDodged: "bool",
+        blocked: "bool",
+      },
       type: "offchainTable",
     },
     DamageOverTimeApplied: {

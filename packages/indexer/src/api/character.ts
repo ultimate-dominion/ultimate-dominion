@@ -36,7 +36,6 @@ export function createCharacterRouter(syncHandle: SyncHandle): Router {
         characterRows,
         statsRows,
         equipmentRows,
-        escrowRows,
         encounterRows,
         effectsRows,
         sessionRows,
@@ -45,7 +44,6 @@ export function createCharacterRouter(syncHandle: SyncHandle): Router {
         queryByKey(t('Characters'), 'characterId', characterId),
         queryByKey(t('Stats'), 'entityId', characterId),
         queryByKey(t('CharacterEquipment'), 'characterId', characterId),
-        queryByKey(t('AdventureEscrow'), 'characterId', characterId),
         queryByKey(t('EncounterEntity'), 'encounterEntityId', characterId),
         queryByKey(t('WorldStatusEffects'), 'entityId', characterId),
         queryByKey(t('SessionTimer'), 'characterId', characterId),
@@ -55,7 +53,6 @@ export function createCharacterRouter(syncHandle: SyncHandle): Router {
       const character = characterRows[0] || null;
       const stats = statsRows[0] || null;
       const equipment = equipmentRows[0] || null;
-      const escrow = escrowRows[0] || null;
       const encounter = encounterRows[0] || null;
       const effects = effectsRows[0] || null;
       const session = sessionRows[0] || null;
@@ -65,7 +62,6 @@ export function createCharacterRouter(syncHandle: SyncHandle): Router {
         character,
         stats,
         equipment,
-        escrow,
         encounter,
         effects,
         session,

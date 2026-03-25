@@ -290,7 +290,7 @@
     },
     {
       "name": "Spider Silk Wraps",
-      "description": "Impossibly light. The silk doesn't tear — you have to cut it.",
+      "description": "Impossibly light. The silk doesn't tear \u2014 you have to cut it.",
       "rarity": 2,
       "dropChance": 1500,
       "initialSupply": 10000000000000000000,
@@ -993,7 +993,7 @@
         "strModifier": 3
       },
       "statRestrictions": {
-        "minAgility": 5,
+        "minAgility": 4,
         "minIntelligence": 0,
         "minStrength": 13
       },
@@ -1025,7 +1025,7 @@
       "statRestrictions": {
         "minAgility": 14,
         "minIntelligence": 0,
-        "minStrength": 4
+        "minStrength": 6
       }
     },
     {
@@ -1052,7 +1052,7 @@
       "statRestrictions": {
         "minAgility": 0,
         "minIntelligence": 13,
-        "minStrength": 5
+        "minStrength": 4
       },
       "scalingStat": ""
     },
@@ -1079,7 +1079,7 @@
         "strModifier": 3
       },
       "statRestrictions": {
-        "minAgility": 13,
+        "minAgility": 10,
         "minIntelligence": 0,
         "minStrength": 16
       },
@@ -1094,7 +1094,7 @@
       "metadataUri": "weapon:phasefang",
       "price": 350000000000000000000,
       "isStarter": false,
-      "scalingStat": "",
+      "scalingStat": "AGI",
       "stats": {
         "agiModifier": 4,
         "effects": [
@@ -1805,7 +1805,7 @@
     },
     {
       "name": "Flashpowder",
-      "description": "A handful of blinding dust. Throw it and run — they won't see which way you went.",
+      "description": "A handful of blinding dust. Throw it and run \u2014 they won't see which way you went.",
       "rarity": 2,
       "dropChance": 40,
       "initialSupply": 10000000000000000000,

@@ -1081,6 +1081,21 @@ export const ActionsPanel = (): JSX.Element => {
                 >
                   {attackContent}
                 </SafeTypist>
+                {attack.doubleStrike && (
+                  <Text size={{ base: '2xs', sm: '2xs', lg: 'xs' }} color="#A8DEFF" fontWeight={700}>
+                    Double Strike!
+                  </Text>
+                )}
+                {attack.blocked && (
+                  <Text size={{ base: '2xs', sm: '2xs', lg: 'xs' }} color="#8B8B8B" fontWeight={700}>
+                    {isPlayerAttack ? `${opponentDisplayName} blocked some damage.` : 'You blocked some damage.'}
+                  </Text>
+                )}
+                {attack.spellDodged && (
+                  <Text size={{ base: '2xs', sm: '2xs', lg: 'xs' }} color="#A8DEFF" fontWeight={700}>
+                    {isPlayerAttack ? `${opponentDisplayName} dodged the spell!` : 'You dodged the spell!'}
+                  </Text>
+                )}
                 {dotMessageElement}
               </Box>
             );

@@ -143,7 +143,6 @@ const CharacterProviderInner = ({
   // Per-character reactive reads
   const statsData = useGameValue('Stats', characterKeyBytes);
   const encounterData = useGameValue('EncounterEntity', characterKeyBytes);
-  const escrowData = useGameValue('AdventureEscrow', characterKeyBytes);
   const effectsData = useGameValue('WorldStatusEffects', characterKeyBytes);
   const equipmentData = useGameValue('CharacterEquipment', characterKeyBytes);
 
@@ -174,7 +173,6 @@ const CharacterProviderInner = ({
   }
 
   const externalGoldBalance = toBigInt(goldData?.value);
-  const escrowGoldBalance = toBigInt(escrowData?.balance);
 
   // Decode base stats from the Characters table bytes field
   const decodedBaseStats = useMemo(() => {
@@ -333,7 +331,6 @@ const CharacterProviderInner = ({
     return {
       // CharacterData fields
       baseStats: decodedBaseStats,
-      escrowGoldBalance,
       externalGoldBalance,
       id: keyBytes as any,
       inBattle,
@@ -379,7 +376,6 @@ const CharacterProviderInner = ({
   }, [
     characterEntry,
     decodedBaseStats,
-    escrowGoldBalance,
     externalGoldBalance,
     inBattle,
     pvpCooldownTimer,

@@ -1,7 +1,7 @@
 ---
 title: "Dark Fantasy Games Worth Playing in 2026"
 description: "The best dark fantasy games to play in 2026 — from Dark Souls and Elden Ring to text-based MUDs and indie RPGs. Games with grim worlds, real consequences, and lore worth digging into."
-date: 2026-03-12
+date: 2026-03-13
 tags: ["recommendations", "dark-fantasy"]
 draft: false
 ---

@@ -289,6 +289,21 @@ library CombatMath {
     }
 
     /**
+     * @notice Calculate spell dodge chance for AGI builds vs magic attacks
+     * @dev AGI's defense against magic — critical for the combat triangle (AGI > INT).
+     *      Formula: if defender AGI >= 10, chance = min((AGI - 10) * 2, 20)%
+     * @param defenderAgi Defender's agility stat
+     * @param rnChunk Random number chunk for roll
+     * @return dodged Whether the magic attack was dodged
+     */
+    function calculateSpellDodge(int256 defenderAgi, uint64 rnChunk) internal pure returns (bool) {
+        if (defenderAgi < 10) return false;
+        uint256 dodgeChance = uint256(defenderAgi - 10) * 2;
+        if (dodgeChance > 20) dodgeChance = 20;
+        return (uint256(rnChunk) % 100) < dodgeChance;
+    }
+
+    /**
      * @notice Calculate double strike chance for AGI weapons
      * @param attackerAgi Attacker's agility stat
      * @param defenderAgi Defender's agility stat

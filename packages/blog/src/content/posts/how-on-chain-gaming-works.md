@@ -1,7 +1,7 @@
 ---
 title: "How On-Chain Gaming Works: A Player's Guide"
 description: "A beginner-friendly guide to on-chain gaming and blockchain games. How they work, why they matter, and how to play one without any crypto knowledge — using Ultimate Dominion as an example."
-date: 2026-03-12
+date: 2026-03-22
 tags: ["guide", "blockchain", "on-chain-gaming"]
 draft: false
 ---

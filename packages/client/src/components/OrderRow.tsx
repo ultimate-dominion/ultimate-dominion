@@ -163,16 +163,21 @@ export const OrderRow = ({
         {!isOfferer && (
           <Tooltip
             aria-label={
-              offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
+              insufficientGold
+                ? 'Not enough gold'
+                : offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
             }
             bg="#14120F"
             hasArrow
             label={
-              offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
+              insufficientGold
+                ? 'Not enough gold'
+                : offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
             }
             placement="top"
           >
             <Button
+              isDisabled={insufficientGold}
               isLoading={fillTx.isLoading}
               p={2}
               onClick={onFulfillOrder}

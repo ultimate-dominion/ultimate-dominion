@@ -53,7 +53,6 @@ import {
   MAX_LEVEL,
 } from '../utils/constants';
 import {
-  calculateXpBoostPercent,
   decodeCharacterId,
   etherToFixedNumber,
 } from '../utils/helpers';
@@ -245,31 +244,6 @@ export const CharacterPage = (): JSX.Element => {
                       </>
                     )}
                   </Text>
-                </HStack>
-                <HStack>
-                  <Text
-                    color="#8A7E6A"
-                    size="xs"
-                    fontWeight="bold"
-                    textAlign="start"
-                  >
-                    Carried Gold:{' '}
-                    {etherToFixedNumber(character.escrowGoldBalance)} $GOLD
-                    {character.escrowGoldBalance > 0n && (
-                      <Text as="span" color="#5A8A3E">
-                        {' '}(+{calculateXpBoostPercent(character.escrowGoldBalance).toFixed(0)}% XP)
-                      </Text>
-                    )}
-                  </Text>
-                  <Tooltip
-                    bg="#14120F"
-                    hasArrow
-                    label="Carried Gold is earned from battles. Carrying more Gold helps you level up faster, but in the Winding Dark, you risk losing it to other players."
-                    placement="top"
-                    shouldWrapChildren
-                  >
-                    <IoMdInformationCircleOutline />
-                  </Tooltip>
                 </HStack>
               </VStack>
               <Level
