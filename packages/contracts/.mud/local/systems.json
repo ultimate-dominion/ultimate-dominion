@@ -181,7 +181,7 @@
         "error ItemNotEquipped()",
         "error NotAuthorizedCaller()",
         "error UnrecognizedResistanceStat()",
-        "function executeAction((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit) actionOutcomeData, uint256 randomNumber) returns ((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit))",
+        "function executeAction((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit) actionOutcomeData, uint256 randomNumber) returns ((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit), (bool doubleStrike, bool spellDodged, bool blocked))",
         "function getDied(bytes32 entityId) view returns (bool isDied)",
         "function getEncounter(bytes32 encounterId) view returns ((uint8 encounterType, uint256 start, uint256 end, bool rewardsDistributed, uint256 currentTurn, uint256 currentTurnTimer, uint256 maxTurns, bool attackersAreMobs, bytes32[] defenders, bytes32[] attackers))"
       ],
@@ -194,7 +194,7 @@
         "error ItemNotEquipped()",
         "error NotAuthorizedCaller()",
         "error UnrecognizedResistanceStat()",
-        "function UD__executeAction((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit) actionOutcomeData, uint256 randomNumber) returns ((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit))",
+        "function UD__executeAction((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit) actionOutcomeData, uint256 randomNumber) returns ((uint256 itemId, bytes32 attackerId, bytes32 defenderId, int256 attackerDamageDelt, int256 defenderDamageDelt, bool attackerDied, bool defenderDied, uint256 blockNumber, uint256 timestamp, int256[] damagePerHit, bytes32[] effectIds, bool[] hit, bool[] miss, bool[] crit), (bool doubleStrike, bool spellDodged, bool blocked))",
         "function UD__getDied(bytes32 entityId) view returns (bool isDied)",
         "function UD__getEncounter(bytes32 encounterId) view returns ((uint8 encounterType, uint256 start, uint256 end, bool rewardsDistributed, uint256 currentTurn, uint256 currentTurnTimer, uint256 maxTurns, bool attackersAreMobs, bytes32[] defenders, bytes32[] attackers))"
       ]
@@ -440,7 +440,6 @@
       "systemId": "0x7379554400000000000000000000000047617353746174696f6e537973000000",
       "abi": [
         "error GamePaused()",
-        "error GasStationArrayMismatch()",
         "error GasStationBelowMinLevel()",
         "error GasStationCooldownActive()",
         "error GasStationDisabled()",
@@ -451,10 +450,8 @@
         "error GasStationTransferFailed()",
         "error GasStationZeroAmount()",
         "error InsufficientBalance()",
-        "function batchChargeGasGold(address[] players, bytes32[] characterIds)",
-        "function batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)",
         "function buyGas(bytes32 characterId, uint256 goldAmount, uint256 minEthOutput)",
-        "function chargeGasGold(address player, bytes32 characterId)",
+        "function fundAndCharge(address player, bytes32 characterId)",
         "function fundGasTreasury() payable",
         "function gasTreasuryBalance() view returns (uint256)",
         "function setGasStationConfig(uint256 ethPerGold, uint256 maxGoldPerSwap, uint256 cooldownSeconds, bool enabled)",
@@ -464,7 +461,6 @@
       ],
       "worldAbi": [
         "error GamePaused()",
-        "error GasStationArrayMismatch()",
         "error GasStationBelowMinLevel()",
         "error GasStationCooldownActive()",
         "error GasStationDisabled()",
@@ -475,16 +471,71 @@
         "error GasStationTransferFailed()",
         "error GasStationZeroAmount()",
         "error InsufficientBalance()",
-        "function UD__batchChargeGasGold(address[] players, bytes32[] characterIds)",
-        "function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)",
         "function UD__buyGas(bytes32 characterId, uint256 goldAmount, uint256 minEthOutput)",
-        "function UD__chargeGasGold(address player, bytes32 characterId)",
+        "function UD__fundAndCharge(address player, bytes32 characterId)",
         "function UD__fundGasTreasury() payable",
         "function UD__gasTreasuryBalance() view returns (uint256)",
         "function UD__setGasStationConfig(uint256 ethPerGold, uint256 maxGoldPerSwap, uint256 cooldownSeconds, bool enabled)",
         "function UD__setGasStationSwapConfig(address swapRouter, address weth, uint24 poolFee, address relayerAddress, uint256 goldPerGasCharge)",
         "function UD__withdrawGasTreasury(uint256 amount)",
         "receive() external payable"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "GoldERC20System",
+      "namespace": "UD",
+      "name": "GoldERC20System",
+      "systemId": "0x73795544000000000000000000000000476f6c64455243323053797374656d00",
+      "abi": [
+        "error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed)",
+        "error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed)",
+        "error ERC20InvalidApprover(address approver)",
+        "error ERC20InvalidReceiver(address receiver)",
+        "error ERC20InvalidSender(address sender)",
+        "error ERC20InvalidSpender(address spender)",
+        "error PuppetMaster_NoPuppet(address systemAddress, bytes32 systemId)",
+        "event Approval(address indexed owner, address indexed spender, uint256 value)",
+        "event Transfer(address indexed from, address indexed to, uint256 value)",
+        "function allowance(address owner, address spender) view returns (uint256)",
+        "function approve(address spender, uint256 value) returns (bool)",
+        "function balanceOf(address account) view returns (uint256)",
+        "function burn(address account, uint256 value)",
+        "function burnWithAccess(address account, uint256 value)",
+        "function decimals() view returns (uint8)",
+        "function mint(address account, uint256 value)",
+        "function mintWithAccess(address account, uint256 value)",
+        "function name() view returns (string)",
+        "function symbol() view returns (string)",
+        "function totalSupply() view returns (uint256)",
+        "function transfer(address to, uint256 value) returns (bool)",
+        "function transferFrom(address from, address to, uint256 value) returns (bool)",
+        "function transferWithAccess(address from, address to, uint256 value)"
+      ],
+      "worldAbi": [
+        "error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed)",
+        "error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed)",
+        "error ERC20InvalidApprover(address approver)",
+        "error ERC20InvalidReceiver(address receiver)",
+        "error ERC20InvalidSender(address sender)",
+        "error ERC20InvalidSpender(address spender)",
+        "error PuppetMaster_NoPuppet(address systemAddress, bytes32 systemId)",
+        "event Approval(address indexed owner, address indexed spender, uint256 value)",
+        "event Transfer(address indexed from, address indexed to, uint256 value)",
+        "function UD__allowance(address owner, address spender) view returns (uint256)",
+        "function UD__approve(address spender, uint256 value) returns (bool)",
+        "function UD__balanceOf(address account) view returns (uint256)",
+        "function UD__burn(address account, uint256 value)",
+        "function UD__burnWithAccess(address account, uint256 value)",
+        "function UD__decimals() view returns (uint8)",
+        "function UD__mint(address account, uint256 value)",
+        "function UD__mintWithAccess(address account, uint256 value)",
+        "function UD__name() view returns (string)",
+        "function UD__symbol() view returns (string)",
+        "function UD__totalSupply() view returns (uint256)",
+        "function UD__transfer(address to, uint256 value) returns (bool)",
+        "function UD__transferFrom(address from, address to, uint256 value) returns (bool)",
+        "function UD__transferWithAccess(address from, address to, uint256 value)"
       ]
     },
     {
@@ -635,46 +686,32 @@
       "name": "LootManagerSyste",
       "systemId": "0x737955440000000000000000000000004c6f6f744d616e616765725379737465",
       "abi": [
-        "error GamePaused()",
         "error InsufficientBalance()",
-        "error NotAtSpawn()",
         "error NotAuthorizedCaller()",
         "function consumeItem(bytes32 characterId, uint256 itemId)",
-        "function depositToEscrow(bytes32 characterId, uint256 amount) returns (uint256 _balance)",
-        "function dropGoldToEscrow(bytes32 characterId, uint256 amount)",
         "function dropGoldToPlayer(bytes32 characterId, uint256 amount)",
         "function dropItem(bytes32 characterId, uint256 itemId, uint256 amount)",
         "function dropItems(bytes32[] characterIds, uint256[] itemIds, uint256[] amounts)",
-        "function getEscrowBalance(bytes32 characterId) view returns (uint256 _balance)",
-        "function increaseEscrowBalance(bytes32 characterId, uint256 amount) returns (uint256 newBalance)",
         "function issueAdvancedClassItems(bytes32 characterId, uint8 advancedClass)",
         "function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) returns (bytes4)",
         "function onERC1155Received(address, address, uint256, uint256, bytes) returns (bytes4)",
         "function setGoldApproval(address spender, uint256 value)",
         "function setItemsApproval(address spender, bool approval)",
-        "function transferGold(address player, uint256 amount)",
-        "function withdrawFromEscrow(bytes32 characterId, uint256 amount) returns (uint256 _balance)"
+        "function transferGold(address player, uint256 amount)"
       ],
       "worldAbi": [
-        "error GamePaused()",
         "error InsufficientBalance()",
-        "error NotAtSpawn()",
         "error NotAuthorizedCaller()",
         "function UD__consumeItem(bytes32 characterId, uint256 itemId)",
-        "function UD__depositToEscrow(bytes32 characterId, uint256 amount) returns (uint256 _balance)",
-        "function UD__dropGoldToEscrow(bytes32 characterId, uint256 amount)",
         "function UD__dropGoldToPlayer(bytes32 characterId, uint256 amount)",
         "function UD__dropItem(bytes32 characterId, uint256 itemId, uint256 amount)",
         "function UD__dropItems(bytes32[] characterIds, uint256[] itemIds, uint256[] amounts)",
-        "function UD__getEscrowBalance(bytes32 characterId) view returns (uint256 _balance)",
-        "function UD__increaseEscrowBalance(bytes32 characterId, uint256 amount) returns (uint256 newBalance)",
         "function UD__issueAdvancedClassItems(bytes32 characterId, uint8 advancedClass)",
         "function UD__onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) returns (bytes4)",
         "function UD__onERC1155Received(address, address, uint256, uint256, bytes) returns (bytes4)",
         "function UD__setGoldApproval(address spender, uint256 value)",
         "function UD__setItemsApproval(address spender, bool approval)",
-        "function UD__transferGold(address player, uint256 amount)",
-        "function UD__withdrawFromEscrow(bytes32 characterId, uint256 amount) returns (uint256 _balance)"
+        "function UD__transferGold(address player, uint256 amount)"
       ]
     },
     {
@@ -822,6 +859,7 @@
         "function getNpcStats(uint256 mobId) view returns ((string name, bytes32[] storyPathIds, uint8 alignment))",
         "function getSpawnCounter(bytes32 entityId) pure returns (uint256)",
         "function isValidMob(bytes32 entityId) view returns (bool _isValidMob)",
+        "function registerMobInZone(uint256 zoneId, uint256 level, uint256 mobId)",
         "function spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32 entityId)",
         "function spawnMobs(uint256[] mobIds, uint16 x, uint16 y)"
       ],
@@ -842,6 +880,7 @@
         "function UD__getNpcStats(uint256 mobId) view returns ((string name, bytes32[] storyPathIds, uint8 alignment))",
         "function UD__getSpawnCounter(bytes32 entityId) pure returns (uint256)",
         "function UD__isValidMob(bytes32 entityId) view returns (bool _isValidMob)",
+        "function UD__registerMobInZone(uint256 zoneId, uint256 level, uint256 mobId)",
         "function UD__spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32 entityId)",
         "function UD__spawnMobs(uint256[] mobIds, uint16 x, uint16 y)"
       ]
@@ -938,13 +977,11 @@
       "abi": [
         "error InvalidRewardState()",
         "error NotAuthorizedCaller()",
-        "function calculateExpMultiplier(bytes32 characterId) view returns (uint256 _expMultiplier)",
         "function distributePveRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
       ],
       "worldAbi": [
         "error InvalidRewardState()",
         "error NotAuthorizedCaller()",
-        "function UD__calculateExpMultiplier(bytes32 characterId) view returns (uint256 _expMultiplier)",
         "function UD__distributePveRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
       ]
     },
@@ -980,7 +1017,6 @@
         "error NotOwnShopEncounter()",
         "error OutOfStock()",
         "error ReentrancyGuardReentrantCall()",
-        "error ShopInsufficientGold()",
         "error Unauthorized()",
         "function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
         "function canRestock(bytes32 shopId) view returns (bool)",
@@ -1004,7 +1040,6 @@
         "error NotOwnShopEncounter()",
         "error OutOfStock()",
         "error ReentrancyGuardReentrantCall()",
-        "error ShopInsufficientGold()",
         "error Unauthorized()",
         "function UD__buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
         "function UD__canRestock(bytes32 shopId) view returns (bool)",
@@ -1101,6 +1136,39 @@
         "function UD__rest(bytes32 characterId)",
         "function UD__useCombatConsumableItem(bytes32, uint256) pure",
         "function UD__useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "ZoneTransitionSystem",
+      "namespace": "UD",
+      "name": "ZoneTransSys",
+      "systemId": "0x737955440000000000000000000000005a6f6e655472616e7353797300000000",
+      "abi": [
+        "error AlreadyInZone()",
+        "error GamePaused()",
+        "error InEncounter()",
+        "error NotSpawned()",
+        "error OnlyCharacters()",
+        "error PrerequisiteZoneIncomplete()",
+        "error Unauthorized()",
+        "error ZoneLevelTooLow()",
+        "error ZoneNotConfigured()",
+        "function getCharacterZone(bytes32 entityId) view returns (uint256)",
+        "function transitionZone(bytes32 entityId, uint256 targetZoneId)"
+      ],
+      "worldAbi": [
+        "error AlreadyInZone()",
+        "error GamePaused()",
+        "error InEncounter()",
+        "error NotSpawned()",
+        "error OnlyCharacters()",
+        "error PrerequisiteZoneIncomplete()",
+        "error Unauthorized()",
+        "error ZoneLevelTooLow()",
+        "error ZoneNotConfigured()",
+        "function UD__getCharacterZone(bytes32 entityId) view returns (uint256)",
+        "function UD__transitionZone(bytes32 entityId, uint256 targetZoneId)"
       ]
     },
     {
@@ -1491,5 +1559,5 @@
       ]
     }
   ],
-  "createdAt": 1774048487627
+  "createdAt": 1774458025327
 }

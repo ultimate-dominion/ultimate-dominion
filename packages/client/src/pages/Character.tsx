@@ -629,7 +629,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
           Weapons ({weaponsInInventory})
           <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
-            {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} slots used
+            {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} action slots used
           </Text>
         </Text>
         {maxWeaponsEquipped && (
@@ -701,7 +701,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
           Consumables ({consumablesInInventory})
           <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
-            {equippedConsumableIds.length} equipped
+            {equippedConsumableIds.length} equipped — {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} action slots used
           </Text>
         </Text>
         <Grid

@@ -177,10 +177,10 @@ export const Marketplace = (): JSX.Element => {
     () => [
       ...armorTemplates,
       ...consumableTemplates,
-      ...spellTemplates,
       ...weaponTemplates,
+      // Spells excluded — class-granted, not tradeable
     ],
-    [armorTemplates, consumableTemplates, spellTemplates, weaponTemplates],
+    [armorTemplates, consumableTemplates, weaponTemplates],
   );
 
   const pageNumber = useMemo(() => {
@@ -451,7 +451,9 @@ export const Marketplace = (): JSX.Element => {
               size="sm"
               value={itemTypeFilter}
             >
-              {Object.keys(ItemFilterOptions).map(k => {
+              {Object.keys(ItemFilterOptions)
+                .filter(k => k !== 'Spell')
+                .map(k => {
                 return (
                   <option key={`item-type-filter-${k}`} value={k}>
                     {ItemFilterOptions[k as keyof typeof ItemFilterOptions]}
