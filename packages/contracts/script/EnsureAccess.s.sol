@@ -139,8 +139,9 @@ contract EnsureAccessSystem is System {
         // ================================================================
         // Step 7: Badges namespace grants
         // ================================================================
-        address[4] memory badgeWriters = [levelSystem, adminSystem, statSystem, fragmentSystem];
-        for (uint256 i = 0; i < 4; i++) {
+        address zoneTransition = Systems.getSystem(WorldResourceIdLib.encode(RESOURCE_SYSTEM, WORLD_NAMESPACE, "ZoneTransSys"));
+        address[5] memory badgeWriters = [levelSystem, adminSystem, statSystem, fragmentSystem, zoneTransition];
+        for (uint256 i = 0; i < 5; i++) {
             ResourceAccess.set(badgesErc721System, badgeWriters[i], true);
             ResourceAccess.set(badgesOwners, badgeWriters[i], true);
             ResourceAccess.set(badgesBalances, badgeWriters[i], true);

@@ -18,6 +18,10 @@ import {
     ZoneMapConfig
 } from "../codegen/index.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
+import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
+import {Balances as ERC721Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
+import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
+import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {
     AlreadyInZone,
@@ -29,7 +33,7 @@ import {
     ZoneLevelTooLow,
     ZoneNotConfigured
 } from "../Errors.sol";
-import {ZONE_DARK_CAVE} from "../../constants.sol";
+import {ZONE_DARK_CAVE, BADGES_NAMESPACE, BADGE_ZONE_PIONEER_BASE} from "../../constants.sol";
 
 contract ZoneTransitionSystem is System {
     /// @notice Transition a character to a different zone.
@@ -90,6 +94,9 @@ contract ZoneTransitionSystem is System {
 
         // 5. Spawn mobs on the origin tile
         IWorld(_world()).UD__spawnOnTileEnter(originX, originY);
+
+        // 6. Mint Pioneer badge (first entry into this zone)
+        _tryMintPioneerBadge(entityId, targetZoneId);
     }
 
     /// @notice Get a character's current zone (0 or unset → Dark Cave).
@@ -109,6 +116,22 @@ contract ZoneTransitionSystem is System {
         if (_msgSender() == owner) return true;
         ResourceId delegationId = UserDelegationControl.getDelegationControlId(owner, _msgSender());
         return ResourceId.unwrap(delegationId) != bytes32(0);
+    }
+
+    function _tryMintPioneerBadge(bytes32 entityId, uint256 zoneId) internal {
+        address owner = Characters.getOwner(entityId);
+        uint256 tokenId = Characters.getTokenId(entityId);
+        uint256 badgeId = (BADGE_ZONE_PIONEER_BASE + zoneId) * 1_000_000 + tokenId;
+
+        ResourceId ownersTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Owners");
+        ResourceId balancesTableId = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Balances");
+
+        // Skip if already minted (re-entry into zone)
+        if (ERC721Owners.get(ownersTableId, badgeId) != address(0)) return;
+
+        ERC721Owners.set(ownersTableId, badgeId, owner);
+        uint256 currentBalance = ERC721Balances.get(balancesTableId, owner);
+        ERC721Balances.set(balancesTableId, owner, currentBalance + 1);
     }
 
     function _removeFromPosition(bytes32 entityId, uint16 x, uint16 y) internal {

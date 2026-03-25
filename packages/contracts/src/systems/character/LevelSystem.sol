@@ -17,7 +17,7 @@ import {
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGE_FOUNDER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE, POWER_SOURCE_BONUS_LEVEL} from "../../../constants.sol";
+import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGE_FOUNDER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE, ZONE_WINDY_PEAKS, POWER_SOURCE_BONUS_LEVEL} from "../../../constants.sol";
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {Balances as ERC721Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -234,9 +234,10 @@ contract LevelSystem is System {
      * @param newLevel The level just attained
      */
     function _checkZoneCompletion(bytes32 characterId, uint256 newLevel) internal {
-        // Check each configured zone (currently just Dark Cave)
-        uint256[] memory zoneIds = new uint256[](1);
+        // Check each configured zone
+        uint256[] memory zoneIds = new uint256[](2);
         zoneIds[0] = ZONE_DARK_CAVE;
+        zoneIds[1] = ZONE_WINDY_PEAKS;
 
         for (uint256 i = 0; i < zoneIds.length; i++) {
             uint256 zoneId = zoneIds[i];
