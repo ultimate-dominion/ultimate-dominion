@@ -19,6 +19,8 @@ import { usePrivy, useWallets, useLoginWithOAuth, useCreateWallet } from '@privy
 
 import { clearCachedDelegator } from '../lib/delegatorCache';
 import { base } from '../lib/mud/supportedChains';
+import { setErrorReporterWallet } from '../utils/errorReporter';
+import { setMetricsReporterWallet } from '../utils/metricsReporter';
 
 /**
  * Determines the wallet initialization action when no privy wallet is in the
@@ -214,18 +216,18 @@ export const AuthProvider = ({
           import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL as string | undefined,
         ].filter(Boolean) as string[];
 
-        // Methods that must go through the game RPC for accurate results.
-        // eth_sendTransaction stays on Privy (MPC signing happens there).
-        const GAME_RPC_METHODS = new Set([
-          'eth_estimateGas',
-          'eth_call',
-          'eth_getBalance',
-          'eth_getTransactionCount',
-          'eth_blockNumber',
-          'eth_getBlockByNumber',
-          'eth_gasPrice',
-          'eth_maxPriorityFeePerGas',
-          'eth_feeHistory',
+        // Only signing must stay on Privy (MPC key lives there).
+        // Everything else goes through game RPCs to avoid Privy's proxy
+        // adding latency and mangling reverts.
+        const PRIVY_ONLY_METHODS = new Set([
+          'eth_sendTransaction',
+          'personal_sign',
+          'eth_signTypedData_v4',
+          'eth_sign',
+          'eth_accounts',
+          'eth_requestAccounts',
+          'wallet_switchEthereumChain',
+          'wallet_addEthereumChain',
         ]);
 
         let rpcId = 0;
@@ -280,9 +282,10 @@ export const AuthProvider = ({
               txQueue = queued.catch(() => {}); // don't let failures block the queue
               return queued;
             }
-            // Route gas estimation and reads through game RPC to avoid Privy
-            // proxy mangling reverts into "insufficient funds" errors.
-            if (gameRpcUrls.length > 0 && GAME_RPC_METHODS.has(args.method)) {
+            // Route everything through game RPCs except signing/wallet methods.
+            // Privy's proxy (base-mainnet.rpc.privy.systems) adds latency and
+            // mangles reverts — only use it for MPC signing.
+            if (gameRpcUrls.length > 0 && !PRIVY_ONLY_METHODS.has(args.method)) {
               return gameRpcRequest(args);
             }
             return provider.request(args);
@@ -297,6 +300,10 @@ export const AuthProvider = ({
 
         setEmbeddedWalletClient(walletClient);
         setEmbeddedAddress(privyWallet.address as Address);
+
+        // Tag telemetry with this player's wallet for per-user debugging
+        setErrorReporterWallet(privyWallet.address);
+        setMetricsReporterWallet(privyWallet.address);
 
         // Track first-time sign-ups (wallet just created = new user)
         if (isConfirmedNewUser) {
@@ -453,6 +460,14 @@ export const AuthProvider = ({
       body: JSON.stringify({ wallet: embeddedAddress.toLowerCase(), email: signedInEmail }),
     }).catch(() => {});
   }, [signedInEmail, embeddedAddress]);
+
+  // Tag telemetry for external wallet users too
+  useEffect(() => {
+    if (wagmiConnected && wagmiAddress) {
+      setErrorReporterWallet(wagmiAddress);
+      setMetricsReporterWallet(wagmiAddress);
+    }
+  }, [wagmiConnected, wagmiAddress]);
 
   const value = useMemo((): AuthContextType => {
     // Embedded wallet takes priority if connected

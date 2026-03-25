@@ -25,6 +25,12 @@ const ENDPOINT = import.meta.env.VITE_TELEMETRY_URL
 
 let buffer: ErrorEntry[] = [];
 let flushTimer: ReturnType<typeof setInterval> | null = null;
+let playerWallet: string | null = null;
+
+/** Set the connected wallet address. Called once from AuthContext. */
+export function setErrorReporterWallet(wallet: string) {
+  playerWallet = wallet.toLowerCase();
+}
 
 function makeEntry(
   partial: Partial<ErrorEntry> & Pick<ErrorEntry, 'message' | 'type'>,
@@ -34,6 +40,7 @@ function makeEntry(
     url: window.location.href,
     userAgent: navigator.userAgent,
     ...partial,
+    meta: { ...partial.meta, ...(playerWallet ? { wallet: playerWallet } : {}) },
   };
 }
 
