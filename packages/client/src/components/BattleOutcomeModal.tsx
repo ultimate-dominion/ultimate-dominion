@@ -42,6 +42,7 @@ import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage
 import { ItemCard } from './ItemCard';
 import { getItemImage } from '../utils/itemImages';
 import { getMonsterImage } from '../utils/monsterImages';
+import { LootReveal } from './LootReveal';
 import { ShareButton } from './ShareButton';
 import { ItemEquipModal } from './ItemEquipModal';
 import { LevelUpBanner } from './LevelUpBanner';
@@ -383,34 +384,26 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                   <Spinner />
                 ) : (
                   <>
-                    {sortedLoot.length > 0 && winner === character.id && (
-                      <Text fontWeight="bold">Looted Items:</Text>
+                    {winner === character.id && sortedLoot.length > 0 && (
+                      <LootReveal
+                        items={sortedLoot}
+                        onItemClick={(item) => {
+                          const isEquipped = [
+                            ...equippedArmor,
+                            ...equippedConsumables,
+                            ...equippedSpells,
+                            ...equippedWeapons,
+                          ].some(
+                            equippedItem =>
+                              equippedItem.tokenId === item.tokenId,
+                          );
+                          if (!isEquipped) {
+                            setSelectedItem(item);
+                            onOpenItemModal();
+                          }
+                        }}
+                      />
                     )}
-                    {winner === character.id &&
-                      sortedLoot.map(item => (
-                        <Box key={`loot-${item.tokenId}`}>
-                          <ItemCard
-                            key={item.tokenId}
-                            onClick={
-                              [
-                                ...equippedArmor,
-                                ...equippedConsumables,
-                                ...equippedSpells,
-                                ...equippedWeapons,
-                              ].some(
-                                equippedItem =>
-                                  equippedItem.tokenId === item.tokenId,
-                              )
-                                ? undefined
-                                : () => {
-                                    setSelectedItem(item);
-                                    onOpenItemModal();
-                                  }
-                            }
-                            {...item}
-                          />
-                        </Box>
-                      ))}
                     {winner === character.id && sortedLoot.length > 0 && (sortedLoot[0].rarity ?? 0) >= Rarity.Uncommon && (
                       <ShareButton
                         text={`Found ${sortedLoot[0].rarity !== undefined ? `a ${RARITY_NAMES[sortedLoot[0].rarity]} ` : ''}${sortedLoot[0].name} in Ultimate Dominion. Every item is permanent, on-chain, and mine.`}
