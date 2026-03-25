@@ -42,6 +42,21 @@ import {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// ============ Zone ID + Coordinate Offsets ============
+
+/** Zone name → on-chain zone ID. Must match constants.sol */
+const ZONE_IDS: Record<string, number> = {
+  dark_cave: 1,
+  windy_peaks: 2,
+};
+
+/** Y-origin offset per zone. Must match ZONE_ORIGIN_SPACING in constants.sol */
+const ZONE_ORIGIN_SPACING = 100;
+
+function getZoneOriginY(zoneId: number): number {
+  return (zoneId - 1) * ZONE_ORIGIN_SPACING;
+}
+
 // ============ Types ============
 
 interface ZoneManifest {
@@ -192,6 +207,7 @@ const worldAbi = parseAbi([
   'function UD__setStarterItemPool(uint256 itemId, bool isStarter)',
   'function UD__setStarterConsumables(uint256[] itemIds, uint256[] amounts)',
   'function UD__adminSetWeaponScaling(uint256 itemId, bool usesAgi)',
+  'function UD__registerMobInZone(uint256 zoneId, uint256 level, uint256 mobId)',
 ]);
 
 // ============ ABI Encoding Helpers ============
@@ -703,6 +719,9 @@ Available zones:
   }
 
   // Load monsters
+  const zoneId = ZONE_IDS[zoneName] ?? 0;
+  const createdMobIds: { mobId: bigint; level: number }[] = [];
+
   if (manifest.load.monsters) {
     const monstersPath = path.join(zonePath, 'monsters.json');
     if (fs.existsSync(monstersPath)) {
@@ -736,6 +755,35 @@ Available zones:
             functionName: 'UD__createMob',
             args: [MobType.Monster, stats, monster.metadataUri],
           });
+
+          // Track mob ID for zone registration (createMob returns mobId but we read counter)
+          // MobsByLevel is populated by createMob automatically.
+          // Also register in zone-scoped MobsByZoneLevel for zone-aware spawning.
+          if (zoneId > 0) {
+            // Read mob counter to get the just-created mobId
+            // The counter increments in createMob, so current value = latest mobId
+            const mobCounterAbi = parseAbi(['function UD__getCurrentMobCounter() view returns (uint256)']);
+            let mobId: bigint;
+            try {
+              mobId = await publicClient.readContract({
+                address: worldAddress,
+                abi: mobCounterAbi,
+                functionName: 'UD__getCurrentMobCounter',
+              });
+            } catch {
+              // Fallback: count mobs created so far (1-indexed)
+              mobId = BigInt(createdMobIds.length + 1);
+            }
+            createdMobIds.push({ mobId, level: monster.stats.level });
+
+            await sendTx({
+              address: worldAddress,
+              abi: worldAbi,
+              functionName: 'UD__registerMobInZone',
+              args: [BigInt(zoneId), BigInt(monster.stats.level), mobId],
+            });
+            console.log(`    -> Registered in MobsByZoneLevel(zone=${zoneId}, level=${monster.stats.level}, mobId=${mobId})`);
+          }
         }
       }
     }
@@ -748,8 +796,13 @@ Available zones:
       const shopsData: ShopsJson = JSON.parse(fs.readFileSync(shopsPath, 'utf-8'));
       console.log('\n>>> Loading Shops <<<');
 
+      // Apply zone coordinate offset to shop locations
+      const zoneOriginY = zoneId > 0 ? getZoneOriginY(zoneId) : 0;
+
       for (const shop of shopsData.shops) {
-        console.log(`  Shop: ${shop.name} at (${shop.location[0]}, ${shop.location[1]})`);
+        const spawnX = shop.location[0];
+        const spawnY = shop.location[1] + zoneOriginY;
+        console.log(`  Shop: ${shop.name} at (${spawnX}, ${spawnY})${zoneOriginY > 0 ? ` [offset from (${shop.location[0]}, ${shop.location[1]})]` : ''}`);
 
         // Resolve item names to IDs
         const buyableItems: bigint[] = [];
@@ -836,9 +889,9 @@ Available zones:
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__spawnMob',
-            args: [mobId, shop.location[0], shop.location[1]],
+            args: [mobId, spawnX, spawnY],
           });
-          console.log(`    -> Spawned at (${shop.location[0]}, ${shop.location[1]}) with mobId ${mobId}`);
+          console.log(`    -> Spawned at (${spawnX}, ${spawnY}) with mobId ${mobId}`);
         }
       }
     }
