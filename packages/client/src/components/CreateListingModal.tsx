@@ -67,7 +67,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   } = useCharacter();
 
   const [itemListingFilter, setItemListingFilter] =
-    useState<ItemListingFilterOptions>(ItemListingFilterOptions.AllItems);
+    useState<ItemListingFilterOptions>(ItemListingFilterOptions.Inventory);
   const [itemTypeFilter, setItemTypeFilter] = useState<ItemFilterOptions>(
     ItemFilterOptions.All,
   );
@@ -129,7 +129,9 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       ...inventorySpells,
       ...inventoryWeapons,
     ];
-    return filterAndSearchItems(unfilteredInventory);
+    const filtered = filterAndSearchItems(unfilteredInventory);
+    // Sort by rarity (highest first) so best items are prominent
+    return filtered.sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
   }, [
     inventoryArmor,
     inventoryConsumables,

@@ -6,29 +6,41 @@ import {
   HStack,
   Image,
   Text,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useAllowance } from '../contexts/AllowanceContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useCharacter } from '../contexts/CharacterContext';
+import { useMUD } from '../contexts/MUDContext';
+import { useTransaction } from '../hooks/useTransaction';
+import { useOrders } from '../contexts/OrdersContext';
 import { ITEM_PATH } from '../Routes';
-import { getEmoji, removeEmoji } from '../utils/helpers';
+import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getItemImage } from '../utils/itemImages';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
   ItemType,
+  type Order,
   OrderType,
   Rarity,
   RARITY_COLORS,
   type SpellTemplate,
+  SystemToAllow,
+  TokenType,
   type WeaponTemplate,
 } from '../utils/types';
 
 import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const MarketplaceRow = ({
+  cheapestOrder,
   highestOffer,
+  highestOfferOrder,
   itemType,
   lowestPrice,
   minLevel,
@@ -37,11 +49,32 @@ export const MarketplaceRow = ({
   tokenId,
   ...item
 }: (ArmorTemplate | ConsumableTemplate | SpellTemplate | WeaponTemplate) & {
+  cheapestOrder?: Order;
   highestOffer: string;
+  highestOfferOrder?: Order;
   lowestPrice: string;
   orderType: OrderType;
 }): JSX.Element => {
   const navigate = useNavigate();
+  const { authMethod } = useAuth();
+  const { character, refreshCharacter } = useCharacter();
+  const {
+    systemCalls: { fulfillOrder },
+  } = useMUD();
+  const { ensureGoldAllowance, goldMarketplaceAllowance } = useAllowance();
+  const { refreshOrders } = useOrders();
+
+  const buyTx = useTransaction({
+    actionName: 'buy item',
+    showSuccessToast: true,
+    successMessage: `Bought ${removeEmoji(name)}!`,
+  });
+
+  const acceptTx = useTransaction({
+    actionName: 'accept offer',
+    showSuccessToast: true,
+    successMessage: `Sold ${removeEmoji(name)}!`,
+  });
 
   const rarityColor = item.rarity !== undefined ? RARITY_COLORS[item.rarity] : undefined;
   const hasRarityAccent = item.rarity !== undefined && item.rarity >= Rarity.Rare;
@@ -52,46 +85,113 @@ export const MarketplaceRow = ({
     return searchParams;
   }, [orderType]);
 
+  const insufficientGold = useMemo(() => {
+    if (!character || !cheapestOrder) return false;
+    return cheapestOrder.consideration.amount > character.externalGoldBalance;
+  }, [character, cheapestOrder]);
+
+  const onBuyNow = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!cheapestOrder || !character) return;
+
+    // Check allowance for embedded wallets
+    if (authMethod === 'embedded' && goldMarketplaceAllowance < cheapestOrder.consideration.amount) {
+      const ok = await ensureGoldAllowance(SystemToAllow.Marketplace, cheapestOrder.consideration.amount);
+      if (!ok) return;
+    } else if (authMethod !== 'embedded' && goldMarketplaceAllowance < cheapestOrder.consideration.amount) {
+      // External wallet needs allowance — send to detail page
+      navigate(`${ITEM_PATH}/${tokenId}?orderType=${OrderType.Buying}`);
+      return;
+    }
+
+    const result = await buyTx.execute(async () => {
+      const { error, success } = await fulfillOrder(cheapestOrder.orderHash);
+      if (error && !success) throw new Error(error);
+      return true;
+    });
+
+    if (result !== undefined) {
+      refreshCharacter();
+      refreshOrders();
+    }
+  }, [
+    authMethod,
+    buyTx,
+    character,
+    cheapestOrder,
+    ensureGoldAllowance,
+    fulfillOrder,
+    goldMarketplaceAllowance,
+    name,
+    navigate,
+    refreshCharacter,
+    refreshOrders,
+    tokenId,
+  ]);
+
+  const onAcceptOffer = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!highestOfferOrder || !character) return;
+
+    const result = await acceptTx.execute(async () => {
+      const { error, success } = await fulfillOrder(highestOfferOrder.orderHash);
+      if (error && !success) throw new Error(error);
+      return true;
+    });
+
+    if (result !== undefined) {
+      refreshCharacter();
+      refreshOrders();
+    }
+  }, [acceptTx, character, fulfillOrder, highestOfferOrder, refreshCharacter, refreshOrders]);
+
+  const goToDetail = useCallback(() => {
+    navigate(`${ITEM_PATH}/${tokenId}?${newSearchParams}`);
+  }, [navigate, newSearchParams, tokenId]);
+
+  // Determine which inline action to show
+  const showBuyButton = orderType === OrderType.Buying && cheapestOrder && Number(lowestPrice) > 0;
+  const showAcceptButton = orderType === OrderType.Selling && highestOfferOrder && Number(highestOffer) > 0;
+  const isOwnListing = cheapestOrder?.offerer === character?.owner;
+  const isOwnOffer = highestOfferOrder?.offerer === character?.owner;
+
   return (
     <Flex
       bgColor="#1C1814"
       borderLeft={hasRarityAccent ? `3px solid ${rarityColor}` : undefined}
       justify="space-between"
-      onClick={() => navigate(`${ITEM_PATH}/${tokenId}?${newSearchParams}`)}
-      px={{ base: 1, sm: 2, md: 4 }}
-      py={2}
+      onClick={goToDetail}
+      px={{ base: 2, sm: 3, md: 4 }}
+      py={{ base: 2, md: 3 }}
       w="100%"
+      cursor="pointer"
       _hover={{
-        cursor: 'pointer',
-        button: {
-          bgColor: 'grey100',
-        },
+        bg: '#221E18',
       }}
-      _active={{
-        button: {
-          bgColor: 'grey400',
-        },
-      }}
+      transition="background 0.15s"
     >
-      <Flex>
+      {/* Left: Item info */}
+      <Flex flex={1} minW={0}>
         {getItemImage(removeEmoji(name)) ? (
           <Image
             src={getItemImage(removeEmoji(name))}
             alt={removeEmoji(name)}
-            boxSize="64px"
+            boxSize={{ base: '48px', md: '64px' }}
             objectFit="contain"
             mr={2}
+            flexShrink={0}
           />
         ) : (
-          <Avatar bgColor="#1C1814" borderRadius={0} size="lg" name={' '}>
+          <Avatar bgColor="#1C1814" borderRadius={0} size={{ base: 'md', md: 'lg' }} name={' '}>
             {getEmoji(name)}
           </Avatar>
         )}
-        <VStack align="start" justify="center" ml={4}>
+        <VStack align="start" justify="center" ml={{ base: 2, md: 4 }} spacing={0} minW={0}>
           <Text
             color={rarityColor}
             fontWeight={700}
-            size={{ base: 'sm', lg: 'lg' }}
+            size={{ base: 'sm', lg: 'md' }}
+            noOfLines={1}
           >
             {removeEmoji(name)}
           </Text>
@@ -99,7 +199,8 @@ export const MarketplaceRow = ({
             <Text
               color="#8A7E6A"
               fontWeight={500}
-              size={{ base: '2xs', lg: 'md' }}
+              size={{ base: '3xs', sm: '2xs', lg: 'xs' }}
+              noOfLines={1}
             >
               HP{' '}
               {(item as ArmorTemplate | WeaponTemplate).hpModifier.toString()} •
@@ -111,46 +212,115 @@ export const MarketplaceRow = ({
               {(item as ArmorTemplate | WeaponTemplate).intModifier.toString()}
             </Text>
           )}
+          {/* Mobile price — shown below stats */}
+          <Text
+            color={Number(lowestPrice) > 0 ? '#D4A54A' : '#5A5040'}
+            display={{ base: 'block', md: 'none' }}
+            fontFamily="'Fira Code', monospace"
+            fontSize="xs"
+            fontWeight={600}
+            mt={0.5}
+          >
+            {Number(lowestPrice) > 0
+              ? `${Number(lowestPrice).toLocaleString()} $GOLD`
+              : 'No listings'}
+          </Text>
         </VStack>
       </Flex>
-      <HStack>
-        <HStack w={{ base: '0px', md: '350px', lg: '500px' }}>
+
+      {/* Right: Price columns (desktop) + Action */}
+      <HStack spacing={0} flexShrink={0}>
+        {/* Desktop columns */}
+        <HStack w={{ base: '0px', md: '250px', lg: '350px' }} display={{ base: 'none', md: 'flex' }}>
           <Text
-            display={{ base: 'none', md: 'block' }}
             fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
+            size={{ base: 'xs', lg: 'sm' }}
             textAlign="center"
             w="100%"
           >
             {Number(minLevel).toLocaleString()}
           </Text>
           <Text
-            display={{ base: 'none', md: 'block' }}
-            fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
+            color={Number(lowestPrice) > 0 ? '#D4A54A' : '#8A7E6A'}
+            fontFamily="'Fira Code', monospace"
+            fontWeight={600}
+            size={{ base: 'xs', lg: 'sm' }}
             textAlign="center"
             w="100%"
           >
             {Number(lowestPrice) == 0
               ? 'N/A'
-              : `${Number(lowestPrice).toLocaleString()} $GOLD`}
+              : `${Number(lowestPrice).toLocaleString()}`}
           </Text>
           <Text
-            display={{ base: 'none', md: 'block' }}
+            color={Number(highestOffer) > 0 ? '#A8DEFF' : '#8A7E6A'}
+            fontFamily="'Fira Code', monospace"
             fontWeight={500}
-            size={{ base: 'xs', lg: 'md' }}
+            size={{ base: 'xs', lg: 'sm' }}
             textAlign="center"
             w="100%"
           >
             {Number(highestOffer) == 0
               ? 'N/A'
-              : `${Number(highestOffer).toLocaleString()} $GOLD`}
+              : `${Number(highestOffer).toLocaleString()}`}
           </Text>
         </HStack>
-        <Box display={{ base: 'none', md: 'block' }} mr={2} w="50px">
-          <Button size="sm" variant="ghost">
-            <ForwardCaretSvg />
-          </Button>
+
+        {/* Action button */}
+        <Box w={{ base: 'auto', md: '100px' }} ml={{ base: 2, md: 3 }} display="flex" justifyContent="center">
+          {showBuyButton && !isOwnListing ? (
+            <Tooltip
+              hasArrow
+              isDisabled={!insufficientGold}
+              label="Not enough $GOLD"
+              placement="top"
+            >
+              <Button
+                bg="#C87A2A"
+                color="#E8DCC8"
+                fontSize={{ base: '2xs', sm: 'xs' }}
+                h={{ base: '32px', md: '34px' }}
+                isDisabled={insufficientGold}
+                isLoading={buyTx.isLoading}
+                loadingText="..."
+                minW={{ base: '60px', md: '80px' }}
+                onClick={onBuyNow}
+                px={{ base: 2, md: 3 }}
+                size="sm"
+                _hover={{ bg: '#E8A840' }}
+                _active={{ bg: '#A86820' }}
+              >
+                Buy
+              </Button>
+            </Tooltip>
+          ) : showAcceptButton && !isOwnOffer ? (
+            <Button
+              bg="transparent"
+              border="1px solid #C87A2A"
+              color="#C87A2A"
+              fontSize={{ base: '2xs', sm: 'xs' }}
+              h={{ base: '32px', md: '34px' }}
+              isLoading={acceptTx.isLoading}
+              loadingText="..."
+              minW={{ base: '60px', md: '80px' }}
+              onClick={onAcceptOffer}
+              px={{ base: 2, md: 3 }}
+              size="sm"
+              _hover={{ bg: 'rgba(200,122,42,0.15)', borderColor: '#E8A840' }}
+              _active={{ bg: 'rgba(200,122,42,0.25)' }}
+            >
+              Accept
+            </Button>
+          ) : (
+            <Button
+              display={{ base: 'none', md: 'flex' }}
+              size="sm"
+              variant="ghost"
+              onClick={goToDetail}
+            >
+              <ForwardCaretSvg />
+            </Button>
+          )}
         </Box>
       </HStack>
     </Flex>
