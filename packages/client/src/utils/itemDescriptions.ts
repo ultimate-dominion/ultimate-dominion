@@ -119,4 +119,72 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "weapon:webspinner_bow": "Strung with spider silk. The arrows fly silent.",
   "weapon:worn_shortbow": "The string frays at both ends. Every shot might be the last.",
   "weapon:zero_day_exploit": "Nobody saw it coming. Nobody can patch it in time.",
+
+  // ==================== Zone 2: Windy Peaks ====================
+
+  // --- Monsters ---
+  "monster:ridge_stalker": "Lean and low to the ground. It watches from the ridgelines, patient as stone, until it isn't.",
+  "monster:frost_wraith": "The cold didn't kill it. The cold is what it became.",
+  "monster:granite_sentinel": "Carved by hands or grown by the mountain \u2014 no one's sure. It guards the path and doesn't negotiate.",
+  "monster:gale_phantom": "More wind than creature. You hear it before you see it, and by then it's behind you.",
+  "monster:blighthorn": "Where it grazes, nothing grows. The decay rides in its breath.",
+  "monster:storm_shrike": "Lightning dances between its feathers. It screams and the thunder answers.",
+  "monster:hollow_scout": "Wears the remnants of a faction uniform. Doesn't serve either side anymore.",
+  "monster:ironpeak_charger": "Built like the mountain itself. When it charges, the ground remembers.",
+  "monster:peakfire_wraith": "Born where the stone still holds Korrath's heat. It burns cold.",
+  "monster:korraths_warden": "A soldier who climbed the peak and found something that wouldn't let go. The armor isn't his. He doesn't care.",
+
+  // --- STR Weapons ---
+  "weapon:ridgestone_hammer": "Chipped from the mountain's own rock. Every swing carries the weight of the peak.",
+  "weapon:peak_cleaver": "Forged at a mountain camp. The edge holds despite the wind.",
+  "weapon:windforged_axe": "The blade hums in strong wind. Whoever made it understood the peaks.",
+  "weapon:wardens_maul": "Pulled from a dead man's hands at the summit. The grip is still warm.",
+
+  // --- AGI Weapons ---
+  "weapon:scrub_bow": "Bent from scrub wood that grows sideways in the wind. Shoots true enough.",
+  "weapon:gale_bow": "The draw is light. Arrows fly like the wind itself carried them.",
+  "weapon:stormfeather_bow": "Fletched with feathers from something that flew through storms. Doesn't miss in wind.",
+  "weapon:peakwind_longbow": "The string sings a note you can feel in your chest. Range that makes the peaks feel small.",
+
+  // --- INT Weapons ---
+  "weapon:frozen_shard": "A splinter of ice that won't melt. It cuts the air when you point it.",
+  "weapon:rime_staff": "White wood crusted with permanent frost. The cold comes from inside it.",
+  "weapon:stormglass_rod": "Glass that survived a lightning strike. The crack inside pulses.",
+  "weapon:wraith_beacon": "It doesn't cast light. It casts attention. Things come when you raise it.",
+
+  // --- Hybrid Weapons ---
+  "weapon:wardens_ember": "A blade that glows like a coal. The Warden's heat lingers in the steel.",
+  "weapon:windweaver": "Light as air, sharp as spite. The magic and the edge are the same thing.",
+  "weapon:ridgefang": "Tooth of something that lived inside the mountain. Cuts and keeps cutting.",
+  "weapon:viperstrike": "Fast and venomous. Named by someone who didn't survive to rename it.",
+  "weapon:ashveil_staff": "Charred wood from a lightning-struck tree. The magic tastes like smoke.",
+
+  // --- Plate Armor ---
+  "armor:peakstone_mail": "Mountain stone links threaded with iron. Heavy and honest.",
+  "armor:ridgeforged_plate": "Hammered at a ridge forge by someone who stayed too long. Good work.",
+  "armor:windsworn_plate": "Scored by decades of mountain wind. The dents are a map of storms survived.",
+  "armor:wardens_bulwark": "Taken from the summit. The metal is warm and hums when storms approach.",
+
+  // --- Leather Armor ---
+  "armor:mountain_hide": "Thick-skinned beast leather, poorly cured. Smells like altitude.",
+  "armor:galebound_leather": "Supple and windproof. Made by someone who knew the peaks.",
+  "armor:stormhide_vest": "The hide crackles with static. Whatever wore this skin lived in the storms.",
+  "armor:phantom_shroud": "You can see through it in certain light. Or maybe you can't see what's behind it.",
+
+  // --- Cloth Armor ---
+  "armor:frostweave_robe": "Woven from threads that hold the cold. You feel sharper wearing it.",
+  "armor:mistcloak": "Grey as the mountain mist. Hard to see. Hard to hit.",
+  "armor:wraith_vestments": "The fabric moves when the air doesn't. Something in the weave still remembers.",
+  "armor:ember_mantle": "Warm without fire. The lining glows faintly where Korrath's heat seeped into the thread.",
+
+  // --- Spells (L15) ---
+  "spell:warcry": "A battle roar that sharpens steel and hardens resolve. One cry to turn the tide.",
+  "spell:judgment": "Holy wrath made manifest. The guilty find their strength failing.",
+  "spell:volley": "A rain of arrows. No single shot — a storm.",
+  "spell:backstab": "One strike, placed perfectly. The target never sees it coming.",
+  "spell:regrowth": "The forest mends what battle breaks. Roots knit bone, bark seals wounds.",
+  "spell:blight": "Everything rots. Strength, speed, wit — all of it fades under the curse.",
+  "spell:meteor": "A shard of raw arcane force, called from above. Nothing subtle about it.",
+  "spell:mana_burn": "Drains the weave from your enemy. Their magic gutters like a candle in wind.",
+  "spell:smite": "Holy fire that heals the righteous and scorches the wicked. Both at once.",
 };

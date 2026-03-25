@@ -28,6 +28,12 @@ const ENDPOINT = import.meta.env.VITE_TELEMETRY_URL
 let buffer: MetricEntry[] = [];
 let flushTimer: ReturnType<typeof setInterval> | null = null;
 let memoryTimer: ReturnType<typeof setInterval> | null = null;
+let playerWallet: string | null = null;
+
+/** Set the connected wallet address. Called once from AuthContext. */
+export function setMetricsReporterWallet(wallet: string) {
+  playerWallet = wallet.toLowerCase();
+}
 
 function flush() {
   if (buffer.length === 0) return;
@@ -47,6 +53,9 @@ function flush() {
 }
 
 function push(entry: MetricEntry) {
+  if (playerWallet) {
+    entry.meta = { ...entry.meta, wallet: playerWallet };
+  }
   buffer.push(entry);
   if (buffer.length >= MAX_BATCH) flush();
 }

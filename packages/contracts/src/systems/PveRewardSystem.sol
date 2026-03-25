@@ -21,7 +21,7 @@ import {MonsterStats, RewardDistributionTemps} from "@interfaces/Structs.sol";
 import {InvalidRewardState} from "../Errors.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
 import {GoldLib} from "../libraries/GoldLib.sol";
-import {BASE_GOLD_DROP, MAX_LEVEL, ELITE_REWARD_MULTIPLIER, ELITE_DROP_MULTIPLIER} from "../../constants.sol";
+import {BASE_GOLD_DROP, MAX_LEVEL, ELITE_REWARD_MULTIPLIER, ELITE_DROP_MULTIPLIER, GUILD_BONUS_BPS} from "../../constants.sol";
 
 contract PveRewardSystem is System {
     function distributePveRewards(bytes32 encounterId, uint256 randomNumber)
@@ -79,16 +79,33 @@ contract PveRewardSystem is System {
                 if (statsTemp.currentHp > int256(0)) {
                     if (_goldAmount > uint256(0)) {
                         uint256 goldPerPlayer = _goldAmount / distTemps.livingPlayers;
+
+                        // Guild bonus: +5% gold
+                        if (IWorld(_world()).UD__isGuildMember(distTemps.entityIdTemp)) {
+                            goldPerPlayer = goldPerPlayer * (10000 + GUILD_BONUS_BPS) / 10000;
+                        }
+
                         uint256 reserveSplit = goldPerPlayer / 20; // 5%
                         uint256 playerSplit = goldPerPlayer - reserveSplit; // 95%
 
+                        // Guild tax: deduct from player's share, add to guild treasury
+                        uint256 taxAmount = IWorld(_world()).UD__taxGold(distTemps.entityIdTemp, playerSplit);
+                        playerSplit -= taxAmount;
+
                         address playerAddress = IWorld(_world()).UD__getOwnerAddress(distTemps.entityIdTemp);
                         GoldLib.goldMint(_world(), playerAddress, playerSplit);
+                        // taxAmount is virtual — tracked in Guild.treasury, backed by reduced player mint.
+                        // No token mint needed; withdrawTreasury mints on withdrawal.
                         GoldLib.goldMint(_world(), _world(), reserveSplit);
                         GasReserve.setBalance(distTemps.entityIdTemp, GasReserve.getBalance(distTemps.entityIdTemp) + reserveSplit);
                     }
                     uint256 currentExp = statsTemp.experience;
                     uint256 _calculatedExp = _baseExp / distTemps.livingPlayers;
+
+                    // Guild bonus: +5% XP
+                    if (IWorld(_world()).UD__isGuildMember(distTemps.entityIdTemp)) {
+                        _calculatedExp = _calculatedExp * (10000 + GUILD_BONUS_BPS) / 10000;
+                    }
                     if (
                         statsTemp.level >= MAX_LEVEL || currentExp >= maxLevelExp
                             || _baseExp == uint256(0) || distTemps.livingPlayers == uint256(0)

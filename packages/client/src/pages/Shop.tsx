@@ -15,6 +15,7 @@ import { GiTwoCoins } from 'react-icons/gi';
 import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PolygonalCard } from '../components/PolygonalCard';
+import { RepairShopPanel } from '../components/RepairShopPanel';
 import { ShopHalf } from '../components/ShopHalf';
 import { ShopSvg } from '../components/SVGs/ShopSvg';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -441,6 +442,8 @@ export const Shop = (): JSX.Element => {
           </PolygonalCard>
         </GridItem>
       </Grid>
+
+      <RepairShopPanel />
     </Box>
   );
 };

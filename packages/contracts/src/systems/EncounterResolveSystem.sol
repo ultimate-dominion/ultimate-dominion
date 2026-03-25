@@ -71,7 +71,13 @@ contract EncounterResolveSystem is System {
 
         CombatOutcome.set(encounterId, combatOutcome);
 
+        // Degrade equipped items for player characters (gas-guarded)
         bool isPvE = encounterData.encounterType == EncounterType.PvE;
+        if (gasleft() > 100_000) {
+            _degradePlayerItems(encounterData.attackers, !isPvE || !encounterData.attackersAreMobs);
+            _degradePlayerItems(encounterData.defenders, !isPvE || encounterData.attackersAreMobs);
+        }
+
         _cleanupEntities(encounterData.attackers, !isPvE || !encounterData.attackersAreMobs);
         _cleanupEntities(encounterData.defenders, !isPvE || encounterData.attackersAreMobs);
     }
@@ -83,6 +89,13 @@ contract EncounterResolveSystem is System {
         encounterData.end = block.timestamp;
         EncounterEntity.setEncounterId(encounterData.character, bytes32(0));
         WorldEncounter.set(encounterId, encounterData);
+    }
+
+    function _degradePlayerItems(bytes32[] memory entities, bool areCharacters) internal {
+        if (!areCharacters) return;
+        for (uint256 i; i < entities.length; i++) {
+            try IWorld(_world()).UD__degradeEquippedItems(entities[i]) {} catch {}
+        }
     }
 
     function _cleanupEntities(bytes32[] memory entities, bool areCharacters) internal {

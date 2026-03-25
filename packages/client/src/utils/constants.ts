@@ -1,8 +1,9 @@
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 export const MAX_EQUIPPED_ARMOR = 1;
-export const MAX_EQUIPPED_WEAPONS = 4;
-export const MAX_LEVEL = 10;
+export const MAX_EQUIPPED_WEAPONS = 4; // shared across weapons + consumables + spells
+export const MAX_ACTION_SLOTS = 4; // alias for clarity
+export const MAX_LEVEL = 20;
 
 export const SLOT_ORDER_KEY_PREFIX = 'ud_action_order_';
 

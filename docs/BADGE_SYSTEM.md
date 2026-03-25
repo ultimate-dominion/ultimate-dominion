@@ -10,8 +10,18 @@ Soulbound (non-transferable) ERC1155 badges that recognize player achievements a
 |----------|-------|-------------|---------|
 | 1 | Adventurer | Reach Level 3 | Chat access |
 | 50 | Founder | Play during launch window (configurable) | Cosmetic recognition |
+| 100 | Zone Conqueror (DC) | Top 10 to reach max level in Dark Cave | Cosmetic recognition |
+| 101 | Peaks Conqueror (WP) | Top 10 to reach max level in Windy Peaks | Cosmetic recognition |
+| 152 | Peaks Pioneer | Enter the Windy Peaks zone | Cosmetic recognition |
+| 201 | Lore Keeper (DC) | Collect all 8 Dark Cave fragments | Cosmetic recognition |
+| 202 | Peaks Lore Keeper (WP) | Collect all Windy Peaks fragments | Cosmetic recognition |
 
 Unique token ID per character: `(BADGE_ID × 1,000,000) + characterTokenId`
+
+### Zone Badge Ranges
+- **100 + zoneId**: Zone Conqueror (top 10 to max level per zone, via `ZoneConfig.badgeBase`)
+- **150 + zoneId**: Zone Pioneer (first entry into a zone, minted by `ZoneTransitionSystem`)
+- **200 + zoneId**: Lore Keeper (all zone fragments, minted by `FragmentSystem`)
 
 ## Future Badges `[PLANNED]`
 

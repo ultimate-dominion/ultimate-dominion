@@ -34,7 +34,9 @@ import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { BadgeIcons, BadgeShowcase } from '../components/BadgeDisplay';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
+import { FragmentChainProgress } from '../components/FragmentChainProgress';
 import { FragmentCollection } from '../components/FragmentCollection';
+import { RespecPanel } from '../components/RespecPanel';
 import { ItemCard } from '../components/ItemCard';
 import { ItemConsumeModal } from '../components/ItemConsumeModal';
 import { ItemEquipModal } from '../components/ItemEquipModal';
@@ -332,10 +334,30 @@ export const CharacterPage = (): JSX.Element => {
           >
             <ItemsPanel character={character} />
           </GridItem>
+          {isOwner && (
+            <GridItem
+              colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+              colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+              order={{ base: 5, lg: 5 }}
+            >
+              <PolygonalCard clipPath="none" p={6}>
+                <RespecPanel />
+              </PolygonalCard>
+            </GridItem>
+          )}
           <GridItem
             colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
             colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            order={{ base: 5, lg: 5 }}
+            order={{ base: 6, lg: 6 }}
+          >
+            <PolygonalCard clipPath="none" p={6}>
+              <FragmentChainProgress />
+            </PolygonalCard>
+          </GridItem>
+          <GridItem
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            order={{ base: 7, lg: 7 }}
           >
             <FragmentCollection />
           </GridItem>
@@ -629,7 +651,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
           Weapons ({weaponsInInventory})
           <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
-            {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} slots used
+            {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} action slots used
           </Text>
         </Text>
         {maxWeaponsEquipped && (
@@ -701,7 +723,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
           Consumables ({consumablesInInventory})
           <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
-            {equippedConsumableIds.length} equipped
+            {equippedConsumableIds.length} equipped — {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} action slots used
           </Text>
         </Text>
         <Grid

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ultimate Dominion — Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #12100E;
+      --bg-card: #1A1714;
+      --bg-card-hover: #1E1B17;
+      --border: #3A3228;
+      --text: #C4B89E;
+      --text-dim: #8A7E6A;
+      --text-bright: #E8DCC8;
+      --accent: #C87A2A;
+      --gold: #EFD31C;
+      --green: #4CAF50;
+      --red: #E57373;
+      --blue: #64B5F6;
+      --purple: #BA68C8;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-data: 'Inter', -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-data);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: 0.02em;
+    }
+    .header .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+    .header .updated {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 8px;
+      opacity: 0.6;
+    }
+
+    /* Hero metrics */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .hero-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    .hero-card .label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .hero-card .value {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-top: 8px;
+      line-height: 1;
+    }
+    .hero-card .delta {
+      font-size: 0.75rem;
+      margin-top: 6px;
+    }
+    .delta.positive { color: var(--green); }
+    .delta.negative { color: var(--red); }
+
+    /* Chart grid */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+    .chart-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 16px;
+    }
+    .chart-card .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 280px;
+    }
+    .chart-card .chart-wrap canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 280px;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+    .loading::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      opacity: 0.5;
+    }
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-grid { grid-template-columns: repeat(2, 1fr); }
+      .chart-grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 1.5rem; }
+      .hero-card .value { font-size: 1.8rem; }
+    }
+    @media (max-width: 480px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .container { padding: 20px 12px 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Ultimate Dominion</h1>
+      <div class="subtitle">On-Chain Analytics &mdash; Base Mainnet</div>
+      <div class="updated" id="updated"></div>
+    </div>
+
+    <!-- Hero metrics -->
+    <div class="hero-grid">
+      <div class="hero-card">
+        <div class="label">Total Players</div>
+        <div class="value" id="metric-players">—</div>
+        <div class="delta" id="metric-players-delta"></div>
+      </div>
+      <div class="hero-card">
+        <div class="label">Daily Active</div>
+        <div class="value" id="metric-dau">—</div>
+        <div class="delta" id="metric-dau-delta"></div>
+      </div>
+      <div class="hero-card">
+        <div class="label">Gold Supply</div>
+        <div class="value" id="metric-supply">—</div>
+        <div class="delta" id="metric-supply-delta"></div>
+      </div>
+      <div class="hero-card">
+        <div class="label">Gold Price</div>
+        <div class="value" id="metric-price">—</div>
+        <div class="delta" id="metric-price-sub"></div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-grid">
+      <div class="chart-card full-width">
+        <h2>Player Growth</h2>
+        <div class="chart-wrap" id="wrap-growth"><div class="loading">Loading</div></div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Daily Active Users</h2>
+        <div class="chart-wrap" id="wrap-dau"><div class="loading">Loading</div></div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Player Levels</h2>
+        <div class="chart-wrap" id="wrap-levels"><div class="loading">Loading</div></div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Gold Total Supply</h2>
+        <div class="chart-wrap" id="wrap-supply"><div class="loading">Loading</div></div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Gold Price (per ETH)</h2>
+        <div class="chart-wrap" id="wrap-price"><div class="loading">Loading</div></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Data from <a href="https://dune.com" target="_blank">Dune Analytics</a> &middot;
+      <a href="https://ultimatedominion.com" target="_blank">Play the game</a> &middot;
+      Refreshes every 5 min
+    </div>
+  </div>
+
+  <script>
+    // --- Config ---
+    const API_URL = '/api/data';
+
+    // --- Chart.js defaults ---
+    Chart.defaults.color = '#8A7E6A';
+    Chart.defaults.borderColor = 'rgba(58,50,40,0.4)';
+    Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.plugins.legend.labels.boxWidth = 12;
+    Chart.defaults.plugins.legend.labels.padding = 16;
+    Chart.defaults.plugins.tooltip.backgroundColor = '#1E1B17';
+    Chart.defaults.plugins.tooltip.borderColor = '#3A3228';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.titleColor = '#E8DCC8';
+    Chart.defaults.plugins.tooltip.bodyColor = '#C4B89E';
+    Chart.defaults.plugins.tooltip.padding = 10;
+
+    const charts = {};
+
+    function makeCanvas(wrapperId) {
+      const wrap = document.getElementById(wrapperId);
+      wrap.innerHTML = '';
+      const canvas = document.createElement('canvas');
+      wrap.appendChild(canvas);
+      return canvas.getContext('2d');
+    }
+
+    function fmtDate(s) {
+      return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function fmtNum(n) {
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return Math.round(n).toLocaleString();
+    }
+
+    // --- Render functions ---
+
+    function renderGrowth(rows) {
+      if (!rows.length) return;
+      const labels = rows.map(r => fmtDate(r.day));
+      const daily = rows.map(r => r.new_players);
+      const cumul = rows.map(r => r.total_players);
+
+      // Hero metric
+      const latest = rows[rows.length - 1];
+      const prev = rows.length > 1 ? rows[rows.length - 2] : null;
+      document.getElementById('metric-players').textContent = fmtNum(latest.total_players);
+      if (prev) {
+        const d = latest.new_players;
+        document.getElementById('metric-players-delta').textContent = `+${d} today`;
+        document.getElementById('metric-players-delta').className = 'delta positive';
+      }
+
+      if (charts.growth) charts.growth.destroy();
+      charts.growth = new Chart(makeCanvas('wrap-growth'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'New Players',
+              data: daily,
+              backgroundColor: 'rgba(200,122,42,0.7)',
+              borderRadius: 3,
+              order: 2,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Total Players',
+              data: cumul,
+              type: 'line',
+              borderColor: '#EFD31C',
+              backgroundColor: 'rgba(239,211,28,0.08)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 3,
+              pointBackgroundColor: '#EFD31C',
+              borderWidth: 2,
+              order: 1,
+              yAxisID: 'y1',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            y: {
+              position: 'left',
+              title: { display: true, text: 'New / Day', color: '#8A7E6A' },
+              grid: { color: 'rgba(58,50,40,0.3)' },
+            },
+            y1: {
+              position: 'right',
+              title: { display: true, text: 'Cumulative', color: '#8A7E6A' },
+              grid: { drawOnChartArea: false },
+            },
+            x: { grid: { display: false } },
+          },
+        },
+      });
+    }
+
+    function renderDAU(rows) {
+      if (!rows.length) return;
+      const labels = rows.map(r => fmtDate(r.day));
+      const dau = rows.map(r => r.dau);
+
+      const latest = rows[rows.length - 1];
+      document.getElementById('metric-dau').textContent = fmtNum(latest.dau);
+      if (rows.length > 1) {
+        const prev = rows[rows.length - 2];
+        const diff = latest.dau - prev.dau;
+        const el = document.getElementById('metric-dau-delta');
+        el.textContent = (diff >= 0 ? '+' : '') + diff + ' vs yesterday';
+        el.className = 'delta ' + (diff >= 0 ? 'positive' : 'negative');
+      }
+
+      if (charts.dau) charts.dau.destroy();
+      charts.dau = new Chart(makeCanvas('wrap-dau'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'DAU',
+            data: dau,
+            borderColor: '#64B5F6',
+            backgroundColor: 'rgba(100,181,246,0.08)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointBackgroundColor: '#64B5F6',
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(58,50,40,0.3)' },
+            },
+            x: { grid: { display: false } },
+          },
+        },
+      });
+    }
+
+    function renderLevels(rows) {
+      if (!rows.length) return;
+      const labels = rows.map(r => 'L' + r.level);
+      const counts = rows.map(r => r.player_count);
+
+      if (charts.levels) charts.levels.destroy();
+      charts.levels = new Chart(makeCanvas('wrap-levels'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Players',
+            data: counts,
+            backgroundColor: rows.map(r =>
+              r.level === 10 ? '#EFD31C' :
+              r.level >= 7 ? '#BA68C8' :
+              r.level >= 4 ? '#64B5F6' :
+              'rgba(200,122,42,0.7)'
+            ),
+            borderRadius: 3,
+          }],
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { color: 'rgba(58,50,40,0.3)' },
+              title: { display: true, text: 'Player Count', color: '#8A7E6A' },
+            },
+            y: { grid: { display: false } },
+          },
+        },
+      });
+    }
+
+    function renderSupply(rows) {
+      if (!rows.length) return;
+      const labels = rows.map(r => fmtDate(r.day));
+      const supply = rows.map(r => r.total_supply);
+
+      const latest = rows[rows.length - 1];
+      document.getElementById('metric-supply').textContent = fmtNum(latest.total_supply);
+      if (rows.length > 1) {
+        const minted = latest.daily_minted;
+        const el = document.getElementById('metric-supply-delta');
+        el.textContent = '+' + fmtNum(minted) + ' today';
+        el.className = 'delta positive';
+      }
+
+      if (charts.supply) charts.supply.destroy();
+      charts.supply = new Chart(makeCanvas('wrap-supply'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Gold Supply',
+            data: supply,
+            borderColor: '#EFD31C',
+            backgroundColor: 'rgba(239,211,28,0.12)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointBackgroundColor: '#EFD31C',
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              grid: { color: 'rgba(58,50,40,0.3)' },
+              title: { display: true, text: 'Gold', color: '#8A7E6A' },
+            },
+            x: { grid: { display: false } },
+          },
+        },
+      });
+    }
+
+    function renderPrice(rows) {
+      if (!rows.length) return;
+      // Aggregate to daily for cleaner chart
+      const daily = {};
+      rows.forEach(r => {
+        const day = r.hour.split(' ')[0];
+        if (!daily[day]) daily[day] = { prices: [], volumes: [] };
+        daily[day].prices.push(r.gold_per_eth);
+        daily[day].volumes.push(r.volume_gold || 0);
+      });
+      const days = Object.keys(daily).sort();
+      const labels = days.map(d => fmtDate(d));
+      const prices = days.map(d => {
+        const p = daily[d].prices;
+        return p.reduce((a, b) => a + b, 0) / p.length;
+      });
+
+      const latestPrice = prices[prices.length - 1];
+      document.getElementById('metric-price').textContent = fmtNum(latestPrice);
+      document.getElementById('metric-price-sub').textContent = 'Gold per ETH';
+      document.getElementById('metric-price-sub').className = 'delta';
+
+      if (charts.price) charts.price.destroy();
+      charts.price = new Chart(makeCanvas('wrap-price'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Gold / ETH',
+            data: prices,
+            borderColor: '#4CAF50',
+            backgroundColor: 'rgba(76,175,80,0.08)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointBackgroundColor: '#4CAF50',
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              grid: { color: 'rgba(58,50,40,0.3)' },
+              title: { display: true, text: 'Gold per ETH', color: '#8A7E6A' },
+              ticks: { callback: v => fmtNum(v) },
+            },
+            x: { grid: { display: false } },
+          },
+          plugins: {
+            tooltip: {
+              callbacks: { label: ctx => fmtNum(ctx.parsed.y) + ' Gold / ETH' },
+            },
+          },
+        },
+      });
+    }
+
+    // --- Data fetch ---
+    async function fetchAndRender() {
+      try {
+        const resp = await fetch(API_URL);
+        const data = await resp.json();
+
+        if (data['player-growth']?.rows) renderGrowth(data['player-growth'].rows);
+        if (data['dau']?.rows) renderDAU(data['dau'].rows);
+        if (data['level-distribution']?.rows) renderLevels(data['level-distribution'].rows);
+        if (data['gold-supply']?.rows) renderSupply(data['gold-supply'].rows);
+        if (data['gold-price']?.rows) renderPrice(data['gold-price'].rows);
+
+        document.getElementById('updated').textContent =
+          'Last updated: ' + new Date().toLocaleTimeString();
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+      }
+    }
+
+    // Initial load + auto-refresh
+    fetchAndRender();
+    setInterval(fetchAndRender, 5 * 60 * 1000);
+  </script>
+</body>
+</html>

@@ -1466,23 +1466,32 @@ const OpponentRow = ({
           cursor: disableRow ? 'not-allowed' : 'pointer',
         }}
       >
-        <HStack justifyContent="start" spacing={4}>
-          {(encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image) && (
-            <Avatar
+        <Tooltip
+          label={encounterType === EncounterType.PvE && (opponent as Monster).description ? (
+            <Text size="xs" fontStyle="italic" p={1}>{(opponent as Monster).description}</Text>
+          ) : undefined}
+          placement="top"
+          hasArrow
+          isDisabled={encounterType !== EncounterType.PvE || !(opponent as Monster).description}
+        >
+          <HStack justifyContent="start" spacing={4}>
+            {(encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image) && (
+              <Avatar
+                filter={disableRow ? 'grayscale(100%)' : 'none'}
+                size={{ base: '2xs', md: 'xs' }}
+                src={encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image}
+                name={name}
+              />
+            )}
+            <Text
+              color={nameColor}
               filter={disableRow ? 'grayscale(100%)' : 'none'}
-              size={{ base: '2xs', md: 'xs' }}
-              src={encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image}
-              name={name}
-            />
-          )}
-          <Text
-            color={nameColor}
-            filter={disableRow ? 'grayscale(100%)' : 'none'}
-            size={{ base: '2xs', sm: '2xs', md: 'sm', lg: 'md' }}
-          >
-            {isElite ? '★ ' : ''}{name}
-          </Text>
-        </HStack>
+              size={{ base: '2xs', sm: '2xs', md: 'sm', lg: 'md' }}
+            >
+              {isElite ? '★ ' : ''}{name}
+            </Text>
+          </HStack>
+        </Tooltip>
         {!disableRow && !!level && (
           <HStack spacing={1}>
             <Text fontWeight={500} size={{ base: '2xs', sm: '2xs', md: 'sm' }}>

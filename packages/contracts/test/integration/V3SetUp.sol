@@ -69,8 +69,7 @@ contract V3SetUp is Test {
         vm.startPrank(deployer);
 
         // Connect to deployed world
-        string memory json = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/deploys/31337/latest.json")));
-        worldAddress = json.readAddress(".worldAddress");
+        worldAddress = vm.envAddress("WORLD_ADDRESS");
         vm.label(worldAddress, "World");
         StoreSwitch.setStoreAddress(worldAddress);
         world = IWorld(worldAddress);

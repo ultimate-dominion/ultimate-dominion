@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.24;
+pragma solidity >=0.8.24;
 
 library ArrayManagers {
     // takes empty positions out of a bytes32 memory array;

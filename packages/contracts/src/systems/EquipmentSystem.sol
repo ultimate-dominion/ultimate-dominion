@@ -55,6 +55,8 @@ contract EquipmentSystem is System {
             itemId = itemIds[i];
             // Items are owned by the character owner (delegator), not the caller (session wallet)
             require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "EQUIPMENT: Not Item Owner");
+            // Durability gate: broken items cannot be equipped
+            require(IWorld(_world()).UD__canEquipDurability(characterId, itemId), "EQUIPMENT: Item broken");
             ItemType itemType = Items.getItemType(itemId);
             if (itemType == ItemType.Weapon) {
                 // Delegate to WeaponSystem

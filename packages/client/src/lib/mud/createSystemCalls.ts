@@ -1741,7 +1741,281 @@ export function createSystemCalls(
     }
   };
 
+  // ==================== Z2 Feature System Calls ====================
+
+  // --- Durability ---
+  const repairItem = async (
+    characterId: string,
+    itemId: bigint,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'repairItem');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__repairItem([
+        characterId as `0x${string}`,
+        itemId,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  // --- Respec ---
+  const statRespec = async (
+    characterId: string,
+    desiredStats: {
+      strength: bigint;
+      agility: bigint;
+      class: number;
+      intelligence: bigint;
+      maxHp: bigint;
+      currentHp: bigint;
+      experience: bigint;
+      level: bigint;
+      powerSource: number;
+      race: number;
+      startingArmor: number;
+      advancedClass: number;
+      hasSelectedAdvancedClass: boolean;
+    },
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'statRespec');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__statRespec([
+        characterId as `0x${string}`,
+        desiredStats,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const fullRespec = async (
+    characterId: string,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'fullRespec');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__fullRespec([
+        characterId as `0x${string}`,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  // --- NPC Dialogue ---
+  const talkToNpc = async (
+    characterId: string,
+    npcId: string,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'talkToNpc');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__talkToNpc([
+        characterId as `0x${string}`,
+        npcId as `0x${string}`,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  // --- Guild System ---
+  const createGuild = async (
+    characterId: string,
+    name: string,
+    tag: string,
+    isOpen: boolean,
+    description: string,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'createGuild');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__createGuild([
+        characterId as `0x${string}`,
+        name,
+        tag,
+        isOpen,
+        description,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const joinGuild = async (
+    characterId: string,
+    guildId: bigint,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'joinGuild');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__joinGuild([
+        characterId as `0x${string}`,
+        guildId,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const leaveGuild = async (
+    characterId: string,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'leaveGuild');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__leaveGuild([
+        characterId as `0x${string}`,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const applyToGuild = async (
+    characterId: string,
+    guildId: bigint,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'applyToGuild');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__applyToGuild([
+        characterId as `0x${string}`,
+        guildId,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const setTaxRate = async (
+    characterId: string,
+    newRate: bigint,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'setTaxRate');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__setTaxRate([
+        characterId as `0x${string}`,
+        newRate,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const withdrawTreasury = async (
+    characterId: string,
+    amount: bigint,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'withdrawTreasury');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__withdrawTreasury([
+        characterId as `0x${string}`,
+        amount,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const disbandGuild = async (
+    characterId: string,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'disbandGuild');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__disbandGuild([
+        characterId as `0x${string}`,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   return {
+    applyToGuild,
     autoAdventure,
     buy,
     buyGas,
@@ -1750,31 +2024,41 @@ export function createSystemCalls(
     chooseRace,
     choosePowerSource,
     claimFragment,
-    triggerFragment,
     createEncounter,
+    createGuild,
     createOrder,
+    disbandGuild,
     endShopEncounter,
     endWorldEncounter,
     endTurn,
     enterGame,
     equipItems,
     fleePvp,
+    fullRespec,
     fulfillOrder,
     autoFight,
+    joinGuild,
+    leaveGuild,
     levelCharacter,
     mintCharacter,
     move,
     removeEntityFromBoard,
+    repairItem,
     rest,
     restock,
     rollBaseStats,
     rollStats,
     selectAdvancedClass,
     sell,
+    setTaxRate,
     spawn,
+    statRespec,
+    talkToNpc,
     transitionZone,
+    triggerFragment,
     unequipItem,
     updateTokenUri,
     useWorldConsumableItem,
+    withdrawTreasury,
   };
 }

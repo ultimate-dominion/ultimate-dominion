@@ -21,11 +21,7 @@ contract ImplicitClassSystemUnitTest is Test {
     bytes32 characterId;
 
     function setUp() public {
-        // Get world address from deployment
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/deploys/31337/latest.json");
-        string memory json = vm.readFile(path);
-        address worldAddress = vm.parseJsonAddress(json, ".worldAddress");
+        address worldAddress = vm.envAddress("WORLD_ADDRESS");
 
         world = IWorld(worldAddress);
         StoreSwitch.setStoreAddress(worldAddress);

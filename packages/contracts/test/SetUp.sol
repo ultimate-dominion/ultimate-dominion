@@ -67,8 +67,7 @@ contract SetUp is Test {
 
     function setUp() public virtual {
         vm.startPrank(deployer);
-        string memory json = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/deploys/31337/latest.json")));
-        worldAddress = json.readAddress(".worldAddress");
+        worldAddress = vm.envAddress("WORLD_ADDRESS");
         vm.label(address(worldAddress), "World");
         StoreSwitch.setStoreAddress(worldAddress);
         lootManagerAddress = Systems.getSystem(_lootManagerSystemId("UD"));

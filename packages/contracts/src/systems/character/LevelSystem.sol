@@ -12,12 +12,14 @@ import {
     ZoneCompletions,
     CharacterZoneCompletion,
     ZoneConfig,
-    UltimateDominionConfig
+    UltimateDominionConfig,
+    LevelUnlockItems,
+    LevelUnlockItemsData
 } from "@codegen/index.sol";
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {StatCalculator} from "@libraries/StatCalculator.sol";
-import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGE_FOUNDER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE, POWER_SOURCE_BONUS_LEVEL} from "../../../constants.sol";
+import {MAX_LEVEL, ADVENTURER_BADGE_LEVEL, BADGE_ADVENTURER, BADGE_FOUNDER, BADGES_NAMESPACE, MAX_ZONE_CONQUEROR_BADGES, ZONE_DARK_CAVE, ZONE_WINDY_PEAKS, POWER_SOURCE_BONUS_LEVEL} from "../../../constants.sol";
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {Balances as ERC721Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -184,6 +186,9 @@ contract LevelSystem is System {
         // Check for zone completion (Zone Conqueror badge)
         _checkZoneCompletion(characterId, newLevel);
 
+        // Grant level-gated items (e.g., L15 class spells)
+        _grantLevelUnlockItems(characterId, newLevel);
+
         emit CharacterLeveledUp(characterId, currentStats.level, currentStats.experience);
     }
 
@@ -234,9 +239,10 @@ contract LevelSystem is System {
      * @param newLevel The level just attained
      */
     function _checkZoneCompletion(bytes32 characterId, uint256 newLevel) internal {
-        // Check each configured zone (currently just Dark Cave)
-        uint256[] memory zoneIds = new uint256[](1);
+        // Check each configured zone
+        uint256[] memory zoneIds = new uint256[](2);
         zoneIds[0] = ZONE_DARK_CAVE;
+        zoneIds[1] = ZONE_WINDY_PEAKS;
 
         for (uint256 i = 0; i < zoneIds.length; i++) {
             uint256 zoneId = zoneIds[i];
@@ -261,6 +267,23 @@ contract LevelSystem is System {
             if (rank <= MAX_ZONE_CONQUEROR_BADGES) {
                 _mintZoneConquerorBadge(characterId, zoneId);
             }
+        }
+    }
+
+    /**
+     * @dev Grants items configured in LevelUnlockItems for the character's level + class
+     * @param characterId The character that just leveled up
+     * @param newLevel The level just attained
+     */
+    function _grantLevelUnlockItems(bytes32 characterId, uint256 newLevel) internal {
+        AdvancedClass advancedClass = Stats.getAdvancedClass(characterId);
+        if (advancedClass == AdvancedClass.None) return;
+
+        LevelUnlockItemsData memory unlockData = LevelUnlockItems.get(newLevel, advancedClass);
+        if (unlockData.itemIds.length == 0) return;
+
+        for (uint256 i; i < unlockData.itemIds.length; i++) {
+            IWorld(_world()).UD__dropItem(characterId, unlockData.itemIds[i], unlockData.amounts[i]);
         }
     }
 

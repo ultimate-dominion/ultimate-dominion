@@ -1272,6 +1272,24 @@
   },
   {
     "type": "function",
+    "name": "UD__applyToGuild",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "guildId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__applyWeaponEnchant",
     "inputs": [
       {
@@ -1342,6 +1360,24 @@
         ]
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__approveApplication",
+    "inputs": [
+      {
+        "name": "officerCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "applicantCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -1448,53 +1484,6 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__batchChargeGasGold",
-    "inputs": [
-      {
-        "name": "players",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "characterIds",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__batchChargeGasGoldWithCounts",
-    "inputs": [
-      {
-        "name": "players",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "characterIds",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      },
-      {
-        "name": "counts",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "charged",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -2165,6 +2154,30 @@
   },
   {
     "type": "function",
+    "name": "UD__canEquipDurability",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__canEquipMoreWeapons",
     "inputs": [
       {
@@ -2218,24 +2231,6 @@
         "internalType": "bool"
       }
     ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__chargeGasGold",
-    "inputs": [
-      {
-        "name": "player",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -2593,6 +2588,19 @@
   },
   {
     "type": "function",
+    "name": "UD__claimLeadership",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__cleanupEntitySpellState",
     "inputs": [
       {
@@ -2765,6 +2773,45 @@
         "name": "encounterId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__createGuild",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "tag",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "isOpen",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "guildId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -3052,26 +3099,46 @@
   },
   {
     "type": "function",
-    "name": "UD__depositToEscrow",
+    "name": "UD__degradeEquippedItems",
     "inputs": [
       {
         "name": "characterId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__demoteMember",
+    "inputs": [
+      {
+        "name": "leaderCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "targetCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
-    "outputs": [
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__disbandGuild",
+    "inputs": [
       {
-        "name": "_balance",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -3140,24 +3207,6 @@
         "internalType": "uint256[]"
       }
     ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "UD__dropGoldToEscrow",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -3244,6 +3293,13 @@
         "internalType": "bool"
       }
     ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__endSeason",
+    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -3541,6 +3597,28 @@
             "internalType": "bool[]"
           }
         ]
+      },
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct CombatFlagsResult",
+        "components": [
+          {
+            "name": "doubleStrike",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "spellDodged",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "blocked",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
       }
     ],
     "stateMutability": "nonpayable"
@@ -3719,6 +3797,19 @@
         "internalType": "bool"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__fullRespec",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -4070,6 +4161,25 @@
         "name": "_characterToken",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getCharacterZone",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -4594,25 +4704,6 @@
   },
   {
     "type": "function",
-    "name": "UD__getEscrowBalance",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "_balance",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "UD__getExperience",
     "inputs": [
       {
@@ -4725,6 +4816,29 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__getGuildBonus",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "goldBonus",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "xpBonus",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "dropBonus",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -5460,6 +5574,30 @@
   },
   {
     "type": "function",
+    "name": "UD__getRespecCost",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "statCost",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "fullCost",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__getSpawnCounter",
     "inputs": [
       {
@@ -5900,30 +6038,6 @@
   },
   {
     "type": "function",
-    "name": "UD__increaseEscrowBalance",
-    "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "newBalance",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "UD__incrementCounter",
     "inputs": [
       {
@@ -5939,6 +6053,65 @@
         "internalType": "uint256"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__initializeChain",
+    "inputs": [
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "totalSteps",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__initializeCharacterChain",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "totalSteps",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__initializeDurability",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -6068,6 +6241,25 @@
   },
   {
     "type": "function",
+    "name": "UD__isGuildMember",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UD__isInEncounter",
     "inputs": [
       {
@@ -6180,6 +6372,25 @@
     "type": "function",
     "name": "UD__isPaused",
     "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__isRankedZone",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
     "outputs": [
       {
         "name": "",
@@ -6518,6 +6729,55 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "UD__joinGuild",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "guildId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__kickMember",
+    "inputs": [
+      {
+        "name": "officerCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "targetCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__leaveGuild",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -6861,6 +7121,65 @@
   },
   {
     "type": "function",
+    "name": "UD__promoteMember",
+    "inputs": [
+      {
+        "name": "leaderCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "targetCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__registerMobInZone",
+    "inputs": [
+      {
+        "name": "zoneId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "level",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "mobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__rejectApplication",
+    "inputs": [
+      {
+        "name": "officerCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "applicantCharId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__removeEntitiesFromBoard",
     "inputs": [
       {
@@ -6880,6 +7199,24 @@
         "name": "entityId",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__repairItem",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -7070,6 +7407,57 @@
   },
   {
     "type": "function",
+    "name": "UD__setChainStep",
+    "inputs": [
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "stepIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "triggerType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "triggerData",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "narrative",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setDescription",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__setFeePercent",
     "inputs": [
       {
@@ -7203,6 +7591,24 @@
   },
   {
     "type": "function",
+    "name": "UD__setIsOpen",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "isOpen",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__setItemsApproval",
     "inputs": [
       {
@@ -7221,12 +7627,63 @@
   },
   {
     "type": "function",
+    "name": "UD__setMaxDurability",
+    "inputs": [
+      {
+        "name": "itemId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxDurability",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__setMaxPlayers",
     "inputs": [
       {
         "name": "newMax",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setNpcDialogue",
+    "inputs": [
+      {
+        "name": "npcId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "fragmentStep",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "zoneId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "dialogueLines",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -7336,6 +7793,24 @@
             "internalType": "int256"
           }
         ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__setTaxRate",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "newRate",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -7457,6 +7932,104 @@
   },
   {
     "type": "function",
+    "name": "UD__startSeason",
+    "inputs": [
+      {
+        "name": "seasonEnd",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__statRespec",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "desiredStats",
+        "type": "tuple",
+        "internalType": "struct StatsData",
+        "components": [
+          {
+            "name": "strength",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "agility",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "class",
+            "type": "uint8",
+            "internalType": "enum Classes"
+          },
+          {
+            "name": "intelligence",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "maxHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "currentHp",
+            "type": "int256",
+            "internalType": "int256"
+          },
+          {
+            "name": "experience",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "level",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "powerSource",
+            "type": "uint8",
+            "internalType": "enum PowerSource"
+          },
+          {
+            "name": "race",
+            "type": "uint8",
+            "internalType": "enum Race"
+          },
+          {
+            "name": "startingArmor",
+            "type": "uint8",
+            "internalType": "enum ArmorType"
+          },
+          {
+            "name": "advancedClass",
+            "type": "uint8",
+            "internalType": "enum AdvancedClass"
+          },
+          {
+            "name": "hasSelectedAdvancedClass",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__supportsInterface",
     "inputs": [
       {
@@ -7476,6 +8049,48 @@
   },
   {
     "type": "function",
+    "name": "UD__talkToNpc",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "npcId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__taxGold",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "goldAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "taxAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "UD__transferGold",
     "inputs": [
       {
@@ -7485,6 +8100,47 @@
       },
       {
         "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__transferWithAccess",
+    "inputs": [
+      {
+        "name": "from",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__transitionZone",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "targetZoneId",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -7515,6 +8171,34 @@
         "name": "tileY",
         "type": "uint16",
         "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__tryAdvanceChain",
+    "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fragmentType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "triggerType",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "triggerData",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ],
     "outputs": [],
@@ -7596,6 +8280,24 @@
     "type": "function",
     "name": "UD__unpause",
     "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "UD__updateRatings",
+    "inputs": [
+      {
+        "name": "winners",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "losers",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -7975,32 +8677,26 @@
   },
   {
     "type": "function",
-    "name": "UD__withdrawFromEscrow",
+    "name": "UD__withdrawGasTreasury",
     "inputs": [
-      {
-        "name": "characterId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
       {
         "name": "amount",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
-    "outputs": [
-      {
-        "name": "_balance",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "UD__withdrawGasTreasury",
+    "name": "UD__withdrawTreasury",
     "inputs": [
+      {
+        "name": "characterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
       {
         "name": "amount",
         "type": "uint256",

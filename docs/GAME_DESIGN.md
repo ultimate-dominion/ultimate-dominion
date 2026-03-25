@@ -414,12 +414,15 @@ See [LORE_NFT_FRAGMENTS.md](./LORE_NFT_FRAGMENTS.md) for full narrative content.
 
 ## Badge System
 
-Soulbound badges (ERC1155) awarded for milestones.
+Soulbound badges (ERC721) awarded for milestones.
 
 | Badge | ID | Requirement | Purpose |
 |-------|----|-------------|---------|
 | Adventurer | 1 | Reach Level 3 | Unlocks chat access |
 | Founder | 50 | Play during launch window | Permanent recognition |
+| Zone Conqueror | 100+zoneId | Top 10 to max level in a zone | Competitive recognition |
+| Peaks Pioneer | 150+zoneId | First entry into a zone | Exploration recognition |
+| Lore Keeper | 200+zoneId | Collect all zone fragments | Lore recognition |
 
 Badges are minted to the character owner's address with unique token IDs per character.
 

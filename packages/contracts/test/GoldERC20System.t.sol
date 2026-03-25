@@ -34,10 +34,7 @@ contract Test_GoldERC20System is Test {
         vm.deal(deployer, 100 ether);
         vm.startPrank(deployer);
 
-        string memory json = vm.readFile(
-            string(abi.encodePacked(vm.projectRoot(), "/deploys/31337/latest.json"))
-        );
-        worldAddress = json.readAddress(".worldAddress");
+        worldAddress = vm.envAddress("WORLD_ADDRESS");
         StoreSwitch.setStoreAddress(worldAddress);
         world = IWorld(worldAddress);
 

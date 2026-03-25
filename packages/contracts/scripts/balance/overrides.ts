@@ -274,11 +274,11 @@ export const ARMORS_WITH_SECONDARY_REQS: Armor[] = [
   { name: "Ranger Leathers",    armorValue: 6, strMod: 0,  agiMod: 3, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 11, minInt: 8,  armorType: "Leather", rarity: 2, price: 100 },
   { name: "Mage Robes",         armorValue: 4, strMod: 0,  agiMod: 0, intMod: 3, hpMod: 0, minStr: 0,  minAgi: 10, minInt: 14, armorType: "Cloth",   rarity: 2, price: 100 },
   { name: "Spider Silk Wraps",  armorValue: 3, strMod: 0,  agiMod: 4, intMod: 0, hpMod: 0, minStr: 0,  minAgi: 12, minInt: 8,  armorType: "Leather", rarity: 2, price: 90 },
-  // R3 — primary + higher secondary (costs 1-3 off-path)
-  { name: "Carved Stone Plate",armorValue: 10, strMod: 3, agiMod: 0, intMod: 0, hpMod: 10, minStr: 14, minAgi: 0,  minInt: 9,  armorType: "Plate",   rarity: 3, price: 200 },
+  // R3 — primary + secondary reqs balanced: every path pays 1 off-path for R3 armor
+  { name: "Carved Stone Plate",armorValue: 10, strMod: 3, agiMod: 0, intMod: 0, hpMod: 10, minStr: 14, minAgi: 0,  minInt: 7,  armorType: "Plate",   rarity: 3, price: 200 },
   { name: "Stalker's Cloak",    armorValue: 7,  strMod: 0, agiMod: 5, intMod: 0, hpMod: 0,  minStr: 0,  minAgi: 14, minInt: 8,  armorType: "Leather", rarity: 3, price: 200 },
-  { name: "Drake's Cowl",      armorValue: 6,  strMod: 0, agiMod: 0, intMod: 5, hpMod: 0,  minStr: 0,  minAgi: 12, minInt: 14, armorType: "Cloth",   rarity: 3, price: 200 },
-  { name: "Scorched Scale Vest",armorValue: 8,  strMod: 1, agiMod: 1, intMod: 4, hpMod: 6,  minStr: 12, minAgi: 0,  minInt: 9,  armorType: "Plate",   rarity: 3, price: 250 },
+  { name: "Drake's Cowl",      armorValue: 6,  strMod: 0, agiMod: 0, intMod: 5, hpMod: 0,  minStr: 0,  minAgi: 10, minInt: 14, armorType: "Cloth",   rarity: 3, price: 200 },
+  { name: "Scorched Scale Vest",armorValue: 8,  strMod: 1, agiMod: 1, intMod: 4, hpMod: 6,  minStr: 12, minAgi: 0,  minInt: 7,  armorType: "Plate",   rarity: 3, price: 250 },
 ];
 
 // ============================================================
@@ -376,10 +376,11 @@ export const WEAPONS_V4: Weapon[] = [
   { name: "Dire Rat Fang",  minDamage: 2, maxDamage: 3, strMod: 0, agiMod: 2, intMod: 0, hpMod: 0, scaling: "str", isMagic: false, minStr: 0,  minAgi: 0,  minInt: 0,  rarity: 3, price: 150 },
   { name: "Gnarled Cudgel", minDamage: 4, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 3, scaling: "str", isMagic: false, minStr: 10, minAgi: 4,  minInt: 0,  rarity: 3, price: 180 },
   { name: "Bone Staff",       minDamage: 4, maxDamage: 6, strMod: 0, agiMod: 0, intMod: 3, hpMod: 5, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 11, rarity: 3, price: 180 },
-  { name: "Stone Maul",     minDamage: 5, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 13, minAgi: 5,  minInt: 0,  rarity: 3, price: 250 },
+  { name: "Stone Maul",     minDamage: 5, maxDamage: 6, strMod: 3, agiMod: 0, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 13, minAgi: 4,  minInt: 0,  rarity: 3, price: 250 },
   // R3 — pure path endgame. Darkwood 7-10→6-9, Smoldering stays 5-7 but better mods
-  { name: "Darkwood Bow",     minDamage: 6, maxDamage: 9, strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 4,  minAgi: 14, minInt: 0,  rarity: 3, price: 220 },
-  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 7, strMod: 0, agiMod: 0, intMod: 5, hpMod: 6, scaling: "str", isMagic: true,  minStr: 5,  minAgi: 0,  minInt: 13, rarity: 3, price: 300 },
+  // Secondary reqs balanced: every path pays 1-2 off-path for R3 loadout
+  { name: "Darkwood Bow",     minDamage: 6, maxDamage: 9, strMod: 2, agiMod: 5, intMod: 0, hpMod: 6, scaling: "agi", isMagic: false, minStr: 6,  minAgi: 14, minInt: 0,  rarity: 3, price: 220 },
+  { name: "Smoldering Rod",   minDamage: 5, maxDamage: 7, strMod: 0, agiMod: 0, intMod: 5, hpMod: 6, scaling: "str", isMagic: true,  minStr: 4,  minAgi: 0,  minInt: 13, rarity: 3, price: 300 },
   // R4 EPIC — hybrid weapons, marketplace drivers
   { name: "Trollhide Cleaver", minDamage: 6, maxDamage: 9, strMod: 3, agiMod: 3, intMod: 0, hpMod: 5, scaling: "str", isMagic: false, minStr: 16, minAgi: 10, minInt: 0,  rarity: 4, price: 350 },
   { name: "Phasefang",  minDamage: 4, maxDamage: 8, strMod: 0, agiMod: 4, intMod: 3, hpMod: 5, scaling: "agi", isMagic: true,  minStr: 0,  minAgi: 16, minInt: 11, rarity: 4, price: 350 },
