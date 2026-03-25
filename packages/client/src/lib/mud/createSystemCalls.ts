@@ -723,11 +723,38 @@ export function createSystemCalls(
       ]);
       const txResult = await waitForTransaction(tx);
 
+      if (txResult.status === 'reverted') {
+        // Diagnostic simulation to extract real revert reason
+        try {
+          await worldContract.simulate.UD__fulfillOrder(
+            [orderHash as Hash],
+            { account: diagAccount },
+          );
+        } catch (diagError) {
+          return { success: false, error: getContractError(diagError) };
+        }
+      }
+
       return {
         error: txResult.status === 'success' ? undefined : 'Failed to fulfill order.',
         success: txResult.status === 'success',
       };
     } catch (e) {
+      // Viem masks contract reverts as InsufficientFundsError when the
+      // player's ETH balance is low. Run diagnostic simulation to get
+      // the real revert reason (if any) before falling back to the gas error.
+      if (isInsufficientFundsError(e)) {
+        try {
+          await worldContract.simulate.UD__fulfillOrder(
+            [orderHash as Hash],
+            { account: diagAccount },
+          );
+          // Simulation passed — genuinely a gas issue, not a revert
+        } catch (diagError) {
+          // Real contract revert found — return that instead
+          return { success: false, error: getContractError(diagError) };
+        }
+      }
       return {
         error: getContractError(e),
         success: false,
