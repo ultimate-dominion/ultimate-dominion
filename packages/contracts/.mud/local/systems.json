@@ -455,6 +455,7 @@
         "function batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)",
         "function buyGas(bytes32 characterId, uint256 goldAmount, uint256 minEthOutput)",
         "function chargeGasGold(address player, bytes32 characterId)",
+        "function fundAndCharge(address player, bytes32 characterId)",
         "function fundGasTreasury() payable",
         "function gasTreasuryBalance() view returns (uint256)",
         "function setGasStationConfig(uint256 ethPerGold, uint256 maxGoldPerSwap, uint256 cooldownSeconds, bool enabled)",
@@ -479,12 +480,68 @@
         "function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)",
         "function UD__buyGas(bytes32 characterId, uint256 goldAmount, uint256 minEthOutput)",
         "function UD__chargeGasGold(address player, bytes32 characterId)",
+        "function UD__fundAndCharge(address player, bytes32 characterId)",
         "function UD__fundGasTreasury() payable",
         "function UD__gasTreasuryBalance() view returns (uint256)",
         "function UD__setGasStationConfig(uint256 ethPerGold, uint256 maxGoldPerSwap, uint256 cooldownSeconds, bool enabled)",
         "function UD__setGasStationSwapConfig(address swapRouter, address weth, uint24 poolFee, address relayerAddress, uint256 goldPerGasCharge)",
         "function UD__withdrawGasTreasury(uint256 amount)",
         "receive() external payable"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "GoldERC20System",
+      "namespace": "UD",
+      "name": "GoldERC20System",
+      "systemId": "0x73795544000000000000000000000000476f6c64455243323053797374656d00",
+      "abi": [
+        "error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed)",
+        "error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed)",
+        "error ERC20InvalidApprover(address approver)",
+        "error ERC20InvalidReceiver(address receiver)",
+        "error ERC20InvalidSender(address sender)",
+        "error ERC20InvalidSpender(address spender)",
+        "error PuppetMaster_NoPuppet(address systemAddress, bytes32 systemId)",
+        "event Approval(address indexed owner, address indexed spender, uint256 value)",
+        "event Transfer(address indexed from, address indexed to, uint256 value)",
+        "function allowance(address owner, address spender) view returns (uint256)",
+        "function approve(address spender, uint256 value) returns (bool)",
+        "function balanceOf(address account) view returns (uint256)",
+        "function burn(address account, uint256 value)",
+        "function burnWithAccess(address account, uint256 value)",
+        "function decimals() view returns (uint8)",
+        "function mint(address account, uint256 value)",
+        "function mintWithAccess(address account, uint256 value)",
+        "function name() view returns (string)",
+        "function symbol() view returns (string)",
+        "function totalSupply() view returns (uint256)",
+        "function transfer(address to, uint256 value) returns (bool)",
+        "function transferFrom(address from, address to, uint256 value) returns (bool)"
+      ],
+      "worldAbi": [
+        "error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed)",
+        "error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed)",
+        "error ERC20InvalidApprover(address approver)",
+        "error ERC20InvalidReceiver(address receiver)",
+        "error ERC20InvalidSender(address sender)",
+        "error ERC20InvalidSpender(address spender)",
+        "error PuppetMaster_NoPuppet(address systemAddress, bytes32 systemId)",
+        "event Approval(address indexed owner, address indexed spender, uint256 value)",
+        "event Transfer(address indexed from, address indexed to, uint256 value)",
+        "function UD__allowance(address owner, address spender) view returns (uint256)",
+        "function UD__approve(address spender, uint256 value) returns (bool)",
+        "function UD__balanceOf(address account) view returns (uint256)",
+        "function UD__burn(address account, uint256 value)",
+        "function UD__burnWithAccess(address account, uint256 value)",
+        "function UD__decimals() view returns (uint8)",
+        "function UD__mint(address account, uint256 value)",
+        "function UD__mintWithAccess(address account, uint256 value)",
+        "function UD__name() view returns (string)",
+        "function UD__symbol() view returns (string)",
+        "function UD__totalSupply() view returns (uint256)",
+        "function UD__transfer(address to, uint256 value) returns (bool)",
+        "function UD__transferFrom(address from, address to, uint256 value) returns (bool)"
       ]
     },
     {
@@ -938,13 +995,11 @@
       "abi": [
         "error InvalidRewardState()",
         "error NotAuthorizedCaller()",
-        "function calculateExpMultiplier(bytes32 characterId) view returns (uint256 _expMultiplier)",
         "function distributePveRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
       ],
       "worldAbi": [
         "error InvalidRewardState()",
         "error NotAuthorizedCaller()",
-        "function UD__calculateExpMultiplier(bytes32 characterId) view returns (uint256 _expMultiplier)",
         "function UD__distributePveRewards(bytes32 encounterId, uint256 randomNumber) returns (uint256 _expAmount, uint256 _goldAmount, uint256[] _itemIdsDropped)"
       ]
     },
@@ -980,7 +1035,6 @@
         "error NotOwnShopEncounter()",
         "error OutOfStock()",
         "error ReentrancyGuardReentrantCall()",
-        "error ShopInsufficientGold()",
         "error Unauthorized()",
         "function buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
         "function canRestock(bytes32 shopId) view returns (bool)",
@@ -1004,7 +1058,6 @@
         "error NotOwnShopEncounter()",
         "error OutOfStock()",
         "error ReentrancyGuardReentrantCall()",
-        "error ShopInsufficientGold()",
         "error Unauthorized()",
         "function UD__buy(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
         "function UD__canRestock(bytes32 shopId) view returns (bool)",
@@ -1491,5 +1544,5 @@
       ]
     }
   ],
-  "createdAt": 1774048487627
+  "createdAt": 1774281418428
 }
