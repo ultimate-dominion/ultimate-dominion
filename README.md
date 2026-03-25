@@ -54,7 +54,7 @@ The game runs at `http://localhost:3000`. Local development uses Anvil (chain 31
 | Environment | Chain | URL | World Address |
 |-------------|-------|-----|---------------|
 | Local | Anvil (31337) | localhost:3000 | Deployed on `pnpm dev` |
-| Beta | Base Mainnet (8453) | beta.ultimatedominion.com | `0xD2051EB4F5001d46c11F928BD6578Bd5f7e028A3` |
+| Beta | Base Mainnet (8453) | beta.ultimatedominion.com | `0xeB023E9B5A0C452B202306eDa50255EfaF555426` |
 | Production | Base Mainnet (8453) | ultimatedominion.com | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` |
 
 Both beta and production run on Base Mainnet, distinguished by world address.
