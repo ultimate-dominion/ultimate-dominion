@@ -181,6 +181,32 @@ export const TileDetailsPanel = (): JSX.Element => {
   const { autoAdventureMode, isRefreshing } = useMovement();
   const stage = useOnboardingStage();
 
+  const MONSTER_COLLAPSE_LIMIT = 3;
+  const [monstersExpanded, setMonstersExpanded] = useState(false);
+
+  // Reset expanded state when player moves to a new tile
+  const tileKey = position ? `${position.x},${position.y}` : null;
+  useEffect(() => {
+    setMonstersExpanded(false);
+  }, [tileKey]);
+
+  // Sort monsters by level relevance (closest to player level first), elites on top
+  const sortedMonsters = useMemo(() => {
+    if (visibleMonstersOnTile.length === 0) return [];
+    const playerLevel = character?.level ? Number(character.level) : 1;
+    return [...visibleMonstersOnTile].sort((a, b) => {
+      // Elites always surface first
+      if (a.isElite !== b.isElite) return a.isElite ? -1 : 1;
+      // Then by closeness to player level
+      return Math.abs(Number(a.level) - playerLevel) - Math.abs(Number(b.level) - playerLevel);
+    });
+  }, [visibleMonstersOnTile, character?.level]);
+
+  const visibleMonsters = monstersExpanded
+    ? sortedMonsters
+    : sortedMonsters.slice(0, MONSTER_COLLAPSE_LIMIT);
+  const hiddenMonsterCount = sortedMonsters.length - MONSTER_COLLAPSE_LIMIT;
+
   const { isCounterattackPending, pendingCounterattackDamage } = useCombatPacing({
     attackOutcomes,
     characterId: character?.id,
@@ -1150,36 +1176,63 @@ export const TileDetailsPanel = (): JSX.Element => {
                 />
               </>
             )}
-            {visibleMonstersOnTile.length > 0 &&
-              visibleMonstersOnTile.map((monster, i) => (
-                <Box key={`tile-monster-${i}-${monster.name}`}>
-                  <OpponentRow
-                    encounterType={EncounterType.PvE}
-                    onClick={() => {
-                      if (isMoveEquipped) {
-                        onInitiateCombat(monster, EncounterType.PvE);
-                      } else {
-                        onOpenNoMoveEquippedModal();
-                      }
-                    }}
-                    opponent={monster}
-                    playerStats={{
-                      strength: character?.strength ?? 0n,
-                      agility: character?.agility ?? 0n,
-                      intelligence: character?.intelligence ?? 0n,
-                      level: character?.level ?? 1n,
-                      maxHp: character?.maxHp ?? 18n,
-                    }}
-                  />
-                  <Box
-                    backgroundColor="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="6px"
+            {sortedMonsters.length > 0 && (
+              <>
+                {visibleMonsters.map((monster, i) => (
+                  <Box key={`tile-monster-${i}-${monster.name}`}>
+                    <OpponentRow
+                      encounterType={EncounterType.PvE}
+                      onClick={() => {
+                        if (isMoveEquipped) {
+                          onInitiateCombat(monster, EncounterType.PvE);
+                        } else {
+                          onOpenNoMoveEquippedModal();
+                        }
+                      }}
+                      opponent={monster}
+                      playerStats={{
+                        strength: character?.strength ?? 0n,
+                        agility: character?.agility ?? 0n,
+                        intelligence: character?.intelligence ?? 0n,
+                        level: character?.level ?? 1n,
+                        maxHp: character?.maxHp ?? 18n,
+                      }}
+                    />
+                    <Box
+                      backgroundColor="rgba(196,184,158,0.08)"
+                      boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                      h="6px"
+                      w="100%"
+                    />
+                  </Box>
+                ))}
+                {hiddenMonsterCount > 0 && (
+                  <HStack
+                    as="button"
+                    h={ROW_HEIGHT}
+                    justify="center"
+                    onClick={() => setMonstersExpanded(prev => !prev)}
+                    px={4}
                     w="100%"
-                  />
-                </Box>
-              ))}
-            {visibleMonstersOnTile.length === 0 && (
+                    cursor="pointer"
+                    _hover={{ bg: 'rgba(200,122,42,0.1)' }}
+                    transition="background 0.2s"
+                  >
+                    <Text
+                      color="#8A7E6A"
+                      fontFamily="mono"
+                      fontSize={{ base: '2xs', lg: 'xs' }}
+                      fontWeight={500}
+                    >
+                      {monstersExpanded
+                        ? 'Show fewer'
+                        : `${hiddenMonsterCount} more monster${hiddenMonsterCount !== 1 ? 's' : ''}...`}
+                    </Text>
+                  </HStack>
+                )}
+              </>
+            )}
+            {sortedMonsters.length === 0 && (
               <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
                 No monsters in this area
               </Text>
@@ -1194,7 +1247,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
-          {stage <= OnboardingStage.FIRST_STEPS && visibleMonstersOnTile.length === 0 && (
+          {stage <= OnboardingStage.JUST_SPAWNED && visibleMonstersOnTile.length === 0 && (
             <VStack
               align="center"
               justify="center"
