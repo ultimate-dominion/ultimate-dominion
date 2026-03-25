@@ -392,3 +392,107 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
     expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
   });
 });
+
+// --- Monster Collapse ---
+
+const makeMonster = (overrides: Record<string, unknown>) => ({
+  ...testMonster,
+  ...overrides,
+});
+
+describe('TileDetailsPanel — Monster Collapse', () => {
+  beforeEach(() => {
+    setDefaults();
+    vi.useFakeTimers();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('shows all monsters when 3 or fewer', () => {
+    const monsters = [
+      makeMonster({ id: '0xm1', name: 'Rat A', level: 2n }),
+      makeMonster({ id: '0xm2', name: 'Rat B', level: 3n }),
+    ];
+    mapState.visibleMonstersOnTile = monsters;
+    mapState.monstersOnTile = monsters;
+
+    render(<TileDetailsPanel />);
+
+    expect(screen.getByText('Rat A')).toBeTruthy();
+    expect(screen.getByText('Rat B')).toBeTruthy();
+    expect(screen.queryByText(/more monster/)).toBeNull();
+  });
+
+  it('collapses to 3 when more than 3 monsters, shows expand link', () => {
+    const monsters = [
+      makeMonster({ id: '0xm1', name: 'Rat A', level: 2n }),
+      makeMonster({ id: '0xm2', name: 'Rat B', level: 3n }),
+      makeMonster({ id: '0xm3', name: 'Rat C', level: 4n }),
+      makeMonster({ id: '0xm4', name: 'Rat D', level: 6n }),
+      makeMonster({ id: '0xm5', name: 'Rat E', level: 8n }),
+    ];
+    mapState.visibleMonstersOnTile = monsters;
+    mapState.monstersOnTile = monsters;
+
+    render(<TileDetailsPanel />);
+
+    // 3 visible, 2 hidden
+    expect(screen.getByText(/2 more monsters/)).toBeTruthy();
+  });
+
+  it('expands to show all monsters when clicked', async () => {
+    // Player level = 5. Sorted by distance: Rat B(diff=0), Rat A(diff=1), Rat C(diff=2), Rat D(diff=5)
+    const monsters = [
+      makeMonster({ id: '0xm1', name: 'Rat A', level: 4n }),
+      makeMonster({ id: '0xm2', name: 'Rat B', level: 5n }),
+      makeMonster({ id: '0xm3', name: 'Rat C', level: 3n }),
+      makeMonster({ id: '0xm4', name: 'Rat D', level: 10n }),
+    ];
+    mapState.visibleMonstersOnTile = monsters;
+    mapState.monstersOnTile = monsters;
+
+    render(<TileDetailsPanel />);
+
+    // Initially only 3 visible — Rat D (furthest from player level) is hidden
+    expect(screen.getByText(/1 more monster\.\.\./)).toBeTruthy();
+    expect(screen.queryByText('Rat D')).toBeNull();
+
+    // Expand
+    await act(async () => {
+      fireEvent.click(screen.getByText(/1 more monster/));
+    });
+
+    expect(screen.getByText('Rat D')).toBeTruthy();
+    expect(screen.getByText('Show fewer')).toBeTruthy();
+  });
+
+  it('sorts elites first, then by level closeness to player', () => {
+    // Player is level 5 (from defaultCharacter)
+    const monsters = [
+      makeMonster({ id: '0xm1', name: 'Far Rat', level: 1n, isElite: false }),
+      makeMonster({ id: '0xm2', name: 'Close Rat', level: 4n, isElite: false }),
+      makeMonster({ id: '0xm3', name: 'Elite Rat', level: 8n, isElite: true }),
+      makeMonster({ id: '0xm4', name: 'Mid Rat', level: 3n, isElite: false }),
+    ];
+    mapState.visibleMonstersOnTile = monsters;
+    mapState.monstersOnTile = monsters;
+
+    render(<TileDetailsPanel />);
+
+    // Only 3 shown (collapsed). Elite should be first, then Close Rat (diff=1), then Mid Rat (diff=2).
+    // Far Rat (diff=4) should be hidden.
+    const buttons = screen.getAllByRole('button');
+    const monsterNames = buttons
+      .map(b => b.textContent)
+      .filter(t => t && ['Elite Rat', 'Close Rat', 'Mid Rat', 'Far Rat'].some(n => t.includes(n)));
+
+    expect(monsterNames[0]).toContain('Elite Rat');
+    expect(monsterNames[1]).toContain('Close Rat');
+    expect(monsterNames[2]).toContain('Mid Rat');
+    expect(screen.queryByText('Far Rat')).toBeNull();
+  });
+});

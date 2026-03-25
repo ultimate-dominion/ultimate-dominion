@@ -14,7 +14,7 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStoreAlt } from 'react-icons/fa';
 
 
@@ -393,6 +393,7 @@ const WASD_MAP: Record<string, string> = { N: 'W', W: 'A', S: 'S', E: 'D' };
 const ARROW_MAP: Record<string, string> = { N: '\u2191', W: '\u2190', S: '\u2193', E: '\u2192' };
 
 const COMPASS_COLLAPSED_KEY = 'ud_compass_collapsed';
+const COMPASS_PULSE_SEEN_KEY = 'ud_compass_pulse_seen';
 
 const NavigationCompass = ({
   adjacentTiles,
@@ -412,6 +413,21 @@ const NavigationCompass = ({
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(COMPASS_COLLAPSED_KEY) === 'true';
   });
+
+  // Pulse compass arrows once per player, not infinitely
+  const [showPulse, setShowPulse] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !localStorage.getItem(COMPASS_PULSE_SEEN_KEY);
+  });
+
+  useEffect(() => {
+    if (!showPulse) return;
+    const timer = setTimeout(() => {
+      setShowPulse(false);
+      localStorage.setItem(COMPASS_PULSE_SEEN_KEY, 'true');
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [showPulse]);
   const btnSize = '44px';
   const arrowSize = '18px';
 
@@ -586,7 +602,7 @@ const NavigationCompass = ({
                   variant="ghost"
                   size="xs"
                   animation={
-                    stage < OnboardingStage.SETTLING_IN && isActive
+                    showPulse && stage < OnboardingStage.SETTLING_IN && isActive
                       ? `${compassPulse} 2s ease-in-out infinite`
                       : undefined
                   }
