@@ -48,6 +48,7 @@ import { useChat } from '../contexts/ChatContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
+import { SHOW_Z2 } from '../lib/env';
 import { HOME_PATH } from '../Routes';
 import {
   MAX_EQUIPPED_ARMOR,
@@ -334,7 +335,7 @@ export const CharacterPage = (): JSX.Element => {
           >
             <ItemsPanel character={character} />
           </GridItem>
-          {isOwner && (
+          {isOwner && SHOW_Z2 && (
             <GridItem
               colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
               colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
@@ -345,22 +346,26 @@ export const CharacterPage = (): JSX.Element => {
               </PolygonalCard>
             </GridItem>
           )}
-          <GridItem
-            colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            order={{ base: 6, lg: 6 }}
-          >
-            <PolygonalCard clipPath="none" p={6}>
-              <FragmentChainProgress />
-            </PolygonalCard>
-          </GridItem>
-          <GridItem
-            colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-            order={{ base: 7, lg: 7 }}
-          >
-            <FragmentCollection />
-          </GridItem>
+          {SHOW_Z2 && (
+            <GridItem
+              colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+              colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+              order={{ base: 6, lg: 6 }}
+            >
+              <PolygonalCard clipPath="none" p={6}>
+                <FragmentChainProgress />
+              </PolygonalCard>
+            </GridItem>
+          )}
+          {SHOW_Z2 && (
+            <GridItem
+              colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+              colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+              order={{ base: 7, lg: 7 }}
+            >
+              <FragmentCollection />
+            </GridItem>
+          )}
         </Grid>
       ) : (
         <Grid>
