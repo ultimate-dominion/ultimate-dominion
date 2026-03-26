@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
+import { useTranslation } from 'react-i18next';
 import SafeTypist from './SafeTypist';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -52,6 +53,7 @@ export const MONSTER_MOVE_MAPPING: Record<string, string> = {
 };
 
 export const ActionsPanel = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
   const { isSpawned, visibleMonstersOnTile, position } = useMap();
@@ -80,7 +82,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   // Display name prefixed with "Elite" for elite mobs
   const opponentDisplayName = useMemo(() => {
-    if (!opponent) return 'a monster';
+    if (!opponent) return t('battle.aMonster');
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
     return isElite ? `Elite ${opponent.name}` : opponent.name;
   }, [opponent]);
@@ -482,15 +484,15 @@ export const ActionsPanel = (): JSX.Element => {
                 : ''}
               {lastestBattleOutcome?.winner !== character?.id &&
               lastestBattleOutcome?.playerFled
-                ? 'You fled!'
+                ? t('combat.youFled')
                 : ''}
               {lastestBattleOutcome?.winner === character?.id &&
               !lastestBattleOutcome?.playerFled
-                ? 'You won!'
+                ? t('combat.youWon')
                 : ''}
               {lastestBattleOutcome?.winner !== character?.id &&
               !lastestBattleOutcome?.playerFled
-                ? 'You died...'
+                ? t('combat.youDied')
                 : ''}
             </Text>
           )}
@@ -551,10 +553,10 @@ export const ActionsPanel = (): JSX.Element => {
               </Button>
               <Text size="2xs" color={hasSmokeCover ? '#6B8E6B' : '#8A7E6A'} maxW="200px">
                 {hasSmokeCover
-                  ? 'Smoke Cloak active — flee without gold penalty!'
+                  ? t('combat.smokeCloakActive')
                   : currentBattle.encounterType === EncounterType.PvP
-                    ? 'First turn only. Costs 25% carried gold.'
-                    : 'First turn only.'}
+                    ? t('combat.fleeFirstTurnCost')
+                    : t('combat.fleeFirstTurn')}
               </Text>
             </HStack>
           )}
@@ -740,10 +742,10 @@ export const ActionsPanel = (): JSX.Element => {
             <HStack justify="space-between" w="100%">
               <Text color="#8A7E6A" fontStyle="italic" size="xs">
                 {position.x === 0 && position.y === 0
-                  ? 'Move to a new tile to find monsters.'
+                  ? t('combat.moveToFind')
                   : visibleMonstersOnTile.length === 0
-                    ? 'No monsters here. Try another tile.'
-                    : 'Click on a monster to battle.'}
+                    ? t('combat.noMonstersHere')
+                    : t('combat.clickToFight')}
               </Text>
               {/* Auto-adventure paused — hidden until re-enabled */}
             </HStack>
@@ -773,8 +775,8 @@ export const ActionsPanel = (): JSX.Element => {
                 </Text>
                 <Text color={isCritical ? '#C08080' : '#8A7E6A'} size="2xs">
                   {isCritical
-                    ? 'You are close to death. Heal before your next fight.'
-                    : 'Consider using a potion before continuing.'}
+                    ? t('combat.closeToDeath')
+                    : t('combat.considerPotion')}
                 </Text>
               </Box>
             );
@@ -831,7 +833,7 @@ export const ActionsPanel = (): JSX.Element => {
                     stdTypingDelay={10}
                   >
                     <Text size={logSize}>
-                      {isPlayer ? 'You' : opponentDisplayName} used{' '}
+                      {isPlayer ? t('combat.you') : opponentDisplayName} {t('combat.used')}{' '}
                       <Text as="span" color="green">
                         {consumable ? removeEmoji(consumable.name) : 'a potion'}
                       </Text>
@@ -1015,7 +1017,7 @@ export const ActionsPanel = (): JSX.Element => {
                   .{' '}
                   {effectNames[0]
                     ? `${effectNames[0]} is already active.`
-                    : 'It had no effect.'}
+                    : t('combat.noEffect')}
                 </Text>
               );
             } else if (isPlayerAttack) {
@@ -1088,7 +1090,7 @@ export const ActionsPanel = (): JSX.Element => {
                 )}
                 {attack.blocked && (
                   <Text size={{ base: '2xs', sm: '2xs', lg: 'xs' }} color="#8B8B8B" fontWeight={700}>
-                    {isPlayerAttack ? `${opponentDisplayName} blocked some damage.` : 'You blocked some damage.'}
+                    {isPlayerAttack ? t('combat.blockedSome', { name: opponentDisplayName }) : t('combat.youBlockedSome')}
                   </Text>
                 )}
                 {attack.spellDodged && (

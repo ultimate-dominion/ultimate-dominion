@@ -21,6 +21,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
@@ -113,6 +114,7 @@ const REST_FLAVOR = [
 ];
 
 export const TileDetailsPanel = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     isOpen: isSafetyZoneInfoModalOpen,
@@ -998,7 +1000,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             size={{ base: 'md', lg: 'xl' }}
             textTransform="uppercase"
           >
-            {pendingOpponent ? `Fighting ${pendingOpponent.name}` : 'Initiating battle'}
+            {pendingOpponent ? t('combat.fighting', { name: pendingOpponent.name }) : t('combat.initiatingBattle')}
           </Text>
           <Spinner color="red.400" size="lg" thickness="3px" speed="0.8s" />
         </VStack>
@@ -1031,7 +1033,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           )}
           <GridItem colSpan={2}>
             <Heading size="sm">
-              {shopsOnTile.length > 0 && !isHomeTile && 'Shops & '}Players
+              {shopsOnTile.length > 0 && !isHomeTile ? t('tile.shopsAndPlayers') : t('tile.players')}
             </Heading>
           </GridItem>
         </Grid>
@@ -1225,7 +1227,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                       fontWeight={500}
                     >
                       {monstersExpanded
-                        ? 'Show fewer'
+                        ? t('combat.showFewer')
                         : `${hiddenMonsterCount} more monster${hiddenMonsterCount !== 1 ? 's' : ''}...`}
                     </Text>
                   </HStack>
@@ -1281,7 +1283,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             <>
               <HStack h={ROW_HEIGHT} justifyContent="end" px={4}>
                 <Text size={{ base: '3xs', sm: '2xs', md: 'xs' }} textAlign="right">
-                  {inSafetyZone ? 'The Alcove' : 'The Winding Dark'}
+                  {inSafetyZone ? t('tile.theAlcove') : t('tile.theWindingDark')}
                 </Text>
               </HStack>
               <Box
