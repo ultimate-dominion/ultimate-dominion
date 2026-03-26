@@ -9,7 +9,7 @@
 set -euo pipefail
 
 # ── Canonical world addresses (update here when creating a new world) ──
-BETA_WORLD="0x4a54538eCD32E1827121f9edb4a87CC4C08536E5"
+BETA_WORLD="0xDc34AC3b06fa0ed899696A72B7706369864E5678"
 PROD_WORLD="0x99d01939F58B965E6E84a1D167E710Abdf5764b0"
 
 ENV_LABEL="${1:-unknown}"

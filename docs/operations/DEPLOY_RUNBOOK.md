@@ -9,7 +9,7 @@ How to deploy every component of Ultimate Dominion, from contracts to infrastruc
 | Environment | Chain | Chain ID | World Address | Branch | Client URL |
 |-------------|-------|----------|---------------|--------|------------|
 | **Local** | Anvil | 31337 | Auto-generated | Any | `http://localhost:3000` |
-| **Beta** | Base Mainnet | 8453 | `0x4a54538eCD32E1827121f9edb4a87CC4C08536E5` | `dev` | `https://beta.ultimatedominion.com` |
+| **Beta** | Base Mainnet | 8453 | `0xDc34AC3b06fa0ed899696A72B7706369864E5678` | `dev` | `https://beta.ultimatedominion.com` |
 | **Production** | Base Mainnet | 8453 | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `main` | `https://ultimatedominion.com` |
 
 Both beta and production run on Base Mainnet (chain 8453). They are distinguished **only** by world address. Never mix them.
@@ -21,9 +21,9 @@ All four Railway services live in the same Railway project (`sweet-quietude`). T
 | Service | Railway Name | Railway URL | World |
 |---------|-------------|-------------|-------|
 | Indexer (prod) | `indexer` | `indexer-production-d6df.up.railway.app` | `0x99d01939...` |
-| Indexer (beta) | `indexer-beta` | `indexer-prod-production-45cf.up.railway.app` | `0x4a54538e...` |
+| Indexer (beta) | `indexer-beta` | `indexer-prod-production-45cf.up.railway.app` | `0xDc34AC3b...` |
 | Relayer (prod) | `relayer` | `8453.relay.ultimatedominion.com` | `0x99d01939...` |
-| Relayer (beta) | `relayer-beta` | `relayer-prod-production.up.railway.app` | `0x4a54538e...` |
+| Relayer (beta) | `relayer-beta` | `relayer-prod-production.up.railway.app` | `0xDc34AC3b...` |
 
 **Safety rule:** After every Railway deploy, `curl /api/health` (indexer) or `curl /` (relayer) and verify the `worldAddress` in the response matches the expected environment.
 
@@ -201,7 +201,7 @@ Custom MUD indexer that syncs Store events from on-chain to PostgreSQL, providin
 |---|---|---|
 | Railway service name | `indexer` | `indexer-beta` |
 | Railway URL | `https://indexer-production-d6df.up.railway.app` | `https://indexer-prod-production-45cf.up.railway.app` |
-| World address | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `0x4a54538eCD32E1827121f9edb4a87CC4C08536E5` |
+| World address | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `0xDc34AC3b06fa0ed899696A72B7706369864E5678` |
 | Client env var | `.env.production` → `VITE_INDEXER_API_URL` | `.env.staging` → `VITE_INDEXER_API_URL` |
 | Health | `GET /api/health` | `GET /api/health` |
 | Status | `GET /api/status` | `GET /api/status` |
@@ -274,7 +274,7 @@ Self-hosted transaction relayer with a pool of 5 EOA wallets. Pays gas on behalf
 |---|---|---|
 | Railway service name | `relayer` | `relayer-beta` |
 | Railway URL | `https://8453.relay.ultimatedominion.com` | `https://relayer-prod-production.up.railway.app` |
-| World address | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `0x4a54538eCD32E1827121f9edb4a87CC4C08536E5` |
+| World address | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `0xDc34AC3b06fa0ed899696A72B7706369864E5678` |
 | Client env var | `.env.production` → `VITE_RELAYER_URL` | `.env.staging` → `VITE_RELAYER_URL` |
 | Health | `GET /` | `GET /` |
 
@@ -395,7 +395,7 @@ pnpm item:verify:testnet dark_cave  # Should show no diffs (or expected diffs)
 # Production — verify worldAddress matches 0x99d01939...
 curl -s https://indexer-production-d6df.up.railway.app/api/health
 
-# Beta — verify worldAddress matches 0x4a54538e...
+# Beta — verify worldAddress matches 0xDc34AC3b...
 curl -s https://indexer-prod-production-45cf.up.railway.app/api/health
 ```
 
