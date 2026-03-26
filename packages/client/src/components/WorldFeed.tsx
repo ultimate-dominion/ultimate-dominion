@@ -9,6 +9,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useChat } from '../contexts/ChatContext';
 
@@ -36,6 +37,7 @@ const RECENT_THRESHOLD = 12_000;
 type WorldFeedProps = { inline?: boolean };
 
 export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
+  const { t } = useTranslation('ui');
   const {
     isOpen,
     messages,
@@ -73,7 +75,7 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
         px={3}
         w="100%"
       >
-        <Heading fontSize={inline ? 'xs' : { base: 'xs', md: 'sm' }} textTransform="uppercase" letterSpacing="wider">World</Heading>
+        <Heading fontSize={inline ? 'xs' : { base: 'xs', md: 'sm' }} textTransform="uppercase" letterSpacing="wider">{t('worldFeed.title')}</Heading>
         {!inline && <CloseButton size="sm" onClick={onClose} />}
       </HStack>
       <Box
@@ -86,7 +88,7 @@ export const WorldFeed: React.FC<WorldFeedProps> = ({ inline = false }) => {
         <VStack bg="#14120F" className="data-dense" flex="1" overflowY="auto" px={1.5} py={1} spacing={0.5}>
           {reversed.length === 0 && (
             <Text color="#5A5347" fontStyle="italic" mt={4} fontSize="xs" textAlign="center">
-              Waiting for world events...
+              {t('worldFeed.waiting')}
             </Text>
           )}
           {reversed.map((message, index) => {

@@ -212,5 +212,65 @@
     "claiming": "Claiming...",
     "claimFragment": "CLAIM FRAGMENT",
     "shareText": "Discovered Fragment {{num}}: {{name}} in Ultimate Dominion. The fallen speak in riddles."
+  },
+  "chat": {
+    "title": "Chat",
+    "badgeUnlocked": "Adventurer Badge - Chat Unlocked!",
+    "publicWarning": "This chat is permanent and public to all other players. Do not share personal information or sensitive data.",
+    "locked": "Chat Locked",
+    "unlockMessage": "Reach level 3 to unlock global chat and earn your Adventurer badge!",
+    "keepAdventuring": "Keep adventuring and defeating monsters to level up.",
+    "checkingAccess": "Checking chat access...",
+    "publicDisclaimer": "Ultimate Dominion's chat is public and permanent. Do not share personal information or sensitive data.",
+    "joinChat": "Join Chat",
+    "login": "Login",
+    "placeholder": "Type a message...",
+    "sent": "Sent: {{time}}"
+  },
+  "roster": {
+    "playersOnline": "{{count}} Players Online",
+    "playerOnline": "{{count}} Player Online",
+    "online": "Online",
+    "all": "All",
+    "noPlayersFound": "No players found",
+    "searchPlayers": "Search players...",
+    "inBattle": "In Battle",
+    "shopping": "Shopping",
+    "cooldown": "Cooldown",
+    "tile": "Tile {{label}}",
+    "safe": "Safe",
+    "you": "You",
+    "lv": "Lv{{level}}"
+  },
+  "worldFeed": {
+    "title": "World",
+    "waiting": "Waiting for world events..."
+  },
+  "footer": {
+    "about": "About",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "blog": "Blog"
+  },
+  "share": {
+    "shareWithImage": "Share with image",
+    "shareAria": "Share",
+    "copied": "Copied!",
+    "copyText": "Copy text",
+    "copyAria": "Copy to clipboard",
+    "monsterSlain": "Monster Slain",
+    "pvpVictory": "PvP Victory",
+    "itemFound": "Item Found",
+    "levelUpLabel": "Level Up",
+    "fragmentLabel": "Fragment {{num}} of 8",
+    "classChosen": "Advanced Class Chosen",
+    "defaultLabel": "Ultimate Dominion"
+  },
+  "health": {
+    "lvl": "Lvl {{level}}",
+    "hp": "HP"
+  },
+  "durability": {
+    "label": "Durability: {{current}}/{{max}}"
   }
 }
