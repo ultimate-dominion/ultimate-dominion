@@ -39,3 +39,4 @@
       "@latticexyz/protocol-parser@2.2.23": "patches/@latticexyz__protocol-parser@2.2.23.patch"
     }
   }
+}
