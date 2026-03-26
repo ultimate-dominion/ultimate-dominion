@@ -540,5 +540,79 @@
     "notNow": "지금은 아니오",
     "chosenMessage": "어둠의 동굴을 걸어 살아남았다.\n길이 정해졌다. 세상이 기억할 것이다.",
     "shareText": "Ultimate Dominion에서 {{name}}이(가) 되었습니다. 레벨 10 달성."
+  },
+  "characterCreation": {
+    "pageTitle": "캐릭터 생성 | Ultimate Dominion",
+    "identity": {
+      "heading": "당신은 누구인가?",
+      "namePlaceholder": "이름",
+      "raceLabel": "당신의 혈통",
+      "powerLabel": "당신의 힘",
+      "submitButton": "나는 {{name}}, {{power}}의 {{race}}",
+      "submitButtonDefault": "나는 {{name}}",
+      "loadingText": "각성 중...",
+      "warning": "종족과 힘의 원천을 선택하세요."
+    },
+    "stats": {
+      "heading": "동굴이 시험한다",
+      "racePrefix": "종족: {{name}}",
+      "powerPrefix": "힘: {{name}}",
+      "rollButton": "스탯 굴리기",
+      "rerollButton": "스탯 다시 굴리기",
+      "noRerolls": "재굴림 횟수 소진",
+      "rerollsRemaining": "재굴림 {{count}}회 남음 — 무료",
+      "rollingText": "굴리는 중...",
+      "continueButton": "운명을 받아들이다",
+      "buildIndicator": "현재 빌드: ",
+      "buildDominant": "{{stat}} 특화"
+    },
+    "equipment": {
+      "heading": "무장하라",
+      "loading": "장비 불러오는 중...",
+      "weaponLabel": "무기",
+      "armorLabel": "방어구",
+      "recommendedBadge": "빌드에 적합",
+      "combatTriangleHint": "STR은 AGI에 강하다. AGI는 INT에 강하다. INT는 STR에 강하다.",
+      "submitButton": "어둠의 동굴로",
+      "wakingText": "깨어나는 중..."
+    },
+    "celebration": {
+      "journeyBegins": "여정이 시작된다."
+    },
+    "funding": {
+      "heading": "세션 충전",
+      "message": "세션 계정에 Base 네트워크 게임 수수료를 위한 소량의 ETH가 필요합니다. 자금은 세션에 보관되며 언제든 출금할 수 있습니다.",
+      "depositButton": "ETH 입금"
+    },
+    "race": {
+      "human": "인간",
+      "humanDesc": "균형 잡힌 다재다능함",
+      "elf": "엘프",
+      "elfDesc": "우아하고 현명한",
+      "dwarf": "드워프",
+      "dwarfDesc": "튼튼하고 강한"
+    },
+    "powerSource": {
+      "divine": "신성",
+      "divineDesc": "부르면 무언가가 응답한다. 오래된 것이.",
+      "divinePlay": "신앙",
+      "weave": "위브",
+      "weaveDesc": "현실의 직물에 실이 있다. 당신은 그것을 볼 수 있다.",
+      "weavePlay": "마법",
+      "physical": "물리",
+      "physicalDesc": "마법도 없다. 기도도 없다. 오직 육체, 무기, 의지뿐.",
+      "physicalPlay": "무술",
+      "divineTitle": "신성의",
+      "weaveTitle": "위브의",
+      "physicalTitle": "강철 의지"
+    },
+    "selectBothWarning": "시작 무기와 방어구를 모두 선택하세요.",
+    "errors": {
+      "walletInitializing": "지갑 초기화 중 — 잠시 후 다시 시도하세요.",
+      "nameRequired": "이름을 입력하세요.",
+      "avatarUploadFailed": "캐릭터 아바타 업로드 중 문제가 발생했습니다.",
+      "invalidMetadataUrl": "서버에서 유효하지 않은 메타데이터 URL이 반환되었습니다.",
+      "creationFailed": "캐릭터 생성에 실패했습니다."
+    }
   }
 }

@@ -74,7 +74,7 @@ export async function getNetworkConfig(): Promise<{
    * URL query param override removed for security (H-4).
    */
   const world = worlds[chain.id.toString()];
-  const worldAddress = import.meta.env.VITE_WORLD_ADDRESS || (IS_DEV ? world?.address : undefined);
+  const worldAddress = (import.meta.env.VITE_WORLD_ADDRESS?.trim()) || (IS_DEV ? world?.address : undefined);
   if (!worldAddress) {
     throw new Error(
       `No world address found for chain ${chainId}. ` +

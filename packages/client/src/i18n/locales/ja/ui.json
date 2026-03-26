@@ -540,5 +540,79 @@
     "notNow": "今はしない",
     "chosenMessage": "暗黒の洞窟を歩き、生き延びた。\n道は選ばれた。世界はそれを記憶する。",
     "shareText": "Ultimate Dominionで{{name}}になった。レベル10達成。"
+  },
+  "characterCreation": {
+    "pageTitle": "キャラクター作成 | Ultimate Dominion",
+    "identity": {
+      "heading": "汝は何者か?",
+      "namePlaceholder": "名前",
+      "raceLabel": "血統",
+      "powerLabel": "力の源",
+      "submitButton": "我は{{name}}、{{power}}の{{race}}",
+      "submitButtonDefault": "我は{{name}}",
+      "loadingText": "覚醒中...",
+      "warning": "種族と力の源を選んでください。"
+    },
+    "stats": {
+      "heading": "洞窟が試す",
+      "racePrefix": "種族: {{name}}",
+      "powerPrefix": "力: {{name}}",
+      "rollButton": "ステータスを振る",
+      "rerollButton": "ステータスを振り直す",
+      "noRerolls": "振り直し回数なし",
+      "rerollsRemaining": "残り{{count}}回振り直し可能 — 無料",
+      "rollingText": "ダイスを振っています...",
+      "continueButton": "運命を受け入れる",
+      "buildIndicator": "現在のビルド: ",
+      "buildDominant": "{{stat}}特化"
+    },
+    "equipment": {
+      "heading": "武装せよ",
+      "loading": "装備を読み込み中...",
+      "weaponLabel": "武器",
+      "armorLabel": "防具",
+      "recommendedBadge": "ビルドに最適",
+      "combatTriangleHint": "STRはAGIに強い。AGIはINTに強い。INTはSTRに強い。",
+      "submitButton": "暗黒の洞窟へ",
+      "wakingText": "目覚め中..."
+    },
+    "celebration": {
+      "journeyBegins": "旅が始まる。"
+    },
+    "funding": {
+      "heading": "セッションに入金",
+      "message": "セッションアカウントにBaseネットワークのゲーム手数料をカバーする少量のETHが必要です。資金はセッションに保管され、いつでも引き出せます。",
+      "depositButton": "ETHを入金"
+    },
+    "race": {
+      "human": "人間",
+      "humanDesc": "バランスが取れた万能型",
+      "elf": "エルフ",
+      "elfDesc": "優雅で賢い",
+      "dwarf": "ドワーフ",
+      "dwarfDesc": "頑丈で力強い"
+    },
+    "powerSource": {
+      "divine": "神聖",
+      "divineDesc": "呼べば何かが応える。古いものが。",
+      "divinePlay": "信仰",
+      "weave": "織",
+      "weaveDesc": "現実の織物には糸がある。あなたにはそれが見える。",
+      "weavePlay": "魔法",
+      "physical": "物理",
+      "physicalDesc": "魔法もない。祈りもない。己の体と武器と意志だけ。",
+      "physicalPlay": "武術",
+      "divineTitle": "神聖の",
+      "weaveTitle": "織の",
+      "physicalTitle": "鉄の意志"
+    },
+    "selectBothWarning": "初期武器と防具の両方を選択してください。",
+    "errors": {
+      "walletInitializing": "ウォレット初期化中 — しばらくしてから再試行してください。",
+      "nameRequired": "名前を入力してください。",
+      "avatarUploadFailed": "キャラクターアバターのアップロードに失敗しました。",
+      "invalidMetadataUrl": "サーバーから無効なメタデータURLが返されました。",
+      "creationFailed": "キャラクター作成に失敗しました。"
+    }
   }
 }

@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
 import { useAuth } from '../contexts/AuthContext';
@@ -91,78 +92,77 @@ const STAT_COLORS: Record<string, string> = {
   INT: '#4A7AB5',
 };
 
-// Race descriptions, stat bonuses, and display info
+// Race stat bonuses and display info (names/descriptions resolved via i18n)
 const RACE_INFO: Record<Race, {
-  name: string;
-  description: string;
+  nameKey: string;
+  descKey: string;
   icon: string;
   bonuses: { hp: number; str: number; agi: number; int: number };
 }> = {
   [Race.Human]: {
-    name: 'Human',
-    description: 'Balanced and versatile',
+    nameKey: 'characterCreation.race.human',
+    descKey: 'characterCreation.race.humanDesc',
     icon: '🧑',
     bonuses: { hp: 0, str: 1, agi: 1, int: 1 },
   },
   [Race.Elf]: {
-    name: 'Elf',
-    description: 'Graceful and wise',
+    nameKey: 'characterCreation.race.elf',
+    descKey: 'characterCreation.race.elfDesc',
     icon: '🧝',
     bonuses: { hp: -1, str: -1, agi: 2, int: 1 },
   },
   [Race.Dwarf]: {
-    name: 'Dwarf',
-    description: 'Sturdy and strong',
+    nameKey: 'characterCreation.race.dwarf',
+    descKey: 'characterCreation.race.dwarfDesc',
     icon: '🧔',
     bonuses: { hp: 1, str: 2, agi: -1, int: 0 },
   },
   [Race.None]: {
-    name: 'None',
-    description: '',
+    nameKey: '',
+    descKey: '',
     icon: '',
     bonuses: { hp: 0, str: 0, agi: 0, int: 0 },
   },
 };
 
-// Power source descriptions
+// Power source display info (names/descriptions resolved via i18n)
 const POWER_SOURCE_INFO: Record<PowerSource, {
-  name: string;
-  description: string;
+  nameKey: string;
+  descKey: string;
   icon: string;
-  playstyle: string;
+  playstyleKey: string;
 }> = {
   [PowerSource.Divine]: {
-    name: 'Divine',
-    description: 'Something answers when you call. Something old.',
+    nameKey: 'characterCreation.powerSource.divine',
+    descKey: 'characterCreation.powerSource.divineDesc',
     icon: '✨',
-    playstyle: 'Faith',
+    playstyleKey: 'characterCreation.powerSource.divinePlay',
   },
   [PowerSource.Weave]: {
-    name: 'Weave',
-    description: 'The fabric of reality has threads. You can see them.',
+    nameKey: 'characterCreation.powerSource.weave',
+    descKey: 'characterCreation.powerSource.weaveDesc',
     icon: '🔮',
-    playstyle: 'Magic',
+    playstyleKey: 'characterCreation.powerSource.weavePlay',
   },
   [PowerSource.Physical]: {
-    name: 'Physical',
-    description: 'No magic. No prayers. Just your body, your weapon, your will.',
+    nameKey: 'characterCreation.powerSource.physical',
+    descKey: 'characterCreation.powerSource.physicalDesc',
     icon: '⚔️',
-    playstyle: 'Martial',
+    playstyleKey: 'characterCreation.powerSource.physicalPlay',
   },
   [PowerSource.None]: {
-    name: 'None',
-    description: '',
+    nameKey: '',
+    descKey: '',
     icon: '',
-    playstyle: '',
+    playstyleKey: '',
   },
 };
 
-
-// Title suffixes for the identity button
+// Title suffixes for the identity button (i18n keys)
 const POWER_SOURCE_TITLE: Record<PowerSource, string> = {
-  [PowerSource.Divine]: 'the Divine',
-  [PowerSource.Weave]: 'the Weave',
-  [PowerSource.Physical]: 'Iron Will',
+  [PowerSource.Divine]: 'characterCreation.powerSource.divineTitle',
+  [PowerSource.Weave]: 'characterCreation.powerSource.weaveTitle',
+  [PowerSource.Physical]: 'characterCreation.powerSource.physicalTitle',
   [PowerSource.None]: '',
 };
 
@@ -187,6 +187,7 @@ export const CharacterCreation = (): JSX.Element => {
 type CreationPhase = 'identity' | 'stats' | 'equipment' | 'celebration';
 
 const CharacterCreationInner = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   useEffect(() => {
     console.info('[CharacterCreation] Inner component mounted');
   }, []);
@@ -331,13 +332,13 @@ const CharacterCreationInner = (): JSX.Element => {
         setIsCreating(true);
 
         if (!delegatorAddress) {
-          renderWarning('Wallet still initializing — please wait a moment and try again.');
+          renderWarning(t('characterCreation.errors.walletInitializing'));
           setIsCreating(false);
           return;
         }
 
         if (!name) {
-          renderWarning('Name is required.');
+          renderWarning(t('characterCreation.errors.nameRequired'));
           return;
         }
 
@@ -350,7 +351,7 @@ const CharacterCreationInner = (): JSX.Element => {
           const avatarCid = await onUpload();
           if (!avatarCid)
             throw new Error(
-              'Something went wrong uploading your character avatar.',
+              t('characterCreation.errors.avatarUploadFailed'),
             );
 
           image = `ipfs://${avatarCid}`;
@@ -412,7 +413,7 @@ const CharacterCreationInner = (): JSX.Element => {
           // Extract CID from the IPFS gateway URL
           const cid = url.split('/').pop();
           if (!cid) {
-            throw new Error('Invalid metadata URL returned from the server.');
+            throw new Error(t('characterCreation.errors.invalidMetadataUrl'));
           }
 
           const { error, success } = await mintCharacter(
@@ -432,7 +433,7 @@ const CharacterCreationInner = (): JSX.Element => {
           throw error;
         }
       } catch (e) {
-        renderError((e as Error)?.message ?? 'Failed to create character.', e);
+        renderError((e as Error)?.message ?? t('characterCreation.errors.creationFailed'), e);
       } finally {
         setIsCreating(false);
       }
@@ -445,6 +446,7 @@ const CharacterCreationInner = (): JSX.Element => {
       onUpload,
       renderError,
       renderWarning,
+      t,
     ],
   );
 
@@ -524,7 +526,7 @@ const CharacterCreationInner = (): JSX.Element => {
     }
 
     if (!selectedStarterWeaponId || !selectedStarterArmorId) {
-      renderWarning('Please select both a starter weapon and armor.');
+      renderWarning(t('characterCreation.selectBothWarning'));
       return;
     }
 
@@ -537,7 +539,7 @@ const CharacterCreationInner = (): JSX.Element => {
     if (result?.success) {
       setShowCelebration(true);
       import('../utils/analytics').then(({ trackCharacterCreated }) =>
-        trackCharacterCreated(RACE_INFO[selectedRace]?.name ?? 'Unknown', name ?? ''),
+        trackCharacterCreated(t(RACE_INFO[selectedRace]?.nameKey || '', 'Unknown'), name ?? ''),
       );
       setTimeout(() => navigate(GAME_BOARD_PATH), 3000);
     }
@@ -550,6 +552,7 @@ const CharacterCreationInner = (): JSX.Element => {
     rolledOnce,
     selectedStarterWeaponId,
     selectedStarterArmorId,
+    t,
   ]);
 
   // Orchestrate identity submission: mint → race → powerSource
@@ -659,14 +662,13 @@ const CharacterCreationInner = (): JSX.Element => {
     return (
       <Center h="100vh" flexDirection="column" gap={4} px={4}>
         <Text color="#D4A54A" fontFamily="Cinzel, serif" fontSize="xl" fontWeight={600}>
-          Fund Your Session
+          {t('characterCreation.funding.heading')}
         </Text>
         <Text color="#C4B89E" fontSize="sm" textAlign="center" maxW="400px">
-          Your session account needs a small ETH deposit to cover gameplay fees on Base.
-          Your funds stay in your session and can be withdrawn anytime.
+          {t('characterCreation.funding.message')}
         </Text>
         <Button onClick={onOpenWalletDetailsModal} variant="amber" px={10} py={5}>
-          Deposit ETH
+          {t('characterCreation.funding.depositButton')}
         </Button>
       </Center>
     );
@@ -705,9 +707,9 @@ const CharacterCreationInner = (): JSX.Element => {
           {character.name}
         </Text>
         <HStack spacing={3} position="relative">
-          <Text fontSize="14px" color="#8A7E6A">{RACE_INFO[selectedRace]?.name}</Text>
+          <Text fontSize="14px" color="#8A7E6A">{t(RACE_INFO[selectedRace]?.nameKey || '')}</Text>
           <Text fontSize="14px" color="#3A3228">&middot;</Text>
-          <Text fontSize="14px" color="#8A7E6A">{POWER_SOURCE_INFO[selectedPowerSource]?.name}</Text>
+          <Text fontSize="14px" color="#8A7E6A">{t(POWER_SOURCE_INFO[selectedPowerSource]?.nameKey || '')}</Text>
         </HStack>
         <HStack spacing={4} position="relative">
           <Text fontFamily="mono" fontSize="14px" color="#B85C3A">STR {character.strength.toString()}</Text>
@@ -723,7 +725,7 @@ const CharacterCreationInner = (): JSX.Element => {
           mt={4}
           position="relative"
         >
-          Your journey begins.
+          {t('characterCreation.celebration.journeyBegins')}
         </Text>
       </VStack>
     );
@@ -732,7 +734,7 @@ const CharacterCreationInner = (): JSX.Element => {
   // Handle the identity submit: batched mint + race + powerSource
   const onSubmitIdentity = async (e: React.FormEvent) => {
     if (selectedRace === Race.None || selectedPowerSource === PowerSource.None) {
-      renderWarning('Choose a race and power source.');
+      renderWarning(t('characterCreation.identity.warning'));
       return;
     }
 
@@ -766,7 +768,7 @@ const CharacterCreationInner = (): JSX.Element => {
   return (
     <VStack minH="100vh" justify="center" py={{ base: 4, sm: 8 }} px={{ base: 2, sm: 4 }}>
       <Helmet>
-        <title>Create Character | Ultimate Dominion</title>
+        <title>{t('characterCreation.pageTitle')}</title>
       </Helmet>
 
       <PolygonalCard maxW="640px" mx="auto" w="100%" p={{ base: 4, sm: 8 }}>
@@ -778,10 +780,10 @@ const CharacterCreationInner = (): JSX.Element => {
               {/* Name */}
               <VStack spacing={3} w="100%">
                 <Text fontFamily="'Cinzel', serif" fontSize="22px" color="#D4A54A" fontWeight={700}>
-                  Who Are You?
+                  {t('characterCreation.identity.heading')}
                 </Text>
                 <Input
-                  placeholder="Your name"
+                  placeholder={t('characterCreation.identity.namePlaceholder')}
                   maxLength={15}
                   bg="#14120F"
                   border="2px solid #3A3228"
@@ -800,7 +802,7 @@ const CharacterCreationInner = (): JSX.Element => {
               {/* Race */}
               <VStack spacing={3} w="100%">
                 <Text fontFamily="'Cinzel', serif" fontSize="16px" color="#8A7E6A" letterSpacing="0.1em">
-                  Your Blood
+                  {t('characterCreation.identity.raceLabel')}
                 </Text>
                 <HStack spacing={3} w="100%" justify="center">
                   {[Race.Human, Race.Elf, Race.Dwarf].map((race) => {
@@ -826,9 +828,9 @@ const CharacterCreationInner = (): JSX.Element => {
                       >
                         <Text fontSize="28px">{info.icon}</Text>
                         <Text fontFamily="'Cinzel', serif" fontSize="14px" color="#E8DCC8" fontWeight={600}>
-                          {info.name}
+                          {t(info.nameKey)}
                         </Text>
-                        <Text fontSize="12px" color="#8A7E6A">{info.description}</Text>
+                        <Text fontSize="12px" color="#8A7E6A">{t(info.descKey)}</Text>
                       </VStack>
                     );
                   })}
@@ -853,7 +855,7 @@ const CharacterCreationInner = (): JSX.Element => {
               {/* Power Source */}
               <VStack spacing={3} w="100%">
                 <Text fontFamily="'Cinzel', serif" fontSize="16px" color="#8A7E6A" letterSpacing="0.1em">
-                  Your Power
+                  {t('characterCreation.identity.powerLabel')}
                 </Text>
                 <HStack spacing={3} w="100%" justify="center">
                   {[PowerSource.Divine, PowerSource.Weave, PowerSource.Physical].map((ps) => {
@@ -879,12 +881,12 @@ const CharacterCreationInner = (): JSX.Element => {
                       >
                         <Text fontSize="28px">{info.icon}</Text>
                         <Text fontFamily="'Cinzel', serif" fontSize="14px" color="#E8DCC8" fontWeight={600}>
-                          {info.name}
+                          {t(info.nameKey)}
                         </Text>
                         <Text fontSize="11px" color="#C87A2A" fontWeight={600} letterSpacing="0.1em" textTransform="uppercase">
-                          {info.playstyle}
+                          {t(info.playstyleKey)}
                         </Text>
-                        <Text fontSize="12px" color="#8A7E6A" fontStyle="italic">{info.description}</Text>
+                        <Text fontSize="12px" color="#8A7E6A" fontStyle="italic">{t(info.descKey)}</Text>
                       </VStack>
                     );
                   })}
@@ -899,12 +901,12 @@ const CharacterCreationInner = (): JSX.Element => {
                   size="lg"
                   isDisabled={!name || selectedRace === Race.None || selectedPowerSource === PowerSource.None || awaitingFunding}
                   isLoading={isCreating || identityStep > 0}
-                  loadingText="Awakening..."
+                  loadingText={t('characterCreation.identity.loadingText')}
                   onClick={onSubmitIdentity}
                 >
                   {name && selectedRace !== Race.None && selectedPowerSource !== PowerSource.None
-                    ? `I Am ${name}, ${RACE_INFO[selectedRace].name} of ${POWER_SOURCE_TITLE[selectedPowerSource]}`
-                    : `I Am ${name || '...'}`}
+                    ? t('characterCreation.identity.submitButton', { name, race: t(RACE_INFO[selectedRace].nameKey), power: t(POWER_SOURCE_TITLE[selectedPowerSource]) })
+                    : t('characterCreation.identity.submitButtonDefault', { name: name || '...' })}
                 </Button>
                 {/* Progress dots */}
                 {identityStep > 0 && (
@@ -923,12 +925,12 @@ const CharacterCreationInner = (): JSX.Element => {
             <>
               <VStack spacing={1}>
                 <Text fontFamily="'Cinzel', serif" fontSize="22px" color="#D4A54A" fontWeight={700}>
-                  The Cave Tests You
+                  {t('characterCreation.stats.heading')}
                 </Text>
                 <HStack spacing={2}>
-                  <Text fontSize="13px" color="#8A7E6A">Race: {RACE_INFO[selectedRace]?.name}</Text>
+                  <Text fontSize="13px" color="#8A7E6A">{t('characterCreation.stats.racePrefix', { name: t(RACE_INFO[selectedRace]?.nameKey || '') })}</Text>
                   <Text fontSize="13px" color="#3A3228">|</Text>
-                  <Text fontSize="13px" color="#8A7E6A">Power: {POWER_SOURCE_INFO[selectedPowerSource]?.name}</Text>
+                  <Text fontSize="13px" color="#8A7E6A">{t('characterCreation.stats.powerPrefix', { name: t(POWER_SOURCE_INFO[selectedPowerSource]?.nameKey || '') })}</Text>
                 </HStack>
               </VStack>
 
@@ -957,7 +959,7 @@ const CharacterCreationInner = (): JSX.Element => {
               {/* Build indicator */}
               {dominantStat && (
                 <Text fontSize="13px" color="#8A7E6A" textAlign="center">
-                  Current build: <Text as="span" color={STAT_COLORS[dominantStat]} fontWeight={600}>{dominantStat}-dominant</Text>
+                  {t('characterCreation.stats.buildIndicator')}<Text as="span" color={STAT_COLORS[dominantStat]} fontWeight={600}>{t('characterCreation.stats.buildDominant', { stat: dominantStat })}</Text>
                 </Text>
               )}
 
@@ -969,16 +971,16 @@ const CharacterCreationInner = (): JSX.Element => {
                   size="lg"
                   isDisabled={isStatsDisabled || rollsExhausted}
                   isLoading={rollStatsTx.isLoading}
-                  loadingText="Rolling..."
+                  loadingText={t('characterCreation.stats.rollingText')}
                   onClick={onRollStats}
                 >
-                  {rolledOnce ? 'Re-Roll Stats' : 'Roll Stats'}
+                  {rolledOnce ? t('characterCreation.stats.rerollButton') : t('characterCreation.stats.rollButton')}
                 </Button>
                 <Text fontSize="12px" color="#8A7E6A" textAlign="center">
                   {rollsExhausted
-                    ? 'No re-rolls remaining'
+                    ? t('characterCreation.stats.noRerolls')
                     : rolledOnce
-                      ? `${rollsRemaining} re-roll${rollsRemaining > 1 ? 's' : ''} remaining \u2014 it\u2019s free`
+                      ? t('characterCreation.stats.rerollsRemaining', { count: rollsRemaining })
                       : ''}
                 </Text>
               </VStack>
@@ -991,7 +993,7 @@ const CharacterCreationInner = (): JSX.Element => {
                   size="md"
                   onClick={() => setPhase('equipment')}
                 >
-                  Accept My Fate
+                  {t('characterCreation.stats.continueButton')}
                 </Button>
               )}
             </>
@@ -1001,20 +1003,20 @@ const CharacterCreationInner = (): JSX.Element => {
           {phase === 'equipment' && character && (
             <>
               <Text fontFamily="'Cinzel', serif" fontSize="22px" color="#D4A54A" fontWeight={700}>
-                Arm Yourself
+                {t('characterCreation.equipment.heading')}
               </Text>
 
               {isLoadingItemTemplates ? (
                 <VStack py={8} spacing={3}>
                   <Spinner color="#C4B89E" size="lg" />
-                  <Text fontSize="md" color="#9A9080">Loading available equipment...</Text>
+                  <Text fontSize="md" color="#9A9080">{t('characterCreation.equipment.loading')}</Text>
                 </VStack>
               ) : (
                 <>
                   {/* Weapons */}
                   <VStack spacing={2} w="100%">
                     <Text fontFamily="'Cinzel', serif" fontSize="16px" color="#8A7E6A" letterSpacing="0.1em">
-                      Weapon
+                      {t('characterCreation.equipment.weaponLabel')}
                     </Text>
                     {availableStarterWeapons.map(weapon => {
                       const selected = selectedStarterWeaponId === BigInt(weapon.tokenId);
@@ -1048,7 +1050,7 @@ const CharacterCreationInner = (): JSX.Element => {
                           </VStack>
                           {recommended && (
                             <Text fontSize="10px" color="#5A8A3E" fontWeight={600} letterSpacing="0.05em" textTransform="uppercase">
-                              Fits your build
+                              {t('characterCreation.equipment.recommendedBadge')}
                             </Text>
                           )}
                         </HStack>
@@ -1058,13 +1060,13 @@ const CharacterCreationInner = (): JSX.Element => {
 
                   {/* Combat triangle hint */}
                   <Text fontSize="11px" color="#8A7E6A" textAlign="center" fontStyle="italic">
-                    STR counters AGI. AGI counters INT. INT counters STR.
+                    {t('characterCreation.equipment.combatTriangleHint')}
                   </Text>
 
                   {/* Armor */}
                   <VStack spacing={2} w="100%">
                     <Text fontFamily="'Cinzel', serif" fontSize="16px" color="#8A7E6A" letterSpacing="0.1em">
-                      Armor
+                      {t('characterCreation.equipment.armorLabel')}
                     </Text>
                     {availableStarterArmors.map(armor => {
                       const selected = selectedStarterArmorId === BigInt(armor.tokenId);
@@ -1107,10 +1109,10 @@ const CharacterCreationInner = (): JSX.Element => {
                     size="lg"
                     isDisabled={isEnterGameDisabled || !selectedStarterWeaponId || !selectedStarterArmorId}
                     isLoading={enterGameTx.isLoading}
-                    loadingText="Waking..."
+                    loadingText={t('characterCreation.equipment.wakingText')}
                     onClick={onEnterGame}
                   >
-                    Enter the Dark Cave
+                    {t('characterCreation.equipment.submitButton')}
                   </Button>
                 </>
               )}

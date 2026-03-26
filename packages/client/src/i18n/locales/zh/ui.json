@@ -540,5 +540,79 @@
     "notNow": "暂时不选",
     "chosenMessage": "你穿越了暗黑洞穴，活了下来。\n你的道路已定。世界将铭记。",
     "shareText": "在 Ultimate Dominion 中成为了{{name}}。等级 10 达成。"
+  },
+  "characterCreation": {
+    "pageTitle": "创建角色 | Ultimate Dominion",
+    "identity": {
+      "heading": "你是谁?",
+      "namePlaceholder": "你的名字",
+      "raceLabel": "你的血脉",
+      "powerLabel": "你的力量",
+      "submitButton": "吾乃{{name}}，{{power}}之{{race}}",
+      "submitButtonDefault": "吾乃{{name}}",
+      "loadingText": "觉醒中...",
+      "warning": "请选择种族和力量源泉。"
+    },
+    "stats": {
+      "heading": "洞穴考验你",
+      "racePrefix": "种族: {{name}}",
+      "powerPrefix": "力量: {{name}}",
+      "rollButton": "投掷属性",
+      "rerollButton": "重新投掷",
+      "noRerolls": "无剩余重投次数",
+      "rerollsRemaining": "剩余{{count}}次重投 — 免费",
+      "rollingText": "投掷中...",
+      "continueButton": "接受命运",
+      "buildIndicator": "当前流派: ",
+      "buildDominant": "{{stat}}特化"
+    },
+    "equipment": {
+      "heading": "武装自己",
+      "loading": "加载装备中...",
+      "weaponLabel": "武器",
+      "armorLabel": "防具",
+      "recommendedBadge": "适合你的流派",
+      "combatTriangleHint": "STR克制AGI。AGI克制INT。INT克制STR。",
+      "submitButton": "进入暗黑洞穴",
+      "wakingText": "觉醒中..."
+    },
+    "celebration": {
+      "journeyBegins": "旅程开始了。"
+    },
+    "funding": {
+      "heading": "充值会话",
+      "message": "会话账户需要少量ETH来支付Base网络上的游戏费用。资金保存在会话中，可随时提取。",
+      "depositButton": "充值ETH"
+    },
+    "race": {
+      "human": "人类",
+      "humanDesc": "均衡而多才",
+      "elf": "精灵",
+      "elfDesc": "优雅而睿智",
+      "dwarf": "矮人",
+      "dwarfDesc": "坚韧而强壮"
+    },
+    "powerSource": {
+      "divine": "神圣",
+      "divineDesc": "你呼唤时，有什么在回应。古老的东西。",
+      "divinePlay": "信仰",
+      "weave": "织网",
+      "weaveDesc": "现实的织物有丝线。你能看到它们。",
+      "weavePlay": "魔法",
+      "physical": "物理",
+      "physicalDesc": "没有魔法。没有祈祷。只有你的身体、武器和意志。",
+      "physicalPlay": "武术",
+      "divineTitle": "神圣之",
+      "weaveTitle": "织网之",
+      "physicalTitle": "钢铁意志"
+    },
+    "selectBothWarning": "请选择初始武器和防具。",
+    "errors": {
+      "walletInitializing": "钱包初始化中 — 请稍后再试。",
+      "nameRequired": "请输入名字。",
+      "avatarUploadFailed": "角色头像上传出错。",
+      "invalidMetadataUrl": "服务器返回了无效的元数据URL。",
+      "creationFailed": "角色创建失败。"
+    }
   }
 }

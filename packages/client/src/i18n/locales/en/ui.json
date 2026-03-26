@@ -540,5 +540,79 @@
     "notNow": "Not now",
     "chosenMessage": "You have walked the Dark Cave and survived.\nYour path is chosen. The world will remember.",
     "shareText": "Became a {{name}} in Ultimate Dominion. Level 10 achieved."
+  },
+  "characterCreation": {
+    "pageTitle": "Create Character | Ultimate Dominion",
+    "identity": {
+      "heading": "Who Are You?",
+      "namePlaceholder": "Your name",
+      "raceLabel": "Your Blood",
+      "powerLabel": "Your Power",
+      "submitButton": "I Am {{name}}, {{race}} of {{power}}",
+      "submitButtonDefault": "I Am {{name}}",
+      "loadingText": "Awakening...",
+      "warning": "Choose a race and power source."
+    },
+    "stats": {
+      "heading": "The Cave Tests You",
+      "racePrefix": "Race: {{name}}",
+      "powerPrefix": "Power: {{name}}",
+      "rollButton": "Roll Stats",
+      "rerollButton": "Re-Roll Stats",
+      "noRerolls": "No re-rolls remaining",
+      "rerollsRemaining": "{{count}} re-roll(s) remaining — it's free",
+      "rollingText": "Rolling...",
+      "continueButton": "Accept My Fate",
+      "buildIndicator": "Current build: ",
+      "buildDominant": "{{stat}}-dominant"
+    },
+    "equipment": {
+      "heading": "Arm Yourself",
+      "loading": "Loading available equipment...",
+      "weaponLabel": "Weapon",
+      "armorLabel": "Armor",
+      "recommendedBadge": "Fits your build",
+      "combatTriangleHint": "STR counters AGI. AGI counters INT. INT counters STR.",
+      "submitButton": "Enter the Dark Cave",
+      "wakingText": "Waking..."
+    },
+    "celebration": {
+      "journeyBegins": "Your journey begins."
+    },
+    "funding": {
+      "heading": "Fund Your Session",
+      "message": "Your session account needs a small ETH deposit to cover gameplay fees on Base. Your funds stay in your session and can be withdrawn anytime.",
+      "depositButton": "Deposit ETH"
+    },
+    "race": {
+      "human": "Human",
+      "humanDesc": "Balanced and versatile",
+      "elf": "Elf",
+      "elfDesc": "Graceful and wise",
+      "dwarf": "Dwarf",
+      "dwarfDesc": "Sturdy and strong"
+    },
+    "powerSource": {
+      "divine": "Divine",
+      "divineDesc": "Something answers when you call. Something old.",
+      "divinePlay": "Faith",
+      "weave": "Weave",
+      "weaveDesc": "The fabric of reality has threads. You can see them.",
+      "weavePlay": "Magic",
+      "physical": "Physical",
+      "physicalDesc": "No magic. No prayers. Just your body, your weapon, your will.",
+      "physicalPlay": "Martial",
+      "divineTitle": "the Divine",
+      "weaveTitle": "the Weave",
+      "physicalTitle": "Iron Will"
+    },
+    "selectBothWarning": "Please select both a starter weapon and armor.",
+    "errors": {
+      "walletInitializing": "Wallet still initializing — please wait a moment and try again.",
+      "nameRequired": "Name is required.",
+      "avatarUploadFailed": "Something went wrong uploading your character avatar.",
+      "invalidMetadataUrl": "Invalid metadata URL returned from the server.",
+      "creationFailed": "Failed to create character."
+    }
   }
 }
