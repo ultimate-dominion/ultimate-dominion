@@ -42,6 +42,18 @@ import {
   type Weapon,
 } from '../utils/types';
 
+/** Race a promise against a timeout. Rejects with a user-friendly message. */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('This is taking longer than expected. Please try again.')), ms),
+    ),
+  ]);
+}
+
+const TX_TIMEOUT_MS = 25_000;
+
 const torchGlow = keyframes`
   0%, 100% {
     box-shadow: 0 0 8px rgba(200,122,42,0.3), inset 0 0 8px rgba(200,122,42,0.1);
@@ -370,13 +382,16 @@ const CharacterCreationInner = (): JSX.Element => {
         debug.log('Full upload URL', uploadUrl);
 
         try {
-          const res = await fetch(uploadUrl, {
-            method: 'POST',
-            body: JSON.stringify(characterMetadata),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
+          const res = await withTimeout(
+            fetch(uploadUrl, {
+              method: 'POST',
+              body: JSON.stringify(characterMetadata),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }),
+            15_000,
+          );
 
           debug.log('Response status', res.status);
           debug.log('Response ok', res.ok);
@@ -415,10 +430,9 @@ const CharacterCreationInner = (): JSX.Element => {
             throw new Error('Invalid metadata URL returned from the server.');
           }
 
-          const { error, success } = await mintCharacter(
-            delegatorAddress,
-            name,
-            cid,
+          const { error, success } = await withTimeout(
+            mintCharacter(delegatorAddress, name, cid),
+            TX_TIMEOUT_MS,
           );
 
           if (error && !success) {
@@ -456,7 +470,7 @@ const CharacterCreationInner = (): JSX.Element => {
     setSelectedRace(race);
 
     const result = await raceTx.execute(async () => {
-      const r = await chooseRace(character.id, race);
+      const r = await withTimeout(chooseRace(character.id, race), TX_TIMEOUT_MS);
       if (!r.success) throw new Error(r.error || 'Race selection failed');
       return r;
     });
@@ -478,7 +492,7 @@ const CharacterCreationInner = (): JSX.Element => {
     setSelectedPowerSource(powerSource);
 
     const result = await powerSourceTx.execute(async () => {
-      const r = await choosePowerSource(character.id, powerSource);
+      const r = await withTimeout(choosePowerSource(character.id, powerSource), TX_TIMEOUT_MS);
       if (!r.success) throw new Error(r.error || 'Power source selection failed');
       return r;
     });
@@ -505,7 +519,7 @@ const CharacterCreationInner = (): JSX.Element => {
     }
 
     await rollStatsTx.execute(async () => {
-      const r = await rollBaseStats(character.id);
+      const r = await withTimeout(rollBaseStats(character.id), TX_TIMEOUT_MS);
       if (!r.success) throw new Error(r.error || 'Stat roll failed');
       return r;
     });
@@ -529,7 +543,7 @@ const CharacterCreationInner = (): JSX.Element => {
     }
 
     const result = await enterGameTx.execute(async () => {
-      const r = await enterGame(character.id, selectedStarterWeaponId, selectedStarterArmorId);
+      const r = await withTimeout(enterGame(character.id, selectedStarterWeaponId, selectedStarterArmorId), TX_TIMEOUT_MS);
       if (!r.success) throw new Error(r.error || 'Enter game failed');
       return r;
     });
