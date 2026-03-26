@@ -826,7 +826,7 @@ The table schema is already defined. If you want to build one of the unused syst
 
 4. **Respect the dependency chain.** Features in higher tiers often depend on features in lower tiers. Check the "Dependencies" section for each feature before starting work.
 
-5. **Test on beta first.** Beta world address: `0xeB023E9B5A0C452B202306eDa50255EfaF555426`. Deploy and validate there before touching production. See `docs/architecture/` for deployment guides.
+5. **Test on beta first.** Beta world address: `0x4a54538eCD32E1827121f9edb4a87CC4C08536E5`. Deploy and validate there before touching production. See `docs/architecture/` for deployment guides.
 
 6. **Keep the manifesto in mind.** Every system should make the world more permanent, more player-driven, and more worth coming back to in a year. If a feature doesn't pass that test, it doesn't ship.
 
