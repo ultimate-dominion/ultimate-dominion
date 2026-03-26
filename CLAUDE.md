@@ -1,145 +1,48 @@
-# Ultimate Dominion - Project Memory
+# Ultimate Dominion — Rules
 
-## Game Manifesto (Design North Star)
+## Design Filter
+Does this make the world more permanent, more player-driven, and more worth coming back to in a year? (Full manifesto: `packages/client/src/pages/Manifesto.tsx`)
 
-Full manifesto: `packages/client/src/pages/Manifesto.tsx`. Core principles: permanent world (no shortcuts), player-authored stories (emergent > scripted), provable on-chain ownership, invisible tech (no crypto jargon in UI), meaningful consequences, fair economics. **Filter: Does this make the world more permanent, more player-driven, and more worth coming back to in a year?**
+## Testing
+Every code change MUST have tests — happy paths, unhappy paths, edge cases. No exceptions.
 
-## Rules
+## Item & Drop Rate Changes
+`items.json` is the SINGLE SOURCE OF TRUTH. `effects.json` likewise. Never bypass with cast/scripts.
+Flow: edit JSON → commit → `item-sync dark_cave --update` → verify (0 mismatches) → stop if verify fails.
+After any `mud deploy`: run item-sync + effect-sync to verify, tag the deploy, run drop-sim.
 
-### Testing
-**CRITICAL**: Every code change MUST have tests — happy paths, unhappy paths, and edge cases. No exceptions. We deploy directly to production; untested code goes straight to players.
+## Documentation Consistency
+`docs/` is source of truth for game design. Read relevant docs before major changes. Flag contradictions. Update docs after changes.
 
-### Item & Drop Rate Changes
-**CRITICAL**: `items.json` is the SINGLE SOURCE OF TRUTH for all item stats, drop rates, and inventories. Violations of this rule have caused production bugs multiple times.
+## Scope Control
+One feature or fix per branch/commit. If it touches >3 systems, plan first.
 
-**The only allowed flow:**
-1. Edit `items.json` (or `monsters.json` for inventories)
-2. Commit the change
-3. Run `item-sync dark_cave --update` to push to chain
-4. Run `item-sync dark_cave` (verify mode) — must show 0 mismatches
-5. If verify fails, STOP and investigate
+## Git Workflow
+Conventional commits. Only commit current session work. Don't push without asking.
 
-**NEVER do any of these:**
-- Change drop rates on-chain via `cast send` or one-off scripts without updating items.json first
-- Run `item-sync --update` from uncommitted changes
-- Manually set Items table values that bypass items.json
-- Deploy PveRewardSystem from uncommitted code
+## Feature Flow (Beta → Prod)
+- Features land on `dev` first → PR to `main` for production. `main` has branch protection.
+- Hotfixes: 1-commit PR to `main`, `sync-dev.yml` syncs back to dev.
+- Unreleased features: gate with `SHOW_Z2` from `packages/client/src/lib/env.ts` (`!IS_PRODUCTION`).
 
-**Effect changes follow the same flow** — `effects.json` is the source of truth:
-1. Edit `effects.json`
-2. Commit the change
-3. Run `effect-sync dark_cave --update` to push to chain
-4. Run `effect-sync dark_cave` (verify mode) — must show 0 mismatches
+## Autonomy
+**Do freely:** read, search, test, deploy to beta, fix obvious bugs, run forge scripts on testnet.
+**Must ask:** push to main, deploy to prod, spend money, delete resources, change env vars, security changes, force push.
 
-**After any `mud deploy`:**
-- Run `item-sync dark_cave` to verify items AND effects survived the upgrade
-- Run `effect-sync dark_cave` to deep-verify effect stats if item-sync reports missing effects
-- Tag the deploy: `git tag deploy-prod-$(date +%Y%m%d-%H%M)`
-- Run `npx tsx scripts/drop-sim.ts` to confirm player experience matches expectations
+## Session Management
+- `SESSION.md` (repo root) is a multi-task log — append new tasks, remove finished ones.
+- Each entry: branch, task, next step, blockers. Keep it under 20 lines.
+- Learnings go to memory topic files immediately, not SESSION.md.
+- On session start: read SESSION.md + `git status` + `git log --oneline -5` to orient.
 
-### Documentation Consistency
-**CRITICAL**: The docs (`docs/`) are the source of truth for game design. Before making any major code change:
-1. Read the relevant doc(s) to verify the change aligns with documented design
-2. If the change contradicts a doc, flag the inconsistency and ask before proceeding
-3. After completing the change, update any affected docs to stay in sync
-4. Key docs to check: `GAME_DESIGN.md` (mechanics), `ECONOMICS.md` (gold/pricing), `COMBAT_SYSTEM.md` (formulas), `SYSTEM_ARCHITECTURE.md` (contracts), `APP_FLOW.md` (UX flows)
+## Learn From Mistakes
+After any error taking >1 attempt: write root cause + solution to UD-scoped memory immediately.
 
-### Scope Control
-- Keep changes focused — one feature or fix per branch/commit.
-- Don't bundle unrelated work together.
-- If a change touches more than 3 systems, plan it first.
+## After Any Deploy
+Tag: `git tag deploy-prod-$(date +%Y%m%d-%H%M)`. Verify items + effects survived. Run drop-sim.
 
-### Git Workflow
-- Commit style: conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`).
-- Only commit what was worked on in the current session — don't sweep in unrelated uncommitted changes.
-- Don't push without asking.
-
-### Feature Flow (Beta → Prod)
-- **Features land on `dev` first** (beta testing at beta.ultimatedominion.com).
-- **PR from `dev` to `main`** for production release. `main` has branch protection — no direct push.
-- **Hotfixes**: 1-commit PR directly to `main`, then `sync-dev.yml` picks it up.
-- **Unreleased features** must be gated with `SHOW_Z2` from `packages/client/src/lib/env.ts`.
-- `SHOW_Z2 = !IS_PRODUCTION` — visible on beta + local dev, hidden on prod.
-
-### Autonomy Rules
-**Do freely** (no confirmation needed):
-- Read files, search the web, run tests, check health endpoints
-- Deploy to beta (`dev` branch, testnet)
-- Fix obvious bugs, apply config changes to beta
-- Run forge scripts against testnet
-
-**Must ask first**:
-- Push to `main` or deploy to production
-- Spend money (any service, any amount)
-- Delete files, branches, database records, or production resources
-- Change env vars on Railway or Vercel
-- Any security-sensitive change (keys, access control, permissions)
-- Force push anywhere
-
-### Dependencies
-- Pin versions. Run `pnpm audit` before adding new packages.
-- Prefer well-maintained packages with small surface area.
-
-### Status Updates
-- Before any operation that takes more than 10 seconds, say what you're doing and roughly how long it'll take.
-
-### Definition of Done
-- Every task needs a verification command, commit hash, or live URL before it's closed. No closing on vibes.
-
-### Learn From Mistakes
-- After any error that takes more than one attempt to fix, write the root cause and solution to `~/.claude/projects/-Users-michaelorourke/memory/learnings.md` (general) or `mud-gotchas.md` (MUD-specific) before moving on.
-
-### Session State Persistence
-- Maintain `~/.claude/projects/-Users-michaelorourke/memory/SESSION.md` as a working scratchpad.
-- **Update it** when: starting a new task, completing a task, hitting a blocker, making a commit, or any significant state change.
-- **Read it first** at the start of every session to resume where we left off.
-
-## Tech Stack
-- **Framework**: MUD (Lattice) v2 for on-chain game development
-- **Contracts**: Solidity 0.8.24+, deployed via MUD World, tested with Forge (Foundry)
-- **Frontend**: React 18, Chakra UI, Privy + RainbowKit, viem/wagmi
-- **API**: Express on Vercel serverless, Pinata IPFS
-- **Chain**: Base Mainnet (chain 8453) — both production and beta (separate world addresses)
-
-## Key Documentation
-- `docs/INDEX.md` — **Start here.** Master hub linking all docs.
-- Key refs: `GAME_DESIGN.md`, `ECONOMICS.md`, `COMBAT_SYSTEM.md`, `SYSTEM_ARCHITECTURE.md`, `APP_FLOW.md`
-- Operations: `operations/launch_checklist.md`, `operations/DEPLOY_RUNBOOK.md`, `operations/ERROR_REFERENCE.md`
-- Architecture: `architecture/` dir — TOKEN_GUIDE, ACCESS_CONTROL, AUTH_INTEGRATION, INDEXER, RELAYER, frontend_guidelines
-
-## Domain-Specific Rules
-Loaded automatically via `.claude/rules/` when working in each domain:
-- **`solidity.md`** — Security, access control patterns, MUD gotchas, gas safety, testing (activates on `packages/contracts/**/*.sol`)
-- **`client.md`** — Performance, usability, crypto abstraction, SEO, player-facing copy (activates on `packages/client/**`)
-- **`api.md`** — Rate limiting, CORS, input validation, no secret leakage (activates on `packages/api/**`, `packages/relayer/**`)
-- **`deploy.md`** — Environment separation, branch conventions, MUD deploy safety, worlds.json (activates on deploy scripts, env files, mud.config)
-
-## Reminders
-
-### Launch Checklist Updates
-After every git commit, check `docs/operations/launch_checklist.md` for items the commit addresses. Mark done with commit hash, update summary section, update timestamp.
-
-## Critical Gaps
-1. ~~Emergency pause/circuit breaker~~ (DONE)
-2. No external security audit
-3. Inconsistent access control on some admin functions
-
-## Current Deploy State
-
-> **Canonical source for world addresses:** `packages/client/src/mud/worlds.json` (both envs). After any deploy, read this file — don't rely on hardcoded addresses elsewhere.
-
-| Env | Branch | Address Source |
-|-----|--------|---------------|
-| Production | `main` | `worlds.json` → chain `8453`, key `address` (production entry) |
-| Beta | `dev` | `worlds.json` → chain `8453`, key `address` (beta entry) |
-
-| Service | URL |
-|---------|-----|
-| Game (prod) | https://ultimatedominion.com |
-| Game (beta) | https://beta.ultimatedominion.com |
-| Guide | https://ud-guide.vercel.app |
-| Tavern (forum) | https://tavern.ultimatedominion.com |
-| Relayer | https://8453.relay.ultimatedominion.com |
-| Indexer | https://indexer-production-d6df.up.railway.app |
-
-**What's live for players:** Dark Cave (10x10 grid, levels 1-10), 3 races (Human/Elf/Dwarf), 9 advanced classes at level 10, turn-based PvE + PvP combat, NPC shop, player marketplace, escrow-based PvP economy, lore fragments, badges (Adventurer/Founder/Zone Conqueror), Tavern chat at level 3. Gas relayer abstracts all blockchain interaction.
+## Reference (read on demand, not here)
+- Tech stack, service URLs, world addresses → UD-scoped memory (`reference_production_addresses.md`, `infra/tools.md`)
+- Game docs index → `docs/INDEX.md`
+- Domain rules → `.claude/rules/` (auto-loaded per file type)
+- Deploy runbook → `docs/operations/DEPLOY_RUNBOOK.md`
