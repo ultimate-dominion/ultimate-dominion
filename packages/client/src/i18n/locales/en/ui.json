@@ -1,0 +1,544 @@
+{
+  "nav": {
+    "game": "Game",
+    "character": "Character",
+    "marketplace": "Marketplace",
+    "guild": "Guild",
+    "leaderboard": "Leaderboard",
+    "guide": "Guide",
+    "blog": "Blog",
+    "tavern": "Tavern",
+    "settings": "Settings",
+    "about": "About",
+    "sound": "Sound",
+    "menu": "Menu",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
+  "beta": {
+    "banner": "BETA — Test World"
+  },
+  "queue": {
+    "position": "Queue (#{{position}})"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "or": "OR",
+    "no": "No",
+    "yes": "Yes",
+    "complete": "Complete",
+    "permissionGranted": "Permission granted!",
+    "allowSpending": "Allow Spending",
+    "alwaysAllow": "Always Allow",
+    "noCharacter": "No character found. Please select a character.",
+    "walletNotConnected": "Wallet not connected. Please reconnect your wallet."
+  },
+  "betaBanner": {
+    "message": "Early Access — Things may break. When in doubt, refresh.",
+    "reportIssues": "Report issues"
+  },
+  "badges": {
+    "title": "Badges",
+    "noneEarned": "No badges earned yet"
+  },
+  "level": {
+    "max": "MAX",
+    "label": "Level {{level}}"
+  },
+  "discord": {
+    "join": "Join Discord"
+  },
+  "feedback": {
+    "send": "Send Feedback",
+    "sendAria": "Send feedback"
+  },
+  "captcha": {
+    "failed": "Verification failed. Please try again.",
+    "expired": "Verification expired. Please verify again.",
+    "joining": "Joining...",
+    "joinQueue": "Join Queue"
+  },
+  "sound": {
+    "mute": "Mute",
+    "unmute": "Sound",
+    "muteAria": "Mute sound",
+    "enableAria": "Enable sound"
+  },
+  "map": {
+    "autoAdventure": "Auto Adventure",
+    "serverFull": "Server Full ({{current}}/{{max}})",
+    "joinQueue": "Join Queue",
+    "queuePosition": "Queue Position: #{{position}}",
+    "waitTime": "~{{minutes}} min wait",
+    "viewWaitingRoom": "View Waiting Room",
+    "slotOpened": "A slot opened!",
+    "spawnNow": "Spawn Now",
+    "spawning": "Spawning...",
+    "spawnTooltip": "Spawn onto the map. Monsters lurk beyond the Alcove — tread carefully.",
+    "spawn": "Spawn",
+    "expandCompass": "Expand compass",
+    "collapse": "Collapse",
+    "tileInfo": "{{dir}}: {{monsters}} monsters, {{players}} players",
+    "moveDirection": "Move {{dir}}"
+  },
+  "signIn": {
+    "title": "Sign In to Play",
+    "openInBrowser": "Open in your browser",
+    "inAppWarning": "Google sign-in doesn't work in app browsers. Copy the link below and open it in Chrome or Safari.",
+    "copied": "Copied!",
+    "copyLink": "Copy link",
+    "continueWithGoogle": "Continue with Google",
+    "googleFailed": "Google sign-in failed",
+    "termsAgreement": "By signing in you agree to the",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "connectWallet": {
+    "signingIn": "Signing In...",
+    "settingUp": "Setting up your account...",
+    "depositInfo": "A small ETH deposit is needed to cover gameplay fees. Your funds stay in your session and can be withdrawn anytime.",
+    "useGoogle": "Use Google sign-in instead",
+    "connecting": "Connecting wallet...",
+    "ready": "Ready",
+    "secureSession": "Secure Your Session"
+  },
+  "outOfResources": {
+    "title": "Out of Resources",
+    "message": "You have no ETH for gas and no Gold to auto-swap. You need resources to continue playing.",
+    "embeddedAdvice": "Fight a monster to earn Gold. Your next transaction will be sponsored so you can get back on your feet.",
+    "embeddedDetail": "Once you earn Gold, the GasStation will automatically swap it for ETH to cover future gas costs.",
+    "externalAdvice": "Deposit ETH from your main wallet to continue playing.",
+    "openWallet": "Open Wallet"
+  },
+  "levelUp": {
+    "banner": "LEVEL UP!",
+    "bannerReached": "You reached Level {{level}}",
+    "youHaveReached": "You have reached",
+    "abilityPoint": "+1 Ability Point",
+    "allocateStats": "Allocate Stats",
+    "shareText": "Reached Level {{level}} in Ultimate Dominion."
+  },
+  "editCharacter": {
+    "title": "Edit Character",
+    "namePlaceholder": "Name",
+    "nameRequired": "Name is required",
+    "uploadAvatar": "Upload Avatar Image",
+    "uploading": "Uploading...",
+    "avatarRequired": "Avatar is required",
+    "bioPlaceholder": "Bio",
+    "bioRequired": "Bio is required",
+    "updating": "Updating...",
+    "update": "Update",
+    "updated": "Character updated!",
+    "missingFields": "Missing required fields.",
+    "updateFailed": "Failed to update character."
+  },
+  "allowance": {
+    "shopTitle": "Shop Permissions",
+    "marketplaceTitle": "Marketplace Permissions",
+    "lootManagerTitle": "Loot Manager Permission",
+    "buyPermission": "In order to buy {{item}}, you need to give permission to spend {{price}} Gold.",
+    "sellPermissionShop": "In order to sell {{item}}, you must allow the shop to manage your items.",
+    "sellPermissionMarketplace": "In order to sell {{item}}, you must allow the marketplace to manage your items.",
+    "goldSpendPermission": "Give permission to spend {{amount}} Gold with the Loot Manager?",
+    "itemPermission": "Allow all items to be used by the Loot Manager?",
+    "shopAlwaysAllowTooltip": "This allows you to spend Gold on Shops without having to approve each transaction. It is a faster and smoother experience.",
+    "marketplaceAlwaysAllowTooltip": "This allows you to spend Gold on the Marketplace without having to approve each transaction. It is a faster and smoother experience.",
+    "lootManagerAlwaysAllowTooltip": "This allows you to carry Gold without having to approve each transaction. It is a faster and smoother experience.",
+    "lootManagerSuccess": "You can use your token with the Loot Manager."
+  },
+  "battle": {
+    "victory": "Victory!",
+    "defeat": "Defeat...",
+    "draw": "Draw...",
+    "monsterFled": "{{name}} fled!",
+    "youFled": "You fled from {{name}}.",
+    "earnedGold": "You earned",
+    "gold": "Gold.",
+    "fleeingCost": "Fleeing cost you",
+    "carriedGold": "Carried Gold.",
+    "drawMessage": "The battle ended in a draw! You both fled the battlefield.",
+    "youDefeated": "You defeated {{name}}!",
+    "youWereKilled": "You were killed by {{name}}.",
+    "lostGold": "You lost",
+    "deathMessage": "When you die, your health is restored, but you are forced to respawn at the Town Square.",
+    "pvpShareText": "Defeated {{name}} in PvP combat in Ultimate Dominion.",
+    "pveShareText": "Slew {{name}} in the Dark Cave.",
+    "itemShareText": "Found {{rarity}}{{name}} in Ultimate Dominion. Every item is permanent, on-chain, and mine.",
+    "aMonster": "a monster",
+    "fetchFailed": "Failed to fetch looted items."
+  },
+  "equip": {
+    "equipItem": "Equip Item",
+    "unequipItem": "Unequip Item",
+    "makeOffer": "Make an offer",
+    "wantEquip": "Do you want to equip this item?",
+    "wantUnequip": "Do you want to unequip this item?",
+    "wantOffer": "Do you want to make an offer for this item?",
+    "equipping": "Equipping...",
+    "unequipping": "Unequipping...",
+    "equip": "Equip",
+    "unequip": "Unequip",
+    "sellOnMarketplace": "Sell on Marketplace",
+    "missingRequirements": "Missing requirements:",
+    "levelRequired": "Level {{level}} required",
+    "agiRequired": "AGI {{agi}} required",
+    "intRequired": "INT {{int}} required",
+    "strRequired": "STR {{str}} required",
+    "youStat": "(you: {{value}})",
+    "slotsFull": "All equipment slots are full. Unequip something first.",
+    "cannotEquipInBattle": "You cannot equip items during a battle.",
+    "cannotUnequipInBattle": "You cannot unequip items during a battle.",
+    "mustHaveWeapon": "You must have at least 1 weapon or spell equipped in the Outer Realms.",
+    "equippingItem": "Equipping {{name}}...",
+    "unequippingItem": "Unequipping {{name}}...",
+    "alreadyEquipped": "{{name}} is already equipped",
+    "equipped": "{{name}} equipped",
+    "alreadyUnequipped": "{{name}} is already unequipped",
+    "unequipped": "{{name}} unequipped"
+  },
+  "fragment": {
+    "fragmentOf": "Fragment {{num}} of {{total}}",
+    "xpReward": "+1 XP",
+    "depthsRelicHunter": "Depths Relic Hunter",
+    "allCollected": "All {{total}} fragments collected. The fallen speak through you now. A badge has been forged in your name.",
+    "discoveredAt": "Discovered at ({{x}}, {{y}})",
+    "claiming": "Claiming...",
+    "claimFragment": "CLAIM FRAGMENT",
+    "shareText": "Discovered Fragment {{num}}: {{name}} in Ultimate Dominion. The fallen speak in riddles."
+  },
+  "chat": {
+    "title": "Chat",
+    "badgeUnlocked": "Adventurer Badge - Chat Unlocked!",
+    "publicWarning": "This chat is permanent and public to all other players. Do not share personal information or sensitive data.",
+    "locked": "Chat Locked",
+    "unlockMessage": "Reach level 3 to unlock global chat and earn your Adventurer badge!",
+    "keepAdventuring": "Keep adventuring and defeating monsters to level up.",
+    "checkingAccess": "Checking chat access...",
+    "publicDisclaimer": "Ultimate Dominion's chat is public and permanent. Do not share personal information or sensitive data.",
+    "joinChat": "Join Chat",
+    "login": "Login",
+    "placeholder": "Type a message...",
+    "sent": "Sent: {{time}}"
+  },
+  "roster": {
+    "playersOnline": "{{count}} Players Online",
+    "playerOnline": "{{count}} Player Online",
+    "online": "Online",
+    "all": "All",
+    "noPlayersFound": "No players found",
+    "searchPlayers": "Search players...",
+    "inBattle": "In Battle",
+    "shopping": "Shopping",
+    "cooldown": "Cooldown",
+    "tile": "Tile {{label}}",
+    "safe": "Safe",
+    "you": "You",
+    "lv": "Lv{{level}}"
+  },
+  "worldFeed": {
+    "title": "World",
+    "waiting": "Waiting for world events..."
+  },
+  "footer": {
+    "about": "About",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "blog": "Blog"
+  },
+  "share": {
+    "shareWithImage": "Share with image",
+    "shareAria": "Share",
+    "copied": "Copied!",
+    "copyText": "Copy text",
+    "copyAria": "Copy to clipboard",
+    "monsterSlain": "Monster Slain",
+    "pvpVictory": "PvP Victory",
+    "itemFound": "Item Found",
+    "levelUpLabel": "Level Up",
+    "fragmentLabel": "Fragment {{num}} of 8",
+    "classChosen": "Advanced Class Chosen",
+    "defaultLabel": "Ultimate Dominion"
+  },
+  "health": {
+    "lvl": "Lvl {{level}}",
+    "hp": "HP"
+  },
+  "durability": {
+    "label": "Durability: {{current}}/{{max}}"
+  },
+  "stats": {
+    "gold": "Gold",
+    "getGold": "Get Gold",
+    "levelUpButton": "Level Up!",
+    "fragments": "Fragments",
+    "xp": "XP"
+  },
+  "wallet": {
+    "account": "Account",
+    "signedInAs": "Signed in as",
+    "signOut": "Sign Out",
+    "cannotSignOutBattle": "Cannot sign out during battle.",
+    "fundSession": "Fund Your Session",
+    "fundingPrompt": "A small ETH deposit is needed to cover gameplay transaction fees. This stays in your session and can be withdrawn later.",
+    "sessionBalance": "Session Balance",
+    "addFunds": "Add funds",
+    "ethPlaceholder": "ETH amount",
+    "deposit": "Deposit",
+    "walletBalance": "Wallet balance:",
+    "advancedOptions": "Advanced options",
+    "hideAdvanced": "Hide advanced",
+    "withdrawToWallet": "Withdraw to wallet",
+    "withdrawalsUnlock": "Withdrawals unlock at level 3.",
+    "withdraw": "Withdraw",
+    "resetSession": "Reset Session",
+    "resetting": "Resetting...",
+    "resetConfirmTitle": "Reset Session?",
+    "resetConfirmBody": "This will reset your game session. Any remaining ETH stays in the session and can be recovered.",
+    "reset": "Reset",
+    "disconnect": "Disconnect",
+    "cannotDisconnectBattle": "Cannot disconnect during battle.",
+    "connecting": "Connecting...",
+    "depositSuccess": "Funds deposited successfully!",
+    "withdrawSuccess": "Funds withdrawn successfully!",
+    "sessionReset": "Game account has been reset.",
+    "signedOutEmbedded": "Signed out successfully!",
+    "disconnectedExternal": "Wallet disconnected successfully!",
+    "amountGreaterZero": "Amount must be greater than 0.",
+    "insufficientExternal": "Insufficient funds in external wallet.",
+    "insufficientSession": "Insufficient funds in game account."
+  },
+  "invite": {
+    "referralStats": "Referral Stats",
+    "codesSent": "Codes Sent",
+    "activated": "Activated",
+    "bonusEarned": "Bonus Earned",
+    "yourCodes": "Your Invite Codes",
+    "noCodes": "No invite codes available. Earn more by reaching milestones:",
+    "level3": "Level 3 — 1 invite code",
+    "level10": "Level 10 — 1 invite code",
+    "level20": "Level 20 — 1 invite code",
+    "friendLevel5": "Invited friend reaches Level 5 — bonus code",
+    "usedCodes": "Used Codes",
+    "redeemed": "Redeemed",
+    "refreshCodes": "Refresh Codes",
+    "copyLink": "Copy Link",
+    "shareToX": "Share to X",
+    "bonus": "Bonus",
+    "starter": "Starter"
+  },
+  "goldMerchant": {
+    "title": "Gold Merchant",
+    "adventurer": "Adventurer",
+    "goldLabel": "gold",
+    "comingSoon": "Coming Soon",
+    "comingSoonMessage": "The Gold Merchant is preparing his wares. You'll be able to purchase gold directly here soon.",
+    "earnGoldNow": "For now, earn gold through combat and trade on the marketplace.",
+    "preparingCheckout": "Preparing checkout...",
+    "redirecting": "Redirecting to secure payment page.",
+    "somethingWrong": "Something went wrong",
+    "tryAgain": "Try Again"
+  },
+  "npc": {
+    "farewell": "Farewell",
+    "next": "Next",
+    "dialogueFailed": "Failed to start dialogue."
+  },
+  "consume": {
+    "consumable": "Consumable",
+    "consumed": "{{name}} was consumed!",
+    "equippedReady": "This consumable is equipped and ready for combat.",
+    "notEquipped": "This consumable is not equipped.",
+    "effectLasts": "Its effect lasts {{duration}}.",
+    "slotCount": "Slot {{current}}/{{max}} equipped",
+    "useThroughBattle": "Use consumables through the battle panel during combat.",
+    "mustBeSpawned": "You must be spawned to consume items.",
+    "healthFull": "Your health is full.",
+    "maxStacks": "You have reached the maximum of this item you can consume at once.",
+    "consuming": "Consuming...",
+    "consume": "Consume",
+    "makeOffer": "Make Offer",
+    "unequipFirst": "Unequip something first",
+    "consumingItem": "Consuming {{name}}...",
+    "consumedSuccess": "{{name}} was consumed!",
+    "equippedSuccess": "{{name}} equipped successfully!",
+    "unequippedSuccess": "{{name}} unequipped successfully!"
+  },
+  "loadout": {
+    "title": "Loadout",
+    "edit": "Edit",
+    "emptySlot": "Empty slot",
+    "armorEmpty": "Armor — empty",
+    "tapToSetFirst": "tap to set as #1"
+  },
+  "leveling": {
+    "levelUp": "Level Up!",
+    "myStats": "My Stats",
+    "abilityPoints": "Ability Points: {{points}}",
+    "notEnoughPoints": "You do not have enough ability points.",
+    "unusedPoints": "You have unused ability points",
+    "agility": "Agility",
+    "intelligence": "Intelligence",
+    "strength": "Strength",
+    "agiDesc": "Dodge attacks. Higher crit chance.",
+    "intDesc": "Spell damage. Arcane force.",
+    "strDesc": "Physical damage. Raw power.",
+    "base": "Base",
+    "bonus": "Bonus",
+    "total": "Total",
+    "divinePowerBonus": "Your faith stirs — +2 HP",
+    "weavePowerBonus": "The Weave responds — +1 Intelligence",
+    "physicalPowerBonus": "Your discipline sharpens — +1 bonus ability point",
+    "level5Divine": "+2 HP from your Divine power",
+    "level5Weave": "+1 INT from the Weave",
+    "level5Physical": "Physical bonus point allocated",
+    "level5Success": "Level 5!{{bonus}}",
+    "level3Badge": "Level 3! You earned the Adventurer Badge!",
+    "leveledUp": "Character leveled up!"
+  },
+  "respec": {
+    "title": "Redistribute Stats",
+    "remaining": "Remaining: {{remaining}}",
+    "cost": "Cost: {{cost}} gold",
+    "fullRespecInfo": "Full respec resets class, level, and all equipment. Cost: {{cost}} gold.",
+    "fullReset": "Full Reset",
+    "cannotDuringCombat": "Cannot respec during combat.",
+    "redistributed": "Stats redistributed.",
+    "fullRespecWarning": "Full respec will reset class, level, and equipment. This cannot be undone.",
+    "fullyReset": "Character fully reset."
+  },
+  "repair": {
+    "title": "Repair Equipment",
+    "durability": "{{current}}/{{max}} durability",
+    "repairButton": "Repair ({{cost}} gold)",
+    "repaired": "{{name}} repaired",
+    "failed": "Repair failed"
+  },
+  "itemCard": {
+    "equipped": "Equipped",
+    "restoresHp": "Restores {{hp}} HP",
+    "requires": "Requires:"
+  },
+  "miniLeaderboard": {
+    "nearbyRanks": "Nearby Ranks",
+    "statsTab": "Stats",
+    "goldTab": "Gold"
+  },
+  "header": {
+    "openMenu": "Open menu"
+  },
+  "classSymbol": {
+    "intelligence": "Intelligence",
+    "agility": "Agility",
+    "strength": "Strength"
+  },
+  "connectWalletBtn": {
+    "signInWithWallet": "Sign in with Wallet",
+    "wrongNetwork": "Wrong Network"
+  },
+  "delegation": {
+    "settingUp": "Setting up...",
+    "authorizePlay": "Authorize & Play",
+    "fundingSkipped": "Session authorized but funding skipped. You can deposit ETH from the settings menu.",
+    "ready": "Game account ready!"
+  },
+  "consumableQuickUse": {
+    "noConsumables": "No consumables. Visit a shop to stock up."
+  },
+  "gameEventFeed": {
+    "waiting": "Waiting for game events...",
+    "description": "Battles, loot, quests, and new arrivals will appear here",
+    "found": " found "
+  },
+  "shop": {
+    "search": "Search",
+    "stock": "Stock",
+    "price": "Price",
+    "noItems": "No Items",
+    "buy": "Buy",
+    "sell": "Sell",
+    "approve": "Approve",
+    "totalCost": "Total Cost: {{amount}} $GOLD",
+    "totalReceive": "Total to receive: {{amount}} $GOLD",
+    "currentBalance": "Current Balance {{amount}} $GOLD",
+    "boughtItems": "Bought {{amount}}x {{name}}",
+    "soldItems": "Sold {{amount}}x {{name}} for {{gold}} $GOLD",
+    "insufficientStock": "Insufficient stock.",
+    "notEnoughGold": "You don't have enough $GOLD to buy this.",
+    "cantSellEquipped": "You can't sell the last of an equipped item.",
+    "shopkeeperNoGold": "The shopkeeper doesn't have enough gold. Stock replenishes every 12 hours.",
+    "maxItems": "max {{count}} items",
+    "stats": "Stats",
+    "minDamage": "Min Damage:",
+    "maxDamage": "Max Damage:",
+    "restrictions": "Restrictions",
+    "buyAllowanceSuccess": "Allowance was successful! You can now buy {{name}}",
+    "sellAllowanceSuccess": "Allowance was successful! You can now sell {{name}}"
+  },
+  "marketplace": {
+    "bought": "Bought {{name}}!",
+    "sold": "Sold {{name}}!",
+    "notEnoughGold": "Not enough $GOLD",
+    "noListings": "No listings"
+  },
+  "order": {
+    "from": "From: {{name}} ({{address}})",
+    "wantsGoldFor": "Wants {{gold}} $GOLD for {{amount}} {{item}}",
+    "wantsItemFor": "Wants {{amount}} {{item}} for {{gold}} $GOLD",
+    "notEnoughGold": "Not enough gold",
+    "sellItem": "Sell item",
+    "buyItem": "Buy item",
+    "removeListing": "Remove listing"
+  },
+  "createListing": {
+    "title": "Create Listing",
+    "allItems": "All Items",
+    "inventory": "Inventory",
+    "numItems": "# of items:",
+    "filterBy": "Filter by:"
+  },
+  "fragmentCollection": {
+    "title": "Fragments ({{claimed}}/{{total}})",
+    "discover": "Discover lore fragments throughout the Dark Cave",
+    "clickToRead": "Click to read",
+    "clickToClaim": "Click to claim!"
+  },
+  "fragmentRead": {
+    "claimed": "CLAIMED",
+    "fragmentOf": "Fragment {{num}} of {{total}}",
+    "claimedDate": "Claimed {{date}}",
+    "tokenId": "Token #{{id}}"
+  },
+  "fragmentChain": {
+    "title": "Fragment Chains ({{completed}}/{{total}})",
+    "complete": "Complete",
+    "step": "Step {{current}}/{{total}}"
+  },
+  "loot": {
+    "title": "Looted Items:"
+  },
+  "leaderboardRow": {
+    "statsSummary": "HP {{hp}} • STR {{str}} • AGI {{agi}} • INT {{int}}"
+  },
+  "mapReveal": {
+    "windingDark": "The Winding Dark"
+  },
+  "advancedClass": {
+    "chooseYourPath": "Choose Your Path",
+    "permanent": "This decision is permanent. Choose wisely.",
+    "learnMore": "Learn more",
+    "bonuses": "Bonuses",
+    "multipliers": "Multipliers",
+    "classSpell": "Class Spell",
+    "become": "Become a {{name}}",
+    "notNow": "Not now",
+    "chosenMessage": "You have walked the Dark Cave and survived.\nYour path is chosen. The world will remember.",
+    "shareText": "Became a {{name}} in Ultimate Dominion. Level 10 achieved."
+  }
+}

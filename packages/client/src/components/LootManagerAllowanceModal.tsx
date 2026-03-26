@@ -11,6 +11,7 @@ import {
   Tooltip,
   VStack,
 } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { parseEther } from 'viem';
 
 import { useAllowance } from '../contexts/AllowanceContext';
@@ -34,6 +35,7 @@ export const LootManagerAllowanceModal = ({
   onClose: () => void;
   successMessage?: string;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     goldLootManagerAllowance,
     isApprovingGold,
@@ -62,7 +64,7 @@ export const LootManagerAllowanceModal = ({
           </ModalBody>
           <ModalFooter>
             <Button onClick={onClose} size="sm" variant="ghost">
-              Close
+              {t('common.close')}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -82,7 +84,7 @@ export const LootManagerAllowanceModal = ({
             <VStack spacing={10} textAlign="center">
               {!message && (
                 <Text>
-                  Give permission to spend {amount} Gold with the Loot Manager?
+                  {t('allowance.goldSpendPermission', { amount })}
                 </Text>
               )}
               {message && <Text>{message}</Text>}
@@ -90,7 +92,7 @@ export const LootManagerAllowanceModal = ({
           </ModalBody>
           <ModalFooter alignItems="start" gap={3}>
             <Button onClick={onClose} size="sm" variant="ghost">
-              Close
+              {t('common.close')}
             </Button>
             <VStack spacing={1}>
               <Button
@@ -102,13 +104,13 @@ export const LootManagerAllowanceModal = ({
                   )
                 }
               >
-                Allow Spending
+                {t('common.allowSpending')}
               </Button>
               {!isApprovingGold && (
                 <Tooltip
                   bg="#14120F"
                   hasArrow
-                  label="This allows you to carry Gold without having to approve each transaction. It is a faster and smoother experience."
+                  label={t('allowance.lootManagerAlwaysAllowTooltip')}
                   placement="top"
                   shouldWrapChildren
                 >
@@ -132,7 +134,7 @@ export const LootManagerAllowanceModal = ({
                       textDecoration: 'underline',
                     }}
                   >
-                    Always Allow
+                    {t('common.alwaysAllow')}
                   </Button>
                 </Tooltip>
               )}
@@ -153,20 +155,20 @@ export const LootManagerAllowanceModal = ({
         <ModalBody px={{ base: 6, sm: 8 }}>
           <VStack spacing={10} textAlign="center">
             {!message && (
-              <Text>Allow all items to be used by the Loot Manager?</Text>
+              <Text>{t('allowance.itemPermission')}</Text>
             )}
             {message && <Text>{message}</Text>}
           </VStack>
         </ModalBody>
         <ModalFooter gap={3}>
           <Button onClick={onClose} size="sm" variant="ghost">
-            Close
+            {t('common.close')}
           </Button>
           <Button
             isLoading={isApprovingItems}
             onClick={() => onSetApprovalForAllItems(SystemToAllow.LootManager)}
           >
-            Allow Spending
+            {t('common.allowSpending')}
           </Button>
         </ModalFooter>
       </ModalContent>

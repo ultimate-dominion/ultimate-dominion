@@ -10,6 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, Navigate, useParams } from 'react-router-dom';
 
 import { CLASS_DATA, getClassBySlug } from '../data/classData';
@@ -56,39 +57,44 @@ const SectionLabel = ({ children }: { children: string }) => (
   </Text>
 );
 
-const ClassNav = ({ currentSlug }: { currentSlug: string }) => (
-  <HStack
-    flexWrap="wrap"
-    justify="center"
-    spacing={0}
-    gap={2}
-  >
-    {CLASS_DATA.map(c => (
-      <Link
-        key={c.slug}
-        as={RouterLink}
-        to={`${GUIDE_PATH}/classes/${c.slug}`}
-        color={c.slug === currentSlug ? '#E8DCC8' : '#8A7E6A'}
-        bg={c.slug === currentSlug ? 'rgba(200,122,42,0.12)' : 'transparent'}
-        border="1px solid"
-        borderColor={c.slug === currentSlug ? 'rgba(200,122,42,0.3)' : 'rgba(58,50,40,0.3)'}
-        borderRadius="sm"
-        fontSize="13px"
-        fontWeight={c.slug === currentSlug ? 600 : 400}
-        px={3}
-        py={1}
-        _hover={{ color: '#E8DCC8', borderColor: 'rgba(200,122,42,0.4)', textDecoration: 'none' }}
-        transition="all 0.2s"
-      >
-        {c.name}
-      </Link>
-    ))}
-  </HStack>
-);
+const ClassNav = ({ currentSlug }: { currentSlug: string }) => {
+  const { t } = useTranslation('classes');
+  return (
+    <HStack
+      flexWrap="wrap"
+      justify="center"
+      spacing={0}
+      gap={2}
+    >
+      {CLASS_DATA.map(c => (
+        <Link
+          key={c.slug}
+          as={RouterLink}
+          to={`${GUIDE_PATH}/classes/${c.slug}`}
+          color={c.slug === currentSlug ? '#E8DCC8' : '#8A7E6A'}
+          bg={c.slug === currentSlug ? 'rgba(200,122,42,0.12)' : 'transparent'}
+          border="1px solid"
+          borderColor={c.slug === currentSlug ? 'rgba(200,122,42,0.3)' : 'rgba(58,50,40,0.3)'}
+          borderRadius="sm"
+          fontSize="13px"
+          fontWeight={c.slug === currentSlug ? 600 : 400}
+          px={3}
+          py={1}
+          _hover={{ color: '#E8DCC8', borderColor: 'rgba(200,122,42,0.4)', textDecoration: 'none' }}
+          transition="all 0.2s"
+        >
+          {t(`${c.slug}.name`)}
+        </Link>
+      ))}
+    </HStack>
+  );
+};
 
 /* ────────────────────────── Page ────────────────────────── */
 
 export const ClassPage = (): JSX.Element => {
+  const { t } = useTranslation('pages');
+  const { t: tc } = useTranslation('classes');
   const { className } = useParams<{ className: string }>();
   const classData = className ? getClassBySlug(className) : undefined;
 
@@ -115,7 +121,7 @@ export const ClassPage = (): JSX.Element => {
       }}
     >
       <Helmet>
-        <title>{classData.name} | Classes | Ultimate Dominion</title>
+        <title>{t('classPage.metaTitle', { name: tc(`${classData.slug}.name`) })}</title>
       </Helmet>
 
       {/* Class-colored radial glow */}
@@ -151,7 +157,7 @@ export const ClassPage = (): JSX.Element => {
             to={GUIDE_PATH}
             _hover={{ color: '#C87A2A', textDecoration: 'none' }}
           >
-            &larr; The Codex
+            &larr; {t('classPage.backToCodex')}
           </Link>
         </HStack>
 
@@ -172,7 +178,7 @@ export const ClassPage = (): JSX.Element => {
             >
               <Image
                 src={classData.image}
-                alt={classData.name}
+                alt={tc(`${classData.slug}.name`)}
                 maxH={{ base: '200px', md: '280px' }}
                 objectFit="cover"
               />
@@ -187,7 +193,7 @@ export const ClassPage = (): JSX.Element => {
             letterSpacing="0.4em"
             textTransform="uppercase"
           >
-            {classData.archetype} Class
+            {t('classPage.archetypeClass', { archetype: tc(`${classData.slug}.archetype`) })}
           </Text>
 
           <Heading
@@ -198,7 +204,7 @@ export const ClassPage = (): JSX.Element => {
             letterSpacing="0.06em"
             textAlign="center"
           >
-            {classData.name}
+            {tc(`${classData.slug}.name`)}
           </Heading>
 
           <Text
@@ -209,7 +215,7 @@ export const ClassPage = (): JSX.Element => {
             maxW="600px"
             textAlign="center"
           >
-            {classData.description}
+            {tc(`${classData.slug}.description`)}
           </Text>
         </VStack>
 
@@ -218,14 +224,14 @@ export const ClassPage = (): JSX.Element => {
 
         {/* ── Lore ── */}
         <VStack align="flex-start" mb={{ base: 8, md: 10 }} spacing={3} w="100%">
-          <SectionLabel>Lore</SectionLabel>
+          <SectionLabel>{t('classPage.sectionLore')}</SectionLabel>
           <Text
             color="#C4B89E"
             fontSize={{ base: '15px', sm: '16px' }}
             fontStyle="italic"
             lineHeight="2"
           >
-            &ldquo;{classData.lore}&rdquo;
+            &ldquo;{tc(`${classData.slug}.lore`)}&rdquo;
           </Text>
         </VStack>
 
@@ -244,21 +250,21 @@ export const ClassPage = (): JSX.Element => {
             p={{ base: 5, sm: 6 }}
           >
             <VStack align="flex-start" spacing={4}>
-              <SectionLabel>Bonuses</SectionLabel>
+              <SectionLabel>{t('classPage.sectionBonuses')}</SectionLabel>
               <Box bg="rgba(58,50,40,0.4)" h="1px" w="100%" />
               <VStack align="stretch" spacing={2} w="100%">
                 <HStack justify="space-between" w="100%">
-                  <Text color="#8A7E6A" fontSize="14px">Flat Bonuses</Text>
+                  <Text color="#8A7E6A" fontSize="14px">{t('classPage.flatBonuses')}</Text>
                   <Text color="#4A8B4A" fontFamily="monospace" fontSize="14px" fontWeight={700}>
-                    {classData.flatBonuses}
+                    {tc(`${classData.slug}.flatBonuses`)}
                   </Text>
                 </HStack>
                 <Box bg="rgba(58,50,40,0.3)" h="1px" w="100%" />
-                <StatRow label="Physical Dmg" value={classData.multipliers.phys} highlight={classData.multipliers.phys !== '100%'} />
-                <StatRow label="Spell Dmg" value={classData.multipliers.spell} highlight={classData.multipliers.spell !== '100%'} />
-                <StatRow label="Healing" value={classData.multipliers.heal} highlight={classData.multipliers.heal !== '100%'} />
-                <StatRow label="Crit Dmg" value={classData.multipliers.crit} highlight={classData.multipliers.crit !== '100%'} />
-                <StatRow label="Max HP" value={classData.multipliers.maxHp} highlight={classData.multipliers.maxHp !== '100%'} />
+                <StatRow label={t('classPage.physicalDmg')} value={classData.multipliers.phys} highlight={classData.multipliers.phys !== '100%'} />
+                <StatRow label={t('classPage.spellDmg')} value={classData.multipliers.spell} highlight={classData.multipliers.spell !== '100%'} />
+                <StatRow label={t('classPage.healing')} value={classData.multipliers.heal} highlight={classData.multipliers.heal !== '100%'} />
+                <StatRow label={t('classPage.critDmg')} value={classData.multipliers.crit} highlight={classData.multipliers.crit !== '100%'} />
+                <StatRow label={t('classPage.maxHp')} value={classData.multipliers.maxHp} highlight={classData.multipliers.maxHp !== '100%'} />
               </VStack>
             </VStack>
           </Box>
@@ -271,7 +277,7 @@ export const ClassPage = (): JSX.Element => {
             p={{ base: 5, sm: 6 }}
           >
             <VStack align="flex-start" spacing={4}>
-              <SectionLabel>Class Ability</SectionLabel>
+              <SectionLabel>{t('classPage.sectionAbility')}</SectionLabel>
               <Box bg="rgba(58,50,40,0.4)" h="1px" w="100%" />
               <VStack align="flex-start" spacing={2}>
                 <Text
@@ -280,15 +286,15 @@ export const ClassPage = (): JSX.Element => {
                   fontSize={{ base: '18px', sm: '20px' }}
                   fontWeight={600}
                 >
-                  {classData.spellName}
+                  {tc(`${classData.slug}.spellName`)}
                 </Text>
                 <Text color="#C4B89E" fontSize="15px" lineHeight="1.7">
-                  {classData.spellDesc}
+                  {tc(`${classData.slug}.spellDesc`)}
                 </Text>
               </VStack>
               <Box bg="rgba(58,50,40,0.3)" h="1px" w="100%" />
               <Text color="#8A7E6A" fontSize="13px" fontStyle="italic" lineHeight="1.7">
-                Usable once per combat encounter. Available at Level 10 upon class selection.
+                {t('classPage.abilityNote')}
               </Text>
             </VStack>
           </Box>
@@ -296,9 +302,9 @@ export const ClassPage = (): JSX.Element => {
 
         {/* ── Playstyle ── */}
         <VStack align="flex-start" mb={{ base: 8, md: 10 }} spacing={3} w="100%">
-          <SectionLabel>Playstyle</SectionLabel>
+          <SectionLabel>{t('classPage.sectionPlaystyle')}</SectionLabel>
           <Text color="#C4B89E" fontSize={{ base: '15px', sm: '16px' }} lineHeight="2">
-            {classData.playstyle}
+            {tc(`${classData.slug}.playstyle`)}
           </Text>
         </VStack>
 
@@ -323,9 +329,9 @@ export const ClassPage = (): JSX.Element => {
                 letterSpacing="0.2em"
                 textTransform="uppercase"
               >
-                Strengths
+                {t('classPage.sectionStrengths')}
               </Text>
-              {classData.strengths.map((s, i) => (
+              {(tc(`${classData.slug}.strengths`, { returnObjects: true }) as string[]).map((s, i) => (
                 <HStack key={i} align="flex-start" spacing={3}>
                   <Text color="#4A8B4A" fontSize="12px" mt="2px">+</Text>
                   <Text color="#C4B89E" fontSize="14px" lineHeight="1.6">{s}</Text>
@@ -347,9 +353,9 @@ export const ClassPage = (): JSX.Element => {
                 letterSpacing="0.2em"
                 textTransform="uppercase"
               >
-                Weaknesses
+                {t('classPage.sectionWeaknesses')}
               </Text>
-              {classData.weaknesses.map((w, i) => (
+              {(tc(`${classData.slug}.weaknesses`, { returnObjects: true }) as string[]).map((w, i) => (
                 <HStack key={i} align="flex-start" spacing={3}>
                   <Text color="#8B4040" fontSize="12px" mt="2px">-</Text>
                   <Text color="#C4B89E" fontSize="14px" lineHeight="1.6">{w}</Text>
@@ -368,17 +374,17 @@ export const ClassPage = (): JSX.Element => {
           w="100%"
         >
           <VStack spacing={3}>
-            <SectionLabel>How Multipliers Scale</SectionLabel>
+            <SectionLabel>{t('classPage.sectionMultipliers')}</SectionLabel>
             <Text
               color="#C4B89E"
               fontFamily="monospace"
               fontSize={{ base: '13px', sm: '14px' }}
               textAlign="center"
             >
-              finalDamage = (baseDamage + itemDamage) &times; classMultiplier
+              {t('classPage.multiplierFormula')}
             </Text>
             <Text color="#8A7E6A" fontSize="14px" lineHeight="1.7" textAlign="center" maxW="500px">
-              Better gear amplifies class bonuses. A 10% multiplier on 100 damage is +10. On 500 damage, it&apos;s +50. Classes scale with progression.
+              {t('classPage.multiplierDesc')}
             </Text>
           </VStack>
         </Box>
@@ -396,7 +402,7 @@ export const ClassPage = (): JSX.Element => {
             to={GUIDE_PATH}
             _hover={{ color: '#C87A2A', textDecoration: 'none' }}
           >
-            &larr; The Codex
+            &larr; {t('classPage.backToCodex')}
           </Link>
           <Box bg="rgba(200,122,42,0.15)" h="1px" w="30px" />
         </HStack>

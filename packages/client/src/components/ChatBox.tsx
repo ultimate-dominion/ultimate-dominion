@@ -15,6 +15,7 @@ import { CiCircleCheck } from 'react-icons/ci';
 import { IoIosSend, IoMdInformationCircleOutline } from 'react-icons/io';
 import { FaMedal } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { useChat } from '../contexts/ChatContext';
 import { useMap } from '../contexts/MapContext';
@@ -46,6 +47,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
     onSetNewMessage,
     onSetMessageInputFocus,
   } = useChat();
+  const { t } = useTranslation('ui');
 
   // Badge gating — disabled for beta, re-enable by setting VITE_BADGE_CONTRACT_ADDRESS
   const badgeGatingEnabled = false; // TODO: restore after beta: !!import.meta.env.VITE_BADGE_CONTRACT_ADDRESS
@@ -101,12 +103,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
         w="100%"
       >
         <HStack>
-          <Heading size={inline ? 'sm' : { base: 'sm', md: 'md' }}>Chat</Heading>
+          <Heading size={inline ? 'sm' : { base: 'sm', md: 'md' }}>{t('chat.title')}</Heading>
           {hasBadge && (
             <Tooltip
               bg="#14120F"
               hasArrow
-              label="Adventurer Badge - Chat Unlocked!"
+              label={t('chat.badgeUnlocked')}
               placement="top"
               shouldWrapChildren
             >
@@ -118,7 +120,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
           <Tooltip
             bg="#14120F"
             hasArrow
-            label="This chat is permanent and public to all other players. Do not share personal information or sensitive data."
+            label={t('chat.publicWarning')}
             placement="top"
             shouldWrapChildren
           >
@@ -138,13 +140,13 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
         {badgeGatingEnabled && !canAccessChat && !isCheckingBadge && (
           <VStack justifyContent="center" mt={8} p={2} spacing={4}>
             <Text size="sm" textAlign="center" fontWeight="bold">
-              Chat Locked
+              {t('chat.locked')}
             </Text>
             <Text size="sm" textAlign="center">
-              Reach level 3 to unlock global chat and earn your Adventurer badge!
+              {t('chat.unlockMessage')}
             </Text>
             <Text size="xs" textAlign="center" color="gray.500">
-              Keep adventuring and defeating monsters to level up.
+              {t('chat.keepAdventuring')}
             </Text>
           </VStack>
         )}
@@ -152,7 +154,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
         {badgeGatingEnabled && isCheckingBadge && (
           <VStack justifyContent="center" mt={8} p={2} spacing={4}>
             <Text size="sm" textAlign="center">
-              Checking chat access...
+              {t('chat.checkingAccess')}
             </Text>
           </VStack>
         )}
@@ -160,8 +162,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
         {canAccessChat && (isLoggingIn || !isGroupMember) && (
           <VStack justifyContent="center" mt={inline ? 4 : 8} p={2} spacing={inline ? 4 : 8}>
             <Text size="sm" textAlign="center">
-              Ultimate Dominion&apos;s chat is public and permanent. Do not
-              share personal information or sensitive data.
+              {t('chat.publicDisclaimer')}
             </Text>
             {isLoggedIn ? (
               <Button
@@ -169,11 +170,11 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                 onClick={onJoinGroupChat}
                 size="sm"
               >
-                Join Chat
+                {t('chat.joinChat')}
               </Button>
             ) : (
               <Button isLoading={isLoggingIn} onClick={onLogin} size="sm">
-                Login
+                {t('chat.login')}
               </Button>
             )}
           </VStack>
@@ -281,7 +282,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
                         <Tooltip
                           bg="#14120F"
                           hasArrow
-                          label={`Sent: ${new Date(message.timestamp).toLocaleString()}`}
+                          label={t('chat.sent', { time: new Date(message.timestamp).toLocaleString() })}
                           placement={isUser ? 'left' : 'right'}
                           shouldWrapChildren
                           fontSize="xs"
@@ -316,7 +317,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ inline = false }) => {
             minH="40px"
             onChange={e => onSetNewMessage(e.target.value)}
             overflow="hidden"
-            placeholder="Type a message..."
+            placeholder={t('chat.placeholder')}
             ref={textareaRef}
             resize="none"
             size="xs"

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -74,52 +75,6 @@ const LEVEL_BACKGROUNDS: Record<number, string> = {
   10: '/images/levelup/level-10.png',
 };
 
-/* ──────────────────────── Level Narratives ──────────────────────── */
-
-const LEVEL_NARRATIVES: Record<number, { title: string; text: string }> = {
-  2: {
-    title: 'The cave grows darker.',
-    text: 'Something shifts in the gloom ahead \u2014 hunched shapes, larger than any rat, with eyes that gleam with a terrible intelligence.\n\nYou are not alone down here.',
-  },
-  3: {
-    title: 'The depths stir.',
-    text: 'New sounds echo from passages you haven\u2019t dared explore \u2014 scraping claws, crackling energy, the low hum of something ancient.\n\nThe cave\u2019s true inhabitants make themselves known.',
-  },
-  4: {
-    title: 'The darkness knows your name.',
-    text: 'You move through the cave with purpose now. The creatures that once seemed fearsome give you a wider berth.\n\nBut deeper things are watching \u2014 waiting to see if you are worthy.',
-  },
-  5: {
-    title: 'Beyond the boundary.',
-    text: 'The ancient ward crumbles at your approach. Beyond lies the Winding Dark \u2014 where other adventurers hunt, and are hunted.\n\nThe full map is yours now. Tread carefully.',
-  },
-  6: {
-    title: 'The tunnels remember.',
-    text: 'Your footsteps echo differently now \u2014 the cave reshapes itself around you, passages opening where there were none.\n\nYou are becoming part of this place.',
-  },
-  7: {
-    title: 'A reputation precedes you.',
-    text: 'Other adventurers step aside when you pass. The creatures of the deep hesitate before striking.\n\nFear is a currency, and you are wealthy.',
-  },
-  8: {
-    title: 'The cave reveals its secrets.',
-    text: 'In the deepest passages, you find markings older than memory \u2014 warnings left by those who came before.\n\nThey did not leave. You will.',
-  },
-  9: {
-    title: 'Something stirs above.',
-    text: 'A draft. Cold, clean air from somewhere far overhead. The cave is not the whole world \u2014 there is something beyond the stone.\n\nYou are almost ready to find it.',
-  },
-  10: {
-    title: 'The masters take notice.',
-    text: 'You have walked the Winding Dark and survived. You have earned the right to choose what you become.\n\nThis is not an ending. It is a transformation.',
-  },
-};
-
-const DEFAULT_NARRATIVE = {
-  title: 'You grow stronger.',
-  text: 'The cave tests you with greater challenges.\n\nYou answer.',
-};
-
 /* ──────────────────────── Component ──────────────────────── */
 
 type LevelUpModalProps = {
@@ -133,13 +88,19 @@ export const LevelUpModal = ({
   isOpen,
   onClose,
 }: LevelUpModalProps): JSX.Element => {
+  const { t } = useTranslation('ui');
+  const { t: tn } = useTranslation('narrative');
   const [phase, setPhase] = useState<'celebrate' | 'allocate' | 'narrative'>('celebrate');
   const [showContent, setShowContent] = useState(false);
   // Capture target level when modal opens — character.level updates after TX
   // but we need the level they're reaching, not the post-refresh level
   const [targetLevel, setTargetLevel] = useState(0);
 
-  const narrative = LEVEL_NARRATIVES[targetLevel] ?? DEFAULT_NARRATIVE;
+  const levelKey = tn(`levelUp.${targetLevel}.title`, { defaultValue: '' }) ? `${targetLevel}` : 'default';
+  const narrative = {
+    title: tn(`levelUp.${levelKey}.title`),
+    text: tn(`levelUp.${levelKey}.text`),
+  };
   const backgroundImage = LEVEL_BACKGROUNDS[targetLevel];
 
   useEffect(() => {
@@ -253,7 +214,7 @@ export const LevelUpModal = ({
                   color="rgba(212, 165, 74, 0.6)"
                   mb={2}
                 >
-                  You have reached
+                  {t('levelUp.youHaveReached')}
                 </Text>
                 <Text
                   textAlign="center"
@@ -264,7 +225,7 @@ export const LevelUpModal = ({
                   lineHeight="1"
                   animation={`${goldGlow} 3s ease-in-out infinite`}
                 >
-                  Level {targetLevel}
+                  {t('level.label', { level: targetLevel })}
                 </Text>
               </Box>
 
@@ -307,7 +268,7 @@ export const LevelUpModal = ({
                 opacity={showContent ? 1 : 0}
                 animation={showContent ? `${fadeUp} 0.6s 1s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
               >
-                +1 Ability Point
+                {t('levelUp.abilityPoint')}
               </Text>
             </VStack>
           )}
@@ -577,7 +538,7 @@ export const LevelUpModal = ({
               opacity={showContent ? 1 : 0}
               animation={showContent ? `${fadeUp} 0.6s 1.3s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
             >
-              Allocate Stats
+              {t('levelUp.allocateStats')}
             </Button>
           )}
           {phase === 'narrative' && (
@@ -587,10 +548,10 @@ export const LevelUpModal = ({
                 variant="gold"
                 size="md"
               >
-                Continue
+                {t('common.continue')}
               </Button>
               <ShareButton
-                text={`Reached Level ${targetLevel} in Ultimate Dominion.`}
+                text={t('levelUp.shareText', { level: targetLevel })}
                 shareParams={{
                   type: 'levelup',
                   level: targetLevel.toString(),

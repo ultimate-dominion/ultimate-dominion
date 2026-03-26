@@ -1,4 +1,5 @@
 import { IconButton, Tooltip } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { GiSpeaker, GiSpeakerOff } from 'react-icons/gi';
 import { useGameAudio } from '../contexts/SoundContext';
 
@@ -8,16 +9,17 @@ type SoundToggleProps = {
 };
 
 export const SoundToggle = ({ size = 'sm', variant = 'ghost' }: SoundToggleProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { soundEnabled, toggleSound } = useGameAudio();
 
   return (
     <Tooltip
       hasArrow
-      label={soundEnabled ? 'Mute' : 'Sound'}
+      label={soundEnabled ? t('sound.mute') : t('sound.unmute')}
       placement="top"
     >
       <IconButton
-        aria-label={soundEnabled ? 'Mute sound' : 'Enable sound'}
+        aria-label={soundEnabled ? t('sound.muteAria') : t('sound.enableAria')}
         icon={soundEnabled ? <GiSpeaker size={18} /> : <GiSpeakerOff size={18} />}
         onClick={toggleSound}
         size={size}

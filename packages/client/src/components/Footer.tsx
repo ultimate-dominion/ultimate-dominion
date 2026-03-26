@@ -1,6 +1,8 @@
 import { Grid, GridItem, HStack, Link, Stack, VStack } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 export const Footer = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   return (
     <HStack
       alignItems="center"
@@ -23,7 +25,7 @@ export const Footer = (): JSX.Element => {
                 href="https://www.ultimatedominion.com/"
                 isExternal
               >
-                About
+                {t('footer.about')}
               </Link>
               <Link
                 alignSelf="start"
@@ -32,7 +34,7 @@ export const Footer = (): JSX.Element => {
                 href="https://ultimatedominion.com/terms"
                 isExternal
               >
-                Terms
+                {t('footer.terms')}
               </Link>
               <Link
                 alignSelf="start"
@@ -41,7 +43,7 @@ export const Footer = (): JSX.Element => {
                 href="https://ultimatedominion.com/privacy"
                 isExternal
               >
-                Privacy
+                {t('footer.privacy')}
               </Link>
               <Link
                 alignSelf="start"
@@ -50,7 +52,7 @@ export const Footer = (): JSX.Element => {
                 href="https://ultimatedominion.com/blog"
                 isExternal
               >
-                Blog
+                {t('footer.blog')}
               </Link>
             </Stack>
           </HStack>

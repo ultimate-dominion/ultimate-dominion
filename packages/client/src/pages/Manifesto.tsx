@@ -1,5 +1,6 @@
 import { Box, Button, Heading, keyframes, Text, VStack } from '@chakra-ui/react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { HOME_PATH } from '../Routes';
@@ -11,11 +12,12 @@ const dragonPulse = keyframes`
 
 export const Manifesto = (): JSX.Element => {
   const navigate = useNavigate();
+  const { t } = useTranslation('pages');
 
   return (
     <Box border="6px solid #3A3228" p={1.5}>
       <Helmet>
-        <title>Manifesto | Ultimate Dominion</title>
+        <title>{t('manifesto.metaTitle')}</title>
       </Helmet>
       <Box
         border="0.5px solid #3A3228"
@@ -62,43 +64,33 @@ export const Manifesto = (): JSX.Element => {
             textAlign="center"
             textTransform="uppercase"
           >
-            Manifesto
+            {t('manifesto.title')}
           </Heading>
           <VStack fontWeight={500} maxW="750px" spacing={6} textAlign="center">
             <Text
               fontStyle="italic"
               size={{ base: 'xs', sm: 'sm', md: 'md' }}
             >
-              You wake in a cave with no memory and no name. Everything after
-              that is yours.
+              {t('manifesto.opening')}
             </Text>
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
-              This is a world built for years, not minutes. Progression is slow
-              because the journey is the point. Stories are earned, not skipped.
-              The lore isn&apos;t written for you — it&apos;s written by what
-              you do, who you fight, what you choose to protect, and what you
-              let burn.
+              {t('manifesto.p1')}
             </Text>
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
-              Everything here is permanent. Your gold, your weapons, your scars
-              — they belong to you. Not to a server. Not to us. No one can take
-              them, alter them, or shut them off. You don&apos;t have to take
-              our word for it. You can prove it.
+              {t('manifesto.p2')}
             </Text>
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
-              You don&apos;t need to download anything. Open your browser. Step
-              into the dark.
+              {t('manifesto.p3')}
             </Text>
             <Text
               fontWeight={600}
               size={{ base: 'xs', sm: 'sm', md: 'md' }}
             >
-              This is not a game you finish. It&apos;s a world that becomes
-              part of you.
+              {t('manifesto.closing')}
             </Text>
           </VStack>
           <Button onClick={() => navigate(HOME_PATH)} variant="outline">
-            Enter the World
+            {t('manifesto.enterWorld')}
           </Button>
         </VStack>
       </Box>

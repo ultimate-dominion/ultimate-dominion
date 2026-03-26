@@ -10,6 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaCheck, FaLock } from 'react-icons/fa';
 
 /* Scale + opacity only — both GPU-composited for 60fps.
@@ -36,6 +37,7 @@ import { FragmentReadModal } from './FragmentReadModal';
 import { PolygonalCard } from './PolygonalCard';
 
 export const FragmentCollection = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { fragments, isLoading } = useFragments();
   const [selectedFragment, setSelectedFragment] =
     useState<FragmentStatus | null>(null);
@@ -70,7 +72,7 @@ export const FragmentCollection = (): JSX.Element => {
       <PolygonalCard clipPath="none" p={6}>
         <VStack align="stretch" spacing={4}>
           <Text fontWeight="bold" size="lg">
-            Fragments ({claimedCount}/{TOTAL_FRAGMENTS})
+            {t('fragmentCollection.title', { claimed: claimedCount, total: TOTAL_FRAGMENTS })}
           </Text>
 
           <Grid
@@ -88,7 +90,7 @@ export const FragmentCollection = (): JSX.Element => {
           </Grid>
 
           <Text fontSize="xs" color="gray.500" textAlign="center">
-            Discover lore fragments throughout the Dark Cave
+            {t('fragmentCollection.discover')}
           </Text>
         </VStack>
       </PolygonalCard>
@@ -124,15 +126,16 @@ type FragmentTileProps = {
 };
 
 const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const isClaimed = fragment.claimed;
   const isTriggered = fragment.triggered;
   const isClickable = isClaimed || isTriggered;
   const imageSrc = getFragmentImage(fragment.name);
 
   const tooltipLabel = isClaimed
-    ? `${fragment.name} - Click to read`
+    ? `${fragment.name} - ${t('fragmentCollection.clickToRead')}`
     : isTriggered
-      ? `${fragment.name} - Click to claim!`
+      ? `${fragment.name} - ${t('fragmentCollection.clickToClaim')}`
       : fragment.hint;
 
   return (

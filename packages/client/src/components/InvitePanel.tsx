@@ -8,9 +8,11 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueue } from '../contexts/QueueContext';
 
 export const InvitePanel = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { inviteCodes, inviteStats, refreshInviteCodes } = useQueue();
 
   const availableCodes = inviteCodes.filter((c) => !c.usedBy);
@@ -21,30 +23,30 @@ export const InvitePanel = (): JSX.Element => {
       {/* Stats */}
       <Box border="1px solid" borderColor="#3A3228" p={4}>
         <Text fontFamily="Cinzel, serif" fontWeight={600} mb={3}>
-          Referral Stats
+          {t('invite.referralStats')}
         </Text>
         <HStack justify="space-around">
-          <StatBox label="Codes Sent" value={inviteStats.codesUsed} />
-          <StatBox label="Activated" value={inviteStats.activated} />
-          <StatBox label="Bonus Earned" value={inviteStats.bonusCodes} />
+          <StatBox label={t('invite.codesSent')} value={inviteStats.codesUsed} />
+          <StatBox label={t('invite.activated')} value={inviteStats.activated} />
+          <StatBox label={t('invite.bonusEarned')} value={inviteStats.bonusCodes} />
         </HStack>
       </Box>
 
       {/* Available codes */}
       <Box border="1px solid" borderColor="#3A3228" p={4}>
         <Text fontFamily="Cinzel, serif" fontWeight={600} mb={3}>
-          Your Invite Codes
+          {t('invite.yourCodes')}
         </Text>
         {availableCodes.length === 0 ? (
           <VStack spacing={2}>
             <Text color="#8A7E6A" fontSize="sm">
-              No invite codes available. Earn more by reaching milestones:
+              {t('invite.noCodes')}
             </Text>
             <VStack align="start" spacing={1}>
-              <Text color="#8A7E6A" fontSize="sm">Level 3 — 1 invite code</Text>
-              <Text color="#8A7E6A" fontSize="sm">Level 10 — 1 invite code</Text>
-              <Text color="#8A7E6A" fontSize="sm">Level 20 — 1 invite code</Text>
-              <Text color="#8A7E6A" fontSize="sm">Invited friend reaches Level 5 — bonus code</Text>
+              <Text color="#8A7E6A" fontSize="sm">{t('invite.level3')}</Text>
+              <Text color="#8A7E6A" fontSize="sm">{t('invite.level10')}</Text>
+              <Text color="#8A7E6A" fontSize="sm">{t('invite.level20')}</Text>
+              <Text color="#8A7E6A" fontSize="sm">{t('invite.friendLevel5')}</Text>
             </VStack>
           </VStack>
         ) : (
@@ -60,7 +62,7 @@ export const InvitePanel = (): JSX.Element => {
       {usedCodes.length > 0 && (
         <Box border="1px solid" borderColor="#3A3228" p={4}>
           <Text fontFamily="Cinzel, serif" fontWeight={600} mb={3}>
-            Used Codes
+            {t('invite.usedCodes')}
           </Text>
           <VStack align="stretch" spacing={2}>
             {usedCodes.map((code) => (
@@ -69,7 +71,7 @@ export const InvitePanel = (): JSX.Element => {
                   {code.code}
                 </Text>
                 <Text color="#5A5040" size="xs">
-                  Redeemed
+                  {t('invite.redeemed')}
                 </Text>
               </HStack>
             ))}
@@ -78,7 +80,7 @@ export const InvitePanel = (): JSX.Element => {
       )}
 
       <Button onClick={refreshInviteCodes} size="sm" variant="ghost">
-        Refresh Codes
+        {t('invite.refreshCodes')}
       </Button>
     </VStack>
   );
@@ -96,6 +98,7 @@ const StatBox = ({ label, value }: { label: string; value: number }): JSX.Elemen
 );
 
 const InviteCodeRow = ({ code, milestone }: { code: string; milestone: string }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const inviteUrl = `ultimatedominion.com?invite=${code}`;
   const { hasCopied, onCopy } = useClipboard(inviteUrl);
 
@@ -109,9 +112,9 @@ const InviteCodeRow = ({ code, milestone }: { code: string; milestone: string })
   }, [inviteUrl]);
 
   const milestoneLabel = milestone === 'activation_bonus'
-    ? 'Bonus'
+    ? t('invite.bonus')
     : milestone.startsWith('starter')
-      ? 'Starter'
+      ? t('invite.starter')
       : milestone.replace('_', ' ');
 
   return (
@@ -126,10 +129,10 @@ const InviteCodeRow = ({ code, milestone }: { code: string; milestone: string })
       </HStack>
       <HStack spacing={2}>
         <Button onClick={onCopy} size="xs" variant="outline">
-          {hasCopied ? 'Copied!' : 'Copy Link'}
+          {hasCopied ? t('share.copied') : t('invite.copyLink')}
         </Button>
         <Button onClick={shareToX} size="xs" variant="outline">
-          Share to X
+          {t('invite.shareToX')}
         </Button>
       </HStack>
     </Box>

@@ -19,6 +19,7 @@ import {
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
 import { useGoldMerchant } from '../contexts/GoldMerchantContext';
@@ -36,6 +37,7 @@ import { Level } from './Level';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
   const { character } = useCharacter();
   const { fragments } = useFragments();
   const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
@@ -178,7 +180,7 @@ export const StatsPanel = (): JSX.Element => {
         {/* HP bar */}
         <Box px={2} py={1.5} w="100%">
           <HStack justifyContent="space-between" mb={1}>
-            <Text fontWeight={700} size="sm">HP</Text>
+            <Text fontWeight={700} size="sm">{t('health.hp')}</Text>
             <Text color="#8A7E6A" fontFamily="mono" fontWeight={700} size="sm">
               {currentHpWithFloor.toString()}/{maxHp.toString()}
             </Text>
@@ -257,11 +259,11 @@ export const StatsPanel = (): JSX.Element => {
               maxed={maxed}
             />
             <HStack justifyContent="space-between" mt={1}>
-              <Text color="#8A7E6A" fontWeight={600} size="xs">XP</Text>
+              <Text color="#8A7E6A" fontWeight={600} size="xs">{t('stats.xp')}</Text>
               <Text fontFamily="mono" fontWeight={700} size="xs">
                 {maxed ? (
                   <Text as="span" color="green">
-                    {experience.toString()} (MAX)
+                    {experience.toString()} ({t('level.max')})
                   </Text>
                 ) : (
                   <>
@@ -294,7 +296,7 @@ export const StatsPanel = (): JSX.Element => {
               <HStack spacing={1.5} cursor="default">
                 <GiTwoCoins color="#D4A54A" size={18} />
                 <Text color="yellow" fontWeight={700} size="lg">
-                  Gold
+                  {t('stats.gold')}
                 </Text>
               </HStack>
               <Text
@@ -315,7 +317,7 @@ export const StatsPanel = (): JSX.Element => {
               size="xs"
               variant="gold"
             >
-              Get Gold
+              {t('stats.getGold')}
             </Button>
             {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
               <Button
@@ -323,7 +325,7 @@ export const StatsPanel = (): JSX.Element => {
                 size="xs"
                 variant="gold"
               >
-                Level Up!
+                {t('stats.levelUpButton')}
               </Button>
             )}
           </HStack>
@@ -338,7 +340,7 @@ export const StatsPanel = (): JSX.Element => {
           <Divider borderColor="grey300" mt={1} />
           <VStack px={4} py={3} spacing={1.5} w="100%">
             <Text color="#8A7E6A" fontSize="xs" fontWeight={600}>
-              Fragments
+              {t('stats.fragments')}
             </Text>
             <HStack spacing={1.5}>
               {Array.from({ length: 8 }, (_, i) => {

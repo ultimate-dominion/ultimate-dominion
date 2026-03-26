@@ -1,5 +1,6 @@
 import { HStack, IconButton, Text, Tooltip, useClipboard } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaCheck, FaCopy, FaDownload } from 'react-icons/fa';
 import { FaShareNodes } from 'react-icons/fa6';
 
@@ -161,6 +162,7 @@ export const ShareButton = ({
   imageSrc,
   colorAccent = '#8A7E6A',
 }: ShareButtonProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const shareUrl = buildShareUrl(shareParams);
   const fullText = `${text}\n\n${shareUrl}\n\n${HASHTAG}`;
   const { hasCopied, onCopy } = useClipboard(fullText);
@@ -211,9 +213,9 @@ export const ShareButton = ({
 
   return (
     <HStack spacing={1}>
-      <Tooltip label="Share with image" placement="top" hasArrow>
+      <Tooltip label={t('share.shareWithImage')} placement="top" hasArrow>
         <IconButton
-          aria-label="Share"
+          aria-label={t('share.shareAria')}
           icon={<FaShareNodes />}
           onClick={handleShare}
           isLoading={isGenerating}
@@ -223,9 +225,9 @@ export const ShareButton = ({
           _hover={{ color: '#E8DCC8', bg: `${colorAccent}20` }}
         />
       </Tooltip>
-      <Tooltip label={hasCopied ? 'Copied!' : 'Copy text'} placement="top" hasArrow>
+      <Tooltip label={hasCopied ? t('share.copied') : t('share.copyText')} placement="top" hasArrow>
         <IconButton
-          aria-label="Copy to clipboard"
+          aria-label={t('share.copyAria')}
           icon={hasCopied ? <FaCheck /> : <FaCopy />}
           onClick={onCopy}
           variant="ghost"
@@ -236,7 +238,7 @@ export const ShareButton = ({
       </Tooltip>
       {hasCopied && (
         <Text fontSize="9px" color="#5A8A3E" fontFamily="mono">
-          Copied!
+          {t('share.copied')}
         </Text>
       )}
     </HStack>

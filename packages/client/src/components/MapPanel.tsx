@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStoreAlt } from 'react-icons/fa';
 
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -64,6 +65,7 @@ const COMPASS_DIRECTIONS: {
 ];
 
 export const MapPanel = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { allCharacters, allMonsters, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { character } = useCharacter();
   const { currentBattle } = useBattle();
@@ -161,7 +163,7 @@ export const MapPanel = (): JSX.Element => {
                   letterSpacing="0.5px"
                   transition="color 0.2s"
                 >
-                  Auto Adventure
+                  {t('map.autoAdventure')}
                 </Text>
                 <Switch
                   size="sm"
@@ -177,13 +179,13 @@ export const MapPanel = (): JSX.Element => {
             {isMapFull && queueStatus === 'idle' && !showCaptcha && (
               <>
                 <Text color="red" fontWeight={500} size="sm">
-                  Server Full ({currentPlayersSpawned}/{Number(maxPlayers)})
+                  {t('map.serverFull', { current: currentPlayersSpawned, max: Number(maxPlayers) })}
                 </Text>
                 <Button
                   onClick={() => setShowCaptcha(true)}
                   size="sm"
                 >
-                  Join Queue
+                  {t('map.joinQueue')}
                 </Button>
               </>
             )}
@@ -199,28 +201,28 @@ export const MapPanel = (): JSX.Element => {
             {isMapFull && (queueStatus === 'waiting' || queueStatus === 'joining') && (
               <>
                 <Text color="#D4A54A" fontWeight={500} size="sm">
-                  Queue Position: #{queuePosition}
+                  {t('map.queuePosition', { position: queuePosition })}
                 </Text>
                 <Text color="#8A7E6A" size="xs">
-                  ~{estimatedWaitMinutes} min wait
+                  {t('map.waitTime', { minutes: estimatedWaitMinutes })}
                 </Text>
                 <Button
                   onClick={() => navigate(WAITING_ROOM_PATH)}
                   size="sm"
                   variant="outline"
                 >
-                  View Waiting Room
+                  {t('map.viewWaitingRoom')}
                 </Button>
               </>
             )}
             {isMapFull && queueStatus === 'ready' && (
               <>
                 <Text color="green.300" fontWeight={700} size="sm">
-                  A slot opened!
+                  {t('map.slotOpened')}
                 </Text>
                 <Button
                   isLoading={isSpawning}
-                  loadingText="Spawning..."
+                  loadingText={t('map.spawning')}
                   onClick={() => {
                     reportSpawned();
                     onSpawn();
@@ -228,12 +230,12 @@ export const MapPanel = (): JSX.Element => {
                   size="sm"
                   colorScheme="green"
                 >
-                  Spawn Now
+                  {t('map.spawnNow')}
                 </Button>
               </>
             )}
             <Tooltip
-              label="Spawn onto the map. Monsters lurk beyond the Alcove — tread carefully."
+              label={t('map.spawnTooltip')}
               isOpen={stage === OnboardingStage.PRE_SPAWN}
               placement="top"
               hasArrow
@@ -241,11 +243,11 @@ export const MapPanel = (): JSX.Element => {
               <Button
                 isDisabled={!!currentBattle}
                 isLoading={isSpawning}
-                loadingText="Spawning..."
+                loadingText={t('map.spawning')}
                 onClick={onSpawn}
                 size="sm"
               >
-                Spawn
+                {t('map.spawn')}
               </Button>
             </Tooltip>
           </VStack>
@@ -423,6 +425,7 @@ const NavigationCompass = ({
   position: { x: number; y: number } | null;
   stage: OnboardingStage;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -470,13 +473,13 @@ const NavigationCompass = ({
                 isDisabled={!info}
                 label={
                   info
-                    ? `${label}: ${info.monsters} monster${info.monsters !== 1 ? 's' : ''}, ${info.players} player${info.players !== 1 ? 's' : ''}`
+                    ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
                     : undefined
                 }
                 placement="top"
               >
                 <IconButton
-                  aria-label={`Move ${label}`}
+                  aria-label={t('map.moveDirection', { dir: label })}
                   icon={
                     <HStack spacing={0.5}>
                       <Text color="#8A7E6A" fontSize="2xs" fontWeight={700} lineHeight={1}>
@@ -523,7 +526,7 @@ const NavigationCompass = ({
           _hover={{ color: '#8A7E6A' }}
           transition="color 0.2s"
         >
-          Expand compass
+          {t('map.expandCompass')}
         </Text>
       </VStack>
     );
@@ -586,13 +589,13 @@ const NavigationCompass = ({
                 isDisabled={!info}
                 label={
                   info
-                    ? `${label}: ${info.monsters} monster${info.monsters !== 1 ? 's' : ''}, ${info.players} player${info.players !== 1 ? 's' : ''}`
+                    ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
                     : undefined
                 }
                 placement="top"
               >
                 <IconButton
-                  aria-label={`Move ${label}`}
+                  aria-label={t('map.moveDirection', { dir: label })}
                   icon={
                     <VStack spacing={0}>
                       <Text
@@ -697,7 +700,7 @@ const NavigationCompass = ({
           textAlign="center"
           w="100%"
         >
-          Collapse
+          {t('map.collapse')}
         </Text>
       )}
     </Box>

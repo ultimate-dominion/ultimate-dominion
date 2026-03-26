@@ -7,6 +7,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_EFFECT_COLOR_MAPPING: { [key: string]: string } = {
   'AGI boost': 'yellow',
@@ -42,6 +43,7 @@ export const HealthBar = ({
   level?: bigint;
   statusEffects?: string[];
 } & StackProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
   const health = Math.min(
     (Number(currentHpWithFloor.toString()) / Number(maxHp.toString())) * 100,
@@ -54,7 +56,7 @@ export const HealthBar = ({
     <VStack spacing={0.5} {...stackProps}>
       {!!level && (
         <Text alignSelf="start" size={{ base: '3xs', md: '2xs' }}>
-          Lvl {level.toString()}
+          {t('health.lvl', { level: level.toString() })}
         </Text>
       )}
       <Flex
@@ -86,7 +88,7 @@ export const HealthBar = ({
           left={3}
           size={{ base: '2xs', md: 'xs' }}
         >
-          HP
+          {t('health.hp')}
         </Text>
       </Flex>
       <HStack

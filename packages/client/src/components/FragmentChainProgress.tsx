@@ -5,6 +5,7 @@ import {
   Tooltip,
   VStack,
 } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { FaCheck, FaCircle } from 'react-icons/fa';
 import { useGameTable, encodeCompositeKey } from '../lib/gameStore';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -57,6 +58,7 @@ const ChainStep = ({ stepIndex, currentStep, completed }: ChainStepProps): JSX.E
 };
 
 export const FragmentChainProgress = (): JSX.Element | null => {
+  const { t } = useTranslation('ui');
   const { character } = useCharacter();
   const chainTable = useGameTable('FragmentChainProgress');
 
@@ -83,15 +85,15 @@ export const FragmentChainProgress = (): JSX.Element | null => {
   return (
     <Box>
       <Text fontWeight="bold" mb={3}>
-        Fragment Chains ({completedCount}/{chains.length})
+        {t('fragmentChain.title', { completed: completedCount, total: chains.length })}
       </Text>
       <VStack align="stretch" spacing={2}>
         {chains.map(chain => (
           <Tooltip
             key={chain.fragmentType}
             label={chain.completed
-              ? `${chain.name} — Complete`
-              : `${chain.name} — Step ${chain.currentStep}/${chain.totalSteps}`
+              ? `${chain.name} — ${t('fragmentChain.complete')}`
+              : `${chain.name} — ${t('fragmentChain.step', { current: chain.currentStep, total: chain.totalSteps })}`
             }
           >
             <HStack

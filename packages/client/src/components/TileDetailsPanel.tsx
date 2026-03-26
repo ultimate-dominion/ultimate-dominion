@@ -21,6 +21,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
@@ -104,15 +105,11 @@ const pickWeaponForMonster = (
   return undefined; // caller falls back to first weapon
 };
 
-const REST_FLAVOR = [
-  'The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.',
-  'You sit by the flames and let the heat chase away the cold. Strength returns.',
-  'Embers dance in the dark. The world feels far away. You breathe deep, and heal.',
-  'The fire hisses and pops. For a moment, the dangers beyond feel like a distant memory.',
-  'Sparks drift upward like tiny stars. When you rise, the pain is gone.',
-];
+const REST_FLAVOR_COUNT = 5;
 
 export const TileDetailsPanel = (): JSX.Element => {
+  const { t } = useTranslation('ui');
+  const { t: tn } = useTranslation('narrative');
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     isOpen: isSafetyZoneInfoModalOpen,
@@ -232,9 +229,10 @@ export const TileDetailsPanel = (): JSX.Element => {
       return true;
     });
     if (result !== undefined) {
-      renderSuccess(REST_FLAVOR[Math.floor(Math.random() * REST_FLAVOR.length)]);
+      const idx = Math.floor(Math.random() * REST_FLAVOR_COUNT);
+      renderSuccess(tn(`restFlavor.${idx}`));
     }
-  }, [character, rest, restTx, renderSuccess]);
+  }, [character, rest, restTx, renderSuccess, tn]);
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
   const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);
@@ -998,7 +996,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             size={{ base: 'md', lg: 'xl' }}
             textTransform="uppercase"
           >
-            {pendingOpponent ? `Fighting ${pendingOpponent.name}` : 'Initiating battle'}
+            {pendingOpponent ? t('combat.fighting', { name: pendingOpponent.name }) : t('combat.initiatingBattle')}
           </Text>
           <Spinner color="red.400" size="lg" thickness="3px" speed="0.8s" />
         </VStack>
@@ -1031,7 +1029,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           )}
           <GridItem colSpan={2}>
             <Heading size="sm">
-              {shopsOnTile.length > 0 && !isHomeTile && 'Shops & '}Players
+              {shopsOnTile.length > 0 && !isHomeTile ? t('tile.shopsAndPlayers') : t('tile.players')}
             </Heading>
           </GridItem>
         </Grid>
@@ -1225,7 +1223,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                       fontWeight={500}
                     >
                       {monstersExpanded
-                        ? 'Show fewer'
+                        ? t('combat.showFewer')
                         : `${hiddenMonsterCount} more monster${hiddenMonsterCount !== 1 ? 's' : ''}...`}
                     </Text>
                   </HStack>
@@ -1281,7 +1279,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             <>
               <HStack h={ROW_HEIGHT} justifyContent="end" px={4}>
                 <Text size={{ base: '3xs', sm: '2xs', md: 'xs' }} textAlign="right">
-                  {inSafetyZone ? 'The Alcove' : 'The Winding Dark'}
+                  {inSafetyZone ? t('tile.theAlcove') : t('tile.theWindingDark')}
                 </Text>
               </HStack>
               <Box

@@ -1,4 +1,5 @@
 import { Box, Center, HStack, Image, keyframes, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getEmoji, removeEmoji } from '../utils/helpers';
@@ -32,6 +33,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   ...item
 }): JSX.Element => {
   const { balance, name, rarity } = item;
+  const { t } = useTranslation('ui');
   const rarityColor = getRarityColor(rarity);
   const rarityName = getRarityName(rarity);
   const rarityGlow = getRarityGlow(rarity);
@@ -90,7 +92,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       if (parts.length === 0) return null;
       return (
         <Text size="2xs" color="#C87A2A" fontFamily="'Fira Code', monospace">
-          Requires: {parts.join(' ')}
+          {t('itemCard.requires')} {parts.join(' ')}
         </Text>
       );
     };
@@ -102,7 +104,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       if (hpRestoreAmount > BigInt(0)) {
         return (
           <Text size={{ base: '2xs', sm: 'xs' }} color="#5A8A3E" fontWeight={600}>
-            Restores {hpRestoreAmount.toString()} HP
+            {t('itemCard.restoresHp', { hp: hpRestoreAmount.toString() })}
           </Text>
         );
       }
@@ -164,7 +166,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         {renderReqs(minLevel, statRestrictions)}
       </VStack>
     );
-  }, [item]);
+  }, [item, t]);
 
   return (
     <Tooltip
@@ -200,7 +202,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             transform="translateY(-50%)"
             zIndex={2}
           >
-            Equipped
+            {t('itemCard.equipped')}
           </Box>
         )}
         <HStack

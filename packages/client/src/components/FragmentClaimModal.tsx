@@ -16,6 +16,8 @@ import {
 import SafeTypist from './SafeTypist';
 import { ShareButton } from './ShareButton';
 
+import { useTranslation } from 'react-i18next';
+
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments, type FragmentStatus } from '../contexts/FragmentContext';
 import { getFragmentColor, getFragmentImage } from '../utils/fragmentImages';
@@ -62,6 +64,7 @@ export const FragmentClaimModal = ({
   isOpen,
   onClose,
 }: FragmentClaimModalProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { claimFragment, isClaiming, fragments } = useFragments();
   const { refreshCharacter } = useCharacter();
   const [isClaimed, setIsClaimed] = useState(false);
@@ -228,8 +231,7 @@ export const FragmentClaimModal = ({
                 letterSpacing="widest"
                 textTransform="uppercase"
               >
-                Fragment {getRomanNumeral(fragment.fragmentType)} of{' '}
-                {getRomanNumeral(TOTAL_FRAGMENTS)}
+                {t('fragment.fragmentOf', { num: getRomanNumeral(fragment.fragmentType), total: getRomanNumeral(TOTAL_FRAGMENTS) })}
               </Text>
 
               {/* Title */}
@@ -256,7 +258,7 @@ export const FragmentClaimModal = ({
                     color={color}
                     animation={`${xpFlash} 0.5s ease-out`}
                   >
-                    +1 XP
+                    {t('fragment.xpReward')}
                   </Text>
 
                   {/* Divider */}
@@ -301,11 +303,10 @@ export const FragmentClaimModal = ({
                         fontSize="lg"
                         fontFamily="'Cinzel', serif"
                       >
-                        Depths Relic Hunter
+                        {t('fragment.depthsRelicHunter')}
                       </Text>
                       <Text fontSize="md" textAlign="center" color="#C4B89E">
-                        All {TOTAL_FRAGMENTS} fragments collected. The fallen speak
-                        through you now. A badge has been forged in your name.
+                        {t('fragment.allCollected', { total: TOTAL_FRAGMENTS })}
                       </Text>
                     </VStack>
                   )}
@@ -322,7 +323,7 @@ export const FragmentClaimModal = ({
                     textAlign="center"
                     fontFamily="mono"
                   >
-                    Discovered at ({fragment.triggerTileX}, {fragment.triggerTileY})
+                    {t('fragment.discoveredAt', { x: fragment.triggerTileX, y: fragment.triggerTileY })}
                   </Text>
                 </>
               )}
@@ -341,7 +342,7 @@ export const FragmentClaimModal = ({
             <Button
               onClick={handleClaim}
               isLoading={isClaiming}
-              loadingText="Claiming..."
+              loadingText={t('fragment.claiming')}
               size="lg"
               px={12}
               bg={`${color}20`}
@@ -360,12 +361,12 @@ export const FragmentClaimModal = ({
                 bg: `${color}35`,
               }}
             >
-              CLAIM FRAGMENT
+              {t('fragment.claimFragment')}
             </Button>
           ) : (
             <VStack spacing={3}>
               <ShareButton
-                text={`Discovered Fragment ${getRomanNumeral(fragment.fragmentType)}: ${fragment.name} in Ultimate Dominion. The fallen speak in riddles.`}
+                text={t('fragment.shareText', { num: getRomanNumeral(fragment.fragmentType), name: fragment.name })}
                 shareParams={{
                   type: 'fragment',
                   name: fragment.name,
@@ -389,7 +390,7 @@ export const FragmentClaimModal = ({
                   borderColor: `${color}60`,
                 }}
               >
-                Close
+                {t('common.close')}
               </Button>
             </VStack>
           )}

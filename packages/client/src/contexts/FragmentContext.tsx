@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
@@ -15,7 +16,6 @@ import {
   useGameTable,
 } from '../lib/gameStore';
 import {
-  getFragmentInfo,
   TOTAL_FRAGMENTS,
 } from '../utils/fragmentNarratives';
 
@@ -62,6 +62,7 @@ export type FragmentProviderProps = {
 export const FragmentProvider = ({
   children,
 }: FragmentProviderProps): JSX.Element => {
+  const { t: tn } = useTranslation('narrative');
   const { renderSuccess } = useToast();
   const {
     systemCalls: { claimFragment: claimFragmentCall },
@@ -102,8 +103,6 @@ export const FragmentProvider = ({
     const fragmentStatuses: FragmentStatus[] = [];
 
     for (let i = 1; i <= TOTAL_FRAGMENTS; i++) {
-      const info = getFragmentInfo(i);
-      if (!info) continue;
 
       // Locate the row whose keyBytes starts with this character's padded id and
       // whose second 32-byte segment encodes the current fragment type.
@@ -119,9 +118,9 @@ export const FragmentProvider = ({
 
       fragmentStatuses.push({
         fragmentType: i,
-        name: info.name,
-        narrative: info.narrative,
-        hint: info.hint,
+        name: tn(`${i}.name`),
+        narrative: tn(`${i}.narrative`),
+        hint: tn(`${i}.hint`),
         triggered: progress ? Boolean(progress.triggered) : false,
         triggeredAt: progress ? toNumber(progress.triggeredAt) : 0,
         triggerTileX: progress ? toNumber(progress.triggerTileX) : 0,
@@ -133,7 +132,7 @@ export const FragmentProvider = ({
     }
 
     return fragmentStatuses;
-  }, [character, characterKeyPrefix, fragmentProgressTable, refreshKey]);
+  }, [character, characterKeyPrefix, fragmentProgressTable, refreshKey, tn]);
 
   // Check if there's a pending echo on the current tile.
   const pendingEcho = useMemo(() => {
@@ -164,13 +163,13 @@ export const FragmentProvider = ({
       });
 
       if (result !== undefined) {
-        const info = getFragmentInfo(fragmentType);
-        renderSuccess(`Fragment claimed: ${info?.name ?? 'Unknown'}`);
+        renderSuccess(`Fragment claimed: ${tn(`${fragmentType}.name`)}`);
+
         setClaimedTypes(prev => new Set(prev).add(fragmentType));
         setRefreshKey(k => k + 1);
       }
     },
-    [character, claimFragmentCall, claimTx, renderSuccess],
+    [character, claimFragmentCall, claimTx, renderSuccess, tn],
   );
 
   const refreshFragments = useCallback(() => {

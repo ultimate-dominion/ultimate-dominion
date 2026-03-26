@@ -9,6 +9,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IoClose } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useDisconnect, useWalletClient } from 'wagmi';
@@ -30,6 +31,7 @@ export const ConnectWalletModal = ({
   onClose: () => void;
   suppressNavigate?: boolean;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const navigate = useNavigate();
   const { data: externalWalletClient } = useWalletClient();
   const { authMethod, isAuthenticated, ownerAddress } = useAuth();
@@ -85,12 +87,12 @@ export const ConnectWalletModal = ({
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
-          <ModalHeader>Signing In...</ModalHeader>
+          <ModalHeader>{t('connectWallet.signingIn')}</ModalHeader>
           <ModalCloseButton>
             <IoClose size={30} />
           </ModalCloseButton>
           <ModalBody>
-            <Text textAlign="center">Setting up your account...</Text>
+            <Text textAlign="center">{t('connectWallet.settingUp')}</Text>
           </ModalBody>
         </ModalContent>
       </Modal>
@@ -103,8 +105,7 @@ export const ConnectWalletModal = ({
       return (
         <VStack spacing={6}>
           <Text fontSize="sm" textAlign="center">
-            A small ETH deposit is needed to cover gameplay fees.
-            Your funds stay in your session and can be withdrawn anytime.
+            {t('connectWallet.depositInfo')}
           </Text>
           <DelegationButton
             externalWalletClient={externalWalletClient}
@@ -118,7 +119,7 @@ export const ConnectWalletModal = ({
             textAlign="center"
             _hover={{ color: '#C4B89E' }}
           >
-            Use Google sign-in instead
+            {t('connectWallet.useGoogle')}
           </Text>
         </VStack>
       );
@@ -126,7 +127,7 @@ export const ConnectWalletModal = ({
 
     return (
       <VStack spacing={10}>
-        <Text textAlign="center">Connecting wallet...</Text>
+        <Text textAlign="center">{t('connectWallet.connecting')}</Text>
       </VStack>
     );
   })();
@@ -137,7 +138,7 @@ export const ConnectWalletModal = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          {delegatorAddress ? 'Ready' : 'Secure Your Session'}
+          {delegatorAddress ? t('connectWallet.ready') : t('connectWallet.secureSession')}
         </ModalHeader>
         <ModalCloseButton>
           <IoClose size={30} />

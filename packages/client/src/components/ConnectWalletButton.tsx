@@ -1,7 +1,9 @@
 import { Button, Flex, HStack, Text } from '@chakra-ui/react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useTranslation } from 'react-i18next';
 
 export const ConnectWalletButton: React.FC = () => {
+  const { t } = useTranslation('ui');
   return (
     <ConnectButton.Custom>
       {({
@@ -29,7 +31,7 @@ export const ConnectWalletButton: React.FC = () => {
               if (!connected) {
                 return (
                   <Button onClick={openConnectModal} type="button">
-                    Sign in with Wallet
+                    {t('connectWalletBtn.signInWithWallet')}
                   </Button>
                 );
               }
@@ -37,7 +39,7 @@ export const ConnectWalletButton: React.FC = () => {
               if (chain.unsupported) {
                 return (
                   <Button onClick={openChainModal} type="button">
-                    Wrong Network
+                    {t('connectWalletBtn.wrongNetwork')}
                   </Button>
                 );
               }
