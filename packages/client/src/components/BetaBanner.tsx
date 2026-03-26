@@ -1,9 +1,11 @@
 import { Box, CloseButton, HStack, Link, Text } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const DISMISSED_KEY = 'ud_beta_banner_dismissed';
 
 export const BetaBanner = (): JSX.Element | null => {
+  const { t } = useTranslation('ui');
   const [dismissed, setDismissed] = useState(
     () => sessionStorage.getItem(DISMISSED_KEY) === '1',
   );
@@ -31,7 +33,7 @@ export const BetaBanner = (): JSX.Element | null => {
           fontWeight="bold"
           textAlign="center"
         >
-          Early Access — Things may break. When in doubt, refresh.{' '}
+          {t('betaBanner.message')}{' '}
           <Link
             color="#E8DCC8"
             href="https://tavern.ultimatedominion.com/c/beta-feedback"
@@ -39,7 +41,7 @@ export const BetaBanner = (): JSX.Element | null => {
             textDecoration="underline"
             _hover={{ color: '#fff' }}
           >
-            Report issues
+            {t('betaBanner.reportIssues')}
           </Link>
         </Text>
         <CloseButton

@@ -23,5 +23,194 @@
   },
   "language": {
     "label": "Language"
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "or": "OR",
+    "no": "No",
+    "yes": "Yes",
+    "complete": "Complete",
+    "permissionGranted": "Permission granted!",
+    "allowSpending": "Allow Spending",
+    "alwaysAllow": "Always Allow",
+    "noCharacter": "No character found. Please select a character.",
+    "walletNotConnected": "Wallet not connected. Please reconnect your wallet."
+  },
+  "betaBanner": {
+    "message": "Early Access — Things may break. When in doubt, refresh.",
+    "reportIssues": "Report issues"
+  },
+  "badges": {
+    "title": "Badges",
+    "noneEarned": "No badges earned yet"
+  },
+  "level": {
+    "max": "MAX",
+    "label": "Level {{level}}"
+  },
+  "discord": {
+    "join": "Join Discord"
+  },
+  "feedback": {
+    "send": "Send Feedback",
+    "sendAria": "Send feedback"
+  },
+  "captcha": {
+    "failed": "Verification failed. Please try again.",
+    "expired": "Verification expired. Please verify again.",
+    "joining": "Joining...",
+    "joinQueue": "Join Queue"
+  },
+  "sound": {
+    "mute": "Mute",
+    "unmute": "Sound",
+    "muteAria": "Mute sound",
+    "enableAria": "Enable sound"
+  },
+  "map": {
+    "autoAdventure": "Auto Adventure",
+    "serverFull": "Server Full ({{current}}/{{max}})",
+    "joinQueue": "Join Queue",
+    "queuePosition": "Queue Position: #{{position}}",
+    "waitTime": "~{{minutes}} min wait",
+    "viewWaitingRoom": "View Waiting Room",
+    "slotOpened": "A slot opened!",
+    "spawnNow": "Spawn Now",
+    "spawning": "Spawning...",
+    "spawnTooltip": "Spawn onto the map. Monsters lurk beyond the Alcove — tread carefully.",
+    "spawn": "Spawn",
+    "expandCompass": "Expand compass",
+    "collapse": "Collapse",
+    "tileInfo": "{{dir}}: {{monsters}} monsters, {{players}} players",
+    "moveDirection": "Move {{dir}}"
+  },
+  "signIn": {
+    "title": "Sign In to Play",
+    "openInBrowser": "Open in your browser",
+    "inAppWarning": "Google sign-in doesn't work in app browsers. Copy the link below and open it in Chrome or Safari.",
+    "copied": "Copied!",
+    "copyLink": "Copy link",
+    "continueWithGoogle": "Continue with Google",
+    "googleFailed": "Google sign-in failed",
+    "termsAgreement": "By signing in you agree to the",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "connectWallet": {
+    "signingIn": "Signing In...",
+    "settingUp": "Setting up your account...",
+    "depositInfo": "A small ETH deposit is needed to cover gameplay fees. Your funds stay in your session and can be withdrawn anytime.",
+    "useGoogle": "Use Google sign-in instead",
+    "connecting": "Connecting wallet...",
+    "ready": "Ready",
+    "secureSession": "Secure Your Session"
+  },
+  "outOfResources": {
+    "title": "Out of Resources",
+    "message": "You have no ETH for gas and no Gold to auto-swap. You need resources to continue playing.",
+    "embeddedAdvice": "Fight a monster to earn Gold. Your next transaction will be sponsored so you can get back on your feet.",
+    "embeddedDetail": "Once you earn Gold, the GasStation will automatically swap it for ETH to cover future gas costs.",
+    "externalAdvice": "Deposit ETH from your main wallet to continue playing.",
+    "openWallet": "Open Wallet"
+  },
+  "levelUp": {
+    "banner": "LEVEL UP!",
+    "bannerReached": "You reached Level {{level}}",
+    "youHaveReached": "You have reached",
+    "abilityPoint": "+1 Ability Point",
+    "allocateStats": "Allocate Stats",
+    "shareText": "Reached Level {{level}} in Ultimate Dominion."
+  },
+  "editCharacter": {
+    "title": "Edit Character",
+    "namePlaceholder": "Name",
+    "nameRequired": "Name is required",
+    "uploadAvatar": "Upload Avatar Image",
+    "uploading": "Uploading...",
+    "avatarRequired": "Avatar is required",
+    "bioPlaceholder": "Bio",
+    "bioRequired": "Bio is required",
+    "updating": "Updating...",
+    "update": "Update",
+    "updated": "Character updated!",
+    "missingFields": "Missing required fields.",
+    "updateFailed": "Failed to update character."
+  },
+  "allowance": {
+    "shopTitle": "Shop Permissions",
+    "marketplaceTitle": "Marketplace Permissions",
+    "lootManagerTitle": "Loot Manager Permission",
+    "buyPermission": "In order to buy {{item}}, you need to give permission to spend {{price}} Gold.",
+    "sellPermissionShop": "In order to sell {{item}}, you must allow the shop to manage your items.",
+    "sellPermissionMarketplace": "In order to sell {{item}}, you must allow the marketplace to manage your items.",
+    "goldSpendPermission": "Give permission to spend {{amount}} Gold with the Loot Manager?",
+    "itemPermission": "Allow all items to be used by the Loot Manager?",
+    "shopAlwaysAllowTooltip": "This allows you to spend Gold on Shops without having to approve each transaction. It is a faster and smoother experience.",
+    "marketplaceAlwaysAllowTooltip": "This allows you to spend Gold on the Marketplace without having to approve each transaction. It is a faster and smoother experience.",
+    "lootManagerAlwaysAllowTooltip": "This allows you to carry Gold without having to approve each transaction. It is a faster and smoother experience.",
+    "lootManagerSuccess": "You can use your token with the Loot Manager."
+  },
+  "battle": {
+    "victory": "Victory!",
+    "defeat": "Defeat...",
+    "draw": "Draw...",
+    "monsterFled": "{{name}} fled!",
+    "youFled": "You fled from {{name}}.",
+    "earnedGold": "You earned",
+    "gold": "Gold.",
+    "fleeingCost": "Fleeing cost you",
+    "carriedGold": "Carried Gold.",
+    "drawMessage": "The battle ended in a draw! You both fled the battlefield.",
+    "youDefeated": "You defeated {{name}}!",
+    "youWereKilled": "You were killed by {{name}}.",
+    "lostGold": "You lost",
+    "deathMessage": "When you die, your health is restored, but you are forced to respawn at the Town Square.",
+    "pvpShareText": "Defeated {{name}} in PvP combat in Ultimate Dominion.",
+    "pveShareText": "Slew {{name}} in the Dark Cave.",
+    "itemShareText": "Found {{rarity}}{{name}} in Ultimate Dominion. Every item is permanent, on-chain, and mine.",
+    "aMonster": "a monster",
+    "fetchFailed": "Failed to fetch looted items."
+  },
+  "equip": {
+    "equipItem": "Equip Item",
+    "unequipItem": "Unequip Item",
+    "makeOffer": "Make an offer",
+    "wantEquip": "Do you want to equip this item?",
+    "wantUnequip": "Do you want to unequip this item?",
+    "wantOffer": "Do you want to make an offer for this item?",
+    "equipping": "Equipping...",
+    "unequipping": "Unequipping...",
+    "equip": "Equip",
+    "unequip": "Unequip",
+    "sellOnMarketplace": "Sell on Marketplace",
+    "missingRequirements": "Missing requirements:",
+    "levelRequired": "Level {{level}} required",
+    "agiRequired": "AGI {{agi}} required",
+    "intRequired": "INT {{int}} required",
+    "strRequired": "STR {{str}} required",
+    "youStat": "(you: {{value}})",
+    "slotsFull": "All equipment slots are full. Unequip something first.",
+    "cannotEquipInBattle": "You cannot equip items during a battle.",
+    "cannotUnequipInBattle": "You cannot unequip items during a battle.",
+    "mustHaveWeapon": "You must have at least 1 weapon or spell equipped in the Outer Realms.",
+    "equippingItem": "Equipping {{name}}...",
+    "unequippingItem": "Unequipping {{name}}...",
+    "alreadyEquipped": "{{name}} is already equipped",
+    "equipped": "{{name}} equipped",
+    "alreadyUnequipped": "{{name}} is already unequipped",
+    "unequipped": "{{name}} unequipped"
+  },
+  "fragment": {
+    "fragmentOf": "Fragment {{num}} of {{total}}",
+    "xpReward": "+1 XP",
+    "depthsRelicHunter": "Depths Relic Hunter",
+    "allCollected": "All {{total}} fragments collected. The fallen speak through you now. A badge has been forged in your name.",
+    "discoveredAt": "Discovered at ({{x}}, {{y}})",
+    "claiming": "Claiming...",
+    "claimFragment": "CLAIM FRAGMENT",
+    "shareText": "Discovered Fragment {{num}}: {{name}} in Ultimate Dominion. The fallen speak in riddles."
   }
 }

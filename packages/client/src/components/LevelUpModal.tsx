@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -133,6 +134,7 @@ export const LevelUpModal = ({
   isOpen,
   onClose,
 }: LevelUpModalProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const [phase, setPhase] = useState<'celebrate' | 'allocate' | 'narrative'>('celebrate');
   const [showContent, setShowContent] = useState(false);
   // Capture target level when modal opens — character.level updates after TX
@@ -253,7 +255,7 @@ export const LevelUpModal = ({
                   color="rgba(212, 165, 74, 0.6)"
                   mb={2}
                 >
-                  You have reached
+                  {t('levelUp.youHaveReached')}
                 </Text>
                 <Text
                   textAlign="center"
@@ -264,7 +266,7 @@ export const LevelUpModal = ({
                   lineHeight="1"
                   animation={`${goldGlow} 3s ease-in-out infinite`}
                 >
-                  Level {targetLevel}
+                  {t('level.label', { level: targetLevel })}
                 </Text>
               </Box>
 
@@ -307,7 +309,7 @@ export const LevelUpModal = ({
                 opacity={showContent ? 1 : 0}
                 animation={showContent ? `${fadeUp} 0.6s 1s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
               >
-                +1 Ability Point
+                {t('levelUp.abilityPoint')}
               </Text>
             </VStack>
           )}
@@ -577,7 +579,7 @@ export const LevelUpModal = ({
               opacity={showContent ? 1 : 0}
               animation={showContent ? `${fadeUp} 0.6s 1.3s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
             >
-              Allocate Stats
+              {t('levelUp.allocateStats')}
             </Button>
           )}
           {phase === 'narrative' && (
@@ -587,10 +589,10 @@ export const LevelUpModal = ({
                 variant="gold"
                 size="md"
               >
-                Continue
+                {t('common.continue')}
               </Button>
               <ShareButton
-                text={`Reached Level ${targetLevel} in Ultimate Dominion.`}
+                text={t('levelUp.shareText', { level: targetLevel })}
                 shareParams={{
                   type: 'levelup',
                   level: targetLevel.toString(),

@@ -14,6 +14,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FcGoogle } from 'react-icons/fc';
 import { IoClose } from 'react-icons/io5';
 import { IoCopyOutline } from 'react-icons/io5';
@@ -39,6 +40,7 @@ export const SignInModal = ({
   onClose: () => void;
   onChooseWallet?: () => void;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     connectWithGoogle,
     hasInjectedWallet,
@@ -76,7 +78,7 @@ export const SignInModal = ({
       // effect and can leave the user on the Welcome page with no
       // loading feedback while MUD sync finishes.
     } catch (e) {
-      setError((e as Error)?.message ?? 'Google sign-in failed');
+      setError((e as Error)?.message ?? t('signIn.googleFailed'));
     }
   }, [connectWithGoogle]);
 
@@ -90,7 +92,7 @@ export const SignInModal = ({
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>Sign In to Play</ModalHeader>
+        <ModalHeader>{t('signIn.title')}</ModalHeader>
         <ModalCloseButton>
           <IoClose size={30} />
         </ModalCloseButton>
@@ -106,11 +108,10 @@ export const SignInModal = ({
                 w="100%"
               >
                 <Text color="#C87A2A" fontWeight={600} fontSize="sm" mb={1}>
-                  Open in your browser
+                  {t('signIn.openInBrowser')}
                 </Text>
                 <Text color="rgba(196, 184, 158, 0.7)" fontSize="xs" mb={3}>
-                  Google sign-in doesn&apos;t work in app browsers.
-                  Copy the link below and open it in Chrome or Safari.
+                  {t('signIn.inAppWarning')}
                 </Text>
                 <Button
                   leftIcon={<IoCopyOutline />}
@@ -122,7 +123,7 @@ export const SignInModal = ({
                   w="100%"
                   _hover={{ bg: 'rgba(200, 122, 42, 0.15)' }}
                 >
-                  {copied ? 'Copied!' : 'Copy link'}
+                  {copied ? t('signIn.copied') : t('signIn.copyLink')}
                 </Button>
               </Box>
             )}
@@ -150,7 +151,7 @@ export const SignInModal = ({
                 bg: '#f1f3f4',
               }}
             >
-              Continue with Google
+              {t('signIn.continueWithGoogle')}
             </Button>
 
             {error && (
@@ -165,7 +166,7 @@ export const SignInModal = ({
                   <HStack spacing={4} w="100%">
                     <Divider />
                     <Text color="#8A7E6A" fontSize="xs" whiteSpace="nowrap">
-                      OR
+                      {t('common.or')}
                     </Text>
                     <Divider />
                   </HStack>
@@ -174,13 +175,13 @@ export const SignInModal = ({
               </Box>
             )}
             <Text color="#8A7E6A" fontSize="12px" textAlign="center">
-              By signing in you agree to the{' '}
+              {t('signIn.termsAgreement')}{' '}
               <Link href="https://ultimatedominion.com/terms" isExternal color="#C4B89E" textDecoration="underline">
-                Terms of Service
+                {t('signIn.termsOfService')}
               </Link>{' '}
-              and{' '}
+              {t('signIn.and')}{' '}
               <Link href="https://ultimatedominion.com/privacy" isExternal color="#C4B89E" textDecoration="underline">
-                Privacy Policy
+                {t('signIn.privacyPolicy')}
               </Link>
             </Text>
           </VStack>
