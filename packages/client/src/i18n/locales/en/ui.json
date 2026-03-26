@@ -369,5 +369,65 @@
     "consumedSuccess": "{{name}} was consumed!",
     "equippedSuccess": "{{name}} equipped successfully!",
     "unequippedSuccess": "{{name}} unequipped successfully!"
+  },
+  "loadout": {
+    "title": "Loadout",
+    "edit": "Edit",
+    "emptySlot": "Empty slot",
+    "armorEmpty": "Armor — empty",
+    "tapToSetFirst": "tap to set as #1"
+  },
+  "leveling": {
+    "levelUp": "Level Up!",
+    "myStats": "My Stats",
+    "abilityPoints": "Ability Points: {{points}}",
+    "notEnoughPoints": "You do not have enough ability points.",
+    "unusedPoints": "You have unused ability points",
+    "agility": "Agility",
+    "intelligence": "Intelligence",
+    "strength": "Strength",
+    "agiDesc": "Dodge attacks. Higher crit chance.",
+    "intDesc": "Spell damage. Arcane force.",
+    "strDesc": "Physical damage. Raw power.",
+    "base": "Base",
+    "bonus": "Bonus",
+    "total": "Total",
+    "divinePowerBonus": "Your faith stirs — +2 HP",
+    "weavePowerBonus": "The Weave responds — +1 Intelligence",
+    "physicalPowerBonus": "Your discipline sharpens — +1 bonus ability point",
+    "level5Divine": "+2 HP from your Divine power",
+    "level5Weave": "+1 INT from the Weave",
+    "level5Physical": "Physical bonus point allocated",
+    "level5Success": "Level 5!{{bonus}}",
+    "level3Badge": "Level 3! You earned the Adventurer Badge!",
+    "leveledUp": "Character leveled up!"
+  },
+  "respec": {
+    "title": "Redistribute Stats",
+    "remaining": "Remaining: {{remaining}}",
+    "cost": "Cost: {{cost}} gold",
+    "fullRespecInfo": "Full respec resets class, level, and all equipment. Cost: {{cost}} gold.",
+    "fullReset": "Full Reset",
+    "cannotDuringCombat": "Cannot respec during combat.",
+    "redistributed": "Stats redistributed.",
+    "fullRespecWarning": "Full respec will reset class, level, and equipment. This cannot be undone.",
+    "fullyReset": "Character fully reset."
+  },
+  "repair": {
+    "title": "Repair Equipment",
+    "durability": "{{current}}/{{max}} durability",
+    "repairButton": "Repair ({{cost}} gold)",
+    "repaired": "{{name}} repaired",
+    "failed": "Repair failed"
+  },
+  "itemCard": {
+    "equipped": "Equipped",
+    "restoresHp": "Restores {{hp}} HP",
+    "requires": "Requires:"
+  },
+  "miniLeaderboard": {
+    "nearbyRanks": "Nearby Ranks",
+    "statsTab": "Stats",
+    "goldTab": "Gold"
   }
 }
