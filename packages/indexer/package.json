@@ -33,5 +33,9 @@
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vitest": "^3.0.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@latticexyz/protocol-parser@2.2.23": "patches/@latticexyz__protocol-parser@2.2.23.patch"
+    }
   }
-}

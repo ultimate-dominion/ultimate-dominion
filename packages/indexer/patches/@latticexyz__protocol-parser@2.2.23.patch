@@ -1,0 +1,19 @@
+diff --git a/dist/internal.js b/dist/internal.js
+index 0000000..0000001 100644
+--- a/dist/internal.js
++++ b/dist/internal.js
+@@ -199,7 +199,13 @@ function decodeStaticField(abiType, data) {
+       return data;
+     }
+     case "bool": {
+-      return hexToBool(data);
++      try {
++        return hexToBool(data);
++      } catch {
++        // Handle non-standard boolean values (e.g. 0x64 from packed fields)
++        const num = parseInt(data, 16);
++        return num !== 0;
++      }
+     }
+     case "address": {
+       return getAddress(data);
