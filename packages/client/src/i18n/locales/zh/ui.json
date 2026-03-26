@@ -23,5 +23,522 @@
   },
   "language": {
     "label": "语言"
+  },
+  "common": {
+    "close": "关闭",
+    "cancel": "取消",
+    "continue": "继续",
+    "or": "或",
+    "no": "否",
+    "yes": "是",
+    "complete": "完成",
+    "permissionGranted": "授权成功！",
+    "allowSpending": "允许消费",
+    "alwaysAllow": "始终允许",
+    "noCharacter": "未找到角色，请选择一个角色。",
+    "walletNotConnected": "钱包未连接，请重新连接钱包。"
+  },
+  "betaBanner": {
+    "message": "抢先体验 — 可能存在问题，遇到异常请刷新页面。",
+    "reportIssues": "报告问题"
+  },
+  "badges": {
+    "title": "徽章",
+    "noneEarned": "尚未获得任何徽章"
+  },
+  "level": {
+    "max": "满级",
+    "label": "等级 {{level}}"
+  },
+  "discord": {
+    "join": "加入 Discord"
+  },
+  "feedback": {
+    "send": "发送反馈",
+    "sendAria": "发送反馈"
+  },
+  "captcha": {
+    "failed": "验证失败，请重试。",
+    "expired": "验证已过期，请重新验证。",
+    "joining": "加入中...",
+    "joinQueue": "加入队列"
+  },
+  "sound": {
+    "mute": "静音",
+    "unmute": "音效",
+    "muteAria": "静音",
+    "enableAria": "开启音效"
+  },
+  "map": {
+    "autoAdventure": "自动冒险",
+    "serverFull": "服务器已满 ({{current}}/{{max}})",
+    "joinQueue": "加入队列",
+    "queuePosition": "队列位置: #{{position}}",
+    "waitTime": "约等待 {{minutes}} 分钟",
+    "viewWaitingRoom": "查看等候室",
+    "slotOpened": "有空位了！",
+    "spawnNow": "立即进入",
+    "spawning": "进入中...",
+    "spawnTooltip": "进入地图。洞穴深处怪物横行——小心前行。",
+    "spawn": "进入",
+    "expandCompass": "展开罗盘",
+    "collapse": "收起",
+    "tileInfo": "{{dir}}: {{monsters}} 只怪物, {{players}} 名玩家",
+    "moveDirection": "向{{dir}}移动"
+  },
+  "signIn": {
+    "title": "登录开始游戏",
+    "openInBrowser": "请在浏览器中打开",
+    "inAppWarning": "Google 登录无法在应用内浏览器中使用。请复制下方链接并在 Chrome 或 Safari 中打开。",
+    "copied": "已复制！",
+    "copyLink": "复制链接",
+    "continueWithGoogle": "使用 Google 继续",
+    "googleFailed": "Google 登录失败",
+    "termsAgreement": "登录即表示您同意",
+    "termsOfService": "服务条款",
+    "and": "和",
+    "privacyPolicy": "隐私政策"
+  },
+  "connectWallet": {
+    "signingIn": "登录中...",
+    "settingUp": "正在设置账户...",
+    "depositInfo": "需要少量 ETH 来支付游戏交易费用。资金保存在您的会话中，随时可以提取。",
+    "useGoogle": "改用 Google 登录",
+    "connecting": "正在连接钱包...",
+    "ready": "准备就绪",
+    "secureSession": "保护您的会话"
+  },
+  "outOfResources": {
+    "title": "资源耗尽",
+    "message": "您没有 ETH 支付燃料费，也没有金币可用于自动兑换。需要资源才能继续游戏。",
+    "embeddedAdvice": "去击杀一只怪物赚取金币。您的下一笔交易将由系统代付，助您重新站起来。",
+    "embeddedDetail": "一旦赚到金币，加油站会自动将其兑换为 ETH 以支付后续燃料费。",
+    "externalAdvice": "从您的主钱包充值 ETH 以继续游戏。",
+    "openWallet": "打开钱包"
+  },
+  "levelUp": {
+    "banner": "升级了！",
+    "bannerReached": "你已达到等级 {{level}}",
+    "youHaveReached": "你已达到",
+    "abilityPoint": "+1 能力点",
+    "allocateStats": "分配属性",
+    "shareText": "在 Ultimate Dominion 中达到了等级 {{level}}。"
+  },
+  "editCharacter": {
+    "title": "编辑角色",
+    "namePlaceholder": "名称",
+    "nameRequired": "名称为必填项",
+    "uploadAvatar": "上传头像",
+    "uploading": "上传中...",
+    "avatarRequired": "头像为必填项",
+    "bioPlaceholder": "简介",
+    "bioRequired": "简介为必填项",
+    "updating": "更新中...",
+    "update": "更新",
+    "updated": "角色已更新！",
+    "missingFields": "缺少必填字段。",
+    "updateFailed": "角色更新失败。"
+  },
+  "allowance": {
+    "shopTitle": "商店权限",
+    "marketplaceTitle": "交易所权限",
+    "lootManagerTitle": "战利品管理器权限",
+    "buyPermission": "购买 {{item}} 需要授权花费 {{price}} 金币。",
+    "sellPermissionShop": "出售 {{item}} 需要允许商店管理您的物品。",
+    "sellPermissionMarketplace": "出售 {{item}} 需要允许交易所管理您的物品。",
+    "goldSpendPermission": "允许战利品管理器花费 {{amount}} 金币？",
+    "itemPermission": "允许战利品管理器使用所有物品？",
+    "shopAlwaysAllowTooltip": "启用后无需逐笔审批即可在商店中消费金币，体验更流畅。",
+    "marketplaceAlwaysAllowTooltip": "启用后无需逐笔审批即可在交易所中消费金币，体验更流畅。",
+    "lootManagerAlwaysAllowTooltip": "启用后无需逐笔审批即可携带金币，体验更流畅。",
+    "lootManagerSuccess": "您可以在战利品管理器中使用该代币。"
+  },
+  "battle": {
+    "victory": "胜利！",
+    "defeat": "战败...",
+    "draw": "平局...",
+    "monsterFled": "{{name}} 逃跑了！",
+    "youFled": "你从 {{name}} 身边逃走了。",
+    "earnedGold": "你获得了",
+    "gold": "金币。",
+    "fleeingCost": "逃跑花费了你",
+    "carriedGold": "携带的金币。",
+    "drawMessage": "战斗以平局告终！双方都撤离了战场。",
+    "youDefeated": "你击败了 {{name}}！",
+    "youWereKilled": "你被 {{name}} 击杀了。",
+    "lostGold": "你失去了",
+    "deathMessage": "死亡后你的生命值会恢复，但你将被强制传送至城镇广场重生。",
+    "pvpShareText": "在 Ultimate Dominion 的 PvP 战斗中击败了 {{name}}。",
+    "pveShareText": "在暗黑洞穴中击杀了 {{name}}。",
+    "itemShareText": "在 Ultimate Dominion 中发现了{{rarity}}{{name}}。每件物品都是永久的、链上的、属于我的。",
+    "aMonster": "一只怪物",
+    "fetchFailed": "获取战利品失败。"
+  },
+  "equip": {
+    "equipItem": "装备物品",
+    "unequipItem": "卸下物品",
+    "makeOffer": "发起报价",
+    "wantEquip": "要装备这件物品吗？",
+    "wantUnequip": "要卸下这件物品吗？",
+    "wantOffer": "要对这件物品发起报价吗？",
+    "equipping": "装备中...",
+    "unequipping": "卸下中...",
+    "equip": "装备",
+    "unequip": "卸下",
+    "sellOnMarketplace": "在交易所出售",
+    "missingRequirements": "未满足要求：",
+    "levelRequired": "需要等级 {{level}}",
+    "agiRequired": "需要 AGI {{agi}}",
+    "intRequired": "需要 INT {{int}}",
+    "strRequired": "需要 STR {{str}}",
+    "youStat": "(你: {{value}})",
+    "slotsFull": "所有装备槽已满，请先卸下某件装备。",
+    "cannotEquipInBattle": "战斗中无法装备物品。",
+    "cannotUnequipInBattle": "战斗中无法卸下物品。",
+    "mustHaveWeapon": "在外域必须至少装备一件武器或法术。",
+    "equippingItem": "正在装备 {{name}}...",
+    "unequippingItem": "正在卸下 {{name}}...",
+    "alreadyEquipped": "{{name}} 已装备",
+    "equipped": "{{name}} 已装备",
+    "alreadyUnequipped": "{{name}} 已卸下",
+    "unequipped": "{{name}} 已卸下"
+  },
+  "fragment": {
+    "fragmentOf": "碎片 {{num}} / {{total}}",
+    "xpReward": "+1 经验值",
+    "depthsRelicHunter": "深渊遗物猎人",
+    "allCollected": "已收集全部 {{total}} 枚碎片。逝者的低语如今通过你传达。一枚徽章已以你之名铸造。",
+    "discoveredAt": "发现于 ({{x}}, {{y}})",
+    "claiming": "领取中...",
+    "claimFragment": "领取碎片",
+    "shareText": "在 Ultimate Dominion 中发现了碎片 {{num}}: {{name}}。逝者以谜语相告。"
+  },
+  "chat": {
+    "title": "聊天",
+    "badgeUnlocked": "冒险者徽章 - 聊天已解锁！",
+    "publicWarning": "此聊天永久公开，所有玩家可见。请勿分享个人信息或敏感数据。",
+    "locked": "聊天已锁定",
+    "unlockMessage": "达到等级 3 即可解锁全局聊天并获得冒险者徽章！",
+    "keepAdventuring": "继续冒险，击败怪物来提升等级。",
+    "checkingAccess": "正在检查聊天权限...",
+    "publicDisclaimer": "Ultimate Dominion 的聊天永久公开。请勿分享个人信息或敏感数据。",
+    "joinChat": "加入聊天",
+    "login": "登录",
+    "placeholder": "输入消息...",
+    "sent": "发送于: {{time}}"
+  },
+  "roster": {
+    "playersOnline": "{{count}} 名玩家在线",
+    "playerOnline": "{{count}} 名玩家在线",
+    "online": "在线",
+    "all": "全部",
+    "noPlayersFound": "未找到玩家",
+    "searchPlayers": "搜索玩家...",
+    "inBattle": "战斗中",
+    "shopping": "购物中",
+    "cooldown": "冷却中",
+    "tile": "地块 {{label}}",
+    "safe": "安全",
+    "you": "你",
+    "lv": "Lv{{level}}"
+  },
+  "worldFeed": {
+    "title": "世界",
+    "waiting": "等待世界事件中..."
+  },
+  "footer": {
+    "about": "关于",
+    "terms": "条款",
+    "privacy": "隐私",
+    "blog": "博客"
+  },
+  "share": {
+    "shareWithImage": "附图分享",
+    "shareAria": "分享",
+    "copied": "已复制！",
+    "copyText": "复制文本",
+    "copyAria": "复制到剪贴板",
+    "monsterSlain": "击杀怪物",
+    "pvpVictory": "PvP 胜利",
+    "itemFound": "发现物品",
+    "levelUpLabel": "升级",
+    "fragmentLabel": "碎片 {{num}} / 8",
+    "classChosen": "已选择进阶职业",
+    "defaultLabel": "Ultimate Dominion"
+  },
+  "health": {
+    "lvl": "Lv {{level}}",
+    "hp": "HP"
+  },
+  "durability": {
+    "label": "耐久度: {{current}}/{{max}}"
+  },
+  "stats": {
+    "gold": "金币",
+    "getGold": "获取金币",
+    "levelUpButton": "升级！",
+    "fragments": "碎片",
+    "xp": "经验值"
+  },
+  "wallet": {
+    "account": "账户",
+    "signedInAs": "当前登录",
+    "signOut": "退出登录",
+    "cannotSignOutBattle": "战斗中无法退出登录。",
+    "fundSession": "充值会话",
+    "fundingPrompt": "需要少量 ETH 来支付游戏交易费用。资金保存在您的会话中，之后可以提取。",
+    "sessionBalance": "会话余额",
+    "addFunds": "充值",
+    "ethPlaceholder": "ETH 数量",
+    "deposit": "充值",
+    "walletBalance": "钱包余额:",
+    "advancedOptions": "高级选项",
+    "hideAdvanced": "隐藏高级选项",
+    "withdrawToWallet": "提取至钱包",
+    "withdrawalsUnlock": "等级 3 后解锁提取功能。",
+    "withdraw": "提取",
+    "resetSession": "重置会话",
+    "resetting": "重置中...",
+    "resetConfirmTitle": "确认重置会话？",
+    "resetConfirmBody": "这将重置您的游戏会话。剩余的 ETH 将保留在会话中，可以找回。",
+    "reset": "重置",
+    "disconnect": "断开连接",
+    "cannotDisconnectBattle": "战斗中无法断开连接。",
+    "connecting": "连接中...",
+    "depositSuccess": "充值成功！",
+    "withdrawSuccess": "提取成功！",
+    "sessionReset": "游戏账户已重置。",
+    "signedOutEmbedded": "退出登录成功！",
+    "disconnectedExternal": "钱包已断开连接！",
+    "amountGreaterZero": "金额必须大于 0。",
+    "insufficientExternal": "外部钱包余额不足。",
+    "insufficientSession": "游戏账户余额不足。"
+  },
+  "invite": {
+    "referralStats": "邀请统计",
+    "codesSent": "已发送邀请码",
+    "activated": "已激活",
+    "bonusEarned": "获得奖励",
+    "yourCodes": "我的邀请码",
+    "noCodes": "暂无可用邀请码。达成以下里程碑可获取更多：",
+    "level3": "等级 3 — 1 个邀请码",
+    "level10": "等级 10 — 1 个邀请码",
+    "level20": "等级 20 — 1 个邀请码",
+    "friendLevel5": "被邀请的好友达到等级 5 — 额外邀请码",
+    "usedCodes": "已使用的邀请码",
+    "redeemed": "已兑换",
+    "refreshCodes": "刷新邀请码",
+    "copyLink": "复制链接",
+    "shareToX": "分享到 X",
+    "bonus": "奖励",
+    "starter": "新手"
+  },
+  "goldMerchant": {
+    "title": "金币商人",
+    "adventurer": "冒险者",
+    "goldLabel": "金币",
+    "comingSoon": "即将推出",
+    "comingSoonMessage": "金币商人正在备货。您很快就可以在这里直接购买金币。",
+    "earnGoldNow": "目前可以通过战斗赚取金币，也可以在交易所进行交易。",
+    "preparingCheckout": "正在准备结账...",
+    "redirecting": "正在跳转到安全支付页面。",
+    "somethingWrong": "出了点问题",
+    "tryAgain": "重试"
+  },
+  "npc": {
+    "farewell": "告辞",
+    "next": "继续",
+    "dialogueFailed": "对话启动失败。"
+  },
+  "consume": {
+    "consumable": "消耗品",
+    "consumed": "{{name}} 已使用！",
+    "equippedReady": "该消耗品已装备，可在战斗中使用。",
+    "notEquipped": "该消耗品未装备。",
+    "effectLasts": "效果持续 {{duration}}。",
+    "slotCount": "已装备槽位 {{current}}/{{max}}",
+    "useThroughBattle": "在战斗中通过战斗面板使用消耗品。",
+    "mustBeSpawned": "必须进入地图后才能使用物品。",
+    "healthFull": "你的生命值已满。",
+    "maxStacks": "该物品同时使用数量已达上限。",
+    "consuming": "使用中...",
+    "consume": "使用",
+    "makeOffer": "发起报价",
+    "unequipFirst": "请先卸下一件装备",
+    "consumingItem": "正在使用 {{name}}...",
+    "consumedSuccess": "{{name}} 已使用！",
+    "equippedSuccess": "{{name}} 装备成功！",
+    "unequippedSuccess": "{{name}} 卸下成功！"
+  },
+  "loadout": {
+    "title": "装备配置",
+    "edit": "编辑",
+    "emptySlot": "空槽位",
+    "armorEmpty": "护甲 — 空",
+    "tapToSetFirst": "点击设为 #1"
+  },
+  "leveling": {
+    "levelUp": "升级！",
+    "myStats": "我的属性",
+    "abilityPoints": "能力点: {{points}}",
+    "notEnoughPoints": "能力点不足。",
+    "unusedPoints": "你有未分配的能力点",
+    "agility": "敏捷",
+    "intelligence": "智力",
+    "strength": "力量",
+    "agiDesc": "闪避攻击，提高暴击率。",
+    "intDesc": "法术伤害，奥术之力。",
+    "strDesc": "物理伤害，蛮力之源。",
+    "base": "基础",
+    "bonus": "加成",
+    "total": "总计",
+    "divinePowerBonus": "你的信仰涌动 — +2 HP",
+    "weavePowerBonus": "织网回应了你 — +1 智力",
+    "physicalPowerBonus": "你的修炼更加精进 — +1 额外能力点",
+    "level5Divine": "神圣之力赋予 +2 HP",
+    "level5Weave": "织网赋予 +1 INT",
+    "level5Physical": "物理额外能力点已分配",
+    "level5Success": "等级 5！{{bonus}}",
+    "level3Badge": "等级 3！你获得了冒险者徽章！",
+    "leveledUp": "角色已升级！"
+  },
+  "respec": {
+    "title": "重新分配属性",
+    "remaining": "剩余: {{remaining}}",
+    "cost": "费用: {{cost}} 金币",
+    "fullRespecInfo": "完全重置将重置职业、等级和所有装备。费用: {{cost}} 金币。",
+    "fullReset": "完全重置",
+    "cannotDuringCombat": "战斗中无法重新分配属性。",
+    "redistributed": "属性已重新分配。",
+    "fullRespecWarning": "完全重置将重置职业、等级和装备，此操作不可撤销。",
+    "fullyReset": "角色已完全重置。"
+  },
+  "repair": {
+    "title": "修理装备",
+    "durability": "{{current}}/{{max}} 耐久度",
+    "repairButton": "修理 ({{cost}} 金币)",
+    "repaired": "{{name}} 已修理",
+    "failed": "修理失败"
+  },
+  "itemCard": {
+    "equipped": "已装备",
+    "restoresHp": "恢复 {{hp}} HP",
+    "requires": "要求:"
+  },
+  "miniLeaderboard": {
+    "nearbyRanks": "附近排名",
+    "statsTab": "属性",
+    "goldTab": "金币"
+  },
+  "header": {
+    "openMenu": "打开菜单"
+  },
+  "classSymbol": {
+    "intelligence": "智力",
+    "agility": "敏捷",
+    "strength": "力量"
+  },
+  "connectWalletBtn": {
+    "signInWithWallet": "使用钱包登录",
+    "wrongNetwork": "网络错误"
+  },
+  "delegation": {
+    "settingUp": "设置中...",
+    "authorizePlay": "授权并开始",
+    "fundingSkipped": "会话已授权，但跳过了充值。您可以在设置菜单中充值 ETH。",
+    "ready": "游戏账户就绪！"
+  },
+  "consumableQuickUse": {
+    "noConsumables": "没有消耗品。前往商店补充。"
+  },
+  "gameEventFeed": {
+    "waiting": "等待游戏事件中...",
+    "description": "战斗、战利品、任务和新玩家的动态将在此显示",
+    "found": " 发现了 "
+  },
+  "shop": {
+    "search": "搜索",
+    "stock": "库存",
+    "price": "价格",
+    "noItems": "无物品",
+    "buy": "购买",
+    "sell": "出售",
+    "approve": "批准",
+    "totalCost": "总计: {{amount}} $GOLD",
+    "totalReceive": "收入: {{amount}} $GOLD",
+    "currentBalance": "当前余额 {{amount}} $GOLD",
+    "boughtItems": "购买了 {{amount}}x {{name}}",
+    "soldItems": "出售了 {{amount}}x {{name}}，获得 {{gold}} $GOLD",
+    "insufficientStock": "库存不足。",
+    "notEnoughGold": "你没有足够的 $GOLD 来购买。",
+    "cantSellEquipped": "无法出售已装备物品中的最后一件。",
+    "shopkeeperNoGold": "店主金币不足。库存每 12 小时补充一次。",
+    "maxItems": "最多 {{count}} 件",
+    "stats": "属性",
+    "minDamage": "最低伤害:",
+    "maxDamage": "最高伤害:",
+    "restrictions": "限制",
+    "buyAllowanceSuccess": "授权成功！现在可以购买 {{name}}",
+    "sellAllowanceSuccess": "授权成功！现在可以出售 {{name}}"
+  },
+  "marketplace": {
+    "bought": "购买了 {{name}}！",
+    "sold": "出售了 {{name}}！",
+    "notEnoughGold": "$GOLD 不足",
+    "noListings": "暂无挂单"
+  },
+  "order": {
+    "from": "来自: {{name}} ({{address}})",
+    "wantsGoldFor": "以 {{gold}} $GOLD 出售 {{amount}} 个 {{item}}",
+    "wantsItemFor": "以 {{amount}} 个 {{item}} 换取 {{gold}} $GOLD",
+    "notEnoughGold": "金币不足",
+    "sellItem": "出售物品",
+    "buyItem": "购买物品",
+    "removeListing": "撤销挂单"
+  },
+  "createListing": {
+    "title": "创建挂单",
+    "allItems": "所有物品",
+    "inventory": "背包",
+    "numItems": "数量:",
+    "filterBy": "筛选:"
+  },
+  "fragmentCollection": {
+    "title": "碎片 ({{claimed}}/{{total}})",
+    "discover": "在暗黑洞穴中探索传说碎片",
+    "clickToRead": "点击阅读",
+    "clickToClaim": "点击领取！"
+  },
+  "fragmentRead": {
+    "claimed": "已领取",
+    "fragmentOf": "碎片 {{num}} / {{total}}",
+    "claimedDate": "领取于 {{date}}",
+    "tokenId": "Token #{{id}}"
+  },
+  "fragmentChain": {
+    "title": "碎片链 ({{completed}}/{{total}})",
+    "complete": "完成",
+    "step": "步骤 {{current}}/{{total}}"
+  },
+  "loot": {
+    "title": "获得的战利品:"
+  },
+  "leaderboardRow": {
+    "statsSummary": "HP {{hp}} • STR {{str}} • AGI {{agi}} • INT {{int}}"
+  },
+  "mapReveal": {
+    "windingDark": "蜿蜒暗域"
+  },
+  "advancedClass": {
+    "chooseYourPath": "选择你的道路",
+    "permanent": "此决定不可更改，请慎重选择。",
+    "learnMore": "了解更多",
+    "bonuses": "加成",
+    "multipliers": "倍率",
+    "classSpell": "职业技能",
+    "become": "成为{{name}}",
+    "notNow": "暂时不选",
+    "chosenMessage": "你穿越了暗黑洞穴，活了下来。\n你的道路已定。世界将铭记。",
+    "shareText": "在 Ultimate Dominion 中成为了{{name}}。等级 10 达成。"
   }
 }

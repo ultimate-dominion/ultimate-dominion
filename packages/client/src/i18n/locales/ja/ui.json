@@ -23,5 +23,522 @@
   },
   "language": {
     "label": "言語"
+  },
+  "common": {
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "continue": "続ける",
+    "or": "または",
+    "no": "いいえ",
+    "yes": "はい",
+    "complete": "完了",
+    "permissionGranted": "許可されました！",
+    "allowSpending": "支出を許可",
+    "alwaysAllow": "常に許可",
+    "noCharacter": "キャラクターが見つかりません。キャラクターを選択してください。",
+    "walletNotConnected": "ウォレットが接続されていません。再接続してください。"
+  },
+  "betaBanner": {
+    "message": "早期アクセス — 不具合が発生する場合があります。困ったらリロード。",
+    "reportIssues": "問題を報告"
+  },
+  "badges": {
+    "title": "バッジ",
+    "noneEarned": "まだバッジを獲得していません"
+  },
+  "level": {
+    "max": "MAX",
+    "label": "レベル {{level}}"
+  },
+  "discord": {
+    "join": "Discordに参加"
+  },
+  "feedback": {
+    "send": "フィードバックを送信",
+    "sendAria": "フィードバックを送信"
+  },
+  "captcha": {
+    "failed": "認証に失敗しました。もう一度お試しください。",
+    "expired": "認証の有効期限が切れました。再度認証してください。",
+    "joining": "参加中...",
+    "joinQueue": "待機列に参加"
+  },
+  "sound": {
+    "mute": "ミュート",
+    "unmute": "サウンド",
+    "muteAria": "ミュートにする",
+    "enableAria": "サウンドを有効にする"
+  },
+  "map": {
+    "autoAdventure": "自動冒険",
+    "serverFull": "サーバー満員 ({{current}}/{{max}})",
+    "joinQueue": "待機列に参加",
+    "queuePosition": "待機順位: #{{position}}",
+    "waitTime": "約{{minutes}}分待ち",
+    "viewWaitingRoom": "待機室を見る",
+    "slotOpened": "空きが出ました！",
+    "spawnNow": "今すぐ出撃",
+    "spawning": "出撃中...",
+    "spawnTooltip": "マップに出撃します。隠れ家の外にはモンスターが潜んでいます — 慎重に進め。",
+    "spawn": "出撃",
+    "expandCompass": "コンパスを展開",
+    "collapse": "折りたたむ",
+    "tileInfo": "{{dir}}: モンスター{{monsters}}体、プレイヤー{{players}}人",
+    "moveDirection": "{{dir}}へ移動"
+  },
+  "signIn": {
+    "title": "サインインしてプレイ",
+    "openInBrowser": "ブラウザで開く",
+    "inAppWarning": "Googleサインインはアプリ内ブラウザでは動作しません。下のリンクをコピーしてChromeまたはSafariで開いてください。",
+    "copied": "コピーしました！",
+    "copyLink": "リンクをコピー",
+    "continueWithGoogle": "Googleで続行",
+    "googleFailed": "Googleサインインに失敗しました",
+    "termsAgreement": "サインインすることで、以下に同意したものとみなされます：",
+    "termsOfService": "利用規約",
+    "and": "および",
+    "privacyPolicy": "プライバシーポリシー"
+  },
+  "connectWallet": {
+    "signingIn": "サインイン中...",
+    "settingUp": "アカウントを設定中...",
+    "depositInfo": "ゲームプレイ手数料をカバーするために少額のETHデポジットが必要です。資金はセッションに保管され、いつでも引き出せます。",
+    "useGoogle": "代わりにGoogleサインインを使用",
+    "connecting": "ウォレット接続中...",
+    "ready": "準備完了",
+    "secureSession": "セッションを保護"
+  },
+  "outOfResources": {
+    "title": "リソース不足",
+    "message": "ガス用のETHもオートスワップ用のGoldもありません。プレイを続けるにはリソースが必要です。",
+    "embeddedAdvice": "モンスターと戦ってGoldを稼ぎましょう。次のトランザクションはスポンサーされるので、立て直せます。",
+    "embeddedDetail": "Goldを獲得すると、ガスステーションが自動的にETHに交換し、将来のガス代をカバーします。",
+    "externalAdvice": "メインウォレットからETHを入金してプレイを続けてください。",
+    "openWallet": "ウォレットを開く"
+  },
+  "levelUp": {
+    "banner": "レベルアップ！",
+    "bannerReached": "レベル{{level}}に到達しました",
+    "youHaveReached": "到達レベル",
+    "abilityPoint": "+1 アビリティポイント",
+    "allocateStats": "ステータスを割り振る",
+    "shareText": "Ultimate Dominionでレベル{{level}}に到達。"
+  },
+  "editCharacter": {
+    "title": "キャラクター編集",
+    "namePlaceholder": "名前",
+    "nameRequired": "名前は必須です",
+    "uploadAvatar": "アバター画像をアップロード",
+    "uploading": "アップロード中...",
+    "avatarRequired": "アバターは必須です",
+    "bioPlaceholder": "自己紹介",
+    "bioRequired": "自己紹介は必須です",
+    "updating": "更新中...",
+    "update": "更新",
+    "updated": "キャラクターを更新しました！",
+    "missingFields": "必須項目が入力されていません。",
+    "updateFailed": "キャラクターの更新に失敗しました。"
+  },
+  "allowance": {
+    "shopTitle": "ショップ許可",
+    "marketplaceTitle": "取引所許可",
+    "lootManagerTitle": "ルートマネージャー許可",
+    "buyPermission": "{{item}}を購入するには、{{price}} Goldの支出を許可する必要があります。",
+    "sellPermissionShop": "{{item}}を売却するには、ショップにアイテム管理を許可する必要があります。",
+    "sellPermissionMarketplace": "{{item}}を売却するには、取引所にアイテム管理を許可する必要があります。",
+    "goldSpendPermission": "ルートマネージャーに{{amount}} Goldの支出を許可しますか？",
+    "itemPermission": "ルートマネージャーに全アイテムの使用を許可しますか？",
+    "shopAlwaysAllowTooltip": "ショップでのGold支出を毎回承認なしで行えるようになります。より快適なプレイ体験が得られます。",
+    "marketplaceAlwaysAllowTooltip": "取引所でのGold支出を毎回承認なしで行えるようになります。より快適なプレイ体験が得られます。",
+    "lootManagerAlwaysAllowTooltip": "Goldの所持を毎回承認なしで行えるようになります。より快適なプレイ体験が得られます。",
+    "lootManagerSuccess": "ルートマネージャーでトークンを使用できます。"
+  },
+  "battle": {
+    "victory": "勝利！",
+    "defeat": "敗北...",
+    "draw": "引き分け...",
+    "monsterFled": "{{name}}が逃走した！",
+    "youFled": "{{name}}から逃走しました。",
+    "earnedGold": "獲得:",
+    "gold": "Gold",
+    "fleeingCost": "逃走の代償:",
+    "carriedGold": "所持Gold",
+    "drawMessage": "引き分け！ 両者とも戦場から撤退しました。",
+    "youDefeated": "{{name}}を倒しました！",
+    "youWereKilled": "{{name}}に倒されました。",
+    "lostGold": "失った:",
+    "deathMessage": "死亡するとHPは回復しますが、町の広場に強制リスポーンされます。",
+    "pvpShareText": "Ultimate DominionのPvP戦闘で{{name}}を撃破。",
+    "pveShareText": "暗黒の洞窟で{{name}}を討伐。",
+    "itemShareText": "Ultimate Dominionで{{rarity}}{{name}}を発見。すべてのアイテムは永続的でオンチェーン、自分だけのもの。",
+    "aMonster": "モンスター",
+    "fetchFailed": "ルートアイテムの取得に失敗しました。"
+  },
+  "equip": {
+    "equipItem": "装備する",
+    "unequipItem": "装備を外す",
+    "makeOffer": "オファーを出す",
+    "wantEquip": "このアイテムを装備しますか？",
+    "wantUnequip": "このアイテムの装備を外しますか？",
+    "wantOffer": "このアイテムにオファーを出しますか？",
+    "equipping": "装備中...",
+    "unequipping": "装備解除中...",
+    "equip": "装備",
+    "unequip": "解除",
+    "sellOnMarketplace": "取引所で売却",
+    "missingRequirements": "要件を満たしていません:",
+    "levelRequired": "レベル{{level}}が必要",
+    "agiRequired": "AGI {{agi}}が必要",
+    "intRequired": "INT {{int}}が必要",
+    "strRequired": "STR {{str}}が必要",
+    "youStat": "(現在: {{value}})",
+    "slotsFull": "装備スロットが全て埋まっています。先に何かを外してください。",
+    "cannotEquipInBattle": "戦闘中はアイテムを装備できません。",
+    "cannotUnequipInBattle": "戦闘中は装備を外せません。",
+    "mustHaveWeapon": "外界では最低1つの武器または呪文を装備する必要があります。",
+    "equippingItem": "{{name}}を装備中...",
+    "unequippingItem": "{{name}}を解除中...",
+    "alreadyEquipped": "{{name}}は既に装備済みです",
+    "equipped": "{{name}}を装備しました",
+    "alreadyUnequipped": "{{name}}は既に装備されていません",
+    "unequipped": "{{name}}の装備を解除しました"
+  },
+  "fragment": {
+    "fragmentOf": "フラグメント {{num}}/{{total}}",
+    "xpReward": "+1 XP",
+    "depthsRelicHunter": "深淵の遺物探求者",
+    "allCollected": "全{{total}}個のフラグメントを収集しました。亡者たちがあなたを通じて語りかけます。あなたの名でバッジが鋳造されました。",
+    "discoveredAt": "発見場所 ({{x}}, {{y}})",
+    "claiming": "受領中...",
+    "claimFragment": "フラグメントを受領",
+    "shareText": "Ultimate Dominionでフラグメント{{num}}「{{name}}」を発見。亡者たちは謎かけで語る。"
+  },
+  "chat": {
+    "title": "チャット",
+    "badgeUnlocked": "冒険者バッジ — チャット解放！",
+    "publicWarning": "このチャットは永続的で、全プレイヤーに公開されています。個人情報や機密データを共有しないでください。",
+    "locked": "チャットロック中",
+    "unlockMessage": "レベル3に到達するとグローバルチャットが解放され、冒険者バッジを獲得できます！",
+    "keepAdventuring": "冒険を続けてモンスターを倒し、レベルを上げましょう。",
+    "checkingAccess": "チャットアクセスを確認中...",
+    "publicDisclaimer": "Ultimate Dominionのチャットは公開かつ永続的です。個人情報や機密データを共有しないでください。",
+    "joinChat": "チャットに参加",
+    "login": "ログイン",
+    "placeholder": "メッセージを入力...",
+    "sent": "送信: {{time}}"
+  },
+  "roster": {
+    "playersOnline": "{{count}}人オンライン",
+    "playerOnline": "{{count}}人オンライン",
+    "online": "オンライン",
+    "all": "全員",
+    "noPlayersFound": "プレイヤーが見つかりません",
+    "searchPlayers": "プレイヤーを検索...",
+    "inBattle": "戦闘中",
+    "shopping": "買い物中",
+    "cooldown": "クールダウン",
+    "tile": "タイル {{label}}",
+    "safe": "安全",
+    "you": "自分",
+    "lv": "Lv{{level}}"
+  },
+  "worldFeed": {
+    "title": "ワールド",
+    "waiting": "ワールドイベントを待機中..."
+  },
+  "footer": {
+    "about": "概要",
+    "terms": "利用規約",
+    "privacy": "プライバシー",
+    "blog": "ブログ"
+  },
+  "share": {
+    "shareWithImage": "画像付きで共有",
+    "shareAria": "共有",
+    "copied": "コピーしました！",
+    "copyText": "テキストをコピー",
+    "copyAria": "クリップボードにコピー",
+    "monsterSlain": "モンスター討伐",
+    "pvpVictory": "PvP勝利",
+    "itemFound": "アイテム発見",
+    "levelUpLabel": "レベルアップ",
+    "fragmentLabel": "フラグメント {{num}}/8",
+    "classChosen": "上級クラス選択",
+    "defaultLabel": "Ultimate Dominion"
+  },
+  "health": {
+    "lvl": "Lv {{level}}",
+    "hp": "HP"
+  },
+  "durability": {
+    "label": "耐久度: {{current}}/{{max}}"
+  },
+  "stats": {
+    "gold": "Gold",
+    "getGold": "Goldを入手",
+    "levelUpButton": "レベルアップ！",
+    "fragments": "フラグメント",
+    "xp": "XP"
+  },
+  "wallet": {
+    "account": "アカウント",
+    "signedInAs": "サインイン中:",
+    "signOut": "サインアウト",
+    "cannotSignOutBattle": "戦闘中はサインアウトできません。",
+    "fundSession": "セッションに入金",
+    "fundingPrompt": "ゲームプレイのトランザクション手数料をカバーするために少額のETHデポジットが必要です。セッションに保管され、後から引き出せます。",
+    "sessionBalance": "セッション残高",
+    "addFunds": "入金する",
+    "ethPlaceholder": "ETH数量",
+    "deposit": "入金",
+    "walletBalance": "ウォレット残高:",
+    "advancedOptions": "詳細オプション",
+    "hideAdvanced": "詳細を隠す",
+    "withdrawToWallet": "ウォレットに出金",
+    "withdrawalsUnlock": "出金はレベル3で解放されます。",
+    "withdraw": "出金",
+    "resetSession": "セッションをリセット",
+    "resetting": "リセット中...",
+    "resetConfirmTitle": "セッションをリセットしますか？",
+    "resetConfirmBody": "ゲームセッションがリセットされます。残りのETHはセッションに残り、復旧可能です。",
+    "reset": "リセット",
+    "disconnect": "切断",
+    "cannotDisconnectBattle": "戦闘中は切断できません。",
+    "connecting": "接続中...",
+    "depositSuccess": "入金が完了しました！",
+    "withdrawSuccess": "出金が完了しました！",
+    "sessionReset": "ゲームアカウントがリセットされました。",
+    "signedOutEmbedded": "サインアウトしました！",
+    "disconnectedExternal": "ウォレットが切断されました！",
+    "amountGreaterZero": "金額は0より大きくしてください。",
+    "insufficientExternal": "外部ウォレットの残高が不足しています。",
+    "insufficientSession": "ゲームアカウントの残高が不足しています。"
+  },
+  "invite": {
+    "referralStats": "紹介実績",
+    "codesSent": "送信済みコード",
+    "activated": "有効化済み",
+    "bonusEarned": "獲得ボーナス",
+    "yourCodes": "招待コード",
+    "noCodes": "招待コードがありません。マイルストーン達成で追加獲得:",
+    "level3": "レベル3 — 招待コード1個",
+    "level10": "レベル10 — 招待コード1個",
+    "level20": "レベル20 — 招待コード1個",
+    "friendLevel5": "招待した友人がレベル5に到達 — ボーナスコード",
+    "usedCodes": "使用済みコード",
+    "redeemed": "適用済み",
+    "refreshCodes": "コードを更新",
+    "copyLink": "リンクをコピー",
+    "shareToX": "Xで共有",
+    "bonus": "ボーナス",
+    "starter": "スターター"
+  },
+  "goldMerchant": {
+    "title": "Gold商人",
+    "adventurer": "冒険者",
+    "goldLabel": "Gold",
+    "comingSoon": "近日公開",
+    "comingSoonMessage": "Gold商人が商品を準備中です。間もなくここで直接Goldを購入できるようになります。",
+    "earnGoldNow": "現在は戦闘でGoldを稼ぐか、取引所で売買してください。",
+    "preparingCheckout": "決済を準備中...",
+    "redirecting": "安全な決済ページにリダイレクトしています。",
+    "somethingWrong": "エラーが発生しました",
+    "tryAgain": "再試行"
+  },
+  "npc": {
+    "farewell": "さらばだ",
+    "next": "次へ",
+    "dialogueFailed": "会話の開始に失敗しました。"
+  },
+  "consume": {
+    "consumable": "消耗品",
+    "consumed": "{{name}}を消費しました！",
+    "equippedReady": "この消耗品は装備済みで、戦闘に使用できます。",
+    "notEquipped": "この消耗品は装備されていません。",
+    "effectLasts": "効果時間: {{duration}}",
+    "slotCount": "スロット {{current}}/{{max}} 装備中",
+    "useThroughBattle": "消耗品は戦闘中にバトルパネルから使用してください。",
+    "mustBeSpawned": "アイテムを消費するにはマップに出撃している必要があります。",
+    "healthFull": "HPは満タンです。",
+    "maxStacks": "このアイテムの同時使用上限に達しています。",
+    "consuming": "消費中...",
+    "consume": "消費する",
+    "makeOffer": "オファーを出す",
+    "unequipFirst": "先に装備を外してください",
+    "consumingItem": "{{name}}を消費中...",
+    "consumedSuccess": "{{name}}を消費しました！",
+    "equippedSuccess": "{{name}}を装備しました！",
+    "unequippedSuccess": "{{name}}の装備を解除しました！"
+  },
+  "loadout": {
+    "title": "装備一覧",
+    "edit": "編集",
+    "emptySlot": "空きスロット",
+    "armorEmpty": "アーマー — 空き",
+    "tapToSetFirst": "タップで#1に設定"
+  },
+  "leveling": {
+    "levelUp": "レベルアップ！",
+    "myStats": "ステータス",
+    "abilityPoints": "アビリティポイント: {{points}}",
+    "notEnoughPoints": "アビリティポイントが不足しています。",
+    "unusedPoints": "未使用のアビリティポイントがあります",
+    "agility": "敏捷",
+    "intelligence": "知力",
+    "strength": "筋力",
+    "agiDesc": "攻撃を回避。クリティカル率上昇。",
+    "intDesc": "呪文ダメージ。魔力増幅。",
+    "strDesc": "物理ダメージ。腕力増幅。",
+    "base": "基本",
+    "bonus": "ボーナス",
+    "total": "合計",
+    "divinePowerBonus": "信仰が高まる — +2 HP",
+    "weavePowerBonus": "織りが応える — +1 INT",
+    "physicalPowerBonus": "鍛錬が研ぎ澄まされる — +1 ボーナスアビリティポイント",
+    "level5Divine": "神聖の力により +2 HP",
+    "level5Weave": "織りの力により +1 INT",
+    "level5Physical": "肉体のボーナスポイントを割り振りました",
+    "level5Success": "レベル5！{{bonus}}",
+    "level3Badge": "レベル3！ 冒険者バッジを獲得しました！",
+    "leveledUp": "キャラクターがレベルアップしました！"
+  },
+  "respec": {
+    "title": "ステータス再配分",
+    "remaining": "残り: {{remaining}}",
+    "cost": "費用: {{cost}} Gold",
+    "fullRespecInfo": "完全リセットはクラス、レベル、全装備を初期化します。費用: {{cost}} Gold",
+    "fullReset": "完全リセット",
+    "cannotDuringCombat": "戦闘中はリスペックできません。",
+    "redistributed": "ステータスを再配分しました。",
+    "fullRespecWarning": "完全リセットはクラス、レベル、装備をリセットします。この操作は取り消せません。",
+    "fullyReset": "キャラクターを完全にリセットしました。"
+  },
+  "repair": {
+    "title": "装備を修理",
+    "durability": "耐久度 {{current}}/{{max}}",
+    "repairButton": "修理 ({{cost}} Gold)",
+    "repaired": "{{name}}を修理しました",
+    "failed": "修理に失敗しました"
+  },
+  "itemCard": {
+    "equipped": "装備中",
+    "restoresHp": "HP {{hp}} 回復",
+    "requires": "要件:"
+  },
+  "miniLeaderboard": {
+    "nearbyRanks": "近接ランク",
+    "statsTab": "ステータス",
+    "goldTab": "Gold"
+  },
+  "header": {
+    "openMenu": "メニューを開く"
+  },
+  "classSymbol": {
+    "intelligence": "知力",
+    "agility": "敏捷",
+    "strength": "筋力"
+  },
+  "connectWalletBtn": {
+    "signInWithWallet": "ウォレットでサインイン",
+    "wrongNetwork": "ネットワークが違います"
+  },
+  "delegation": {
+    "settingUp": "設定中...",
+    "authorizePlay": "認証してプレイ",
+    "fundingSkipped": "セッションは認証されましたが、入金がスキップされました。設定メニューからETHを入金できます。",
+    "ready": "ゲームアカウント準備完了！"
+  },
+  "consumableQuickUse": {
+    "noConsumables": "消耗品がありません。ショップで補充しましょう。"
+  },
+  "gameEventFeed": {
+    "waiting": "ゲームイベントを待機中...",
+    "description": "バトル、ルート、クエスト、新たな冒険者の到着がここに表示されます",
+    "found": " が発見 "
+  },
+  "shop": {
+    "search": "検索",
+    "stock": "在庫",
+    "price": "価格",
+    "noItems": "アイテムなし",
+    "buy": "購入",
+    "sell": "売却",
+    "approve": "承認",
+    "totalCost": "合計: {{amount}} $GOLD",
+    "totalReceive": "受取額: {{amount}} $GOLD",
+    "currentBalance": "現在の残高 {{amount}} $GOLD",
+    "boughtItems": "{{name}}を{{amount}}個購入しました",
+    "soldItems": "{{name}}を{{amount}}個売却 — {{gold}} $GOLD",
+    "insufficientStock": "在庫不足です。",
+    "notEnoughGold": "$GOLDが不足しています。",
+    "cantSellEquipped": "装備中のアイテムの最後の1つは売却できません。",
+    "shopkeeperNoGold": "店主のGoldが不足しています。在庫は12時間ごとに補充されます。",
+    "maxItems": "最大{{count}}個",
+    "stats": "ステータス",
+    "minDamage": "最小ダメージ:",
+    "maxDamage": "最大ダメージ:",
+    "restrictions": "制限",
+    "buyAllowanceSuccess": "許可が完了しました！ {{name}}を購入できます",
+    "sellAllowanceSuccess": "許可が完了しました！ {{name}}を売却できます"
+  },
+  "marketplace": {
+    "bought": "{{name}}を購入しました！",
+    "sold": "{{name}}を売却しました！",
+    "notEnoughGold": "$GOLDが不足しています",
+    "noListings": "出品なし"
+  },
+  "order": {
+    "from": "出品者: {{name}} ({{address}})",
+    "wantsGoldFor": "{{amount}}個の{{item}}を{{gold}} $GOLDで販売",
+    "wantsItemFor": "{{amount}}個の{{item}}を{{gold}} $GOLDで購入希望",
+    "notEnoughGold": "Gold不足",
+    "sellItem": "アイテムを売る",
+    "buyItem": "アイテムを買う",
+    "removeListing": "出品を取り消す"
+  },
+  "createListing": {
+    "title": "出品する",
+    "allItems": "全アイテム",
+    "inventory": "所持品",
+    "numItems": "個数:",
+    "filterBy": "フィルター:"
+  },
+  "fragmentCollection": {
+    "title": "フラグメント ({{claimed}}/{{total}})",
+    "discover": "暗黒の洞窟でロアフラグメントを探しましょう",
+    "clickToRead": "クリックして読む",
+    "clickToClaim": "クリックして受領！"
+  },
+  "fragmentRead": {
+    "claimed": "受領済み",
+    "fragmentOf": "フラグメント {{num}}/{{total}}",
+    "claimedDate": "受領日 {{date}}",
+    "tokenId": "トークン #{{id}}"
+  },
+  "fragmentChain": {
+    "title": "フラグメントチェーン ({{completed}}/{{total}})",
+    "complete": "完了",
+    "step": "ステップ {{current}}/{{total}}"
+  },
+  "loot": {
+    "title": "獲得アイテム:"
+  },
+  "leaderboardRow": {
+    "statsSummary": "HP {{hp}} • STR {{str}} • AGI {{agi}} • INT {{int}}"
+  },
+  "mapReveal": {
+    "windingDark": "曲がりくねる闇"
+  },
+  "advancedClass": {
+    "chooseYourPath": "進む道を選べ",
+    "permanent": "この選択は取り消せません。慎重に。",
+    "learnMore": "詳しく見る",
+    "bonuses": "ボーナス",
+    "multipliers": "倍率",
+    "classSpell": "クラス呪文",
+    "become": "{{name}}になる",
+    "notNow": "今はしない",
+    "chosenMessage": "暗黒の洞窟を歩き、生き延びた。\n道は選ばれた。世界はそれを記憶する。",
+    "shareText": "Ultimate Dominionで{{name}}になった。レベル10達成。"
   }
 }
