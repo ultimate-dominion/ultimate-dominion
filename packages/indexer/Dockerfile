@@ -22,6 +22,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.5 --activate
 WORKDIR /app
 
 COPY package.json ./
+COPY patches/ ./patches/
 RUN pnpm install --prod
 
 COPY --from=builder /app/dist ./dist
