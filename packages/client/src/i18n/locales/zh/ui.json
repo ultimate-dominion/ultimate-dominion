@@ -614,5 +614,107 @@
       "invalidMetadataUrl": "服务器返回了无效的元数据URL。",
       "creationFailed": "角色创建失败。"
     }
+  },
+  "gameBoard": {
+    "pageTitle": "游戏 | Ultimate Dominion",
+    "loading": "加载游戏中...",
+    "reload": "重新加载",
+    "reconnecting": "重新连接中...",
+    "statsDrawer": "属性",
+    "outerRealmsWarning": "小心！你即将进入蜿蜒暗域！",
+    "outerRealmsBody1": "<bold>蜿蜒暗域</bold>对1级角色来说是个危险的地方。任何其他玩家都可能随时攻击你。",
+    "outerRealmsBody2": "建议你先提升等级再进入。"
+  },
+  "guild": {
+    "pageTitle": "公会 | Ultimate Dominion",
+    "heading": "公会",
+    "createModal": {
+      "title": "创建公会",
+      "nameLabel": "公会名称",
+      "namePlaceholder": "输入公会名称",
+      "tagLabel": "标签",
+      "tagPlaceholder": "例: FURY",
+      "openLabel": "自由加入",
+      "descLabel": "描述",
+      "descPlaceholder": "介绍你的公会...",
+      "cancel": "取消",
+      "create": "创建",
+      "creating": "创建中..."
+    },
+    "withdrawModal": {
+      "title": "从金库提取",
+      "available": "可用: {{amount}} $GOLD",
+      "amountPlaceholder": "提取金额",
+      "cancel": "取消",
+      "withdraw": "提取",
+      "withdrawing": "提取中..."
+    },
+    "directory": {
+      "count": "{{count}} 个公会",
+      "createButton": "创建公会",
+      "members": "{{count}} 名成员",
+      "open": "开放",
+      "closed": "关闭",
+      "join": "加入",
+      "apply": "申请",
+      "emptyTitle": "暂无公会。",
+      "emptySubtitle": "成为第一个创建的人！"
+    },
+    "roles": {
+      "leader": "会长",
+      "officer": "干部",
+      "member": "成员"
+    },
+    "tooltips": {
+      "leader": "会长",
+      "promote": "升为干部",
+      "demote": "降为成员",
+      "kick": "踢出"
+    },
+    "treasury": "$GOLD 金库",
+    "leaderControls": "会长管理",
+    "taxRate": "税率",
+    "withdrawTreasury": "提取金库",
+    "disbandGuild": "解散公会",
+    "disbanding": "解散中...",
+    "pendingApplications": "待处理申请 ({{count}})",
+    "approve": "批准",
+    "reject": "拒绝",
+    "memberCount": "{{count}} 名成员",
+    "leaveGuild": "退出公会",
+    "leaving": "退出中..."
+  },
+  "leaderboard": {
+    "pageTitle": "排行榜 | Ultimate Dominion",
+    "heading": "排行榜",
+    "tabs": {
+      "rankings": "排名",
+      "raceToMax": "满级竞速",
+      "pvpRankings": "PvP排名"
+    },
+    "search": "搜索",
+    "filterAll": "全部",
+    "filterStrength": "力量",
+    "filterAgility": "敏捷",
+    "filterIntelligence": "智力",
+    "playerCount": "{{count}} 名玩家",
+    "sortStats": "总属性",
+    "sortLevel": "等级",
+    "sortGold": "$Gold",
+    "noPlayers": "暂无玩家",
+    "raceToMaxDesc": "前10名达到满级的玩家将获得永久区域征服者徽章。",
+    "zoneConqueror": "区域征服者",
+    "noneConquered": "还没有人征服暗黑洞穴。",
+    "beFirst": "成为第一个达到满级的人！",
+    "badgesRemaining": "剩余 {{count}} 个徽章",
+    "season": "赛季 {{number}}",
+    "pvpDesc": "根据PvP战斗的ELO评分排名。",
+    "colRank": "#",
+    "colPlayer": "玩家",
+    "colWL": "胜/负",
+    "colWinPct": "胜率",
+    "colElo": "ELO",
+    "noPvp": "暂无PvP记录。",
+    "pvpCta": "挑战其他玩家来提升排名！"
   }
 }

@@ -19,6 +19,7 @@ import {
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp, FaMedal, FaCrosshairs } from 'react-icons/fa';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
@@ -62,6 +63,7 @@ type PvpRankingEntry = {
 };
 
 export const Leaderboard = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
@@ -236,12 +238,12 @@ export const Leaderboard = (): JSX.Element => {
   return (
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
       <Helmet>
-        <title>Leaderboard | Ultimate Dominion</title>
+        <title>{t('leaderboard.pageTitle')}</title>
       </Helmet>
       <VStack>
         <HStack bgColor="blue500" h="66px" px="20px" width="100%">
           <LeaderboardIconSvg />
-          <Heading color="white">Leaderboard</Heading>
+          <Heading color="white">{t('leaderboard.heading')}</Heading>
         </HStack>
 
         {/* Tab switcher */}
@@ -253,7 +255,7 @@ export const Leaderboard = (): JSX.Element => {
             size="sm"
             variant="white"
           >
-            Rankings
+            {t('leaderboard.tabs.rankings')}
           </Button>
           <Button
             bgColor={tab === 'raceToMax' ? 'grey500' : undefined}
@@ -263,7 +265,7 @@ export const Leaderboard = (): JSX.Element => {
             size="sm"
             variant="white"
           >
-            Race to Max
+            {t('leaderboard.tabs.raceToMax')}
           </Button>
           {SHOW_Z2 && (
             <Button
@@ -274,7 +276,7 @@ export const Leaderboard = (): JSX.Element => {
               size="sm"
               variant="white"
             >
-              PvP Rankings
+              {t('leaderboard.tabs.pvpRankings')}
             </Button>
           )}
         </HStack>
@@ -293,7 +295,7 @@ export const Leaderboard = (): JSX.Element => {
             </InputLeftElement>
             <Input
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search"
+              placeholder={t('leaderboard.search')}
               value={query}
             />
           </InputGroup>
@@ -305,7 +307,7 @@ export const Leaderboard = (): JSX.Element => {
               size="sm"
               variant="white"
             >
-              All
+              {t('leaderboard.filterAll')}
             </Button>
             <Button
               leftIcon={
@@ -322,7 +324,7 @@ export const Leaderboard = (): JSX.Element => {
               variant="white"
             >
               {!isSmallScreen ? (
-                'Strength'
+                t('leaderboard.filterStrength')
               ) : (
                 <WarriorSvg
                   theme={filter === StatsClasses.Strength ? 'light' : 'dark'}
@@ -344,7 +346,7 @@ export const Leaderboard = (): JSX.Element => {
               variant="white"
             >
               {!isSmallScreen ? (
-                'Agility'
+                t('leaderboard.filterAgility')
               ) : (
                 <RogueSvg
                   theme={filter === StatsClasses.Agility ? 'light' : 'dark'}
@@ -366,7 +368,7 @@ export const Leaderboard = (): JSX.Element => {
               variant="white"
             >
               {!isSmallScreen ? (
-                'Intelligence'
+                t('leaderboard.filterIntelligence')
               ) : (
                 <MageSvg
                   theme={filter === StatsClasses.Intelligence ? 'light' : 'dark'}
@@ -377,7 +379,7 @@ export const Leaderboard = (): JSX.Element => {
         </Stack>
         <Flex alignItems="center" justify="space-between" w="100%">
           <Text pl={4} color="#565555" fontWeight={400} size="sm">
-            {allCharacters.length} Players
+            {t('leaderboard.playerCount', { count: allCharacters.length })}
           </Text>
           <HStack>
             <HStack
@@ -399,7 +401,7 @@ export const Leaderboard = (): JSX.Element => {
                 w="100%"
               >
                 <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                  Total Stats
+                  {t('leaderboard.sortStats')}
                 </Text>
                 {sort.sorted == 'byStats' && sort.reversed && (
                   <FaSortAmountUp />
@@ -425,7 +427,7 @@ export const Leaderboard = (): JSX.Element => {
                 w="100%"
               >
                 <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                  Level
+                  {t('leaderboard.sortLevel')}
                 </Text>
                 {sort.sorted == 'byLevel' && sort.reversed && (
                   <FaSortAmountUp />
@@ -451,7 +453,7 @@ export const Leaderboard = (): JSX.Element => {
                 w="100%"
               >
                 <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                  $Gold
+                  {t('leaderboard.sortGold')}
                 </Text>
                 {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
                 {sort.sorted == 'byGold' && !sort.reversed && (
@@ -490,7 +492,7 @@ export const Leaderboard = (): JSX.Element => {
               );
             })
           ) : (
-            <Text mt={12}>No players</Text>
+            <Text mt={12}>{t('leaderboard.noPlayers')}</Text>
           )}
         </VStack>
         <HStack my={5} visibility={entries.length > 0 ? 'visible' : 'hidden'}>
@@ -508,7 +510,7 @@ export const Leaderboard = (): JSX.Element => {
         {tab === 'raceToMax' && (
           <VStack px={3} py={4} spacing={3} w="100%">
             <Text color="#8A7E6A" size="sm" textAlign="center">
-              First 10 players to reach max level earn a permanent Zone Conqueror badge.
+              {t('leaderboard.raceToMaxDesc')}
             </Text>
 
             <VStack spacing={0} w="100%">
@@ -540,7 +542,7 @@ export const Leaderboard = (): JSX.Element => {
                         #{entry.rank}
                       </Text>
                       {entry.hasBadge && (
-                        <Tooltip hasArrow label="Zone Conqueror" placement="top">
+                        <Tooltip hasArrow label={t('leaderboard.zoneConqueror')} placement="top">
                           <span>
                             <FaMedal color="#D4A54A" size={14} />
                           </span>
@@ -576,10 +578,10 @@ export const Leaderboard = (): JSX.Element => {
                 <VStack py={8} spacing={2}>
                   <FaMedal color="#5A5040" size={32} />
                   <Text color="#8A7E6A" mt={2} size="sm">
-                    No one has conquered the Dark Cave yet.
+                    {t('leaderboard.noneConquered')}
                   </Text>
                   <Text color="#5A5040" size="xs">
-                    Be the first to reach max level!
+                    {t('leaderboard.beFirst')}
                   </Text>
                 </VStack>
               )}
@@ -588,7 +590,7 @@ export const Leaderboard = (): JSX.Element => {
             {/* In-progress characters */}
             {zoneCompletions.length > 0 && zoneCompletions.length < 10 && (
               <Text color="#5A5040" mt={2} size="xs" textAlign="center">
-                {10 - zoneCompletions.length} badge{10 - zoneCompletions.length !== 1 ? 's' : ''} remaining
+                {t('leaderboard.badgesRemaining', { count: 10 - zoneCompletions.length })}
               </Text>
             )}
           </VStack>
@@ -610,7 +612,7 @@ export const Leaderboard = (): JSX.Element => {
               >
                 <FaCrosshairs color="#E85D5D" size={14} />
                 <Text color="#E85D5D" fontSize="sm" fontWeight={600}>
-                  Season {toNumber(pvpSeasonData.season)}
+                  {t('leaderboard.season', { number: toNumber(pvpSeasonData.season) })}
                 </Text>
                 {pvpSeasonData.name && (
                   <Text color="#8A7E6A" fontSize="xs">
@@ -621,17 +623,17 @@ export const Leaderboard = (): JSX.Element => {
             )}
 
             <Text color="#8A7E6A" size="sm" textAlign="center">
-              Players ranked by ELO rating from PvP combat.
+              {t('leaderboard.pvpDesc')}
             </Text>
 
             {/* Column headers */}
             <Flex align="center" justify="space-between" px={4} w="100%">
               <HStack flex={1} spacing={3}>
                 <Text color="#565555" fontWeight={400} minW="30px" size="xs">
-                  #
+                  {t('leaderboard.colRank')}
                 </Text>
                 <Text color="#565555" fontWeight={400} size="xs">
-                  Player
+                  {t('leaderboard.colPlayer')}
                 </Text>
               </HStack>
               <HStack spacing={4}>
@@ -643,7 +645,7 @@ export const Leaderboard = (): JSX.Element => {
                   size="xs"
                   textAlign="center"
                 >
-                  W/L
+                  {t('leaderboard.colWL')}
                 </Text>
                 <Text
                   color="#565555"
@@ -653,7 +655,7 @@ export const Leaderboard = (): JSX.Element => {
                   size="xs"
                   textAlign="center"
                 >
-                  Win %
+                  {t('leaderboard.colWinPct')}
                 </Text>
                 <Text
                   color="#565555"
@@ -662,7 +664,7 @@ export const Leaderboard = (): JSX.Element => {
                   size="xs"
                   textAlign="right"
                 >
-                  ELO
+                  {t('leaderboard.colElo')}
                 </Text>
               </HStack>
             </Flex>
@@ -758,10 +760,10 @@ export const Leaderboard = (): JSX.Element => {
                 <VStack py={8} spacing={2}>
                   <FaCrosshairs color="#5A5040" size={32} />
                   <Text color="#8A7E6A" mt={2} size="sm">
-                    No PvP ratings yet.
+                    {t('leaderboard.noPvp')}
                   </Text>
                   <Text color="#5A5040" size="xs">
-                    Challenge other players to climb the ranks!
+                    {t('leaderboard.pvpCta')}
                   </Text>
                 </VStack>
               )}

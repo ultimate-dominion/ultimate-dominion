@@ -614,5 +614,107 @@
       "invalidMetadataUrl": "서버에서 유효하지 않은 메타데이터 URL이 반환되었습니다.",
       "creationFailed": "캐릭터 생성에 실패했습니다."
     }
+  },
+  "gameBoard": {
+    "pageTitle": "플레이 | Ultimate Dominion",
+    "loading": "게임 로딩 중...",
+    "reload": "새로고침",
+    "reconnecting": "재연결 중...",
+    "statsDrawer": "스탯",
+    "outerRealmsWarning": "조심하세요! 구불어둠에 진입합니다!",
+    "outerRealmsBody1": "<bold>구불어둠</bold>은 레벨 1 캐릭터에게 위험한 곳입니다. 다른 플레이어가 언제든 공격할 수 있습니다.",
+    "outerRealmsBody2": "더 레벨업한 후 진입하는 것을 권장합니다."
+  },
+  "guild": {
+    "pageTitle": "길드 | Ultimate Dominion",
+    "heading": "길드",
+    "createModal": {
+      "title": "길드 생성",
+      "nameLabel": "길드 이름",
+      "namePlaceholder": "길드 이름 입력",
+      "tagLabel": "태그",
+      "tagPlaceholder": "예: FURY",
+      "openLabel": "자유 가입",
+      "descLabel": "설명",
+      "descPlaceholder": "길드를 소개하세요...",
+      "cancel": "취소",
+      "create": "생성",
+      "creating": "생성 중..."
+    },
+    "withdrawModal": {
+      "title": "금고에서 출금",
+      "available": "가용: {{amount}} $GOLD",
+      "amountPlaceholder": "출금 금액",
+      "cancel": "취소",
+      "withdraw": "출금",
+      "withdrawing": "출금 중..."
+    },
+    "directory": {
+      "count": "길드 {{count}}개",
+      "createButton": "길드 생성",
+      "members": "멤버 {{count}}명",
+      "open": "오픈",
+      "closed": "비공개",
+      "join": "가입",
+      "apply": "신청",
+      "emptyTitle": "아직 길드가 없습니다.",
+      "emptySubtitle": "첫 번째로 만들어 보세요!"
+    },
+    "roles": {
+      "leader": "길드장",
+      "officer": "간부",
+      "member": "멤버"
+    },
+    "tooltips": {
+      "leader": "길드장",
+      "promote": "간부로 승격",
+      "demote": "멤버로 강등",
+      "kick": "추방"
+    },
+    "treasury": "$GOLD 금고",
+    "leaderControls": "길드장 관리",
+    "taxRate": "세율",
+    "withdrawTreasury": "금고 출금",
+    "disbandGuild": "길드 해산",
+    "disbanding": "해산 중...",
+    "pendingApplications": "대기 중인 신청 ({{count}})",
+    "approve": "승인",
+    "reject": "거절",
+    "memberCount": "멤버 {{count}}명",
+    "leaveGuild": "길드 탈퇴",
+    "leaving": "탈퇴 중..."
+  },
+  "leaderboard": {
+    "pageTitle": "리더보드 | Ultimate Dominion",
+    "heading": "리더보드",
+    "tabs": {
+      "rankings": "순위",
+      "raceToMax": "만렙 경쟁",
+      "pvpRankings": "PvP 랭킹"
+    },
+    "search": "검색",
+    "filterAll": "전체",
+    "filterStrength": "힘",
+    "filterAgility": "민첩",
+    "filterIntelligence": "지능",
+    "playerCount": "플레이어 {{count}}명",
+    "sortStats": "전체 스탯",
+    "sortLevel": "레벨",
+    "sortGold": "$Gold",
+    "noPlayers": "플레이어 없음",
+    "raceToMaxDesc": "만렙에 먼저 도달한 10명의 플레이어가 영구 구역 정복자 배지를 획득합니다.",
+    "zoneConqueror": "구역 정복자",
+    "noneConquered": "아직 아무도 어둠의 동굴을 정복하지 못했습니다.",
+    "beFirst": "최초로 만렙에 도달하세요!",
+    "badgesRemaining": "배지 {{count}}개 남음",
+    "season": "시즌 {{number}}",
+    "pvpDesc": "PvP 전투의 ELO 레이팅 기준 순위입니다.",
+    "colRank": "#",
+    "colPlayer": "플레이어",
+    "colWL": "승/패",
+    "colWinPct": "승률",
+    "colElo": "ELO",
+    "noPvp": "아직 PvP 기록이 없습니다.",
+    "pvpCta": "다른 플레이어에게 도전해서 순위를 올리세요!"
   }
 }

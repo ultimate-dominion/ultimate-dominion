@@ -614,5 +614,107 @@
       "invalidMetadataUrl": "Invalid metadata URL returned from the server.",
       "creationFailed": "Failed to create character."
     }
+  },
+  "gameBoard": {
+    "pageTitle": "Play | Ultimate Dominion",
+    "loading": "Loading game...",
+    "reload": "Reload",
+    "reconnecting": "Reconnecting...",
+    "statsDrawer": "Stats",
+    "outerRealmsWarning": "Careful! You're about to enter the Winding Dark!",
+    "outerRealmsBody1": "The <bold>Winding Dark</bold> is a dangerous place for a level 1 character. Any other player could attack you at any time.",
+    "outerRealmsBody2": "It is recommended that you level up your character more before entering."
+  },
+  "guild": {
+    "pageTitle": "Guild | Ultimate Dominion",
+    "heading": "Guild",
+    "createModal": {
+      "title": "Create Guild",
+      "nameLabel": "Guild Name",
+      "namePlaceholder": "Enter guild name",
+      "tagLabel": "Tag",
+      "tagPlaceholder": "e.g. FURY",
+      "openLabel": "Open to Join",
+      "descLabel": "Description",
+      "descPlaceholder": "Describe your guild...",
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating..."
+    },
+    "withdrawModal": {
+      "title": "Withdraw from Treasury",
+      "available": "Available: {{amount}} $GOLD",
+      "amountPlaceholder": "Amount to withdraw",
+      "cancel": "Cancel",
+      "withdraw": "Withdraw",
+      "withdrawing": "Withdrawing..."
+    },
+    "directory": {
+      "count": "{{count}} Guild(s)",
+      "createButton": "Create Guild",
+      "members": "{{count}} member(s)",
+      "open": "Open",
+      "closed": "Closed",
+      "join": "Join",
+      "apply": "Apply",
+      "emptyTitle": "No guilds exist yet.",
+      "emptySubtitle": "Be the first to create one!"
+    },
+    "roles": {
+      "leader": "Leader",
+      "officer": "Officer",
+      "member": "Member"
+    },
+    "tooltips": {
+      "leader": "Leader",
+      "promote": "Promote to Officer",
+      "demote": "Demote to Member",
+      "kick": "Kick"
+    },
+    "treasury": "$GOLD Treasury",
+    "leaderControls": "Leader Controls",
+    "taxRate": "Tax Rate",
+    "withdrawTreasury": "Withdraw Treasury",
+    "disbandGuild": "Disband Guild",
+    "disbanding": "Disbanding...",
+    "pendingApplications": "Pending Applications ({{count}})",
+    "approve": "Approve",
+    "reject": "Reject",
+    "memberCount": "{{count}} Member(s)",
+    "leaveGuild": "Leave Guild",
+    "leaving": "Leaving..."
+  },
+  "leaderboard": {
+    "pageTitle": "Leaderboard | Ultimate Dominion",
+    "heading": "Leaderboard",
+    "tabs": {
+      "rankings": "Rankings",
+      "raceToMax": "Race to Max",
+      "pvpRankings": "PvP Rankings"
+    },
+    "search": "Search",
+    "filterAll": "All",
+    "filterStrength": "Strength",
+    "filterAgility": "Agility",
+    "filterIntelligence": "Intelligence",
+    "playerCount": "{{count}} Players",
+    "sortStats": "Total Stats",
+    "sortLevel": "Level",
+    "sortGold": "$Gold",
+    "noPlayers": "No players",
+    "raceToMaxDesc": "First 10 players to reach max level earn a permanent Zone Conqueror badge.",
+    "zoneConqueror": "Zone Conqueror",
+    "noneConquered": "No one has conquered the Dark Cave yet.",
+    "beFirst": "Be the first to reach max level!",
+    "badgesRemaining": "{{count}} badge(s) remaining",
+    "season": "Season {{number}}",
+    "pvpDesc": "Players ranked by ELO rating from PvP combat.",
+    "colRank": "#",
+    "colPlayer": "Player",
+    "colWL": "W/L",
+    "colWinPct": "Win %",
+    "colElo": "ELO",
+    "noPvp": "No PvP ratings yet.",
+    "pvpCta": "Challenge other players to climb the ranks!"
   }
 }
