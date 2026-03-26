@@ -1,4 +1,5 @@
 import { Box, Progress, Tooltip } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 import { encodeCompositeKey, encodeUint256Key, useGameValue } from '../lib/gameStore';
 
@@ -11,6 +12,7 @@ export const DurabilityBar = ({
   characterId,
   itemId,
 }: DurabilityBarProps): JSX.Element | null => {
+  const { t } = useTranslation('ui');
   const durKey = encodeUint256Key(itemId);
   const itemDur = useGameValue('ItemDurability', durKey);
   const maxDurability = Number(itemDur?.maxDurability ?? 0);
@@ -24,7 +26,7 @@ export const DurabilityBar = ({
   const color = pct > 50 ? 'green' : pct > 20 ? 'yellow' : 'red';
 
   return (
-    <Tooltip hasArrow label={`Durability: ${current}/${maxDurability}`} placement="bottom">
+    <Tooltip hasArrow label={t('durability.label', { current, max: maxDurability })} placement="bottom">
       <Box w="100%" mt="2px">
         <Progress
           borderRadius="full"

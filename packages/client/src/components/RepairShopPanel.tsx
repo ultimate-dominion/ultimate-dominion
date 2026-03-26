@@ -8,6 +8,7 @@ import {
   useToast,
   VStack,
 } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { useCallback, useMemo, useState } from 'react';
 import { formatEther } from 'viem';
 import { GiAnvilImpact } from 'react-icons/gi';
@@ -44,6 +45,7 @@ export const RepairShopPanel = (): JSX.Element | null => {
   const { character, equippedArmor, equippedWeapons, equippedSpells } = useCharacter();
   const { systemCalls: { repairItem } } = useMUD();
   const toast = useToast();
+  const { t } = useTranslation('ui');
   const [repairing, setRepairing] = useState<string | null>(null);
 
   const charDurTable = useGameTable('CharacterItemDurability');
@@ -87,9 +89,9 @@ export const RepairShopPanel = (): JSX.Element | null => {
     const result = await repairItem(character.id as `0x${string}`, item.itemId);
     setRepairing(null);
     if (result.success) {
-      toast({ title: `${item.name} repaired`, status: 'success', duration: 3000 });
+      toast({ title: t('repair.repaired', { name: item.name }), status: 'success', duration: 3000 });
     } else {
-      toast({ title: result.error ?? 'Repair failed', status: 'error', duration: 4000 });
+      toast({ title: result.error ?? t('repair.failed'), status: 'error', duration: 4000 });
     }
   }, [character, repairItem, toast]);
 
@@ -100,7 +102,7 @@ export const RepairShopPanel = (): JSX.Element | null => {
       <HStack mb={4}>
         <GiAnvilImpact color="#C8A96E" size={20} />
         <Text color="#E8DCC8" fontFamily="Cinzel, serif" fontWeight={700}>
-          Repair Equipment
+          {t('repair.title')}
         </Text>
       </HStack>
       <VStack spacing={3} align="stretch">
@@ -125,7 +127,7 @@ export const RepairShopPanel = (): JSX.Element | null => {
                   </Box>
                 </Tooltip>
                 <Text color="#8A7E6A" fontSize="xs">
-                  {item.currentDurability}/{item.maxDurability} durability
+                  {t('repair.durability', { current: item.currentDurability, max: item.maxDurability })}
                 </Text>
               </VStack>
               <Button
@@ -137,7 +139,7 @@ export const RepairShopPanel = (): JSX.Element | null => {
                 onClick={() => handleRepair(item)}
                 _hover={{ bg: 'rgba(200, 169, 110, 0.1)' }}
               >
-                Repair ({formatEther(item.repairCost)} gold)
+                {t('repair.repairButton', { cost: formatEther(item.repairCost) })}
               </Button>
             </HStack>
           );

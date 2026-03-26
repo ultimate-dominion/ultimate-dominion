@@ -18,6 +18,7 @@ import {
 } from '@chakra-ui/react';
 import FuzzySearch from 'fuzzy-search';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaSearch } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
@@ -51,6 +52,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   isOpen,
   onClose,
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const navigate = useNavigate();
   const {
     armorTemplates,
@@ -146,7 +148,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader px={8}>
-          <Text>Create Listing</Text>
+          <Text>{t('createListing.title')}</Text>
           <HStack justifyContent="center" mt={4} w="100%">
             {Object.keys(ItemListingFilterOptions).map(k => {
               return (
@@ -178,17 +180,13 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   size={{ base: 'xs', sm: 'sm' }}
                   variant="white"
                 >
-                  {
-                    ItemListingFilterOptions[
-                      k as keyof typeof ItemListingFilterOptions
-                    ]
-                  }
+                  {k === 'AllItems' ? t('createListing.allItems') : t('createListing.inventory')}
                 </Button>
               );
             })}
           </HStack>
           <Text mt={2} size="xs">
-            # of items:{' '}
+            {t('createListing.numItems')}{' '}
             {itemListingFilter === ItemListingFilterOptions.AllItems
               ? allItems.length
               : allInventoryItems.length}
@@ -199,7 +197,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
             </InputLeftElement>
             <Input
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search"
+              placeholder={t('shop.search')}
               value={query}
             />
           </InputGroup>
@@ -211,7 +209,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
             w="100%"
           >
             <Text size="xs" w="40%">
-              Filter by:
+              {t('createListing.filterBy')}
             </Text>
             <Select
               onChange={e =>
@@ -261,7 +259,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose} variant="ghost">
-            Close
+            {t('common.close')}
           </Button>
         </ModalFooter>
       </ModalContent>

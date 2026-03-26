@@ -1,5 +1,6 @@
 import { Box, Center, HStack, Image, Text, Tooltip, VStack, useDisclosure } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
@@ -30,6 +31,7 @@ const getTooltipLabel = (c: Consumable): string => {
 };
 
 export const ConsumableQuickUse = (): JSX.Element | null => {
+  const { t } = useTranslation('ui');
   const { character, inventoryConsumables, equippedConsumables } = useCharacter();
   const { isSpawned } = useMap();
 
@@ -136,7 +138,7 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
         </HStack>
       ) : (
         <Text color="#5A5040" fontSize="xs" fontStyle="italic">
-          No consumables. Visit a shop to stock up.
+          {t('consumableQuickUse.noConsumables')}
         </Text>
       )}
 

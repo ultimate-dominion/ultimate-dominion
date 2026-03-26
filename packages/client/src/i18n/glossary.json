@@ -1,0 +1,95 @@
+{
+  "_meta": {
+    "description": "Master glossary for CJK translation consistency. NOT loaded by i18next — reference only.",
+    "usage": "Feed relevant entries as context when translating each namespace."
+  },
+
+  "proper_nouns": {
+    "_note": "Keep these untranslated or transliterate consistently. Never translate differently across files.",
+    "Ultimate Dominion": { "ko": "얼티밋 도미니언", "ja": "アルティメットドミニオン", "zh": "终极统治" },
+    "Dark Cave": { "ko": "어둠의 동굴", "ja": "暗黒の洞窟", "zh": "暗黑洞穴" },
+    "Windy Peaks": { "ko": "바람의 봉우리", "ja": "風の頂", "zh": "狂风之巅" },
+    "Tal Carden": { "ko": "탈 카든", "ja": "タル・カーデン", "zh": "塔尔·卡登" },
+    "Korrath": { "ko": "코라스", "ja": "コラス", "zh": "科拉斯" },
+    "the Weave": { "ko": "위브", "ja": "織り", "zh": "织网" },
+    "the Marrow": { "ko": "골수", "ja": "髄", "zh": "骨髓" }
+  },
+
+  "classes": {
+    "_note": "Class names: transliterate for KO/JA (players expect katakana/English loanwords in RPGs), translate for ZH.",
+    "Warrior": { "ko": "워리어", "ja": "ウォリアー", "zh": "战士" },
+    "Paladin": { "ko": "팔라딘", "ja": "パラディン", "zh": "圣骑士" },
+    "Ranger": { "ko": "레인저", "ja": "レンジャー", "zh": "游侠" },
+    "Rogue": { "ko": "로그", "ja": "ローグ", "zh": "盗贼" },
+    "Druid": { "ko": "드루이드", "ja": "ドルイド", "zh": "德鲁伊" },
+    "Warlock": { "ko": "워록", "ja": "ウォーロック", "zh": "术士" },
+    "Wizard": { "ko": "위자드", "ja": "ウィザード", "zh": "法师" },
+    "Cleric": { "ko": "클레릭", "ja": "クレリック", "zh": "牧师" },
+    "Sorcerer": { "ko": "소서러", "ja": "ソーサラー", "zh": "巫师" }
+  },
+
+  "spells": {
+    "_note": "Spell names: keep English feel for KO/JA (standard in Asian RPGs), translate meaning for ZH.",
+    "Battle Cry": { "ko": "전투 함성", "ja": "バトルクライ", "zh": "战吼" },
+    "Divine Shield": { "ko": "신성한 방패", "ja": "ディバインシールド", "zh": "神圣之盾" },
+    "Hunter's Mark": { "ko": "사냥꾼의 표식", "ja": "ハンターズマーク", "zh": "猎人印记" },
+    "Shadowstep": { "ko": "그림자 걸음", "ja": "シャドウステップ", "zh": "暗影步" },
+    "Entangle": { "ko": "속박", "ja": "エンタングル", "zh": "缠绕" },
+    "Soul Drain": { "ko": "영혼 흡수", "ja": "ソウルドレイン", "zh": "灵魂汲取" },
+    "Arcane Blast": { "ko": "비전 폭발", "ja": "アーケインブラスト", "zh": "奥术冲击" },
+    "Blessing": { "ko": "축복", "ja": "ブレッシング", "zh": "祝福" },
+    "Arcane Surge": { "ko": "비전 쇄도", "ja": "アーケインサージ", "zh": "奥术涌动" }
+  },
+
+  "game_terms": {
+    "_note": "Consistent across all namespaces. These appear in UI, descriptions, and narrative.",
+    "$GOLD": { "ko": "$GOLD", "ja": "$GOLD", "zh": "$GOLD", "_note": "Never translate — it's a token symbol" },
+    "Fragment": { "ko": "파편", "ja": "フラグメント", "zh": "碎片" },
+    "HP": { "ko": "HP", "ja": "HP", "zh": "HP", "_note": "Universal gaming abbreviation — never translate" },
+    "STR": { "ko": "STR", "ja": "STR", "zh": "力量", "_note": "KO/JA keep English stat abbreviations" },
+    "AGI": { "ko": "AGI", "ja": "AGI", "zh": "敏捷" },
+    "INT": { "ko": "INT", "ja": "INT", "zh": "智力" },
+    "Armor": { "ko": "방어력", "ja": "アーマー", "zh": "护甲" },
+    "PvP": { "ko": "PvP", "ja": "PvP", "zh": "PvP" },
+    "PvE": { "ko": "PvE", "ja": "PvE", "zh": "PvE" }
+  },
+
+  "rarity": {
+    "Worn": { "ko": "낡은", "ja": "ボロ", "zh": "破旧" },
+    "Common": { "ko": "일반", "ja": "コモン", "zh": "普通" },
+    "Uncommon": { "ko": "고급", "ja": "アンコモン", "zh": "优秀" },
+    "Rare": { "ko": "희귀", "ja": "レア", "zh": "稀有" },
+    "Epic": { "ko": "영웅", "ja": "エピック", "zh": "史诗" },
+    "Legendary": { "ko": "전설", "ja": "レジェンダリー", "zh": "传说" }
+  },
+
+  "tone_guide": {
+    "ui": "Clean, modern, minimal. Short labels. No flavor text in UI strings.",
+    "items": "Terse, atmospheric, darkly funny. Each description should feel like it was written by someone who's been in the cave too long. The dev-themed items should keep their tech humor — translate the joke, not the words.",
+    "narrative": "Literary. Weighty. The lore is the soul of the game. Preserve the rhythm and imagery. This is where transcreation matters most.",
+    "classes": "Authoritative game guide tone. Practical but with personality. Stats and mechanics should be precise.",
+    "effects": "Mechanical/terse. These are combat tooltips — clarity over flavor.",
+    "npc_voice": {
+      "Tal Carden": "Old, weary, dry humor. Speaks in short sentences. Knows more than he lets on."
+    }
+  },
+
+  "formality": {
+    "_note": "Language-specific register guidance",
+    "ko": {
+      "ui": "합쇼체 (formal polite) for system messages, 해요체 (casual polite) for tooltips",
+      "narrative": "해라체 (literary/plain) for narration, character-appropriate for dialogue",
+      "npc_tal_carden": "해요체 with occasional 반말 — weary old man who doesn't stand on ceremony"
+    },
+    "ja": {
+      "ui": "です/ます form for system messages, plain form for labels",
+      "narrative": "だ/である form for narration, character-appropriate for dialogue",
+      "npc_tal_carden": "Old man speech (わし/じゃ patterns) — not comedic, just weathered"
+    },
+    "zh": {
+      "ui": "Standard written Chinese, concise",
+      "narrative": "Literary register, allow classical Chinese phrasing where it fits",
+      "npc_tal_carden": "Casual, slightly archaic diction — old merchant who's seen everything"
+    }
+  }
+}

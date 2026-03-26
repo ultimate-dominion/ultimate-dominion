@@ -1,6 +1,7 @@
 import { Box, Center, HStack, Image, Spinner, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { useCallback, useMemo } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useBattle } from '../contexts/BattleContext';
@@ -76,6 +77,7 @@ const FilledSlot = ({
   isInBattle: boolean;
   characterId?: string;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const rarityColor = getRarityColor(item.rarity);
   const rarityAnimation = getRarityAnimation(item.rarity);
   const imageSrc = getItemImage(removeEmoji(item.name));
@@ -84,7 +86,7 @@ const FilledSlot = ({
   return (
     <Tooltip
       hasArrow
-      label={`${getItemTooltip(item)}${canClick ? ' — tap to set as #1' : ''}`}
+      label={`${getItemTooltip(item)}${canClick ? ` — ${t('loadout.tapToSetFirst')}` : ''}`}
       placement="top"
     >
       <Center
@@ -141,6 +143,7 @@ const FilledSlot = ({
 export const EquippedLoadout = (): JSX.Element | null => {
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons } =
     useCharacter();
+  const { t } = useTranslation('ui');
   const { currentBattle } = useBattle();
   const { isLoading: isLoadingItemTemplates } = useItems();
 
@@ -178,7 +181,7 @@ export const EquippedLoadout = (): JSX.Element | null => {
     return (
       <VStack spacing={1.5} w="100%">
         <Text color="#5A5040" fontSize="2xs" fontWeight={700} letterSpacing="wider" textTransform="uppercase">
-          Loadout
+          {t('loadout.title')}
         </Text>
         <Center h="44px">
           <Spinner size="xs" color="#5A5040" />
@@ -193,7 +196,7 @@ export const EquippedLoadout = (): JSX.Element | null => {
     <VStack spacing={1.5} w="100%">
       <HStack justifyContent="space-between" w="100%">
         <Text color="#5A5040" fontSize="2xs" fontWeight={700} letterSpacing="wider" textTransform="uppercase">
-          Loadout
+          {t('loadout.title')}
         </Text>
         <Text
           as={RouterLink}
@@ -202,7 +205,7 @@ export const EquippedLoadout = (): JSX.Element | null => {
           to={`/characters/${character.id}`}
           _hover={{ color: '#8A7E6A', textDecoration: 'underline' }}
         >
-          Edit
+          {t('loadout.edit')}
         </Text>
       </HStack>
       <HStack spacing={1.5} justify="center">
@@ -211,7 +214,7 @@ export const EquippedLoadout = (): JSX.Element | null => {
           {armor ? (
             <FilledSlot item={armor} slotNumber={0} isInBattle={isInBattle} characterId={character.id} />
           ) : (
-            <EmptySlot label="Armor — empty" />
+            <EmptySlot label={t('loadout.armorEmpty')} />
           )}
           <Text
             color="#5A5040"
@@ -244,7 +247,7 @@ export const EquippedLoadout = (): JSX.Element | null => {
                 characterId={character.id}
               />
             ) : (
-              <EmptySlot />
+              <EmptySlot label={t('loadout.emptySlot')} />
             )}
           </Box>
         ))}

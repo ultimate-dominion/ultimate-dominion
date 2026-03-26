@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import SafeTypist from '../components/SafeTypist';
 
@@ -38,6 +39,7 @@ const dragonPulse = keyframes`
 `;
 
 export const Welcome = (): JSX.Element => {
+  const { t } = useTranslation('pages');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isOpen, onClose, onOpen } = useDisclosure();
@@ -150,7 +152,7 @@ export const Welcome = (): JSX.Element => {
           fontSize="lg"
           textAlign="center"
         >
-          Could not recover your wallet
+          {t('welcome.walletRecoveryTitle')}
         </Text>
         <Text
           color="rgba(196, 184, 158, 0.6)"
@@ -158,8 +160,7 @@ export const Welcome = (): JSX.Element => {
           textAlign="center"
           maxW="400px"
         >
-          Your account was found, but we couldn&apos;t restore your wallet on this device.
-          Try signing in from your original device, or clearing your browser data and signing in again.
+          {t('welcome.walletRecoveryMessage')}
         </Text>
         <Button
           variant="outline"
@@ -169,7 +170,7 @@ export const Welcome = (): JSX.Element => {
           size="sm"
           _hover={{ borderColor: '#C4B89E' }}
         >
-          Sign out and retry
+          {t('welcome.signOutRetry')}
         </Button>
       </Box>
     );
@@ -191,7 +192,7 @@ export const Welcome = (): JSX.Element => {
       }}
     >
       <Helmet>
-        <title>Ultimate Dominion — Nothing Is Forgotten</title>
+        <title>{t('welcome.metaTitle')}</title>
       </Helmet>
       <Box
         border="0.5px solid #3A3228"
@@ -253,7 +254,7 @@ export const Welcome = (): JSX.Element => {
               textAlign="center"
               textTransform="uppercase"
             >
-              Nothing Is Forgotten
+              {t('intro.tagline')}
             </Text>
             {/* Ornamental divider */}
             <Box
@@ -275,24 +276,16 @@ export const Welcome = (): JSX.Element => {
               aria-hidden="true"
             >
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
-                As you awaken, your eyes flutter open to the stark, eerie ambiance
-                of a dimly lit cave.
+                {t('intro.p1')}
               </Text>
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                Confusion clouds your mind; the cold, hard ground beneath you
-                offers no comfort. Glimpses of blood and bruises on your body only
-                deepen the mystery, painting a silent story of unseen struggles.
+                {t('intro.p2')}
               </Text>
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                Where are you? How did you end up here?
+                {t('intro.p3')}
               </Text>
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                The shadows around you hold secrets, whispering tales of survival
-                and discovery. Gathering your strength, you rise, the weight of
-                uncertainty heavy on your shoulders — yet igniting a spark of
-                determination within. With a deep breath, you take your first step
-                into the unknown, embarking on a journey where every choice carves
-                your path through the darkness.
+                {t('intro.p4')}
               </Text>
             </VStack>
             {/* Typing animation overlaid at exact same position */}
@@ -304,27 +297,19 @@ export const Welcome = (): JSX.Element => {
                   cursor={{ show: true, blink: true, element: '\u258C', hideWhenDone: true, hideWhenDoneDelay: 500 }}
                 >
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
-                    As you awaken, your eyes flutter open to the stark, eerie ambiance
-                    of a dimly lit cave.
+                    {t('intro.p1')}
                   </Text>
                   <SafeTypist.Delay ms={800} />
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                    Confusion clouds your mind; the cold, hard ground beneath you
-                    offers no comfort. Glimpses of blood and bruises on your body only
-                    deepen the mystery, painting a silent story of unseen struggles.
+                    {t('intro.p2')}
                   </Text>
                   <SafeTypist.Delay ms={600} />
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                    Where are you? How did you end up here?
+                    {t('intro.p3')}
                   </Text>
                   <SafeTypist.Delay ms={1000} />
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                    The shadows around you hold secrets, whispering tales of survival
-                    and discovery. Gathering your strength, you rise, the weight of
-                    uncertainty heavy on your shoulders — yet igniting a spark of
-                    determination within. With a deep breath, you take your first step
-                    into the unknown, embarking on a journey where every choice carves
-                    your path through the darkness.
+                    {t('intro.p4')}
                   </Text>
                 </SafeTypist>
               </VStack>
@@ -340,7 +325,7 @@ export const Welcome = (): JSX.Element => {
               px={{ base: 16, sm: 24 }}
               textTransform="uppercase"
             >
-              Enter
+              {t('intro.enter')}
             </Button>
             <SoundToggle />
           </VStack>
@@ -356,7 +341,7 @@ export const Welcome = (): JSX.Element => {
               to={MANIFESTO_PATH}
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
-              Manifesto
+              {t('welcome.manifesto')}
             </Link>
             <Text color="#3A3228" userSelect="none">|</Text>
             <Link
@@ -365,7 +350,7 @@ export const Welcome = (): JSX.Element => {
               to={GUIDE_PATH}
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
-              Guide
+              {t('welcome.guide')}
             </Link>
             <Text color="#3A3228" userSelect="none">|</Text>
             <Link
@@ -374,7 +359,7 @@ export const Welcome = (): JSX.Element => {
               isExternal
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
-              Tavern
+              {t('welcome.tavern')}
             </Link>
             <Text color="#3A3228" userSelect="none">|</Text>
             <Link

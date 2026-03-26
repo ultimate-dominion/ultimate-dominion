@@ -8,6 +8,7 @@ import {
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { type NearbyRanksResult } from '../hooks/useNearbyRanks';
 import { LEADERBOARD_PATH } from '../Routes';
@@ -19,6 +20,7 @@ type MiniLeaderboardProps = Pick<NearbyRanksResult, 'nearby' | 'isLoading' | 'ra
 
 export const MiniLeaderboard = ({ nearby, isLoading, rankBy, dataRankBy, setRankBy }: MiniLeaderboardProps): JSX.Element | null => {
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
 
   // Use dataRankBy for sorting/display — this is the mode the current data was fetched with
   const displayMode = dataRankBy;
@@ -58,7 +60,7 @@ export const MiniLeaderboard = ({ nearby, isLoading, rankBy, dataRankBy, setRank
           size="xs"
           _hover={{ textDecoration: 'underline', cursor: 'pointer' }}
         >
-          Nearby Ranks
+          {t('miniLeaderboard.nearbyRanks')}
         </Heading>
         <HStack spacing={0}>
           <Button
@@ -73,7 +75,7 @@ export const MiniLeaderboard = ({ nearby, isLoading, rankBy, dataRankBy, setRank
             px={2}
             variant="unstyled"
           >
-            Stats
+            {t('miniLeaderboard.statsTab')}
           </Button>
           <Button
             borderBottom={rankBy === 'gold' ? '2px solid #C87A2A' : '2px solid transparent'}
@@ -87,7 +89,7 @@ export const MiniLeaderboard = ({ nearby, isLoading, rankBy, dataRankBy, setRank
             px={2}
             variant="unstyled"
           >
-            Gold
+            {t('miniLeaderboard.goldTab')}
           </Button>
         </HStack>
       </HStack>
@@ -129,7 +131,7 @@ export const MiniLeaderboard = ({ nearby, isLoading, rankBy, dataRankBy, setRank
                 {player.name}
               </Text>
               <Text color="#5A5040" fontFamily="mono" size="2xs">
-                Lv {player.level}
+                {t('roster.lv', { level: player.level })}
               </Text>
               <Text color="#D4A54A" fontFamily="mono" fontWeight={600} size="xs" textAlign="right">
                 {displayMode === 'stats'

@@ -19,6 +19,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -44,6 +45,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   onClose,
   tokenId,
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { renderError, renderSuccess, renderWarning } = useToast();
 
   const {
@@ -97,7 +99,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   const updateTx = useTransaction({
     actionName: 'update character',
     showSuccessToast: true,
-    successMessage: 'Character updated!',
+    successMessage: t('editCharacter.updated'),
   });
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -114,7 +116,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
 
         if (!((avatar || image) && newDescription && newName)) {
           setShowError(true);
-          renderWarning('Missing required fields.');
+          renderWarning(t('editCharacter.missingFields'));
           return;
         }
 
@@ -177,7 +179,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
           onClose();
         }
       } catch (e) {
-        renderError('Failed to update character.', e);
+        renderError(t('editCharacter.updateFailed'), e);
       } finally {
         setIsUpdating(false);
       }
@@ -212,7 +214,7 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          <Text>Edit Character</Text>
+          <Text>{t('editCharacter.title')}</Text>
         </ModalHeader>
         <ModalCloseButton />
         <Box as="form" onSubmit={onEditCharacter}>
@@ -225,14 +227,14 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                     <Input
                       isDisabled={isUpdating}
                       onChange={e => setNewName(e.target.value)}
-                      placeholder={'Name'}
+                      placeholder={t('editCharacter.namePlaceholder')}
                       type="text"
                       value={newName}
                       maxLength={15}
                     />
                     {showError && !newName && (
                       <FormHelperText color="red">
-                        Name is required
+                        {t('editCharacter.nameRequired')}
                       </FormHelperText>
                     )}
                   </FormControl>
@@ -249,16 +251,16 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                       alignSelf="start"
                       isDisabled={isUpdating}
                       isLoading={isUploading}
-                      loadingText="Uploading..."
+                      loadingText={t('editCharacter.uploading')}
                       onClick={onUploadAvatar}
                       size={{ base: 'xs', sm: 'sm' }}
                       type="button"
                     >
-                      Upload Avatar Image
+                      {t('editCharacter.uploadAvatar')}
                     </Button>
                     {showError && !(avatar || image) && (
                       <FormHelperText color="red">
-                        Avatar is required
+                        {t('editCharacter.avatarRequired')}
                       </FormHelperText>
                     )}
                   </FormControl>
@@ -269,26 +271,26 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                   height="200px"
                   isDisabled={isUpdating}
                   onChange={e => setNewDescription(e.target.value)}
-                  placeholder="Bio"
+                  placeholder={t('editCharacter.bioPlaceholder')}
                   value={newDescription}
                 />
                 {showError && !newDescription && (
-                  <FormHelperText color="red">Bio is required</FormHelperText>
+                  <FormHelperText color="red">{t('editCharacter.bioRequired')}</FormHelperText>
                 )}
               </FormControl>
             </VStack>
           </ModalBody>
           <ModalFooter gap={3}>
             <Button onClick={onClose} variant="ghost">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               isDisabled={!hasChanged}
               isLoading={isUpdating}
-              loadingText="Updating..."
+              loadingText={t('editCharacter.updating')}
               type="submit"
             >
-              Update
+              {t('editCharacter.update')}
             </Button>
           </ModalFooter>
         </Box>

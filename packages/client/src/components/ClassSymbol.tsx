@@ -1,4 +1,5 @@
 import { Box, HStack, IconProps, Text, Tooltip, useBreakpointValue } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 import {
   ADVANCED_CLASS_COLORS,
@@ -22,10 +23,10 @@ const ICON_SIZE = {
   },
 };
 
-const CLASS_LABELS: Record<StatsClasses, string> = {
-  [StatsClasses.Intelligence]: 'Intelligence',
-  [StatsClasses.Agility]: 'Agility',
-  [StatsClasses.Strength]: 'Strength',
+const CLASS_LABEL_KEYS: Record<StatsClasses, string> = {
+  [StatsClasses.Intelligence]: 'classSymbol.intelligence',
+  [StatsClasses.Agility]: 'classSymbol.agility',
+  [StatsClasses.Strength]: 'classSymbol.strength',
 };
 
 export const ClassSymbol = ({
@@ -40,12 +41,14 @@ export const ClassSymbol = ({
   responsive?: boolean;
   theme?: 'light' | 'dark';
 } & IconProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const isDesktop = useBreakpointValue({ base: false, lg: true });
 
+  const classLabel = t(CLASS_LABEL_KEYS[entityClass]) ?? '';
   const hasAdvancedClass = advancedClass != null && advancedClass !== AdvancedClass.None;
   const tooltipLabel = hasAdvancedClass
-    ? `${ADVANCED_CLASS_NAMES[advancedClass]} (${CLASS_LABELS[entityClass]})`
-    : CLASS_LABELS[entityClass] ?? '';
+    ? `${ADVANCED_CLASS_NAMES[advancedClass]} (${classLabel})`
+    : classLabel;
 
   const SvgComponent =
     entityClass === StatsClasses.Intelligence

@@ -9,6 +9,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BiPurchaseTagAlt } from 'react-icons/bi';
 import { FaTimes } from 'react-icons/fa';
 import { hexToString } from 'viem';
@@ -45,6 +46,7 @@ export const OrderRow = ({
   order,
   refreshOrders,
 }: OrderRowProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     systemCalls: { cancelOrder, fulfillOrder },
   } = useMUD();
@@ -141,20 +143,16 @@ export const OrderRow = ({
         >
           <HStack w="100%">
             <Text size={{ base: '2xs', lg: 'sm' }}>
-              From: {ownerCharacterName} {'('}
-              {shortenAddress(consideration.recipient)}
-              {')'}
+              {t('order.from', { name: ownerCharacterName, address: shortenAddress(consideration.recipient) })}
             </Text>
           </HStack>
           {consideration.tokenType === TokenType.ERC20 ? (
             <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-              Wants {etherToFixedNumber(consideration.amount)} $GOLD for{' '}
-              {offer.amount.toString()} {removeEmoji(item.name)}
+              {t('order.wantsGoldFor', { gold: etherToFixedNumber(consideration.amount), amount: offer.amount.toString(), item: removeEmoji(item.name) })}
             </Text>
           ) : (
             <Text fontWeight="bold" size={{ base: '3xs', sm: '2xs', lg: 'sm' }}>
-              Wants {consideration.amount.toString()} {removeEmoji(item.name)}{' '}
-              for {etherToFixedNumber(offer.amount)} $GOLD
+              {t('order.wantsItemFor', { amount: consideration.amount.toString(), item: removeEmoji(item.name), gold: etherToFixedNumber(offer.amount) })}
             </Text>
           )}
         </VStack>
@@ -164,15 +162,15 @@ export const OrderRow = ({
           <Tooltip
             aria-label={
               insufficientGold
-                ? 'Not enough gold'
-                : offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
+                ? t('order.notEnoughGold')
+                : offer.tokenType === TokenType.ERC20 ? t('order.sellItem') : t('order.buyItem')
             }
             bg="#14120F"
             hasArrow
             label={
               insufficientGold
-                ? 'Not enough gold'
-                : offer.tokenType === TokenType.ERC20 ? 'Sell item' : 'Buy item'
+                ? t('order.notEnoughGold')
+                : offer.tokenType === TokenType.ERC20 ? t('order.sellItem') : t('order.buyItem')
             }
             placement="top"
           >
@@ -190,10 +188,10 @@ export const OrderRow = ({
         )}
         {isOfferer && (
           <Tooltip
-            aria-label="Remove listing"
+            aria-label={t('order.removeListing')}
             bg="#14120F"
             hasArrow
-            label="Remove listing"
+            label={t('order.removeListing')}
             placement="top"
           >
             <Button

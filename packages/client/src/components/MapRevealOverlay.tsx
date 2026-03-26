@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Button, keyframes, Text } from '@chakra-ui/react';
 
 const GRID_SIZE = 10;
@@ -65,6 +66,7 @@ type MapRevealOverlayProps = {
 };
 
 export const MapRevealOverlay = ({ onComplete }: MapRevealOverlayProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const [isExiting, setIsExiting] = useState(false);
   const [buttonReady, setButtonReady] = useState(false);
 
@@ -210,7 +212,7 @@ export const MapRevealOverlay = ({ onComplete }: MapRevealOverlayProps): JSX.Ele
         opacity={0}
         animation={`${fadeUp} 0.8s 5s cubic-bezier(0.16, 1, 0.3, 1) forwards`}
       >
-        The Winding Dark
+        {t('mapReveal.windingDark')}
       </Text>
 
       {/* Continue button */}
@@ -222,7 +224,7 @@ export const MapRevealOverlay = ({ onComplete }: MapRevealOverlayProps): JSX.Ele
         pointerEvents={buttonReady ? 'auto' : 'none'}
         animation={`${fadeUp} 0.6s 5.5s cubic-bezier(0.16, 1, 0.3, 1) forwards`}
       >
-        Continue
+        {t('common.continue')}
       </Button>
     </Box>
   );

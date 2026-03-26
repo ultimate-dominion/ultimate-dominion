@@ -1,21 +1,23 @@
 import { IconButton, Tooltip } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { FaDiscord } from 'react-icons/fa';
 
 const DISCORD_URL = 'https://discord.gg/sSkQW36Fvj';
 
 /** Floating Discord button — positioned above the FeedbackButton quill */
 export const DiscordButton = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   return (
     <Tooltip
       bg="#2A2218"
       color="#C4B89E"
       fontFamily="Cinzel, serif"
       fontSize="xs"
-      label="Join Discord"
+      label={t('discord.join')}
       placement="right"
     >
       <IconButton
-        aria-label="Join Discord"
+        aria-label={t('discord.join')}
         as="a"
         bg="linear-gradient(135deg, #3A2E1A 0%, #2A2218 100%)"
         border="1px solid #C87A2A"

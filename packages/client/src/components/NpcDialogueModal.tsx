@@ -9,6 +9,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -37,6 +38,7 @@ export const NpcDialogueModal = ({
   } = useMUD();
   const { renderError } = useToast();
   const talkTx = useTransaction({ actionName: 'talk to NPC', silent: true });
+  const { t } = useTranslation('ui');
 
   const [lineIndex, setLineIndex] = useState(0);
 
@@ -56,7 +58,7 @@ export const NpcDialogueModal = ({
     if (!isOpen || !character) return;
 
     talkTx.execute(() => talkToNpc(character.characterId, npcId)).catch((err) => {
-      renderError('Failed to start dialogue.');
+      renderError(t('npc.dialogueFailed'));
       console.error('[NpcDialogue] talkToNpc error:', err);
     });
     // Only fire on open
@@ -107,7 +109,7 @@ export const NpcDialogueModal = ({
               variant="ghost"
               _hover={{ bg: '#1A1612' }}
             >
-              {isLastLine ? 'Farewell' : 'Next'}
+              {isLastLine ? t('npc.farewell') : t('npc.next')}
             </Button>
           </VStack>
         </ModalBody>

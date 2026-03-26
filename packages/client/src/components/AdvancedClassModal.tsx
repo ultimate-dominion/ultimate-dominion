@@ -10,6 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { ShareButton } from './ShareButton';
@@ -227,6 +228,7 @@ export const AdvancedClassModal = ({
   characterId,
   onClassSelected,
 }: AdvancedClassModalProps): JSX.Element | null => {
+  const { t } = useTranslation('ui');
   const {
     systemCalls: { selectAdvancedClass },
   } = useMUD();
@@ -336,7 +338,7 @@ export const AdvancedClassModal = ({
               opacity={0}
               animation={`${subtitleFade} 0.4s 2s ease-out forwards`}
             >
-              Not now
+              {t('advancedClass.notNow')}
             </Button>
           </Box>
 
@@ -352,7 +354,7 @@ export const AdvancedClassModal = ({
             opacity={0}
             animation={`${titleReveal} 1s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards`}
           >
-            Choose Your Path
+            {t('advancedClass.chooseYourPath')}
           </Text>
 
           {/* Shimmer divider */}
@@ -379,7 +381,7 @@ export const AdvancedClassModal = ({
             opacity={0}
             animation={`${subtitleFade} 0.6s 1s cubic-bezier(0.16, 1, 0.3, 1) forwards`}
           >
-            This decision is permanent. Choose wisely.
+            {t('advancedClass.permanent')}
           </Text>
 
           {/* Class Grid */}
@@ -545,7 +547,7 @@ export const AdvancedClassModal = ({
                       color="#8A7E6A"
                       _hover={{ color: selectedColor, textDecoration: 'underline' }}
                     >
-                      Learn more
+                      {t('advancedClass.learnMore')}
                     </Link>
                   </HStack>
                   <Text
@@ -566,7 +568,7 @@ export const AdvancedClassModal = ({
                     border="1px solid #3A3228"
                   >
                     <Text fontSize="2xs" color="#8A7E6A" textTransform="uppercase" letterSpacing="0.1em" mb={1}>
-                      Bonuses
+                      {t('advancedClass.bonuses')}
                     </Text>
                     <Text fontSize="sm" color="#5A8A3E" fontWeight={600} fontFamily="mono">
                       {selectedInfo.flatBonuses}
@@ -579,7 +581,7 @@ export const AdvancedClassModal = ({
                     border="1px solid #3A3228"
                   >
                     <Text fontSize="2xs" color="#8A7E6A" textTransform="uppercase" letterSpacing="0.1em" mb={1}>
-                      Multipliers
+                      {t('advancedClass.multipliers')}
                     </Text>
                     <Text fontSize="sm" color="#D4A54A" fontWeight={600} fontFamily="mono">
                       {selectedInfo.multipliers}
@@ -592,7 +594,7 @@ export const AdvancedClassModal = ({
                     border="1px solid #3A3228"
                   >
                     <Text fontSize="2xs" color="#8A7E6A" textTransform="uppercase" letterSpacing="0.1em" mb={1}>
-                      Class Spell
+                      {t('advancedClass.classSpell')}
                     </Text>
                     <Text fontSize="sm" color="#4A9FC5" fontWeight={600} fontFamily="mono">
                       {selectedInfo.spell}
@@ -614,7 +616,7 @@ export const AdvancedClassModal = ({
                   textTransform="uppercase"
                   fontSize="sm"
                 >
-                  Become a {selectedInfo.name}
+                  {t('advancedClass.become', { name: selectedInfo.name })}
                 </Button>
               </VStack>
             </Box>
@@ -731,8 +733,7 @@ export const AdvancedClassModal = ({
             animation={`${fadeUp} 0.8s 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards`}
             textShadow="0 1px 3px rgba(0,0,0,0.4)"
           >
-            You have walked the Dark Cave and survived.{'\n'}
-            Your path is chosen. The world will remember.
+            {t('advancedClass.chosenMessage')}
           </Text>
 
           {/* Actions */}
@@ -746,10 +747,10 @@ export const AdvancedClassModal = ({
               textTransform="uppercase"
               fontSize="sm"
             >
-              Continue
+              {t('common.continue')}
             </Button>
             <ShareButton
-              text={`Became a ${confirmedInfo.name} in Ultimate Dominion. Level 10 achieved.`}
+              text={t('advancedClass.shareText', { name: confirmedInfo.name })}
               shareParams={{
                 type: 'class',
                 class: confirmedInfo.name,

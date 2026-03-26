@@ -10,6 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { useAllowance } from '../contexts/AllowanceContext';
@@ -55,6 +56,7 @@ export const MarketplaceRow = ({
   lowestPrice: string;
   orderType: OrderType;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const navigate = useNavigate();
   const { authMethod } = useAuth();
   const { character, refreshCharacter } = useCharacter();
@@ -67,13 +69,13 @@ export const MarketplaceRow = ({
   const buyTx = useTransaction({
     actionName: 'buy item',
     showSuccessToast: true,
-    successMessage: `Bought ${removeEmoji(name)}!`,
+    successMessage: t('marketplace.bought', { name: removeEmoji(name) }),
   });
 
   const acceptTx = useTransaction({
     actionName: 'accept offer',
     showSuccessToast: true,
-    successMessage: `Sold ${removeEmoji(name)}!`,
+    successMessage: t('marketplace.sold', { name: removeEmoji(name) }),
   });
 
   const rarityColor = item.rarity !== undefined ? RARITY_COLORS[item.rarity] : undefined;
@@ -223,7 +225,7 @@ export const MarketplaceRow = ({
           >
             {Number(lowestPrice) > 0
               ? `${Number(lowestPrice).toLocaleString()} $GOLD`
-              : 'No listings'}
+              : t('marketplace.noListings')}
           </Text>
         </VStack>
       </Flex>
@@ -272,7 +274,7 @@ export const MarketplaceRow = ({
             <Tooltip
               hasArrow
               isDisabled={!insufficientGold}
-              label="Not enough $GOLD"
+              label={t('marketplace.notEnoughGold')}
               placement="top"
             >
               <Button

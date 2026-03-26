@@ -18,6 +18,7 @@ import {
 import { useMemo, useState } from 'react';
 import { IoSearch } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -64,14 +65,14 @@ function getPlayerStatus(character: Character): {
     !(character as any).worldEncounter &&
     character.inBattle
   ) {
-    return { label: 'In Battle', color: '#B83A2A' };
+    return { label: 'roster.inBattle', color: '#B83A2A' };
   }
   if ((character as any).worldEncounter) {
-    return { label: 'Shopping', color: '#EFD31C' };
+    return { label: 'roster.shopping', color: '#EFD31C' };
   }
   const cooldownTimer = character.pvpCooldownTimer;
   if (cooldownTimer && Number(cooldownTimer) + 30 > Date.now() / 1000) {
-    return { label: 'Cooldown', color: '#8A7E6A' };
+    return { label: 'roster.cooldown', color: '#8A7E6A' };
   }
   return null;
 }
@@ -85,6 +86,7 @@ function isSafeZone(x: number, y: number): boolean {
 export const OnlineLink = (): JSX.Element => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { allCharacters } = useMap();
+  const { t } = useTranslation('ui');
 
   const spawnedPlayers = useMemo(
     () => allCharacters.filter((c) => c.isSpawned),
@@ -150,7 +152,7 @@ export const OnlineLink = (): JSX.Element => {
             },
           }}
         >
-          {count} Player{count !== 1 ? 's' : ''} Online
+          {count === 1 ? t('roster.playerOnline', { count }) : t('roster.playersOnline', { count })}
         </Text>
       </HStack>
 
@@ -177,6 +179,7 @@ const OnlineRosterDrawer = ({
   const [filter, setFilter] = useState<'all' | 'str' | 'agi' | 'int'>('all');
   const [search, setSearch] = useState('');
   const { delegatorAddress } = useMUD();
+  const { t } = useTranslation('ui');
 
   // Sort by level desc, keep current player in list
   const sortedPlayers = useMemo(() => {
@@ -267,7 +270,7 @@ const OnlineRosterDrawer = ({
                 letterSpacing="2.5px"
                 textTransform="uppercase"
               >
-                Online
+                {t('roster.online')}
               </Text>
               <HStack
                 spacing={1.5}
@@ -364,7 +367,7 @@ const OnlineRosterDrawer = ({
               textAlign="center"
               py={8}
             >
-              No players found
+              {t('roster.noPlayersFound')}
             </Text>
           )}
         </DrawerBody>
@@ -381,7 +384,7 @@ const OnlineRosterDrawer = ({
               <IoSearch color="#5A5248" size={14} />
             </InputLeftElement>
             <Input
-              placeholder="Search players..."
+              placeholder={t('roster.searchPlayers')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               bg="#14120F"
@@ -413,6 +416,7 @@ const GroupedPlayerList = ({
   getRank: (id: string) => number;
   isCurrentPlayer: (c: Character) => boolean;
 }) => {
+  const { t } = useTranslation('ui');
   const groups = useMemo(() => {
     if (mode === 'dense') {
       // Group by class
@@ -459,8 +463,8 @@ const GroupedPlayerList = ({
                 letterSpacing="1.5px"
                 whiteSpace="nowrap"
               >
-                {isTileGroup ? `Tile ${label}` : label}
-                {safe && ' \u00b7 Safe'}
+                {isTileGroup ? t('roster.tile', { label }) : label}
+                {safe && ` \u00b7 ${t('roster.safe')}`}
                 {` (${list.length})`}
               </Text>
               <Box flex={1} h="1px" bg="rgba(196,184,158,0.08)" />
@@ -495,6 +499,7 @@ const PlayerRow = ({
   isSelf?: boolean;
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
   const status = getPlayerStatus(character);
   const classColor =
     ADVANCED_CLASS_COLORS[character.advancedClass] ?? '#8A7E6A';
@@ -562,7 +567,7 @@ const PlayerRow = ({
               opacity={0.7}
               flexShrink={0}
             >
-              You
+              {t('roster.you')}
             </Text>
           )}
           {status && (
@@ -579,7 +584,7 @@ const PlayerRow = ({
               flexShrink={0}
               lineHeight="1.6"
             >
-              {status.label}
+              {t(status.label)}
             </Text>
           )}
         </HStack>
@@ -600,7 +605,7 @@ const PlayerRow = ({
             {safe && (
               <Text as="span" color="#5A8A3E" opacity={0.7}>
                 {' '}
-                Safe
+                {t('roster.safe')}
               </Text>
             )}
           </Text>
@@ -630,7 +635,7 @@ const PlayerRow = ({
           border="1px solid rgba(200,122,42,0.12)"
           lineHeight="1.5"
         >
-          Lv{character.level.toString()}
+          {t('roster.lv', { level: character.level.toString() })}
         </Text>
         <Text
           fontFamily="mono"
