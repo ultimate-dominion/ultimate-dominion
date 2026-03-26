@@ -105,16 +105,11 @@ const pickWeaponForMonster = (
   return undefined; // caller falls back to first weapon
 };
 
-const REST_FLAVOR = [
-  'The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.',
-  'You sit by the flames and let the heat chase away the cold. Strength returns.',
-  'Embers dance in the dark. The world feels far away. You breathe deep, and heal.',
-  'The fire hisses and pops. For a moment, the dangers beyond feel like a distant memory.',
-  'Sparks drift upward like tiny stars. When you rise, the pain is gone.',
-];
+const REST_FLAVOR_COUNT = 5;
 
 export const TileDetailsPanel = (): JSX.Element => {
   const { t } = useTranslation('ui');
+  const { t: tn } = useTranslation('narrative');
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     isOpen: isSafetyZoneInfoModalOpen,
@@ -234,9 +229,10 @@ export const TileDetailsPanel = (): JSX.Element => {
       return true;
     });
     if (result !== undefined) {
-      renderSuccess(REST_FLAVOR[Math.floor(Math.random() * REST_FLAVOR.length)]);
+      const idx = Math.floor(Math.random() * REST_FLAVOR_COUNT);
+      renderSuccess(tn(`restFlavor.${idx}`));
     }
-  }, [character, rest, restTx, renderSuccess]);
+  }, [character, rest, restTx, renderSuccess, tn]);
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
   const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);

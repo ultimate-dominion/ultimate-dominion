@@ -37,23 +37,10 @@ import { ConsumableQuickUse } from './ConsumableQuickUse';
 import { ItemEquipModal } from './ItemEquipModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 
-export const MONSTER_MOVE_MAPPING: Record<string, string> = {
-  '1': 'Razor Claws',      // Dire Rat
-  '2': 'Elemental Burst',  // Fungal Shaman
-  '3': 'Stone Fist',       // Cavern Brute
-  '4': 'Elemental Burst',  // Crystal Elemental
-  '5': 'Crushing Slam',    // Ironhide Troll
-  '6': 'Venomous Bite',    // Phase Spider
-  '7': 'Dark Magic',       // Bonecaster
-  '8': 'Crushing Slam',    // Rock Golem
-  '9': 'Shadow Strike',    // Pale Stalker
-  '10': 'Elemental Burst', // Dusk Drake
-  '11': 'Basilisk Fangs',  // Basilisk (boss)
-};
-
 export const ActionsPanel = (): JSX.Element => {
   const { t } = useTranslation('ui');
   const { t: te } = useTranslation('effects');
+  const { t: tm } = useTranslation('monsters');
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
   const { isSpawned, visibleMonstersOnTile, position } = useMap();
@@ -796,7 +783,7 @@ export const ActionsPanel = (): JSX.Element => {
             const itemName =
               currentBattle?.encounterType === EncounterType.PvE &&
               attack.attackerId !== character?.id
-                ? MONSTER_MOVE_MAPPING[(opponent as Monster).mobId] ?? 'an item'
+                ? tm(`moves.${(opponent as Monster).mobId}`, { defaultValue: 'an item' })
                 : attackItem?.name ?? 'an item';
 
             const possibleStatusEffectAttack = statusEffectActions.find(
