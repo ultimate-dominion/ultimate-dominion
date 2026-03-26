@@ -215,7 +215,7 @@ const CaveTexture = ({ side }: { side: 'left' | 'right' }) => (
 /* ──────────────────────── Zone Title ──────────────────────── */
 
 const ZONE_NAME = 'WINDY PEAKS';
-const SUBTITLE = 'The mountain range above Noctum\'s Wound';
+const SUBTITLE = 'The mountain range above Noctum\'s Marrow';
 
 const ZoneTitle = () => (
   <Box

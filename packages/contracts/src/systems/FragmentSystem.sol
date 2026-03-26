@@ -21,7 +21,7 @@ import {_requireSystemOrAdmin, _isSystemOrAdmin} from "../utils.sol";
 
 /**
  * @title FragmentSystem
- * @notice Manages the "Fragments of the Fallen" lore NFT collection
+ * @notice Manages the "Fragments" lore NFT collection
  * @dev Each fragment is triggered by in-game actions and can be claimed as an NFT
  */
 contract FragmentSystem is System {

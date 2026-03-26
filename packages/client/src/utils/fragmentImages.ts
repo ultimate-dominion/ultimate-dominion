@@ -7,7 +7,7 @@ const FRAGMENT_IMAGES: Record<string, string> = {
   "Betrayer's Truth": '/images/fragments/the-betrayers-truth.webp',
   'The Quartermaster': '/images/fragments/the-quartermaster.webp',
   'The Restless': '/images/fragments/the-restless.webp',
-  'The Wound': '/images/fragments/the-wound.webp',
+  'The Marrow': '/images/fragments/the-wound.webp',
   'Blood Price': '/images/fragments/blood-price.webp',
   'Death of the Death God': '/images/fragments/death-of-the-death-god.webp',
   'Souls That Linger': '/images/fragments/souls-that-linger.webp',

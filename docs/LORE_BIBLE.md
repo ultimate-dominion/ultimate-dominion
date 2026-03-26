@@ -40,10 +40,10 @@ This question drives all content. It is never fully answered. Different eras exp
 The game explores faith without preaching either position:
 
 **Evidence FOR Faith:**
-- Prayer demonstrably slows the world's decay
+- Prayer demonstrably slows the Fraying
 - Temples feel different than other buildings
 - Some miracles happen (rarely, ambiguously)
-- The faithful seem to resist void corruption better
+- The faithful seem to resist Blind corruption better
 
 **Evidence AGAINST Faith:**
 - The gods are proven dead
@@ -81,8 +81,8 @@ Does faith work because the gods aren't fully dead? Or does faith itself have po
 
 ### What Players Don't Know Yet
 
-- They were thrown into the Wound as sacrifices, criminals, or heretics
-- Their memories were taken by the Wound itself (death's domain is broken)
+- They were thrown into the Marrow as sacrifices, criminals, or heretics
+- Their memories were taken by the Marrow itself (death's domain is broken)
 - The cave is where a god died
 - They are not the first - and most don't survive
 
@@ -102,36 +102,36 @@ What is known:
 - They did not die naturally
 - At least one was murdered by the others
 - Their deaths were not simultaneous
-- Each death left a "Wound" in reality
+- Each death left a "Marrow" in reality
 
-### The Wounds
+### The Marrows
 
-Where a god died, reality is damaged. These are the Wounds - places where the rules break down, where the divine corpse still leaks power, where monsters spawn from corrupted essence.
+Where a god died, reality is damaged. These are the Marrows - places where the rules break down, where the divine corpse still leaks power, where monsters spawn from corrupted essence.
 
-The Dark Cave (starting zone) is the Wound of Noctum, god of death. This is why:
+The Dark Cave (starting zone) is the Marrow of Noctum, god of death. This is why:
 - Players wake with no memory (death's domain is broken)
 - Souls linger as monsters instead of passing on
 - The dead don't stay dead properly
 
-### The Decay
+### The Fraying
 
-Without gods maintaining reality, the world is slowly unraveling. This is called "the Decay."
+Without gods maintaining reality, the world is slowly unraveling. This is called "the Fraying."
 
-**Symptoms of Decay:**
+**Symptoms of the Fraying:**
 - Time moves inconsistently in some places
 - The borders between life and death blur
 - Monsters spawn from nothing
 - People forget things that should be unforgettable
-- The void presses in at the edges
+- The Blind presses in at the edges
 
 **The Speed:**
-The Decay is slow - generational. Fast enough to fear, slow enough to deny. This creates the religious tension: believers say faith slows it, cynics say it's natural entropy.
+The Fraying is slow - generational. Fast enough to fear, slow enough to deny. This creates the religious tension: believers say faith slows it, cynics say it's natural entropy.
 
 ---
 
 ## The Pantheon of the Dead
 
-Seven gods once existed. Each is dead. Each left a Wound.
+Seven gods once existed. Each is dead. Each left a Marrow.
 
 ### Auros, the Radiant
 **Domain:** Sun, truth, judgment
@@ -140,7 +140,7 @@ Seven gods once existed. Each is dead. Each left a Wound.
 
 **How They Died:** Murdered by the other six gods. Auros saw a truth that threatened them all and was silenced for it.
 
-**What Remains:** The Eternal Eclipse - a zone where light doesn't function normally. His corpse still radiates, but the light reveals rather than illuminates. People see things they shouldn't.
+**What Remains:** The Pyre - a zone where light doesn't function normally. His corpse still radiates, but the light reveals rather than illuminates. People see things they shouldn't.
 
 **Legacy:** The Covenant claims to follow Auros's light. They don't know he was killed by the gods they also honor.
 
@@ -166,7 +166,7 @@ Seven gods once existed. Each is dead. Each left a Wound.
 
 **How They Died:** Fell in a battle against an enemy so terrible that reality itself forgot what it was. The enemy was erased - but so was the context of Korrath's victory.
 
-**What Remains:** His armor, scattered across the world, still fights. Pieces possess those who wear them. The Battlefield Eternal is his Wound - ghosts still fighting a war no one remembers.
+**What Remains:** His armor, scattered across the world, still fights. Pieces possess those who wear them. The Vigil is his Marrow - ghosts still fighting a war no one remembers.
 
 **Legacy:** The Iron General (Pretender God) wears pieces of Korrath's armor and may be partially possessed by the dead god's will.
 
@@ -179,7 +179,7 @@ Seven gods once existed. Each is dead. Each left a Wound.
 
 **How They Died:** Drowned in her own domain. How does a sea goddess drown? Someone (something?) held her under.
 
-**What Remains:** The seas are haunted. Her dreams leak into reality near coastlines. The Drowned Kingdom is her Wound - an underwater nightmare where her death replays eternally.
+**What Remains:** The seas are haunted. Her dreams leak into reality near coastlines. The Undertow is her Marrow - an underwater nightmare where her death replays eternally.
 
 **Legacy:** The Tide Queen (Pretender God) emerged from Miren's corpse and may be her rage given form.
 
@@ -192,7 +192,7 @@ Seven gods once existed. Each is dead. Each left a Wound.
 
 **How They Died:** Starved. When people stopped believing, stopped gathering, stopped building community - she weakened. The final blow came when her last temple was abandoned.
 
-**What Remains:** Her temples still feel warm, but empty. The Empty Hearth is her Wound - abandoned cities where loneliness is a physical force that kills.
+**What Remains:** Her temples still feel warm, but empty. The Silence is her Marrow - abandoned cities where loneliness is a physical force that kills.
 
 **Legacy:** Thessa's death is used as evidence by both sides. Believers say she died because faith died. Cynics say her death proves gods depend on mortals, not the reverse.
 
@@ -205,9 +205,9 @@ Seven gods once existed. Each is dead. Each left a Wound.
 
 **How They Died:** The first to die. Murdered by Auros before the other deaths began. This broke the cycle of death - souls no longer transition properly.
 
-**What Remains:** The Dark Cave is his Wound. Death doesn't work here. The dead linger. Memories fragment. The living wake with no past.
+**What Remains:** The Dark Cave is his Marrow. Death doesn't work here. The dead linger. Memories fragment. The living wake with no past.
 
-**Legacy:** Players begin in Noctum's Wound. Their amnesia, the undead monsters, the broken afterlife - all stem from his death.
+**Legacy:** Players begin in Noctum's Marrow. Their amnesia, the undead monsters, the broken afterlife - all stem from his death.
 
 ---
 
@@ -233,9 +233,9 @@ Seven gods once existed. Each is dead. Each left a Wound.
 
 ## The World State
 
-### The Wound (Starting Area)
+### The Marrow (Starting Area)
 
-The cave system where players awaken. It is Noctum's Wound - where the god of death died.
+The cave system where players awaken. It is Noctum's Marrow - where the god of death died.
 
 **Physical State:**
 - Dark (obviously), but darkness here has weight
@@ -251,7 +251,7 @@ The cave system where players awaken. It is Noctum's Wound - where the god of de
 
 ### The Company
 
-The organization that controls access to the Wound and maintains information control over the outside world.
+The organization that controls access to the Marrow and maintains information control over the outside world.
 
 **Public Face:** A mining/expedition company extracting valuable resources from dangerous caves.
 
@@ -265,7 +265,7 @@ The organization that controls access to the Wound and maintains information con
 **What They Know:**
 - The full truth about the dead gods
 - Something about the Seventh
-- Why people are really thrown into the Wound
+- Why people are really thrown into the Marrow
 
 ---
 
@@ -277,7 +277,7 @@ The organization that controls access to the Wound and maintains information con
 **Core Belief:** The gods may be dead, but their light remains. Through faith, devotion, and preservation of the old ways, we hold back the darkness. Perhaps the gods can return - or we can become worthy of their legacy.
 
 **They're Right About:**
-- Faith demonstrably slows the Decay
+- Faith demonstrably slows the Fraying
 - Traditions provide stability in chaos
 - Without structure, society collapses
 
@@ -345,7 +345,7 @@ The organization that controls access to the Wound and maintains information con
 
 | Issue | Covenant View | Unbound View |
 |-------|---------------|--------------|
-| The Decay | Faith slows it | Faith is a bandage, not a cure |
+| The Fraying | Faith slows it | Faith is a bandage, not a cure |
 | The gods | Honor their memory | Let them stay dead |
 | Order | Stability prevents chaos | Hierarchy enables tyranny |
 | Power | Earned through devotion | Earned through merit |
@@ -353,14 +353,14 @@ The organization that controls access to the Wound and maintains information con
 **Crossover Potential:**
 - Characters can switch factions based on player influence
 - Leaders from opposing factions can show mutual respect
-- Shared enemies (the Void) force temporary alliances
+- Shared enemies (the Blind) force temporary alliances
 - Not all members match their faction's stereotype
 
 ---
 
 ## Core Characters - The Survivors
 
-These characters wake in the Wound like the player - but before the player. They've survived longer. They're mentors, trainers, quest-givers. Players grow alongside them.
+These characters wake in the Marrow like the player - but before the player. They've survived longer. They're mentors, trainers, quest-givers. Players grow alongside them.
 
 ---
 
@@ -391,7 +391,7 @@ He wears practical leather armor, always slightly too big for him (scavenged), w
 - The emotional heart of the survivor group
 
 **Background:**
-Baker's apprentice from a small town. Thrown into the Wound for a debt his father owed. Has been here six months when players arrive. Survived by being useful - organizing supplies, keeping morale up.
+Baker's apprentice from a small town. Thrown into the Marrow for a debt his father owed. Has been here six months when players arrive. Survived by being useful - organizing supplies, keeping morale up.
 
 **Abilities He Teaches:**
 
@@ -455,7 +455,7 @@ Her left ear is missing the top half - clean cut, a blade. She wears dark leathe
 - Guilt she won't name drives her
 
 **Background:**
-Former Covenant Inquisition soldier. Trained killer. She followed orders until she saw what those orders meant - the families dragged away, the innocents burned. She deserted. Has been in the Wound for two years. The longest survivor except Senna.
+Former Covenant Inquisition soldier. Trained killer. She followed orders until she saw what those orders meant - the families dragged away, the innocents burned. She deserted. Has been in the Marrow for two years. The longest survivor except Senna.
 
 **Abilities She Teaches:**
 
@@ -526,7 +526,7 @@ He walks with a slight limp - broken ankle that healed wrong his first month. He
 - Stronger than he looks
 
 **Background:**
-Lowborn acolyte who asked the wrong questions about church doctrine. Thrown into the Wound for heresy - specifically, for asking why the Inquisition burned innocents. Has been here eight months. Survives because he's too valuable to lose.
+Lowborn acolyte who asked the wrong questions about church doctrine. Thrown into the Marrow for heresy - specifically, for asking why the Inquisition burned innocents. Has been here eight months. Survives because he's too valuable to lose.
 
 **Abilities He Teaches:**
 
@@ -600,7 +600,7 @@ She wears dark practical clothes, layered, with many pockets. No visible weapons
 - Dark humor as survival
 
 **Background:**
-This is her second time in the Wound. The first time, she escaped with four companions. They were going to change the world. Three died within a year. The fourth lived long enough to have a family - the Inquisition found them anyway. Senna came back voluntarily. She won't say why.
+This is her second time in the Marrow. The first time, she escaped with four companions. They were going to change the world. Three died within a year. The fourth lived long enough to have a family - the Inquisition found them anyway. Senna came back voluntarily. She won't say why.
 
 **Abilities She Teaches:**
 
@@ -666,7 +666,7 @@ These are the major figures players hear about and eventually meet. They're esta
 
 **Arc:** Mentor → Struggles against corruption → Terrible sacrifice OR lives to see faith validated/broken
 
-**Potential Death Event:** "The Martyrdom of Evren" - Void attacks her temple, players defend
+**Potential Death Event:** "The Martyrdom of Evren" - the Blind attacks her temple, players defend
 
 ---
 
@@ -682,8 +682,8 @@ These are the major figures players hear about and eventually meet. They're esta
 **Personality:**
 - Publicly pious, privately monstrous
 - Knows gods are dead, doesn't care - power is power
-- Responsible for throwing people into the Wound
-- Has a reason: family killed by Void entities (doesn't excuse him)
+- Responsible for throwing people into the Marrow
+- Has a reason: family killed by Blind entities (doesn't excuse him)
 
 **Key Quote:** "Mercy is a luxury we cannot afford. The gods demand purity."
 
@@ -828,7 +828,7 @@ Elderly, bald, serene. Paper-thin skin showing veins beneath. Moves with impossi
 **Physical Description:** [TO BE DEVELOPED]
 
 **What We Know:**
-- Controls information about the Wound
+- Controls information about the Marrow
 - Knows everything
 - Believes his cruelty is necessary
 - The Company predates both factions
@@ -873,15 +873,15 @@ Content is structured in Eras - major shifts that change the world while maintai
 
 ---
 
-### Era 3: The Void Answers
+### Era 3: The Blind Answers
 **Theme:** What fills the absence
 
-- Void entities emerge
+- Blind entities emerge
 - Reality destabilizes
-- Decay accelerates
+- The Fraying accelerates
 - Things older than gods appear
 
-**Endgame:** Push back the Void (temporarily)
+**Endgame:** Push back the Blind (temporarily)
 
 ---
 
@@ -891,7 +891,7 @@ Content is structured in Eras - major shifts that change the world while maintai
 **Factions:**
 - Resurrection Cult: Bring back old gods
 - Ascension Order: Elevate mortals
-- Void Embrace: Become one with nothing
+- Blind Embrace: Become one with nothing
 - Faithkeepers: Belief alone is enough
 
 **Endgame:** Faction warfare determines which philosophy wins
@@ -900,7 +900,7 @@ Content is structured in Eras - major shifts that change the world while maintai
 
 ### Era 5+: The Cycle Continues
 Each era introduces:
-- New void threats
+- New Blind threats
 - New pretenders or ascension attempts
 - New revelations about dead gods
 - New zones
@@ -913,7 +913,7 @@ The core questions remain unanswered.
 ## Zone Lore
 
 ### Dark Cave (Level 1-10)
-**Wound of Noctum**
+**Marrow of Noctum**
 
 **What Players Learn:**
 - Survival basics
@@ -943,7 +943,7 @@ The core questions remain unanswered.
 
 **What's Hinted:**
 - Names of old gods
-- References to "the Wound"
+- References to "the Marrow"
 - Repeating symbols
 
 **Lore Fragments Available:**
@@ -959,7 +959,7 @@ The core questions remain unanswered.
 **What Players Learn:**
 - What actually happened
 - Who the gods were
-- What the Wound is
+- What the Marrow is
 
 **What's Hinted:**
 - What's still coming
@@ -1052,7 +1052,7 @@ NPCs reveal lore through:
 - Outcome inscribed: saved or died, who helped
 
 **"The Martyrdom of Evren" (Era 3 or 4)**
-- Void attacks her temple
+- The Blind attacks her temple
 - Covenant players defend
 - Her death or survival shapes next era
 
@@ -1080,10 +1080,10 @@ These need to be resolved as the lore develops:
 - [ ] Specific quest chains for each core character
 - [ ] Item naming conventions and legendary items
 - [ ] How races work in this world (mostly human? other races?)
-- [ ] The world outside the Wound - what's civilization like?
+- [ ] The world outside the Marrow - what's civilization like?
 - [ ] Calendar system for inscribing dates
 - [ ] Pretender God full designs
-- [ ] Void entity descriptions and motivations
+- [ ] Blind entity descriptions and motivations
 
 ---
 
@@ -1613,7 +1613,7 @@ Lira shows you that magic can be solid. Concentrated will made real. The quest i
 | Mentor | Lira |
 
 *Quest: "The God's Heartbeat"*
-Velith, the Weaver, god of time - her corpse still beats. Once. Per day. In that moment, time stops everywhere except where she died. Lira believes wizards can tap into that moment, extend it, use it. This quest takes you to the edge of Velith's Wound.
+Velith, the Weaver, god of time - her corpse still beats. Once. Per day. In that moment, time stops everywhere except where she died. Lira believes wizards can tap into that moment, extend it, use it. This quest takes you to the edge of Velith's Marrow.
 
 *Lira's Teaching:* "A god of time doesn't die like others. Her death takes forever. Literally. We're all living in her final heartbeat, stretched across eternity. If you listen carefully, you can hear when it pauses. And pause with it."
 
@@ -1684,7 +1684,7 @@ Edric has gathered survivors who believe - in what, they're not sure. But when t
 | Mentor | Edric |
 
 *Quest: "The Unfinished Death"*
-In Noctum's Wound, death doesn't work properly. Souls linger. Edric believes this is a curse - but curses can be leveraged. This quest explores the broken boundary between life and death, and whether pulling someone back is mercy or cruelty.
+In Noctum's Marrow, death doesn't work properly. Souls linger. Edric believes this is a curse - but curses can be leveraged. This quest explores the broken boundary between life and death, and whether pulling someone back is mercy or cruelty.
 
 *Edric's Teaching:* "The god of death is dead. His rules don't apply anymore. Death is... negotiable now. I don't know if that's good or bad. But if someone died before their time, and I can bring them back? I will. Let theologians argue about it later."
 
@@ -1759,7 +1759,7 @@ Lira explains that magical talent can build up like pressure in a pipe. Most peo
 | Mentors | Lira + Brother Aldous (joint) |
 
 *Quest: "The Convergence"*
-The elements don't naturally work together - fire and ice oppose, lightning destabilizes both. But in the moment a god dies, the elements converge in chaos. Lira and Brother Aldous teach you to replicate that moment. The quest involves visiting multiple Wounds and attuning to each.
+The elements don't naturally work together - fire and ice oppose, lightning destabilizes both. But in the moment a god dies, the elements converge in chaos. Lira and Brother Aldous teach you to replicate that moment. The quest involves visiting multiple Marrows and attuning to each.
 
 *Brother Aldous's Teaching:* "Balance doesn't mean peace. It means equal forces in opposition. A storm is perfectly balanced - it's just that the balance is violent."
 *Lira's Teaching:* "I've spent my life separating elements for study. You're going to put them back together. I hope you know what you're doing."

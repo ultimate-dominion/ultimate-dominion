@@ -402,7 +402,7 @@ export const Tavern = (): JSX.Element => (
             textAlign="center"
           >
             &ldquo;They say the gods killed one of their own. Noctum,
-            lord of death. Cut him down and left the wound to fester.
+            lord of death. Cut him down and left the marrow to fester.
             This cave &mdash; it&apos;s not natural. It&apos;s what&apos;s
             left when a god bleeds.&rdquo;
           </Text>

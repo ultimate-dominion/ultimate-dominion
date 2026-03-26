@@ -38,7 +38,7 @@ Each token is deployed idempotently — `PostDeploy` checks `UltimateDominionCon
 | Characters | `"UDCharacters"` | `"UDC"` | `"ipfs://"` |
 | Items | N/A (ERC1155) | N/A | `"ipfs://"` |
 | Badges | `"Ultimate Dominion Badges"` | `"UDB"` | `"ipfs://"` |
-| Fragments | `"Fragments of the Fallen"` | `"FRAGMENT"` | `"ipfs://"` |
+| Fragments | `"Fragments"` | `"FRAGMENT"` | `"ipfs://"` |
 
 ---
 
@@ -162,7 +162,7 @@ Despite using the ERC721 puppet, badges behave like ERC1155 through a composite 
 ### Fragments (ERC721)
 
 **Config field**: `UltimateDominionConfig.fragmentToken`
-**Name**: "Fragments of the Fallen"
+**Name**: "Fragments"
 **Transferable**: Yes (no NoTransferHook)
 
 Lore NFTs triggered by in-game actions (combat kills, tile discovery). 8 fragment types per zone.

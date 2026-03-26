@@ -1,4 +1,4 @@
-# Lore NFT Fragments: "Fragments of the Fallen"
+# Lore NFT Fragments: "Fragments"
 
 This document details the collectible lore NFTs that reveal the story setup in the Dark Cave (Zone 1).
 
@@ -12,7 +12,7 @@ This document details the collectible lore NFTs that reveal the story setup in t
 | 2 | The Quartermaster | Visit shop at (9,9) | — |
 | 3 | The Restless | First monster kill | — |
 | 4 | Souls That Linger | Kill Dark Wisp | 13 |
-| 5 | The Wound | Reach tile (5,5) | — |
+| 5 | The Marrow | Reach tile (5,5) | — |
 | 6 | Death of Death God | Kill Lich Acolyte | 25 |
 | 7 | Betrayer's Truth | Kill Void Whisper | 22 |
 | 8 | Blood Price | First PvP kill | — |
@@ -21,7 +21,7 @@ This document details the collectible lore NFTs that reveal the story setup in t
 
 ## Overview
 
-Players collect **8 lore fragments** through gameplay actions. Each fragment reveals part of the core narrative: the gods are dead, murdered, and the Dark Cave is the Wound left by Noctum's death.
+Players collect **8 lore fragments** through gameplay actions. Each fragment reveals part of the core narrative: the gods are dead, murdered, and the Dark Cave is the Marrow left by Noctum's death.
 
 ### Progression
 
@@ -29,7 +29,7 @@ Players collect **8 lore fragments** through gameplay actions. Each fragment rev
 Fragments 1-3: "Something is wrong here"
        |
        v
-Fragments 4-5: "Death doesn't work / This is a Wound"
+Fragments 4-5: "Death doesn't work / This is a Marrow"
        |
        v
 Fragments 6-7: "Gods were murdered / Noctum died first"
@@ -128,7 +128,7 @@ Fragment 8: "You're becoming part of this place"
 
 ---
 
-### Fragment V: "The Wound"
+### Fragment V: "The Marrow"
 **Trigger:** Reach tile (5,5) - center of cave
 
 > *The air changes.*
@@ -137,13 +137,13 @@ Fragment 8: "You're becoming part of this place"
 >
 > *The walls pulse. Not stone—something else. Something that remembers being alive.*
 >
-> *You understand now. This cave isn't natural. It's a scar. A wound in the world itself, left by something's death. Something vast. Something that should not have been able to die.*
+> *You understand now. This cave isn't natural. It's a scar. A marrow of the world itself, left by something's death. Something vast. Something that should not have been able to die.*
 >
 > *The old prayers call such places cursed. The scholars call them impossible.*
 >
 > *The survivors just call it what it is:*
 >
-> *The Wound.*
+> *The Marrow.*
 >
 > *And you are standing in its heart.*
 
@@ -210,7 +210,7 @@ Fragment 8: "You're becoming part of this place"
 >
 > *You killed them.*
 >
-> *In another place, this would mean something. Guards would come. Justice would follow. Here, in Noctum's Wound, there is no justice. No law. Only survival.*
+> *In another place, this would mean something. Guards would come. Justice would follow. Here, in Noctum's Marrow, there is no justice. No law. Only survival.*
 >
 > *You wait for guilt. For horror. For the weight of what you've done.*
 >
@@ -236,7 +236,7 @@ Fragment 8: "You're becoming part of this place"
 | 2 | The Quartermaster | Talk to Tal | Others have died here, you're not alone |
 | 3 | The Restless | First monster kill | Creatures are compelled, not willing |
 | 4 | Souls That Linger | Kill Dark Wisp | Monsters are trapped human souls |
-| 5 | The Wound | Reach center (5,5) | This place is a divine death-scar |
+| 5 | The Marrow | Reach center (5,5) | This place is a divine death-scar |
 | 6 | Death of the Death God | Kill Lich Acolyte | Noctum (death god) was murdered, death is broken |
 | 7 | The Betrayer's Truth | Kill Void Whisper | Auros killed Noctum, then was killed for a secret truth |
 | 8 | Blood Price | First PvP kill | You're capable of the same violence that made this place |
@@ -245,24 +245,24 @@ Fragment 8: "You're becoming part of this place"
 
 ## UI/UX Design
 
-### Core Concept: Memory Echoes
+### Core Concept: Impressions
 
-When a trigger condition is met, a **Memory Echo** appears on the player's current tile. These are fragments of memory pressed into reality by the Wound, waiting to be absorbed. The echo appears as a glowing, ethereal wisp that pulses with soft light.
+When a trigger condition is met, an **Impression** appears on the player's current tile. These are fragments of memory pressed into reality by the Marrow, waiting to be absorbed. The Impression appears as a glowing, ethereal wisp that pulses with soft light.
 
 ### Interaction Flow
 
 ```
 1. Player is on tile (e.g., 5,5)
 2. Trigger happens (reach tile, kill monster, talk to NPC)
-3. Echo appears on THAT SAME TILE (player is already there)
-4. Player clicks Echo → Modal opens
+3. Impression appears on THAT SAME TILE (player is already there)
+4. Player clicks Impression → Modal opens
 5. Player claims → NFT minted, modal closes
-6. Echo disappears permanently (never shows again for this player)
+6. Impression disappears permanently (never shows again for this player)
 ```
 
 ### Tile Placement Per Trigger
 
-| Trigger | Echo Appears On | When |
+| Trigger | Impression Appears On | When |
 |---------|-----------------|------|
 | First spawn | Tile (0,0) - spawn point | Immediately on first game load |
 | Talk to Tal | Tile (9,9) - Tal's tile | After closing shop UI |
@@ -284,12 +284,12 @@ BEFORE TRIGGER:                    AFTER TRIGGER:
 │    (5,5)        │                │    (5,5)        │
 └─────────────────┘                └─────────────────┘
 
-Player and Echo both on same tile - Echo is clickable
+Player and Impression both on same tile - Impression is clickable
 ```
 
 ### Board Interaction
 
-When echo appears on player's tile:
+When Impression appears on player's tile:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -297,10 +297,10 @@ When echo appears on player's tile:
 │   [ Game Board ]                                            │
 │                                                             │
 │        Player standing on tile                              │
-│        Echo visible on same tile                            │
+│        Impression visible on same tile                      │
 │                                                             │
 │   ┌─────────────────────────────────────┐                   │
-│   │  ✦ Memory Echo     [Click to view]  │  ← Clickable      │
+│   │  ✦ Impression      [Click to view]  │  ← Clickable      │
 │   └─────────────────────────────────────┘    overlay/button │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -308,7 +308,7 @@ When echo appears on player's tile:
 
 ### Claim Modal
 
-When player clicks the echo:
+When player clicks the Impression:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -319,7 +319,7 @@ When player clicks the echo:
 │                    ╚═══════════════════╝                    │
 │                                                             │
 │              ─── Fragment V of VIII ───                     │
-│                   « THE WOUND »                             │
+│                   « THE MARROW »                            │
 │                                                             │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │  The air changes.                                     │  │
@@ -336,13 +336,13 @@ When player clicks the echo:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-After claim → Modal closes, echo gone forever.
+After claim → Modal closes, Impression gone forever.
 
 ---
 
 ### Character Page: Fragment Collection
 
-Add a "Fragments of the Fallen" section to the character page:
+Add a "Fragments" section to the character page:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -360,7 +360,7 @@ Add a "Fragments of the Fallen" section to the character page:
 │  └────────┘ └────────┘ └────────┘                          │
 │                                                             │
 │─────────────────────────────────────────────────────────────│
-│  FRAGMENTS OF THE FALLEN                        5/8        │
+│  FRAGMENTS                                      5/8        │
 │                                                             │
 │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐
 │  │ ✦I  │ │ ✦II │ │✦III │ │ ✦IV │ │ ✦V  │ │ ?VI │ │?VII │ │?VIII│
@@ -427,7 +427,7 @@ Clicking a claimed fragment on the character page:
 | II - The Quartermaster | "Seek the one who counts the living..." |
 | III - The Restless | "Even the smallest creature holds a secret..." |
 | IV - Souls That Linger | "Seek the souls that glow with unnatural light..." |
-| V - The Wound | "The heart of the cave holds secrets..." |
+| V - The Marrow | "The heart of the cave holds secrets..." |
 | VI - Death of the Death God | "Those who served death in life still pray..." |
 | VII - The Betrayer's Truth | "The void remembers what others forget..." |
 | VIII - Blood Price | "Some knowledge comes only through blood..." |
@@ -437,8 +437,8 @@ Clicking a claimed fragment on the character page:
 | State | On Board | On Character Page |
 |-------|----------|-------------------|
 | **Not triggered yet** | Nothing shown | `?` with hint on hover |
-| **Triggered, not claimed** | Echo visible on tile | `?` (still undiscovered until claimed) |
-| **Claimed** | Echo never appears again | `✦` clickable to re-read |
+| **Triggered, not claimed** | Impression visible on tile | `?` (still undiscovered until claimed) |
+| **Claimed** | Impression never appears again | `✦` clickable to re-read |
 
 ---
 

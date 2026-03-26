@@ -189,7 +189,7 @@ contract MapSystem is System {
         if (IWorld(_world()).UD__isValidCharacterId(entityId)) {
             SessionTimer.set(entityId, block.timestamp);
 
-            // Fragment V: The Wound - triggers when reaching center tile (5,5)
+            // Fragment V: The Marrow - triggers when reaching center tile (5,5)
             if (x == FRAGMENT_CENTER_X && y == FRAGMENT_CENTER_Y) {
                 if (!FragmentProgress.getClaimed(entityId, FragmentType.TheWound)) {
                     IWorld(_world()).UD__triggerFragment(entityId, 5, x, y);

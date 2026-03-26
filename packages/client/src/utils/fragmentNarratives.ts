@@ -1,5 +1,5 @@
 /**
- * Fragment Narratives for "Fragments of the Fallen"
+ * Fragment Narratives for "Fragments"
  * 8 collectible lore fragments that reveal the game's narrative
  */
 
@@ -74,14 +74,14 @@ Images flood your mind: A great ritual. Hooded figures around a pit of absolute 
 
 The light begins to fade.
 
-*"Find the Wound at the center. There, you will understand what we became."*
+*"Find the Marrow at the center. There, you will understand what we became."*
 
 And then it's gone, leaving only the echo of ancient sorrow.`,
     hint: 'Defeat a Crystal Elemental.',
   },
   5: {
     id: 5,
-    name: 'The Wound',
+    name: 'The Marrow',
     narrative: `You stand at the center of the cave, and the ground... breathes.
 
 No, not breathes. Pulses. Like a heart. Like something alive beneath your feet.

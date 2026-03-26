@@ -70,7 +70,7 @@ export const FragmentCollection = (): JSX.Element => {
       <PolygonalCard clipPath="none" p={6}>
         <VStack align="stretch" spacing={4}>
           <Text fontWeight="bold" size="lg">
-            Fragments of the Fallen ({claimedCount}/{TOTAL_FRAGMENTS})
+            Fragments ({claimedCount}/{TOTAL_FRAGMENTS})
           </Text>
 
           <Grid
