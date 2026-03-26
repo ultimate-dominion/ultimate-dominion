@@ -371,6 +371,10 @@ export const uriToHttp = (uri: string): string[] => {
       case 'ipfs': {
         const hash = uri.match(/^ipfs:(\/\/)?(.*)$/i)?.[2];
         if (!hash) return [];
+        // Guard: if the "hash" is actually an HTTP URL, use it directly
+        if (hash.startsWith('http://') || hash.startsWith('https://')) {
+          return [hash.startsWith('http://') ? 'https' + hash.substring(4) : hash];
+        }
         return IPFS_GATEWAYS.map(gateway => `${gateway}/ipfs/${hash}`);
       }
       case 'ipns': {
