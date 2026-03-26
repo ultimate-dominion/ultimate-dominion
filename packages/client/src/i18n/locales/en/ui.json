@@ -429,5 +429,116 @@
     "nearbyRanks": "Nearby Ranks",
     "statsTab": "Stats",
     "goldTab": "Gold"
+  },
+  "header": {
+    "openMenu": "Open menu"
+  },
+  "classSymbol": {
+    "intelligence": "Intelligence",
+    "agility": "Agility",
+    "strength": "Strength"
+  },
+  "connectWalletBtn": {
+    "signInWithWallet": "Sign in with Wallet",
+    "wrongNetwork": "Wrong Network"
+  },
+  "delegation": {
+    "settingUp": "Setting up...",
+    "authorizePlay": "Authorize & Play",
+    "fundingSkipped": "Session authorized but funding skipped. You can deposit ETH from the settings menu.",
+    "ready": "Game account ready!"
+  },
+  "consumableQuickUse": {
+    "noConsumables": "No consumables. Visit a shop to stock up."
+  },
+  "gameEventFeed": {
+    "waiting": "Waiting for game events...",
+    "description": "Battles, loot, quests, and new arrivals will appear here",
+    "found": " found "
+  },
+  "shop": {
+    "search": "Search",
+    "stock": "Stock",
+    "price": "Price",
+    "noItems": "No Items",
+    "buy": "Buy",
+    "sell": "Sell",
+    "approve": "Approve",
+    "totalCost": "Total Cost: {{amount}} $GOLD",
+    "totalReceive": "Total to receive: {{amount}} $GOLD",
+    "currentBalance": "Current Balance {{amount}} $GOLD",
+    "boughtItems": "Bought {{amount}}x {{name}}",
+    "soldItems": "Sold {{amount}}x {{name}} for {{gold}} $GOLD",
+    "insufficientStock": "Insufficient stock.",
+    "notEnoughGold": "You don't have enough $GOLD to buy this.",
+    "cantSellEquipped": "You can't sell the last of an equipped item.",
+    "shopkeeperNoGold": "The shopkeeper doesn't have enough gold. Stock replenishes every 12 hours.",
+    "maxItems": "max {{count}} items",
+    "stats": "Stats",
+    "minDamage": "Min Damage:",
+    "maxDamage": "Max Damage:",
+    "restrictions": "Restrictions",
+    "buyAllowanceSuccess": "Allowance was successful! You can now buy {{name}}",
+    "sellAllowanceSuccess": "Allowance was successful! You can now sell {{name}}"
+  },
+  "marketplace": {
+    "bought": "Bought {{name}}!",
+    "sold": "Sold {{name}}!",
+    "notEnoughGold": "Not enough $GOLD",
+    "noListings": "No listings"
+  },
+  "order": {
+    "from": "From: {{name}} ({{address}})",
+    "wantsGoldFor": "Wants {{gold}} $GOLD for {{amount}} {{item}}",
+    "wantsItemFor": "Wants {{amount}} {{item}} for {{gold}} $GOLD",
+    "notEnoughGold": "Not enough gold",
+    "sellItem": "Sell item",
+    "buyItem": "Buy item",
+    "removeListing": "Remove listing"
+  },
+  "createListing": {
+    "title": "Create Listing",
+    "allItems": "All Items",
+    "inventory": "Inventory",
+    "numItems": "# of items:",
+    "filterBy": "Filter by:"
+  },
+  "fragmentCollection": {
+    "title": "Fragments ({{claimed}}/{{total}})",
+    "discover": "Discover lore fragments throughout the Dark Cave",
+    "clickToRead": "Click to read",
+    "clickToClaim": "Click to claim!"
+  },
+  "fragmentRead": {
+    "claimed": "CLAIMED",
+    "fragmentOf": "Fragment {{num}} of {{total}}",
+    "claimedDate": "Claimed {{date}}",
+    "tokenId": "Token #{{id}}"
+  },
+  "fragmentChain": {
+    "title": "Fragment Chains ({{completed}}/{{total}})",
+    "complete": "Complete",
+    "step": "Step {{current}}/{{total}}"
+  },
+  "loot": {
+    "title": "Looted Items:"
+  },
+  "leaderboardRow": {
+    "statsSummary": "HP {{hp}} • STR {{str}} • AGI {{agi}} • INT {{int}}"
+  },
+  "mapReveal": {
+    "windingDark": "The Winding Dark"
+  },
+  "advancedClass": {
+    "chooseYourPath": "Choose Your Path",
+    "permanent": "This decision is permanent. Choose wisely.",
+    "learnMore": "Learn more",
+    "bonuses": "Bonuses",
+    "multipliers": "Multipliers",
+    "classSpell": "Class Spell",
+    "become": "Become a {{name}}",
+    "notNow": "Not now",
+    "chosenMessage": "You have walked the Dark Cave and survived.\nYour path is chosen. The world will remember.",
+    "shareText": "Became a {{name}} in Ultimate Dominion. Level 10 achieved."
   }
 }

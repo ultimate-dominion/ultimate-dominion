@@ -15,6 +15,7 @@ import {
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 
 import {
   type ArmorTemplate,
@@ -56,6 +57,7 @@ export const ShopHalf = ({
   shop: Shop;
   orderType: OrderType;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const [entries, setEntries] = useState<
     Array<{
       balance: bigint | null;
@@ -165,7 +167,7 @@ export const ShopHalf = ({
           </InputLeftElement>
           <Input
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search"
+            placeholder={t('shop.search')}
             value={query}
           />
         </InputGroup>
@@ -203,7 +205,7 @@ export const ShopHalf = ({
               w="75px"
             >
               <Text mr={2} size={{ base: '2xs' }}>
-                Stock
+                {t('shop.stock')}
               </Text>
               {sort.sorted === SortOptions.Stock && sort.reversed && (
                 <FaSortAmountUp />
@@ -230,7 +232,7 @@ export const ShopHalf = ({
               w="75px"
             >
               <Text mr={2} size={{ base: '2xs' }}>
-                Price
+                {t('shop.price')}
               </Text>
               {sort.sorted === SortOptions.Price && sort.reversed && (
                 <FaSortAmountUp />
@@ -266,7 +268,7 @@ export const ShopHalf = ({
             );
           })
         ) : (
-          <Text mt={4}>No Items</Text>
+          <Text mt={4}>{t('shop.noItems')}</Text>
         )}
       </VStack>
       <Spacer />

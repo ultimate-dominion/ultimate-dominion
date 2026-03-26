@@ -22,6 +22,7 @@ import { useCallback, useMemo } from 'react';
 import { IoMdMenu } from 'react-icons/io';
 import { IoSettingsOutline } from 'react-icons/io5';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { SoundToggle } from './SoundToggle';
@@ -51,6 +52,7 @@ type NavItem = {
 };
 
 export const Header = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -95,38 +97,38 @@ export const Header = (): JSX.Element => {
     if (!character?.id) return [];
     const items: NavItem[] = [
       {
-        label: 'Game',
+        label: t('nav.game'),
         path: GAME_BOARD_PATH,
         isActive: (p: string) => p === GAME_BOARD_PATH,
       },
       {
-        label: 'Character',
+        label: t('nav.character'),
         path: `${CHARACTERS_PATH}/${character.id}`,
         isActive: (p: string) => p.startsWith(CHARACTERS_PATH),
       },
       {
-        label: 'Marketplace',
+        label: t('nav.marketplace'),
         path: MARKETPLACE_PATH,
         isActive: (p: string) => p.startsWith(MARKETPLACE_PATH),
       },
       ...(SHOW_Z2
-        ? [{ label: 'Guild', path: GUILD_PATH, isActive: (p: string) => p === GUILD_PATH }]
+        ? [{ label: t('nav.guild'), path: GUILD_PATH, isActive: (p: string) => p === GUILD_PATH }]
         : []),
       {
-        label: 'Leaderboard',
+        label: t('nav.leaderboard'),
         path: LEADERBOARD_PATH,
         isActive: (p: string) => p === LEADERBOARD_PATH,
       },
     ];
     if (inQueue) {
       items.push({
-        label: `Queue (#${queuePosition})`,
+        label: t('queue.position', { position: queuePosition }),
         path: WAITING_ROOM_PATH,
         isActive: (p: string) => p === WAITING_ROOM_PATH,
       });
     }
     return items;
-  }, [character?.id, inQueue, queuePosition]);
+  }, [character?.id, inQueue, queuePosition, t]);
 
   const handleDrawerNav = useCallback(
     async (to: string) => {
@@ -150,7 +152,7 @@ export const Header = (): JSX.Element => {
         textTransform="uppercase"
         w="100%"
       >
-        BETA — Test World
+        {t('beta.banner')}
       </Box>
     )}
     <Grid
@@ -215,7 +217,7 @@ export const Header = (): JSX.Element => {
                 transition="color 0.2s ease, border-color 0.2s ease"
                 _hover={{ color: '#C4B89E' }}
               >
-                Guide
+                {t('nav.guide')}
               </Box>
               <Link
                 borderBottom="2px solid transparent"
@@ -231,7 +233,7 @@ export const Header = (): JSX.Element => {
                 transition="color 0.2s ease"
                 _hover={{ color: '#C4B89E', textDecoration: 'none' }}
               >
-                Blog
+                {t('nav.blog')}
               </Link>
               <Link
                 borderBottom="2px solid transparent"
@@ -247,7 +249,7 @@ export const Header = (): JSX.Element => {
                 transition="color 0.2s ease"
                 _hover={{ color: '#C4B89E', textDecoration: 'none' }}
               >
-                Tavern
+                {t('nav.tavern')}
               </Link>
             </HStack>
           )}
@@ -270,7 +272,7 @@ export const Header = (): JSX.Element => {
             <LanguageSwitcher />
             {pathname !== HOME_PATH && (
               <IconButton
-                aria-label="Settings"
+                aria-label={t('nav.settings')}
                 color="#8A7E6A"
                 display={{ base: 'none', lg: 'flex' }}
                 icon={<IoSettingsOutline size={20} />}
@@ -291,7 +293,7 @@ export const Header = (): JSX.Element => {
         textAlign="right"
       >
         <Button
-          aria-label="Open menu"
+          aria-label={t('header.openMenu')}
           backgroundColor="#24201A"
           onClick={onOpen}
           p={3}
@@ -304,7 +306,7 @@ export const Header = (): JSX.Element => {
           <DrawerOverlay />
           <DrawerContent bg="#1C1814" color="#E8DCC8">
             <DrawerCloseButton />
-            <DrawerHeader color="#D4A54A">Menu</DrawerHeader>
+            <DrawerHeader color="#D4A54A">{t('nav.menu')}</DrawerHeader>
 
             <DrawerBody>
               <Stack direction="column" spacing={4}>
@@ -342,7 +344,7 @@ export const Header = (): JSX.Element => {
                       textTransform="uppercase"
                       _hover={{ color: '#C4B89E' }}
                     >
-                      Guide
+                      {t('nav.guide')}
                     </Text>
                     <Link
                       alignSelf="start"
@@ -355,7 +357,7 @@ export const Header = (): JSX.Element => {
                       textTransform="uppercase"
                       _hover={{ color: '#C4B89E', textDecoration: 'none' }}
                     >
-                      Blog
+                      {t('nav.blog')}
                     </Link>
                     <Link
                       alignSelf="start"
@@ -368,7 +370,7 @@ export const Header = (): JSX.Element => {
                       textTransform="uppercase"
                       _hover={{ color: '#C4B89E', textDecoration: 'none' }}
                     >
-                      Tavern
+                      {t('nav.tavern')}
                     </Link>
                   </Stack>
                 </Box>
@@ -387,7 +389,7 @@ export const Header = (): JSX.Element => {
                     textAlign="left"
                     _hover={{ color: '#C4B89E' }}
                   >
-                    Settings
+                    {t('nav.settings')}
                   </Text>
                 )}
                 <Link
@@ -397,10 +399,10 @@ export const Header = (): JSX.Element => {
                   href="https://www.ultimatedominion.com/"
                   isExternal
                 >
-                  About
+                  {t('nav.about')}
                 </Link>
                 <HStack spacing={2} mt={2}>
-                  <Text color="#8A7E6A" fontSize="sm">Sound</Text>
+                  <Text color="#8A7E6A" fontSize="sm">{t('nav.sound')}</Text>
                   <SoundToggle />
                 </HStack>
                 <HStack spacing={2} mt={2}>
@@ -422,7 +424,7 @@ export const Header = (): JSX.Element => {
                   href="https://ultimatedominion.com/terms"
                   isExternal
                 >
-                  Terms
+                  {t('nav.terms')}
                 </Link>
                 <Link
                   color="#8A7E6A"
@@ -430,7 +432,7 @@ export const Header = (): JSX.Element => {
                   href="https://ultimatedominion.com/privacy"
                   isExternal
                 >
-                  Privacy
+                  {t('nav.privacy')}
                 </Link>
                 <Link
                   color="#8A7E6A"
@@ -438,7 +440,7 @@ export const Header = (): JSX.Element => {
                   href="https://www.ultimatedominion.com/"
                   isExternal
                 >
-                  About
+                  {t('nav.about')}
                 </Link>
               </Stack>
             </DrawerFooter>
