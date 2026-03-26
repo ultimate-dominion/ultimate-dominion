@@ -30,7 +30,6 @@ import {
   BATTLE_OUTCOME_SEEN_KEY,
   SLOT_ORDER_KEY_PREFIX,
   STATUS_EFFECT_NAME_MAPPING,
-  STATUS_EFFECT_DESCRIPTION_MAPPING,
 } from '../utils/constants';
 import { getItemImage } from '../utils/itemImages';
 import { etherToFixedNumber, removeEmoji } from '../utils/helpers';
@@ -54,6 +53,7 @@ export const MONSTER_MOVE_MAPPING: Record<string, string> = {
 
 export const ActionsPanel = (): JSX.Element => {
   const { t } = useTranslation('ui');
+  const { t: te } = useTranslation('effects');
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
   const { isSpawned, visibleMonstersOnTile, position } = useMap();
@@ -968,16 +968,12 @@ export const ActionsPanel = (): JSX.Element => {
                       {affectedText}
                     </Text>
                   </Text>
-                  {STATUS_EFFECT_DESCRIPTION_MAPPING[
-                    possibleStatusEffectAttack.name
-                  ] && (
+                  {te(`descriptions.${possibleStatusEffectAttack.name}`, { defaultValue: '' }) && (
                     <Text
                       size={{ base: '2xs', sm: '2xs', lg: 'xs' }}
                       color={effectColor}
                     >
-                      {STATUS_EFFECT_DESCRIPTION_MAPPING[
-                        possibleStatusEffectAttack.name
-                      ]}
+                      {te(`descriptions.${possibleStatusEffectAttack.name}`)}
                     </Text>
                   )}
                 </Box>
@@ -993,14 +989,14 @@ export const ActionsPanel = (): JSX.Element => {
                   ) : 'you'}
                   .
                   {effectNames[0] &&
-                    STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]] && (
+                    te(`descriptions.${effectNames[0]}`, { defaultValue: '' }) && (
                       <Text
                         as="span"
                         color="#D08040"
                       >
                         {' '}
-                        {effectNames[0]}.{' '}
-                        {STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]]}
+                        {te(`names.${effectNames[0]}`)}.{' '}
+                        {te(`descriptions.${effectNames[0]}`)}
                       </Text>
                     )}
                 </Text>

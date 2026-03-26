@@ -57,40 +57,44 @@ const SectionLabel = ({ children }: { children: string }) => (
   </Text>
 );
 
-const ClassNav = ({ currentSlug }: { currentSlug: string }) => (
-  <HStack
-    flexWrap="wrap"
-    justify="center"
-    spacing={0}
-    gap={2}
-  >
-    {CLASS_DATA.map(c => (
-      <Link
-        key={c.slug}
-        as={RouterLink}
-        to={`${GUIDE_PATH}/classes/${c.slug}`}
-        color={c.slug === currentSlug ? '#E8DCC8' : '#8A7E6A'}
-        bg={c.slug === currentSlug ? 'rgba(200,122,42,0.12)' : 'transparent'}
-        border="1px solid"
-        borderColor={c.slug === currentSlug ? 'rgba(200,122,42,0.3)' : 'rgba(58,50,40,0.3)'}
-        borderRadius="sm"
-        fontSize="13px"
-        fontWeight={c.slug === currentSlug ? 600 : 400}
-        px={3}
-        py={1}
-        _hover={{ color: '#E8DCC8', borderColor: 'rgba(200,122,42,0.4)', textDecoration: 'none' }}
-        transition="all 0.2s"
-      >
-        {c.name}
-      </Link>
-    ))}
-  </HStack>
-);
+const ClassNav = ({ currentSlug }: { currentSlug: string }) => {
+  const { t } = useTranslation('classes');
+  return (
+    <HStack
+      flexWrap="wrap"
+      justify="center"
+      spacing={0}
+      gap={2}
+    >
+      {CLASS_DATA.map(c => (
+        <Link
+          key={c.slug}
+          as={RouterLink}
+          to={`${GUIDE_PATH}/classes/${c.slug}`}
+          color={c.slug === currentSlug ? '#E8DCC8' : '#8A7E6A'}
+          bg={c.slug === currentSlug ? 'rgba(200,122,42,0.12)' : 'transparent'}
+          border="1px solid"
+          borderColor={c.slug === currentSlug ? 'rgba(200,122,42,0.3)' : 'rgba(58,50,40,0.3)'}
+          borderRadius="sm"
+          fontSize="13px"
+          fontWeight={c.slug === currentSlug ? 600 : 400}
+          px={3}
+          py={1}
+          _hover={{ color: '#E8DCC8', borderColor: 'rgba(200,122,42,0.4)', textDecoration: 'none' }}
+          transition="all 0.2s"
+        >
+          {t(`${c.slug}.name`)}
+        </Link>
+      ))}
+    </HStack>
+  );
+};
 
 /* ────────────────────────── Page ────────────────────────── */
 
 export const ClassPage = (): JSX.Element => {
   const { t } = useTranslation('pages');
+  const { t: tc } = useTranslation('classes');
   const { className } = useParams<{ className: string }>();
   const classData = className ? getClassBySlug(className) : undefined;
 
@@ -117,7 +121,7 @@ export const ClassPage = (): JSX.Element => {
       }}
     >
       <Helmet>
-        <title>{t('classPage.metaTitle', { name: classData.name })}</title>
+        <title>{t('classPage.metaTitle', { name: tc(`${classData.slug}.name`) })}</title>
       </Helmet>
 
       {/* Class-colored radial glow */}
@@ -174,7 +178,7 @@ export const ClassPage = (): JSX.Element => {
             >
               <Image
                 src={classData.image}
-                alt={classData.name}
+                alt={tc(`${classData.slug}.name`)}
                 maxH={{ base: '200px', md: '280px' }}
                 objectFit="cover"
               />
@@ -189,7 +193,7 @@ export const ClassPage = (): JSX.Element => {
             letterSpacing="0.4em"
             textTransform="uppercase"
           >
-            {t('classPage.archetypeClass', { archetype: classData.archetype })}
+            {t('classPage.archetypeClass', { archetype: tc(`${classData.slug}.archetype`) })}
           </Text>
 
           <Heading
@@ -200,7 +204,7 @@ export const ClassPage = (): JSX.Element => {
             letterSpacing="0.06em"
             textAlign="center"
           >
-            {classData.name}
+            {tc(`${classData.slug}.name`)}
           </Heading>
 
           <Text
@@ -211,7 +215,7 @@ export const ClassPage = (): JSX.Element => {
             maxW="600px"
             textAlign="center"
           >
-            {classData.description}
+            {tc(`${classData.slug}.description`)}
           </Text>
         </VStack>
 
@@ -227,7 +231,7 @@ export const ClassPage = (): JSX.Element => {
             fontStyle="italic"
             lineHeight="2"
           >
-            &ldquo;{classData.lore}&rdquo;
+            &ldquo;{tc(`${classData.slug}.lore`)}&rdquo;
           </Text>
         </VStack>
 
@@ -252,7 +256,7 @@ export const ClassPage = (): JSX.Element => {
                 <HStack justify="space-between" w="100%">
                   <Text color="#8A7E6A" fontSize="14px">{t('classPage.flatBonuses')}</Text>
                   <Text color="#4A8B4A" fontFamily="monospace" fontSize="14px" fontWeight={700}>
-                    {classData.flatBonuses}
+                    {tc(`${classData.slug}.flatBonuses`)}
                   </Text>
                 </HStack>
                 <Box bg="rgba(58,50,40,0.3)" h="1px" w="100%" />
@@ -282,10 +286,10 @@ export const ClassPage = (): JSX.Element => {
                   fontSize={{ base: '18px', sm: '20px' }}
                   fontWeight={600}
                 >
-                  {classData.spellName}
+                  {tc(`${classData.slug}.spellName`)}
                 </Text>
                 <Text color="#C4B89E" fontSize="15px" lineHeight="1.7">
-                  {classData.spellDesc}
+                  {tc(`${classData.slug}.spellDesc`)}
                 </Text>
               </VStack>
               <Box bg="rgba(58,50,40,0.3)" h="1px" w="100%" />
@@ -300,7 +304,7 @@ export const ClassPage = (): JSX.Element => {
         <VStack align="flex-start" mb={{ base: 8, md: 10 }} spacing={3} w="100%">
           <SectionLabel>{t('classPage.sectionPlaystyle')}</SectionLabel>
           <Text color="#C4B89E" fontSize={{ base: '15px', sm: '16px' }} lineHeight="2">
-            {classData.playstyle}
+            {tc(`${classData.slug}.playstyle`)}
           </Text>
         </VStack>
 
@@ -327,7 +331,7 @@ export const ClassPage = (): JSX.Element => {
               >
                 {t('classPage.sectionStrengths')}
               </Text>
-              {classData.strengths.map((s, i) => (
+              {(tc(`${classData.slug}.strengths`, { returnObjects: true }) as string[]).map((s, i) => (
                 <HStack key={i} align="flex-start" spacing={3}>
                   <Text color="#4A8B4A" fontSize="12px" mt="2px">+</Text>
                   <Text color="#C4B89E" fontSize="14px" lineHeight="1.6">{s}</Text>
@@ -351,7 +355,7 @@ export const ClassPage = (): JSX.Element => {
               >
                 {t('classPage.sectionWeaknesses')}
               </Text>
-              {classData.weaknesses.map((w, i) => (
+              {(tc(`${classData.slug}.weaknesses`, { returnObjects: true }) as string[]).map((w, i) => (
                 <HStack key={i} align="flex-start" spacing={3}>
                   <Text color="#8B4040" fontSize="12px" mt="2px">-</Text>
                   <Text color="#C4B89E" fontSize="14px" lineHeight="1.6">{w}</Text>
