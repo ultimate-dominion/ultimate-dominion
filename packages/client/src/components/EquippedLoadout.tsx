@@ -82,59 +82,61 @@ const FilledSlot = ({
   const canClick = onClick && !isInBattle;
 
   return (
-    <Tooltip
-      hasArrow
-      label={`${getItemTooltip(item)}${canClick ? ' — tap to set as #1' : ''}`}
-      placement="top"
-    >
-      <Center
-        animation={rarityAnimation}
-        border="2px solid"
-        borderColor={rarityColor}
-        borderRadius="md"
-        h={SLOT_SIZE}
-        w={SLOT_SIZE}
-        flexShrink={0}
-        cursor={canClick ? 'pointer' : 'default'}
-        onClick={canClick ? onClick : undefined}
-        position="relative"
-        _hover={canClick ? { opacity: 0.8, transform: 'scale(1.05)' } : undefined}
-        transition="transform 0.1s ease, opacity 0.1s ease"
+    <Box>
+      <Tooltip
+        hasArrow
+        label={`${getItemTooltip(item)}${canClick ? ' — tap to set as #1' : ''}`}
+        placement="top"
       >
-        {imageSrc ? (
-          <Image
-            src={imageSrc}
-            alt={removeEmoji(item.name)}
-            boxSize="32px"
-            objectFit="contain"
-          />
-        ) : (
-          <Text fontSize="lg">
-            {item.itemType === ItemType.Consumable
-              ? getConsumableEmoji(removeEmoji(item.name))
-              : getEmoji(item.name)}
-          </Text>
-        )}
-        <Text
-          color="#8A7E6A"
-          fontFamily="mono"
-          fontSize="7px"
-          fontWeight={700}
-          position="absolute"
-          bottom="-1px"
-          right="2px"
-          lineHeight={1}
+        <Center
+          animation={rarityAnimation}
+          border="2px solid"
+          borderColor={rarityColor}
+          borderRadius="md"
+          h={SLOT_SIZE}
+          w={SLOT_SIZE}
+          flexShrink={0}
+          cursor={canClick ? 'pointer' : 'default'}
+          onClick={canClick ? onClick : undefined}
+          position="relative"
+          _hover={canClick ? { opacity: 0.8, transform: 'scale(1.05)' } : undefined}
+          transition="transform 0.1s ease, opacity 0.1s ease"
         >
-          {slotNumber}
-        </Text>
-      </Center>
+          {imageSrc ? (
+            <Image
+              src={imageSrc}
+              alt={removeEmoji(item.name)}
+              boxSize="32px"
+              objectFit="contain"
+            />
+          ) : (
+            <Text fontSize="lg">
+              {item.itemType === ItemType.Consumable
+                ? getConsumableEmoji(removeEmoji(item.name))
+                : getEmoji(item.name)}
+            </Text>
+          )}
+          <Text
+            color="#8A7E6A"
+            fontFamily="mono"
+            fontSize="7px"
+            fontWeight={700}
+            position="absolute"
+            bottom="-1px"
+            right="2px"
+            lineHeight={1}
+          >
+            {slotNumber}
+          </Text>
+        </Center>
+      </Tooltip>
       {characterId && (
         <DurabilityBar
           characterId={characterId}
           itemId={BigInt(item.tokenId)}
         />
       )}
-    </Tooltip>
+    </Box>
   );
 };
 
