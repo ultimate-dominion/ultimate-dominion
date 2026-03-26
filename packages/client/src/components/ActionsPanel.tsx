@@ -622,7 +622,7 @@ export const ActionsPanel = (): JSX.Element => {
                   w="100%"
                 />
               )}
-              <HStack spacing={0} w="100%" flexWrap={{ base: 'wrap', lg: 'nowrap' }}>
+              <HStack spacing={0} w="100%" flexWrap="wrap">
                 {actionItems.map((item, index) => {
                   const icon = getItemImage(removeEmoji(item.name));
                   const matchupData = item.type === 'attack' ? weaponMatchups[item.tokenId] : undefined;
@@ -630,14 +630,8 @@ export const ActionsPanel = (): JSX.Element => {
                   const statType = matchupData?.statType;
                   return (
                     <Button
-                      borderLeft={{
-                        base: index % 2 === 0 ? 'none' : '2px',
-                        lg: index === 0 ? 'none' : '2px',
-                      }}
-                      borderTop={{
-                        base: index >= 2 ? '2px' : 'none',
-                        lg: 'none',
-                      }}
+                      borderLeft={index % 2 === 0 ? 'none' : '2px'}
+                      borderTop={index >= 2 ? '2px' : 'none'}
                       borderRadius={0}
                       borderRight="none"
                       isDisabled={
@@ -648,44 +642,50 @@ export const ActionsPanel = (): JSX.Element => {
                       loadingText=""
                       onClick={() => onAttack(item.tokenId)}
                       ref={getButtonRef(index)}
-                      fontSize={
-                        actionItems.length > 2 ? '2xs' : 'xs'
-                      }
+                      fontSize="xs"
                       size={{ base: 'sm', sm: 'sm', lg: 'md' }}
-                      py={{ base: 5, sm: 4, lg: 'unset' }}
+                      h="auto"
+                      py={{ base: 3, lg: 3 }}
+                      px={{ base: 2, lg: 3 }}
                       variant="outline"
                       bg={matchup === 'strong' ? 'rgba(90,138,62,0.08)' : matchup === 'weak' ? 'rgba(184,92,58,0.08)' : undefined}
-                      w={{ base: '50%', lg: '100%' }}
+                      w="50%"
                     >
-                      <>
-                        {isDesktop && (
-                          <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.6} mr={1}>
-                            [{index + 1}]
+                      <VStack spacing={0} align="center" w="100%">
+                        <HStack spacing={1} justify="center">
+                          {isDesktop && (
+                            <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.5}>
+                              [{index + 1}]
+                            </Text>
+                          )}
+                          {icon ? (
+                            <Image src={icon} boxSize="18px" />
+                          ) : item.type === 'consumable' ? (
+                            <PotionSvg size={3} theme="dark" />
+                          ) : null}
+                          <Text as="span" fontSize="xs" noOfLines={1}>
+                            {removeEmoji(item.name)}
                           </Text>
-                        )}
-                        {icon ? (
-                          <Image src={icon} boxSize="20px" mr={1} />
-                        ) : item.type === 'consumable' ? (
-                          <PotionSvg size={3} theme="dark" mr={1} />
-                        ) : null}
-                        {removeEmoji(item.name)}
-                        {matchup === 'strong' && (
-                          <Text as="span" color="#5A8A3E" fontSize="2xs" ml={1}>▲</Text>
-                        )}
-                        {matchup === 'weak' && (
-                          <Text as="span" color="#B85C3A" fontSize="2xs" ml={1}>▼</Text>
-                        )}
-                        {statType !== undefined && (
-                          <Text as="span" fontSize="2xs" ml={1} color={CLASS_COLORS[statType]} opacity={0.7}>
-                            {STAT_LABELS[statType]}
-                          </Text>
-                        )}
-                        {item.type === 'consumable' && 'balance' in item && (
-                          <Text as="span" fontSize="2xs" ml={1} opacity={0.7}>
-                            (x{item.balance.toString()})
-                          </Text>
-                        )}
-                      </>
+                        </HStack>
+                        <HStack spacing={1} justify="center" mt={0.5}>
+                          {statType !== undefined && (
+                            <Text as="span" fontSize="2xs" color={CLASS_COLORS[statType]} opacity={0.7}>
+                              {STAT_LABELS[statType]}
+                            </Text>
+                          )}
+                          {matchup === 'strong' && (
+                            <Text as="span" color="#5A8A3E" fontSize="2xs">▲</Text>
+                          )}
+                          {matchup === 'weak' && (
+                            <Text as="span" color="#B85C3A" fontSize="2xs">▼</Text>
+                          )}
+                          {item.type === 'consumable' && 'balance' in item && (
+                            <Text as="span" fontSize="2xs" opacity={0.7}>
+                              x{item.balance.toString()}
+                            </Text>
+                          )}
+                        </HStack>
+                      </VStack>
                     </Button>
                   );
                 })}
