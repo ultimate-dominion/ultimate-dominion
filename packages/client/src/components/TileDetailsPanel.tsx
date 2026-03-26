@@ -1531,6 +1531,7 @@ const OpponentRow = ({
           placement="top"
           hasArrow
           isDisabled={encounterType !== EncounterType.PvE || !(opponent as Monster).description}
+          shouldWrapChildren
         >
           <HStack justifyContent="start" spacing={4}>
             {(encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image) && (

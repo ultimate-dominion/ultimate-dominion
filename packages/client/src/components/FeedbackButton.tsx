@@ -46,6 +46,7 @@ export const FeedbackButton = (): JSX.Element => {
       fontSize="xs"
       label="Send Feedback"
       placement="right"
+      shouldWrapChildren
     >
       <IconButton
         aria-label="Send feedback"
