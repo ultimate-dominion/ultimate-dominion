@@ -1527,9 +1527,7 @@ const OpponentRow = ({
         }}
       >
         <Tooltip
-          label={encounterType === EncounterType.PvE && (opponent as Monster).description ? (
-            <Text size="xs" fontStyle="italic" p={1}>{(opponent as Monster).description}</Text>
-          ) : undefined}
+          label={(opponent as Monster).description || ''}
           placement="top"
           hasArrow
           isDisabled={encounterType !== EncounterType.PvE || !(opponent as Monster).description}
