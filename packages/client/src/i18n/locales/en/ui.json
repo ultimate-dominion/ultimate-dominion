@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "game": "Game",
+    "character": "Character",
+    "marketplace": "Marketplace",
+    "guild": "Guild",
+    "leaderboard": "Leaderboard",
+    "guide": "Guide",
+    "blog": "Blog",
+    "tavern": "Tavern",
+    "settings": "Settings",
+    "about": "About",
+    "sound": "Sound",
+    "menu": "Menu",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  },
+  "beta": {
+    "banner": "BETA — Test World"
+  },
+  "queue": {
+    "position": "Queue (#{{position}})"
+  },
+  "language": {
+    "label": "Language"
+  }
+}

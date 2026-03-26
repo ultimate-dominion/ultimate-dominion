@@ -13,7 +13,7 @@ export const globalStyles = css`
   body {
     background: #12100E;
     color: #C4B89E;
-    font-family: 'Cormorant Garamond', 'Inter', Georgia, serif;
+    font-family: 'Cormorant Garamond', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Inter', Georgia, serif;
     font-size: 1.15rem;
   }
 
@@ -446,8 +446,8 @@ const Tooltip = {
 export const theme = extendTheme({
   config: { initialColorMode: 'dark', useSystemColorMode: false, disableTransitionOnChange: false },
   fonts: {
-    body: `'Cormorant Garamond', 'Inter', Georgia, serif`,
-    heading: `'Cinzel', 'Inter', serif`,
+    body: `'Cormorant Garamond', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Inter', Georgia, serif`,
+    heading: `'Cinzel', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Inter', serif`,
     mono: `'Fira Code', monospace`,
   },
   colors: {

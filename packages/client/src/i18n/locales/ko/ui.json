@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "game": "게임",
+    "character": "캐릭터",
+    "marketplace": "거래소",
+    "guild": "길드",
+    "leaderboard": "순위표",
+    "guide": "가이드",
+    "blog": "블로그",
+    "tavern": "선술집",
+    "settings": "설정",
+    "about": "소개",
+    "sound": "소리",
+    "menu": "메뉴",
+    "terms": "이용약관",
+    "privacy": "개인정보"
+  },
+  "beta": {
+    "banner": "베타 — 테스트 월드"
+  },
+  "queue": {
+    "position": "대기열 (#{{position}})"
+  },
+  "language": {
+    "label": "언어"
+  }
+}

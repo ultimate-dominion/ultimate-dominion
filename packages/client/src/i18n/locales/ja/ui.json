@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "game": "ゲーム",
+    "character": "キャラクター",
+    "marketplace": "取引所",
+    "guild": "ギルド",
+    "leaderboard": "ランキング",
+    "guide": "ガイド",
+    "blog": "ブログ",
+    "tavern": "酒場",
+    "settings": "設定",
+    "about": "概要",
+    "sound": "サウンド",
+    "menu": "メニュー",
+    "terms": "利用規約",
+    "privacy": "プライバシー"
+  },
+  "beta": {
+    "banner": "ベータ — テストワールド"
+  },
+  "queue": {
+    "position": "待機列 (#{{position}})"
+  },
+  "language": {
+    "label": "言語"
+  }
+}

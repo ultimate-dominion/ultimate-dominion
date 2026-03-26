@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "game": "游戏",
+    "character": "角色",
+    "marketplace": "交易所",
+    "guild": "公会",
+    "leaderboard": "排行榜",
+    "guide": "指南",
+    "blog": "博客",
+    "tavern": "酒馆",
+    "settings": "设置",
+    "about": "关于",
+    "sound": "音效",
+    "menu": "菜单",
+    "terms": "服务条款",
+    "privacy": "隐私政策"
+  },
+  "beta": {
+    "banner": "测试版 — 测试世界"
+  },
+  "queue": {
+    "position": "排队 (#{{position}})"
+  },
+  "language": {
+    "label": "语言"
+  }
+}
