@@ -38,5 +38,11 @@ optimizer = false
 via_ir = false
 sparse_mode = true
 
+# Script runner profile — optimizer_runs=1 avoids stack-too-deep in EnsureAccess.s.sol
+# Usage: FOUNDRY_PROFILE=script forge script ...
+[profile.script]
+optimizer_runs = 1
+skip = []
+
 [profile.base-mainnet]
 # eth_rpc_url sourced from ETH_RPC_URL env var (set in .env.testnet / .env.mainnet)
