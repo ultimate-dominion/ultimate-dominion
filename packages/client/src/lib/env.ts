@@ -17,6 +17,9 @@ export const IS_BETA = APP_ENV === 'beta';
 export const IS_PRODUCTION = APP_ENV === 'production';
 export const IS_DEV = APP_ENV === 'development';
 
+/** Z2 features: visible on beta + local dev, hidden on production. */
+export const SHOW_Z2 = !IS_PRODUCTION;
+
 /**
  * Validate that a world address is set. The address itself comes from
  * VITE_WORLD_ADDRESS (set on Vercel per environment) — no hardcoded

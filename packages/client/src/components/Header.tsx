@@ -27,7 +27,7 @@ import { SoundToggle } from './SoundToggle';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
-import { IS_BETA } from '../lib/env';
+import { IS_BETA, SHOW_Z2 } from '../lib/env';
 import {
   BLOG_URL,
   CHARACTER_CREATION_PATH,
@@ -108,11 +108,9 @@ export const Header = (): JSX.Element => {
         path: MARKETPLACE_PATH,
         isActive: (p: string) => p.startsWith(MARKETPLACE_PATH),
       },
-      {
-        label: 'Guild',
-        path: GUILD_PATH,
-        isActive: (p: string) => p === GUILD_PATH,
-      },
+      ...(SHOW_Z2
+        ? [{ label: 'Guild', path: GUILD_PATH, isActive: (p: string) => p === GUILD_PATH }]
+        : []),
       {
         label: 'Leaderboard',
         path: LEADERBOARD_PATH,

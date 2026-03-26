@@ -54,6 +54,13 @@ Full manifesto: `packages/client/src/pages/Manifesto.tsx`. Core principles: perm
 - Only commit what was worked on in the current session — don't sweep in unrelated uncommitted changes.
 - Don't push without asking.
 
+### Feature Flow (Beta → Prod)
+- **Features land on `dev` first** (beta testing at beta.ultimatedominion.com).
+- **PR from `dev` to `main`** for production release. `main` has branch protection — no direct push.
+- **Hotfixes**: 1-commit PR directly to `main`, then `sync-dev.yml` picks it up.
+- **Unreleased features** must be gated with `SHOW_Z2` from `packages/client/src/lib/env.ts`.
+- `SHOW_Z2 = !IS_PRODUCTION` — visible on beta + local dev, hidden on prod.
+
 ### Autonomy Rules
 **Do freely** (no confirmation needed):
 - Read files, search the web, run tests, check health endpoints
