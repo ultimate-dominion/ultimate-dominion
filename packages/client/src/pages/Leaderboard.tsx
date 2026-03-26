@@ -22,6 +22,7 @@ import { Helmet } from 'react-helmet-async';
 import { FaSearch, FaSortAmountDown, FaSortAmountUp, FaMedal, FaCrosshairs } from 'react-icons/fa';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
+import { SHOW_Z2 } from '../lib/env';
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
@@ -264,16 +265,18 @@ export const Leaderboard = (): JSX.Element => {
           >
             Race to Max
           </Button>
-          <Button
-            bgColor={tab === 'pvpRankings' ? 'grey500' : undefined}
-            color={tab === 'pvpRankings' ? 'white' : undefined}
-            leftIcon={<FaCrosshairs color={tab === 'pvpRankings' ? '#E85D5D' : undefined} />}
-            onClick={() => setTab('pvpRankings')}
-            size="sm"
-            variant="white"
-          >
-            PvP Rankings
-          </Button>
+          {SHOW_Z2 && (
+            <Button
+              bgColor={tab === 'pvpRankings' ? 'grey500' : undefined}
+              color={tab === 'pvpRankings' ? 'white' : undefined}
+              leftIcon={<FaCrosshairs color={tab === 'pvpRankings' ? '#E85D5D' : undefined} />}
+              onClick={() => setTab('pvpRankings')}
+              size="sm"
+              variant="white"
+            >
+              PvP Rankings
+            </Button>
+          )}
         </HStack>
 
         {tab === 'rankings' && <><Stack
@@ -591,7 +594,7 @@ export const Leaderboard = (): JSX.Element => {
           </VStack>
         )}
 
-        {tab === 'pvpRankings' && (
+        {SHOW_Z2 && tab === 'pvpRankings' && (
           <VStack px={3} py={4} spacing={3} w="100%">
             {pvpSeasonData && (
               <HStack

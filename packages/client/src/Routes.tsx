@@ -1,6 +1,7 @@
 import { Text, VStack } from '@chakra-ui/react';
 import React, { Component, ReactNode, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { SHOW_Z2 } from './lib/env';
 
 // Auto-reload on stale chunk after deploy. If a lazy import fails (old chunk
 // hash no longer exists), reload the page once to get fresh HTML with new hashes.
@@ -140,7 +141,7 @@ const AppRoutes: React.FC = () => {
           <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
           <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
           <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
-          <Route path={GUILD_PATH} element={<Guild />} />
+          {SHOW_Z2 && <Route path={GUILD_PATH} element={<Guild />} />}
           <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
           <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
           <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
