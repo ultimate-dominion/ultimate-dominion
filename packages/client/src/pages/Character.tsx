@@ -357,15 +357,13 @@ export const CharacterPage = (): JSX.Element => {
               </PolygonalCard>
             </GridItem>
           )}
-          {SHOW_Z2 && (
-            <GridItem
-              colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-              colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-              order={{ base: 7, lg: 7 }}
-            >
-              <FragmentCollection />
-            </GridItem>
-          )}
+          <GridItem
+            colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
+            colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
+            order={{ base: 7, lg: 7 }}
+          >
+            <FragmentCollection />
+          </GridItem>
         </Grid>
       ) : (
         <Grid>
