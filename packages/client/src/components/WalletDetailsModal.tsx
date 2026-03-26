@@ -27,6 +27,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
 import { formatEther, parseEther } from 'viem';
 import { useBalance, useWalletClient } from 'wagmi';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -56,6 +57,7 @@ export const WalletDetailsModal = ({
   onClose: () => void;
 }): JSX.Element => {
   const { renderSuccess, renderError } = useToast();
+  const { t } = useTranslation('ui');
   const { data: externalWalletClient } = useWalletClient();
   const { authMethod, isAuthenticated, ownerAddress, signedInEmail, disconnect } = useAuth();
   const {
@@ -111,7 +113,7 @@ export const WalletDetailsModal = ({
     setIsRevokeDialogOpen(false);
     try {
       await handleRevokeDelegation();
-      renderSuccess('Game account has been reset.');
+      renderSuccess(t('wallet.sessionReset'));
     } catch (e) {
       renderError(
         (e as Error)?.message ?? 'Error revoking delegation.',
@@ -141,8 +143,8 @@ export const WalletDetailsModal = ({
       await disconnect();
       renderSuccess(
         authMethod === 'embedded'
-          ? 'Signed out successfully!'
-          : 'Wallet disconnected successfully!',
+          ? t('wallet.signedOutEmbedded')
+          : t('wallet.disconnectedExternal'),
       );
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error disconnecting.', e);
@@ -168,12 +170,12 @@ export const WalletDetailsModal = ({
       }
 
       if (!depositAmount || parseEther(depositAmount) <= 0) {
-        setDepositErrorMessage('Amount must be greater than 0.');
+        setDepositErrorMessage(t('wallet.amountGreaterZero'));
         return;
       }
 
       if (parseEther(depositAmount) > externalWalletBalance.value) {
-        setDepositErrorMessage('Insufficient funds in external wallet.');
+        setDepositErrorMessage(t('wallet.insufficientExternal'));
         return;
       }
 
@@ -187,7 +189,7 @@ export const WalletDetailsModal = ({
 
       setDepositAmount('0');
       await refetch();
-      renderSuccess('Funds deposited successfully!');
+      renderSuccess(t('wallet.depositSuccess'));
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error depositing funds.', e);
     } finally {
@@ -208,12 +210,12 @@ export const WalletDetailsModal = ({
       setIsWithdrawing(true);
 
       if (!withdrawAmount || parseEther(withdrawAmount) <= 0) {
-        setWithdrawErrorMessage('Amount must be greater than 0.');
+        setWithdrawErrorMessage(t('wallet.amountGreaterZero'));
         return;
       }
 
       if (parseEther(withdrawAmount) > parseEther(burnerBalance)) {
-        setWithdrawErrorMessage('Insufficient funds in game account.');
+        setWithdrawErrorMessage(t('wallet.insufficientSession'));
         return;
       }
 
@@ -226,7 +228,7 @@ export const WalletDetailsModal = ({
       });
 
       setWithdrawAmount('0');
-      renderSuccess('Funds withdrawn successfully!');
+      renderSuccess(t('wallet.withdrawSuccess'));
     } catch (e) {
       renderError((e as Error)?.message ?? 'Error withdrawing funds.', e);
     } finally {
@@ -253,7 +255,7 @@ export const WalletDetailsModal = ({
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
-          <ModalHeader>Account</ModalHeader>
+          <ModalHeader>{t('wallet.account')}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} alignItems="start">
@@ -265,7 +267,7 @@ export const WalletDetailsModal = ({
                     letterSpacing="wide"
                     textTransform="uppercase"
                   >
-                    Signed in as
+                    {t('wallet.signedInAs')}
                   </Text>
                   <Text fontSize="sm" fontWeight={500}>
                     {signedInEmail}
@@ -282,7 +284,7 @@ export const WalletDetailsModal = ({
                       letterSpacing="wide"
                       textTransform="uppercase"
                     >
-                      Gold
+                      {t('stats.gold')}
                     </Text>
                   </HStack>
                   <Text color="#D4A54A" fontFamily="mono" fontSize="2xl" fontWeight={700}>
@@ -302,15 +304,15 @@ export const WalletDetailsModal = ({
               size="sm"
               variant="ghost"
             >
-              Sign Out
+              {t('wallet.signOut')}
             </Button>
             {character?.inBattle && (
               <Text color="#C87A2A" fontSize="xs" fontWeight={700}>
-                Cannot sign out during battle.
+                {t('wallet.cannotSignOutBattle')}
               </Text>
             )}
             <Button onClick={onClose} size="sm" variant="ghost">
-              Close
+              {t('common.close')}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -328,7 +330,7 @@ export const WalletDetailsModal = ({
         <ModalContent>
           <PolygonalCard isModal />
           <ModalHeader>
-            {needsFunding ? 'Fund Your Session' : 'Account'}
+            {needsFunding ? t('wallet.fundSession') : t('wallet.account')}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
@@ -337,8 +339,7 @@ export const WalletDetailsModal = ({
                 {/* Prompt when session has no funds */}
                 {needsFunding && (
                   <Text fontSize="sm">
-                    A small ETH deposit is needed to cover gameplay transaction
-                    fees. This stays in your session and can be withdrawn later.
+                    {t('wallet.fundingPrompt')}
                   </Text>
                 )}
 
@@ -353,7 +354,7 @@ export const WalletDetailsModal = ({
                         letterSpacing="wide"
                         textTransform="uppercase"
                       >
-                        Gold
+                        {t('stats.gold')}
                       </Text>
                     </HStack>
                     <Text color="#D4A54A" fontFamily="mono" fontSize="2xl" fontWeight={700}>
@@ -373,7 +374,7 @@ export const WalletDetailsModal = ({
                       letterSpacing="wide"
                       textTransform="uppercase"
                     >
-                      Session Balance
+                      {t('wallet.sessionBalance')}
                     </Text>
                     <Text fontSize="2xl" fontWeight={700}>
                       {formatBalance(burnerBalance)} ETH
@@ -385,7 +386,7 @@ export const WalletDetailsModal = ({
                 <Box>
                   {!needsFunding && (
                     <Text color="#8A7E6A" fontSize="xs" mb={2}>
-                      Add funds
+                      {t('wallet.addFunds')}
                     </Text>
                   )}
                   <FormControl isInvalid={!!depositErrorMessage}>
@@ -398,7 +399,7 @@ export const WalletDetailsModal = ({
                       <Input
                         isDisabled={isDepositing}
                         onChange={e => setDepositAmount(e.target.value)}
-                        placeholder="ETH amount"
+                        placeholder={t('wallet.ethPlaceholder')}
                         type="number"
                         value={depositAmount}
                       />
@@ -407,11 +408,11 @@ export const WalletDetailsModal = ({
                         onClick={onDeposit}
                         size="sm"
                       >
-                        Deposit
+                        {t('wallet.deposit')}
                       </Button>
                     </HStack>
                     <Text color="#8A7E6A" fontSize="xs" mt={1}>
-                      Wallet balance:{' '}
+                      {t('wallet.walletBalance')}{' '}
                       {externalWalletBalance
                         ? formatBalance(externalWalletBalance.value)
                         : '0'}{' '}
@@ -428,13 +429,13 @@ export const WalletDetailsModal = ({
                     size="xs"
                     variant="link"
                   >
-                    {showAdvanced ? 'Hide advanced' : 'Advanced options'}
+                    {showAdvanced ? t('wallet.hideAdvanced') : t('wallet.advancedOptions')}
                   </Button>
                   <Collapse in={showAdvanced}>
                     <VStack align="stretch" mt={4} spacing={4}>
                       <FormControl isInvalid={!!withdrawErrorMessage}>
                         <Text color="#8A7E6A" fontSize="xs" mb={1}>
-                          Withdraw to wallet
+                          {t('wallet.withdrawToWallet')}
                         </Text>
                         {character && character.level < 3n && (
                           <FormHelperText
@@ -442,7 +443,7 @@ export const WalletDetailsModal = ({
                             fontSize="xs"
                             mb={2}
                           >
-                            Withdrawals unlock at level 3.
+                            {t('wallet.withdrawalsUnlock')}
                           </FormHelperText>
                         )}
                         {!!withdrawErrorMessage && (
@@ -457,7 +458,7 @@ export const WalletDetailsModal = ({
                               (!!character && character.level < 3n)
                             }
                             onChange={e => setWithdrawAmount(e.target.value)}
-                            placeholder="ETH amount"
+                            placeholder={t('wallet.ethPlaceholder')}
                             type="number"
                             value={withdrawAmount}
                           />
@@ -467,7 +468,7 @@ export const WalletDetailsModal = ({
                             onClick={onWithdraw}
                             size="sm"
                           >
-                            Withdraw
+                            {t('wallet.withdraw')}
                           </Button>
                         </HStack>
                       </FormControl>
@@ -479,13 +480,13 @@ export const WalletDetailsModal = ({
                           character?.inBattle || isRevokingDelegation
                         }
                         isLoading={isRevokingDelegation}
-                        loadingText="Resetting..."
+                        loadingText={t('wallet.resetting')}
                         onClick={() => setIsRevokeDialogOpen(true)}
                         size="sm"
                         variant="outline"
                         _hover={{ bg: 'rgba(184,58,42,0.12)' }}
                       >
-                        Reset Session
+                        {t('wallet.resetSession')}
                       </Button>
                     </VStack>
                   </Collapse>
@@ -493,7 +494,7 @@ export const WalletDetailsModal = ({
               </VStack>
             ) : (
               <VStack spacing={10}>
-                <Text textAlign="center">Connecting...</Text>
+                <Text textAlign="center">{t('wallet.connecting')}</Text>
               </VStack>
             )}
           </ModalBody>
@@ -505,15 +506,15 @@ export const WalletDetailsModal = ({
               size="sm"
               variant="ghost"
             >
-              Disconnect
+              {t('wallet.disconnect')}
             </Button>
             {character?.inBattle && (
               <Text color="#C87A2A" fontSize="xs" fontWeight={700}>
-                Cannot disconnect during battle.
+                {t('wallet.cannotDisconnectBattle')}
               </Text>
             )}
             <Button onClick={onClose} size="sm" variant="ghost">
-              Close
+              {t('common.close')}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -527,18 +528,17 @@ export const WalletDetailsModal = ({
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Reset Session?
+              {t('wallet.resetConfirmTitle')}
             </AlertDialogHeader>
             <AlertDialogBody>
-              This will reset your game session. Any remaining ETH stays in the
-              session and can be recovered.
+              {t('wallet.resetConfirmBody')}
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button
                 onClick={() => setIsRevokeDialogOpen(false)}
                 ref={cancelRevokeRef}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 borderColor="#B83A2A"
@@ -548,7 +548,7 @@ export const WalletDetailsModal = ({
                 variant="outline"
                 _hover={{ bg: 'rgba(184,58,42,0.12)' }}
               >
-                Reset
+                {t('wallet.reset')}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

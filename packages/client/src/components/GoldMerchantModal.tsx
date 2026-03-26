@@ -12,6 +12,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GiTwoCoins } from 'react-icons/gi';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -36,6 +37,7 @@ export const GoldMerchantModal = ({
 }): JSX.Element => {
   const { ownerAddress } = useAuth();
   const { character } = useCharacter();
+  const { t } = useTranslation('ui');
 
   const [step, setStep] = useState<ModalStep>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -106,7 +108,7 @@ export const GoldMerchantModal = ({
           pt={5}
           textAlign="center"
         >
-          Gold Merchant
+          {t('goldMerchant.title')}
         </ModalHeader>
         <ModalCloseButton color="#8A7E6A" _hover={{ color: '#E8DCC8' }} />
 
@@ -135,7 +137,7 @@ export const GoldMerchantModal = ({
                 letterSpacing="0.1em"
                 textTransform="uppercase"
               >
-                Adventurer
+                {t('goldMerchant.adventurer')}
               </Text>
             </VStack>
             <HStack
@@ -156,7 +158,7 @@ export const GoldMerchantModal = ({
                 {formattedBalance}
               </Text>
               <Text color="#6A6050" fontSize="xs" fontWeight={500}>
-                gold
+                {t('goldMerchant.goldLabel')}
               </Text>
             </HStack>
           </VStack>
@@ -171,14 +173,13 @@ export const GoldMerchantModal = ({
                 fontSize="xl"
                 fontWeight={700}
               >
-                Coming Soon
+                {t('goldMerchant.comingSoon')}
               </Text>
               <Text color="#8A7E6A" fontSize="sm" textAlign="center" maxW="320px">
-                The Gold Merchant is preparing his wares. You'll be able to purchase
-                gold directly here soon.
+                {t('goldMerchant.comingSoonMessage')}
               </Text>
               <Text color="#6A6050" fontSize="xs" textAlign="center">
-                For now, earn gold through combat and trade on the marketplace.
+                {t('goldMerchant.earnGoldNow')}
               </Text>
             </VStack>
           )}
@@ -186,10 +187,10 @@ export const GoldMerchantModal = ({
           {step === 'creating' && (
             <VStack spacing={3} py={8}>
               <Text color="#E8DCC8" fontSize="lg" fontWeight={600}>
-                Preparing checkout...
+                {t('goldMerchant.preparingCheckout')}
               </Text>
               <Text color="#8A7E6A" fontSize="sm" textAlign="center">
-                Redirecting to secure payment page.
+                {t('goldMerchant.redirecting')}
               </Text>
             </VStack>
           )}
@@ -197,7 +198,7 @@ export const GoldMerchantModal = ({
           {step === 'error' && (
             <VStack spacing={3} py={8}>
               <Text color="#E8DCC8" fontSize="lg" fontWeight={600}>
-                Something went wrong
+                {t('goldMerchant.somethingWrong')}
               </Text>
               <Text color="#8A7E6A" fontSize="sm" textAlign="center">
                 {errorMsg || 'Please try again.'}
@@ -209,7 +210,7 @@ export const GoldMerchantModal = ({
                 _hover={{ bg: '#3A3228' }}
                 onClick={() => setStep('idle')}
               >
-                Try Again
+                {t('goldMerchant.tryAgain')}
               </Button>
             </VStack>
           )}
