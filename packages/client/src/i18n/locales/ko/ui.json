@@ -623,7 +623,11 @@
     "statsDrawer": "스탯",
     "outerRealmsWarning": "조심하세요! 구불어둠에 진입합니다!",
     "outerRealmsBody1": "<bold>구불어둠</bold>은 레벨 1 캐릭터에게 위험한 곳입니다. 다른 플레이어가 언제든 공격할 수 있습니다.",
-    "outerRealmsBody2": "더 레벨업한 후 진입하는 것을 권장합니다."
+    "outerRealmsBody2": "더 레벨업한 후 진입하는 것을 권장합니다.",
+    "tileDetailsHeading": "타일 정보",
+    "notSpawned": "아직 맵에 소환되지 않았습니다.",
+    "errorOccurred": "오류가 발생했습니다.",
+    "spawnPrompt": "전투를 시작하려면 캐릭터를 <bold>소환</bold>해야 합니다."
   },
   "guild": {
     "pageTitle": "길드 | Ultimate Dominion",

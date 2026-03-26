@@ -623,7 +623,11 @@
     "statsDrawer": "属性",
     "outerRealmsWarning": "小心！你即将进入蜿蜒暗域！",
     "outerRealmsBody1": "<bold>蜿蜒暗域</bold>对1级角色来说是个危险的地方。任何其他玩家都可能随时攻击你。",
-    "outerRealmsBody2": "建议你先提升等级再进入。"
+    "outerRealmsBody2": "建议你先提升等级再进入。",
+    "tileDetailsHeading": "地块详情",
+    "notSpawned": "你还未生成到地图上。",
+    "errorOccurred": "发生了错误。",
+    "spawnPrompt": "要开始战斗，你必须<bold>生成</bold>你的角色。"
   },
   "guild": {
     "pageTitle": "公会 | Ultimate Dominion",

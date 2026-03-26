@@ -623,7 +623,11 @@
     "statsDrawer": "ステータス",
     "outerRealmsWarning": "注意！曲がりくねる闇に入ろうとしています！",
     "outerRealmsBody1": "<bold>曲がりくねる闇</bold>はレベル1のキャラクターには危険な場所です。他のプレイヤーがいつでも攻撃してくる可能性があります。",
-    "outerRealmsBody2": "もう少しレベルを上げてから進入することをお勧めします。"
+    "outerRealmsBody2": "もう少しレベルを上げてから進入することをお勧めします。",
+    "tileDetailsHeading": "タイル詳細",
+    "notSpawned": "まだマップにスポーンしていません。",
+    "errorOccurred": "エラーが発生しました。",
+    "spawnPrompt": "戦闘を開始するには、キャラクターを<bold>スポーン</bold>してください。"
   },
   "guild": {
     "pageTitle": "ギルド | Ultimate Dominion",

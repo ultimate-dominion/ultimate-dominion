@@ -623,7 +623,11 @@
     "statsDrawer": "Stats",
     "outerRealmsWarning": "Careful! You're about to enter the Winding Dark!",
     "outerRealmsBody1": "The <bold>Winding Dark</bold> is a dangerous place for a level 1 character. Any other player could attack you at any time.",
-    "outerRealmsBody2": "It is recommended that you level up your character more before entering."
+    "outerRealmsBody2": "It is recommended that you level up your character more before entering.",
+    "tileDetailsHeading": "Tile Details",
+    "notSpawned": "You have not yet spawned to the map.",
+    "errorOccurred": "An error occurred.",
+    "spawnPrompt": "In order to begin battling, you must <bold>spawn</bold> your character."
   },
   "guild": {
     "pageTitle": "Guild | Ultimate Dominion",

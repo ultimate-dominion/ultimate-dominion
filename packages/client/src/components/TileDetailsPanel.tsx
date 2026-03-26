@@ -701,7 +701,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           width="100%"
         >
           <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
-            Tile Details
+            {t('gameBoard.tileDetailsHeading')}
           </Heading>
         </HStack>
         {isRefreshingCharacter ? (
@@ -710,7 +710,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           </Flex>
         ) : (
           <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }} p={6}>
-            An error occurred.
+            {t('gameBoard.errorOccurred')}
           </Text>
         )}
       </Box>
@@ -727,11 +727,11 @@ export const TileDetailsPanel = (): JSX.Element => {
           width="100%"
         >
           <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
-            Tile Details
+            {t('gameBoard.tileDetailsHeading')}
           </Heading>
         </HStack>
         <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }} p={6}>
-          You have not yet spawned to the map.
+          {t('gameBoard.notSpawned')}
         </Text>
       </Box>
     );
