@@ -200,6 +200,7 @@ const MUDProviderInner = ({
   // proxy issue is fixed at the transport level in AuthContext (game RPCs for
   // estimation, Privy only for signing).
   const FIXED_GAS: Record<string, bigint> = {
+    UD__mintCharacter: 4_000_000n,
     UD__move: 4_000_000n,
     UD__rollBaseStats: 4_000_000n,
     UD__chooseRace: 500_000n,
