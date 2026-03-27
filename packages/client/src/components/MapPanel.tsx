@@ -15,7 +15,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaStoreAlt } from 'react-icons/fa';
+import { FaStoreAlt, FaUser } from 'react-icons/fa';
 
 
 import { useTranslation } from 'react-i18next';
@@ -37,9 +37,10 @@ import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassArrowSvg, CompassRoseOrnamentSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
 
-const SAFE_ZONE_AREA = {
-  topLeft: { x: 0, y: 4 },
-  bottomRight: { x: 4, y: 0 },
+/** Safe zone boundaries per zone (display coords, top-down grid) */
+const SAFE_ZONE_BY_ZONE: Record<number, { topLeft: { x: number; y: number }; bottomRight: { x: number; y: number } }> = {
+  1: { topLeft: { x: 0, y: 4 }, bottomRight: { x: 4, y: 0 } },   // Z1: x<5 AND y<5
+  2: { topLeft: { x: 0, y: 2 }, bottomRight: { x: 9, y: 0 } },   // Z2: y<3 (full width)
 };
 
 const MAP_SIZE = 10;
@@ -66,7 +67,7 @@ const COMPASS_DIRECTIONS: {
 
 export const MapPanel = (): JSX.Element => {
   const { t } = useTranslation('ui');
-  const { allCharacters, allMonsters, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position } = useMap();
+  const { allCharacters, allMonsters, allNpcs, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position } = useMap();
   const { character } = useCharacter();
   const { currentBattle } = useBattle();
   const { autoAdventureMode, isRefreshing, onMove, onToggleAutoAdventure } = useMovement();
@@ -286,34 +287,36 @@ export const MapPanel = (): JSX.Element => {
               const col = i % gridSize;
               const currentTile = displayPosition?.x === col && displayPosition?.y === row;
 
-              // Safe zone borders only in Zone 1
-              const showSafeZone = currentZone === 1;
+              const safeZone = SAFE_ZONE_BY_ZONE[currentZone];
+              const showSafeZone = !!safeZone;
               const hasSafeZoneTopBorder = showSafeZone &&
-                row === SAFE_ZONE_AREA.topLeft.y &&
-                col >= SAFE_ZONE_AREA.topLeft.x &&
-                col <= SAFE_ZONE_AREA.bottomRight.x;
+                row === safeZone.topLeft.y &&
+                col >= safeZone.topLeft.x &&
+                col <= safeZone.bottomRight.x;
 
               const hasSafeZoneRightBorder = showSafeZone &&
-                col === SAFE_ZONE_AREA.bottomRight.x &&
-                row >= SAFE_ZONE_AREA.bottomRight.y &&
-                row <= SAFE_ZONE_AREA.topLeft.y;
+                col === safeZone.bottomRight.x &&
+                row >= safeZone.bottomRight.y &&
+                row <= safeZone.topLeft.y;
 
               const hasSafeZoneBottomBorder = showSafeZone &&
-                row === SAFE_ZONE_AREA.bottomRight.y &&
-                col >= SAFE_ZONE_AREA.topLeft.x &&
-                col <= SAFE_ZONE_AREA.bottomRight.x;
+                row === safeZone.bottomRight.y &&
+                col >= safeZone.topLeft.x &&
+                col <= safeZone.bottomRight.x;
 
               const hasSafeZoneLeftBorder = showSafeZone &&
-                row >= SAFE_ZONE_AREA.bottomRight.y &&
-                row <= SAFE_ZONE_AREA.topLeft.y &&
-                col === SAFE_ZONE_AREA.topLeft.x;
+                row >= safeZone.bottomRight.y &&
+                row <= safeZone.topLeft.y &&
+                col === safeZone.topLeft.x;
+
+              const isInSafeArea = showSafeZone &&
+                col >= safeZone.topLeft.x && col <= safeZone.bottomRight.x &&
+                row >= safeZone.bottomRight.y && row <= safeZone.topLeft.y;
 
               return (
                 <VStack
                   bgColor={
-                    showSafeZone &&
-                    col <= SAFE_ZONE_AREA.topLeft.y &&
-                    row <= SAFE_ZONE_AREA.bottomRight.x
+                    isInSafeArea
                       ? 'rgba(200,122,42,0.06)'
                       : 'transparent'
                   }
@@ -370,6 +373,26 @@ export const MapPanel = (): JSX.Element => {
                           transform="translateX(-50%)"
                         >
                           <FaStoreAlt size={14} />
+                        </VStack>
+                      )
+                    );
+                  })}
+
+                  {allNpcs.map((npc, index) => {
+                    const zoneOriginY = currentZone === 1 ? 0 : (currentZone - 1) * 100;
+                    const npcDisplayX = npc.position.x;
+                    const npcDisplayY = npc.position.y - zoneOriginY;
+                    const isNpcHere = npcDisplayX === col && npcDisplayY === row;
+
+                    return (
+                      isNpcHere && (
+                        <VStack
+                          key={`npc-${index}`}
+                          left="50%"
+                          position="absolute"
+                          transform="translateX(-50%)"
+                        >
+                          <FaUser size={14} color={npc.interaction === 'respec' ? '#e07c4f' : '#4fc3f7'} />
                         </VStack>
                       )
                     );

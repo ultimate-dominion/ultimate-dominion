@@ -1,6 +1,6 @@
 {
   "name": "Windy Peaks",
-  "description": "The mountain range above Noctum's Marrow. Wind-blasted stone, ancient roads, and the echo of a dead war god. The first time you see the sky — and realize the world it belongs to is dying.",
+  "description": "The mountain range above Noctum's Marrow. Wind-blasted stone, ancient roads, and the echo of a dead war god. The first time you see the sky — and realize the world it belongs to is dying. At the peak, the world opens: a vast grove stretches below the far ridge, ancient and tangled. The only way forward is down.",
   "version": "1.0.0",
   "levelRange": {
     "min": 11,
@@ -9,13 +9,27 @@
   "mapConfig": {
     "width": 10,
     "height": 10,
-    "startPosition": [0, 0]
+    "startPosition": [0, 0],
+    "safeZone": {
+      "rule": "y < 3",
+      "description": "Base camp (rows 0-2). PvE only."
+    },
+    "dangerZone": {
+      "rule": "y >= 3",
+      "description": "Exposed slopes and peak ridge. PvP enabled."
+    },
+    "mobSpawnTiers": [
+      { "condition": "y < 3", "levelRange": [11, 13], "description": "Treeline — safe zone fodder" },
+      { "condition": "y >= 3 && y < 8", "levelRange": [14, 18], "description": "Exposed slopes — mid-zone grind" },
+      { "condition": "y >= 8", "levelRange": [19, 20], "description": "Peak ridge — boss territory" }
+    ]
   },
   "dependencies": ["dark_cave"],
   "load": {
     "effects": true,
     "items": true,
     "monsters": true,
-    "shops": true
+    "shops": true,
+    "npcs": true
   }
 }

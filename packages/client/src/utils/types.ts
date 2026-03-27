@@ -410,6 +410,17 @@ export type Shop = {
   stock: bigint[];
 };
 
+export type NpcInteraction = 'respec' | 'guild' | 'dialogue';
+
+export type Npc = {
+  entityId: string;
+  mobId: string;
+  name: string;
+  interaction: NpcInteraction;
+  position: { x: number; y: number };
+  metadataUri: string;
+};
+
 export type Spell = SpellTemplate & {
   balance: bigint;
   itemId: string;

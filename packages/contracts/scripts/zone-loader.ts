@@ -71,6 +71,7 @@ interface ZoneManifest {
     items: boolean;
     monsters: boolean;
     shops: boolean;
+    npcs?: boolean;
   };
 }
 
@@ -168,6 +169,22 @@ interface ShopTemplate {
 
 interface ShopsJson {
   shops: ShopTemplate[];
+}
+
+interface NPCTemplate {
+  name: string;
+  location: [number, number];
+  alignment: number;
+  storyPathIds: string[];
+  interaction: string;
+  metadataUri: string;
+  level?: number;
+  description?: string;
+  dialogue?: Record<string, string | string[]>;
+}
+
+interface NPCsJson {
+  npcs: NPCTemplate[];
 }
 
 // ItemType and ArmorType — imported from ./lib/encode-stats
@@ -351,6 +368,26 @@ function encodeShopStats(
       buyableItems,
       restock,
       stock,
+    }]
+  );
+}
+
+function encodeNPCStats(
+  name: string,
+  storyPathIds: Hex[],
+  alignment: number
+): Hex {
+  // Field order must match Solidity NPCStats struct: name, storyPathIds, alignment
+  return encodeAbiParameters(
+    [{ type: 'tuple', components: [
+      { name: 'name', type: 'string' },
+      { name: 'storyPathIds', type: 'bytes32[]' },
+      { name: 'alignment', type: 'uint8' },
+    ]}],
+    [{
+      name,
+      storyPathIds,
+      alignment,
     }]
   );
 }
@@ -884,6 +921,60 @@ Available zones:
           // Shop index within this loop
           const shopIndex = shopsData.shops.indexOf(shop);
           const mobId = BigInt(monsterCount + shopIndex + 1);
+
+          await sendTx({
+            address: worldAddress,
+            abi: worldAbi,
+            functionName: 'UD__spawnMob',
+            args: [mobId, spawnX, spawnY],
+          });
+          console.log(`    -> Spawned at (${spawnX}, ${spawnY}) with mobId ${mobId}`);
+        }
+      }
+    }
+  }
+
+  // Load NPCs
+  if (manifest.load.npcs) {
+    const npcsPath = path.join(zonePath, 'npcs.json');
+    if (fs.existsSync(npcsPath)) {
+      const npcsData: NPCsJson = JSON.parse(fs.readFileSync(npcsPath, 'utf-8'));
+      console.log('\n>>> Loading NPCs <<<');
+
+      const zoneOriginY = zoneId > 0 ? getZoneOriginY(zoneId) : 0;
+
+      // Count existing mobs (monsters + shops) to compute NPC mobIds
+      const monstersPath = path.join(zonePath, 'monsters.json');
+      let existingMobCount = 0;
+      if (fs.existsSync(monstersPath)) {
+        const monstersData: MonstersJson = JSON.parse(fs.readFileSync(monstersPath, 'utf-8'));
+        existingMobCount += monstersData.monsters.length;
+      }
+      const shopsPath = path.join(zonePath, 'shops.json');
+      if (fs.existsSync(shopsPath)) {
+        const shopsData: ShopsJson = JSON.parse(fs.readFileSync(shopsPath, 'utf-8'));
+        existingMobCount += shopsData.shops.length;
+      }
+
+      for (let npcIndex = 0; npcIndex < npcsData.npcs.length; npcIndex++) {
+        const npc = npcsData.npcs[npcIndex];
+        const spawnX = npc.location[0];
+        const spawnY = npc.location[1] + zoneOriginY;
+        console.log(`  NPC: ${npc.name} at (${spawnX}, ${spawnY})${zoneOriginY > 0 ? ` [offset from (${npc.location[0]}, ${npc.location[1]})]` : ''} — interaction: ${npc.interaction}`);
+
+        if (!dryRun && walletClient) {
+          const storyPathIds: Hex[] = (npc.storyPathIds || []).map(id => id as Hex);
+          const npcStats = encodeNPCStats(npc.name, storyPathIds, npc.alignment);
+
+          await sendTx({
+            address: worldAddress,
+            abi: worldAbi,
+            functionName: 'UD__createMob',
+            args: [MobType.NPC, npcStats, npc.metadataUri],
+          });
+          console.log(`    -> Created NPC mob template`);
+
+          const mobId = BigInt(existingMobCount + npcIndex + 1);
 
           await sendTx({
             address: worldAddress,

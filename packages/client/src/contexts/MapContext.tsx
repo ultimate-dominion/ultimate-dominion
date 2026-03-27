@@ -33,7 +33,10 @@ import { buildCharacter } from '../utils/buildCharacter';
 import {
   type Character,
   type Monster,
+  type Npc,
+  type NpcInteraction,
   type Shop,
+  MobType,
 } from '../utils/types';
 
 import { useCharacter } from './CharacterContext';
@@ -49,6 +52,12 @@ const SHOP_MOB_ID_TO_NAME: Record<string, string> = {
 
 const SHOP_POSITION_TO_NAME: Record<string, string> = {
   '9,9': 'Tal',
+};
+
+/** Map NPC metadataUri prefix to interaction type and display name */
+const NPC_METADATA_MAP: Record<string, { name: string; interaction: NpcInteraction }> = {
+  'npc:vel_morrow': { name: 'Vel Morrow', interaction: 'respec' },
+  'npc:edric_thorne': { name: 'Edric Thorne', interaction: 'guild' },
 };
 
 // ── Zone coordinate system ──
@@ -82,6 +91,7 @@ function isInZone(rawX: number, rawY: number, zoneId: number, gridSize = 10): bo
 type MapContextType = {
   allCharacters: Character[];
   allMonsters: Monster[];
+  allNpcs: Npc[];
   allShops: Shop[];
   currentZone: number;
   currentZoneName: string;
@@ -91,6 +101,7 @@ type MapContextType = {
   isSpawned: boolean;
   isSpawning: boolean;
   monstersOnTile: Monster[];
+  npcsOnTile: Npc[];
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
@@ -102,6 +113,7 @@ type MapContextType = {
 const MapContext = createContext<MapContextType>({
   allCharacters: [],
   allMonsters: [],
+  allNpcs: [],
   allShops: [],
   currentZone: 1,
   currentZoneName: 'Dark Cave',
@@ -111,6 +123,7 @@ const MapContext = createContext<MapContextType>({
   isSpawned: false,
   isSpawning: false,
   monstersOnTile: [],
+  npcsOnTile: [],
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
@@ -150,6 +163,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const statsTable = useGameTable('Stats');
   const charactersTable = useGameTable('Characters');
   const shopsTable = useGameTable('Shops');
+  const mobsTable = useGameTable('Mobs');
 
   // Additional reactive tables for character building
   const goldBalancesTable = useGameTable('GoldBalances');
@@ -188,9 +202,15 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   const inSafetyZone = useMemo(() => {
     if (!displayPosition) return false;
-    // Safety zone only exists in Zone 1 (Dark Cave)
-    if (currentZone !== 1) return false;
-    return displayPosition.x < 5 && displayPosition.y < 5;
+    if (currentZone === 1) {
+      // Z1 Dark Cave: quadrant safe zone
+      return displayPosition.x < 5 && displayPosition.y < 5;
+    }
+    if (currentZone === 2) {
+      // Z2 Windy Peaks: base camp (rows 0-2)
+      return displayPosition.y < 3;
+    }
+    return false;
   }, [displayPosition, currentZone]);
 
   const spawnedData = useGameValue('Spawned', character?.id);
@@ -229,6 +249,24 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const allCharacterEntities = useMemo(() => {
     return Object.keys(charactersTable).filter(key => statsTable[key]);
   }, [charactersTable, statsTable]);
+
+  // NPC entities: spawned + position, but not shops/characters/monsters
+  // Detected by checking the Mobs template table for MobType.NPC
+  const allNpcEntities = useMemo(() => {
+    return Object.keys(positionTable).filter(key => {
+      if (!spawnedTable[key]) return false;
+      if (shopsTable[key] || charactersTable[key] || statsTable[key]) return false;
+      // Decode mobId from entityId and check the Mobs template
+      try {
+        const { mobId } = decodeMobInstanceId(key as `0x${string}`);
+        const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
+        const mobData = mobsTable[mobKey];
+        return mobData && toNumber(mobData.mobType) === MobType.NPC;
+      } catch {
+        return false;
+      }
+    });
+  }, [positionTable, spawnedTable, shopsTable, charactersTable, statsTable, mobsTable]);
 
   // ============================================================
   // Synchronous allCharacters — no async, no IPFS blocking
@@ -419,6 +457,37 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     }
   }, [allShopEntities, isSynced, renderError]);
 
+  // ============================================================
+  // NPCs — built from NPC entities detected via Mobs table
+  // ============================================================
+  const allNpcs = useMemo((): Npc[] => {
+    if (!isSynced) return [];
+    try {
+      return allNpcEntities.map(entity => {
+        const posData = positionTable[entity];
+        const x = toNumber(posData?.x ?? 0);
+        const y = toNumber(posData?.y ?? 0);
+        const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
+        const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
+        const mobData = mobsTable[mobKey];
+        const metadataUri = typeof mobData?.mobMetadata === 'string' ? mobData.mobMetadata : '';
+        const npcMeta = NPC_METADATA_MAP[metadataUri] ?? { name: `NPC #${mobId}`, interaction: 'dialogue' as const };
+
+        return {
+          entityId: entity,
+          mobId: mobId.toString(),
+          name: npcMeta.name,
+          interaction: npcMeta.interaction,
+          position: { x, y },
+          metadataUri,
+        };
+      });
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Failed to fetch NPCs.', e);
+      return [];
+    }
+  }, [allNpcEntities, positionTable, mobsTable, isSynced, renderError]);
+
   // Deprecated — reactivity handles updates. Kept for backward compatibility.
   const refreshEntities = useCallback(() => {}, []);
 
@@ -430,6 +499,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const zonedShops = useMemo(() => {
     return allShops.filter(s => isInZone(s.position.x, s.position.y, currentZone));
   }, [allShops, currentZone]);
+
+  const zonedNpcs = useMemo(() => {
+    return allNpcs.filter(n => isInZone(n.position.x, n.position.y, currentZone));
+  }, [allNpcs, currentZone]);
 
   const zonedCharacters = useMemo(() => {
     return allCharacters.filter((c: any) => {
@@ -463,6 +536,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       m => m.position.x === position.x && m.position.y === position.y,
     );
   }, [zonedShops, position]);
+
+  const npcsOnTile = useMemo(() => {
+    if (!position || (position.x === 0 && position.y === 0)) return [];
+    return zonedNpcs.filter(
+      n => n.position.x === position.x && n.position.y === position.y,
+    );
+  }, [zonedNpcs, position]);
 
   const otherCharactersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
@@ -562,6 +642,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       value={{
         allCharacters: zonedCharacters,
         allMonsters: zonedMonsters,
+        allNpcs: zonedNpcs,
         allShops: zonedShops,
         currentZone,
         currentZoneName,
@@ -571,6 +652,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         isSpawned,
         isSpawning: spawnTx.isLoading || isWaitingForSpawn,
         monstersOnTile,
+        npcsOnTile,
         onSpawn,
         otherCharactersOnTile,
         position,

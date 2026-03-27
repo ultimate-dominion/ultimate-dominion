@@ -23,7 +23,7 @@ import {
 } from "@codegen/index.sol";
 import {EncounterType, ItemType} from "@codegen/common.sol";
 import {Action, CombatFlagsResult} from "@interfaces/Structs.sol";
-import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID} from "../../constants.sol";
+import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID, ZONE_ORIGIN_SPACING} from "../../constants.sol";
 import {
     NoWeaponsEquipped,
     Unauthorized,
@@ -57,7 +57,7 @@ contract PvPSystem is System {
                 _isValidPvP = false;
                 break;
             }
-            if (entityX < 5 && entityY < 5) {
+            if (_isInSafeZone(entityX, entityY)) {
                 _isValidPvP = false;
                 break;
             }
@@ -81,7 +81,7 @@ contract PvPSystem is System {
                     _isValidPvP = false;
                     break;
                 }
-                if (entityX < 5 && entityY < 5) {
+                if (_isInSafeZone(entityX, entityY)) {
                     _isValidPvP = false;
                     break;
                 }
@@ -110,6 +110,21 @@ contract PvPSystem is System {
             }
         }
         return _isValidPvP;
+    }
+
+    /// @dev Zone-aware safe zone check using absolute on-chain coordinates
+    function _isInSafeZone(uint16 x, uint16 y) internal pure returns (bool) {
+        // Z1 Dark Cave: quadrant safe zone (x<5 AND y<5)
+        if (y < ZONE_ORIGIN_SPACING) {
+            return x < 5 && y < 5;
+        }
+        // Z2 Windy Peaks: base camp rows 0-2 (absolute y 100-102)
+        if (y < 2 * ZONE_ORIGIN_SPACING) {
+            uint16 relY = y - ZONE_ORIGIN_SPACING;
+            return relY < 3;
+        }
+        // Future zones: no safe zone by default
+        return false;
     }
 
     function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory effects) public {

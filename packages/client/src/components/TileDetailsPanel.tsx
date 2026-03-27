@@ -63,6 +63,7 @@ import { ClassSymbol } from './ClassSymbol';
 import { FragmentClaimModal } from './FragmentClaimModal';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
+import { NpcRow } from './NpcRow';
 import { ShopRow } from './ShopRow';
 
 const ROW_HEIGHT = { base: 10, md: 8 };
@@ -161,6 +162,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     inSafetyZone,
     isSpawned,
     monstersOnTile,
+    npcsOnTile,
     otherCharactersOnTile,
     position,
     shopsOnTile,
@@ -1148,6 +1150,17 @@ export const TileDetailsPanel = (): JSX.Element => {
                 />
               </Box>
             ))}
+            {npcsOnTile.map((npc, i) => (
+              <Box key={`tile-npc-${i}`}>
+                <NpcRow npcName={npc.name} interaction={npc.interaction} />
+                <Box
+                  backgroundColor="rgba(196,184,158,0.08)"
+                  boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                  h="6px"
+                  w="100%"
+                />
+              </Box>
+            ))}
           </GridItem>
         )}
 
@@ -1294,6 +1307,18 @@ export const TileDetailsPanel = (): JSX.Element => {
             shopsOnTile.map((shop, i) => (
               <Box key={`tile-shop-${i}`}>
                 <ShopRow shopId={shop.shopId} shopName={shop.name} />
+                <Box
+                  backgroundColor="rgba(196,184,158,0.08)"
+                  boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                  h="6px"
+                  w="100%"
+                />
+              </Box>
+            ))}
+          {!isHomeTile &&
+            npcsOnTile.map((npc, i) => (
+              <Box key={`tile-npc-${i}`}>
+                <NpcRow npcName={npc.name} interaction={npc.interaction} />
                 <Box
                   backgroundColor="rgba(196,184,158,0.08)"
                   boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
