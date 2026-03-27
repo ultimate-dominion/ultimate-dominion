@@ -239,6 +239,7 @@ export const MapPanel = (): JSX.Element => {
               isOpen={stage === OnboardingStage.PRE_SPAWN}
               placement="top"
               hasArrow
+              shouldWrapChildren
             >
               <Button
                 isDisabled={!!currentBattle}
@@ -474,9 +475,10 @@ const NavigationCompass = ({
                 label={
                   info
                     ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
-                    : undefined
+                    : ''
                 }
                 placement="top"
+                shouldWrapChildren
               >
                 <IconButton
                   aria-label={t('map.moveDirection', { dir: label })}
@@ -590,9 +592,10 @@ const NavigationCompass = ({
                 label={
                   info
                     ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
-                    : undefined
+                    : ''
                 }
                 placement="top"
+                shouldWrapChildren
               >
                 <IconButton
                   aria-label={t('map.moveDirection', { dir: label })}

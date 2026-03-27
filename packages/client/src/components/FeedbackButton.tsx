@@ -48,6 +48,7 @@ export const FeedbackButton = (): JSX.Element => {
       fontSize="xs"
       label={t('feedback.send')}
       placement="right"
+      shouldWrapChildren
     >
       <IconButton
         aria-label={t('feedback.sendAria')}

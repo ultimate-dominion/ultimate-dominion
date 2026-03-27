@@ -15,6 +15,7 @@ export const DiscordButton = (): JSX.Element => {
       fontSize="xs"
       label={t('discord.join')}
       placement="right"
+      shouldWrapChildren
     >
       <IconButton
         aria-label={t('discord.join')}

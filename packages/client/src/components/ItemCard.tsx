@@ -181,6 +181,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       }
       placement="top"
       hasArrow
+      shouldWrapChildren
     >
       <Box position="relative" w="100%">
         {isEquipped && (

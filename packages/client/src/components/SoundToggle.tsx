@@ -17,6 +17,7 @@ export const SoundToggle = ({ size = 'sm', variant = 'ghost' }: SoundToggleProps
       hasArrow
       label={soundEnabled ? t('sound.mute') : t('sound.unmute')}
       placement="top"
+      shouldWrapChildren
     >
       <IconButton
         aria-label={soundEnabled ? t('sound.muteAria') : t('sound.enableAria')}
