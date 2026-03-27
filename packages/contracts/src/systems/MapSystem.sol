@@ -19,9 +19,9 @@ import {
     UltimateDominionConfig,
     ZoneMapConfig
 } from "../codegen/index.sol";
-import {FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y, MOVE_COOLDOWN, PLAYER_COUNTER_KEY, ZONE_DARK_CAVE} from "../../constants.sol";
+import {FRAGMENT_CENTER_X, FRAGMENT_CENTER_Y, MOVE_COOLDOWN, PLAYER_COUNTER_KEY, ZONE_DARK_CAVE, ZONE_WINDY_PEAKS} from "../../constants.sol";
 import {FragmentProgress} from "@codegen/index.sol";
-import {FragmentType} from "@codegen/common.sol";
+import {FragmentType, FragmentTriggerType} from "@codegen/common.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
 import {OnlyCharacters, Unauthorized, NotSpawned, AlreadySpawned, InEncounter, OutOfBounds, InvalidMove, MaxPlayers, EntityNotAtPosition, MoveTooFast} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
@@ -193,6 +193,18 @@ contract MapSystem is System {
             if (x == FRAGMENT_CENTER_X && y == FRAGMENT_CENTER_Y) {
                 if (!FragmentProgress.getClaimed(entityId, FragmentType.TheWound)) {
                     IWorld(_world()).UD__triggerFragment(entityId, 5, x, y);
+                }
+            }
+
+            // Zone 2 chain-based tile triggers — try all Z2 chains on each move
+            if (_getCharacterZone(entityId) == ZONE_WINDY_PEAKS) {
+                bytes memory tileData = abi.encode(x, y);
+                for (uint8 ft = 9; ft <= 16; ft++) {
+                    IWorld(_world()).UD__tryAdvanceChain(
+                        entityId, ft,
+                        uint8(FragmentTriggerType.TileVisit),
+                        tileData
+                    );
                 }
             }
         }

@@ -33,7 +33,8 @@ import {
     ZoneLevelTooLow,
     ZoneNotConfigured
 } from "../Errors.sol";
-import {ZONE_DARK_CAVE, BADGES_NAMESPACE, BADGE_ZONE_PIONEER_BASE} from "../../constants.sol";
+import {FragmentTriggerType} from "@codegen/common.sol";
+import {ZONE_DARK_CAVE, ZONE_WINDY_PEAKS, BADGES_NAMESPACE, BADGE_ZONE_PIONEER_BASE} from "../../constants.sol";
 
 contract ZoneTransitionSystem is System {
     /// @notice Transition a character to a different zone.
@@ -97,6 +98,29 @@ contract ZoneTransitionSystem is System {
 
         // 6. Mint Pioneer badge (first entry into this zone)
         _tryMintPioneerBadge(entityId, targetZoneId);
+
+        // 7. Initialize fragment chains for the target zone
+        if (targetZoneId == ZONE_WINDY_PEAKS) {
+            _initializeZ2Chains(entityId, originX, originY);
+        }
+    }
+
+    /// @dev Initialize all 8 Z2 fragment chains and auto-complete Fragment IX (arrival).
+    function _initializeZ2Chains(bytes32 entityId, uint16 originX, uint16 originY) internal {
+        // Fragment type → total steps: IX=1, X=2, XI=2, XII=3, XIII=3, XIV=2, XV=3, XVI=3
+        uint8[8] memory fragTypes = [uint8(9), 10, 11, 12, 13, 14, 15, 16];
+        uint256[8] memory stepCounts = [uint256(1), 2, 2, 3, 3, 2, 3, 3];
+
+        for (uint256 i; i < 8; i++) {
+            IWorld(_world()).UD__initializeCharacterChain(entityId, fragTypes[i], stepCounts[i]);
+        }
+
+        // Fragment IX auto-triggers on arrival (1-step TileVisit at zone spawn)
+        IWorld(_world()).UD__tryAdvanceChain(
+            entityId, 9,
+            uint8(FragmentTriggerType.TileVisit),
+            abi.encode(originX, originY)
+        );
     }
 
     /// @notice Get a character's current zone (0 or unset → Dark Cave).

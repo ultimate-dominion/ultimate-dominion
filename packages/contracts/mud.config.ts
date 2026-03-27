@@ -314,15 +314,15 @@ export default defineWorld({
       "DeathOfDeathGod",   // 6
       "BetrayersTruth",    // 7
       "BloodPrice",        // 8
-      // Zone 2 fragments (IX-XVI)
-      "FirstLight",        // 9
-      "TheBladesEdge",     // 10
-      "DividedGround",     // 11
-      "TheDirectors",      // 12
-      "TheStormsMemory",   // 13
-      "WhatGrows",         // 14
-      "TheBakersStand",    // 15
-      "TheLightsBelow",    // 16
+      // Zone 2 fragments (IX-XVI) — Windy Peaks quest chains
+      "TheAscent",            // 9  — Peaks chain: arrive in zone
+      "VelsWarning",          // 10 — Vel chain: Covenant hunters
+      "TheOrders",            // 11 — Vel chain: assassination orders
+      "WhatSheLeftBehind",    // 12 — Vel chain: Covenant camp
+      "TheShrine",            // 13 — Edric chain: Korrath's shrine
+      "TheHereticsQuestion",  // 14 — Edric chain: prayer answered
+      "BonesOfFaith",         // 15 — Edric chain: the Last Sermon
+      "TheWindsMemory",       // 16 — Peaks chain: summit capstone
     ],
     FragmentTriggerType: [
       "TileVisit",    // 0
@@ -505,6 +505,14 @@ export default defineWorld({
     BossSpawnConfig: {
       key: [],
       schema: {
+        bossMobId: "uint256",
+        spawnChanceBp: "uint256",
+      },
+    },
+    ZoneBossConfig: {
+      key: ["zoneId"],
+      schema: {
+        zoneId: "uint256",
         bossMobId: "uint256",
         spawnChanceBp: "uint256",
       },
@@ -1375,6 +1383,15 @@ export default defineWorld({
         triggerType: "FragmentTriggerType",
         triggerData: "bytes",
         narrative: "string",
+      },
+    },
+    // Optional item reward on chain step completion (quest item drops)
+    FragmentChainStepReward: {
+      key: ["fragmentType", "stepIndex"],
+      schema: {
+        fragmentType: "FragmentType",
+        stepIndex: "uint256",
+        rewardItemId: "uint256", // 0 = no reward
       },
     },
     ///////////////////////////////////// CRAFTING ///////////////////////////////////

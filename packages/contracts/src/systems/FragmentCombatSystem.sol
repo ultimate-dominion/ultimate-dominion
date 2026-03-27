@@ -2,13 +2,18 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
+import {IWorld} from "@world/IWorld.sol";
 import {
     FragmentProgress,
     CharacterFirstActions,
     Characters
 } from "@codegen/index.sol";
-import {FragmentType} from "@codegen/common.sol";
-import {CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID} from "../../constants.sol";
+import {FragmentType, FragmentTriggerType} from "@codegen/common.sol";
+import {
+    CRYSTAL_ELEMENTAL_MOB_ID, SHADOW_STALKER_MOB_ID, LICH_ACOLYTE_MOB_ID,
+    COVENANT_SCOUT_MOB_ID, COVENANT_TRACKER_MOB_ID, FRAYING_GUARDIAN_MOB_ID,
+    OSSUARY_GUARDIAN_MOB_ID, GALE_FURY_MOB_ID
+} from "../../constants.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
 
 /**
@@ -66,6 +71,18 @@ contract FragmentCombatSystem is System {
                 // Fragment VII: Betrayer's Truth - kill Shadow Stalker
                 else if (mobId == SHADOW_STALKER_MOB_ID) {
                     _triggerFragment(characterId, 7, tileX, tileY);
+                }
+
+                // Zone 2 quest chain combat triggers — try advancing all Z2 chains
+                if (mobId >= COVENANT_SCOUT_MOB_ID && mobId <= GALE_FURY_MOB_ID) {
+                    bytes memory combatData = abi.encode(mobId);
+                    for (uint8 ft = 9; ft <= 16; ft++) {
+                        IWorld(_world()).UD__tryAdvanceChain(
+                            characterId, ft,
+                            uint8(FragmentTriggerType.CombatKill),
+                            combatData
+                        );
+                    }
                 }
             } else {
                 // PvP kill

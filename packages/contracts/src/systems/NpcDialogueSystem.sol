@@ -13,6 +13,7 @@ import {
 import {FragmentType, FragmentTriggerType} from "@codegen/common.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {NotAtNpcPosition, NpcHasNoDialogue, NotAdmin} from "../Errors.sol";
+import {ZONE_WINDY_PEAKS} from "../../constants.sol";
 
 /**
  * @title NpcDialogueSystem
@@ -41,9 +42,19 @@ contract NpcDialogueSystem is System {
         NpcDialogueData memory dialogue = NpcDialogue.get(npcId);
         if (bytes(dialogue.dialogueLines).length == 0) revert NpcHasNoDialogue();
 
-        // Advance fragment chain if NPC is linked to one
-        if (uint8(dialogue.fragmentType) != 0) {
-            // Encode npcId as trigger data
+        // Advance fragment chain(s) on NPC interaction
+        if (dialogue.zoneId == ZONE_WINDY_PEAKS) {
+            // Z2 NPCs can be linked to multiple chains — try all Z2 chains
+            bytes memory triggerData = abi.encode(npcId);
+            for (uint8 ft = 9; ft <= 16; ft++) {
+                IWorld(_world()).UD__tryAdvanceChain(
+                    characterId, ft,
+                    uint8(FragmentTriggerType.NpcInteract),
+                    triggerData
+                );
+            }
+        } else if (uint8(dialogue.fragmentType) != 0) {
+            // Z1 single-chain behavior
             bytes memory triggerData = abi.encode(npcId);
             IWorld(_world()).UD__tryAdvanceChain(
                 characterId,

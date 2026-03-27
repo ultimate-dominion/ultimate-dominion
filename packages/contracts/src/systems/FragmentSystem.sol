@@ -15,7 +15,7 @@ import {FragmentType} from "@codegen/common.sol";
 import {Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {_ownersTableId, _balancesTableId} from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
-import {FRAGMENTS_NAMESPACE, BADGES_NAMESPACE, ZONE_DARK_CAVE, BADGE_ZONE_FRAGMENT_BASE, FRAGMENT_XP_REWARD} from "../../constants.sol";
+import {FRAGMENTS_NAMESPACE, BADGES_NAMESPACE, ZONE_DARK_CAVE, ZONE_WINDY_PEAKS, BADGE_ZONE_FRAGMENT_BASE, FRAGMENT_XP_REWARD} from "../../constants.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {_requireSystemOrAdmin, _isSystemOrAdmin} from "../utils.sol";
 
@@ -40,7 +40,7 @@ contract FragmentSystem is System {
      * @notice Trigger a fragment for a character
      * @dev Called by other systems when trigger conditions are met
      * @param characterId The character ID
-     * @param fragmentType The fragment type (1-8)
+     * @param fragmentType The fragment type (1-16)
      * @param tileX The X coordinate where triggered
      * @param tileY The Y coordinate where triggered
      */
@@ -49,7 +49,7 @@ contract FragmentSystem is System {
         address sender = _msgSender();
         if (Characters.getOwner(characterId) != sender && !_isSystemOrAdmin(sender)) revert NotCharacterOwner();
         PauseLib.requireNotPaused();
-        if (fragmentType < 1 || fragmentType > 8) revert InvalidFragmentType();
+        if (fragmentType < 1 || fragmentType > 16) revert InvalidFragmentType();
         if (!_isCharacter(characterId)) revert InvalidCharacter();
 
         _triggerFragment(characterId, fragmentType, tileX, tileY);
@@ -76,12 +76,14 @@ contract FragmentSystem is System {
     }
 
     /**
-     * @dev Check if all 8 fragments are claimed and mint zone fragment badge
+     * @dev Check if all zone fragments are claimed and mint zone fragment badge
      * @param characterId The character to check
-     * @param zoneId The zone ID for the badge (e.g. ZONE_DARK_CAVE = 1)
+     * @param zoneId The zone ID for the badge
+     * @param startType First fragment type in zone (inclusive)
+     * @param endType Last fragment type in zone (inclusive)
      */
-    function _checkZoneFragmentBadge(bytes32 characterId, uint256 zoneId) private {
-        for (uint8 i = 1; i <= 8; i++) {
+    function _checkZoneFragmentBadge(bytes32 characterId, uint256 zoneId, uint8 startType, uint8 endType) private {
+        for (uint8 i = startType; i <= endType; i++) {
             if (!FragmentProgress.getClaimed(characterId, FragmentType(i))) return;
         }
         address badgeToken = UltimateDominionConfig.getBadgeToken();
@@ -99,12 +101,12 @@ contract FragmentSystem is System {
     /**
      * @notice Claim a triggered fragment and mint the NFT
      * @param characterId The character ID
-     * @param fragmentType The fragment type (1-8)
+     * @param fragmentType The fragment type (1-16)
      * @return tokenId The minted token ID
      */
     function claimFragment(bytes32 characterId, uint8 fragmentType) public returns (uint256 tokenId) {
         PauseLib.requireNotPaused();
-        if (fragmentType < 1 || fragmentType > 8) revert InvalidFragmentType();
+        if (fragmentType < 1 || fragmentType > 16) revert InvalidFragmentType();
         if (!_isCharacter(characterId)) revert InvalidCharacter();
 
         address owner = Characters.getOwner(characterId);
@@ -136,8 +138,12 @@ contract FragmentSystem is System {
         stats.experience += FRAGMENT_XP_REWARD;
         Stats.set(characterId, stats);
 
-        // Check 8/8 completion → mint zone fragment badge
-        _checkZoneFragmentBadge(characterId, ZONE_DARK_CAVE);
+        // Check zone completion → mint zone fragment badge
+        if (fragmentType <= 8) {
+            _checkZoneFragmentBadge(characterId, ZONE_DARK_CAVE, 1, 8);
+        } else if (fragmentType <= 16) {
+            _checkZoneFragmentBadge(characterId, ZONE_WINDY_PEAKS, 9, 16);
+        }
 
         emit FragmentClaimed(characterId, fragmentType, tokenId);
 
@@ -147,11 +153,11 @@ contract FragmentSystem is System {
     /**
      * @notice Check if a fragment can be claimed
      * @param characterId The character ID
-     * @param fragmentType The fragment type (1-8)
+     * @param fragmentType The fragment type (1-16)
      * @return True if the fragment is triggered but not claimed
      */
     function canClaim(bytes32 characterId, uint8 fragmentType) public view returns (bool) {
-        if (fragmentType < 1 || fragmentType > 8) return false;
+        if (fragmentType < 1 || fragmentType > 16) return false;
 
         FragmentType fType = FragmentType(fragmentType);
         return FragmentProgress.getTriggered(characterId, fType) &&
@@ -161,7 +167,7 @@ contract FragmentSystem is System {
     /**
      * @notice Get the status of a specific fragment for a character
      * @param characterId The character ID
-     * @param fragmentType The fragment type (1-8)
+     * @param fragmentType The fragment type (1-16)
      * @return triggered Whether the fragment has been triggered
      * @return triggeredAt Timestamp when triggered (0 if not triggered)
      * @return triggerTileX X coordinate where triggered
@@ -179,7 +185,7 @@ contract FragmentSystem is System {
         uint256 claimedAt,
         uint256 tokenId
     ) {
-        if (fragmentType < 1 || fragmentType > 8) {
+        if (fragmentType < 1 || fragmentType > 16) {
             return (false, 0, 0, 0, false, 0, 0);
         }
 
@@ -195,7 +201,7 @@ contract FragmentSystem is System {
 
     /**
      * @notice Admin function to set fragment metadata
-     * @param fragmentType The fragment type (1-8)
+     * @param fragmentType The fragment type (1-16)
      * @param name The fragment name
      * @param narrative The fragment narrative text
      * @param hint The hint for how to discover this fragment
@@ -207,7 +213,7 @@ contract FragmentSystem is System {
         string memory hint
     ) public {
         if (!Admin.getIsAdmin(_msgSender())) revert NotAdmin();
-        if (fragmentType < 1 || fragmentType > 8) revert InvalidFragmentType();
+        if (fragmentType < 1 || fragmentType > 16) revert InvalidFragmentType();
 
         FragmentType fType = FragmentType(fragmentType);
         FragmentMetadata.setName(fType, name);
@@ -217,7 +223,7 @@ contract FragmentSystem is System {
 
     /**
      * @notice Get fragment metadata
-     * @param fragmentType The fragment type (1-8)
+     * @param fragmentType The fragment type (1-16)
      * @return name The fragment name
      * @return narrative The fragment narrative text
      * @return hint The hint for discovery
@@ -227,7 +233,7 @@ contract FragmentSystem is System {
         string memory narrative,
         string memory hint
     ) {
-        if (fragmentType < 1 || fragmentType > 8) {
+        if (fragmentType < 1 || fragmentType > 16) {
             return ("", "", "");
         }
 
