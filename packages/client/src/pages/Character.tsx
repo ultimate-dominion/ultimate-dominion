@@ -64,6 +64,7 @@ import {
   type Armor,
   type Character,
   type Consumable,
+  type QuestItemTemplate,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -413,6 +414,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
     armorTemplates,
     consumableTemplates,
     isLoading: isLoadingItemTemplates,
+    questItemTemplates,
     spellTemplates,
     weaponTemplates,
   } = useItems();
@@ -545,6 +547,23 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         return Number(b.maxDamage - a.maxDamage);
       });
   }, [weaponTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
+
+  const inventoryQuestItems = useMemo(() => {
+    if (isLoadingItemTemplates || questItemTemplates.length === 0) return [];
+    return questItemTemplates
+      .map(qi => {
+        const compositeKey = encodeCompositeKey(ownerKey, encodeUint256Key(BigInt(qi.tokenId)));
+        const itemOwner = itemsOwnersTable[compositeKey];
+        return {
+          ...qi,
+          balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+          itemId: compositeKey,
+          owner: character.owner,
+        };
+      })
+      .filter(qi => qi.balance !== BigInt(0))
+      .sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
+  }, [questItemTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
 
   // Equipped items derived from inventory + equipment IDs — fully synchronous
   const equippedArmor = useMemo(() =>
@@ -758,6 +777,48 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
             );
           })}
         </Grid>
+        {SHOW_Z2 && inventoryQuestItems.length > 0 && (
+          <>
+            <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
+            <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+              Quest Items ({inventoryQuestItems.length})
+            </Text>
+            <Grid
+              templateColumns={{
+                base: 'repeat(1, 1fr)',
+                sm: 'repeat(1, 1fr)',
+                md: 'repeat(2, 1fr)',
+                xl: 'repeat(3, 1fr)',
+              }}
+              gap={2}
+              mt={4}
+            >
+              {inventoryQuestItems.map((qi, i) => (
+                <GridItem key={i}>
+                  <Box
+                    border="1px solid"
+                    borderColor="#3A3428"
+                    borderRadius="md"
+                    p={3}
+                    bg="rgba(155, 175, 191, 0.04)"
+                  >
+                    <Text fontWeight="bold" fontSize="sm" color="#E8DCC8">
+                      {qi.name}
+                    </Text>
+                    {qi.description && (
+                      <Text fontSize="xs" color="#8A7E6A" mt={1} fontStyle="italic" noOfLines={3}>
+                        {qi.description}
+                      </Text>
+                    )}
+                    <Text fontSize="2xs" color="#6A6055" mt={1}>
+                      Permanent memento
+                    </Text>
+                  </Box>
+                </GridItem>
+              ))}
+            </Grid>
+          </>
+        )}
         {selectedItem && (
           <ItemEquipModal
             isEquipped={

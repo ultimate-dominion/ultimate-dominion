@@ -332,6 +332,12 @@ export type Metadata = {
   name: string;
 };
 
+export type QuestItemTemplate = Metadata & {
+  itemType: ItemType;
+  tokenId: string;
+  rarity?: Rarity;
+};
+
 export type Monster = MonsterTemplate & {
   currentHp: bigint;
   id: string;
@@ -410,7 +416,7 @@ export type Shop = {
   stock: bigint[];
 };
 
-export type NpcInteraction = 'respec' | 'guild' | 'dialogue';
+export type NpcInteraction = 'respec' | 'guild' | 'dialogue' | 'examine';
 
 export type Npc = {
   entityId: string;

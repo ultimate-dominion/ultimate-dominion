@@ -58,6 +58,10 @@ const SHOP_POSITION_TO_NAME: Record<string, string> = {
 const NPC_METADATA_MAP: Record<string, { name: string; interaction: NpcInteraction }> = {
   'npc:vel_morrow': { name: 'Vel Morrow', interaction: 'respec' },
   'npc:edric_thorne': { name: 'Edric Thorne', interaction: 'guild' },
+  'worldobj:camp_journal': { name: 'Camp Journal', interaction: 'examine' },
+  'worldobj:shrine_inscriptions': { name: 'Shrine Inscriptions', interaction: 'examine' },
+  'worldobj:edric_at_shrine': { name: 'Edric at Shrine', interaction: 'examine' },
+  'worldobj:summit_stone': { name: 'Summit Stone', interaction: 'examine' },
 };
 
 // ── Zone coordinate system ──

@@ -1,7 +1,7 @@
 import { HStack, Text } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUser } from 'react-icons/fa';
+import { FaUser, FaSearch } from 'react-icons/fa';
 
 import type { NpcInteraction } from '../utils/types';
 
@@ -11,12 +11,21 @@ const INTERACTION_LABELS: Record<NpcInteraction, string> = {
   respec: 'Combat Trainer',
   guild: 'Guild Founder',
   dialogue: 'Talk',
+  examine: 'Examine',
 };
 
 const INTERACTION_COLORS: Record<NpcInteraction, string> = {
   respec: '#e07c4f',
   guild: '#4fc3f7',
   dialogue: '#c4b89e',
+  examine: '#9BAFBF',
+};
+
+const INTERACTION_ICONS: Record<NpcInteraction, typeof FaUser> = {
+  respec: FaUser,
+  guild: FaUser,
+  dialogue: FaUser,
+  examine: FaSearch,
 };
 
 export const NpcRow = ({
@@ -34,7 +43,11 @@ export const NpcRow = ({
     } else if (interaction === 'guild') {
       navigate('/guild');
     }
+    // examine and dialogue NPCs trigger chain advancement on-chain via NpcDialogueSystem
   }, [interaction, navigate]);
+
+  const Icon = INTERACTION_ICONS[interaction];
+  const color = INTERACTION_COLORS[interaction];
 
   return (
     <HStack
@@ -48,17 +61,20 @@ export const NpcRow = ({
       w="100%"
       _active={{
         bg: 'grey300',
-        borderBottom: `2px solid ${INTERACTION_COLORS[interaction]}`,
+        borderBottom: `2px solid ${color}`,
         cursor: 'pointer',
       }}
       _hover={{
-        borderBottom: `2px solid ${INTERACTION_COLORS[interaction]}`,
+        borderBottom: `2px solid ${color}`,
         cursor: 'pointer',
       }}
     >
       <HStack justifyContent="start" spacing={4}>
-        <FaUser color={INTERACTION_COLORS[interaction]} size={12} />
-        <Text size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}>
+        <Icon color={color} size={12} />
+        <Text
+          size={{ base: '3xs', sm: '2xs', md: 'sm', lg: 'md' }}
+          fontStyle={interaction === 'examine' ? 'italic' : undefined}
+        >
           {npcName}
         </Text>
         <Text color="grey500" fontSize="xs">
