@@ -9,10 +9,6 @@ import { config, gasChargingEnabled } from './config.js';
 import { publicClient, relayerAddress, sendPrimaryTx } from './tx.js';
 import { getCharacterId } from './chainReader.js';
 
-// ==================== Constants ====================
-
-const FLUSH_BATCH_SIZE = 50;
-
 // ==================== State ====================
 
 /** Pending ETH funded per player since last flush (in wei) */
@@ -27,7 +23,7 @@ let swapTimer: ReturnType<typeof setInterval> | null = null;
 // ==================== ABI fragments ====================
 
 const worldAbi = parseAbi([
-  'function UD__batchChargeGasGoldWithCounts(address[] players, bytes32[] characterIds, uint256[] counts) returns (uint256[] charged)',
+  'function UD__fundAndCharge(address player, bytes32 characterId)',
 ]);
 
 const erc20Abi = parseAbi([
@@ -76,7 +72,7 @@ export function recordFunding(eoaAddress: Address, ethAmount: bigint): void {
 }
 
 /**
- * Flush pending charges — batch-charge Gold from players.
+ * Flush pending charges — charge Gold from players via fundAndCharge.
  * Runs on interval (default 5 min).
  */
 export async function flushCharges(): Promise<void> {
@@ -88,46 +84,18 @@ export async function flushCharges(): Promise<void> {
 
   console.log(`[gasCharge] Flushing ${snapshot.size} players, ${formatEther(getTotalFromMap(snapshot))} total ETH funded`);
 
-  // Build full arrays — convert ETH amounts to proportional counts
-  // 1 count per fundingAmount ETH funded (minimum 1)
-  const players: Address[] = [];
-  const characterIds: Hex[] = [];
-  const counts: bigint[] = [];
-  /** Map from index in players[] back to snapshot key for re-queue on failure */
-  const playerEthFunded: bigint[] = [];
-
-  const countPerUnit = config.fundingAmount; // matches actual top-up amount
-
   for (const [player, ethFunded] of snapshot) {
     const charId = await getCharacterId(player);
     if (!charId) {
       console.log(`[gasCharge] Skipping ${player} — no characterId found`);
       continue;
     }
-    players.push(player);
-    characterIds.push(charId);
-    const count = ethFunded / countPerUnit;
-    counts.push(count > 0n ? count : 1n);
-    playerEthFunded.push(ethFunded);
-  }
-
-  if (players.length === 0) {
-    console.log('[gasCharge] No eligible players to charge');
-    return;
-  }
-
-  // Send in chunks of FLUSH_BATCH_SIZE to stay within block gas limit
-  for (let i = 0; i < players.length; i += FLUSH_BATCH_SIZE) {
-    const batchPlayers = players.slice(i, i + FLUSH_BATCH_SIZE);
-    const batchCharIds = characterIds.slice(i, i + FLUSH_BATCH_SIZE);
-    const batchCounts = counts.slice(i, i + FLUSH_BATCH_SIZE);
-    const batchEthFunded = playerEthFunded.slice(i, i + FLUSH_BATCH_SIZE);
 
     try {
       const calldata = encodeFunctionData({
         abi: worldAbi,
-        functionName: 'UD__batchChargeGasGoldWithCounts',
-        args: [batchPlayers, batchCharIds, batchCounts],
+        functionName: 'UD__fundAndCharge',
+        args: [player, charId],
       });
 
       const txHash = await sendPrimaryTx({
@@ -135,27 +103,18 @@ export async function flushCharges(): Promise<void> {
         calldata,
       });
 
-      console.log(`[gasCharge] Batch charge tx: ${txHash} (${batchPlayers.length} players, batch ${Math.floor(i / FLUSH_BATCH_SIZE) + 1})`);
-
-      // Clear retry counts on success for this batch
-      for (const player of batchPlayers) {
-        chargeRetries.delete(player);
-      }
+      console.log(`[gasCharge] Charged ${player} tx: ${txHash}`);
+      chargeRetries.delete(player);
     } catch (err) {
-      console.error(`[gasCharge] Batch charge failed (batch ${Math.floor(i / FLUSH_BATCH_SIZE) + 1}):`, err);
-      // Re-queue only this batch's players with retry tracking
-      for (let j = 0; j < batchPlayers.length; j++) {
-        const player = batchPlayers[j];
-        const ethFunded = batchEthFunded[j];
-        const retries = (chargeRetries.get(player) || 0) + 1;
-        if (retries >= 3) {
-          console.warn(`[gasCharge] Dead-lettering charge for ${player} after ${retries} failures (${formatEther(ethFunded)} ETH)`);
-          chargeRetries.delete(player);
-        } else {
-          chargeRetries.set(player, retries);
-          const existing = pendingCharges.get(player) || 0n;
-          pendingCharges.set(player, existing + ethFunded);
-        }
+      const retries = (chargeRetries.get(player) || 0) + 1;
+      if (retries >= 3) {
+        console.warn(`[gasCharge] Dead-lettering charge for ${player} after ${retries} failures (${formatEther(ethFunded)} ETH)`);
+        chargeRetries.delete(player);
+      } else {
+        chargeRetries.set(player, retries);
+        const existing = pendingCharges.get(player) || 0n;
+        pendingCharges.set(player, existing + ethFunded);
+        console.warn(`[gasCharge] Charge failed for ${player}, retry ${retries}/3:`, (err as Error).message?.slice(0, 100));
       }
     }
   }
