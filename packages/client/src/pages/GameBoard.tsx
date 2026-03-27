@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Trans, useTranslation } from 'react-i18next';
 import { GiPerson } from 'react-icons/gi';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -50,6 +51,7 @@ import { BATTLE_OUTCOME_SEEN_KEY, MAX_LEVEL } from '../utils/constants';
 import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 
 export const GameBoard = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     isOpen: isOuterRealmsInfoModalOpen,
     onOpen: onOpenOuterRealmsInfoModal,
@@ -253,14 +255,14 @@ export const GameBoard = (): JSX.Element => {
     if (hasCachedSession && wasPreHydrated) {
       return (
         <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minH="calc(100vh - 125px)" gap={4}>
-          <Text color="rgba(196, 184, 158, 0.5)" fontSize="sm">Loading game...</Text>
+          <Text color="rgba(196, 184, 158, 0.5)" fontSize="sm">{t('gameBoard.loading')}</Text>
           {loadingTooLong && (
             <Button
               onClick={() => window.location.reload()}
               size="sm"
               variant="outline"
             >
-              Reload
+              {t('gameBoard.reload')}
             </Button>
           )}
         </Box>
@@ -272,7 +274,7 @@ export const GameBoard = (): JSX.Element => {
   return (
     <>
     <Helmet>
-      <title>Play | Ultimate Dominion</title>
+      <title>{t('gameBoard.pageTitle')}</title>
     </Helmet>
     {isReconnecting && (
       <Box
@@ -289,7 +291,7 @@ export const GameBoard = (): JSX.Element => {
         pointerEvents="all"
       >
         <Text color="rgba(196, 184, 158, 0.8)" fontSize="md" fontWeight="medium">
-          Reconnecting...
+          {t('gameBoard.reconnecting')}
         </Text>
       </Box>
     )}
@@ -366,7 +368,7 @@ export const GameBoard = (): JSX.Element => {
           <DrawerOverlay />
           <DrawerContent maxH="60vh" borderTopRadius="lg">
             <DrawerCloseButton />
-            <DrawerHeader>Stats</DrawerHeader>
+            <DrawerHeader>{t('gameBoard.statsDrawer')}</DrawerHeader>
             <DrawerBody className="data-dense" overflowY="auto" pb={6}>
               <StatsPanel />
               {isSpawned && !currentBattle && stage >= OnboardingStage.FIRST_BLOOD && (
@@ -383,23 +385,17 @@ export const GameBoard = (): JSX.Element => {
       </Box>
 
       <InfoModal
-        heading="Careful! You're about to enter the Winding Dark!"
+        heading={t('gameBoard.outerRealmsWarning')}
         isOpen={isOuterRealmsInfoModalOpen}
         onClose={onAcknowledgeOuterRealmsWarning}
       >
         <VStack p={4} spacing={4}>
           <IoIosWarning color="orange" size={40} />
           <Text mt={4}>
-            The{' '}
-            <Text as="span" fontWeight={700}>
-              Winding Dark
-            </Text>{' '}
-            is a dangerous place for a level 1 character. Any other player could
-            attack you at any time.
+            <Trans i18nKey="gameBoard.outerRealmsBody1" ns="ui" components={{ bold: <Text as="span" fontWeight={700} /> }} />
           </Text>
           <Text>
-            It is recommended that you level up your character more before
-            entering.
+            {t('gameBoard.outerRealmsBody2')}
           </Text>
         </VStack>
       </InfoModal>

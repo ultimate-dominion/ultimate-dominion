@@ -14,7 +14,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import SafeTypist from './SafeTypist';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -715,11 +715,7 @@ export const ActionsPanel = (): JSX.Element => {
             stdTypingDelay={10}
           >
             <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-              In order to begin battling, you must{' '}
-              <Text as="span" fontWeight={700}>
-                spawn
-              </Text>{' '}
-              your character.
+              <Trans i18nKey="gameBoard.spawnPrompt" ns="ui" components={{ bold: <Text as="span" fontWeight={700} /> }} />
             </Text>
           </SafeTypist>
         )}

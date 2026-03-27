@@ -614,5 +614,145 @@
       "invalidMetadataUrl": "サーバーから無効なメタデータURLが返されました。",
       "creationFailed": "キャラクター作成に失敗しました。"
     }
+  },
+  "gameBoard": {
+    "pageTitle": "プレイ | Ultimate Dominion",
+    "loading": "ゲーム読み込み中...",
+    "reload": "再読み込み",
+    "reconnecting": "再接続中...",
+    "statsDrawer": "ステータス",
+    "outerRealmsWarning": "注意！曲がりくねる闇に入ろうとしています！",
+    "outerRealmsBody1": "<bold>曲がりくねる闇</bold>はレベル1のキャラクターには危険な場所です。他のプレイヤーがいつでも攻撃してくる可能性があります。",
+    "outerRealmsBody2": "もう少しレベルを上げてから進入することをお勧めします。",
+    "tileDetailsHeading": "タイル詳細",
+    "notSpawned": "まだマップにスポーンしていません。",
+    "errorOccurred": "エラーが発生しました。",
+    "spawnPrompt": "戦闘を開始するには、キャラクターを<bold>スポーン</bold>してください。"
+  },
+  "combat": {
+    "moveToFind": "モンスターを探すには移動してください。",
+    "noMonstersHere": "ここにモンスターはいません。移動を続けてください。",
+    "clickToFight": "モンスターをクリックして戦闘開始。",
+    "youFled": "逃走しました！",
+    "youWon": "勝利！",
+    "youDied": "敗北...",
+    "you": "あなた",
+    "used": "使用:",
+    "noEffect": "効果なし。",
+    "closeToDeath": "瀕死です！",
+    "considerPotion": "ポーションの使用を検討してください。",
+    "smokeCloakActive": "煙幕 — 確定脱出",
+    "fleeFirstTurn": "初ターン無料",
+    "fleeFirstTurnCost": "PvP逃走にはゴールドが必要",
+    "showFewer": "表示を減らす",
+    "initiatingBattle": "戦闘開始中...",
+    "fighting": "{{name}}と戦闘中...",
+    "blockedSome": "{{name}}がダメージを一部ブロック！",
+    "youBlockedSome": "ダメージを一部ブロックしました！"
+  },
+  "tile": {
+    "players": "プレイヤー",
+    "shopsAndPlayers": "ショップ＆プレイヤー",
+    "theAlcove": "安息所",
+    "theWindingDark": "曲がりくねる闇"
+  },
+  "zone": {
+    "darkCave": "暗黒の洞窟",
+    "windyPeaks": "風の峰",
+    "windyPeaksSubtitle": "ノクタムの髄の上にそびえる山脈",
+    "windyPeaksNarrative": "空気が薄くなる。影が深まる。上で何か古いものが蠢く。",
+    "enterThePeaks": "峰へ進入"
+  },
+  "guild": {
+    "pageTitle": "ギルド | Ultimate Dominion",
+    "heading": "ギルド",
+    "createModal": {
+      "title": "ギルド作成",
+      "nameLabel": "ギルド名",
+      "namePlaceholder": "ギルド名を入力",
+      "tagLabel": "タグ",
+      "tagPlaceholder": "例: FURY",
+      "openLabel": "自由参加",
+      "descLabel": "説明",
+      "descPlaceholder": "ギルドの説明...",
+      "cancel": "キャンセル",
+      "create": "作成",
+      "creating": "作成中..."
+    },
+    "withdrawModal": {
+      "title": "金庫から出金",
+      "available": "利用可能: {{amount}} $GOLD",
+      "amountPlaceholder": "出金額",
+      "cancel": "キャンセル",
+      "withdraw": "出金",
+      "withdrawing": "出金中..."
+    },
+    "directory": {
+      "count": "ギルド {{count}}件",
+      "createButton": "ギルド作成",
+      "members": "メンバー {{count}}人",
+      "open": "オープン",
+      "closed": "クローズ",
+      "join": "参加",
+      "apply": "申請",
+      "emptyTitle": "まだギルドがありません。",
+      "emptySubtitle": "最初のギルドを作りましょう！"
+    },
+    "roles": {
+      "leader": "ギルド長",
+      "officer": "幹部",
+      "member": "メンバー"
+    },
+    "tooltips": {
+      "leader": "ギルド長",
+      "promote": "幹部に昇格",
+      "demote": "メンバーに降格",
+      "kick": "追放"
+    },
+    "treasury": "$GOLD 金庫",
+    "leaderControls": "ギルド長管理",
+    "taxRate": "税率",
+    "withdrawTreasury": "金庫出金",
+    "disbandGuild": "ギルド解散",
+    "disbanding": "解散中...",
+    "pendingApplications": "保留中の申請 ({{count}})",
+    "approve": "承認",
+    "reject": "拒否",
+    "memberCount": "メンバー {{count}}人",
+    "leaveGuild": "ギルド脱退",
+    "leaving": "脱退中..."
+  },
+  "leaderboard": {
+    "pageTitle": "リーダーボード | Ultimate Dominion",
+    "heading": "リーダーボード",
+    "tabs": {
+      "rankings": "ランキング",
+      "raceToMax": "最大レベル競争",
+      "pvpRankings": "PvPランキング"
+    },
+    "search": "検索",
+    "filterAll": "全て",
+    "filterStrength": "力",
+    "filterAgility": "敏捷",
+    "filterIntelligence": "知力",
+    "playerCount": "プレイヤー {{count}}人",
+    "sortStats": "合計ステータス",
+    "sortLevel": "レベル",
+    "sortGold": "$Gold",
+    "noPlayers": "プレイヤーなし",
+    "raceToMaxDesc": "最大レベルに最初に到達した10人のプレイヤーが永久ゾーン征服者バッジを獲得します。",
+    "zoneConqueror": "ゾーン征服者",
+    "noneConquered": "まだ誰もダークケイブを征服していません。",
+    "beFirst": "最初に最大レベルに到達しよう！",
+    "badgesRemaining": "残り {{count}} バッジ",
+    "season": "シーズン {{number}}",
+    "pvpDesc": "PvP戦闘のELOレーティングによるランキングです。",
+    "colRank": "#",
+    "colPlayer": "プレイヤー",
+    "colWL": "勝/敗",
+    "colWinPct": "勝率",
+    "colElo": "ELO",
+    "noPvp": "まだPvP記録がありません。",
+    "pvpCta": "他のプレイヤーに挑戦してランクを上げよう！"
   }
 }

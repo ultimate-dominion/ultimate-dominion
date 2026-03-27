@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { zeroHash } from 'viem';
 import { loadZoneManifest } from '../utils/itemImages';
 import { loadMonsterManifest } from '../utils/monsterImages';
@@ -60,9 +61,9 @@ const ZONE_ORIGINS: Record<number, { x: number; y: number }> = {
   2: { x: 0, y: ZONE_ORIGIN_SPACING },
 };
 
-const ZONE_NAMES: Record<number, string> = {
-  1: 'Dark Cave',
-  2: 'Windy Peaks',
+const ZONE_NAME_KEYS: Record<number, string> = {
+  1: 'zone.darkCave',
+  2: 'zone.windyPeaks',
 };
 
 /** Convert raw on-chain position to display (0-9) coords for the current zone */
@@ -127,6 +128,7 @@ const SESSION_IDLE_MS = 10 * 60 * 1000;
 const IDLE_CHECK_INTERVAL_MS = 30 * 1000;
 
 export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { renderError } = useToast();
   const {
     delegatorAddress,
@@ -166,7 +168,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     const zoneId = characterZoneData ? toNumber(characterZoneData.zoneId) : 0;
     return zoneId === 0 ? 1 : zoneId;
   }, [characterZoneData]);
-  const currentZoneName = ZONE_NAMES[currentZone] ?? `Zone ${currentZone}`;
+  const currentZoneName = ZONE_NAME_KEYS[currentZone] ? t(ZONE_NAME_KEYS[currentZone]) : `Zone ${currentZone}`;
 
   // Preload art manifests when zone changes (CDN fallback for missing local art)
   const ZONE_SLUGS: Record<number, string> = { 1: 'dark_cave', 2: 'windy_peaks' };
