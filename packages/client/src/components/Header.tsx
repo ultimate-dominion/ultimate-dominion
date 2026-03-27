@@ -159,6 +159,7 @@ export const Header = (): JSX.Element => {
       as="header"
       bgColor={pathname === HOME_PATH ? 'transparent' : '#1C1814'}
       mt={4}
+      overflow="hidden"
       px={4}
       py={2}
       templateColumns={{ base: '1fr auto', lg: '1fr' }}
