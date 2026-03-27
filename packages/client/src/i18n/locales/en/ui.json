@@ -629,6 +629,40 @@
     "errorOccurred": "An error occurred.",
     "spawnPrompt": "In order to begin battling, you must <bold>spawn</bold> your character."
   },
+  "combat": {
+    "moveToFind": "Move around to find monsters.",
+    "noMonstersHere": "No monsters here. Keep moving.",
+    "clickToFight": "Click on a monster to battle.",
+    "youFled": "You fled!",
+    "youWon": "Victory!",
+    "youDied": "Defeated...",
+    "you": "You",
+    "used": "used",
+    "noEffect": "No effect.",
+    "closeToDeath": "You're close to death!",
+    "considerPotion": "Consider using a potion.",
+    "smokeCloakActive": "Smoke Cloak — guaranteed escape",
+    "fleeFirstTurn": "Free on first turn",
+    "fleeFirstTurnCost": "Costs Gold to flee PvP",
+    "showFewer": "Show fewer",
+    "initiatingBattle": "Initiating battle...",
+    "fighting": "Fighting {{name}}...",
+    "blockedSome": "{{name}} blocked some damage!",
+    "youBlockedSome": "You blocked some damage!"
+  },
+  "tile": {
+    "players": "Players",
+    "shopsAndPlayers": "Shops & Players",
+    "theAlcove": "The Alcove",
+    "theWindingDark": "The Winding Dark"
+  },
+  "zone": {
+    "darkCave": "Dark Cave",
+    "windyPeaks": "WINDY PEAKS",
+    "windyPeaksSubtitle": "The mountain range above Noctum's Marrow",
+    "windyPeaksNarrative": "The air thins. The shadows deepen. Something ancient stirs above.",
+    "enterThePeaks": "Enter the Peaks"
+  },
   "guild": {
     "pageTitle": "Guild | Ultimate Dominion",
     "heading": "Guild",

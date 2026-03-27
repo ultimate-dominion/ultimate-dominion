@@ -629,6 +629,40 @@
     "errorOccurred": "エラーが発生しました。",
     "spawnPrompt": "戦闘を開始するには、キャラクターを<bold>スポーン</bold>してください。"
   },
+  "combat": {
+    "moveToFind": "モンスターを探すには移動してください。",
+    "noMonstersHere": "ここにモンスターはいません。移動を続けてください。",
+    "clickToFight": "モンスターをクリックして戦闘開始。",
+    "youFled": "逃走しました！",
+    "youWon": "勝利！",
+    "youDied": "敗北...",
+    "you": "あなた",
+    "used": "使用:",
+    "noEffect": "効果なし。",
+    "closeToDeath": "瀕死です！",
+    "considerPotion": "ポーションの使用を検討してください。",
+    "smokeCloakActive": "煙幕 — 確定脱出",
+    "fleeFirstTurn": "初ターン無料",
+    "fleeFirstTurnCost": "PvP逃走にはゴールドが必要",
+    "showFewer": "表示を減らす",
+    "initiatingBattle": "戦闘開始中...",
+    "fighting": "{{name}}と戦闘中...",
+    "blockedSome": "{{name}}がダメージを一部ブロック！",
+    "youBlockedSome": "ダメージを一部ブロックしました！"
+  },
+  "tile": {
+    "players": "プレイヤー",
+    "shopsAndPlayers": "ショップ＆プレイヤー",
+    "theAlcove": "安息所",
+    "theWindingDark": "曲がりくねる闇"
+  },
+  "zone": {
+    "darkCave": "暗黒の洞窟",
+    "windyPeaks": "風の峰",
+    "windyPeaksSubtitle": "ノクタムの髄の上にそびえる山脈",
+    "windyPeaksNarrative": "空気が薄くなる。影が深まる。上で何か古いものが蠢く。",
+    "enterThePeaks": "峰へ進入"
+  },
   "guild": {
     "pageTitle": "ギルド | Ultimate Dominion",
     "heading": "ギルド",

@@ -629,6 +629,40 @@
     "errorOccurred": "오류가 발생했습니다.",
     "spawnPrompt": "전투를 시작하려면 캐릭터를 <bold>소환</bold>해야 합니다."
   },
+  "combat": {
+    "moveToFind": "몬스터를 찾으려면 이동하세요.",
+    "noMonstersHere": "여기에는 몬스터가 없습니다. 계속 이동하세요.",
+    "clickToFight": "몬스터를 클릭하여 전투하세요.",
+    "youFled": "도주했습니다!",
+    "youWon": "승리!",
+    "youDied": "패배...",
+    "you": "당신",
+    "used": "사용:",
+    "noEffect": "효과 없음.",
+    "closeToDeath": "사망 위기!",
+    "considerPotion": "포션 사용을 고려하세요.",
+    "smokeCloakActive": "연막 — 확정 탈출",
+    "fleeFirstTurn": "첫 턴 무료",
+    "fleeFirstTurnCost": "PvP 도주 시 골드 소모",
+    "showFewer": "줄여 보기",
+    "initiatingBattle": "전투 시작 중...",
+    "fighting": "{{name}}과(와) 전투 중...",
+    "blockedSome": "{{name}}이(가) 피해를 일부 방어했습니다!",
+    "youBlockedSome": "피해를 일부 방어했습니다!"
+  },
+  "tile": {
+    "players": "플레이어",
+    "shopsAndPlayers": "상점 & 플레이어",
+    "theAlcove": "안식처",
+    "theWindingDark": "구불어둠"
+  },
+  "zone": {
+    "darkCave": "어둠의 동굴",
+    "windyPeaks": "바람의 봉우리",
+    "windyPeaksSubtitle": "녹툼의 골수 위 산맥",
+    "windyPeaksNarrative": "공기가 희박해진다. 그림자가 깊어진다. 위에서 고대의 무언가가 꿈틀댄다.",
+    "enterThePeaks": "봉우리로 진입"
+  },
   "guild": {
     "pageTitle": "길드 | Ultimate Dominion",
     "heading": "길드",
