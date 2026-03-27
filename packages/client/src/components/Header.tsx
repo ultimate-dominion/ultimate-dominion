@@ -258,13 +258,12 @@ export const Header = (): JSX.Element => {
           {/* Logo + settings gear — right-aligned on desktop */}
           <HStack spacing={2}>
             <Button
-              mb={{ base: pathname !== HOME_PATH ? 2 : 0, sm: 2 }}
-              mt={{ base: pathname !== HOME_PATH ? -1 : 0, sm: -1 }}
               onClick={() => navigate(logoLink)}
               variant="unstyled"
             >
               <Image
                 alt="Ultimate Dominion Logo"
+                maxH="40px"
                 src="/images/ud-logo-dark-horizontal.svg"
                 width={{ base: '180px', sm: '220px' }}
               />
