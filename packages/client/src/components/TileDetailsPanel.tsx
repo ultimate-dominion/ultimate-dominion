@@ -1245,7 +1245,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
-          {stage <= OnboardingStage.JUST_SPAWNED && visibleMonstersOnTile.length === 0 && (
+          {stage >= OnboardingStage.FIRST_STEPS && stage < OnboardingStage.FIRST_BLOOD && visibleMonstersOnTile.length === 0 && (
             <VStack
               align="center"
               justify="center"
