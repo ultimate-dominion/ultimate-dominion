@@ -21,4 +21,10 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
 Sitemap: https://ultimatedominion.com/sitemap.xml
