@@ -7,6 +7,7 @@ import Breadcrumbs from './Breadcrumbs.astro';
 import TableOfContents from './TableOfContents.astro';
 import MobileSidebar from './MobileSidebar.astro';
 import SearchModal from '../ui/SearchModal.astro';
+import JsonLd from '../seo/JsonLd.astro';
 
 interface BreadcrumbItem {
   label: string;
@@ -29,9 +30,23 @@ interface Props {
 }
 
 const { title, description, breadcrumbs = [], headings = [], canonical, ogImage } = Astro.props;
+
+const breadcrumbSchema = breadcrumbs.length > 0 ? {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Guide', item: 'https://ultimatedominion.com/guide/' },
+    ...breadcrumbs.map((bc, i) => ({
+      '@type': 'ListItem',
+      position: i + 2,
+      name: bc.label,
+      ...(bc.href ? { item: `https://ultimatedominion.com/guide${bc.href}` } : {}),
+    })),
+  ],
+} : null;
 ---
 
 <BaseLayout title={title} description={description} canonical={canonical} ogImage={ogImage}>
+  {breadcrumbSchema && <JsonLd schema={breadcrumbSchema} slot="head" />}
   <slot name="head" slot="head" />
 
   <Header />
