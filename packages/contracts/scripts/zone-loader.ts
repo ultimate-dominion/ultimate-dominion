@@ -514,16 +514,31 @@ Available zones:
     console.log(`Starting nonce: ${currentNonce}`);
   }
 
-  async function sendTx(args: Parameters<typeof walletClient!.writeContract>[0]) {
+  async function sendTx(args: Parameters<typeof walletClient!.writeContract>[0], retries = 3): Promise<`0x${string}`> {
     if (!walletClient) throw new Error('No wallet client');
-    const hash = await walletClient.writeContract({
-      ...args,
-      nonce: currentNonce!,
-    });
-    currentNonce!++;
-    await publicClient.waitForTransactionReceipt({ hash });
-    await sleep(2000);
-    return hash;
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        // Refresh nonce from chain to avoid drift on L2
+        currentNonce = await publicClient.getTransactionCount({ address: account!.address });
+        const hash = await walletClient.writeContract({
+          ...args,
+          nonce: currentNonce,
+        });
+        currentNonce++;
+        await publicClient.waitForTransactionReceipt({ hash });
+        await sleep(1000);
+        return hash;
+      } catch (e: any) {
+        const msg = e?.details || e?.message || '';
+        if ((msg.includes('nonce') || msg.includes('underpriced') || msg.includes('replacement')) && attempt < retries - 1) {
+          console.log(`    Nonce error, retrying (attempt ${attempt + 2}/${retries})...`);
+          await sleep(3000);
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw new Error('sendTx: max retries exceeded');
   }
 
   // Track created item IDs by name for shop inventory resolution
