@@ -63,8 +63,8 @@ const worldAbi = parseAbi([
   'function UD__getCurrentMobCounter() view returns (uint256)',
   // Item creation (for quest items)
   'function UD__createItem(uint8 itemType, string name, string description, uint256 price, uint256 rarity, bytes stats) returns (uint256)',
-  // FragmentChainStepReward direct table write
-  'function UD__setFragmentChainStepReward(uint8 fragmentType, uint256 stepIndex, uint256 rewardItemId) external',
+  // FragChainReward direct table write
+  'function UD__setFragChainReward(uint8 fragmentType, uint256 stepIndex, uint256 rewardItemId) external',
 ]);
 
 enum MobType {
@@ -99,21 +99,33 @@ function encodeNpcInteract(npcEntityId: Hex): Hex {
 
 function encodeMonsterStats(
   level: number, hp: number, str: number, agi: number, int_: number, arm: number,
-  xp: number, cls: number
+  xp: number, cls: number, inventory: number[] = [1]
 ): Hex {
   return encodeAbiParameters(
     [{ type: 'tuple', components: [
-      { name: 'level', type: 'uint256' },
-      { name: 'maxHp', type: 'int256' },
-      { name: 'strength', type: 'int256' },
       { name: 'agility', type: 'int256' },
-      { name: 'intelligence', type: 'int256' },
       { name: 'armor', type: 'int256' },
+      { name: 'class', type: 'uint8' },
       { name: 'experience', type: 'uint256' },
-      { name: 'monsterClass', type: 'uint8' },
+      { name: 'hasBossAI', type: 'bool' },
+      { name: 'hitPoints', type: 'int256' },
+      { name: 'intelligence', type: 'int256' },
+      { name: 'inventory', type: 'uint256[]' },
+      { name: 'level', type: 'uint256' },
+      { name: 'strength', type: 'int256' },
     ]}],
-    [{ level: BigInt(level), maxHp: BigInt(hp), strength: BigInt(str), agility: BigInt(agi),
-       intelligence: BigInt(int_), armor: BigInt(arm), experience: BigInt(xp), monsterClass: cls }]
+    [{
+      agility: BigInt(agi),
+      armor: BigInt(arm),
+      class: cls,
+      experience: BigInt(xp),
+      hasBossAI: false,
+      hitPoints: BigInt(hp),
+      intelligence: BigInt(int_),
+      inventory: inventory.map(i => BigInt(i)),
+      level: BigInt(level),
+      strength: BigInt(str),
+    }]
   );
 }
 
@@ -194,20 +206,7 @@ async function main() {
     return receipt;
   }
 
-  // ── Step 1: Read mob counter baseline ──
-  console.log('=== Step 1: Read mob counter ===');
-  let mobCounter: bigint;
-  try {
-    mobCounter = await publicClient.readContract({
-      address: worldAddress,
-      abi: worldAbi,
-      functionName: 'UD__getCurrentMobCounter',
-    });
-    console.log(`  Current mob counter: ${mobCounter}\n`);
-  } catch {
-    console.warn('  Could not read mob counter — using 34 as baseline');
-    mobCounter = 34n;
-  }
+  // ── Step 1: Skipped (mob counter read via simulateContract in step 2) ──
 
   // ── Step 2: Create quest mobs ──
   console.log('=== Step 2: Create quest mobs ===');
@@ -216,37 +215,43 @@ async function main() {
   for (const mob of QUEST_MOBS) {
     console.log(`  Creating: ${mob.name} (L${mob.level})`);
     const stats = encodeMonsterStats(mob.level, mob.hp, mob.str, mob.agi, mob.int_, mob.arm, mob.xp, mob.cls);
+
+    // Simulate to get the returned mobId
+    const { result: mobId } = await publicClient.simulateContract({
+      address: worldAddress,
+      abi: worldAbi,
+      functionName: 'UD__createMob',
+      args: [MobType.Monster, stats, mob.uri],
+      account: account.address,
+    });
+    console.log(`  -> will be mobId: ${mobId}`);
+
+    // Execute the actual tx
     await sendTx({
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__createMob',
       args: [MobType.Monster, stats, mob.uri],
     });
-    mobCounter++;
-    questMobIds.push(mobCounter);
-    console.log(`  -> mobId: ${mobCounter}`);
+    questMobIds.push(mobId as bigint);
 
     // Spawn at position
     await sendTx({
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__spawnMob',
-      args: [mobCounter, mob.tile.x, mob.tile.y],
+      args: [mobId, mob.tile.x, mob.tile.y],
     });
     console.log(`  -> Spawned at (${mob.tile.x}, ${mob.tile.y})\n`);
   }
 
-  // Verify mob IDs match constants.sol expectations
   const [scoutId, trackerId, guardianId, ossuaryId, galeFuryId] = questMobIds;
-  console.log('  Mob ID verification:');
-  console.log(`    COVENANT_SCOUT_MOB_ID    = ${scoutId} (expected: 35)`);
-  console.log(`    COVENANT_TRACKER_MOB_ID  = ${trackerId} (expected: 36)`);
-  console.log(`    FRAYING_GUARDIAN_MOB_ID  = ${guardianId} (expected: 37)`);
-  console.log(`    OSSUARY_GUARDIAN_MOB_ID  = ${ossuaryId} (expected: 38)`);
-  console.log(`    GALE_FURY_MOB_ID         = ${galeFuryId} (expected: 39)`);
-  if (scoutId !== 35n || trackerId !== 36n || guardianId !== 37n || ossuaryId !== 38n || galeFuryId !== 39n) {
-    console.error('\n  WARNING: Mob IDs do not match constants.sol! Update constants before deploying contracts.');
-  }
+  console.log('  Quest mob IDs:');
+  console.log(`    COVENANT_SCOUT_MOB_ID    = ${scoutId}`);
+  console.log(`    COVENANT_TRACKER_MOB_ID  = ${trackerId}`);
+  console.log(`    FRAYING_GUARDIAN_MOB_ID  = ${guardianId}`);
+  console.log(`    OSSUARY_GUARDIAN_MOB_ID  = ${ossuaryId}`);
+  console.log(`    GALE_FURY_MOB_ID         = ${galeFuryId}`);
   console.log();
 
   // ── Step 3: Create world object NPCs ──
@@ -256,28 +261,41 @@ async function main() {
   for (const obj of WORLD_OBJECTS) {
     console.log(`  Creating: ${obj.name} at (${obj.tile.x}, ${obj.tile.y})`);
     const stats = encodeNPCStats(obj.name);
-    const receipt = await sendTx({
+    const uri = `worldobj:${obj.name.toLowerCase().replace(/\s+/g, '_')}`;
+
+    // Simulate to get mobId
+    const { result: objMobId } = await publicClient.simulateContract({
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__createMob',
-      args: [MobType.NPC, stats, `worldobj:${obj.name.toLowerCase().replace(/\s+/g, '_')}`],
+      args: [MobType.NPC, stats, uri],
+      account: account.address,
     });
-    mobCounter++;
-    console.log(`  -> mobId: ${mobCounter}`);
+    console.log(`  -> will be mobId: ${objMobId}`);
 
-    const spawnReceipt = await sendTx({
+    await sendTx({
+      address: worldAddress,
+      abi: worldAbi,
+      functionName: 'UD__createMob',
+      args: [MobType.NPC, stats, uri],
+    });
+
+    await sendTx({
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__spawnMob',
-      args: [mobCounter, obj.tile.x, obj.tile.y],
+      args: [objMobId, obj.tile.x, obj.tile.y],
     });
 
-    // Extract entity ID from spawn event logs (the entity ID is needed for NPC dialogue config)
-    // For now, compute it: entityId = (mobId << 224) | spawnIndex
-    // This is approximate — the actual entityId comes from the SpawnMob event
-    const entityId = `0x${mobCounter.toString(16).padStart(8, '0')}${'0'.repeat(56)}` as Hex;
+    // Entity ID encoding: uint32(mobId) | uint192(spawnCounter) | uint16(x) | uint16(y)
+    // spawnCounter starts at 1 for first spawn of each mob
+    const mobIdHex = (objMobId as bigint).toString(16).padStart(8, '0');
+    const spawnCounterHex = '000000000000000000000000000000000000000000000001';
+    const xHex = obj.tile.x.toString(16).padStart(4, '0');
+    const yHex = obj.tile.y.toString(16).padStart(4, '0');
+    const entityId = `0x${mobIdHex}${spawnCounterHex}${xHex}${yHex}` as Hex;
     worldObjectEntityIds.push(entityId);
-    console.log(`  -> entityId (approx): ${entityId}\n`);
+    console.log(`  -> entityId: ${entityId}\n`);
   }
 
   const [campJournalEntity, shrineInscEntity, edricShrineEntity, summitStoneEntity] = worldObjectEntityIds;
@@ -416,8 +434,8 @@ async function main() {
   console.log('=== Step 7: Quest item rewards ===');
   console.log('  NOTE: Quest items must be created via item-sync before setting rewards.');
   console.log('  After creating items, run:');
-  console.log('    UD__setFragmentChainStepReward(11, 0, SEALED_LETTER_ITEM_ID)');
-  console.log('    UD__setFragmentChainStepReward(15, 1, LAST_SERMON_ITEM_ID)\n');
+  console.log('    UD__setFragChainReward(11, 0, SEALED_LETTER_ITEM_ID)');
+  console.log('    UD__setFragChainReward(15, 1, LAST_SERMON_ITEM_ID)\n');
 
   // ── Step 8: Set fragment metadata ──
   console.log('=== Step 8: Set fragment metadata ===');
@@ -443,7 +461,7 @@ async function main() {
   console.log('');
   console.log('  REMAINING MANUAL STEPS:');
   console.log('  1. Create quest items (Sealed Letter, Last Sermon) via item-sync');
-  console.log('  2. Set FragmentChainStepReward for fragments 11 and 15');
+  console.log('  2. Set FragChainReward for fragments 11 and 15');
   console.log('  3. Verify Vel/Edric entity IDs and re-run if needed');
   console.log('='.repeat(60));
 }

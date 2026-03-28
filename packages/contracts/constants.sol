@@ -101,11 +101,11 @@ uint256 constant SHADOW_STALKER_MOB_ID = 9;       // Fragment VII: Betrayer's Tr
 
 // Zone 2 (Windy Peaks) quest chain mob IDs — assigned at deploy time
 // IDs must match deploy-z2-quest-chains.ts output
-uint256 constant COVENANT_SCOUT_MOB_ID = 35;      // Fragment X step 2: Vel's Warning
-uint256 constant COVENANT_TRACKER_MOB_ID = 36;    // Fragment XI step 1: The Orders (drops Sealed Letter)
-uint256 constant FRAYING_GUARDIAN_MOB_ID = 37;     // Fragment XIII step 2: The Shrine
-uint256 constant OSSUARY_GUARDIAN_MOB_ID = 38;     // Fragment XV step 2: Bones of Faith (drops Last Sermon)
-uint256 constant GALE_FURY_MOB_ID = 39;            // Fragment XVI step 2: The Wind's Memory
+uint256 constant COVENANT_SCOUT_MOB_ID = 81;      // Fragment X step 2: Vel's Warning
+uint256 constant COVENANT_TRACKER_MOB_ID = 82;    // Fragment XI step 1: The Orders (drops Sealed Letter)
+uint256 constant FRAYING_GUARDIAN_MOB_ID = 83;     // Fragment XIII step 2: The Shrine
+uint256 constant OSSUARY_GUARDIAN_MOB_ID = 84;     // Fragment XV step 2: Bones of Faith (drops Last Sermon)
+uint256 constant GALE_FURY_MOB_ID = 85;            // Fragment XVI step 2: The Wind's Memory
 
 // GameDelegation constants
 bytes16 constant GAME_DELEGATION_NAME = "GameDelegation";
