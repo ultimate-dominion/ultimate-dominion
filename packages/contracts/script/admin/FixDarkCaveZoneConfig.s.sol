@@ -4,73 +4,49 @@ pragma solidity >=0.8.24;
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 import {IWorld} from "@world/IWorld.sol";
-import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
-import {ZoneConfig, CharacterZoneCompletion, ZoneCompletions} from "@codegen/index.sol";
-import {ZONE_DARK_CAVE, EARLY_GAME_CAP} from "../../constants.sol";
 
 /**
  * @title FixDarkCaveZoneConfig
- * @notice Fixes Dark Cave ZoneConfig maxLevel from 20 → 10 (EARLY_GAME_CAP) and
- *         backfills zone completion + badge for the remaining 4 characters who
- *         reached level 10 but were skipped because maxLevel was incorrectly set to 20.
+ * @notice Backfills zone completion + badge for the 2 characters who reached level 10
+ *         but were skipped because Dark Cave maxLevel was incorrectly set to 20.
  *
- *         Characters must be passed in chronological order of when they reached level 10
- *         (earliest first). They will receive ranks 7–10 since 6 completions already exist.
+ *         PREREQUISITE: Update ZoneConfig.maxLevel for Dark Cave BEFORE running this script:
+ *           cast send $WORLD_ADDRESS "UD__adminSetZoneMaxLevel(uint256,uint256)" 1 10 \
+ *             --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+ *         Or use storeSetField if no admin function exists (see below).
  *
  *         Usage:
- *         source .env.mainnet && forge script script/admin/FixDarkCaveZoneConfig.s.sol \
- *           --sig "run(address,bytes32,bytes32,bytes32,bytes32)" \
- *           $WORLD_ADDRESS $CHAR_7 $CHAR_8 $CHAR_9 $CHAR_10 \
+ *         source .env.mainnet && FOUNDRY_PROFILE=script forge script \
+ *           script/admin/FixDarkCaveZoneConfig.s.sol:FixDarkCaveZoneConfig \
+ *           --sig "run(address)" $WORLD_ADDRESS \
  *           --rpc-url "$RPC_URL" --broadcast
  */
 contract FixDarkCaveZoneConfig is Script {
-    function run(
-        address _worldAddress,
-        bytes32 char7,
-        bytes32 char8,
-        bytes32 char9,
-        bytes32 char10
-    ) external {
+    function run(address _worldAddress) external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        StoreSwitch.setStoreAddress(_worldAddress);
         IWorld world = IWorld(_worldAddress);
 
-        console.log("=== Fix Dark Cave Zone Config ===");
+        console.log("=== Fix Dark Cave Zone Conqueror Badge ===");
         console.log("World address:", _worldAddress);
         console.log("Deployer:", deployer);
 
-        // ── Step 1: Fix ZoneConfig maxLevel ──
-        uint256 currentMaxLevel = ZoneConfig.getMaxLevel(ZONE_DARK_CAVE);
-        console.log("  Current Dark Cave maxLevel:", currentMaxLevel);
-        require(currentMaxLevel == 20, "Unexpected maxLevel — already patched?");
+        // Agentsmithy (rank 7) -- token 0x73, reached L10 after existing 6
+        bytes32 char7 = 0xa3ed8c7b0a75a1465b487918d777f5fcd358f043000000000000000000000073;
+        // Kirin (rank 8) -- token 0x77, reached L10 after Agentsmithy
+        bytes32 char8 = 0x5a4b5547bfdc0922b45bec76e3129f9fa46195e5000000000000000000000077;
 
         vm.startBroadcast(deployerPrivateKey);
 
-        ZoneConfig.setMaxLevel(ZONE_DARK_CAVE, EARLY_GAME_CAP);
-        console.log("  Updated Dark Cave maxLevel:", EARLY_GAME_CAP);
+        console.log("  Backfilling Agentsmithy (rank 7)...");
+        world.UD__backfillZoneCompletion(char7);
 
-        // Verify existing completions before backfill
-        bytes32[] memory existing = ZoneCompletions.getCompletedCharacters(ZONE_DARK_CAVE);
-        console.log("  Existing DC completions:", existing.length);
-        require(existing.length == 6, "Expected 6 existing completions");
-
-        // ── Step 2: Backfill remaining 4 characters (ranks 7–10) ──
-        bytes32[4] memory charIds = [char7, char8, char9, char10];
-
-        for (uint256 i = 0; i < charIds.length; i++) {
-            console.log("  Backfilling character (rank %d):", existing.length + i + 1);
-            world.UD__backfillZoneCompletion(charIds[i]);
-        }
+        console.log("  Backfilling Kirin (rank 8)...");
+        world.UD__backfillZoneCompletion(char8);
 
         vm.stopBroadcast();
 
-        // ── Verify ──
-        bytes32[] memory afterCompletions = ZoneCompletions.getCompletedCharacters(ZONE_DARK_CAVE);
-        console.log("  DC completions after backfill:", afterCompletions.length);
-        require(afterCompletions.length == 10, "Expected 10 completions after backfill");
-
-        console.log("=== Fix Complete ===");
+        console.log("=== Backfill Complete ===");
     }
 }
