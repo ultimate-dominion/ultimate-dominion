@@ -56,14 +56,15 @@ const CURRENT_DROPS: Record<number, MobDropProfile> = {
   10: { R2: [100, 100, 100, 100, 100, 100, 40], R3: [16, 16, 16, 4], R4: [11] },
 };
 
-// Proposed: expanded inventories + tuned rates + MobDropBonus
-// Matches UpdateMonsterInventories.s.sol + SetMobDropBonuses.s.sol exactly
-function buildProposalDrops(): Record<number, MobDropProfile> {
-  const R2 = 1500; // base rate for all R2 items
-  const R3 = 100;  // base rate for all R3 items
-  const R4 = 15;   // base rate for all R4 items
+// Unified V4 drop table — same base rates across Z1 and Z2
+// Matches items.json + SetMobDropBonuses.s.sol (bonuses additive)
+function buildUnifiedDrops(): Record<number, MobDropProfile> {
+  const R1 = 4000; // base rate for all R1 (common) items
+  const R2 = 1500; // base rate for all R2 (uncommon) items
+  const R3 = 200;  // base rate for all R3 (rare) items
+  const R4 = 30;   // base rate for all R4 (epic) items
   return {
-    // L1-L4: 3 R2 items each, no R3/R4 (can't game low mobs), no bonuses
+    // L1-L4: 3 R2 items each, no R3/R4, no bonuses
     1:  { R2: [R2, R2, R2],             R3: [],                          R4: [] },
     2:  { R2: [R2, R2, R2],             R3: [],                          R4: [] },
     3:  { R2: [R2, R2, R2],             R3: [],                          R4: [] },
@@ -308,16 +309,16 @@ async function main() {
   });
   analyzeResults(currentResults, 'CURRENT ON-CHAIN');
 
-  if (args.includes('--proposal')) {
+  if (args.includes('--proposal') || args.includes('--unified') || args.includes('--unified')) {
     for (const eMult of [100, 200, 300]) {
       const proposalResults = simulateJourney({
-        drops: buildProposalDrops(),
+        drops: buildUnifiedDrops(),
         eliteChance: ELITE_CHANCE,
         eliteDropMult: eMult,
         sims: SIMS,
         winRates: avgWinRates,
       });
-      analyzeResults(proposalResults, `PROPOSAL (elite ${eMult / 100}x)`);
+      analyzeResults(proposalResults, `UNIFIED V4 (elite ${eMult / 100}x)`);
     }
   }
 
@@ -328,7 +329,7 @@ async function main() {
     console.log('  ------|-----------|--------|--------|-------------|----------');
     for (const eMult of [100, 150, 200, 250, 300, 400, 500]) {
       const r = simulateJourney({
-        drops: buildProposalDrops(),
+        drops: buildUnifiedDrops(),
         eliteChance: ELITE_CHANCE,
         eliteDropMult: eMult,
         sims: SIMS,
@@ -367,15 +368,15 @@ async function main() {
           }
         }
 
-        const drops = args.includes('--proposal') ? buildProposalDrops() : CURRENT_DROPS;
+        const drops = args.includes('--proposal') || args.includes('--unified') ? buildUnifiedDrops() : CURRENT_DROPS;
         const r = simulateJourney({
           drops,
           eliteChance: ELITE_CHANCE,
-          eliteDropMult: args.includes('--proposal') ? 200 : 100,
+          eliteDropMult: args.includes('--proposal') || args.includes('--unified') ? 200 : 100,
           sims: SIMS,
           winRates: archWinRates,
         });
-        analyzeResults(r, `${arch.name} (${arch.id}) — ${args.includes('--proposal') ? 'PROPOSAL' : 'CURRENT'}`);
+        analyzeResults(r, `${arch.name} (${arch.id}) — ${args.includes('--proposal') || args.includes('--unified') ? 'PROPOSAL' : 'CURRENT'}`);
       }
     } else {
       console.log(`No archetype matching "${archId}". Available: ${engine.archetypes.map(a => a.id).join(', ')}`);
