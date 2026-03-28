@@ -4,19 +4,23 @@ import MonsterCard from '../components/ui/MonsterCard.astro';
 import Callout from '../components/ui/Callout.astro';
 import DataTable from '../components/ui/DataTable.astro';
 import JsonLd from '../components/seo/JsonLd.astro';
-import { darkCaveMonsters } from '../data/monsters';
+import { darkCaveMonsters, basilisk } from '../data/monsters';
+
+const allMonsters = [...darkCaveMonsters, basilisk];
 
 const headings = [
   { depth: 2, slug: 'monster-classes', text: 'Monster Classes' },
   { depth: 2, slug: 'dark-cave-monsters', text: 'Dark Cave Monsters' },
+  { depth: 2, slug: 'the-basilisk', text: 'The Basilisk' },
   { depth: 2, slug: 'stat-comparison', text: 'Stat Comparison' },
+  { depth: 2, slug: 'elite-monsters', text: 'Elite Monsters' },
   { depth: 2, slug: 'hunting-tips', text: 'Hunting Tips' },
 ];
 ---
 
 <GuideLayout
   title="Creatures of the Wound"
-  description="Complete bestiary for Ultimate Dominion's Dark Cave. All 10 monsters with stats, combat classes, drop tables, and tactical advice for every encounter."
+  description="Complete bestiary for Ultimate Dominion's Dark Cave. All 11 monsters with stats, combat classes, drop tables, XP values, and tactical advice for every encounter."
   breadcrumbs={[{ label: 'Bestiary' }]}
   headings={headings}
 >
@@ -24,9 +28,9 @@ const headings = [
     '@type': 'ItemList',
     name: 'Ultimate Dominion Bestiary — Dark Cave',
     description: 'All creatures found in the Dark Cave zone.',
-    numberOfItems: darkCaveMonsters.length,
-    dateModified: '2026-03-12',
-    itemListElement: darkCaveMonsters.map((m, i) => ({
+    numberOfItems: allMonsters.length,
+    dateModified: '2026-03-27',
+    itemListElement: allMonsters.map((m, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: `${m.name} (Level ${m.level} ${m.monsterClass})`,
@@ -35,7 +39,7 @@ const headings = [
 
   <h1>Creatures of the Wound</h1>
   <p class="text-lg text-text-secondary">
-    Ultimate Dominion's Dark Cave contains 10 monsters spanning levels 1-10, each belonging to one of three combat classes: Warrior (STR), Rogue (AGI), or Mage (INT). Monster class determines combat triangle interactions — fighting with the triangle advantage grants up to +40% bonus damage. Each monster has unique stats, drop tables, and tactical considerations.
+    The Dark Cave contains 11 monsters — one per level from 1 to 10, plus the Basilisk boss at level 12. Each belongs to one of three combat classes: Warrior (STR), Rogue (AGI), or Mage (INT). The class pattern alternates: Rogue, Mage, Warrior, Mage, Warrior, Rogue, Mage, Warrior, Rogue, Mage. Monster class determines combat triangle interactions — fighting with the triangle advantage grants up to +12% bonus damage.
   </p>
   <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
@@ -51,13 +55,13 @@ const headings = [
   </ul>
 
   <Callout type="tip" title="Use the triangle">
-    Before engaging, check the monster's class and compare it to your dominant stat. Fighting with the triangle advantage gives you +5% damage per stat point — this adds up fast.
+    Before engaging, check the monster's class and compare it to your dominant stat. Fighting with the triangle advantage gives you +2% damage per stat point difference (up to 12%).
   </Callout>
 
   <h2 id="dark-cave-monsters">Dark Cave Monsters</h2>
   <p class="text-sm text-text-secondary mb-2"><em>Ten creatures, one per level (1-10), with alternating combat classes. Full stat cards and drop tables below.</em></p>
   <p>
-    Ten creatures inhabit the Dark Cave, one per level from 1 to 10. The class sequence alternates irregularly — there's no simple pattern to exploit.
+    Ten regular creatures inhabit the Dark Cave, one per level from 1 to 10. The class sequence alternates irregularly — check the cards below for each monster's class.
   </p>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose my-6">
@@ -71,15 +75,41 @@ const headings = [
         agi={m.agi}
         int={m.int}
         armor={m.armor}
+        xp={m.xp}
         drops={m.drops}
       />
     ))}
   </div>
 
+  <h2 id="the-basilisk">The Basilisk</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Level 12 boss with 130 HP, 4 armor, and dual-weapon boss AI. Drops only rare and epic gear.</em></p>
+  <p>
+    The Basilisk is the Dark Cave's boss encounter — a level 12 Warrior with boss AI. It attacks with <strong>Basilisk Fangs</strong> (physical + venom) and <strong>Petrifying Gaze</strong> (8-14 magic damage + venom). At 130 HP and 4 armor, this is a war of attrition.
+  </p>
+
+  <div class="not-prose my-6">
+    <MonsterCard
+      name={basilisk.name}
+      level={basilisk.level}
+      monsterClass={basilisk.monsterClass}
+      hp={basilisk.hp}
+      str={basilisk.str}
+      agi={basilisk.agi}
+      int={basilisk.int}
+      armor={basilisk.armor}
+      xp={basilisk.xp}
+      drops={basilisk.drops}
+    />
+  </div>
+
+  <Callout type="warning" title="Boss AI">
+    The Basilisk uses boss AI — it switches between physical and magical attacks, applying venom with both. Intelligence builds have the triangle advantage, but bring Antidotes and plenty of healing.
+  </Callout>
+
   <h2 id="stat-comparison">Stat Comparison</h2>
 
-  <DataTable headers={['Monster', 'Lvl', 'Class', 'HP', 'STR', 'AGI', 'INT', 'Armor']} compact>
-    {darkCaveMonsters.map((m) => (
+  <DataTable headers={['Monster', 'Lvl', 'Class', 'HP', 'STR', 'AGI', 'INT', 'Armor', 'XP']} compact>
+    {allMonsters.map((m) => (
       <tr class="hover:bg-surface/50">
         <td class="px-3 py-2 text-white font-medium text-sm">{m.name}</td>
         <td class="px-3 py-2 font-mono text-xs text-center">{m.level}</td>
@@ -89,18 +119,32 @@ const headings = [
         <td class="px-3 py-2 font-mono text-xs text-center text-green">{m.agi}</td>
         <td class="px-3 py-2 font-mono text-xs text-center text-accent-gold">{m.int}</td>
         <td class="px-3 py-2 font-mono text-xs text-center">{m.armor}</td>
+        <td class="px-3 py-2 font-mono text-xs text-center">{m.xp}</td>
       </tr>
     ))}
   </DataTable>
 
+  <h2 id="elite-monsters">Elite Monsters</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>15% chance to spawn as elite — 1.3x stats, 1.5x HP, 2x drop chance, 1.5x XP/gold.</em></p>
+  <p>
+    Any monster can spawn as an <strong>elite variant</strong>. Elites have boosted stats and better rewards:
+  </p>
+  <DataTable headers={['Modifier', 'Value']}>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Spawn chance</td><td class="px-4 py-3 font-mono text-sm">15%</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">STR/AGI/INT</td><td class="px-4 py-3 font-mono text-sm">&times;1.3</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">HP</td><td class="px-4 py-3 font-mono text-sm">&times;1.5</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">XP &amp; Gold reward</td><td class="px-4 py-3 font-mono text-sm">&times;1.5</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Drop chance bonus</td><td class="px-4 py-3 font-mono text-sm">&times;2.0</td></tr>
+  </DataTable>
+
   <h2 id="hunting-tips">Hunting Tips</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Start with Cave Rats (level 1), farm Stone Giant (level 8) for weapons, prep consumables for the Shadow Dragon (level 10).</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>Start with Dire Rats, farm Rock Golems for weapons, prep consumables for the Dusk Drake and Basilisk.</em></p>
   <ul>
-    <li><strong>Start with Cave Rats</strong> — level 1, low HP, drops starter gear. Perfect for your first fights.</li>
-    <li><strong>Farm the Stone Giant</strong> — level 8 Warrior drops two different weapons (Steel Mace and Warhammer), making it one of the best farming targets for weapon upgrades.</li>
-    <li><strong>Shadow Dragon is the boss</strong> — level 10, 48 HP, 20 INT, and armor. Come prepared with your best gear and a full stack of potions. Drops two rare armors.</li>
-    <li><strong>Consumable prep</strong> — buff consumables drop from specific monsters. Stock up on Fortifying Stew (STR buff) before fighting Mage-class creatures, or Quickening Berries (AGI buff) before Warrior-class.</li>
-    <li><strong>Watch the class pattern</strong> — the cave alternates monster classes (R, M, W, M, W, R, M, W, R, M). Plan your consumable usage around upcoming encounters.</li>
+    <li><strong>Start with Dire Rats</strong> — level 1, low HP (10), drops starter gear. Perfect for your first fights.</li>
+    <li><strong>Farm the Rock Golem</strong> — level 8 Warrior drops multiple weapons (Warhammer, Stone Maul) and Carved Stone Plate, making it one of the best farming targets for gear upgrades.</li>
+    <li><strong>Dusk Drake is the gate boss</strong> — level 10, 52 HP, 15 INT, and 2 armor. Come prepared with your best gear and a full stack of potions. Drops epic and rare gear from every class.</li>
+    <li><strong>The Basilisk is endgame</strong> — 130 HP, boss AI, dual-weapon attacks with venom. Bring Antidotes, Greater Health Potions, and your best combat consumables. Drops only rare and epic items.</li>
+    <li><strong>Watch the class pattern</strong> — R, M, W, M, W, R, M, W, R, M. Plan your consumable usage around upcoming encounters.</li>
   </ul>
 
   <Callout type="lore">

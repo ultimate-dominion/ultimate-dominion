@@ -61,20 +61,20 @@ export const classes: ClassData[] = [
   {
     name: 'Warlock',
     bonuses: '+2 AGI, +2 INT',
-    phys: '100%', spell: '110%', heal: '100%', crit: '100%', maxHp: '100%',
+    phys: '100%', spell: '120%', heal: '100%', crit: '100%', maxHp: '100%',
     spellName: 'Soul Drain',
     spellDesc: '8-14 magic damage + (-3 STR, -3 INT) for 3 turns',
     archetype: 'hybrid',
-    description: 'A dark caster who weakens enemies while dealing damage. Soul Drain is the only class ability that both deals damage and applies debuffs, making Warlocks uniquely oppressive in sustained fights.',
+    description: 'A dark caster who weakens enemies while dealing damage. With the second-highest spell multiplier in the game at 120%, Warlocks hit hard with magic. Soul Drain is the only class ability that both deals damage and applies debuffs, making Warlocks uniquely oppressive in sustained fights.',
   },
   {
     name: 'Wizard',
     bonuses: '+3 INT',
-    phys: '100%', spell: '115%', heal: '100%', crit: '100%', maxHp: '100%',
+    phys: '100%', spell: '125%', heal: '100%', crit: '100%', maxHp: '100%',
     spellName: 'Arcane Blast',
     spellDesc: '12-20 magic damage',
     archetype: 'int',
-    description: 'Pure magical devastation. Wizards have the highest spell damage multiplier in the game, making every spell hit significantly harder. Arcane Blast adds yet more burst damage to an already overwhelming arsenal.',
+    description: 'Pure magical devastation. Wizards have the highest spell damage multiplier in the game at 125%, making every spell hit significantly harder. Arcane Blast adds yet more burst damage to an already overwhelming arsenal.',
   },
   {
     name: 'Cleric',
@@ -88,10 +88,10 @@ export const classes: ClassData[] = [
   {
     name: 'Sorcerer',
     bonuses: '+2 STR, +2 INT',
-    phys: '100%', spell: '108%', heal: '100%', crit: '100%', maxHp: '105%',
+    phys: '100%', spell: '115%', heal: '100%', crit: '100%', maxHp: '105%',
     spellName: 'Arcane Surge',
     spellDesc: '10-16 magic damage',
     archetype: 'hybrid',
-    description: 'A battle mage who pairs magical talent with physical resilience. Sorcerers get a modest spell boost and extra HP, making them sturdier than pure casters. Their split stat bonuses allow flexible builds.',
+    description: 'A battle mage who pairs magical talent with physical resilience. Sorcerers get a 115% spell boost and extra HP, making them sturdier than pure casters. Their split stat bonuses allow flexible builds.',
   },
 ];

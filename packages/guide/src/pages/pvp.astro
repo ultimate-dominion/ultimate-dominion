@@ -25,12 +25,12 @@ const headings = [
     '@type': 'Article',
     headline: 'Blood in the Dark — Ultimate Dominion PvP Guide',
     description: 'How player-vs-player combat works in Ultimate Dominion: danger zones, gold escrow, flee penalties, and strategic advice.',
-    dateModified: '2026-03-12',
+    dateModified: '2026-03-27',
   }} slot="head" />
 
   <h1>Blood in the Dark</h1>
   <p class="text-lg text-text-secondary">
-    Ultimate Dominion features player-vs-player combat in designated danger zones. Players deposit gold into an escrow system before entering, and the winner claims ~40% of the loser's escrowed gold. PvP uses the same turn-based combat system as PvE, with a 30-second cooldown between encounters. The safe zone (northwest 5x5 corner) has PvP disabled; everything else is the danger zone.
+    Ultimate Dominion features player-vs-player combat in designated danger zones. The winner claims 40% of the loser's wallet gold (10% burned, 40% to winner). PvP uses the same turn-based combat system as PvE, with a 30-second cooldown between encounters. The safe zone (northwest 5x5 corner) has PvP disabled; everything else is the danger zone.
   </p>
   <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
@@ -75,7 +75,7 @@ const headings = [
   </ul>
 
   <h2 id="fleeing">Fleeing</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>10% escrow penalty to flee — half to opponent, half burned. Attacker flees turn 1, defender turn 2.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>10% wallet gold penalty to flee — 5% to opponent, 5% burned. Attacker flees turn 1, defender turn 2.</em></p>
   <p>
     Either side can attempt to flee, but it comes at a cost:
   </p>
@@ -84,35 +84,36 @@ const headings = [
     <tr class="hover:bg-surface/50">
       <td class="px-4 py-3 text-white font-medium">Attacker</td>
       <td class="px-4 py-3 font-mono text-sm">Turn 1</td>
-      <td class="px-4 py-3 text-red">10% of escrowed gold</td>
+      <td class="px-4 py-3 text-red">10% of wallet gold</td>
     </tr>
     <tr class="hover:bg-surface/50">
       <td class="px-4 py-3 text-white font-medium">Defender</td>
       <td class="px-4 py-3 font-mono text-sm">Turn 2</td>
-      <td class="px-4 py-3 text-red">10% of escrowed gold</td>
+      <td class="px-4 py-3 text-red">10% of wallet gold</td>
     </tr>
   </DataTable>
 
   <p>
-    The flee penalty is <strong>10% of your escrowed gold</strong>. Half goes to the other player, half is burned (removed from the economy). This discourages hit-and-run tactics while still giving an escape route when you're outmatched.
+    The flee penalty is <strong>10% of your wallet gold</strong>. 5% goes to the other player, 5% is burned (removed from the economy). This discourages hit-and-run tactics while still giving an escape route when you're outmatched. The Smoke Cloak effect (from Flashpowder) negates the flee penalty.
   </p>
 
   <Callout type="info" title="PvE flee penalty">
-    Fleeing from monsters (PvE) costs <strong>5% of your escrowed gold</strong>, burned entirely. Lower risk than PvP, but still not free.
+    Fleeing from monsters (PvE) costs <strong>5% of your wallet gold</strong>, burned entirely. Lower risk than PvP, but still not free.
   </Callout>
 
   <Callout type="tip" title="Know when to run">
-    If you're clearly outmatched — wrong side of the combat triangle, lower level, worse gear — fleeing on your first available turn and losing 10% is often better than fighting and losing ~40%.
+    If you're clearly outmatched — wrong side of the combat triangle, lower level, worse gear — fleeing on your first available turn and losing 10% is often better than fighting and losing 50%.
   </Callout>
 
   <h2 id="rewards-and-penalties">Rewards and Penalties</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Winner gets ~40% of loser's escrow. 20% of the pot is burned. Draws have no consequences.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>Loser loses 50% of wallet gold — 40% to winner, 10% burned. Draws have no consequences.</em></p>
   <p>
     When PvP combat ends decisively:
   </p>
   <ul>
-    <li><strong>Winner</strong> receives ~40% of the loser's escrowed gold. (20% of the pot is burned as a gold sink.)</li>
-    <li><strong>Loser</strong> loses ~40% of their escrowed gold.</li>
+    <li><strong>Loser</strong> loses <strong>50%</strong> of their wallet gold.</li>
+    <li><strong>Winner</strong> receives <strong>40%</strong> of the loser's wallet gold.</li>
+    <li><strong>10%</strong> of the loser's wallet gold is <strong>burned</strong> (permanent gold sink).</li>
     <li>If the fight draws (15-turn limit), neither side gains or loses.</li>
   </ul>
 
