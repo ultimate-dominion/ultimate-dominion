@@ -1386,7 +1386,7 @@ export default defineWorld({
       },
     },
     // Optional item reward on chain step completion (quest item drops)
-    FragmentChainStepReward: {
+    FragChainReward: {
       key: ["fragmentType", "stepIndex"],
       schema: {
         fragmentType: "FragmentType",

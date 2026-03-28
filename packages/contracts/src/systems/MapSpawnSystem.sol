@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {MobsByLevel, MobsByZoneLevel, EntitiesAtPosition, BossSpawnConfig, ZoneMapConfig} from "@codegen/index.sol";
+import {MobsByLevel, MobsByZoneLevel, EntitiesAtPosition, BossSpawnConfig, ZoneBossConfig, ZoneMapConfig} from "@codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
@@ -88,11 +88,16 @@ contract MapSpawnSystem is System {
             );
         }
 
-        // Boss spawn check — flat probability on every tile entry
+        // Boss spawn check — per-zone config, falls back to global singleton
         {
-            uint256 bossMobId = BossSpawnConfig.getBossMobId();
-            if (bossMobId != 0) {
-                uint256 chance = BossSpawnConfig.getSpawnChanceBp();
+            uint256 bossMobId = ZoneBossConfig.getBossMobId(zoneId);
+            uint256 chance = ZoneBossConfig.getSpawnChanceBp(zoneId);
+            if (bossMobId == 0) {
+                // Fallback to legacy singleton BossSpawnConfig
+                bossMobId = BossSpawnConfig.getBossMobId();
+                chance = BossSpawnConfig.getSpawnChanceBp();
+            }
+            if (bossMobId != 0 && chance > 0) {
                 uint256 bossRoll = uint256(keccak256(abi.encodePacked(block.prevrandao, x, y, "boss"))) % 10000;
                 if (bossRoll < chance) {
                     uint256[] memory bossSpawn = new uint256[](1);

@@ -7,7 +7,7 @@ import {
     FragmentChainProgress,
     FragmentChainStep,
     FragmentChainStepData,
-    FragmentChainStepReward,
+    FragChainReward,
     FragmentProgress,
     Admin
 } from "@codegen/index.sol";
@@ -81,7 +81,7 @@ contract FragmentChainSystem is System {
         FragmentChainProgress.setCurrentStep(characterId, FragmentType(fragmentType), newStep);
 
         // Drop quest item reward if configured for this step
-        uint256 rewardItemId = FragmentChainStepReward.getRewardItemId(FragmentType(fragmentType), currentStep);
+        uint256 rewardItemId = FragChainReward.getRewardItemId(FragmentType(fragmentType), currentStep);
         if (rewardItemId != 0) {
             IWorld(_world()).UD__dropItem(characterId, rewardItemId, 1);
         }
