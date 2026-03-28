@@ -304,6 +304,8 @@ function encodeStatusEffectStats(effect: StatusEffect): Hex {
 
 // encodeArmorStats, encodeWeaponStats, encodeConsumableStats — imported from ./lib/encode-stats
 
+/** Canonical MonsterStats encoding — fields MUST be alphabetical to match Solidity struct.
+ *  Other scripts (deploy-z2-quest-chains.ts) reference this as the source of truth. */
 function encodeMonsterStats(stats: MonsterStats): Hex {
   return encodeAbiParameters(
     [{ type: 'tuple', components: [

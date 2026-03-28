@@ -6,6 +6,19 @@
  * Prereqs: Z2 zone config, monsters, and core NPCs (Tal/Vel/Edric) must already be deployed.
  *
  * Usage: CHAIN_ID=8453 npx tsx scripts/admin/deploy-z2-quest-chains.ts
+ *   Env vars: VEL_ENTITY_ID, EDRIC_ENTITY_ID (bytes32 — query EntitiesAtPosition if unknown)
+ *
+ * GOTCHAS (learned the hard way):
+ *   - MonsterStats encoding MUST use alphabetical field order matching the Solidity struct:
+ *     agility, armor, class, experience, hasBossAI, hitPoints, intelligence, inventory, level, strength
+ *     Reference: zone-loader.ts:encodeMonsterStats() is the canonical encoding.
+ *   - inventory MUST contain at least 1 weapon ID — spawnMob reads inventory[0] for combat weapon.
+ *     Empty inventory causes OOB panic with no useful error message.
+ *   - Mob IDs are assigned sequentially from the on-chain counter. They are NOT predictable
+ *     across environments. Use simulateContract to get the return value, never hardcode expected IDs.
+ *   - After deploying, update constants.sol mob IDs to match and redeploy FragmentCombatSystem.
+ *   - FragChainReward table has no world setter — write via MUD setRecord with table ID
+ *     0x7462 + "UD" (14 bytes) + "FragChainReward" (16 bytes).
  */
 
 import { config } from 'dotenv';
