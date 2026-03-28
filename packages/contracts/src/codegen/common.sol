@@ -123,14 +123,14 @@ enum FragmentType {
   DeathOfDeathGod,
   BetrayersTruth,
   BloodPrice,
-  FirstLight,
-  TheBladesEdge,
-  DividedGround,
-  TheDirectors,
-  TheStormsMemory,
-  WhatGrows,
-  TheBakersStand,
-  TheLightsBelow
+  TheAscent,
+  VelsWarning,
+  TheOrders,
+  WhatSheLeftBehind,
+  TheShrine,
+  TheHereticsQuestion,
+  BonesOfFaith,
+  TheWindsMemory
 }
 
 enum FragmentTriggerType {
