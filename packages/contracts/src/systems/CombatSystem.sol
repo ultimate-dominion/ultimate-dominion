@@ -228,6 +228,10 @@ contract CombatSystem is System {
                         cachedAttacker,
                         cachedDefender
                     );
+                    // Check if upfront spell damage killed the defender
+                    if (actionOutcomeData.hit[i] && Stats.getCurrentHp(actionOutcomeData.defenderId) <= 0) {
+                        actionOutcomeData.defenderDied = true;
+                    }
                     // if combat consumable, consume the item
                     if (Items.getItemType(actionOutcomeData.itemId) == ItemType.Consumable) {
                         IWorld(_world()).UD__consumeItem(actionOutcomeData.attackerId, actionOutcomeData.itemId);
