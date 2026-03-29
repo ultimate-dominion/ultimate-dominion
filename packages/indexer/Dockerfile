@@ -27,6 +27,6 @@ RUN pnpm install --prod
 
 COPY --from=builder /app/dist ./dist
 
-EXPOSE 3001
+EXPOSE 8080
 
 CMD ["node", "dist/index.js"]
