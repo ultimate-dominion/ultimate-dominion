@@ -119,6 +119,17 @@ export const MapPanel = (): JSX.Element => {
 
   const playerLevel = character?.level ? Number(character.level) : 1;
 
+  const isAtZoneExit = useMemo(() => {
+    return (
+      SHOW_Z2 &&
+      !!character?.hasSelectedAdvancedClass &&
+      currentZone === 1 &&
+      displayPosition?.x === EXIT_TILE.x &&
+      displayPosition?.y === EXIT_TILE.y &&
+      !autoAdventureMode
+    );
+  }, [character?.hasSelectedAdvancedClass, currentZone, displayPosition, autoAdventureMode]);
+
   const adjacentTiles = useMemo(() => {
     if (!position || !displayPosition) return null;
 
@@ -167,6 +178,7 @@ export const MapPanel = (): JSX.Element => {
             <NavigationCompass
               adjacentTiles={adjacentTiles}
               displayPosition={displayPosition}
+              isAtZoneExit={isAtZoneExit}
               isDisabled={!!currentBattle || isRefreshing}
               onMove={onMove}
               position={position}
@@ -509,6 +521,11 @@ const compassPulse = keyframes`
   50% { opacity: 1; transform: scale(1.08); }
 `;
 
+const exitCompassGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 6px rgba(180, 198, 212, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(180, 198, 212, 0.45), 0 0 4px rgba(180, 198, 212, 0.2); }
+`;
+
 const WASD_MAP: Record<string, string> = { N: 'W', W: 'A', S: 'S', E: 'D' };
 const ARROW_MAP: Record<string, string> = { N: '\u2191', W: '\u2190', S: '\u2193', E: '\u2192' };
 
@@ -518,6 +535,7 @@ const COMPASS_PULSE_SEEN_KEY = 'ud_compass_pulse_seen';
 const NavigationCompass = ({
   adjacentTiles,
   displayPosition,
+  isAtZoneExit,
   isDisabled,
   onMove,
   position,
@@ -525,6 +543,7 @@ const NavigationCompass = ({
 }: {
   adjacentTiles: Record<string, TileInfo> | null;
   displayPosition: { x: number; y: number } | null;
+  isAtZoneExit: boolean;
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   position: { x: number; y: number } | null;
@@ -675,7 +694,9 @@ const NavigationCompass = ({
         {/* Direction buttons */}
         {COMPASS_DIRECTIONS.map(({ label, direction, rotate, gridRow, gridCol }) => {
           const info = adjacentTiles?.[label] ?? null;
-          const isOob = adjacentTiles ? adjacentTiles[label] === null : false;
+          const rawOob = adjacentTiles ? adjacentTiles[label] === null : false;
+          const isExitArrow = isAtZoneExit && direction === 'up';
+          const isOob = isExitArrow ? false : rawOob;
           const isActive = !isDisabled && !isOob;
 
           return (
@@ -692,29 +713,37 @@ const NavigationCompass = ({
             >
               <Tooltip
                 hasArrow
-                isDisabled={!info}
+                isDisabled={!info && !isExitArrow}
                 label={
-                  info
-                    ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
-                    : ''
+                  isExitArrow
+                    ? t('map.zoneExit', 'Venture north...')
+                    : info
+                      ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
+                      : ''
                 }
                 placement="top"
                 shouldWrapChildren
               >
                 <IconButton
-                  aria-label={t('map.moveDirection', { dir: label })}
+                  aria-label={isExitArrow ? t('map.zoneExit', 'Venture north...') : t('map.moveDirection', { dir: label })}
                   icon={
                     <VStack spacing={0}>
                       <Text
-                        color="#D4A54A"
+                        color={isExitArrow ? '#B4C6D4' : '#D4A54A'}
                         fontSize="2xs"
                         fontWeight={700}
                         lineHeight={1}
                         mb={-0.5}
+                        textShadow={isExitArrow ? '0 0 8px rgba(180, 198, 212, 0.6)' : undefined}
                       >
                         {label}
                       </Text>
-                      <Box transform={`rotate(${rotate})`} lineHeight={0}>
+                      <Box
+                        transform={`rotate(${rotate})`}
+                        lineHeight={0}
+                        filter={isExitArrow ? 'hue-rotate(180deg) saturate(0.5) brightness(1.4)' : undefined}
+                        transition="filter 0.3s"
+                      >
                         <CompassArrowSvg boxSize={arrowSize} />
                       </Box>
                     </VStack>
@@ -727,12 +756,22 @@ const NavigationCompass = ({
                   variant="ghost"
                   size="xs"
                   animation={
-                    showPulse && stage < OnboardingStage.SETTLING_IN && isActive
-                      ? `${compassPulse} 2s ease-in-out infinite`
-                      : undefined
+                    isExitArrow
+                      ? `${exitCompassGlow} 2.5s ease-in-out infinite`
+                      : showPulse && stage < OnboardingStage.SETTLING_IN && isActive
+                        ? `${compassPulse} 2s ease-in-out infinite`
+                        : undefined
                   }
+                  bg={isExitArrow ? 'rgba(180, 198, 212, 0.06)' : undefined}
+                  borderRadius="md"
                   opacity={isDisabled || isOob ? 0.2 : 1}
-                  _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.25)' }}
+                  _hover={
+                    isDisabled
+                      ? {}
+                      : isExitArrow
+                        ? { bg: 'rgba(180, 198, 212, 0.2)' }
+                        : { bg: 'rgba(200,122,42,0.25)' }
+                  }
                 />
               </Tooltip>
             </GridItem>
