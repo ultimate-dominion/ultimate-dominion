@@ -199,7 +199,7 @@ export const parseTextUri = (uri: string): string => {
 export const isTextOnlyUri = (uri: string): boolean => {
   if (!uri) return false;
   const protocol = uri.split(':')[0].toLowerCase();
-  return ['text', 'monster', 'item', 'armor', 'weapon', 'spell', 'consumable', 'accessory'].includes(protocol);
+  return ['text', 'monster', 'item', 'armor', 'weapon', 'spell', 'consumable', 'accessory', 'quest'].includes(protocol);
 };
 
 const METADATA_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours

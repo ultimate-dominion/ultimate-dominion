@@ -157,6 +157,9 @@
   "monster:peakfire_wraith": "Born where the stone still holds Korrath's heat. It burns cold.",
   "monster:korraths_warden": "A soldier who climbed the peak and found something that wouldn't let go. The armor isn't his. He doesn't care.",
 
+  "quest:sealed_letter": "Taken from the Covenant Tracker's body. The seal is broken but the ink is fresh. Vel will want to see this.",
+  "quest:last_sermon": "A stone tablet pulled from the Ossuary wall. The words are in a language older than the mountain. Edric might know what it says.",
+
   "spell:warcry": "A battle roar that sharpens steel and hardens resolve. One cry to turn the tide.",
   "spell:judgment": "Holy wrath made manifest. The guilty find their strength failing.",
   "spell:volley": "A rain of arrows. No single shot \u2014 a storm.",

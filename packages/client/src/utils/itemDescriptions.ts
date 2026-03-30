@@ -178,6 +178,8 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "armor:ember_mantle": "Warm without fire. The lining glows faintly where Korrath's heat seeped into the thread.",
 
   // --- Spells (L15) ---
+  "quest:sealed_letter": "Taken from the Covenant Tracker's body. The seal is broken but the ink is fresh. Vel will want to see this.",
+  "quest:last_sermon": "A stone tablet pulled from the Ossuary wall. The words are in a language older than the mountain. Edric might know what it says.",
   "spell:warcry": "A battle roar that sharpens steel and hardens resolve. One cry to turn the tide.",
   "spell:judgment": "Holy wrath made manifest. The guilty find their strength failing.",
   "spell:volley": "A rain of arrows. No single shot — a storm.",

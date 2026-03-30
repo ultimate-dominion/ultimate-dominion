@@ -157,6 +157,9 @@
   "monster:peakfire_wraith": "诞生于仍存科拉斯余热的岩石中。它燃烧着冰冷的火。",
   "monster:korraths_warden": "一个爬上山峰、找到了不肯放手之物的士兵。甲胄不是他的。他不在乎。",
 
+  "quest:sealed_letter": "从圣约追踪者的尸体上取得。封印已破，但墨迹尚新。维尔会想看到这个。",
+  "quest:last_sermon": "从纳骨堂墙壁中拔出的石板。上面的文字比这座山还古老。埃德里克或许能读懂。",
+
   "spell:warcry": "磨砺钢铁、坚定决心的战吼。扭转战局的一声呐喊。",
   "spell:judgment": "神圣怒火的具现。有罪者的力量开始衰退。",
   "spell:volley": "箭雨。不是一射——是风暴。",
