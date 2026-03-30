@@ -8,7 +8,6 @@ import {
   IconButton,
   keyframes,
   Stack,
-  Switch,
   Text,
   Tooltip,
   useBreakpointValue,
@@ -94,7 +93,7 @@ export const MapPanel = (): JSX.Element => {
   const { allCharacters, allMonsters, allNpcs, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position, worldBosses } = useMap();
   const { character } = useCharacter();
   const { currentBattle } = useBattle();
-  const { autoAdventureMode, isRefreshing, onMove, onToggleAutoAdventure } = useMovement();
+  const { autoAdventureMode, isRefreshing, onMove } = useMovement();
   const { delegatorAddress } = useMUD();
   const navigate = useNavigate();
   const {
@@ -184,32 +183,6 @@ export const MapPanel = (): JSX.Element => {
               position={position}
               stage={stage}
             />
-            {/* Mobile-only auto adventure toggle */}
-            {!isDesktop && stage >= OnboardingStage.SETTLING_IN && (
-              <HStack
-                justify="center"
-                spacing={2.5}
-                pt={1}
-                pb={0.5}
-              >
-                <Text
-                  color={autoAdventureMode ? '#C87A2A' : '#5A5248'}
-                  fontFamily="mono"
-                  fontSize="11px"
-                  fontWeight={500}
-                  letterSpacing="0.5px"
-                  transition="color 0.2s"
-                >
-                  {t('map.autoAdventure')}
-                </Text>
-                <Switch
-                  size="sm"
-                  isChecked={autoAdventureMode}
-                  onChange={onToggleAutoAdventure}
-                  colorScheme="orange"
-                />
-              </HStack>
-            )}
           </>
         ) : !isSpawned ? (
           <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
