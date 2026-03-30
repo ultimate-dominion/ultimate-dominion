@@ -25,7 +25,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { getCachedDelegator } from '../lib/delegatorCache';
 
 import { ActionsPanel } from '../components/ActionsPanel';
+import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
+import { CaveReactionOverlay } from '../components/CaveReactionOverlay';
 import { RankChangeToast } from '../components/RankChangeToast';
 import { ConsumableQuickUse } from '../components/ConsumableQuickUse';
 import { EquippedLoadout } from '../components/EquippedLoadout';
@@ -44,6 +46,7 @@ import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
+import { SHOW_Z2 } from '../lib/env';
 import { useGameStore, wasPreHydrated } from '../lib/gameStore/store';
 import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
@@ -74,8 +77,16 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseLevelUpModal,
   } = useDisclosure();
 
+  const {
+    isOpen: isClassModalOpen,
+    onOpen: onOpenClassModal,
+    onClose: onCloseClassModal,
+  } = useDisclosure();
+
   const [showMapReveal, setShowMapReveal] = useState(false);
   const [showZoneTransition, setShowZoneTransition] = useState(false);
+  const [showCaveReaction, setShowCaveReaction] = useState(false);
+  const [classJustSelected, setClassJustSelected] = useState(false);
 
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const location = useLocation();
@@ -85,10 +96,10 @@ export const GameBoard = (): JSX.Element => {
     isSynced,
     network: { worldContract },
   } = useMUD();
-  const { character, isMoveEquipped, isRefreshing } = useCharacter();
+  const { character, isMoveEquipped, isRefreshing, refreshCharacter } = useCharacter();
   const { currentZone, inSafetyZone, isSpawned, position } = useMap();
   const { attackProgress, continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
-  const { autoAdventureMode, moveProgress } = useMovement();
+  const { autoAdventureMode, clearPendingZoneTransition, moveProgress, pendingZoneTransition } = useMovement();
   const { isMapFull, queueStatus } = useQueue();
   const hydrated = useGameStore((s) => s.hydrated);
   const isReconnecting = useGameStore((s) => s.isReconnecting);
@@ -110,11 +121,69 @@ export const GameBoard = (): JSX.Element => {
 
   const handleLevelUpClose = useCallback(() => {
     onCloseLevelUpModal();
+
+    // L10: chain to advanced class selection
+    if (
+      SHOW_Z2 &&
+      character &&
+      Number(character.level) >= 10 &&
+      !character.hasSelectedAdvancedClass
+    ) {
+      setTimeout(() => onOpenClassModal(), 500);
+      return;
+    }
+
+    // L5: map reveal
     const key = `map-reveal-seen-${worldContract.address}-${character?.id}`;
     if (character && Number(character.level) >= 5 && !localStorage.getItem(key)) {
       setTimeout(() => setShowMapReveal(true), 500);
     }
-  }, [character, onCloseLevelUpModal, worldContract.address]);
+  }, [character, onCloseLevelUpModal, onOpenClassModal, worldContract.address]);
+
+  // Class selection callbacks
+  const onClassSelected = useCallback(() => {
+    refreshCharacter();
+    setClassJustSelected(true);
+  }, [refreshCharacter]);
+
+  const handleClassModalClose = useCallback(() => {
+    onCloseClassModal();
+    if (classJustSelected) {
+      setClassJustSelected(false);
+      const caveReactionKey = `cave-reaction-seen-${worldContract.address}-${character?.id}`;
+      if (!localStorage.getItem(caveReactionKey)) {
+        localStorage.setItem(caveReactionKey, 'true');
+        setTimeout(() => setShowCaveReaction(true), 700);
+      }
+    }
+  }, [character?.id, classJustSelected, onCloseClassModal, worldContract.address]);
+
+  // Fallback: auto-open class modal for players who log in at L10 without having gone through the battle chain
+  useEffect(() => {
+    if (
+      SHOW_Z2 &&
+      character &&
+      Number(character.level) >= 10 &&
+      !character.hasSelectedAdvancedClass &&
+      !isClassModalOpen &&
+      !isBattleOutcomeModalOpen &&
+      !isLevelUpModalOpen
+    ) {
+      const key = `class-modal-prompted-${worldContract.address}-${character.id}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, 'true');
+        setTimeout(() => onOpenClassModal(), 1000);
+      }
+    }
+  }, [character, isBattleOutcomeModalOpen, isClassModalOpen, isLevelUpModalOpen, onOpenClassModal, worldContract.address]);
+
+  // Wire zone transition overlay from MovementContext
+  useEffect(() => {
+    if (pendingZoneTransition) {
+      clearPendingZoneTransition();
+      setShowZoneTransition(true);
+    }
+  }, [clearPendingZoneTransition, pendingZoneTransition]);
 
   // Grace period: cached session lets player land here before auth resolves.
   // Wait up to 5s for auth to catch up before redirecting.
@@ -419,6 +488,21 @@ export const GameBoard = (): JSX.Element => {
           character={character}
           isOpen={isLevelUpModalOpen}
           onClose={handleLevelUpClose}
+        />
+      )}
+
+      {SHOW_Z2 && character && (
+        <AdvancedClassModal
+          isOpen={isClassModalOpen}
+          onClose={handleClassModalClose}
+          characterId={character.id}
+          onClassSelected={onClassSelected}
+        />
+      )}
+
+      {showCaveReaction && (
+        <CaveReactionOverlay
+          onComplete={() => setShowCaveReaction(false)}
         />
       )}
 

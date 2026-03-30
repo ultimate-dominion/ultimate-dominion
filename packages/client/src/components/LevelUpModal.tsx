@@ -61,6 +61,19 @@ const gateDissolve = keyframes`
   100% { opacity: 0; clip-path: inset(40% 30% 40% 30%); filter: blur(6px); }
 `;
 
+const stoneCrack = keyframes`
+  0%   { width: 0; opacity: 0; }
+  30%  { width: 40%; opacity: 0.6; }
+  60%  { width: 70%; opacity: 0.9; }
+  100% { width: 90%; opacity: 1; }
+`;
+
+const lightSeep = keyframes`
+  0%   { opacity: 0; height: 0; }
+  40%  { opacity: 0.3; height: 20px; }
+  100% { opacity: 0.6; height: 40px; }
+`;
+
 /* ──────────────────────── Level Background Art ──────────────────────── */
 
 const LEVEL_BACKGROUNDS: Record<number, string> = {
@@ -477,7 +490,112 @@ export const LevelUpModal = ({
             </VStack>
           )}
 
-          {phase === 'narrative' && targetLevel !== 3 && targetLevel !== 5 && (
+          {phase === 'narrative' && targetLevel === 10 && (
+            /* ── Level 10: Mastery / Class Selection Tease ── */
+            <VStack
+              spacing={6}
+              py={{ base: 12, md: 16 }}
+              px={{ base: 6, md: 10 }}
+              align="center"
+            >
+              {/* Cracked stone with light seeping through */}
+              <Box position="relative" w="200px" h="80px" overflow="hidden">
+                {/* Stone slab */}
+                <Box
+                  position="absolute"
+                  inset={0}
+                  border="2px solid rgba(180, 198, 212, 0.3)"
+                  borderRadius="sm"
+                  bg="linear-gradient(180deg, rgba(60, 55, 48, 0.6) 0%, rgba(40, 36, 30, 0.8) 100%)"
+                />
+                {/* Horizontal crack */}
+                <Box
+                  position="absolute"
+                  top="50%"
+                  left="50%"
+                  transform="translate(-50%, -50%)"
+                  h="2px"
+                  bg="rgba(180, 198, 212, 0.8)"
+                  boxShadow="0 0 12px rgba(180, 198, 212, 0.6), 0 0 24px rgba(180, 198, 212, 0.3)"
+                  borderRadius="full"
+                  animation={`${stoneCrack} 2s 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards`}
+                  w="0"
+                  opacity={0}
+                />
+                {/* Light seeping through crack */}
+                <Box
+                  position="absolute"
+                  top="50%"
+                  left="50%"
+                  transform="translateX(-50%)"
+                  w="60%"
+                  bg="linear-gradient(180deg, rgba(180, 198, 212, 0.3) 0%, transparent 100%)"
+                  animation={`${lightSeep} 2s 1s ease-out forwards`}
+                  opacity={0}
+                  h="0"
+                />
+              </Box>
+
+              {/* Title */}
+              <Text
+                fontFamily="'Cinzel', serif"
+                fontSize={{ base: 'xl', md: '2xl' }}
+                fontWeight={700}
+                color="#B4C6D4"
+                letterSpacing="0.1em"
+                textShadow="0 0 20px rgba(180, 198, 212, 0.3)"
+                animation={`${fadeUp} 0.6s 2s cubic-bezier(0.16, 1, 0.3, 1) both`}
+              >
+                {narrative.title}
+              </Text>
+
+              <Box mx="auto" w="60px" h="1px" bg="rgba(180, 198, 212, 0.3)" />
+
+              {/* Narrative */}
+              <Box
+                maxW="420px"
+                bg="rgba(28, 24, 20, 0.85)"
+                borderRadius="md"
+                border="1px solid rgba(180, 198, 212, 0.08)"
+                px={{ base: 5, md: 7 }}
+                py={6}
+                animation={`${fadeUp} 0.6s 2.3s cubic-bezier(0.16, 1, 0.3, 1) both`}
+                position="relative"
+              >
+                <Text
+                  fontSize={{ base: 'sm', md: 'md' }}
+                  lineHeight="1.85"
+                  visibility="hidden"
+                  aria-hidden="true"
+                  whiteSpace="pre-line"
+                >
+                  {narrative.text}
+                </Text>
+                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                  <SafeTypist
+                    avgTypingDelay={50}
+                    cursor={{ show: false }}
+                    stdTypingDelay={25}
+                    startDelay={2600}
+                  >
+                    <Text
+                      fontSize={{ base: 'sm', md: 'md' }}
+                      lineHeight="1.85"
+                      color="#D4C8B0"
+                      fontStyle="italic"
+                      textAlign="center"
+                      whiteSpace="pre-line"
+                      textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                    >
+                      {narrative.text}
+                    </Text>
+                  </SafeTypist>
+                </Box>
+              </Box>
+            </VStack>
+          )}
+
+          {phase === 'narrative' && targetLevel !== 3 && targetLevel !== 5 && targetLevel !== 10 && (
             /* ── Generic narrative for other levels ── */
             <VStack
               spacing={6}

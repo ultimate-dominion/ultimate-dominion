@@ -27,6 +27,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
 import { useGameConfig } from '../lib/gameStore';
+import { SHOW_Z2 } from '../lib/env';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { WAITING_ROOM_PATH } from '../Routes';
 import { CaptchaGate } from './CaptchaGate';
@@ -44,6 +45,19 @@ const SAFE_ZONE_BY_ZONE: Record<number, { topLeft: { x: number; y: number }; bot
 };
 
 const MAP_SIZE = 10;
+
+/** Zone exit tile — north-center of Dark Cave */
+const EXIT_TILE = { x: 5, y: 9 };
+
+const exitTileGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 6px rgba(180, 198, 212, 0.2), inset 0 0 3px rgba(180, 198, 212, 0.05); }
+  50%      { box-shadow: 0 0 14px rgba(180, 198, 212, 0.5), inset 0 0 6px rgba(180, 198, 212, 0.1); }
+`;
+
+const exitTilePulse = keyframes`
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.3); }
+`;
 
 type TileInfo = {
   monsters: number;
@@ -397,6 +411,34 @@ export const MapPanel = (): JSX.Element => {
                       )
                     );
                   })}
+
+                  {/* Zone exit tile — glowing portal at north-center */}
+                  {SHOW_Z2 &&
+                    character?.hasSelectedAdvancedClass &&
+                    currentZone === 1 &&
+                    col === EXIT_TILE.x &&
+                    row === EXIT_TILE.y && (
+                      <Box
+                        position="absolute"
+                        inset={0}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        bg="radial-gradient(circle, rgba(180,198,212,0.12) 0%, transparent 70%)"
+                        animation={`${exitTileGlow} 3s ease-in-out infinite`}
+                        borderRadius="sm"
+                        pointerEvents="none"
+                      >
+                        <Box
+                          w="6px"
+                          h="6px"
+                          borderRadius="full"
+                          bg="rgba(180, 198, 212, 0.7)"
+                          boxShadow="0 0 8px rgba(180, 198, 212, 0.6)"
+                          animation={`${exitTilePulse} 2s ease-in-out infinite`}
+                        />
+                      </Box>
+                    )}
                 </VStack>
               );
             })}

@@ -53,10 +53,10 @@ contract ConfigureZones is Script {
             console.log("  Windy Peaks ZoneConfig already set, maxLevel:", existingZ2MaxLevel);
         }
 
-        // ZoneMapConfig for Windy Peaks: 10x10 grid at origin (0, 100), minLevel = 11
+        // ZoneMapConfig for Windy Peaks: 10x10 grid at origin (0, 100), minLevel = 10
         if (ZoneMapConfig.getWidth(ZONE_WINDY_PEAKS) == 0) {
-            ZoneMapConfig.set(ZONE_WINDY_PEAKS, 10, 10, 0, ZONE_ORIGIN_SPACING, 11);
-            console.log("  Windy Peaks ZoneMapConfig: 10x10 at (0,100), minLevel=11");
+            ZoneMapConfig.set(ZONE_WINDY_PEAKS, 10, 10, 0, ZONE_ORIGIN_SPACING, 10);
+            console.log("  Windy Peaks ZoneMapConfig: 10x10 at (0,100), minLevel=10");
         } else {
             console.log("  Windy Peaks ZoneMapConfig already set");
         }

@@ -754,5 +754,12 @@
     "colElo": "ELO",
     "noPvp": "No PvP ratings yet.",
     "pvpCta": "Challenge other players to climb the ranks!"
+  },
+  "zoneExit": {
+    "narrative": "A passage opens above. Cold wind rushes through the gap.",
+    "reassurance": "You can return to the Dark Cave at any time.",
+    "leave": "Leave the Dark Cave",
+    "stay": "Stay",
+    "transitioning": "Leaving..."
   }
 }
