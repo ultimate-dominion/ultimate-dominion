@@ -335,7 +335,6 @@ export const AllowanceProvider = ({
     async (system: SystemToAllow): Promise<boolean> => {
       if (authMethod !== 'embedded') return false;
       const systemAddress = getSystemAddress(system);
-      console.log('[APPROVE PRE-CHECK]', { systemAddress, approvalClient: !!approvalClient, itemsAddress });
       if (!systemAddress || !approvalClient || !itemsAddress) return false;
       setIsApprovingItems(true);
       try {
@@ -353,8 +352,7 @@ export const AllowanceProvider = ({
         if (status !== 'success') return false;
         await fetchAllowances();
         return true;
-      } catch (err) {
-        console.error('[APPROVE ERROR]', err);
+      } catch {
         return false;
       } finally {
         setIsApprovingItems(false);
