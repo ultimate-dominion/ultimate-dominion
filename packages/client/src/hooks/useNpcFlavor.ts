@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useGameTable, encodeCompositeKey } from '../lib/gameStore';
 import { useCharacter } from '../contexts/CharacterContext';
 import { NPC_NARRATIVES } from '../utils/npcNarratives';
+import { CHAIN_PROGRESS_TABLE } from '../utils/fragmentChainData';
 
 /**
  * Resolves the correct NPC title and atmospheric flavor text based on the
@@ -13,7 +14,7 @@ import { NPC_NARRATIVES } from '../utils/npcNarratives';
  */
 export function useNpcFlavor(metadataUri: string): { title: string; flavor: string } {
   const { character } = useCharacter();
-  const chainTable = useGameTable('FragmentChainProgress');
+  const chainTable = useGameTable(CHAIN_PROGRESS_TABLE);
 
   return useMemo(() => {
     const narrative = NPC_NARRATIVES[metadataUri];

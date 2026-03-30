@@ -14,6 +14,7 @@ import { getRomanNumeral } from '../utils/fragmentNarratives';
 import {
   ARCS,
   CHAIN_NAMES,
+  CHAIN_PROGRESS_TABLE,
   FRAGMENT_XVI_PREREQ,
   STEP_OBJECTIVES,
   Z2_FRAGMENT_TYPES,
@@ -65,7 +66,7 @@ type ChainData = {
 export const FragmentChainProgress = (): JSX.Element | null => {
   const { t } = useTranslation('ui');
   const { character } = useCharacter();
-  const chainTable = useGameTable('FragmentChainProgress');
+  const chainTable = useGameTable(CHAIN_PROGRESS_TABLE);
 
   const chains = useMemo(() => {
     if (!character?.id) return [];

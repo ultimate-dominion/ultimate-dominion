@@ -4,6 +4,7 @@ import { useGameTable, encodeCompositeKey } from '../lib/gameStore';
 import { useCharacter } from '../contexts/CharacterContext';
 import {
   CHAIN_NAMES,
+  CHAIN_PROGRESS_TABLE,
   FRAGMENT_XVI_PREREQ,
   STEP_OBJECTIVES,
   Z2_FRAGMENT_TYPES,
@@ -15,7 +16,7 @@ import {
  */
 export const CurrentObjectiveHud = (): JSX.Element | null => {
   const { character } = useCharacter();
-  const chainTable = useGameTable('FragmentChainProgress');
+  const chainTable = useGameTable(CHAIN_PROGRESS_TABLE);
 
   const activeObjective = useMemo(() => {
     if (!character?.id) return null;

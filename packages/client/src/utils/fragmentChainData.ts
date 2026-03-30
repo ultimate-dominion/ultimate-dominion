@@ -1,5 +1,8 @@
 /** Shared Z2 fragment chain data — used by FragmentChainProgress and CurrentObjectiveHud */
 
+/** MUD truncates table names to 16 bytes. "FragmentChainProgress" → "FragmentChainPro" in the indexer. */
+export const CHAIN_PROGRESS_TABLE = 'FragmentChainPro';
+
 export const CHAIN_NAMES: Record<number, string> = {
   9: 'The Ascent',
   10: "Vel's Warning",
