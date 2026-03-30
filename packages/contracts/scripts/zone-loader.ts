@@ -459,16 +459,37 @@ Available zones:
     worldAddress = process.env.WORLD_ADDRESS as Address;
   }
   if (!worldAddress) {
-    const worldsPath = path.join(__dirname, '..', 'worlds.json');
-    if (fs.existsSync(worldsPath)) {
-      const worlds = JSON.parse(fs.readFileSync(worldsPath, 'utf-8'));
-      worldAddress = worlds['31337']?.address as Address;
+    // Only fall back to worlds.json for local anvil (31337).
+    // NEVER auto-resolve mainnet worlds — require explicit WORLD_ADDRESS or --world.
+    const chainId = parseInt(process.env.CHAIN_ID || '31337');
+    if (chainId === 31337) {
+      const worldsPath = path.join(__dirname, '..', 'worlds.json');
+      if (fs.existsSync(worldsPath)) {
+        const worlds = JSON.parse(fs.readFileSync(worldsPath, 'utf-8'));
+        worldAddress = worlds['31337']?.address as Address;
+      }
     }
   }
 
   if (!worldAddress) {
     console.error('Error: World address not found. Use --world <address> or set WORLD_ADDRESS');
     process.exit(1);
+  }
+
+  // ── Production safety guard ──
+  // Never allow writes to the production world without explicit confirmation.
+  // This prevents accidental production runs from env var misconfiguration.
+  const PRODUCTION_WORLD = '0x99d01939F58B965E6E84a1D167E710Abdf5764b0';
+  if (worldAddress.toLowerCase() === PRODUCTION_WORLD.toLowerCase() && !dryRun) {
+    if (!args.includes('--confirm-production')) {
+      console.error('\n' + '!'.repeat(60));
+      console.error('  BLOCKED: World address is PRODUCTION.');
+      console.error(`  ${worldAddress}`);
+      console.error('  To run against production, add --confirm-production');
+      console.error('!'.repeat(60) + '\n');
+      process.exit(1);
+    }
+    console.warn('\n⚠  WARNING: Running against PRODUCTION world ⚠\n');
   }
 
   // Get private key

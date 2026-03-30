@@ -18,11 +18,9 @@ import { base } from 'viem/chains';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const ZONE_ORIGIN_Y = 100; // Z2 origin
-
 const worldAbi = parseAbi([
   'function UD__createMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)',
-  'function UD__spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32)',
+  'function UD__spawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) returns (bytes32)',
 ]);
 
 enum MobType {
@@ -72,6 +70,16 @@ async function main() {
     throw new Error('Missing PRIVATE_KEY, WORLD_ADDRESS, or RPC_URL');
   }
 
+  // Production safety guard
+  const PRODUCTION_WORLD = '0x99d01939F58B965E6E84a1D167E710Abdf5764b0';
+  if (worldAddress.toLowerCase() === PRODUCTION_WORLD.toLowerCase() && !process.argv.includes('--confirm-production')) {
+    console.error('\n' + '!'.repeat(60));
+    console.error('  BLOCKED: World address is PRODUCTION.');
+    console.error('  To run against production, add --confirm-production');
+    console.error('!'.repeat(60) + '\n');
+    process.exit(1);
+  }
+
   const account = privateKeyToAccount(privateKey);
   const chain = base;
 
@@ -91,9 +99,9 @@ async function main() {
     return receipt;
   }
 
-  // ── 1. Tal Carden — Shop at (7, 0) ──
+  // ── 1. Tal Carden — Shop at (7, 0) in zone 2 ──
   // Empty inventory for now — items will be added via admin once item-sync resolves IDs
-  console.log('>>> Creating Tal Carden (Shop) at (7, 100) <<<');
+  console.log('>>> Creating Tal Carden (Shop) at zone 2 (7, 0) <<<');
   const shopStats = encodeShopStats(
     10000000000000000000000n,  // gold: 10,000
     10000000000000000000000n,  // maxGold: 10,000
@@ -144,12 +152,12 @@ async function main() {
     address: worldAddress,
     abi: worldAbi,
     functionName: 'UD__spawnMob',
-    args: [talMobId, 7, ZONE_ORIGIN_Y + 0],
+    args: [talMobId, 2n, 7, 0],
   });
-  console.log('  -> Spawned at (7, 100)\n');
+  console.log('  -> Spawned at zone 2 (7, 0)\n');
 
-  // ── 2. Vel Morrow — NPC (respec) at (2, 3) ──
-  console.log('>>> Creating Vel Morrow (NPC/Respec) at (2, 103) <<<');
+  // ── 2. Vel Morrow — NPC (respec) at (2, 3) in zone 2 ──
+  console.log('>>> Creating Vel Morrow (NPC/Respec) at zone 2 (2, 3) <<<');
   const velStats = encodeNPCStats('Vel Morrow', [], 0); // Alignment.Loyalist = 0
 
   await sendTx({
@@ -167,12 +175,12 @@ async function main() {
     address: worldAddress,
     abi: worldAbi,
     functionName: 'UD__spawnMob',
-    args: [velMobId, 2, ZONE_ORIGIN_Y + 3],
+    args: [velMobId, 2n, 2, 3],
   });
-  console.log('  -> Spawned at (2, 103)\n');
+  console.log('  -> Spawned at zone 2 (2, 3)\n');
 
-  // ── 3. Edric Thorne — NPC (guild) at (3, 0) ──
-  console.log('>>> Creating Edric Thorne (NPC/Guild) at (3, 100) <<<');
+  // ── 3. Edric Thorne — NPC (guild) at (3, 0) in zone 2 ──
+  console.log('>>> Creating Edric Thorne (NPC/Guild) at zone 2 (3, 0) <<<');
   const edricStats = encodeNPCStats('Edric Thorne', [], 1); // Alignment.Neutral = 1
 
   await sendTx({
@@ -190,15 +198,15 @@ async function main() {
     address: worldAddress,
     abi: worldAbi,
     functionName: 'UD__spawnMob',
-    args: [edricMobId, 3, ZONE_ORIGIN_Y + 0],
+    args: [edricMobId, 2n, 3, 0],
   });
-  console.log('  -> Spawned at (3, 100)\n');
+  console.log('  -> Spawned at zone 2 (3, 0)\n');
 
   console.log('='.repeat(60));
   console.log('  Z2 NPCs deployed successfully!');
-  console.log('  Tal Carden (shop) at (7, 100) — mobId ' + talMobId);
-  console.log('  Vel Morrow (respec) at (2, 103) — mobId ' + velMobId);
-  console.log('  Edric Thorne (guild) at (3, 100) — mobId ' + edricMobId);
+  console.log('  Tal Carden (shop) at zone 2 (7, 0) — mobId ' + talMobId);
+  console.log('  Vel Morrow (respec) at zone 2 (2, 3) — mobId ' + velMobId);
+  console.log('  Edric Thorne (guild) at zone 2 (3, 0) — mobId ' + edricMobId);
   console.log('='.repeat(60));
 }
 

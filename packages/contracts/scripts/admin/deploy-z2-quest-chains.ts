@@ -39,19 +39,18 @@ import { base } from 'viem/chains';
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ══════════════════════════════════════════════════════════
-// Zone 2 coordinates (Y offset = 100 for Windy Peaks)
+// Zone 2 coordinates — zone-relative (0-9). zoneId disambiguates.
 // ══════════════════════════════════════════════════════════
-const Z2_ORIGIN_Y = 100;
 
 // Tile positions for quest locations
 const TILES = {
-  spawn: { x: 0, y: Z2_ORIGIN_Y },
-  velRidge: { x: 2, y: Z2_ORIGIN_Y + 3 },        // Vel's ridge position (existing NPC)
-  covenantCamp: { x: 6, y: Z2_ORIGIN_Y + 5 },     // Abandoned Covenant camp
-  shrine: { x: 4, y: Z2_ORIGIN_Y + 7 },            // Korrath's ruined shrine
-  ossuary: { x: 8, y: Z2_ORIGIN_Y + 8 },           // Ossuary (deep peaks)
-  summit: { x: 5, y: Z2_ORIGIN_Y + 9 },             // Summit (highest point)
-  edric: { x: 3, y: Z2_ORIGIN_Y },                  // Edric's position (existing NPC)
+  spawn: { x: 0, y: 0 },
+  velRidge: { x: 2, y: 3 },        // Vel's ridge position (existing NPC)
+  covenantCamp: { x: 6, y: 5 },    // Abandoned Covenant camp
+  shrine: { x: 4, y: 7 },          // Korrath's ruined shrine
+  ossuary: { x: 8, y: 8 },         // Ossuary (deep peaks)
+  summit: { x: 5, y: 9 },          // Summit (highest point)
+  edric: { x: 3, y: 0 },           // Edric's position (existing NPC)
 };
 
 // Fragment trigger types (must match FragmentTriggerType enum)
@@ -158,7 +157,7 @@ function encodeNPCStats(name: string): Hex {
 // ══════════════════════════════════════════════════════════
 const QUEST_MOBS = [
   { name: 'Covenant Scout',        level: 13, hp: 28, str: 8,  agi: 14, int_: 6,  arm: 4,  xp: 8,  cls: 1, uri: 'mob:covenant_scout',        tile: TILES.velRidge },
-  { name: 'Covenant Tracker',      level: 15, hp: 38, str: 14, agi: 10, int_: 6,  arm: 6,  xp: 12, cls: 0, uri: 'mob:covenant_tracker',      tile: { x: 4, y: Z2_ORIGIN_Y + 4 } },
+  { name: 'Covenant Tracker',      level: 15, hp: 38, str: 14, agi: 10, int_: 6,  arm: 6,  xp: 12, cls: 0, uri: 'mob:covenant_tracker',      tile: { x: 4, y: 4 } },
   { name: 'Fraying-touched Guardian', level: 16, hp: 42, str: 8, agi: 8, int_: 16, arm: 5,  xp: 14, cls: 2, uri: 'mob:fraying_guardian',      tile: TILES.shrine },
   { name: 'Ossuary Guardian',      level: 17, hp: 48, str: 16, agi: 8,  int_: 8,  arm: 8,  xp: 16, cls: 0, uri: 'mob:ossuary_guardian',      tile: TILES.ossuary },
   { name: 'Gale Fury',             level: 18, hp: 55, str: 10, agi: 10, int_: 18, arm: 3,  xp: 20, cls: 2, uri: 'mob:gale_fury',             tile: TILES.summit },
@@ -198,6 +197,16 @@ async function main() {
 
   if (!privateKey || !worldAddress || !rpcUrl) {
     throw new Error('Missing PRIVATE_KEY, WORLD_ADDRESS, or RPC_URL');
+  }
+
+  // Production safety guard
+  const PRODUCTION_WORLD = '0x99d01939F58B965E6E84a1D167E710Abdf5764b0';
+  if (worldAddress.toLowerCase() === PRODUCTION_WORLD.toLowerCase() && !process.argv.includes('--confirm-production')) {
+    console.error('\n' + '!'.repeat(60));
+    console.error('  BLOCKED: World address is PRODUCTION.');
+    console.error('  To run against production, add --confirm-production');
+    console.error('!'.repeat(60) + '\n');
+    process.exit(1);
   }
 
   const account = privateKeyToAccount(privateKey);
