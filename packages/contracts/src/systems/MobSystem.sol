@@ -104,9 +104,6 @@ contract MobSystem is System {
             // Roll for elite (15% chance)
             bool isElite = (uint32(rng >> 128) % 100) < ELITE_CHANCE;
 
-            // Apply XP variance (±25%, same as stat variance)
-            int256 expVar = Math.variance(int256(monsterStats.experience), uint32(rng >> 160));
-
             StatsData memory statsData = StatsData({
                 strength: monsterStats.strength + strVar,
                 agility: monsterStats.agility + agiVar,
@@ -114,7 +111,7 @@ contract MobSystem is System {
                 maxHp: monsterStats.hitPoints + hpVar,
                 class: monsterStats.class,
                 currentHp: monsterStats.hitPoints + hpVar,
-                experience: uint256(int256(monsterStats.experience) + expVar),
+                experience: monsterStats.experience, // derived from spawned stats below
                 level: monsterStats.level,
                 powerSource: PowerSource.None,
                 race: Race.None,
@@ -123,7 +120,20 @@ contract MobSystem is System {
                 hasSelectedAdvancedClass: false
             });
 
-            // Apply elite boost on top of variance
+            // Derive XP from spawned stat power relative to template —
+            // tougher rolls reward more XP, weaker rolls reward less
+            {
+                int256 spawnedPower = statsData.strength + statsData.agility
+                    + statsData.intelligence + statsData.maxHp;
+                int256 templatePower = monsterStats.strength + monsterStats.agility
+                    + monsterStats.intelligence + monsterStats.hitPoints;
+                if (templatePower <= 0) templatePower = 1;
+                int256 derivedXp = int256(monsterStats.experience) * spawnedPower / templatePower;
+                if (derivedXp < 1) derivedXp = 1;
+                statsData.experience = uint256(derivedXp);
+            }
+
+            // Apply elite boost on top of derived XP
             if (isElite) {
                 statsData.strength = statsData.strength * int256(ELITE_STAT_MULTIPLIER) / 100;
                 statsData.agility = statsData.agility * int256(ELITE_STAT_MULTIPLIER) / 100;
