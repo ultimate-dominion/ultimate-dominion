@@ -23,7 +23,7 @@ import { config } from 'dotenv';
 const envFile = process.env.CHAIN_ID === '8453' ? '.env.mainnet' : '.env';
 config({ path: envFile, override: false });
 
-import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, Hex, Address } from 'viem';
+import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, toHex, concat, Hex, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { foundry, base } from 'viem/chains';
 import * as fs from 'fs';
@@ -210,10 +210,23 @@ enum Classes {
   Mage = 2,
 }
 
+// ============ MUD Resource ID Construction ============
+
+/** Build a MUD table ResourceId: 0x7462 (tb) + namespace (14 bytes) + name (16 bytes) */
+function tableResourceId(namespace: string, name: string): Hex {
+  const typeBytes = toHex('tb', { size: 2 });
+  const nsBytes = toHex(namespace, { size: 14 });
+  const nameBytes = toHex(name, { size: 16 });
+  return concat([typeBytes, nsBytes, nameBytes]);
+}
+
+const URI_STORAGE_TABLE_ID = tableResourceId('Items', 'URIStorage');
+
 // ============ ABI ============
 const worldAbi = parseAbi([
   // Read functions
   'function UD__getCurrentItemsCounter() view returns (uint256)',
+  'function getRecord(bytes32 tableId, bytes32[] keyTuple) view returns (bytes staticData, bytes32 encodedLengths, bytes dynamicData)',
 
   // Direct system functions (require namespace access - works for deployer)
   'function UD__createEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)',
@@ -546,10 +559,63 @@ Available zones:
   // Track created item IDs by name for shop inventory resolution
   const itemIdsByName: Map<string, bigint> = new Map();
 
-  // Load dependencies first (recursive)
-  for (const dep of manifest.dependencies) {
-    console.log(`\nLoading dependency: ${dep}`);
-    // TODO: Implement recursive zone loading
+  // Resolve dependency items (populate itemIdsByName from already-deployed zones)
+  if (manifest.dependencies.length > 0) {
+    console.log('\n>>> Resolving Dependency Items <<<');
+
+    // Scan all on-chain item URIs to build uri→id map
+    const uriToId: Map<string, bigint> = new Map();
+    const itemCounter = await publicClient.readContract({
+      address: worldAddress,
+      abi: worldAbi,
+      functionName: 'UD__getCurrentItemsCounter',
+    });
+    console.log(`  Scanning ${itemCounter} on-chain items for URI mapping...`);
+
+    for (let id = 1n; id <= itemCounter; id++) {
+      try {
+        const [, , dynamicData] = await publicClient.readContract({
+          address: worldAddress,
+          abi: worldAbi,
+          functionName: 'getRecord',
+          args: [URI_STORAGE_TABLE_ID, [toHex(id, { size: 32 })]],
+        });
+        if (dynamicData && dynamicData !== '0x') {
+          const uri = Buffer.from((dynamicData as string).slice(2), 'hex').toString('utf-8');
+          if (uri) uriToId.set(uri, id);
+        }
+      } catch {
+        // Item may not exist, skip
+      }
+    }
+    console.log(`  Found ${uriToId.size} items with URIs on-chain`);
+
+    // For each dependency, read its items.json and resolve names via URI
+    for (const dep of manifest.dependencies) {
+      const depItemsPath = path.join(__dirname, '..', 'zones', dep, 'items.json');
+      if (!fs.existsSync(depItemsPath)) {
+        console.log(`  Warning: dependency "${dep}" items.json not found, skipping`);
+        continue;
+      }
+      const depItems: ItemsJson = JSON.parse(fs.readFileSync(depItemsPath, 'utf-8'));
+      let resolved = 0;
+
+      for (const armor of depItems.armor || []) {
+        const id = uriToId.get(armor.metadataUri);
+        if (id !== undefined) { itemIdsByName.set(armor.name, id); resolved++; }
+      }
+      for (const weapon of depItems.weapons || []) {
+        const id = uriToId.get(weapon.metadataUri);
+        if (id !== undefined) { itemIdsByName.set(weapon.name, id); resolved++; }
+      }
+      for (const consumable of depItems.consumables || []) {
+        const id = uriToId.get(consumable.metadataUri);
+        if (id !== undefined) { itemIdsByName.set(consumable.name, id); resolved++; }
+      }
+
+      const totalDep = (depItems.armor?.length || 0) + (depItems.weapons?.length || 0) + (depItems.consumables?.length || 0);
+      console.log(`  ${dep}: resolved ${resolved}/${totalDep} items`);
+    }
   }
 
   // Load effects
