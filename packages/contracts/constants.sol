@@ -121,6 +121,10 @@ uint256 constant ELITE_REWARD_MULTIPLIER = 150; // 1.5x XP/gold
 uint256 constant ELITE_DROP_MULTIPLIER = 200; // 2x multiplicative drop chance (elite dc = base * 200 / 100)
 uint256 constant STAT_VARIANCE_PCT = 25;      // ±25% variance on all spawns
 
+// Wind Gust — environmental DOT on Windy Peaks peak ridge tiles
+bytes32 constant WIND_GUST_EFFECT_ID = 0xeebd896a2209e6f4000000000000000000000000000000000000000000000000;
+uint16 constant PEAK_RIDGE_RELATIVE_Y = 8;
+
 // Flashpowder / Smoke Cloak — flee without gold penalty
 bytes8 constant SMOKE_CLOAK_EFFECT_STAT_ID = 0x5db83b18b4d1bdc3; // keccak256(abi.encode("smoke_cloak"))[:8]
 
