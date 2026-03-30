@@ -216,6 +216,15 @@ function tableResourceId(namespace: string, name: string): Hex {
 }
 
 const URI_STORAGE_TABLE_ID = tableResourceId('Items', 'URIStorage');
+const COUNTERS_TABLE_ID = tableResourceId('UD', 'Counters');
+
+function padKey(v: number | bigint | string): Hex {
+  if (typeof v === 'string') {
+    // address — left-pad to 32 bytes
+    return ('0x' + v.replace('0x', '').toLowerCase().padStart(64, '0')) as Hex;
+  }
+  return ('0x' + BigInt(v).toString(16).padStart(64, '0')) as Hex;
+}
 
 // ============ ABI ============
 const worldAbi = parseAbi([
@@ -875,20 +884,14 @@ Available zones:
           // MobsByLevel is populated by createMob automatically.
           // Also register in zone-scoped MobsByZoneLevel for zone-aware spawning.
           if (zoneId > 0) {
-            // Read mob counter to get the just-created mobId
-            // The counter increments in createMob, so current value = latest mobId
-            const mobCounterAbi = parseAbi(['function UD__getCurrentMobCounter() view returns (uint256)']);
-            let mobId: bigint;
-            try {
-              mobId = await publicClient.readContract({
-                address: worldAddress,
-                abi: mobCounterAbi,
-                functionName: 'UD__getCurrentMobCounter',
-              });
-            } catch {
-              // Fallback: count mobs created so far (1-indexed)
-              mobId = BigInt(createdMobIds.length + 1);
-            }
+            // Read mob counter directly from Counters table (createMob increments it, so current value = latest mobId)
+            const [mobCounterStatic] = await publicClient.readContract({
+              address: worldAddress,
+              abi: worldAbi,
+              functionName: 'getRecord',
+              args: [COUNTERS_TABLE_ID, [padKey(worldAddress), padKey(0)]],
+            });
+            const mobId = BigInt('0x' + (mobCounterStatic as string).slice(2));
             createdMobIds.push({ mobId, level: monster.stats.level });
 
             await sendTx({
