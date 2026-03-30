@@ -27,11 +27,11 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateLevelFromExperience() public {
-        // Create array with 10 levels (MAX_LEVEL)
-        uint256[] memory levelsTable = new uint256[](10);
+        // Create array with 20 levels (MAX_LEVEL)
+        uint256[] memory levelsTable = new uint256[](20);
 
         // Set up experience thresholds with increasing requirements
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 20; i++) {
             if (i == 0) {
                 levelsTable[i] = 0;
             } else {
@@ -47,9 +47,9 @@ contract StatCalculatorTest is Test {
         level = StatCalculator.calculateLevelFromExperience(1100, levelsTable);
         assertEq(level, 5);
 
-        // Test max level (XP >= levelsTable[9])
+        // Test max level (XP >= levelsTable[19])
         level = StatCalculator.calculateLevelFromExperience(1000000, levelsTable);
-        assertEq(level, 10);
+        assertEq(level, 20);
     }
 
     function testGenerateRandomStats() public {
