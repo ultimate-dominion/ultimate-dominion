@@ -26,6 +26,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
 import { useGameConfig } from '../lib/gameStore';
+import { SHOW_Z2 } from '../lib/env';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { WAITING_ROOM_PATH } from '../Routes';
 import { CaptchaGate } from './CaptchaGate';
@@ -135,7 +136,7 @@ export const MapPanel = (): JSX.Element => {
     <Stack alignItems="center" className="data-dense" h="100%">
       {/* Compass — above map on mobile, below on desktop */}
       <Box order={{ base: 0, lg: 2 }} w="100%">
-        {isSpawned && stage >= OnboardingStage.FIRST_STEPS ? (
+        {isSpawned && position && stage >= OnboardingStage.FIRST_STEPS ? (
           <>
             <NavigationCompass
               adjacentTiles={adjacentTiles}
@@ -145,8 +146,8 @@ export const MapPanel = (): JSX.Element => {
               position={position}
               stage={stage}
             />
-            {/* Mobile-only auto adventure toggle */}
-            {!isDesktop && stage >= OnboardingStage.SETTLING_IN && (
+            {/* Mobile-only auto adventure toggle — Z2 only */}
+            {!isDesktop && SHOW_Z2 && stage >= OnboardingStage.SETTLING_IN && (
               <HStack
                 justify="center"
                 spacing={2.5}
@@ -172,6 +173,12 @@ export const MapPanel = (): JSX.Element => {
               </HStack>
             )}
           </>
+        ) : isSpawned && !position ? (
+          <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
+            <Text color="#8A7E6A" fontStyle="italic" size="sm">
+              Loading position…
+            </Text>
+          </VStack>
         ) : !isSpawned ? (
           <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
             {isMapFull && queueStatus === 'idle' && !showCaptcha && (

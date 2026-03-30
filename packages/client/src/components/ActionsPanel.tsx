@@ -719,7 +719,7 @@ export const ActionsPanel = (): JSX.Element => {
           </VStack>
         )}
       <Stack p={{ base: 2, lg: 4 }}>
-        {!currentBattle && !(isSpawned && position) && (
+        {!currentBattle && !isSpawned && (
           <SafeTypist
             avgTypingDelay={10}
             cursor={{ show: false }}
