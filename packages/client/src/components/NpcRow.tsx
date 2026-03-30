@@ -1,5 +1,6 @@
 import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaSearch } from 'react-icons/fa';
 
@@ -8,11 +9,11 @@ import type { NpcInteraction } from '../utils/types';
 
 const ROW_HEIGHT = { base: 5, md: 8 };
 
-const INTERACTION_LABELS: Record<NpcInteraction, string> = {
-  respec: 'Combat Trainer',
-  guild: 'Guild Founder',
-  dialogue: 'Talk',
-  examine: 'Examine',
+const INTERACTION_LABEL_KEYS: Record<NpcInteraction, string> = {
+  respec: 'npc.combatTrainer',
+  guild: 'npc.guildFounder',
+  dialogue: 'npc.talk',
+  examine: 'npc.examine',
 };
 
 const INTERACTION_COLORS: Record<NpcInteraction, string> = {
@@ -45,6 +46,7 @@ export const NpcRow = ({
   metadataUri: string;
   onOpenDialogue: (npcId: string, npcName: string, metadataUri: string) => void;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const navigate = useNavigate();
   const { title, flavor } = useNpcFlavor(metadataUri);
   const showNarrative = hasNarrative(interaction) && (title || flavor);
@@ -94,7 +96,7 @@ export const NpcRow = ({
             </Text>
           </HStack>
           <Text color="grey500" fontSize="xs">
-            {INTERACTION_LABELS[interaction]}
+            {t(INTERACTION_LABEL_KEYS[interaction])}
           </Text>
         </HStack>
         <VStack align="start" spacing={0} pl={{ base: 7, sm: 8 }} mt={0.5}>
@@ -142,7 +144,7 @@ export const NpcRow = ({
           {npcName}
         </Text>
         <Text color="grey500" fontSize="xs">
-          {INTERACTION_LABELS[interaction]}
+          {t(INTERACTION_LABEL_KEYS[interaction])}
         </Text>
       </HStack>
     </HStack>

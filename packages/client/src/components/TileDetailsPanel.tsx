@@ -21,7 +21,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
@@ -781,7 +781,7 @@ export const TileDetailsPanel = (): JSX.Element => {
         </style>
         <HStack bgColor="blue500" h={{ base: '36px', md: '46px' }} px={4}>
           <Heading color="#E8DCC8" size="sm">
-            Battlefield
+            {t('tile.battlefield')}
           </Heading>
         </HStack>
         <Box
@@ -896,7 +896,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                       size={{ base: 'sm', lg: 'lg' }}
                       color={opponentDefeated ? 'red.400' : undefined}
                     >
-                      {opponentDefeated ? `${opponent.name} defeated` : opponent.name}
+                      {opponentDefeated ? t('tile.opponentDefeated', { name: opponent.name }) : opponent.name}
                     </Text>
                     <ClassSymbol
                       entityClass={opponent.entityClass}
@@ -927,7 +927,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                       size={{ base: 'sm', lg: 'lg' }}
                       color={opponentDefeated ? 'red.400' : undefined}
                     >
-                      {opponentDefeated ? `${opponent.name} defeated` : opponent.name}
+                      {opponentDefeated ? t('tile.opponentDefeated', { name: opponent.name }) : opponent.name}
                     </Text>
                     <ClassSymbol
                       advancedClass={(opponent as Character).advancedClass}
@@ -1045,13 +1045,13 @@ export const TileDetailsPanel = (): JSX.Element => {
         >
           {isHomeTile && shopsOnTile.length > 0 && (
             <GridItem colSpan={2}>
-              <Heading size="sm">Shops</Heading>
+              <Heading size="sm">{t('tile.shops')}</Heading>
             </GridItem>
           )}
           {!isHomeTile && (
             <GridItem colSpan={2}>
               <Heading size="sm">
-                Monsters
+                {t('tile.monsters')}
               </Heading>
             </GridItem>
           )}
@@ -1113,13 +1113,13 @@ export const TileDetailsPanel = (): JSX.Element => {
                           fontStyle="italic"
                           textAlign="center"
                         >
-                          A fire crackles nearby. You could rest here.
+                          {t('tile.fireCracklesNear')}
                         </Text>
                         <Button
                           alignSelf="center"
                           isDisabled={restTx.isLoading}
                           isLoading={restTx.isLoading}
-                          loadingText="Resting by the fire..."
+                          loadingText={t('tile.restingByFire')}
                           onClick={onRest}
                           size="xs"
                           variant="outline"
@@ -1127,7 +1127,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                           borderColor="orange.400"
                           _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
                         >
-                          Rest by the Fire
+                          {t('tile.restByFire')}
                         </Button>
                       </>
                     ) : (
@@ -1138,7 +1138,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                         fontStyle="italic"
                         textAlign="center"
                       >
-                        A fire crackles softly. You are fully rested.
+                        {t('tile.fullyRested')}
                       </Text>
                     )}
                   </VStack>
@@ -1270,7 +1270,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                     >
                       {monstersExpanded
                         ? t('combat.showFewer')
-                        : `${hiddenMonsterCount} more monster${hiddenMonsterCount !== 1 ? 's' : ''}...`}
+                        : t('tile.moreMonsters', { count: hiddenMonsterCount })}
                     </Text>
                   </HStack>
                 )}
@@ -1278,7 +1278,7 @@ export const TileDetailsPanel = (): JSX.Element => {
             )}
             {sortedMonsters.length === 0 && (
               <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
-                No monsters in this area
+                {t('tile.noMonstersArea')}
               </Text>
             )}
           </GridItem>
@@ -1309,7 +1309,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 textAlign="center"
                 textShadow="0 0 20px rgba(168, 222, 255, 0.4), 0 0 40px rgba(168, 222, 255, 0.15)"
               >
-                Explore the Dark Cave
+                {t('tile.exploreDarkCave')}
               </Text>
               <Text
                 color="#5A5040"
@@ -1317,7 +1317,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 letterSpacing="0.15em"
                 textTransform="uppercase"
               >
-                Use the compass to move
+                {t('tile.useCompass')}
               </Text>
             </VStack>
           )}
@@ -1386,8 +1386,8 @@ export const TileDetailsPanel = (): JSX.Element => {
                 >
                   <Text color="#8A7E6A" size={{ base: '2xs', md: 'sm' }} fontStyle="italic">
                     {remaining > 0
-                      ? `World boss returns in ${minutes}m ${seconds.toString().padStart(2, '0')}s`
-                      : 'World boss stirring...'}
+                      ? t('tile.worldBossReturns', { time: `${minutes}m ${seconds.toString().padStart(2, '0')}s` })
+                      : t('tile.worldBossStirring')}
                   </Text>
                 </HStack>
               );
@@ -1423,7 +1423,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 ))}
               {otherCharactersOnTile.length === 0 && (
                 <Text p={2} size={{ base: '2xs', lg: 'sm' }}>
-                  No players in this area
+                  {t('tile.noPlayersArea')}
                 </Text>
               )}
             </>
@@ -1432,51 +1432,36 @@ export const TileDetailsPanel = (): JSX.Element => {
       </Grid>
 
       <InfoModal
-        heading="No moves equipped!"
+        heading={t('tile.noMovesEquipped')}
         isOpen={isNoMoveEquippedModalOpen}
         onClose={onCloseNoMoveEquippedModal}
       >
         <VStack p={4} spacing={4}>
           <IoIosWarning color="orange" size={40} />
-          <Text>
-            In order to initiate a battle, you must have at least 1 weapon or
-            spell equipped. Go to your{' '}
-            <Text
-              as={Link}
-              color="blue"
-              to={`/characters/${character?.id}`}
-              _hover={{
-                textDecoration: 'underline',
-              }}
-            >
-              character page
-            </Text>{' '}
-            to equip a move.
-          </Text>
+          <Trans
+            i18nKey="tile.noMovesBody"
+            ns="ui"
+            components={{
+              link: <Text as={Link} color="blue" to={`/characters/${character?.id}`} _hover={{ textDecoration: 'underline' }} />,
+            }}
+          />
         </VStack>
       </InfoModal>
 
       <InfoModal
-        heading="Cannot Battle in the Alcove"
+        heading={t('tile.cannotBattleAlcove')}
         isOpen={isSafetyZoneInfoModalOpen}
         onClose={onCloseSafetyZoneInfoModal}
       >
         <VStack p={4} spacing={4}>
           <IoIosWarning color="orange" size={40} />
-          <Text mt={4}>
-            You are currently in{' '}
-            <Text as="span" fontWeight={700}>
-              the Alcove
-            </Text>
-            .
-          </Text>
-          <Text textAlign="center">
-            In order to battle other players, you must enter{' '}
-            <Text as="span" fontWeight={700}>
-              the Winding Dark
-            </Text>
-            .
-          </Text>
+          <Trans
+            i18nKey="tile.cannotBattleAlcoveBody"
+            ns="ui"
+            components={{
+              bold: <Text as="span" fontWeight={700} />,
+            }}
+          />
         </VStack>
       </InfoModal>
 
@@ -1515,6 +1500,7 @@ const OpponentRow = ({
   onClick: () => void;
   isWorldBoss?: boolean;
 }) => {
+  const { t } = useTranslation('ui');
   const { inBattle, level, name } = opponent;
   const isElite = encounterType === EncounterType.PvE && (opponent as Monster).isElite;
   const navigate = useNavigate();
@@ -1595,7 +1581,7 @@ const OpponentRow = ({
         {!disableRow && !!level && (
           <HStack spacing={1}>
             <Text fontWeight={500} size={{ base: '2xs', sm: '2xs', md: 'sm' }}>
-              Level {level.toString()}
+              {t('tile.levelLabel', { level: level.toString() })}
             </Text>
             {encounterType === EncounterType.PvP &&
               (opponent as Character).advancedClass != null &&
@@ -1613,17 +1599,17 @@ const OpponentRow = ({
         )}
         {!(opponent as Character).worldEncounter && inBattle && (
           <Text color="red" fontWeight={700} size={{ base: '3xs', sm: '2xs' }}>
-            (In battle...)
+            ({t('tile.inBattle')})
           </Text>
         )}
         {(opponent as Character).worldEncounter && (
           <Text color="red" fontWeight={700} size={{ base: '3xs', sm: '2xs' }}>
-            (In shop...)
+            ({t('tile.inShop')})
           </Text>
         )}
         {inCooldown && (
           <Text color="red" fontWeight={700} size={{ base: '3xs', sm: '2xs' }}>
-            (In cooldown...)
+            ({t('tile.inCooldown')})
           </Text>
         )}
       </HStack>
@@ -1644,7 +1630,7 @@ const OpponentRow = ({
                 navigate('/characters/' + (opponent as Character).id)
               }
             >
-              View character
+              {t('tile.viewCharacter')}
             </MenuItem>
           </MenuList>
         </Menu>
