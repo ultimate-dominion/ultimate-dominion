@@ -15,7 +15,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaStoreAlt, FaUser } from 'react-icons/fa';
+import { FaStoreAlt, FaUser, FaSkullCrossbones } from 'react-icons/fa';
 
 
 import { useTranslation } from 'react-i18next';
@@ -49,6 +49,16 @@ const MAP_SIZE = 10;
 /** Zone exit tile — north-center of Dark Cave */
 const EXIT_TILE = { x: 5, y: 9 };
 
+const bossGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 6px rgba(184, 58, 42, 0.3), inset 0 0 3px rgba(184, 58, 42, 0.08); }
+  50% { box-shadow: 0 0 12px rgba(184, 58, 42, 0.5), inset 0 0 6px rgba(184, 58, 42, 0.12); }
+`;
+
+const bossFade = keyframes`
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+`;
+
 const exitTileGlow = keyframes`
   0%, 100% { box-shadow: 0 0 6px rgba(180, 198, 212, 0.2), inset 0 0 3px rgba(180, 198, 212, 0.05); }
   50%      { box-shadow: 0 0 14px rgba(180, 198, 212, 0.5), inset 0 0 6px rgba(180, 198, 212, 0.1); }
@@ -81,7 +91,7 @@ const COMPASS_DIRECTIONS: {
 
 export const MapPanel = (): JSX.Element => {
   const { t } = useTranslation('ui');
-  const { allCharacters, allMonsters, allNpcs, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position } = useMap();
+  const { allCharacters, allMonsters, allNpcs, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position, worldBosses } = useMap();
   const { character } = useCharacter();
   const { currentBattle } = useBattle();
   const { autoAdventureMode, isRefreshing, onMove, onToggleAutoAdventure } = useMovement();
@@ -409,6 +419,46 @@ export const MapPanel = (): JSX.Element => {
                           <FaUser size={14} color={npc.interaction === 'respec' ? '#e07c4f' : '#4fc3f7'} />
                         </VStack>
                       )
+                    );
+                  })}
+
+                  {/* World boss spawn tile */}
+                  {worldBosses.map((boss) => {
+                    const zoneOriginY = currentZone === 1 ? 0 : (currentZone - 1) * 100;
+                    const bossDisplayX = boss.spawnX;
+                    const bossDisplayY = boss.spawnY - zoneOriginY;
+                    const isBossHere = bossDisplayX === col && bossDisplayY === row;
+
+                    if (!isBossHere) return null;
+
+                    return boss.isAlive ? (
+                      <Box
+                        key={`boss-${boss.bossId}`}
+                        position="absolute"
+                        inset={0}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        bg="radial-gradient(circle, rgba(184,58,42,0.15) 0%, transparent 70%)"
+                        animation={`${bossGlow} 3s ease-in-out infinite`}
+                        borderRadius="sm"
+                        pointerEvents="none"
+                      >
+                        <FaSkullCrossbones size={12} color="#B83A2A" />
+                      </Box>
+                    ) : (
+                      <Box
+                        key={`boss-dead-${boss.bossId}`}
+                        position="absolute"
+                        inset={0}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        animation={`${bossFade} 4s ease-in-out infinite`}
+                        pointerEvents="none"
+                      >
+                        <FaSkullCrossbones size={10} color="#3A3228" />
+                      </Box>
                     );
                   })}
 

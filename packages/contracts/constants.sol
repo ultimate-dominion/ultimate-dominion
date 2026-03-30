@@ -110,6 +110,9 @@ uint256 constant GALE_FURY_MOB_ID = 85;            // Fragment XVI step 2: The W
 // GameDelegation constants
 bytes16 constant GAME_DELEGATION_NAME = "GameDelegation";
 
+// World Boss system — counter ID for Counters table (uses _world() as address key)
+uint256 constant WORLD_BOSS_COUNTER_ID = type(uint256).max;
+
 // Elite monster constants
 uint256 constant ELITE_CHANCE = 15;           // 15% spawn chance
 uint256 constant ELITE_STAT_MULTIPLIER = 130; // 1.3x STR/AGI/INT

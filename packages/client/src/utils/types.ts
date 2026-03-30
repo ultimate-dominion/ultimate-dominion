@@ -427,6 +427,20 @@ export type Npc = {
   metadataUri: string;
 };
 
+export type WorldBoss = {
+  bossId: string;
+  mobId: number;
+  zoneId: number;
+  spawnX: number;
+  spawnY: number;
+  entityId: string;
+  isAlive: boolean;
+  respawnSeconds: number;
+  lastKilledAt: number;
+  spawnedAt: number;
+  active: boolean;
+};
+
 export type Spell = SpellTemplate & {
   balance: bigint;
   itemId: string;

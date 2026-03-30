@@ -4,7 +4,7 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {MobsByLevel, MobsByZoneLevel, EntitiesAtPosition, BossSpawnConfig, ZoneBossConfig, ZoneMapConfig} from "@codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
-import {IMobSystem} from "@world/IWorld.sol";
+import {IMobSystem, IWorldBossSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {NoMonsters} from "../Errors.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
@@ -105,6 +105,11 @@ contract MapSpawnSystem is System {
                     SystemSwitch.call(abi.encodeCall(IMobSystem.UD__spawnMobs, (bossSpawn, x, y)));
                 }
             }
+        }
+
+        // World boss lazy spawn check
+        if (gasleft() > 200_000) {
+            SystemSwitch.call(abi.encodeCall(IWorldBossSystem.UD__trySpawnWorldBosses, (zoneId)));
         }
     }
 

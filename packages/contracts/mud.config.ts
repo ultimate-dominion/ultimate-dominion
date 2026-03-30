@@ -162,6 +162,10 @@ export default defineWorld({
       name: "AdminTuningSys",
       openAccess: false,
     },
+    WorldBossSystem: {
+      name: "WorldBossSys",
+      openAccess: true,
+    },
     UltimateDominionConfigSystem: {
       name: "UDConfigSys",
       openAccess: false,
@@ -1651,15 +1655,15 @@ export default defineWorld({
       key: ["bossId"],
       schema: {
         bossId: "uint256",
-        mobId: "uint256",        // references Mobs table for stats
-        currentHp: "int256",
-        maxHp: "int256",
+        mobId: "uint256",           // references Mobs table for stats
+        zoneId: "uint256",
         spawnX: "uint16",
         spawnY: "uint16",
+        entityId: "bytes32",        // live spawned entity (bytes32(0) when dead)
+        respawnSeconds: "uint256",
+        lastKilledAt: "uint256",
         spawnedAt: "uint256",
         active: "bool",
-        goldReward: "uint256",
-        xpReward: "uint256",
       },
     },
     // Tracks each player's contribution to a boss fight for proportional rewards

@@ -167,6 +167,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     position,
     shopsOnTile,
     visibleMonstersOnTile,
+    worldBosses,
   } = useMap();
   const {
     attackOutcomes,
@@ -200,6 +201,15 @@ export const TileDetailsPanel = (): JSX.Element => {
       return Math.abs(Number(a.level) - playerLevel) - Math.abs(Number(b.level) - playerLevel);
     });
   }, [visibleMonstersOnTile, character?.level]);
+
+  // World boss entity IDs for special rendering
+  const worldBossEntityIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const boss of worldBosses) {
+      if (boss.isAlive && boss.entityId) ids.add(boss.entityId);
+    }
+    return ids;
+  }, [worldBosses]);
 
   const visibleMonsters = monstersExpanded
     ? sortedMonsters
@@ -1193,6 +1203,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                   <Box key={`tile-monster-${i}-${monster.name}`}>
                     <OpponentRow
                       encounterType={EncounterType.PvE}
+                      isWorldBoss={worldBossEntityIds.has(monster.id)}
                       onClick={() => {
                         if (isMoveEquipped) {
                           onInitiateCombat(monster, EncounterType.PvE);
@@ -1327,6 +1338,32 @@ export const TileDetailsPanel = (): JSX.Element => {
                 />
               </Box>
             ))}
+          {/* Dead world boss respawn timer — shows on the boss's spawn tile */}
+          {worldBosses
+            .filter(b => !b.isAlive && b.lastKilledAt > 0 && position
+              && b.spawnX === position.x && b.spawnY === position.y)
+            .map(boss => {
+              const respawnAt = boss.lastKilledAt + boss.respawnSeconds;
+              const now = Math.floor(Date.now() / 1000);
+              const remaining = Math.max(0, respawnAt - now);
+              const minutes = Math.floor(remaining / 60);
+              const seconds = remaining % 60;
+              return (
+                <HStack
+                  key={`boss-timer-${boss.bossId}`}
+                  h={ROW_HEIGHT}
+                  px={{ base: 3, sm: 4 }}
+                  spacing={3}
+                  opacity={0.6}
+                >
+                  <Text color="#8A7E6A" size={{ base: '2xs', md: 'sm' }} fontStyle="italic">
+                    {remaining > 0
+                      ? `World boss returns in ${minutes}m ${seconds.toString().padStart(2, '0')}s`
+                      : 'World boss stirring...'}
+                  </Text>
+                </HStack>
+              );
+            })}
           {stage >= OnboardingStage.SETTLING_IN && (
             <>
               {otherCharactersOnTile.length > 0 &&
@@ -1432,11 +1469,13 @@ const OpponentRow = ({
   opponent,
   playerStats,
   onClick,
+  isWorldBoss,
 }: {
   encounterType: EncounterType;
   opponent: Character | Monster;
   playerStats: { strength: bigint; agility: bigint; intelligence: bigint; level: bigint; maxHp: bigint };
   onClick: () => void;
+  isWorldBoss?: boolean;
 }) => {
   const { inBattle, level, name } = opponent;
   const isElite = encounterType === EncounterType.PvE && (opponent as Monster).isElite;
@@ -1506,11 +1545,12 @@ const OpponentRow = ({
               />
             )}
             <Text
-              color={nameColor}
+              color={isWorldBoss ? '#E8A840' : nameColor}
               filter={disableRow ? 'grayscale(100%)' : 'none'}
+              fontWeight={isWorldBoss ? 700 : undefined}
               size={{ base: '2xs', sm: '2xs', md: 'sm', lg: 'md' }}
             >
-              {isElite ? '★ ' : ''}{name}
+              {isWorldBoss ? 'BOSS \u2022 ' : isElite ? '★ ' : ''}{name}
             </Text>
           </HStack>
         </Tooltip>

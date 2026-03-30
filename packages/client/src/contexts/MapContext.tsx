@@ -36,6 +36,7 @@ import {
   type Npc,
   type NpcInteraction,
   type Shop,
+  type WorldBoss,
   MobType,
 } from '../utils/types';
 
@@ -112,6 +113,7 @@ type MapContextType = {
   refreshEntities: () => void;
   shopsOnTile: Shop[];
   visibleMonstersOnTile: Monster[];
+  worldBosses: WorldBoss[];
 };
 
 const MapContext = createContext<MapContextType>({
@@ -134,6 +136,7 @@ const MapContext = createContext<MapContextType>({
   refreshEntities: () => {},
   shopsOnTile: [],
   visibleMonstersOnTile: [],
+  worldBosses: [],
 });
 
 export type MapProviderProps = {
@@ -175,6 +178,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const tokenURITable = useGameTable('CharactersTokenURI');
   const worldStatusEffectsTable = useGameTable('WorldStatusEffects');
   const mobStatsTable = useGameTable('MobStats');
+  const worldBossTable = useGameTable('WorldBoss');
 
   // Player's position from the store (canonical — no optimistic updates)
   const posData = useGameValue('Position', character?.id);
@@ -515,6 +519,25 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     });
   }, [allCharacters, currentZone]);
 
+  // World bosses for the current zone
+  const worldBosses = useMemo((): WorldBoss[] => {
+    return Object.entries(worldBossTable)
+      .map(([key, row]) => ({
+        bossId: key,
+        mobId: toNumber(row.mobId),
+        zoneId: toNumber(row.zoneId),
+        spawnX: toNumber(row.spawnX),
+        spawnY: toNumber(row.spawnY),
+        entityId: (row.entityId as string) ?? '',
+        isAlive: !!row.entityId && row.entityId !== zeroHash,
+        respawnSeconds: toNumber(row.respawnSeconds),
+        lastKilledAt: toNumber(row.lastKilledAt),
+        spawnedAt: toNumber(row.spawnedAt),
+        active: Boolean(row.active),
+      }))
+      .filter(b => b.active && b.zoneId === currentZone);
+  }, [worldBossTable, currentZone]);
+
   const monstersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
     const result = zonedMonsters.filter(
@@ -663,6 +686,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         refreshEntities,
         shopsOnTile,
         visibleMonstersOnTile,
+        worldBosses,
       }}
     >
       {children}
