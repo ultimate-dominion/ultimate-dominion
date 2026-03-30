@@ -65,10 +65,10 @@ contract LevelSystemTest is SetUp {
         StatsData memory staleBase = abi.decode(Characters.getBaseStats(bobCharacterId), (StatsData));
         assertEq(staleBase.experience, 0, "baseStats should still be stale");
 
-        // Build desired stats: +2 stat points for level 2 (STAT_POINTS_EARLY)
+        // Build desired stats: +1 stat point for level 2 (STAT_POINTS_EARLY)
         StatsData memory current = Stats.get(bobCharacterId);
         StatsData memory desired = current;
-        desired.strength = current.strength + 2; // Put both points in STR
+        desired.strength = current.strength + 1;
 
         // Level up — this was reverting before the fix
         vm.prank(bob);
@@ -91,24 +91,24 @@ contract LevelSystemTest is SetUp {
 
         StatsData memory current = Stats.get(bobCharacterId);
 
-        // Level 1 → 2 (+2 stat points)
+        // Level 1 → 2 (+1 stat point)
         StatsData memory desired1 = current;
-        desired1.strength = current.strength + 2;
+        desired1.strength = current.strength + 1;
         vm.prank(bob);
         world.UD__levelCharacter(bobCharacterId, desired1);
         assertEq(Stats.getLevel(bobCharacterId), 2);
 
-        // Level 2 → 3 (+2 stat points)
+        // Level 2 → 3 (+1 stat point)
         StatsData memory current2 = Stats.get(bobCharacterId);
         StatsData memory desired2 = current2;
-        desired2.agility = current2.agility + 2;
+        desired2.agility = current2.agility + 1;
         vm.prank(bob);
         world.UD__levelCharacter(bobCharacterId, desired2);
         assertEq(Stats.getLevel(bobCharacterId), 3);
     }
 
-    /// @dev Stat points can be split across multiple stats
-    function testLevelUpSplitStatPoints() public {
+    /// @dev Cannot split 1 stat point — must allocate exactly 1
+    function testRevertSplitSingleStatPoint() public {
         vm.startPrank(deployer);
         Stats.setExperience(bobCharacterId, 600);
         vm.stopPrank();
@@ -116,13 +116,11 @@ contract LevelSystemTest is SetUp {
         StatsData memory current = Stats.get(bobCharacterId);
         StatsData memory desired = current;
         desired.strength = current.strength + 1;
-        desired.agility = current.agility + 1;
+        desired.agility = current.agility + 1; // total +2, but only 1 allowed
 
         vm.prank(bob);
+        vm.expectRevert(ILevelSystem.LevelSystem_InvalidStatChanges.selector);
         world.UD__levelCharacter(bobCharacterId, desired);
-        assertEq(Stats.getLevel(bobCharacterId), 2);
-        assertEq(Stats.getStrength(bobCharacterId), desired.strength);
-        assertEq(Stats.getAgility(bobCharacterId), desired.agility);
     }
 
     // ====================================================================
@@ -134,7 +132,7 @@ contract LevelSystemTest is SetUp {
         // Bob starts at level 1 with 0 XP everywhere
         StatsData memory current = Stats.get(bobCharacterId);
         StatsData memory desired = current;
-        desired.strength = current.strength + 2;
+        desired.strength = current.strength + 1;
 
         vm.prank(bob);
         vm.expectRevert(ILevelSystem.LevelSystem_InsufficientExperience.selector);
@@ -149,7 +147,7 @@ contract LevelSystemTest is SetUp {
 
         StatsData memory current = Stats.get(bobCharacterId);
         StatsData memory desired = current;
-        desired.strength = current.strength + 2;
+        desired.strength = current.strength + 1;
 
         vm.prank(bob);
         vm.expectRevert(ILevelSystem.LevelSystem_InsufficientExperience.selector);
@@ -164,9 +162,9 @@ contract LevelSystemTest is SetUp {
 
         StatsData memory current = Stats.get(bobCharacterId);
 
-        // Try to allocate 3 points instead of 2
+        // Try to allocate 2 points instead of 1
         StatsData memory desired = current;
-        desired.strength = current.strength + 3;
+        desired.strength = current.strength + 2;
 
         vm.prank(bob);
         vm.expectRevert(ILevelSystem.LevelSystem_InvalidStatChanges.selector);
@@ -196,7 +194,7 @@ contract LevelSystemTest is SetUp {
         // First level-up succeeds
         StatsData memory current = Stats.get(bobCharacterId);
         StatsData memory desired = current;
-        desired.strength = current.strength + 2;
+        desired.strength = current.strength + 1;
         vm.prank(bob);
         world.UD__levelCharacter(bobCharacterId, desired);
         assertEq(Stats.getLevel(bobCharacterId), 2);
@@ -204,7 +202,7 @@ contract LevelSystemTest is SetUp {
         // Second level-up should fail (need 2000 XP for L3)
         StatsData memory current2 = Stats.get(bobCharacterId);
         StatsData memory desired2 = current2;
-        desired2.strength = current2.strength + 2;
+        desired2.strength = current2.strength + 1;
         vm.prank(bob);
         vm.expectRevert(ILevelSystem.LevelSystem_InsufficientExperience.selector);
         world.UD__levelCharacter(bobCharacterId, desired2);
