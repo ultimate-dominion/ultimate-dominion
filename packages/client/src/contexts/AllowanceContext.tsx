@@ -335,9 +335,8 @@ export const AllowanceProvider = ({
     async (system: SystemToAllow): Promise<boolean> => {
       if (authMethod !== 'embedded') return false;
       const systemAddress = getSystemAddress(system);
+      console.log('[APPROVE PRE-CHECK]', { systemAddress, approvalClient: !!approvalClient, itemsAddress });
       if (!systemAddress || !approvalClient || !itemsAddress) return false;
-
-      console.log('[APPROVE DEBUG]', { systemAddress, approvalClient: !!approvalClient, itemsAddress });
       setIsApprovingItems(true);
       try {
         const { request } = await publicClient.simulateContract({
