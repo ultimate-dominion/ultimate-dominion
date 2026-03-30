@@ -6,7 +6,7 @@ import {IWorld} from "@world/IWorld.sol";
 import {
     NpcDialogue,
     NpcDialogueData,
-    Position,
+    PositionV2,
     Characters,
     Admin
 } from "@codegen/index.sol";
@@ -33,10 +33,10 @@ contract NpcDialogueSystem is System {
         require(owner == _msgSender(), "Not character owner");
 
         // Validate same position
-        uint16 charX = Position.getX(characterId);
-        uint16 charY = Position.getY(characterId);
-        uint16 npcX = Position.getX(npcId);
-        uint16 npcY = Position.getY(npcId);
+        uint16 charX = PositionV2.getX(characterId);
+        uint16 charY = PositionV2.getY(characterId);
+        uint16 npcX = PositionV2.getX(npcId);
+        uint16 npcY = PositionV2.getY(npcId);
         if (charX != npcX || charY != npcY) revert NotAtNpcPosition();
 
         NpcDialogueData memory dialogue = NpcDialogue.get(npcId);

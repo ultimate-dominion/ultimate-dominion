@@ -8,10 +8,10 @@ import {
     Characters,
     CharacterZone,
     Counters,
-    EntitiesAtPosition,
+    EntitiesAtPositionV2,
     CharacterEquipment,
     MapConfig,
-    Position,
+    PositionV2,
     Spawned,
     Stats,
     EncounterEntity,
@@ -51,19 +51,15 @@ contract MapSystem is System {
         uint256 lastAction = SessionTimer.get(entityId);
         if (lastAction != 0 && block.timestamp < lastAction + MOVE_COOLDOWN) revert MoveTooFast();
 
-        (uint16 currentX, uint16 currentY) = Position.get(entityId);
+        (uint256 zoneId, uint16 currentX, uint16 currentY) = PositionV2.get(entityId);
 
-        // Zone-aware bounds checking
-        uint256 zoneId = _getCharacterZone(entityId);
+        // Zone-relative bounds checking
         uint16 zoneWidth = ZoneMapConfig.getWidth(zoneId);
 
         if (zoneWidth > 0) {
-            // Zone configured — validate within zone bounds
-            uint16 originX = ZoneMapConfig.getOriginX(zoneId);
-            uint16 originY = ZoneMapConfig.getOriginY(zoneId);
             uint16 zoneHeight = ZoneMapConfig.getHeight(zoneId);
-            if (x < originX || x >= originX + zoneWidth) revert OutOfBounds();
-            if (y < originY || y >= originY + zoneHeight) revert OutOfBounds();
+            if (x >= zoneWidth) revert OutOfBounds();
+            if (y >= zoneHeight) revert OutOfBounds();
         } else {
             // Fallback to global MapConfig (backward compat for unconfigured zones)
             (uint16 height, uint16 width) = MapConfig.get();
@@ -72,8 +68,8 @@ contract MapSystem is System {
         }
 
         if (_standardDistance(currentX, currentY, x, y) != 1) revert InvalidMove();
-        _moveEntity(entityId, currentX, currentY, x, y);
-        IWorld(_world()).UD__spawnOnTileEnter(x, y);
+        _moveEntity(entityId, zoneId, currentX, currentY, x, y);
+        IWorld(_world()).UD__spawnOnTileEnter(zoneId, x, y);
     }
 
     function spawn(bytes32 entityId) public {
@@ -98,19 +94,10 @@ contract MapSystem is System {
             Stats.setCurrentHp(entityId, maxHp);
         }
 
-        // Determine spawn position from character's zone
-        uint16 homeX = 0;
-        uint16 homeY = 0;
-        if (isCharacter) {
-            uint256 zoneId = _getCharacterZone(entityId);
-            uint16 zoneWidth = ZoneMapConfig.getWidth(zoneId);
-            if (zoneWidth > 0) {
-                homeX = ZoneMapConfig.getOriginX(zoneId);
-                homeY = ZoneMapConfig.getOriginY(zoneId);
-            }
-        }
+        // Determine spawn zone — coordinates are always (0,0) zone-relative
+        uint256 zoneId = isCharacter ? _getCharacterZone(entityId) : 0;
 
-        Position.set(entityId, homeX, homeY);
+        PositionV2.set(entityId, zoneId, 0, 0);
         Spawned.setSpawned(entityId, true);
 
         if (isCharacter) {
@@ -125,11 +112,11 @@ contract MapSystem is System {
         // encounter wasn't properly resolved (client crash, failed tx, etc.)
         EncounterEntity.setEncounterId(entityId, bytes32(0));
         EncounterEntity.setDied(entityId, false);
-        EntitiesAtPosition.pushEntities(homeX, homeY, entityId);
+        EntitiesAtPositionV2.pushEntities(zoneId, 0, 0, entityId);
 
         // Fragment I: The Awakening - triggers on first spawn
         if (isCharacter) {
-            IWorld(_world()).UD__triggerFragment(entityId, 1, homeX, homeY);
+            IWorld(_world()).UD__triggerFragment(entityId, 1, 0, 0);
         }
     }
 
@@ -143,19 +130,19 @@ contract MapSystem is System {
         return PLAYER_COUNTER_KEY;
     }
 
-    function getEntitiesAtPosition(uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
-        return EntitiesAtPosition.getEntities(x, y);
+    function getEntitiesAtPosition(uint256 zoneId, uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
+        return EntitiesAtPositionV2.getEntities(zoneId, x, y);
     }
 
     function isAtPosition(bytes32 entityId, uint16 x, uint16 y) public view returns (bool _isAtPosition) {
-        (uint16 j, uint16 k) = Position.get(entityId);
+        (, uint16 j, uint16 k) = PositionV2.get(entityId);
         if (j == x && k == y) {
             _isAtPosition = true;
         }
     }
 
-    function getEntityPosition(bytes32 entityId) public view returns (uint16 x, uint16 y) {
-        (x, y) = Position.get(entityId);
+    function getEntityPosition(bytes32 entityId) public view returns (uint256 zoneId, uint16 x, uint16 y) {
+        (zoneId, x, y) = PositionV2.get(entityId);
     }
 
     function _getCharacterZone(bytes32 entityId) internal view returns (uint256) {
@@ -169,15 +156,15 @@ contract MapSystem is System {
         return deltaX + deltaY;
     }
 
-    function _moveEntity(bytes32 entityId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
-        bytes32[] memory entAtPos = getEntitiesAtPosition(currentX, currentY);
+    function _moveEntity(bytes32 entityId, uint256 zoneId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
+        bytes32[] memory entAtPos = EntitiesAtPositionV2.getEntities(zoneId, currentX, currentY);
         bool entityWasAtPosition;
         for (uint256 i; i < entAtPos.length;) {
             if (entAtPos[i] == entityId) {
                 entityWasAtPosition = true;
                 bytes32 lastEnt = entAtPos[entAtPos.length - 1];
-                EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
-                EntitiesAtPosition.popEntities(currentX, currentY);
+                EntitiesAtPositionV2.updateEntities(zoneId, currentX, currentY, i, lastEnt);
+                EntitiesAtPositionV2.popEntities(zoneId, currentX, currentY);
                 break;
             }
             {
@@ -208,7 +195,7 @@ contract MapSystem is System {
                 }
             }
         }
-        Position.set(entityId, x, y);
-        EntitiesAtPosition.pushEntities(x, y, entityId);
+        PositionV2.set(entityId, zoneId, x, y);
+        EntitiesAtPositionV2.pushEntities(zoneId, x, y, entityId);
     }
 }

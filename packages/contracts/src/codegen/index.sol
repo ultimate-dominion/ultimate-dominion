@@ -58,6 +58,8 @@ import { MapConfig } from "./tables/MapConfig.sol";
 import { Spawned } from "./tables/Spawned.sol";
 import { Position } from "./tables/Position.sol";
 import { EntitiesAtPosition } from "./tables/EntitiesAtPosition.sol";
+import { PositionV2 } from "./tables/PositionV2.sol";
+import { EntitiesAtPositionV2 } from "./tables/EntitiesAtPositionV2.sol";
 import { UltimateDominionConfig, UltimateDominionConfigData } from "./tables/UltimateDominionConfig.sol";
 import { SessionConfig } from "./tables/SessionConfig.sol";
 import { Orders, OrdersData } from "./tables/Orders.sol";
@@ -123,6 +125,7 @@ import { DeathPenaltyConfig, DeathPenaltyConfigData } from "./tables/DeathPenalt
 import { Party, PartyData } from "./tables/Party.sol";
 import { PartyMember, PartyMemberData } from "./tables/PartyMember.sol";
 import { WorldBoss, WorldBossData } from "./tables/WorldBoss.sol";
+import { WorldBossV2, WorldBossV2Data } from "./tables/WorldBossV2.sol";
 import { WorldBossContribution } from "./tables/WorldBossContribution.sol";
 import { WorldEvent, WorldEventData } from "./tables/WorldEvent.sol";
 import { EventParticipation, EventParticipationData } from "./tables/EventParticipation.sol";

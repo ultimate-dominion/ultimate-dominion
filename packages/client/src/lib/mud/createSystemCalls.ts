@@ -951,8 +951,8 @@ export function createSystemCalls(
 
     // Read position from the Zustand store (updated synchronously from receipts)
     // instead of relying on React state or optimistic refs which can be stale.
-    const pos = getTableValue('Position', characterEntity) as
-      | { x: number; y: number } | undefined;
+    const pos = getTableValue('PositionV2', characterEntity) as
+      | { zoneId: number; x: number; y: number } | undefined;
     if (!pos) {
       return { success: false, error: 'Position not found.' };
     }
@@ -1101,8 +1101,8 @@ export function createSystemCalls(
     if (ownershipError) return ownershipError;
 
     // Same store-based position read as move — uses Zustand (updated from receipts)
-    const pos = getTableValue('Position', characterEntity) as
-      | { x: number; y: number } | undefined;
+    const pos = getTableValue('PositionV2', characterEntity) as
+      | { zoneId: number; x: number; y: number } | undefined;
     if (!pos) {
       return { success: false, error: 'Position not found.' };
     }

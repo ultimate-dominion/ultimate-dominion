@@ -19,7 +19,7 @@ import {
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y, ESCROW_ADDRESS} from "../../constants.sol";
-import {Position} from "@codegen/index.sol";
+import {PositionV2} from "@codegen/index.sol";
 import {GoldLib} from "../libraries/GoldLib.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
@@ -48,7 +48,7 @@ contract ShopSystem is System, ReentrancyGuard {
                 || worldData.entity != shopId || worldData.character != characterId
         ) revert InvalidShopEncounter();
         if (!IWorld(_world()).UD__isValidOwner(characterId, _msgSender())) revert Unauthorized();
-        (uint16 characterX, uint16 characterY) = IWorld(_world()).UD__getEntityPosition(characterId);
+        (, uint16 characterX, uint16 characterY) = IWorld(_world()).UD__getEntityPosition(characterId);
         if (!IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY)) revert NotAtShopPosition();
     }
 
@@ -179,7 +179,7 @@ contract ShopSystem is System, ReentrancyGuard {
 
         // Fragment II: The Quartermaster - talk to Tal at (9,9)
         bytes32 shopEntityId = WorldEncounter.getEntity(encounterId);
-        (uint16 shopX, uint16 shopY) = Position.get(shopEntityId);
+        (, uint16 shopX, uint16 shopY) = PositionV2.get(shopEntityId);
         if (shopX == TAL_SHOP_X && shopY == TAL_SHOP_Y) {
             SystemSwitch.call(
                 abi.encodeCall(IFragmentSystem.UD__triggerFragment, (characterId, 2, shopX, shopY))

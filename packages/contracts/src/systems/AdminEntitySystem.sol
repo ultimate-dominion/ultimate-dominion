@@ -8,8 +8,8 @@ import {
     StatsData,
     Characters,
     Admin,
-    EntitiesAtPosition,
-    Position
+    EntitiesAtPositionV2,
+    PositionV2
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 
@@ -25,15 +25,15 @@ contract AdminEntitySystem is System {
     }
 
     function adminMoveEntity(bytes32 entityId, uint16 x, uint16 y) public onlyAdmin {
-        (uint16 currentX, uint16 currentY) = IWorld(_world()).UD__getEntityPosition(entityId);
-        bytes32[] memory entAtPos = IWorld(_world()).UD__getEntitiesAtPosition(currentX, currentY);
+        (uint256 zoneId, uint16 currentX, uint16 currentY) = PositionV2.get(entityId);
+        bytes32[] memory entAtPos = EntitiesAtPositionV2.getEntities(zoneId, currentX, currentY);
         bool entityWasAtPosition;
         for (uint256 i; i < entAtPos.length;) {
             if (entAtPos[i] == entityId) {
                 entityWasAtPosition = true;
                 bytes32 lastEnt = entAtPos[entAtPos.length - 1];
-                EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
-                EntitiesAtPosition.popEntities(currentX, currentY);
+                EntitiesAtPositionV2.updateEntities(zoneId, currentX, currentY, i, lastEnt);
+                EntitiesAtPositionV2.popEntities(zoneId, currentX, currentY);
                 break;
             }
             {
@@ -41,8 +41,8 @@ contract AdminEntitySystem is System {
             }
         }
         if (!entityWasAtPosition) revert EntityNotAtPosition();
-        Position.set(entityId, x, y);
-        EntitiesAtPosition.pushEntities(x, y, entityId);
+        PositionV2.set(entityId, zoneId, x, y);
+        EntitiesAtPositionV2.pushEntities(zoneId, x, y, entityId);
     }
 
     function adminRemoveEntity(bytes32 entityId) public onlyAdmin {

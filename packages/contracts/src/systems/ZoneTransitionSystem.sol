@@ -8,9 +8,9 @@ import {
     Characters,
     CharacterZone,
     CharacterZoneCompletion,
-    EntitiesAtPosition,
+    EntitiesAtPositionV2,
     EncounterEntity,
-    Position,
+    PositionV2,
     SessionTimer,
     Spawned,
     Stats,
@@ -78,30 +78,29 @@ contract ZoneTransitionSystem is System {
 
         // --- Execute transition ---
         // 1. Remove from current tile
-        (uint16 currentX, uint16 currentY) = Position.get(entityId);
-        _removeFromPosition(entityId, currentX, currentY);
+        uint16 currentX; uint16 currentY;
+        (, currentX, currentY) = PositionV2.get(entityId);
+        _removeFromPosition(entityId, currentZoneId, currentX, currentY);
 
         // 2. Update zone
         CharacterZone.set(entityId, targetZoneId);
 
-        // 3. Set position to target zone origin
-        uint16 originX = ZoneMapConfig.getOriginX(targetZoneId);
-        uint16 originY = ZoneMapConfig.getOriginY(targetZoneId);
-        Position.set(entityId, originX, originY);
-        EntitiesAtPosition.pushEntities(originX, originY, entityId);
+        // 3. Set position to zone-relative origin (0,0)
+        PositionV2.set(entityId, targetZoneId, 0, 0);
+        EntitiesAtPositionV2.pushEntities(targetZoneId, 0, 0, entityId);
 
         // 4. Reset move cooldown for immediate movement
         SessionTimer.set(entityId, 0);
 
         // 5. Spawn mobs on the origin tile
-        IWorld(_world()).UD__spawnOnTileEnter(originX, originY);
+        IWorld(_world()).UD__spawnOnTileEnter(targetZoneId, 0, 0);
 
         // 6. Mint Pioneer badge (first entry into this zone)
         _tryMintPioneerBadge(entityId, targetZoneId);
 
         // 7. Initialize fragment chains for the target zone
         if (targetZoneId == ZONE_WINDY_PEAKS) {
-            _initializeZ2Chains(entityId, originX, originY);
+            _initializeZ2Chains(entityId, 0, 0);
         }
     }
 
@@ -158,13 +157,13 @@ contract ZoneTransitionSystem is System {
         ERC721Balances.set(balancesTableId, owner, currentBalance + 1);
     }
 
-    function _removeFromPosition(bytes32 entityId, uint16 x, uint16 y) internal {
-        bytes32[] memory entities = EntitiesAtPosition.getEntities(x, y);
+    function _removeFromPosition(bytes32 entityId, uint256 zoneId, uint16 x, uint16 y) internal {
+        bytes32[] memory entities = EntitiesAtPositionV2.getEntities(zoneId, x, y);
         for (uint256 i; i < entities.length; i++) {
             if (entities[i] == entityId) {
                 bytes32 last = entities[entities.length - 1];
-                EntitiesAtPosition.updateEntities(x, y, i, last);
-                EntitiesAtPosition.popEntities(x, y);
+                EntitiesAtPositionV2.updateEntities(zoneId, x, y, i, last);
+                EntitiesAtPositionV2.popEntities(zoneId, x, y);
                 return;
             }
         }

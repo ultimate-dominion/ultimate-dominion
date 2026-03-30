@@ -45,8 +45,8 @@ contract Test_CombatSystem is SetUp, GasReporter {
         vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
         spawnedMobId = 5;
-        entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
-        entityId2 = world.UD__spawnMob(spawnedMobId, 0, 1);
+        entityId = world.UD__spawnMob(spawnedMobId, 1, 0, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 1, 0, 1);
 
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);
@@ -166,7 +166,7 @@ contract Test_CombatSystem is SetUp, GasReporter {
     }
 
     function test_createPvEEncounter_Revert_Entities_Wrong_Position() public {
-        entityId2 = world.UD__spawnMob(spawnedMobId, 1, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 1, 1, 1);
         defenders[0] = entityId2;
         vm.prank(bob);
         vm.expectRevert("ENCOUNTER SYSTEM: INVALID PVE");
@@ -298,19 +298,19 @@ contract Test_CombatSystem is SetUp, GasReporter {
             assertGt(endingStats.experience, startingStats.experience, "incorrect exp");
             assertGt(goldToken.balanceOf(bob), startingGold, "incorrect gold");
             assertNotEq(startingStats.currentHp, Stats.get(entityId).currentHp, "incorrect hp");
-            bytes32[] memory entities = world.UD__getEntitiesAtPosition(0, 1);
+            bytes32[] memory entities = world.UD__getEntitiesAtPosition(1, 0, 1);
             bool entityIsAtPosition;
             for (uint256 i; i < entities.length; i++) {
                 if (entityId == entities[i]) entityIsAtPosition == true;
             }
             assertFalse(entityIsAtPosition, "entity still at position");
-            (uint16 entityX, uint16 entityY) = world.UD__getEntityPosition(entityId);
+            (uint256 entityZoneId, uint16 entityX, uint16 entityY) = world.UD__getEntityPosition(entityId);
             assertEq(entityX, 0, "entity pos: incorrect x");
             assertEq(entityY, 0, "entity pos: incorrect y");
         } else {
             assertNotEq(startingStats.currentHp, Stats.get(bobCharacterId).currentHp);
             assertFalse(EncounterEntity.getDied(entityId), "incorrect died");
-            bytes32[] memory entities = world.UD__getEntitiesAtPosition(0, 1);
+            bytes32[] memory entities = world.UD__getEntitiesAtPosition(1, 0, 1);
             bool entityIsAtPosition;
             for (uint256 i; i < entities.length; i++) {
                 if (bobCharacterId == entities[i]) entityIsAtPosition == true;

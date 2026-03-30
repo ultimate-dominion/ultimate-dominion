@@ -9,9 +9,9 @@ import {
     CombatEncounter,
     CombatEncounterData,
     Counters,
-    EntitiesAtPosition,
+    EntitiesAtPositionV2,
     EncounterEntity,
-    Position,
+    PositionV2,
     SessionConfig,
     SessionTimer,
     Spawned,
@@ -55,21 +55,21 @@ contract MapRemovalSystem is System {
             // Non-character entity (e.g., monster) - allow inter-system calls
         }
 
-        (uint16 currentX, uint16 currentY) = IWorld(_world()).UD__getEntityPosition(entityId);
-        bytes32[] memory entAtPos = IWorld(_world()).UD__getEntitiesAtPosition(currentX, currentY);
+        (uint256 zoneId, uint16 currentX, uint16 currentY) = PositionV2.get(entityId);
+        bytes32[] memory entAtPos = EntitiesAtPositionV2.getEntities(zoneId, currentX, currentY);
 
         for (uint256 i; i < entAtPos.length;) {
             if (entAtPos[i] == entityId) {
                 bytes32 lastEnt = entAtPos[entAtPos.length - 1];
-                EntitiesAtPosition.updateEntities(currentX, currentY, i, lastEnt);
-                EntitiesAtPosition.popEntities(currentX, currentY);
+                EntitiesAtPositionV2.updateEntities(zoneId, currentX, currentY, i, lastEnt);
+                EntitiesAtPositionV2.popEntities(zoneId, currentX, currentY);
                 break;
             }
             {
                 i++;
             }
         }
-        Position.set(entityId, 0, 0);
+        PositionV2.set(entityId, 0, 0, 0);
         Spawned.setSpawned(entityId, false);
 
         bytes32[] memory emptyArray;

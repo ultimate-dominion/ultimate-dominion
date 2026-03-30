@@ -50,12 +50,7 @@ const ZONE_IDS: Record<string, number> = {
   windy_peaks: 2,
 };
 
-/** Y-origin offset per zone. Must match ZONE_ORIGIN_SPACING in constants.sol */
-const ZONE_ORIGIN_SPACING = 100;
-
-function getZoneOriginY(zoneId: number): number {
-  return (zoneId - 1) * ZONE_ORIGIN_SPACING;
-}
+// Coordinates are zone-relative (0-9). No offset needed.
 
 // ============ Types ============
 
@@ -232,7 +227,7 @@ const worldAbi = parseAbi([
   'function UD__createEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)',
   'function UD__createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)',
   'function UD__createMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)',
-  'function UD__spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32)',
+  'function UD__spawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) returns (bytes32)',
   'function UD__setStarterItems(uint8 class, uint256[] itemIds, uint256[] amounts)',
   'function UD__setStarterItemPool(uint256 itemId, bool isStarter)',
   'function UD__setStarterConsumables(uint256[] itemIds, uint256[] amounts)',
@@ -916,13 +911,10 @@ Available zones:
       const shopsData: ShopsJson = JSON.parse(fs.readFileSync(shopsPath, 'utf-8'));
       console.log('\n>>> Loading Shops <<<');
 
-      // Apply zone coordinate offset to shop locations
-      const zoneOriginY = zoneId > 0 ? getZoneOriginY(zoneId) : 0;
-
       for (const shop of shopsData.shops) {
         const spawnX = shop.location[0];
-        const spawnY = shop.location[1] + zoneOriginY;
-        console.log(`  Shop: ${shop.name} at (${spawnX}, ${spawnY})${zoneOriginY > 0 ? ` [offset from (${shop.location[0]}, ${shop.location[1]})]` : ''}`);
+        const spawnY = shop.location[1];
+        console.log(`  Shop: ${shop.name} at zone ${zoneId} (${spawnX}, ${spawnY})`);
 
         // Resolve item names to IDs
         const buyableItems: bigint[] = [];
@@ -1009,9 +1001,9 @@ Available zones:
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__spawnMob',
-            args: [mobId, spawnX, spawnY],
+            args: [mobId, BigInt(zoneId), spawnX, spawnY],
           });
-          console.log(`    -> Spawned at (${spawnX}, ${spawnY}) with mobId ${mobId}`);
+          console.log(`    -> Spawned at zone ${zoneId} (${spawnX}, ${spawnY}) with mobId ${mobId}`);
         }
       }
     }
@@ -1023,8 +1015,6 @@ Available zones:
     if (fs.existsSync(npcsPath)) {
       const npcsData: NPCsJson = JSON.parse(fs.readFileSync(npcsPath, 'utf-8'));
       console.log('\n>>> Loading NPCs <<<');
-
-      const zoneOriginY = zoneId > 0 ? getZoneOriginY(zoneId) : 0;
 
       // Count existing mobs (monsters + shops) to compute NPC mobIds
       const monstersPath = path.join(zonePath, 'monsters.json');
@@ -1042,8 +1032,8 @@ Available zones:
       for (let npcIndex = 0; npcIndex < npcsData.npcs.length; npcIndex++) {
         const npc = npcsData.npcs[npcIndex];
         const spawnX = npc.location[0];
-        const spawnY = npc.location[1] + zoneOriginY;
-        console.log(`  NPC: ${npc.name} at (${spawnX}, ${spawnY})${zoneOriginY > 0 ? ` [offset from (${npc.location[0]}, ${npc.location[1]})]` : ''} — interaction: ${npc.interaction}`);
+        const spawnY = npc.location[1];
+        console.log(`  NPC: ${npc.name} at zone ${zoneId} (${spawnX}, ${spawnY}) — interaction: ${npc.interaction}`);
 
         if (!dryRun && walletClient) {
           const storyPathIds: Hex[] = (npc.storyPathIds || []).map(id => id as Hex);
@@ -1063,9 +1053,9 @@ Available zones:
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__spawnMob',
-            args: [mobId, spawnX, spawnY],
+            args: [mobId, BigInt(zoneId), spawnX, spawnY],
           });
-          console.log(`    -> Spawned at (${spawnX}, ${spawnY}) with mobId ${mobId}`);
+          console.log(`    -> Spawned at zone ${zoneId} (${spawnX}, ${spawnY}) with mobId ${mobId}`);
         }
       }
     }

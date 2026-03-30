@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {WorldBossV2, Counters, Admin, EntitiesAtPosition, Spawned, Position} from "@codegen/index.sol";
+import {WorldBossV2, Counters, Admin, Spawned} from "@codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem} from "@world/IWorld.sol";
 import {NotAdmin} from "../Errors.sol";
@@ -78,7 +78,7 @@ contract WorldBossSystem is System {
             uint16 sy = WorldBossV2.getSpawnY(i);
 
             bytes memory returnData = SystemSwitch.call(
-                abi.encodeCall(IMobSystem.UD__spawnMob, (mobId, sx, sy))
+                abi.encodeCall(IMobSystem.UD__spawnMob, (mobId, zoneId, sx, sy))
             );
             bytes32 newEntityId = abi.decode(returnData, (bytes32));
 

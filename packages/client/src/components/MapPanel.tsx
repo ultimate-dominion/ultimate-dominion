@@ -381,12 +381,7 @@ export const MapPanel = (): JSX.Element => {
                   )}
 
                   {allShops.map((shop, index) => {
-                    // Compare display-relative coords for grid placement
-                    const zoneOriginX = currentZone === 1 ? 0 : 0;
-                    const zoneOriginY = currentZone === 1 ? 0 : (currentZone - 1) * 100;
-                    const shopDisplayX = shop.position.x - zoneOriginX;
-                    const shopDisplayY = shop.position.y - zoneOriginY;
-                    const isShopHere = shopDisplayX === col && shopDisplayY === row;
+                    const isShopHere = shop.position.x === col && shop.position.y === row;
 
                     return (
                       isShopHere && (
@@ -403,10 +398,7 @@ export const MapPanel = (): JSX.Element => {
                   })}
 
                   {allNpcs.map((npc, index) => {
-                    const zoneOriginY = currentZone === 1 ? 0 : (currentZone - 1) * 100;
-                    const npcDisplayX = npc.position.x;
-                    const npcDisplayY = npc.position.y - zoneOriginY;
-                    const isNpcHere = npcDisplayX === col && npcDisplayY === row;
+                    const isNpcHere = npc.position.x === col && npc.position.y === row;
 
                     return (
                       isNpcHere && (
@@ -424,10 +416,7 @@ export const MapPanel = (): JSX.Element => {
 
                   {/* World boss spawn tile */}
                   {worldBosses.map((boss) => {
-                    const zoneOriginY = currentZone === 1 ? 0 : (currentZone - 1) * 100;
-                    const bossDisplayX = boss.spawnX;
-                    const bossDisplayY = boss.spawnY - zoneOriginY;
-                    const isBossHere = bossDisplayX === col && bossDisplayY === row;
+                    const isBossHere = boss.spawnX === col && boss.spawnY === row;
 
                     if (!isBossHere) return null;
 

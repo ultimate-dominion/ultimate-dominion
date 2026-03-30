@@ -25,7 +25,7 @@ function makeCharacter(overrides: Partial<Character> = {}): Character {
     isSpawned: true,
     inBattle: false,
     pvpCooldownTimer: 0n,
-    position: { x: 3, y: 7 },
+    position: { zoneId: 1, x: 3, y: 7 },
     level: 5n,
     experience: 100n,
     currentHp: 50n,
@@ -96,7 +96,7 @@ describe('OnlineRoster', () => {
       allMonsters: [],
       allShops: [],
       isSpawned: true,
-      position: { x: 3, y: 3 },
+      position: { zoneId: 1, x: 3, y: 3 },
     };
     mockNavigate.mockClear();
   });
@@ -258,7 +258,7 @@ describe('OnlineRoster', () => {
 
     it('shows tile position', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'Positioned', owner: '0xother', position: { x: 7, y: 2 } }),
+        makeCharacter({ name: 'Positioned', owner: '0xother', position: { zoneId: 1, x: 7, y: 2 } }),
       ];
 
       render(<OnlineLink />);
@@ -269,7 +269,7 @@ describe('OnlineRoster', () => {
 
     it('shows Safe tag for players in safe zone', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'SafePlayer', owner: '0xother', position: { x: 2, y: 3 } }),
+        makeCharacter({ name: 'SafePlayer', owner: '0xother', position: { zoneId: 1, x: 2, y: 3 } }),
       ];
 
       render(<OnlineLink />);
@@ -280,7 +280,7 @@ describe('OnlineRoster', () => {
 
     it('does not show Safe tag for players outside safe zone', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'DangerPlayer', owner: '0xother', position: { x: 7, y: 8 } }),
+        makeCharacter({ name: 'DangerPlayer', owner: '0xother', position: { zoneId: 1, x: 7, y: 8 } }),
       ];
 
       render(<OnlineLink />);

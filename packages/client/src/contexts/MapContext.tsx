@@ -65,33 +65,11 @@ const NPC_METADATA_MAP: Record<string, { name: string; interaction: NpcInteracti
   'worldobj:summit_stone': { name: 'Summit Stone', interaction: 'examine' },
 };
 
-// ── Zone coordinate system ──
-// Each zone's Y-origin is spaced by ZONE_ORIGIN_SPACING.
-// Zone 1: origin (0, 0), Zone 2: origin (0, 100), etc.
-const ZONE_ORIGIN_SPACING = 100;
-
-const ZONE_ORIGINS: Record<number, { x: number; y: number }> = {
-  1: { x: 0, y: 0 },
-  2: { x: 0, y: ZONE_ORIGIN_SPACING },
-};
-
+// Coordinates are zone-relative (0-9). zoneId disambiguates which zone.
 const ZONE_NAME_KEYS: Record<number, string> = {
   1: 'zone.darkCave',
   2: 'zone.windyPeaks',
 };
-
-/** Convert raw on-chain position to display (0-9) coords for the current zone */
-function toDisplayPosition(raw: { x: number; y: number }, zoneId: number): { x: number; y: number } {
-  const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
-  return { x: raw.x - origin.x, y: raw.y - origin.y };
-}
-
-/** Check if a raw position falls within a zone's coordinate bounds */
-function isInZone(rawX: number, rawY: number, zoneId: number, gridSize = 10): boolean {
-  const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
-  return rawX >= origin.x && rawX < origin.x + gridSize
-    && rawY >= origin.y && rawY < origin.y + gridSize;
-}
 
 type MapContextType = {
   allCharacters: Character[];
@@ -109,7 +87,7 @@ type MapContextType = {
   npcsOnTile: Npc[];
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
-  position: { x: number; y: number } | null;
+  position: { zoneId: number; x: number; y: number } | null;
   refreshEntities: () => void;
   shopsOnTile: Shop[];
   visibleMonstersOnTile: Monster[];
@@ -165,7 +143,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [isWaitingForSpawn, setIsWaitingForSpawn] = useState(false);
 
   // Reactive table subscriptions for entity queries
-  const positionTable = useGameTable('Position');
+  const positionTable = useGameTable('PositionV2');
   const spawnedTable = useGameTable('Spawned');
   const statsTable = useGameTable('Stats');
   const charactersTable = useGameTable('Characters');
@@ -181,8 +159,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const worldBossTable = useGameTable('WorldBossV2');
 
   // Player's position from the store (canonical — no optimistic updates)
-  const posData = useGameValue('Position', character?.id);
-  const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
+  const posData = useGameValue('PositionV2', character?.id);
+  const position = posData ? { zoneId: toNumber(posData.zoneId), x: toNumber(posData.x), y: toNumber(posData.y) } : null;
 
   // Zone awareness — read CharacterZone table (0 or unset = zone 1)
   const characterZoneData = useGameValue('CharacterZone', character?.id);
@@ -202,11 +180,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     }
   }, [currentZone]);
 
-  // Display position — raw coords converted to zone-relative (0-9)
+  // Display position — coords are already zone-relative (0-9)
   const displayPosition = useMemo(() => {
     if (!position) return null;
-    return toDisplayPosition(position, currentZone);
-  }, [position, currentZone]);
+    return { x: position.x, y: position.y };
+  }, [position]);
 
   const inSafetyZone = useMemo(() => {
     if (!displayPosition) return false;
@@ -352,6 +330,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const isEntitySpawned = Boolean(spawnedEntityData?.spawned ?? false);
 
         const positionEntityData = positionTable[entity];
+        const posZoneId = toNumber(positionEntityData?.zoneId ?? 0);
         const posX = toNumber(positionEntityData?.x ?? 0);
         const posY = toNumber(positionEntityData?.y ?? 0);
 
@@ -388,7 +367,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           inBattle,
           isElite,
           isSpawned: isEntitySpawned,
-          position: { x: posX, y: posY },
+          position: { zoneId: posZoneId, x: posX, y: posY },
         } as Monster;
       });
     } catch (e) {
@@ -408,7 +387,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
     try {
       const _shops: Shop[] = allShopEntities.map(entity => {
-        const positionEntityData = getTableValue('Position', entity);
+        const positionEntityData = getTableValue('PositionV2', entity);
         const shopData = getTableValue('Shops', entity);
 
         if (!positionEntityData || !shopData) {
@@ -416,6 +395,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         }
 
         const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
+        const shopZoneId = toNumber(positionEntityData.zoneId);
         const x = toNumber(positionEntityData.x);
         const y = toNumber(positionEntityData.y);
         const name =
@@ -438,7 +418,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           gold: toBigInt(shopData.gold),
           maxGold: toBigInt(shopData.maxGold),
           name,
-          position: { x, y },
+          position: { zoneId: shopZoneId, x, y },
           priceMarkdown: toBigInt(shopData.priceMarkdown),
           priceMarkup: toBigInt(shopData.priceMarkup),
           sellableItems,
@@ -452,7 +432,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       const seen = new Set<string>();
       const dedupedShops: Shop[] = [];
       for (let i = _shops.length - 1; i >= 0; i--) {
-        const key = `${_shops[i].position.x},${_shops[i].position.y}`;
+        const key = `${_shops[i].position.zoneId},${_shops[i].position.x},${_shops[i].position.y}`;
         if (!seen.has(key)) {
           seen.add(key);
           dedupedShops.push(_shops[i]);
@@ -473,6 +453,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     try {
       return allNpcEntities.map(entity => {
         const posData = positionTable[entity];
+        const npcZoneId = toNumber(posData?.zoneId ?? 0);
         const x = toNumber(posData?.x ?? 0);
         const y = toNumber(posData?.y ?? 0);
         const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
@@ -486,7 +467,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           mobId: mobId.toString(),
           name: npcMeta.name,
           interaction: npcMeta.interaction,
-          position: { x, y },
+          position: { zoneId: npcZoneId, x, y },
           metadataUri,
         };
       });
@@ -501,21 +482,21 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   // Filter entities to current zone only
   const zonedMonsters = useMemo(() => {
-    return allMonsters.filter(m => isInZone(m.position.x, m.position.y, currentZone));
+    return allMonsters.filter(m => m.position.zoneId === currentZone);
   }, [allMonsters, currentZone]);
 
   const zonedShops = useMemo(() => {
-    return allShops.filter(s => isInZone(s.position.x, s.position.y, currentZone));
+    return allShops.filter(s => s.position.zoneId === currentZone);
   }, [allShops, currentZone]);
 
   const zonedNpcs = useMemo(() => {
-    return allNpcs.filter(n => isInZone(n.position.x, n.position.y, currentZone));
+    return allNpcs.filter(n => n.position.zoneId === currentZone);
   }, [allNpcs, currentZone]);
 
   const zonedCharacters = useMemo(() => {
     return allCharacters.filter((c: any) => {
       if (!c.position) return false;
-      return isInZone(c.position.x, c.position.y, currentZone);
+      return c.position.zoneId === currentZone;
     });
   }, [allCharacters, currentZone]);
 

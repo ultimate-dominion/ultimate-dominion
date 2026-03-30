@@ -12,7 +12,7 @@ import {
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
-    Position,
+    PositionV2,
     Spawned,
     ActionOutcome,
     ActionOutcomeData,
@@ -23,7 +23,7 @@ import {
 } from "@codegen/index.sol";
 import {EncounterType, ItemType} from "@codegen/common.sol";
 import {Action, CombatFlagsResult} from "@interfaces/Structs.sol";
-import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID, ZONE_ORIGIN_SPACING} from "../../constants.sol";
+import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID, ZONE_DARK_CAVE, ZONE_WINDY_PEAKS} from "../../constants.sol";
 import {
     NoWeaponsEquipped,
     Unauthorized,
@@ -45,10 +45,11 @@ contract PvPSystem is System {
         returns (bool _isValidPvP)
     {
         _isValidPvP = true;
+        uint256 entityZone;
         uint16 entityX;
         uint16 entityY;
         for (uint256 i; i < attackers.length;) {
-            (entityX, entityY) = IWorld(_world()).UD__getEntityPosition(attackers[i]);
+            (entityZone, entityX, entityY) = PositionV2.get(attackers[i]);
             if (!IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
                 _isValidPvP = false;
                 break;
@@ -57,7 +58,7 @@ contract PvPSystem is System {
                 _isValidPvP = false;
                 break;
             }
-            if (_isInSafeZone(entityX, entityY)) {
+            if (_isInSafeZone(entityZone, entityX, entityY)) {
                 _isValidPvP = false;
                 break;
             }
@@ -72,7 +73,7 @@ contract PvPSystem is System {
         }
         if (_isValidPvP) {
             for (uint256 i; i < defenders.length;) {
-                (entityX, entityY) = IWorld(_world()).UD__getEntityPosition(defenders[i]);
+                (entityZone, entityX, entityY) = PositionV2.get(defenders[i]);
                 if (!IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
                     _isValidPvP = false;
                     break;
@@ -81,7 +82,7 @@ contract PvPSystem is System {
                     _isValidPvP = false;
                     break;
                 }
-                if (_isInSafeZone(entityX, entityY)) {
+                if (_isInSafeZone(entityZone, entityX, entityY)) {
                     _isValidPvP = false;
                     break;
                 }
@@ -112,16 +113,15 @@ contract PvPSystem is System {
         return _isValidPvP;
     }
 
-    /// @dev Zone-aware safe zone check using absolute on-chain coordinates
-    function _isInSafeZone(uint16 x, uint16 y) internal pure returns (bool) {
-        // Z1 Dark Cave: quadrant safe zone (x<5 AND y<5)
-        if (y < ZONE_ORIGIN_SPACING) {
+    /// @dev Zone-aware safe zone check using zone-relative coordinates
+    function _isInSafeZone(uint256 zoneId, uint16 x, uint16 y) internal pure returns (bool) {
+        if (zoneId == ZONE_DARK_CAVE) {
+            // Z1: quadrant safe zone (x<5 AND y<5)
             return x < 5 && y < 5;
         }
-        // Z2 Windy Peaks: base camp rows 0-2 (absolute y 100-102)
-        if (y < 2 * ZONE_ORIGIN_SPACING) {
-            uint16 relY = y - ZONE_ORIGIN_SPACING;
-            return relY < 3;
+        if (zoneId == ZONE_WINDY_PEAKS) {
+            // Z2: base camp rows 0-2
+            return y < 3;
         }
         // Future zones: no safe zone by default
         return false;

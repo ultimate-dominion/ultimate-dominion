@@ -237,7 +237,7 @@ export type CharacterData = {
   isSpawned: boolean;
   locked: boolean;
   owner: string;
-  position: { x: number; y: number };
+  position: { zoneId: number; x: number; y: number };
   pvpCooldownTimer: bigint;
   tokenId: string;
   worldEncounter?: WorldEncounter;
@@ -345,7 +345,7 @@ export type Monster = MonsterTemplate & {
   isElite: boolean;
   isSpawned: boolean;
   maxHp: bigint;
-  position: { x: number; y: number };
+  position: { zoneId: number; x: number; y: number };
 };
 
 export type MonsterStats = {
@@ -408,7 +408,7 @@ export type Shop = {
   gold: bigint;
   maxGold: bigint;
   name: string;
-  position: { x: number; y: number };
+  position: { zoneId: number; x: number; y: number };
   priceMarkdown: bigint;
   priceMarkup: bigint;
   sellableItems: string[];
@@ -423,7 +423,7 @@ export type Npc = {
   mobId: string;
   name: string;
   interaction: NpcInteraction;
-  position: { x: number; y: number };
+  position: { zoneId: number; x: number; y: number };
   metadataUri: string;
 };
 

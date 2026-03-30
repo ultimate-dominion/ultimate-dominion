@@ -83,7 +83,7 @@ contract Test_PvpGoldBurn is SetUp {
         world.UD__adminSetStats(bobCharacterId, bobStats);
 
         // Spawn a strong mob
-        entityId = world.UD__spawnMob(5, 0, 1);
+        entityId = world.UD__spawnMob(5, 1, 0, 1);
         StatsData memory mobStats = Stats.get(entityId);
         mobStats.agility = 50;
         mobStats.strength = 50;
@@ -133,7 +133,7 @@ contract Test_PvpGoldBurn is SetUp {
         bobStats.currentHp = 1;
         world.UD__adminSetStats(bobCharacterId, bobStats);
 
-        entityId = world.UD__spawnMob(5, 0, 1);
+        entityId = world.UD__spawnMob(5, 1, 0, 1);
         StatsData memory mobStats = Stats.get(entityId);
         mobStats.agility = 50;
         mobStats.strength = 50;
@@ -303,7 +303,7 @@ contract Test_PvpGoldBurn is SetUp {
         uint256 walletBefore = goldToken.balanceOf(bob);
 
         // Spawn a mob
-        entityId = world.UD__spawnMob(5, 0, 1);
+        entityId = world.UD__spawnMob(5, 1, 0, 1);
 
         bytes32[] memory defenders = new bytes32[](1);
         defenders[0] = entityId;

@@ -25,7 +25,6 @@ import {
     EARLY_GAME_CAP,
     ZONE_DARK_CAVE,
     ZONE_WINDY_PEAKS,
-    ZONE_ORIGIN_SPACING,
     BADGE_ZONE_CONQUEROR_BASE,
     BADGE_ZONE_PIONEER_BASE,
     BADGE_ZONE_FRAGMENT_BASE,
@@ -65,7 +64,7 @@ contract Test_Z2Badges is Test {
 
         // Configure zone maps
         ZoneMapConfig.set(ZONE_DARK_CAVE, 10, 10, 0, 0, 1);
-        ZoneMapConfig.set(ZONE_WINDY_PEAKS, 10, 10, 0, ZONE_ORIGIN_SPACING, 11);
+        ZoneMapConfig.set(ZONE_WINDY_PEAKS, 10, 10, 0, 0, 11);
 
         vm.stopPrank();
     }

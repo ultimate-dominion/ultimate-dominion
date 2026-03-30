@@ -6,7 +6,7 @@ import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
-import {WorldBossV2, Counters, Admin, EntitiesAtPosition, Spawned, Position} from "@codegen/index.sol";
+import {WorldBossV2, Counters, Admin, EntitiesAtPositionV2, Spawned, PositionV2} from "@codegen/index.sol";
 import {WorldBossSystem} from "@systems/WorldBossSystem.sol";
 import {MapSpawnSystem} from "@systems/MapSpawnSystem.sol";
 import {ZONE_WINDY_PEAKS, WORLD_BOSS_COUNTER_ID} from "../constants.sol";
@@ -90,7 +90,7 @@ contract Test_WorldBossSystem is Test {
         assertTrue(entityId != bytes32(0), "boss should be spawned");
         assertTrue(Spawned.getSpawned(entityId), "entity should be marked spawned");
 
-        (uint16 ex, uint16 ey) = Position.get(entityId);
+        (uint256 eZoneId, uint16 ex, uint16 ey) = PositionV2.get(entityId);
         assertEq(ex, SPAWN_X, "entity x");
         assertEq(ey, SPAWN_Y, "entity y");
         vm.stopPrank();

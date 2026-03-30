@@ -12,9 +12,9 @@ import {
     CombatEncounter,
     CombatOutcome,
     EncounterEntity,
-    EntitiesAtPosition,
+    EntitiesAtPositionV2,
     MapConfig,
-    Position,
+    PositionV2,
     Spawned,
     Stats
 } from "@codegen/index.sol";
@@ -74,7 +74,7 @@ contract Test_AutoAdventureSystem is Test {
         vm.stopPrank();
 
         // Should have moved without combat
-        (uint16 x, uint16 y) = Position.get(aliceCharacterId);
+        (, uint16 x, uint16 y) = PositionV2.get(aliceCharacterId);
         assertEq(x, 1, "x should be 1");
         assertEq(y, 0, "y should be 0");
         assertFalse(combatOccurred, "no combat on move-only");
@@ -134,7 +134,7 @@ contract Test_AutoAdventureSystem is Test {
         world.UD__autoAdventure(aliceCharacterId, 0, 0);
         vm.stopPrank();
 
-        (uint16 x, uint16 y) = Position.get(aliceCharacterId);
+        (, uint16 x, uint16 y) = PositionV2.get(aliceCharacterId);
         assertEq(x, 0, "x should be 0");
         assertEq(y, 0, "y should be 0");
     }
@@ -256,7 +256,7 @@ contract Test_AutoAdventureSystem is Test {
         world.UD__autoAdventure(aliceCharacterId, 1, 0);
         vm.stopPrank();
 
-        (uint16 x, uint16 y) = Position.get(aliceCharacterId);
+        (, uint16 x, uint16 y) = PositionV2.get(aliceCharacterId);
         assertEq(x, 1, "x should be 1 via delegation");
         assertEq(y, 0, "y should be 0 via delegation");
     }
@@ -325,7 +325,7 @@ contract Test_AutoAdventureSystem is Test {
                 continue;
             }
             // Check if any living mobs are on this tile
-            bytes32[] memory ents = EntitiesAtPosition.getEntities(i, 0);
+            bytes32[] memory ents = EntitiesAtPositionV2.getEntities(1, i, 0);
             for (uint256 j; j < ents.length; j++) {
                 if (ents[j] != aliceCharacterId && !world.UD__isValidCharacterId(ents[j])) {
                     if (Stats.getCurrentHp(ents[j]) > 0 && Spawned.getSpawned(ents[j])) {
@@ -362,7 +362,7 @@ contract Test_AutoAdventureSystem is Test {
         assertEq(EncounterEntity.getEncounterId(aliceCharacterId), bytes32(0), "encounter should be cleared");
 
         // Position should not have changed (no movement in autoFight)
-        (uint16 x, uint16 y) = Position.get(aliceCharacterId);
+        (, uint16 x, uint16 y) = PositionV2.get(aliceCharacterId);
         assertEq(x, tileX, "x should be unchanged");
         assertEq(y, 0, "y should be unchanged");
     }
@@ -378,8 +378,8 @@ contract Test_AutoAdventureSystem is Test {
 
         // Immediately try another fight — should not revert
         // (Need a new mob though — the first one is dead)
-        (uint16 cx, uint16 cy) = Position.get(aliceCharacterId);
-        bytes32[] memory ents = EntitiesAtPosition.getEntities(cx, cy);
+        (, uint16 cx, uint16 cy) = PositionV2.get(aliceCharacterId);
+        bytes32[] memory ents = EntitiesAtPositionV2.getEntities(1, cx, cy);
         bytes32 mobId2;
         for (uint256 i; i < ents.length; i++) {
             if (ents[i] != aliceCharacterId && !world.UD__isValidCharacterId(ents[i])) {

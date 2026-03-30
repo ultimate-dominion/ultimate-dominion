@@ -25,7 +25,7 @@ contract ConfigureWorldBoss is Script {
         uint256 mobId = 34;        // Korrath's Warden
         uint256 zoneId = 2;        // ZONE_WINDY_PEAKS
         uint16 spawnX = 5;         // Center of peak ridge
-        uint16 spawnY = 109;       // Top row of Z2 (originY=100, zone-relative y=9)
+        uint16 spawnY = 9;         // Top row of Z2 (zone-relative)
         uint256 respawnSeconds = 3600; // 1 hour
 
         console.log("=== ConfigureWorldBoss: Korrath's Warden ===");

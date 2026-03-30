@@ -945,6 +945,34 @@ export default defineWorld({
       },
     },
     /**
+     * Zone-relative position of an entity (V2).
+     * Coordinates are zone-relative (0-9), zoneId disambiguates.
+     */
+    PositionV2: {
+      key: ["entity"],
+      codegen: {
+        dataStruct: false,
+      },
+      schema: {
+        entity: "bytes32",
+        zoneId: "uint256",
+        x: "uint16",
+        y: "uint16",
+      },
+    },
+    /**
+     * Reverse lookup: entities at a zone-relative position (V2).
+     */
+    EntitiesAtPositionV2: {
+      key: ["zoneId", "x", "y"],
+      schema: {
+        zoneId: "uint256",
+        x: "uint16",
+        y: "uint16",
+        entities: "bytes32[]",
+      },
+    },
+    /**
      * UltimateDominion settings:
      * - locked - If true, game settings are locked.
      * - goldToken that is used in UltimateDominion rewards.
