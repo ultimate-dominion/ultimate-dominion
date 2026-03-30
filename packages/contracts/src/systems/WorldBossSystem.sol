@@ -10,7 +10,7 @@ import {_requireSystemOrAdmin} from "../utils.sol";
 import {WORLD_BOSS_COUNTER_ID} from "../../constants.sol";
 import {BoardCleanupLib} from "../libraries/BoardCleanupLib.sol";
 
-contract WorldBossV2System is System {
+contract WorldBossSystem is System {
     modifier onlyAdmin() {
         if (!Admin.get(_msgSender())) revert NotAdmin();
         _;

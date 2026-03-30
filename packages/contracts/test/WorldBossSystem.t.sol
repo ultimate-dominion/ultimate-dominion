@@ -7,18 +7,18 @@ import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourc
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
 import {WorldBossV2, Counters, Admin, EntitiesAtPosition, Spawned, Position} from "@codegen/index.sol";
-import {WorldBossV2System} from "@systems/WorldBossV2System.sol";
+import {WorldBossSystem} from "@systems/WorldBossSystem.sol";
 import {MapSpawnSystem} from "@systems/MapSpawnSystem.sol";
 import {ZONE_WINDY_PEAKS, WORLD_BOSS_COUNTER_ID} from "../constants.sol";
 
 /**
- * @title Test_WorldBossV2System
+ * @title Test_WorldBossSystem
  * @notice Tests for persistent world boss spawning with respawn timers.
  *
- * Fork-based tests against beta world. Registers the new WorldBossV2System
+ * Fork-based tests against beta world. Registers the new WorldBossSystem
  * and upgraded MapSpawnSystem in setUp, then tests config, spawn, cooldown, and death.
  */
-contract Test_WorldBossV2System is Test {
+contract Test_WorldBossSystem is Test {
     address deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
     IWorld public world;
 
@@ -34,8 +34,8 @@ contract Test_WorldBossV2System is Test {
         StoreSwitch.setStoreAddress(worldAddress);
         world = IWorld(worldAddress);
 
-        // Deploy and register WorldBossV2System
-        WorldBossV2System wbs = new WorldBossV2System();
+        // Deploy and register WorldBossSystem
+        WorldBossSystem wbs = new WorldBossSystem();
         ResourceId wbsId = WorldResourceIdLib.encode(RESOURCE_SYSTEM, "UD", "WorldBossV2Sys");
         world.registerSystem(wbsId, wbs, true);
 
