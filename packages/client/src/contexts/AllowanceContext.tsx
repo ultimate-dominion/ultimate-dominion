@@ -337,6 +337,7 @@ export const AllowanceProvider = ({
       const systemAddress = getSystemAddress(system);
       if (!systemAddress || !approvalClient || !itemsAddress) return false;
 
+      console.log('[APPROVE DEBUG]', { systemAddress, approvalClient: !!approvalClient, itemsAddress });
       setIsApprovingItems(true);
       try {
         const { request } = await publicClient.simulateContract({
@@ -353,7 +354,8 @@ export const AllowanceProvider = ({
         if (status !== 'success') return false;
         await fetchAllowances();
         return true;
-      } catch {
+      } catch (err) {
+        console.error('[APPROVE ERROR]', err);
         return false;
       } finally {
         setIsApprovingItems(false);
