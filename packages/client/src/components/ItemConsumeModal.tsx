@@ -105,10 +105,12 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   );
 
   const onUseConsumable = useCallback(async () => {
-    if (!character) return;
-    if (!delegatorAddress) return;
+    console.log('[CONSUME DEBUG]', { character: !!character, delegatorAddress, itemsLootManagerAllowance, authMethod });
+    if (!character) { console.log('[CONSUME] bail: no character'); return; }
+    if (!delegatorAddress) { console.log('[CONSUME] bail: no delegatorAddress'); return; }
 
     if (!itemsLootManagerAllowance) {
+      console.log('[CONSUME] no allowance, authMethod:', authMethod);
       if (authMethod === 'embedded') {
         const ok = await ensureItemsAllowance(SystemToAllow.LootManager);
         if (!ok) return;
