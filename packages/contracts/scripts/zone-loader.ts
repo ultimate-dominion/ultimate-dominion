@@ -594,6 +594,7 @@ Available zones:
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__getCurrentItemsCounter',
+      account: account!,
     });
     console.log(`  Scanning ${itemCounter} on-chain items for URI mapping...`);
 
