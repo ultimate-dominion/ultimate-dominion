@@ -166,13 +166,13 @@ export const Leaderboard = (): JSX.Element => {
     let entriesCopy: Character[] = allCharacters;
     entriesCopy = [...entriesCopy].sort((entryA, entryB) => {
       const totalStatsA =
-        Number(entryA.baseStats.agility) +
-        Number(entryA.baseStats.strength) +
-        Number(entryA.baseStats.intelligence);
+        Number(entryA.agility) +
+        Number(entryA.strength) +
+        Number(entryA.intelligence);
       const totalStatsB =
-        Number(entryB.baseStats.agility) +
-        Number(entryB.baseStats.strength) +
-        Number(entryB.baseStats.intelligence);
+        Number(entryB.agility) +
+        Number(entryB.strength) +
+        Number(entryB.intelligence);
 
       switch (sort.sorted) {
         case 'byGold': {

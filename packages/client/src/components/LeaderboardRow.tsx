@@ -20,14 +20,16 @@ import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 export const LeaderboardRow = ({
   character: {
     advancedClass,
-    baseStats: { agility, intelligence, strength },
+    agility,
     entityClass,
     externalGoldBalance,
     id,
     image,
+    intelligence,
     level,
     maxHp,
     name,
+    strength,
   },
   index,
   top3,
