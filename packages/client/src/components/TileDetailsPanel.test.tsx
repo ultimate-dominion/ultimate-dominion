@@ -169,12 +169,25 @@ vi.mock('../utils/fragmentNarratives', () => ({
   getRomanNumeral: () => 'I',
 }));
 
+vi.mock('../hooks/useNpcFlavor', () => ({
+  useNpcFlavor: () => ({ title: '', flavor: '' }),
+}));
+
 vi.mock('./ClassSymbol', () => ({
   ClassSymbol: () => null,
 }));
 
 vi.mock('./FragmentClaimModal', () => ({
   FragmentClaimModal: () => null,
+}));
+
+vi.mock('./NpcDialogueModal', () => ({
+  NpcDialogueModal: ({ npcName, npcId }: { npcName: string; npcId: string }) => (
+    <div data-testid="npc-dialogue-modal">
+      <span data-testid="dialogue-npc-name">{npcName}</span>
+      <span data-testid="dialogue-npc-id">{npcId}</span>
+    </div>
+  ),
 }));
 
 vi.mock('./HealthBar', () => ({
@@ -228,10 +241,12 @@ function setDefaults() {
     inSafetyZone: false,
     isSpawned: true,
     monstersOnTile: [testMonster],
+    npcsOnTile: [],
     otherCharactersOnTile: [],
     position: { x: 1, y: 1 },
     shopsOnTile: [],
     visibleMonstersOnTile: [testMonster],
+    worldBosses: [],
   };
 
   fragmentState = {
@@ -494,5 +509,90 @@ describe('TileDetailsPanel — Monster Collapse', () => {
     expect(monsterNames[1]).toContain('Close Rat');
     expect(monsterNames[2]).toContain('Mid Rat');
     expect(screen.queryByText('Far Rat')).toBeNull();
+  });
+});
+
+describe('TileDetailsPanel — NPC Dialogue Wiring', () => {
+  beforeEach(() => {
+    setDefaults();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('clicking a dialogue NPC opens NpcDialogueModal with correct props', async () => {
+    mapState.npcsOnTile = [{
+      entityId: '0xvel123',
+      mobId: '25',
+      name: 'Vel Morrow',
+      interaction: 'dialogue',
+      position: { x: 1, y: 1 },
+      metadataUri: 'npc:vel_morrow',
+    }];
+    mapState.monstersOnTile = [];
+    mapState.visibleMonstersOnTile = [];
+
+    render(<TileDetailsPanel />);
+
+    const npcButton = screen.getByText('Vel Morrow').closest('button');
+    expect(npcButton).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(npcButton!);
+    });
+
+    expect(screen.getByTestId('npc-dialogue-modal')).toBeTruthy();
+    expect(screen.getByTestId('dialogue-npc-name').textContent).toBe('Vel Morrow');
+    expect(screen.getByTestId('dialogue-npc-id').textContent).toBe('0xvel123');
+  });
+
+  it('clicking an examine NPC opens NpcDialogueModal', async () => {
+    mapState.npcsOnTile = [{
+      entityId: '0xjournal456',
+      mobId: '30',
+      name: 'Camp Journal',
+      interaction: 'examine',
+      position: { x: 1, y: 1 },
+      metadataUri: 'worldobj:camp_journal',
+    }];
+    mapState.monstersOnTile = [];
+    mapState.visibleMonstersOnTile = [];
+
+    render(<TileDetailsPanel />);
+
+    const npcButton = screen.getByText('Camp Journal').closest('button');
+    expect(npcButton).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(npcButton!);
+    });
+
+    expect(screen.getByTestId('npc-dialogue-modal')).toBeTruthy();
+    expect(screen.getByTestId('dialogue-npc-name').textContent).toBe('Camp Journal');
+  });
+
+  it('clicking a respec NPC does NOT open dialogue modal', async () => {
+    mapState.npcsOnTile = [{
+      entityId: '0xvel123',
+      mobId: '25',
+      name: 'Vel Morrow',
+      interaction: 'respec',
+      position: { x: 1, y: 1 },
+      metadataUri: 'npc:vel_morrow',
+    }];
+    mapState.monstersOnTile = [];
+    mapState.visibleMonstersOnTile = [];
+
+    render(<TileDetailsPanel />);
+
+    const npcButton = screen.getByText('Vel Morrow').closest('button');
+    expect(npcButton).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(npcButton!);
+    });
+
+    expect(screen.queryByTestId('npc-dialogue-modal')).toBeNull();
   });
 });

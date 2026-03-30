@@ -63,6 +63,7 @@ import { ClassSymbol } from './ClassSymbol';
 import { FragmentClaimModal } from './FragmentClaimModal';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
+import { NpcDialogueModal } from './NpcDialogueModal';
 import { NpcRow } from './NpcRow';
 import { ShopRow } from './ShopRow';
 
@@ -127,6 +128,21 @@ export const TileDetailsPanel = (): JSX.Element => {
     onClose: onCloseFragmentClaimModal,
     onOpen: onOpenFragmentClaimModal,
   } = useDisclosure();
+  const {
+    isOpen: isNpcDialogueOpen,
+    onClose: onCloseNpcDialogue,
+    onOpen: onOpenNpcDialogue,
+  } = useDisclosure();
+
+  const [dialogueNpc, setDialogueNpc] = useState<{ id: string; name: string } | null>(null);
+  const handleOpenNpcDialogue = useCallback((npcId: string, npcName: string) => {
+    setDialogueNpc({ id: npcId, name: npcName });
+    onOpenNpcDialogue();
+  }, [onOpenNpcDialogue]);
+  const handleCloseNpcDialogue = useCallback(() => {
+    onCloseNpcDialogue();
+    setDialogueNpc(null);
+  }, [onCloseNpcDialogue]);
 
   const {
     delegatorAddress,
@@ -1162,7 +1178,13 @@ export const TileDetailsPanel = (): JSX.Element => {
             ))}
             {npcsOnTile.map((npc, i) => (
               <Box key={`tile-npc-${i}`}>
-                <NpcRow npcName={npc.name} interaction={npc.interaction} />
+                <NpcRow
+                  npcName={npc.name}
+                  interaction={npc.interaction}
+                  entityId={npc.entityId}
+                  metadataUri={npc.metadataUri}
+                  onOpenDialogue={handleOpenNpcDialogue}
+                />
                 <Box
                   backgroundColor="rgba(196,184,158,0.08)"
                   boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
@@ -1329,7 +1351,13 @@ export const TileDetailsPanel = (): JSX.Element => {
           {!isHomeTile &&
             npcsOnTile.map((npc, i) => (
               <Box key={`tile-npc-${i}`}>
-                <NpcRow npcName={npc.name} interaction={npc.interaction} />
+                <NpcRow
+                  npcName={npc.name}
+                  interaction={npc.interaction}
+                  entityId={npc.entityId}
+                  metadataUri={npc.metadataUri}
+                  onOpenDialogue={handleOpenNpcDialogue}
+                />
                 <Box
                   backgroundColor="rgba(196,184,158,0.08)"
                   boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
@@ -1457,6 +1485,15 @@ export const TileDetailsPanel = (): JSX.Element => {
           fragment={fragmentForModal}
           isOpen={isFragmentClaimModalOpen}
           onClose={handleCloseFragmentClaim}
+        />
+      )}
+
+      {dialogueNpc && (
+        <NpcDialogueModal
+          isOpen={isNpcDialogueOpen}
+          onClose={handleCloseNpcDialogue}
+          npcId={dialogueNpc.id}
+          npcName={dialogueNpc.name}
         />
       )}
     </Box>

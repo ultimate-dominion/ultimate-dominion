@@ -11,45 +11,13 @@ import { FaCheck, FaCircle, FaLock } from 'react-icons/fa';
 import { useGameTable, encodeCompositeKey } from '../lib/gameStore';
 import { useCharacter } from '../contexts/CharacterContext';
 import { getRomanNumeral } from '../utils/fragmentNarratives';
-
-/** Correct fragment chain names matching the lore doc */
-const CHAIN_NAMES: Record<number, string> = {
-  9: 'The Ascent',
-  10: "Vel's Warning",
-  11: 'The Orders',
-  12: 'What She Left Behind',
-  13: 'The Shrine',
-  14: "The Heretic's Question",
-  15: 'Bones of Faith',
-  16: "The Wind's Memory",
-};
-
-/** Current step objective text for each chain step */
-const STEP_OBJECTIVES: Record<number, string[]> = {
-  9: ['Arrive at Windy Peaks'],
-  10: ['Talk to Vel', 'Kill a Covenant Scout'],
-  11: ['Kill a Covenant Tracker', 'Bring the Sealed Letter to Vel'],
-  12: ['Find the abandoned camp', 'Examine the camp journal', 'Talk to Vel'],
-  13: ['Discover the ruined shrine', 'Kill the Fraying Guardian', 'Read the shrine inscriptions'],
-  14: ['Talk to Edric', 'Meet Edric at the shrine'],
-  15: ['Discover the Ossuary', 'Kill the Ossuary Guardian', 'Bring the Last Sermon to Edric'],
-  16: ['Reach the Summit', 'Survive the Gale Fury', 'Examine the Summit Stone'],
-};
-
-type Arc = {
-  name: string;
-  color: string;
-  types: number[];
-};
-
-const ARCS: Arc[] = [
-  { name: 'The Peaks', color: '#8BA4B4', types: [9, 16] },
-  { name: "Vel's Shadow", color: '#B47A5A', types: [10, 11, 12] },
-  { name: "Edric's Trial", color: '#7A9B6E', types: [13, 14, 15] },
-];
-
-const Z2_FRAGMENT_TYPES = [9, 10, 11, 12, 13, 14, 15, 16];
-const FRAGMENT_XVI_PREREQ = 4;
+import {
+  ARCS,
+  CHAIN_NAMES,
+  FRAGMENT_XVI_PREREQ,
+  STEP_OBJECTIVES,
+  Z2_FRAGMENT_TYPES,
+} from '../utils/fragmentChainData';
 
 interface ChainStepProps {
   stepIndex: number;
@@ -72,6 +40,7 @@ const ChainStep = ({ stepIndex, currentStep, completed }: ChainStepProps): JSX.E
       bg={isDone ? '#C8A96E' : isCurrent ? '#3A3428' : '#1A1714'}
       border="1px solid"
       borderColor={isDone ? '#C8A96E' : isCurrent ? '#C8A96E' : '#3A3428'}
+      transition="all 0.3s ease"
     >
       {isDone ? (
         <FaCheck size={7} color="#0C0A09" />
@@ -170,6 +139,8 @@ export const FragmentChainProgress = (): JSX.Element | null => {
                       ? `${chain.name} — Requires ${FRAGMENT_XVI_PREREQ}+ fragments`
                       : `${chain.name} — ${objectives[chain.currentStep] ?? `Step ${chain.currentStep + 1} of ${chain.totalSteps}`}`;
 
+                  const isActive = activeChain?.fragmentType === chain.fragmentType;
+
                   return (
                     <Tooltip key={chain.fragmentType} label={tooltipText}>
                       <HStack
@@ -179,12 +150,15 @@ export const FragmentChainProgress = (): JSX.Element | null => {
                         borderColor={
                           chain.completed ? '#C8A96E'
                             : chain.locked ? '#2A2520'
-                              : '#3A3428'
+                              : isActive ? '#C8A96E'
+                                : '#3A3428'
                         }
+                        borderLeft={isActive && !chain.completed ? '2px solid #C8A96E' : undefined}
                         bg={
                           chain.completed ? 'rgba(200, 169, 110, 0.05)'
                             : chain.locked ? 'rgba(0, 0, 0, 0.2)'
-                              : 'transparent'
+                              : isActive ? 'rgba(200, 169, 110, 0.03)'
+                                : 'transparent'
                         }
                         opacity={chain.locked ? 0.5 : 1}
                         spacing={3}

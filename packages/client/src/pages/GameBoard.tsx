@@ -25,6 +25,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getCachedDelegator } from '../lib/delegatorCache';
 
 import { ActionsPanel } from '../components/ActionsPanel';
+import { CurrentObjectiveHud } from '../components/CurrentObjectiveHud';
 import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
 import { CaveReactionOverlay } from '../components/CaveReactionOverlay';
@@ -390,6 +391,7 @@ export const GameBoard = (): JSX.Element => {
         gap={0}
         overflow="hidden"
       >
+        {SHOW_Z2 && <CurrentObjectiveHud />}
         <Box
           flex={!isDesktop && currentBattle ? 'none' : '1'}
           minH={0}
