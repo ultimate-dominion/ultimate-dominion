@@ -5,7 +5,7 @@ import {System} from "@latticexyz/world/src/System.sol";
 import {
     Counters,
     PositionV2,
-    EntitiesAtPositionV2,
+    ZoneEntitiesAtPos,
     MobsByLevel,
     MobsByZoneLevel,
     Mobs,
@@ -73,7 +73,7 @@ contract MobSystem is System {
             // normal scenario
             // loops through all the shops
             uint256 nonMonsters = 0;
-            bytes32[] memory entities = EntitiesAtPositionV2.getEntities(zoneId, x, y);
+            bytes32[] memory entities = ZoneEntitiesAtPos.getEntities(zoneId, x, y);
             // loop through all the entities
             for (uint256 i = 0; i < entities.length; ++i) {
                 // if there are less than max monsters we can certainly add another
@@ -163,7 +163,7 @@ contract MobSystem is System {
         }
 
         PositionV2.set(entityId, zoneId, x, y);
-        EntitiesAtPositionV2.pushEntities(zoneId, x, y, entityId);
+        ZoneEntitiesAtPos.pushEntities(zoneId, x, y, entityId);
         Spawned.set(entityId, true);
     }
 

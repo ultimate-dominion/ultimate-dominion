@@ -12,7 +12,7 @@ import {
     CombatEncounter,
     CombatOutcome,
     EncounterEntity,
-    EntitiesAtPositionV2,
+    ZoneEntitiesAtPos,
     MapConfig,
     PositionV2,
     Spawned,
@@ -325,7 +325,7 @@ contract Test_AutoAdventureSystem is Test {
                 continue;
             }
             // Check if any living mobs are on this tile
-            bytes32[] memory ents = EntitiesAtPositionV2.getEntities(1, i, 0);
+            bytes32[] memory ents = ZoneEntitiesAtPos.getEntities(1, i, 0);
             for (uint256 j; j < ents.length; j++) {
                 if (ents[j] != aliceCharacterId && !world.UD__isValidCharacterId(ents[j])) {
                     if (Stats.getCurrentHp(ents[j]) > 0 && Spawned.getSpawned(ents[j])) {
@@ -379,7 +379,7 @@ contract Test_AutoAdventureSystem is Test {
         // Immediately try another fight — should not revert
         // (Need a new mob though — the first one is dead)
         (, uint16 cx, uint16 cy) = PositionV2.get(aliceCharacterId);
-        bytes32[] memory ents = EntitiesAtPositionV2.getEntities(1, cx, cy);
+        bytes32[] memory ents = ZoneEntitiesAtPos.getEntities(1, cx, cy);
         bytes32 mobId2;
         for (uint256 i; i < ents.length; i++) {
             if (ents[i] != aliceCharacterId && !world.UD__isValidCharacterId(ents[i])) {

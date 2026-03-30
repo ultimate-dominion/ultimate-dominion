@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import {Counters, EntitiesAtPositionV2, PositionV2, Spawned} from "@codegen/index.sol";
+import {Counters, ZoneEntitiesAtPos, PositionV2, Spawned} from "@codegen/index.sol";
 import {PLAYER_COUNTER_KEY} from "../../constants.sol";
 
 /// @dev External library — deploys as a separate contract, called via DELEGATECALL.
@@ -12,12 +12,12 @@ import {PLAYER_COUNTER_KEY} from "../../constants.sol";
 library BoardCleanupLib {
     function removeFromBoard(bytes32 entityId, bool isCharacter) external {
         (uint256 zoneId, uint16 x, uint16 y) = PositionV2.get(entityId);
-        bytes32[] memory entities = EntitiesAtPositionV2.getEntities(zoneId, x, y);
+        bytes32[] memory entities = ZoneEntitiesAtPos.getEntities(zoneId, x, y);
         for (uint256 i; i < entities.length; i++) {
             if (entities[i] == entityId) {
                 bytes32 last = entities[entities.length - 1];
-                EntitiesAtPositionV2.updateEntities(zoneId, x, y, i, last);
-                EntitiesAtPositionV2.popEntities(zoneId, x, y);
+                ZoneEntitiesAtPos.updateEntities(zoneId, x, y, i, last);
+                ZoneEntitiesAtPos.popEntities(zoneId, x, y);
                 break;
             }
         }

@@ -9,7 +9,7 @@ import {
     CombatEncounter,
     CombatEncounterData,
     Counters,
-    EntitiesAtPositionV2,
+    ZoneEntitiesAtPos,
     EncounterEntity,
     PositionV2,
     SessionConfig,
@@ -56,13 +56,13 @@ contract MapRemovalSystem is System {
         }
 
         (uint256 zoneId, uint16 currentX, uint16 currentY) = PositionV2.get(entityId);
-        bytes32[] memory entAtPos = EntitiesAtPositionV2.getEntities(zoneId, currentX, currentY);
+        bytes32[] memory entAtPos = ZoneEntitiesAtPos.getEntities(zoneId, currentX, currentY);
 
         for (uint256 i; i < entAtPos.length;) {
             if (entAtPos[i] == entityId) {
                 bytes32 lastEnt = entAtPos[entAtPos.length - 1];
-                EntitiesAtPositionV2.updateEntities(zoneId, currentX, currentY, i, lastEnt);
-                EntitiesAtPositionV2.popEntities(zoneId, currentX, currentY);
+                ZoneEntitiesAtPos.updateEntities(zoneId, currentX, currentY, i, lastEnt);
+                ZoneEntitiesAtPos.popEntities(zoneId, currentX, currentY);
                 break;
             }
             {

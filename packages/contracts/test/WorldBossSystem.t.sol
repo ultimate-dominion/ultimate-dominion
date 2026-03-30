@@ -6,7 +6,7 @@ import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
-import {WorldBossV2, Counters, Admin, EntitiesAtPositionV2, Spawned, PositionV2} from "@codegen/index.sol";
+import {WorldBossV2, Counters, Admin, ZoneEntitiesAtPos, Spawned, PositionV2} from "@codegen/index.sol";
 import {WorldBossSystem} from "@systems/WorldBossSystem.sol";
 import {MapSpawnSystem} from "@systems/MapSpawnSystem.sol";
 import {ZONE_WINDY_PEAKS, WORLD_BOSS_COUNTER_ID} from "../constants.sol";

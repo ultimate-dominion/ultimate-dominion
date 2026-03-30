@@ -8,7 +8,7 @@ import {
     Characters,
     CharacterZone,
     Counters,
-    EntitiesAtPositionV2,
+    ZoneEntitiesAtPos,
     CharacterEquipment,
     MapConfig,
     PositionV2,
@@ -112,7 +112,7 @@ contract MapSystem is System {
         // encounter wasn't properly resolved (client crash, failed tx, etc.)
         EncounterEntity.setEncounterId(entityId, bytes32(0));
         EncounterEntity.setDied(entityId, false);
-        EntitiesAtPositionV2.pushEntities(zoneId, 0, 0, entityId);
+        ZoneEntitiesAtPos.pushEntities(zoneId, 0, 0, entityId);
 
         // Fragment I: The Awakening - triggers on first spawn
         if (isCharacter) {
@@ -131,7 +131,7 @@ contract MapSystem is System {
     }
 
     function getEntitiesAtPosition(uint256 zoneId, uint16 x, uint16 y) public view returns (bytes32[] memory entitiesAtPosition) {
-        return EntitiesAtPositionV2.getEntities(zoneId, x, y);
+        return ZoneEntitiesAtPos.getEntities(zoneId, x, y);
     }
 
     function isAtPosition(bytes32 entityId, uint16 x, uint16 y) public view returns (bool _isAtPosition) {
@@ -157,14 +157,14 @@ contract MapSystem is System {
     }
 
     function _moveEntity(bytes32 entityId, uint256 zoneId, uint16 currentX, uint16 currentY, uint16 x, uint16 y) internal {
-        bytes32[] memory entAtPos = EntitiesAtPositionV2.getEntities(zoneId, currentX, currentY);
+        bytes32[] memory entAtPos = ZoneEntitiesAtPos.getEntities(zoneId, currentX, currentY);
         bool entityWasAtPosition;
         for (uint256 i; i < entAtPos.length;) {
             if (entAtPos[i] == entityId) {
                 entityWasAtPosition = true;
                 bytes32 lastEnt = entAtPos[entAtPos.length - 1];
-                EntitiesAtPositionV2.updateEntities(zoneId, currentX, currentY, i, lastEnt);
-                EntitiesAtPositionV2.popEntities(zoneId, currentX, currentY);
+                ZoneEntitiesAtPos.updateEntities(zoneId, currentX, currentY, i, lastEnt);
+                ZoneEntitiesAtPos.popEntities(zoneId, currentX, currentY);
                 break;
             }
             {
@@ -196,6 +196,6 @@ contract MapSystem is System {
             }
         }
         PositionV2.set(entityId, zoneId, x, y);
-        EntitiesAtPositionV2.pushEntities(zoneId, x, y, entityId);
+        ZoneEntitiesAtPos.pushEntities(zoneId, x, y, entityId);
     }
 }

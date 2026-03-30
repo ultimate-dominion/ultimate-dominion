@@ -11,7 +11,7 @@ import {
     CombatEncounter,
     CombatEncounterData,
     EncounterEntity,
-    EntitiesAtPositionV2,
+    ZoneEntitiesAtPos,
     PositionV2,
     SessionTimer,
     Spawned,
@@ -74,20 +74,20 @@ contract AutoAdventureSystem is System {
             uint16 dy = cy > y ? cy - y : y - cy;
             if (dx + dy != 1) revert InvalidMove();
 
-            bytes32[] memory old = EntitiesAtPositionV2.getEntities(zoneId, cx, cy);
+            bytes32[] memory old = ZoneEntitiesAtPos.getEntities(zoneId, cx, cy);
             bool found;
             for (uint256 i; i < old.length; i++) {
                 if (old[i] == cid) {
                     found = true;
-                    EntitiesAtPositionV2.updateEntities(zoneId, cx, cy, i, old[old.length - 1]);
-                    EntitiesAtPositionV2.popEntities(zoneId, cx, cy);
+                    ZoneEntitiesAtPos.updateEntities(zoneId, cx, cy, i, old[old.length - 1]);
+                    ZoneEntitiesAtPos.popEntities(zoneId, cx, cy);
                     break;
                 }
             }
             if (!found) revert EntityNotAtPosition();
             SessionTimer.set(cid, block.timestamp);
             PositionV2.set(cid, zoneId, x, y);
-            EntitiesAtPositionV2.pushEntities(zoneId, x, y, cid);
+            ZoneEntitiesAtPos.pushEntities(zoneId, x, y, cid);
         }
 
         // Spawn mobs
@@ -96,7 +96,7 @@ contract AutoAdventureSystem is System {
         // Find first living mob
         bytes32 mid;
         {
-            bytes32[] memory ents = EntitiesAtPositionV2.getEntities(zoneId, x, y);
+            bytes32[] memory ents = ZoneEntitiesAtPos.getEntities(zoneId, x, y);
             for (uint256 i; i < ents.length; i++) {
                 if (ents[i] != cid && !IWorld(_world()).UD__isValidCharacterId(ents[i])) {
                     if (Stats.getCurrentHp(ents[i]) > 0 && Spawned.getSpawned(ents[i])) {

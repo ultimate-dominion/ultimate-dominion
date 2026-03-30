@@ -8,7 +8,7 @@ import {
     Characters,
     CharacterZone,
     CharacterZoneCompletion,
-    EntitiesAtPositionV2,
+    ZoneEntitiesAtPos,
     EncounterEntity,
     PositionV2,
     SessionTimer,
@@ -87,7 +87,7 @@ contract ZoneTransitionSystem is System {
 
         // 3. Set position to zone-relative origin (0,0)
         PositionV2.set(entityId, targetZoneId, 0, 0);
-        EntitiesAtPositionV2.pushEntities(targetZoneId, 0, 0, entityId);
+        ZoneEntitiesAtPos.pushEntities(targetZoneId, 0, 0, entityId);
 
         // 4. Reset move cooldown for immediate movement
         SessionTimer.set(entityId, 0);
@@ -158,12 +158,12 @@ contract ZoneTransitionSystem is System {
     }
 
     function _removeFromPosition(bytes32 entityId, uint256 zoneId, uint16 x, uint16 y) internal {
-        bytes32[] memory entities = EntitiesAtPositionV2.getEntities(zoneId, x, y);
+        bytes32[] memory entities = ZoneEntitiesAtPos.getEntities(zoneId, x, y);
         for (uint256 i; i < entities.length; i++) {
             if (entities[i] == entityId) {
                 bytes32 last = entities[entities.length - 1];
-                EntitiesAtPositionV2.updateEntities(zoneId, x, y, i, last);
-                EntitiesAtPositionV2.popEntities(zoneId, x, y);
+                ZoneEntitiesAtPos.updateEntities(zoneId, x, y, i, last);
+                ZoneEntitiesAtPos.popEntities(zoneId, x, y);
                 return;
             }
         }

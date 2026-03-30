@@ -963,7 +963,7 @@ export default defineWorld({
     /**
      * Reverse lookup: entities at a zone-relative position (V2).
      */
-    EntitiesAtPositionV2: {
+    ZoneEntitiesAtPos: {
       key: ["zoneId", "x", "y"],
       schema: {
         zoneId: "uint256",
