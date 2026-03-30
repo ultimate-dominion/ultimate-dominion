@@ -43,7 +43,7 @@ export const NpcRow = ({
   interaction: NpcInteraction;
   entityId: string;
   metadataUri: string;
-  onOpenDialogue: (npcId: string, npcName: string) => void;
+  onOpenDialogue: (npcId: string, npcName: string, metadataUri: string) => void;
 }): JSX.Element => {
   const navigate = useNavigate();
   const { title, flavor } = useNpcFlavor(metadataUri);
@@ -55,9 +55,9 @@ export const NpcRow = ({
     } else if (interaction === 'guild') {
       navigate('/guild');
     } else if (interaction === 'dialogue' || interaction === 'examine') {
-      onOpenDialogue(entityId, npcName);
+      onOpenDialogue(entityId, npcName, metadataUri);
     }
-  }, [interaction, navigate, onOpenDialogue, entityId, npcName]);
+  }, [interaction, navigate, onOpenDialogue, entityId, npcName, metadataUri]);
 
   const Icon = INTERACTION_ICONS[interaction];
   const color = INTERACTION_COLORS[interaction];

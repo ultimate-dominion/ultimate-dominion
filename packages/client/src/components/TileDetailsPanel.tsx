@@ -134,9 +134,9 @@ export const TileDetailsPanel = (): JSX.Element => {
     onOpen: onOpenNpcDialogue,
   } = useDisclosure();
 
-  const [dialogueNpc, setDialogueNpc] = useState<{ id: string; name: string } | null>(null);
-  const handleOpenNpcDialogue = useCallback((npcId: string, npcName: string) => {
-    setDialogueNpc({ id: npcId, name: npcName });
+  const [dialogueNpc, setDialogueNpc] = useState<{ id: string; name: string; metadataUri: string } | null>(null);
+  const handleOpenNpcDialogue = useCallback((npcId: string, npcName: string, metadataUri: string) => {
+    setDialogueNpc({ id: npcId, name: npcName, metadataUri });
     onOpenNpcDialogue();
   }, [onOpenNpcDialogue]);
   const handleCloseNpcDialogue = useCallback(() => {
@@ -1494,6 +1494,7 @@ export const TileDetailsPanel = (): JSX.Element => {
           onClose={handleCloseNpcDialogue}
           npcId={dialogueNpc.id}
           npcName={dialogueNpc.name}
+          metadataUri={dialogueNpc.metadataUri}
         />
       )}
     </Box>

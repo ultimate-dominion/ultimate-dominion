@@ -182,7 +182,7 @@ vi.mock('./FragmentClaimModal', () => ({
 }));
 
 vi.mock('./NpcDialogueModal', () => ({
-  NpcDialogueModal: ({ npcName, npcId }: { npcName: string; npcId: string }) => (
+  NpcDialogueModal: ({ npcName, npcId, metadataUri }: { npcName: string; npcId: string; metadataUri: string }) => (
     <div data-testid="npc-dialogue-modal">
       <span data-testid="dialogue-npc-name">{npcName}</span>
       <span data-testid="dialogue-npc-id">{npcId}</span>
