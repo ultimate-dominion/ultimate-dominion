@@ -72,7 +72,7 @@ const worldAbi = parseAbi([
   'function UD__setNpcDialogue(bytes32 npcId, uint8 fragmentType, uint256 fragmentStep, uint256 zoneId, string dialogueLines) external',
   // Mob creation
   'function UD__createMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)',
-  'function UD__spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32)',
+  'function UD__spawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) returns (bytes32)',
   'function UD__getCurrentMobCounter() view returns (uint256)',
   // Item creation (for quest items)
   'function UD__createItem(uint8 itemType, string name, string description, uint256 price, uint256 rarity, bytes stats) returns (uint256)',
@@ -253,7 +253,7 @@ async function main() {
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__spawnMob',
-      args: [mobId, mob.tile.x, mob.tile.y],
+      args: [mobId, 2n, mob.tile.x, mob.tile.y],
     });
     console.log(`  -> Spawned at (${mob.tile.x}, ${mob.tile.y})\n`);
   }
@@ -297,7 +297,7 @@ async function main() {
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__spawnMob',
-      args: [objMobId, obj.tile.x, obj.tile.y],
+      args: [objMobId, 2n, obj.tile.x, obj.tile.y],
     });
 
     // Entity ID encoding: uint32(mobId) | uint192(spawnCounter) | uint16(x) | uint16(y)
