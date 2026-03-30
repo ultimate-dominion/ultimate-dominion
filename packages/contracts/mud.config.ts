@@ -1651,7 +1651,24 @@ export default defineWorld({
       },
     },
     ///////////////////////////////////// WORLD BOSSES / RAIDS ///////////////////////////////////
+    // Original WorldBoss — immutable on-chain, kept for schema compat
     WorldBoss: {
+      key: ["bossId"],
+      schema: {
+        bossId: "uint256",
+        mobId: "uint256",
+        currentHp: "int256",
+        maxHp: "int256",
+        spawnX: "uint16",
+        spawnY: "uint16",
+        spawnedAt: "uint256",
+        active: "bool",
+        goldReward: "uint256",
+        xpReward: "uint256",
+      },
+    },
+    // V2 with respawn timer, zone awareness, entity tracking
+    WorldBossV2: {
       key: ["bossId"],
       schema: {
         bossId: "uint256",

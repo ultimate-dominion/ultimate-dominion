@@ -178,7 +178,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const tokenURITable = useGameTable('CharactersTokenURI');
   const worldStatusEffectsTable = useGameTable('WorldStatusEffects');
   const mobStatsTable = useGameTable('MobStats');
-  const worldBossTable = useGameTable('WorldBoss');
+  const worldBossTable = useGameTable('WorldBossV2');
 
   // Player's position from the store (canonical — no optimistic updates)
   const posData = useGameValue('Position', character?.id);
