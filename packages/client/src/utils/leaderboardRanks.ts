@@ -22,7 +22,7 @@ export const computeRanks = (
   if (!target) return null;
 
   const totalStats = (c: Character): bigint =>
-    c.baseStats.agility + c.baseStats.strength + c.baseStats.intelligence;
+    c.agility + c.strength + c.intelligence;
 
   const targetStats = totalStats(target);
   const targetGold = target.externalGoldBalance;

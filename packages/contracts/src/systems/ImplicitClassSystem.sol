@@ -15,6 +15,7 @@ import {Race, PowerSource, ArmorType, AdvancedClass, RngRequestType} from "@code
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
+import {AdjustedCombatStats} from "../interfaces/Structs.sol";
 import {CLASS_MULTIPLIER_BASE} from "../../constants.sol";
 import {
     Unauthorized,
@@ -198,7 +199,11 @@ contract ImplicitClassSystem is System {
      */
     function selectAdvancedClass(bytes32 characterId, AdvancedClass advancedClass) public onlyOwner(characterId) {
         PauseLib.requireNotPaused();
-        StatsData memory stats = Stats.get(characterId);
+
+        // Read base stats (without equipment) from Characters table — NOT Stats table
+        // which includes equipment bonuses and would contaminate baseStats permanently.
+        StatsData memory stats = abi.decode(Characters.getBaseStats(characterId), (StatsData));
+        stats.experience = Stats.getExperience(characterId);
 
         // Check requirements
         if (stats.level < 10) revert RequiresLevel10();
@@ -212,13 +217,19 @@ contract ImplicitClassSystem is System {
         stats.advancedClass = advancedClass;
         stats.hasSelectedAdvancedClass = true;
 
-        Stats.set(characterId, stats);
+        // Save clean base stats (no equipment)
+        Characters.setBaseStats(characterId, abi.encode(stats));
+
+        // Set class fields on Stats table (setStats preserves these when recalculating combat fields)
+        Stats.setAdvancedClass(characterId, advancedClass);
+        Stats.setHasSelectedAdvancedClass(characterId, true);
 
         // Set class multipliers in separate table
         _setClassMultipliers(characterId, advancedClass);
 
-        // Update base stats to include the new bonuses
-        Characters.setBaseStats(characterId, abi.encode(stats));
+        // Recalculate Stats table combat fields: base + equipment bonuses
+        AdjustedCombatStats memory equipBonuses = IWorld(_world()).UD__calculateEquipmentBonuses(characterId);
+        IWorld(_world()).UD__setStats(characterId, equipBonuses);
 
         // Issue class-specific items
         IWorld(_world()).UD__issueAdvancedClassItems(characterId, advancedClass);
