@@ -58,8 +58,8 @@ uint256 constant ATTACKER_HIT_DAMPENER = 95;
 //Gold Drop constants
 uint256 constant BASE_GOLD_DROP = 3 ether;
 
-// LEVELING - Diminishing returns system
-// Stat points: +2/level (1-10), +1/2 levels (11-50), +1/5 levels (51-100)
+// LEVELING
+// Stat points: +1/level (all tiers)
 // HP: +2/level (1-10), +1/level (11-50), +1/2 levels (51-100)
 int256 constant BASE_HP_GAIN_EARLY = 2;      // Levels 1-10
 int256 constant BASE_HP_GAIN_MID = 1;        // Levels 11-50
