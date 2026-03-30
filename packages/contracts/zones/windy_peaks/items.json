@@ -1173,6 +1173,48 @@
         "minStrength": 0
       },
       "isStarter": false
+    },
+    {
+      "name": "Sealed Letter",
+      "description": "Taken from the Covenant Tracker's body. The seal is broken but the ink is fresh. Vel will want to see this.",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "quest:sealed_letter",
+      "price": 0,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      },
+      "isStarter": false
+    },
+    {
+      "name": "Last Sermon",
+      "description": "A stone tablet pulled from the Ossuary wall. The words are in a language older than the mountain. Edric might know what it says.",
+      "rarity": 3,
+      "dropChance": 0,
+      "initialSupply": 0,
+      "metadataUri": "quest:last_sermon",
+      "price": 0,
+      "stats": {
+        "effects": [],
+        "maxDamage": 0,
+        "minDamage": 0,
+        "minLevel": 0
+      },
+      "statRestrictions": {
+        "minAgility": 0,
+        "minIntelligence": 0,
+        "minStrength": 0
+      },
+      "isStarter": false
     }
   ]
 }
