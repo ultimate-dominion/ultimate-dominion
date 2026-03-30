@@ -19,7 +19,7 @@ contract WorldBossSystem is System {
     // ============ Admin Functions ============
 
     /// @notice Create or update a world boss configuration.
-    function configureWorldBossV2(
+    function configureWorldBoss(
         uint256 bossId,
         uint256 mobId,
         uint256 zoneId,
@@ -42,12 +42,12 @@ contract WorldBossSystem is System {
     }
 
     /// @notice Toggle a world boss on or off.
-    function setWorldBossV2Active(uint256 bossId, bool active) external onlyAdmin {
+    function setWorldBossActive(uint256 bossId, bool active) external onlyAdmin {
         WorldBossV2.setActive(bossId, active);
     }
 
     /// @notice Force-despawn a live world boss.
-    function despawnWorldBossV2(uint256 bossId) external onlyAdmin {
+    function despawnWorldBoss(uint256 bossId) external onlyAdmin {
         bytes32 entityId = WorldBossV2.getEntityId(bossId);
         if (entityId != bytes32(0)) {
             BoardCleanupLib.removeFromBoard(entityId, false);
@@ -59,7 +59,7 @@ contract WorldBossSystem is System {
 
     /// @notice Check and spawn any world bosses due for respawn in this zone.
     /// @dev Called from MapSpawnSystem on tile entry. Lazy spawn — no cron needed.
-    function trySpawnWorldBossV2es(uint256 zoneId) external {
+    function trySpawnWorldBosses(uint256 zoneId) external {
         _requireSystemOrAdmin(_msgSender());
 
         uint256 totalBosses = Counters.getCounter(_world(), WORLD_BOSS_COUNTER_ID);
@@ -89,7 +89,7 @@ contract WorldBossSystem is System {
 
     /// @notice Called when a mob entity dies. Updates world boss state if applicable.
     /// @dev Called from EncounterResolveSystem during cleanup. No-op for non-boss entities.
-    function onWorldBossV2Death(bytes32 entityId) external {
+    function onWorldBossDeath(bytes32 entityId) external {
         _requireSystemOrAdmin(_msgSender());
 
         uint256 totalBosses = Counters.getCounter(_world(), WORLD_BOSS_COUNTER_ID);
