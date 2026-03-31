@@ -1359,6 +1359,50 @@ export function createSystemCalls(
     }
   };
 
+  const sellBatch = async (
+    itemIds: bigint[],
+    amounts: bigint[],
+    shopId: string,
+    characterId: string,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'sellBatch');
+    if (ownershipError) return ownershipError;
+    if (!walletClient) return { error: 'Wallet not ready', success: false };
+
+    try {
+      const sellBatchAbi = [{
+        type: 'function' as const,
+        name: 'UD__sellBatch',
+        inputs: [
+          { name: 'itemIds', type: 'uint256[]' },
+          { name: 'amounts', type: 'uint256[]' },
+          { name: 'shopId', type: 'bytes32' },
+          { name: 'characterId', type: 'bytes32' },
+        ],
+        outputs: [],
+        stateMutability: 'nonpayable' as const,
+      }] as const;
+
+      const tx = await walletClient!.writeContract({
+        address: worldContract.address,
+        abi: sellBatchAbi,
+        functionName: 'UD__sellBatch',
+        args: [itemIds, amounts, shopId as `0x${string}`, characterId as `0x${string}`],
+      });
+
+      const txResult = await waitForTransaction(tx);
+      return {
+        error: txResult.status === 'success' ? undefined : 'Failed to sell items.',
+        success: txResult.status === 'success',
+      };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   const spawn = async (characterEntity: string): SystemCallReturn => {
     const ownershipError = validateCharacterOwnership(characterEntity, 'spawn');
     if (ownershipError) return ownershipError;
@@ -2050,6 +2094,7 @@ export function createSystemCalls(
     rollStats,
     selectAdvancedClass,
     sell,
+    sellBatch,
     setTaxRate,
     spawn,
     statRespec,

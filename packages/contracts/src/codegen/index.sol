@@ -59,7 +59,7 @@ import { Spawned } from "./tables/Spawned.sol";
 import { Position } from "./tables/Position.sol";
 import { EntitiesAtPosition } from "./tables/EntitiesAtPosition.sol";
 import { PositionV2 } from "./tables/PositionV2.sol";
-import { EntitiesAtPositionV2 } from "./tables/EntitiesAtPositionV2.sol";
+import { ZoneEntitiesAtPos } from "./tables/ZoneEntitiesAtPos.sol";
 import { UltimateDominionConfig, UltimateDominionConfigData } from "./tables/UltimateDominionConfig.sol";
 import { SessionConfig } from "./tables/SessionConfig.sol";
 import { Orders, OrdersData } from "./tables/Orders.sol";

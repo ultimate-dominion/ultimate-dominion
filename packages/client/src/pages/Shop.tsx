@@ -26,25 +26,33 @@ import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
+import { useAllowance } from '../contexts/AllowanceContext';
+import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
   OrderType,
+  Rarity,
   type SpellTemplate,
+  SystemToAllow,
   type WeaponTemplate,
 } from '../utils/types';
 
 export const Shop = (): JSX.Element => {
   const { shopId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated: isConnected, isConnecting } = useAuth();
+  const { isAuthenticated: isConnected, isConnecting, authMethod } = useAuth();
   const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
 
   const {
     delegatorAddress,
     isSynced,
-    systemCalls: { endShopEncounter },
+    systemCalls: { endShopEncounter, sellBatch },
   } = useMUD();
+  const { ensureItemsAllowance, itemsShopAllowance } = useAllowance();
+  const { renderSuccess } = useToast();
+  const sellAllTx = useTransaction({ actionName: 'sellAll', showSuccessToast: false });
   const {
     armorTemplates,
     consumableTemplates,
@@ -103,9 +111,8 @@ export const Shop = (): JSX.Element => {
   >([]);
 
   const [goldAdjustment, setGoldAdjustment] = useState(0n);
-  const [shopGoldAdjustment, setShopGoldAdjustment] = useState(0n);
 
-  // Clear optimistic gold adjustments when the reactive data catches up
+  // Clear optimistic gold adjustment when the reactive data catches up
   const prevGoldRef = useRef(userCharacter?.externalGoldBalance);
   useEffect(() => {
     if (userCharacter && prevGoldRef.current !== userCharacter.externalGoldBalance) {
@@ -114,19 +121,10 @@ export const Shop = (): JSX.Element => {
     }
   }, [userCharacter?.externalGoldBalance]);
 
-  const prevShopGoldRef = useRef(shop?.gold);
-  useEffect(() => {
-    if (shop && prevShopGoldRef.current !== shop.gold) {
-      prevShopGoldRef.current = shop.gold;
-      setShopGoldAdjustment(0n);
-    }
-  }, [shop?.gold]);
-
   const onTradeComplete = useCallback(
     (tokenId: string, amount: number, goldDelta: bigint, orderType: OrderType) => {
       if (orderType === OrderType.Selling) {
         setGoldAdjustment(prev => prev + goldDelta);
-        setShopGoldAdjustment(prev => prev - goldDelta);
         setSellable(prev =>
           prev
             .map(entry =>
@@ -145,7 +143,6 @@ export const Shop = (): JSX.Element => {
         );
       } else {
         setGoldAdjustment(prev => prev - goldDelta);
-        setShopGoldAdjustment(prev => prev + goldDelta);
         setBuyable(prev =>
           prev.map(entry =>
             entry.item.tokenId === tokenId
@@ -157,6 +154,80 @@ export const Shop = (): JSX.Element => {
     },
     [],
   );
+
+  const handleSellAll = useCallback(async () => {
+    if (!userCharacter || !shop) return;
+
+    const toSell = sellable.filter(entry => {
+      if (entry.isEquipped) return false;
+      if (!entry.balance || entry.balance <= 0n) return false;
+      const rarity = entry.item.rarity;
+      return rarity !== undefined && rarity <= Rarity.Uncommon;
+    });
+
+    if (toSell.length === 0) return;
+
+    if (!itemsShopAllowance) {
+      if (authMethod === 'embedded') {
+        const ok = await ensureItemsAllowance(SystemToAllow.Shop);
+        if (!ok) return;
+      } else {
+        // External wallets need manual approval — fall back to individual sells
+        return;
+      }
+    }
+
+    const itemIds = toSell.map(entry => BigInt(entry.item.tokenId));
+    const amounts = toSell.map(entry => entry.balance!);
+
+    const result = await sellAllTx.execute(async () => {
+      const { error, success } = await sellBatch(
+        itemIds,
+        amounts,
+        shop.shopId,
+        userCharacter.id,
+      );
+      if (error && !success) throw new Error(error);
+      return success;
+    });
+
+    if (result !== undefined) {
+      let totalGold = 0n;
+      for (const entry of toSell) {
+        totalGold += entry.balance! * ((entry.item.price * shop.priceMarkdown) / 10_000n);
+      }
+      setGoldAdjustment(prev => prev + totalGold);
+      setSellable(prev =>
+        prev.filter(entry => {
+          if (entry.isEquipped) return true;
+          const rarity = entry.item.rarity;
+          if (rarity !== undefined && rarity <= Rarity.Uncommon) return false;
+          return true;
+        }),
+      );
+      renderSuccess(
+        `Sold ${toSell.length} items for ${etherToFixedNumber(totalGold)} gold`,
+      );
+    }
+  }, [
+    ensureItemsAllowance,
+    itemsShopAllowance,
+    renderSuccess,
+    sellAllTx,
+    sellBatch,
+    sellable,
+    shop,
+    userCharacter,
+  ]);
+
+  const sellAllCount = useMemo(() => {
+    return sellable.filter(entry => {
+      if (entry.isEquipped) return false;
+      if (!entry.balance || entry.balance <= 0n) return false;
+      const rarity = entry.item.rarity;
+      return rarity !== undefined && rarity <= Rarity.Uncommon;
+    }).length;
+  }, [sellable]);
 
   const items = useMemo(
     () => [
@@ -394,6 +465,26 @@ export const Shop = (): JSX.Element => {
             >
               Get Gold
             </Button>
+            {sellAllCount > 0 && (
+              <Button
+                bg="#3A2A1A"
+                border="1px solid #5A4A3A"
+                color="#C4B89E"
+                fontFamily="Cinzel, serif"
+                fontSize="xs"
+                fontWeight={600}
+                isLoading={sellAllTx.isLoading}
+                letterSpacing="0.05em"
+                ml={2}
+                onClick={handleSellAll}
+                px={4}
+                size="sm"
+                textTransform="uppercase"
+                _hover={{ bg: '#5A4A3A', color: '#E8DCC8' }}
+              >
+                Sell All ({sellAllCount})
+              </Button>
+            )}
           </HStack>
           <PolygonalCard clipPath="none" h="calc(100% - 68px)">
             {userCharacter && shopId && sellable && sellable.length ? (
@@ -416,14 +507,6 @@ export const Shop = (): JSX.Element => {
             <Heading color="#E8DCC8" size={{ base: 'sm', md: 'md' }}>
               Shopkeeper&apos;s Inventory
             </Heading>
-            <Spacer />
-            <Text
-              color="yellow"
-              fontWeight={700}
-              size={{ base: 'lg', md: 'xl' }}
-            >
-              {etherToFixedNumber(BigInt(shop.gold) + shopGoldAdjustment).toString()} $GOLD
-            </Text>
           </HStack>
           <PolygonalCard clipPath="none" h="calc(100% - 68px)">
             {userCharacter && shopId && buyable && buyable.length ? (

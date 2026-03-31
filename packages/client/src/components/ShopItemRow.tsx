@@ -147,11 +147,6 @@ export const ShopItemRow = ({
     return isEquipped;
   }, [amount, balance, isEquipped, orderType, userCharacter]);
 
-  const shopBroke = useMemo(() => {
-    if (orderType !== OrderType.Selling) return false;
-    return price > BigInt(shop.gold);
-  }, [orderType, price, shop.gold]);
-
   const onBuyOrSell = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -164,10 +159,6 @@ export const ShopItemRow = ({
         return;
       }
       if (unsellableError) {
-        setShowError(true);
-        return;
-      }
-      if (shopBroke) {
         setShowError(true);
         return;
       }
@@ -253,7 +244,6 @@ export const ShopItemRow = ({
       renderSuccess,
       sell,
       shop.shopId,
-      shopBroke,
       shopTx,
       unsellableError,
     ],
@@ -607,7 +597,7 @@ export const ShopItemRow = ({
               flexDirection="column"
               isInvalid={
                 showError &&
-                (insufficientGold || unsellableError || insufficientStock || shopBroke)
+                (insufficientGold || unsellableError || insufficientStock)
               }
             >
               {showError && insufficientStock && (
@@ -623,11 +613,6 @@ export const ShopItemRow = ({
               {showError && unsellableError && (
                 <FormHelperText color="red" m={3}>
                   {t('shop.cantSellEquipped')}
-                </FormHelperText>
-              )}
-              {showError && shopBroke && (
-                <FormHelperText color="orange.300" m={3}>
-                  {t('shop.shopkeeperNoGold')}
                 </FormHelperText>
               )}
               <HStack gap={3}>

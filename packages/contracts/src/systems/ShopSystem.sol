@@ -36,7 +36,8 @@ import {
     OutOfStock,
     InsufficientItemBalance,
     NotOwnShopEncounter,
-    InvalidEncounter
+    InvalidEncounter,
+    ArrayMismatch
 } from "../Errors.sol";
 
 contract ShopSystem is System, ReentrancyGuard {
@@ -146,6 +147,48 @@ contract ShopSystem is System, ReentrancyGuard {
         GoldLib.goldMint(_world(), Characters.getOwner(characterId), price);
 
         ShopSale.set(shopId, characterId, itemId, block.timestamp, false, price);
+    }
+
+    /// @notice Batch-sell multiple item types in a single transaction
+    function sellBatch(
+        uint256[] calldata itemIds,
+        uint256[] calldata amounts,
+        bytes32 shopId,
+        bytes32 characterId
+    ) public nonReentrant {
+        PauseLib.requireNotPaused();
+        if (itemIds.length != amounts.length) revert ArrayMismatch();
+        if (itemIds.length > 50) revert ArrayMismatch();
+        _validateShopEncounter(characterId, shopId);
+
+        address seller = _msgSender();
+        address lootManager = ESCROW_ADDRESS;
+        bytes14 ns = ITEMS_NAMESPACE;
+        ResourceId ownersTable = _ownersTableId(ns);
+        uint256 markdown = Shops.getPriceMarkdown(shopId);
+        uint256 totalPrice;
+
+        for (uint256 i; i < itemIds.length; i++) {
+            uint256 itemId = itemIds[i];
+            uint256 amount = amounts[i];
+            if (amount == 0) continue;
+
+            uint256 price = amount * ((Items.getPrice(itemId) * markdown) / 10_000);
+            totalPrice += price;
+
+            uint256 sellerBalance = ERC1155Owners.getBalance(ownersTable, seller, itemId);
+            if (sellerBalance < amount) revert InsufficientItemBalance();
+            ERC1155Owners.setBalance(ownersTable, seller, itemId, sellerBalance - amount);
+
+            uint256 lmBalance = ERC1155Owners.getBalance(ownersTable, lootManager, itemId);
+            ERC1155Owners.setBalance(ownersTable, lootManager, itemId, lmBalance + amount);
+
+            ShopSale.set(shopId, characterId, itemId, block.timestamp, false, price);
+        }
+
+        if (totalPrice > 0) {
+            GoldLib.goldMint(_world(), Characters.getOwner(characterId), totalPrice);
+        }
     }
 
     function canRestock(bytes32 shopId) public view returns (bool) {
