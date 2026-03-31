@@ -1,19 +1,20 @@
 /**
- * Monster ASCII Renderer v3
+ * Monster ASCII Renderer v3.1
  *
- * Renders monster silhouettes as dense, tightly-packed ASCII art with 3D depth.
- * Uses normal-mapped lighting, perspective projection, ground shadows, and
- * idle animation to make ASCII monsters feel alive and volumetric.
+ * Dense ASCII art with 3D depth via multi-pass extrusion, normal-mapped
+ * lighting, perspective projection, and idle animation.
  *
  * Core techniques:
  * - Template canvas at 512px for fine detail
+ * - Multi-pass depth extrusion (3 shadow layers behind main render)
  * - Area-averaged brightness sampling with gradient normals
- * - Perspective foreshortening (bottom wider than top = "looking up")
+ * - Perspective foreshortening (bottom wider = "looking up")
  * - Animated directional light → per-character illumination via normals
- * - Idle animation: bob, sway, breathing, character-level wave
+ * - Specular highlights on bright areas
+ * - Idle animation: bob, sway, breathing, organic character-level wave
  * - Ground shadow for spatial grounding
- * - Compact character palette (punctuation, not letters)
- * - 4-5px cells packed tight so the SHAPE dominates
+ * - Boss: brightness wave sweep across silhouette
+ * - Pre-computed cell buffer for efficient multi-pass rendering
  */
 
 import { FONTS } from '../theme';
@@ -33,11 +34,32 @@ type TemplateData = {
   data: ImageData;
   w: number;
   h: number;
-  // Pre-computed normal map (nx, ny per cell at fixed grid resolution)
   normals: Float32Array | null;
   normalCols: number;
   normalRows: number;
 };
+
+// Pre-allocated cell buffer to avoid GC pressure
+type CellData = {
+  char: string;
+  x: number;
+  y: number;
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+  weight: number;
+  fontSize: number;
+};
+
+let cellBuffer: CellData[] = [];
+let cellCount = 0;
+
+function ensureBuffer(size: number) {
+  while (cellBuffer.length < size) {
+    cellBuffer.push({ char: '', x: 0, y: 0, r: 0, g: 0, b: 0, a: 0, weight: 400, fontSize: 4 });
+  }
+}
 
 /** Measure visual density of each palette character via alpha-channel coverage */
 function buildCharBrightness(): number[] {
@@ -75,19 +97,6 @@ function ensureInit() {
 // ---------------------------------------------------------------------------
 
 const TEMPLATE_RES = 512;
-
-/** Sample brightness from high-res template at a fractional position */
-function sampleAt(
-  data: Uint8ClampedArray,
-  imgW: number,
-  imgH: number,
-  fx: number,
-  fy: number,
-): number {
-  const px = Math.min(Math.max(0, Math.floor(fx * imgW)), imgW - 1);
-  const py = Math.min(Math.max(0, Math.floor(fy * imgH)), imgH - 1);
-  return data[(py * imgW + px) * 4] / 255;
-}
 
 function getTemplateImage(template: MonsterTemplate): TemplateData {
   let cached = templateCache.get(template.id);
@@ -144,42 +153,28 @@ function computeNormals(
   cols: number,
   rows: number,
 ): Float32Array {
-  // Check if we already have normals at this resolution
   if (tpl.normals && tpl.normalCols === cols && tpl.normalRows === rows) {
     return tpl.normals;
   }
 
-  const normals = new Float32Array(cols * rows * 2); // nx, ny per cell
+  const normals = new Float32Array(cols * rows * 2);
   const d = tpl.data.data;
   const iw = tpl.w;
   const ih = tpl.h;
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      // Sample brightness at neighboring cells for gradient
-      const bL = col > 0
-        ? sampleBrightness(d, iw, ih, col - 1, row, cols, rows)
-        : 0;
-      const bR = col < cols - 1
-        ? sampleBrightness(d, iw, ih, col + 1, row, cols, rows)
-        : 0;
-      const bU = row > 0
-        ? sampleBrightness(d, iw, ih, col, row - 1, cols, rows)
-        : 0;
-      const bD = row < rows - 1
-        ? sampleBrightness(d, iw, ih, col, row + 1, cols, rows)
-        : 0;
+      const bL = col > 0 ? sampleBrightness(d, iw, ih, col - 1, row, cols, rows) : 0;
+      const bR = col < cols - 1 ? sampleBrightness(d, iw, ih, col + 1, row, cols, rows) : 0;
+      const bU = row > 0 ? sampleBrightness(d, iw, ih, col, row - 1, cols, rows) : 0;
+      const bD = row < rows - 1 ? sampleBrightness(d, iw, ih, col, row + 1, cols, rows) : 0;
 
-      // Gradient → surface normal (heightmap to normal conversion)
-      const nx = bL - bR;
-      const ny = bU - bD;
       const idx = (row * cols + col) * 2;
-      normals[idx] = nx;
-      normals[idx + 1] = ny;
+      normals[idx] = bL - bR;
+      normals[idx + 1] = bU - bD;
     }
   }
 
-  // Cache
   tpl.normals = normals;
   tpl.normalCols = cols;
   tpl.normalRows = rows;
@@ -212,6 +207,13 @@ function getWeight(level: number, isBoss: boolean, brightness: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// Depth extrusion layers
+// ---------------------------------------------------------------------------
+
+const DEPTH_LAYERS = 3;
+const DEPTH_OFFSET = 1.5; // px per layer
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -227,12 +229,9 @@ export type RenderOptions = {
 /**
  * Render a monster as dense ASCII art with 3D depth.
  *
- * The monster fills the (x, y, width, height) region, centered and
- * scaled to maintain its template aspect ratio. Features:
- * - Perspective foreshortening (bottom wider, "looking up at" the monster)
- * - Animated directional lighting with heightmap normals
- * - Ground shadow for spatial grounding
- * - Idle animation: bob, sway, breathing, character wave
+ * Multi-pass rendering: shadow extrusion layers behind the main render
+ * create volumetric thickness. Normal-mapped lighting, perspective
+ * foreshortening, and idle animation complete the 3D effect.
  */
 export function renderMonster(
   ctx: CanvasRenderingContext2D,
@@ -248,23 +247,18 @@ export function renderMonster(
 
   if (width < 20 || height < 20) return;
 
-  // -----------------------------------------------------------------------
-  // Get high-res template
-  // -----------------------------------------------------------------------
-
   const tpl = getTemplateImage(template);
 
   // -----------------------------------------------------------------------
-  // Grid sizing — dense, tightly-packed cells
+  // Grid sizing
   // -----------------------------------------------------------------------
 
   const cellW = Math.max(3, cellSize);
-  const cellH = cellW * 1.25; // Tight vertical packing
+  const cellH = cellW * 1.25;
 
   const maxCols = Math.floor(width / cellW);
   const maxRows = Math.floor(height / cellH);
 
-  // Fit to template aspect ratio
   const templateAspect = template.gridWidth / template.gridHeight;
   let cols: number, rows: number;
 
@@ -279,10 +273,6 @@ export function renderMonster(
   cols = Math.max(10, cols);
   rows = Math.max(6, rows);
 
-  // -----------------------------------------------------------------------
-  // Compute actual cell dimensions and centering
-  // -----------------------------------------------------------------------
-
   const actualCellW = Math.min(width / cols, height / (rows * 1.25));
   const actualCellH = actualCellW * 1.25;
   const renderW = cols * actualCellW;
@@ -292,44 +282,41 @@ export function renderMonster(
   // 3D parameters
   // -----------------------------------------------------------------------
 
-  // Idle animation
   const bobY = enable3D ? Math.sin(elapsed * 0.0018) * 3 : 0;
   const swayX = enable3D ? Math.sin(elapsed * 0.0013) * 1.5 : 0;
   const breathScale = enable3D ? 1 + Math.sin(elapsed * 0.0025) * 0.012 : 1;
+  const perspectiveAmount = enable3D ? 0.12 : 0;
 
-  // Perspective: bottom is wider than top (looking up at the monster)
-  const perspectiveAmount = enable3D ? 0.12 : 0; // 12% narrower at top
-
-  // Animated light direction (orbits slowly)
+  // Animated light direction
   const lightAngle = elapsed * 0.0008;
   const lightX = Math.cos(lightAngle) * 0.6;
   const lightY = -0.3 + Math.sin(lightAngle * 0.7) * 0.2;
-  const lightZ = 0.7; // always somewhat forward-facing
+  const lightZ = 0.7;
   const lightLen = Math.sqrt(lightX * lightX + lightY * lightY + lightZ * lightZ);
   const lx = lightX / lightLen;
   const ly = lightY / lightLen;
   const lz = lightZ / lightLen;
 
-  // Center position with bob/sway
   const centerX = x + (width - renderW) / 2 + swayX;
   const centerY = y + (height - renderH) / 2 + bobY;
 
-  // -----------------------------------------------------------------------
-  // Compute normals for lighting
-  // -----------------------------------------------------------------------
-
+  // Normals
   let normals: Float32Array | null = null;
   if (enable3D) {
     normals = computeNormals(tpl, cols, rows);
   }
 
-  // -----------------------------------------------------------------------
-  // Color + glow setup
-  // -----------------------------------------------------------------------
-
   const baseColor = template.isBoss
     ? BOSS_COLOR
     : (CLASS_COLORS[template.monsterClass] ?? CLASS_COLORS[0]);
+
+  // -----------------------------------------------------------------------
+  // Boss brightness wave (sweeps across silhouette)
+  // -----------------------------------------------------------------------
+
+  const bossWaveFront = template.isBoss
+    ? (Math.sin(elapsed * 0.0015) * 0.5 + 0.5) // 0-1, sweeps left to right
+    : -1;
 
   // -----------------------------------------------------------------------
   // Ground shadow
@@ -337,106 +324,79 @@ export function renderMonster(
 
   if (enable3D) {
     ctx.save();
-    const shadowH = renderH * 0.12;
-    const shadowY = centerY + renderH * breathScale + shadowH * 0.3;
-    const shadowW = renderW * 0.7;
-    const shadowX = centerX + (renderW - shadowW) / 2;
+    const shadowH = renderH * 0.1;
+    const shadowY = centerY + renderH * breathScale + shadowH * 0.5;
+    const shadowW = renderW * 0.65;
+    const shadowCenterX = centerX + renderW / 2;
 
-    ctx.globalAlpha = alpha * 0.15;
-    ctx.fillStyle = `rgb(${baseColor.r * 0.3}, ${baseColor.g * 0.3}, ${baseColor.b * 0.3})`;
+    ctx.globalAlpha = alpha * 0.12;
+    ctx.fillStyle = `rgb(${Math.floor(baseColor.r * 0.2)}, ${Math.floor(baseColor.g * 0.2)}, ${Math.floor(baseColor.b * 0.2)})`;
 
-    // Elliptical shadow using arc
     ctx.beginPath();
-    ctx.ellipse(
-      shadowX + shadowW / 2,
-      shadowY,
-      shadowW / 2,
-      shadowH / 2,
-      0, 0, Math.PI * 2,
-    );
+    ctx.ellipse(shadowCenterX, shadowY, shadowW / 2, shadowH / 2, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
   // -----------------------------------------------------------------------
-  // Boss glow
+  // Pre-compute cell buffer
   // -----------------------------------------------------------------------
-
-  if (template.isBoss) {
-    ctx.shadowColor = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.6)`;
-    ctx.shadowBlur = 8 + Math.sin(elapsed * 0.003) * 4;
-  }
-
-  // -----------------------------------------------------------------------
-  // Render dense character grid with 3D effects
-  // -----------------------------------------------------------------------
-
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
 
   const fontSize = actualCellW * 1.2;
   const brightness = charBrightness!;
 
+  ensureBuffer(cols * rows);
+  cellCount = 0;
+
   for (let row = 0; row < rows; row++) {
-    // Perspective foreshortening: row 0 (top) is narrower, row (rows-1) is wider
-    const rowT = row / (rows - 1 || 1); // 0 at top, 1 at bottom
+    const rowT = row / (rows - 1 || 1);
     const perspScale = 1 - perspectiveAmount * (1 - rowT);
-
-    // Breathing: scale from bottom center
     const breathOffsetY = (1 - breathScale) * (rows - row) * actualCellH * 0.5;
-
-    // Row width after perspective
     const rowW = renderW * perspScale;
     const rowOffsetX = centerX + (renderW - rowW) / 2;
-
     const rowCellW = rowW / cols;
     const rowCellH = actualCellH * breathScale;
     const drawY = centerY + row * rowCellH + breathOffsetY;
 
     for (let col = 0; col < cols; col++) {
-      // Area-averaged brightness from high-res template
-      const b = sampleBrightness(
-        tpl.data.data, tpl.w, tpl.h,
-        col, row, cols, rows,
-      );
+      const b = sampleBrightness(tpl.data.data, tpl.w, tpl.h, col, row, cols, rows);
       if (b < 0.02) continue;
 
-      // ---------------------------------------------------------------
-      // 3D lighting from normal map
-      // ---------------------------------------------------------------
-
+      // Lighting
       let litB = b;
       if (normals) {
         const nIdx = (row * cols + col) * 2;
         const nx = normals[nIdx];
         const ny = normals[nIdx + 1];
-        const nz = 0.5; // surface faces viewer
+        const nz = 0.5;
         const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
 
-        // Dot product with light direction
         const dot = (nx / nLen) * lx + (ny / nLen) * ly + (nz / nLen) * lz;
-        // Remap: ambient 0.35 + diffuse 0.65
         const lighting = 0.35 + Math.max(0, dot) * 0.65;
         litB = b * lighting;
 
-        // Specular highlight for bright areas
+        // Specular
         if (b > 0.4) {
-          // Half-vector for specular
           const hx = lx;
           const hy = ly;
-          const hz = lz + 1; // viewer at z=1
+          const hz = lz + 1;
           const hLen = Math.sqrt(hx * hx + hy * hy + hz * hz) || 1;
           const spec = Math.max(0, (nx / nLen) * (hx / hLen) + (ny / nLen) * (hy / hLen) + (nz / nLen) * (hz / hLen));
           litB += Math.pow(spec, 8) * 0.3 * b;
         }
       }
 
+      // Boss wave boost
+      if (bossWaveFront >= 0) {
+        const colT = col / cols;
+        const distFromWave = Math.abs(colT - bossWaveFront);
+        const pulseBoost = Math.max(0, 1 - distFromWave * 4) * 0.25;
+        litB += pulseBoost;
+      }
+
       litB = Math.min(1, Math.max(0, litB));
 
-      // ---------------------------------------------------------------
-      // Character selection from lit brightness
-      // ---------------------------------------------------------------
-
+      // Character selection
       let bestIdx = 0;
       let bestDiff = 1;
       for (let i = 0; i < brightness.length; i++) {
@@ -446,41 +406,84 @@ export function renderMonster(
           bestIdx = i;
         }
       }
-
       const char = CHAR_PALETTE[bestIdx];
       if (char === ' ') continue;
 
-      // ---------------------------------------------------------------
-      // Character-level wave (organic ripple)
-      // ---------------------------------------------------------------
-
+      // Character wave displacement
       let waveX = 0;
       let waveY = 0;
       if (enable3D) {
-        waveX = Math.sin(elapsed * 0.003 + col * 0.4 + row * 0.3) * 0.4;
-        waveY = Math.cos(elapsed * 0.0025 + col * 0.3 + row * 0.5) * 0.3;
+        // Layered sine approximation of noise — organic without a dependency
+        waveX = Math.sin(elapsed * 0.003 + col * 0.4 + row * 0.3) * 0.4
+              + Math.sin(elapsed * 0.0017 + col * 0.23 + row * 0.17) * 0.2;
+        waveY = Math.cos(elapsed * 0.0025 + col * 0.3 + row * 0.5) * 0.3
+              + Math.cos(elapsed * 0.0013 + col * 0.19 + row * 0.31) * 0.15;
       }
-
-      // ---------------------------------------------------------------
-      // Draw
-      // ---------------------------------------------------------------
 
       const weight = getWeight(template.level, !!template.isBoss, litB);
       const drawFontSize = fontSize * perspScale;
-      ctx.font = `${weight} ${drawFontSize}px ${FONTS.serif}`;
 
-      // Color modulated by lighting
+      const cellX = rowOffsetX + col * rowCellW + rowCellW / 2 + waveX;
+      const cellY = drawY + rowCellH / 2 + waveY;
+
       const r = Math.min(255, Math.floor(baseColor.r * litB * 1.1));
       const g = Math.min(255, Math.floor(baseColor.g * litB * 1.1));
       const bChan = Math.min(255, Math.floor(baseColor.b * litB * 1.1));
-      ctx.fillStyle = `rgba(${r}, ${g}, ${bChan}, ${alpha * (0.25 + litB * 0.75)})`;
+      const a = alpha * (0.25 + litB * 0.75);
 
-      ctx.fillText(
-        char,
-        rowOffsetX + col * rowCellW + rowCellW / 2 + waveX,
-        drawY + rowCellH / 2 + waveY,
-      );
+      const cell = cellBuffer[cellCount++];
+      cell.char = char;
+      cell.x = cellX;
+      cell.y = cellY;
+      cell.r = r;
+      cell.g = g;
+      cell.b = bChan;
+      cell.a = a;
+      cell.weight = weight;
+      cell.fontSize = drawFontSize;
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // Render: shadow extrusion layers (back to front)
+  // -----------------------------------------------------------------------
+
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+
+  if (enable3D) {
+    for (let layer = DEPTH_LAYERS; layer >= 1; layer--) {
+      const ox = layer * DEPTH_OFFSET;
+      const oy = layer * DEPTH_OFFSET;
+      const darken = 0.15 + (DEPTH_LAYERS - layer) * 0.05; // deeper = darker
+      const layerAlpha = (0.25 - layer * 0.05);
+
+      for (let i = 0; i < cellCount; i++) {
+        const c = cellBuffer[i];
+        ctx.font = `${c.weight} ${c.fontSize}px ${FONTS.serif}`;
+        const dr = Math.floor(c.r * darken);
+        const dg = Math.floor(c.g * darken);
+        const db = Math.floor(c.b * darken);
+        ctx.fillStyle = `rgba(${dr}, ${dg}, ${db}, ${c.a * layerAlpha})`;
+        ctx.fillText(c.char, c.x + ox, c.y + oy);
+      }
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Render: main layer
+  // -----------------------------------------------------------------------
+
+  if (template.isBoss) {
+    ctx.shadowColor = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.6)`;
+    ctx.shadowBlur = 8 + Math.sin(elapsed * 0.003) * 4;
+  }
+
+  for (let i = 0; i < cellCount; i++) {
+    const c = cellBuffer[i];
+    ctx.font = `${c.weight} ${c.fontSize}px ${FONTS.serif}`;
+    ctx.fillStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`;
+    ctx.fillText(c.char, c.x, c.y);
   }
 
   if (template.isBoss) {
