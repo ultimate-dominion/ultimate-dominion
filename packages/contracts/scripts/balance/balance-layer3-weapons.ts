@@ -110,7 +110,7 @@ let POWER_SOURCE_BONUS_LEVEL = 5;
 let CLASS_MULTIPLIER_BASE = 1000;
 
 // Combat constants (set from proposed overrides)
-let ATTACK_MODIFIER = 1.2;
+let ATTACK_MODIFIER = 1.0;
 let AGI_ATTACK_MODIFIER = 1.0;
 let CRIT_MULTIPLIER = 2;
 let CRIT_BASE_CHANCE = 5;

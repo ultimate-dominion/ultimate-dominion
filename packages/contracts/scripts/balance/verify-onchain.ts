@@ -301,7 +301,7 @@ async function verifyCombatConstants() {
 
   // Compare against known on-chain constants from constants.sol
   const onChainConstants = {
-    attackModifier: 1.2,       // ATTACK_MODIFIER = 1.2 ether
+    attackModifier: 1.0,       // ATTACK_MODIFIER = 1.0 ether
     agiAttackModifier: 1.0,    // AGI_ATTACK_MODIFIER = 1.0 ether
     doubleStrikeCap: 40,       // DOUBLE_STRIKE_CAP = 40
     evasionCap: 35,            // EVASION_CAP = 35

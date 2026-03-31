@@ -95,7 +95,7 @@ contract CombatMathTest is Test {
             attackStats, 15, 10, weapon, 12345, false, AGI_ATTACK_MODIFIER
         );
 
-        // V3: AGI modifier is 1.0, STR is 1.2. STR should still do more damage.
+        // Both modifiers are now 1.0 — STR and AGI do equal base damage.
         assertTrue(strDamage >= agiDamage);
         assertTrue(agiDamage > 0);
 
@@ -133,17 +133,17 @@ contract CombatMathTest is Test {
 
     function testAddStatBonus_AttackerAdvantage() public {
         // attackerStat=15, defenderStat=10, baseDamage=5 WAD
-        // baseDiff = 15*1.2e18 - 10*1e18 = 18e18 - 10e18 = 8e18
-        // damage = (8e18/2 + 5e18) / 1e18 = 9e18 / 1e18 = 9
+        // baseDiff = 15*1.0e18 - 10*1e18 = 15e18 - 10e18 = 5e18
+        // damage = (5e18/2 + 5e18) / 1e18 = 7.5e18 → roundInt → 8
         int256 damage = CombatMath.addStatBonus(15, 10, 5 ether, ATTACK_MODIFIER);
-        assertEq(damage, 9);
+        assertEq(damage, 8);
     }
 
     function testAddStatBonus_DefenderAdvantage_PenaltyApplied() public {
         // Cavern Brute scenario: attacker STR=9, defender STR=12
-        // baseDamage = 2 * 1.2e18 = 2.4e18 (weapon roll of 2 with ATTACK_MODIFIER)
-        // baseDiff = 9*1.2e18 - 12*1e18 = 10.8e18 - 12e18 = -1.2e18
-        // damage = (2.4e18 + (-1.2e18/2)) / 1e18 = (2.4e18 - 0.6e18) / 1e18 = 1.8e18 / 1e18 = 1
+        // baseDamage = 2.4e18 (hardcoded test value)
+        // baseDiff = 9*1.0e18 - 12*1e18 = 9e18 - 12e18 = -3e18
+        // damage = (2.4e18 + (-3e18/2)) / 1e18 = (2.4e18 - 1.5e18) / 1e18 = 0.9e18 / 1e18 = 0 -> floor at 1
         int256 damage = CombatMath.addStatBonus(9, 12, 2.4 ether, ATTACK_MODIFIER);
         assertEq(damage, 1);
     }
@@ -160,26 +160,27 @@ contract CombatMathTest is Test {
     function testAddStatBonus_EqualStats() public {
         // Equal stats: no bonus or penalty, just base damage
         // attacker=10, defender=10, baseDamage=3.6e18
-        // baseDiff = 10*1.2e18 - 10*1e18 = 12e18 - 10e18 = 2e18 > 0 (attacker gets slight edge from 1.2x modifier)
+        // baseDiff = 10*1.0e18 - 10*1e18 = 0 (equal modifiers, no stat bonus)
+        // damage = 3.6e18 / 1e18 = 3
         int256 damage = CombatMath.addStatBonus(10, 10, 3.6 ether, ATTACK_MODIFIER);
-        assertTrue(damage >= 3, "equal stats with 1.2x modifier should give slight bonus");
+        assertEq(damage, 3);
     }
 
     function testAddStatBonus_ModerateDefenderAdvantage_NotIgnored() public {
         // Previously this fell into the dead zone (no penalty). Now penalty always applies.
         // attacker=9, defender=14, baseDamage=2.4e18
-        // baseDiff = 9*1.2e18 - 14*1e18 = 10.8e18 - 14e18 = -3.2e18
-        // damage = (2.4e18 + (-3.2e18/2)) / 1e18 = (2.4e18 - 1.6e18) / 1e18 = 0.8e18 / 1e18 = 0 -> floor at 1
+        // baseDiff = 9*1.0e18 - 14*1e18 = 9e18 - 14e18 = -5e18
+        // damage = (2.4e18 + (-5e18/2)) / 1e18 = (2.4e18 - 2.5e18) / 1e18 = -0.1e18 -> floor at 1
         int256 damage = CombatMath.addStatBonus(9, 14, 2.4 ether, ATTACK_MODIFIER);
         assertEq(damage, 1);
     }
 
     function testAddStatBonus_SmallDefenderAdvantage() public {
         // attacker=10, defender=13, baseDamage=6e18
-        // baseDiff = 10*1.2e18 - 13*1e18 = 12e18 - 13e18 = -1e18
-        // damage = (6e18 + (-1e18/2)) / 1e18 = 5.5e18 / 1e18 = 5
+        // baseDiff = 10*1.0e18 - 13*1e18 = 10e18 - 13e18 = -3e18
+        // damage = (6e18 + (-3e18/2)) / 1e18 = 4.5e18 / 1e18 = 4
         int256 damage = CombatMath.addStatBonus(10, 13, 6 ether, ATTACK_MODIFIER);
-        assertEq(damage, 5);
+        assertEq(damage, 4);
     }
 
     function testGetStatModifier() public {
@@ -520,7 +521,7 @@ contract CombatMathTest is Test {
 
     function testAddStatBonus_MassiveDefenderAdvantage_FlooredAt1() public {
         // attacker=1, defender=50, baseDamage=1.2e18
-        // baseDiff = 1*1.2e18 - 50*1e18 = 1.2e18 - 50e18 = -48.8e18
+        // baseDiff = 1*1.0e18 - 50*1e18 = 1e18 - 50e18 = -49e18
         // abs(baseDiff/WAD) = 48 >= attackerStat(1) -> penalty branch
         // baseDamage + baseDiff = 1.2e18 + (-48.8e18) < 0 -> floor at 1
         int256 damage = CombatMath.addStatBonus(1, 50, 1.2 ether, ATTACK_MODIFIER);

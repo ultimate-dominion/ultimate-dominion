@@ -41,7 +41,7 @@ address constant CHARACTER_TOKEN_COUNTER_KEY = address(2);
 
 uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
-uint256 constant ATTACK_MODIFIER = 1.2 ether;
+uint256 constant ATTACK_MODIFIER = 1.0 ether;
 uint256 constant AGI_ATTACK_MODIFIER = 1.0 ether;
 uint256 constant EVASION_CAP = 35;
 uint256 constant DOUBLE_STRIKE_CAP = 40;
