@@ -36,7 +36,9 @@
     "allowSpending": "支出を許可",
     "alwaysAllow": "常に許可",
     "noCharacter": "キャラクターが見つかりません。キャラクターを選択してください。",
-    "walletNotConnected": "ウォレットが接続されていません。再接続してください。"
+    "walletNotConnected": "ウォレットが接続されていません。再接続してください。",
+    "error": "エラーが発生しました。",
+    "of": "/ {{count}}"
   },
   "betaBanner": {
     "message": "早期アクセス — 不具合が発生する場合があります。困ったらリロード。",
@@ -172,7 +174,10 @@
     "pveShareText": "暗黒の洞窟で{{name}}を討伐。",
     "itemShareText": "Ultimate Dominionで{{rarity}}{{name}}を発見。すべてのアイテムは永続的でオンチェーン、自分だけのもの。",
     "aMonster": "モンスター",
-    "fetchFailed": "ルートアイテムの取得に失敗しました。"
+    "fetchFailed": "ルートアイテムの取得に失敗しました。",
+    "criticalHit": "クリティカルヒット！",
+    "elitePrefix": "エリート {{name}}",
+    "drawEnd": "引き分けで戦闘が終了した。"
   },
   "equip": {
     "equipItem": "装備する",
@@ -483,13 +488,18 @@
     "maxDamage": "最大ダメージ:",
     "restrictions": "制限",
     "buyAllowanceSuccess": "許可が完了しました！ {{name}}を購入できます",
-    "sellAllowanceSuccess": "許可が完了しました！ {{name}}を売却できます"
+    "sellAllowanceSuccess": "許可が完了しました！ {{name}}を売却できます",
+    "shopNotFound": "ショップが見つかりません",
+    "characterNotFound": "キャラクターが見つかりません",
+    "leaveShop": "ショップを出る",
+    "noSellableItems": "売れるアイテムがありません"
   },
   "marketplace": {
     "bought": "{{name}}を購入しました！",
     "sold": "{{name}}を売却しました！",
     "notEnoughGold": "$GOLDが不足しています",
-    "noListings": "出品なし"
+    "noListings": "出品なし",
+    "itemNotFound": "アイテムが見つかりません"
   },
   "order": {
     "from": "出品者: {{name}} ({{address}})",
@@ -819,6 +829,33 @@
     "colWinPct": "勝率",
     "colElo": "ELO",
     "noPvp": "まだPvP記録がありません。",
-    "pvpCta": "他のプレイヤーに挑戦してランクを上げよう！"
+    "pvpCta": "他のプレイヤーに挑戦してランクを上げよう！",
+    "statsRankChange": "ステータス順位: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}",
+    "goldRankChange": "ゴールド順位: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}"
+  },
+  "character": {
+    "notExist": "このキャラクターは存在しません"
+  },
+  "inventory": {
+    "noArmor": "防具なし",
+    "noWeapons": "武器なし",
+    "noSpells": "呪文なし",
+    "noConsumables": "消耗品なし"
+  },
+  "npc": {
+    "combatTrainer": "戦闘訓練師",
+    "guildFounder": "ギルド創設者",
+    "talk": "話す",
+    "examine": "調べる"
+  },
+  "hud": {
+    "objective": "目標"
+  },
+  "zoneExit": {
+    "narrative": "頭上に通路が開く。冷たい風が隙間から吹き込んでくる。",
+    "reassurance": "暗黒の洞窟にはいつでも戻れます。",
+    "leave": "暗黒の洞窟を出る",
+    "stay": "留まる",
+    "transitioning": "離脱中..."
   }
 }

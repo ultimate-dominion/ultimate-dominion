@@ -36,7 +36,9 @@
     "allowSpending": "允许消费",
     "alwaysAllow": "始终允许",
     "noCharacter": "未找到角色，请选择一个角色。",
-    "walletNotConnected": "钱包未连接，请重新连接钱包。"
+    "walletNotConnected": "钱包未连接，请重新连接钱包。",
+    "error": "发生错误。",
+    "of": "/ {{count}}"
   },
   "betaBanner": {
     "message": "抢先体验 — 可能存在问题，遇到异常请刷新页面。",
@@ -172,7 +174,10 @@
     "pveShareText": "在暗黑洞穴中击杀了 {{name}}。",
     "itemShareText": "在 Ultimate Dominion 中发现了{{rarity}}{{name}}。每件物品都是永久的、链上的、属于我的。",
     "aMonster": "一只怪物",
-    "fetchFailed": "获取战利品失败。"
+    "fetchFailed": "获取战利品失败。",
+    "criticalHit": "暴击！",
+    "elitePrefix": "精英 {{name}}",
+    "drawEnd": "战斗以平局结束。"
   },
   "equip": {
     "equipItem": "装备物品",
@@ -483,13 +488,18 @@
     "maxDamage": "最高伤害:",
     "restrictions": "限制",
     "buyAllowanceSuccess": "授权成功！现在可以购买 {{name}}",
-    "sellAllowanceSuccess": "授权成功！现在可以出售 {{name}}"
+    "sellAllowanceSuccess": "授权成功！现在可以出售 {{name}}",
+    "shopNotFound": "未找到商店",
+    "characterNotFound": "未找到角色",
+    "leaveShop": "离开商店",
+    "noSellableItems": "没有可出售的物品"
   },
   "marketplace": {
     "bought": "购买了 {{name}}！",
     "sold": "出售了 {{name}}！",
     "notEnoughGold": "$GOLD 不足",
-    "noListings": "暂无挂单"
+    "noListings": "暂无挂单",
+    "itemNotFound": "未找到物品"
   },
   "order": {
     "from": "来自: {{name}} ({{address}})",
@@ -819,6 +829,33 @@
     "colWinPct": "胜率",
     "colElo": "ELO",
     "noPvp": "暂无PvP记录。",
-    "pvpCta": "挑战其他玩家来提升排名！"
+    "pvpCta": "挑战其他玩家来提升排名！",
+    "statsRankChange": "属性排名: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}",
+    "goldRankChange": "金币排名: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}"
+  },
+  "character": {
+    "notExist": "该角色不存在"
+  },
+  "inventory": {
+    "noArmor": "无护甲",
+    "noWeapons": "无武器",
+    "noSpells": "无法术",
+    "noConsumables": "无消耗品"
+  },
+  "npc": {
+    "combatTrainer": "战斗训练师",
+    "guildFounder": "公会创始人",
+    "talk": "对话",
+    "examine": "查看"
+  },
+  "hud": {
+    "objective": "目标"
+  },
+  "zoneExit": {
+    "narrative": "头顶出现了一条通道。冷风从缝隙中灌入。",
+    "reassurance": "你随时可以回到暗黑洞穴。",
+    "leave": "离开暗黑洞穴",
+    "stay": "留下",
+    "transitioning": "离开中..."
   }
 }

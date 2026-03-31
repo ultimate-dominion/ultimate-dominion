@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -72,6 +73,7 @@ import {
 export const CharacterPage = (): JSX.Element => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const { isSynced } = useMUD();
@@ -383,7 +385,7 @@ export const CharacterPage = (): JSX.Element => {
                 variant="filled"
               >
                 <CardBody>
-                  <Text fontWeight="bold">This character does not exist</Text>
+                  <Text fontWeight="bold">{t('character.notExist')}</Text>
                 </CardBody>
               </Card>
             </Center>
@@ -410,6 +412,7 @@ export const CharacterPage = (): JSX.Element => {
 };
 
 const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     armorTemplates,
     consumableTemplates,
@@ -652,7 +655,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryArmor.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No armor</Text>}
+          {inventoryArmor.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noArmor')}</Text>}
           {inventoryArmor.map((ar, i) => {
             const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
             return (
@@ -689,7 +692,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryWeapons.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No weapons</Text>}
+          {inventoryWeapons.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noWeapons')}</Text>}
           {inventoryWeapons.map((item, i) => {
             const isEquipped = equippedWeaponIds.includes(
               BigInt(item.tokenId),
@@ -722,7 +725,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventorySpells.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No spells</Text>}
+          {inventorySpells.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noSpells')}</Text>}
           {inventorySpells.map((item, i) => {
             const isEquipped = equippedSpellIds.includes(
               BigInt(item.tokenId),
@@ -758,7 +761,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryConsumables.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No consumables</Text>}
+          {inventoryConsumables.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noConsumables')}</Text>}
           {inventoryConsumables.map((consumable, i) => {
             const isEquipped = equippedConsumableIds.includes(
               BigInt(consumable.tokenId),

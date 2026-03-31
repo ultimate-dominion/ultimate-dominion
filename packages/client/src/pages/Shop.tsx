@@ -11,6 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { GiTwoCoins } from 'react-icons/gi';
 import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -42,6 +43,7 @@ import {
 export const Shop = (): JSX.Element => {
   const { shopId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
   const { isAuthenticated: isConnected, isConnecting, authMethod } = useAuth();
   const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
 
@@ -335,7 +337,7 @@ export const Shop = (): JSX.Element => {
   if (!shop) {
     return (
       <VStack>
-        <Text>Shop not found</Text>
+        <Text>{t('shop.shopNotFound')}</Text>
       </VStack>
     );
   }
@@ -343,7 +345,7 @@ export const Shop = (): JSX.Element => {
   if (!userCharacter) {
     return (
       <VStack>
-        <Text>Character not found</Text>
+        <Text>{t('shop.characterNotFound')}</Text>
       </VStack>
     );
   }
@@ -391,7 +393,7 @@ export const Shop = (): JSX.Element => {
             textTransform="uppercase"
             _hover={{ bg: '#3A3228', color: '#E8DCC8' }}
           >
-            Leave Shop
+            {t('shop.leaveShop')}
           </Button>
         </HStack>
       </HStack>
@@ -497,7 +499,7 @@ export const Shop = (): JSX.Element => {
               />
             ) : (
               <VStack p={6}>
-                <Text>No Sellable Items</Text>
+                <Text>{t('shop.noSellableItems')}</Text>
               </VStack>
             )}
           </PolygonalCard>

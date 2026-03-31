@@ -1,5 +1,6 @@
 import { Box, HStack, Text } from '@chakra-ui/react';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGameTable, encodeCompositeKey } from '../lib/gameStore';
 import { useCharacter } from '../contexts/CharacterContext';
 import {
@@ -15,6 +16,7 @@ import {
  * Renders null when no chains are active or initialized.
  */
 export const CurrentObjectiveHud = (): JSX.Element | null => {
+  const { t } = useTranslation('ui');
   const { character } = useCharacter();
   const chainTable = useGameTable(CHAIN_PROGRESS_TABLE);
 
@@ -67,7 +69,7 @@ export const CurrentObjectiveHud = (): JSX.Element | null => {
       <HStack justifyContent="space-between" spacing={2}>
         <HStack spacing={2} minW={0}>
           <Text fontSize="2xs" color="#8A7E6A" textTransform="uppercase" letterSpacing="wider" flexShrink={0}>
-            Objective
+            {t('hud.objective')}
           </Text>
           <Text fontSize="xs" color="#E8DCC8" noOfLines={1}>
             {activeObjective.objective}

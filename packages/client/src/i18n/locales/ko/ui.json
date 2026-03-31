@@ -36,7 +36,9 @@
     "allowSpending": "지출 허용",
     "alwaysAllow": "항상 허용",
     "noCharacter": "캐릭터를 찾을 수 없습니다. 캐릭터를 선택해 주세요.",
-    "walletNotConnected": "지갑이 연결되지 않았습니다. 지갑을 다시 연결해 주세요."
+    "walletNotConnected": "지갑이 연결되지 않았습니다. 지갑을 다시 연결해 주세요.",
+    "error": "오류가 발생했습니다.",
+    "of": "/ {{count}}"
   },
   "betaBanner": {
     "message": "얼리 액세스 — 오류가 발생할 수 있습니다. 문제가 있으면 새로고침하세요.",
@@ -172,7 +174,10 @@
     "pveShareText": "어둠의 동굴에서 {{name}}을(를) 처치.",
     "itemShareText": "Ultimate Dominion에서 {{rarity}}{{name}}을(를) 발견. 모든 아이템은 영구적이고, 온체인이며, 내 것이다.",
     "aMonster": "몬스터",
-    "fetchFailed": "전리품을 불러오지 못했습니다."
+    "fetchFailed": "전리품을 불러오지 못했습니다.",
+    "criticalHit": "치명타!",
+    "elitePrefix": "엘리트 {{name}}",
+    "drawEnd": "무승부로 전투가 끝났다."
   },
   "equip": {
     "equipItem": "아이템 장착",
@@ -483,13 +488,18 @@
     "maxDamage": "최대 피해:",
     "restrictions": "제한 사항",
     "buyAllowanceSuccess": "권한이 승인되었습니다! 이제 {{name}}을(를) 구매할 수 있습니다",
-    "sellAllowanceSuccess": "권한이 승인되었습니다! 이제 {{name}}을(를) 판매할 수 있습니다"
+    "sellAllowanceSuccess": "권한이 승인되었습니다! 이제 {{name}}을(를) 판매할 수 있습니다",
+    "shopNotFound": "상점을 찾을 수 없습니다",
+    "characterNotFound": "캐릭터를 찾을 수 없습니다",
+    "leaveShop": "상점 나가기",
+    "noSellableItems": "판매할 아이템이 없습니다"
   },
   "marketplace": {
     "bought": "{{name}} 구매 완료!",
     "sold": "{{name}} 판매 완료!",
     "notEnoughGold": "$GOLD가 부족합니다",
-    "noListings": "등록된 매물이 없습니다"
+    "noListings": "등록된 매물이 없습니다",
+    "itemNotFound": "아이템을 찾을 수 없습니다"
   },
   "order": {
     "from": "판매자: {{name}} ({{address}})",
@@ -819,6 +829,33 @@
     "colWinPct": "승률",
     "colElo": "ELO",
     "noPvp": "아직 PvP 기록이 없습니다.",
-    "pvpCta": "다른 플레이어에게 도전해서 순위를 올리세요!"
+    "pvpCta": "다른 플레이어에게 도전해서 순위를 올리세요!",
+    "statsRankChange": "스탯 순위: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}",
+    "goldRankChange": "골드 순위: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}"
+  },
+  "character": {
+    "notExist": "이 캐릭터는 존재하지 않습니다"
+  },
+  "inventory": {
+    "noArmor": "방어구 없음",
+    "noWeapons": "무기 없음",
+    "noSpells": "주문 없음",
+    "noConsumables": "소모품 없음"
+  },
+  "npc": {
+    "combatTrainer": "전투 훈련사",
+    "guildFounder": "길드 창시자",
+    "talk": "대화",
+    "examine": "조사"
+  },
+  "hud": {
+    "objective": "목표"
+  },
+  "zoneExit": {
+    "narrative": "머리 위로 통로가 열린다. 차가운 바람이 틈새로 밀려든다.",
+    "reassurance": "언제든 어둠의 동굴로 돌아올 수 있습니다.",
+    "leave": "어둠의 동굴 떠나기",
+    "stay": "머무르기",
+    "transitioning": "이동 중..."
   }
 }

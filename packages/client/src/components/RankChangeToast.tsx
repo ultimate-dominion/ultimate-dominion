@@ -1,10 +1,12 @@
 import { useToast } from '@chakra-ui/react';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLeaderboardRank } from '../hooks/useLeaderboardRank';
 
 const THROTTLE_MS = 5000;
 
 export const RankChangeToast = (): null => {
+  const { t } = useTranslation('ui');
   const toast = useToast();
   const rank = useLeaderboardRank();
   const lastToastTime = useRef(0);
@@ -35,7 +37,7 @@ export const RankChangeToast = (): null => {
       const arrow = statsRankDelta > 0 ? '\u25B2' : '\u25BC';
       const prevRank = statsRank - statsRankDelta;
       toast({
-        description: `Stats Rank: #${prevRank} \u2192 #${statsRank} ${arrow}${Math.abs(statsRankDelta)}`,
+        description: t('leaderboard.statsRankChange', { prevRank, rank: statsRank, arrow, delta: Math.abs(statsRankDelta) }),
         status: statsRankDelta > 0 ? 'success' : 'warning',
         position: 'bottom-right',
         duration: 3500,
@@ -47,7 +49,7 @@ export const RankChangeToast = (): null => {
       const arrow = goldRankDelta > 0 ? '\u25B2' : '\u25BC';
       const prevRank = goldRank - goldRankDelta;
       toast({
-        description: `Gold Rank: #${prevRank} \u2192 #${goldRank} ${arrow}${Math.abs(goldRankDelta)}`,
+        description: t('leaderboard.goldRankChange', { prevRank, rank: goldRank, arrow, delta: Math.abs(goldRankDelta) }),
         status: goldRankDelta > 0 ? 'success' : 'warning',
         position: 'bottom-right',
         duration: 3500,

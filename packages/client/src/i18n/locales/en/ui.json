@@ -36,7 +36,9 @@
     "allowSpending": "Allow Spending",
     "alwaysAllow": "Always Allow",
     "noCharacter": "No character found. Please select a character.",
-    "walletNotConnected": "Wallet not connected. Please reconnect your wallet."
+    "walletNotConnected": "Wallet not connected. Please reconnect your wallet.",
+    "error": "An error occurred.",
+    "of": "of {{count}}"
   },
   "betaBanner": {
     "message": "Early Access — Things may break. When in doubt, refresh.",
@@ -172,7 +174,10 @@
     "pveShareText": "Slew {{name}} in the Dark Cave.",
     "itemShareText": "Found {{rarity}}{{name}} in Ultimate Dominion. Every item is permanent, on-chain, and mine.",
     "aMonster": "a monster",
-    "fetchFailed": "Failed to fetch looted items."
+    "fetchFailed": "Failed to fetch looted items.",
+    "criticalHit": "Critical hit!",
+    "elitePrefix": "Elite {{name}}",
+    "drawEnd": "The battle ended in a draw."
   },
   "equip": {
     "equipItem": "Equip Item",
@@ -483,13 +488,18 @@
     "maxDamage": "Max Damage:",
     "restrictions": "Restrictions",
     "buyAllowanceSuccess": "Allowance was successful! You can now buy {{name}}",
-    "sellAllowanceSuccess": "Allowance was successful! You can now sell {{name}}"
+    "sellAllowanceSuccess": "Allowance was successful! You can now sell {{name}}",
+    "shopNotFound": "Shop not found",
+    "characterNotFound": "Character not found",
+    "leaveShop": "Leave Shop",
+    "noSellableItems": "No Sellable Items"
   },
   "marketplace": {
     "bought": "Bought {{name}}!",
     "sold": "Sold {{name}}!",
     "notEnoughGold": "Not enough $GOLD",
-    "noListings": "No listings"
+    "noListings": "No listings",
+    "itemNotFound": "Item not found"
   },
   "order": {
     "from": "From: {{name}} ({{address}})",
@@ -819,7 +829,27 @@
     "colWinPct": "Win %",
     "colElo": "ELO",
     "noPvp": "No PvP ratings yet.",
-    "pvpCta": "Challenge other players to climb the ranks!"
+    "pvpCta": "Challenge other players to climb the ranks!",
+    "statsRankChange": "Stats Rank: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}",
+    "goldRankChange": "Gold Rank: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}"
+  },
+  "character": {
+    "notExist": "This character does not exist"
+  },
+  "inventory": {
+    "noArmor": "No armor",
+    "noWeapons": "No weapons",
+    "noSpells": "No spells",
+    "noConsumables": "No consumables"
+  },
+  "npc": {
+    "combatTrainer": "Combat Trainer",
+    "guildFounder": "Guild Founder",
+    "talk": "Talk",
+    "examine": "Examine"
+  },
+  "hud": {
+    "objective": "Objective"
   },
   "zoneExit": {
     "narrative": "A passage opens above. Cold wind rushes through the gap.",

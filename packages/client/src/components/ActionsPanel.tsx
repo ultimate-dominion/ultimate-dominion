@@ -71,7 +71,7 @@ export const ActionsPanel = (): JSX.Element => {
   const opponentDisplayName = useMemo(() => {
     if (!opponent) return t('battle.aMonster');
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
-    return isElite ? `Elite ${opponent.name}` : opponent.name;
+    return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
   }, [opponent]);
 
   const {
@@ -457,7 +457,7 @@ export const ActionsPanel = (): JSX.Element => {
               size={{ base: 'xs', sm: 'sm', lg: 'md' }}
               textAlign="center"
             >
-              The battle ended in a draw.
+              {t('battle.drawEnd')}
             </Text>
           ) : (
             <Text
@@ -924,7 +924,7 @@ export const ActionsPanel = (): JSX.Element => {
                 <Box>
                   <Text size={logSize}>
                     {isCrit && (
-                      <Text as="span" color="#C87A2A" fontWeight={700}>Critical hit! </Text>
+                      <Text as="span" color="#C87A2A" fontWeight={700}>{t('battle.criticalHit')} </Text>
                     )}
                     {isPlayerAttack ? (
                       <Text as="span">

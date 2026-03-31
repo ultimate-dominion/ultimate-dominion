@@ -1,5 +1,6 @@
 import { Button, HStack, Input, Text } from '@chakra-ui/react';
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaBackwardStep, FaForwardStep } from 'react-icons/fa6';
 import { IoCaretBack, IoCaretForward } from 'react-icons/io5';
 
@@ -18,6 +19,7 @@ export const Pagination = ({
   setPage: (n: number) => void;
   setPageLimit: (n: number) => void;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const pageNumber = useMemo(() => {
     if (isNaN(Number(page))) {
       return 1;
@@ -75,7 +77,7 @@ export const Pagination = ({
         value={page === 0 ? '' : page}
         w={10}
       />
-      <Text size="sm">of {pageLimit}</Text>
+      <Text size="sm">{t('common.of', { count: pageLimit })}</Text>
       <Button
         onClick={() =>
           setPage(pageNumber < pageLimit ? pageNumber + 1 : pageNumber)
