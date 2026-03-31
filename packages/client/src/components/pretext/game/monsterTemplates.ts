@@ -1,16 +1,16 @@
 /**
- * Monster silhouette templates for ASCII rendering — v4 (Full Color)
+ * Monster silhouette templates for ASCII rendering — v5 (Bright Color)
  *
  * All monsters in side/3/4 profile facing RIGHT (Pokemon battle style).
- * Each template draws in its OWN D&D-inspired color palette.
- * The renderer samples RGB directly for full-color ASCII rendering.
+ * Each template draws in BRIGHT, saturated colors — the renderer's
+ * lighting and gamma curve handles the mood. Paint bright, display moody.
  *
- * Design principles:
- * - Side/3/4 profile: identifiable from silhouette alone ("who's that Pokemon?" test)
- * - Hard edges with colored gradient shading for 3D volume
- * - Distinct anatomy: visible limbs, jaws, tails, wings, horns
- * - Each monster has a unique color identity (D&D Monster Manual style)
- * - Fine detail strokes for muscle, bone, scale texture
+ * Design principles (from D&D Monster Manual study):
+ * - Paint bright: let the renderer darken. Dark templates → invisible on black bg.
+ * - Rim highlights: bright edges define the silhouette (renderer adds rim lighting)
+ * - Accent anchors: eyes, teeth, claws are NEAR-WHITE for readability
+ * - Saturated colors even in shadow: hue-shift shadows, don't just darken to gray
+ * - High contrast: deepest darks AND brightest whites in the same creature
  */
 
 export type MonsterTemplate = {
@@ -32,22 +32,22 @@ export type MonsterTemplate = {
 // Shading helpers — now color-aware
 // ---------------------------------------------------------------------------
 
-/** Colored radial gradient with HARD edge — shape reads clearly */
+/** Colored radial gradient — less aggressive falloff for dark-bg visibility */
 function bodyGrad(
   ctx: CanvasRenderingContext2D,
   cx: number, cy: number, r: number,
   coreR: number, coreG: number, coreB: number,
   midR?: number, midG?: number, midB?: number,
 ): CanvasGradient {
-  const mR = midR ?? Math.floor(coreR * 0.75);
-  const mG = midG ?? Math.floor(coreG * 0.75);
-  const mB = midB ?? Math.floor(coreB * 0.75);
+  const mR = midR ?? Math.floor(coreR * 0.8);
+  const mG = midG ?? Math.floor(coreG * 0.8);
+  const mB = midB ?? Math.floor(coreB * 0.8);
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
   g.addColorStop(0, `rgb(${coreR},${coreG},${coreB})`);
   g.addColorStop(0.5, `rgb(${mR},${mG},${mB})`);
-  g.addColorStop(0.8, `rgb(${Math.floor(coreR * 0.4)},${Math.floor(coreG * 0.4)},${Math.floor(coreB * 0.4)})`);
-  g.addColorStop(0.95, `rgb(${Math.floor(coreR * 0.2)},${Math.floor(coreG * 0.2)},${Math.floor(coreB * 0.2)})`);
-  g.addColorStop(1, `rgb(${Math.floor(coreR * 0.05)},${Math.floor(coreG * 0.05)},${Math.floor(coreB * 0.05)})`);
+  g.addColorStop(0.75, `rgb(${Math.floor(coreR * 0.55)},${Math.floor(coreG * 0.55)},${Math.floor(coreB * 0.55)})`);
+  g.addColorStop(0.9, `rgb(${Math.floor(coreR * 0.35)},${Math.floor(coreG * 0.35)},${Math.floor(coreB * 0.35)})`);
+  g.addColorStop(1, `rgb(${Math.floor(coreR * 0.18)},${Math.floor(coreG * 0.18)},${Math.floor(coreB * 0.18)})`);
   return g;
 }
 
@@ -101,8 +101,8 @@ function drawLimb(
 // Side profile: hunched rodent, long snout, big ears, bald tail, clawed feet
 // ---------------------------------------------------------------------------
 function drawDireRat(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // Main body — horizontal mass, hunched (dark brown fur)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.45, h * 0.45, w * 0.22, 140, 110, 80);
+  // Main body — horizontal mass, hunched (warm brown fur)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.45, h * 0.45, w * 0.22, 185, 150, 110);
   ctx.beginPath();
   ctx.moveTo(w * 0.25, h * 0.30);
   ctx.bezierCurveTo(w * 0.35, h * 0.22, w * 0.55, h * 0.22, w * 0.65, h * 0.30);
@@ -116,11 +116,11 @@ function drawDireRat(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fill();
 
   // Haunches — rear bulk
-  ctx.fillStyle = bodyGrad(ctx, w * 0.60, h * 0.42, w * 0.14, 130, 100, 70);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.60, h * 0.42, w * 0.14, 170, 135, 95);
   fillEllipse(ctx, w * 0.60, h * 0.42, w * 0.13, h * 0.16);
 
   // Head — angular, rodent skull
-  ctx.fillStyle = bodyGrad(ctx, w * 0.18, h * 0.38, w * 0.10, 120, 95, 70);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.18, h * 0.38, w * 0.10, 165, 130, 95);
   ctx.beginPath();
   ctx.moveTo(w * 0.22, h * 0.28);
   ctx.bezierCurveTo(w * 0.14, h * 0.26, w * 0.08, h * 0.32, w * 0.06, h * 0.38);
@@ -267,8 +267,8 @@ function drawFungalShaman(ctx: CanvasRenderingContext2D, w: number, h: number) {
     fillCircle(ctx, w * 0.70 + Math.cos(angle) * w * 0.06, h * 0.08 + Math.sin(angle) * h * 0.05, w * 0.025);
   }
 
-  // Body — thin, slight hunch (mushroom flesh)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.55, w * 0.12, 130, 105, 70, 110, 85, 55);
+  // Body — thin, slight hunch (mushroom flesh — brighter)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.55, w * 0.12, 175, 140, 95, 150, 115, 75);
   ctx.beginPath();
   ctx.moveTo(w * 0.35, h * 0.35);
   ctx.bezierCurveTo(w * 0.30, h * 0.40, w * 0.28, h * 0.55, w * 0.30, h * 0.70);
@@ -277,8 +277,8 @@ function drawFungalShaman(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.bezierCurveTo(w * 0.44, h * 0.34, w * 0.38, h * 0.33, w * 0.35, h * 0.35);
   ctx.fill();
 
-  // Mushroom cap — large dome, distinctive (deep purple)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.38, h * 0.18, w * 0.22, 130, 55, 140, 100, 40, 110);
+  // Mushroom cap — large dome, distinctive (vivid purple)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.38, h * 0.18, w * 0.22, 180, 75, 195, 145, 55, 160);
   ctx.beginPath();
   ctx.moveTo(w * 0.18, h * 0.30);
   ctx.bezierCurveTo(w * 0.15, h * 0.20, w * 0.18, h * 0.08, w * 0.28, h * 0.04);
@@ -347,8 +347,8 @@ function drawFungalShaman(ctx: CanvasRenderingContext2D, w: number, h: number) {
 // 3/4 view: gorilla-like, massive arms, broad hunched shoulders, small head
 // ---------------------------------------------------------------------------
 function drawCavernBrute(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // Massive torso — hunched, broad shoulders (stone/earth)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.42, h * 0.38, w * 0.26, 140, 120, 90, 120, 100, 75);
+  // Massive torso — hunched, broad shoulders (warm stone/earth)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.42, h * 0.38, w * 0.26, 185, 160, 125, 160, 140, 105);
   ctx.beginPath();
   ctx.moveTo(w * 0.25, h * 0.18);
   ctx.bezierCurveTo(w * 0.15, h * 0.22, w * 0.12, h * 0.35, w * 0.15, h * 0.55);
@@ -555,8 +555,8 @@ function drawCrystalElemental(ctx: CanvasRenderingContext2D, w: number, h: numbe
 // 3/4 side view: hulking, hunched, long arms, thick hide, angry face
 // ---------------------------------------------------------------------------
 function drawIronhideTroll(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // Massive torso — heavily hunched (moss green)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.40, w * 0.25, 85, 130, 65, 70, 110, 50);
+  // Massive torso — heavily hunched (vivid moss green)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.40, w * 0.25, 125, 190, 95, 105, 165, 75);
   ctx.beginPath();
   ctx.moveTo(w * 0.30, h * 0.15);
   ctx.bezierCurveTo(w * 0.20, h * 0.18, w * 0.14, h * 0.30, w * 0.16, h * 0.50);
@@ -567,11 +567,11 @@ function drawIronhideTroll(ctx: CanvasRenderingContext2D, w: number, h: number) 
   ctx.fill();
 
   // Hunch/shoulder mass (lighter green)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.45, h * 0.18, w * 0.18, 100, 145, 75, 80, 120, 55);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.45, h * 0.18, w * 0.18, 140, 200, 110, 115, 175, 85);
   fillEllipse(ctx, w * 0.45, h * 0.18, w * 0.18, h * 0.10);
 
   // Head — small, forward-jutting
-  ctx.fillStyle = bodyGrad(ctx, w * 0.25, h * 0.08, w * 0.08, 75, 115, 55, 60, 95, 40);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.25, h * 0.08, w * 0.08, 110, 170, 80, 90, 140, 60);
   ctx.beginPath();
   ctx.moveTo(w * 0.22, h * 0.04);
   ctx.bezierCurveTo(w * 0.18, h * 0.02, w * 0.15, h * 0.05, w * 0.15, h * 0.10);
@@ -607,7 +607,7 @@ function drawIronhideTroll(ctx: CanvasRenderingContext2D, w: number, h: number) 
   ctx.fill();
 
   // Left arm — massive, reaching down/forward (moss green)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.12, h * 0.45, w * 0.10, 80, 125, 60, 65, 105, 45);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.12, h * 0.45, w * 0.10, 120, 180, 90, 100, 155, 70);
   ctx.beginPath();
   ctx.moveTo(w * 0.18, h * 0.25);
   ctx.bezierCurveTo(w * 0.10, h * 0.30, w * 0.04, h * 0.50, w * 0.06, h * 0.68);
@@ -617,7 +617,7 @@ function drawIronhideTroll(ctx: CanvasRenderingContext2D, w: number, h: number) 
   ctx.fill();
 
   // Right arm (far side, darker green)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.68, h * 0.45, w * 0.08, 65, 105, 45, 50, 80, 30);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.68, h * 0.45, w * 0.08, 95, 150, 70, 75, 120, 50);
   ctx.beginPath();
   ctx.moveTo(w * 0.62, h * 0.25);
   ctx.bezierCurveTo(w * 0.72, h * 0.35, w * 0.76, h * 0.50, w * 0.74, h * 0.65);
@@ -667,7 +667,7 @@ function drawIronhideTroll(ctx: CanvasRenderingContext2D, w: number, h: number) 
 // ---------------------------------------------------------------------------
 function drawPhaseSpider(ctx: CanvasRenderingContext2D, w: number, h: number) {
   // Far-side legs (drawn first, behind body — dark purple)
-  const farLegColor = 'rgb(55,45,75)';
+  const farLegColor = 'rgb(100,85,150)';
   const farLegs: [number, number, number, number, number, number][] = [
     [0.42, 0.38, 0.52, 0.22, 0.62, 0.08],
     [0.48, 0.40, 0.60, 0.30, 0.72, 0.18],
@@ -684,8 +684,8 @@ function drawPhaseSpider(ctx: CanvasRenderingContext2D, w: number, h: number) {
     ctx.stroke();
   }
 
-  // Abdomen — large, round, rear (deep purple-blue)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.58, h * 0.45, w * 0.18, 55, 40, 100, 45, 30, 80);
+  // Abdomen — large, round, rear (rich purple-blue)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.58, h * 0.45, w * 0.18, 115, 90, 200, 95, 70, 170);
   ctx.beginPath();
   ctx.moveTo(w * 0.45, h * 0.32);
   ctx.bezierCurveTo(w * 0.50, h * 0.24, w * 0.68, h * 0.24, w * 0.75, h * 0.35);
@@ -705,11 +705,11 @@ function drawPhaseSpider(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fill();
 
   // Thorax — smaller, front (blue-purple)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.32, h * 0.40, w * 0.10, 75, 65, 120, 60, 50, 100);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.32, h * 0.40, w * 0.10, 130, 115, 210, 105, 90, 180);
   fillEllipse(ctx, w * 0.32, h * 0.40, w * 0.10, h * 0.08);
 
   // Head — small, with fangs
-  ctx.fillStyle = bodyGrad(ctx, w * 0.20, h * 0.38, w * 0.06, 85, 75, 130, 70, 60, 110);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.20, h * 0.38, w * 0.06, 140, 125, 215, 115, 100, 185);
   fillEllipse(ctx, w * 0.20, h * 0.38, w * 0.06, h * 0.05);
 
   // Eyes — cluster of 8 (eerie green glow)
@@ -747,7 +747,7 @@ function drawPhaseSpider(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.stroke();
 
   // Near-side legs (drawn on top of body — lighter purple)
-  const nearLegColor = 'rgb(95,85,140)';
+  const nearLegColor = 'rgb(145,130,210)';
   const nearLegs: [number, number, number, number, number, number][] = [
     [0.28, 0.46, 0.18, 0.30, 0.08, 0.14],
     [0.32, 0.48, 0.22, 0.40, 0.10, 0.28],
@@ -783,8 +783,8 @@ function drawPhaseSpider(ctx: CanvasRenderingContext2D, w: number, h: number) {
 // Side view: skeletal robed figure, skull head, staff with floating bone
 // ---------------------------------------------------------------------------
 function drawBonecaster(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // Robe — flowing, tattered bottom (near-black brown)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.55, w * 0.18, 55, 38, 32, 40, 28, 22);
+  // Robe — flowing, tattered bottom (dark brown with visible folds)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.55, w * 0.18, 85, 60, 50, 65, 45, 35);
   ctx.beginPath();
   ctx.moveTo(w * 0.30, h * 0.28);
   ctx.bezierCurveTo(w * 0.24, h * 0.35, w * 0.20, h * 0.55, w * 0.18, h * 0.75);
@@ -805,8 +805,8 @@ function drawBonecaster(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillStyle = sideLight(ctx, w * 0.20, h * 0.30, w * 0.60, h * 0.70, 60, 45, 35);
   ctx.fill();
 
-  // Hood (darker brown-black)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.35, h * 0.18, w * 0.12, 50, 35, 28, 35, 22, 16);
+  // Hood (dark brown)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.35, h * 0.18, w * 0.12, 75, 52, 42, 55, 38, 28);
   ctx.beginPath();
   ctx.moveTo(w * 0.28, h * 0.28);
   ctx.bezierCurveTo(w * 0.22, h * 0.22, w * 0.22, h * 0.10, w * 0.30, h * 0.05);
@@ -825,7 +825,7 @@ function drawBonecaster(ctx: CanvasRenderingContext2D, w: number, h: number) {
   fillCircle(ctx, w * 0.32, h * 0.16, w * 0.010);
   fillCircle(ctx, w * 0.40, h * 0.16, w * 0.010);
   // Glowing pupils (NECROTIC GREEN)
-  ctx.fillStyle = 'rgb(80,220,60)';
+  ctx.fillStyle = 'rgb(110,255,80)';
   fillCircle(ctx, w * 0.32, h * 0.16, w * 0.005);
   fillCircle(ctx, w * 0.40, h * 0.16, w * 0.005);
   // Nasal cavity (bone)
@@ -869,7 +869,7 @@ function drawBonecaster(ctx: CanvasRenderingContext2D, w: number, h: number) {
   fillCircle(ctx, w * 0.70, h * 0.05, w * 0.008);
   fillCircle(ctx, w * 0.74, h * 0.05, w * 0.008);
   // Staff skull glowing eyes (necrotic green)
-  ctx.fillStyle = 'rgb(80,220,60)';
+  ctx.fillStyle = 'rgb(110,255,80)';
   fillCircle(ctx, w * 0.70, h * 0.05, w * 0.004);
   fillCircle(ctx, w * 0.74, h * 0.05, w * 0.004);
 
@@ -899,8 +899,8 @@ function drawBonecaster(ctx: CanvasRenderingContext2D, w: number, h: number) {
 // 3/4 view: massive stone humanoid, chunky angular, cracks, mossy
 // ---------------------------------------------------------------------------
 function drawRockGolem(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // Massive torso — rectangular, stone (stone gray)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.42, h * 0.35, w * 0.25, 140, 135, 120, 120, 115, 100);
+  // Massive torso — rectangular, stone (bright stone gray)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.42, h * 0.35, w * 0.25, 185, 180, 160, 160, 155, 135);
   ctx.beginPath();
   ctx.moveTo(w * 0.22, h * 0.12);
   ctx.lineTo(w * 0.62, h * 0.12);
@@ -916,7 +916,7 @@ function drawRockGolem(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fill();
 
   // Head — angular, flat-topped (lighter stone)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.06, w * 0.12, 155, 150, 135, 135, 130, 115);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.06, w * 0.12, 195, 190, 175, 175, 170, 155);
   ctx.beginPath();
   ctx.moveTo(w * 0.30, h * 0.12);
   ctx.lineTo(w * 0.28, h * 0.04);
@@ -1162,8 +1162,8 @@ function drawDuskDrake(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.closePath();
   ctx.fill();
 
-  // Body — muscular, horizontal (rich purple)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.48, h * 0.48, w * 0.20, 130, 75, 150, 110, 60, 130);
+  // Body — muscular, horizontal (vivid purple)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.48, h * 0.48, w * 0.20, 175, 105, 205, 150, 85, 180);
   ctx.beginPath();
   ctx.moveTo(w * 0.32, h * 0.38);
   ctx.bezierCurveTo(w * 0.40, h * 0.32, w * 0.56, h * 0.32, w * 0.68, h * 0.38);
@@ -1178,7 +1178,7 @@ function drawDuskDrake(ctx: CanvasRenderingContext2D, w: number, h: number) {
 
   // Wings — large, spread upward (the defining feature)
   // Near wing (detailed — purple membrane)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.20, w * 0.22, 110, 60, 130, 85, 45, 100);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.20, w * 0.22, 155, 90, 185, 125, 65, 150);
   ctx.beginPath();
   ctx.moveTo(w * 0.40, h * 0.38);
   ctx.bezierCurveTo(w * 0.35, h * 0.28, w * 0.28, h * 0.14, w * 0.20, h * 0.04);
@@ -1203,7 +1203,7 @@ function drawDuskDrake(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.stroke();
 
   // Far wing (simpler, behind body — very dark purple)
-  ctx.fillStyle = 'rgb(50,30,65)';
+  ctx.fillStyle = 'rgb(90,55,120)';
   ctx.beginPath();
   ctx.moveTo(w * 0.55, h * 0.36);
   ctx.bezierCurveTo(w * 0.58, h * 0.22, w * 0.62, h * 0.10, w * 0.68, h * 0.02);
@@ -1213,7 +1213,7 @@ function drawDuskDrake(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fill();
 
   // Neck — serpentine S-curve (bright purple)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.22, h * 0.32, w * 0.08, 140, 85, 160, 120, 70, 140);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.22, h * 0.32, w * 0.08, 185, 120, 215, 160, 100, 190);
   ctx.beginPath();
   ctx.moveTo(w * 0.32, h * 0.40);
   ctx.bezierCurveTo(w * 0.26, h * 0.38, w * 0.18, h * 0.34, w * 0.14, h * 0.28);
@@ -1224,7 +1224,7 @@ function drawDuskDrake(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fill();
 
   // Head — angular, reptilian, jaws (lighter purple)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.12, h * 0.18, w * 0.07, 150, 95, 170, 130, 80, 150);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.12, h * 0.18, w * 0.07, 195, 130, 225, 170, 110, 200);
   ctx.beginPath();
   ctx.moveTo(w * 0.14, h * 0.16);
   ctx.bezierCurveTo(w * 0.10, h * 0.14, w * 0.04, h * 0.15, w * 0.02, h * 0.18);
@@ -1300,8 +1300,8 @@ function drawDuskDrake(ctx: CanvasRenderingContext2D, w: number, h: number) {
 // Side view: massive serpent king, enormous head, crowned, coiling body
 // ---------------------------------------------------------------------------
 function drawBasilisk(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // Coiling body — massive serpentine form (rich brown)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.55, h * 0.55, w * 0.25, 140, 95, 45, 120, 80, 35);
+  // Coiling body — massive serpentine form (rich warm brown)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.55, h * 0.55, w * 0.25, 190, 135, 65, 165, 115, 50);
 
   // Lower coil
   ctx.beginPath();
@@ -1314,7 +1314,7 @@ function drawBasilisk(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fill();
 
   // Upper body — rising from coil (lighter brown)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.30, h * 0.30, w * 0.18, 165, 115, 55, 140, 95, 45);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.30, h * 0.30, w * 0.18, 210, 155, 80, 185, 130, 65);
   ctx.beginPath();
   ctx.moveTo(w * 0.34, h * 0.52);
   ctx.bezierCurveTo(w * 0.28, h * 0.45, w * 0.22, h * 0.35, w * 0.20, h * 0.25);
@@ -1324,8 +1324,8 @@ function drawBasilisk(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.closePath();
   ctx.fill();
 
-  // Head — massive, crowned, the boss focal point (brown)
-  ctx.fillStyle = bodyGrad(ctx, w * 0.18, h * 0.14, w * 0.12, 155, 105, 50, 135, 90, 40);
+  // Head — massive, crowned, the boss focal point (warm brown)
+  ctx.fillStyle = bodyGrad(ctx, w * 0.18, h * 0.14, w * 0.12, 200, 145, 75, 175, 125, 60);
   ctx.beginPath();
   ctx.moveTo(w * 0.22, h * 0.10);
   ctx.bezierCurveTo(w * 0.16, h * 0.06, w * 0.08, h * 0.08, w * 0.04, h * 0.14);
@@ -1334,8 +1334,8 @@ function drawBasilisk(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.bezierCurveTo(w * 0.30, h * 0.16, w * 0.28, h * 0.12, w * 0.22, h * 0.10);
   ctx.fill();
 
-  // Crown/crest — THREE spikes, boss marker (DEEP RED — boss accent)
-  ctx.fillStyle = 'rgb(200,45,35)';
+  // Crown/crest — THREE spikes, boss marker (VIVID RED — boss accent)
+  ctx.fillStyle = 'rgb(240,60,45)';
   ctx.beginPath();
   ctx.moveTo(w * 0.12, h * 0.08);
   ctx.lineTo(w * 0.10, h * -0.02);
