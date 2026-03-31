@@ -62,6 +62,9 @@ export class Broadcaster {
         case 'ping':
           this.send(client, { type: 'pong' });
           break;
+        case 'chat:auth':
+          this.chatHandler?.handleAuth(client, msg);
+          break;
         case 'chat:send':
           this.chatHandler?.handleSend(client, msg).catch((err) =>
             console.error('[ws] chat:send error:', err)

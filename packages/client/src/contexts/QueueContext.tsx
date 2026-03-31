@@ -175,6 +175,10 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 
     wsRef.current.onopen = () => {
       reconnectAttempts.current = 0;
+      // Authenticate chat identity on connect
+      if (wallet && wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'chat:auth', address: wallet }));
+      }
       // Start heartbeat (only when tab is visible)
       if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
       if (!document.hidden) {

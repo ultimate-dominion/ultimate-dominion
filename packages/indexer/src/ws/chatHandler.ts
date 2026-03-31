@@ -42,19 +42,27 @@ function decodeCharacterName(raw: unknown): string | null {
 async function resolveCharacter(
   walletAddress: string,
   charactersTable: string,
-): Promise<{ name: string; characterId: string } | null> {
+  statsTable?: string,
+): Promise<{ name: string; characterId: string; level: number } | null> {
   if (!walletAddress || !walletAddress.startsWith('0x') || walletAddress.length < 42) return null;
   try {
     const walletBytes = Buffer.from(walletAddress.slice(2, 42), 'hex');
-    const rows = await sql.unsafe(`
-      SELECT "name", encode("__key_bytes", 'hex') as key_hex
-      FROM "${mudSchema}"."${charactersTable}"
-      WHERE substring("__key_bytes" from 1 for 20) = $1 LIMIT 1
-    `, [walletBytes]);
+
+    // Join with Stats table to get level if available
+    const query = statsTable
+      ? `SELECT c."name", encode(c."__key_bytes", 'hex') as key_hex, COALESCE(s."level", 1) as level
+         FROM "${mudSchema}"."${charactersTable}" c
+         LEFT JOIN "${mudSchema}"."${statsTable}" s ON c."__key_bytes" = s."__key_bytes"
+         WHERE substring(c."__key_bytes" from 1 for 20) = $1 LIMIT 1`
+      : `SELECT "name", encode("__key_bytes", 'hex') as key_hex, 1 as level
+         FROM "${mudSchema}"."${charactersTable}"
+         WHERE substring("__key_bytes" from 1 for 20) = $1 LIMIT 1`;
+
+    const rows = await sql.unsafe(query, [walletBytes]);
     if (rows.length === 0) return null;
     const name = decodeCharacterName(rows[0].name);
     if (!name) return null;
-    return { name, characterId: '0x' + rows[0].key_hex };
+    return { name, characterId: '0x' + rows[0].key_hex, level: Number(rows[0].level) };
   } catch {
     return null;
   }
@@ -99,6 +107,7 @@ async function isGuildMember(
 }
 
 export type ChatHandler = {
+  handleAuth(client: ChatClient, msg: Extract<ClientMessage, { type: 'chat:auth' }>): void;
   handleSend(client: ChatClient, msg: Extract<ClientMessage, { type: 'chat:send' }>): Promise<void>;
   handleHistory(client: ChatClient, msg: Extract<ClientMessage, { type: 'chat:history' }>): Promise<void>;
   handleJoin(client: ChatClient, msg: Extract<ClientMessage, { type: 'chat:join' }>): Promise<void>;
@@ -141,6 +150,20 @@ export function createChatHandler(broadcaster: Broadcaster, syncHandle: SyncHand
   }, 5 * 60_000).unref();
 
   return {
+    handleAuth(client, msg) {
+      const { address } = msg;
+      if (!address || typeof address !== 'string' || !address.startsWith('0x') || address.length < 42) {
+        broadcaster.sendToClient(client, { type: 'chat:error', code: 'invalid_address', message: 'Invalid wallet address' });
+        return;
+      }
+      // Lock identity — once set, cannot be changed (prevents mid-session hijacking)
+      if (client.walletAddress) {
+        // Already authenticated, ignore subsequent auth attempts
+        return;
+      }
+      client.walletAddress = address.toLowerCase();
+    },
+
     async handleSend(client, msg) {
       const { channel, content, senderAddress } = msg;
 
@@ -166,6 +189,7 @@ export function createChatHandler(broadcaster: Broadcaster, syncHandle: SyncHand
 
       // Establish identity on first send, then use server-verified address
       const charactersTable = syncHandle.tableNameMap.get('Characters');
+      const statsTable = syncHandle.tableNameMap.get('Stats');
       if (!charactersTable) {
         broadcaster.sendToClient(client, { type: 'chat:error', code: 'server_error', message: 'Server not ready' });
         return;
@@ -178,9 +202,15 @@ export function createChatHandler(broadcaster: Broadcaster, syncHandle: SyncHand
         return;
       }
 
-      const charInfo = await resolveCharacter(walletAddr, charactersTable);
+      const charInfo = await resolveCharacter(walletAddr, charactersTable, statsTable);
       if (!charInfo) {
         broadcaster.sendToClient(client, { type: 'chat:error', code: 'no_character', message: 'You need a character to chat' });
+        return;
+      }
+
+      // Require level 3+ to chat (anti-bot measure)
+      if (charInfo.level < 3) {
+        broadcaster.sendToClient(client, { type: 'chat:error', code: 'level_required', message: 'Reach level 3 to unlock chat' });
         return;
       }
 

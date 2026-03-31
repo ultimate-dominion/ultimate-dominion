@@ -77,16 +77,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ inline = false }) => {
         bgColor="blue500"
         h={inline ? '28px' : { base: '40px', md: '28px' }}
         px={2}
+        role="tablist"
         spacing={0}
         w="100%"
       >
         {tabs.map(tab => (
           <HStack
             key={tab.key}
+            aria-selected={activeTab === tab.key}
             as="button"
             cursor="pointer"
             h="100%"
             px={2}
+            role="tab"
             spacing={1}
             borderBottom={activeTab === tab.key ? '2px solid #C87A2A' : '2px solid transparent'}
             onClick={() => setActiveTab(tab.key)}
@@ -148,6 +151,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ inline = false }) => {
         h={inline ? undefined : { base: '300px', sm: '350px' }}
         overflowY="auto"
         bg="#14120F"
+        role="tabpanel"
       >
         {activeTab === 'world' && <WorldTab messages={worldMessages} />}
         {activeTab === 'global' && <ChatTab messages={globalMessages} />}

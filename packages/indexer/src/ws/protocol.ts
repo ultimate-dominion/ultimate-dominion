@@ -47,6 +47,7 @@ export type ClientMessage =
   | { type: 'subscribe'; tables: string[] }
   | { type: 'ping' }
   | { type: 'resume'; lastBlock: number }
+  | { type: 'chat:auth'; address: string }
   | { type: 'chat:send'; channel: ChatChannel; content: string; senderAddress: string }
   | { type: 'chat:history'; channel: ChatChannel; before?: number }
   | { type: 'chat:join'; channel: ChatChannel }
