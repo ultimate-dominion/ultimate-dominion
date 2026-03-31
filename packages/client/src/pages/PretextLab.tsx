@@ -16,13 +16,14 @@ import { ZoneTransition } from '../components/pretext/ZoneTransition';
 import { AncientMapView } from '../components/pretext/AncientMapView';
 import { LoreFragment } from '../components/pretext/LoreFragment';
 import { ChatBubbles } from '../components/pretext/ChatBubbles';
+import { MonsterGallery } from '../components/pretext/game/MonsterGallery';
 
 type Demo = {
   id: string;
   name: string;
   description: string;
   component: React.ComponentType;
-  category: 'quick' | 'narrative' | 'spectacle' | 'experimental';
+  category: 'game' | 'quick' | 'narrative' | 'spectacle' | 'experimental';
 };
 
 const DEMOS: Demo[] = [
@@ -43,16 +44,19 @@ const DEMOS: Demo[] = [
   { id: 'ancient-map', name: 'Ancient Map', description: 'Typographic terrain map', component: AncientMapView, category: 'experimental' },
   { id: 'lore-fragment', name: 'Lore Fragment', description: 'Illuminated manuscript page', component: LoreFragment, category: 'experimental' },
   { id: 'chat-bubbles', name: 'Chat Bubbles', description: 'Pre-measured tight message bubbles', component: ChatBubbles, category: 'experimental' },
+  // Game integration
+  { id: 'monster-gallery', name: 'Monster Gallery', description: 'All 11 Z1 monsters as ASCII art', component: MonsterGallery, category: 'game' },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
+  game: 'Game Integration',
   quick: 'Quick Wins',
   narrative: 'Narrative + Combat',
   spectacle: 'Spectacle',
   experimental: 'Experimental',
 };
 
-const CATEGORY_ORDER = ['quick', 'narrative', 'spectacle', 'experimental'];
+const CATEGORY_ORDER = ['game', 'quick', 'narrative', 'spectacle', 'experimental'];
 
 export function PretextLab() {
   const [activeDemo, setActiveDemo] = useState(DEMOS[0].id);
