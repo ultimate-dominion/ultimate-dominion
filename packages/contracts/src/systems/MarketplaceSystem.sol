@@ -112,6 +112,9 @@ contract MarketplaceSystem is System, ReentrancyGuard {
         uint256 feeAmount = (goldAmount * feePercent) / 10000;
         uint256 sellerAmount = goldAmount - feeAmount;
 
+        // CEI: mark fulfilled before transfers to prevent re-entrancy vectors
+        Orders.setOrderStatus(orderHash, OrderStatus.Fulfilled);
+
         // Transfer gold with fee deduction
         if (o.tokenType == TokenType.ERC20) {
             // Gold was in escrow, distribute from there
@@ -130,9 +133,6 @@ contract MarketplaceSystem is System, ReentrancyGuard {
             // Transfer item from escrow to buyer
             _transferItemDirect(ESCROW_ADDRESS, itemReceiver, o.identifier, o.amount);
         }
-
-        // set order status to fulfilled (only update the status field — preserve original offerer)
-        Orders.setOrderStatus(orderHash, OrderStatus.Fulfilled);
 
         MarketplaceSaleData memory sale = MarketplaceSaleData({
             buyer: o.tokenType == TokenType.ERC20 ? c.recipient : _msgSender(),
