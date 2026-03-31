@@ -125,10 +125,14 @@ export function PretextLab() {
 
   return (
     <Flex
+      position="fixed"
+      top={0}
+      left={0}
       w="100vw"
       h="100vh"
       bg={COLORS.bg}
       overflow="hidden"
+      zIndex={1000}
     >
       {/* Desktop sidebar */}
       {!isMobile && (
