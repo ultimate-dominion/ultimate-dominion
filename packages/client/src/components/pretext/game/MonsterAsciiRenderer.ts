@@ -498,6 +498,27 @@ export function renderMonster(
     : -1;
 
   // -----------------------------------------------------------------------
+  // Atmospheric background glow
+  // -----------------------------------------------------------------------
+
+  if (template.atmosphere) {
+    const atm = template.atmosphere;
+    const glowCX = centerX + renderW / 2;
+    const glowCY = centerY + renderH * 0.42;
+    const glowR = Math.max(renderW, renderH) * 0.65;
+    const grad = ctx.createRadialGradient(glowCX, glowCY, 0, glowCX, glowCY, glowR);
+    grad.addColorStop(0, `rgba(${atm.r},${atm.g},${atm.b},${atm.intensity})`);
+    grad.addColorStop(0.35, `rgba(${atm.r},${atm.g},${atm.b},${atm.intensity * 0.5})`);
+    grad.addColorStop(0.7, `rgba(${atm.r},${atm.g},${atm.b},${atm.intensity * 0.15})`);
+    grad.addColorStop(1, `rgba(${atm.r},${atm.g},${atm.b},0)`);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, width, height);
+    ctx.restore();
+  }
+
+  // -----------------------------------------------------------------------
   // Ground shadow
   // -----------------------------------------------------------------------
 
@@ -579,10 +600,13 @@ export function renderMonster(
 
       // Character selection based on luminance (lit)
       const litLum = Math.min(1, color.lum * lightMul);
+      // Floor character density — dim pixels still get visible characters
+      // Without this, dim areas map to '.' or ',' which are invisible on black bg
+      const charLum = Math.max(0.30, litLum);
       let bestIdx = 0;
       let bestDiff = 1;
       for (let i = 0; i < brightness.length; i++) {
-        const diff = Math.abs(brightness[i] - litLum);
+        const diff = Math.abs(brightness[i] - charLum);
         if (diff < bestDiff) {
           bestDiff = diff;
           bestIdx = i;
@@ -615,8 +639,8 @@ export function renderMonster(
       const r = Math.min(255, Math.floor(Math.pow(Math.min(1, litR), GAMMA) * 255));
       const g = Math.min(255, Math.floor(Math.pow(Math.min(1, litG), GAMMA) * 255));
       const bChan = Math.min(255, Math.floor(Math.pow(Math.min(1, litB), GAMMA) * 255));
-      // High min alpha (0.65) — even dark areas must be visible
-      const a = alpha * (0.65 + litLum * 0.35);
+      // High min alpha (0.75) — even dark areas must be visible against black bg
+      const a = alpha * (0.75 + litLum * 0.25);
 
       const cellIdx = cellCount++;
       const cell = cellBuffer[cellIdx];

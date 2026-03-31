@@ -24,6 +24,8 @@ export type MonsterTemplate = {
   monsterClass: 0 | 1 | 2;
   level: number;
   isBoss?: boolean;
+  /** Atmospheric background glow — colored radial gradient behind creature */
+  atmosphere?: { r: number; g: number; b: number; intensity: number };
   /** Draw silhouette on a pre-filled black canvas at (w x h) pixels */
   draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 };
@@ -32,22 +34,22 @@ export type MonsterTemplate = {
 // Shading helpers — now color-aware
 // ---------------------------------------------------------------------------
 
-/** Colored radial gradient — less aggressive falloff for dark-bg visibility */
+/** Colored radial gradient — slow falloff retains brightness for ASCII visibility */
 function bodyGrad(
   ctx: CanvasRenderingContext2D,
   cx: number, cy: number, r: number,
   coreR: number, coreG: number, coreB: number,
   midR?: number, midG?: number, midB?: number,
 ): CanvasGradient {
-  const mR = midR ?? Math.floor(coreR * 0.8);
-  const mG = midG ?? Math.floor(coreG * 0.8);
-  const mB = midB ?? Math.floor(coreB * 0.8);
+  const mR = midR ?? Math.floor(coreR * 0.9);
+  const mG = midG ?? Math.floor(coreG * 0.9);
+  const mB = midB ?? Math.floor(coreB * 0.9);
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
   g.addColorStop(0, `rgb(${coreR},${coreG},${coreB})`);
-  g.addColorStop(0.5, `rgb(${mR},${mG},${mB})`);
-  g.addColorStop(0.75, `rgb(${Math.floor(coreR * 0.55)},${Math.floor(coreG * 0.55)},${Math.floor(coreB * 0.55)})`);
-  g.addColorStop(0.9, `rgb(${Math.floor(coreR * 0.35)},${Math.floor(coreG * 0.35)},${Math.floor(coreB * 0.35)})`);
-  g.addColorStop(1, `rgb(${Math.floor(coreR * 0.18)},${Math.floor(coreG * 0.18)},${Math.floor(coreB * 0.18)})`);
+  g.addColorStop(0.4, `rgb(${mR},${mG},${mB})`);
+  g.addColorStop(0.7, `rgb(${Math.floor(coreR * 0.70)},${Math.floor(coreG * 0.70)},${Math.floor(coreB * 0.70)})`);
+  g.addColorStop(0.85, `rgb(${Math.floor(coreR * 0.50)},${Math.floor(coreG * 0.50)},${Math.floor(coreB * 0.50)})`);
+  g.addColorStop(1, `rgb(${Math.floor(coreR * 0.30)},${Math.floor(coreG * 0.30)},${Math.floor(coreB * 0.30)})`);
   return g;
 }
 
@@ -77,7 +79,9 @@ function fillCircle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: nu
   fillEllipse(ctx, cx, cy, r, r);
 }
 
-/** Limb stroke with taper */
+/** Organic filled limb — overlapping circles along bezier for mass and taper.
+ * ASCII rendering needs substantial filled area, not thin strokes.
+ * The `thickness` param matches old API but produces 4-6 char wide limbs. */
 function drawLimb(
   ctx: CanvasRenderingContext2D,
   x0: number, y0: number,
@@ -86,14 +90,26 @@ function drawLimb(
   thickness: number,
   color: string,
 ) {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = thickness;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+  ctx.fillStyle = color;
+  const startR = thickness * 2.0;  // start radius — 4x the old stroke
+  const endR = thickness * 1.2;    // end radius — taper
+  const steps = 12;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const mt = 1 - t;
+    // Quadratic bezier point
+    const px = mt * mt * x0 + 2 * mt * t * cx + t * t * x1;
+    const py = mt * mt * y0 + 2 * mt * t * cy + t * t * y1;
+    const r = startR + (endR - startR) * t;
+    ctx.beginPath();
+    ctx.arc(px, py, Math.max(1, r), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Joint shadow at control point for depth
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
   ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.quadraticCurveTo(cx, cy, x1, y1);
-  ctx.stroke();
+  ctx.arc(cx, cy, startR * 0.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // ---------------------------------------------------------------------------
@@ -173,17 +189,17 @@ function drawDireRat(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.closePath();
   ctx.fill();
 
-  // Tail — long, thin, curving upward (pinkish-brown)
+  // Tail — curving upward (pinkish-brown) — thick for ASCII visibility
   ctx.strokeStyle = 'rgb(160,120,100)';
   ctx.lineCap = 'round';
-  ctx.lineWidth = w * 0.018;
+  ctx.lineWidth = w * 0.035;
   ctx.beginPath();
   ctx.moveTo(w * 0.70, h * 0.40);
   ctx.bezierCurveTo(w * 0.78, h * 0.32, w * 0.86, h * 0.22, w * 0.94, h * 0.12);
   ctx.stroke();
   // Taper
   ctx.strokeStyle = 'rgb(140,105,85)';
-  ctx.lineWidth = w * 0.008;
+  ctx.lineWidth = w * 0.018;
   ctx.beginPath();
   ctx.moveTo(w * 0.90, h * 0.16);
   ctx.bezierCurveTo(w * 0.95, h * 0.10, w * 0.98, h * 0.06, w * 0.99, h * 0.04);
@@ -250,7 +266,7 @@ function drawDireRat(ctx: CanvasRenderingContext2D, w: number, h: number) {
 function drawFungalShaman(ctx: CanvasRenderingContext2D, w: number, h: number) {
   // Staff — gnarled stick, held in right hand (woody brown)
   ctx.strokeStyle = 'rgb(90,65,35)';
-  ctx.lineWidth = w * 0.025;
+  ctx.lineWidth = w * 0.045;
   ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(w * 0.70, h * 0.10);
@@ -258,7 +274,7 @@ function drawFungalShaman(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.stroke();
   // Staff knob (bioluminescent green)
   ctx.fillStyle = 'rgb(120,200,60)';
-  fillCircle(ctx, w * 0.70, h * 0.08, w * 0.035);
+  fillCircle(ctx, w * 0.70, h * 0.08, w * 0.05);
 
   // Spore cloud around staff top (green glow)
   ctx.fillStyle = 'rgba(100,200,60,0.15)';
@@ -674,14 +690,8 @@ function drawPhaseSpider(ctx: CanvasRenderingContext2D, w: number, h: number) {
     [0.52, 0.44, 0.64, 0.50, 0.76, 0.62],
     [0.50, 0.48, 0.58, 0.62, 0.68, 0.78],
   ];
-  ctx.strokeStyle = farLegColor;
-  ctx.lineWidth = w * 0.012;
-  ctx.lineCap = 'round';
   for (const [x0, y0, cx, cy, x1, y1] of farLegs) {
-    ctx.beginPath();
-    ctx.moveTo(w * x0, h * y0);
-    ctx.quadraticCurveTo(w * cx, h * cy, w * x1, h * y1);
-    ctx.stroke();
+    drawLimb(ctx, w * x0, h * y0, w * cx, h * cy, w * x1, h * y1, w * 0.014, farLegColor);
   }
 
   // Abdomen — large, round, rear (rich purple-blue)
@@ -754,13 +764,8 @@ function drawPhaseSpider(ctx: CanvasRenderingContext2D, w: number, h: number) {
     [0.42, 0.52, 0.32, 0.64, 0.20, 0.78],
     [0.44, 0.55, 0.40, 0.70, 0.34, 0.88],
   ];
-  ctx.strokeStyle = nearLegColor;
-  ctx.lineWidth = w * 0.015;
   for (const [x0, y0, cx, cy, x1, y1] of nearLegs) {
-    ctx.beginPath();
-    ctx.moveTo(w * x0, h * y0);
-    ctx.quadraticCurveTo(w * cx, h * cy, w * x1, h * y1);
-    ctx.stroke();
+    drawLimb(ctx, w * x0, h * y0, w * cx, h * cy, w * x1, h * y1, w * 0.018, nearLegColor);
   }
 
   // Leg tips (tarsi) — small
@@ -855,7 +860,7 @@ function drawBonecaster(ctx: CanvasRenderingContext2D, w: number, h: number) {
 
   // Staff — bone staff with skull topper (bone white)
   ctx.strokeStyle = 'rgb(190,180,150)';
-  ctx.lineWidth = w * 0.018;
+  ctx.lineWidth = w * 0.038;
   ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(w * 0.72, h * 0.06);
@@ -1084,23 +1089,14 @@ function drawPaleStalker(ctx: CanvasRenderingContext2D, w: number, h: number) {
   }
 
   // Legs — digitigrade (backward-bent knee), predator stance
-  ctx.strokeStyle = 'rgb(170,180,200)';
-  ctx.lineWidth = w * 0.016;
-  ctx.lineCap = 'round';
-  // Left leg
-  ctx.beginPath();
-  ctx.moveTo(w * 0.32, h * 0.56);
-  ctx.quadraticCurveTo(w * 0.28, h * 0.68, w * 0.32, h * 0.76);
-  ctx.quadraticCurveTo(w * 0.34, h * 0.84, w * 0.28, h * 0.92);
-  ctx.stroke();
-  // Right leg
-  ctx.strokeStyle = 'rgb(155,165,185)';
-  ctx.lineWidth = w * 0.014;
-  ctx.beginPath();
-  ctx.moveTo(w * 0.44, h * 0.56);
-  ctx.quadraticCurveTo(w * 0.48, h * 0.68, w * 0.46, h * 0.76);
-  ctx.quadraticCurveTo(w * 0.45, h * 0.84, w * 0.50, h * 0.92);
-  ctx.stroke();
+  // Left leg — upper segment
+  drawLimb(ctx, w * 0.32, h * 0.56, w * 0.28, h * 0.62, w * 0.32, h * 0.76, w * 0.020, 'rgb(170,180,200)');
+  // Left leg — lower segment
+  drawLimb(ctx, w * 0.32, h * 0.76, w * 0.34, h * 0.84, w * 0.28, h * 0.92, w * 0.016, 'rgb(160,170,190)');
+  // Right leg — upper segment
+  drawLimb(ctx, w * 0.44, h * 0.56, w * 0.48, h * 0.62, w * 0.46, h * 0.76, w * 0.018, 'rgb(155,165,185)');
+  // Right leg — lower segment
+  drawLimb(ctx, w * 0.46, h * 0.76, w * 0.45, h * 0.84, w * 0.50, h * 0.92, w * 0.014, 'rgb(145,155,175)');
 
   // Clawed feet
   ctx.fillStyle = 'rgb(190,200,220)';
@@ -1452,6 +1448,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 8,
     monsterClass: 1,
     level: 1,
+    atmosphere: { r: 140, g: 110, b: 70, intensity: 0.12 },
     draw: drawDireRat,
   },
   {
@@ -1461,6 +1458,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 12,
     monsterClass: 2,
     level: 2,
+    atmosphere: { r: 60, g: 160, b: 40, intensity: 0.14 },
     draw: drawFungalShaman,
   },
   {
@@ -1470,6 +1468,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 12,
     monsterClass: 0,
     level: 3,
+    atmosphere: { r: 160, g: 120, b: 60, intensity: 0.12 },
     draw: drawCavernBrute,
   },
   {
@@ -1479,6 +1478,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 12,
     monsterClass: 2,
     level: 4,
+    atmosphere: { r: 60, g: 160, b: 220, intensity: 0.16 },
     draw: drawCrystalElemental,
   },
   {
@@ -1488,6 +1488,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 12,
     monsterClass: 0,
     level: 5,
+    atmosphere: { r: 100, g: 150, b: 60, intensity: 0.12 },
     draw: drawIronhideTroll,
   },
   {
@@ -1497,6 +1498,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 11,
     monsterClass: 1,
     level: 6,
+    atmosphere: { r: 100, g: 70, b: 160, intensity: 0.14 },
     draw: drawPhaseSpider,
   },
   {
@@ -1506,6 +1508,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 14,
     monsterClass: 2,
     level: 7,
+    atmosphere: { r: 60, g: 180, b: 50, intensity: 0.14 },
     draw: drawBonecaster,
   },
   {
@@ -1515,6 +1518,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 12,
     monsterClass: 0,
     level: 8,
+    atmosphere: { r: 180, g: 140, b: 60, intensity: 0.12 },
     draw: drawRockGolem,
   },
   {
@@ -1524,6 +1528,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 13,
     monsterClass: 1,
     level: 9,
+    atmosphere: { r: 120, g: 150, b: 200, intensity: 0.16 },
     draw: drawPaleStalker,
   },
   {
@@ -1533,6 +1538,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     gridHeight: 12,
     monsterClass: 2,
     level: 10,
+    atmosphere: { r: 140, g: 80, b: 180, intensity: 0.14 },
     draw: drawDuskDrake,
   },
   {
@@ -1543,6 +1549,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
     monsterClass: 0,
     level: 12,
     isBoss: true,
+    atmosphere: { r: 200, g: 80, b: 40, intensity: 0.18 },
     draw: drawBasilisk,
   },
 ];
