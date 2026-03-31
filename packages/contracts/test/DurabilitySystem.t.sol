@@ -8,10 +8,12 @@ import {ItemNotDamageable, ItemAlreadyFullDurability, NotAdmin} from "../src/Err
 import {
     DURABILITY_LOSS_PER_COMBAT,
     REPAIR_COST_R0,
-    REPAIR_COST_R1
+    REPAIR_COST_R1,
+    GUILD_CREATE_COST,
+    GUILD_REPAIR_DISCOUNT_BPS
 } from "../constants.sol";
-import {StatRestrictionsData, WeaponStatsData, ArmorStatsData} from "@codegen/index.sol";
-import {ArmorType} from "@codegen/common.sol";
+import {StatRestrictionsData, WeaponStatsData, ArmorStatsData, GuildMember} from "@codegen/index.sol";
+import {ArmorType, Classes} from "@codegen/common.sol";
 
 contract Test_DurabilitySystem is SetUp {
     uint256 z2WeaponId;
@@ -232,5 +234,63 @@ contract Test_DurabilitySystem is SetUp {
         vm.prank(bob);
         vm.expectRevert(NotAdmin.selector);
         world.UD__setMaxDurability(z2WeaponId, 50);
+    }
+
+    // ==================== Guild Repair Discount ====================
+
+    function test_repair_guildMemberGetsDiscount() public {
+        // Degrade once
+        vm.prank(deployer);
+        world.UD__degradeEquippedItems(bobCharacterId);
+
+        // Set up bob in a guild — enter game first, then create guild
+        vm.startPrank(bob);
+        world.UD__rollStats(bytes32(keccak256("bobRng")), bobCharacterId, Classes.Warrior);
+        world.UD__enterGame(bobCharacterId, newWeaponId, newArmorId);
+        vm.stopPrank();
+
+        vm.prank(deployer);
+        world.UD__adminDropGold(bobCharacterId, GUILD_CREATE_COST);
+
+        vm.prank(bob);
+        world.UD__createGuild(bobCharacterId, "RepairGuild", "RG", true, "test");
+
+        // Verify bob is in a guild
+        assertTrue(GuildMember.getGuildId(bobCharacterId) != 0, "bob should be in guild");
+
+        uint256 durBefore = CharacterItemDurability.getCurrentDurability(bobCharacterId, z2WeaponId);
+        uint256 pointsToRepair = Z2_MAX_DURABILITY - durBefore;
+        uint256 baseCost = pointsToRepair * REPAIR_COST_R1;
+        uint256 discountedCost = baseCost * (10000 - GUILD_REPAIR_DISCOUNT_BPS) / 10000;
+
+        uint256 goldBefore = goldToken.balanceOf(bob);
+
+        vm.prank(bob);
+        world.UD__repairItem(bobCharacterId, z2WeaponId);
+
+        uint256 goldAfter = goldToken.balanceOf(bob);
+        assertEq(goldBefore - goldAfter, discountedCost, "guild member should pay discounted cost");
+        assertLt(discountedCost, baseCost, "discounted cost should be less than base cost");
+    }
+
+    function test_repair_nonGuildMemberPaysFullPrice() public {
+        // Degrade once
+        vm.prank(deployer);
+        world.UD__degradeEquippedItems(bobCharacterId);
+
+        // Verify bob is NOT in a guild
+        assertEq(GuildMember.getGuildId(bobCharacterId), 0, "bob should not be in guild");
+
+        uint256 durBefore = CharacterItemDurability.getCurrentDurability(bobCharacterId, z2WeaponId);
+        uint256 pointsToRepair = Z2_MAX_DURABILITY - durBefore;
+        uint256 expectedCost = pointsToRepair * REPAIR_COST_R1;
+
+        uint256 goldBefore = goldToken.balanceOf(bob);
+
+        vm.prank(bob);
+        world.UD__repairItem(bobCharacterId, z2WeaponId);
+
+        uint256 goldAfter = goldToken.balanceOf(bob);
+        assertEq(goldBefore - goldAfter, expectedCost, "non-guild member should pay full cost");
     }
 }

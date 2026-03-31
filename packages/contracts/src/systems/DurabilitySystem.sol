@@ -9,7 +9,8 @@ import {
     CharacterEquipment,
     Items,
     Characters,
-    Admin
+    Admin,
+    GuildMember
 } from "@codegen/index.sol";
 import {ItemType} from "@codegen/common.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
@@ -29,7 +30,8 @@ import {
     REPAIR_COST_R1,
     REPAIR_COST_R2,
     REPAIR_COST_R3,
-    REPAIR_COST_R4
+    REPAIR_COST_R4,
+    GUILD_REPAIR_DISCOUNT_BPS
 } from "../../constants.sol";
 
 /**
@@ -83,6 +85,11 @@ contract DurabilitySystem is System {
         uint256 pointsToRepair = maxDur - currentDur;
         uint256 costPerPoint = _getRepairCostPerPoint(itemId);
         uint256 totalCost = pointsToRepair * costPerPoint;
+
+        // Guild members get a repair discount
+        if (GuildMember.getGuildId(characterId) != 0) {
+            totalCost = totalCost * (10000 - GUILD_REPAIR_DISCOUNT_BPS) / 10000;
+        }
 
         GoldLib.goldBurn(_world(), owner, totalCost);
         CharacterItemDurability.setCurrentDurability(characterId, itemId, maxDur);
