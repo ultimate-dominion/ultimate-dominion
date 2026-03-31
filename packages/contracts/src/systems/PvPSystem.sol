@@ -249,16 +249,16 @@ contract PvPSystem is System {
         } else if (encounterData.encounterType == EncounterType.PvP) {
             uint256 amountToDrop;
             bool attackersWin;
-            // take 10% of wallet Gold — 5% burned (permanent sink), 5% to opponent
+            // take 5% of on-hand Gold — 3% burned (permanent sink), 2% to opponent
             // Smoke Cloak negates the penalty entirely
             if (!hasSmokeCover) {
                 address playerAddr = IWorld(_world()).UD__getOwnerAddress(entityId);
                 uint256 walletGold = GoldLib.goldBalanceOf(playerAddr);
                 if (walletGold > 0) {
-                    amountToDrop = walletGold / 10;
+                    amountToDrop = walletGold / 20; // 5% total (was 10%)
                     if (amountToDrop > 0) {
-                        uint256 toBurn = amountToDrop / 2;
-                        uint256 toOpponents = amountToDrop - toBurn;
+                        uint256 toBurn = amountToDrop * 3 / 5; // 60% of pot = 3% of wallet
+                        uint256 toOpponents = amountToDrop - toBurn; // 40% of pot = 2% of wallet
 
                         GoldLib.goldBurn(_world(), playerAddr, toBurn);
 

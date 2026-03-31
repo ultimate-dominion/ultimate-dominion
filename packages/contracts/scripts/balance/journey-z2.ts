@@ -161,7 +161,7 @@ const Z2_MONSTER_EFFECTS: Record<string, WeaponEffect[]> = {
   ],
   // L19 Peakfire Wraith: searing breath + burn DoT — dual threat
   "Peakfire Wraith": [
-    { type: "magic_breath", name: "Searing Breath", minDmg: 8, maxDmg: 13, cooldown: 2 },
+    { type: "magic_breath", name: "Searing Breath", minDmg: 8, maxDmg: 13, cooldown: 3 },
     { type: "dot", name: "Burn", damagePerTick: 3, maxStacks: 1, duration: 5, cooldown: 0 },
   ],
   // L20 Korrath's Warden: thunder breath + ground slam
@@ -179,61 +179,76 @@ const Z2_MONSTER_EFFECTS: Record<string, WeaponEffect[]> = {
 
 const Z2_WEAPONS: Weapon[] = [
   // ---- STR PURE PATH ----
+  // Cross-stat gates: R1=0, R2=+5, R3=+6, R4=+7 off-path.
+  // R1 is entry-level — no gates. R2+ forces 1+ actual off-path allocation.
+  // Warden's Maul nerfed from 9-14 to 9-13: 1.1x modifier already boosts per-hit.
   { name: "Ridgestone Hammer", minDamage: 5, maxDamage: 8, strMod: 1, agiMod: 0, intMod: 0, hpMod: 2,
     scaling: "str", isMagic: false, minStr: 16, minAgi: 0, minInt: 0, rarity: 1, price: 40 },
   { name: "Peak Cleaver", minDamage: 6, maxDamage: 10, strMod: 2, agiMod: 0, intMod: 0, hpMod: 3,
-    scaling: "str", isMagic: false, minStr: 20, minAgi: 0, minInt: 0, rarity: 2, price: 80 },
+    scaling: "str", isMagic: false, minStr: 20, minAgi: 5, minInt: 0, rarity: 2, price: 80 },
   { name: "Windforged Axe", minDamage: 7, maxDamage: 12, strMod: 3, agiMod: 0, intMod: 0, hpMod: 4,
-    scaling: "str", isMagic: false, minStr: 24, minAgi: 0, minInt: 0, rarity: 3, price: 150 },
-  { name: "Warden's Maul", minDamage: 9, maxDamage: 14, strMod: 4, agiMod: 0, intMod: 0, hpMod: 5,
-    scaling: "str", isMagic: false, minStr: 28, minAgi: 0, minInt: 0, rarity: 4, price: 300 },
+    scaling: "str", isMagic: false, minStr: 24, minAgi: 6, minInt: 0, rarity: 3, price: 150 },
+  { name: "Warden's Maul", minDamage: 9, maxDamage: 13, strMod: 4, agiMod: 0, intMod: 0, hpMod: 5,
+    scaling: "str", isMagic: false, minStr: 28, minAgi: 7, minInt: 0, rarity: 4, price: 300 },
 
-  // ---- AGI PURE PATH — HP mods added to close survivability gap vs STR ----
+  // ---- AGI PURE PATH ----
+  // Cross-stat gates: R2=+5 STR, R3=+6, R4=+7. HP mods close survivability gap vs plate.
+  // Evasion + double strike + crit compensate for slightly lower per-hit.
   { name: "Scrub Bow", minDamage: 4, maxDamage: 7, strMod: 0, agiMod: 1, intMod: 0, hpMod: 2,
     scaling: "agi", isMagic: false, minStr: 0, minAgi: 16, minInt: 0, rarity: 1, price: 40 },
   { name: "Gale Bow", minDamage: 5, maxDamage: 9, strMod: 0, agiMod: 2, intMod: 0, hpMod: 3,
-    scaling: "agi", isMagic: false, minStr: 0, minAgi: 20, minInt: 0, rarity: 2, price: 80 },
+    scaling: "agi", isMagic: false, minStr: 5, minAgi: 20, minInt: 0, rarity: 2, price: 80 },
   { name: "Stormfeather Bow", minDamage: 6, maxDamage: 11, strMod: 0, agiMod: 3, intMod: 0, hpMod: 4,
-    scaling: "agi", isMagic: false, minStr: 0, minAgi: 24, minInt: 0, rarity: 3, price: 150 },
-  { name: "Peakwind Longbow", minDamage: 7, maxDamage: 13, strMod: 0, agiMod: 4, intMod: 0, hpMod: 5,
-    scaling: "agi", isMagic: false, minStr: 0, minAgi: 28, minInt: 0, rarity: 4, price: 300 },
+    scaling: "agi", isMagic: false, minStr: 6, minAgi: 24, minInt: 0, rarity: 3, price: 150 },
+  { name: "Peakwind Longbow", minDamage: 7, maxDamage: 12, strMod: 0, agiMod: 4, intMod: 0, hpMod: 5,
+    scaling: "agi", isMagic: false, minStr: 7, minAgi: 28, minInt: 0, rarity: 4, price: 300 },
 
-  // ---- INT PURE PATH (magic) — HP mods added to close survivability gap vs STR ----
-  { name: "Frozen Shard", minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 0, intMod: 1, hpMod: 2,
+  // ---- INT PURE PATH (magic) ----
+  // Cross-stat gates: R2=+5 STR, R3=+6, R4=+7. Higher HP to compensate for lowest armor.
+  // Magic bypasses armor — huge vs plate. Wraith Beacon 10-15 is INT's tank-buster.
+  { name: "Frozen Shard", minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 0, intMod: 1, hpMod: 3,
     scaling: "str", isMagic: true, minStr: 0, minAgi: 0, minInt: 16, rarity: 1, price: 40 },
-  { name: "Rime Staff", minDamage: 6, maxDamage: 10, strMod: 0, agiMod: 0, intMod: 2, hpMod: 3,
-    scaling: "str", isMagic: true, minStr: 0, minAgi: 0, minInt: 20, rarity: 2, price: 80 },
-  { name: "Stormglass Rod", minDamage: 8, maxDamage: 13, strMod: 0, agiMod: 0, intMod: 3, hpMod: 4,
-    scaling: "str", isMagic: true, minStr: 0, minAgi: 0, minInt: 24, rarity: 3, price: 150 },
-  { name: "Wraith Beacon", minDamage: 10, maxDamage: 15, strMod: 0, agiMod: 0, intMod: 4, hpMod: 6,
-    scaling: "str", isMagic: true, minStr: 0, minAgi: 0, minInt: 28, rarity: 4, price: 300 },
+  { name: "Rime Staff", minDamage: 6, maxDamage: 10, strMod: 0, agiMod: 0, intMod: 2, hpMod: 4,
+    scaling: "str", isMagic: true, minStr: 5, minAgi: 0, minInt: 20, rarity: 2, price: 80 },
+  { name: "Stormglass Rod", minDamage: 8, maxDamage: 13, strMod: 0, agiMod: 0, intMod: 3, hpMod: 6,
+    scaling: "str", isMagic: true, minStr: 6, minAgi: 0, minInt: 24, rarity: 3, price: 150 },
+  { name: "Wraith Beacon", minDamage: 10, maxDamage: 15, strMod: 0, agiMod: 0, intMod: 4, hpMod: 8,
+    scaling: "str", isMagic: true, minStr: 7, minAgi: 0, minInt: 28, rarity: 4, price: 300 },
 
-  // ---- HYBRID WEAPONS (harder to equip, unique effects) ----
+  // ---- HYBRID WEAPONS (economy drivers — the builds people theorycraft about) ----
 
   // STR/INT hybrid — dual magic (physical + magic hit per round)
-  // STR build needs ~4 off-path INT (base 6 → 10)
   { name: "Warden's Ember", minDamage: 5, maxDamage: 9, strMod: 2, agiMod: 0, intMod: 2, hpMod: 2,
     scaling: "str", isMagic: false, minStr: 18, minAgi: 0, minInt: 10, rarity: 3, price: 200 },
 
   // AGI/INT hybrid — dual magic (fast strikes + magic burst)
-  // AGI build needs ~3 off-path INT (base 7 → 10)
-  { name: "Windweaver", minDamage: 4, maxDamage: 8, strMod: 0, agiMod: 2, intMod: 2, hpMod: 0,
+  { name: "Windweaver", minDamage: 5, maxDamage: 8, strMod: 0, agiMod: 2, intMod: 2, hpMod: 2,
     scaling: "agi", isMagic: false, minStr: 0, minAgi: 18, minInt: 10, rarity: 3, price: 200 },
 
   // STR/AGI hybrid — bleed DoT + armor strip
-  // STR build needs ~3 off-path AGI (base 3 → 6). Very expensive for Dwarf/Plate builds.
   { name: "Ridgefang", minDamage: 6, maxDamage: 10, strMod: 2, agiMod: 2, intMod: 0, hpMod: 3,
     scaling: "str", isMagic: false, minStr: 18, minAgi: 6, minInt: 0, rarity: 3, price: 200 },
 
   // AGI/STR hybrid — venom strike
-  // AGI build needs ~3 off-path STR (base 5 → 8)
   { name: "Viperstrike", minDamage: 5, maxDamage: 9, strMod: 2, agiMod: 2, intMod: 0, hpMod: 2,
     scaling: "agi", isMagic: false, minStr: 8, minAgi: 18, minInt: 0, rarity: 3, price: 200 },
 
   // INT/STR hybrid — spellblade (magic + bleed)
-  // INT build needs ~3 off-path STR (base 3 → 6)
   { name: "Ashveil Staff", minDamage: 6, maxDamage: 10, strMod: 1, agiMod: 0, intMod: 2, hpMod: 2,
     scaling: "str", isMagic: true, minStr: 6, minAgi: 0, minInt: 18, rarity: 3, price: 200 },
+
+  // R4 HYBRID EPICS — marketplace crown jewels. 5+ off-path investment required.
+  // STR/AGI R4 — heavy hitter with armor penetration
+  { name: "Galeforce Spear", minDamage: 7, maxDamage: 12, strMod: 3, agiMod: 3, intMod: 0, hpMod: 4,
+    scaling: "str", isMagic: false, minStr: 22, minAgi: 12, minInt: 0, rarity: 4, price: 350 },
+
+  // AGI/INT R4 — phase strikes (magic + evasion combo)
+  { name: "Stormcaller Bow", minDamage: 6, maxDamage: 11, strMod: 0, agiMod: 3, intMod: 3, hpMod: 3,
+    scaling: "agi", isMagic: true, minStr: 0, minAgi: 22, minInt: 12, rarity: 4, price: 350 },
+
+  // STR/INT R4 — dual magic tank buster
+  { name: "Peakfire Scepter", minDamage: 7, maxDamage: 11, strMod: 2, agiMod: 0, intMod: 3, hpMod: 4,
+    scaling: "str", isMagic: true, minStr: 14, minAgi: 0, minInt: 22, rarity: 4, price: 350 },
 ];
 
 // Weapon effects for player weapons (keyed by weapon name)

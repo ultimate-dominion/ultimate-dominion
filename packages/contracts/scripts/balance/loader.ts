@@ -363,6 +363,19 @@ function mapConsumable(
   zc: ZoneConsumable,
   effectIndex: Map<string, ZoneStatusEffect>
 ): Consumable | null {
+  // Flee items: Smoke Bomb / Flashpowder — check BEFORE effect loop.
+  // smoke_cloak effect (validTurns=2, targetsSelf=true, all-zero stats) matches
+  // tradeoff_buff pattern if we don't catch it here.
+  const lcName = zc.name.toLowerCase();
+  if (lcName.includes("smoke") || lcName.includes("flashpowder")) {
+    return {
+      name: zc.name,
+      type: "flee",
+      rarity: zc.rarity,
+      price: weiToGold(zc.price),
+    };
+  }
+
   // Skip vendor trash (no effects, no damage)
   if (zc.stats.effects.length === 0 && zc.stats.minDamage === 0) return null;
 

@@ -47,10 +47,15 @@ export const ECONOMY = {
     4: 3000,
   } as Record<number, number>,
 
-  // Death/flee sinks
+  // Death/flee sinks (on-hand gold only — banked gold is safe)
   PVE_DEATH_BURN_PCT: 0.05,
   PVE_FLEE_BURN_PCT: 0.05,
-  PVP_DEATH_BURN_PCT: 0.10,
+  PVP_DEATH_TOTAL_PCT: 0.25,     // 25% of on-hand gold (down from 50%)
+  PVP_DEATH_BURN_PCT: 0.15,      // 15% burned (up from 10% — better sink, less griefing incentive)
+  PVP_DEATH_TO_KILLER_PCT: 0.10, // 10% to killer (down from 40% — breaks predator economy)
+  PVP_FLEE_TOTAL_PCT: 0.05,      // 5% of on-hand gold (down from 10%)
+  PVP_FLEE_BURN_PCT: 0.03,       // 3% burned
+  PVP_FLEE_TO_OPP_PCT: 0.02,     // 2% to opponent
   DEATH_RATE_NORMAL: 0.15,
   FLEE_RATE_NORMAL: 0.05,
 
@@ -77,13 +82,17 @@ export const ECONOMY = {
   // Guild sinks
   // Guild takes a % of member PvE gold income → guild treasury.
   // Treasury spent on: war declarations, territory upkeep, buffs.
-  // Member perks: free repairs, drop rate bonus, gold bonus, XP bonus.
-  // Net effect: guild tax > repair savings = net gold drain for members.
+  // Member perks: 50% repair discount, drop rate bonus, gold bonus, XP bonus.
+  // Net effect: guild tax roughly offsets repair savings — buffs are the real value.
   GUILD_CREATION_COST: 500,
   GUILD_TAX_RATE: 0.10,             // 10% of PvE kill gold goes to guild treasury
   GUILD_PARTICIPATION_RATE: 0.20,   // % of DAU in a guild
   AVG_GUILD_SIZE: 8,
-  GUILD_FREE_REPAIRS: true,         // guilded players don't pay repair costs (perk)
+  GUILD_REPAIR_DISCOUNT: 0.50,      // 50% off repairs (not free — keeps repair sink alive)
+  GUILD_BUFF_COST_L1_L2: 150,       // 150g/day per buff for L1-L2 slots
+  GUILD_BUFF_COST_L3: 200,          // 200g/day per buff for L3 slot (premium)
+  GUILD_UPGRADE_L2: 5000,           // ~2 weeks saving for Z2 guild
+  GUILD_UPGRADE_L3: 25000,          // ~2 months saving, realistically Z3+
   // Treasury burn: how much of treasury gold gets burned (wars, upkeep) vs recirculated
   GUILD_TREASURY_BURN_RATE: 0.80,   // 80% of treasury gold is burned (wars, territory, buffs), 20% recirculated
 
@@ -163,9 +172,9 @@ export function totalGuildSinkPerDay(dau: number, avgLevel: number, fightsPerDay
   return treasuryBurned + creationAmortized;
 }
 
-/** Repair savings per guilded player per day (free repairs perk) */
+/** Repair savings per guilded player per day (50% discount on repairs) */
 export function guildRepairSavingsPerDay(fightsPerDay: number, weaponPrice: number, armorPrice: number, weaponRarity = 2, armorRarity = 2): number {
-  return ECONOMY.GUILD_FREE_REPAIRS ? fightsPerDay * repairCostPerFight(weaponPrice, armorPrice, weaponRarity, armorRarity) : 0;
+  return fightsPerDay * repairCostPerFight(weaponPrice, armorPrice, weaponRarity, armorRarity) * ECONOMY.GUILD_REPAIR_DISCOUNT;
 }
 
 /** Net guild cost to a member per day: tax paid - repair savings */

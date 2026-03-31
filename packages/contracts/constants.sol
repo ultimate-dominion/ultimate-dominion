@@ -43,9 +43,12 @@ uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1.1 ether;
 uint256 constant AGI_ATTACK_MODIFIER = 1.0 ether;
-uint256 constant EVASION_CAP = 35;
-uint256 constant DOUBLE_STRIKE_CAP = 40;
+uint256 constant EVASION_CAP = 30;
+uint256 constant DOUBLE_STRIKE_CAP = 30;
 uint256 constant DOUBLE_STRIKE_DAMAGE_DIVISOR = 2;
+// Magic resistance: % damage reduction per INT point, capped
+uint256 constant MAGIC_RESIST_PER_INT = 2;
+uint256 constant MAGIC_RESIST_CAP = 30;
 // the amount crits damage is multiplied by
 uint256 constant CRIT_MULTIPLIER = 2;
 // the character's stats are divided by PROFICIENCY_DENOMINATOR when applying stat bonuses
@@ -76,7 +79,7 @@ uint256 constant POWER_SOURCE_BONUS_LEVEL = 5;
 // Class multipliers (stored as basis points: 1000 = 100%, 1100 = 110%)
 uint256 constant CLASS_MULTIPLIER_BASE = 1000;  // 100% base
 uint256 constant SESSION_TIMEOUT = 10 minutes;
-uint256 constant PVP_GOLD_DENOMINATOR = 2;
+uint256 constant PVP_GOLD_DENOMINATOR = 4;            // 25% of on-hand gold (was 50%)
 uint256 constant PVP_BASE_XP = 1; // PvP XP = level^2 * 1 (scaled /75 to match /100 XP rescale)
 
 uint256 constant PVP_TIMER = 30 seconds;
@@ -164,11 +167,27 @@ uint256 constant FULL_RESPEC_MULTIPLIER = 10;          // full respec = 10x stat
 uint256 constant RESPEC_COST_PER_LEVEL = 10 ether;    // +10 gold per level
 
 // ======== Phase 5: Guilds ========
-uint256 constant GUILD_CREATE_COST = 100 ether;        // 100 gold to create
+uint256 constant GUILD_CREATE_COST = 500 ether;        // 500 gold to create (meaningful commitment)
 uint256 constant GUILD_MAX_MEMBERS = 50;
 uint256 constant GUILD_MAX_TAX_RATE = 5000;            // 50% max (basis points)
 uint256 constant GUILD_INACTIVITY_THRESHOLD = 14 days;
 uint256 constant GUILD_BONUS_BPS = 500;                // 5% flat bonus (gold, XP, drops)
+uint256 constant GUILD_REPAIR_DISCOUNT_BPS = 5000;     // 50% repair discount for members (was 100% free)
+
+// Guild Stat Buffs
+int256 constant GUILD_BUFF_FLAT_STAT = 3;              // +3 STR/AGI/INT
+int256 constant GUILD_BUFF_FLAT_HP = 5;                 // +5 maxHP for Resilience
+uint256 constant GUILD_BUFF_DAILY_COST = 150 ether;     // 150 gold/day per buff (L1-L2 slots)
+uint256 constant GUILD_BUFF_L3_DAILY_COST = 200 ether;  // 200 gold/day per buff (L3 slot — premium)
+uint256 constant GUILD_BUFF_PERIOD = 1 days;
+
+// Guild Upgrades — steep progression, 3 buffs is a Z3+ achievement
+uint256 constant GUILD_UPGRADE_LEVEL_2_COST = 5000 ether;   // ~2 weeks saving for Z2 guild
+uint256 constant GUILD_UPGRADE_LEVEL_3_COST = 25000 ether;  // ~2 months saving, realistically Z3+
+uint256 constant GUILD_MAX_LEVEL = 3;
+
+// The Pact Badge
+uint256 constant BADGE_GUILD_FOUNDER = 60;              // Social badge range (60-69)
 
 // Guild Stat Buffs
 int256 constant GUILD_BUFF_FLAT_STAT = 3;              // +3 STR/AGI/INT
