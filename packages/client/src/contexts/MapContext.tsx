@@ -52,7 +52,8 @@ const SHOP_MOB_ID_TO_NAME: Record<string, string> = {
 };
 
 const SHOP_POSITION_TO_NAME: Record<string, string> = {
-  '9,9': 'Tal',
+  '1,9,9': 'Grizzled Merchant',
+  '2,9,9': 'Tal',
 };
 
 /** Map NPC metadataUri prefix to interaction type and display name */
@@ -400,7 +401,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const y = toNumber(positionEntityData.y);
         const name =
           SHOP_MOB_ID_TO_NAME[mobId.toString()] ??
-          SHOP_POSITION_TO_NAME[`${x},${y}`] ??
+          SHOP_POSITION_TO_NAME[`${shopZoneId},${x},${y}`] ??
           'Unknown Shop';
 
         const buyableItems = Array.isArray(shopData.buyableItems)

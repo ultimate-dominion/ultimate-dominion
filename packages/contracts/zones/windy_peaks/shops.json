@@ -2,7 +2,7 @@
   "shops": [
     {
       "name": "Tal Carden",
-      "location": [7, 0],
+      "location": [9, 9],
       "gold": 10000000000000000000000,
       "maxGold": 10000000000000000000000,
       "priceMarkdown": 5000,
