@@ -43,21 +43,21 @@ export const PROPOSED_LEVELING_CONSTANTS: LevelingConstants = {
 // ============================================================
 
 export const PROPOSED_COMBAT_CONSTANTS: CombatConstants = {
-  attackModifier: 1.0,
+  attackModifier: 1.1,             // STR gets 10% per-hit premium (compensates for no evasion/dblstrike)
   agiAttackModifier: 1.0,
   defenseModifier: 1.0,           // same as on-chain
   critMultiplier: 2,
   critBaseChance: 5,              // on-chain: 4
   critAgiDivisor: 4,              // same as on-chain (sim uses hardcoded /4 in resolveAttack)
-  evasionMultiplier: 2,            // (AGI diff) × 2, capped at 35% — fixed from division to match design
-  evasionCap: 35,                 // on-chain: 25
+  evasionMultiplier: 2,            // (AGI diff) × 2, capped at 30%
+  evasionCap: 30,                 // on-chain: 25, proposed: 30 (slight AGI buff, not dominant at L20)
   doubleStrikeMultiplier: 3,      // on-chain: 2 (sim uses × 3 in resolveAttack)
-  doubleStrikeCap: 40,            // on-chain: 25
+  doubleStrikeCap: 30,            // on-chain: 25, proposed: 30 (was 40, too dominant at L20)
   combatTriangleFlatPct: 0,        // removed — triangle driven by per-stat bonus only
   combatTrianglePerStat: 0.02,    // on-chain: 0.02 (same, but triangle cap differs)
   combatTriangleMax: 0.12,        // on-chain: 0.20
-  magicResistPerInt: 3,           // on-chain: 2
-  magicResistCap: 40,
+  magicResistPerInt: 2,           // on-chain: 2 (reverted from proposed 3 — was crushing INT)
+  magicResistCap: 30,             // lowered from 40 — makes INT more viable in PvP
   blockChancePerStr: 2,           // on-chain: 1.5
   blockChanceCap: 35,
   blockReductionPhys: 0.55,
@@ -94,7 +94,7 @@ export const CLASS_SPELLS: Record<string, ClassSpell> = {
   Warlock:  { name: "Soul Drain",    type: "damage_debuff", baseDmgMin: 4, baseDmgMax: 8, dmgPerInt: 0.4, strPct: -0.12, intPct: -0.12, duration: 5, maxUses: 2 },
   Wizard:   { name: "Arcane Blast",  type: "magic_damage",  baseDmgMin: 5, baseDmgMax: 10, dmgPerInt: 0.5, maxUses: 3 },
   Sorcerer: { name: "Arcane Infusion", type: "weapon_enchant", baseDmgMin: 3, baseDmgMax: 6, dmgPerInt: 0.25, duration: 10 },
-  Cleric:   { name: "Blessing",      type: "self_buff",     intPct: 0.12, armorMod: 7, hpPct: 0.15, duration: 6, maxUses: 2 },
+  Cleric:   { name: "Blessing",      type: "damage_buff",   baseDmgMin: 4, baseDmgMax: 8, dmgPerInt: 0.35, intPct: 0.12, armorMod: 7, hpPct: 0.15, duration: 6, maxUses: 2 },
 };
 
 // ============================================================
