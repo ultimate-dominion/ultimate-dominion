@@ -131,8 +131,8 @@ contract MarketplaceSystem is System, ReentrancyGuard {
             _transferItemDirect(ESCROW_ADDRESS, itemReceiver, o.identifier, o.amount);
         }
 
-        // set order status to fulfilled
-        Orders.set(orderHash, _msgSender(), 0, OrderStatus.Fulfilled);
+        // set order status to fulfilled (only update the status field — preserve original offerer)
+        Orders.setOrderStatus(orderHash, OrderStatus.Fulfilled);
 
         MarketplaceSaleData memory sale = MarketplaceSaleData({
             buyer: o.tokenType == TokenType.ERC20 ? c.recipient : _msgSender(),
