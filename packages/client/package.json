@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
+    "@chenglou/pretext": "^0.0.3",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@fontsource/cinzel": "^5.2.8",
