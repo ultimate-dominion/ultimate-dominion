@@ -1,33 +1,39 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGameTable, encodeCompositeKey } from '../lib/gameStore';
 import { useCharacter } from '../contexts/CharacterContext';
-import { NPC_NARRATIVES } from '../utils/npcNarratives';
+import { NPC_CHAIN_STRUCTURE } from '../utils/npcNarratives';
 import { CHAIN_PROGRESS_TABLE } from '../utils/fragmentChainData';
 
 /**
  * Resolves the correct NPC title and atmospheric flavor text based on the
  * player's current fragment chain progress.
  *
- * For each fragmentType the NPC has chain flavors for, checks if that chain
- * is active (initialized and not completed) and returns the flavor for the
- * current step. Falls back to defaultFlavor.
+ * Text is read from the 'narrative' i18n namespace under the "npc" key.
+ * Structure (which chains/steps have flavors) comes from NPC_CHAIN_STRUCTURE.
  */
 export function useNpcFlavor(metadataUri: string): { title: string; flavor: string } {
+  const { t } = useTranslation('narrative');
   const { character } = useCharacter();
   const chainTable = useGameTable(CHAIN_PROGRESS_TABLE);
 
+  const structure = NPC_CHAIN_STRUCTURE[metadataUri];
+
   return useMemo(() => {
-    const narrative = NPC_NARRATIVES[metadataUri];
-    if (!narrative) {
+    if (!structure) {
       return { title: '', flavor: '' };
     }
 
+    const { npcKey } = structure;
+    const title = t(`npc.${npcKey}.title`);
+    const defaultFlavor = t(`npc.${npcKey}.defaultFlavor`);
+
     if (!character?.id) {
-      return { title: narrative.title, flavor: narrative.defaultFlavor };
+      return { title, flavor: defaultFlavor };
     }
 
     // Check each chain this NPC has flavor for, in order
-    for (const fragTypeStr of Object.keys(narrative.chainFlavors)) {
+    for (const fragTypeStr of Object.keys(structure.chains)) {
       const fragType = Number(fragTypeStr);
       const key = encodeCompositeKey(character.id, fragType.toString());
       const data = chainTable[key];
@@ -42,12 +48,11 @@ export function useNpcFlavor(metadataUri: string): { title: string; flavor: stri
       if (completed || totalSteps === 0) continue;
 
       // Return the flavor for the current step if it exists
-      const stepFlavors = narrative.chainFlavors[fragType];
-      if (stepFlavors && stepFlavors[currentStep] !== undefined) {
-        return { title: narrative.title, flavor: stepFlavors[currentStep] };
+      if (structure.chains[fragType]?.includes(currentStep)) {
+        return { title, flavor: t(`npc.${npcKey}.chain.${fragType}.${currentStep}`) };
       }
     }
 
-    return { title: narrative.title, flavor: narrative.defaultFlavor };
-  }, [metadataUri, character?.id, chainTable]);
+    return { title, flavor: defaultFlavor };
+  }, [metadataUri, character?.id, chainTable, structure, t]);
 }
