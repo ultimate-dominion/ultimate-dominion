@@ -46,6 +46,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import {
   encodeBytes32Key,
   toBigInt,
@@ -89,6 +90,13 @@ const BUFF_COLORS: Record<number, string> = {
   [BUFF_AGILITY]: '#5AAF5A',
   [BUFF_INTELLIGENCE]: '#5A7AC8',
   [BUFF_RESILIENCE]: '#C8A96E',
+};
+
+const BUFF_ABBREV: Record<number, string> = {
+  [BUFF_STRENGTH]: 'STR',
+  [BUFF_AGILITY]: 'AGI',
+  [BUFF_INTELLIGENCE]: 'INT',
+  [BUFF_RESILIENCE]: 'HP',
 };
 
 // Guild upgrade costs (display only — contract enforces)
@@ -337,6 +345,7 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
 }) => {
   const buffSlotTable = useGameTable('GuildStatBuffSlot');
   const guildLevelTable = useGameTable('GuildLevel');
+  const { renderError } = useToast();
   const [isSettingBuff, setIsSettingBuff] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
 
@@ -391,34 +400,43 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
     async (slotIndex: number, buffType: number) => {
       setIsSettingBuff(true);
       try {
-        await systemCalls.setGuildBuff(characterId, slotIndex, buffType);
+        const result = await systemCalls.setGuildBuff(characterId, slotIndex, buffType);
+        if (result?.error) renderError(result.error);
+      } catch (e: any) {
+        renderError(e?.message ?? 'Failed to set buff');
       } finally {
         setIsSettingBuff(false);
       }
     },
-    [characterId, systemCalls],
+    [characterId, systemCalls, renderError],
   );
 
   const handleRemoveBuff = useCallback(
     async (slotIndex: number) => {
       setIsSettingBuff(true);
       try {
-        await systemCalls.removeGuildBuff(characterId, slotIndex);
+        const result = await systemCalls.removeGuildBuff(characterId, slotIndex);
+        if (result?.error) renderError(result.error);
+      } catch (e: any) {
+        renderError(e?.message ?? 'Failed to remove buff');
       } finally {
         setIsSettingBuff(false);
       }
     },
-    [characterId, systemCalls],
+    [characterId, systemCalls, renderError],
   );
 
   const handleUpgrade = useCallback(async () => {
     setIsUpgrading(true);
     try {
-      await systemCalls.upgradeGuild(characterId);
+      const result = await systemCalls.upgradeGuild(characterId);
+      if (result?.error) renderError(result.error);
+    } catch (e: any) {
+      renderError(e?.message ?? 'Failed to upgrade guild');
     } finally {
       setIsUpgrading(false);
     }
-  }, [characterId, systemCalls]);
+  }, [characterId, systemCalls, renderError]);
 
   const nextUpgradeCost = UPGRADE_COSTS[guildLevel + 1];
 
@@ -470,7 +488,7 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
             key={slot.slotIndex}
             bg={
               slot.active && slot.buffType !== BUFF_NONE
-                ? `rgba(${BUFF_COLORS[slot.buffType]?.replace('#', '').match(/.{2}/g)?.map(h => parseInt(h, 16)).join(',') ?? '200,169,110'},0.1)`
+                ? `${BUFF_COLORS[slot.buffType] ?? '#C8A96E'}1A`
                 : 'rgba(60,54,42,0.3)'
             }
             border="1px solid"
@@ -501,7 +519,10 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
                 </VStack>
                 {isLeader && (
                   <Button
+                    aria-label="Remove buff"
                     isLoading={isSettingBuff}
+                    minH="44px"
+                    minW="44px"
                     onClick={() => handleRemoveBuff(slot.slotIndex)}
                     size="xs"
                     variant="ghost"
@@ -522,13 +543,16 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
                       .map(bt => (
                         <Tooltip key={bt} label={`${BUFF_LABELS[bt]} (${BUFF_STATS[bt]})`}>
                           <Button
+                            aria-label={BUFF_LABELS[bt]}
                             color={BUFF_COLORS[bt]}
                             isLoading={isSettingBuff}
+                            minH="44px"
+                            minW="44px"
                             onClick={() => handleSetBuff(slot.slotIndex, bt)}
                             size="xs"
                             variant="ghost"
                           >
-                            {bt === BUFF_STRENGTH ? 'STR' : bt === BUFF_AGILITY ? 'AGI' : bt === BUFF_INTELLIGENCE ? 'INT' : 'HP'}
+                            {BUFF_ABBREV[bt]}
                           </Button>
                         </Tooltip>
                       ))}

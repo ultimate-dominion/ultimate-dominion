@@ -444,6 +444,9 @@ contract GuildSystem is System {
         uint256 guildId = GuildMember.getGuildId(characterId);
         if (guildId == 0) return (0, 0, 0, 0);
 
+        // Guild may have been disbanded — leader is zeroed on delete
+        if (Guild.getLeader(guildId) == bytes32(0)) return (0, 0, 0, 0);
+
         uint256 guildLevel = _getGuildLevel(guildId);
 
         for (uint8 i = 0; i < guildLevel; i++) {
@@ -510,6 +513,7 @@ contract GuildSystem is System {
     function _chargeGuildBuffs(uint256 guildId) internal {
         uint256 guildLevel = _getGuildLevel(guildId);
         uint256 treasury = Guild.getTreasury(guildId);
+        uint256 startingTreasury = treasury;
 
         for (uint8 i = 0; i < guildLevel; i++) {
             GuildStatBuffSlotData memory slot = GuildStatBuffSlot.get(guildId, i);
@@ -523,7 +527,6 @@ contract GuildSystem is System {
 
             if (treasury >= totalCost) {
                 treasury -= totalCost;
-                Guild.setTreasury(guildId, treasury);
                 // Advance by exact period multiples to prevent drift
                 GuildStatBuffSlot.setLastChargedAt(guildId, i, slot.lastChargedAt + (periodsOwed * GUILD_BUFF_PERIOD));
             } else {
@@ -531,6 +534,11 @@ contract GuildSystem is System {
                 GuildStatBuffSlot.setActive(guildId, i, false);
                 emit GuildBuffDeactivated(guildId, i);
             }
+        }
+
+        // Single treasury write after all charges
+        if (treasury != startingTreasury) {
+            Guild.setTreasury(guildId, treasury);
         }
     }
 
