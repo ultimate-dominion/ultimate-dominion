@@ -43,8 +43,8 @@ export const PROPOSED_LEVELING_CONSTANTS: LevelingConstants = {
 // ============================================================
 
 export const PROPOSED_COMBAT_CONSTANTS: CombatConstants = {
-  attackModifier: 1.2,
-  agiAttackModifier: 1.0,        // on-chain: 0.9
+  attackModifier: 1.0,
+  agiAttackModifier: 1.0,
   defenseModifier: 1.0,           // same as on-chain
   critMultiplier: 2,
   critBaseChance: 5,              // on-chain: 4

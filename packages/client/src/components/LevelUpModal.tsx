@@ -47,6 +47,11 @@ const badgePulse = keyframes`
   50%      { box-shadow: 0 0 30px rgba(106, 138, 176, 0.5), 0 0 60px rgba(106, 138, 176, 0.2), inset 0 0 20px rgba(106, 138, 176, 0.1); }
 `;
 
+const spellPulse = keyframes`
+  0%, 100% { box-shadow: 0 0 20px rgba(160, 120, 220, 0.3), 0 0 40px rgba(160, 120, 220, 0.1), inset 0 0 15px rgba(160, 120, 220, 0.05); }
+  50%      { box-shadow: 0 0 30px rgba(160, 120, 220, 0.5), 0 0 60px rgba(160, 120, 220, 0.2), inset 0 0 20px rgba(160, 120, 220, 0.1); }
+`;
+
 const badgeReveal = keyframes`
   from { opacity: 0; transform: scale(0.6) rotate(-10deg); }
   40%  { opacity: 1; transform: scale(1.08) rotate(2deg); }
@@ -343,7 +348,7 @@ export const LevelUpModal = ({
                 textShadow="0 0 20px rgba(106, 138, 176, 0.3)"
                 animation={`${fadeUp} 0.6s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both`}
               >
-                Adventurer
+                {tn('milestone.3.title')}
               </Text>
 
               <Box mx="auto" w="60px" h="1px" bg="rgba(106, 138, 176, 0.3)" />
@@ -366,7 +371,7 @@ export const LevelUpModal = ({
                   aria-hidden="true"
                   whiteSpace="pre-line"
                 >
-                  {'The cave has tested you, and you have not broken.\n\nFew earn this mark. Fewer still survive what comes next.'}
+                  {tn('milestone.3.text')}
                 </Text>
                 <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
                   <SafeTypist
@@ -384,7 +389,7 @@ export const LevelUpModal = ({
                       whiteSpace="pre-line"
                       textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
                     >
-                      {'The cave has tested you, and you have not broken.\n\nFew earn this mark. Fewer still survive what comes next.'}
+                      {tn('milestone.3.text')}
                     </Text>
                   </SafeTypist>
                 </Box>
@@ -426,7 +431,7 @@ export const LevelUpModal = ({
                     textTransform="uppercase"
                     color="rgba(212, 165, 74, 0.5)"
                   >
-                    The way is open
+                    {tn('milestone.5.gate')}
                   </Text>
                 </Box>
               </Box>
@@ -441,7 +446,7 @@ export const LevelUpModal = ({
                 textShadow="0 0 20px rgba(212, 165, 74, 0.3)"
                 animation={`${fadeUp} 0.6s 2.2s cubic-bezier(0.16, 1, 0.3, 1) both`}
               >
-                The Winding Dark
+                {tn('milestone.5.title')}
               </Text>
 
               <Box mx="auto" w="60px" h="1px" bg="rgba(212, 165, 74, 0.3)" />
@@ -464,7 +469,7 @@ export const LevelUpModal = ({
                   aria-hidden="true"
                   whiteSpace="pre-line"
                 >
-                  {'The ancient ward crumbles at your approach. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe full map is yours now. Tread carefully.'}
+                  {tn('milestone.5.text')}
                 </Text>
                 <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
                   <SafeTypist
@@ -482,7 +487,7 @@ export const LevelUpModal = ({
                       whiteSpace="pre-line"
                       textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
                     >
-                      {'The ancient ward crumbles at your approach. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe full map is yours now. Tread carefully.'}
+                      {tn('milestone.5.text')}
                     </Text>
                   </SafeTypist>
                 </Box>
@@ -612,13 +617,8 @@ export const LevelUpModal = ({
                 alignItems="center"
                 justifyContent="center"
                 bg="rgba(160, 120, 220, 0.08)"
-                animation={`${badgeReveal} 1s cubic-bezier(0.16, 1, 0.3, 1) forwards, ${badgePulse} 3s ease-in-out 1s infinite`}
+                animation={`${badgeReveal} 1s cubic-bezier(0.16, 1, 0.3, 1) forwards, ${spellPulse} 3s ease-in-out 1s infinite`}
                 opacity={0}
-                css={{
-                  '&': {
-                    boxShadow: '0 0 20px rgba(160, 120, 220, 0.3), 0 0 40px rgba(160, 120, 220, 0.1)',
-                  },
-                }}
               >
                 <Text fontSize="3xl" filter="drop-shadow(0 0 12px rgba(160, 120, 220, 0.5))">
                   ✦

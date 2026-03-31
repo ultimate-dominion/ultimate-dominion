@@ -30,7 +30,7 @@ function setup() {
 }
 
 const CC: CombatConstants = {
-  attackModifier: 1.2, agiAttackModifier: 1.0, defenseModifier: 1.0,
+  attackModifier: 1.0, agiAttackModifier: 1.0, defenseModifier: 1.0,
   critMultiplier: 2, critBaseChance: 5, critAgiDivisor: 4,
   evasionMultiplier: 2, evasionCap: 25, doubleStrikeMultiplier: 3, doubleStrikeCap: 40,
   combatTriangleFlatPct: 0, combatTrianglePerStat: 0.02, combatTriangleMax: 0.12,

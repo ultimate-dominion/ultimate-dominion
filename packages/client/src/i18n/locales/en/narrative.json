@@ -162,6 +162,17 @@
       }
     }
   },
+  "milestone": {
+    "3": {
+      "title": "Adventurer",
+      "text": "The cave has tested you, and you have not broken.\n\nFew earn this mark. Fewer still survive what comes next."
+    },
+    "5": {
+      "title": "The Winding Dark",
+      "gate": "The way is open",
+      "text": "The ancient ward crumbles at your approach. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe full map is yours now. Tread carefully."
+    }
+  },
   "restFlavor": [
     "The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.",
     "You sit by the flames and let the heat chase away the cold. Strength returns.",

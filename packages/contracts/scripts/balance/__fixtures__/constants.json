@@ -2,7 +2,7 @@
   "version": "2.0",
   "combat": {
     "hit": { "startingProbability": 90, "attackerDampener": 95, "defenderDampener": 30, "min": 5, "max": 98, "strWeaponsUseStr": true },
-    "damage": { "attackModifier": 1.2, "agiAttackModifier": 0.9, "defenseModifier": 1.0, "critMultiplier": 2 },
+    "damage": { "attackModifier": 1.0, "agiAttackModifier": 1.0, "defenseModifier": 1.0, "critMultiplier": 2 },
     "evasion": { "divisor": 3, "cap": 25 },
     "doubleStrike": { "multiplier": 2, "cap": 25 },
     "crit": { "baseChance": 4, "agiDivisor": 4 },
