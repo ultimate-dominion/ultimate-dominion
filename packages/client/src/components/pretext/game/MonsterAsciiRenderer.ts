@@ -1,17 +1,21 @@
 /**
- * Monster ASCII Renderer v6 — Contour Lines + Edge-Directed Characters
+ * Monster ASCII Renderer v7 — Brightness + Surface Texture
  *
- * Key rendering techniques (D&D Monster Manual style):
- * 1. Auto-contour — 512px edge detection brightens silhouette edges in template
- * 2. Edge-directed characters — Sobel gradient picks /\|- at edges for sharp outlines
- * 3. Rim lighting — edge cells (silhouette boundary) get brightness boost
- * 4. Gamma lift — sqrt curve pulls dark values up for visibility on black bg
- * 5. High ambient — minimum light level 0.55 keeps even shadow areas visible
- * 6. Strong specular — sharp highlights on bright surfaces
- * 7. Full-color sampling from template canvas
- * 8. Multi-pass depth extrusion for 3D volume
- * 9. Normal-mapped directional lighting
- * 10. Perspective foreshortening + idle animation
+ * Rendering pipeline (D&D Monster Manual style):
+ * Template stage (512px, cached):
+ *   1. Draw template silhouette with colors
+ *   2. Global brightness boost (1.8x) — paint bright, display moody
+ *   3. Procedural noise texture — surface detail (scales, fur, stone grain)
+ *   4. Auto-contour — edge detection brightens silhouette boundary
+ *
+ * Render stage (per frame):
+ *   5. Area-averaged color sampling with full RGB
+ *   6. Normal-mapped directional lighting (high ambient 0.70)
+ *   7. Aggressive gamma lift (0.50) for dark-bg visibility
+ *   8. Edge-directed characters — Sobel picks /\|- at edges
+ *   9. Rim lighting — 150% boost at silhouette boundary
+ *   10. Multi-pass depth extrusion for 3D volume
+ *   11. Perspective foreshortening + idle animation
  */
 
 import { FONTS } from '../theme';
@@ -124,9 +128,12 @@ function getTemplateImage(template: MonsterTemplate): TemplateData {
   template.draw(ctx, w, h);
   const data = ctx.getImageData(0, 0, w, h);
 
-  // Auto-contour: detect silhouette edges at 512px resolution and brighten them.
-  // This creates fine "crowquill" contour lines BEFORE downsampling to the char grid.
-  // An edge pixel = non-black pixel with at least one black 4-connected neighbor.
+  // Template post-processing pipeline (order matters):
+  // 1. Brightness boost — lift everything so renderer has headroom
+  applyBrightnessBoost(data.data, w, h);
+  // 2. Noise texture — break up smooth gradients with surface detail
+  applyNoiseTexture(data.data, w, h);
+  // 3. Auto-contour — brighten silhouette edges (runs AFTER noise so edges are crisp)
   applyContourBrightening(data.data, w, h);
 
   cached = { data, w, h, normals: null, normalCols: 0, normalRows: 0 };
@@ -134,13 +141,99 @@ function getTemplateImage(template: MonsterTemplate): TemplateData {
   return cached;
 }
 
+// ---------------------------------------------------------------------------
+// Template post-processing constants
+// ---------------------------------------------------------------------------
+
 /** Threshold for "black" pixel detection (luminance below this = background) */
 const CONTOUR_BLACK_THRESHOLD = 8;
 /** How much to brighten contour pixels (multiplier) */
-const CONTOUR_BOOST = 1.6;
+const CONTOUR_BOOST = 2.2;
+/** Global brightness multiplier for all non-black template pixels.
+ *  Templates should paint at moderate brightness; this lifts everything
+ *  so the renderer's lighting/gamma has more headroom. */
+const TEMPLATE_BRIGHTNESS_BOOST = 1.8;
 
+// ---------------------------------------------------------------------------
+// Procedural noise — fast hash-based value noise for surface texture
+// ---------------------------------------------------------------------------
+
+/** Integer hash → pseudo-random float in [-1, 1] */
+function hash2d(x: number, y: number): number {
+  let n = x * 374761393 + y * 668265263;
+  n = ((n ^ (n >> 13)) * 1274126177) | 0;
+  return ((n ^ (n >> 16)) & 0x7fffffff) / 0x7fffffff * 2 - 1;
+}
+
+/** Smoothstep interpolation */
+function smoothstep(t: number): number {
+  return t * t * (3 - 2 * t);
+}
+
+/** 2D value noise, returns [-1, 1] */
+function valueNoise(x: number, y: number): number {
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  const fx = smoothstep(x - ix);
+  const fy = smoothstep(y - iy);
+
+  const v00 = hash2d(ix, iy);
+  const v10 = hash2d(ix + 1, iy);
+  const v01 = hash2d(ix, iy + 1);
+  const v11 = hash2d(ix + 1, iy + 1);
+
+  const top = v00 + (v10 - v00) * fx;
+  const bot = v01 + (v11 - v01) * fx;
+  return top + (bot - top) * fy;
+}
+
+/** Two-octave fractal noise for surface texture, returns [-1, 1] */
+function surfaceNoise(x: number, y: number): number {
+  // Octave 1: broad variation (muscle groups, large scales)
+  const n1 = valueNoise(x * 0.15, y * 0.15) * 0.6;
+  // Octave 2: fine detail (individual scales, fur strands, stone grain)
+  const n2 = valueNoise(x * 0.6, y * 0.6) * 0.4;
+  return n1 + n2;
+}
+
+// ---------------------------------------------------------------------------
+// Template post-processing pipeline
+// ---------------------------------------------------------------------------
+
+/** Step 1: Global brightness boost — multiply all non-black pixels */
+function applyBrightnessBoost(pixels: Uint8ClampedArray, w: number, h: number): void {
+  for (let i = 0; i < w * h; i++) {
+    const idx = i * 4;
+    const lum = 0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2];
+    if (lum < CONTOUR_BLACK_THRESHOLD) continue;
+    pixels[idx]     = Math.min(255, Math.floor(pixels[idx] * TEMPLATE_BRIGHTNESS_BOOST));
+    pixels[idx + 1] = Math.min(255, Math.floor(pixels[idx + 1] * TEMPLATE_BRIGHTNESS_BOOST));
+    pixels[idx + 2] = Math.min(255, Math.floor(pixels[idx + 2] * TEMPLATE_BRIGHTNESS_BOOST));
+  }
+}
+
+/** Step 2: Procedural noise overlay — adds surface texture variation */
+function applyNoiseTexture(pixels: Uint8ClampedArray, w: number, h: number): void {
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = (y * w + x) * 4;
+      const lum = 0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2];
+      if (lum < CONTOUR_BLACK_THRESHOLD) continue;
+
+      // Noise amplitude scales with brightness — brighter areas get more texture
+      const noise = surfaceNoise(x, y);
+      const amplitude = 0.15 + (lum / 255) * 0.10; // 15-25% modulation
+      const mod = 1 + noise * amplitude;
+
+      pixels[idx]     = Math.min(255, Math.max(0, Math.floor(pixels[idx] * mod)));
+      pixels[idx + 1] = Math.min(255, Math.max(0, Math.floor(pixels[idx + 1] * mod)));
+      pixels[idx + 2] = Math.min(255, Math.max(0, Math.floor(pixels[idx + 2] * mod)));
+    }
+  }
+}
+
+/** Step 3: Auto-contour — brighten silhouette edges */
 function applyContourBrightening(pixels: Uint8ClampedArray, w: number, h: number): void {
-  // First pass: build boolean mask of "is this pixel non-black?"
   const nonBlack = new Uint8Array(w * h);
   for (let i = 0; i < w * h; i++) {
     const idx = i * 4;
@@ -148,24 +241,19 @@ function applyContourBrightening(pixels: Uint8ClampedArray, w: number, h: number
     nonBlack[i] = lum >= CONTOUR_BLACK_THRESHOLD ? 1 : 0;
   }
 
-  // Second pass: for each non-black pixel, check if any 4-connected neighbor is black.
-  // If so, boost its RGB. We also check 2px deep to create a thicker contour band.
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       if (!nonBlack[i]) continue;
 
-      // Check 4-connected neighbors at 1px and 2px distance
       let edgeDist = 0;
       for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]] as const) {
-        // 1px neighbor
         const nx1 = x + dx;
         const ny1 = y + dy;
         if (nx1 < 0 || nx1 >= w || ny1 < 0 || ny1 >= h || !nonBlack[ny1 * w + nx1]) {
-          edgeDist = 2; // directly adjacent to edge
+          edgeDist = 2;
           break;
         }
-        // 2px neighbor — creates a softer outer glow
         const nx2 = x + dx * 2;
         const ny2 = y + dy * 2;
         if (nx2 < 0 || nx2 >= w || ny2 < 0 || ny2 >= h || !nonBlack[ny2 * w + nx2]) {
@@ -316,7 +404,8 @@ const DEPTH_LAYERS = 3;
 const DEPTH_OFFSET = 1.5;
 
 // Gamma exponent for dark-background visibility lift (< 1 brightens darks)
-const GAMMA = 0.72;
+// 0.50 is aggressive — lifts dark midtones significantly while preserving highlights
+const GAMMA = 0.50;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -465,17 +554,17 @@ export function renderMonster(
         const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
 
         const dot = (nx / nLen) * lx + (ny / nLen) * ly + (nz / nLen) * lz;
-        // Higher ambient (0.55) — keep shadow areas visible on dark bg
-        lightMul = 0.55 + Math.max(0, dot) * 0.45;
+        // High ambient (0.70) — nothing disappears into shadow
+        lightMul = 0.70 + Math.max(0, dot) * 0.30;
 
-        // Stronger specular highlight (lower threshold, higher intensity)
-        if (color.lum > 0.15) {
+        // Strong specular highlights for surface sheen
+        if (color.lum > 0.10) {
           const hx = lx;
           const hy = ly;
           const hz = lz + 1;
           const hLen = Math.sqrt(hx * hx + hy * hy + hz * hz) || 1;
           const spec = Math.max(0, (nx / nLen) * (hx / hLen) + (ny / nLen) * (hy / hLen) + (nz / nLen) * (hz / hLen));
-          lightMul += Math.pow(spec, 6) * 0.45;
+          lightMul += Math.pow(spec, 5) * 0.6;
         }
       }
 
@@ -486,7 +575,7 @@ export function renderMonster(
         lightMul += Math.max(0, 1 - distFromWave * 4) * 0.3;
       }
 
-      lightMul = Math.min(1.6, Math.max(0, lightMul));
+      lightMul = Math.min(2.0, Math.max(0, lightMul));
 
       // Character selection based on luminance (lit)
       const litLum = Math.min(1, color.lum * lightMul);
@@ -526,8 +615,8 @@ export function renderMonster(
       const r = Math.min(255, Math.floor(Math.pow(Math.min(1, litR), GAMMA) * 255));
       const g = Math.min(255, Math.floor(Math.pow(Math.min(1, litG), GAMMA) * 255));
       const bChan = Math.min(255, Math.floor(Math.pow(Math.min(1, litB), GAMMA) * 255));
-      // Higher min alpha (0.45) so dark areas stay visible
-      const a = alpha * (0.45 + litLum * 0.55);
+      // High min alpha (0.65) — even dark areas must be visible
+      const a = alpha * (0.65 + litLum * 0.35);
 
       const cellIdx = cellCount++;
       const cell = cellBuffer[cellIdx];
@@ -575,13 +664,13 @@ export function renderMonster(
 
       if (emptyNeighbors > 0) {
         const cell = cellBuffer[idx];
-        // Rim boost scales with how exposed the edge is
-        const rimStrength = Math.min(1, emptyNeighbors / 4);
-        const boost = 1 + rimStrength * 0.8;
+        // Strong rim boost — up to 150% brightness at exposed edges
+        const rimStrength = Math.min(1, emptyNeighbors / 3);
+        const boost = 1 + rimStrength * 1.5;
         cell.r = Math.min(255, Math.floor(cell.r * boost));
         cell.g = Math.min(255, Math.floor(cell.g * boost));
         cell.b = Math.min(255, Math.floor(cell.b * boost));
-        cell.a = Math.min(1, cell.a + rimStrength * 0.3);
+        cell.a = Math.min(1, cell.a + rimStrength * 0.35);
 
         // Edge-directed character selection via Sobel gradient
         // Compute Gx and Gy from the lumGrid
