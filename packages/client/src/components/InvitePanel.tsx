@@ -103,7 +103,7 @@ const InviteCodeRow = ({ code, milestone }: { code: string; milestone: string })
   const { hasCopied, onCopy } = useClipboard(inviteUrl);
 
   const shareToX = useCallback(() => {
-    const text = `I'm playing Ultimate Dominion — an RPG where every battle, every scar, and every piece of loot is permanent.\n\nUse my invite code to skip the line: ${inviteUrl}\n\n#UltimateDominion`;
+    const text = t('invite.tweetText', { inviteUrl });
     window.open(
       `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`,
       '_blank',

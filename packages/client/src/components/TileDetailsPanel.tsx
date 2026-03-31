@@ -47,6 +47,7 @@ import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getMonsterImage } from '../utils/monsterImages';
 import {
   ADVANCED_CLASS_COLORS,
+  ADVANCED_CLASS_I18N_KEYS,
   ADVANCED_CLASS_NAMES,
   AdvancedClass,
   type Character,
@@ -1574,7 +1575,7 @@ const OpponentRow = ({
               fontWeight={isWorldBoss ? 700 : undefined}
               size={{ base: '2xs', sm: '2xs', md: 'sm', lg: 'md' }}
             >
-              {isWorldBoss ? 'BOSS \u2022 ' : isElite ? '★ ' : ''}{name}
+              {isWorldBoss ? `${t('tile.bossPrefix')} \u2022 ` : isElite ? '★ ' : ''}{name}
             </Text>
           </HStack>
         </Tooltip>
@@ -1592,7 +1593,7 @@ const OpponentRow = ({
                   fontSize="2xs"
                   fontWeight={700}
                 >
-                  {ADVANCED_CLASS_NAMES[(opponent as Character).advancedClass]}
+                  {t(ADVANCED_CLASS_I18N_KEYS[(opponent as Character).advancedClass])}
                 </Text>
               )}
           </HStack>

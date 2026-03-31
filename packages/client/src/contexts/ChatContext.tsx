@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 import { formatEther, zeroAddress } from 'viem';
 
@@ -135,6 +136,7 @@ export type ChatProviderProps = {
 };
 
 export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { ownerAddress: address } = useAuth();
   const {
@@ -364,7 +366,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           from: zeroAddress,
           jsx: (
             <Text fontWeight={500} size="xs" textAlign="center">
-              A{' '}<Text as="span" color={BOSS_COLOR} fontWeight={700}>{BOSS_NAME}</Text>{' '}has appeared at ({x}, {y})!
+              {t('boss.spawn', { name: BOSS_NAME, x, y })}
             </Text>
           ),
           message: '',
@@ -409,9 +411,7 @@ export const ChatProvider = ({ children }: ChatProviderProps): JSX.Element => {
           from: zeroAddress,
           jsx: (
             <Text fontWeight={500} size="xs" textAlign="center">
-              <Text as={RouterLink} color={winnerNameColor} fontWeight={700} to={`${CHARACTERS_PATH}/${winnerId}`} _hover={{ textDecoration: 'underline' }}>{winnerName}</Text>
-              {' '}has slain the{' '}
-              <Text as="span" color={BOSS_COLOR} fontWeight={700}>{BOSS_NAME}</Text>!
+              {t('boss.slain', { winner: winnerName, boss: BOSS_NAME })}
             </Text>
           ),
           message: '',

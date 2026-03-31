@@ -21,6 +21,13 @@ One feature or fix per branch/commit. If it touches >3 systems, plan first.
 ## Git Workflow
 Conventional commits. Only commit current session work. Don't push without asking.
 
+## Worktrees
+Each workstream uses its own worktree (`.claude/worktrees/<name>/`). Setup: `./scripts/setup-worktree.sh <name> [branch]`.
+- After setup, run `pnpm mud codegen` if contracts changed since the branch point.
+- Deploys run from the worktree — know which worktree you're deploying from.
+- Balance sim must run in the worktree that has the latest game data (`items.json`, `effects.json`).
+- Main checkout is for prod ops and reviewing merged state.
+
 ## Feature Flow (Beta → Prod)
 - Features land on `dev` first → PR to `main` for production. `main` has branch protection.
 - Hotfixes: 1-commit PR to `main`, `sync-dev.yml` syncs back to dev.

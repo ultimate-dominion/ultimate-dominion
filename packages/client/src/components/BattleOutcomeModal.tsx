@@ -34,7 +34,7 @@ import {
   EncounterType,
   type Monster,
   Rarity,
-  RARITY_NAMES,
+  RARITY_I18N_KEYS,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -78,7 +78,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const opponentDisplayName = useMemo(() => {
     if (!opponent) return t('battle.aMonster');
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
-    return isElite ? `Elite ${opponent.name}` : opponent.name;
+    return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
   }, [opponent, t]);
   const stage = useOnboardingStage();
 
@@ -408,7 +408,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     )}
                     {winner === character.id && sortedLoot.length > 0 && (sortedLoot[0].rarity ?? 0) >= Rarity.Uncommon && (
                       <ShareButton
-                        text={`Found ${sortedLoot[0].rarity !== undefined ? `a ${RARITY_NAMES[sortedLoot[0].rarity]} ` : ''}${sortedLoot[0].name} in Ultimate Dominion. Every item is permanent, on-chain, and mine.`}
+                        text={t('battle.itemShareText', { rarity: sortedLoot[0].rarity !== undefined ? t(RARITY_I18N_KEYS[sortedLoot[0].rarity]) + ' ' : '', name: sortedLoot[0].name })}
                         shareParams={{
                           type: 'drop',
                           item: sortedLoot[0].name,

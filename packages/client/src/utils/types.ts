@@ -135,6 +135,16 @@ export const RARITY_NAMES: Record<Rarity, string> = {
   [Rarity.Legendary]: 'Legendary',
 };
 
+/** i18n key for each rarity tier (namespace: ui) */
+export const RARITY_I18N_KEYS: Record<Rarity, string> = {
+  [Rarity.Worn]: 'rarity.worn',
+  [Rarity.Common]: 'rarity.common',
+  [Rarity.Uncommon]: 'rarity.uncommon',
+  [Rarity.Rare]: 'rarity.rare',
+  [Rarity.Epic]: 'rarity.epic',
+  [Rarity.Legendary]: 'rarity.legendary',
+};
+
 export const CLASS_COLORS: Record<StatsClasses, string> = {
   [StatsClasses.Strength]: '#B85C3A',     // warm copper
   [StatsClasses.Agility]: '#5A8A3E',      // forest green
@@ -152,6 +162,20 @@ export const ADVANCED_CLASS_NAMES: Record<AdvancedClass, string> = {
   [AdvancedClass.Cleric]: 'Cleric',
   [AdvancedClass.Wizard]: 'Wizard',
   [AdvancedClass.Rogue]: 'Rogue',
+};
+
+/** i18n key for each advanced class (namespace: ui) */
+export const ADVANCED_CLASS_I18N_KEYS: Record<AdvancedClass, string> = {
+  [AdvancedClass.None]: 'advancedClass.none',
+  [AdvancedClass.Paladin]: 'advancedClass.paladin',
+  [AdvancedClass.Sorcerer]: 'advancedClass.sorcerer',
+  [AdvancedClass.Warrior]: 'advancedClass.warrior',
+  [AdvancedClass.Druid]: 'advancedClass.druid',
+  [AdvancedClass.Warlock]: 'advancedClass.warlock',
+  [AdvancedClass.Ranger]: 'advancedClass.ranger',
+  [AdvancedClass.Cleric]: 'advancedClass.cleric',
+  [AdvancedClass.Wizard]: 'advancedClass.wizard',
+  [AdvancedClass.Rogue]: 'advancedClass.rogue',
 };
 
 export const ADVANCED_CLASS_COLORS: Record<AdvancedClass, string> = {
