@@ -9,7 +9,7 @@ import { useCanvas } from '../hooks/useCanvas';
 import { usePretextFonts } from '../hooks/usePretextFonts';
 import { COLORS, FONTS } from '../theme';
 import { MONSTER_TEMPLATES, type MonsterTemplate } from './monsterTemplates';
-import { renderMonster, renderMonsterHiRes } from './MonsterAsciiRenderer';
+import { renderMonster } from './MonsterAsciiRenderer';
 
 // ---------------------------------------------------------------------------
 // Size presets
@@ -55,11 +55,8 @@ function MonsterPreview({
       const labelH = viewSize === 'tile' ? 0 : 30;
       const monsterH = height - labelH;
 
-      if (viewSize === 'splash') {
-        renderMonsterHiRes(ctx, template, 0, 0, width, monsterH, { elapsed });
-      } else {
-        renderMonster(ctx, template, 0, 0, width, monsterH, { elapsed });
-      }
+      const cellSize = viewSize === 'tile' ? 4 : viewSize === 'combat' ? 6 : 5;
+      renderMonster(ctx, template, 0, 0, width, monsterH, { elapsed, cellSize });
 
       // Name label (skip on tile view)
       if (viewSize !== 'tile') {
@@ -122,7 +119,7 @@ function MonsterExpanded({ template }: { template: MonsterTemplate }) {
       ctx.fillStyle = COLORS.bg;
       ctx.fillRect(0, 0, width, height);
 
-      renderMonsterHiRes(ctx, template, 0, 0, width, height - 50, { elapsed });
+      renderMonster(ctx, template, 0, 0, width, height - 50, { elapsed, cellSize: 5 });
 
       // Info
       const classInfo = CLASS_LABELS[template.monsterClass];
