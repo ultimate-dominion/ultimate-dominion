@@ -55,7 +55,7 @@ function MonsterPreview({
       const labelH = viewSize === 'tile' ? 0 : 30;
       const monsterH = height - labelH;
 
-      const cellSize = viewSize === 'tile' ? 4 : viewSize === 'combat' ? 6 : 5;
+      const cellSize = viewSize === 'tile' ? 3 : viewSize === 'combat' ? 4 : 3;
       renderMonster(ctx, template, 0, 0, width, monsterH, { elapsed, cellSize });
 
       // Name label (skip on tile view)
@@ -119,7 +119,7 @@ function MonsterExpanded({ template }: { template: MonsterTemplate }) {
       ctx.fillStyle = COLORS.bg;
       ctx.fillRect(0, 0, width, height);
 
-      renderMonster(ctx, template, 0, 0, width, height - 50, { elapsed, cellSize: 5 });
+      renderMonster(ctx, template, 0, 0, width, height - 50, { elapsed, cellSize: 3 });
 
       // Info
       const classInfo = CLASS_LABELS[template.monsterClass];
@@ -144,9 +144,11 @@ function MonsterExpanded({ template }: { template: MonsterTemplate }) {
 
   return (
     <Box
-      w="100%"
-      h="100%"
-      minH="400px"
+      position="absolute"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
       borderRadius="md"
       overflow="hidden"
       border="1px solid"
@@ -224,7 +226,7 @@ export function MonsterGallery() {
 
       {/* Content */}
       {selectedTemplate ? (
-        <Box flex={1}>
+        <Box flex={1} position="relative">
           <MonsterExpanded template={selectedTemplate} />
         </Box>
       ) : (
