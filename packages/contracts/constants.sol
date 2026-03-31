@@ -43,9 +43,12 @@ uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
 uint256 constant ATTACK_MODIFIER = 1.1 ether;
 uint256 constant AGI_ATTACK_MODIFIER = 1.0 ether;
-uint256 constant EVASION_CAP = 35;
-uint256 constant DOUBLE_STRIKE_CAP = 40;
+uint256 constant EVASION_CAP = 30;
+uint256 constant DOUBLE_STRIKE_CAP = 30;
 uint256 constant DOUBLE_STRIKE_DAMAGE_DIVISOR = 2;
+// Magic resistance: % damage reduction per INT point, capped
+uint256 constant MAGIC_RESIST_PER_INT = 2;
+uint256 constant MAGIC_RESIST_CAP = 30;
 // the amount crits damage is multiplied by
 uint256 constant CRIT_MULTIPLIER = 2;
 // the character's stats are divided by PROFICIENCY_DENOMINATOR when applying stat bonuses

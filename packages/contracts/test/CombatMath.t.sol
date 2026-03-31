@@ -158,12 +158,12 @@ contract CombatMathTest is Test {
     }
 
     function testAddStatBonus_EqualStats() public {
-        // Equal stats: no bonus or penalty, just base damage
+        // Equal stats but attackMod 1.1x gives attacker slight edge
         // attacker=10, defender=10, baseDamage=3.6e18
-        // baseDiff = 10*1.0e18 - 10*1e18 = 0 (equal modifiers, no stat bonus)
-        // damage = 3.6e18 / 1e18 = 3
+        // baseDiff = 10*1.1e18 - 10*1e18 = 1e18 (positive)
+        // damage = round(3.6e18 + 0.5e18) / 1e18 = round(4.1e18) / 1e18 = 4
         int256 damage = CombatMath.addStatBonus(10, 10, 3.6 ether, ATTACK_MODIFIER);
-        assertEq(damage, 3);
+        assertEq(damage, 4);
     }
 
     function testAddStatBonus_ModerateDefenderAdvantage_NotIgnored() public {
@@ -177,10 +177,10 @@ contract CombatMathTest is Test {
 
     function testAddStatBonus_SmallDefenderAdvantage() public {
         // attacker=10, defender=13, baseDamage=6e18
-        // baseDiff = 10*1.0e18 - 13*1e18 = 10e18 - 13e18 = -3e18
-        // damage = (6e18 + (-3e18/2)) / 1e18 = 4.5e18 / 1e18 = 4
+        // baseDiff = 10*1.1e18 - 13*1e18 = 11e18 - 13e18 = -2e18
+        // damage = (6e18 + (-2e18/2)) / 1e18 = 5e18 / 1e18 = 5
         int256 damage = CombatMath.addStatBonus(10, 13, 6 ether, ATTACK_MODIFIER);
-        assertEq(damage, 4);
+        assertEq(damage, 5);
     }
 
     function testGetStatModifier() public {
@@ -295,15 +295,15 @@ contract CombatMathTest is Test {
     }
 
     function testEvasionDodgeCap_V3() public {
-        // Evasion cap is 35
-        assertEq(EVASION_CAP, 35);
+        // Evasion cap is 30
+        assertEq(EVASION_CAP, 30);
 
-        // defAGI=200, atkAGI=0, diff=200 -> uncapped=400, capped=35
+        // defAGI=200, atkAGI=0, diff=200 -> uncapped=400, capped=30
         // Equal STR: no STR reduction
-        // rnChunk=34 -> 34 < 35 -> dodge (within cap)
-        assertTrue(CombatMath.calculateEvasionDodge(200, 0, 10, 10, 34));
-        // rnChunk=35 -> 35 < 35 is false -> no dodge (cap works)
-        assertFalse(CombatMath.calculateEvasionDodge(200, 0, 10, 10, 35));
+        // rnChunk=29 -> 29 < 30 -> dodge (within cap)
+        assertTrue(CombatMath.calculateEvasionDodge(200, 0, 10, 10, 29));
+        // rnChunk=30 -> 30 < 30 is false -> no dodge (cap works)
+        assertFalse(CombatMath.calculateEvasionDodge(200, 0, 10, 10, 30));
     }
 
     function testEvasionDodge_STRReduction() public {
@@ -320,7 +320,7 @@ contract CombatMathTest is Test {
         // STR reduction capped at 15
         // defAGI=30, atkAGI=10, diff=20 -> base dodge = 20*2 = 40
         // atkSTR=50, defSTR=10, strDiff=40 -> reduction=min(40,15)=15
-        // dodge after STR = 40 - 15 = 25 (below evasion cap 35, no cap applied)
+        // dodge after STR = 40 - 15 = 25 (below evasion cap 30, no cap applied)
         // effective dodge = 25%
         assertTrue(CombatMath.calculateEvasionDodge(30, 10, 50, 10, 24));
         assertFalse(CombatMath.calculateEvasionDodge(30, 10, 50, 10, 25));
@@ -392,26 +392,25 @@ contract CombatMathTest is Test {
     }
 
     function testDoubleStrikeCap_V3() public {
-        // Double strike cap is 40
-        assertEq(DOUBLE_STRIKE_CAP, 40);
+        // Double strike cap is 30
+        assertEq(DOUBLE_STRIKE_CAP, 30);
 
-        // atkAGI=20, defAGI=0, diff=20 -> uncapped=60, capped=40
-        assertTrue(CombatMath.calculateDoubleStrike(20, 0, 39));
-        assertFalse(CombatMath.calculateDoubleStrike(20, 0, 40));
+        // atkAGI=20, defAGI=0, diff=20 -> uncapped=60, capped=30
+        assertTrue(CombatMath.calculateDoubleStrike(20, 0, 29));
+        assertFalse(CombatMath.calculateDoubleStrike(20, 0, 30));
     }
 
     function testMagicResistance_V3() public {
-        // V3: 3% per INT point (was 2%), still capped at 40%
-        // defINT=10, damage=100 -> resistPct=min(30,40)=30 -> resist=100*30/100=30
-        assertEq(CombatMath.calculateMagicResistance(10, 100), 30);
+        // 2% per INT point, capped at 30%
+        // defINT=10, damage=100 -> resistPct=min(20,30)=20 -> resist=100*20/100=20
+        assertEq(CombatMath.calculateMagicResistance(10, 100), 20);
 
-        // defINT=14, damage=100 -> resistPct=min(42,40)=40 -> resist=100*40/100=40
-        // But capped at damage-1: resist = min(40, 99) = 40
-        assertEq(CombatMath.calculateMagicResistance(14, 100), 40);
+        // defINT=14, damage=100 -> resistPct=min(28,30)=28 -> resist=100*28/100=28
+        assertEq(CombatMath.calculateMagicResistance(14, 100), 28);
 
         // High INT, low damage -> capped at damage-1
-        // defINT=100, damage=5 -> resistPct=40 -> resist=5*40/100=2
-        assertEq(CombatMath.calculateMagicResistance(100, 5), 2);
+        // defINT=100, damage=5 -> resistPct=30 -> resist=5*30/100=1
+        assertEq(CombatMath.calculateMagicResistance(100, 5), 1);
 
         // No resistance on zero/negative damage
         assertEq(CombatMath.calculateMagicResistance(20, 0), 0);

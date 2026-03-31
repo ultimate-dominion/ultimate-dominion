@@ -20,7 +20,9 @@ import {
     ATTACKER_HIT_DAMPENER,
     DEFENDER_HIT_DAMPENER,
     EVASION_CAP,
-    DOUBLE_STRIKE_CAP
+    DOUBLE_STRIKE_CAP,
+    MAGIC_RESIST_PER_INT,
+    MAGIC_RESIST_CAP
 } from "../../constants.sol";
 
 /**
@@ -333,9 +335,8 @@ library CombatMath {
         returns (int256)
     {
         if (damage <= 0) return int256(0);
-        // 3% damage reduction per INT point, capped at 40%
-        int256 resistPct = defenderIntelligence * 3;
-        if (resistPct > 40) resistPct = 40;
+        int256 resistPct = defenderIntelligence * int256(MAGIC_RESIST_PER_INT);
+        if (resistPct > int256(MAGIC_RESIST_CAP)) resistPct = int256(MAGIC_RESIST_CAP);
         if (resistPct < 0) resistPct = 0;
         int256 resist = (damage * resistPct) / 100;
         if (resist >= damage) resist = damage - 1;
