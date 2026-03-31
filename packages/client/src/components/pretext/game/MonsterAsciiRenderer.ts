@@ -1,19 +1,15 @@
 /**
- * Monster ASCII Renderer v4 — Full Color
+ * Monster ASCII Renderer v5 — Full Color + Rim Lighting
  *
- * Each monster template draws in its OWN colors (D&D Monster Manual style).
- * The renderer samples RGB directly from the template and uses luminance
- * for character density selection. No more flat class-based color overlay.
- *
- * Core techniques:
- * - Full-color templates: each monster has its own palette
- * - Template canvas at 512px for fine detail
- * - RGB sampling with luminance-based character selection
- * - Multi-pass depth extrusion (3 shadow layers)
- * - Normal-mapped directional lighting modulates template colors
- * - Perspective foreshortening (bottom wider = "looking up")
- * - Idle animation: bob, sway, breathing, organic wave
- * - Ground shadow, boss brightness wave
+ * Key rendering techniques (D&D Monster Manual style):
+ * 1. Rim lighting — edge cells (silhouette boundary) get brightness boost
+ * 2. Gamma lift — sqrt curve pulls dark values up for visibility on black bg
+ * 3. High ambient — minimum light level 0.55 keeps even shadow areas visible
+ * 4. Strong specular — sharp highlights on bright surfaces
+ * 5. Full-color sampling from template canvas
+ * 6. Multi-pass depth extrusion for 3D volume
+ * 7. Normal-mapped directional lighting
+ * 8. Perspective foreshortening + idle animation
  */
 
 import { FONTS } from '../theme';
@@ -52,10 +48,15 @@ type CellData = {
 
 let cellBuffer: CellData[] = [];
 let cellCount = 0;
+// Grid mapping (row, col) → cellBuffer index. -1 = empty cell.
+let gridIndex: Int32Array = new Int32Array(0);
 
 function ensureBuffer(size: number) {
   while (cellBuffer.length < size) {
     cellBuffer.push({ char: '', x: 0, y: 0, r: 0, g: 0, b: 0, a: 0, weight: 400, fontSize: 4 });
+  }
+  if (gridIndex.length < size) {
+    gridIndex = new Int32Array(size);
   }
 }
 
@@ -122,7 +123,7 @@ function getTemplateImage(template: MonsterTemplate): TemplateData {
 
 type ColorSample = { r: number; g: number; b: number; lum: number };
 
-/** Area-averaged color sampling — returns RGB and perceptual luminance */
+/** Area-averaged color sampling — returns RGB [0..1] and perceptual luminance */
 function sampleColor(
   data: Uint8ClampedArray,
   imgW: number,
@@ -247,6 +248,9 @@ function getWeight(level: number, isBoss: boolean, brightness: number): number {
 const DEPTH_LAYERS = 3;
 const DEPTH_OFFSET = 1.5;
 
+// Gamma exponent for dark-background visibility lift (< 1 brightens darks)
+const GAMMA = 0.72;
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -338,7 +342,7 @@ export function renderMonster(
     : -1;
 
   // -----------------------------------------------------------------------
-  // Ground shadow (use average color from template center)
+  // Ground shadow
   // -----------------------------------------------------------------------
 
   if (enable3D) {
@@ -362,9 +366,11 @@ export function renderMonster(
 
   const fontSize = actualCellW * 1.2;
   const brightness = charBrightness!;
+  const gridSize = cols * rows;
 
-  ensureBuffer(cols * rows);
+  ensureBuffer(gridSize);
   cellCount = 0;
+  gridIndex.fill(-1, 0, gridSize);
 
   for (let row = 0; row < rows; row++) {
     const rowT = row / (rows - 1 || 1);
@@ -391,16 +397,17 @@ export function renderMonster(
         const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
 
         const dot = (nx / nLen) * lx + (ny / nLen) * ly + (nz / nLen) * lz;
-        lightMul = 0.4 + Math.max(0, dot) * 0.6;
+        // Higher ambient (0.55) — keep shadow areas visible on dark bg
+        lightMul = 0.55 + Math.max(0, dot) * 0.45;
 
-        // Specular highlight
-        if (color.lum > 0.3) {
+        // Stronger specular highlight (lower threshold, higher intensity)
+        if (color.lum > 0.15) {
           const hx = lx;
           const hy = ly;
           const hz = lz + 1;
           const hLen = Math.sqrt(hx * hx + hy * hy + hz * hz) || 1;
           const spec = Math.max(0, (nx / nLen) * (hx / hLen) + (ny / nLen) * (hy / hLen) + (nz / nLen) * (hz / hLen));
-          lightMul += Math.pow(spec, 8) * 0.25;
+          lightMul += Math.pow(spec, 6) * 0.45;
         }
       }
 
@@ -411,7 +418,7 @@ export function renderMonster(
         lightMul += Math.max(0, 1 - distFromWave * 4) * 0.3;
       }
 
-      lightMul = Math.min(1.4, Math.max(0, lightMul));
+      lightMul = Math.min(1.6, Math.max(0, lightMul));
 
       // Character selection based on luminance (lit)
       const litLum = Math.min(1, color.lum * lightMul);
@@ -443,13 +450,19 @@ export function renderMonster(
       const cellX = rowOffsetX + col * rowCellW + rowCellW / 2 + waveX;
       const cellY = drawY + rowCellH / 2 + waveY;
 
-      // Use template's own color, modulated by lighting
-      const r = Math.min(255, Math.floor(color.r * 255 * lightMul));
-      const g = Math.min(255, Math.floor(color.g * 255 * lightMul));
-      const bChan = Math.min(255, Math.floor(color.b * 255 * lightMul));
-      const a = alpha * (0.25 + litLum * 0.75);
+      // Apply gamma lift — pulls darks up for visibility on dark background
+      // pow(x, 0.72) where x in [0..1] brightens dark values more than bright ones
+      const litR = color.r * lightMul;
+      const litG = color.g * lightMul;
+      const litB = color.b * lightMul;
+      const r = Math.min(255, Math.floor(Math.pow(Math.min(1, litR), GAMMA) * 255));
+      const g = Math.min(255, Math.floor(Math.pow(Math.min(1, litG), GAMMA) * 255));
+      const bChan = Math.min(255, Math.floor(Math.pow(Math.min(1, litB), GAMMA) * 255));
+      // Higher min alpha (0.45) so dark areas stay visible
+      const a = alpha * (0.45 + litLum * 0.55);
 
-      const cell = cellBuffer[cellCount++];
+      const cellIdx = cellCount++;
+      const cell = cellBuffer[cellIdx];
       cell.char = char;
       cell.x = cellX;
       cell.y = cellY;
@@ -459,6 +472,46 @@ export function renderMonster(
       cell.a = a;
       cell.weight = weight;
       cell.fontSize = drawFontSize;
+
+      // Track in grid for edge detection
+      gridIndex[row * cols + col] = cellIdx;
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Rim lighting — detect silhouette edges and boost brightness
+  // Cells adjacent to empty space get a strong highlight, creating the
+  // "backlit" rim effect seen in D&D Monster Manual illustrations.
+  // -----------------------------------------------------------------------
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const idx = gridIndex[row * cols + col];
+      if (idx < 0) continue;
+
+      // Check 8-connected neighbors for empty cells
+      let emptyNeighbors = 0;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = row + dr;
+          const nc = col + dc;
+          if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || gridIndex[nr * cols + nc] < 0) {
+            emptyNeighbors++;
+          }
+        }
+      }
+
+      if (emptyNeighbors > 0) {
+        const cell = cellBuffer[idx];
+        // Rim boost scales with how exposed the edge is (more empty neighbors = stronger rim)
+        const rimStrength = Math.min(1, emptyNeighbors / 4);
+        const boost = 1 + rimStrength * 0.8; // up to 80% brightness boost
+        cell.r = Math.min(255, Math.floor(cell.r * boost));
+        cell.g = Math.min(255, Math.floor(cell.g * boost));
+        cell.b = Math.min(255, Math.floor(cell.b * boost));
+        cell.a = Math.min(1, cell.a + rimStrength * 0.3);
+      }
     }
   }
 
@@ -490,7 +543,6 @@ export function renderMonster(
   // -----------------------------------------------------------------------
 
   if (template.isBoss) {
-    // Boss glow uses the monster's own dominant color
     ctx.shadowColor = 'rgba(200, 60, 40, 0.6)';
     ctx.shadowBlur = 8 + Math.sin(elapsed * 0.003) * 4;
   }
