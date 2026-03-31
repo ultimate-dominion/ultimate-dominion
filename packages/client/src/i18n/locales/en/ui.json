@@ -153,7 +153,10 @@
     "shopAlwaysAllowTooltip": "This allows you to spend Gold on Shops without having to approve each transaction. It is a faster and smoother experience.",
     "marketplaceAlwaysAllowTooltip": "This allows you to spend Gold on the Marketplace without having to approve each transaction. It is a faster and smoother experience.",
     "lootManagerAlwaysAllowTooltip": "This allows you to carry Gold without having to approve each transaction. It is a faster and smoother experience.",
-    "lootManagerSuccess": "You can use your token with the Loot Manager."
+    "lootManagerSuccess": "You can use your token with the Loot Manager.",
+    "consumeTitle": "Allow Consumables",
+    "consumeMessage": "In order to consume items, you must allow the game to use your items.",
+    "consumeSuccess": "You can now consume your item."
   },
   "battle": {
     "victory": "Victory!",
@@ -336,7 +339,8 @@
     "copyLink": "Copy Link",
     "shareToX": "Share to X",
     "bonus": "Bonus",
-    "starter": "Starter"
+    "starter": "Starter",
+    "tweetText": "I'm playing Ultimate Dominion — an RPG where every battle, every scar, and every piece of loot is permanent.\n\nUse my invite code to skip the line: {{inviteUrl}}\n\n#UltimateDominion"
   },
   "goldMerchant": {
     "title": "Gold Merchant",
@@ -725,6 +729,7 @@
     "cannotBattleAlcove": "Cannot Battle in the Alcove",
     "cannotBattleAlcoveBody": "You are currently in <bold>the Alcove</bold>. In order to battle other players, you must enter <bold>the Winding Dark</bold>.",
     "worldBossReturns": "World boss returns in {{time}}",
+    "bossPrefix": "BOSS",
     "worldBossStirring": "World boss stirring...",
     "viewCharacter": "View character",
     "inBattle": "In battle...",
@@ -857,5 +862,29 @@
     "leave": "Leave the Dark Cave",
     "stay": "Stay",
     "transitioning": "Leaving..."
+  },
+  "rarity": {
+    "worn": "Worn",
+    "common": "Common",
+    "uncommon": "Uncommon",
+    "rare": "Rare",
+    "epic": "Epic",
+    "legendary": "Legendary"
+  },
+  "advancedClass": {
+    "none": "",
+    "paladin": "Paladin",
+    "sorcerer": "Sorcerer",
+    "warrior": "Warrior",
+    "druid": "Druid",
+    "warlock": "Warlock",
+    "ranger": "Ranger",
+    "cleric": "Cleric",
+    "wizard": "Wizard",
+    "rogue": "Rogue"
+  },
+  "boss": {
+    "spawn": "A {{name}} has appeared at ({{x}}, {{y}})!",
+    "slain": "{{winner}} has slain the {{boss}}!"
   }
 }

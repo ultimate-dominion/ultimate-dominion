@@ -10,7 +10,7 @@ import {
   ItemType,
   Rarity,
   RARITY_COLORS,
-  RARITY_NAMES,
+  RARITY_I18N_KEYS,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -346,7 +346,7 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
                       mb={0.5}
                       textTransform="uppercase"
                     >
-                      {RARITY_NAMES[rarity as Rarity]}
+                      {t(RARITY_I18N_KEYS[rarity as Rarity])}
                     </Text>
                   )}
 
