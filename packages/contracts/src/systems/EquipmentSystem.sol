@@ -55,7 +55,9 @@ contract EquipmentSystem is System {
             itemId = itemIds[i];
             // Items are owned by the character owner (delegator), not the caller (session wallet)
             require(IWorld(_world()).UD__isItemOwner(itemId, characterOwner), "EQUIPMENT: Not Item Owner");
-            // Durability gate: broken items cannot be equipped
+            // Initialize durability for items that haven't been tracked yet (no-op if already set)
+            IWorld(_world()).UD__initializeDurability(characterId, itemId);
+            // Durability gate: broken items (durability=1) cannot be equipped
             require(IWorld(_world()).UD__canEquipDurability(characterId, itemId), "EQUIPMENT: Item broken");
             ItemType itemType = Items.getItemType(itemId);
             if (itemType == ItemType.Weapon) {
@@ -220,6 +222,14 @@ contract EquipmentSystem is System {
             modifiedStats.armor = CharacterEquipment.getArmor(entityId);
             modifiedStats.maxHp = baseStats.maxHp;
             modifiedStats.currentHp = baseStats.currentHp;
+
+            // Apply guild stat buffs
+            (int256 gStrBuff, int256 gAgiBuff, int256 gIntBuff, int256 gHpBuff) =
+                IWorld(_world()).UD__getGuildBuffStats(entityId);
+            modifiedStats.strength += gStrBuff;
+            modifiedStats.agility += gAgiBuff;
+            modifiedStats.intelligence += gIntBuff;
+            modifiedStats.maxHp += gHpBuff;
         } else if (IWorld(_world()).UD__isValidMob(entityId)) {
             modifiedStats = IWorld(_world()).UD__getMonsterCombatStats(entityId);
         } else {

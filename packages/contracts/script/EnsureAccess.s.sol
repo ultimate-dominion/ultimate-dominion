@@ -111,11 +111,11 @@ contract EnsureAccessSystem is System {
         ResourceId badgesOwners = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Owners");
         ResourceId badgesBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Balances");
 
-        address[5] memory writers = [
+        address[6] memory writers = [
             _sys("LevelSystem"), _sys("AdminSystem"), _sys("StatSystem"),
-            _sys("FragmentSystem"), _sys("ZoneTransSys")
+            _sys("FragmentSystem"), _sys("ZoneTransSys"), _sys("GuildSystem")
         ];
-        for (uint256 i = 0; i < 5; i++) {
+        for (uint256 i = 0; i < 6; i++) {
             ResourceAccess.set(badgesErc721System, writers[i], true);
             ResourceAccess.set(badgesOwners, writers[i], true);
             ResourceAccess.set(badgesBalances, writers[i], true);

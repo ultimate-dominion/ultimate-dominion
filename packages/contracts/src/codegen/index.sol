@@ -145,6 +145,8 @@ import { Territory, TerritoryData } from "./tables/Territory.sol";
 import { GuildWar, GuildWarData } from "./tables/GuildWar.sol";
 import { TerritoryBonus, TerritoryBonusData } from "./tables/TerritoryBonus.sol";
 import { GuildBuff, GuildBuffData } from "./tables/GuildBuff.sol";
+import { GuildStatBuffSlot, GuildStatBuffSlotData } from "./tables/GuildStatBuffSlot.sol";
+import { GuildLevel } from "./tables/GuildLevel.sol";
 import { GuildContract, GuildContractData } from "./tables/GuildContract.sol";
 import { GuildSeason, GuildSeasonData } from "./tables/GuildSeason.sol";
 import { RegearRequest, RegearRequestData } from "./tables/RegearRequest.sol";

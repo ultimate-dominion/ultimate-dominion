@@ -41,7 +41,7 @@ address constant CHARACTER_TOKEN_COUNTER_KEY = address(2);
 
 uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
-uint256 constant ATTACK_MODIFIER = 1.0 ether;
+uint256 constant ATTACK_MODIFIER = 1.1 ether;
 uint256 constant AGI_ATTACK_MODIFIER = 1.0 ether;
 uint256 constant EVASION_CAP = 35;
 uint256 constant DOUBLE_STRIKE_CAP = 40;
@@ -169,6 +169,20 @@ uint256 constant GUILD_MAX_MEMBERS = 50;
 uint256 constant GUILD_MAX_TAX_RATE = 5000;            // 50% max (basis points)
 uint256 constant GUILD_INACTIVITY_THRESHOLD = 14 days;
 uint256 constant GUILD_BONUS_BPS = 500;                // 5% flat bonus (gold, XP, drops)
+
+// Guild Stat Buffs
+int256 constant GUILD_BUFF_FLAT_STAT = 3;              // +3 STR/AGI/INT
+int256 constant GUILD_BUFF_FLAT_HP = 5;                 // +5 maxHP for Resilience
+uint256 constant GUILD_BUFF_DAILY_COST = 200 ether;     // 200 gold/day per active buff
+uint256 constant GUILD_BUFF_PERIOD = 1 days;
+
+// Guild Upgrades
+uint256 constant GUILD_UPGRADE_LEVEL_2_COST = 1000 ether;
+uint256 constant GUILD_UPGRADE_LEVEL_3_COST = 2500 ether;
+uint256 constant GUILD_MAX_LEVEL = 3;
+
+// The Pact Badge
+uint256 constant BADGE_GUILD_FOUNDER = 60;              // Social badge range (60-69)
 
 // ======== Phase 5: PvP Rankings ========
 int256 constant ELO_DEFAULT_RATING = 1000;

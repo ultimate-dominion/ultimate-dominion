@@ -153,6 +153,14 @@ enum BoostType {
   GoldFind
 }
 
+enum GuildStatBuff {
+  None,
+  Strength,
+  Agility,
+  Intelligence,
+  Resilience
+}
+
 enum SocialLinkType {
   None,
   Friend,
