@@ -3,6 +3,7 @@
 ## Design Filter
 Does this make the world more permanent, more player-driven, and more worth coming back to in a year? (Full manifesto: `packages/client/src/pages/Manifesto.tsx`)
 
+
 ## Testing
 Every code change MUST have tests — happy paths, unhappy paths, edge cases. No exceptions.
 
