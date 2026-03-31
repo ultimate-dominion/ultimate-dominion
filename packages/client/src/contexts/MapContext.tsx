@@ -143,7 +143,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [isWaitingForSpawn, setIsWaitingForSpawn] = useState(false);
 
   // Reactive table subscriptions for entity queries
-  const positionTable = useGameTable('Position');
+  // Merge Position + PositionV2 — beta contract deploy leaked V2 tables to prod.
+  // V2 entries override V1 so recently-moved entities resolve correctly.
+  const positionTableV1 = useGameTable('Position');
+  const positionTableV2 = useGameTable('PositionV2');
+  const positionTable = useMemo(
+    () => ({ ...positionTableV1, ...positionTableV2 }),
+    [positionTableV1, positionTableV2],
+  );
   const spawnedTable = useGameTable('Spawned');
   const statsTable = useGameTable('Stats');
   const charactersTable = useGameTable('Characters');
@@ -157,7 +164,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const mobStatsTable = useGameTable('MobStats');
 
   // Player's position from the store (canonical — no optimistic updates)
-  const posData = useGameValue('Position', character?.id);
+  // Try PositionV2 first (zone-relative coords deployed via beta contract leak),
+  // fall back to legacy Position table for unaffected characters.
+  const posDataV2 = useGameValue('PositionV2', character?.id);
+  const posDataV1 = useGameValue('Position', character?.id);
+  const posData = posDataV2 ?? posDataV1;
   const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
 
   // Zone awareness — read CharacterZone table (0 or unset = zone 1)
@@ -360,7 +371,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
     try {
       const _shops: Shop[] = allShopEntities.map(entity => {
-        const positionEntityData = getTableValue('Position', entity);
+        const positionEntityData = getTableValue('PositionV2', entity) ?? getTableValue('Position', entity);
         const shopData = getTableValue('Shops', entity);
 
         if (!positionEntityData || !shopData) {
