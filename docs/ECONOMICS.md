@@ -29,13 +29,13 @@ Gold drops from monster kills. Drop amounts scale with mob level via the formula
 
 | Mob Level | Gold Range | Average |
 |-----------|------------|---------|
-| 1 | 0.05–3 | ~1.5 gold |
-| 3 | 0.05–9 | ~4.5 gold |
-| 5 | 0.05–15 | ~7.5 gold |
-| 7 | 0.05–21 | ~10.5 gold |
-| 10 | 0.05–30 | ~15.0 gold |
+| 1 | 0.05–2 | ~1.1 gold |
+| 3 | 0.05–6 | ~3.1 gold |
+| 5 | 0.05–10 | ~5.1 gold |
+| 7 | 0.05–14 | ~7.1 gold |
+| 10 | 0.05–20 | ~10.1 gold |
 
-**Current implementation**: `BASE_GOLD_DROP = 3` (on-chain constant). Scales with mob level.
+**Current implementation**: `BASE_GOLD_DROP = 2` (on-chain constant, reduced from 3 in March 2026 economy rebalance). Scales with mob level.
 
 **Anti-farming**: If player is 5+ levels above mob, no gold drops. `[PLANNED]` — prevents high-level farming of easy content.
 

@@ -7,7 +7,7 @@
       "dropChance": 4000,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:peakstone_mail",
-      "price": "35000000000000000000",
+      "price": "100000000000000000000",
       "armorType": "Plate",
       "isStarter": false,
       "stats": {
@@ -31,7 +31,7 @@
       "dropChance": 1500,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:ridgeforged_plate",
-      "price": "70000000000000000000",
+      "price": "200000000000000000000",
       "armorType": "Plate",
       "isStarter": false,
       "stats": {
@@ -55,7 +55,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:windsworn_plate",
-      "price": "140000000000000000000",
+      "price": "400000000000000000000",
       "armorType": "Plate",
       "isStarter": false,
       "stats": {
@@ -79,7 +79,7 @@
       "dropChance": 30,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:wardens_bulwark",
-      "price": "280000000000000000000",
+      "price": "800000000000000000000",
       "armorType": "Plate",
       "isStarter": false,
       "stats": {
@@ -103,7 +103,7 @@
       "dropChance": 4000,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:mountain_hide",
-      "price": "35000000000000000000",
+      "price": "100000000000000000000",
       "armorType": "Leather",
       "isStarter": false,
       "stats": {
@@ -127,7 +127,7 @@
       "dropChance": 1500,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:galebound_leather",
-      "price": "70000000000000000000",
+      "price": "200000000000000000000",
       "armorType": "Leather",
       "isStarter": false,
       "stats": {
@@ -151,7 +151,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:stormhide_vest",
-      "price": "140000000000000000000",
+      "price": "400000000000000000000",
       "armorType": "Leather",
       "isStarter": false,
       "stats": {
@@ -175,7 +175,7 @@
       "dropChance": 30,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:phantom_shroud",
-      "price": "280000000000000000000",
+      "price": "800000000000000000000",
       "armorType": "Leather",
       "isStarter": false,
       "stats": {
@@ -199,7 +199,7 @@
       "dropChance": 4000,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:frostweave_robe",
-      "price": "35000000000000000000",
+      "price": "100000000000000000000",
       "armorType": "Cloth",
       "isStarter": false,
       "stats": {
@@ -223,7 +223,7 @@
       "dropChance": 1500,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:mistcloak",
-      "price": "70000000000000000000",
+      "price": "200000000000000000000",
       "armorType": "Cloth",
       "isStarter": false,
       "stats": {
@@ -247,7 +247,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:wraith_vestments",
-      "price": "140000000000000000000",
+      "price": "400000000000000000000",
       "armorType": "Cloth",
       "isStarter": false,
       "stats": {
@@ -271,7 +271,7 @@
       "dropChance": 30,
       "initialSupply": "10000000000000000000",
       "metadataUri": "armor:ember_mantle",
-      "price": "280000000000000000000",
+      "price": "800000000000000000000",
       "armorType": "Cloth",
       "isStarter": false,
       "stats": {
@@ -297,7 +297,7 @@
       "dropChance": 4000,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:ridgestone_hammer",
-      "price": "40000000000000000000",
+      "price": "120000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -325,7 +325,7 @@
       "dropChance": 1500,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:peak_cleaver",
-      "price": "80000000000000000000",
+      "price": "240000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -353,7 +353,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:windforged_axe",
-      "price": "150000000000000000000",
+      "price": "450000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -381,7 +381,7 @@
       "dropChance": 30,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:wardens_maul",
-      "price": "300000000000000000000",
+      "price": "900000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -409,7 +409,7 @@
       "dropChance": 4000,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:scrub_bow",
-      "price": "40000000000000000000",
+      "price": "120000000000000000000",
       "isStarter": false,
       "scalingStat": "AGI",
       "stats": {
@@ -437,7 +437,7 @@
       "dropChance": 1500,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:gale_bow",
-      "price": "80000000000000000000",
+      "price": "240000000000000000000",
       "isStarter": false,
       "scalingStat": "AGI",
       "stats": {
@@ -465,7 +465,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:stormfeather_bow",
-      "price": "150000000000000000000",
+      "price": "450000000000000000000",
       "isStarter": false,
       "scalingStat": "AGI",
       "stats": {
@@ -493,7 +493,7 @@
       "dropChance": 30,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:peakwind_longbow",
-      "price": "300000000000000000000",
+      "price": "900000000000000000000",
       "isStarter": false,
       "scalingStat": "AGI",
       "stats": {
@@ -521,7 +521,7 @@
       "dropChance": 4000,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:frozen_shard",
-      "price": "40000000000000000000",
+      "price": "120000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -549,7 +549,7 @@
       "dropChance": 1500,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:rime_staff",
-      "price": "80000000000000000000",
+      "price": "240000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -577,7 +577,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:stormglass_rod",
-      "price": "150000000000000000000",
+      "price": "450000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -605,7 +605,7 @@
       "dropChance": 30,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:wraith_beacon",
-      "price": "300000000000000000000",
+      "price": "900000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -633,7 +633,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:wardens_ember",
-      "price": "200000000000000000000",
+      "price": "600000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -661,7 +661,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:windweaver",
-      "price": "200000000000000000000",
+      "price": "600000000000000000000",
       "isStarter": false,
       "scalingStat": "AGI",
       "stats": {
@@ -689,7 +689,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:ridgefang",
-      "price": "200000000000000000000",
+      "price": "600000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {
@@ -717,7 +717,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:viperstrike",
-      "price": "200000000000000000000",
+      "price": "600000000000000000000",
       "isStarter": false,
       "scalingStat": "AGI",
       "stats": {
@@ -745,7 +745,7 @@
       "dropChance": 200,
       "initialSupply": "10000000000000000000",
       "metadataUri": "weapon:ashveil_staff",
-      "price": "200000000000000000000",
+      "price": "600000000000000000000",
       "isStarter": false,
       "scalingStat": "",
       "stats": {

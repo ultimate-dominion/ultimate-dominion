@@ -7,16 +7,27 @@
 
 export const ECONOMY = {
   // Gold faucets
-  BASE_GOLD_DROP: 3,
+  BASE_GOLD_DROP: 2,
   GOLD_PER_KILL_FLAT: 0.05,
   SHOP_SELL_MARKDOWN: 0.50,
   MARKETPLACE_FEE: 0.03,
 
-  // Gear degradation (Z2+)
-  DURABILITY_MAX: 100,
-  DURABILITY_LOSS_PER_FIGHT: 2,
-  REPAIR_RATE: 0.08,
-  FIGHTS_PER_DURABILITY_CYCLE: 50,
+  // Gear degradation — flat per-rarity cost model (matches constants.sol)
+  DURABILITY_LOSS_PER_FIGHT: 1,
+  REPAIR_COST_PER_POINT: {
+    0: 0.05,   // R0 (Worn)     — max dur 20, full repair: 1g
+    1: 0.25,   // R1 (Common)   — max dur 30, full repair: 7.5g
+    2: 0.75,   // R2 (Uncommon) — max dur 40, full repair: 30g
+    3: 1.5,    // R3 (Rare)     — max dur 50, full repair: 75g
+    4: 2.5,    // R4 (Epic)     — max dur 60, full repair: 150g
+  } as Record<number, number>,
+  MAX_DURABILITY: {
+    0: 20, 1: 30, 2: 40, 3: 50, 4: 60,
+  } as Record<number, number>,
+  // Legacy compat (used by some callers)
+  DURABILITY_MAX: 40,       // avg for R2
+  REPAIR_RATE: 0.10,        // approximate, actual is per-point flat
+  FIGHTS_PER_DURABILITY_CYCLE: 40,
 
   // Drop rates (/100000)
   DROP_RATES: {
@@ -99,10 +110,11 @@ export function avgVendorGoldPerFight(): number {
   return total;
 }
 
-/** Repair cost per fight for a given weapon + armor base price */
-export function repairCostPerFight(weaponPrice: number, armorPrice: number): number {
-  const durLoss = ECONOMY.DURABILITY_LOSS_PER_FIGHT / ECONOMY.DURABILITY_MAX;
-  return (weaponPrice + armorPrice) * ECONOMY.REPAIR_RATE * durLoss;
+/** Repair cost per fight for a given weapon + armor rarity (flat per-point model) */
+export function repairCostPerFight(weaponPrice: number, armorPrice: number, weaponRarity = 2, armorRarity = 2): number {
+  const wCost = ECONOMY.REPAIR_COST_PER_POINT[weaponRarity] ?? 0.75;
+  const aCost = ECONOMY.REPAIR_COST_PER_POINT[armorRarity] ?? 0.75;
+  return (wCost + aCost) * ECONOMY.DURABILITY_LOSS_PER_FIGHT;
 }
 
 /** Consumable cost per fight by play mode */
@@ -152,8 +164,8 @@ export function totalGuildSinkPerDay(dau: number, avgLevel: number, fightsPerDay
 }
 
 /** Repair savings per guilded player per day (free repairs perk) */
-export function guildRepairSavingsPerDay(fightsPerDay: number, weaponPrice: number, armorPrice: number): number {
-  return ECONOMY.GUILD_FREE_REPAIRS ? fightsPerDay * repairCostPerFight(weaponPrice, armorPrice) : 0;
+export function guildRepairSavingsPerDay(fightsPerDay: number, weaponPrice: number, armorPrice: number, weaponRarity = 2, armorRarity = 2): number {
+  return ECONOMY.GUILD_FREE_REPAIRS ? fightsPerDay * repairCostPerFight(weaponPrice, armorPrice, weaponRarity, armorRarity) : 0;
 }
 
 /** Net guild cost to a member per day: tax paid - repair savings */
@@ -169,12 +181,10 @@ export function dailyGrossIncome(avgLevel: number, fightsPerDay: number): number
 }
 
 /** Complete burn rate including all sinks for a given DAU */
-export function completeBurnRate(dau: number, avgLevel: number, fightsPerDay: number, avgGearValue: number): number {
+export function completeBurnRate(dau: number, avgLevel: number, fightsPerDay: number, avgGearValue: number, avgRarity = 2): number {
   const gross = dailyGrossIncome(avgLevel, fightsPerDay) * dau;
-  const weaponPrice = avgGearValue * 0.55;
-  const armorPrice = avgGearValue * 0.45;
 
-  const repairSink = fightsPerDay * repairCostPerFight(weaponPrice, armorPrice) * dau;
+  const repairSink = fightsPerDay * repairCostPerFight(0, 0, avgRarity, avgRarity) * dau;
   const potSink = fightsPerDay * consumableCostPerFight("farming") * dau;
   const dailyKillGold = fightsPerDay * avgGoldPerKill(avgLevel);
   const deathSink = dailyKillGold * ECONOMY.DEATH_RATE_NORMAL * ECONOMY.PVE_DEATH_BURN_PCT * 5 * dau;

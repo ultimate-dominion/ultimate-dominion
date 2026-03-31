@@ -23,13 +23,13 @@ import {
 } from '../lib/gameStore';
 import { PolygonalCard } from './PolygonalCard';
 
-/** Repair cost per durability point by rarity (in wei) */
+/** Repair cost per durability point by rarity (in wei) — must match constants.sol */
 const REPAIR_COST_PER_POINT: Record<number, bigint> = {
-  0: 1000000000000000000n,   // 1 gold (R0)
-  1: 5000000000000000000n,   // 5 gold (R1)
-  2: 15000000000000000000n,  // 15 gold (R2)
-  3: 50000000000000000000n,  // 50 gold (R3)
-  4: 150000000000000000000n, // 150 gold (R4)
+  0: 50000000000000000n,     // 0.05 gold (R0)
+  1: 250000000000000000n,    // 0.25 gold (R1)
+  2: 750000000000000000n,    // 0.75 gold (R2)
+  3: 1500000000000000000n,   // 1.5 gold (R3)
+  4: 2500000000000000000n,   // 2.5 gold (R4)
 };
 
 interface DamagedItem {

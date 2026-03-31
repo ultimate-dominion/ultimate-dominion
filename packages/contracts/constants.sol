@@ -56,7 +56,7 @@ uint256 constant DEFENDER_HIT_DAMPENER = 30;
 uint256 constant ATTACKER_HIT_DAMPENER = 95;
 
 //Gold Drop constants
-uint256 constant BASE_GOLD_DROP = 3 ether;
+uint256 constant BASE_GOLD_DROP = 2 ether;
 
 // LEVELING
 // Stat points: +1/level (all tiers)
@@ -152,11 +152,11 @@ uint256 constant UNISWAP_MIN_OUTPUT = 1;               // Accept any output — 
 // ======== Phase 3: Item Degradation ========
 uint256 constant DURABILITY_LOSS_PER_COMBAT = 1;
 // Repair cost per durability point by rarity (in gold wei)
-uint256 constant REPAIR_COST_R0 = 1 ether;     // Worn
-uint256 constant REPAIR_COST_R1 = 5 ether;     // Common
-uint256 constant REPAIR_COST_R2 = 15 ether;    // Uncommon
-uint256 constant REPAIR_COST_R3 = 50 ether;    // Rare
-uint256 constant REPAIR_COST_R4 = 150 ether;   // Epic
+uint256 constant REPAIR_COST_R0 = 0.05 ether;   // Worn     (full R0 repair: 1g)
+uint256 constant REPAIR_COST_R1 = 0.25 ether;   // Common   (full R1 repair: 7.5g)
+uint256 constant REPAIR_COST_R2 = 0.75 ether;   // Uncommon (full R2 repair: 30g)
+uint256 constant REPAIR_COST_R3 = 1.5 ether;    // Rare     (full R3 repair: 75g)
+uint256 constant REPAIR_COST_R4 = 2.5 ether;    // Epic     (full R4 repair: 150g)
 
 // ======== Phase 3: Respec ========
 uint256 constant STAT_RESPEC_BASE_COST = 50 ether;    // 50 gold at level 1
