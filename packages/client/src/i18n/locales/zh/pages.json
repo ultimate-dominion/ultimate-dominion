@@ -21,7 +21,10 @@
     "tavern": "酒馆",
     "walletRecoveryTitle": "无法恢复您的钱包",
     "walletRecoveryMessage": "已找到您的账户，但无法在此设备上恢复钱包。请尝试从原始设备登录，或清除浏览器数据后重新登录。",
-    "signOutRetry": "退出并重试"
+    "signOutRetry": "退出并重试",
+    "metaDescription": "Ultimate Dominion是一款可在浏览器中游玩的免费多人文字RPG（MUD）。与怪物战斗、交易物品，在永恒的链上世界中书写你的传奇。",
+    "ogTitle": "Ultimate Dominion — 一切都不会被遗忘",
+    "ogDescription": "免费多人文字RPG。狩猎怪物、交易物品、在永恒世界中冒险。无需下载。"
   },
   "faq": {
     "metaTitle": "常见问题 | Ultimate Dominion",
@@ -61,7 +64,10 @@
     "p2": "这里的一切都是永恒的。你的金币、你的武器、你的伤痕——它们属于你，不属于服务器，不属于我们。无人能夺取、篡改或关闭它们。你不必相信我们的话，你可以自行验证。",
     "p3": "你无需下载任何东西。打开浏览器，步入黑暗。",
     "closing": "这不是一款你能通关的游戏。这是一个将成为你一部分的世界。",
-    "enterWorld": "进入世界"
+    "enterWorld": "进入世界",
+    "metaDescription": "Ultimate Dominion的设计理念 — 永恒的世界、玩家所有权、有意义的选择。",
+    "ogTitle": "宣言 | Ultimate Dominion",
+    "ogDescription": "Ultimate Dominion的设计理念 — 永恒性、玩家所有权、有意义的选择。"
   },
   "classPage": {
     "backToCodex": "法典",
@@ -82,6 +88,19 @@
     "sectionMultipliers": "倍率增长机制",
     "multiplierFormula": "最终伤害 = (基础伤害 + 装备伤害) × 职业倍率",
     "multiplierDesc": "更好的装备会放大职业加成。100 点伤害上的 10% 倍率是 +10；500 点伤害上则是 +50。职业随进度而增强。",
-    "metaTitle": "{{name}} | 职业 | Ultimate Dominion"
+    "metaTitle": "{{name}} | 职业 | Ultimate Dominion",
+    "metaDescription": "了解Ultimate Dominion的{{name}}职业 — 技能、属性加成、战斗策略。",
+    "ogTitle": "{{name}} | Ultimate Dominion 职业",
+    "ogDescription": "{{name}}职业 — 技能、属性加成、战斗策略。"
+  },
+  "leaderboard": {
+    "metaDescription": "Ultimate Dominion实时排行榜 — 经验值最强冒险者、PvP冠军、区域征服者。",
+    "ogTitle": "排行榜 | Ultimate Dominion",
+    "ogDescription": "实时排行榜 — 经验值最强冒险者、PvP冠军、区域征服者。"
+  },
+  "marketplace": {
+    "metaDescription": "在Ultimate Dominion交易市场浏览和交易武器、护甲和消耗品。所有物品均为链上玩家所有。",
+    "ogTitle": "交易市场 | Ultimate Dominion",
+    "ogDescription": "浏览和交易链上玩家所有的武器、护甲和消耗品。"
   }
 }

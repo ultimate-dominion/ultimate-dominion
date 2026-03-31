@@ -21,7 +21,10 @@
     "tavern": "酒場",
     "walletRecoveryTitle": "ウォレットを復元できませんでした",
     "walletRecoveryMessage": "アカウントは見つかりましたが、このデバイスでウォレットを復元できませんでした。元のデバイスからサインインするか、ブラウザデータを消去して再度サインインしてください。",
-    "signOutRetry": "サインアウトして再試行"
+    "signOutRetry": "サインアウトして再試行",
+    "metaDescription": "Ultimate Dominionは、ブラウザで遊べる無料マルチプレイヤーテキストRPG（MUD）です。モンスターと戦い、アイテムを取引し、永続するオンチェーン世界であなたの伝説を築きましょう。",
+    "ogTitle": "Ultimate Dominion — 何も忘れられない",
+    "ogDescription": "無料マルチプレイヤーテキストRPG。モンスター討伐、アイテム取引、永続する世界での冒険。ダウンロード不要。"
   },
   "faq": {
     "metaTitle": "FAQ | Ultimate Dominion",
@@ -61,7 +64,10 @@
     "p2": "ここにあるすべては永続的である。Gold、武器、傷痕 — それらはおまえのものだ。サーバーのものでも、我々のものでもない。誰も奪えず、改ざんできず、停止させることはできない。我々の言葉を信じる必要はない。証明できるのだから。",
     "p3": "ダウンロードは不要だ。ブラウザを開け。闇に足を踏み入れろ。",
     "closing": "これはクリアするゲームではない。おまえの一部となる世界だ。",
-    "enterWorld": "世界に入る"
+    "enterWorld": "世界に入る",
+    "metaDescription": "Ultimate Dominionの設計思想 — 永続する世界、プレイヤーの所有権、意味のある選択。",
+    "ogTitle": "マニフェスト | Ultimate Dominion",
+    "ogDescription": "Ultimate Dominionの設計思想 — 永続性、プレイヤーの所有権、意味のある選択。"
   },
   "classPage": {
     "backToCodex": "コデックス",
@@ -82,6 +88,19 @@
     "sectionMultipliers": "倍率のスケーリング",
     "multiplierFormula": "最終ダメージ = (基礎ダメージ + 装備ダメージ) × クラス倍率",
     "multiplierDesc": "優れた装備はクラスボーナスを増幅する。100ダメージに対する10%倍率は+10。500ダメージなら+50。クラスは成長とともにスケールする。",
-    "metaTitle": "{{name}} | クラス | Ultimate Dominion"
+    "metaTitle": "{{name}} | クラス | Ultimate Dominion",
+    "metaDescription": "Ultimate Dominionの{{name}}クラスを詳しく見る — 能力、ステータスボーナス、戦闘戦略。",
+    "ogTitle": "{{name}} | Ultimate Dominion クラス",
+    "ogDescription": "{{name}}クラス — 能力、ステータスボーナス、戦闘戦略。"
+  },
+  "leaderboard": {
+    "metaDescription": "Ultimate Dominionのリアルタイムランキング — 経験値トップ冒険者、PvPチャンピオン、ゾーン征服者。",
+    "ogTitle": "リーダーボード | Ultimate Dominion",
+    "ogDescription": "リアルタイムランキング — 経験値トップ冒険者、PvPチャンピオン、ゾーン征服者。"
+  },
+  "marketplace": {
+    "metaDescription": "Ultimate Dominionのマーケットプレイスで武器・防具・消耗品を取引。全アイテムはオンチェーンでプレイヤーが所有。",
+    "ogTitle": "マーケットプレイス | Ultimate Dominion",
+    "ogDescription": "オンチェーンのプレイヤー所有アイテムを取引しましょう。"
   }
 }

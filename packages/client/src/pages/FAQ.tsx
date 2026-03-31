@@ -15,12 +15,13 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { HOME_PATH } from '../Routes';
+import { LocaleHead } from '../components/LocaleHead';
 
 const FAQ_COUNT = 10;
 
 export const FAQ = (): JSX.Element => {
   const navigate = useNavigate();
-  const { t } = useTranslation('pages');
+  const { t, i18n } = useTranslation('pages');
 
   const faqs = Array.from({ length: FAQ_COUNT }, (_, i) => ({
     q: t(`faq.q${i + 1}`),
@@ -30,6 +31,7 @@ export const FAQ = (): JSX.Element => {
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    inLanguage: i18n.language,
     mainEntity: faqs.map((faq) => ({
       '@type': 'Question',
       name: faq.q,
@@ -59,6 +61,7 @@ export const FAQ = (): JSX.Element => {
           {JSON.stringify(faqJsonLd)}
         </script>
       </Helmet>
+      <LocaleHead path="/faq" />
       <Box border="0.5px solid #3A3228">
         <VStack
           justifyContent="center"

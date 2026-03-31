@@ -27,4 +27,8 @@ Allow: /
 User-agent: Bytespider
 Allow: /
 
+# Korean search — Naver
+User-agent: Yeti
+Allow: /
+
 Sitemap: https://ultimatedominion.com/sitemap.xml

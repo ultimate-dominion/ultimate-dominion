@@ -23,5 +23,16 @@
 - [Blog](https://ultimatedominion.com/blog): Development updates and stories from the world
 - [The Game That Faded Away](https://ultimatedominion.com/blog/the-game-that-faded-away): Origin story — why Ultimate Dominion was built
 
+## Languages
+
+Ultimate Dominion is available in English, Korean (한국어), Japanese (日本語), and Simplified Chinese (中文).
+
+- [Korean](https://ultimatedominion.com/?lang=ko): 한국어 버전
+- [Japanese](https://ultimatedominion.com/?lang=ja): 日本語版
+- [Chinese](https://ultimatedominion.com/?lang=zh): 中文版
+- [Korean FAQ](https://ultimatedominion.com/faq?lang=ko)
+- [Japanese FAQ](https://ultimatedominion.com/faq?lang=ja)
+- [Chinese FAQ](https://ultimatedominion.com/faq?lang=zh)
+
 ## About
 - [FAQ](https://ultimatedominion.com/faq): Common questions about gameplay, blockchain integration, and getting started

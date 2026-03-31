@@ -15,6 +15,7 @@ import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-d
 import SafeTypist from '../components/SafeTypist';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
+import { LocaleHead } from '../components/LocaleHead';
 import { SoundToggle } from '../components/SoundToggle';
 import { getCachedDelegator } from '../lib/delegatorCache';
 import { useAuth } from '../contexts/AuthContext';
@@ -193,7 +194,13 @@ export const Welcome = (): JSX.Element => {
     >
       <Helmet>
         <title>{t('welcome.metaTitle')}</title>
+        <meta name="description" content={t('welcome.metaDescription')} />
+        <link rel="canonical" href="https://ultimatedominion.com/" />
+        <meta property="og:title" content={t('welcome.ogTitle')} />
+        <meta property="og:description" content={t('welcome.ogDescription')} />
+        <meta property="og:url" content="https://ultimatedominion.com/" />
       </Helmet>
+      <LocaleHead path="/" />
       <Box
         border="0.5px solid #3A3228"
         position="relative"

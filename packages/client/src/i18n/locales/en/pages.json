@@ -21,7 +21,10 @@
     "tavern": "Tavern",
     "walletRecoveryTitle": "Could not recover your wallet",
     "walletRecoveryMessage": "Your account was found, but we couldn't restore your wallet on this device. Try signing in from your original device, or clearing your browser data and signing in again.",
-    "signOutRetry": "Sign out and retry"
+    "signOutRetry": "Sign out and retry",
+    "metaDescription": "Ultimate Dominion is a free multiplayer text-based RPG (MUD) playable in any browser. Fight monsters, trade items, and build your legacy in a persistent on-chain world.",
+    "ogTitle": "Ultimate Dominion — Nothing Is Forgotten",
+    "ogDescription": "Free multiplayer text-based RPG. Fight monsters, trade items, and build your legacy in a persistent world. No downloads required."
   },
   "faq": {
     "metaTitle": "FAQ | Ultimate Dominion",
@@ -61,7 +64,10 @@
     "p2": "Everything here is permanent. Your gold, your weapons, your scars — they belong to you. Not to a server. Not to us. No one can take them, alter them, or shut them off. You don't have to take our word for it. You can prove it.",
     "p3": "You don't need to download anything. Open your browser. Step into the dark.",
     "closing": "This is not a game you finish. It's a world that becomes part of you.",
-    "enterWorld": "Enter the World"
+    "enterWorld": "Enter the World",
+    "metaDescription": "The design philosophy behind Ultimate Dominion — a world built on permanence, player ownership, and meaningful consequences.",
+    "ogTitle": "Manifesto | Ultimate Dominion",
+    "ogDescription": "The design philosophy behind Ultimate Dominion — permanence, player ownership, and meaningful consequences."
   },
   "classPage": {
     "backToCodex": "The Codex",
@@ -82,6 +88,19 @@
     "sectionMultipliers": "How Multipliers Scale",
     "multiplierFormula": "finalDamage = (baseDamage + itemDamage) × classMultiplier",
     "multiplierDesc": "Better gear amplifies class bonuses. A 10% multiplier on 100 damage is +10. On 500 damage, it's +50. Classes scale with progression.",
-    "metaTitle": "{{name}} | Classes | Ultimate Dominion"
+    "metaTitle": "{{name}} | Classes | Ultimate Dominion",
+    "metaDescription": "Explore the {{name}} class in Ultimate Dominion — abilities, stat bonuses, and combat strategies.",
+    "ogTitle": "{{name}} | Ultimate Dominion Classes",
+    "ogDescription": "Learn about the {{name}} class — abilities, stat bonuses, and combat strategies."
+  },
+  "leaderboard": {
+    "metaDescription": "Live rankings for Ultimate Dominion — top adventurers by XP, PvP champions, and zone conquerors.",
+    "ogTitle": "Leaderboard | Ultimate Dominion",
+    "ogDescription": "Live rankings — top adventurers by XP, PvP champions, and zone conquerors."
+  },
+  "marketplace": {
+    "metaDescription": "Browse and trade weapons, armor, and consumables on the Ultimate Dominion player marketplace. Every item is on-chain and player-owned.",
+    "ogTitle": "Marketplace | Ultimate Dominion",
+    "ogDescription": "Browse and trade player-owned weapons, armor, and consumables on-chain."
   }
 }

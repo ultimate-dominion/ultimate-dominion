@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { HOME_PATH } from '../Routes';
+import { LocaleHead } from '../components/LocaleHead';
 
 const dragonPulse = keyframes`
   0%, 100% { opacity: 0.03; }
@@ -18,7 +19,13 @@ export const Manifesto = (): JSX.Element => {
     <Box border="6px solid #3A3228" p={1.5}>
       <Helmet>
         <title>{t('manifesto.metaTitle')}</title>
+        <meta name="description" content={t('manifesto.metaDescription')} />
+        <link rel="canonical" href="https://ultimatedominion.com/manifesto" />
+        <meta property="og:title" content={t('manifesto.ogTitle')} />
+        <meta property="og:description" content={t('manifesto.ogDescription')} />
+        <meta property="og:url" content="https://ultimatedominion.com/manifesto" />
       </Helmet>
+      <LocaleHead path="/manifesto" />
       <Box
         border="0.5px solid #3A3228"
         position="relative"

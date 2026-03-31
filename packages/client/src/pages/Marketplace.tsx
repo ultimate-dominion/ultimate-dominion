@@ -22,7 +22,9 @@ import { FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import { GiTwoCoins } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
+import { useTranslation } from 'react-i18next';
 import { CreateListingModal } from '../components/CreateListingModal';
+import { LocaleHead } from '../components/LocaleHead';
 import { InfoModal } from '../components/InfoModal';
 import { MarketplaceRow } from '../components/MarketplaceRow';
 import { Pagination } from '../components/Pagination';
@@ -59,6 +61,7 @@ const ITEMS_PER_PAGE = 10;
 const MARKETPLACE_INFO_SEEN_KEY = 'marketplace-info-seen';
 
 export const Marketplace = (): JSX.Element => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
@@ -333,8 +336,14 @@ export const Marketplace = (): JSX.Element => {
   return (
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
       <Helmet>
-        <title>Marketplace | Ultimate Dominion</title>
+        <title>{t('marketplace.ogTitle', { ns: 'pages' })}</title>
+        <meta name="description" content={t('marketplace.metaDescription', { ns: 'pages' })} />
+        <link rel="canonical" href="https://ultimatedominion.com/marketplace" />
+        <meta property="og:title" content={t('marketplace.ogTitle', { ns: 'pages' })} />
+        <meta property="og:description" content={t('marketplace.ogDescription', { ns: 'pages' })} />
+        <meta property="og:url" content="https://ultimatedominion.com/marketplace" />
       </Helmet>
+      <LocaleHead path="/marketplace" />
       <VStack>
         <HStack
           bgColor="blue500"

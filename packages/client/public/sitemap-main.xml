@@ -1,27 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://ultimatedominion.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ultimatedominion.com/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://ultimatedominion.com/?lang=ko" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://ultimatedominion.com/?lang=ja" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://ultimatedominion.com/?lang=zh" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ultimatedominion.com/" />
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://ultimatedominion.com/manifesto</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ultimatedominion.com/manifesto?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://ultimatedominion.com/manifesto?lang=ko" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://ultimatedominion.com/manifesto?lang=ja" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://ultimatedominion.com/manifesto?lang=zh" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ultimatedominion.com/manifesto" />
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ultimatedominion.com/leaderboard</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ultimatedominion.com/leaderboard?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://ultimatedominion.com/leaderboard?lang=ko" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://ultimatedominion.com/leaderboard?lang=ja" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://ultimatedominion.com/leaderboard?lang=zh" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ultimatedominion.com/leaderboard" />
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://ultimatedominion.com/marketplace</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ultimatedominion.com/marketplace?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://ultimatedominion.com/marketplace?lang=ko" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://ultimatedominion.com/marketplace?lang=ja" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://ultimatedominion.com/marketplace?lang=zh" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ultimatedominion.com/marketplace" />
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://ultimatedominion.com/faq</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ultimatedominion.com/faq?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://ultimatedominion.com/faq?lang=ko" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://ultimatedominion.com/faq?lang=ja" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://ultimatedominion.com/faq?lang=zh" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ultimatedominion.com/faq" />
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

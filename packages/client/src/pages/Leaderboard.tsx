@@ -25,6 +25,7 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
 import { SHOW_Z2 } from '../lib/env';
 import { LeaderboardRow } from '../components/LeaderboardRow';
+import { LocaleHead } from '../components/LocaleHead';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
 import {
@@ -239,7 +240,13 @@ export const Leaderboard = (): JSX.Element => {
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
       <Helmet>
         <title>{t('leaderboard.pageTitle')}</title>
+        <meta name="description" content={t('leaderboard.metaDescription', { ns: 'pages' })} />
+        <link rel="canonical" href="https://ultimatedominion.com/leaderboard" />
+        <meta property="og:title" content={t('leaderboard.ogTitle', { ns: 'pages' })} />
+        <meta property="og:description" content={t('leaderboard.ogDescription', { ns: 'pages' })} />
+        <meta property="og:url" content="https://ultimatedominion.com/leaderboard" />
       </Helmet>
+      <LocaleHead path="/leaderboard" />
       <VStack>
         <HStack bgColor="blue500" h="66px" px="20px" width="100%">
           <LeaderboardIconSvg />

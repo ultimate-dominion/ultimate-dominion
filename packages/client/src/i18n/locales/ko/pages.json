@@ -21,7 +21,10 @@
     "tavern": "선술집",
     "walletRecoveryTitle": "지갑을 복구할 수 없습니다",
     "walletRecoveryMessage": "계정은 확인되었으나 이 기기에서 지갑을 복원할 수 없었습니다. 원래 사용하던 기기에서 로그인하거나, 브라우저 데이터를 삭제한 후 다시 로그인해 주세요.",
-    "signOutRetry": "로그아웃 후 재시도"
+    "signOutRetry": "로그아웃 후 재시도",
+    "metaDescription": "얼티밋 도미니언은 브라우저에서 바로 플레이할 수 있는 무료 멀티플레이어 텍스트 RPG(MUD)입니다. 몬스터와 싸우고, 아이템을 거래하며, 영원한 온체인 세계에서 자신만의 전설을 만드세요.",
+    "ogTitle": "얼티밋 도미니언 — 아무것도 잊혀지지 않는다",
+    "ogDescription": "무료 멀티플레이어 텍스트 RPG. 몬스터 사냥, 아이템 거래, 영원한 세계에서의 모험. 다운로드 불필요."
   },
   "faq": {
     "metaTitle": "FAQ | Ultimate Dominion",
@@ -61,7 +64,10 @@
     "p2": "이곳의 모든 것은 영구하다. 당신의 Gold, 무기, 상처 — 그것들은 당신의 것이다. 서버의 것이 아니다. 우리의 것도 아니다. 누구도 빼앗거나, 변조하거나, 차단할 수 없다. 우리 말을 믿을 필요도 없다. 스스로 증명할 수 있으니까.",
     "p3": "다운로드할 것은 없다. 브라우저를 열어라. 어둠 속으로 발을 들여라.",
     "closing": "이것은 끝내는 게임이 아니다. 당신의 일부가 되는 세계다.",
-    "enterWorld": "세계로 입장"
+    "enterWorld": "세계로 입장",
+    "metaDescription": "얼티밋 도미니언의 설계 철학 — 영속성, 플레이어 소유권, 의미 있는 선택으로 만들어진 세계.",
+    "ogTitle": "선언문 | 얼티밋 도미니언",
+    "ogDescription": "얼티밋 도미니언의 설계 철학 — 영속성, 플레이어 소유권, 의미 있는 선택."
   },
   "classPage": {
     "backToCodex": "코덱스",
@@ -82,6 +88,19 @@
     "sectionMultipliers": "배율의 성장 원리",
     "multiplierFormula": "최종피해 = (기본피해 + 아이템피해) × 클래스배율",
     "multiplierDesc": "좋은 장비는 클래스 보너스를 증폭시킵니다. 100 피해에 10% 배율은 +10이지만, 500 피해에는 +50입니다. 클래스는 성장과 함께 강해집니다.",
-    "metaTitle": "{{name}} | 클래스 | Ultimate Dominion"
+    "metaTitle": "{{name}} | 클래스 | Ultimate Dominion",
+    "metaDescription": "얼티밋 도미니언의 {{name}} 클래스를 알아보세요 — 능력, 스탯 보너스, 전투 전략.",
+    "ogTitle": "{{name}} | 얼티밋 도미니언 클래스",
+    "ogDescription": "{{name}} 클래스 — 능력, 스탯 보너스, 전투 전략."
+  },
+  "leaderboard": {
+    "metaDescription": "얼티밋 도미니언 실시간 랭킹 — 경험치 최강자, PvP 챔피언, 존 정복자.",
+    "ogTitle": "리더보드 | 얼티밋 도미니언",
+    "ogDescription": "실시간 랭킹 — 경험치 최강자, PvP 챔피언, 존 정복자."
+  },
+  "marketplace": {
+    "metaDescription": "얼티밋 도미니언 마켓플레이스에서 무기, 방어구, 소모품을 거래하세요. 모든 아이템은 온체인으로 플레이어가 소유합니다.",
+    "ogTitle": "마켓플레이스 | 얼티밋 도미니언",
+    "ogDescription": "온체인 플레이어 소유 무기, 방어구, 소모품을 거래하세요."
   }
 }

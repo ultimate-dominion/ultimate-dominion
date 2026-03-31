@@ -43,6 +43,19 @@ export const SUPPORTED_LANGUAGES = {
 
 export type SupportedLanguage = keyof typeof SUPPORTED_LANGUAGES;
 
+
+/** Maps i18n language codes to HTML lang attribute values. */
+export const HTML_LANG_MAP: Record<string, string> = {
+  en: 'en',
+  ko: 'ko',
+  ja: 'ja',
+  zh: 'zh-Hans',
+};
+
+function setHtmlLang(lng: string) {
+  document.documentElement.lang = HTML_LANG_MAP[lng] || lng;
+}
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -61,10 +74,15 @@ i18n
       escapeValue: false, // React already escapes
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['querystring', 'localStorage', 'navigator'],
+      lookupQuerystring: 'lang',
       lookupLocalStorage: 'ud-language',
       caches: ['localStorage'],
     },
   });
+
+// Set <html lang> on init and on every language change
+setHtmlLang(i18n.language);
+i18n.on('languageChanged', setHtmlLang);
 
 export default i18n;

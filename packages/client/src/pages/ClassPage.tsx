@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, Navigate, useParams } from 'react-router-dom';
 
 import { CLASS_DATA, getClassBySlug } from '../data/classData';
+import { LocaleHead } from '../components/LocaleHead';
 import { GUIDE_PATH } from '../Routes';
 
 /* ────────────────────────── Animations ────────────────────────── */
@@ -122,7 +123,11 @@ export const ClassPage = (): JSX.Element => {
     >
       <Helmet>
         <title>{t('classPage.metaTitle', { name: tc(`${classData.slug}.name`) })}</title>
+        <meta name="description" content={t('classPage.metaDescription', { name: tc(`${classData.slug}.name`), ns: 'pages' })} />
+        <meta property="og:title" content={t('classPage.ogTitle', { name: tc(`${classData.slug}.name`), ns: 'pages' })} />
+        <meta property="og:description" content={t('classPage.ogDescription', { name: tc(`${classData.slug}.name`), ns: 'pages' })} />
       </Helmet>
+      <LocaleHead path={`/guide/classes/${classData.slug}`} />
 
       {/* Class-colored radial glow */}
       <Box
