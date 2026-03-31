@@ -1,26 +1,25 @@
 /**
- * Monster ASCII Renderer v3.1
+ * Monster ASCII Renderer v4 — Full Color
  *
- * Dense ASCII art with 3D depth via multi-pass extrusion, normal-mapped
- * lighting, perspective projection, and idle animation.
+ * Each monster template draws in its OWN colors (D&D Monster Manual style).
+ * The renderer samples RGB directly from the template and uses luminance
+ * for character density selection. No more flat class-based color overlay.
  *
  * Core techniques:
+ * - Full-color templates: each monster has its own palette
  * - Template canvas at 512px for fine detail
- * - Multi-pass depth extrusion (3 shadow layers behind main render)
- * - Area-averaged brightness sampling with gradient normals
+ * - RGB sampling with luminance-based character selection
+ * - Multi-pass depth extrusion (3 shadow layers)
+ * - Normal-mapped directional lighting modulates template colors
  * - Perspective foreshortening (bottom wider = "looking up")
- * - Animated directional light → per-character illumination via normals
- * - Specular highlights on bright areas
- * - Idle animation: bob, sway, breathing, organic character-level wave
- * - Ground shadow for spatial grounding
- * - Boss: brightness wave sweep across silhouette
- * - Pre-computed cell buffer for efficient multi-pass rendering
+ * - Idle animation: bob, sway, breathing, organic wave
+ * - Ground shadow, boss brightness wave
  */
 
 import { FONTS } from '../theme';
 import type { MonsterTemplate } from './monsterTemplates';
 
-// Dense character palette sorted by visual density — no wide letters.
+// Dense character palette sorted by visual density.
 const CHAR_PALETTE = " .`',:-~^;*+!=?#@";
 
 // ---------------------------------------------------------------------------
@@ -39,7 +38,6 @@ type TemplateData = {
   normalRows: number;
 };
 
-// Pre-allocated cell buffer to avoid GC pressure
 type CellData = {
   char: string;
   x: number;
@@ -118,8 +116,52 @@ function getTemplateImage(template: MonsterTemplate): TemplateData {
   return cached;
 }
 
-/** Area-averaged brightness sampling */
-function sampleBrightness(
+// ---------------------------------------------------------------------------
+// Full-color sampling
+// ---------------------------------------------------------------------------
+
+type ColorSample = { r: number; g: number; b: number; lum: number };
+
+/** Area-averaged color sampling — returns RGB and perceptual luminance */
+function sampleColor(
+  data: Uint8ClampedArray,
+  imgW: number,
+  imgH: number,
+  col: number,
+  row: number,
+  cols: number,
+  rows: number,
+): ColorSample {
+  const x0 = Math.floor((col / cols) * imgW);
+  const y0 = Math.floor((row / rows) * imgH);
+  const x1 = Math.max(x0 + 1, Math.ceil(((col + 1) / cols) * imgW));
+  const y1 = Math.max(y0 + 1, Math.ceil(((row + 1) / rows) * imgH));
+
+  let rSum = 0, gSum = 0, bSum = 0;
+  let count = 0;
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const idx = (y * imgW + x) * 4;
+      rSum += data[idx];
+      gSum += data[idx + 1];
+      bSum += data[idx + 2];
+      count++;
+    }
+  }
+
+  if (count === 0) return { r: 0, g: 0, b: 0, lum: 0 };
+
+  const r = rSum / count;
+  const g = gSum / count;
+  const b = bSum / count;
+  // Perceptual luminance (ITU-R BT.601)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return { r: r / 255, g: g / 255, b: b / 255, lum };
+}
+
+/** Luminance-only sampling for normals computation */
+function sampleLuminance(
   data: Uint8ClampedArray,
   imgW: number,
   imgH: number,
@@ -137,7 +179,8 @@ function sampleBrightness(
   let count = 0;
   for (let y = y0; y < y1; y++) {
     for (let x = x0; x < x1; x++) {
-      sum += data[(y * imgW + x) * 4]; // red channel
+      const idx = (y * imgW + x) * 4;
+      sum += 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
       count++;
     }
   }
@@ -145,8 +188,7 @@ function sampleBrightness(
 }
 
 /**
- * Compute per-cell surface normals from brightness gradients.
- * Treats brightness as a heightmap — gradient direction = surface normal.
+ * Compute per-cell surface normals from luminance gradients.
  */
 function computeNormals(
   tpl: TemplateData,
@@ -164,10 +206,10 @@ function computeNormals(
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      const bL = col > 0 ? sampleBrightness(d, iw, ih, col - 1, row, cols, rows) : 0;
-      const bR = col < cols - 1 ? sampleBrightness(d, iw, ih, col + 1, row, cols, rows) : 0;
-      const bU = row > 0 ? sampleBrightness(d, iw, ih, col, row - 1, cols, rows) : 0;
-      const bD = row < rows - 1 ? sampleBrightness(d, iw, ih, col, row + 1, cols, rows) : 0;
+      const bL = col > 0 ? sampleLuminance(d, iw, ih, col - 1, row, cols, rows) : 0;
+      const bR = col < cols - 1 ? sampleLuminance(d, iw, ih, col + 1, row, cols, rows) : 0;
+      const bU = row > 0 ? sampleLuminance(d, iw, ih, col, row - 1, cols, rows) : 0;
+      const bD = row < rows - 1 ? sampleLuminance(d, iw, ih, col, row + 1, cols, rows) : 0;
 
       const idx = (row * cols + col) * 2;
       normals[idx] = bL - bR;
@@ -182,16 +224,8 @@ function computeNormals(
 }
 
 // ---------------------------------------------------------------------------
-// Color + weight
+// Weight
 // ---------------------------------------------------------------------------
-
-const CLASS_COLORS: Record<number, { r: number; g: number; b: number }> = {
-  0: { r: 200, g: 150, b: 60 },  // Warrior — warm amber
-  1: { r: 130, g: 165, b: 200 }, // Rogue — cool blue-gray
-  2: { r: 160, g: 100, b: 180 }, // Mage — purple/violet
-};
-
-const BOSS_COLOR = { r: 200, g: 60, b: 40 };
 
 function getWeight(level: number, isBoss: boolean, brightness: number): number {
   if (isBoss || level >= 10) {
@@ -207,11 +241,11 @@ function getWeight(level: number, isBoss: boolean, brightness: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// Depth extrusion layers
+// Constants
 // ---------------------------------------------------------------------------
 
 const DEPTH_LAYERS = 3;
-const DEPTH_OFFSET = 1.5; // px per layer
+const DEPTH_OFFSET = 1.5;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -226,13 +260,6 @@ export type RenderOptions = {
   enable3D?: boolean;
 };
 
-/**
- * Render a monster as dense ASCII art with 3D depth.
- *
- * Multi-pass rendering: shadow extrusion layers behind the main render
- * create volumetric thickness. Normal-mapped lighting, perspective
- * foreshortening, and idle animation complete the 3D effect.
- */
 export function renderMonster(
   ctx: CanvasRenderingContext2D,
   template: MonsterTemplate,
@@ -300,26 +327,18 @@ export function renderMonster(
   const centerX = x + (width - renderW) / 2 + swayX;
   const centerY = y + (height - renderH) / 2 + bobY;
 
-  // Normals
   let normals: Float32Array | null = null;
   if (enable3D) {
     normals = computeNormals(tpl, cols, rows);
   }
 
-  const baseColor = template.isBoss
-    ? BOSS_COLOR
-    : (CLASS_COLORS[template.monsterClass] ?? CLASS_COLORS[0]);
-
-  // -----------------------------------------------------------------------
-  // Boss brightness wave (sweeps across silhouette)
-  // -----------------------------------------------------------------------
-
+  // Boss wave
   const bossWaveFront = template.isBoss
-    ? (Math.sin(elapsed * 0.0015) * 0.5 + 0.5) // 0-1, sweeps left to right
+    ? (Math.sin(elapsed * 0.0015) * 0.5 + 0.5)
     : -1;
 
   // -----------------------------------------------------------------------
-  // Ground shadow
+  // Ground shadow (use average color from template center)
   // -----------------------------------------------------------------------
 
   if (enable3D) {
@@ -330,8 +349,7 @@ export function renderMonster(
     const shadowCenterX = centerX + renderW / 2;
 
     ctx.globalAlpha = alpha * 0.12;
-    ctx.fillStyle = `rgb(${Math.floor(baseColor.r * 0.2)}, ${Math.floor(baseColor.g * 0.2)}, ${Math.floor(baseColor.b * 0.2)})`;
-
+    ctx.fillStyle = 'rgb(20, 15, 10)';
     ctx.beginPath();
     ctx.ellipse(shadowCenterX, shadowY, shadowW / 2, shadowH / 2, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -339,7 +357,7 @@ export function renderMonster(
   }
 
   // -----------------------------------------------------------------------
-  // Pre-compute cell buffer
+  // Pre-compute cell buffer with FULL COLOR from template
   // -----------------------------------------------------------------------
 
   const fontSize = actualCellW * 1.2;
@@ -359,11 +377,12 @@ export function renderMonster(
     const drawY = centerY + row * rowCellH + breathOffsetY;
 
     for (let col = 0; col < cols; col++) {
-      const b = sampleBrightness(tpl.data.data, tpl.w, tpl.h, col, row, cols, rows);
-      if (b < 0.02) continue;
+      // Sample full color from template
+      const color = sampleColor(tpl.data.data, tpl.w, tpl.h, col, row, cols, rows);
+      if (color.lum < 0.02) continue;
 
-      // Lighting
-      let litB = b;
+      // Lighting modulates the template's own color
+      let lightMul = 1.0;
       if (normals) {
         const nIdx = (row * cols + col) * 2;
         const nx = normals[nIdx];
@@ -372,35 +391,34 @@ export function renderMonster(
         const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
 
         const dot = (nx / nLen) * lx + (ny / nLen) * ly + (nz / nLen) * lz;
-        const lighting = 0.35 + Math.max(0, dot) * 0.65;
-        litB = b * lighting;
+        lightMul = 0.4 + Math.max(0, dot) * 0.6;
 
-        // Specular
-        if (b > 0.4) {
+        // Specular highlight
+        if (color.lum > 0.3) {
           const hx = lx;
           const hy = ly;
           const hz = lz + 1;
           const hLen = Math.sqrt(hx * hx + hy * hy + hz * hz) || 1;
           const spec = Math.max(0, (nx / nLen) * (hx / hLen) + (ny / nLen) * (hy / hLen) + (nz / nLen) * (hz / hLen));
-          litB += Math.pow(spec, 8) * 0.3 * b;
+          lightMul += Math.pow(spec, 8) * 0.25;
         }
       }
 
-      // Boss wave boost
+      // Boss wave
       if (bossWaveFront >= 0) {
         const colT = col / cols;
         const distFromWave = Math.abs(colT - bossWaveFront);
-        const pulseBoost = Math.max(0, 1 - distFromWave * 4) * 0.25;
-        litB += pulseBoost;
+        lightMul += Math.max(0, 1 - distFromWave * 4) * 0.3;
       }
 
-      litB = Math.min(1, Math.max(0, litB));
+      lightMul = Math.min(1.4, Math.max(0, lightMul));
 
-      // Character selection
+      // Character selection based on luminance (lit)
+      const litLum = Math.min(1, color.lum * lightMul);
       let bestIdx = 0;
       let bestDiff = 1;
       for (let i = 0; i < brightness.length; i++) {
-        const diff = Math.abs(brightness[i] - litB);
+        const diff = Math.abs(brightness[i] - litLum);
         if (diff < bestDiff) {
           bestDiff = diff;
           bestIdx = i;
@@ -409,27 +427,27 @@ export function renderMonster(
       const char = CHAR_PALETTE[bestIdx];
       if (char === ' ') continue;
 
-      // Character wave displacement
+      // Wave displacement
       let waveX = 0;
       let waveY = 0;
       if (enable3D) {
-        // Layered sine approximation of noise — organic without a dependency
         waveX = Math.sin(elapsed * 0.003 + col * 0.4 + row * 0.3) * 0.4
               + Math.sin(elapsed * 0.0017 + col * 0.23 + row * 0.17) * 0.2;
         waveY = Math.cos(elapsed * 0.0025 + col * 0.3 + row * 0.5) * 0.3
               + Math.cos(elapsed * 0.0013 + col * 0.19 + row * 0.31) * 0.15;
       }
 
-      const weight = getWeight(template.level, !!template.isBoss, litB);
+      const weight = getWeight(template.level, !!template.isBoss, litLum);
       const drawFontSize = fontSize * perspScale;
 
       const cellX = rowOffsetX + col * rowCellW + rowCellW / 2 + waveX;
       const cellY = drawY + rowCellH / 2 + waveY;
 
-      const r = Math.min(255, Math.floor(baseColor.r * litB * 1.1));
-      const g = Math.min(255, Math.floor(baseColor.g * litB * 1.1));
-      const bChan = Math.min(255, Math.floor(baseColor.b * litB * 1.1));
-      const a = alpha * (0.25 + litB * 0.75);
+      // Use template's own color, modulated by lighting
+      const r = Math.min(255, Math.floor(color.r * 255 * lightMul));
+      const g = Math.min(255, Math.floor(color.g * 255 * lightMul));
+      const bChan = Math.min(255, Math.floor(color.b * 255 * lightMul));
+      const a = alpha * (0.25 + litLum * 0.75);
 
       const cell = cellBuffer[cellCount++];
       cell.char = char;
@@ -445,7 +463,7 @@ export function renderMonster(
   }
 
   // -----------------------------------------------------------------------
-  // Render: shadow extrusion layers (back to front)
+  // Render: shadow extrusion layers
   // -----------------------------------------------------------------------
 
   ctx.textBaseline = 'middle';
@@ -455,16 +473,13 @@ export function renderMonster(
     for (let layer = DEPTH_LAYERS; layer >= 1; layer--) {
       const ox = layer * DEPTH_OFFSET;
       const oy = layer * DEPTH_OFFSET;
-      const darken = 0.15 + (DEPTH_LAYERS - layer) * 0.05; // deeper = darker
+      const darken = 0.15 + (DEPTH_LAYERS - layer) * 0.05;
       const layerAlpha = (0.25 - layer * 0.05);
 
       for (let i = 0; i < cellCount; i++) {
         const c = cellBuffer[i];
         ctx.font = `${c.weight} ${c.fontSize}px ${FONTS.serif}`;
-        const dr = Math.floor(c.r * darken);
-        const dg = Math.floor(c.g * darken);
-        const db = Math.floor(c.b * darken);
-        ctx.fillStyle = `rgba(${dr}, ${dg}, ${db}, ${c.a * layerAlpha})`;
+        ctx.fillStyle = `rgba(${Math.floor(c.r * darken)}, ${Math.floor(c.g * darken)}, ${Math.floor(c.b * darken)}, ${c.a * layerAlpha})`;
         ctx.fillText(c.char, c.x + ox, c.y + oy);
       }
     }
@@ -475,7 +490,8 @@ export function renderMonster(
   // -----------------------------------------------------------------------
 
   if (template.isBoss) {
-    ctx.shadowColor = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.6)`;
+    // Boss glow uses the monster's own dominant color
+    ctx.shadowColor = 'rgba(200, 60, 40, 0.6)';
     ctx.shadowBlur = 8 + Math.sin(elapsed * 0.003) * 4;
   }
 
