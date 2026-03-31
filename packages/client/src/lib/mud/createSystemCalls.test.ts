@@ -814,7 +814,7 @@ describe('createSystemCalls — ghost monster pre-flight validation', () => {
     const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
-    expect(result.error).toContain('Stale monsters cleared');
+    expect(result.error).toContain('No enemies here');
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
     expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', TEST_MONSTER, expect.objectContaining({ died: true }));
     expect(waitForTransaction).not.toHaveBeenCalled();
@@ -853,7 +853,7 @@ describe('createSystemCalls — ghost monster pre-flight validation', () => {
     );
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
-    expect(result.error).toContain('Stale monsters cleared');
+    expect(result.error).toContain('No enemies here');
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
     expect(waitForTransaction).not.toHaveBeenCalled();
   });
@@ -911,7 +911,7 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
-    expect(result.error).toContain('Stale monsters cleared');
+    expect(result.error).toContain('No enemies here');
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
   });
 
@@ -954,7 +954,7 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     );
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
-    expect(result.error).toContain('Stale monsters cleared');
+    expect(result.error).toContain('No enemies here');
     expect(waitForTransaction).toHaveBeenCalled(); // TX was sent (gas est skipped)
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
   });
@@ -983,7 +983,7 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     );
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
-    expect(result.error).toContain('Stale monsters cleared');
+    expect(result.error).toContain('No enemies here');
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
   });
 });

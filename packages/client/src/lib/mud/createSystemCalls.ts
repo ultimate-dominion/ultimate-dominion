@@ -29,7 +29,7 @@ import {
   StatsClasses,
 } from '../../utils/types';
 
-import { getTableValue, useGameStore } from '../gameStore';
+import { getTableValue, useGameStore, type BatchUpdate } from '../gameStore';
 import { SetupNetworkResult } from './setupNetwork';
 
 // ==================== Emergency gas funding ====================
@@ -333,6 +333,7 @@ export function createSystemCalls(
   // When a ghost is detected, evict ALL monsters on the same tile to prevent
   // the player from clicking dead monsters one-by-one. The next WS update or
   // snapshot re-fetch will bring back any that are actually still alive.
+  // Uses applyBatch for a single Zustand set() / React render.
   const evictAllMonstersOnTile = (ghostMonsterId: string) => {
     const pos = getTableValue('PositionV2', ghostMonsterId) as
       | { zoneId?: unknown; x?: unknown; y?: unknown } | undefined;
@@ -349,7 +350,7 @@ export function createSystemCalls(
     const gz = String(pos.zoneId);
     const gx = String(pos.x);
     const gy = String(pos.y);
-    let evicted = 0;
+    const batch: BatchUpdate[] = [];
 
     for (const entityId of Object.keys(spawnedTable)) {
       if (charactersTable[entityId]) continue; // skip player characters
@@ -358,14 +359,17 @@ export function createSystemCalls(
       if (!ePos) continue;
       if (String(ePos.zoneId) !== gz || String(ePos.x) !== gx || String(ePos.y) !== gy) continue;
 
-      store.setRow('Spawned', entityId, { spawned: false });
-      store.setRow('EncounterEntity', entityId, {
-        ...(getTableValue('EncounterEntity', entityId) ?? {}),
-        died: true,
+      batch.push({ type: 'set', table: 'Spawned', keyBytes: entityId, data: { spawned: false } });
+      batch.push({
+        type: 'set', table: 'EncounterEntity', keyBytes: entityId,
+        data: { ...(getTableValue('EncounterEntity', entityId) ?? {}), died: true },
       });
-      evicted++;
     }
-    console.warn(`[ghost] Evicted ${evicted} monsters on tile (${gz},${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
+
+    if (batch.length > 0) {
+      store.applyBatch(batch);
+    }
+    console.warn(`[ghost] Evicted ${batch.length / 2} monsters on tile (${gz},${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
   };
 
   // Selectors for ghost monster revert errors (InvalidCombatEntity / InvalidPvE).
@@ -472,7 +476,7 @@ export function createSystemCalls(
         deadTargets.forEach(evictAllMonstersOnTile);
         return {
           success: false,
-          error: 'Stale monsters cleared — move to a new tile to find fresh spawns.',
+          error: 'No enemies here — try moving to another tile.',
           severity: 'warning',
         };
       }
@@ -508,7 +512,7 @@ export function createSystemCalls(
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
             group2.forEach(evictAllMonstersOnTile);
-            return { success: false, error: 'Stale monsters cleared — move to a new tile to find fresh spawns.', severity: 'warning' };
+            return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
         }
@@ -526,7 +530,7 @@ export function createSystemCalls(
       }
       if (encounterType === EncounterType.PvE && isGhostMonsterError(e)) {
         group2.forEach(evictAllMonstersOnTile);
-        return { success: false, error: 'Stale monsters cleared — move to a new tile to find fresh spawns.', severity: 'warning' };
+        return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
       }
       // Fallback: if gas estimation somehow leaks through (shouldn't with gas
       // override), try simulation to extract the real revert reason.
@@ -540,7 +544,7 @@ export function createSystemCalls(
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
             group2.forEach(evictAllMonstersOnTile);
-            return { success: false, error: 'Stale monsters cleared — move to a new tile to find fresh spawns.', severity: 'warning' };
+            return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
         }
@@ -1224,7 +1228,7 @@ export function createSystemCalls(
       evictAllMonstersOnTile(monsterId);
       return {
         success: false,
-        error: 'Stale monsters cleared — move to a new tile to find fresh spawns.',
+        error: 'No enemies here — try moving to another tile.',
         severity: 'warning',
       };
     }
@@ -1256,7 +1260,7 @@ export function createSystemCalls(
           }
           if (isGhostMonsterError(diagError)) {
             evictAllMonstersOnTile(monsterId);
-            return { success: false, error: 'Stale monsters cleared — move to a new tile to find fresh spawns.', severity: 'warning' };
+            return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
         }
@@ -1271,7 +1275,7 @@ export function createSystemCalls(
       }
       if (isGhostMonsterError(e)) {
         evictAllMonstersOnTile(monsterId);
-        return { success: false, error: 'Stale monsters cleared — move to a new tile to find fresh spawns.', severity: 'warning' };
+        return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
       }
       return {
         error: getContractError(e),
