@@ -315,7 +315,7 @@ contract GuildSystem is System {
         Guild.setLifetimeGoldEarned(guildId, Guild.getLifetimeGoldEarned(guildId) + taxAmount);
 
         // Auto-renew guild stat buffs (lazy charge from treasury)
-        if (gasleft() > 200_000) {
+        if (gasleft() > 300_000) {
             _chargeGuildBuffs(guildId);
         }
 
