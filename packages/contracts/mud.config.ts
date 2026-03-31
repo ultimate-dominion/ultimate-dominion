@@ -345,6 +345,13 @@ export default defineWorld({
       "Experience", // 2
       "GoldFind",   // 3
     ],
+    GuildStatBuff: [
+      "None",          // 0
+      "Strength",      // 1 — +3 STR
+      "Agility",       // 2 — +3 AGI
+      "Intelligence",  // 3 — +3 INT
+      "Resilience",    // 4 — +5 maxHP
+    ],
     SocialLinkType: [
       "None",    // 0
       "Friend",  // 1
@@ -1922,6 +1929,27 @@ export default defineWorld({
         multiplierBps: "uint256",    // basis points bonus (500 = 5%)
         expiresAt: "uint256",
         activatedBy: "bytes32",      // characterId of leader/officer who activated
+      },
+    },
+    // Guild stat buffs — leader picks a combat stat to buff for all members
+    // Auto-renews daily from treasury. Guild level determines available slots.
+    GuildStatBuffSlot: {
+      key: ["guildId", "slotIndex"],
+      schema: {
+        guildId: "uint256",
+        slotIndex: "uint8",
+        buffType: "GuildStatBuff",
+        lastChargedAt: "uint256",
+        activatedBy: "bytes32",      // characterId of leader who set it
+        active: "bool",
+      },
+    },
+    // Guild upgrade level — determines how many buff slots are unlocked
+    GuildLevel: {
+      key: ["guildId"],
+      schema: {
+        guildId: "uint256",
+        level: "uint256",            // 1 (default), 2, 3
       },
     },
     // Configurable gold tax — guild leader sets % of member gold earnings sent to treasury
