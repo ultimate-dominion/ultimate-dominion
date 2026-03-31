@@ -29,20 +29,23 @@ export function createOrdersRouter(syncHandle: SyncHandle): Router {
         return res.json({ orders: [], block: syncHandle.latestStoredBlockNumber });
       }
 
-      // Get order hashes for batch lookup
+      // Get order hashes for batch lookup — use IN with individual params
+      // (sql.unsafe + ANY($1) fails with bytea[] because postgres.js doesn't
+      // serialize Buffer arrays into a Postgres array literal)
       const orderHashes = activeOrders.map((o: any) => o.order_hash);
+      const placeholders = orderHashes.map((_: unknown, i: number) => `$${i + 1}`).join(', ');
 
       const [offers, considerations] = await Promise.all([
         offersTable
           ? sql.unsafe(
-              `SELECT * FROM "${mudSchema}"."${offersTable}" WHERE "order_hash" = ANY($1)`,
-              [orderHashes]
+              `SELECT * FROM "${mudSchema}"."${offersTable}" WHERE "order_hash" IN (${placeholders})`,
+              orderHashes
             )
           : [],
         considerationsTable
           ? sql.unsafe(
-              `SELECT * FROM "${mudSchema}"."${considerationsTable}" WHERE "order_hash" = ANY($1)`,
-              [orderHashes]
+              `SELECT * FROM "${mudSchema}"."${considerationsTable}" WHERE "order_hash" IN (${placeholders})`,
+              orderHashes
             )
           : [],
       ]);
