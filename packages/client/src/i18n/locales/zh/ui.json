@@ -153,7 +153,10 @@
     "shopAlwaysAllowTooltip": "启用后无需逐笔审批即可在商店中消费金币，体验更流畅。",
     "marketplaceAlwaysAllowTooltip": "启用后无需逐笔审批即可在交易所中消费金币，体验更流畅。",
     "lootManagerAlwaysAllowTooltip": "启用后无需逐笔审批即可携带金币，体验更流畅。",
-    "lootManagerSuccess": "您可以在战利品管理器中使用该代币。"
+    "lootManagerSuccess": "您可以在战利品管理器中使用该代币。",
+    "consumeTitle": "允许使用消耗品",
+    "consumeMessage": "要使用消耗品，您必须允许游戏使用您的物品。",
+    "consumeSuccess": "现在可以使用消耗品了。"
   },
   "battle": {
     "victory": "胜利！",
@@ -336,7 +339,8 @@
     "copyLink": "复制链接",
     "shareToX": "分享到 X",
     "bonus": "奖励",
-    "starter": "新手"
+    "starter": "新手",
+    "tweetText": "我在玩 Ultimate Dominion — 一款每场战斗、每道伤疤、每件战利品都永久存在的RPG。\n\n使用我的邀请码跳过排队: {{inviteUrl}}\n\n#UltimateDominion"
   },
   "goldMerchant": {
     "title": "金币商人",
@@ -725,6 +729,7 @@
     "cannotBattleAlcove": "安全区内无法战斗",
     "cannotBattleAlcoveBody": "你目前在<bold>安全区</bold>。要与其他玩家战斗，必须进入<bold>蜿蜒暗域</bold>。",
     "worldBossReturns": "世界首领 {{time}} 后出现",
+    "bossPrefix": "首领",
     "worldBossStirring": "世界首领正在苏醒...",
     "viewCharacter": "查看角色",
     "inBattle": "战斗中...",
@@ -857,5 +862,29 @@
     "leave": "离开暗黑洞穴",
     "stay": "留下",
     "transitioning": "离开中..."
+  },
+  "rarity": {
+    "worn": "破旧",
+    "common": "普通",
+    "uncommon": "优秀",
+    "rare": "稀有",
+    "epic": "史诗",
+    "legendary": "传说"
+  },
+  "advancedClass": {
+    "none": "",
+    "paladin": "圣骑士",
+    "sorcerer": "巫师",
+    "warrior": "战士",
+    "druid": "德鲁伊",
+    "warlock": "术士",
+    "ranger": "游侠",
+    "cleric": "牧师",
+    "wizard": "法师",
+    "rogue": "盗贼"
+  },
+  "boss": {
+    "spawn": "{{name}} 出现在 ({{x}}, {{y}})！",
+    "slain": "{{winner}} 击杀了 {{boss}}！"
   }
 }

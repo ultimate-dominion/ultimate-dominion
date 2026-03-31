@@ -153,7 +153,10 @@
     "shopAlwaysAllowTooltip": "ショップでのGold支出を毎回承認なしで行えるようになります。より快適なプレイ体験が得られます。",
     "marketplaceAlwaysAllowTooltip": "取引所でのGold支出を毎回承認なしで行えるようになります。より快適なプレイ体験が得られます。",
     "lootManagerAlwaysAllowTooltip": "Goldの所持を毎回承認なしで行えるようになります。より快適なプレイ体験が得られます。",
-    "lootManagerSuccess": "ルートマネージャーでトークンを使用できます。"
+    "lootManagerSuccess": "ルートマネージャーでトークンを使用できます。",
+    "consumeTitle": "消耗品の使用を許可",
+    "consumeMessage": "アイテムを消費するには、ゲームがアイテムを使用できるように許可する必要があります。",
+    "consumeSuccess": "アイテムを消費できるようになりました。"
   },
   "battle": {
     "victory": "勝利！",
@@ -336,7 +339,8 @@
     "copyLink": "リンクをコピー",
     "shareToX": "Xで共有",
     "bonus": "ボーナス",
-    "starter": "スターター"
+    "starter": "スターター",
+    "tweetText": "Ultimate Dominionをプレイ中 — すべての戦い、すべての傷、すべての戦利品が永続するRPG。\n\n招待コードで順番をスキップ: {{inviteUrl}}\n\n#UltimateDominion"
   },
   "goldMerchant": {
     "title": "Gold商人",
@@ -725,6 +729,7 @@
     "cannotBattleAlcove": "安息所では戦闘できません",
     "cannotBattleAlcoveBody": "現在<bold>安息所</bold>にいます。他のプレイヤーと戦うには<bold>曲がりくねる闇</bold>に進入してください。",
     "worldBossReturns": "ワールドボス{{time}}後に出現",
+    "bossPrefix": "ボス",
     "worldBossStirring": "ワールドボスが蠢いている...",
     "viewCharacter": "キャラクターを見る",
     "inBattle": "戦闘中...",
@@ -857,5 +862,29 @@
     "leave": "暗黒の洞窟を出る",
     "stay": "留まる",
     "transitioning": "離脱中..."
+  },
+  "rarity": {
+    "worn": "ボロ",
+    "common": "一般",
+    "uncommon": "上質",
+    "rare": "レア",
+    "epic": "エピック",
+    "legendary": "レジェンダリー"
+  },
+  "advancedClass": {
+    "none": "",
+    "paladin": "パラディン",
+    "sorcerer": "ソーサラー",
+    "warrior": "ウォリアー",
+    "druid": "ドルイド",
+    "warlock": "ウォーロック",
+    "ranger": "レンジャー",
+    "cleric": "クレリック",
+    "wizard": "ウィザード",
+    "rogue": "ローグ"
+  },
+  "boss": {
+    "spawn": "{{name}}が({{x}}, {{y}})に出現しました！",
+    "slain": "{{winner}}が{{boss}}を討伐しました！"
   }
 }

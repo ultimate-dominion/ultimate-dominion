@@ -382,11 +382,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
 
       {authMethod !== 'embedded' && (
         <LootManagerAllowanceModal
-          heading="Allow Consumables"
+          heading={t('allowance.consumeTitle')}
           isOpen={isAllowanceModalOpen}
-          message="In order to consume items, you must allow the game to use your items."
+          message={t('allowance.consumeMessage')}
           onClose={onCloseAllowanceModal}
-          successMessage="You can now consume your item."
+          successMessage={t('allowance.consumeSuccess')}
         />
       )}
     </Modal>
