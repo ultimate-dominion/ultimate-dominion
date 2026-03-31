@@ -8,12 +8,14 @@ import {
   GiMountainRoad,
   GiMountaintop,
   GiWindSlap,
+  GiBlackFlag,
 } from 'react-icons/gi';
 import type { Badge, BadgeType } from '../hooks/useBadges';
 
 const BADGE_ICONS: Record<BadgeType, React.ElementType> = {
   adventurer: GiCrossedSwords,
   founder: GiLaurelsTrophy,
+  guild_founder: GiBlackFlag,
   zone_conqueror: GiCrownedSkull,
   zone_fragment: GiScrollQuill,
   peaks_pioneer: GiMountainRoad,

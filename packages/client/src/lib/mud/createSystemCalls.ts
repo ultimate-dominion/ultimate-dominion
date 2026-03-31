@@ -2058,6 +2058,75 @@ export function createSystemCalls(
     }
   };
 
+  const setGuildBuff = async (
+    characterId: string,
+    slotIndex: number,
+    buffType: number,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'setGuildBuff');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__setGuildBuff([
+        characterId as `0x${string}`,
+        slotIndex,
+        buffType,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const removeGuildBuff = async (
+    characterId: string,
+    slotIndex: number,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'removeGuildBuff');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__removeGuildBuff([
+        characterId as `0x${string}`,
+        slotIndex,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
+  const upgradeGuild = async (
+    characterId: string,
+  ): SystemCallReturn => {
+    const ownershipError = validateCharacterOwnership(characterId, 'upgradeGuild');
+    if (ownershipError) return ownershipError;
+
+    try {
+      const tx = await wrappedWorldContract.write.UD__upgradeGuild([
+        characterId as `0x${string}`,
+      ]);
+
+      const receipt = await waitForTransaction(tx);
+      return { success: receipt.status === 'success' };
+    } catch (e) {
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   return {
     applyToGuild,
     autoAdventure,
@@ -2073,6 +2142,7 @@ export function createSystemCalls(
     createOrder,
     disbandGuild,
     endShopEncounter,
+    removeGuildBuff,
     endWorldEncounter,
     endTurn,
     enterGame,
@@ -2095,6 +2165,7 @@ export function createSystemCalls(
     selectAdvancedClass,
     sell,
     sellBatch,
+    setGuildBuff,
     setTaxRate,
     spawn,
     statRespec,
@@ -2103,6 +2174,7 @@ export function createSystemCalls(
     triggerFragment,
     unequipItem,
     updateTokenUri,
+    upgradeGuild,
     useWorldConsumableItem,
     withdrawTreasury,
   };

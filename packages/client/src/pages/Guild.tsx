@@ -57,10 +57,45 @@ import { CHARACTERS_PATH, HOME_PATH } from '../Routes';
 
 const MEMBERS_PER_PAGE = 10;
 
-// Guild role constants
-const ROLE_MEMBER = 0;
-const ROLE_OFFICER = 1;
-const ROLE_LEADER = 2;
+// Guild role constants — matches GuildRank enum in contracts (1=Member, 2=Officer, 3=Leader)
+const ROLE_MEMBER = 1;
+const ROLE_OFFICER = 2;
+const ROLE_LEADER = 3;
+
+// GuildStatBuff enum
+const BUFF_NONE = 0;
+const BUFF_STRENGTH = 1;
+const BUFF_AGILITY = 2;
+const BUFF_INTELLIGENCE = 3;
+const BUFF_RESILIENCE = 4;
+
+const BUFF_LABELS: Record<number, string> = {
+  [BUFF_NONE]: 'Empty',
+  [BUFF_STRENGTH]: 'Might of the Order',
+  [BUFF_AGILITY]: 'Grace of the Order',
+  [BUFF_INTELLIGENCE]: 'Wisdom of the Order',
+  [BUFF_RESILIENCE]: 'Resilience of the Order',
+};
+
+const BUFF_STATS: Record<number, string> = {
+  [BUFF_STRENGTH]: '+3 STR',
+  [BUFF_AGILITY]: '+3 AGI',
+  [BUFF_INTELLIGENCE]: '+3 INT',
+  [BUFF_RESILIENCE]: '+5 HP',
+};
+
+const BUFF_COLORS: Record<number, string> = {
+  [BUFF_STRENGTH]: '#C85A3A',
+  [BUFF_AGILITY]: '#5AAF5A',
+  [BUFF_INTELLIGENCE]: '#5A7AC8',
+  [BUFF_RESILIENCE]: '#C8A96E',
+};
+
+// Guild upgrade costs (display only — contract enforces)
+const UPGRADE_COSTS: Record<number, number> = {
+  2: 1000,
+  3: 2500,
+};
 
 type GuildEntry = {
   guildId: string;
@@ -282,6 +317,254 @@ type GuildDirectoryProps = {
   onOpenCreate: () => void;
   isJoining: boolean;
 };
+
+// ---------------------------------------------------------------------------
+// Guild Buff Panel
+// ---------------------------------------------------------------------------
+
+type GuildBuffPanelProps = {
+  guildId: string;
+  isLeader: boolean;
+  characterId: string;
+  systemCalls: any;
+};
+
+const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
+  guildId,
+  isLeader,
+  characterId,
+  systemCalls,
+}) => {
+  const buffSlotTable = useGameTable('GuildStatBuffSlot');
+  const guildLevelTable = useGameTable('GuildLevel');
+  const [isSettingBuff, setIsSettingBuff] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  // Derive guild level (default 1)
+  const guildLevel = useMemo(() => {
+    if (!guildLevelTable) return 1;
+    for (const data of Object.values(guildLevelTable)) {
+      if (String(data.guildId) === String(guildId)) {
+        const lvl = Number(data.level);
+        return lvl === 0 ? 1 : lvl;
+      }
+    }
+    return 1;
+  }, [guildLevelTable, guildId]);
+
+  // Read active buff slots
+  const buffSlots = useMemo(() => {
+    const slots: { slotIndex: number; buffType: number; active: boolean }[] = [];
+    for (let i = 0; i < 3; i++) {
+      slots.push({ slotIndex: i, buffType: BUFF_NONE, active: false });
+    }
+    if (!buffSlotTable) return slots;
+
+    for (const data of Object.values(buffSlotTable)) {
+      if (String(data.guildId) === String(guildId)) {
+        const idx = Number(data.slotIndex);
+        if (idx < 3) {
+          slots[idx] = {
+            slotIndex: idx,
+            buffType: Number(data.buffType),
+            active: Boolean(data.active),
+          };
+        }
+      }
+    }
+    return slots;
+  }, [buffSlotTable, guildId]);
+
+  // Active buff types (for duplicate check in UI)
+  const activeBuffTypes = useMemo(() => {
+    return new Set(
+      buffSlots.filter(s => s.active && s.buffType !== BUFF_NONE).map(s => s.buffType),
+    );
+  }, [buffSlots]);
+
+  const activeBuffCount = useMemo(
+    () => buffSlots.filter(s => s.active && s.buffType !== BUFF_NONE).length,
+    [buffSlots],
+  );
+
+  const handleSetBuff = useCallback(
+    async (slotIndex: number, buffType: number) => {
+      setIsSettingBuff(true);
+      try {
+        await systemCalls.setGuildBuff(characterId, slotIndex, buffType);
+      } finally {
+        setIsSettingBuff(false);
+      }
+    },
+    [characterId, systemCalls],
+  );
+
+  const handleRemoveBuff = useCallback(
+    async (slotIndex: number) => {
+      setIsSettingBuff(true);
+      try {
+        await systemCalls.removeGuildBuff(characterId, slotIndex);
+      } finally {
+        setIsSettingBuff(false);
+      }
+    },
+    [characterId, systemCalls],
+  );
+
+  const handleUpgrade = useCallback(async () => {
+    setIsUpgrading(true);
+    try {
+      await systemCalls.upgradeGuild(characterId);
+    } finally {
+      setIsUpgrading(false);
+    }
+  }, [characterId, systemCalls]);
+
+  const nextUpgradeCost = UPGRADE_COSTS[guildLevel + 1];
+
+  return (
+    <VStack
+      bg="rgba(200,169,110,0.05)"
+      border="1px solid"
+      borderColor="#3A3428"
+      borderRadius="md"
+      p={4}
+      spacing={3}
+      w="100%"
+    >
+      {/* Header */}
+      <HStack justify="space-between" w="100%">
+        <Text color="#C8A96E" fontSize="sm" fontWeight={700}>
+          Stat Buffs
+        </Text>
+        <HStack spacing={1}>
+          <Text color="#8A7E6A" fontSize="xs">
+            Level {guildLevel}
+          </Text>
+          {isLeader && nextUpgradeCost && (
+            <Button
+              colorScheme="yellow"
+              isLoading={isUpgrading}
+              ml={2}
+              onClick={handleUpgrade}
+              size="xs"
+              variant="outline"
+            >
+              Upgrade ({nextUpgradeCost.toLocaleString()}g)
+            </Button>
+          )}
+        </HStack>
+      </HStack>
+
+      {/* Daily cost */}
+      {activeBuffCount > 0 && (
+        <Text color="#8A7E6A" fontSize="xs">
+          Daily cost: {(activeBuffCount * 200).toLocaleString()} gold/day
+        </Text>
+      )}
+
+      {/* Buff Slots */}
+      <VStack spacing={2} w="100%">
+        {buffSlots.slice(0, guildLevel).map((slot) => (
+          <HStack
+            key={slot.slotIndex}
+            bg={
+              slot.active && slot.buffType !== BUFF_NONE
+                ? `rgba(${BUFF_COLORS[slot.buffType]?.replace('#', '').match(/.{2}/g)?.map(h => parseInt(h, 16)).join(',') ?? '200,169,110'},0.1)`
+                : 'rgba(60,54,42,0.3)'
+            }
+            border="1px solid"
+            borderColor={
+              slot.active && slot.buffType !== BUFF_NONE
+                ? (BUFF_COLORS[slot.buffType] ?? '#3A3428') + '40'
+                : '#3A3428'
+            }
+            borderRadius="md"
+            justify="space-between"
+            px={3}
+            py={2}
+            w="100%"
+          >
+            {slot.active && slot.buffType !== BUFF_NONE ? (
+              <>
+                <VStack align="start" spacing={0}>
+                  <Text
+                    color={BUFF_COLORS[slot.buffType] ?? '#E8DCC8'}
+                    fontSize="sm"
+                    fontWeight={600}
+                  >
+                    {BUFF_LABELS[slot.buffType]}
+                  </Text>
+                  <Text color="#8A7E6A" fontSize="xs">
+                    {BUFF_STATS[slot.buffType]}
+                  </Text>
+                </VStack>
+                {isLeader && (
+                  <Button
+                    isLoading={isSettingBuff}
+                    onClick={() => handleRemoveBuff(slot.slotIndex)}
+                    size="xs"
+                    variant="ghost"
+                  >
+                    <FaTrash color="#8A7E6A" size={10} />
+                  </Button>
+                )}
+              </>
+            ) : (
+              <>
+                <Text color="#5A5244" fontSize="sm">
+                  Empty Slot
+                </Text>
+                {isLeader && (
+                  <HStack spacing={1}>
+                    {[BUFF_STRENGTH, BUFF_AGILITY, BUFF_INTELLIGENCE, BUFF_RESILIENCE]
+                      .filter(bt => !activeBuffTypes.has(bt))
+                      .map(bt => (
+                        <Tooltip key={bt} label={`${BUFF_LABELS[bt]} (${BUFF_STATS[bt]})`}>
+                          <Button
+                            color={BUFF_COLORS[bt]}
+                            isLoading={isSettingBuff}
+                            onClick={() => handleSetBuff(slot.slotIndex, bt)}
+                            size="xs"
+                            variant="ghost"
+                          >
+                            {bt === BUFF_STRENGTH ? 'STR' : bt === BUFF_AGILITY ? 'AGI' : bt === BUFF_INTELLIGENCE ? 'INT' : 'HP'}
+                          </Button>
+                        </Tooltip>
+                      ))}
+                  </HStack>
+                )}
+              </>
+            )}
+          </HStack>
+        ))}
+
+        {/* Locked slots */}
+        {Array.from({ length: 3 - guildLevel }).map((_, i) => (
+          <HStack
+            key={`locked-${i}`}
+            bg="rgba(40,36,30,0.3)"
+            border="1px dashed"
+            borderColor="#2A2620"
+            borderRadius="md"
+            justify="center"
+            px={3}
+            py={2}
+            w="100%"
+          >
+            <Text color="#3A3428" fontSize="xs">
+              Unlock at Level {guildLevel + i + 1}
+            </Text>
+          </HStack>
+        ))}
+      </VStack>
+    </VStack>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Guild Directory
+// ---------------------------------------------------------------------------
 
 const GuildDirectory: React.FC<GuildDirectoryProps> = ({
   guilds,
@@ -838,6 +1121,14 @@ export const Guild = (): JSX.Element => {
                 {t('guild.treasury')}
               </Text>
             </HStack>
+
+            {/* Guild Stat Buffs */}
+            <GuildBuffPanel
+              guildId={myGuildId!}
+              isLeader={isLeader}
+              characterId={characterId}
+              systemCalls={systemCalls}
+            />
 
             {/* Leader Controls */}
             {isLeader && (
