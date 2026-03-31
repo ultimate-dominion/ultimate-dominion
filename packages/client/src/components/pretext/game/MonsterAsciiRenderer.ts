@@ -1,15 +1,17 @@
 /**
- * Monster ASCII Renderer v5 — Full Color + Rim Lighting
+ * Monster ASCII Renderer v6 — Contour Lines + Edge-Directed Characters
  *
  * Key rendering techniques (D&D Monster Manual style):
- * 1. Rim lighting — edge cells (silhouette boundary) get brightness boost
- * 2. Gamma lift — sqrt curve pulls dark values up for visibility on black bg
- * 3. High ambient — minimum light level 0.55 keeps even shadow areas visible
- * 4. Strong specular — sharp highlights on bright surfaces
- * 5. Full-color sampling from template canvas
- * 6. Multi-pass depth extrusion for 3D volume
- * 7. Normal-mapped directional lighting
- * 8. Perspective foreshortening + idle animation
+ * 1. Auto-contour — 512px edge detection brightens silhouette edges in template
+ * 2. Edge-directed characters — Sobel gradient picks /\|- at edges for sharp outlines
+ * 3. Rim lighting — edge cells (silhouette boundary) get brightness boost
+ * 4. Gamma lift — sqrt curve pulls dark values up for visibility on black bg
+ * 5. High ambient — minimum light level 0.55 keeps even shadow areas visible
+ * 6. Strong specular — sharp highlights on bright surfaces
+ * 7. Full-color sampling from template canvas
+ * 8. Multi-pass depth extrusion for 3D volume
+ * 9. Normal-mapped directional lighting
+ * 10. Perspective foreshortening + idle animation
  */
 
 import { FONTS } from '../theme';
@@ -17,6 +19,13 @@ import type { MonsterTemplate } from './monsterTemplates';
 
 // Dense character palette sorted by visual density.
 const CHAR_PALETTE = " .`',:-~^;*+!=?#@";
+
+// Edge-directed characters indexed by quantized angle (0-7, 45° steps).
+// Angle is the direction of the EDGE (perpendicular to gradient direction).
+// 0=right, 1=upper-right, 2=up, 3=upper-left, etc.
+const EDGE_CHARS = ['-', '/', '|', '\\', '-', '/', '|', '\\'];
+// Minimum gradient magnitude (normalized 0-1) to trigger edge character
+const EDGE_GRADIENT_THRESHOLD = 0.08;
 
 // ---------------------------------------------------------------------------
 // Module state
@@ -50,6 +59,8 @@ let cellBuffer: CellData[] = [];
 let cellCount = 0;
 // Grid mapping (row, col) → cellBuffer index. -1 = empty cell.
 let gridIndex: Int32Array = new Int32Array(0);
+// Per-cell sampled luminance (0-1) for Sobel edge detection in post-pass.
+let lumGrid: Float32Array = new Float32Array(0);
 
 function ensureBuffer(size: number) {
   while (cellBuffer.length < size) {
@@ -57,6 +68,7 @@ function ensureBuffer(size: number) {
   }
   if (gridIndex.length < size) {
     gridIndex = new Int32Array(size);
+    lumGrid = new Float32Array(size);
   }
 }
 
@@ -112,9 +124,64 @@ function getTemplateImage(template: MonsterTemplate): TemplateData {
   template.draw(ctx, w, h);
   const data = ctx.getImageData(0, 0, w, h);
 
+  // Auto-contour: detect silhouette edges at 512px resolution and brighten them.
+  // This creates fine "crowquill" contour lines BEFORE downsampling to the char grid.
+  // An edge pixel = non-black pixel with at least one black 4-connected neighbor.
+  applyContourBrightening(data.data, w, h);
+
   cached = { data, w, h, normals: null, normalCols: 0, normalRows: 0 };
   templateCache.set(template.id, cached);
   return cached;
+}
+
+/** Threshold for "black" pixel detection (luminance below this = background) */
+const CONTOUR_BLACK_THRESHOLD = 8;
+/** How much to brighten contour pixels (multiplier) */
+const CONTOUR_BOOST = 1.6;
+
+function applyContourBrightening(pixels: Uint8ClampedArray, w: number, h: number): void {
+  // First pass: build boolean mask of "is this pixel non-black?"
+  const nonBlack = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const idx = i * 4;
+    const lum = 0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2];
+    nonBlack[i] = lum >= CONTOUR_BLACK_THRESHOLD ? 1 : 0;
+  }
+
+  // Second pass: for each non-black pixel, check if any 4-connected neighbor is black.
+  // If so, boost its RGB. We also check 2px deep to create a thicker contour band.
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (!nonBlack[i]) continue;
+
+      // Check 4-connected neighbors at 1px and 2px distance
+      let edgeDist = 0;
+      for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]] as const) {
+        // 1px neighbor
+        const nx1 = x + dx;
+        const ny1 = y + dy;
+        if (nx1 < 0 || nx1 >= w || ny1 < 0 || ny1 >= h || !nonBlack[ny1 * w + nx1]) {
+          edgeDist = 2; // directly adjacent to edge
+          break;
+        }
+        // 2px neighbor — creates a softer outer glow
+        const nx2 = x + dx * 2;
+        const ny2 = y + dy * 2;
+        if (nx2 < 0 || nx2 >= w || ny2 < 0 || ny2 >= h || !nonBlack[ny2 * w + nx2]) {
+          if (edgeDist < 1) edgeDist = 1;
+        }
+      }
+
+      if (edgeDist > 0) {
+        const boost = edgeDist === 2 ? CONTOUR_BOOST : 1 + (CONTOUR_BOOST - 1) * 0.5;
+        const idx = i * 4;
+        pixels[idx]     = Math.min(255, Math.floor(pixels[idx] * boost));
+        pixels[idx + 1] = Math.min(255, Math.floor(pixels[idx + 1] * boost));
+        pixels[idx + 2] = Math.min(255, Math.floor(pixels[idx + 2] * boost));
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -371,6 +438,7 @@ export function renderMonster(
   ensureBuffer(gridSize);
   cellCount = 0;
   gridIndex.fill(-1, 0, gridSize);
+  lumGrid.fill(0, 0, gridSize);
 
   for (let row = 0; row < rows; row++) {
     const rowT = row / (rows - 1 || 1);
@@ -473,15 +541,18 @@ export function renderMonster(
       cell.weight = weight;
       cell.fontSize = drawFontSize;
 
-      // Track in grid for edge detection
+      // Track in grid for edge detection + Sobel
       gridIndex[row * cols + col] = cellIdx;
+      lumGrid[row * cols + col] = color.lum;
     }
   }
 
   // -----------------------------------------------------------------------
-  // Rim lighting — detect silhouette edges and boost brightness
-  // Cells adjacent to empty space get a strong highlight, creating the
-  // "backlit" rim effect seen in D&D Monster Manual illustrations.
+  // Rim lighting + edge-directed characters
+  //
+  // Two passes combined for efficiency:
+  // 1. Rim lighting — edge cells get brightness boost (backlit silhouette)
+  // 2. Edge-directed chars — Sobel gradient at edges picks /\|- for sharp outlines
   // -----------------------------------------------------------------------
 
   for (let row = 0; row < rows; row++) {
@@ -504,13 +575,34 @@ export function renderMonster(
 
       if (emptyNeighbors > 0) {
         const cell = cellBuffer[idx];
-        // Rim boost scales with how exposed the edge is (more empty neighbors = stronger rim)
+        // Rim boost scales with how exposed the edge is
         const rimStrength = Math.min(1, emptyNeighbors / 4);
-        const boost = 1 + rimStrength * 0.8; // up to 80% brightness boost
+        const boost = 1 + rimStrength * 0.8;
         cell.r = Math.min(255, Math.floor(cell.r * boost));
         cell.g = Math.min(255, Math.floor(cell.g * boost));
         cell.b = Math.min(255, Math.floor(cell.b * boost));
         cell.a = Math.min(1, cell.a + rimStrength * 0.3);
+
+        // Edge-directed character selection via Sobel gradient
+        // Compute Gx and Gy from the lumGrid
+        const gIdx = row * cols + col;
+        const lumL = col > 0 ? lumGrid[gIdx - 1] : 0;
+        const lumR = col < cols - 1 ? lumGrid[gIdx + 1] : 0;
+        const lumU = row > 0 ? lumGrid[gIdx - cols] : 0;
+        const lumD = row < rows - 1 ? lumGrid[gIdx + cols] : 0;
+        // Sobel-like gradient (simplified 3x3 → central differences)
+        const gx = lumR - lumL;
+        const gy = lumD - lumU;
+        const gradMag = Math.sqrt(gx * gx + gy * gy);
+
+        if (gradMag > EDGE_GRADIENT_THRESHOLD) {
+          // Gradient angle → edge direction (perpendicular, rotated 90°)
+          // atan2(gy, gx) gives gradient direction; edge runs perpendicular
+          const angle = Math.atan2(gy, gx) + Math.PI / 2;
+          // Quantize to 8 directions (45° steps), wrapping negative
+          const quantized = ((Math.round(angle / (Math.PI / 4)) % 8) + 8) % 8;
+          cell.char = EDGE_CHARS[quantized];
+        }
       }
     }
   }
