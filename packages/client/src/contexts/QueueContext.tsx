@@ -55,6 +55,11 @@ type QueueContextType = {
   leaveQueue: () => Promise<void>;
   reportSpawned: () => Promise<void>;
   refreshInviteCodes: () => Promise<void>;
+  // Chat WS bridge
+  sendWsMessage: (msg: object) => void;
+  onChatMessage: React.MutableRefObject<((msg: any) => void) | null>;
+  onChatHistory: React.MutableRefObject<((msg: any) => void) | null>;
+  onChatError: React.MutableRefObject<((msg: any) => void) | null>;
 };
 
 const defaultInviteStats: InviteStats = {
@@ -63,6 +68,8 @@ const defaultInviteStats: InviteStats = {
   activated: 0,
   bonusCodes: 0,
 };
+
+const defaultChatRef = { current: null };
 
 const QueueContext = createContext<QueueContextType>({
   queuePosition: 0,
@@ -83,6 +90,10 @@ const QueueContext = createContext<QueueContextType>({
   leaveQueue: async () => {},
   reportSpawned: async () => {},
   refreshInviteCodes: async () => {},
+  sendWsMessage: () => {},
+  onChatMessage: defaultChatRef,
+  onChatHistory: defaultChatRef,
+  onChatError: defaultChatRef,
 });
 
 export const useQueue = () => useContext(QueueContext);
@@ -108,6 +119,11 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
   const [inviteStats, setInviteStats] = useState<InviteStats>(defaultInviteStats);
   const [gameEvents, setGameEvents] = useState<GameEvent[]>([]);
   const [statsLoaded, setStatsLoaded] = useState(false);
+
+  // Chat callback refs -- set by ChatContext, called from WS handler
+  const onChatMessage = useRef<((msg: any) => void) | null>(null);
+  const onChatHistory = useRef<((msg: any) => void) | null>(null);
+  const onChatError = useRef<((msg: any) => void) | null>(null);
 
   // Fetch recent event history from the indexer on mount
   const historyFetched = useRef(false);
@@ -193,6 +209,16 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
               const next = [...prev, msg.event];
               return next.length > 200 ? next.slice(-200) : next;
             });
+            break;
+
+          case 'chat:message':
+            onChatMessage.current?.(msg);
+            break;
+          case 'chat:history':
+            onChatHistory.current?.(msg);
+            break;
+          case 'chat:error':
+            onChatError.current?.(msg);
             break;
         }
       } catch {
@@ -549,6 +575,12 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     };
   }, [queueStatus]);
 
+  const sendWsMessage = useCallback((msg: object) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(msg));
+    }
+  }, []);
+
   const value = useMemo<QueueContextType>(() => ({
     queuePosition,
     totalInQueue,
@@ -568,6 +600,10 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     leaveQueue,
     reportSpawned,
     refreshInviteCodes,
+    sendWsMessage,
+    onChatMessage,
+    onChatHistory,
+    onChatError,
   }), [
     queuePosition,
     totalInQueue,
@@ -587,6 +623,7 @@ export const QueueProvider = ({ children }: { children: ReactNode }): JSX.Elemen
     leaveQueue,
     reportSpawned,
     refreshInviteCodes,
+    sendWsMessage,
   ]);
 
   return (

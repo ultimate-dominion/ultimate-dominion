@@ -11,6 +11,8 @@ import { closeDb } from './db/connection.js';
 import { initQueueTables, advanceQueue, expireReadyEntries, cleanupStaleEntries, getQueueStats, getPlayerEmail, shouldNotifyAndMark } from './db/queueSchema.js';
 import { initCheckpointTable, saveCheckpoint } from './db/checkpoint.js';
 import { initEventStore } from './db/eventStore.js';
+import { initChatTables } from './db/chatStore.js';
+import { createChatHandler } from './ws/chatHandler.js';
 import { sendSlotOpenEmail } from './lib/slotEmail.js';
 import { startMilestoneWatcher } from './queue/milestoneWatcher.js';
 import { startEventFeed } from './queue/eventFeed.js';
@@ -30,10 +32,11 @@ async function main() {
 
   const httpServer = createServer(app);
 
-  // Initialize queue tables, checkpoint, and event store
+  // Initialize queue tables, checkpoint, event store, and chat
   await initQueueTables();
   await initCheckpointTable();
   await initEventStore();
+  await initChatTables();
 
   // Broadcaster for WebSocket
   const broadcaster = new Broadcaster();
@@ -41,6 +44,10 @@ async function main() {
   // Start MUD sync
   const syncHandle = await startSync(broadcaster);
   broadcaster.setTableNameMap(syncHandle.tableNameMap);
+
+  // Wire up chat handler (needs syncHandle for character/guild lookups)
+  const chatHandler = createChatHandler(broadcaster, syncHandle);
+  broadcaster.setChatHandler(chatHandler);
 
   // Start milestone watcher and event feed
   startMilestoneWatcher(syncHandle, broadcaster);

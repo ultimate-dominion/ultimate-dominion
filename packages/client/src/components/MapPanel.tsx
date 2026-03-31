@@ -30,7 +30,7 @@ import { SHOW_Z2 } from '../lib/env';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { WAITING_ROOM_PATH } from '../Routes';
 import { CaptchaGate } from './CaptchaGate';
-import { WorldFeed } from './WorldFeed';
+import { ChatPanel } from './ChatPanel';
 import { OnlineLink } from './OnlineRoster';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
@@ -481,7 +481,7 @@ export const MapPanel = (): JSX.Element => {
 
       {isDesktop && stage >= OnboardingStage.VETERAN && (
         <Box order={3} w="100%" flex={1} minH="100px" mt={2}>
-          <WorldFeed inline />
+          <ChatPanel inline />
         </Box>
       )}
     </Stack>

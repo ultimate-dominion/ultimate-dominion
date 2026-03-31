@@ -11,7 +11,7 @@ import { GiScrollUnfurled } from 'react-icons/gi';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
 import { BetaBanner } from './components/BetaBanner';
-import { WorldFeed } from './components/WorldFeed';
+import { ChatPanel } from './components/ChatPanel';
 import { DiscordButton } from './components/DiscordButton';
 import { FeedbackButton } from './components/FeedbackButton';
 import { Footer } from './components/Footer';
@@ -205,7 +205,7 @@ const AppInner = (): JSX.Element => {
             right={2}
             zIndex={10}
           >
-            <WorldFeed />
+            <ChatPanel />
           </Box>
         </>
       )}

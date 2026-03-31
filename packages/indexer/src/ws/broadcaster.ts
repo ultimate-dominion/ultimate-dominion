@@ -5,12 +5,17 @@ import { encodeMessage, decodeClientMessage, type ServerMessage, type QueueStats
 import { queryUpdatedRows, sql, mudSchema } from '../db/connection.js';
 import { extractKeyBytes, serializeRow, resolveResourceName, snakeToPascal, fixAbbreviations } from '../naming.js';
 import { GAME_NAMESPACE } from '../sync/startSync.js';
+import type { ChatHandler } from './chatHandler.js';
 
-type Client = {
+export type ChatClient = {
   ws: WebSocket;
   subscribedTables: Set<string>; // empty = all tables
   lastBlock: number;
+  chatChannels: Set<string>;
+  walletAddress: string | null;
 };
+
+type Client = ChatClient;
 
 export class Broadcaster {
   private clients = new Set<Client>();
@@ -18,9 +23,14 @@ export class Broadcaster {
   private tableNameMap = new Map<string, string>();
   /** tableId (hex) → logical table name */
   private tableIdMap = new Map<string, string>();
+  private chatHandler: ChatHandler | null = null;
 
   setTableNameMap(map: Map<string, string>) {
     this.tableNameMap = map;
+  }
+
+  setChatHandler(handler: ChatHandler) {
+    this.chatHandler = handler;
   }
 
   addClient(ws: WebSocket, currentBlock: number) {
@@ -28,6 +38,8 @@ export class Broadcaster {
       ws,
       subscribedTables: new Set(),
       lastBlock: 0,
+      chatChannels: new Set(['global']),
+      walletAddress: null,
     };
 
     // Send connected message
@@ -49,6 +61,24 @@ export class Broadcaster {
           break;
         case 'ping':
           this.send(client, { type: 'pong' });
+          break;
+        case 'chat:send':
+          this.chatHandler?.handleSend(client, msg).catch((err) =>
+            console.error('[ws] chat:send error:', err)
+          );
+          break;
+        case 'chat:history':
+          this.chatHandler?.handleHistory(client, msg).catch((err) =>
+            console.error('[ws] chat:history error:', err)
+          );
+          break;
+        case 'chat:join':
+          this.chatHandler?.handleJoin(client, msg).catch((err) =>
+            console.error('[ws] chat:join error:', err)
+          );
+          break;
+        case 'chat:leave':
+          this.chatHandler?.handleLeave(client, msg);
           break;
       }
     });
@@ -168,6 +198,20 @@ export class Broadcaster {
   broadcastGameEvent(event: GameEvent) {
     const msg: ServerMessage = { type: 'game:event', event };
     this.broadcastToAll(msg);
+  }
+
+  /** Broadcast a chat message to all clients subscribed to a channel */
+  broadcastToChannel(channel: string, msg: ServerMessage) {
+    for (const client of this.clients) {
+      if (client.chatChannels.has(channel)) {
+        this.send(client, msg);
+      }
+    }
+  }
+
+  /** Send a message to a specific client (used for shadow mute, errors) */
+  sendToClient(client: Client, msg: ServerMessage) {
+    this.send(client, msg);
   }
 
   private broadcastToAll(msg: ServerMessage) {

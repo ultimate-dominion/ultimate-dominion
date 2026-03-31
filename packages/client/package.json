@@ -33,7 +33,6 @@
     "@latticexyz/world": "2.2.23",
     "@marsidev/react-turnstile": "^1.4.2",
     "@privy-io/react-auth": "^2.4.1",
-    "@pushprotocol/restapi": "^1.7.25",
     "@rainbow-me/rainbowkit": "^2.1.1",
     "@tanstack/react-query": "^5.37.1",
     "@types/fuzzy-search": "^2.1.5",
