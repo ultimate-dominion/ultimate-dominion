@@ -595,7 +595,94 @@ export const LevelUpModal = ({
             </VStack>
           )}
 
-          {phase === 'narrative' && targetLevel !== 3 && targetLevel !== 5 && targetLevel !== 10 && (
+          {phase === 'narrative' && targetLevel === 15 && (
+            /* ── Level 15: Spell Acquisition ── */
+            <VStack
+              spacing={6}
+              py={{ base: 12, md: 16 }}
+              px={{ base: 6, md: 10 }}
+              align="center"
+            >
+              <Box
+                w="80px"
+                h="80px"
+                borderRadius="full"
+                border="2px solid rgba(160, 120, 220, 0.4)"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bg="rgba(160, 120, 220, 0.08)"
+                animation={`${badgeReveal} 1s cubic-bezier(0.16, 1, 0.3, 1) forwards, ${badgePulse} 3s ease-in-out 1s infinite`}
+                opacity={0}
+                css={{
+                  '&': {
+                    boxShadow: '0 0 20px rgba(160, 120, 220, 0.3), 0 0 40px rgba(160, 120, 220, 0.1)',
+                  },
+                }}
+              >
+                <Text fontSize="3xl" filter="drop-shadow(0 0 12px rgba(160, 120, 220, 0.5))">
+                  ✦
+                </Text>
+              </Box>
+
+              <Text
+                fontFamily="'Cinzel', serif"
+                fontSize={{ base: 'xl', md: '2xl' }}
+                fontWeight={700}
+                color="#A078DC"
+                letterSpacing="0.1em"
+                textShadow="0 0 20px rgba(160, 120, 220, 0.3)"
+                animation={`${fadeUp} 0.6s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both`}
+              >
+                {narrative.title}
+              </Text>
+
+              <Box mx="auto" w="60px" h="1px" bg="rgba(160, 120, 220, 0.3)" />
+
+              <Box
+                maxW="420px"
+                bg="rgba(28, 24, 20, 0.85)"
+                borderRadius="md"
+                border="1px solid rgba(160, 120, 220, 0.08)"
+                px={{ base: 5, md: 7 }}
+                py={6}
+                animation={`${fadeUp} 0.6s 1s cubic-bezier(0.16, 1, 0.3, 1) both`}
+                position="relative"
+              >
+                <Text
+                  fontSize={{ base: 'sm', md: 'md' }}
+                  lineHeight="1.85"
+                  visibility="hidden"
+                  aria-hidden="true"
+                  whiteSpace="pre-line"
+                >
+                  {narrative.text}
+                </Text>
+                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                  <SafeTypist
+                    avgTypingDelay={50}
+                    cursor={{ show: false }}
+                    stdTypingDelay={25}
+                    startDelay={1200}
+                  >
+                    <Text
+                      fontSize={{ base: 'sm', md: 'md' }}
+                      lineHeight="1.85"
+                      color="#D4C8B0"
+                      fontStyle="italic"
+                      textAlign="center"
+                      whiteSpace="pre-line"
+                      textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                    >
+                      {narrative.text}
+                    </Text>
+                  </SafeTypist>
+                </Box>
+              </Box>
+            </VStack>
+          )}
+
+          {phase === 'narrative' && targetLevel !== 3 && targetLevel !== 5 && targetLevel !== 10 && targetLevel !== 15 && (
             /* ── Generic narrative for other levels ── */
             <VStack
               spacing={6}

@@ -79,6 +79,10 @@
     "10": {
       "title": "The masters take notice.",
       "text": "You have walked the Winding Dark and survived. You have earned the right to choose what you become.\n\nThis is not an ending. It is a transformation."
+    },
+    "15": {
+      "title": "The art reveals itself.",
+      "text": "Power flows through you like a river finding its course. The knowledge was always there \u2014 waiting for you to be ready.\n\nYou have learned your class spell."
     }
   },
   "npc": {
