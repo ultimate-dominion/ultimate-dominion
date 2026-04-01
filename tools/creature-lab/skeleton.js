@@ -234,55 +234,55 @@ export function drawDebugSkeleton(ctx, skeleton, w, h) {
 // Compact and round, NOT elongated. Think "angry dark boulder with a face."
 export const direRatSkeleton = {
   spine: [
-    // FULLY CROUCHED — belly near ground, stubby legs, head low
-    { id: 'snout',   x: 0.10, y: 0.70, radius: 0.025 },
-    { id: 'head',    x: 0.16, y: 0.64, radius: 0.065 },
-    { id: 'neck',    x: 0.26, y: 0.56, radius: 0.074 },
-    { id: 'chest',   x: 0.38, y: 0.48, radius: 0.120 },
-    { id: 'belly',   x: 0.52, y: 0.44, radius: 0.140 },
-    { id: 'hip',     x: 0.64, y: 0.48, radius: 0.125 },
-    { id: 'rump',    x: 0.72, y: 0.56, radius: 0.058 },
+    // GROUND-HUGGING — belly practically on the floor, stubby legs
+    { id: 'snout',   x: 0.10, y: 0.84, radius: 0.025 },
+    { id: 'head',    x: 0.16, y: 0.78, radius: 0.065 },
+    { id: 'neck',    x: 0.26, y: 0.72, radius: 0.074 },
+    { id: 'chest',   x: 0.38, y: 0.64, radius: 0.120 },
+    { id: 'belly',   x: 0.52, y: 0.60, radius: 0.140 },
+    { id: 'hip',     x: 0.64, y: 0.64, radius: 0.125 },
+    { id: 'rump',    x: 0.72, y: 0.70, radius: 0.058 },
   ],
   limbs: [
-    // Near front leg — stubby, crouched, paw reaching forward
+    // Near front leg — tiny stubs barely poking below body
     { attach: 'chest', side: 'near', segments: [
-      { x: 0.26, y: 0.62, radius: 0.040 },  // shoulder — in body
-      { x: 0.20, y: 0.70, radius: 0.018 },  // elbow
-      { x: 0.16, y: 0.76, radius: 0.012 },  // forearm
-      { x: 0.14, y: 0.84, radius: 0.018 },  // paw
+      { x: 0.26, y: 0.78, radius: 0.040 },  // shoulder — in body
+      { x: 0.20, y: 0.86, radius: 0.018 },  // elbow
+      { x: 0.16, y: 0.92, radius: 0.012 },  // forearm
+      { x: 0.14, y: 0.97, radius: 0.018 },  // paw
     ]},
     // Far front leg
     { attach: 'chest', side: 'far', segments: [
-      { x: 0.34, y: 0.60, radius: 0.032 },
-      { x: 0.28, y: 0.68, radius: 0.014 },
-      { x: 0.24, y: 0.76, radius: 0.010 },
-      { x: 0.23, y: 0.84, radius: 0.014 },
+      { x: 0.34, y: 0.76, radius: 0.032 },
+      { x: 0.28, y: 0.84, radius: 0.014 },
+      { x: 0.24, y: 0.92, radius: 0.010 },
+      { x: 0.23, y: 0.97, radius: 0.014 },
     ]},
-    // Near rear leg — stubby zig-zag, compressed
+    // Near rear leg — compressed zig-zag, barely visible below body
     { attach: 'hip', side: 'near', segments: [
-      { x: 0.58, y: 0.48, radius: 0.100 },  // haunch — hidden in body
-      { x: 0.60, y: 0.60, radius: 0.026 },  // thigh emerges back
-      { x: 0.65, y: 0.70, radius: 0.013 },  // knee — behind
-      { x: 0.59, y: 0.78, radius: 0.010 },  // shin — forward
-      { x: 0.55, y: 0.84, radius: 0.016 },  // paw
+      { x: 0.58, y: 0.64, radius: 0.100 },  // haunch — hidden in body
+      { x: 0.60, y: 0.76, radius: 0.026 },  // thigh emerges
+      { x: 0.65, y: 0.86, radius: 0.013 },  // knee — behind
+      { x: 0.59, y: 0.92, radius: 0.010 },  // shin — forward
+      { x: 0.55, y: 0.97, radius: 0.016 },  // paw
     ]},
     // Far rear leg
     { attach: 'hip', side: 'far', segments: [
-      { x: 0.66, y: 0.48, radius: 0.085 },  // haunch — hidden
-      { x: 0.68, y: 0.60, radius: 0.020 },  // thigh
-      { x: 0.72, y: 0.70, radius: 0.011 },  // knee — behind
-      { x: 0.68, y: 0.78, radius: 0.008 },  // shin
-      { x: 0.66, y: 0.84, radius: 0.013 },  // paw
+      { x: 0.66, y: 0.64, radius: 0.085 },  // haunch — hidden
+      { x: 0.68, y: 0.76, radius: 0.020 },  // thigh
+      { x: 0.72, y: 0.86, radius: 0.011 },  // knee — behind
+      { x: 0.68, y: 0.92, radius: 0.008 },  // shin
+      { x: 0.66, y: 0.97, radius: 0.013 },  // paw
     ]},
   ],
   tail: {
     points: [
-      { x: 0.74, y: 0.58 },
-      { x: 0.82, y: 0.50 },
-      { x: 0.90, y: 0.48 },
-      { x: 0.94, y: 0.56 },
-      { x: 0.93, y: 0.66 },
-      { x: 0.88, y: 0.72 },
+      { x: 0.74, y: 0.72 },
+      { x: 0.82, y: 0.64 },
+      { x: 0.90, y: 0.58 },
+      { x: 0.94, y: 0.50 },
+      { x: 0.93, y: 0.42 },
+      { x: 0.88, y: 0.38 },
     ],
     startWidth: 0.018,
     endWidth: 0.003,
@@ -803,17 +803,26 @@ export function drawCleanCreature(ctx, skeleton, w, h, helpers) {
   ctx.quadraticCurveTo(w * (sx - 0.01), h * (sy + 0.06), w * (sx + 0.02), h * (sy + 0.05));
   ctx.stroke();
 
-  // 10. Teeth — two bright triangles
-  ctx.fillStyle = 'rgb(230,220,200)';
+  // 10. Teeth — BIG prominent fangs, 2x size
+  ctx.fillStyle = 'rgb(235,225,205)';
+  // Left fang — long, curved
   ctx.beginPath();
-  ctx.moveTo(w * (sx - 0.03), h * (sy + 0.03));
-  ctx.lineTo(w * (sx - 0.035), h * (sy + 0.07));
-  ctx.lineTo(w * (sx - 0.02), h * (sy + 0.035));
+  ctx.moveTo(w * (sx - 0.03), h * (sy + 0.02));
+  ctx.lineTo(w * (sx - 0.04), h * (sy + 0.12));
+  ctx.lineTo(w * (sx - 0.018), h * (sy + 0.03));
   ctx.fill();
+  // Right fang
   ctx.beginPath();
-  ctx.moveTo(w * (sx - 0.005), h * (sy + 0.035));
-  ctx.lineTo(w * (sx - 0.01), h * (sy + 0.07));
-  ctx.lineTo(w * (sx + 0.005), h * (sy + 0.045));
+  ctx.moveTo(w * (sx - 0.005), h * (sy + 0.03));
+  ctx.lineTo(w * (sx - 0.015), h * (sy + 0.12));
+  ctx.lineTo(w * (sx + 0.008), h * (sy + 0.045));
+  ctx.fill();
+  // Small teeth between
+  ctx.fillStyle = 'rgb(210,200,180)';
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.018), h * (sy + 0.03));
+  ctx.lineTo(w * (sx - 0.022), h * (sy + 0.08));
+  ctx.lineTo(w * (sx - 0.012), h * (sy + 0.035));
   ctx.fill();
 
   // 11. Eyes — bold bright circles, the soul of the creature
@@ -838,11 +847,10 @@ export function drawCleanCreature(ctx, skeleton, w, h, helpers) {
   ctx.fillStyle = 'rgba(140,60,70,0.5)';
   _fe(ctx, w * (hx + 0.06), h * (hy - hr * 0.9), w * 0.012, h * 0.018);
 
-  // 13. Hackle spikes — simple dark triangles along spine
-  ctx.fillStyle = 'rgb(30,22,16)';
+  // 13. Hackle spikes — BIG, visible bone/keratin spikes jutting from spine
   const sp = skeleton.spine;
-  for (let i = 0; i < 12; i++) {
-    const t = i / 12;
+  for (let i = 0; i < 14; i++) {
+    const t = i / 14;
     const si = 2 + t * (sp.length - 3);
     const idx = Math.floor(si);
     const f = si - idx;
@@ -850,11 +858,27 @@ export function drawCleanCreature(ctx, skeleton, w, h, helpers) {
     const b = sp[Math.min(idx + 1, sp.length - 1)];
     const px = w * (a.x + (b.x - a.x) * f);
     const py = h * (a.y + (b.y - a.y) * f - (a.radius + (b.radius - a.radius) * f));
-    const len = w * (0.014 + t * 0.008);
+    // Spikes get taller in the middle, shorter at ends
+    const sizeMult = 1.0 - Math.abs(t - 0.4) * 1.2;
+    const len = w * (0.030 + sizeMult * 0.025);
+    const baseW = w * 0.006;
+    // Slight lean backward
+    const lean = -0.15;
+    // Dark base
+    ctx.fillStyle = 'rgb(50,36,26)';
     ctx.beginPath();
-    ctx.moveTo(px - w * 0.003, py);
-    ctx.lineTo(px, py - len);
-    ctx.lineTo(px + w * 0.003, py);
+    ctx.moveTo(px - baseW, py);
+    ctx.lineTo(px + Math.sin(lean) * len, py - Math.cos(lean) * len);
+    ctx.lineTo(px + baseW, py);
+    ctx.fill();
+    // Bright tip — catches light, reads in ASCII
+    ctx.fillStyle = 'rgb(140,110,80)';
+    ctx.beginPath();
+    const tipX = px + Math.sin(lean) * len;
+    const tipY = py - Math.cos(lean) * len;
+    ctx.moveTo(tipX - w * 0.002, tipY + len * 0.3);
+    ctx.lineTo(tipX, tipY);
+    ctx.lineTo(tipX + w * 0.002, tipY + len * 0.3);
     ctx.fill();
   }
 }
