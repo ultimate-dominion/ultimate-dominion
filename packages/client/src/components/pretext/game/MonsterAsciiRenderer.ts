@@ -463,6 +463,176 @@ const BG_FILL_ALPHA = 0.35;      // opacity of the bg rect
 // Public API
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Animation state — drives combat actions
+// ---------------------------------------------------------------------------
+
+export type AnimAction =
+  | 'idle'
+  | 'fangs'       // Basilisk Fangs — physical lunge + bite
+  | 'gaze'        // Petrifying Gaze — eyes charge + magic wave
+  | 'hit'         // Taking damage — recoil + flash
+  | 'death'       // Dying — collapse + dissolve
+  | 'enrage';     // Low HP — faster, redder, meaner
+
+export type AnimationState = {
+  action: AnimAction;
+  /** Timestamp (ms) when the action started */
+  startTime: number;
+};
+
+/** Easing: fast start, slow finish */
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+/** Easing: slow start, fast middle, slow finish */
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+/** Easing: overshoot then settle */
+function easeOutBack(t: number): number {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+/** Duration of each action in ms */
+const ACTION_DURATION: Record<AnimAction, number> = {
+  idle: Infinity,
+  fangs: 900,
+  gaze: 1200,
+  hit: 500,
+  death: 2000,
+  enrage: 800,
+};
+
+type AnimParams = {
+  translateX: number;
+  translateY: number;
+  scale: number;
+  colorShiftR: number;
+  colorShiftG: number;
+  colorShiftB: number;
+  glowIntensity: number;
+  /** 0 = normal, 1 = fully dissolved */
+  dissolve: number;
+  /** Shake magnitude in pixels */
+  shake: number;
+};
+
+function computeAnimParams(anim: AnimationState | undefined, elapsed: number): AnimParams {
+  const base: AnimParams = {
+    translateX: 0, translateY: 0, scale: 1,
+    colorShiftR: 0, colorShiftG: 0, colorShiftB: 0,
+    glowIntensity: 0, dissolve: 0, shake: 0,
+  };
+  if (!anim || anim.action === 'idle') return base;
+
+  const dt = elapsed - anim.startTime;
+  const duration = ACTION_DURATION[anim.action];
+  const t = Math.min(1, dt / duration); // 0..1 progress
+
+  switch (anim.action) {
+    case 'fangs': {
+      // Phase 1 (0-0.25): tense — pull back slightly, crouch
+      // Phase 2 (0.25-0.55): lunge — snap forward fast
+      // Phase 3 (0.55-1.0): recover — settle back to idle
+      if (t < 0.25) {
+        const p = easeInOutCubic(t / 0.25);
+        base.translateX = -8 * p;
+        base.translateY = 3 * p;
+        base.scale = 1 - 0.03 * p;
+      } else if (t < 0.55) {
+        const p = easeOutBack((t - 0.25) / 0.30);
+        base.translateX = -8 + 35 * p;
+        base.translateY = 3 - 8 * p;
+        base.scale = 0.97 + 0.08 * p;
+        base.shake = (1 - (t - 0.25) / 0.30) * 3;
+      } else {
+        const p = easeOutCubic((t - 0.55) / 0.45);
+        base.translateX = 27 * (1 - p);
+        base.translateY = -5 * (1 - p);
+        base.scale = 1.05 - 0.05 * p;
+      }
+      break;
+    }
+    case 'gaze': {
+      // Phase 1 (0-0.4): eyes charge — body stiffens, green glow builds
+      // Phase 2 (0.4-0.65): release — wave of energy, slight recoil
+      // Phase 3 (0.65-1.0): settle — glow fades
+      if (t < 0.40) {
+        const p = easeInOutCubic(t / 0.40);
+        base.scale = 1 + 0.02 * p;
+        base.colorShiftG = Math.floor(60 * p);
+        base.glowIntensity = p;
+        base.translateY = -2 * p;
+      } else if (t < 0.65) {
+        const p = easeOutCubic((t - 0.40) / 0.25);
+        base.scale = 1.02 - 0.04 * p;
+        base.translateX = -6 * p;
+        base.colorShiftG = 60 - Math.floor(30 * p);
+        base.glowIntensity = 1 - 0.3 * p;
+        base.shake = (1 - p) * 4;
+      } else {
+        const p = easeOutCubic((t - 0.65) / 0.35);
+        base.scale = 0.98 + 0.02 * p;
+        base.translateX = -6 * (1 - p);
+        base.colorShiftG = Math.floor(30 * (1 - p));
+        base.glowIntensity = 0.7 * (1 - p);
+      }
+      break;
+    }
+    case 'hit': {
+      // Quick recoil + white flash + shake
+      if (t < 0.15) {
+        const p = easeOutCubic(t / 0.15);
+        base.translateX = -12 * p;
+        base.scale = 1 - 0.04 * p;
+        base.colorShiftR = Math.floor(120 * p);
+        base.colorShiftG = Math.floor(100 * p);
+        base.colorShiftB = Math.floor(100 * p);
+        base.shake = 6 * p;
+      } else {
+        const p = easeOutCubic((t - 0.15) / 0.85);
+        base.translateX = -12 * (1 - p);
+        base.scale = 0.96 + 0.04 * p;
+        base.colorShiftR = Math.floor(120 * (1 - p));
+        base.colorShiftG = Math.floor(100 * (1 - p));
+        base.colorShiftB = Math.floor(100 * (1 - p));
+        base.shake = 6 * (1 - p);
+      }
+      break;
+    }
+    case 'death': {
+      // Slow collapse: sink down, desaturate, dissolve from edges
+      const p = easeInOutCubic(t);
+      base.translateY = 20 * p;
+      base.scale = 1 - 0.15 * p;
+      // Desaturate by shifting all channels toward gray
+      base.colorShiftR = -Math.floor(30 * p);
+      base.colorShiftG = -Math.floor(30 * p);
+      base.colorShiftB = -Math.floor(20 * p);
+      base.dissolve = p;
+      break;
+    }
+    case 'enrage': {
+      // Pulse red, scale up aggressively, then hold at slightly larger
+      if (t < 0.5) {
+        const p = easeOutBack(t / 0.5);
+        base.scale = 1 + 0.06 * p;
+        base.colorShiftR = Math.floor(50 * p);
+        base.shake = 3 * (1 - t / 0.5);
+      } else {
+        const p = (t - 0.5) / 0.5;
+        base.scale = 1.06 - 0.02 * p;
+        base.colorShiftR = Math.floor(50 * (1 - p * 0.4));
+      }
+      break;
+    }
+  }
+  return base;
+}
+
 export type RenderOptions = {
   alpha?: number;
   elapsed?: number;
@@ -476,6 +646,8 @@ export type RenderOptions = {
   enableHalfBlock?: boolean;
   /** v8: Canvas glow on bright accent cells. Default: true */
   enableGlow?: boolean;
+  /** Combat animation state */
+  animation?: AnimationState;
 };
 
 export function renderMonster(
@@ -496,9 +668,13 @@ export function renderMonster(
     enableBgFill = true,
     enableHalfBlock = false,
     enableGlow = true,
+    animation,
   } = options;
 
   if (width < 20 || height < 20) return;
+
+  // Compute animation parameters
+  const anim = computeAnimParams(animation, elapsed);
 
   const tpl = getTemplateImage(template);
 
@@ -543,7 +719,7 @@ export function renderMonster(
 
   const bobY = enable3D ? Math.sin(elapsed * 0.0018) * 3 : 0;
   const swayX = enable3D ? Math.sin(elapsed * 0.0013) * 1.5 : 0;
-  const breathScale = enable3D ? 1 + Math.sin(elapsed * 0.0025) * 0.012 : 1;
+  const breathScale = (enable3D ? 1 + Math.sin(elapsed * 0.0025) * 0.012 : 1) * anim.scale;
   const perspectiveAmount = enable3D ? 0.12 : 0;
 
   const lightAngle = elapsed * 0.0008;
@@ -555,8 +731,12 @@ export function renderMonster(
   const ly = lightY / lightLen;
   const lz = lightZ / lightLen;
 
-  const centerX = x + (width - renderW) / 2 + swayX;
-  const centerY = y + (height - renderH) / 2 + bobY;
+  // Shake: random per-frame offset
+  const shakeX = anim.shake > 0 ? (Math.random() - 0.5) * anim.shake * 2 : 0;
+  const shakeY = anim.shake > 0 ? (Math.random() - 0.5) * anim.shake * 2 : 0;
+
+  const centerX = x + (width - renderW) / 2 + swayX + anim.translateX + shakeX;
+  const centerY = y + (height - renderH) / 2 + bobY + anim.translateY + shakeY;
 
   let normals: Float32Array | null = null;
   if (enable3D) {
@@ -820,6 +1000,67 @@ export function renderMonster(
         }
       }
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // Animation: color shifts, dissolve, glow overlay
+  // -----------------------------------------------------------------------
+
+  if (anim.colorShiftR !== 0 || anim.colorShiftG !== 0 || anim.colorShiftB !== 0) {
+    for (let i = 0; i < cellCount; i++) {
+      const c = cellBuffer[i];
+      c.r = Math.max(0, Math.min(255, c.r + anim.colorShiftR));
+      c.g = Math.max(0, Math.min(255, c.g + anim.colorShiftG));
+      c.b = Math.max(0, Math.min(255, c.b + anim.colorShiftB));
+      c.topR = Math.max(0, Math.min(255, c.topR + anim.colorShiftR));
+      c.topG = Math.max(0, Math.min(255, c.topG + anim.colorShiftG));
+      c.topB = Math.max(0, Math.min(255, c.topB + anim.colorShiftB));
+      c.botR = Math.max(0, Math.min(255, c.botR + anim.colorShiftR));
+      c.botG = Math.max(0, Math.min(255, c.botG + anim.colorShiftG));
+      c.botB = Math.max(0, Math.min(255, c.botB + anim.colorShiftB));
+    }
+  }
+
+  // Dissolve: remove cells from edges inward based on dissolve progress
+  if (anim.dissolve > 0) {
+    // Use a noise-based threshold so cells vanish organically, not in a line
+    for (let i = 0; i < cellCount; i++) {
+      const c = cellBuffer[i];
+      // Edge distance: cells near the silhouette edge dissolve first
+      const gIdx = gridIndex.indexOf(i);
+      const col = gIdx >= 0 ? gIdx % cols : 0;
+      const row = gIdx >= 0 ? Math.floor(gIdx / cols) : 0;
+      // Normalized distance from center
+      const dx = (col / cols - 0.5) * 2;
+      const dy = (row / rows - 0.5) * 2;
+      const edgeDist = Math.sqrt(dx * dx + dy * dy);
+      // Add noise so it's not a clean circle
+      const noise = Math.sin(col * 7.3 + row * 13.7) * 0.3;
+      const threshold = anim.dissolve * 1.5; // dissolve faster at edges
+      if (edgeDist + noise > (1 - threshold)) {
+        c.a = 0; // hide this cell
+      } else {
+        c.a *= 1 - anim.dissolve * 0.5; // fade remaining cells
+      }
+    }
+  }
+
+  // Gaze glow: extra green atmospheric glow during petrifying gaze
+  if (anim.glowIntensity > 0) {
+    const glowCX = centerX + renderW * 0.15; // eyes are in the front
+    const glowCY = centerY + renderH * 0.3;
+    const glowR = Math.max(renderW, renderH) * 0.5;
+    const grad = ctx.createRadialGradient(glowCX, glowCY, 0, glowCX, glowCY, glowR);
+    const gi = anim.glowIntensity;
+    grad.addColorStop(0, `rgba(40,255,40,${0.25 * gi})`);
+    grad.addColorStop(0.3, `rgba(30,200,30,${0.12 * gi})`);
+    grad.addColorStop(0.7, `rgba(20,120,20,${0.04 * gi})`);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, width, height);
+    ctx.restore();
   }
 
   // -----------------------------------------------------------------------

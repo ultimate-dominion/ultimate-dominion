@@ -3,13 +3,13 @@
  * rendered as ASCII art at multiple sizes.
  */
 
-import { useCallback, useState } from 'react';
-import { Box, Flex, Text, SimpleGrid, Button, HStack } from '@chakra-ui/react';
+import { useCallback, useRef, useState } from 'react';
+import { Box, Flex, Text, Button, HStack } from '@chakra-ui/react';
 import { useCanvas } from '../hooks/useCanvas';
 import { usePretextFonts } from '../hooks/usePretextFonts';
 import { COLORS, FONTS } from '../theme';
 import { MONSTER_TEMPLATES, type MonsterTemplate } from './monsterTemplates';
-import { renderMonster } from './MonsterAsciiRenderer';
+import { renderMonster, type AnimAction, type AnimationState } from './MonsterAsciiRenderer';
 
 // ---------------------------------------------------------------------------
 // Size presets
@@ -111,7 +111,13 @@ function MonsterPreview({
 // Expanded single-monster view
 // ---------------------------------------------------------------------------
 
-function MonsterExpanded({ template }: { template: MonsterTemplate }) {
+function MonsterExpanded({
+  template,
+  animRef,
+}: {
+  template: MonsterTemplate;
+  animRef: React.MutableRefObject<AnimationState | undefined>;
+}) {
   const onFrame = useCallback(
     (ctx: CanvasRenderingContext2D, _dt: number, elapsed: number) => {
       const { width, height } = ctx.canvas.getBoundingClientRect();
@@ -119,7 +125,11 @@ function MonsterExpanded({ template }: { template: MonsterTemplate }) {
       ctx.fillStyle = COLORS.bg;
       ctx.fillRect(0, 0, width, height);
 
-      renderMonster(ctx, template, 0, 0, width, height - 50, { elapsed, cellSize: 3 });
+      renderMonster(ctx, template, 0, 0, width, height - 50, {
+        elapsed,
+        cellSize: 3,
+        animation: animRef.current,
+      });
 
       // Info
       const classInfo = CLASS_LABELS[template.monsterClass];
@@ -137,7 +147,7 @@ function MonsterExpanded({ template }: { template: MonsterTemplate }) {
         height - 32,
       );
     },
-    [template],
+    [template, animRef],
   );
 
   const { canvasRef } = useCanvas({ onFrame });
@@ -166,14 +176,40 @@ function MonsterExpanded({ template }: { template: MonsterTemplate }) {
 // Gallery
 // ---------------------------------------------------------------------------
 
+const ATTACK_BUTTONS: { action: AnimAction; label: string; color: string }[] = [
+  { action: 'fangs', label: 'Basilisk Fangs', color: 'rgb(200,150,60)' },
+  { action: 'gaze', label: 'Petrifying Gaze', color: 'rgb(60,220,60)' },
+  { action: 'hit', label: 'Take Hit', color: 'rgb(220,80,60)' },
+  { action: 'enrage', label: 'Enrage', color: 'rgb(220,50,30)' },
+  { action: 'death', label: 'Death', color: 'rgb(120,120,140)' },
+];
+
 export function MonsterGallery() {
   const { ready } = usePretextFonts();
   const [viewSize, setViewSize] = useState<ViewSize>('combat');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const animRef = useRef<AnimationState | undefined>(undefined);
+  const [activeAction, setActiveAction] = useState<AnimAction>('idle');
 
   const selectedTemplate = selectedId
     ? MONSTER_TEMPLATES.find((t) => t.id === selectedId)
     : null;
+
+  const triggerAnimation = useCallback((action: AnimAction) => {
+    animRef.current = { action, startTime: performance.now() };
+    setActiveAction(action);
+    if (action !== 'death') {
+      // Auto-return to idle after animation duration
+      const durations: Record<string, number> = {
+        fangs: 900, gaze: 1200, hit: 500, enrage: 800,
+      };
+      const dur = durations[action] ?? 1000;
+      setTimeout(() => {
+        animRef.current = undefined;
+        setActiveAction('idle');
+      }, dur);
+    }
+  }, []);
 
   if (!ready) {
     return (
@@ -199,7 +235,11 @@ export function MonsterGallery() {
               variant="outline"
               color={COLORS.textBody}
               borderColor={COLORS.border}
-              onClick={() => setSelectedId(null)}
+              onClick={() => {
+                setSelectedId(null);
+                animRef.current = undefined;
+                setActiveAction('idle');
+              }}
               _hover={{ bg: COLORS.bgHover }}
               mr={2}
             >
@@ -227,7 +267,38 @@ export function MonsterGallery() {
       {/* Content */}
       {selectedTemplate ? (
         <Box flex={1} position="relative">
-          <MonsterExpanded template={selectedTemplate} />
+          <MonsterExpanded template={selectedTemplate} animRef={animRef} />
+          {/* Animation controls */}
+          <HStack
+            position="absolute"
+            bottom={14}
+            left="50%"
+            transform="translateX(-50%)"
+            spacing={1}
+            bg="rgba(0,0,0,0.7)"
+            px={3}
+            py={1.5}
+            borderRadius="md"
+          >
+            {ATTACK_BUTTONS.map(({ action, label, color }) => (
+              <Button
+                key={action}
+                size="xs"
+                variant="outline"
+                color={activeAction === action ? COLORS.bg : color}
+                bg={activeAction === action ? color : 'transparent'}
+                borderColor={color}
+                onClick={() => triggerAnimation(action)}
+                isDisabled={activeAction !== 'idle' && activeAction !== action}
+                _hover={{ bg: activeAction === action ? color : 'rgba(255,255,255,0.05)' }}
+                _disabled={{ opacity: 0.4, cursor: 'not-allowed' }}
+                fontFamily="mono"
+                fontSize="10px"
+              >
+                {label}
+              </Button>
+            ))}
+          </HStack>
         </Box>
       ) : (
         <Box flex={1} overflowY="auto" px={2}>
