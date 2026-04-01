@@ -820,6 +820,319 @@ function drawKoboldRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
   }
 }
 
+// -- Goblin skeleton: squat barrel-body, two-handed axe raised, huge ears ------
+const GOBLIN_SKELETON: Skeleton = {
+  spine: [
+    { id: 'jaw',    x: 0.30, y: 0.38, radius: 0.016 },
+    { id: 'head',   x: 0.38, y: 0.28, radius: 0.082 },
+    { id: 'neck',   x: 0.42, y: 0.42, radius: 0.050 },
+    { id: 'chest',  x: 0.46, y: 0.52, radius: 0.095 },
+    { id: 'belly',  x: 0.48, y: 0.62, radius: 0.098 },
+    { id: 'hip',    x: 0.48, y: 0.72, radius: 0.080 },
+  ],
+  tail: { points: [], startWidth: 0, endWidth: 0 },
+  limbs: [
+    { attach: 'chest', side: 'near', segments: [
+      { x: 0.44, y: 0.48, radius: 0.034 },
+      { x: 0.52, y: 0.36, radius: 0.024 },
+      { x: 0.60, y: 0.24, radius: 0.018 },
+      { x: 0.64, y: 0.16, radius: 0.020 },
+    ]},
+    { attach: 'chest', side: 'far', segments: [
+      { x: 0.50, y: 0.50, radius: 0.028 },
+      { x: 0.54, y: 0.40, radius: 0.020 },
+      { x: 0.58, y: 0.30, radius: 0.015 },
+      { x: 0.60, y: 0.22, radius: 0.018 },
+    ]},
+    { attach: 'hip', side: 'near', segments: [
+      { x: 0.40, y: 0.78, radius: 0.040 },
+      { x: 0.36, y: 0.86, radius: 0.032 },
+      { x: 0.34, y: 0.94, radius: 0.028 },
+    ]},
+    { attach: 'hip', side: 'far', segments: [
+      { x: 0.56, y: 0.78, radius: 0.034 },
+      { x: 0.62, y: 0.86, radius: 0.026 },
+      { x: 0.64, y: 0.94, radius: 0.024 },
+    ]},
+  ],
+};
+
+function drawGoblinRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const sk = GOBLIN_SKELETON;
+  const jaw = sk.spine.find(n => n.id === 'jaw')!;
+  const head = sk.spine.find(n => n.id === 'head')!;
+  const neck = sk.spine.find(n => n.id === 'neck')!;
+  const chest = sk.spine.find(n => n.id === 'chest')!;
+  const belly = sk.spine.find(n => n.id === 'belly')!;
+  const hip = sk.spine.find(n => n.id === 'hip')!;
+
+  const skinDark = [58, 72, 28];
+  const skinMid = [88, 108, 42];
+  const skinLight = [118, 142, 58];
+  const skinShadow = [32, 40, 16];
+  const leatherDark = [62, 44, 28];
+  const leatherMid = [92, 68, 42];
+  const leatherLight = [118, 90, 56];
+  const eyeOuter = [255, 160, 20];
+  const eyeCore = [255, 240, 120];
+  const teethColor = [210, 200, 175];
+  const axeWood = [95, 68, 38];
+  const axeHead = [155, 148, 138];
+  const axeEdge = [200, 195, 185];
+  const earInner = [120, 65, 50];
+
+  // 1. FAR LIMBS
+  for (const limb of sk.limbs) {
+    if (limb.side === 'far') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${skinShadow.join(',')})`);
+  }
+
+  // 2. AXE — two-handed, shaft only from hands up to head
+  const handX = 0.64, handY = 0.16;
+  const farHandY = 0.22;
+  ctx.strokeStyle = `rgb(${axeWood.join(',')})`;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = w * 0.022;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.56, h * (farHandY + 0.02));
+  ctx.lineTo(w * (handX + 0.06), h * (handY - 0.10));
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(130,100,60,0.30)';
+  ctx.lineWidth = w * 0.006;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.57, h * farHandY);
+  ctx.lineTo(w * (handX + 0.04), h * (handY - 0.06));
+  ctx.stroke();
+  const ahx = handX + 0.06, ahy = handY - 0.12;
+  ctx.fillStyle = `rgb(${axeHead.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * ahx, h * (ahy + 0.03));
+  ctx.bezierCurveTo(w * (ahx + 0.08), h * (ahy - 0.06), w * (ahx + 0.16), h * (ahy - 0.04), w * (ahx + 0.16), h * (ahy + 0.03));
+  ctx.bezierCurveTo(w * (ahx + 0.16), h * (ahy + 0.10), w * (ahx + 0.08), h * (ahy + 0.14), w * ahx, h * (ahy + 0.08));
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = `rgba(${axeHead[0] - 30},${axeHead[1] - 30},${axeHead[2] - 30},0.85)`;
+  ctx.beginPath();
+  ctx.moveTo(w * ahx, h * (ahy + 0.03));
+  ctx.bezierCurveTo(w * (ahx - 0.05), h * (ahy - 0.03), w * (ahx - 0.08), h * (ahy - 0.01), w * (ahx - 0.08), h * (ahy + 0.04));
+  ctx.bezierCurveTo(w * (ahx - 0.07), h * (ahy + 0.09), w * (ahx - 0.03), h * (ahy + 0.10), w * ahx, h * (ahy + 0.08));
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgb(${axeEdge.join(',')})`;
+  ctx.lineWidth = w * 0.006;
+  ctx.beginPath();
+  ctx.moveTo(w * (ahx + 0.16), h * (ahy - 0.02));
+  ctx.bezierCurveTo(w * (ahx + 0.16), h * (ahy + 0.05), w * (ahx + 0.12), h * (ahy + 0.12), w * (ahx + 0.04), h * (ahy + 0.14));
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(220,218,210,0.30)';
+  fillEllipse(ctx, w * (ahx + 0.08), h * (ahy + 0.02), w * 0.035, w * 0.025);
+  ctx.fillStyle = `rgb(${axeHead.join(',')})`;
+  fillCircle(ctx, w * (ahx + 0.14), h * (ahy + 0.06), w * 0.004);
+  fillCircle(ctx, w * (ahx + 0.12), h * (ahy + 0.10), w * 0.003);
+
+  // 3. BODY
+  const bodyFill = bodyGrad3(ctx, w * belly.x, h * belly.y, w * 0.22,
+    skinMid[0], skinMid[1], skinMid[2],
+    skinShadow[0], skinShadow[1], skinShadow[2],
+    skinLight[0], skinLight[1], skinLight[2]);
+  drawSkeletonBodyOutline(ctx, sk.spine, w, h, bodyFill);
+
+  // 4. LEATHER VEST
+  ctx.fillStyle = bodyGrad3(ctx, w * chest.x, h * chest.y, w * 0.12,
+    leatherMid[0], leatherMid[1], leatherMid[2],
+    leatherDark[0], leatherDark[1], leatherDark[2],
+    leatherLight[0], leatherLight[1], leatherLight[2]);
+  ctx.beginPath();
+  ctx.moveTo(w * (neck.x - 0.02), h * (neck.y + 0.02));
+  ctx.bezierCurveTo(w * (chest.x - 0.06), h * (chest.y - 0.02), w * (chest.x - 0.07), h * (chest.y + 0.08), w * (belly.x - 0.04), h * (belly.y + 0.02));
+  ctx.bezierCurveTo(w * belly.x, h * (belly.y + 0.04), w * (belly.x + 0.04), h * (belly.y + 0.02), w * (belly.x + 0.05), h * belly.y);
+  ctx.bezierCurveTo(w * (chest.x + 0.06), h * (chest.y + 0.02), w * (chest.x + 0.04), h * (chest.y - 0.04), w * (neck.x + 0.04), h * (neck.y + 0.01));
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgb(${leatherDark.join(',')})`;
+  ctx.lineWidth = w * 0.003;
+  ctx.stroke();
+  ctx.strokeStyle = `rgb(${leatherDark.join(',')})`;
+  ctx.lineWidth = w * 0.008;
+  ctx.beginPath();
+  ctx.moveTo(w * (belly.x - 0.05), h * (belly.y + 0.01));
+  ctx.bezierCurveTo(w * belly.x, h * (belly.y + 0.03), w * (belly.x + 0.04), h * (belly.y + 0.02), w * (belly.x + 0.05), h * belly.y);
+  ctx.stroke();
+  ctx.fillStyle = `rgb(${axeHead.join(',')})`;
+  fillCircle(ctx, w * belly.x, h * (belly.y + 0.02), w * 0.008);
+  highlight(ctx, w * (chest.x - 0.01), h * (chest.y + 0.01), w * 0.018, `rgb(${leatherLight.join(',')})`, 0.15);
+  ambientOcclusion(ctx, w * belly.x, h * (belly.y + 0.03), w * 0.04, h * 0.008, 0.22);
+
+  // 5. NEAR LIMBS
+  for (const limb of sk.limbs) {
+    if (limb.side === 'near') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${skinDark.join(',')})`);
+  }
+
+  // 6. FEET
+  for (const limb of sk.limbs) {
+    const foot = limb.segments[limb.segments.length - 1];
+    if (foot.y < 0.88) continue;
+    ctx.fillStyle = limb.side === 'near' ? `rgb(${skinDark.join(',')})` : `rgb(${skinShadow.join(',')})`;
+    fillEllipse(ctx, w * foot.x, h * foot.y, w * (foot.radius + 0.006), h * 0.012);
+    ctx.fillStyle = `rgb(${teethColor.join(',')})`;
+    for (let c = -1; c <= 1; c++) {
+      const cx = w * foot.x + c * w * 0.007;
+      ctx.beginPath();
+      ctx.moveTo(cx, h * foot.y + h * 0.006);
+      ctx.lineTo(cx - w * 0.002, h * foot.y + h * 0.020);
+      ctx.lineTo(cx + w * 0.002, h * foot.y + h * 0.014);
+      ctx.fill();
+    }
+  }
+
+  // 7. HANDS on axe shaft
+  ctx.fillStyle = `rgb(${skinMid.join(',')})`;
+  fillEllipse(ctx, w * handX, h * handY, w * 0.016, w * 0.014);
+  ctx.fillStyle = `rgb(${skinDark.join(',')})`;
+  for (let f = 0; f < 4; f++) {
+    fillCircle(ctx, w * (handX - 0.005 + f * 0.004), h * (handY + 0.002 + f * 0.003), w * 0.005);
+  }
+  const farHand = sk.limbs[1].segments[3];
+  ctx.fillStyle = `rgb(${skinShadow.join(',')})`;
+  fillEllipse(ctx, w * farHand.x, h * farHand.y, w * 0.014, w * 0.012);
+  for (let f = 0; f < 4; f++) {
+    fillCircle(ctx, w * (farHand.x - 0.004 + f * 0.003), h * (farHand.y + 0.002 + f * 0.003), w * 0.004);
+  }
+
+  // 8. HEAD — wide round
+  const hx = head.x, hy = head.y, hr = head.radius;
+  const jx = jaw.x, jy = jaw.y;
+  ctx.fillStyle = bodyGrad3(ctx, w * hx, h * hy, w * hr * 2.5,
+    skinMid[0], skinMid[1], skinMid[2],
+    skinShadow[0], skinShadow[1], skinShadow[2],
+    skinLight[0], skinLight[1], skinLight[2]);
+  fillEllipse(ctx, w * hx, h * hy, w * hr * 1.4, h * hr * 1.2);
+  ctx.fillStyle = bodyGrad3(ctx, w * jx, h * jy, w * 0.06,
+    skinMid[0], skinMid[1], skinMid[2],
+    skinShadow[0], skinShadow[1], skinShadow[2],
+    skinLight[0], skinLight[1], skinLight[2]);
+  ctx.beginPath();
+  ctx.moveTo(w * (hx - hr * 0.8), h * (hy + hr * 0.2));
+  ctx.bezierCurveTo(w * (jx - 0.06), h * (jy - 0.02), w * (jx - 0.06), h * (jy + 0.04), w * (jx - 0.02), h * (jy + 0.06));
+  ctx.bezierCurveTo(w * (jx + 0.02), h * (jy + 0.06), w * (hx + 0.02), h * (hy + hr * 0.6), w * (hx + hr * 0.6), h * (hy + hr * 0.3));
+  ctx.fill();
+  ambientOcclusion(ctx, w * (hx - 0.02), h * (hy + 0.01), w * 0.06, h * 0.015, 0.35);
+
+  // 9. EARS — thick base, sharp tip
+  const earNx = hx + hr * 0.6, earNy = hy - hr * 0.1;
+  ctx.fillStyle = `rgb(${skinMid.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * earNx, h * (earNy + 0.025));
+  ctx.lineTo(w * earNx, h * (earNy - 0.025));
+  ctx.bezierCurveTo(w * (earNx + 0.06), h * (earNy - 0.04), w * (earNx + 0.12), h * (earNy - 0.06), w * (earNx + 0.16), h * (earNy - 0.04));
+  ctx.bezierCurveTo(w * (earNx + 0.12), h * (earNy + 0.00), w * (earNx + 0.06), h * (earNy + 0.02), w * earNx, h * (earNy + 0.025));
+  ctx.fill();
+  ctx.fillStyle = `rgb(${earInner.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * (earNx + 0.01), h * (earNy + 0.015));
+  ctx.lineTo(w * (earNx + 0.01), h * (earNy - 0.015));
+  ctx.bezierCurveTo(w * (earNx + 0.05), h * (earNy - 0.03), w * (earNx + 0.10), h * (earNy - 0.04), w * (earNx + 0.13), h * (earNy - 0.03));
+  ctx.bezierCurveTo(w * (earNx + 0.10), h * (earNy + 0.00), w * (earNx + 0.05), h * (earNy + 0.01), w * (earNx + 0.01), h * (earNy + 0.015));
+  ctx.fill();
+  ctx.strokeStyle = `rgb(${skinLight.join(',')})`;
+  ctx.lineWidth = w * 0.004;
+  ctx.beginPath();
+  ctx.moveTo(w * earNx, h * (earNy - 0.025));
+  ctx.bezierCurveTo(w * (earNx + 0.06), h * (earNy - 0.04), w * (earNx + 0.12), h * (earNy - 0.06), w * (earNx + 0.16), h * (earNy - 0.04));
+  ctx.stroke();
+  const earFx = hx - 0.02, earFy = hy - hr * 0.3;
+  ctx.fillStyle = `rgb(${skinShadow.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * earFx, h * (earFy + 0.020));
+  ctx.lineTo(w * earFx, h * (earFy - 0.020));
+  ctx.bezierCurveTo(w * (earFx - 0.05), h * (earFy - 0.04), w * (earFx - 0.10), h * (earFy - 0.06), w * (earFx - 0.14), h * (earFy - 0.05));
+  ctx.bezierCurveTo(w * (earFx - 0.10), h * (earFy - 0.01), w * (earFx - 0.05), h * (earFy + 0.01), w * earFx, h * (earFy + 0.020));
+  ctx.fill();
+  ctx.fillStyle = `rgba(${earInner.join(',')},0.4)`;
+  ctx.beginPath();
+  ctx.moveTo(w * (earFx - 0.01), h * (earFy + 0.012));
+  ctx.lineTo(w * (earFx - 0.01), h * (earFy - 0.012));
+  ctx.bezierCurveTo(w * (earFx - 0.04), h * (earFy - 0.03), w * (earFx - 0.08), h * (earFy - 0.04), w * (earFx - 0.11), h * (earFy - 0.04));
+  ctx.bezierCurveTo(w * (earFx - 0.08), h * (earFy - 0.01), w * (earFx - 0.04), h * (earFy + 0.00), w * (earFx - 0.01), h * (earFy + 0.012));
+  ctx.fill();
+
+  // 10. NOSE
+  ctx.fillStyle = `rgb(${skinDark.join(',')})`;
+  fillEllipse(ctx, w * (jx - 0.01), h * (jy - 0.02), w * 0.018, w * 0.014);
+  ctx.fillStyle = `rgb(${skinShadow.join(',')})`;
+  fillCircle(ctx, w * (jx - 0.022), h * (jy - 0.018), w * 0.005);
+  fillCircle(ctx, w * (jx - 0.008), h * (jy - 0.014), w * 0.004);
+
+  // 11. MOUTH
+  ctx.fillStyle = 'rgb(18,10,8)';
+  ctx.beginPath();
+  ctx.moveTo(w * (jx - 0.035), h * (jy + 0.005));
+  ctx.quadraticCurveTo(w * (jx + 0.01), h * (jy + 0.06), w * (hx + 0.01), h * (hy + hr * 0.3));
+  ctx.quadraticCurveTo(w * jx, h * (jy + 0.04), w * (jx - 0.035), h * (jy + 0.005));
+  ctx.fill();
+  ctx.fillStyle = `rgb(${teethColor.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * (jx - 0.025), h * (jy + 0.005));
+  ctx.lineTo(w * (jx - 0.030), h * (jy + 0.050));
+  ctx.lineTo(w * (jx - 0.018), h * (jy + 0.012));
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w * (jx - 0.005), h * (jy + 0.015));
+  ctx.lineTo(w * (jx - 0.012), h * (jy + 0.048));
+  ctx.lineTo(w * (jx + 0.004), h * (jy + 0.022));
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w * (jx - 0.018), h * (jy + 0.040));
+  ctx.lineTo(w * (jx - 0.014), h * (jy + 0.015));
+  ctx.lineTo(w * (jx - 0.008), h * (jy + 0.038));
+  ctx.fill();
+
+  // 12. EYES — two clearly visible
+  const eNx = hx - 0.01, eNy = hy - 0.01;
+  ambientOcclusion(ctx, w * eNx, h * eNy, w * 0.026, w * 0.022, 0.35);
+  ctx.save(); ctx.globalAlpha = 0.28;
+  ctx.fillStyle = `rgb(${eyeOuter.join(',')})`;
+  fillCircle(ctx, w * eNx, h * eNy, w * 0.026);
+  ctx.restore();
+  ctx.fillStyle = `rgb(${eyeOuter.join(',')})`;
+  fillCircle(ctx, w * eNx, h * eNy, w * 0.018);
+  ctx.fillStyle = `rgb(${eyeCore.join(',')})`;
+  fillCircle(ctx, w * eNx, h * eNy, w * 0.010);
+  ctx.fillStyle = 'rgb(8,4,2)';
+  fillCircle(ctx, w * (eNx - 0.003), h * eNy, w * 0.006);
+  ctx.fillStyle = 'rgb(255,255,255)';
+  fillCircle(ctx, w * (eNx - 0.007), h * (eNy - 0.007), w * 0.005);
+
+  const eFx = hx + hr * 0.5, eFy = hy - 0.01;
+  ambientOcclusion(ctx, w * eFx, h * eFy, w * 0.020, w * 0.018, 0.30);
+  ctx.save(); ctx.globalAlpha = 0.22;
+  ctx.fillStyle = `rgb(${eyeOuter.join(',')})`;
+  fillCircle(ctx, w * eFx, h * eFy, w * 0.020);
+  ctx.restore();
+  ctx.fillStyle = `rgb(${eyeOuter.join(',')})`;
+  fillCircle(ctx, w * eFx, h * eFy, w * 0.014);
+  ctx.fillStyle = `rgb(${eyeCore.join(',')})`;
+  fillCircle(ctx, w * eFx, h * eFy, w * 0.008);
+  ctx.fillStyle = 'rgb(8,4,2)';
+  fillCircle(ctx, w * (eFx - 0.002), h * eFy, w * 0.005);
+  ctx.fillStyle = 'rgb(255,255,255)';
+  fillCircle(ctx, w * (eFx - 0.005), h * (eFy - 0.005), w * 0.003);
+
+  // 13. BROW WRINKLES
+  ctx.strokeStyle = `rgb(${skinShadow.join(',')})`;
+  ctx.lineWidth = w * 0.005;
+  ctx.beginPath();
+  ctx.moveTo(w * (eNx - 0.015), h * (eNy - 0.022));
+  ctx.quadraticCurveTo(w * ((eNx + eFx) / 2), h * (eNy - 0.032), w * (eFx + 0.015), h * (eFy - 0.020));
+  ctx.stroke();
+
+  // 14. WARTS
+  ctx.fillStyle = `rgb(${skinDark.join(',')})`;
+  fillCircle(ctx, w * (hx + 0.02), h * (hy + 0.01), w * 0.005);
+  fillCircle(ctx, w * (jx - 0.01), h * (jy + 0.005), w * 0.004);
+  ctx.fillStyle = `rgb(${skinLight.join(',')})`;
+  fillCircle(ctx, w * (hx + 0.01), h * (hy - hr * 0.8), w * 0.008);
+}
+
 function drawCavernBruteRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillStyle = bodyGrad(ctx, w * 0.44, h * 0.40, w * 0.28, 178, 152, 120, 82, 64, 44);
   ctx.beginPath();
@@ -1019,15 +1332,16 @@ function drawBasiliskRedux(ctx: CanvasRenderingContext2D, w: number, h: number) 
 }
 
 export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
+  // ── Zone 1: Dark Cave (Levels 1-12) ──
   { id: 'redux-dire-rat', name: 'Dire Rat', gridWidth: 14, gridHeight: 8, monsterClass: 1, level: 1, atmosphere: { r: 140, g: 110, b: 70, intensity: 0.10 }, draw: drawDireRatRedux },
   { id: 'redux-kobold', name: 'Kobold', gridWidth: 7, gridHeight: 5, monsterClass: 2, level: 2, atmosphere: { r: 160, g: 120, b: 50, intensity: 0.10 }, draw: drawKoboldRedux },
-  { id: 'redux-cavern-brute', name: 'Cavern Brute', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 3, atmosphere: { r: 156, g: 116, b: 58, intensity: 0.10 }, draw: drawCavernBruteRedux },
-  { id: 'redux-crystal-elemental', name: 'Crystal Elemental', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.15 }, draw: drawCrystalElementalRedux },
-  { id: 'redux-ironhide-troll', name: 'Ironhide Troll', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 5, atmosphere: { r: 96, g: 156, b: 70, intensity: 0.12 }, draw: drawIronhideTrollRedux },
-  { id: 'redux-phase-spider', name: 'Phase Spider', gridWidth: 12, gridHeight: 11, monsterClass: 1, level: 6, atmosphere: { r: 106, g: 70, b: 164, intensity: 0.12 }, draw: drawPhaseSpiderRedux },
-  { id: 'redux-bonecaster', name: 'Bonecaster', gridWidth: 10, gridHeight: 14, monsterClass: 2, level: 7, atmosphere: { r: 66, g: 182, b: 56, intensity: 0.12 }, draw: drawBonecasterRedux },
-  { id: 'redux-rock-golem', name: 'Rock Golem', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 8, atmosphere: { r: 172, g: 138, b: 72, intensity: 0.10 }, draw: drawRockGolemRedux },
-  { id: 'redux-pale-stalker', name: 'Pale Stalker', gridWidth: 10, gridHeight: 13, monsterClass: 1, level: 9, atmosphere: { r: 144, g: 168, b: 208, intensity: 0.14 }, draw: drawPaleStalkerRedux },
-  { id: 'redux-dusk-drake', name: 'Dusk Drake', gridWidth: 14, gridHeight: 12, monsterClass: 2, level: 10, atmosphere: { r: 136, g: 82, b: 178, intensity: 0.12 }, draw: drawDuskDrakeRedux },
+  { id: 'redux-goblin', name: 'Goblin', gridWidth: 7, gridHeight: 7, monsterClass: 0, level: 3, atmosphere: { r: 96, g: 120, b: 48, intensity: 0.10 }, draw: drawGoblinRedux },
+  { id: 'redux-giant-spider', name: 'Giant Spider', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.15 }, draw: drawCrystalElementalRedux },
+  { id: 'redux-skeleton', name: 'Skeleton', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 5, atmosphere: { r: 96, g: 156, b: 70, intensity: 0.12 }, draw: drawIronhideTrollRedux },
+  { id: 'redux-goblin-shaman', name: 'Goblin Shaman', gridWidth: 12, gridHeight: 11, monsterClass: 1, level: 6, atmosphere: { r: 106, g: 70, b: 164, intensity: 0.12 }, draw: drawPhaseSpiderRedux },
+  { id: 'redux-gelatinous-ooze', name: 'Gelatinous Ooze', gridWidth: 10, gridHeight: 14, monsterClass: 2, level: 7, atmosphere: { r: 66, g: 182, b: 56, intensity: 0.12 }, draw: drawBonecasterRedux },
+  { id: 'redux-bugbear', name: 'Bugbear', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 8, atmosphere: { r: 172, g: 138, b: 72, intensity: 0.10 }, draw: drawRockGolemRedux },
+  { id: 'redux-carrion-crawler', name: 'Carrion Crawler', gridWidth: 10, gridHeight: 13, monsterClass: 1, level: 9, atmosphere: { r: 144, g: 168, b: 208, intensity: 0.14 }, draw: drawPaleStalkerRedux },
+  { id: 'redux-hook-horror', name: 'Hook Horror', gridWidth: 14, gridHeight: 12, monsterClass: 2, level: 10, atmosphere: { r: 136, g: 82, b: 178, intensity: 0.12 }, draw: drawDuskDrakeRedux },
   { id: 'redux-basilisk', name: 'Basilisk', gridWidth: 26, gridHeight: 9, monsterClass: 0, level: 12, isBoss: true, atmosphere: { r: 52, g: 86, b: 36, intensity: 0.10 }, renderOverrides: { gamma: 0.72, ambient: 0.45, brightnessBoost: 1.15, charDensityFloor: 0.14 }, draw: drawBasiliskRedux },
 ];
