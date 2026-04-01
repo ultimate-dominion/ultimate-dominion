@@ -148,7 +148,7 @@ function getTemplateImage(template: MonsterTemplate): TemplateData {
   template.draw(ctx, w, h);
   const data = ctx.getImageData(0, 0, w, h);
 
-  applyBrightnessBoost(data.data, w, h);
+  applyBrightnessBoost(data.data, w, h, template.renderOverrides?.brightnessBoost);
   applyNoiseTexture(data.data, w, h);
   applyContourBrightening(data.data, w, h);
 
@@ -205,14 +205,15 @@ function surfaceNoise(x: number, y: number): number {
 // Template post-processing pipeline
 // ---------------------------------------------------------------------------
 
-function applyBrightnessBoost(pixels: Uint8ClampedArray, w: number, h: number): void {
+function applyBrightnessBoost(pixels: Uint8ClampedArray, w: number, h: number, boost?: number): void {
+  const mul = boost ?? TEMPLATE_BRIGHTNESS_BOOST;
   for (let i = 0; i < w * h; i++) {
     const idx = i * 4;
     const lum = 0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2];
     if (lum < CONTOUR_BLACK_THRESHOLD) continue;
-    pixels[idx]     = Math.min(255, Math.floor(pixels[idx] * TEMPLATE_BRIGHTNESS_BOOST));
-    pixels[idx + 1] = Math.min(255, Math.floor(pixels[idx + 1] * TEMPLATE_BRIGHTNESS_BOOST));
-    pixels[idx + 2] = Math.min(255, Math.floor(pixels[idx + 2] * TEMPLATE_BRIGHTNESS_BOOST));
+    pixels[idx]     = Math.min(255, Math.floor(pixels[idx] * mul));
+    pixels[idx + 1] = Math.min(255, Math.floor(pixels[idx + 1] * mul));
+    pixels[idx + 2] = Math.min(255, Math.floor(pixels[idx + 2] * mul));
   }
 }
 
@@ -471,7 +472,7 @@ export type RenderOptions = {
   enable3D?: boolean;
   /** v8: Per-cell background fill for continuous color. Default: true */
   enableBgFill?: boolean;
-  /** v8: Half-block rendering for interior cells. Default: true */
+  /** v8: Half-block rendering for interior cells. Default: false */
   enableHalfBlock?: boolean;
   /** v8: Canvas glow on bright accent cells. Default: true */
   enableGlow?: boolean;
@@ -493,13 +494,19 @@ export function renderMonster(
     cellSize = 4,
     enable3D = true,
     enableBgFill = true,
-    enableHalfBlock = true,
+    enableHalfBlock = false,
     enableGlow = true,
   } = options;
 
   if (width < 20 || height < 20) return;
 
   const tpl = getTemplateImage(template);
+
+  // Per-template rendering overrides (dark creatures stay dark, etc.)
+  const ovr = template.renderOverrides;
+  const tplGamma = ovr?.gamma ?? GAMMA;
+  const tplAmbient = ovr?.ambient ?? 0.70;
+  const tplCharFloor = ovr?.charDensityFloor ?? 0.30;
 
   // -----------------------------------------------------------------------
   // Grid sizing
@@ -637,7 +644,7 @@ export function renderMonster(
         const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
 
         const dot = (nx / nLen) * lx + (ny / nLen) * ly + (nz / nLen) * lz;
-        lightMul = 0.70 + Math.max(0, dot) * 0.30;
+        lightMul = tplAmbient + Math.max(0, dot) * (1 - tplAmbient);
 
         if (color.lum > 0.10) {
           const hx = lx;
@@ -660,7 +667,7 @@ export function renderMonster(
 
       // Character selection
       const litLum = Math.min(1, color.lum * lightMul);
-      const charLum = Math.max(0.30, litLum);
+      const charLum = Math.max(tplCharFloor, litLum);
       let bestIdx = 0;
       let bestDiff = 1;
       for (let i = 0; i < brightness.length; i++) {
@@ -693,9 +700,9 @@ export function renderMonster(
       const litR = color.r * lightMul;
       const litG = color.g * lightMul;
       const litB = color.b * lightMul;
-      const r = Math.min(255, Math.floor(Math.pow(Math.min(1, litR), GAMMA) * 255));
-      const g = Math.min(255, Math.floor(Math.pow(Math.min(1, litG), GAMMA) * 255));
-      const bChan = Math.min(255, Math.floor(Math.pow(Math.min(1, litB), GAMMA) * 255));
+      const r = Math.min(255, Math.floor(Math.pow(Math.min(1, litR), tplGamma) * 255));
+      const g = Math.min(255, Math.floor(Math.pow(Math.min(1, litG), tplGamma) * 255));
+      const bChan = Math.min(255, Math.floor(Math.pow(Math.min(1, litB), tplGamma) * 255));
       const a = alpha * (0.75 + litLum * 0.25);
 
       // v8: Sample half-colors for potential half-block rendering
@@ -705,12 +712,12 @@ export function renderMonster(
         const topColor = sampleHalfColor(tpl.data.data, tpl.w, tpl.h, col, row, cols, rows, 'top');
         const botColor = sampleHalfColor(tpl.data.data, tpl.w, tpl.h, col, row, cols, rows, 'bottom');
         // Apply same lighting + gamma to half-colors
-        topR = Math.min(255, Math.floor(Math.pow(Math.min(1, topColor.r * lightMul), GAMMA) * 255));
-        topG = Math.min(255, Math.floor(Math.pow(Math.min(1, topColor.g * lightMul), GAMMA) * 255));
-        topB = Math.min(255, Math.floor(Math.pow(Math.min(1, topColor.b * lightMul), GAMMA) * 255));
-        botR = Math.min(255, Math.floor(Math.pow(Math.min(1, botColor.r * lightMul), GAMMA) * 255));
-        botG = Math.min(255, Math.floor(Math.pow(Math.min(1, botColor.g * lightMul), GAMMA) * 255));
-        botB = Math.min(255, Math.floor(Math.pow(Math.min(1, botColor.b * lightMul), GAMMA) * 255));
+        topR = Math.min(255, Math.floor(Math.pow(Math.min(1, topColor.r * lightMul), tplGamma) * 255));
+        topG = Math.min(255, Math.floor(Math.pow(Math.min(1, topColor.g * lightMul), tplGamma) * 255));
+        topB = Math.min(255, Math.floor(Math.pow(Math.min(1, topColor.b * lightMul), tplGamma) * 255));
+        botR = Math.min(255, Math.floor(Math.pow(Math.min(1, botColor.r * lightMul), tplGamma) * 255));
+        botG = Math.min(255, Math.floor(Math.pow(Math.min(1, botColor.g * lightMul), tplGamma) * 255));
+        botB = Math.min(255, Math.floor(Math.pow(Math.min(1, botColor.b * lightMul), tplGamma) * 255));
       }
 
       const cellIdx = cellCount++;
