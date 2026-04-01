@@ -8,7 +8,7 @@ import {
 } from './helpers.js';
 import { renderAscii } from './ascii-renderer.js';
 import {
-  drawCreatureFromSkeleton, drawDetailedCreature, drawDebugSkeleton, direRatSkeleton,
+  drawCreatureFromSkeleton, drawDetailedCreature, drawCleanCreature, drawDebugSkeleton, direRatSkeleton,
 } from './skeleton.js';
 
 // ==========================================================================
@@ -638,31 +638,34 @@ function render(elapsed = 0) {
   drawCreatureFromSkeleton(ctx1, activeSkeleton, canvasW, canvasH);
   if (showDebug) drawDebugSkeleton(ctx1, activeSkeleton, canvasW, canvasH);
 
-  // Helper bundle for drawDetailedCreature
+  // Helper bundles
   const detailHelpers = {
     setSeed, rand, fillEllipse, fillCircle, organicEllipse,
     bodyGradHueShift, furTextureDirectional,
     ambientOcclusion, highlight, sssEdgeGlow,
     seed: currentSeed,
   };
+  const cleanHelpers = {
+    bodyGradHueShift, fillCircle, fillEllipse,
+  };
 
-  // -- ASCII --
+  // -- ASCII (clean version — bold shapes, let ASCII add texture) --
   const c2 = document.getElementById('next-ascii');
   c2.width = canvasW; c2.height = canvasH;
   c2.style.width = displayW; c2.style.height = displayH;
   const ctx2 = c2.getContext('2d');
   ctx2.fillStyle = '#000'; ctx2.fillRect(0, 0, canvasW, canvasH);
   renderAscii(ctx2, (tctx, tw, th) => {
-    drawDetailedCreature(tctx, activeSkeleton, tw, th, detailHelpers);
+    drawCleanCreature(tctx, activeSkeleton, tw, th, cleanHelpers);
   }, 0, 0, canvasW, canvasH, asciiOpts);
 
-  // -- Painted (skeleton + detail layers) --
+  // -- Painted (clean version — raw template before ASCII) --
   const c3 = document.getElementById('next-raw');
   c3.width = canvasW; c3.height = canvasH;
   c3.style.width = displayW; c3.style.height = displayH;
   const ctx3 = c3.getContext('2d');
   ctx3.fillStyle = '#000'; ctx3.fillRect(0, 0, canvasW, canvasH);
-  drawDetailedCreature(ctx3, activeSkeleton, canvasW, canvasH, detailHelpers);
+  drawCleanCreature(ctx3, activeSkeleton, canvasW, canvasH, cleanHelpers);
 
   if (showGrid) {
     for (const canvas of [c1, c2, c3]) {

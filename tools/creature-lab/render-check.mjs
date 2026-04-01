@@ -2,7 +2,7 @@
 import { createCanvas } from 'canvas';
 import { writeFileSync } from 'fs';
 import {
-  drawCreatureFromSkeleton, drawDebugSkeleton, direRatSkeleton,
+  drawCreatureFromSkeleton, drawCleanCreature, drawDebugSkeleton, direRatSkeleton,
   drawBodyOutline, drawLimbChain, drawTail,
 } from './skeleton.js';
 
@@ -34,7 +34,18 @@ drawCreatureFromSkeleton(sCtx, direRatSkeleton, W, H, {
 });
 writeFileSync('render-silhouette.png', sCanvas.toBuffer('image/png'));
 
-console.log('Saved render-check.png + render-silhouette.png');
+// Clean version — fungal shaman style
+import { bodyGradHueShift, fillCircle, fillEllipse } from './helpers.js';
+const cCanvas = createCanvas(W, H);
+const cCtx = cCanvas.getContext('2d');
+cCtx.fillStyle = '#000';
+cCtx.fillRect(0, 0, W, H);
+drawCleanCreature(cCtx, direRatSkeleton, W, H, {
+  bodyGradHueShift, fillCircle, fillEllipse,
+});
+writeFileSync('render-clean.png', cCanvas.toBuffer('image/png'));
+
+console.log('Saved render-check.png + render-silhouette.png + render-clean.png');
 
 // Also print skeleton summary for analysis
 console.log('\nSpine nodes:');
