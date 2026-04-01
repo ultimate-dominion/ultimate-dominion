@@ -17,6 +17,9 @@ import { zeroAddress, zeroHash } from 'viem';
 import { Trans, useTranslation } from 'react-i18next';
 import SafeTypist from './SafeTypist';
 
+import { SHOW_Z2 } from '../lib/env';
+import { BattleCombatLog } from './pretext/game/BattleCombatLog';
+import { useCombatLogEntries } from '../hooks/useCombatLogEntries';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
@@ -68,11 +71,19 @@ export const ActionsPanel = (): JSX.Element => {
   });
 
   // Display name prefixed with "Elite" for elite mobs
+  // (declared early so combatLogEntries can reference it)
   const opponentDisplayName = useMemo(() => {
     if (!opponent) return t('battle.aMonster');
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
     return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
   }, [opponent]);
+
+  const combatLogEntries = useCombatLogEntries({
+    visibleOutcomes,
+    dotActions,
+    characterId: character?.id,
+    opponentName: opponentDisplayName,
+  });
 
   const {
     armorTemplates,
@@ -707,6 +718,11 @@ export const ActionsPanel = (): JSX.Element => {
             )}
           </VStack>
         )}
+      {SHOW_Z2 && currentBattle && !battleOver && (
+        <Box px={{ base: 2, lg: 4 }} pt={2}>
+          <BattleCombatLog entries={combatLogEntries} />
+        </Box>
+      )}
       <Stack p={{ base: 2, lg: 4 }}>
         {!currentBattle && !(isSpawned && position) && (
           <SafeTypist
