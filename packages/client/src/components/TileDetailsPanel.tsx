@@ -49,7 +49,10 @@ import { SHOW_Z2 } from '../lib/env';
 import { useFloatingDamageSignals } from '../hooks/useFloatingDamageSignals';
 import { BattleFloatingDamage, type BattleFloatingDamageHandle } from './pretext/game/BattleFloatingDamage';
 import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
+import { BattleSceneCanvas } from './pretext/game/BattleSceneCanvas';
 import { ThreatWeightedName } from './pretext/game/ThreatWeightedName';
+import { classifyWeapon } from './pretext/game/weaponAnimations';
+import { useBattleSceneSignals, type BattleSceneHandle } from '../hooks/useBattleSceneSignals';
 import {
   ADVANCED_CLASS_COLORS,
   ADVANCED_CLASS_I18N_KEYS,
@@ -266,6 +269,24 @@ export const TileDetailsPanel = (): JSX.Element => {
     damageRef: floatingDamageRef,
     containerWidth: battleContainerSize.w,
     containerHeight: battleContainerSize.h,
+  });
+
+  // BattleSceneCanvas signals (SHOW_Z2 only)
+  const battleSceneRef = useRef<BattleSceneHandle>(null);
+
+  const weaponTypeForItem = useCallback((itemId: string) => {
+    const spell = equippedSpells.find(s => s.tokenId === itemId || s.itemId === itemId);
+    if (spell) return classifyWeapon(spell, true);
+    const weapon = equippedWeapons.find(w => w.tokenId === itemId || w.itemId === itemId);
+    if (weapon) return classifyWeapon(weapon, false);
+    return 'melee' as const;
+  }, [equippedSpells, equippedWeapons]);
+
+  useBattleSceneSignals({
+    visibleOutcomes,
+    characterId: character?.id,
+    sceneRef: battleSceneRef,
+    weaponTypeForItem,
   });
 
   const encounterTx = useTransaction({
@@ -796,9 +817,72 @@ export const TileDetailsPanel = (): JSX.Element => {
   }
 
   if (currentBattle && opponent && userCharacterForBattleRendering && !autoAdventureMode) {
+    // ── SHOW_Z2: Cinematic single-canvas battle scene ───────────────────
+    if (SHOW_Z2) {
+      return (
+        <Box ref={battleContainerRef} h={{ base: 'auto', lg: '100%' }} position="relative">
+          <BattleFloatingDamage ref={floatingDamageRef} />
+          {/* Battle scene canvas — monster + weapon projectiles + impacts */}
+          <Box h={{ base: '240px', lg: 'calc(100% - 80px)' }} minH="200px" position="relative">
+            <BattleSceneCanvas
+              ref={battleSceneRef}
+              monsterName={opponent.name}
+              monsterHp={Number(opponentDisplayedHp)}
+              monsterMaxHp={Number(opponent.maxHp)}
+              monsterDefeated={opponentDefeated}
+              monsterLevel={Number(opponent.level)}
+              userHp={Number(userDisplayedHp)}
+              userMaxHp={Number(userCharacterForBattleRendering.maxHp)}
+              userName={userCharacterForBattleRendering.name}
+              userDefeated={userDefeated}
+            />
+          </Box>
+          {/* Compact player cockpit bar */}
+          <HStack
+            bg="rgba(18,16,14,0.95)"
+            borderTop="1px solid"
+            borderColor="rgba(58,50,40,0.6)"
+            px={4}
+            py={1}
+            spacing={3}
+            align="center"
+          >
+            <HealthBar
+              maxHp={userCharacterForBattleRendering.maxHp}
+              currentHp={userDisplayedHp}
+              isDotTicking={isUserDotTicking}
+              level={userCharacterForBattleRendering.level}
+              statusEffects={userCharacterStatusEffects}
+              flex={1}
+            />
+            <Text fontWeight={600} size="sm" color="#E8DCC8" whiteSpace="nowrap">
+              {userCharacterForBattleRendering.name}
+            </Text>
+            <ClassSymbol
+              advancedClass={userCharacterForBattleRendering.advancedClass}
+              entityClass={userCharacterForBattleRendering.entityClass}
+              theme="dark"
+            />
+            <HStack spacing={2}>
+              {([
+                { label: 'AGI', color: '#5A8A3E', base: userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier, mod: activeUserBattleEffectModifications.agiModifier },
+                { label: 'INT', color: '#4A7AB5', base: userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier, mod: activeUserBattleEffectModifications.intModifier },
+                { label: 'STR', color: '#B85C3A', base: userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier, mod: activeUserBattleEffectModifications.strModifier },
+              ] as const).map(({ label, color, base, mod }) => (
+                <HStack key={label} spacing={0.5}>
+                  <Text size="2xs" color={color} fontWeight={600}>{label}</Text>
+                  <Text fontFamily="mono" size="2xs">{(base + mod).toString()}</Text>
+                </HStack>
+              ))}
+            </HStack>
+          </HStack>
+        </Box>
+      );
+    }
+
+    // ── Legacy 50/50 split battle view ──────────────────────────────────
     return (
       <Box ref={battleContainerRef} h={{ base: 'auto', lg: '100%' }} position="relative">
-        {SHOW_Z2 && <BattleFloatingDamage ref={floatingDamageRef} />}
         <style>
           {`
           @keyframes flicker {
