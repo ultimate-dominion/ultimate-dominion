@@ -78,6 +78,31 @@ function isInZone(rawX: number, rawY: number, zoneId: number, gridSize = 10): bo
     && rawY >= origin.y && rawY < origin.y + gridSize;
 }
 
+/**
+ * Check if an entity belongs to the given zone using PositionV2 zoneId.
+ * PositionV2 stores zone-RELATIVE coords (0-9), so coordinate bounds alone
+ * can't distinguish zones — we must check the zoneId field directly.
+ * Falls back to coordinate bounds for legacy Position-only entities.
+ */
+function entityInZone(
+  entityId: string,
+  targetZone: number,
+  posV2Table: Record<string, any>,
+  posV1Table: Record<string, any>,
+  toNum: (v: unknown) => number,
+): boolean {
+  const v2 = posV2Table[entityId];
+  if (v2) {
+    const zoneId = toNum(v2.zoneId);
+    return zoneId === 0 ? targetZone === 1 : zoneId === targetZone;
+  }
+  const v1 = posV1Table[entityId];
+  if (v1) {
+    return isInZone(toNum(v1.x), toNum(v1.y), targetZone);
+  }
+  return false;
+}
+
 type MapContextType = {
   allCharacters: Character[];
   allMonsters: Monster[];
@@ -431,21 +456,27 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // Deprecated — reactivity handles updates. Kept for backward compatibility.
   const refreshEntities = useCallback(() => {}, []);
 
-  // Filter entities to current zone only
+  // Filter entities to current zone only.
+  // Uses PositionV2 zoneId (not coordinate bounds) to correctly exclude
+  // Zone 2 entities whose zone-relative coords overlap with Zone 1's range.
   const zonedMonsters = useMemo(() => {
-    return allMonsters.filter(m => isInZone(m.position.x, m.position.y, currentZone));
-  }, [allMonsters, currentZone]);
+    return allMonsters.filter(m =>
+      entityInZone(m.id, currentZone, positionTableV2, positionTableV1, toNumber),
+    );
+  }, [allMonsters, currentZone, positionTableV2, positionTableV1]);
 
   const zonedShops = useMemo(() => {
-    return allShops.filter(s => isInZone(s.position.x, s.position.y, currentZone));
-  }, [allShops, currentZone]);
+    return allShops.filter(s =>
+      entityInZone(s.shopId, currentZone, positionTableV2, positionTableV1, toNumber),
+    );
+  }, [allShops, currentZone, positionTableV2, positionTableV1]);
 
   const zonedCharacters = useMemo(() => {
     return allCharacters.filter((c: any) => {
       if (!c.position) return false;
-      return isInZone(c.position.x, c.position.y, currentZone);
+      return entityInZone(c.id, currentZone, positionTableV2, positionTableV1, toNumber);
     });
-  }, [allCharacters, currentZone]);
+  }, [allCharacters, currentZone, positionTableV2, positionTableV1]);
 
   const monstersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
