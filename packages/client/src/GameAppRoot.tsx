@@ -19,7 +19,7 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { Global } from '@emotion/react';
 import { HelmetProvider } from 'react-helmet-async';
 
-import { PrivyProvider } from '@privy-io/react-auth';
+import { PrivyProvider, type PrivyClientConfig } from '@privy-io/react-auth';
 
 import { App } from './App';
 import { AllowanceProvider } from './contexts/AllowanceContext';
@@ -36,16 +36,16 @@ import { globalStyles, theme } from './utils/theme';
 
 const privyAppId = import.meta.env.VITE_PRIVY_APP_ID || '';
 
-const privyConfig = {
-  loginMethods: ['google'] as const,
-  appearance: { theme: 'dark' as const },
+const privyConfig: PrivyClientConfig = {
+  loginMethods: ['google'],
+  appearance: { theme: 'dark' },
   embeddedWallets: {
-    createOnLogin: 'off' as const,
+    createOnLogin: 'off',
     requireUserPasswordOnCreate: false,
     showWalletUIs: false,
   },
-  defaultChain: base,
-  supportedChains: [base],
+  defaultChain: base as PrivyClientConfig['defaultChain'],
+  supportedChains: [base as NonNullable<PrivyClientConfig['defaultChain']>],
 };
 
 const setupPromise = import('./lib/mud/setup').then(({ setup }) => setup());

@@ -419,7 +419,6 @@ export function createSystemCalls(
     ]);
 
   const SPAWNED_TABLE_ID = tableResourceId('UD', 'Spawned');
-  const POSITION_V2_TABLE_ID = tableResourceId('UD', 'PositionV2');
   const GET_RECORD_ABI = [
     {
       type: 'function' as const,
@@ -438,7 +437,6 @@ export function createSystemCalls(
   ] as const;
 
   type RawStoreRecord = readonly [Hex, Hex, Hex];
-  type ChainPosition = { zoneId: bigint; x: number; y: number };
 
   const readStoreRecord = async (
     tableId: Hex,
@@ -459,33 +457,6 @@ export function createSystemCalls(
       return null;
     }
   };
-
-  const decodePositionV2Record = (
-    record: RawStoreRecord | null,
-  ): ChainPosition | null => {
-    if (!record) return null;
-
-    const staticData = record[0] ?? '0x';
-    const expectedLength = 2 + 64 + 4 + 4; // zoneId:uint256 + x:uint16 + y:uint16
-    if (staticData.length < expectedLength) return null;
-
-    try {
-      const zoneId = BigInt(`0x${staticData.slice(2, 66)}`);
-      const x = Number.parseInt(staticData.slice(66, 70), 16);
-      const y = Number.parseInt(staticData.slice(70, 74), 16);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-      return { zoneId, x, y };
-    } catch {
-      return null;
-    }
-  };
-
-  const readCanonicalPosition = async (
-    entityId: `0x${string}`,
-  ): Promise<ChainPosition | null> =>
-    decodePositionV2Record(
-      await readStoreRecord(POSITION_V2_TABLE_ID, entityId, 'PositionV2'),
-    );
 
   const validateTileMonsters = async (monsterIds: string[]): Promise<void> => {
     if (monsterIds.length === 0) return;
@@ -1112,7 +1083,7 @@ export function createSystemCalls(
     | { result: 'not_spawned' | 'invalid_move' | 'error'; error: unknown };
 
   const applyDirection = (
-    position: Pick<ChainPosition, 'x' | 'y'>,
+    position: { x: number; y: number },
     direction: Direction,
   ): { x: number; y: number } => {
     let { x, y } = position;
@@ -1166,26 +1137,6 @@ export function createSystemCalls(
 
       let args: [`0x${string}`, number, number] = [characterEntity as `0x${string}`, x, y];
       let onChainRetries = 0;
-
-      const syncPositionFromChain = async (): Promise<boolean> => {
-        const canonicalPos = await readCanonicalPosition(
-          characterEntity as `0x${string}`,
-        );
-        if (!canonicalPos) return false;
-
-        const store = useGameStore.getState();
-        store.setRow('Position', characterEntity, {
-          x: canonicalPos.x,
-          y: canonicalPos.y,
-        });
-        store.setRow('PositionV2', characterEntity, canonicalPos);
-
-        const nextPosition = applyDirection(canonicalPos, direction);
-        x = nextPosition.x;
-        y = nextPosition.y;
-        args = [characterEntity as `0x${string}`, x, y];
-        return true;
-      };
 
       const diagnoseMove = async (timeoutMs: number): Promise<MoveDiagnosticResult> => {
         let timedOut = false;
@@ -1250,14 +1201,21 @@ export function createSystemCalls(
               return handleNotSpawned();
             }
 
-            if (
-              diagnostic.result === 'invalid_move' &&
-              onChainRetries < MAX_ON_CHAIN_RETRIES &&
-              await syncPositionFromChain()
-            ) {
-              onChainRetries++;
-              console.warn(`[move] Position stale after revert — re-reading chain (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
-              continue;
+            if (diagnostic.result === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
+              console.warn('[move] Position stale after revert — re-reading store');
+              const freshPos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+                | { x: number; y: number } | undefined;
+              if (freshPos) {
+                const nextPosition = applyDirection(
+                  { x: Number(freshPos.x), y: Number(freshPos.y) },
+                  direction,
+                );
+                x = nextPosition.x;
+                y = nextPosition.y;
+                args = [characterEntity as `0x${string}`, x, y];
+                onChainRetries++;
+                continue;
+              }
             }
 
             if (diagnostic.result === 'pass' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
@@ -1280,31 +1238,8 @@ export function createSystemCalls(
           onMoveSuccess();
           return { success: true };
         } catch (e) {
-          if (
-            isInvalidMoveError(e) &&
-            onChainRetries < MAX_ON_CHAIN_RETRIES &&
-            await syncPositionFromChain()
-          ) {
-            onChainRetries++;
-            console.warn(`[move] Position stale before submission — re-reading chain (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
-            continue;
-          }
-
           // Stale-state / transient errors → yellow warning, not red error
           if (isMoveTooFastError(e) || isTransientRpcError(e)) {
-            const diagnostic = await diagnoseMove(500);
-            if (diagnostic.result === 'not_spawned') {
-              return handleNotSpawned();
-            }
-            if (
-              diagnostic.result === 'invalid_move' &&
-              onChainRetries < MAX_ON_CHAIN_RETRIES &&
-              await syncPositionFromChain()
-            ) {
-              onChainRetries++;
-              console.warn(`[move] Position stale after transient error — re-reading chain (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
-              continue;
-            }
             return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
           }
           return {
@@ -1739,11 +1674,11 @@ export function createSystemCalls(
 
     try {
       const characterId = entity as `0x${string}`;
-      const args = [
+      const args: [`0x${string}`, `0x${string}`, bigint] = [
         characterId,
         characterId,
         BigInt(tokenId),
-      ] as const;
+      ];
 
       const tx = await wrappedWorldContract.write.UD__useWorldConsumableItem(args);
 

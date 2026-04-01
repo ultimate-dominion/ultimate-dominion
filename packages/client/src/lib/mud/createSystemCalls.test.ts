@@ -39,13 +39,6 @@ const TEST_WORLD = '0x1111111111111111111111111111111111111111' as Address;
 const TEST_ENTITY = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const TEST_ENTITY_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
 const FAKE_TX_HASH = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890' as `0x${string}`;
-const ZERO_LENGTHS = ('0x' + '00'.repeat(32)) as `0x${string}`;
-
-const encodeUint16Hex = (value: number) => value.toString(16).padStart(4, '0');
-const encodeUint256Hex = (value: bigint | number) => BigInt(value).toString(16).padStart(64, '0');
-
-const encodePositionV2Static = (zoneId: bigint | number, x: number, y: number) =>
-  (`0x${encodeUint256Hex(zoneId)}${encodeUint16Hex(x)}${encodeUint16Hex(y)}`) as `0x${string}`;
 
 // ── Mock Factory ────────────────────────────────────────────────────
 
@@ -555,27 +548,19 @@ describe('createSystemCalls — error handling', () => {
   });
 });
 
-// ── Suite D: Move Stale Position Recovery ───────────────────────────
+// ── Suite D: Move Invalid Position Handling ─────────────────────────
 
-describe('createSystemCalls — move stale position recovery', () => {
+describe('createSystemCalls — move invalid position handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('retries with chain position when simulation returns InvalidMove', async () => {
+  it('returns failure when submission throws InvalidMove before a tx hash exists', async () => {
     const { network, waitForTransaction } = createMockNetwork();
     mockOwnership();
 
-    // First UD__move call (simulation) throws InvalidMove, second succeeds
     const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'))
-      .mockResolvedValueOnce(FAKE_TX_HASH);
-
-    network.publicClient.readContract = vi.fn().mockResolvedValue([
-      encodePositionV2Static(1n, 2, 3),
-      ZERO_LENGTHS,
-      '0x',
-    ]);
+      .mockRejectedValueOnce(new Error('0x87822d34'));
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
@@ -587,25 +572,18 @@ describe('createSystemCalls — move stale position recovery', () => {
     const calls = createSystemCalls(network);
 
     const result = await calls.move(TEST_ENTITY, 'right');
-    expect(result.success).toBe(true);
-    expect(moveWriteFn).toHaveBeenCalledTimes(2);
-    expect(network.publicClient.readContract).toHaveBeenCalledTimes(1);
-    expect(waitForTransaction).toHaveBeenCalled();
+    expect(result.success).toBe(false);
+    expect(moveWriteFn).toHaveBeenCalledTimes(1);
+    expect(waitForTransaction).not.toHaveBeenCalled();
+    expect(network.publicClient.readContract).not.toHaveBeenCalled();
   });
 
-  it('updates Zustand store with corrected chain position', async () => {
+  it('does not rewrite the store from chain on pre-submit InvalidMove', async () => {
     const { network } = createMockNetwork();
     mockOwnership();
 
     const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'))
-      .mockResolvedValueOnce(FAKE_TX_HASH);
-
-    network.publicClient.readContract = vi.fn().mockResolvedValue([
-      encodePositionV2Static(1n, 5, 7),
-      ZERO_LENGTHS,
-      '0x',
-    ]);
+      .mockRejectedValueOnce(new Error('0x87822d34'));
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
@@ -617,23 +595,39 @@ describe('createSystemCalls — move stale position recovery', () => {
     const calls = createSystemCalls(network);
 
     await calls.move(TEST_ENTITY, 'up');
-    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 5, y: 7 });
-    expect(mockSetRow).toHaveBeenCalledWith('PositionV2', TEST_ENTITY, { zoneId: 1n, x: 5, y: 7 });
+    expect(mockSetRow).not.toHaveBeenCalled();
+    expect(network.publicClient.readContract).not.toHaveBeenCalled();
   });
 
-  it('applies direction correctly to corrected chain position', async () => {
-    const { network } = createMockNetwork();
-    mockOwnership();
+  it('uses PositionV2 from the receipt-driven store for target calculation', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockedGetTableValue.mockImplementation((table: string, entity: string) => {
+      if (table === 'Characters' && entity === TEST_ENTITY) {
+        return { owner: TEST_WALLET } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'SessionTimer') {
+        return { lastAction: 0 } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'WorldEncounter') {
+        return { end: '0' } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'CombatEncounter') {
+        return { end: '0' } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'PositionV2') {
+        return { x: 4, y: 4 } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'Position') {
+        return { x: 1, y: 1 } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'EncounterEntity') {
+        return undefined;
+      }
+      return undefined;
+    });
 
     const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'))
-      .mockResolvedValueOnce(FAKE_TX_HASH);
-
-    network.publicClient.readContract = vi.fn().mockResolvedValue([
-      encodePositionV2Static(1n, 4, 4),
-      ZERO_LENGTHS,
-      '0x',
-    ]);
+      .mockRejectedValueOnce(new Error('0x87822d34'));
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
@@ -645,60 +639,7 @@ describe('createSystemCalls — move stale position recovery', () => {
     const calls = createSystemCalls(network);
 
     await calls.move(TEST_ENTITY, 'down');
-    // direction 'down' → y - 1: target should be (4, 3)
     expect(moveWriteFn).toHaveBeenLastCalledWith([TEST_ENTITY, 4, 3], { gas: BigInt(8_000_000) });
-  });
-
-  it('returns failure when chain position read fails', async () => {
-    const { network, waitForTransaction } = createMockNetwork();
-    mockOwnership();
-
-    const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'));
-
-    network.publicClient.readContract = vi.fn().mockRejectedValue(new Error('RPC error'));
-
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
-        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-
-    const calls = createSystemCalls(network);
-
-    const result = await calls.move(TEST_ENTITY, 'right');
-    expect(result.success).toBe(false);
-    expect(waitForTransaction).not.toHaveBeenCalled();
-  });
-
-  it('returns failure when retry move also fails', async () => {
-    const { network, waitForTransaction } = createMockNetwork();
-    mockOwnership();
-
-    const retryError = new Error('NotSpawned');
-    const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'))
-      .mockRejectedValueOnce(retryError);
-
-    network.publicClient.readContract = vi.fn().mockResolvedValue([
-      encodePositionV2Static(1n, 0, 0),
-      ZERO_LENGTHS,
-      '0x',
-    ]);
-
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
-        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-
-    const calls = createSystemCalls(network);
-
-    const result = await calls.move(TEST_ENTITY, 'left');
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
     expect(waitForTransaction).not.toHaveBeenCalled();
   });
 });
@@ -711,28 +652,12 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
   });
 
   it('detects NotSpawned after on-chain revert and updates store', async () => {
-    // Simulate: MoveTooFast bypass → TX reverts → re-sim finds NotSpawned
-    const { network, waitForTransaction: waitFn } = createMockNetwork({ receiptStatus: 'reverted' });
+    const { network } = createMockNetwork({ receiptStatus: 'reverted' });
     mockOwnership();
-
-    let moveCallCount = 0;
-    const moveWriteFn = vi.fn().mockImplementation(() => {
-      moveCallCount++;
-      if (moveCallCount === 1) {
-        // First sim: MoveTooFast (stale RPC)
-        return Promise.reject(new Error('0x326f4b4f'));
-      }
-      if (moveCallCount === 2) {
-        // MoveTooFast bypass: send with gas → returns TX hash (receipt will be reverted)
-        return Promise.resolve(FAKE_TX_HASH);
-      }
-      // Third call: diagnostic re-simulation → NotSpawned
-      return Promise.reject(new Error('0xbd45e4f6'));
-    });
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
+        if (prop === 'UD__move') return vi.fn().mockResolvedValue(FAKE_TX_HASH);
         return vi.fn().mockResolvedValue(FAKE_TX_HASH);
       },
     });
