@@ -19,6 +19,7 @@ import SafeTypist from './SafeTypist';
 
 import { SHOW_Z2 } from '../lib/env';
 import { BattleCombatLog } from './pretext/game/BattleCombatLog';
+import { GameItemTooltip } from './pretext/game/GameItemTooltip';
 import { useCombatLogEntries } from '../hooks/useCombatLogEntries';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -96,6 +97,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
+  const [hoveredTokenId, setHoveredTokenId] = useState<string | null>(null);
 
   const parentDivRef = useRef<HTMLDivElement>(null);
   const attackButton1Ref = useRef<HTMLButtonElement>(null);
@@ -610,6 +612,28 @@ export const ActionsPanel = (): JSX.Element => {
               </>
             )}
             <HStack position="relative" spacing={0} w="100%">
+              {SHOW_Z2 && isDesktop && hoveredTokenId && (() => {
+                const hovItem = orderedAttackItems.find(i => i.tokenId === hoveredTokenId);
+                if (!hovItem) return null;
+                const mu = weaponMatchups[hovItem.tokenId];
+                return (
+                  <Box
+                    position="absolute"
+                    bottom="100%"
+                    left="50%"
+                    transform="translateX(-50%)"
+                    mb={1}
+                    zIndex={10}
+                    pointerEvents="none"
+                  >
+                    <GameItemTooltip
+                      item={hovItem}
+                      matchup={mu?.matchup}
+                      opponentClass={opponent?.entityClass}
+                    />
+                  </Box>
+                );
+              })()}
               {currentBattle.encounterType === EncounterType.PvP && (
                 <Progress
                   position="absolute"
@@ -639,6 +663,8 @@ export const ActionsPanel = (): JSX.Element => {
                       key={`action-item-${index}`}
                       loadingText=""
                       onClick={() => onAttack(item.tokenId)}
+                      onMouseEnter={item.type === 'attack' ? () => setHoveredTokenId(item.tokenId) : undefined}
+                      onMouseLeave={item.type === 'attack' ? () => setHoveredTokenId(null) : undefined}
                       ref={getButtonRef(index)}
                       fontSize="xs"
                       size={{ base: 'sm', sm: 'sm', lg: 'md' }}
