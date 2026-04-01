@@ -781,13 +781,6 @@ export const TileDetailsPanel = (): JSX.Element => {
           }
         `}
         </style>
-        {isDesktop && currentBattle.encounterType === EncounterType.PvE && (
-          <BattleMonsterAscii
-            monsterName={opponent.name}
-            defeated={opponentDefeated}
-            hit={isMonsterHit}
-          />
-        )}
         <HStack bgColor="blue500" h={{ base: '36px', md: '46px' }} px={4}>
           <Heading color="#E8DCC8" size="sm">
             {t('tile.battlefield')}
@@ -872,26 +865,32 @@ export const TileDetailsPanel = (): JSX.Element => {
               </VStack>
             </VStack>
 
-            <VStack w="50%">
+            <VStack w="50%" position="relative" minH={{ lg: '280px' }}>
+              {/* ASCII monster backdrop — fills the monster's half */}
+              {isDesktop && currentBattle.encounterType === EncounterType.PvE && (
+                <BattleMonsterAscii
+                  monsterName={opponent.name}
+                  defeated={opponentDefeated}
+                  hit={isMonsterHit}
+                />
+              )}
               {currentBattle.encounterType === EncounterType.PvE ? (
-                <VStack mt={{ base: 2, lg: 6 }} spacing={0}>
-                  {isDesktop && (
+                <VStack mt={{ base: 2, lg: 6 }} spacing={0} position="relative" zIndex={2}>
+                  {!isDesktop && (
                     <Avatar
                       animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
                       bgColor="grey300"
                       boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
                       filter={opponentDefeated ? 'grayscale(100%)' : undefined}
-                      mb={{ base: 1, lg: 2 }}
+                      mb={1}
                       opacity={opponentDefeated ? 0.4 : isMonsterHit ? 0 : 1}
-                      size={{ base: '2xs', lg: 'md' }}
+                      size="2xs"
                       src={getMonsterImage(opponent.name)}
                       name={opponent.name}
                     >
                       {!getMonsterImage(opponent.name) && (
                         <Text
-                          animation={
-                            isMonsterHit ? 'flicker .7s infinite' : 'none'
-                          }
+                          animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
                           fontSize="42px"
                         >
                           {getEmoji(opponent.name)}
