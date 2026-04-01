@@ -131,7 +131,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const {
     delegatorAddress,
     isSynced,
-    systemCalls: { spawn, removeEntityFromBoard },
+    systemCalls: { spawn, removeEntityFromBoard, validateTileMonsters },
   } = useMUD();
   const { monsterTemplates } = useMonsters();
   const { character, refreshCharacter } = useCharacter();
@@ -483,6 +483,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         c.isSpawned,
     ) as Character[];
   }, [zonedCharacters, delegatorAddress, position]);
+
+  // Proactive ghost validation — verify monsters on the current tile are alive
+  // on-chain. Prevents "No enemies here" errors by evicting ghosts before the
+  // player clicks Fight. Fires once per tile, not per render.
+  const prevTileRef = useRef<string>('');
+  useEffect(() => {
+    const tileKey = position ? `${position.x},${position.y}` : '';
+    if (tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
+    prevTileRef.current = tileKey;
+
+    validateTileMonsters(monstersOnTile.map(m => m.id));
+  }, [position, monstersOnTile, validateTileMonsters]);
 
   // Clear spawn waiting state when Spawned value updates from store sync
   useEffect(() => {

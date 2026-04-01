@@ -372,6 +372,59 @@ export function createSystemCalls(
     console.warn(`[ghost] Evicted ${batch.length / 2} monsters on tile (${gz},${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
   };
 
+  // ---------------------------------------------------------------------------
+  // Proactive tile validation — verify monsters are alive on-chain when the
+  // player lands on a tile. Prevents "No enemies here" errors by evicting
+  // ghosts BEFORE the player clicks Fight.
+  // ---------------------------------------------------------------------------
+  const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000' as const;
+  const GET_RECORD_ABI = [
+    {
+      type: 'function' as const,
+      name: 'getRecord' as const,
+      stateMutability: 'view' as const,
+      inputs: [
+        { name: 'tableId', type: 'bytes32' as const },
+        { name: 'keyTuple', type: 'bytes32[]' as const },
+      ],
+      outputs: [
+        { name: 'staticData', type: 'bytes' as const },
+        { name: 'encodedLengths', type: 'bytes32' as const },
+        { name: 'dynamicData', type: 'bytes' as const },
+      ],
+    },
+  ] as const;
+
+  const validateTileMonsters = async (monsterIds: string[]): Promise<void> => {
+    if (monsterIds.length === 0) return;
+
+    const results = await Promise.allSettled(
+      monsterIds.map(async (id) => {
+        const [staticData] = await publicClient.readContract({
+          address: worldContract.address,
+          abi: GET_RECORD_ABI,
+          functionName: 'getRecord',
+          args: [SPAWNED_TABLE_ID, [id as `0x${string}`]],
+        });
+        // Spawned table: single bool field. 0x01 = alive, 0x00 or empty = dead.
+        const isAlive = staticData.length >= 4 && staticData.slice(0, 4) === '0x01';
+        return { id, isAlive };
+      }),
+    );
+
+    const ghosts: string[] = [];
+    for (const r of results) {
+      if (r.status === 'fulfilled' && !r.value.isAlive) {
+        ghosts.push(r.value.id);
+      }
+    }
+
+    if (ghosts.length > 0) {
+      console.warn(`[validateTile] Found ${ghosts.length} ghost(s) on tile — evicting`);
+      ghosts.forEach(evictGhostMonster);
+    }
+  };
+
   // Selectors for ghost monster revert errors (InvalidCombatEntity / InvalidPvE).
   const INVALID_COMBAT_ENTITY_SELECTOR = '1af235ec';
   const INVALID_PVE_SELECTOR = 'adee4371';
@@ -2100,6 +2153,7 @@ export function createSystemCalls(
     unequipItem,
     updateTokenUri,
     useWorldConsumableItem,
+    validateTileMonsters,
     withdrawTreasury,
   };
 }

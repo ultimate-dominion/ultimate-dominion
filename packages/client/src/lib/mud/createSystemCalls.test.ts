@@ -1297,3 +1297,82 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
   }, 15000);
 });
+
+// ── Suite: validateTileMonsters (Proactive Ghost Validation) ─────────
+
+describe('createSystemCalls — validateTileMonsters', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('evicts monsters whose on-chain Spawned is false', async () => {
+    const { network } = createMockNetwork();
+    // Mock readContract: first monster alive (0x01), second dead (0x00)
+    network.publicClient.readContract = vi.fn()
+      .mockResolvedValueOnce(['0x01', '0x' + '00'.repeat(32), '0x'])
+      .mockResolvedValueOnce(['0x00', '0x' + '00'.repeat(32), '0x']);
+
+    const calls = createSystemCalls(network);
+    const MONSTER_A = '0x0000000000000000000000000000000000000000000000000000000000000aaa';
+    const MONSTER_B = '0x0000000000000000000000000000000000000000000000000000000000000bbb';
+
+    await calls.validateTileMonsters([MONSTER_A, MONSTER_B]);
+
+    // Only MONSTER_B (dead) should be evicted
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', MONSTER_B, { spawned: false });
+    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', MONSTER_B, expect.objectContaining({ died: true }));
+    // MONSTER_A (alive) should NOT be evicted
+    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', MONSTER_A, expect.anything());
+  });
+
+  it('does nothing when all monsters are alive', async () => {
+    const { network } = createMockNetwork();
+    network.publicClient.readContract = vi.fn()
+      .mockResolvedValue(['0x01', '0x' + '00'.repeat(32), '0x']);
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([TEST_MONSTER]);
+
+    expect(mockSetRow).not.toHaveBeenCalled();
+  });
+
+  it('does nothing for empty monster list', async () => {
+    const { network } = createMockNetwork();
+    network.publicClient.readContract = vi.fn();
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([]);
+
+    expect(network.publicClient.readContract).not.toHaveBeenCalled();
+  });
+
+  it('handles RPC failures gracefully (no evictions)', async () => {
+    const { network } = createMockNetwork();
+    network.publicClient.readContract = vi.fn().mockRejectedValue(new Error('RPC timeout'));
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([TEST_MONSTER]);
+
+    // Should not crash or evict on RPC failure
+    expect(mockSetRow).not.toHaveBeenCalled();
+  });
+
+  it('evicts only failed monsters when some RPC calls fail', async () => {
+    const { network } = createMockNetwork();
+    const MONSTER_A = '0x0000000000000000000000000000000000000000000000000000000000000aaa';
+    const MONSTER_B = '0x0000000000000000000000000000000000000000000000000000000000000bbb';
+
+    // First call returns dead, second fails
+    network.publicClient.readContract = vi.fn()
+      .mockResolvedValueOnce(['0x00', '0x' + '00'.repeat(32), '0x'])
+      .mockRejectedValueOnce(new Error('RPC timeout'));
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([MONSTER_A, MONSTER_B]);
+
+    // Only MONSTER_A (confirmed dead) should be evicted
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', MONSTER_A, { spawned: false });
+    // MONSTER_B (RPC failed) should NOT be evicted (benefit of the doubt)
+    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', MONSTER_B, expect.anything());
+  });
+});

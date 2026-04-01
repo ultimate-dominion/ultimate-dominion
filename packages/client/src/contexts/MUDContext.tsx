@@ -93,6 +93,7 @@ const LOADING_SYSTEM_CALLS: SystemCallsResult = {
   selectAdvancedClass: notReady, sell: notReady,
   spawn: notReady, unequipItem: notReady,
   updateTokenUri: notReady, useWorldConsumableItem: notReady,
+  validateTileMonsters: async () => {},
 } as unknown as SystemCallsResult;
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
