@@ -184,7 +184,15 @@ const ATTACK_BUTTONS: { action: AnimAction; label: string; color: string }[] = [
   { action: 'death', label: 'Death', color: 'rgb(120,120,140)' },
 ];
 
-export function MonsterGallery() {
+type MonsterGalleryProps = {
+  templates?: MonsterTemplate[];
+  galleryTitle?: string;
+};
+
+export function MonsterGallery({
+  templates = MONSTER_TEMPLATES,
+  galleryTitle,
+}: MonsterGalleryProps = {}) {
   const { ready } = usePretextFonts();
   const [viewSize, setViewSize] = useState<ViewSize>('combat');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -192,7 +200,7 @@ export function MonsterGallery() {
   const [activeAction, setActiveAction] = useState<AnimAction>('idle');
 
   const selectedTemplate = selectedId
-    ? MONSTER_TEMPLATES.find((t) => t.id === selectedId)
+    ? templates.find((t) => t.id === selectedId)
     : null;
 
   const triggerAnimation = useCallback((action: AnimAction) => {
@@ -226,7 +234,7 @@ export function MonsterGallery() {
         <Text fontFamily="heading" fontSize="sm" color={COLORS.textPrimary}>
           {selectedTemplate
             ? `${selectedTemplate.name} — Hi-Res`
-            : `Zone 1 Monsters (${MONSTER_TEMPLATES.length})`}
+            : `${galleryTitle ?? 'Zone 1 Monsters'} (${templates.length})`}
         </Text>
         <HStack spacing={1}>
           {selectedTemplate && (
@@ -303,7 +311,7 @@ export function MonsterGallery() {
       ) : (
         <Box flex={1} overflowY="auto" px={2}>
           <Flex flexWrap="wrap" gap={3} justifyContent="center">
-            {MONSTER_TEMPLATES.map((t) => (
+            {templates.map((t) => (
               <MonsterPreview
                 key={t.id}
                 template={t}
