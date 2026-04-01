@@ -50,6 +50,7 @@ import { useFloatingDamageSignals } from '../hooks/useFloatingDamageSignals';
 import { BattleFloatingDamage, type BattleFloatingDamageHandle } from './pretext/game/BattleFloatingDamage';
 import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
 import { BattleSceneCanvas } from './pretext/game/BattleSceneCanvas';
+import { BattleBossSplash, hasBossSplashBeenSeen } from './pretext/game/BattleBossSplash';
 import { BattleDeathScreen } from './pretext/game/BattleDeathScreen';
 import { ThreatWeightedName } from './pretext/game/ThreatWeightedName';
 import { classifyWeapon } from './pretext/game/weaponAnimations';
@@ -783,6 +784,19 @@ export const TileDetailsPanel = (): JSX.Element => {
     setShowDeathScreen(true);
   }, [userDefeated, currentBattle, opponent]);
 
+  // Boss splash overlay (SHOW_Z2) — first encounter with elite/boss only
+  const [showBossSplash, setShowBossSplash] = useState(false);
+  const bossSplashShownRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!SHOW_Z2 || !currentBattle || !opponent) return;
+    const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
+    if (!isElite) return;
+    if (bossSplashShownRef.current === currentBattle.encounterId) return;
+    if (hasBossSplashBeenSeen(opponent.name)) return;
+    bossSplashShownRef.current = currentBattle.encounterId;
+    setShowBossSplash(true);
+  }, [currentBattle, opponent]);
+
   if (!character) {
     return (
       <Box>
@@ -889,6 +903,13 @@ export const TileDetailsPanel = (): JSX.Element => {
               ))}
             </HStack>
           </HStack>
+          {/* Boss splash overlay — first encounter with elite/boss */}
+          {showBossSplash && (
+            <BattleBossSplash
+              bossName={opponent.name}
+              onComplete={() => setShowBossSplash(false)}
+            />
+          )}
           {/* Death screen overlay */}
           {showDeathScreen && (
             <BattleDeathScreen
