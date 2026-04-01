@@ -797,6 +797,41 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
     // With MAX_ON_CHAIN_RETRIES=1: first attempt reverts, sim passes, retries once, second attempt also reverts
     expect(waitFn).toHaveBeenCalledTimes(2);
   });
+
+  it('useWorldConsumableItem diagnoses masked estimate-gas reverts via simulation', async () => {
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    const simulateUseItem = vi.fn().mockRejectedValue(new Error(
+      'EstimateGasExecutionError: execution reverted for an unknown reason. data: "0x54962c76"',
+    ));
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__useWorldConsumableItem') {
+          return vi.fn().mockRejectedValue(new Error('insufficient funds for intrinsic transaction cost'));
+        }
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__useWorldConsumableItem') return simulateUseItem;
+        return vi.fn().mockResolvedValue({ result: undefined });
+      },
+    });
+
+    const calls = createSystemCalls(network);
+    const result = await calls.useWorldConsumableItem(TEST_ENTITY, '1');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('That item is not equipped.');
+    expect(simulateUseItem).toHaveBeenCalledWith(
+      [TEST_ENTITY, TEST_ENTITY, BigInt(1)],
+      { account: network.walletClient.account.address },
+    );
+  });
 });
 
 // ── Suite F: Ghost Monster Pre-flight (Layer 3) ─────────────────────

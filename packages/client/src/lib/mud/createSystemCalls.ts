@@ -1596,16 +1596,36 @@ export function createSystemCalls(
 
     try {
       const characterId = entity as `0x${string}`;
-
-      const tx = await wrappedWorldContract.write.UD__useWorldConsumableItem([
+      const args = [
         characterId,
         characterId,
         BigInt(tokenId),
-      ]);
+      ] as const;
+
+      const tx = await wrappedWorldContract.write.UD__useWorldConsumableItem(args);
 
       const receipt = await waitForTransaction(tx);
+      if (receipt.status === 'reverted') {
+        try {
+          await worldContract.simulate.UD__useWorldConsumableItem(args, { account: diagAccount });
+        } catch (diagError) {
+          return { success: false, error: getContractError(diagError) };
+        }
+        return { success: false, error: 'Failed to use item.' };
+      }
       return { success: receipt.status === 'success' };
     } catch (e) {
+      if (isInsufficientFundsError(e)) {
+        try {
+          await worldContract.simulate.UD__useWorldConsumableItem([
+            entity as `0x${string}`,
+            entity as `0x${string}`,
+            BigInt(tokenId),
+          ], { account: diagAccount });
+        } catch (diagError) {
+          return { success: false, error: getContractError(diagError) };
+        }
+      }
       return {
         error: getContractError(e),
         success: false,
