@@ -245,7 +245,7 @@ function drawNewDireRat(ctx, w, h) {
   // HEAD — the soul of the creature. This must sell "alive" in ASCII.
   // =====================================================================
 
-  // Skull shape — dark, angular, 3/4 view
+  // Skull shape — dark, angular, 3/4 view, heavier jaw
   ctx.fillStyle = bodyGradHueShift(ctx, w * 0.20, h * 0.40, w * 0.16,
     furMid[0], furMid[1], furMid[2],
     furShadow[0], furShadow[1], furShadow[2],
@@ -256,9 +256,9 @@ function drawNewDireRat(ctx, w, h) {
   // Brow ridge — angular, not round
   ctx.bezierCurveTo(w * 0.26, h * 0.28, w * 0.14, h * 0.28, w * 0.08, h * 0.34);
   // Snout forward
-  ctx.bezierCurveTo(w * 0.04, h * 0.38, w * 0.02, h * 0.44, w * 0.04, h * 0.50);
-  // Jaw — heavy
-  ctx.bezierCurveTo(w * 0.08, h * 0.57, w * 0.18, h * 0.60, w * 0.28, h * 0.56);
+  ctx.bezierCurveTo(w * 0.04, h * 0.38, w * 0.01, h * 0.44, w * 0.03, h * 0.51);
+  // Jaw — heavier, lower, more aggressive
+  ctx.bezierCurveTo(w * 0.08, h * 0.60, w * 0.18, h * 0.63, w * 0.28, h * 0.58);
   // Back to skull
   ctx.bezierCurveTo(w * 0.33, h * 0.50, w * 0.34, h * 0.40, w * 0.30, h * 0.35);
   ctx.fill();
@@ -282,40 +282,77 @@ function drawNewDireRat(ctx, w, h) {
   // Snout bridge — slight highlight catches light
   highlight(ctx, w * 0.03, h * 0.43, w * 0.025, `rgb(${skinLight.join(',')})`, 0.15);
 
-  // -- MOUTH CAVITY -- deep black interior, wide open snarl
-  ctx.fillStyle = 'rgb(20,8,8)';
+  // -- MOUTH CAVITY -- deep black, wide open aggressive snarl
+  ctx.fillStyle = 'rgb(15,5,5)';
   ctx.beginPath();
-  ctx.moveTo(w * 0.00, h * 0.50);
-  ctx.bezierCurveTo(w * -0.02, h * 0.53, w * 0.02, h * 0.57, w * 0.12, h * 0.56);
-  ctx.bezierCurveTo(w * 0.10, h * 0.54, w * 0.04, h * 0.52, w * 0.00, h * 0.50);
+  ctx.moveTo(w * -0.02, h * 0.49);
+  ctx.bezierCurveTo(w * -0.04, h * 0.53, w * -0.01, h * 0.60, w * 0.14, h * 0.58);
+  ctx.bezierCurveTo(w * 0.12, h * 0.55, w * 0.04, h * 0.51, w * -0.02, h * 0.49);
   ctx.fill();
-  // Gum line — adds realism
-  ctx.fillStyle = 'rgb(100,35,35)';
+  // Upper gum line — dark red
+  ctx.fillStyle = 'rgb(90,25,25)';
   ctx.beginPath();
-  ctx.moveTo(w * 0.01, h * 0.51);
-  ctx.quadraticCurveTo(w * 0.05, h * 0.50, w * 0.10, h * 0.53);
-  ctx.quadraticCurveTo(w * 0.05, h * 0.52, w * 0.01, h * 0.51);
+  ctx.moveTo(w * -0.01, h * 0.50);
+  ctx.quadraticCurveTo(w * 0.04, h * 0.49, w * 0.12, h * 0.53);
+  ctx.quadraticCurveTo(w * 0.04, h * 0.51, w * -0.01, h * 0.50);
+  ctx.fill();
+  // Lower gum line
+  ctx.fillStyle = 'rgb(80,20,20)';
+  ctx.beginPath();
+  ctx.moveTo(w * -0.01, h * 0.55);
+  ctx.quadraticCurveTo(w * 0.05, h * 0.57, w * 0.12, h * 0.56);
+  ctx.quadraticCurveTo(w * 0.05, h * 0.55, w * -0.01, h * 0.55);
   ctx.fill();
 
-  // -- TEETH -- BRIGHT white, the second-brightest thing on the creature
+  // -- TEETH -- BRIGHT, prominent fangs. Second-brightest after eyes.
   ctx.fillStyle = `rgb(${teethColor.join(',')})`;
-  // Upper fangs — two big incisors
+
+  // Upper left fang — LARGE, prominent
   ctx.beginPath();
-  ctx.moveTo(w * 0.03, h * 0.50);
-  ctx.lineTo(w * 0.015, h * 0.565);
+  ctx.moveTo(w * 0.01, h * 0.49);
+  ctx.lineTo(w * -0.005, h * 0.575);
+  ctx.lineTo(w * 0.03, h * 0.50);
+  ctx.fill();
+
+  // Upper right fang — large
+  ctx.beginPath();
+  ctx.moveTo(w * 0.07, h * 0.50);
+  ctx.lineTo(w * 0.055, h * 0.575);
+  ctx.lineTo(w * 0.085, h * 0.52);
+  ctx.fill();
+
+  // Upper small teeth between fangs
+  ctx.fillStyle = 'rgb(225,215,195)';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.035, h * 0.50);
+  ctx.lineTo(w * 0.025, h * 0.555);
   ctx.lineTo(w * 0.045, h * 0.51);
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(w * 0.065, h * 0.505);
-  ctx.lineTo(w * 0.055, h * 0.565);
-  ctx.lineTo(w * 0.08, h * 0.52);
+  ctx.moveTo(w * 0.052, h * 0.505);
+  ctx.lineTo(w * 0.045, h * 0.555);
+  ctx.lineTo(w * 0.062, h * 0.515);
   ctx.fill();
-  // Smaller teeth between
-  ctx.fillStyle = 'rgb(220,210,190)';
+
+  // Lower fangs — pointing up, visible in the snarl
+  ctx.fillStyle = `rgb(${teethColor.join(',')})`;
   ctx.beginPath();
-  ctx.moveTo(w * 0.048, h * 0.51);
-  ctx.lineTo(w * 0.042, h * 0.545);
-  ctx.lineTo(w * 0.058, h * 0.515);
+  ctx.moveTo(w * 0.02, h * 0.56);
+  ctx.lineTo(w * 0.01, h * 0.52);
+  ctx.lineTo(w * 0.035, h * 0.555);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w * 0.06, h * 0.555);
+  ctx.lineTo(w * 0.055, h * 0.52);
+  ctx.lineTo(w * 0.075, h * 0.545);
+  ctx.fill();
+
+  // Far-side fang — partially visible, adds depth
+  ctx.fillStyle = 'rgb(200,190,170)';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.095, h * 0.53);
+  ctx.lineTo(w * 0.09, h * 0.57);
+  ctx.lineTo(w * 0.11, h * 0.54);
   ctx.fill();
 
   // -- NOSE -- wet, glistening, catches bright highlight
@@ -379,37 +416,41 @@ function drawNewDireRat(ctx, w, h) {
   fillCircle(ctx, w * 0.090, h * 0.384, w * 0.003);
   ctx.restore();
 
-  // -- EARS -- dark outer, PINK inner (strong hue contrast against dark fur)
-  // Near ear — laid back, aggressive
+  // -- EARS -- short, round, laid-back rat ears (NOT bunny ears)
+  // Near ear — round, low, tilted back
   ctx.fillStyle = `rgb(${furDark.join(',')})`;
   ctx.beginPath();
-  ctx.moveTo(w * 0.22, h * 0.32);
-  ctx.bezierCurveTo(w * 0.24, h * 0.18, w * 0.29, h * 0.13, w * 0.31, h * 0.15);
-  ctx.bezierCurveTo(w * 0.31, h * 0.22, w * 0.28, h * 0.30, w * 0.22, h * 0.32);
+  ctx.moveTo(w * 0.23, h * 0.32);
+  ctx.bezierCurveTo(w * 0.25, h * 0.26, w * 0.30, h * 0.23, w * 0.33, h * 0.24);
+  ctx.bezierCurveTo(w * 0.33, h * 0.28, w * 0.30, h * 0.32, w * 0.26, h * 0.33);
+  ctx.closePath();
   ctx.fill();
-  // Ear interior — HOT PINK, high saturation (needs to read against dark)
+  // Ear interior — pink, visible but not dominant
   ctx.fillStyle = `rgb(${earPink.join(',')})`;
   ctx.beginPath();
-  ctx.moveTo(w * 0.235, h * 0.30);
-  ctx.bezierCurveTo(w * 0.255, h * 0.21, w * 0.28, h * 0.17, w * 0.29, h * 0.18);
-  ctx.bezierCurveTo(w * 0.29, h * 0.24, w * 0.27, h * 0.29, w * 0.235, h * 0.30);
+  ctx.moveTo(w * 0.255, h * 0.31);
+  ctx.bezierCurveTo(w * 0.27, h * 0.27, w * 0.305, h * 0.25, w * 0.32, h * 0.26);
+  ctx.bezierCurveTo(w * 0.315, h * 0.29, w * 0.29, h * 0.315, w * 0.265, h * 0.32);
+  ctx.closePath();
   ctx.fill();
   // Ear rim highlight
-  highlight(ctx, w * 0.27, h * 0.20, w * 0.010, 'rgb(200,120,130)', 0.20);
+  highlight(ctx, w * 0.30, h * 0.26, w * 0.008, 'rgb(200,120,130)', 0.18);
 
-  // Far ear — smaller, darker
+  // Far ear — smaller, rounder, darker
   ctx.fillStyle = `rgb(${furShadow.join(',')})`;
   ctx.beginPath();
-  ctx.moveTo(w * 0.15, h * 0.31);
-  ctx.bezierCurveTo(w * 0.14, h * 0.20, w * 0.17, h * 0.15, w * 0.19, h * 0.17);
-  ctx.bezierCurveTo(w * 0.19, h * 0.24, w * 0.17, h * 0.29, w * 0.15, h * 0.31);
+  ctx.moveTo(w * 0.14, h * 0.31);
+  ctx.bezierCurveTo(w * 0.14, h * 0.25, w * 0.18, h * 0.22, w * 0.21, h * 0.24);
+  ctx.bezierCurveTo(w * 0.21, h * 0.28, w * 0.18, h * 0.31, w * 0.15, h * 0.32);
+  ctx.closePath();
   ctx.fill();
   // Far ear pink — dimmer
-  ctx.fillStyle = `rgba(${earPink.join(',')},0.5)`;
+  ctx.fillStyle = `rgba(${earPink.join(',')},0.45)`;
   ctx.beginPath();
-  ctx.moveTo(w * 0.158, h * 0.29);
-  ctx.bezierCurveTo(w * 0.16, h * 0.23, w * 0.175, h * 0.19, w * 0.18, h * 0.20);
-  ctx.bezierCurveTo(w * 0.18, h * 0.25, w * 0.17, h * 0.28, w * 0.158, h * 0.29);
+  ctx.moveTo(w * 0.155, h * 0.30);
+  ctx.bezierCurveTo(w * 0.16, h * 0.26, w * 0.185, h * 0.24, w * 0.20, h * 0.25);
+  ctx.bezierCurveTo(w * 0.195, h * 0.28, w * 0.175, h * 0.30, w * 0.16, h * 0.31);
+  ctx.closePath();
   ctx.fill();
 
   // -- WHISKERS -- thin, catching light
