@@ -146,125 +146,301 @@ function drawLimb(
   }
 }
 
+// -- Skeleton infrastructure for dire rat (clean shapes approach) -----------
+// Circle-chain spine → tangent-hull body outline with Catmull-Rom smoothing
+
+interface SpineNode { id: string; x: number; y: number; radius: number }
+interface LimbSegment { x: number; y: number; radius: number }
+interface LimbDef { attach: string; side: 'near' | 'far'; segments: LimbSegment[] }
+interface TailDef { points: { x: number; y: number }[]; startWidth: number; endWidth: number }
+interface Skeleton { spine: SpineNode[]; limbs: LimbDef[]; tail: TailDef }
+
+function catmullToBezierCP(
+  p0: { x: number; y: number }, p1: { x: number; y: number },
+  p2: { x: number; y: number }, p3: { x: number; y: number },
+  tension = 0.35,
+) {
+  const t = tension;
+  return {
+    cp1x: p1.x + (p2.x - p0.x) * t / 3,
+    cp1y: p1.y + (p2.y - p0.y) * t / 3,
+    cp2x: p2.x - (p3.x - p1.x) * t / 3,
+    cp2y: p2.y - (p3.y - p1.y) * t / 3,
+  };
+}
+
+function drawSkeletonBodyOutline(
+  ctx: CanvasRenderingContext2D, spine: SpineNode[],
+  w: number, h: number, fill: string | CanvasGradient,
+) {
+  const n = spine.length;
+  const top: { x: number; y: number }[] = [];
+  const bot: { x: number; y: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const node = spine[i];
+    const cx = w * node.x, cy = h * node.y, r = w * node.radius;
+    let dx: number, dy: number;
+    if (i === 0) { dx = spine[1].x - node.x; dy = spine[1].y - node.y; }
+    else if (i === n - 1) { dx = node.x - spine[n - 2].x; dy = node.y - spine[n - 2].y; }
+    else { dx = spine[i + 1].x - spine[i - 1].x; dy = spine[i + 1].y - spine[i - 1].y; }
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const px = -dy / len, py = dx / len;
+    top.push({ x: cx + px * r, y: cy + py * r });
+    bot.push({ x: cx - px * r, y: cy - py * r });
+  }
+  const first = spine[0], last = spine[n - 1];
+  ctx.beginPath();
+  ctx.moveTo(top[0].x, top[0].y);
+  for (let i = 0; i < top.length - 1; i++) {
+    const p0 = top[Math.max(0, i - 1)], p1 = top[i];
+    const p2 = top[i + 1], p3 = top[Math.min(top.length - 1, i + 2)];
+    const cp = catmullToBezierCP(p0, p1, p2, p3);
+    ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, p2.x, p2.y);
+  }
+  const lastCx = w * last.x, lastCy = h * last.y, lastR = w * last.radius;
+  const lastTopA = Math.atan2(top[top.length - 1].y - lastCy, top[top.length - 1].x - lastCx);
+  const lastBotA = Math.atan2(bot[bot.length - 1].y - lastCy, bot[bot.length - 1].x - lastCx);
+  ctx.arc(lastCx, lastCy, lastR, lastTopA, lastBotA, false);
+  for (let i = bot.length - 1; i > 0; i--) {
+    const p0 = bot[Math.min(bot.length - 1, i + 1)], p1 = bot[i];
+    const p2 = bot[i - 1], p3 = bot[Math.max(0, i - 2)];
+    const cp = catmullToBezierCP(p0, p1, p2, p3);
+    ctx.bezierCurveTo(cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, p2.x, p2.y);
+  }
+  const firstCx = w * first.x, firstCy = h * first.y, firstR = w * first.radius;
+  const firstBotA = Math.atan2(bot[0].y - firstCy, bot[0].x - firstCx);
+  const firstTopA = Math.atan2(top[0].y - firstCy, top[0].x - firstCx);
+  ctx.arc(firstCx, firstCy, firstR, firstBotA, firstTopA, false);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+function drawSkeletonLimbChain(
+  ctx: CanvasRenderingContext2D, segments: LimbSegment[],
+  w: number, h: number, color: string,
+) {
+  if (segments.length < 2) return;
+  for (let i = 0; i < segments.length - 1; i++) {
+    const s0 = segments[i], s1 = segments[i + 1];
+    const x0 = w * s0.x, y0 = h * s0.y, r0 = w * s0.radius;
+    const x1 = w * s1.x, y1 = h * s1.y, r1 = w * s1.radius;
+    const dx = x1 - x0, dy = y1 - y0;
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const px = -dy / len, py = dx / len;
+    ctx.beginPath();
+    ctx.moveTo(x0 + px * r0, y0 + py * r0);
+    ctx.lineTo(x1 + px * r1, y1 + py * r1);
+    ctx.lineTo(x1 - px * r1, y1 - py * r1);
+    ctx.lineTo(x0 - px * r0, y0 - py * r0);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.beginPath(); ctx.arc(x0, y0, r0, 0, Math.PI * 2); ctx.fill();
+  }
+  const last = segments[segments.length - 1];
+  ctx.beginPath(); ctx.arc(w * last.x, h * last.y, w * last.radius, 0, Math.PI * 2); ctx.fill();
+}
+
+function bodyGrad3(
+  ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number,
+  midR: number, midG: number, midB: number,
+  shadowR: number, shadowG: number, shadowB: number,
+  hiR: number, hiG: number, hiB: number,
+): CanvasGradient {
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, `rgb(${hiR},${hiG},${hiB})`);
+  g.addColorStop(0.25, `rgb(${midR},${midG},${midB})`);
+  g.addColorStop(0.50, `rgb(${Math.floor(midR * 0.85 + shadowR * 0.15)},${Math.floor(midG * 0.85 + shadowG * 0.15)},${Math.floor(midB * 0.85 + shadowB * 0.15)})`);
+  g.addColorStop(0.75, `rgb(${Math.floor(midR * 0.5 + shadowR * 0.5)},${Math.floor(midG * 0.5 + shadowG * 0.5)},${Math.floor(midB * 0.5 + shadowB * 0.5)})`);
+  g.addColorStop(1, `rgb(${shadowR},${shadowG},${shadowB})`);
+  return g;
+}
+
+const DIRE_RAT_SKELETON: Skeleton = {
+  spine: [
+    { id: 'snout',   x: 0.10, y: 0.84, radius: 0.025 },
+    { id: 'head',    x: 0.16, y: 0.78, radius: 0.065 },
+    { id: 'neck',    x: 0.26, y: 0.72, radius: 0.074 },
+    { id: 'chest',   x: 0.38, y: 0.64, radius: 0.120 },
+    { id: 'belly',   x: 0.52, y: 0.60, radius: 0.140 },
+    { id: 'hip',     x: 0.64, y: 0.64, radius: 0.125 },
+    { id: 'rump',    x: 0.72, y: 0.70, radius: 0.058 },
+  ],
+  limbs: [
+    { attach: 'chest', side: 'near', segments: [
+      { x: 0.26, y: 0.78, radius: 0.040 },
+      { x: 0.20, y: 0.86, radius: 0.018 },
+      { x: 0.16, y: 0.92, radius: 0.012 },
+      { x: 0.14, y: 0.97, radius: 0.018 },
+    ]},
+    { attach: 'chest', side: 'far', segments: [
+      { x: 0.34, y: 0.76, radius: 0.032 },
+      { x: 0.28, y: 0.84, radius: 0.014 },
+      { x: 0.24, y: 0.92, radius: 0.010 },
+      { x: 0.23, y: 0.97, radius: 0.014 },
+    ]},
+    { attach: 'hip', side: 'near', segments: [
+      { x: 0.58, y: 0.64, radius: 0.100 },
+      { x: 0.60, y: 0.76, radius: 0.026 },
+      { x: 0.65, y: 0.86, radius: 0.013 },
+      { x: 0.59, y: 0.92, radius: 0.010 },
+      { x: 0.55, y: 0.97, radius: 0.016 },
+    ]},
+    { attach: 'hip', side: 'far', segments: [
+      { x: 0.66, y: 0.64, radius: 0.085 },
+      { x: 0.68, y: 0.76, radius: 0.020 },
+      { x: 0.72, y: 0.86, radius: 0.011 },
+      { x: 0.68, y: 0.92, radius: 0.008 },
+      { x: 0.66, y: 0.97, radius: 0.013 },
+    ]},
+  ],
+  tail: {
+    points: [
+      { x: 0.74, y: 0.72 }, { x: 0.82, y: 0.64 }, { x: 0.90, y: 0.58 },
+      { x: 0.94, y: 0.50 }, { x: 0.93, y: 0.42 }, { x: 0.88, y: 0.38 },
+    ],
+    startWidth: 0.018, endWidth: 0.003,
+  },
+};
+
 function drawDireRatRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // Lower, more predatory anatomy: shoulder hump, tucked belly, smaller ears.
-  ctx.fillStyle = bodyGrad(ctx, w * 0.54, h * 0.45, w * 0.30, 122, 100, 78, 34, 24, 18);
+  // Skeleton-based clean renderer — bold shapes, no noise, let ASCII add texture
+  const sk = DIRE_RAT_SKELETON;
+  const snout = sk.spine.find(n => n.id === 'snout')!;
+  const head = sk.spine.find(n => n.id === 'head')!;
+  const belly = sk.spine.find(n => n.id === 'belly')!;
+
+  // 1. Tail — single thick stroke
+  const tp = sk.tail.points;
+  ctx.strokeStyle = 'rgb(110,70,65)';
+  ctx.lineCap = 'round'; ctx.lineWidth = w * 0.020;
   ctx.beginPath();
-  ctx.moveTo(w * 0.28, h * 0.38);
-  ctx.bezierCurveTo(w * 0.36, h * 0.26, w * 0.56, h * 0.23, w * 0.72, h * 0.34);
-  ctx.bezierCurveTo(w * 0.80, h * 0.40, w * 0.80, h * 0.55, w * 0.74, h * 0.64);
-  ctx.bezierCurveTo(w * 0.66, h * 0.72, w * 0.48, h * 0.76, w * 0.32, h * 0.68);
-  ctx.bezierCurveTo(w * 0.22, h * 0.62, w * 0.20, h * 0.47, w * 0.28, h * 0.38);
-  ctx.fill();
-
-  ctx.fillStyle = bodyGrad(ctx, w * 0.63, h * 0.46, w * 0.16, 104, 84, 66, 30, 22, 16);
-  fillEllipse(ctx, w * 0.66, h * 0.48, w * 0.15, h * 0.18);
-
-  ctx.fillStyle = bodyGrad(ctx, w * 0.20, h * 0.46, w * 0.16, 116, 96, 76, 32, 22, 18);
+  ctx.moveTo(w * tp[0].x, h * tp[0].y);
+  ctx.bezierCurveTo(w * tp[1].x, h * tp[1].y, w * tp[2].x, h * tp[2].y, w * tp[3].x, h * tp[3].y);
+  ctx.stroke();
+  ctx.lineWidth = w * 0.010;
   ctx.beginPath();
-  ctx.moveTo(w * 0.30, h * 0.42);
-  ctx.bezierCurveTo(w * 0.20, h * 0.34, w * 0.10, h * 0.35, w * 0.04, h * 0.42);
-  ctx.bezierCurveTo(w * 0.00, h * 0.47, w * 0.02, h * 0.55, w * 0.09, h * 0.59);
-  ctx.bezierCurveTo(w * 0.17, h * 0.62, w * 0.26, h * 0.58, w * 0.30, h * 0.52);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = bodyGrad(ctx, w * 0.44, h * 0.34, w * 0.13, 138, 112, 86, 54, 40, 28);
-  fillEllipse(ctx, w * 0.40, h * 0.34, w * 0.14, h * 0.10);
-
-  ctx.fillStyle = bodyGrad(ctx, w * 0.42, h * 0.60, w * 0.16, 152, 132, 108, 58, 42, 28);
-  fillEllipse(ctx, w * 0.42, h * 0.62, w * 0.16, h * 0.07);
-
-  ambientOcclusion(ctx, w * 0.34, h * 0.60, w * 0.10, h * 0.04, 0.24);
-  ambientOcclusion(ctx, w * 0.29, h * 0.46, w * 0.05, h * 0.07, 0.22);
-  ambientOcclusion(ctx, w * 0.60, h * 0.50, w * 0.06, h * 0.08, 0.16);
-
-  // Fur should describe form, not just fill space.
-  furTexture(ctx, w * 0.26, h * 0.26, w * 0.48, h * 0.28, 115, 'rgb(28,22,18)', 'rgb(152,128,104)', -0.25);
-  furTexture(ctx, w * 0.28, h * 0.46, w * 0.38, h * 0.14, 40, 'rgb(52,40,30)', 'rgb(180,156,126)', 0.25);
-  furTexture(ctx, w * 0.08, h * 0.38, w * 0.20, h * 0.16, 24, 'rgb(36,28,22)', 'rgb(138,112,88)', 0.0);
-
-  // Ears: smaller and more believable than the toy-like version.
-  ctx.fillStyle = 'rgb(90,72,62)';
-  fillEllipse(ctx, w * 0.19, h * 0.27, w * 0.035, h * 0.08);
-  fillEllipse(ctx, w * 0.25, h * 0.24, w * 0.033, h * 0.085);
-  ctx.fillStyle = 'rgb(160,98,110)';
-  fillEllipse(ctx, w * 0.19, h * 0.27, w * 0.018, h * 0.045);
-  fillEllipse(ctx, w * 0.25, h * 0.245, w * 0.016, h * 0.045);
-
-  // Snout and nose
-  ctx.fillStyle = 'rgb(84,66,54)';
-  ctx.beginPath();
-  ctx.moveTo(w * 0.07, h * 0.45);
-  ctx.lineTo(w * -0.02, h * 0.47);
-  ctx.lineTo(w * 0.06, h * 0.52);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = 'rgb(176,100,106)';
-  fillCircle(ctx, w * -0.005, h * 0.485, w * 0.010);
-
-  // Eye: smaller and deeper set.
-  highlight(ctx, w * 0.145, h * 0.42, w * 0.020, 'rgb(160,46,44)', 0.10);
-  ctx.fillStyle = 'rgb(138,40,34)';
-  fillCircle(ctx, w * 0.145, h * 0.42, w * 0.010);
-  ctx.fillStyle = '#000';
-  fillCircle(ctx, w * 0.148, h * 0.421, w * 0.004);
-
-  // Incisors and whiskers
-  ctx.fillStyle = 'rgb(220,204,170)';
-  ctx.beginPath();
-  ctx.moveTo(w * 0.03, h * 0.50);
-  ctx.lineTo(w * 0.02, h * 0.55);
-  ctx.lineTo(w * 0.05, h * 0.51);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(w * 0.06, h * 0.50);
-  ctx.lineTo(w * 0.06, h * 0.55);
-  ctx.lineTo(w * 0.08, h * 0.51);
-  ctx.fill();
-
-  ctx.strokeStyle = 'rgba(144,118,92,0.65)';
-  ctx.lineWidth = w * 0.003;
-  ctx.beginPath();
-  ctx.moveTo(w * 0.05, h * 0.45); ctx.lineTo(w * -0.03, h * 0.42);
-  ctx.moveTo(w * 0.05, h * 0.48); ctx.lineTo(w * -0.04, h * 0.48);
-  ctx.moveTo(w * 0.05, h * 0.51); ctx.lineTo(w * -0.03, h * 0.55);
+  ctx.moveTo(w * tp[3].x, h * tp[3].y);
+  ctx.bezierCurveTo(w * tp[4].x, h * tp[4].y, w * tp[5].x, h * tp[5].y, w * (tp[5].x - 0.04), h * (tp[5].y + 0.04));
   ctx.stroke();
 
-  // Tail: fleshy and thin, but not a bright candy cane.
-  ctx.strokeStyle = 'rgb(148,112,104)';
-  ctx.lineWidth = w * 0.022;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(w * 0.76, h * 0.48);
-  ctx.bezierCurveTo(w * 0.88, h * 0.40, w * 0.96, h * 0.26, w * 1.00, h * 0.12);
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(94,66,62,0.40)';
-  ctx.lineWidth = w * 0.007;
-  ctx.beginPath();
-  ctx.moveTo(w * 0.79, h * 0.45);
-  ctx.bezierCurveTo(w * 0.88, h * 0.36, w * 0.94, h * 0.24, w * 0.98, h * 0.16);
-  ctx.stroke();
-
-  // Crouched leg placement: front paws forward, rear legs carrying haunch weight.
-  drawLimb(ctx, w * 0.28, h * 0.60, w * 0.24, h * 0.72, w * 0.22, h * 0.84, w * 0.014, 'rgb(116,92,70)');
-  drawLimb(ctx, w * 0.38, h * 0.61, w * 0.35, h * 0.72, w * 0.34, h * 0.84, w * 0.014, 'rgb(114,90,68)');
-  drawLimb(ctx, w * 0.58, h * 0.58, w * 0.56, h * 0.70, w * 0.56, h * 0.86, w * 0.018, 'rgb(96,74,58)');
-  drawLimb(ctx, w * 0.68, h * 0.56, w * 0.70, h * 0.69, w * 0.70, h * 0.84, w * 0.017, 'rgb(90,70,54)');
-
-  ctx.fillStyle = 'rgb(210,192,166)';
-  for (const [fx, fy] of [[0.22, 0.84], [0.34, 0.84], [0.56, 0.86], [0.70, 0.84]] as [number, number][]) {
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.moveTo(w * fx, h * fy);
-      ctx.lineTo(w * (fx - 0.010 + i * 0.010), h * (fy + 0.035));
-      ctx.lineTo(w * (fx - 0.003 + i * 0.010), h * (fy + 0.020));
-      ctx.fill();
-    }
+  // 2. Far limbs — solid dark
+  for (const limb of sk.limbs) {
+    if (limb.side === 'far') drawSkeletonLimbChain(ctx, limb.segments, w, h, 'rgb(24,16,12)');
   }
 
-  highlight(ctx, w * 0.44, h * 0.33, w * 0.05, 'rgb(178,154,126)', 0.08);
-  highlight(ctx, w * 0.61, h * 0.43, w * 0.04, 'rgb(148,126,102)', 0.08);
+  // 3. Body — ONE gradient, clean
+  const bodyFill = bodyGrad3(ctx, w * belly.x, h * belly.y, w * 0.30,
+    90, 68, 50, 30, 22, 16, 130, 105, 80);
+  drawSkeletonBodyOutline(ctx, sk.spine, w, h, bodyFill);
+
+  // 4. Near limbs — slightly lighter
+  for (const limb of sk.limbs) {
+    if (limb.side === 'near') drawSkeletonLimbChain(ctx, limb.segments, w, h, 'rgb(42,30,22)');
+  }
+
+  // 5. Paw pads
+  for (const limb of sk.limbs) {
+    const paw = limb.segments[limb.segments.length - 1];
+    ctx.fillStyle = limb.side === 'near' ? 'rgb(60,40,35)' : 'rgb(35,24,18)';
+    fillEllipse(ctx, w * paw.x, h * paw.y, w * (paw.radius + 0.005), h * 0.012);
+  }
+
+  // 6. Head shape
+  const hx = head.x, hy = head.y, hr = head.radius;
+  const sx = snout.x, sy = snout.y;
+  ctx.fillStyle = bodyGrad3(ctx, w * hx, h * hy, w * hr * 2,
+    82, 62, 46, 28, 20, 14, 120, 95, 72);
+  ctx.beginPath();
+  ctx.moveTo(w * (hx + hr * 0.7), h * (hy - hr * 0.8));
+  ctx.bezierCurveTo(w * (hx - 0.01), h * (hy - hr * 1.1), w * (sx + 0.01), h * (sy - 0.06), w * (sx - 0.03), h * sy);
+  ctx.bezierCurveTo(w * (sx - 0.05), h * (sy + 0.06), w * (sx - 0.02), h * (sy + 0.12), w * (hx - 0.01), h * (hy + hr * 1.0));
+  ctx.bezierCurveTo(w * (hx + hr * 0.5), h * (hy + hr * 0.6), w * (hx + hr * 0.9), h * (hy + hr * 0.1), w * (hx + hr * 0.7), h * (hy - hr * 0.8));
+  ctx.fill();
+
+  // 7. Snout nub
+  ctx.fillStyle = 'rgb(55,35,30)';
+  ctx.beginPath(); ctx.arc(w * (sx - 0.03), h * (sy + 0.01), w * 0.022, 0, Math.PI * 2); ctx.fill();
+
+  // 8. Nose
+  ctx.fillStyle = 'rgb(150,80,75)';
+  fillCircle(ctx, w * (sx - 0.045), h * (sy + 0.005), w * 0.008);
+
+  // 9. Mouth slit
+  ctx.strokeStyle = 'rgb(10,5,5)'; ctx.lineWidth = w * 0.004;
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.04), h * (sy + 0.03));
+  ctx.quadraticCurveTo(w * (sx - 0.01), h * (sy + 0.06), w * (sx + 0.02), h * (sy + 0.05));
+  ctx.stroke();
+
+  // 10. Big fangs
+  ctx.fillStyle = 'rgb(235,225,205)';
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.03), h * (sy + 0.02));
+  ctx.lineTo(w * (sx - 0.04), h * (sy + 0.12));
+  ctx.lineTo(w * (sx - 0.018), h * (sy + 0.03));
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.005), h * (sy + 0.03));
+  ctx.lineTo(w * (sx - 0.015), h * (sy + 0.12));
+  ctx.lineTo(w * (sx + 0.008), h * (sy + 0.045));
+  ctx.fill();
+  ctx.fillStyle = 'rgb(210,200,180)';
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.018), h * (sy + 0.03));
+  ctx.lineTo(w * (sx - 0.022), h * (sy + 0.08));
+  ctx.lineTo(w * (sx - 0.012), h * (sy + 0.035));
+  ctx.fill();
+
+  // 11. Eyes
+  ctx.fillStyle = 'rgb(200,50,30)';
+  fillCircle(ctx, w * (hx - 0.01), h * (hy - 0.01), w * 0.012);
+  ctx.fillStyle = 'rgb(255,120,40)';
+  fillCircle(ctx, w * (hx - 0.01), h * (hy - 0.01), w * 0.007);
+  ctx.fillStyle = '#000';
+  fillCircle(ctx, w * (hx - 0.009), h * (hy - 0.01), w * 0.003);
+  ctx.fillStyle = 'rgb(160,40,25)';
+  fillCircle(ctx, w * (sx + 0.005), h * (sy - 0.05), w * 0.008);
+
+  // 12. Ears
+  ctx.fillStyle = 'rgb(50,36,28)';
+  fillEllipse(ctx, w * (hx + 0.06), h * (hy - hr * 0.9), w * 0.020, h * 0.030);
+  ctx.fillStyle = 'rgb(38,26,20)';
+  fillEllipse(ctx, w * (hx - 0.01), h * (hy - hr * 0.8), w * 0.016, h * 0.024);
+  ctx.fillStyle = 'rgba(140,60,70,0.5)';
+  fillEllipse(ctx, w * (hx + 0.06), h * (hy - hr * 0.9), w * 0.012, h * 0.018);
+
+  // 13. Hackle spikes along spine
+  const sp = sk.spine;
+  for (let i = 0; i < 14; i++) {
+    const t = i / 14;
+    const si = 2 + t * (sp.length - 3);
+    const idx = Math.floor(si);
+    const f = si - idx;
+    const a = sp[Math.min(idx, sp.length - 1)];
+    const b = sp[Math.min(idx + 1, sp.length - 1)];
+    const px = w * (a.x + (b.x - a.x) * f);
+    const py = h * (a.y + (b.y - a.y) * f - (a.radius + (b.radius - a.radius) * f));
+    const sizeMult = 1.0 - Math.abs(t - 0.4) * 1.2;
+    const len = w * (0.030 + sizeMult * 0.025);
+    const baseW = w * 0.006;
+    const lean = -0.15;
+    ctx.fillStyle = 'rgb(50,36,26)';
+    ctx.beginPath();
+    ctx.moveTo(px - baseW, py);
+    ctx.lineTo(px + Math.sin(lean) * len, py - Math.cos(lean) * len);
+    ctx.lineTo(px + baseW, py);
+    ctx.fill();
+    ctx.fillStyle = 'rgb(140,110,80)';
+    ctx.beginPath();
+    const tipX = px + Math.sin(lean) * len;
+    const tipY = py - Math.cos(lean) * len;
+    ctx.moveTo(tipX - w * 0.002, tipY + len * 0.3);
+    ctx.lineTo(tipX, tipY);
+    ctx.lineTo(tipX + w * 0.002, tipY + len * 0.3);
+    ctx.fill();
+  }
 }
 
 function drawFungalShamanRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
