@@ -1023,24 +1023,22 @@ export function renderMonster(
 
   // Dissolve: remove cells from edges inward based on dissolve progress
   if (anim.dissolve > 0) {
-    // Use a noise-based threshold so cells vanish organically, not in a line
+    const rcx = centerX + renderW / 2;
+    const rcy = centerY + renderH / 2;
+    const maxDist = Math.sqrt(renderW * renderW + renderH * renderH) * 0.5;
     for (let i = 0; i < cellCount; i++) {
       const c = cellBuffer[i];
-      // Edge distance: cells near the silhouette edge dissolve first
-      const gIdx = gridIndex.indexOf(i);
-      const col = gIdx >= 0 ? gIdx % cols : 0;
-      const row = gIdx >= 0 ? Math.floor(gIdx / cols) : 0;
-      // Normalized distance from center
-      const dx = (col / cols - 0.5) * 2;
-      const dy = (row / rows - 0.5) * 2;
+      // Distance from creature center, normalized 0..1
+      const dx = (c.x - rcx) / (maxDist || 1);
+      const dy = (c.y - rcy) / (maxDist || 1);
       const edgeDist = Math.sqrt(dx * dx + dy * dy);
-      // Add noise so it's not a clean circle
-      const noise = Math.sin(col * 7.3 + row * 13.7) * 0.3;
-      const threshold = anim.dissolve * 1.5; // dissolve faster at edges
+      // Noise so cells vanish organically
+      const noise = Math.sin(c.x * 0.7 + c.y * 1.3) * 0.2;
+      const threshold = anim.dissolve * 1.4;
       if (edgeDist + noise > (1 - threshold)) {
-        c.a = 0; // hide this cell
+        c.a = 0;
       } else {
-        c.a *= 1 - anim.dissolve * 0.5; // fade remaining cells
+        c.a *= 1 - anim.dissolve * 0.5;
       }
     }
   }
