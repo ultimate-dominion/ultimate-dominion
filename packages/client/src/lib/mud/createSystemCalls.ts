@@ -372,6 +372,59 @@ export function createSystemCalls(
     console.warn(`[ghost] Evicted ${batch.length / 2} monsters on tile (${gz},${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
   };
 
+  // ---------------------------------------------------------------------------
+  // Proactive tile validation — verify monsters are alive on-chain when the
+  // player lands on a tile. Prevents "No enemies here" errors by evicting
+  // ghosts BEFORE the player clicks Fight.
+  // ---------------------------------------------------------------------------
+  const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000' as const;
+  const GET_RECORD_ABI = [
+    {
+      type: 'function' as const,
+      name: 'getRecord' as const,
+      stateMutability: 'view' as const,
+      inputs: [
+        { name: 'tableId', type: 'bytes32' as const },
+        { name: 'keyTuple', type: 'bytes32[]' as const },
+      ],
+      outputs: [
+        { name: 'staticData', type: 'bytes' as const },
+        { name: 'encodedLengths', type: 'bytes32' as const },
+        { name: 'dynamicData', type: 'bytes' as const },
+      ],
+    },
+  ] as const;
+
+  const validateTileMonsters = async (monsterIds: string[]): Promise<void> => {
+    if (monsterIds.length === 0) return;
+
+    const results = await Promise.allSettled(
+      monsterIds.map(async (id) => {
+        const [staticData] = await publicClient.readContract({
+          address: worldContract.address,
+          abi: GET_RECORD_ABI,
+          functionName: 'getRecord',
+          args: [SPAWNED_TABLE_ID, [id as `0x${string}`]],
+        });
+        // Spawned table: single bool field. 0x01 = alive, 0x00 or empty = dead.
+        const isAlive = staticData.length >= 4 && staticData.slice(0, 4) === '0x01';
+        return { id, isAlive };
+      }),
+    );
+
+    const ghosts: string[] = [];
+    for (const r of results) {
+      if (r.status === 'fulfilled' && !r.value.isAlive) {
+        ghosts.push(r.value.id);
+      }
+    }
+
+    if (ghosts.length > 0) {
+      console.warn(`[validateTile] Found ${ghosts.length} ghost(s) on tile — evicting`);
+      ghosts.forEach(evictGhostMonster);
+    }
+  };
+
   // Selectors for ghost monster revert errors (InvalidCombatEntity / InvalidPvE).
   const INVALID_COMBAT_ENTITY_SELECTOR = '1af235ec';
   const INVALID_PVE_SELECTOR = 'adee4371';
@@ -993,27 +1046,17 @@ export function createSystemCalls(
       return { success: false, error: 'In encounter.' };
     }
 
-    // Pre-flight: read on-chain position to avoid mismatch between client store
-    // and contract state (production has Position/PositionV2 table divergence).
-    let x: number;
-    let y: number;
-    try {
-      const onChainPos = await worldContract.read.UD__getEntityPosition([
-        characterEntity as `0x${string}`,
-      ]);
-      // getEntityPosition returns (uint256 zoneId, uint16 x, uint16 y)
-      x = Number(onChainPos[1]);
-      y = Number(onChainPos[2]);
-    } catch {
-      // Fallback to store if chain read fails
-      const pos = getTableValue('PositionV2', characterEntity) as
-        | { zoneId: number; x: number; y: number } | undefined;
-      if (!pos) {
-        return { success: false, error: 'Position not found.' };
-      }
-      x = Number(pos.x);
-      y = Number(pos.y);
+    // Read position from the Zustand store (updated synchronously from receipts).
+    // PositionV2 is canonical — the deployed contract writes (zoneId, x, y) to it.
+    // Position fallback kept for any legacy state still in the store.
+    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+      | { x: number; y: number } | undefined;
+    if (!pos) {
+      return { success: false, error: 'Position not found.' };
     }
+
+    let x = Number(pos.x);
+    let y = Number(pos.y);
     switch (direction) {
       case 'up': y += 1; break;
       case 'down': y -= 1; break;
@@ -1081,15 +1124,12 @@ export function createSystemCalls(
             }
 
             if (diagResult === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
-              console.warn(`[move] Position stale after revert — refreshing from chain`);
-              try {
-                const chainPos = await worldContract.read.UD__getEntityPosition([
-                  characterEntity as `0x${string}`,
-                ]);
-                // Returns (uint256 zoneId, uint16 x, uint16 y)
-                x = Number(chainPos[1]);
-                y = Number(chainPos[2]);
-                useGameStore.getState().setRow('PositionV2', characterEntity, { zoneId: Number(chainPos[0]), x, y });
+              console.warn(`[move] Position stale after revert — re-reading store`);
+              const freshPos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+                | { x: number; y: number } | undefined;
+              if (freshPos) {
+                x = Number(freshPos.x);
+                y = Number(freshPos.y);
                 switch (direction) {
                   case 'up': y += 1; break;
                   case 'down': y -= 1; break;
@@ -1099,8 +1139,6 @@ export function createSystemCalls(
                 args = [characterEntity as `0x${string}`, x, y] as const;
                 onChainRetries++;
                 continue;
-              } catch {
-                // Chain read failed — fall through
               }
             }
 
@@ -1156,9 +1194,9 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'autoAdventure');
     if (ownershipError) return ownershipError;
 
-    // Same store-based position read as move — uses Zustand (updated from receipts)
-    const pos = getTableValue('PositionV2', characterEntity) as
-      | { zoneId: number; x: number; y: number } | undefined;
+    // Same store-based position read as move — PositionV2 is canonical (contract writes to it)
+    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+      | { x: number; y: number } | undefined;
     if (!pos) {
       return { success: false, error: 'Position not found.' };
     }
@@ -1405,50 +1443,6 @@ export function createSystemCalls(
       const txResult = await waitForTransaction(tx);
       return {
         error: txResult.status === 'success' ? undefined : 'Failed to sell item.',
-        success: txResult.status === 'success',
-      };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
-  const sellBatch = async (
-    itemIds: bigint[],
-    amounts: bigint[],
-    shopId: string,
-    characterId: string,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(characterId, 'sellBatch');
-    if (ownershipError) return ownershipError;
-    if (!walletClient) return { error: 'Wallet not ready', success: false };
-
-    try {
-      const sellBatchAbi = [{
-        type: 'function' as const,
-        name: 'UD__sellBatch',
-        inputs: [
-          { name: 'itemIds', type: 'uint256[]' },
-          { name: 'amounts', type: 'uint256[]' },
-          { name: 'shopId', type: 'bytes32' },
-          { name: 'characterId', type: 'bytes32' },
-        ],
-        outputs: [],
-        stateMutability: 'nonpayable' as const,
-      }] as const;
-
-      const tx = await walletClient!.writeContract({
-        address: worldContract.address,
-        abi: sellBatchAbi,
-        functionName: 'UD__sellBatch',
-        args: [itemIds, amounts, shopId as `0x${string}`, characterId as `0x${string}`],
-      });
-
-      const txResult = await waitForTransaction(tx);
-      return {
-        error: txResult.status === 'success' ? undefined : 'Failed to sell items.',
         success: txResult.status === 'success',
       };
     } catch (e) {
@@ -2114,75 +2108,6 @@ export function createSystemCalls(
     }
   };
 
-  const setGuildBuff = async (
-    characterId: string,
-    slotIndex: number,
-    buffType: number,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(characterId, 'setGuildBuff');
-    if (ownershipError) return ownershipError;
-
-    try {
-      const tx = await wrappedWorldContract.write.UD__setGuildBuff([
-        characterId as `0x${string}`,
-        slotIndex,
-        buffType,
-      ]);
-
-      const receipt = await waitForTransaction(tx);
-      return { success: receipt.status === 'success' };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
-  const removeGuildBuff = async (
-    characterId: string,
-    slotIndex: number,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(characterId, 'removeGuildBuff');
-    if (ownershipError) return ownershipError;
-
-    try {
-      const tx = await wrappedWorldContract.write.UD__removeGuildBuff([
-        characterId as `0x${string}`,
-        slotIndex,
-      ]);
-
-      const receipt = await waitForTransaction(tx);
-      return { success: receipt.status === 'success' };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
-  const upgradeGuild = async (
-    characterId: string,
-  ): SystemCallReturn => {
-    const ownershipError = validateCharacterOwnership(characterId, 'upgradeGuild');
-    if (ownershipError) return ownershipError;
-
-    try {
-      const tx = await wrappedWorldContract.write.UD__upgradeGuild([
-        characterId as `0x${string}`,
-      ]);
-
-      const receipt = await waitForTransaction(tx);
-      return { success: receipt.status === 'success' };
-    } catch (e) {
-      return {
-        error: getContractError(e),
-        success: false,
-      };
-    }
-  };
-
   return {
     applyToGuild,
     autoAdventure,
@@ -2198,7 +2123,6 @@ export function createSystemCalls(
     createOrder,
     disbandGuild,
     endShopEncounter,
-    removeGuildBuff,
     endWorldEncounter,
     endTurn,
     enterGame,
@@ -2220,8 +2144,6 @@ export function createSystemCalls(
     rollStats,
     selectAdvancedClass,
     sell,
-    sellBatch,
-    setGuildBuff,
     setTaxRate,
     spawn,
     statRespec,
@@ -2230,8 +2152,8 @@ export function createSystemCalls(
     triggerFragment,
     unequipItem,
     updateTokenUri,
-    upgradeGuild,
     useWorldConsumableItem,
+    validateTileMonsters,
     withdrawTreasury,
   };
 }

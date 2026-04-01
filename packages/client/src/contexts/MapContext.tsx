@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useTranslation } from 'react-i18next';
 import { zeroHash } from 'viem';
 import { loadZoneManifest } from '../utils/itemImages';
 import { loadMonsterManifest } from '../utils/monsterImages';
@@ -33,11 +32,7 @@ import { buildCharacter } from '../utils/buildCharacter';
 import {
   type Character,
   type Monster,
-  type Npc,
-  type NpcInteraction,
   type Shop,
-  type WorldBoss,
-  MobType,
 } from '../utils/types';
 
 import { useCharacter } from './CharacterContext';
@@ -52,30 +47,65 @@ const SHOP_MOB_ID_TO_NAME: Record<string, string> = {
 };
 
 const SHOP_POSITION_TO_NAME: Record<string, string> = {
-  '1,9,9': 'Grizzled Merchant',
-  '2,9,9': 'Tal',
+  '9,9': 'Tal',
 };
 
-/** Map NPC metadataUri prefix to interaction type and display name */
-const NPC_METADATA_MAP: Record<string, { name: string; interaction: NpcInteraction }> = {
-  'npc:vel_morrow': { name: 'Vel Morrow', interaction: 'respec' },
-  'npc:edric_thorne': { name: 'Edric Thorne', interaction: 'guild' },
-  'worldobj:camp_journal': { name: 'Camp Journal', interaction: 'examine' },
-  'worldobj:shrine_inscriptions': { name: 'Shrine Inscriptions', interaction: 'examine' },
-  'worldobj:edric_at_shrine': { name: 'Edric at Shrine', interaction: 'examine' },
-  'worldobj:summit_stone': { name: 'Summit Stone', interaction: 'examine' },
+// ── Zone coordinate system ──
+// Each zone's Y-origin is spaced by ZONE_ORIGIN_SPACING.
+// Zone 1: origin (0, 0), Zone 2: origin (0, 100), etc.
+const ZONE_ORIGIN_SPACING = 100;
+
+const ZONE_ORIGINS: Record<number, { x: number; y: number }> = {
+  1: { x: 0, y: 0 },
+  2: { x: 0, y: ZONE_ORIGIN_SPACING },
 };
 
-// Coordinates are zone-relative (0-9). zoneId disambiguates which zone.
-const ZONE_NAME_KEYS: Record<number, string> = {
-  1: 'zone.darkCave',
-  2: 'zone.windyPeaks',
+const ZONE_NAMES: Record<number, string> = {
+  1: 'Dark Cave',
+  2: 'Windy Peaks',
 };
+
+/** Convert raw on-chain position to display (0-9) coords for the current zone */
+function toDisplayPosition(raw: { x: number; y: number }, zoneId: number): { x: number; y: number } {
+  const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
+  return { x: raw.x - origin.x, y: raw.y - origin.y };
+}
+
+/** Check if a raw position falls within a zone's coordinate bounds */
+function isInZone(rawX: number, rawY: number, zoneId: number, gridSize = 10): boolean {
+  const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
+  return rawX >= origin.x && rawX < origin.x + gridSize
+    && rawY >= origin.y && rawY < origin.y + gridSize;
+}
+
+/**
+ * Check if an entity belongs to the given zone using PositionV2 zoneId.
+ * PositionV2 stores zone-RELATIVE coords (0-9), so coordinate bounds alone
+ * can't distinguish zones — we must check the zoneId field directly.
+ * Falls back to coordinate bounds for legacy Position-only entities.
+ */
+function entityInZone(
+  entityId: string,
+  targetZone: number,
+  posV2Table: Record<string, any>,
+  posV1Table: Record<string, any>,
+  toNum: (v: unknown) => number,
+): boolean {
+  const v2 = posV2Table[entityId];
+  if (v2) {
+    const zoneId = toNum(v2.zoneId);
+    return zoneId === 0 ? targetZone === 1 : zoneId === targetZone;
+  }
+  const v1 = posV1Table[entityId];
+  if (v1) {
+    return isInZone(toNum(v1.x), toNum(v1.y), targetZone);
+  }
+  return false;
+}
 
 type MapContextType = {
   allCharacters: Character[];
   allMonsters: Monster[];
-  allNpcs: Npc[];
   allShops: Shop[];
   currentZone: number;
   currentZoneName: string;
@@ -85,20 +115,17 @@ type MapContextType = {
   isSpawned: boolean;
   isSpawning: boolean;
   monstersOnTile: Monster[];
-  npcsOnTile: Npc[];
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
-  position: { zoneId: number; x: number; y: number } | null;
+  position: { x: number; y: number } | null;
   refreshEntities: () => void;
   shopsOnTile: Shop[];
   visibleMonstersOnTile: Monster[];
-  worldBosses: WorldBoss[];
 };
 
 const MapContext = createContext<MapContextType>({
   allCharacters: [],
   allMonsters: [],
-  allNpcs: [],
   allShops: [],
   currentZone: 1,
   currentZoneName: 'Dark Cave',
@@ -108,14 +135,12 @@ const MapContext = createContext<MapContextType>({
   isSpawned: false,
   isSpawning: false,
   monstersOnTile: [],
-  npcsOnTile: [],
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
   refreshEntities: () => {},
   shopsOnTile: [],
   visibleMonstersOnTile: [],
-  worldBosses: [],
 });
 
 export type MapProviderProps = {
@@ -127,12 +152,11 @@ const SESSION_IDLE_MS = 10 * 60 * 1000;
 const IDLE_CHECK_INTERVAL_MS = 30 * 1000;
 
 export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
-  const { t } = useTranslation('ui');
   const { renderError } = useToast();
   const {
     delegatorAddress,
     isSynced,
-    systemCalls: { spawn, removeEntityFromBoard },
+    systemCalls: { spawn, removeEntityFromBoard, validateTileMonsters },
   } = useMUD();
   const { monsterTemplates } = useMonsters();
   const { character, refreshCharacter } = useCharacter();
@@ -144,12 +168,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const [isWaitingForSpawn, setIsWaitingForSpawn] = useState(false);
 
   // Reactive table subscriptions for entity queries
-  const positionTable = useGameTable('PositionV2');
+  // Merge Position + PositionV2 — beta contract deploy leaked V2 tables to prod.
+  // V2 entries override V1 so recently-moved entities resolve correctly.
+  const positionTableV1 = useGameTable('Position');
+  const positionTableV2 = useGameTable('PositionV2');
+  const positionTable = useMemo(
+    () => ({ ...positionTableV1, ...positionTableV2 }),
+    [positionTableV1, positionTableV2],
+  );
   const spawnedTable = useGameTable('Spawned');
   const statsTable = useGameTable('Stats');
   const charactersTable = useGameTable('Characters');
   const shopsTable = useGameTable('Shops');
-  const mobsTable = useGameTable('Mobs');
 
   // Additional reactive tables for character building
   const goldBalancesTable = useGameTable('GoldBalances');
@@ -157,11 +187,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const tokenURITable = useGameTable('CharactersTokenURI');
   const worldStatusEffectsTable = useGameTable('WorldStatusEffects');
   const mobStatsTable = useGameTable('MobStats');
-  const worldBossTable = useGameTable('WorldBossV2');
 
   // Player's position from the store (canonical — no optimistic updates)
-  const posData = useGameValue('PositionV2', character?.id);
-  const position = posData ? { zoneId: toNumber(posData.zoneId), x: toNumber(posData.x), y: toNumber(posData.y) } : null;
+  // Try PositionV2 first (zone-relative coords deployed via beta contract leak),
+  // fall back to legacy Position table for unaffected characters.
+  const posDataV2 = useGameValue('PositionV2', character?.id);
+  const posDataV1 = useGameValue('Position', character?.id);
+  const posData = posDataV2 ?? posDataV1;
+  const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
 
   // Zone awareness — read CharacterZone table (0 or unset = zone 1)
   const characterZoneData = useGameValue('CharacterZone', character?.id);
@@ -169,7 +202,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     const zoneId = characterZoneData ? toNumber(characterZoneData.zoneId) : 0;
     return zoneId === 0 ? 1 : zoneId;
   }, [characterZoneData]);
-  const currentZoneName = ZONE_NAME_KEYS[currentZone] ? t(ZONE_NAME_KEYS[currentZone]) : `Zone ${currentZone}`;
+  const currentZoneName = ZONE_NAMES[currentZone] ?? `Zone ${currentZone}`;
 
   // Preload art manifests when zone changes (CDN fallback for missing local art)
   const ZONE_SLUGS: Record<number, string> = { 1: 'dark_cave', 2: 'windy_peaks' };
@@ -181,23 +214,17 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     }
   }, [currentZone]);
 
-  // Display position — coords are already zone-relative (0-9)
+  // Display position — raw coords converted to zone-relative (0-9)
   const displayPosition = useMemo(() => {
     if (!position) return null;
-    return { x: position.x, y: position.y };
-  }, [position]);
+    return toDisplayPosition(position, currentZone);
+  }, [position, currentZone]);
 
   const inSafetyZone = useMemo(() => {
     if (!displayPosition) return false;
-    if (currentZone === 1) {
-      // Z1 Dark Cave: quadrant safe zone
-      return displayPosition.x < 5 && displayPosition.y < 5;
-    }
-    if (currentZone === 2) {
-      // Z2 Windy Peaks: base camp (rows 0-2)
-      return displayPosition.y < 3;
-    }
-    return false;
+    // Safety zone only exists in Zone 1 (Dark Cave)
+    if (currentZone !== 1) return false;
+    return displayPosition.x < 5 && displayPosition.y < 5;
   }, [displayPosition, currentZone]);
 
   const spawnedData = useGameValue('Spawned', character?.id);
@@ -236,24 +263,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const allCharacterEntities = useMemo(() => {
     return Object.keys(charactersTable).filter(key => statsTable[key]);
   }, [charactersTable, statsTable]);
-
-  // NPC entities: spawned + position, but not shops/characters/monsters
-  // Detected by checking the Mobs template table for MobType.NPC
-  const allNpcEntities = useMemo(() => {
-    return Object.keys(positionTable).filter(key => {
-      if (!spawnedTable[key]) return false;
-      if (shopsTable[key] || charactersTable[key] || statsTable[key]) return false;
-      // Decode mobId from entityId and check the Mobs template
-      try {
-        const { mobId } = decodeMobInstanceId(key as `0x${string}`);
-        const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
-        const mobData = mobsTable[mobKey];
-        return mobData && toNumber(mobData.mobType) === MobType.NPC;
-      } catch {
-        return false;
-      }
-    });
-  }, [positionTable, spawnedTable, shopsTable, charactersTable, statsTable, mobsTable]);
 
   // ============================================================
   // Synchronous allCharacters — no async, no IPFS blocking
@@ -331,7 +340,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const isEntitySpawned = Boolean(spawnedEntityData?.spawned ?? false);
 
         const positionEntityData = positionTable[entity];
-        const posZoneId = toNumber(positionEntityData?.zoneId ?? 0);
         const posX = toNumber(positionEntityData?.x ?? 0);
         const posY = toNumber(positionEntityData?.y ?? 0);
 
@@ -368,7 +376,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           inBattle,
           isElite,
           isSpawned: isEntitySpawned,
-          position: { zoneId: posZoneId, x: posX, y: posY },
+          position: { x: posX, y: posY },
         } as Monster;
       });
     } catch (e) {
@@ -388,7 +396,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
     try {
       const _shops: Shop[] = allShopEntities.map(entity => {
-        const positionEntityData = getTableValue('PositionV2', entity);
+        const positionEntityData = getTableValue('PositionV2', entity) ?? getTableValue('Position', entity);
         const shopData = getTableValue('Shops', entity);
 
         if (!positionEntityData || !shopData) {
@@ -396,12 +404,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         }
 
         const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
-        const shopZoneId = toNumber(positionEntityData.zoneId);
         const x = toNumber(positionEntityData.x);
         const y = toNumber(positionEntityData.y);
         const name =
           SHOP_MOB_ID_TO_NAME[mobId.toString()] ??
-          SHOP_POSITION_TO_NAME[`${shopZoneId},${x},${y}`] ??
+          SHOP_POSITION_TO_NAME[`${x},${y}`] ??
           'Unknown Shop';
 
         const buyableItems = Array.isArray(shopData.buyableItems)
@@ -419,7 +426,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           gold: toBigInt(shopData.gold),
           maxGold: toBigInt(shopData.maxGold),
           name,
-          position: { zoneId: shopZoneId, x, y },
+          position: { x, y },
           priceMarkdown: toBigInt(shopData.priceMarkdown),
           priceMarkup: toBigInt(shopData.priceMarkup),
           sellableItems,
@@ -433,7 +440,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       const seen = new Set<string>();
       const dedupedShops: Shop[] = [];
       for (let i = _shops.length - 1; i >= 0; i--) {
-        const key = `${_shops[i].position.zoneId},${_shops[i].position.x},${_shops[i].position.y}`;
+        const key = `${_shops[i].position.x},${_shops[i].position.y}`;
         if (!seen.has(key)) {
           seen.add(key);
           dedupedShops.push(_shops[i]);
@@ -446,79 +453,30 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     }
   }, [allShopEntities, isSynced, renderError]);
 
-  // ============================================================
-  // NPCs — built from NPC entities detected via Mobs table
-  // ============================================================
-  const allNpcs = useMemo((): Npc[] => {
-    if (!isSynced) return [];
-    try {
-      return allNpcEntities.map(entity => {
-        const posData = positionTable[entity];
-        const npcZoneId = toNumber(posData?.zoneId ?? 0);
-        const x = toNumber(posData?.x ?? 0);
-        const y = toNumber(posData?.y ?? 0);
-        const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
-        const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
-        const mobData = mobsTable[mobKey];
-        const metadataUri = typeof mobData?.mobMetadata === 'string' ? mobData.mobMetadata : '';
-        const npcMeta = NPC_METADATA_MAP[metadataUri] ?? { name: `NPC #${mobId}`, interaction: 'dialogue' as const };
-
-        return {
-          entityId: entity,
-          mobId: mobId.toString(),
-          name: npcMeta.name,
-          interaction: npcMeta.interaction,
-          position: { zoneId: npcZoneId, x, y },
-          metadataUri,
-        };
-      });
-    } catch (e) {
-      renderError((e as Error)?.message ?? 'Failed to fetch NPCs.', e);
-      return [];
-    }
-  }, [allNpcEntities, positionTable, mobsTable, isSynced, renderError]);
-
   // Deprecated — reactivity handles updates. Kept for backward compatibility.
   const refreshEntities = useCallback(() => {}, []);
 
-  // Filter entities to current zone only
+  // Filter entities to current zone only.
+  // Uses PositionV2 zoneId (not coordinate bounds) to correctly exclude
+  // Zone 2 entities whose zone-relative coords overlap with Zone 1's range.
   const zonedMonsters = useMemo(() => {
-    return allMonsters.filter(m => m.position.zoneId === currentZone);
-  }, [allMonsters, currentZone]);
+    return allMonsters.filter(m =>
+      entityInZone(m.id, currentZone, positionTableV2, positionTableV1, toNumber),
+    );
+  }, [allMonsters, currentZone, positionTableV2, positionTableV1]);
 
   const zonedShops = useMemo(() => {
-    return allShops.filter(s => s.position.zoneId === currentZone);
-  }, [allShops, currentZone]);
-
-  const zonedNpcs = useMemo(() => {
-    return allNpcs.filter(n => n.position.zoneId === currentZone);
-  }, [allNpcs, currentZone]);
+    return allShops.filter(s =>
+      entityInZone(s.shopId, currentZone, positionTableV2, positionTableV1, toNumber),
+    );
+  }, [allShops, currentZone, positionTableV2, positionTableV1]);
 
   const zonedCharacters = useMemo(() => {
     return allCharacters.filter((c: any) => {
       if (!c.position) return false;
-      return c.position.zoneId === currentZone;
+      return entityInZone(c.id, currentZone, positionTableV2, positionTableV1, toNumber);
     });
-  }, [allCharacters, currentZone]);
-
-  // World bosses for the current zone
-  const worldBosses = useMemo((): WorldBoss[] => {
-    return Object.entries(worldBossTable)
-      .map(([key, row]) => ({
-        bossId: key,
-        mobId: toNumber(row.mobId),
-        zoneId: toNumber(row.zoneId),
-        spawnX: toNumber(row.spawnX),
-        spawnY: toNumber(row.spawnY),
-        entityId: (row.entityId as string) ?? '',
-        isAlive: !!row.entityId && row.entityId !== zeroHash,
-        respawnSeconds: toNumber(row.respawnSeconds),
-        lastKilledAt: toNumber(row.lastKilledAt),
-        spawnedAt: toNumber(row.spawnedAt),
-        active: Boolean(row.active),
-      }))
-      .filter(b => b.active && b.zoneId === currentZone);
-  }, [worldBossTable, currentZone]);
+  }, [allCharacters, currentZone, positionTableV2, positionTableV1]);
 
   const monstersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
@@ -546,13 +504,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     );
   }, [zonedShops, position]);
 
-  const npcsOnTile = useMemo(() => {
-    if (!position || (position.x === 0 && position.y === 0)) return [];
-    return zonedNpcs.filter(
-      n => n.position.x === position.x && n.position.y === position.y,
-    );
-  }, [zonedNpcs, position]);
-
   const otherCharactersOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];
     return zonedCharacters.filter(
@@ -563,6 +514,18 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         c.isSpawned,
     ) as Character[];
   }, [zonedCharacters, delegatorAddress, position]);
+
+  // Proactive ghost validation — verify monsters on the current tile are alive
+  // on-chain. Prevents "No enemies here" errors by evicting ghosts before the
+  // player clicks Fight. Fires once per tile, not per render.
+  const prevTileRef = useRef<string>('');
+  useEffect(() => {
+    const tileKey = position ? `${position.x},${position.y}` : '';
+    if (tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
+    prevTileRef.current = tileKey;
+
+    validateTileMonsters(monstersOnTile.map(m => m.id));
+  }, [position, monstersOnTile, validateTileMonsters]);
 
   // Clear spawn waiting state when Spawned value updates from store sync
   useEffect(() => {
@@ -651,7 +614,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       value={{
         allCharacters: zonedCharacters,
         allMonsters: zonedMonsters,
-        allNpcs: zonedNpcs,
         allShops: zonedShops,
         currentZone,
         currentZoneName,
@@ -661,14 +623,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         isSpawned,
         isSpawning: spawnTx.isLoading || isWaitingForSpawn,
         monstersOnTile,
-        npcsOnTile,
         onSpawn,
         otherCharactersOnTile,
         position,
         refreshEntities,
         shopsOnTile,
         visibleMonstersOnTile,
-        worldBosses,
       }}
     >
       {children}
