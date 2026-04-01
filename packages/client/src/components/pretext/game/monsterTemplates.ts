@@ -13,6 +13,24 @@
  * - High contrast: deepest darks AND brightest whites in the same creature
  */
 
+import basiliskSrc from './assets/basilisk-source.png';
+
+// ---------------------------------------------------------------------------
+// Source image preloader — loads PNGs for image-based templates
+// ---------------------------------------------------------------------------
+
+const sourceImages = new Map<string, HTMLImageElement>();
+
+function preloadSourceImage(id: string, src: string): void {
+  if (sourceImages.has(id)) return;
+  const img = new Image();
+  img.src = src;
+  sourceImages.set(id, img);
+}
+
+// Kick off preloads immediately at module init
+preloadSourceImage('basilisk', basiliskSrc);
+
 export type MonsterTemplate = {
   id: string;
   name: string;
@@ -2056,358 +2074,30 @@ function drawDuskDrake(ctx: CanvasRenderingContext2D, w: number, h: number) {
 // Uses hue-shifted color ramps, deep internal contrast, angular silhouette
 // ---------------------------------------------------------------------------
 function drawBasilisk(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // =========================================================================
-  // BASILISK — D&D-style: 8-legged armored reptilian beast, low-slung,
-  // heavy jaw, dorsal spines. Painted like charcoal on black paper:
-  // lay down the darkest mass first, then carve form with a few lighter
-  // values. Only eyes and teeth get real brightness.
-  //
-  // Palette (think charcoal + conte crayon):
-  //   Deep shadow:   rgb(18, 15, 22)   — near-black, cool violet undertone
-  //   Body shadow:   rgb(38, 34, 42)   — dark charcoal
-  //   Body mid:      rgb(58, 52, 60)   — mid charcoal (this is the LIGHTEST body gets)
-  //   Scale edge:    rgb(78, 70, 82)   — where light catches individual scales
-  //   Belly:         rgb(55, 50, 45)   — warmer, desaturated brown-gray
-  //   Eye:           rgb(80, 255, 60)  — toxic green (the ONLY vivid color)
-  //   Teeth:         rgb(200, 195, 180) — bone white
-  //   Mouth:         rgb(45, 8, 8)     — deep blood red
-  // =========================================================================
-
-  // === LAYER 1: Tail — sweeps right, thick at base, angular blade tip ===
-  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.82, h * 0.42, w * 0.16,
-    52, 46, 55,    // core: dark charcoal
-    18, 15, 22,    // shadow: near-black
-    68, 60, 72,    // highlight: slightly lighter charcoal
-  );
-  ctx.beginPath();
-  ctx.moveTo(w * 0.72, h * 0.40);
-  ctx.bezierCurveTo(w * 0.80, h * 0.34, w * 0.90, h * 0.26, w * 0.98, h * 0.20);
-  ctx.lineTo(w * 0.97, h * 0.24);
-  ctx.bezierCurveTo(w * 0.92, h * 0.34, w * 0.84, h * 0.44, w * 0.76, h * 0.50);
-  ctx.bezierCurveTo(w * 0.74, h * 0.48, w * 0.72, h * 0.44, w * 0.72, h * 0.40);
-  ctx.closePath();
-  ctx.fill();
-  // Tail ridge highlight — single bright edge catches light
-  ctx.strokeStyle = 'rgba(78,70,82,0.5)';
-  ctx.lineWidth = w * 0.005;
-  ctx.beginPath();
-  ctx.moveTo(w * 0.73, h * 0.39);
-  ctx.bezierCurveTo(w * 0.82, h * 0.32, w * 0.91, h * 0.24, w * 0.97, h * 0.21);
-  ctx.stroke();
-  // Tail scales
-  scaleTexture(ctx, w * 0.72, h * 0.24, w * 0.24, h * 0.24, w * 0.022,
-    'rgb(22,18,26)', 'rgb(68,60,72)', 0.5);
-
-  // === LAYER 2: Hind legs (2 pairs — 8-legged beast) ===
-  // Far hind leg pair (darker, further back)
-  drawLimb(ctx, w * 0.68, h * 0.52, w * 0.72, h * 0.68, w * 0.70, h * 0.88, w * 0.012, 'rgb(35,30,38)');
-  drawLimb(ctx, w * 0.60, h * 0.52, w * 0.56, h * 0.70, w * 0.58, h * 0.88, w * 0.012, 'rgb(35,30,38)');
-  // Near hind leg pair (slightly brighter)
-  drawLimb(ctx, w * 0.66, h * 0.50, w * 0.70, h * 0.65, w * 0.68, h * 0.86, w * 0.014, 'rgb(48,42,52)');
-  drawLimb(ctx, w * 0.58, h * 0.50, w * 0.54, h * 0.68, w * 0.56, h * 0.86, w * 0.014, 'rgb(48,42,52)');
-  // Claws on hind legs
-  for (const cx of [0.68, 0.56, 0.70, 0.58]) {
-    ctx.fillStyle = 'rgb(60,55,50)';
-    ctx.beginPath();
-    ctx.moveTo(w * (cx - 0.008), h * 0.86);
-    ctx.lineTo(w * cx, h * 0.92);
-    ctx.lineTo(w * (cx + 0.008), h * 0.86);
-    ctx.closePath();
-    ctx.fill();
+  // Image-based template: paint the pre-loaded source image onto the canvas.
+  // The renderer's character selection, lighting, gamma, and rim coloring
+  // all operate on this image data downstream.
+  const img = sourceImages.get('basilisk');
+  if (img && img.complete && img.naturalWidth > 0) {
+    // Center the image in the canvas, maintaining aspect ratio
+    const imgAspect = img.naturalWidth / img.naturalHeight;
+    const canvasAspect = w / h;
+    let dw: number, dh: number, dx: number, dy: number;
+    if (imgAspect > canvasAspect) {
+      // Image wider than canvas — fit to width
+      dw = w;
+      dh = w / imgAspect;
+      dx = 0;
+      dy = (h - dh) / 2;
+    } else {
+      // Image taller than canvas — fit to height
+      dh = h;
+      dw = h * imgAspect;
+      dx = (w - dw) / 2;
+      dy = 0;
+    }
+    ctx.drawImage(img, dx, dy, dw, dh);
   }
-
-  // === LAYER 3: Main body — massive low-slung horizontal bulk ===
-  // This is the core mass. Think of a komodo dragon crossed with an armadillo.
-  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.42, h * 0.40, w * 0.30,
-    55, 48, 58,    // core: charcoal
-    18, 15, 22,    // shadow: near-black
-    70, 62, 74,    // highlight: light charcoal
-  );
-  ctx.beginPath();
-  // Broad, heavy torso — wider than tall
-  ctx.moveTo(w * 0.18, h * 0.32);
-  ctx.bezierCurveTo(w * 0.30, h * 0.22, w * 0.55, h * 0.20, w * 0.72, h * 0.28);
-  ctx.bezierCurveTo(w * 0.78, h * 0.34, w * 0.78, h * 0.52, w * 0.72, h * 0.58);
-  ctx.bezierCurveTo(w * 0.60, h * 0.66, w * 0.35, h * 0.66, w * 0.22, h * 0.58);
-  ctx.bezierCurveTo(w * 0.15, h * 0.52, w * 0.14, h * 0.40, w * 0.18, h * 0.32);
-  ctx.closePath();
-  ctx.fill();
-
-  // Underbelly — slightly warmer, desaturated brown
-  ctx.fillStyle = 'rgba(55,50,45,0.35)';
-  ctx.beginPath();
-  ctx.moveTo(w * 0.26, h * 0.56);
-  ctx.bezierCurveTo(w * 0.38, h * 0.64, w * 0.56, h * 0.64, w * 0.68, h * 0.56);
-  ctx.lineTo(w * 0.64, h * 0.52);
-  ctx.bezierCurveTo(w * 0.54, h * 0.58, w * 0.36, h * 0.58, w * 0.28, h * 0.52);
-  ctx.closePath();
-  ctx.fill();
-
-  // Body shadow — deep AO under the mass
-  ambientOcclusion(ctx, w * 0.45, h * 0.56, w * 0.22, h * 0.06, 0.40);
-
-  // Scale texture — dense, tight, low-contrast
-  scaleTexture(ctx, w * 0.16, h * 0.24, w * 0.62, h * 0.40, w * 0.028,
-    'rgb(22,18,26)', 'rgb(68,60,72)', 0.70);
-
-  // Armored plate ridges — horizontal bands across body
-  ctx.strokeStyle = 'rgba(75,68,80,0.35)';
-  ctx.lineWidth = w * 0.004;
-  for (let i = 0; i < 6; i++) {
-    const t = i / 5;
-    const by = 0.30 + t * 0.24;
-    ctx.beginPath();
-    ctx.moveTo(w * (0.22 + t * 0.04), h * by);
-    ctx.bezierCurveTo(w * 0.40, h * (by - 0.02), w * 0.58, h * (by - 0.02), w * (0.70 - t * 0.04), h * by);
-    ctx.stroke();
-  }
-
-  // Muscle highlights — very subtle, just enough to read form
-  highlight(ctx, w * 0.36, h * 0.34, w * 0.05, 'rgb(72,65,76)', 0.20);
-  highlight(ctx, w * 0.52, h * 0.36, w * 0.04, 'rgb(70,63,74)', 0.18);
-  highlight(ctx, w * 0.44, h * 0.30, w * 0.06, 'rgb(75,68,80)', 0.15);
-
-  // === LAYER 4: Front legs (2 pairs — 8-legged beast) ===
-  // Far front legs (darker)
-  drawLimb(ctx, w * 0.34, h * 0.50, w * 0.30, h * 0.68, w * 0.32, h * 0.88, w * 0.012, 'rgb(35,30,38)');
-  drawLimb(ctx, w * 0.26, h * 0.48, w * 0.22, h * 0.66, w * 0.24, h * 0.88, w * 0.012, 'rgb(35,30,38)');
-  // Near front legs (slightly brighter, overlapping body)
-  drawLimb(ctx, w * 0.32, h * 0.48, w * 0.28, h * 0.66, w * 0.30, h * 0.86, w * 0.014, 'rgb(48,42,52)');
-  drawLimb(ctx, w * 0.24, h * 0.46, w * 0.20, h * 0.64, w * 0.22, h * 0.86, w * 0.014, 'rgb(48,42,52)');
-  // Claws on front legs
-  for (const cx of [0.30, 0.22, 0.32, 0.24]) {
-    ctx.fillStyle = 'rgb(60,55,50)';
-    ctx.beginPath();
-    ctx.moveTo(w * (cx - 0.008), h * 0.86);
-    ctx.lineTo(w * cx, h * 0.92);
-    ctx.lineTo(w * (cx + 0.008), h * 0.86);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // Leg joint shadows
-  ambientOcclusion(ctx, w * 0.30, h * 0.52, w * 0.04, h * 0.03, 0.30);
-  ambientOcclusion(ctx, w * 0.22, h * 0.50, w * 0.04, h * 0.03, 0.30);
-  ambientOcclusion(ctx, w * 0.66, h * 0.52, w * 0.04, h * 0.03, 0.30);
-  ambientOcclusion(ctx, w * 0.58, h * 0.52, w * 0.04, h * 0.03, 0.30);
-
-  // === LAYER 5: Dorsal spines — thick angular plates along the spine ===
-  for (let i = 0; i < 10; i++) {
-    const t = i / 9;
-    const sx = 0.24 + t * 0.48;
-    const sy = 0.26 + Math.sin(t * Math.PI * 0.8) * 0.06;
-    // Height: tallest at shoulders, tapering to tail
-    const spineH = (0.08 + (1 - t) * 0.06) * (i < 3 ? 1.4 : i < 6 ? 1.1 : 0.7);
-    const spineW = 0.018 + (1 - t) * 0.010;
-
-    // Spine body — dark
-    ctx.fillStyle = `rgb(${40 - Math.floor(t * 12)},${34 - Math.floor(t * 10)},${44 - Math.floor(t * 12)})`;
-    ctx.beginPath();
-    ctx.moveTo(w * (sx - spineW), h * sy);
-    ctx.lineTo(w * (sx - spineW * 0.2), h * (sy - spineH));
-    ctx.lineTo(w * (sx + spineW * 0.2), h * (sy - spineH * 0.90));
-    ctx.lineTo(w * (sx + spineW), h * sy);
-    ctx.closePath();
-    ctx.fill();
-
-    // Edge catch — the only brightness on spines
-    ctx.fillStyle = `rgba(85,78,90,${0.40 - t * 0.15})`;
-    ctx.beginPath();
-    ctx.moveTo(w * (sx + spineW * 0.3), h * sy);
-    ctx.lineTo(w * (sx + spineW * 0.4), h * (sy - spineH * 0.80));
-    ctx.lineTo(w * (sx + spineW), h * sy);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // === LAYER 6: Neck — thick, muscular, transitions body to head ===
-  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.16, h * 0.28, w * 0.12,
-    55, 48, 58,    // core
-    20, 16, 24,    // shadow
-    72, 64, 76,    // highlight
-  );
-  ctx.beginPath();
-  ctx.moveTo(w * 0.22, h * 0.34);
-  ctx.bezierCurveTo(w * 0.18, h * 0.28, w * 0.14, h * 0.22, w * 0.10, h * 0.18);
-  ctx.bezierCurveTo(w * 0.08, h * 0.14, w * 0.08, h * 0.10, w * 0.12, h * 0.10);
-  ctx.bezierCurveTo(w * 0.18, h * 0.10, w * 0.24, h * 0.16, w * 0.28, h * 0.24);
-  ctx.bezierCurveTo(w * 0.30, h * 0.30, w * 0.28, h * 0.36, w * 0.22, h * 0.34);
-  ctx.closePath();
-  ctx.fill();
-  // Neck muscle lines
-  ctx.strokeStyle = 'rgba(72,65,76,0.25)';
-  ctx.lineWidth = w * 0.004;
-  ctx.beginPath();
-  ctx.moveTo(w * 0.14, h * 0.14);
-  ctx.bezierCurveTo(w * 0.18, h * 0.20, w * 0.22, h * 0.28, w * 0.24, h * 0.32);
-  ctx.stroke();
-  // Neck scales
-  scaleTexture(ctx, w * 0.08, h * 0.10, w * 0.20, h * 0.24, w * 0.018,
-    'rgb(22,18,26)', 'rgb(65,58,68)', 0.60);
-
-  // === LAYER 7: Head — angular, heavy, broad jaw. Low & flat like a monitor ===
-  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.08, h * 0.12, w * 0.10,
-    60, 52, 62,    // core: slightly lighter than body (catches more light)
-    20, 16, 24,    // shadow
-    78, 70, 82,    // highlight: lightest the body gets
-  );
-  ctx.beginPath();
-  // Angular wedge-shaped skull
-  ctx.moveTo(w * 0.18, h * 0.10);
-  ctx.lineTo(w * 0.14, h * 0.06);   // brow ridge
-  ctx.bezierCurveTo(w * 0.08, h * 0.04, w * 0.02, h * 0.06, w * -0.01, h * 0.12);
-  ctx.lineTo(w * -0.02, h * 0.18);  // snout tip
-  ctx.bezierCurveTo(w * -0.01, h * 0.24, w * 0.04, h * 0.26, w * 0.10, h * 0.26);
-  ctx.bezierCurveTo(w * 0.16, h * 0.26, w * 0.22, h * 0.22, w * 0.22, h * 0.16);
-  ctx.bezierCurveTo(w * 0.22, h * 0.12, w * 0.20, h * 0.10, w * 0.18, h * 0.10);
-  ctx.closePath();
-  ctx.fill();
-
-  // Brow ridge shadow
-  ctx.fillStyle = 'rgba(10,6,14,0.50)';
-  ctx.beginPath();
-  ctx.moveTo(w * 0.02, h * 0.10);
-  ctx.bezierCurveTo(w * 0.06, h * 0.11, w * 0.14, h * 0.11, w * 0.18, h * 0.09);
-  ctx.lineTo(w * 0.16, h * 0.13);
-  ctx.bezierCurveTo(w * 0.12, h * 0.13, w * 0.06, h * 0.13, w * 0.03, h * 0.12);
-  ctx.closePath();
-  ctx.fill();
-
-  // Head scales — finest grain
-  scaleTexture(ctx, w * 0.00, h * 0.06, w * 0.20, h * 0.20, w * 0.014,
-    'rgb(22,18,26)', 'rgb(72,65,76)', 0.65);
-
-  // Brow ridge — angular bone plate
-  ctx.fillStyle = 'rgb(52,46,55)';
-  ctx.beginPath();
-  ctx.moveTo(w * 0.02, h * 0.08);
-  ctx.lineTo(w * 0.04, h * 0.05);
-  ctx.bezierCurveTo(w * 0.08, h * 0.03, w * 0.14, h * 0.03, w * 0.16, h * 0.05);
-  ctx.lineTo(w * 0.18, h * 0.08);
-  ctx.lineTo(w * 0.16, h * 0.09);
-  ctx.bezierCurveTo(w * 0.12, h * 0.06, w * 0.06, h * 0.06, w * 0.04, h * 0.09);
-  ctx.closePath();
-  ctx.fill();
-  // Brow highlight — subtle
-  highlight(ctx, w * 0.09, h * 0.05, w * 0.04, 'rgb(82,75,86)', 0.20);
-
-  // === LAYER 8: Eyes — THE focal point. Toxic green, the ONLY vivid color ===
-  // These MUST be the brightest thing in the entire creature.
-  // Outer glow halo
-  highlight(ctx, w * 0.06, h * 0.12, w * 0.04, 'rgb(40,180,30)', 0.30);
-  highlight(ctx, w * 0.14, h * 0.11, w * 0.04, 'rgb(40,180,30)', 0.30);
-  // Mid glow
-  highlight(ctx, w * 0.06, h * 0.12, w * 0.030, 'rgb(60,220,40)', 0.45);
-  highlight(ctx, w * 0.14, h * 0.11, w * 0.030, 'rgb(60,220,40)', 0.45);
-  // Eye orbs — intense green
-  ctx.fillStyle = 'rgb(80,255,60)';
-  fillCircle(ctx, w * 0.06, h * 0.12, w * 0.022);
-  fillCircle(ctx, w * 0.14, h * 0.11, w * 0.022);
-  // Hot core
-  ctx.fillStyle = 'rgb(160,255,120)';
-  fillCircle(ctx, w * 0.06, h * 0.12, w * 0.012);
-  fillCircle(ctx, w * 0.14, h * 0.11, w * 0.012);
-  // Vertical slit pupils
-  ctx.fillStyle = 'rgb(2,1,0)';
-  ctx.fillRect(w * 0.056, h * 0.105, w * 0.008, h * 0.030);
-  ctx.fillRect(w * 0.136, h * 0.095, w * 0.008, h * 0.030);
-  // Specular catch light
-  ctx.fillStyle = 'rgb(255,255,230)';
-  fillCircle(ctx, w * 0.054, h * 0.115, w * 0.006);
-  fillCircle(ctx, w * 0.134, h * 0.105, w * 0.006);
-
-  // === LAYER 9: Jaw — open, showing teeth. Deep mouth interior ===
-  // Lower jaw
-  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.06, h * 0.30, w * 0.10,
-    50, 44, 52,    // core
-    18, 14, 20,    // shadow
-    65, 58, 68,    // highlight
-  );
-  ctx.beginPath();
-  ctx.moveTo(w * 0.02, h * 0.24);
-  ctx.bezierCurveTo(w * -0.02, h * 0.30, w * -0.02, h * 0.36, w * 0.02, h * 0.38);
-  ctx.bezierCurveTo(w * 0.08, h * 0.40, w * 0.16, h * 0.36, w * 0.20, h * 0.28);
-  ctx.lineTo(w * 0.18, h * 0.24);
-  ctx.closePath();
-  ctx.fill();
-  // Lower jaw scales
-  scaleTexture(ctx, w * 0.00, h * 0.24, w * 0.18, h * 0.14, w * 0.014,
-    'rgb(20,16,24)', 'rgb(62,55,65)', 0.55);
-
-  // Mouth interior — near-black with red tint
-  ctx.fillStyle = 'rgb(30,6,8)';
-  ctx.beginPath();
-  ctx.moveTo(w * 0.04, h * 0.24);
-  ctx.bezierCurveTo(w * 0.00, h * 0.28, w * 0.02, h * 0.34, w * 0.06, h * 0.35);
-  ctx.bezierCurveTo(w * 0.10, h * 0.35, w * 0.16, h * 0.32, w * 0.17, h * 0.26);
-  ctx.lineTo(w * 0.14, h * 0.24);
-  ctx.closePath();
-  ctx.fill();
-  // Throat glow — dark blood red
-  highlight(ctx, w * 0.07, h * 0.30, w * 0.035, 'rgb(80,12,8)', 0.35);
-
-  // Fangs — bone white, the second brightest element
-  ctx.fillStyle = 'rgb(200,195,180)';
-  // Upper fangs
-  ctx.beginPath();
-  ctx.moveTo(w * 0.04, h * 0.23);
-  ctx.lineTo(w * 0.025, h * 0.33);
-  ctx.lineTo(w * 0.055, h * 0.33);
-  ctx.lineTo(w * 0.06, h * 0.23);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(w * 0.13, h * 0.23);
-  ctx.lineTo(w * 0.155, h * 0.33);
-  ctx.lineTo(w * 0.125, h * 0.33);
-  ctx.lineTo(w * 0.12, h * 0.23);
-  ctx.closePath();
-  ctx.fill();
-  // Small teeth — upper
-  ctx.fillStyle = 'rgb(180,175,165)';
-  for (let i = 0; i < 4; i++) {
-    const tx = 0.06 + i * 0.018;
-    ctx.beginPath();
-    ctx.moveTo(w * tx, h * 0.24);
-    ctx.lineTo(w * (tx - 0.002), h * 0.29);
-    ctx.lineTo(w * (tx + 0.006), h * 0.29);
-    ctx.lineTo(w * (tx + 0.008), h * 0.24);
-    ctx.closePath();
-    ctx.fill();
-  }
-  // Lower teeth
-  ctx.fillStyle = 'rgb(170,165,155)';
-  for (let i = 0; i < 3; i++) {
-    const tx = 0.05 + i * 0.026;
-    ctx.beginPath();
-    ctx.moveTo(w * tx, h * 0.35);
-    ctx.lineTo(w * (tx + 0.004), h * 0.29);
-    ctx.lineTo(w * (tx + 0.008), h * 0.35);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // === LAYER 10: Final form — edge highlights and deep shadows ===
-  // Spine ridge highlight — runs along the top of the body
-  ctx.strokeStyle = 'rgba(82,75,88,0.30)';
-  ctx.lineWidth = w * 0.005;
-  ctx.beginPath();
-  ctx.moveTo(w * 0.16, h * 0.14);
-  ctx.bezierCurveTo(w * 0.30, h * 0.22, w * 0.50, h * 0.22, w * 0.72, h * 0.28);
-  ctx.stroke();
-
-  // Body volume highlights — carving the 3D form with minimal light
-  highlight(ctx, w * 0.35, h * 0.32, w * 0.04, 'rgb(75,68,80)', 0.18);
-  highlight(ctx, w * 0.50, h * 0.34, w * 0.035, 'rgb(72,65,76)', 0.15);
-  highlight(ctx, w * 0.14, h * 0.16, w * 0.03, 'rgb(78,70,82)', 0.20);
-
-  // Deep AO where legs meet body
-  ambientOcclusion(ctx, w * 0.26, h * 0.54, w * 0.06, h * 0.04, 0.40);
-  ambientOcclusion(ctx, w * 0.64, h * 0.54, w * 0.06, h * 0.04, 0.40);
-
-  // === LAYER 11: Side lighting — very subtle, from upper-left ===
-  ctx.fillStyle = sideLight(ctx, w * 0.0, h * 0.0, w * 0.5, h * 1.0, 70, 65, 75);
-  ctx.fillRect(0, 0, w, h);
 }
 
 // ---------------------------------------------------------------------------
@@ -2518,8 +2208,8 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   {
     id: 'basilisk',
     name: 'Basilisk',
-    gridWidth: 18,
-    gridHeight: 10,
+    gridWidth: 26,
+    gridHeight: 9,
     monsterClass: 0,
     level: 12,
     isBoss: true,
