@@ -558,7 +558,7 @@ export const TileDetailsPanel = (): JSX.Element => {
       .concat(
         (opponent as Character)?.worldStatusEffects
           ?.filter(effect => effect.active)
-          .map(effect => effect.name) ?? [],
+          ?.map(effect => effect.name) ?? [],
       );
     return [...new Set(names)];
   }, [opponent, statusEffectActions]);
@@ -577,7 +577,7 @@ export const TileDetailsPanel = (): JSX.Element => {
       .concat(
         userCharacterForBattleRendering?.worldStatusEffects
           ?.filter(effect => effect.active)
-          .map(effect => effect.name) ?? [],
+          ?.map(effect => effect.name) ?? [],
       );
     return [...new Set(names)];
   }, [statusEffectActions, userCharacterForBattleRendering]);
