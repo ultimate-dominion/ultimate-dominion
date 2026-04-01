@@ -18,6 +18,8 @@ import {
 import { type FragmentStatus } from '../contexts/FragmentContext';
 import { getFragmentColor, getFragmentImage } from '../utils/fragmentImages';
 import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
+import { SHOW_Z2 } from '../lib/env';
+import { GameLoreReader } from './pretext/game/GameLoreReader';
 
 /* ──────────────────────── Animations ──────────────────────── */
 
@@ -264,6 +266,9 @@ export const FragmentReadModal = ({
               />
 
               {/* Narrative text */}
+              {SHOW_Z2 ? (
+                <GameLoreReader text={fragment.narrative} accentColor={color} />
+              ) : (
               <Text
                 fontSize={{ base: 'sm', md: 'md' }}
                 lineHeight="1.85"
@@ -280,6 +285,7 @@ export const FragmentReadModal = ({
               >
                 {fragment.narrative}
               </Text>
+              )}
 
               {/* Claim metadata */}
               <VStack spacing={0.5} pt={2}>
