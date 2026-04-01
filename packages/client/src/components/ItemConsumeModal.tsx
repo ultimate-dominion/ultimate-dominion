@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -50,6 +51,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
   ...item
 }): JSX.Element => {
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
   const { renderSuccess } = useToast();
   const {
     delegatorAddress,
@@ -116,7 +118,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
       }
     }
 
-    setStatusText(`Consuming ${item.name}...`);
+    setStatusText(t('consume.consumingItem', { name: item.name }));
     const result = await consumeTx.execute(async () => {
       const { error, success } = await useWorldConsumableItem(character.id, item.tokenId);
       if (error && !success) throw new Error(error);
@@ -124,7 +126,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     });
 
     if (result !== undefined) {
-      renderSuccess(`${item.name} was consumed!`);
+      renderSuccess(t('consume.consumedSuccess', { name: item.name }));
       setItemBalance(prev => prev - BigInt(1));
       setIsConsumed(true);
     }
@@ -146,7 +148,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     if (!character) return;
     if (!delegatorAddress) return;
 
-    setStatusText(`Equipping ${item.name}...`);
+    setStatusText(t('equip.equippingItem', { name: item.name }));
     const result = await equipTx.execute(async () => {
       const { error, success } = await equipItems(character.id, [item.tokenId]);
       if (error && !success) {
@@ -158,9 +160,9 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
 
     if (result !== undefined) {
       if (result === 'already-equipped') {
-        renderSuccess(`${item.name} is already equipped`);
+        renderSuccess(t('equip.alreadyEquipped', { name: item.name }));
       } else {
-        renderSuccess(`${item.name} equipped successfully!`);
+        renderSuccess(t('consume.equippedSuccess', { name: item.name }));
       }
       setStatusText('');
       onClose();
@@ -188,7 +190,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
     });
 
     if (result !== undefined) {
-      renderSuccess(`${item.name} unequipped successfully!`);
+      renderSuccess(t('consume.unequippedSuccess', { name: item.name }));
       onClose();
     }
   }, [
@@ -260,18 +262,18 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>{isOwner ? 'Consumable' : 'Make an offer'}</ModalHeader>
+        <ModalHeader>{isOwner ? t('consume.consumable') : t('equip.makeOffer')}</ModalHeader>
         <ModalCloseButton />
         <ModalBody px={{ base: 6, sm: 8 }}>
           {isOwner && character ? (
             <>
               {isConsumed ? (
-                <Text mb={6}>{item.name} was consumed!</Text>
+                <Text mb={6}>{t('consume.consumed', { name: item.name })}</Text>
               ) : (
                 <Text mb={6}>
-                  {isEquipped ? 'This consumable is equipped and ready for combat.' : 'This consumable is not equipped.'}{' '}
+                  {isEquipped ? t('consume.equippedReady') : t('consume.notEquipped')}{' '}
                   {item.validTime > BigInt(0) &&
-                    `Its effect lasts ${getMinutesAndSeconds(item.validTime)}.`}
+                    t('consume.effectLasts', { duration: getMinutesAndSeconds(item.validTime) })}
                 </Text>
               )}
               {isHealthRestore && (
@@ -284,12 +286,12 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               )}
             </>
           ) : (
-            <Text mb={6}>Do you want to make an offer for this item?</Text>
+            <Text mb={6}>{t('equip.wantOffer')}</Text>
           )}
           <ItemCard {...item} balance={itemBalance} isEquipped={isEquipped} />
           {isOwner && (
             <Text color="gray.500" fontSize="xs" mt={2}>
-              Slot {totalEquippedSlots}/{MAX_EQUIPPED_WEAPONS} equipped
+              {t('consume.slotCount', { current: totalEquippedSlots, max: MAX_EQUIPPED_WEAPONS })}
             </Text>
           )}
           {statusText && (
@@ -299,22 +301,22 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
           )}
           {!!currentBattle && isOwner && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
-              Use consumables through the battle panel during combat.
+              {t('consume.useThroughBattle')}
             </Text>
           )}
           {isOwner && !isSpawned && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
-              You must be spawned to consume items.
+              {t('consume.mustBeSpawned')}
             </Text>
           )}
           {isHealthRestore && isHealthFull && isOwner && !isConsumed && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
-              Your health is full.
+              {t('consume.healthFull')}
             </Text>
           )}
           {maxStacksReached && isOwner && !isConsumed && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
-              You have reached the maximum of this item you can consume at once.
+              {t('consume.maxStacks')}
             </Text>
           )}
         </ModalBody>
@@ -325,45 +327,45 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
               onClick={onClose}
               variant="ghost"
             >
-              Close
+              {t('common.close')}
             </Button>
           </ModalFooter>
         ) : (
           <ModalFooter gap={3} flexWrap="wrap" justifyContent="center">
             <Button isDisabled={isAnyLoading} onClick={onClose} variant="ghost">
-              Cancel
+              {t('common.cancel')}
             </Button>
             {isOwner && !isEquipped && (
               <Button
                 isDisabled={!!currentBattle || maxSlotsReached}
                 isLoading={equipTx.isLoading}
-                loadingText="Equipping..."
+                loadingText={t('equip.equipping')}
                 onClick={onEquipItem}
                 variant="outline"
               >
-                Equip
+                {t('equip.equip')}
               </Button>
             )}
             {isOwner && !isEquipped && maxSlotsReached && (
               <Text color="orange" fontSize="xs">
-                Unequip something first
+                {t('consume.unequipFirst')}
               </Text>
             )}
             {isOwner && isEquipped && (
               <Button
                 isDisabled={!!currentBattle}
                 isLoading={unequipTx.isLoading}
-                loadingText="Unequipping..."
+                loadingText={t('equip.unequipping')}
                 onClick={onUnequipItem}
                 variant="outline"
               >
-                Unequip
+                {t('equip.unequip')}
               </Button>
             )}
             <Button
               isDisabled={isConsumeDisabled}
               isLoading={consumeTx.isLoading}
-              loadingText="Consuming..."
+              loadingText={t('consume.consuming')}
               onClick={() =>
                 isOwner
                   ? onUseConsumable()
@@ -372,7 +374,7 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
                     )
               }
             >
-              {isOwner ? 'Consume' : 'Make Offer'}
+              {isOwner ? t('consume.consume') : t('consume.makeOffer')}
             </Button>
           </ModalFooter>
         )}
@@ -380,11 +382,11 @@ export const ItemConsumeModal: React.FC<ItemConsumeModalProps> = ({
 
       {authMethod !== 'embedded' && (
         <LootManagerAllowanceModal
-          heading="Allow Consumables"
+          heading={t('allowance.consumeTitle')}
           isOpen={isAllowanceModalOpen}
-          message="In order to consume items, you must allow the game to use your items."
+          message={t('allowance.consumeMessage')}
           onClose={onCloseAllowanceModal}
-          successMessage="You can now consume your item."
+          successMessage={t('allowance.consumeSuccess')}
         />
       )}
     </Modal>

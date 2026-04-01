@@ -16,7 +16,7 @@ import {
   PowerSource,
   Race,
 } from '../utils/types';
-import { ITEM_DESCRIPTIONS } from './itemDescriptions';
+import i18n from '../i18n';
 
 export const etherToFixedNumber = (
   value: bigint | string,
@@ -199,7 +199,7 @@ export const parseTextUri = (uri: string): string => {
 export const isTextOnlyUri = (uri: string): boolean => {
   if (!uri) return false;
   const protocol = uri.split(':')[0].toLowerCase();
-  return ['text', 'monster', 'item', 'armor', 'weapon', 'spell', 'consumable', 'accessory'].includes(protocol);
+  return ['text', 'monster', 'item', 'armor', 'weapon', 'spell', 'consumable', 'accessory', 'quest'].includes(protocol);
 };
 
 const METADATA_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
@@ -243,7 +243,7 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
     const name = parseTextUri(uri);
     return {
       name,
-      description: ITEM_DESCRIPTIONS[uri] ?? '',
+      description: i18n.t(uri, { ns: 'items', defaultValue: '' }),
       image: '',
     };
   }
@@ -371,6 +371,10 @@ export const uriToHttp = (uri: string): string[] => {
       case 'ipfs': {
         const hash = uri.match(/^ipfs:(\/\/)?(.*)$/i)?.[2];
         if (!hash) return [];
+        // Guard: if the "hash" is actually an HTTP URL, use it directly
+        if (hash.startsWith('http://') || hash.startsWith('https://')) {
+          return [hash.startsWith('http://') ? 'https' + hash.substring(4) : hash];
+        }
         return IPFS_GATEWAYS.map(gateway => `${gateway}/ipfs/${hash}`);
       }
       case 'ipns': {

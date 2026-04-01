@@ -14,8 +14,15 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
+import { Trans, useTranslation } from 'react-i18next';
 import SafeTypist from './SafeTypist';
 
+import { SHOW_Z2 } from '../lib/env';
+import { BattleCombatLog } from './pretext/game/BattleCombatLog';
+import { CombatTypewriter } from './pretext/game/CombatTypewriter';
+import { GameItemTooltip } from './pretext/game/GameItemTooltip';
+import { useCombatLogEntries } from '../hooks/useCombatLogEntries';
+import { useCombatNarrative } from '../hooks/useCombatNarrative';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
@@ -29,7 +36,6 @@ import {
   BATTLE_OUTCOME_SEEN_KEY,
   SLOT_ORDER_KEY_PREFIX,
   STATUS_EFFECT_NAME_MAPPING,
-  STATUS_EFFECT_DESCRIPTION_MAPPING,
 } from '../utils/constants';
 import { getItemImage } from '../utils/itemImages';
 import { etherToFixedNumber, removeEmoji } from '../utils/helpers';
@@ -37,21 +43,10 @@ import { ConsumableQuickUse } from './ConsumableQuickUse';
 import { ItemEquipModal } from './ItemEquipModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 
-export const MONSTER_MOVE_MAPPING: Record<string, string> = {
-  '1': 'Razor Claws',      // Dire Rat
-  '2': 'Elemental Burst',  // Fungal Shaman
-  '3': 'Stone Fist',       // Cavern Brute
-  '4': 'Elemental Burst',  // Crystal Elemental
-  '5': 'Crushing Slam',    // Ironhide Troll
-  '6': 'Venomous Bite',    // Phase Spider
-  '7': 'Dark Magic',       // Bonecaster
-  '8': 'Crushing Slam',    // Rock Golem
-  '9': 'Shadow Strike',    // Pale Stalker
-  '10': 'Elemental Burst', // Dusk Drake
-  '11': 'Basilisk Fangs',  // Basilisk (boss)
-};
-
 export const ActionsPanel = (): JSX.Element => {
+  const { t } = useTranslation('ui');
+  const { t: te } = useTranslation('effects');
+  const { t: tm } = useTranslation('monsters');
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
   const { isSpawned, visibleMonstersOnTile, position } = useMap();
@@ -79,11 +74,19 @@ export const ActionsPanel = (): JSX.Element => {
   });
 
   // Display name prefixed with "Elite" for elite mobs
+  // (declared early so combatLogEntries can reference it)
   const opponentDisplayName = useMemo(() => {
-    if (!opponent) return 'a monster';
+    if (!opponent) return t('battle.aMonster');
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
-    return isElite ? `Elite ${opponent.name}` : opponent.name;
+    return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
   }, [opponent]);
+
+  const combatLogEntries = useCombatLogEntries({
+    visibleOutcomes,
+    dotActions,
+    characterId: character?.id,
+    opponentName: opponentDisplayName,
+  });
 
   const {
     armorTemplates,
@@ -96,6 +99,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
+  const [hoveredTokenId, setHoveredTokenId] = useState<string | null>(null);
 
   const parentDivRef = useRef<HTMLDivElement>(null);
   const attackButton1Ref = useRef<HTMLButtonElement>(null);
@@ -301,6 +305,19 @@ export const ActionsPanel = (): JSX.Element => {
     [spellTemplates, weaponTemplates],
   );
 
+  const combatNarrative = useCombatNarrative({
+    visibleOutcomes,
+    pendingTurn,
+    dotActions,
+    statusEffectActions,
+    characterId: character?.id,
+    opponentName: opponentDisplayName,
+    opponent: opponent && 'mobId' in opponent ? opponent as Monster : null,
+    encounterType: currentBattle?.encounterType,
+    spellAndWeaponTemplates,
+    combatConsumables,
+  });
+
   const STAT_LABELS: Record<StatsClasses, string> = {
     [StatsClasses.Strength]: 'STR',
     [StatsClasses.Agility]: 'AGI',
@@ -468,7 +485,7 @@ export const ActionsPanel = (): JSX.Element => {
               size={{ base: 'xs', sm: 'sm', lg: 'md' }}
               textAlign="center"
             >
-              The battle ended in a draw.
+              {t('battle.drawEnd')}
             </Text>
           ) : (
             <Text
@@ -482,15 +499,15 @@ export const ActionsPanel = (): JSX.Element => {
                 : ''}
               {lastestBattleOutcome?.winner !== character?.id &&
               lastestBattleOutcome?.playerFled
-                ? 'You fled!'
+                ? t('combat.youFled')
                 : ''}
               {lastestBattleOutcome?.winner === character?.id &&
               !lastestBattleOutcome?.playerFled
-                ? 'You won!'
+                ? t('combat.youWon')
                 : ''}
               {lastestBattleOutcome?.winner !== character?.id &&
               !lastestBattleOutcome?.playerFled
-                ? 'You died...'
+                ? t('combat.youDied')
                 : ''}
             </Text>
           )}
@@ -551,10 +568,10 @@ export const ActionsPanel = (): JSX.Element => {
               </Button>
               <Text size="2xs" color={hasSmokeCover ? '#6B8E6B' : '#8A7E6A'} maxW="200px">
                 {hasSmokeCover
-                  ? 'Smoke Cloak active — flee without gold penalty!'
+                  ? t('combat.smokeCloakActive')
                   : currentBattle.encounterType === EncounterType.PvP
-                    ? 'First turn only. Costs 25% carried gold.'
-                    : 'First turn only.'}
+                    ? t('combat.fleeFirstTurnCost')
+                    : t('combat.fleeFirstTurn')}
               </Text>
             </HStack>
           )}
@@ -610,6 +627,28 @@ export const ActionsPanel = (): JSX.Element => {
               </>
             )}
             <HStack position="relative" spacing={0} w="100%">
+              {SHOW_Z2 && isDesktop && hoveredTokenId && (() => {
+                const hovItem = orderedAttackItems.find(i => i.tokenId === hoveredTokenId);
+                if (!hovItem) return null;
+                const mu = weaponMatchups[hovItem.tokenId];
+                return (
+                  <Box
+                    position="absolute"
+                    bottom="100%"
+                    left="50%"
+                    transform="translateX(-50%)"
+                    mb={1}
+                    zIndex={10}
+                    pointerEvents="none"
+                  >
+                    <GameItemTooltip
+                      item={hovItem}
+                      matchup={mu?.matchup}
+                      opponentClass={opponent?.entityClass}
+                    />
+                  </Box>
+                );
+              })()}
               {currentBattle.encounterType === EncounterType.PvP && (
                 <Progress
                   position="absolute"
@@ -620,7 +659,7 @@ export const ActionsPanel = (): JSX.Element => {
                   w="100%"
                 />
               )}
-              <HStack spacing={0} w="100%" flexWrap={{ base: 'wrap', lg: 'nowrap' }}>
+              <HStack spacing={0} w="100%" flexWrap="wrap">
                 {actionItems.map((item, index) => {
                   const icon = getItemImage(removeEmoji(item.name));
                   const matchupData = item.type === 'attack' ? weaponMatchups[item.tokenId] : undefined;
@@ -628,14 +667,8 @@ export const ActionsPanel = (): JSX.Element => {
                   const statType = matchupData?.statType;
                   return (
                     <Button
-                      borderLeft={{
-                        base: index % 2 === 0 ? 'none' : '2px',
-                        lg: index === 0 ? 'none' : '2px',
-                      }}
-                      borderTop={{
-                        base: index >= 2 ? '2px' : 'none',
-                        lg: 'none',
-                      }}
+                      borderLeft={index % 2 === 0 ? 'none' : '2px'}
+                      borderTop={index >= 2 ? '2px' : 'none'}
                       borderRadius={0}
                       borderRight="none"
                       isDisabled={
@@ -645,45 +678,53 @@ export const ActionsPanel = (): JSX.Element => {
                       key={`action-item-${index}`}
                       loadingText=""
                       onClick={() => onAttack(item.tokenId)}
+                      onMouseEnter={item.type === 'attack' ? () => setHoveredTokenId(item.tokenId) : undefined}
+                      onMouseLeave={item.type === 'attack' ? () => setHoveredTokenId(null) : undefined}
                       ref={getButtonRef(index)}
-                      fontSize={
-                        actionItems.length > 2 ? '2xs' : 'xs'
-                      }
+                      fontSize="xs"
                       size={{ base: 'sm', sm: 'sm', lg: 'md' }}
-                      py={{ base: 5, sm: 4, lg: 'unset' }}
+                      h="auto"
+                      py={{ base: 3, lg: 3 }}
+                      px={{ base: 2, lg: 3 }}
                       variant="outline"
                       bg={matchup === 'strong' ? 'rgba(90,138,62,0.08)' : matchup === 'weak' ? 'rgba(184,92,58,0.08)' : undefined}
-                      w={{ base: '50%', lg: '100%' }}
+                      w="50%"
                     >
-                      <>
-                        {isDesktop && (
-                          <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.6} mr={1}>
-                            [{index + 1}]
+                      <VStack spacing={0} align="center" w="100%">
+                        <HStack spacing={1} justify="center">
+                          {isDesktop && (
+                            <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.5}>
+                              [{index + 1}]
+                            </Text>
+                          )}
+                          {icon ? (
+                            <Image src={icon} boxSize="18px" />
+                          ) : item.type === 'consumable' ? (
+                            <PotionSvg size={3} theme="dark" />
+                          ) : null}
+                          <Text as="span" fontSize="xs" noOfLines={1}>
+                            {removeEmoji(item.name)}
                           </Text>
-                        )}
-                        {icon ? (
-                          <Image src={icon} boxSize="20px" mr={1} />
-                        ) : item.type === 'consumable' ? (
-                          <PotionSvg size={3} theme="dark" mr={1} />
-                        ) : null}
-                        {removeEmoji(item.name)}
-                        {matchup === 'strong' && (
-                          <Text as="span" color="#5A8A3E" fontSize="2xs" ml={1}>▲</Text>
-                        )}
-                        {matchup === 'weak' && (
-                          <Text as="span" color="#B85C3A" fontSize="2xs" ml={1}>▼</Text>
-                        )}
-                        {statType !== undefined && (
-                          <Text as="span" fontSize="2xs" ml={1} color={CLASS_COLORS[statType]} opacity={0.7}>
-                            {STAT_LABELS[statType]}
-                          </Text>
-                        )}
-                        {item.type === 'consumable' && 'balance' in item && (
-                          <Text as="span" fontSize="2xs" ml={1} opacity={0.7}>
-                            (x{item.balance.toString()})
-                          </Text>
-                        )}
-                      </>
+                        </HStack>
+                        <HStack spacing={1} justify="center" mt={0.5}>
+                          {statType !== undefined && (
+                            <Text as="span" fontSize="2xs" color={CLASS_COLORS[statType]} opacity={0.7}>
+                              {STAT_LABELS[statType]}
+                            </Text>
+                          )}
+                          {matchup === 'strong' && (
+                            <Text as="span" color="#5A8A3E" fontSize="2xs">▲</Text>
+                          )}
+                          {matchup === 'weak' && (
+                            <Text as="span" color="#B85C3A" fontSize="2xs">▼</Text>
+                          )}
+                          {item.type === 'consumable' && 'balance' in item && (
+                            <Text as="span" fontSize="2xs" opacity={0.7}>
+                              x{item.balance.toString()}
+                            </Text>
+                          )}
+                        </HStack>
+                      </VStack>
                     </Button>
                   );
                 })}
@@ -718,6 +759,11 @@ export const ActionsPanel = (): JSX.Element => {
             )}
           </VStack>
         )}
+      {SHOW_Z2 && currentBattle && !battleOver && (
+        <Box px={{ base: 2, lg: 4 }} pt={2}>
+          <BattleCombatLog entries={combatLogEntries} />
+        </Box>
+      )}
       <Stack p={{ base: 2, lg: 4 }}>
         {!currentBattle && !isSpawned && (
           <SafeTypist
@@ -726,11 +772,7 @@ export const ActionsPanel = (): JSX.Element => {
             stdTypingDelay={10}
           >
             <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-              In order to begin battling, you must{' '}
-              <Text as="span" fontWeight={700}>
-                spawn
-              </Text>{' '}
-              your character.
+              <Trans i18nKey="gameBoard.spawnPrompt" ns="ui" components={{ bold: <Text as="span" fontWeight={700} /> }} />
             </Text>
           </SafeTypist>
         )}
@@ -740,10 +782,10 @@ export const ActionsPanel = (): JSX.Element => {
             <HStack justify="space-between" w="100%">
               <Text color="#8A7E6A" fontStyle="italic" size="xs">
                 {position.x === 0 && position.y === 0
-                  ? 'Move to a new tile to find monsters.'
+                  ? t('combat.moveToFind')
                   : visibleMonstersOnTile.length === 0
-                    ? 'No monsters here. Try another tile.'
-                    : 'Click on a monster to battle.'}
+                    ? t('combat.noMonstersHere')
+                    : t('combat.clickToFight')}
               </Text>
               {/* Auto-adventure paused — hidden until re-enabled */}
             </HStack>
@@ -773,8 +815,8 @@ export const ActionsPanel = (): JSX.Element => {
                 </Text>
                 <Text color={isCritical ? '#C08080' : '#8A7E6A'} size="2xs">
                   {isCritical
-                    ? 'You are close to death. Heal before your next fight.'
-                    : 'Consider using a potion before continuing.'}
+                    ? t('combat.closeToDeath')
+                    : t('combat.considerPotion')}
                 </Text>
               </Box>
             );
@@ -782,7 +824,14 @@ export const ActionsPanel = (): JSX.Element => {
           return null;
         })()}
 
-        {!autoAdventureMode && opponent &&
+        {SHOW_Z2 && !autoAdventureMode && opponent && combatNarrative && (
+          <CombatTypewriter
+            segments={combatNarrative.segments}
+            narrativeKey={combatNarrative.key}
+            isEnemyAttack={combatNarrative.isEnemyAttack}
+          />
+        )}
+        {!SHOW_Z2 && !autoAdventureMode && opponent &&
           (() => {
             const seenDotTurns = new Set<string>();
             const logSize = { base: '2xs' as const, sm: 'xs' as const, lg: 'sm' as const };
@@ -794,7 +843,7 @@ export const ActionsPanel = (): JSX.Element => {
             const itemName =
               currentBattle?.encounterType === EncounterType.PvE &&
               attack.attackerId !== character?.id
-                ? MONSTER_MOVE_MAPPING[(opponent as Monster).mobId] ?? 'an item'
+                ? tm(`moves.${(opponent as Monster).mobId}`, { defaultValue: 'an item' })
                 : attackItem?.name ?? 'an item';
 
             const possibleStatusEffectAttack = statusEffectActions.find(
@@ -831,7 +880,7 @@ export const ActionsPanel = (): JSX.Element => {
                     stdTypingDelay={10}
                   >
                     <Text size={logSize}>
-                      {isPlayer ? 'You' : opponentDisplayName} used{' '}
+                      {isPlayer ? t('combat.you') : opponentDisplayName} {t('combat.used')}{' '}
                       <Text as="span" color="green">
                         {consumable ? removeEmoji(consumable.name) : 'a potion'}
                       </Text>
@@ -939,7 +988,7 @@ export const ActionsPanel = (): JSX.Element => {
                 <Box>
                   <Text size={logSize}>
                     {isCrit && (
-                      <Text as="span" color="#C87A2A" fontWeight={700}>Critical hit! </Text>
+                      <Text as="span" color="#C87A2A" fontWeight={700}>{t('battle.criticalHit')} </Text>
                     )}
                     {isPlayerAttack ? (
                       <Text as="span">
@@ -966,16 +1015,12 @@ export const ActionsPanel = (): JSX.Element => {
                       {affectedText}
                     </Text>
                   </Text>
-                  {STATUS_EFFECT_DESCRIPTION_MAPPING[
-                    possibleStatusEffectAttack.name
-                  ] && (
+                  {te(`descriptions.${possibleStatusEffectAttack.name}`, { defaultValue: '' }) && (
                     <Text
                       size={{ base: '2xs', sm: '2xs', lg: 'xs' }}
                       color={effectColor}
                     >
-                      {STATUS_EFFECT_DESCRIPTION_MAPPING[
-                        possibleStatusEffectAttack.name
-                      ]}
+                      {te(`descriptions.${possibleStatusEffectAttack.name}`)}
                     </Text>
                   )}
                 </Box>
@@ -991,14 +1036,14 @@ export const ActionsPanel = (): JSX.Element => {
                   ) : 'you'}
                   .
                   {effectNames[0] &&
-                    STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]] && (
+                    te(`descriptions.${effectNames[0]}`, { defaultValue: '' }) && (
                       <Text
                         as="span"
                         color="#D08040"
                       >
                         {' '}
-                        {effectNames[0]}.{' '}
-                        {STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]]}
+                        {te(`names.${effectNames[0]}`)}.{' '}
+                        {te(`descriptions.${effectNames[0]}`)}
                       </Text>
                     )}
                 </Text>
@@ -1015,7 +1060,7 @@ export const ActionsPanel = (): JSX.Element => {
                   .{' '}
                   {effectNames[0]
                     ? `${effectNames[0]} is already active.`
-                    : 'It had no effect.'}
+                    : t('combat.noEffect')}
                 </Text>
               );
             } else if (isPlayerAttack) {
@@ -1088,7 +1133,7 @@ export const ActionsPanel = (): JSX.Element => {
                 )}
                 {attack.blocked && (
                   <Text size={{ base: '2xs', sm: '2xs', lg: 'xs' }} color="#8B8B8B" fontWeight={700}>
-                    {isPlayerAttack ? `${opponentDisplayName} blocked some damage.` : 'You blocked some damage.'}
+                    {isPlayerAttack ? t('combat.blockedSome', { name: opponentDisplayName }) : t('combat.youBlockedSome')}
                   </Text>
                 )}
                 {attack.spellDodged && (

@@ -162,6 +162,10 @@ export default defineWorld({
       name: "AdminTuningSys",
       openAccess: false,
     },
+    WorldBossSystem: {
+      name: "WorldBossSys",
+      openAccess: true,
+    },
     UltimateDominionConfigSystem: {
       name: "UDConfigSys",
       openAccess: false,
@@ -314,15 +318,15 @@ export default defineWorld({
       "DeathOfDeathGod",   // 6
       "BetrayersTruth",    // 7
       "BloodPrice",        // 8
-      // Zone 2 fragments (IX-XVI)
-      "FirstLight",        // 9
-      "TheBladesEdge",     // 10
-      "DividedGround",     // 11
-      "TheDirectors",      // 12
-      "TheStormsMemory",   // 13
-      "WhatGrows",         // 14
-      "TheBakersStand",    // 15
-      "TheLightsBelow",    // 16
+      // Zone 2 fragments (IX-XVI) — Windy Peaks quest chains
+      "TheAscent",            // 9  — Peaks chain: arrive in zone
+      "VelsWarning",          // 10 — Vel chain: Covenant hunters
+      "TheOrders",            // 11 — Vel chain: assassination orders
+      "WhatSheLeftBehind",    // 12 — Vel chain: Covenant camp
+      "TheShrine",            // 13 — Edric chain: Korrath's shrine
+      "TheHereticsQuestion",  // 14 — Edric chain: prayer answered
+      "BonesOfFaith",         // 15 — Edric chain: the Last Sermon
+      "TheWindsMemory",       // 16 — Peaks chain: summit capstone
     ],
     FragmentTriggerType: [
       "TileVisit",    // 0
@@ -340,6 +344,13 @@ export default defineWorld({
       "DropRate",   // 1
       "Experience", // 2
       "GoldFind",   // 3
+    ],
+    GuildStatBuff: [
+      "None",          // 0
+      "Strength",      // 1 — +3 STR
+      "Agility",       // 2 — +3 AGI
+      "Intelligence",  // 3 — +3 INT
+      "Resilience",    // 4 — +5 maxHP
     ],
     SocialLinkType: [
       "None",    // 0
@@ -505,6 +516,14 @@ export default defineWorld({
     BossSpawnConfig: {
       key: [],
       schema: {
+        bossMobId: "uint256",
+        spawnChanceBp: "uint256",
+      },
+    },
+    ZoneBossConfig: {
+      key: ["zoneId"],
+      schema: {
+        zoneId: "uint256",
         bossMobId: "uint256",
         spawnChanceBp: "uint256",
       },
@@ -927,6 +946,34 @@ export default defineWorld({
     EntitiesAtPosition: {
       key: ["x", "y"],
       schema: {
+        x: "uint16",
+        y: "uint16",
+        entities: "bytes32[]",
+      },
+    },
+    /**
+     * Zone-relative position of an entity (V2).
+     * Coordinates are zone-relative (0-9), zoneId disambiguates.
+     */
+    PositionV2: {
+      key: ["entity"],
+      codegen: {
+        dataStruct: false,
+      },
+      schema: {
+        entity: "bytes32",
+        zoneId: "uint256",
+        x: "uint16",
+        y: "uint16",
+      },
+    },
+    /**
+     * Reverse lookup: entities at a zone-relative position (V2).
+     */
+    ZoneEntitiesAtPos: {
+      key: ["zoneId", "x", "y"],
+      schema: {
+        zoneId: "uint256",
         x: "uint16",
         y: "uint16",
         entities: "bytes32[]",
@@ -1377,6 +1424,15 @@ export default defineWorld({
         narrative: "string",
       },
     },
+    // Optional item reward on chain step completion (quest item drops)
+    FragChainReward: {
+      key: ["fragmentType", "stepIndex"],
+      schema: {
+        fragmentType: "FragmentType",
+        stepIndex: "uint256",
+        rewardItemId: "uint256", // 0 = no reward
+      },
+    },
     ///////////////////////////////////// CRAFTING ///////////////////////////////////
     CraftingRecipe: {
       key: ["recipeId"],
@@ -1630,11 +1686,12 @@ export default defineWorld({
       },
     },
     ///////////////////////////////////// WORLD BOSSES / RAIDS ///////////////////////////////////
+    // Original WorldBoss — immutable on-chain, kept for schema compat
     WorldBoss: {
       key: ["bossId"],
       schema: {
         bossId: "uint256",
-        mobId: "uint256",        // references Mobs table for stats
+        mobId: "uint256",
         currentHp: "int256",
         maxHp: "int256",
         spawnX: "uint16",
@@ -1643,6 +1700,22 @@ export default defineWorld({
         active: "bool",
         goldReward: "uint256",
         xpReward: "uint256",
+      },
+    },
+    // V2 with respawn timer, zone awareness, entity tracking
+    WorldBossV2: {
+      key: ["bossId"],
+      schema: {
+        bossId: "uint256",
+        mobId: "uint256",           // references Mobs table for stats
+        zoneId: "uint256",
+        spawnX: "uint16",
+        spawnY: "uint16",
+        entityId: "bytes32",        // live spawned entity (bytes32(0) when dead)
+        respawnSeconds: "uint256",
+        lastKilledAt: "uint256",
+        spawnedAt: "uint256",
+        active: "bool",
       },
     },
     // Tracks each player's contribution to a boss fight for proportional rewards
@@ -1856,6 +1929,27 @@ export default defineWorld({
         multiplierBps: "uint256",    // basis points bonus (500 = 5%)
         expiresAt: "uint256",
         activatedBy: "bytes32",      // characterId of leader/officer who activated
+      },
+    },
+    // Guild stat buffs — leader picks a combat stat to buff for all members
+    // Auto-renews daily from treasury. Guild level determines available slots.
+    GuildStatBuffSlot: {
+      key: ["guildId", "slotIndex"],
+      schema: {
+        guildId: "uint256",
+        slotIndex: "uint8",
+        buffType: "GuildStatBuff",
+        lastChargedAt: "uint256",
+        activatedBy: "bytes32",      // characterId of leader who set it
+        active: "bool",
+      },
+    },
+    // Guild upgrade level — determines how many buff slots are unlocked
+    GuildLevel: {
+      key: ["guildId"],
+      schema: {
+        guildId: "uint256",
+        level: "uint256",            // 1 (default), 2, 3
       },
     },
     // Configurable gold tax — guild leader sets % of member gold earnings sent to treasury

@@ -30,8 +30,8 @@ contract Test_CombatConsumable is SetUp {
         world.grantAccess(_mobSystemId("UD"), address(this));
         vm.stopPrank();
         uint256 spawnedMobId = 5;
-        entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
-        entityId2 = world.UD__spawnMob(spawnedMobId, 0, 1);
+        entityId = world.UD__spawnMob(spawnedMobId, 1, 0, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 1, 0, 1);
 
         // Roll stats + enter game for both characters
         vm.startPrank(alice);

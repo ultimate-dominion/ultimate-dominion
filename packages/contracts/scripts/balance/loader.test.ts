@@ -195,8 +195,8 @@ describe("loader", () => {
     it("maps all combat constants with triangle pcts divided by 100", () => {
       const data = load();
       const cc = data.combatConstants;
-      expect(cc.attackModifier).toBe(1.2);
-      expect(cc.agiAttackModifier).toBe(0.9);
+      expect(cc.attackModifier).toBe(1.0);
+      expect(cc.agiAttackModifier).toBe(1.0);
       expect(cc.critMultiplier).toBe(2);
       expect(cc.critBaseChance).toBe(4);
       expect(cc.evasionCap).toBe(25);

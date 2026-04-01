@@ -90,7 +90,7 @@ const LOADING_SYSTEM_CALLS: SystemCallsResult = {
   move: notReady, removeEntityFromBoard: notReady,
   rest: notReady, restock: notReady,
   rollBaseStats: notReady, rollStats: notReady,
-  selectAdvancedClass: notReady, sell: notReady,
+  selectAdvancedClass: notReady, sell: notReady, sellBatch: notReady,
   spawn: notReady, unequipItem: notReady,
   updateTokenUri: notReady, useWorldConsumableItem: notReady,
   validateTileMonsters: async () => {},

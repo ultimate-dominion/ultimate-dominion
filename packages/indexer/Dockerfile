@@ -6,9 +6,10 @@ RUN corepack enable && corepack prepare pnpm@9.15.5 --activate
 WORKDIR /app
 
 COPY package.json ./
+COPY patches/ ./patches/
 RUN pnpm install
 
-# cache-bust: v2
+# cache-bust: v3
 COPY tsconfig.json ./
 COPY src/ ./src/
 RUN pnpm build
@@ -21,10 +22,11 @@ RUN corepack enable && corepack prepare pnpm@9.15.5 --activate
 WORKDIR /app
 
 COPY package.json ./
+COPY patches/ ./patches/
 RUN pnpm install --prod
 
 COPY --from=builder /app/dist ./dist
 
-EXPOSE 3001
+EXPOSE 8080
 
 CMD ["node", "dist/index.js"]

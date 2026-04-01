@@ -8,16 +8,16 @@ import {
   IconButton,
   keyframes,
   Stack,
-  Switch,
   Text,
   Tooltip,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaStoreAlt } from 'react-icons/fa';
+import { FaStoreAlt, FaUser, FaSkullCrossbones } from 'react-icons/fa';
 
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -30,19 +30,44 @@ import { SHOW_Z2 } from '../lib/env';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { WAITING_ROOM_PATH } from '../Routes';
 import { CaptchaGate } from './CaptchaGate';
-import { WorldFeed } from './WorldFeed';
+import { ChatPanel } from './ChatPanel';
 import { OnlineLink } from './OnlineRoster';
 import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassArrowSvg, CompassRoseOrnamentSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
+import { GameAncientMap } from './pretext/game/GameAncientMap';
 
-const SAFE_ZONE_AREA = {
-  topLeft: { x: 0, y: 4 },
-  bottomRight: { x: 4, y: 0 },
+/** Safe zone boundaries per zone (display coords, top-down grid) */
+const SAFE_ZONE_BY_ZONE: Record<number, { topLeft: { x: number; y: number }; bottomRight: { x: number; y: number } }> = {
+  1: { topLeft: { x: 0, y: 4 }, bottomRight: { x: 4, y: 0 } },   // Z1: x<5 AND y<5
+  2: { topLeft: { x: 0, y: 2 }, bottomRight: { x: 9, y: 0 } },   // Z2: y<3 (full width)
 };
 
 const MAP_SIZE = 10;
+
+/** Zone exit tile — north-center of Dark Cave */
+const EXIT_TILE = { x: 5, y: 9 };
+
+const bossGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 6px rgba(184, 58, 42, 0.3), inset 0 0 3px rgba(184, 58, 42, 0.08); }
+  50% { box-shadow: 0 0 12px rgba(184, 58, 42, 0.5), inset 0 0 6px rgba(184, 58, 42, 0.12); }
+`;
+
+const bossFade = keyframes`
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+`;
+
+const exitTileGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 6px rgba(180, 198, 212, 0.2), inset 0 0 3px rgba(180, 198, 212, 0.05); }
+  50%      { box-shadow: 0 0 14px rgba(180, 198, 212, 0.5), inset 0 0 6px rgba(180, 198, 212, 0.1); }
+`;
+
+const exitTilePulse = keyframes`
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.3); }
+`;
 
 type TileInfo = {
   monsters: number;
@@ -65,10 +90,11 @@ const COMPASS_DIRECTIONS: {
 ];
 
 export const MapPanel = (): JSX.Element => {
-  const { allCharacters, allMonsters, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position } = useMap();
+  const { t } = useTranslation('ui');
+  const { allCharacters, allMonsters, allNpcs, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position, worldBosses } = useMap();
   const { character } = useCharacter();
   const { currentBattle } = useBattle();
-  const { autoAdventureMode, isRefreshing, onMove, onToggleAutoAdventure } = useMovement();
+  const { autoAdventureMode, isRefreshing, onMove } = useMovement();
   const { delegatorAddress } = useMUD();
   const navigate = useNavigate();
   const {
@@ -92,6 +118,17 @@ export const MapPanel = (): JSX.Element => {
   const maxPlayers = configValue?.maxPlayers ? BigInt(configValue.maxPlayers as string) : BigInt(0);
 
   const playerLevel = character?.level ? Number(character.level) : 1;
+
+  const isAtZoneExit = useMemo(() => {
+    return (
+      SHOW_Z2 &&
+      !!character?.hasSelectedAdvancedClass &&
+      currentZone === 1 &&
+      displayPosition?.x === EXIT_TILE.x &&
+      displayPosition?.y === EXIT_TILE.y &&
+      !autoAdventureMode
+    );
+  }, [character?.hasSelectedAdvancedClass, currentZone, displayPosition, autoAdventureMode]);
 
   const adjacentTiles = useMemo(() => {
     if (!position || !displayPosition) return null;
@@ -136,61 +173,30 @@ export const MapPanel = (): JSX.Element => {
     <Stack alignItems="center" className="data-dense" h="100%">
       {/* Compass — above map on mobile, below on desktop */}
       <Box order={{ base: 0, lg: 2 }} w="100%">
-        {isSpawned && position && stage >= OnboardingStage.FIRST_STEPS ? (
+        {isSpawned && stage >= OnboardingStage.FIRST_STEPS ? (
           <>
             <NavigationCompass
               adjacentTiles={adjacentTiles}
               displayPosition={displayPosition}
+              isAtZoneExit={isAtZoneExit}
               isDisabled={!!currentBattle || isRefreshing}
               onMove={onMove}
               position={position}
               stage={stage}
             />
-            {/* Mobile-only auto adventure toggle — Z2 only */}
-            {!isDesktop && SHOW_Z2 && stage >= OnboardingStage.SETTLING_IN && (
-              <HStack
-                justify="center"
-                spacing={2.5}
-                pt={1}
-                pb={0.5}
-              >
-                <Text
-                  color={autoAdventureMode ? '#C87A2A' : '#5A5248'}
-                  fontFamily="mono"
-                  fontSize="11px"
-                  fontWeight={500}
-                  letterSpacing="0.5px"
-                  transition="color 0.2s"
-                >
-                  Auto Adventure
-                </Text>
-                <Switch
-                  size="sm"
-                  isChecked={autoAdventureMode}
-                  onChange={onToggleAutoAdventure}
-                  colorScheme="orange"
-                />
-              </HStack>
-            )}
           </>
-        ) : isSpawned && !position ? (
-          <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
-            <Text color="#8A7E6A" fontStyle="italic" size="sm">
-              Loading position…
-            </Text>
-          </VStack>
         ) : !isSpawned ? (
           <VStack mt={{ base: 0, lg: 8 }} spacing={3}>
             {isMapFull && queueStatus === 'idle' && !showCaptcha && (
               <>
                 <Text color="red" fontWeight={500} size="sm">
-                  Server Full ({currentPlayersSpawned}/{Number(maxPlayers)})
+                  {t('map.serverFull', { current: currentPlayersSpawned, max: Number(maxPlayers) })}
                 </Text>
                 <Button
                   onClick={() => setShowCaptcha(true)}
                   size="sm"
                 >
-                  Join Queue
+                  {t('map.joinQueue')}
                 </Button>
               </>
             )}
@@ -206,28 +212,28 @@ export const MapPanel = (): JSX.Element => {
             {isMapFull && (queueStatus === 'waiting' || queueStatus === 'joining') && (
               <>
                 <Text color="#D4A54A" fontWeight={500} size="sm">
-                  Queue Position: #{queuePosition}
+                  {t('map.queuePosition', { position: queuePosition })}
                 </Text>
                 <Text color="#8A7E6A" size="xs">
-                  ~{estimatedWaitMinutes} min wait
+                  {t('map.waitTime', { minutes: estimatedWaitMinutes })}
                 </Text>
                 <Button
                   onClick={() => navigate(WAITING_ROOM_PATH)}
                   size="sm"
                   variant="outline"
                 >
-                  View Waiting Room
+                  {t('map.viewWaitingRoom')}
                 </Button>
               </>
             )}
             {isMapFull && queueStatus === 'ready' && (
               <>
                 <Text color="green.300" fontWeight={700} size="sm">
-                  A slot opened!
+                  {t('map.slotOpened')}
                 </Text>
                 <Button
                   isLoading={isSpawning}
-                  loadingText="Spawning..."
+                  loadingText={t('map.spawning')}
                   onClick={() => {
                     reportSpawned();
                     onSpawn();
@@ -235,12 +241,12 @@ export const MapPanel = (): JSX.Element => {
                   size="sm"
                   colorScheme="green"
                 >
-                  Spawn Now
+                  {t('map.spawnNow')}
                 </Button>
               </>
             )}
             <Tooltip
-              label="Spawn onto the map. Monsters lurk beyond the Alcove — tread carefully."
+              label={t('map.spawnTooltip')}
               isOpen={stage === OnboardingStage.PRE_SPAWN}
               placement="top"
               hasArrow
@@ -249,11 +255,11 @@ export const MapPanel = (): JSX.Element => {
               <Button
                 isDisabled={!!currentBattle}
                 isLoading={isSpawning}
-                loadingText="Spawning..."
+                loadingText={t('map.spawning')}
                 onClick={onSpawn}
                 size="sm"
               >
-                Spawn
+                {t('map.spawn')}
               </Button>
             </Tooltip>
           </VStack>
@@ -273,6 +279,34 @@ export const MapPanel = (): JSX.Element => {
               {currentZoneName}
             </Heading>
           </HStack>
+          {SHOW_Z2 ? (
+            <Box
+              aspectRatio="1/1"
+              maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
+              maxW="100%"
+              m="0 auto"
+              mt={1}
+            >
+              <GameAncientMap
+                gridSize={stage >= OnboardingStage.VETERAN ? MAP_SIZE : 5}
+                displayPosition={displayPosition}
+                allMonsters={allMonsters}
+                allCharacters={allCharacters}
+                allShops={allShops}
+                allNpcs={allNpcs}
+                worldBosses={worldBosses}
+                safeZone={SAFE_ZONE_BY_ZONE[currentZone] ?? null}
+                exitTile={
+                  character?.hasSelectedAdvancedClass && currentZone === 1
+                    ? EXIT_TILE
+                    : null
+                }
+                isSpawned={isSpawned}
+                currentZone={currentZone}
+                delegatorAddress={delegatorAddress}
+              />
+            </Box>
+          ) : (
           <Box
             aspectRatio="1/1"
             border="0.5px solid"
@@ -291,34 +325,36 @@ export const MapPanel = (): JSX.Element => {
               const col = i % gridSize;
               const currentTile = displayPosition?.x === col && displayPosition?.y === row;
 
-              // Safe zone borders only in Zone 1
-              const showSafeZone = currentZone === 1;
+              const safeZone = SAFE_ZONE_BY_ZONE[currentZone];
+              const showSafeZone = !!safeZone;
               const hasSafeZoneTopBorder = showSafeZone &&
-                row === SAFE_ZONE_AREA.topLeft.y &&
-                col >= SAFE_ZONE_AREA.topLeft.x &&
-                col <= SAFE_ZONE_AREA.bottomRight.x;
+                row === safeZone.topLeft.y &&
+                col >= safeZone.topLeft.x &&
+                col <= safeZone.bottomRight.x;
 
               const hasSafeZoneRightBorder = showSafeZone &&
-                col === SAFE_ZONE_AREA.bottomRight.x &&
-                row >= SAFE_ZONE_AREA.bottomRight.y &&
-                row <= SAFE_ZONE_AREA.topLeft.y;
+                col === safeZone.bottomRight.x &&
+                row >= safeZone.bottomRight.y &&
+                row <= safeZone.topLeft.y;
 
               const hasSafeZoneBottomBorder = showSafeZone &&
-                row === SAFE_ZONE_AREA.bottomRight.y &&
-                col >= SAFE_ZONE_AREA.topLeft.x &&
-                col <= SAFE_ZONE_AREA.bottomRight.x;
+                row === safeZone.bottomRight.y &&
+                col >= safeZone.topLeft.x &&
+                col <= safeZone.bottomRight.x;
 
               const hasSafeZoneLeftBorder = showSafeZone &&
-                row >= SAFE_ZONE_AREA.bottomRight.y &&
-                row <= SAFE_ZONE_AREA.topLeft.y &&
-                col === SAFE_ZONE_AREA.topLeft.x;
+                row >= safeZone.bottomRight.y &&
+                row <= safeZone.topLeft.y &&
+                col === safeZone.topLeft.x;
+
+              const isInSafeArea = showSafeZone &&
+                col >= safeZone.topLeft.x && col <= safeZone.bottomRight.x &&
+                row >= safeZone.bottomRight.y && row <= safeZone.topLeft.y;
 
               return (
                 <VStack
                   bgColor={
-                    showSafeZone &&
-                    col <= SAFE_ZONE_AREA.topLeft.y &&
-                    row <= SAFE_ZONE_AREA.bottomRight.x
+                    isInSafeArea
                       ? 'rgba(200,122,42,0.06)'
                       : 'transparent'
                   }
@@ -359,12 +395,7 @@ export const MapPanel = (): JSX.Element => {
                   )}
 
                   {allShops.map((shop, index) => {
-                    // Compare display-relative coords for grid placement
-                    const zoneOriginX = currentZone === 1 ? 0 : 0;
-                    const zoneOriginY = currentZone === 1 ? 0 : (currentZone - 1) * 100;
-                    const shopDisplayX = shop.position.x - zoneOriginX;
-                    const shopDisplayY = shop.position.y - zoneOriginY;
-                    const isShopHere = shopDisplayX === col && shopDisplayY === row;
+                    const isShopHere = shop.position.x === col && shop.position.y === row;
 
                     return (
                       isShopHere && (
@@ -379,10 +410,93 @@ export const MapPanel = (): JSX.Element => {
                       )
                     );
                   })}
+
+                  {allNpcs.map((npc, index) => {
+                    const isNpcHere = npc.position.x === col && npc.position.y === row;
+
+                    return (
+                      isNpcHere && (
+                        <VStack
+                          key={`npc-${index}`}
+                          left="50%"
+                          position="absolute"
+                          transform="translateX(-50%)"
+                        >
+                          <FaUser size={14} color={npc.interaction === 'respec' ? '#e07c4f' : '#4fc3f7'} />
+                        </VStack>
+                      )
+                    );
+                  })}
+
+                  {/* World boss spawn tile */}
+                  {worldBosses.map((boss) => {
+                    const isBossHere = boss.spawnX === col && boss.spawnY === row;
+
+                    if (!isBossHere) return null;
+
+                    return boss.isAlive ? (
+                      <Box
+                        key={`boss-${boss.bossId}`}
+                        position="absolute"
+                        inset={0}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        bg="radial-gradient(circle, rgba(184,58,42,0.15) 0%, transparent 70%)"
+                        animation={`${bossGlow} 3s ease-in-out infinite`}
+                        borderRadius="sm"
+                        pointerEvents="none"
+                      >
+                        <FaSkullCrossbones size={12} color="#B83A2A" />
+                      </Box>
+                    ) : (
+                      <Box
+                        key={`boss-dead-${boss.bossId}`}
+                        position="absolute"
+                        inset={0}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        animation={`${bossFade} 4s ease-in-out infinite`}
+                        pointerEvents="none"
+                      >
+                        <FaSkullCrossbones size={10} color="#3A3228" />
+                      </Box>
+                    );
+                  })}
+
+                  {/* Zone exit tile — glowing portal at north-center */}
+                  {SHOW_Z2 &&
+                    character?.hasSelectedAdvancedClass &&
+                    currentZone === 1 &&
+                    col === EXIT_TILE.x &&
+                    row === EXIT_TILE.y && (
+                      <Box
+                        position="absolute"
+                        inset={0}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        bg="radial-gradient(circle, rgba(180,198,212,0.12) 0%, transparent 70%)"
+                        animation={`${exitTileGlow} 3s ease-in-out infinite`}
+                        borderRadius="sm"
+                        pointerEvents="none"
+                      >
+                        <Box
+                          w="6px"
+                          h="6px"
+                          borderRadius="full"
+                          bg="rgba(180, 198, 212, 0.7)"
+                          boxShadow="0 0 8px rgba(180, 198, 212, 0.6)"
+                          animation={`${exitTilePulse} 2s ease-in-out infinite`}
+                        />
+                      </Box>
+                    )}
                 </VStack>
               );
             })}
           </Box>
+          )}
           {stage >= OnboardingStage.SETTLING_IN && (
             <HStack
               justifyContent="end"
@@ -397,7 +511,7 @@ export const MapPanel = (): JSX.Element => {
 
       {isDesktop && stage >= OnboardingStage.VETERAN && (
         <Box order={3} w="100%" flex={1} minH="100px" mt={2}>
-          <WorldFeed inline />
+          <ChatPanel inline />
         </Box>
       )}
     </Stack>
@@ -410,6 +524,11 @@ const compassPulse = keyframes`
   50% { opacity: 1; transform: scale(1.08); }
 `;
 
+const exitCompassGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 6px rgba(180, 198, 212, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(180, 198, 212, 0.45), 0 0 4px rgba(180, 198, 212, 0.2); }
+`;
+
 const WASD_MAP: Record<string, string> = { N: 'W', W: 'A', S: 'S', E: 'D' };
 const ARROW_MAP: Record<string, string> = { N: '\u2191', W: '\u2190', S: '\u2193', E: '\u2192' };
 
@@ -419,6 +538,7 @@ const COMPASS_PULSE_SEEN_KEY = 'ud_compass_pulse_seen';
 const NavigationCompass = ({
   adjacentTiles,
   displayPosition,
+  isAtZoneExit,
   isDisabled,
   onMove,
   position,
@@ -426,11 +546,13 @@ const NavigationCompass = ({
 }: {
   adjacentTiles: Record<string, TileInfo> | null;
   displayPosition: { x: number; y: number } | null;
+  isAtZoneExit: boolean;
   isDisabled: boolean;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   position: { x: number; y: number } | null;
   stage: OnboardingStage;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -478,14 +600,14 @@ const NavigationCompass = ({
                 isDisabled={!info}
                 label={
                   info
-                    ? `${label}: ${info.monsters} monster${info.monsters !== 1 ? 's' : ''}, ${info.players} player${info.players !== 1 ? 's' : ''}`
+                    ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
                     : ''
                 }
                 placement="top"
                 shouldWrapChildren
               >
                 <IconButton
-                  aria-label={`Move ${label}`}
+                  aria-label={t('map.moveDirection', { dir: label })}
                   icon={
                     <HStack spacing={0.5}>
                       <Text color="#8A7E6A" fontSize="2xs" fontWeight={700} lineHeight={1}>
@@ -532,7 +654,7 @@ const NavigationCompass = ({
           _hover={{ color: '#8A7E6A' }}
           transition="color 0.2s"
         >
-          Expand compass
+          {t('map.expandCompass')}
         </Text>
       </VStack>
     );
@@ -575,7 +697,9 @@ const NavigationCompass = ({
         {/* Direction buttons */}
         {COMPASS_DIRECTIONS.map(({ label, direction, rotate, gridRow, gridCol }) => {
           const info = adjacentTiles?.[label] ?? null;
-          const isOob = adjacentTiles ? adjacentTiles[label] === null : false;
+          const rawOob = adjacentTiles ? adjacentTiles[label] === null : false;
+          const isExitArrow = isAtZoneExit && direction === 'up';
+          const isOob = isExitArrow ? false : rawOob;
           const isActive = !isDisabled && !isOob;
 
           return (
@@ -592,29 +716,37 @@ const NavigationCompass = ({
             >
               <Tooltip
                 hasArrow
-                isDisabled={!info}
+                isDisabled={!info && !isExitArrow}
                 label={
-                  info
-                    ? `${label}: ${info.monsters} monster${info.monsters !== 1 ? 's' : ''}, ${info.players} player${info.players !== 1 ? 's' : ''}`
-                    : ''
+                  isExitArrow
+                    ? t('map.zoneExit', 'Venture north...')
+                    : info
+                      ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
+                      : ''
                 }
                 placement="top"
                 shouldWrapChildren
               >
                 <IconButton
-                  aria-label={`Move ${label}`}
+                  aria-label={isExitArrow ? t('map.zoneExit', 'Venture north...') : t('map.moveDirection', { dir: label })}
                   icon={
                     <VStack spacing={0}>
                       <Text
-                        color="#D4A54A"
+                        color={isExitArrow ? '#B4C6D4' : '#D4A54A'}
                         fontSize="2xs"
                         fontWeight={700}
                         lineHeight={1}
                         mb={-0.5}
+                        textShadow={isExitArrow ? '0 0 8px rgba(180, 198, 212, 0.6)' : undefined}
                       >
                         {label}
                       </Text>
-                      <Box transform={`rotate(${rotate})`} lineHeight={0}>
+                      <Box
+                        transform={`rotate(${rotate})`}
+                        lineHeight={0}
+                        filter={isExitArrow ? 'hue-rotate(180deg) saturate(0.5) brightness(1.4)' : undefined}
+                        transition="filter 0.3s"
+                      >
                         <CompassArrowSvg boxSize={arrowSize} />
                       </Box>
                     </VStack>
@@ -627,12 +759,22 @@ const NavigationCompass = ({
                   variant="ghost"
                   size="xs"
                   animation={
-                    showPulse && stage < OnboardingStage.SETTLING_IN && isActive
-                      ? `${compassPulse} 2s ease-in-out infinite`
-                      : undefined
+                    isExitArrow
+                      ? `${exitCompassGlow} 2.5s ease-in-out infinite`
+                      : showPulse && stage < OnboardingStage.SETTLING_IN && isActive
+                        ? `${compassPulse} 2s ease-in-out infinite`
+                        : undefined
                   }
+                  bg={isExitArrow ? 'rgba(180, 198, 212, 0.06)' : undefined}
+                  borderRadius="md"
                   opacity={isDisabled || isOob ? 0.2 : 1}
-                  _hover={isDisabled ? {} : { bg: 'rgba(200,122,42,0.25)' }}
+                  _hover={
+                    isDisabled
+                      ? {}
+                      : isExitArrow
+                        ? { bg: 'rgba(180, 198, 212, 0.2)' }
+                        : { bg: 'rgba(200,122,42,0.25)' }
+                  }
                 />
               </Tooltip>
             </GridItem>
@@ -707,7 +849,7 @@ const NavigationCompass = ({
           textAlign="center"
           w="100%"
         >
-          Collapse
+          {t('map.collapse')}
         </Text>
       )}
     </Box>

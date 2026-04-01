@@ -232,7 +232,7 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
     try {
       const rows = await sql.unsafe(`
         SELECT co."__key_bytes", co."__last_updated_block_number" as block, co."items_dropped",
-               ce."attackers"
+               ce."attackers", ce."defenders", ce."attackers_are_mobs"
         FROM "${mudSchema}"."${outcomeTable}" co
         LEFT JOIN "${mudSchema}"."${combatEncTable}" ce ON co."__key_bytes" = ce."__key_bytes"
         WHERE co."items_dropped" IS NOT NULL AND array_length(co."items_dropped", 1) > 0
@@ -241,7 +241,10 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
       `);
 
       for (const row of rows) {
-        const walletAddress = extractWalletHex(row.attackers);
+        const isMobAttack = row.attackers_are_mobs === true || row.attackers_are_mobs === 1;
+        const walletAddress = isMobAttack
+          ? extractWalletHex(row.defenders)
+          : extractWalletHex(row.attackers);
         const itemIds: string[] = Array.isArray(row.items_dropped) ? row.items_dropped : [];
         if (itemIds.length === 0) continue;
         const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
@@ -257,14 +260,17 @@ async function backfillFromMudState(syncHandle: SyncHandle) {
             const rarity = Number(itemRow[0].rarity || 0);
             if (rarity < 2) continue;
             const eventType = rarity >= 3 ? 'rare_find' : 'loot_drop';
+            const typeName = ITEM_TYPE_NAMES[Number(itemRow[0].item_type)] || 'Item';
+            const itemName = await resolveItemName(itemIds[i], syncHandle) || typeName;
+            const playerName = await resolvePlayerName(walletAddress, charactersTable) || 'An adventurer';
 
             allEvents.push({
               block: Number(row.block),
               dedupKey: `loot:${keyHex}:${i}`,
               event: {
-                id: crypto.randomUUID(), eventType, playerName: 'An adventurer',
-                description: 'An adventurer found an item!', timestamp: 0,
-                metadata: { itemId: itemIds[i], rarity, walletAddress },
+                id: crypto.randomUUID(), eventType, playerName,
+                description: `${playerName} found ${itemName}!`, timestamp: 0,
+                metadata: { itemId: itemIds[i], rarity, itemName, walletAddress },
               },
             });
           } catch { /* skip item */ }
@@ -517,9 +523,10 @@ async function scanLootDrops(
   if (!outcomeTable || !combatEncTable || !charactersTable) return;
 
   try {
-    // Find combat outcomes with items dropped, get player entity via CombatEncounter.attackers
+    // Find combat outcomes with items dropped, get player entity via CombatEncounter
     const rows = await sql.unsafe(`
-      SELECT co."__key_bytes", co."items_dropped", ce."attackers"
+      SELECT co."__key_bytes", co."items_dropped",
+             ce."attackers", ce."defenders", ce."attackers_are_mobs"
       FROM "${mudSchema}"."${outcomeTable}" co
       LEFT JOIN "${mudSchema}"."${combatEncTable}" ce
         ON co."__key_bytes" = ce."__key_bytes"
@@ -535,7 +542,11 @@ async function scanLootDrops(
 
     for (const row of rows) {
       const keyHex = Buffer.isBuffer(row.__key_bytes) ? row.__key_bytes.toString('hex') : String(row.__key_bytes);
-      const walletAddress = extractWalletHex(row.attackers);
+      // When mobs initiate combat, the player wallet is in defenders, not attackers
+      const isMobAttack = row.attackers_are_mobs === true || row.attackers_are_mobs === 1;
+      const walletAddress = isMobAttack
+        ? extractWalletHex(row.defenders)
+        : extractWalletHex(row.attackers);
       const rawDropped = row.items_dropped;
       const itemIds: string[] = Array.isArray(rawDropped) ? rawDropped.map(String) : [];
       if (itemIds.length === 0) continue;
@@ -888,7 +899,7 @@ async function resolveItemName(itemId: string | number, syncHandle: SyncHandle):
  * The first 20 bytes of a characterId encode the wallet address.
  * Handles all MUD column formats: JSON array strings, {json:[]} objects, packed hex.
  */
-function extractWalletHex(raw: unknown): string | null {
+export function extractWalletHex(raw: unknown): string | null {
   let hexStr: string | null = null;
   if (typeof raw === 'string') {
     if (raw.startsWith('[')) {

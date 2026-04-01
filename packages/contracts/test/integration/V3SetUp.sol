@@ -209,7 +209,7 @@ contract V3SetUp is Test {
             restock: stock, stock: stock
         });
         uint256 shopMobId = world.UD__createMob(MobType.Shop, abi.encode(shop), "test_shop");
-        shopId = world.UD__spawnMob(shopMobId, 0, 0);
+        shopId = world.UD__spawnMob(shopMobId, 1, 0, 0);
     }
 
     function _createMonsters() internal {

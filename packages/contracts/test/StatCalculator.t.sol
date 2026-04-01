@@ -27,11 +27,11 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateLevelFromExperience() public {
-        // Create array with 10 levels (MAX_LEVEL)
-        uint256[] memory levelsTable = new uint256[](10);
+        // Create array with 20 levels (MAX_LEVEL)
+        uint256[] memory levelsTable = new uint256[](20);
 
         // Set up experience thresholds with increasing requirements
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 20; i++) {
             if (i == 0) {
                 levelsTable[i] = 0;
             } else {
@@ -47,9 +47,9 @@ contract StatCalculatorTest is Test {
         level = StatCalculator.calculateLevelFromExperience(1100, levelsTable);
         assertEq(level, 5);
 
-        // Test max level (XP >= levelsTable[9])
+        // Test max level (XP >= levelsTable[19])
         level = StatCalculator.calculateLevelFromExperience(1000000, levelsTable);
-        assertEq(level, 10);
+        assertEq(level, 20);
     }
 
     function testGenerateRandomStats() public {
@@ -81,26 +81,26 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateStatPointsForLevel() public {
-        // Test early game: levels 1-10, +1 per level (V3: was +2)
+        // Test early game: levels 1-10, +1 per level
         int256 statPoints = StatCalculator.calculateStatPointsForLevel(5);
         assertEq(statPoints, 1);
 
         statPoints = StatCalculator.calculateStatPointsForLevel(10);
         assertEq(statPoints, 1);
 
-        // Test mid game: levels 11-50, +1 per 2 levels (even levels only)
+        // Test mid game: levels 11-50, +1 per level
         statPoints = StatCalculator.calculateStatPointsForLevel(12);
-        assertEq(statPoints, 1); // even level gets point
+        assertEq(statPoints, 1);
 
         statPoints = StatCalculator.calculateStatPointsForLevel(13);
-        assertEq(statPoints, 0); // odd level gets no point
+        assertEq(statPoints, 1);
 
-        // Test late game: levels 51-100, +1 per 5 levels
+        // Test late game: levels 51-100, +1 per level
         statPoints = StatCalculator.calculateStatPointsForLevel(55);
-        assertEq(statPoints, 1); // level 55 % 5 == 0
+        assertEq(statPoints, 1);
 
         statPoints = StatCalculator.calculateStatPointsForLevel(52);
-        assertEq(statPoints, 0); // level 52 % 5 != 0
+        assertEq(statPoints, 1);
     }
 
     function testCalculateHpForLevel() public {
@@ -261,17 +261,17 @@ contract StatCalculatorTest is Test {
     }
 
     function testCalculateTotalStatPoints() public {
-        // Test level 10 (early game: 10 points) V3: 1 point/level instead of 2
+        // Test level 10 (early game: 10 points)
         int256 totalPoints = StatCalculator.calculateTotalStatPoints(10);
         assertEq(totalPoints, 10); // 10 levels * 1 point
 
-        // Test level 20 (10 early + 5 mid = 15)
+        // Test level 20 (10 early + 10 mid = 20)
         totalPoints = StatCalculator.calculateTotalStatPoints(20);
-        assertEq(totalPoints, 15); // 10 + (10/2) = 15
+        assertEq(totalPoints, 20); // 10 + 10 = 20
 
-        // Test level 60 (10 early + 20 mid + 2 late)
+        // Test level 60 (10 early + 40 mid + 10 late = 60)
         totalPoints = StatCalculator.calculateTotalStatPoints(60);
-        assertEq(totalPoints, 32); // 10 + 20 + 2 = 32
+        assertEq(totalPoints, 60); // 1 point per level
     }
 
     function testCalculateTotalHpFromLeveling() public {

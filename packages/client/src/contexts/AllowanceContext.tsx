@@ -189,7 +189,10 @@ export const AllowanceProvider = ({
 
       try {
         const owner = character.owner as Address;
-        const spenders = [shopAddress, lootManagerAddress, marketplaceAddress].filter(Boolean) as string[];
+        const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+        const spenders = [shopAddress, lootManagerAddress, marketplaceAddress].filter(
+          (a): a is string => Boolean(a) && a !== ZERO_ADDRESS,
+        );
 
         // 1. Check all allowances in parallel
         const checks = await Promise.all(
@@ -333,7 +336,6 @@ export const AllowanceProvider = ({
       if (authMethod !== 'embedded') return false;
       const systemAddress = getSystemAddress(system);
       if (!systemAddress || !approvalClient || !itemsAddress) return false;
-
       setIsApprovingItems(true);
       try {
         const { request } = await publicClient.simulateContract({

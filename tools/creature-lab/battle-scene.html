@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Battle Scene Prototype</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+    .scene { width: 100vw; height: 70vh; position: relative; }
+    canvas { width: 100%; height: 100%; display: block; }
+    .controls {
+      padding: 16px 24px;
+      border-top: 1px solid #222;
+      display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap;
+    }
+    .attack-btn {
+      background: #1a1a18; border: 1px solid #3a3520; color: #c4b88a;
+      padding: 10px 24px; cursor: pointer; font-family: inherit; font-size: 13px;
+      transition: all 0.15s;
+    }
+    .attack-btn:hover { background: #2a2820; border-color: #5a5030; color: #e8dcc8; }
+    .attack-btn:active { background: #3a3828; }
+    .attack-btn:disabled { opacity: 0.3; cursor: default; }
+    .hp-bar-container {
+      position: absolute; bottom: 20px; right: 20px;
+      width: 200px; z-index: 10;
+    }
+    .hp-label { font-size: 10px; color: #888; margin-bottom: 2px; }
+    .hp-bar-bg { background: #1a1a1a; border: 1px solid #333; height: 10px; width: 100%; }
+    .hp-bar-fill { background: #5a8a3e; height: 100%; transition: width 0.4s ease; }
+    .hp-text { font-size: 11px; color: #aaa; text-align: right; margin-top: 2px; }
+    .monster-name {
+      position: absolute; bottom: 56px; right: 20px;
+      font-size: 14px; color: #c4b88a; z-index: 10;
+    }
+    .damage-float {
+      position: absolute; font-size: 18px; font-weight: bold; color: #e84040;
+      z-index: 20; pointer-events: none; text-shadow: 0 0 6px rgba(0,0,0,0.8);
+    }
+    .log {
+      padding: 8px 24px; font-size: 11px; color: #555; max-height: 80px;
+      overflow-y: auto; border-top: 1px solid #1a1a1a;
+    }
+    .log div { padding: 1px 0; }
+    .log .hit { color: #c4b88a; }
+    .log .miss { color: #555; }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <canvas id="battle"></canvas>
+    <div class="monster-name" id="monster-name">Dire Rat</div>
+    <div class="hp-bar-container">
+      <div class="hp-label">HP</div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp-fill" style="width:100%"></div></div>
+      <div class="hp-text" id="hp-text">9 / 9</div>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="attack-btn" data-weapon="sword" data-label="Warhammer">Warhammer</button>
+    <button class="attack-btn" data-weapon="bow" data-label="Darkwood Bow">Darkwood Bow</button>
+    <button class="attack-btn" data-weapon="spell" data-label="Fire Bolt">Fire Bolt</button>
+  </div>
+  <div class="log" id="log"></div>
+  <script type="module" src="battle-scene.js"></script>
+</body>
+</html>

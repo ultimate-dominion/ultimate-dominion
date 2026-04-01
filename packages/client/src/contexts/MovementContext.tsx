@@ -11,9 +11,11 @@ import { IoIosWarning } from 'react-icons/io';
 import { Link, useLocation } from 'react-router-dom';
 
 import { InfoModal } from '../components/InfoModal';
+import { ZoneExitPrompt } from '../components/ZoneExitPrompt';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import type { TransactionProgress } from '../hooks/useTransactionProgress';
+import { SHOW_Z2 } from '../lib/env';
 import { GAME_BOARD_PATH } from '../Routes';
 
 import { useBattle } from './BattleContext';
@@ -39,22 +41,26 @@ const OUTER_REALMS_NARRATIVES = [
 
 type MovementContextType = {
   autoAdventureMode: boolean;
+  clearPendingZoneTransition: () => void;
   isRefreshing: boolean;
   moveProgress: TransactionProgress;
   moveStatusMessage: string;
   onMove: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSetIsMovementDisabled: (isDisabled: boolean) => void;
   onToggleAutoAdventure: () => void;
+  pendingZoneTransition: boolean;
 };
 
 const MovementContext = createContext<MovementContextType>({
   autoAdventureMode: false,
+  clearPendingZoneTransition: () => {},
   isRefreshing: false,
   moveProgress: { phase: 'idle', percent: 0, transitionMs: 0 },
   moveStatusMessage: '',
   onMove: () => {},
   onSetIsMovementDisabled: () => {},
   onToggleAutoAdventure: () => {},
+  pendingZoneTransition: false,
 });
 
 export type MovementProviderProps = {
@@ -67,7 +73,7 @@ export const MovementProvider = ({
   const { pathname } = useLocation();
   const {
     delegatorAddress,
-    systemCalls: { move },
+    systemCalls: { move, transitionZone },
   } = useMUD();
 
   const {
@@ -85,7 +91,7 @@ export const MovementProvider = ({
   const [outerRealmsNarrative, setOuterRealmsNarrative] = useState('');
 
   const { character, isMoveEquipped } = useCharacter();
-  const { isSpawned, position } = useMap();
+  const { currentZone, displayPosition, isSpawned, position } = useMap();
   const { currentBattle } = useBattle();
   const { isMessageInputFocused } = useChat();
   const { renderError, renderWarning } = useToast();
@@ -124,6 +130,32 @@ export const MovementProvider = ({
     });
   }, []);
 
+  // ── Zone exit state ──
+  const [isZoneExitPromptOpen, setIsZoneExitPromptOpen] = useState(false);
+  const [pendingZoneTransition, setPendingZoneTransition] = useState(false);
+
+  const transitionZoneTx = useTransaction({
+    actionName: 'zone transition',
+    showSuccessToast: false,
+  });
+
+  const onConfirmZoneExit = useCallback(async () => {
+    if (!character) return;
+    const result = await transitionZoneTx.execute(async () => {
+      const { error, success } = await transitionZone(character.id, 2);
+      if (error && !success) throw new Error(error);
+      return { success: true };
+    });
+    if (result !== undefined) {
+      setIsZoneExitPromptOpen(false);
+      setPendingZoneTransition(true);
+    }
+  }, [character, transitionZone, transitionZoneTx]);
+
+  const clearPendingZoneTransition = useCallback(() => {
+    setPendingZoneTransition(false);
+  }, []);
+
   const onMove = useCallback(
     async (direction: 'up' | 'down' | 'left' | 'right') => {
       if (isMovementDisabled) { console.log('[move] blocked: isMovementDisabled'); return; }
@@ -144,6 +176,19 @@ export const MovementProvider = ({
         (direction === 'left' && x === 0) ||
         (direction === 'right' && x === 9)
       ) {
+        // Zone exit: at exit tile pressing north
+        if (
+          SHOW_Z2 &&
+          direction === 'up' &&
+          displayPosition &&
+          displayPosition.x === 5 &&
+          displayPosition.y === 9 &&
+          character.hasSelectedAdvancedClass &&
+          currentZone === 1 &&
+          !autoAdventureMode
+        ) {
+          setIsZoneExitPromptOpen(true);
+        }
         return;
       }
 
@@ -182,9 +227,12 @@ export const MovementProvider = ({
       setIsMoving(false);
     },
     [
+      autoAdventureMode,
       character,
       currentBattle,
+      currentZone,
       delegatorAddress,
+      displayPosition,
       isMessageInputFocused,
       isMoveEquipped,
       isMovementDisabled,
@@ -261,15 +309,27 @@ export const MovementProvider = ({
     <MovementContext.Provider
       value={{
         autoAdventureMode,
+        clearPendingZoneTransition,
         isRefreshing: isMoving,
         moveProgress: moveTx.progress,
         moveStatusMessage: moveTx.statusMessage || (autoAdventureMode ? 'Adventuring...' : 'Moving...'),
         onMove,
         onSetIsMovementDisabled,
         onToggleAutoAdventure,
+        pendingZoneTransition,
       }}
     >
       {children}
+
+      {SHOW_Z2 && (
+        <ZoneExitPrompt
+          isOpen={isZoneExitPromptOpen}
+          isLoading={transitionZoneTx.isLoading}
+          onConfirm={onConfirmZoneExit}
+          onCancel={() => setIsZoneExitPromptOpen(false)}
+        />
+      )}
+
       <InfoModal
         heading="No moves equipped!"
         isOpen={isNoMoveEquippedModalOpen}

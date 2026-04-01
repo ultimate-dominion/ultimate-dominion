@@ -33,7 +33,7 @@ contract PvpRewardSystem is System {
         if (deadDefenders == encounterData.defenders.length) attackersWin = true;
 
         // --- Gold redistribution ---
-        // Losers lose 50% of wallet Gold: 10% burned (permanent sink), 40% to winners
+        // Losers lose 25% of on-hand Gold: 15% burned (permanent sink), 10% to winners
         bytes32[] memory winners = attackersWin ? encounterData.attackers : encounterData.defenders;
         bytes32[] memory losers = attackersWin ? encounterData.defenders : encounterData.attackers;
 
@@ -42,11 +42,11 @@ contract PvpRewardSystem is System {
             uint256 walletGold = GoldLib.goldBalanceOf(loserAddr);
             if (walletGold == 0) continue;
 
-            uint256 totalLoss = walletGold / PVP_GOLD_DENOMINATOR; // 50%
+            uint256 totalLoss = walletGold / PVP_GOLD_DENOMINATOR; // 25% of on-hand gold
             if (totalLoss == 0) continue;
 
-            uint256 burnAmount = totalLoss / 5; // 20% of pot = 10% of wallet
-            uint256 toWinners = totalLoss - burnAmount; // 80% of pot = 40% of wallet
+            uint256 burnAmount = totalLoss * 3 / 5; // 60% of pot = 15% of wallet (burned)
+            uint256 toWinners = totalLoss - burnAmount; // 40% of pot = 10% of wallet (to killer)
             _goldAmount += totalLoss;
 
             GoldLib.goldBurn(_world(), loserAddr, burnAmount);

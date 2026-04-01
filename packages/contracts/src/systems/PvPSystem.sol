@@ -12,7 +12,7 @@ import {
     CombatEncounterData,
     CombatOutcome,
     CombatOutcomeData,
-    Position,
+    PositionV2,
     Spawned,
     ActionOutcome,
     ActionOutcomeData,
@@ -23,7 +23,7 @@ import {
 } from "@codegen/index.sol";
 import {EncounterType, ItemType} from "@codegen/common.sol";
 import {Action, CombatFlagsResult} from "@interfaces/Structs.sol";
-import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID, ZONE_DARK_CAVE, ZONE_ORIGIN_SPACING} from "../../constants.sol";
+import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID, ZONE_DARK_CAVE, ZONE_WINDY_PEAKS} from "../../constants.sol";
 import {
     NoWeaponsEquipped,
     Unauthorized,
@@ -45,10 +45,11 @@ contract PvPSystem is System {
         returns (bool _isValidPvP)
     {
         _isValidPvP = true;
+        uint256 entityZone;
         uint16 entityX;
         uint16 entityY;
         for (uint256 i; i < attackers.length;) {
-            (entityX, entityY) = IWorld(_world()).UD__getEntityPosition(attackers[i]);
+            (entityZone, entityX, entityY) = PositionV2.get(attackers[i]);
             if (!IWorld(_world()).UD__isValidCharacterId(attackers[i])) {
                 _isValidPvP = false;
                 break;
@@ -57,7 +58,7 @@ contract PvPSystem is System {
                 _isValidPvP = false;
                 break;
             }
-            if (_isInSafetyZone(entityX, entityY)) {
+            if (_isInSafeZone(entityZone, entityX, entityY)) {
                 _isValidPvP = false;
                 break;
             }
@@ -72,7 +73,7 @@ contract PvPSystem is System {
         }
         if (_isValidPvP) {
             for (uint256 i; i < defenders.length;) {
-                (entityX, entityY) = IWorld(_world()).UD__getEntityPosition(defenders[i]);
+                (entityZone, entityX, entityY) = PositionV2.get(defenders[i]);
                 if (!IWorld(_world()).UD__isValidCharacterId(defenders[i])) {
                     _isValidPvP = false;
                     break;
@@ -81,7 +82,7 @@ contract PvPSystem is System {
                     _isValidPvP = false;
                     break;
                 }
-                if (_isInSafetyZone(entityX, entityY)) {
+                if (_isInSafeZone(entityZone, entityX, entityY)) {
                     _isValidPvP = false;
                     break;
                 }
@@ -110,6 +111,20 @@ contract PvPSystem is System {
             }
         }
         return _isValidPvP;
+    }
+
+    /// @dev Zone-aware safe zone check using zone-relative coordinates
+    function _isInSafeZone(uint256 zoneId, uint16 x, uint16 y) internal pure returns (bool) {
+        if (zoneId == ZONE_DARK_CAVE) {
+            // Z1: quadrant safe zone (x<5 AND y<5)
+            return x < 5 && y < 5;
+        }
+        if (zoneId == ZONE_WINDY_PEAKS) {
+            // Z2: base camp rows 0-2
+            return y < 3;
+        }
+        // Future zones: no safe zone by default
+        return false;
     }
 
     function executePvPCombat(uint256 prevRandao, bytes32 encounterId, Action[] memory effects) public {
@@ -234,16 +249,16 @@ contract PvPSystem is System {
         } else if (encounterData.encounterType == EncounterType.PvP) {
             uint256 amountToDrop;
             bool attackersWin;
-            // take 10% of wallet Gold — 5% burned (permanent sink), 5% to opponent
+            // take 5% of on-hand Gold — 3% burned (permanent sink), 2% to opponent
             // Smoke Cloak negates the penalty entirely
             if (!hasSmokeCover) {
                 address playerAddr = IWorld(_world()).UD__getOwnerAddress(entityId);
                 uint256 walletGold = GoldLib.goldBalanceOf(playerAddr);
                 if (walletGold > 0) {
-                    amountToDrop = walletGold / 10;
+                    amountToDrop = walletGold / 20; // 5% total (was 10%)
                     if (amountToDrop > 0) {
-                        uint256 toBurn = amountToDrop / 2;
-                        uint256 toOpponents = amountToDrop - toBurn;
+                        uint256 toBurn = amountToDrop * 3 / 5; // 60% of pot = 3% of wallet
+                        uint256 toOpponents = amountToDrop - toBurn; // 40% of pot = 2% of wallet
 
                         GoldLib.goldBurn(_world(), playerAddr, toBurn);
 
@@ -293,21 +308,6 @@ contract PvPSystem is System {
         } else {
             revert UnrecognizedEncounterType();
         }
-    }
-
-    /// @dev Safety zone = first 5x5 tiles of Zone 1 (Dark Cave) only.
-    /// Uses global Position coords: Zone 1 origin is (0,0), so safety is x<5 && y<5.
-    /// Zone-aware so future zones with different origins won't false-positive.
-    function _isInSafetyZone(uint16 globalX, uint16 globalY) internal pure returns (bool) {
-        // Zone 1 origin is (0, 0). Zone 2+ origins are offset by ZONE_ORIGIN_SPACING (100).
-        // Safety zone only applies to Zone 1, so check global coords fall within Z1's 5x5 corner.
-        uint16 z1OriginX = 0;
-        uint16 z1OriginY = 0;
-        uint16 relX = globalX - z1OriginX;
-        uint16 relY = globalY - z1OriginY;
-        // If coords are outside Zone 1 grid (10x10), not in Z1 safety zone.
-        if (relX >= 10 || relY >= 10) return false;
-        return relX < 5 && relY < 5;
     }
 
     function _setCharacterSpawns(CombatEncounterData memory encounterData) internal {

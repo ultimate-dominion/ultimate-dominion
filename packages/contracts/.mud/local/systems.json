@@ -61,15 +61,15 @@
       "abi": [
         "error InvalidShopEntity()",
         "error NotAdmin()",
-        "function adminCreateShop(uint16 x, uint16 y, (uint256 gold, uint256 maxGold, uint256 priceMarkup, uint256 priceMarkdown, uint256 restockTimestamp, uint256[] sellableItems, uint256[] buyableItems, uint256[] restock, uint256[] stock) shopData, string shopMetadataUri) returns (bytes32 entityId)",
-        "function adminSpawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32 entityId)",
+        "function adminCreateShop(uint256 zoneId, uint16 x, uint16 y, (uint256 gold, uint256 maxGold, uint256 priceMarkup, uint256 priceMarkdown, uint256 restockTimestamp, uint256[] sellableItems, uint256[] buyableItems, uint256[] restock, uint256[] stock) shopData, string shopMetadataUri) returns (bytes32 entityId)",
+        "function adminSpawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) returns (bytes32 entityId)",
         "function adminUpdateShop(bytes32 shopEntityId, (uint256 gold, uint256 maxGold, uint256 priceMarkup, uint256 priceMarkdown, uint256 restockTimestamp, uint256[] sellableItems, uint256[] buyableItems, uint256[] restock, uint256[] stock) shopData)"
       ],
       "worldAbi": [
         "error InvalidShopEntity()",
         "error NotAdmin()",
-        "function UD__adminCreateShop(uint16 x, uint16 y, (uint256 gold, uint256 maxGold, uint256 priceMarkup, uint256 priceMarkdown, uint256 restockTimestamp, uint256[] sellableItems, uint256[] buyableItems, uint256[] restock, uint256[] stock) shopData, string shopMetadataUri) returns (bytes32 entityId)",
-        "function UD__adminSpawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32 entityId)",
+        "function UD__adminCreateShop(uint256 zoneId, uint16 x, uint16 y, (uint256 gold, uint256 maxGold, uint256 priceMarkup, uint256 priceMarkdown, uint256 restockTimestamp, uint256[] sellableItems, uint256[] buyableItems, uint256[] restock, uint256[] stock) shopData, string shopMetadataUri) returns (bytes32 entityId)",
+        "function UD__adminSpawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) returns (bytes32 entityId)",
         "function UD__adminUpdateShop(bytes32 shopEntityId, (uint256 gold, uint256 maxGold, uint256 priceMarkup, uint256 priceMarkdown, uint256 restockTimestamp, uint256[] sellableItems, uint256[] buyableItems, uint256[] restock, uint256[] stock) shopData)"
       ]
     },
@@ -605,11 +605,15 @@
       "abi": [
         "error AlreadyInGuild()",
         "error CannotKickLeader()",
+        "error DuplicateBuffType()",
         "error GamePaused()",
         "error GuildFull()",
+        "error GuildMaxLevel()",
         "error GuildNotFound()",
         "error GuildNotOpen()",
         "error InsufficientTreasury()",
+        "error InvalidBuffSlot()",
+        "error InvalidBuffType()",
         "error InvalidGuildTag()",
         "error LeaderNotInactive()",
         "error NoApplicationFound()",
@@ -618,8 +622,11 @@
         "error NotGuildOfficer()",
         "error NotInGuild()",
         "error TaxRateTooHigh()",
+        "event GuildBuffDeactivated(uint256 indexed guildId, uint8 slotIndex)",
+        "event GuildBuffSet(uint256 indexed guildId, uint8 slotIndex, uint8 buffType)",
         "event GuildCreated(uint256 indexed guildId, bytes32 indexed leader, string name)",
         "event GuildDisbanded(uint256 indexed guildId)",
+        "event GuildUpgraded(uint256 indexed guildId, uint256 newLevel)",
         "event MemberJoined(uint256 indexed guildId, bytes32 indexed characterId)",
         "event MemberLeft(uint256 indexed guildId, bytes32 indexed characterId)",
         "event TaxCollected(uint256 indexed guildId, uint256 amount)",
@@ -630,26 +637,34 @@
         "function demoteMember(bytes32 leaderCharId, bytes32 targetCharId)",
         "function disbandGuild(bytes32 characterId)",
         "function getGuildBonus() pure returns (uint256 goldBonus, uint256 xpBonus, uint256 dropBonus)",
+        "function getGuildBuffStats(bytes32 characterId) view returns (int256 strBuff, int256 agiBuff, int256 intBuff, int256 hpBuff)",
         "function isGuildMember(bytes32 characterId) view returns (bool)",
         "function joinGuild(bytes32 characterId, uint256 guildId)",
         "function kickMember(bytes32 officerCharId, bytes32 targetCharId)",
         "function leaveGuild(bytes32 characterId)",
         "function promoteMember(bytes32 leaderCharId, bytes32 targetCharId)",
         "function rejectApplication(bytes32 officerCharId, bytes32 applicantCharId)",
+        "function removeGuildBuff(bytes32 characterId, uint8 slotIndex)",
         "function setDescription(bytes32 characterId, string description)",
+        "function setGuildBuff(bytes32 characterId, uint8 slotIndex, uint8 buffType)",
         "function setIsOpen(bytes32 characterId, bool isOpen)",
         "function setTaxRate(bytes32 characterId, uint256 newRate)",
         "function taxGold(bytes32 characterId, uint256 goldAmount) returns (uint256 taxAmount)",
+        "function upgradeGuild(bytes32 characterId)",
         "function withdrawTreasury(bytes32 characterId, uint256 amount)"
       ],
       "worldAbi": [
         "error AlreadyInGuild()",
         "error CannotKickLeader()",
+        "error DuplicateBuffType()",
         "error GamePaused()",
         "error GuildFull()",
+        "error GuildMaxLevel()",
         "error GuildNotFound()",
         "error GuildNotOpen()",
         "error InsufficientTreasury()",
+        "error InvalidBuffSlot()",
+        "error InvalidBuffType()",
         "error InvalidGuildTag()",
         "error LeaderNotInactive()",
         "error NoApplicationFound()",
@@ -658,8 +673,11 @@
         "error NotGuildOfficer()",
         "error NotInGuild()",
         "error TaxRateTooHigh()",
+        "event GuildBuffDeactivated(uint256 indexed guildId, uint8 slotIndex)",
+        "event GuildBuffSet(uint256 indexed guildId, uint8 slotIndex, uint8 buffType)",
         "event GuildCreated(uint256 indexed guildId, bytes32 indexed leader, string name)",
         "event GuildDisbanded(uint256 indexed guildId)",
+        "event GuildUpgraded(uint256 indexed guildId, uint256 newLevel)",
         "event MemberJoined(uint256 indexed guildId, bytes32 indexed characterId)",
         "event MemberLeft(uint256 indexed guildId, bytes32 indexed characterId)",
         "event TaxCollected(uint256 indexed guildId, uint256 amount)",
@@ -670,16 +688,20 @@
         "function UD__demoteMember(bytes32 leaderCharId, bytes32 targetCharId)",
         "function UD__disbandGuild(bytes32 characterId)",
         "function UD__getGuildBonus() pure returns (uint256 goldBonus, uint256 xpBonus, uint256 dropBonus)",
+        "function UD__getGuildBuffStats(bytes32 characterId) view returns (int256 strBuff, int256 agiBuff, int256 intBuff, int256 hpBuff)",
         "function UD__isGuildMember(bytes32 characterId) view returns (bool)",
         "function UD__joinGuild(bytes32 characterId, uint256 guildId)",
         "function UD__kickMember(bytes32 officerCharId, bytes32 targetCharId)",
         "function UD__leaveGuild(bytes32 characterId)",
         "function UD__promoteMember(bytes32 leaderCharId, bytes32 targetCharId)",
         "function UD__rejectApplication(bytes32 officerCharId, bytes32 applicantCharId)",
+        "function UD__removeGuildBuff(bytes32 characterId, uint8 slotIndex)",
         "function UD__setDescription(bytes32 characterId, string description)",
+        "function UD__setGuildBuff(bytes32 characterId, uint8 slotIndex, uint8 buffType)",
         "function UD__setIsOpen(bytes32 characterId, bool isOpen)",
         "function UD__setTaxRate(bytes32 characterId, uint256 newRate)",
         "function UD__taxGold(bytes32 characterId, uint256 goldAmount) returns (uint256 taxAmount)",
+        "function UD__upgradeGuild(bytes32 characterId)",
         "function UD__withdrawTreasury(bytes32 characterId, uint256 amount)"
       ]
     },
@@ -889,12 +911,12 @@
       "abi": [
         "error NoMonsters()",
         "error NotAuthorizedCaller()",
-        "function spawnOnTileEnter(uint16 x, uint16 y)"
+        "function spawnOnTileEnter(uint256 zoneId, uint16 x, uint16 y)"
       ],
       "worldAbi": [
         "error NoMonsters()",
         "error NotAuthorizedCaller()",
-        "function UD__spawnOnTileEnter(uint16 x, uint16 y)"
+        "function UD__spawnOnTileEnter(uint256 zoneId, uint16 x, uint16 y)"
       ]
     },
     {
@@ -915,8 +937,8 @@
         "error OnlyCharacters()",
         "error OutOfBounds()",
         "error Unauthorized()",
-        "function getEntitiesAtPosition(uint16 x, uint16 y) view returns (bytes32[] entitiesAtPosition)",
-        "function getEntityPosition(bytes32 entityId) view returns (uint16 x, uint16 y)",
+        "function getEntitiesAtPosition(uint256 zoneId, uint16 x, uint16 y) view returns (bytes32[] entitiesAtPosition)",
+        "function getEntityPosition(bytes32 entityId) view returns (uint256 zoneId, uint16 x, uint16 y)",
         "function getPlayerCounterKey() pure returns (address)",
         "function getSpawnedPlayerCount() view returns (uint256)",
         "function isAtPosition(bytes32 entityId, uint16 x, uint16 y) view returns (bool _isAtPosition)",
@@ -935,8 +957,8 @@
         "error OnlyCharacters()",
         "error OutOfBounds()",
         "error Unauthorized()",
-        "function UD__getEntitiesAtPosition(uint16 x, uint16 y) view returns (bytes32[] entitiesAtPosition)",
-        "function UD__getEntityPosition(bytes32 entityId) view returns (uint16 x, uint16 y)",
+        "function UD__getEntitiesAtPosition(uint256 zoneId, uint16 x, uint16 y) view returns (bytes32[] entitiesAtPosition)",
+        "function UD__getEntityPosition(bytes32 entityId) view returns (uint256 zoneId, uint16 x, uint16 y)",
         "function UD__getPlayerCounterKey() pure returns (address)",
         "function UD__getSpawnedPlayerCount() view returns (uint256)",
         "function UD__isAtPosition(bytes32 entityId, uint16 x, uint16 y) view returns (bool _isAtPosition)",
@@ -1005,8 +1027,8 @@
         "function getSpawnCounter(bytes32 entityId) pure returns (uint256)",
         "function isValidMob(bytes32 entityId) view returns (bool _isValidMob)",
         "function registerMobInZone(uint256 zoneId, uint256 level, uint256 mobId)",
-        "function spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32 entityId)",
-        "function spawnMobs(uint256[] mobIds, uint16 x, uint16 y)"
+        "function spawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) returns (bytes32 entityId)",
+        "function spawnMobs(uint256[] mobIds, uint256 zoneId, uint16 x, uint16 y)"
       ],
       "worldAbi": [
         "error MaxMobSpawns()",
@@ -1026,8 +1048,8 @@
         "function UD__getSpawnCounter(bytes32 entityId) pure returns (uint256)",
         "function UD__isValidMob(bytes32 entityId) view returns (bool _isValidMob)",
         "function UD__registerMobInZone(uint256 zoneId, uint256 level, uint256 mobId)",
-        "function UD__spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32 entityId)",
-        "function UD__spawnMobs(uint256[] mobIds, uint16 x, uint16 y)"
+        "function UD__spawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) returns (bytes32 entityId)",
+        "function UD__spawnMobs(uint256[] mobIds, uint256 zoneId, uint16 x, uint16 y)"
       ]
     },
     {
@@ -1239,6 +1261,7 @@
       "name": "ShopSystem",
       "systemId": "0x7379554400000000000000000000000053686f7053797374656d000000000000",
       "abi": [
+        "error ArrayMismatch()",
         "error GamePaused()",
         "error InsufficientItemBalance()",
         "error InvalidEncounter()",
@@ -1259,9 +1282,11 @@
         "function restock(bytes32 shopId) returns (bool)",
         "function sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
         "function sellAny(uint256 amount, bytes32 shopId, uint256 itemId, bytes32 characterId)",
+        "function sellBatch(uint256[] itemIds, uint256[] amounts, bytes32 shopId, bytes32 characterId)",
         "function shopSystemAddress() view returns (address)"
       ],
       "worldAbi": [
+        "error ArrayMismatch()",
         "error GamePaused()",
         "error InsufficientItemBalance()",
         "error InvalidEncounter()",
@@ -1282,6 +1307,7 @@
         "function UD__restock(bytes32 shopId) returns (bool)",
         "function UD__sell(uint256 amount, bytes32 shopId, uint256 itemIndex, bytes32 characterId)",
         "function UD__sellAny(uint256 amount, bytes32 shopId, uint256 itemId, bytes32 characterId)",
+        "function UD__sellBatch(uint256[] itemIds, uint256[] amounts, bytes32 shopId, bytes32 characterId)",
         "function UD__shopSystemAddress() view returns (address)"
       ]
     },
@@ -1366,6 +1392,31 @@
         "function UD__rest(bytes32 characterId)",
         "function UD__useCombatConsumableItem(bytes32, uint256) pure",
         "function UD__useWorldConsumableItem(bytes32 givingEntity, bytes32 receivingEntity, uint256 itemId)"
+      ]
+    },
+    {
+      "namespaceLabel": "UD",
+      "label": "WorldBossSystem",
+      "namespace": "UD",
+      "name": "WorldBossSys",
+      "systemId": "0x73795544000000000000000000000000576f726c64426f737353797300000000",
+      "abi": [
+        "error NotAdmin()",
+        "error NotAuthorizedCaller()",
+        "function configureWorldBoss(uint256 bossId, uint256 mobId, uint256 zoneId, uint16 spawnX, uint16 spawnY, uint256 respawnSeconds)",
+        "function despawnWorldBoss(uint256 bossId)",
+        "function onWorldBossDeath(bytes32 entityId)",
+        "function setWorldBossActive(uint256 bossId, bool active)",
+        "function trySpawnWorldBosses(uint256 zoneId)"
+      ],
+      "worldAbi": [
+        "error NotAdmin()",
+        "error NotAuthorizedCaller()",
+        "function UD__configureWorldBoss(uint256 bossId, uint256 mobId, uint256 zoneId, uint16 spawnX, uint16 spawnY, uint256 respawnSeconds)",
+        "function UD__despawnWorldBoss(uint256 bossId)",
+        "function UD__onWorldBossDeath(bytes32 entityId)",
+        "function UD__setWorldBossActive(uint256 bossId, bool active)",
+        "function UD__trySpawnWorldBosses(uint256 zoneId)"
       ]
     },
     {
@@ -1789,5 +1840,5 @@
       ]
     }
   ],
-  "createdAt": 1774478190965
+  "createdAt": 1774966023276
 }

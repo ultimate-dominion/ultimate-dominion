@@ -2,6 +2,7 @@ import type { Hex, WalletClient } from "viem";
 import {
   sendTx,
   readWorld,
+  simulateAndSend,
   deployerWallet,
   publicClient,
   worldAddress,
@@ -19,6 +20,29 @@ import type { StarterItems } from "./discovery";
 
 const ZERO_BYTES32 =
   "0x0000000000000000000000000000000000000000000000000000000000000000" as Hex;
+
+/**
+ * Read stats and strip viem's numeric tuple indices so object spreads work correctly.
+ * Without this, {...stats, currentHp: 1n} keeps stale values at positional keys.
+ */
+async function readStats(charId: Hex): Promise<StatsData> {
+  const raw = await readWorld("UD__getStats", [charId]);
+  return {
+    strength: raw.strength,
+    agility: raw.agility,
+    class: raw.class,
+    intelligence: raw.intelligence,
+    maxHp: raw.maxHp,
+    currentHp: raw.currentHp,
+    experience: raw.experience,
+    level: raw.level,
+    powerSource: raw.powerSource,
+    race: raw.race,
+    startingArmor: raw.startingArmor,
+    advancedClass: raw.advancedClass,
+    hasSelectedAdvancedClass: raw.hasSelectedAdvancedClass,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Character creation
@@ -51,16 +75,13 @@ export async function createCharacter(
   const nameBytesHex = nameToBytes32(name);
   const address = wallet.account!.address;
 
-  // 1. Mint
-  const mintHash = await sendTx(wallet, "UD__mintCharacter", [
-    address,
-    nameBytesHex,
-    "",
-  ]);
-  // Derive characterId: read it from chain
-  const characterId = (await readWorld("UD__getCharacterIdFromOwnerAddress", [
-    address,
-  ])) as Hex;
+  // 1. Mint (tokenUri must be non-empty or contract reverts InvalidTokenUri)
+  // Use simulateAndSend to capture return value directly — avoids RPC read-after-write lag
+  const { result: characterId } = await simulateAndSend<Hex>(
+    wallet,
+    "UD__mintCharacter",
+    [address, nameBytesHex, "smoke-test"],
+  );
 
   // 2. Choose race
   await sendTx(wallet, "UD__chooseRace", [
@@ -99,13 +120,14 @@ export async function createCharacter(
   // 7. Spawn
   await sendTx(wallet, "UD__spawn", [characterId]);
 
-  const stats = (await readWorld("UD__getStats", [characterId])) as StatsData;
+  const stats = await readStats(characterId);
 
   return { characterId, name, stats };
 }
 
 /**
  * Idempotent character setup: reuses existing character or creates a new one.
+ * Handles partially-created characters (minted but setup not finished).
  * Safe for repeated test runs against the same world.
  */
 export async function getOrCreateCharacter(
@@ -118,12 +140,95 @@ export async function getOrCreateCharacter(
   ])) as Hex;
 
   if (existing !== ZERO_BYTES32) {
-    const stats = (await readWorld("UD__getStats", [existing])) as StatsData;
-    console.log(`[helpers] Reusing existing character ${existing} for ${address}`);
-    return { characterId: existing, name: "resumed", stats };
+    const stats = await readStats(existing);
+
+    // Character is fully set up if it has non-zero stats (from rollBaseStats)
+    if (stats.strength > 0n || stats.maxHp > 0n) {
+      console.log(`[helpers] Reusing existing character ${existing} for ${address}`);
+      // Ensure character is properly on the map (may be missing after partial runs)
+      await ensureOnMap(wallet, existing);
+      return { characterId: existing, name: "resumed", stats };
+    }
+
+    // Character exists but is incomplete — finish setup
+    console.log(`[helpers] Resuming incomplete character ${existing} for ${address}`);
+    await finishCharacterSetup(wallet, existing, config);
+    const finalStats = await readStats(existing);
+    return { characterId: existing, name: "resumed", stats: finalStats };
   }
 
   return createCharacter(wallet, config);
+}
+
+/**
+ * Finish setup for an incomplete character (minted but not fully created).
+ * Each step is wrapped in try/catch to skip already-completed steps.
+ */
+async function finishCharacterSetup(
+  wallet: WalletClient,
+  characterId: Hex,
+  config: CharacterConfig,
+): Promise<void> {
+  const steps: Array<{ name: string; fn: () => Promise<any> }> = [
+    {
+      name: "chooseRace",
+      fn: () => sendTx(wallet, "UD__chooseRace", [characterId, config.race ?? Race.Human]),
+    },
+    {
+      name: "choosePowerSource",
+      fn: () => sendTx(wallet, "UD__choosePowerSource", [characterId, config.powerSource ?? PowerSource.Physical]),
+    },
+    {
+      name: "chooseStartingArmor",
+      fn: () => sendTx(wallet, "UD__chooseStartingArmor", [characterId, config.armorType ?? ArmorType.Plate]),
+    },
+    {
+      name: "rollBaseStats",
+      fn: () => {
+        const randomSeed = nameToBytes32(`seed_${Date.now()}`);
+        return sendTx(wallet, "UD__rollBaseStats", [randomSeed, characterId], 0n);
+      },
+    },
+    {
+      name: "enterGame",
+      fn: () => sendTx(wallet, "UD__enterGame", [characterId, BigInt(config.starterWeaponId), BigInt(config.starterArmorId)]),
+    },
+    {
+      name: "spawn",
+      fn: () => sendTx(wallet, "UD__spawn", [characterId]),
+    },
+  ];
+
+  for (const step of steps) {
+    try {
+      await step.fn();
+      console.log(`[helpers]   ${step.name} ✓`);
+    } catch (err: any) {
+      // Step already done or not applicable — skip
+      console.log(`[helpers]   ${step.name} skipped: ${err.message?.slice(0, 80)}`);
+    }
+  }
+}
+
+/**
+ * Ensure a character is properly registered on the map.
+ * If position data is inconsistent (e.g. from a partial previous run),
+ * re-spawn to fix it.
+ */
+async function ensureOnMap(wallet: WalletClient, characterId: Hex): Promise<void> {
+  const [x, y] = (await readWorld("UD__getEntityPosition", [characterId])) as [number, number];
+  const entities: Hex[] = await readWorld("UD__getEntitiesAtPosition", [x, y]);
+  const isOnMap = entities.some(
+    (e) => e.toLowerCase() === characterId.toLowerCase(),
+  );
+  if (!isOnMap) {
+    console.log(`[helpers] Character not in entities list at (${x},${y}) — re-spawning`);
+    try {
+      await sendTx(wallet, "UD__spawn", [characterId]);
+    } catch {
+      // Already properly spawned
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -181,9 +286,7 @@ export async function navigateTo(
       // Read the result via simulation (we already sent the tx, so read logs)
       // Since autoAdventure returns values, we need to simulate to get them
       // For now, read stats delta to infer combat
-      const statsAfter = (await readWorld("UD__getStats", [
-        charId,
-      ])) as StatsData;
+      const statsAfter = await readStats(charId);
 
       // Update position
       [currentX, currentY] = (await readWorld("UD__getEntityPosition", [
@@ -246,7 +349,7 @@ export async function farmToLevel(
   let currentLevel = Number(await readWorld("UD__getLevel", [charId]));
 
   while (currentLevel < targetLevel) {
-    const stats = (await readWorld("UD__getStats", [charId])) as StatsData;
+    const stats = await readStats(charId);
 
     // If HP is low, try to rest (must be at 0,0)
     if (stats.currentHp > 0n && stats.currentHp < stats.maxHp / 3n) {
@@ -313,7 +416,7 @@ export async function adminBoostToLevel(
   charId: Hex,
   level: number,
 ): Promise<void> {
-  const stats = (await readWorld("UD__getStats", [charId])) as StatsData;
+  const stats = await readStats(charId);
 
   // Calculate experience needed: level N requires roughly N*100 XP
   // We set it generously to avoid edge cases
@@ -337,7 +440,7 @@ export async function adminBoostToLevel(
  * Admin-heal a character to full HP.
  */
 export async function adminHeal(charId: Hex): Promise<void> {
-  const stats = (await readWorld("UD__getStats", [charId])) as StatsData;
+  const stats = await readStats(charId);
   if (stats.currentHp < stats.maxHp) {
     const healed: StatsData = {
       ...stats,

@@ -10,6 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { HOME_PATH } from '../Routes';
@@ -182,7 +183,9 @@ const Bulletin = ({
 
 /* ────────────────────────── Main Tavern Page ────────────────────────── */
 
-export const Tavern = (): JSX.Element => (
+export const Tavern = (): JSX.Element => {
+  const { t } = useTranslation('pages');
+  return (
   <Box
     bg="#12100E"
     minH="100vh"
@@ -199,7 +202,7 @@ export const Tavern = (): JSX.Element => (
     }}
   >
     <Helmet>
-      <title>The Adventurer&apos;s Codex | Ultimate Dominion</title>
+      <title>{t('tavern.pageTitle')}</title>
     </Helmet>
 
     {/* Warm radial hearth glow at center */}
@@ -237,7 +240,7 @@ export const Tavern = (): JSX.Element => (
           letterSpacing="0.4em"
           textTransform="uppercase"
         >
-          Knowledge for the Bold
+          {t('tavern.knowledgeForBold')}
         </Text>
         <Heading
           color="#E8DCC8"
@@ -247,7 +250,7 @@ export const Tavern = (): JSX.Element => (
           letterSpacing="0.06em"
           textAlign="center"
         >
-          The Adventurer&apos;s Codex
+          {t('tavern.heading')}
         </Heading>
         <Text
           color="rgba(196,184,158,0.55)"
@@ -257,9 +260,7 @@ export const Tavern = (): JSX.Element => (
           maxW="600px"
           textAlign="center"
         >
-          A worn volume passed between wanderers. Within its pages lie the
-          paths forward &mdash; rankings, trade, and the principles that
-          govern this world.
+          {t('tavern.subtitle')}
         </Text>
       </VStack>
 
@@ -284,24 +285,12 @@ export const Tavern = (): JSX.Element => (
       {/* ── Board: Announcements ── */}
       <Box mt={{ base: 6, md: 8 }} w="100%">
         <Bulletin
-          title="The Board"
+          title={t('tavern.boardTitle')}
           items={[
-            {
-              text: 'The Dark Cave awaits new challengers.',
-              detail: 'First zone — levels 1 through 10. Monsters, loot, and lore fragments.',
-            },
-            {
-              text: 'The marketplace is open for trade.',
-              detail: 'Buy and sell items with other adventurers. Every item is permanent.',
-            },
-            {
-              text: 'Zone Conqueror badges are live.',
-              detail: 'The first 10 adventurers to reach max level in each zone earn a permanent badge.',
-            },
-            {
-              text: 'Lore fragments are scattered through the world.',
-              detail: 'Eight pieces of a broken story. Find them all to learn what happened before you woke.',
-            },
+            { text: t('tavern.boardItem1'), detail: t('tavern.boardDetail1') },
+            { text: t('tavern.boardItem2'), detail: t('tavern.boardDetail2') },
+            { text: t('tavern.boardItem3'), detail: t('tavern.boardDetail3') },
+            { text: t('tavern.boardItem4'), detail: t('tavern.boardDetail4') },
           ]}
         />
       </Box>
@@ -317,7 +306,7 @@ export const Tavern = (): JSX.Element => (
           mb={2}
           textTransform="uppercase"
         >
-          Where to next
+          {t('tavern.whereToNext')}
         </Text>
 
         <Grid
@@ -328,36 +317,36 @@ export const Tavern = (): JSX.Element => (
           <GridItem>
             <TavernCard
               accentColor="rgba(200,122,42,0.5)"
-              description="See who leads in gold, experience, and combat victories. Your rank among all adventurers."
-              subtitle="Rankings"
-              title="Leaderboard"
+              description={t('tavern.leaderboardDesc')}
+              subtitle={t('tavern.leaderboardSubtitle')}
+              title={t('tavern.leaderboardTitle')}
               to="/leaderboard"
             />
           </GridItem>
           <GridItem>
             <TavernCard
               accentColor="rgba(61,111,181,0.5)"
-              description="Browse items listed by other adventurers. Find the weapon that changes everything."
-              subtitle="Player Trade"
-              title="Marketplace"
+              description={t('tavern.marketplaceDesc')}
+              subtitle={t('tavern.marketplaceSubtitle')}
+              title={t('tavern.marketplaceTitle')}
               to="/marketplace"
             />
           </GridItem>
           <GridItem>
             <TavernCard
               accentColor="rgba(212,165,74,0.5)"
-              description="Nine paths diverge at Level 10. Learn the strengths, spells, and strategies of every advanced class."
-              subtitle="Advanced Classes"
-              title="Classes"
+              description={t('tavern.classesDesc')}
+              subtitle={t('tavern.classesSubtitle')}
+              title={t('tavern.classesTitle')}
               to="/guide/classes/warrior"
             />
           </GridItem>
           <GridItem>
             <TavernCard
               accentColor="rgba(196,184,158,0.3)"
-              description="The principles that shape this world. What we believe and why we built it."
-              subtitle="Our Creed"
-              title="Manifesto"
+              description={t('tavern.manifestoDesc')}
+              subtitle={t('tavern.manifestoSubtitle')}
+              title={t('tavern.manifestoTitle')}
               to="/manifesto"
             />
           </GridItem>
@@ -391,7 +380,7 @@ export const Tavern = (): JSX.Element => (
             letterSpacing="0.3em"
             textTransform="uppercase"
           >
-            Whispered at the bar
+            {t('tavern.loreLabel')}
           </Text>
           <Text
             color="rgba(196,184,158,0.5)"
@@ -401,13 +390,10 @@ export const Tavern = (): JSX.Element => (
             maxW="550px"
             textAlign="center"
           >
-            &ldquo;They say the gods killed one of their own. Noctum,
-            lord of death. Cut him down and left the wound to fester.
-            This cave &mdash; it&apos;s not natural. It&apos;s what&apos;s
-            left when a god bleeds.&rdquo;
+            &ldquo;{t('tavern.loreQuote')}&rdquo;
           </Text>
           <Text color="rgba(196,184,158,0.3)" fontSize="14px" fontStyle="italic">
-            &mdash; An unnamed drinker, several cups deep
+            &mdash; {t('tavern.loreAttribution')}
           </Text>
         </VStack>
       </Box>
@@ -425,10 +411,11 @@ export const Tavern = (): JSX.Element => (
           to={HOME_PATH}
           _hover={{ color: '#C87A2A', textDecoration: 'none' }}
         >
-          &larr; Return
+          &larr; {t('tavern.returnLink')}
         </Link>
         <Box bg="rgba(200,122,42,0.15)" h="1px" w="30px" />
       </HStack>
     </VStack>
   </Box>
-);
+  );
+};

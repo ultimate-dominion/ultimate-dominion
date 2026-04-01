@@ -39,6 +39,11 @@
     "test:smoke:scale": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/scale.test.ts --reporter=verbose'",
     "test:smoke:pvp": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/pvp.test.ts --reporter=verbose'",
     "test:smoke:balance": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/balance.test.ts --reporter=verbose'",
+    "test:smoke:items": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/items.test.ts --reporter=verbose'",
+    "test:smoke:guild": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/guild.test.ts --reporter=verbose'",
+    "test:smoke:shop": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/shop.test.ts --reporter=verbose'",
+    "test:smoke:systems": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/systems.test.ts --reporter=verbose'",
+    "test:smoke:spells": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/spells.test.ts --reporter=verbose'",
     "test:smoke:all": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/ --reporter=verbose --sequence.concurrent=false'"
   },
   "dependencies": {

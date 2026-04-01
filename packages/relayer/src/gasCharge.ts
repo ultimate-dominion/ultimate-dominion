@@ -1,5 +1,6 @@
 import {
   type Address,
+  type Hex,
   encodeFunctionData,
   parseAbi,
   formatEther,
@@ -10,11 +11,18 @@ import { getCharacterId } from './chainReader.js';
 
 // ==================== State ====================
 
+/** Pending ETH funded per player since last flush (in wei) */
+const pendingCharges = new Map<Address, bigint>();
+
+/** Retry count per player — dead-letter after 3 failures */
+const chargeRetries = new Map<Address, number>();
+
+let chargeTimer: ReturnType<typeof setInterval> | null = null;
 let swapTimer: ReturnType<typeof setInterval> | null = null;
 
 // ==================== ABI fragments ====================
 
-const fundAndChargeAbi = parseAbi([
+const worldAbi = parseAbi([
   'function UD__fundAndCharge(address player, bytes32 characterId)',
 ]);
 
@@ -54,30 +62,62 @@ async function getSwapMinimum(tokenIn: Address, tokenOut: Address, amountIn: big
 // ==================== Core Functions ====================
 
 /**
- * Call fundAndCharge on-chain to atomically deduct Gold from a player's GasReserve.
- * Called after successful fund/top-up. Non-blocking — caller should .catch() errors.
+ * Record a gas funding event for a player. Called after successful fund/top-up.
+ * Synchronous — zero latency impact on funding path.
  */
-export async function callFundAndCharge(player: Address): Promise<void> {
+export function recordFunding(eoaAddress: Address, ethAmount: bigint): void {
   if (!gasChargingEnabled) return;
+  const current = pendingCharges.get(eoaAddress) || 0n;
+  pendingCharges.set(eoaAddress, current + ethAmount);
+}
 
-  const characterId = await getCharacterId(player);
-  if (!characterId) {
-    console.log(`[gasCharge] Skipping fundAndCharge for ${player} — no characterId`);
-    return;
+/**
+ * Flush pending charges — charge Gold from players via fundAndCharge.
+ * Runs on interval (default 5 min).
+ */
+export async function flushCharges(): Promise<void> {
+  if (pendingCharges.size === 0) return;
+
+  // Snapshot and clear
+  const snapshot = new Map(pendingCharges);
+  pendingCharges.clear();
+
+  console.log(`[gasCharge] Flushing ${snapshot.size} players, ${formatEther(getTotalFromMap(snapshot))} total ETH funded`);
+
+  for (const [player, ethFunded] of snapshot) {
+    const charId = await getCharacterId(player);
+    if (!charId) {
+      console.log(`[gasCharge] Skipping ${player} — no characterId found`);
+      continue;
+    }
+
+    try {
+      const calldata = encodeFunctionData({
+        abi: worldAbi,
+        functionName: 'UD__fundAndCharge',
+        args: [player, charId],
+      });
+
+      const txHash = await sendPrimaryTx({
+        to: config.worldAddress,
+        calldata,
+      });
+
+      console.log(`[gasCharge] Charged ${player} tx: ${txHash}`);
+      chargeRetries.delete(player);
+    } catch (err) {
+      const retries = (chargeRetries.get(player) || 0) + 1;
+      if (retries >= 3) {
+        console.warn(`[gasCharge] Dead-lettering charge for ${player} after ${retries} failures (${formatEther(ethFunded)} ETH)`);
+        chargeRetries.delete(player);
+      } else {
+        chargeRetries.set(player, retries);
+        const existing = pendingCharges.get(player) || 0n;
+        pendingCharges.set(player, existing + ethFunded);
+        console.warn(`[gasCharge] Charge failed for ${player}, retry ${retries}/3:`, (err as Error).message?.slice(0, 100));
+      }
+    }
   }
-
-  const calldata = encodeFunctionData({
-    abi: fundAndChargeAbi,
-    functionName: 'UD__fundAndCharge',
-    args: [player, characterId],
-  });
-
-  const txHash = await sendPrimaryTx({
-    to: config.worldAddress,
-    calldata,
-  });
-
-  console.log(`[gasCharge] fundAndCharge tx: ${txHash} (player: ${player})`);
 }
 
 /**
@@ -171,25 +211,57 @@ export async function swapGoldForEth(): Promise<void> {
 
 // ==================== Schedulers ====================
 
-export function startSwapScheduler(): void {
+export function startSchedulers(): void {
   if (!gasChargingEnabled) {
     console.log('[gasCharge] Disabled (WORLD_ADDRESS or GOLD_TOKEN not set)');
     return;
   }
 
-  console.log(`[gasCharge] Enabled — swap every ${config.swapIntervalMs / 1000}s`);
+  console.log(`[gasCharge] Enabled — charge every ${config.chargeIntervalMs / 1000}s, swap every ${config.swapIntervalMs / 1000}s`);
   console.log(`[gasCharge] World: ${config.worldAddress}`);
   console.log(`[gasCharge] Gold token: ${config.goldToken}`);
   console.log(`[gasCharge] Swap threshold: ${formatEther(config.swapThreshold)} Gold`);
+
+  chargeTimer = setInterval(() => {
+    flushCharges().catch((err) => console.error('[gasCharge] flushCharges error:', err));
+  }, config.chargeIntervalMs);
 
   swapTimer = setInterval(() => {
     swapGoldForEth().catch((err) => console.error('[gasCharge] swapGoldForEth error:', err));
   }, config.swapIntervalMs);
 }
 
-export function stopSwapScheduler(): void {
+export function stopSchedulers(): void {
+  if (chargeTimer) {
+    clearInterval(chargeTimer);
+    chargeTimer = null;
+  }
   if (swapTimer) {
     clearInterval(swapTimer);
     swapTimer = null;
   }
+}
+
+// ==================== Testing ====================
+
+/** Reset internal state — test use only */
+export function _resetForTesting(): void {
+  pendingCharges.clear();
+  chargeRetries.clear();
+}
+
+// ==================== Health ====================
+
+function getTotalFromMap(map: Map<Address, bigint>): bigint {
+  let total = 0n;
+  for (const amount of map.values()) total += amount;
+  return total;
+}
+
+export function getPendingChargeCount(): number {
+  return pendingCharges.size;
+}
+
+export function getTotalPendingEth(): string {
+  return formatEther(getTotalFromMap(pendingCharges));
 }

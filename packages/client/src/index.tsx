@@ -20,6 +20,29 @@ import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
 import '@fontsource/inter/700.css';
+// CJK fonts loaded conditionally per locale (saves ~10MB for non-CJK users)
+import i18n from './i18n';
+
+function loadCjkFont(lang: string) {
+  const code = lang?.substring(0, 2);
+  if (code === 'ko') {
+    import('@fontsource/noto-sans-kr/400.css');
+    import('@fontsource/noto-sans-kr/500.css');
+    import('@fontsource/noto-sans-kr/700.css');
+  } else if (code === 'ja') {
+    import('@fontsource/noto-sans-jp/400.css');
+    import('@fontsource/noto-sans-jp/500.css');
+    import('@fontsource/noto-sans-jp/700.css');
+  } else if (code === 'zh') {
+    import('@fontsource/noto-sans-sc/400.css');
+    import('@fontsource/noto-sans-sc/500.css');
+    import('@fontsource/noto-sans-sc/700.css');
+  }
+}
+
+loadCjkFont(i18n.language);
+i18n.on('languageChanged', loadCjkFont);
+
 import React from 'react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { Global } from '@emotion/react';

@@ -38,9 +38,9 @@ export function createHealthRouter(syncHandle: SyncHandle, broadcaster: Broadcas
 
   /**
    * GET /ready — readiness probe for Railway health checks.
-   * Returns 200 when caught up (lag < 50 blocks AND tables discovered).
-   * Returns 503 while still catching up, so Railway keeps the old container
-   * serving traffic until this one is ready.
+   * Returns 200 once tables are discovered (server is functional).
+   * Lag info is in the response body for monitoring — a lagging indexer
+   * that serves traffic is better than no indexer at all.
    */
   router.get('/ready', async (_req, res) => {
     try {
@@ -48,10 +48,10 @@ export function createHealthRouter(syncHandle: SyncHandle, broadcaster: Broadcas
       const storedBlock = syncHandle.latestStoredBlockNumber;
       const lag = chainHead - storedBlock;
       const tablesReady = syncHandle.tables.size > 0;
-      const ready = lag < 50 && tablesReady;
 
-      res.status(ready ? 200 : 503).json({
-        ready,
+      res.status(tablesReady ? 200 : 503).json({
+        ready: tablesReady,
+        synced: lag < 50,
         storedBlock,
         chainHead,
         lag,

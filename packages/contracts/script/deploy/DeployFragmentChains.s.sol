@@ -141,7 +141,7 @@ contract DeployFragmentChains is Script {
             FragmentType.TheBladesEdge,
             1,
             ZONE_ID,
-            "Every edge tells a story. This one speaks of a war that never ended — it just moved underground."
+            unicode"Every edge tells a story. This one speaks of a war that never ended \u2014 it just moved underground."
         );
 
         console.log("  Chain X deployed (3 steps, 1 NPC)");
@@ -157,7 +157,7 @@ contract DeployFragmentChains is Script {
             0,
             FragmentTriggerType.TileVisit,
             _tileTrigger(140, 105),
-            "The earth is split here — not by quake, but by something deliberate. The halves don't match."
+            unicode"The earth is split here \u2014 not by quake, but by something deliberate. The halves don't match."
         );
 
         FragmentChainStep.set(
@@ -221,7 +221,7 @@ contract DeployFragmentChains is Script {
             1,
             FragmentTriggerType.CombatKill,
             _combatTrigger(PLACEHOLDER_MOB_ID),
-            "The storm's echo takes form — crackling, angry, defending what it was made to forget."
+            unicode"The storm's echo takes form \u2014 crackling, angry, defending what it was made to forget."
         );
 
         FragmentChainStep.set(
@@ -245,7 +245,7 @@ contract DeployFragmentChains is Script {
             0,
             FragmentTriggerType.TileVisit,
             _tileTrigger(170, 105),
-            "Luminous fungi carpet the overhang. They pulse in rhythm — not with your heartbeat, but with something deeper."
+            unicode"Luminous fungi carpet the overhang. They pulse in rhythm \u2014 not with your heartbeat, but with something deeper."
         );
 
         FragmentChainStep.set(
@@ -289,7 +289,7 @@ contract DeployFragmentChains is Script {
             1,
             FragmentTriggerType.CombatKill,
             _combatTrigger(PLACEHOLDER_MOB_ID + 1),
-            "Scavengers descend on the stand. The baker doesn't run — she reaches for a rolling pin."
+            unicode"Scavengers descend on the stand. The baker doesn't run \u2014 she reaches for a rolling pin."
         );
 
         // Step 2: tile
@@ -327,7 +327,7 @@ contract DeployFragmentChains is Script {
             0,
             FragmentTriggerType.TileVisit,
             _tileTrigger(185, 140),
-            "Through a crack in the stone, lights drift upward — soft, patient, impossibly deep."
+            unicode"Through a crack in the stone, lights drift upward \u2014 soft, patient, impossibly deep."
         );
 
         // Step 1: tile

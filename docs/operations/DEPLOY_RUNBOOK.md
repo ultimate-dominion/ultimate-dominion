@@ -9,10 +9,23 @@ How to deploy every component of Ultimate Dominion, from contracts to infrastruc
 | Environment | Chain | Chain ID | World Address | Branch | Client URL |
 |-------------|-------|----------|---------------|--------|------------|
 | **Local** | Anvil | 31337 | Auto-generated | Any | `http://localhost:3000` |
-| **Beta** | Base Mainnet | 8453 | `0x4a54538eCD32E1827121f9edb4a87CC4C08536E5` | `dev` | `https://beta.ultimatedominion.com` |
+| **Beta** | Base Mainnet | 8453 | `0xDc34AC3b06fa0ed899696A72B7706369864E5678` | `dev` | `https://beta.ultimatedominion.com` |
 | **Production** | Base Mainnet | 8453 | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `main` | `https://ultimatedominion.com` |
 
 Both beta and production run on Base Mainnet (chain 8453). They are distinguished **only** by world address. Never mix them.
+
+### Railway Service Map
+
+All four Railway services live in the same Railway project (`sweet-quietude`). The beta services have legacy URL slugs containing "prod" — always use `railway service link <name>` to target the right one.
+
+| Service | Railway Name | Railway URL | World |
+|---------|-------------|-------------|-------|
+| Indexer (prod) | `indexer` | `indexer-production-d6df.up.railway.app` | `0x99d01939...` |
+| Indexer (beta) | `indexer-beta` | `indexer-prod-production-45cf.up.railway.app` | `0xDc34AC3b...` |
+| Relayer (prod) | `relayer` | `8453.relay.ultimatedominion.com` | `0x99d01939...` |
+| Relayer (beta) | `relayer-beta` | `relayer-prod-production.up.railway.app` | `0xDc34AC3b...` |
+
+**Safety rule:** After every Railway deploy, `curl /api/health` (indexer) or `curl /` (relayer) and verify the `worldAddress` in the response matches the expected environment.
 
 ### Environment Files (packages/contracts/)
 
@@ -182,15 +195,19 @@ A daily drip endpoint runs at 14:00 UTC: `GET /api/drip` (configured in `vercel.
 
 Custom MUD indexer that syncs Store events from on-chain to PostgreSQL, providing a REST API + WebSocket interface for the client.
 
-| Item | Value |
-|------|-------|
-| Platform | Railway (Docker) |
-| Package | `packages/indexer/` |
-| Service ID | `61172447-73de-410a-943e-49ed3cc20d10` |
-| URL | `https://indexer-production-d6df.up.railway.app` |
-| Health | `GET /api/health` |
-| Status | `GET /api/status` (full infra status) |
-| Dashboard | `GET /dashboard` |
+### Service Matrix
+
+| | **Production** | **Beta** |
+|---|---|---|
+| Railway service name | `indexer` | `indexer-beta` |
+| Railway URL | `https://indexer-production-d6df.up.railway.app` | `https://indexer-prod-production-45cf.up.railway.app` |
+| World address | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `0xDc34AC3b06fa0ed899696A72B7706369864E5678` |
+| Client env var | `.env.production` → `VITE_INDEXER_API_URL` | `.env.staging` → `VITE_INDEXER_API_URL` |
+| Health | `GET /api/health` | `GET /api/health` |
+| Status | `GET /api/status` | `GET /api/status` |
+| Dashboard | `GET /dashboard` | `GET /dashboard` |
+
+> **Note:** The beta Railway URL contains "indexer-prod" — this is a legacy slug from when the service was renamed. The Railway service name `indexer-beta` is canonical.
 
 ### Deploying New Code
 
@@ -200,18 +217,20 @@ Railway services are NOT connected to GitHub auto-deploy. Deploy manually:
 # Step 1: Build locally (catches declaration emit errors that tsc --noEmit misses)
 cd packages/indexer && pnpm build && cd ../..
 
-# Step 2: Upload and deploy
-railway up --service indexer --detach
+# Step 2: Link the correct service and deploy
+railway service link indexer        # Production
+railway service link indexer-beta   # Beta
 
-# Step 3: Check build status IMMEDIATELY (railway up exits 0 even on failure)
-RAILWAY_TOKEN=$(cat ~/.railway/config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['user']['token'])")
-curl -s -H "Authorization: Bearer $RAILWAY_TOKEN" -H "Content-Type: application/json" \
-  -d '{"query":"query { deployments(input: { serviceId: \"61172447-73de-410a-943e-49ed3cc20d10\" }) { edges { node { id status createdAt } } } }"}' \
-  https://backboard.railway.com/graphql/v2 | python3 -c "import sys,json; [print(f'{e[\"node\"][\"id\"][:8]} {e[\"node\"][\"status\"]} {e[\"node\"][\"createdAt\"]}') for e in json.load(sys.stdin)['data']['deployments']['edges'][:3]]"
+# Step 3: Upload and deploy
+railway up --detach
 
-# Step 4: Once status is SUCCESS, verify live endpoint
-curl -s https://indexer-production-d6df.up.railway.app/api/health
+# Step 4: Verify — ALWAYS check world address in health response matches expected env
+curl -s https://indexer-production-d6df.up.railway.app/api/health      # Production
+curl -s https://indexer-prod-production-45cf.up.railway.app/api/health  # Beta
+# ↑ worldAddress in response MUST match the expected world for that env
 ```
+
+**CRITICAL: After every indexer deploy, verify the `worldAddress` in the health response. If it doesn't match the expected world, STOP — the service has wrong env vars.**
 
 **Never use `railway redeploy`** — it reuses the old image and will NOT include your new code.
 
@@ -233,7 +252,10 @@ curl -s https://indexer-production-d6df.up.railway.app/api/health
 For standard system upgrades, no indexer changes needed — the indexer auto-syncs new events. Just verify health:
 
 ```bash
+# Production
 curl -s https://indexer-production-d6df.up.railway.app/api/health
+# Beta
+curl -s https://indexer-prod-production-45cf.up.railway.app/api/health
 ```
 
 For fresh world deploys, update `WORLD_ADDRESS` + `START_BLOCK` in Railway env vars and redeploy. May need a DB reset if schema changed significantly.
@@ -246,13 +268,17 @@ Schema changes are handled dynamically — the indexer discovers tables from Pos
 
 Self-hosted transaction relayer with a pool of 5 EOA wallets. Pays gas on behalf of players using EIP-7702 embedded wallets.
 
-| Item | Value |
-|------|-------|
-| Platform | Railway (Docker) |
-| Package | `packages/relayer/` |
-| Service ID | `dd62995a-cab5-4a98-b217-0c7bf111364e` |
-| URL | `https://8453.relay.ultimatedominion.com` |
-| Health | `GET /` (returns pool status + rpcStatus) |
+### Service Matrix
+
+| | **Production** | **Beta** |
+|---|---|---|
+| Railway service name | `relayer` | `relayer-beta` |
+| Railway URL | `https://8453.relay.ultimatedominion.com` | `https://relayer-prod-production.up.railway.app` |
+| World address | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `0xDc34AC3b06fa0ed899696A72B7706369864E5678` |
+| Client env var | `.env.production` → `VITE_RELAYER_URL` | `.env.staging` → `VITE_RELAYER_URL` |
+| Health | `GET /` | `GET /` |
+
+> **Note:** The beta Railway URL contains "relayer-prod" — legacy slug. The Railway service name `relayer-beta` is canonical.
 
 ### Deploying New Code
 
@@ -262,17 +288,14 @@ Same pattern as indexer:
 # Step 1: Build locally
 cd packages/relayer && pnpm build && cd ../..
 
-# Step 2: Upload and deploy
-railway up --service relayer --detach
+# Step 2: Link the correct service and deploy
+railway service link relayer        # Production
+railway service link relayer-beta   # Beta
+railway up --detach
 
-# Step 3: Check build status
-RAILWAY_TOKEN=$(cat ~/.railway/config.json | python3 -c "import sys,json; print(json.load(sys.stdin)['user']['token'])")
-curl -s -H "Authorization: Bearer $RAILWAY_TOKEN" -H "Content-Type: application/json" \
-  -d '{"query":"query { deployments(input: { serviceId: \"dd62995a-cab5-4a98-b217-0c7bf111364e\" }) { edges { node { id status createdAt } } } }"}' \
-  https://backboard.railway.com/graphql/v2 | python3 -c "import sys,json; [print(f'{e[\"node\"][\"id\"][:8]} {e[\"node\"][\"status\"]} {e[\"node\"][\"createdAt\"]}') for e in json.load(sys.stdin)['data']['deployments']['edges'][:3]]"
-
-# Step 4: Verify
-curl -s https://8453.relay.ultimatedominion.com/ | python3 -c "import sys,json; d=json.load(sys.stdin); print('rpcStatus:', d.get('rpcStatus',{}).get('active','MISSING'))"
+# Step 3: Verify — check WORLD_ADDRESS in response matches expected env
+curl -s https://8453.relay.ultimatedominion.com/               # Production
+curl -s https://relayer-prod-production.up.railway.app/         # Beta
 ```
 
 ### Key Environment Variables (set in Railway dashboard)
@@ -369,18 +392,20 @@ pnpm item:verify:testnet dark_cave  # Should show no diffs (or expected diffs)
 ### Indexer
 
 ```bash
-# Health check — verify sync lag is low
+# Production — verify worldAddress matches 0x99d01939...
 curl -s https://indexer-production-d6df.up.railway.app/api/health
 
-# Full infra status
-curl -s https://indexer-production-d6df.up.railway.app/api/status
+# Beta — verify worldAddress matches 0xDc34AC3b...
+curl -s https://indexer-prod-production-45cf.up.railway.app/api/health
 ```
 
 ### Relayer
 
 ```bash
-# Pool status + RPC connectivity
+# Production
 curl -s https://8453.relay.ultimatedominion.com/
+# Beta
+curl -s https://relayer-prod-production.up.railway.app/
 ```
 
 ### Base RPC
@@ -572,4 +597,4 @@ cd packages/contracts && pnpm test:fork:beta
 
 ---
 
-*Last updated: March 17, 2026*
+*Last updated: March 26, 2026*

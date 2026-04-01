@@ -20,8 +20,8 @@ import type {
 
 export function statPointsForLevel(level: number, c: LevelingConstants): number {
   if (level <= c.earlyGameCap) return c.statPointsEarly;
-  if (level <= c.midGameCap) return (level % 2 === 0) ? c.statPointsMid : 0;
-  return (level % 5 === 0) ? c.statPointsLate : 0;
+  if (level <= c.midGameCap) return c.statPointsMid;
+  return c.statPointsLate;
 }
 
 export function hpForLevel(level: number, c: LevelingConstants): number {

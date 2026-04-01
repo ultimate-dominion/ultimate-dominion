@@ -1,0 +1,48 @@
+{
+  "npcs": [
+    {
+      "name": "Vel Morrow",
+      "location": [2, 3],
+      "alignment": 0,
+      "storyPathIds": [],
+      "interaction": "respec",
+      "metadataUri": "npc:vel_morrow",
+      "level": 35,
+      "description": "Covenant deserter. Combat trainer. She watches the slopes with the eyes of someone who knows she's being hunted.",
+      "dialogue": {
+        "greeting": "You made it out of the cave. That means you can fight. But can you fight *well*?",
+        "respec_prompt": "I've seen your technique. It's wrong — not fatally, but wrong enough to get you killed up here. I can retrain you. It'll cost gold and it'll hurt.",
+        "respec_confirm": "Hold still. This part you won't enjoy.",
+        "respec_complete": "Better. Not good — better. Don't make me do this twice.",
+        "idle": [
+          "The wind up here covers footsteps. Remember that.",
+          "I trained with the Covenant's best. Then I killed two of them. Don't ask which two.",
+          "The peaks test everything the cave didn't. Strength isn't enough anymore.",
+          "Someone's been following me since the treeline. If they show themselves... don't interfere."
+        ]
+      }
+    },
+    {
+      "name": "Edric Thorne",
+      "location": [3, 0],
+      "alignment": 1,
+      "storyPathIds": [],
+      "interaction": "guild",
+      "metadataUri": "npc:edric_thorne",
+      "level": 26,
+      "description": "Heretic acolyte. Healer. His faith is cracking but his belief in people isn't.",
+      "dialogue": {
+        "greeting": "The Covenant says the gods will return. I'm starting to think they won't. But *we're* still here.",
+        "guild_prompt": "I've been thinking. Down in the cave, we survived alone — barely. Up here, alone gets you killed. What if we organized? Not a church. Not a hierarchy. Just... people who choose each other.",
+        "guild_create": "A guild. Yes. Give it a name — something worth fighting for. I'll handle the rites. Old habit.",
+        "guild_created": "It's done. Not blessed by any god, but witnessed by a man who used to speak for one. That has to count for something.",
+        "idle": [
+          "I still pray. I just don't know who's listening anymore.",
+          "The Covenant would call this heresy — organizing outside the church. Good.",
+          "Tal says I worry too much. Tal also nearly died buying supplies last week. We need structure.",
+          "Every guild that forms up here is proof the gods aren't necessary. That terrifies me. And gives me hope."
+        ]
+      }
+    }
+  ]
+}

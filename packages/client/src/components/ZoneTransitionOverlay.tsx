@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Button, keyframes, Text } from '@chakra-ui/react';
 
 /* ──────────────────────── Wind Peaks Palette ──────────────────────── */
@@ -215,9 +216,14 @@ const CaveTexture = ({ side }: { side: 'left' | 'right' }) => (
 /* ──────────────────────── Zone Title ──────────────────────── */
 
 const ZONE_NAME = 'WINDY PEAKS';
-const SUBTITLE = 'The mountain range above Noctum\'s Wound';
+const SUBTITLE = 'The mountain range above Noctum\'s Marrow';
 
-const ZoneTitle = () => (
+const ZoneTitle = () => {
+  const { t } = useTranslation('ui');
+  const zoneName = t('zone.windyPeaks') || ZONE_NAME;
+  const subtitle = t('zone.windyPeaksSubtitle') || SUBTITLE;
+
+  return (
   <Box
     position="absolute"
     top="50%"
@@ -235,7 +241,7 @@ const ZoneTitle = () => (
       gap={{ base: '4px', md: '8px' }}
       mb={4}
     >
-      {ZONE_NAME.split('').map((char, i) => (
+      {zoneName.split('').map((char, i) => (
         <Text
           key={i}
           as="span"
@@ -273,7 +279,7 @@ const ZoneTitle = () => (
         letterSpacing="0.15em"
         animation={`${peakGlow} 4s 9s ease-in-out infinite`}
       >
-        {ZONE_NAME}
+        {zoneName}
       </Text>
     </Box>
 
@@ -298,10 +304,11 @@ const ZoneTitle = () => (
       opacity={0}
       animation={`${fadeUp} 0.8s 9.2s cubic-bezier(0.16, 1, 0.3, 1) forwards`}
     >
-      {SUBTITLE}
+      {subtitle}
     </Text>
   </Box>
-);
+  );
+};
 
 /* ──────────────────────── Main Component ──────────────────────── */
 
@@ -312,6 +319,7 @@ type ZoneTransitionOverlayProps = {
 export const ZoneTransitionOverlay = ({
   onComplete,
 }: ZoneTransitionOverlayProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const [isExiting, setIsExiting] = useState(false);
   const [buttonReady, setButtonReady] = useState(false);
   const [phase, setPhase] = useState<'crack' | 'open' | 'vista' | 'ready'>('crack');
@@ -498,7 +506,7 @@ export const ZoneTransitionOverlay = ({
           textShadow="0 1px 4px rgba(0, 0, 0, 0.5)"
           whiteSpace="pre-line"
         >
-          {'Wind-blasted stone, ancient roads, and the echo of a dead war god.\nThe first time you see the sky — and realize the world it belongs to is dying.'}
+          {t('zone.windyPeaksNarrative')}
         </Text>
       </Box>
 
@@ -528,7 +536,7 @@ export const ZoneTransitionOverlay = ({
           textTransform="uppercase"
           fontSize="sm"
         >
-          Enter the Peaks
+          {t('zone.enterThePeaks')}
         </Button>
       </Box>
 

@@ -42,7 +42,7 @@ export function buildCharacter(
   const inBattle = !!encounterId && encounterId !== zeroHash;
 
   const isEntitySpawned = Boolean(spawnedData?.spawned ?? false);
-  const positionData = posData ?? { x: 0, y: 0 };
+  const positionData = posData ?? { zoneId: 0, x: 0, y: 0 };
 
   let decodedBaseStats = {
     agility: BigInt(0),
@@ -132,6 +132,7 @@ export function buildCharacter(
     maxHp: toBigInt(statsData.maxHp),
     owner: characterData.owner as string,
     position: {
+      zoneId: toNumber((positionData as any).zoneId),
       x: toNumber((positionData as any).x),
       y: toNumber((positionData as any).y),
     },

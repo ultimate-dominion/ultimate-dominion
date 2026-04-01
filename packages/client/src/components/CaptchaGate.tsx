@@ -1,5 +1,6 @@
 import { Box, Button, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Turnstile } from '@marsidev/react-turnstile';
 
 const SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA').trim(); // test key fallback
@@ -10,6 +11,7 @@ type CaptchaGateProps = {
 };
 
 export const CaptchaGate = ({ onVerified, isLoading }: CaptchaGateProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [expired, setExpired] = useState(false);
@@ -50,24 +52,24 @@ export const CaptchaGate = ({ onVerified, isLoading }: CaptchaGateProps): JSX.El
 
       {error && (
         <Text color="red.400" size="sm">
-          Verification failed. Please try again.
+          {t('captcha.failed')}
         </Text>
       )}
 
       {expired && !error && (
         <Text color="orange.300" fontSize="sm">
-          Verification expired. Please verify again.
+          {t('captcha.expired')}
         </Text>
       )}
 
       <Button
         isDisabled={!token}
         isLoading={isLoading}
-        loadingText="Joining..."
+        loadingText={t('captcha.joining')}
         onClick={handleJoin}
         size="sm"
       >
-        Join Queue
+        {t('captcha.joinQueue')}
       </Button>
     </VStack>
   );

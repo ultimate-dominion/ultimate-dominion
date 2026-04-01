@@ -7,20 +7,23 @@ import {IWorld} from "@world/IWorld.sol";
 import {
     Characters,
     CharacterEquipment,
+    CharacterZone,
     CombatEncounter,
     CombatEncounterData,
     EncounterEntity,
-    EntitiesAtPosition,
-    MapConfig,
-    Position,
+    ZoneEntitiesAtPos,
+    PositionV2,
     SessionTimer,
     Spawned,
     Stats,
-    AutoAdventureCooldown
+    AutoAdventureCooldown,
+    Counters,
+    WorldBossV2,
+    ZoneMapConfig
 } from "../codegen/index.sol";
 import {EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
-import {DEFAULT_MAX_TURNS} from "../../constants.sol";
+import {DEFAULT_MAX_TURNS, ZONE_WINDY_PEAKS, WIND_GUST_EFFECT_ID, PEAK_RIDGE_RELATIVE_Y, WORLD_BOSS_COUNTER_ID} from "../../constants.sol";
 import {UserDelegationControl} from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
 import {OnlyCharacters, Unauthorized, NotSpawned, InEncounter, OutOfBounds, InvalidMove, EntityNotAtPosition, NoWeaponsEquipped, InvalidCombatEntity} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
@@ -57,38 +60,43 @@ contract AutoAdventureSystem is System {
         AutoAdventureCooldown.setLastTime(cid, block.timestamp);
 
         // Move (inlined — can't delegate because SystemSwitch changes _msgSender)
+        uint256 zoneId;
         {
-            (uint16 cx, uint16 cy) = Position.get(cid);
-            (uint16 h, uint16 w) = MapConfig.get();
-            if (x >= w) revert OutOfBounds();
-            if (y >= h) revert OutOfBounds();
+            uint16 cx; uint16 cy;
+            (zoneId, cx, cy) = PositionV2.get(cid);
+            uint16 zoneWidth = ZoneMapConfig.getWidth(zoneId);
+            uint16 zoneHeight = ZoneMapConfig.getHeight(zoneId);
+            if (zoneWidth > 0) {
+                if (x >= zoneWidth) revert OutOfBounds();
+                if (y >= zoneHeight) revert OutOfBounds();
+            }
             uint16 dx = cx > x ? cx - x : x - cx;
             uint16 dy = cy > y ? cy - y : y - cy;
             if (dx + dy != 1) revert InvalidMove();
 
-            bytes32[] memory old = EntitiesAtPosition.getEntities(cx, cy);
+            bytes32[] memory old = ZoneEntitiesAtPos.getEntities(zoneId, cx, cy);
             bool found;
             for (uint256 i; i < old.length; i++) {
                 if (old[i] == cid) {
                     found = true;
-                    EntitiesAtPosition.updateEntities(cx, cy, i, old[old.length - 1]);
-                    EntitiesAtPosition.popEntities(cx, cy);
+                    ZoneEntitiesAtPos.updateEntities(zoneId, cx, cy, i, old[old.length - 1]);
+                    ZoneEntitiesAtPos.popEntities(zoneId, cx, cy);
                     break;
                 }
             }
             if (!found) revert EntityNotAtPosition();
             SessionTimer.set(cid, block.timestamp);
-            Position.set(cid, x, y);
-            EntitiesAtPosition.pushEntities(x, y, cid);
+            PositionV2.set(cid, zoneId, x, y);
+            ZoneEntitiesAtPos.pushEntities(zoneId, x, y, cid);
         }
 
         // Spawn mobs
-        IWorld(_world()).UD__spawnOnTileEnter(x, y);
+        IWorld(_world()).UD__spawnOnTileEnter(zoneId, x, y);
 
         // Find first living mob
         bytes32 mid;
         {
-            bytes32[] memory ents = EntitiesAtPosition.getEntities(x, y);
+            bytes32[] memory ents = ZoneEntitiesAtPos.getEntities(zoneId, x, y);
             for (uint256 i; i < ents.length; i++) {
                 if (ents[i] != cid && !IWorld(_world()).UD__isValidCharacterId(ents[i])) {
                     if (Stats.getCurrentHp(ents[i]) > 0 && Spawned.getSpawned(ents[i])) {
@@ -134,6 +142,13 @@ contract AutoAdventureSystem is System {
         }));
         EncounterEntity.setEncounterId(cid, encounterId);
         EncounterEntity.setEncounterId(mid, encounterId);
+
+        // Apply wind gust environmental effect on Windy Peaks peak ridge
+        if (_isPeakTile(zoneId, y)) {
+            bool isBoss = _isWorldBossFight(players, mobs);
+            _applyWindGust(players, isBoss);
+            _applyWindGust(mobs, isBoss);
+        }
 
         // Execute combat via existing PvESystem — it handles the full turn loop,
         // ActionOutcome writes, encounter end check, reward distribution, and cleanup.
@@ -190,8 +205,8 @@ contract AutoAdventureSystem is System {
         if (EncounterEntity.getEncounterId(cid) != bytes32(0)) revert InEncounter();
 
         // Validate monster: same tile, is a mob, alive
-        (uint16 cx, uint16 cy) = Position.get(cid);
-        (uint16 mx, uint16 my) = Position.get(monsterId);
+        (uint256 fightZoneId, uint16 cx, uint16 cy) = PositionV2.get(cid);
+        (, uint16 mx, uint16 my) = PositionV2.get(monsterId);
         if (cx != mx || cy != my) revert EntityNotAtPosition();
         if (IWorld(_world()).UD__isValidCharacterId(monsterId)) revert InvalidCombatEntity();
         if (Stats.getCurrentHp(monsterId) <= 0 || !Spawned.getSpawned(monsterId)) revert InvalidCombatEntity();
@@ -241,6 +256,13 @@ contract AutoAdventureSystem is System {
         EncounterEntity.setEncounterId(cid, encounterId);
         EncounterEntity.setEncounterId(monsterId, encounterId);
 
+        // Apply wind gust environmental effect on Windy Peaks peak ridge
+        if (_isPeakTile(fightZoneId, cy)) {
+            bool isBoss = _isWorldBossFight(players, mobs);
+            _applyWindGust(players, isBoss);
+            _applyWindGust(mobs, isBoss);
+        }
+
         // Execute combat loop — same path as autoAdventure
         {
             Action[] memory actions = new Action[](1);
@@ -262,5 +284,35 @@ contract AutoAdventureSystem is System {
         playerDied = EncounterEntity.getDied(cid);
         playerWon = !playerDied;
         if (playerDied) Spawned.set(cid, false);
+    }
+
+    // ---- Wind Gust environmental effect helpers ----
+
+    function _isPeakTile(uint256 zoneId, uint16 y) internal pure returns (bool) {
+        return zoneId == ZONE_WINDY_PEAKS && y >= PEAK_RIDGE_RELATIVE_Y;
+    }
+
+    function _isWorldBossFight(bytes32[] memory group1, bytes32[] memory group2) internal view returns (bool) {
+        uint256 totalBosses = Counters.getCounter(_world(), WORLD_BOSS_COUNTER_ID);
+        for (uint256 i = 1; i <= totalBosses; i++) {
+            bytes32 bossEntityId = WorldBossV2.getEntityId(i);
+            if (bossEntityId == bytes32(0)) continue;
+            for (uint256 j; j < group1.length; j++) {
+                if (group1[j] == bossEntityId) return true;
+            }
+            for (uint256 j; j < group2.length; j++) {
+                if (group2[j] == bossEntityId) return true;
+            }
+        }
+        return false;
+    }
+
+    function _applyWindGust(bytes32[] memory entities, bool isBossFight) internal {
+        for (uint256 i; i < entities.length; i++) {
+            IWorld(_world()).UD__applyStatusEffect(entities[i], WIND_GUST_EFFECT_ID);
+            if (isBossFight) {
+                IWorld(_world()).UD__applyStatusEffect(entities[i], WIND_GUST_EFFECT_ID);
+            }
+        }
     }
 }

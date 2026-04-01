@@ -19,6 +19,8 @@ import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { zeroAddress, zeroHash } from 'viem';
 
+import { useTranslation } from 'react-i18next';
+
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
@@ -32,7 +34,7 @@ import {
   EncounterType,
   type Monster,
   Rarity,
-  RARITY_NAMES,
+  RARITY_I18N_KEYS,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -60,6 +62,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   onClose,
   battleOutcome,
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { renderError } = useToast();
   const { armorTemplates, consumableTemplates, spellTemplates, weaponTemplates } = useItems();
   const {
@@ -73,10 +76,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
 
   const opponentDisplayName = useMemo(() => {
-    if (!opponent) return 'a monster';
+    if (!opponent) return t('battle.aMonster');
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
-    return isElite ? `Elite ${opponent.name}` : opponent.name;
-  }, [opponent]);
+    return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
+  }, [opponent, t]);
   const stage = useOnboardingStage();
 
   const [armor, setArmor] = useState<Armor[]>([]);
@@ -197,7 +200,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
         setWeapons(_weapons);
       } catch (e) {
         renderError(
-          (e as Error)?.message ?? 'Failed to fetch looted items.',
+          (e as Error)?.message ?? t('battle.fetchFailed'),
           e,
         );
       } finally {
@@ -263,37 +266,37 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
         <ModalContent>
           <PolygonalCard isModal />
           <ModalHeader textAlign="center">
-            {winner === character.id ? 'Victory!' : 'Defeat...'}
+            {winner === character.id ? t('battle.victory') : t('battle.defeat')}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
             <VStack alignItems="center" pb={8} spacing={4}>
               <Text>
                 {winner === character.id
-                  ? `${opponentDisplayName} fled!`
-                  : `You fled from ${opponentDisplayName}.`}
+                  ? t('battle.monsterFled', { name: opponentDisplayName })
+                  : t('battle.youFled', { name: opponentDisplayName })}
               </Text>
               {winner === character.id ? (
                 <Text>
-                  You earned{' '}
+                  {t('battle.earnedGold')}{' '}
                   <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
-                  Gold.
+                  {t('battle.gold')}
                 </Text>
               ) : (
                 <Text>
-                  Fleeing cost you{' '}
+                  {t('battle.fleeingCost')}{' '}
                   <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
-                  Carried Gold.
+                  {t('battle.carriedGold')}
                 </Text>
               )}
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button onClick={onAcknowledge}>Continue</Button>
+            <Button onClick={onAcknowledge}>{t('common.continue')}</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -308,25 +311,25 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           <PolygonalCard isModal />
           <ModalHeader textAlign="center">
             {battleDraw
-              ? 'Draw...'
+              ? t('battle.draw')
               : winner === character.id
-                ? 'Victory!'
-                : 'Defeat...'}
+                ? t('battle.victory')
+                : t('battle.defeat')}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
             {battleDraw ? (
               <VStack alignItems="center" pb={4} spacing={4}>
                 <Text>
-                  The battle ended in a draw! You both fled the battlefield.
+                  {t('battle.drawMessage')}
                 </Text>
               </VStack>
             ) : (
               <VStack alignItems="center" pb={4} spacing={4}>
                 <Text>
                   {winner === character.id
-                    ? `You defeated ${opponentDisplayName}!`
-                    : `You were killed by ${opponentDisplayName}.`}
+                    ? t('battle.youDefeated', { name: opponentDisplayName })
+                    : t('battle.youWereKilled', { name: opponentDisplayName })}
                 </Text>
                 {opponent && currentBattle?.encounterType !== EncounterType.PvP && getMonsterImage(opponent.name) && (
                   <Image
@@ -340,25 +343,24 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 )}
                 {winner !== character.id && goldDropped > 0n && (
                   <Text>
-                    You lost{' '}
+                    {t('battle.lostGold')}{' '}
                     <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
                       {etherToFixedNumber(goldDropped)}
                     </Text>{' '}
-                    Carried Gold.
+                    {t('battle.carriedGold')}
                   </Text>
                 )}
                 {winner !== character.id && (
                   <Text>
-                    When you die, your health is restored, but you are forced to
-                    respawn at the Town Square.
+                    {t('battle.deathMessage')}
                   </Text>
                 )}
                 {winner === character.id && !battleDraw && (
                   <ShareButton
                     text={
                       currentBattle?.encounterType === EncounterType.PvP
-                        ? `Defeated ${opponentDisplayName} in PvP combat in Ultimate Dominion.`
-                        : `Slew ${opponentDisplayName} in the Dark Cave.`
+                        ? t('battle.pvpShareText', { name: opponentDisplayName })
+                        : t('battle.pveShareText', { name: opponentDisplayName })
                     }
                     shareParams={{
                       type: currentBattle?.encounterType === EncounterType.PvP ? 'pvp' : 'kill',
@@ -406,7 +408,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     )}
                     {winner === character.id && sortedLoot.length > 0 && (sortedLoot[0].rarity ?? 0) >= Rarity.Uncommon && (
                       <ShareButton
-                        text={`Found ${sortedLoot[0].rarity !== undefined ? `a ${RARITY_NAMES[sortedLoot[0].rarity]} ` : ''}${sortedLoot[0].name} in Ultimate Dominion. Every item is permanent, on-chain, and mine.`}
+                        text={t('battle.itemShareText', { rarity: sortedLoot[0].rarity !== undefined ? t(RARITY_I18N_KEYS[sortedLoot[0].rarity]) + ' ' : '', name: sortedLoot[0].name })}
                         shareParams={{
                           type: 'drop',
                           item: sortedLoot[0].name,
@@ -423,7 +425,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
             )}
           </ModalBody>
           <ModalFooter>
-            <Button onClick={onAcknowledge}>Continue</Button>
+            <Button onClick={onAcknowledge}>{t('common.continue')}</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

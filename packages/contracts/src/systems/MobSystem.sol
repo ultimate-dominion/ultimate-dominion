@@ -4,8 +4,8 @@ pragma solidity >=0.8.24;
 import {System} from "@latticexyz/world/src/System.sol";
 import {
     Counters,
-    Position,
-    EntitiesAtPosition,
+    PositionV2,
+    ZoneEntitiesAtPos,
     MobsByLevel,
     MobsByZoneLevel,
     Mobs,
@@ -56,13 +56,13 @@ contract MobSystem is System {
         }
     }
 
-    function spawnMobs(uint256[] calldata mobIds, uint16 x, uint16 y) external {
+    function spawnMobs(uint256[] calldata mobIds, uint256 zoneId, uint16 x, uint16 y) external {
         for (uint256 i; i < mobIds.length; i++) {
-            spawnMob(mobIds[i], x, y);
+            spawnMob(mobIds[i], zoneId, x, y);
         }
     }
 
-    function spawnMob(uint256 mobId, uint16 x, uint16 y) public returns (bytes32 entityId) {
+    function spawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) public returns (bytes32 entityId) {
         _requireAccessOrAdmin(address(this), _msgSender());
         require(Counters.getCounter(_world(), 0) >= mobId, "MOB SYSTEM: Mob does not exist");
         entityId = bytes32(abi.encodePacked(uint32(mobId), uint192(_incrementMobCounter(mobId)), x, y));
@@ -73,7 +73,7 @@ contract MobSystem is System {
             // normal scenario
             // loops through all the shops
             uint256 nonMonsters = 0;
-            bytes32[] memory entities = EntitiesAtPosition.getEntities(x, y);
+            bytes32[] memory entities = ZoneEntitiesAtPos.getEntities(zoneId, x, y);
             // loop through all the entities
             for (uint256 i = 0; i < entities.length; ++i) {
                 // if there are less than max monsters we can certainly add another
@@ -111,7 +111,7 @@ contract MobSystem is System {
                 maxHp: monsterStats.hitPoints + hpVar,
                 class: monsterStats.class,
                 currentHp: monsterStats.hitPoints + hpVar,
-                experience: monsterStats.experience,
+                experience: monsterStats.experience, // derived from spawned stats below
                 level: monsterStats.level,
                 powerSource: PowerSource.None,
                 race: Race.None,
@@ -120,7 +120,20 @@ contract MobSystem is System {
                 hasSelectedAdvancedClass: false
             });
 
-            // Apply elite boost on top of variance
+            // Derive XP from spawned stat power relative to template —
+            // tougher rolls reward more XP, weaker rolls reward less
+            {
+                int256 spawnedPower = statsData.strength + statsData.agility
+                    + statsData.intelligence + statsData.maxHp;
+                int256 templatePower = monsterStats.strength + monsterStats.agility
+                    + monsterStats.intelligence + monsterStats.hitPoints;
+                if (templatePower <= 0) templatePower = 1;
+                int256 derivedXp = int256(monsterStats.experience) * spawnedPower / templatePower;
+                if (derivedXp < 1) derivedXp = 1;
+                statsData.experience = uint256(derivedXp);
+            }
+
+            // Apply elite boost on top of derived XP
             if (isElite) {
                 statsData.strength = statsData.strength * int256(ELITE_STAT_MULTIPLIER) / 100;
                 statsData.agility = statsData.agility * int256(ELITE_STAT_MULTIPLIER) / 100;
@@ -149,8 +162,8 @@ contract MobSystem is System {
             Shops.set(entityId, shopStats);
         }
 
-        Position.set(entityId, x, y);
-        EntitiesAtPosition.pushEntities(x, y, entityId);
+        PositionV2.set(entityId, zoneId, x, y);
+        ZoneEntitiesAtPos.pushEntities(zoneId, x, y, entityId);
         Spawned.set(entityId, true);
     }
 

@@ -2,32 +2,21 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {MobsByLevel, MobsByZoneLevel, EntitiesAtPosition, BossSpawnConfig, ZoneMapConfig} from "@codegen/index.sol";
+import {MobsByLevel, MobsByZoneLevel, BossSpawnConfig, ZoneBossConfig, ZoneMapConfig} from "@codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
-import {IMobSystem} from "@world/IWorld.sol";
+import {IMobSystem, IWorldBossSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
 import {NoMonsters} from "../Errors.sol";
 import {_requireSystemOrAdmin} from "../utils.sol";
-import {ZONE_DARK_CAVE} from "../../constants.sol";
 
 contract MapSpawnSystem is System {
     using LibChunks for uint256;
 
-    function spawnOnTileEnter(uint16 x, uint16 y) public {
+    function spawnOnTileEnter(uint256 zoneId, uint16 x, uint16 y) public {
         _requireSystemOrAdmin(_msgSender());
 
-        // Derive zone from tile coordinates
-        uint256 zoneId = _deriveZoneFromPosition(x, y);
-        uint16 originX = 0;
-        uint16 originY = 0;
-        uint16 zoneWidth = ZoneMapConfig.getWidth(zoneId);
-        if (zoneWidth > 0) {
-            originX = ZoneMapConfig.getOriginX(zoneId);
-            originY = ZoneMapConfig.getOriginY(zoneId);
-        }
-
-        // Distance from zone origin (not global 0,0)
-        uint256 distanceFromHome = uint256(_chebyshevDistance(originX, originY, x, y));
+        // Distance from zone origin (always 0,0 in zone-relative coords)
+        uint256 distanceFromHome = uint256(_chebyshevDistance(0, 0, x, y));
         if (distanceFromHome == 0) {
             return;
         }
@@ -83,41 +72,34 @@ contract MapSpawnSystem is System {
             }
             SystemSwitch.call(
                 abi.encodeCall(
-                    IMobSystem.UD__spawnMobs, (mobIdsToSpawn, x, y)
+                    IMobSystem.UD__spawnMobs, (mobIdsToSpawn, zoneId, x, y)
                 )
             );
         }
 
-        // Boss spawn check — flat probability on every tile entry
+        // Boss spawn check — per-zone config, falls back to global singleton
         {
-            uint256 bossMobId = BossSpawnConfig.getBossMobId();
-            if (bossMobId != 0) {
-                uint256 chance = BossSpawnConfig.getSpawnChanceBp();
+            uint256 bossMobId = ZoneBossConfig.getBossMobId(zoneId);
+            uint256 chance = ZoneBossConfig.getSpawnChanceBp(zoneId);
+            if (bossMobId == 0) {
+                // Fallback to legacy singleton BossSpawnConfig
+                bossMobId = BossSpawnConfig.getBossMobId();
+                chance = BossSpawnConfig.getSpawnChanceBp();
+            }
+            if (bossMobId != 0 && chance > 0) {
                 uint256 bossRoll = uint256(keccak256(abi.encodePacked(block.prevrandao, x, y, "boss"))) % 10000;
                 if (bossRoll < chance) {
                     uint256[] memory bossSpawn = new uint256[](1);
                     bossSpawn[0] = bossMobId;
-                    SystemSwitch.call(abi.encodeCall(IMobSystem.UD__spawnMobs, (bossSpawn, x, y)));
+                    SystemSwitch.call(abi.encodeCall(IMobSystem.UD__spawnMobs, (bossSpawn, zoneId, x, y)));
                 }
             }
         }
-    }
 
-    /// @notice Derive zone ID from raw tile coordinates by matching against ZoneMapConfig origins.
-    /// @dev Checks zones 1-10 (expandable). Falls back to ZONE_DARK_CAVE if no match.
-    function _deriveZoneFromPosition(uint16 x, uint16 y) internal view returns (uint256) {
-        // Check configured zones (1-10 for now — cheap reads, no loops over all zones)
-        for (uint256 zId = 1; zId <= 10; zId++) {
-            uint16 w = ZoneMapConfig.getWidth(zId);
-            if (w == 0) continue; // unconfigured
-            uint16 ox = ZoneMapConfig.getOriginX(zId);
-            uint16 oy = ZoneMapConfig.getOriginY(zId);
-            uint16 h = ZoneMapConfig.getHeight(zId);
-            if (x >= ox && x < ox + w && y >= oy && y < oy + h) {
-                return zId;
-            }
+        // World boss lazy spawn check
+        if (gasleft() > 200_000) {
+            SystemSwitch.call(abi.encodeCall(IWorldBossSystem.UD__trySpawnWorldBosses, (zoneId)));
         }
-        return ZONE_DARK_CAVE;
     }
 
     function _getAvailableMonsters(uint256 zoneId, uint8 startLevel, uint8 endLevel) internal view returns (uint256[] memory) {

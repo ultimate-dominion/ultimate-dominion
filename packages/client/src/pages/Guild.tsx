@@ -28,6 +28,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import {
   FaCrown,
   FaShieldAlt,
@@ -45,6 +46,7 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useToast } from '../hooks/useToast';
 import {
   encodeBytes32Key,
   toBigInt,
@@ -56,10 +58,52 @@ import { CHARACTERS_PATH, HOME_PATH } from '../Routes';
 
 const MEMBERS_PER_PAGE = 10;
 
-// Guild role constants
-const ROLE_MEMBER = 0;
-const ROLE_OFFICER = 1;
-const ROLE_LEADER = 2;
+// Guild role constants — matches GuildRank enum in contracts (1=Member, 2=Officer, 3=Leader)
+const ROLE_MEMBER = 1;
+const ROLE_OFFICER = 2;
+const ROLE_LEADER = 3;
+
+// GuildStatBuff enum
+const BUFF_NONE = 0;
+const BUFF_STRENGTH = 1;
+const BUFF_AGILITY = 2;
+const BUFF_INTELLIGENCE = 3;
+const BUFF_RESILIENCE = 4;
+
+const BUFF_LABELS: Record<number, string> = {
+  [BUFF_NONE]: 'Empty',
+  [BUFF_STRENGTH]: 'Might of the Order',
+  [BUFF_AGILITY]: 'Grace of the Order',
+  [BUFF_INTELLIGENCE]: 'Wisdom of the Order',
+  [BUFF_RESILIENCE]: 'Resilience of the Order',
+};
+
+const BUFF_STATS: Record<number, string> = {
+  [BUFF_STRENGTH]: '+3 STR',
+  [BUFF_AGILITY]: '+3 AGI',
+  [BUFF_INTELLIGENCE]: '+3 INT',
+  [BUFF_RESILIENCE]: '+5 HP',
+};
+
+const BUFF_COLORS: Record<number, string> = {
+  [BUFF_STRENGTH]: '#C85A3A',
+  [BUFF_AGILITY]: '#5AAF5A',
+  [BUFF_INTELLIGENCE]: '#5A7AC8',
+  [BUFF_RESILIENCE]: '#C8A96E',
+};
+
+const BUFF_ABBREV: Record<number, string> = {
+  [BUFF_STRENGTH]: 'STR',
+  [BUFF_AGILITY]: 'AGI',
+  [BUFF_INTELLIGENCE]: 'INT',
+  [BUFF_RESILIENCE]: 'HP',
+};
+
+// Guild upgrade costs (display only — contract enforces)
+const UPGRADE_COSTS: Record<number, number> = {
+  2: 1000,
+  3: 2500,
+};
 
 type GuildEntry = {
   guildId: string;
@@ -107,6 +151,7 @@ const CreateGuildModal: React.FC<CreateGuildModalProps> = ({
   onCreate,
   isCreating,
 }) => {
+  const { t } = useTranslation('ui');
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
   const [isOpenGuild, setIsOpenGuild] = useState(true);
@@ -127,39 +172,39 @@ const CreateGuildModal: React.FC<CreateGuildModalProps> = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          <Text>Create Guild</Text>
+          <Text>{t('guild.createModal.title')}</Text>
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody px={{ base: 6, sm: 8 }}>
           <VStack gap={4}>
             <FormControl isRequired>
               <FormLabel color="#8A7E6A" fontSize="sm">
-                Guild Name
+                {t('guild.createModal.nameLabel')}
               </FormLabel>
               <Input
                 isDisabled={isCreating}
                 maxLength={24}
                 onChange={e => setName(e.target.value)}
-                placeholder="Enter guild name"
+                placeholder={t('guild.createModal.namePlaceholder')}
                 value={name}
               />
             </FormControl>
             <FormControl isRequired>
               <FormLabel color="#8A7E6A" fontSize="sm">
-                Tag
+                {t('guild.createModal.tagLabel')}
               </FormLabel>
               <Input
                 isDisabled={isCreating}
                 maxLength={5}
                 onChange={e => setTag(e.target.value.toUpperCase())}
-                placeholder="e.g. FURY"
+                placeholder={t('guild.createModal.tagPlaceholder')}
                 value={tag}
               />
             </FormControl>
             <FormControl>
               <HStack justify="space-between">
                 <FormLabel color="#8A7E6A" fontSize="sm" mb={0}>
-                  Open to Join
+                  {t('guild.createModal.openLabel')}
                 </FormLabel>
                 <Switch
                   colorScheme="yellow"
@@ -171,14 +216,14 @@ const CreateGuildModal: React.FC<CreateGuildModalProps> = ({
             </FormControl>
             <FormControl>
               <FormLabel color="#8A7E6A" fontSize="sm">
-                Description
+                {t('guild.createModal.descLabel')}
               </FormLabel>
               <Textarea
                 height="100px"
                 isDisabled={isCreating}
                 maxLength={200}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="Describe your guild..."
+                placeholder={t('guild.createModal.descPlaceholder')}
                 value={description}
               />
             </FormControl>
@@ -186,15 +231,15 @@ const CreateGuildModal: React.FC<CreateGuildModalProps> = ({
         </ModalBody>
         <ModalFooter gap={3}>
           <Button onClick={onClose} variant="ghost">
-            Cancel
+            {t('guild.createModal.cancel')}
           </Button>
           <Button
             isDisabled={!name.trim() || !tag.trim()}
             isLoading={isCreating}
-            loadingText="Creating..."
+            loadingText={t('guild.createModal.creating')}
             onClick={handleCreate}
           >
-            Create
+            {t('guild.createModal.create')}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -219,6 +264,7 @@ const WithdrawTreasuryModal: React.FC<WithdrawModalProps> = ({
   isWithdrawing,
   maxAmount,
 }) => {
+  const { t } = useTranslation('ui');
   const [amount, setAmount] = useState('');
 
   const handleWithdraw = useCallback(async () => {
@@ -233,19 +279,19 @@ const WithdrawTreasuryModal: React.FC<WithdrawModalProps> = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          <Text>Withdraw from Treasury</Text>
+          <Text>{t('guild.withdrawModal.title')}</Text>
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody px={{ base: 6, sm: 8 }}>
           <VStack gap={4}>
             <Text color="#8A7E6A" fontSize="sm">
-              Available: {Number(formatEther(maxAmount)).toLocaleString()} $GOLD
+              {t('guild.withdrawModal.available', { amount: Number(formatEther(maxAmount)).toLocaleString() })}
             </Text>
             <FormControl>
               <Input
                 isDisabled={isWithdrawing}
                 onChange={e => setAmount(e.target.value)}
-                placeholder="Amount to withdraw"
+                placeholder={t('guild.withdrawModal.amountPlaceholder')}
                 type="number"
                 value={amount}
               />
@@ -254,15 +300,15 @@ const WithdrawTreasuryModal: React.FC<WithdrawModalProps> = ({
         </ModalBody>
         <ModalFooter gap={3}>
           <Button onClick={onClose} variant="ghost">
-            Cancel
+            {t('guild.withdrawModal.cancel')}
           </Button>
           <Button
             isDisabled={!amount || Number(amount) <= 0}
             isLoading={isWithdrawing}
-            loadingText="Withdrawing..."
+            loadingText={t('guild.withdrawModal.withdrawing')}
             onClick={handleWithdraw}
           >
-            Withdraw
+            {t('guild.withdrawModal.withdraw')}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -280,6 +326,270 @@ type GuildDirectoryProps = {
   isJoining: boolean;
 };
 
+// ---------------------------------------------------------------------------
+// Guild Buff Panel
+// ---------------------------------------------------------------------------
+
+type GuildBuffPanelProps = {
+  guildId: string;
+  isLeader: boolean;
+  characterId: string;
+  systemCalls: any;
+};
+
+const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
+  guildId,
+  isLeader,
+  characterId,
+  systemCalls,
+}) => {
+  const buffSlotTable = useGameTable('GuildStatBuffSlot');
+  const guildLevelTable = useGameTable('GuildLevel');
+  const { renderError } = useToast();
+  const [isSettingBuff, setIsSettingBuff] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  // Derive guild level (default 1)
+  const guildLevel = useMemo(() => {
+    if (!guildLevelTable) return 1;
+    for (const data of Object.values(guildLevelTable)) {
+      if (String(data.guildId) === String(guildId)) {
+        const lvl = Number(data.level);
+        return lvl === 0 ? 1 : lvl;
+      }
+    }
+    return 1;
+  }, [guildLevelTable, guildId]);
+
+  // Read active buff slots
+  const buffSlots = useMemo(() => {
+    const slots: { slotIndex: number; buffType: number; active: boolean }[] = [];
+    for (let i = 0; i < 3; i++) {
+      slots.push({ slotIndex: i, buffType: BUFF_NONE, active: false });
+    }
+    if (!buffSlotTable) return slots;
+
+    for (const data of Object.values(buffSlotTable)) {
+      if (String(data.guildId) === String(guildId)) {
+        const idx = Number(data.slotIndex);
+        if (idx < 3) {
+          slots[idx] = {
+            slotIndex: idx,
+            buffType: Number(data.buffType),
+            active: Boolean(data.active),
+          };
+        }
+      }
+    }
+    return slots;
+  }, [buffSlotTable, guildId]);
+
+  // Active buff types (for duplicate check in UI)
+  const activeBuffTypes = useMemo(() => {
+    return new Set(
+      buffSlots.filter(s => s.active && s.buffType !== BUFF_NONE).map(s => s.buffType),
+    );
+  }, [buffSlots]);
+
+  const activeBuffCount = useMemo(
+    () => buffSlots.filter(s => s.active && s.buffType !== BUFF_NONE).length,
+    [buffSlots],
+  );
+
+  const handleSetBuff = useCallback(
+    async (slotIndex: number, buffType: number) => {
+      setIsSettingBuff(true);
+      try {
+        const result = await systemCalls.setGuildBuff(characterId, slotIndex, buffType);
+        if (result?.error) renderError(result.error);
+      } catch (e: any) {
+        renderError(e?.message ?? 'Failed to set buff');
+      } finally {
+        setIsSettingBuff(false);
+      }
+    },
+    [characterId, systemCalls, renderError],
+  );
+
+  const handleRemoveBuff = useCallback(
+    async (slotIndex: number) => {
+      setIsSettingBuff(true);
+      try {
+        const result = await systemCalls.removeGuildBuff(characterId, slotIndex);
+        if (result?.error) renderError(result.error);
+      } catch (e: any) {
+        renderError(e?.message ?? 'Failed to remove buff');
+      } finally {
+        setIsSettingBuff(false);
+      }
+    },
+    [characterId, systemCalls, renderError],
+  );
+
+  const handleUpgrade = useCallback(async () => {
+    setIsUpgrading(true);
+    try {
+      const result = await systemCalls.upgradeGuild(characterId);
+      if (result?.error) renderError(result.error);
+    } catch (e: any) {
+      renderError(e?.message ?? 'Failed to upgrade guild');
+    } finally {
+      setIsUpgrading(false);
+    }
+  }, [characterId, systemCalls, renderError]);
+
+  const nextUpgradeCost = UPGRADE_COSTS[guildLevel + 1];
+
+  return (
+    <VStack
+      bg="rgba(200,169,110,0.05)"
+      border="1px solid"
+      borderColor="#3A3428"
+      borderRadius="md"
+      p={4}
+      spacing={3}
+      w="100%"
+    >
+      {/* Header */}
+      <HStack justify="space-between" w="100%">
+        <Text color="#C8A96E" fontSize="sm" fontWeight={700}>
+          Stat Buffs
+        </Text>
+        <HStack spacing={1}>
+          <Text color="#8A7E6A" fontSize="xs">
+            Level {guildLevel}
+          </Text>
+          {isLeader && nextUpgradeCost && (
+            <Button
+              colorScheme="yellow"
+              isLoading={isUpgrading}
+              ml={2}
+              onClick={handleUpgrade}
+              size="xs"
+              variant="outline"
+            >
+              Upgrade ({nextUpgradeCost.toLocaleString()}g)
+            </Button>
+          )}
+        </HStack>
+      </HStack>
+
+      {/* Daily cost */}
+      {activeBuffCount > 0 && (
+        <Text color="#8A7E6A" fontSize="xs">
+          Daily cost: {(activeBuffCount * 200).toLocaleString()} gold/day
+        </Text>
+      )}
+
+      {/* Buff Slots */}
+      <VStack spacing={2} w="100%">
+        {buffSlots.slice(0, guildLevel).map((slot) => (
+          <HStack
+            key={slot.slotIndex}
+            bg={
+              slot.active && slot.buffType !== BUFF_NONE
+                ? `${BUFF_COLORS[slot.buffType] ?? '#C8A96E'}1A`
+                : 'rgba(60,54,42,0.3)'
+            }
+            border="1px solid"
+            borderColor={
+              slot.active && slot.buffType !== BUFF_NONE
+                ? (BUFF_COLORS[slot.buffType] ?? '#3A3428') + '40'
+                : '#3A3428'
+            }
+            borderRadius="md"
+            justify="space-between"
+            px={3}
+            py={2}
+            w="100%"
+          >
+            {slot.active && slot.buffType !== BUFF_NONE ? (
+              <>
+                <VStack align="start" spacing={0}>
+                  <Text
+                    color={BUFF_COLORS[slot.buffType] ?? '#E8DCC8'}
+                    fontSize="sm"
+                    fontWeight={600}
+                  >
+                    {BUFF_LABELS[slot.buffType]}
+                  </Text>
+                  <Text color="#8A7E6A" fontSize="xs">
+                    {BUFF_STATS[slot.buffType]}
+                  </Text>
+                </VStack>
+                {isLeader && (
+                  <Button
+                    aria-label="Remove buff"
+                    isLoading={isSettingBuff}
+                    minH="44px"
+                    minW="44px"
+                    onClick={() => handleRemoveBuff(slot.slotIndex)}
+                    size="xs"
+                    variant="ghost"
+                  >
+                    <FaTrash color="#8A7E6A" size={10} />
+                  </Button>
+                )}
+              </>
+            ) : (
+              <>
+                <Text color="#5A5244" fontSize="sm">
+                  Empty Slot
+                </Text>
+                {isLeader && (
+                  <HStack spacing={1}>
+                    {[BUFF_STRENGTH, BUFF_AGILITY, BUFF_INTELLIGENCE, BUFF_RESILIENCE]
+                      .filter(bt => !activeBuffTypes.has(bt))
+                      .map(bt => (
+                        <Tooltip key={bt} label={`${BUFF_LABELS[bt]} (${BUFF_STATS[bt]})`}>
+                          <Button
+                            aria-label={BUFF_LABELS[bt]}
+                            color={BUFF_COLORS[bt]}
+                            isLoading={isSettingBuff}
+                            minH="44px"
+                            minW="44px"
+                            onClick={() => handleSetBuff(slot.slotIndex, bt)}
+                            size="xs"
+                            variant="ghost"
+                          >
+                            {BUFF_ABBREV[bt]}
+                          </Button>
+                        </Tooltip>
+                      ))}
+                  </HStack>
+                )}
+              </>
+            )}
+          </HStack>
+        ))}
+
+        {/* Locked slots */}
+        {Array.from({ length: 3 - guildLevel }).map((_, i) => (
+          <HStack
+            key={`locked-${i}`}
+            bg="rgba(40,36,30,0.3)"
+            border="1px dashed"
+            borderColor="#2A2620"
+            borderRadius="md"
+            justify="center"
+            px={3}
+            py={2}
+            w="100%"
+          >
+            <Text color="#3A3428" fontSize="xs">
+              Unlock at Level {guildLevel + i + 1}
+            </Text>
+          </HStack>
+        ))}
+      </VStack>
+    </VStack>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Guild Directory
+// ---------------------------------------------------------------------------
+
 const GuildDirectory: React.FC<GuildDirectoryProps> = ({
   guilds,
   onJoin,
@@ -287,6 +597,7 @@ const GuildDirectory: React.FC<GuildDirectoryProps> = ({
   onOpenCreate,
   isJoining,
 }) => {
+  const { t } = useTranslation('ui');
   const [page, setPage] = useState(1);
   const [pageLimit, setPageLimit] = useState(1);
 
@@ -309,10 +620,10 @@ const GuildDirectory: React.FC<GuildDirectoryProps> = ({
         w="100%"
       >
         <Text color="#8A7E6A" fontSize="sm">
-          {guilds.length} Guild{guilds.length !== 1 ? 's' : ''}
+          {t('guild.directory.count', { count: guilds.length })}
         </Text>
         <Button onClick={onOpenCreate} size="sm">
-          Create Guild
+          {t('guild.directory.createButton')}
         </Button>
       </Flex>
 
@@ -345,13 +656,13 @@ const GuildDirectory: React.FC<GuildDirectoryProps> = ({
                   </HStack>
                   <HStack spacing={3}>
                     <Text color="#6A6050" fontSize="xs">
-                      {guild.memberCount} member{guild.memberCount !== 1 ? 's' : ''}
+                      {t('guild.directory.members', { count: guild.memberCount })}
                     </Text>
                     <Text
                       color={guild.isOpen ? '#6AAF6A' : '#AF6A6A'}
                       fontSize="xs"
                     >
-                      {guild.isOpen ? 'Open' : 'Closed'}
+                      {guild.isOpen ? t('guild.directory.open') : t('guild.directory.closed')}
                     </Text>
                   </HStack>
                 </VStack>
@@ -361,7 +672,7 @@ const GuildDirectory: React.FC<GuildDirectoryProps> = ({
                     onClick={() => onJoin(guild.guildId)}
                     size="xs"
                   >
-                    Join
+                    {t('guild.directory.join')}
                   </Button>
                 ) : (
                   <Button
@@ -370,7 +681,7 @@ const GuildDirectory: React.FC<GuildDirectoryProps> = ({
                     size="xs"
                     variant="outline"
                   >
-                    Apply
+                    {t('guild.directory.apply')}
                   </Button>
                 )}
               </HStack>
@@ -386,10 +697,10 @@ const GuildDirectory: React.FC<GuildDirectoryProps> = ({
           <VStack py={8} spacing={2}>
             <FaShieldAlt color="#5A5040" size={32} />
             <Text color="#8A7E6A" mt={2} fontSize="sm">
-              No guilds exist yet.
+              {t('guild.directory.emptyTitle')}
             </Text>
             <Text color="#5A5040" fontSize="xs">
-              Be the first to create one!
+              {t('guild.directory.emptySubtitle')}
             </Text>
           </VStack>
         )}
@@ -428,12 +739,13 @@ const MemberRow: React.FC<MemberRowProps> = ({
   onDemote,
   onKick,
 }) => {
+  const { t } = useTranslation('ui');
   const roleLabel =
     member.role === ROLE_LEADER
-      ? 'Leader'
+      ? t('guild.roles.leader')
       : member.role === ROLE_OFFICER
-        ? 'Officer'
-        : 'Member';
+        ? t('guild.roles.officer')
+        : t('guild.roles.member');
 
   const roleColor =
     member.role === ROLE_LEADER
@@ -457,7 +769,7 @@ const MemberRow: React.FC<MemberRowProps> = ({
       </Text>
       <HStack spacing={1}>
         {member.role === ROLE_LEADER && (
-          <Tooltip hasArrow label="Leader" placement="top">
+          <Tooltip hasArrow label={t('guild.tooltips.leader')} placement="top">
             <span>
               <FaCrown color="#C8A96E" size={12} />
             </span>
@@ -471,7 +783,7 @@ const MemberRow: React.FC<MemberRowProps> = ({
       {isLeader && member.role !== ROLE_LEADER && (
         <HStack spacing={1}>
           {member.role === ROLE_MEMBER && onPromote && (
-            <Tooltip hasArrow label="Promote to Officer" placement="top">
+            <Tooltip hasArrow label={t('guild.tooltips.promote')} placement="top">
               <Button
                 onClick={() => onPromote(member.characterId)}
                 size="xs"
@@ -482,7 +794,7 @@ const MemberRow: React.FC<MemberRowProps> = ({
             </Tooltip>
           )}
           {member.role === ROLE_OFFICER && onDemote && (
-            <Tooltip hasArrow label="Demote to Member" placement="top">
+            <Tooltip hasArrow label={t('guild.tooltips.demote')} placement="top">
               <Button
                 onClick={() => onDemote(member.characterId)}
                 size="xs"
@@ -493,7 +805,7 @@ const MemberRow: React.FC<MemberRowProps> = ({
             </Tooltip>
           )}
           {onKick && (
-            <Tooltip hasArrow label="Kick" placement="top">
+            <Tooltip hasArrow label={t('guild.tooltips.kick')} placement="top">
               <Button
                 colorScheme="red"
                 onClick={() => onKick(member.characterId)}
@@ -526,6 +838,7 @@ const MemberRow: React.FC<MemberRowProps> = ({
 // ---------- Main Guild Page ----------
 
 export const Guild = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const { character } = useCharacter();
@@ -766,12 +1079,12 @@ export const Guild = (): JSX.Element => {
   return (
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
       <Helmet>
-        <title>Guild | Ultimate Dominion</title>
+        <title>{t('guild.pageTitle')}</title>
       </Helmet>
       <VStack>
         <HStack bgColor="blue500" h="66px" px="20px" width="100%">
           <FaShieldAlt color="white" size={24} />
-          <Heading color="white">Guild</Heading>
+          <Heading color="white">{t('guild.heading')}</Heading>
         </HStack>
 
         {!isInGuild ? (
@@ -829,9 +1142,17 @@ export const Guild = (): JSX.Element => {
                 ).toLocaleString()}
               </Text>
               <Text color="#8A7E6A" fontSize="sm">
-                $GOLD Treasury
+                {t('guild.treasury')}
               </Text>
             </HStack>
+
+            {/* Guild Stat Buffs */}
+            <GuildBuffPanel
+              guildId={myGuildId!}
+              isLeader={isLeader}
+              characterId={characterId}
+              systemCalls={systemCalls}
+            />
 
             {/* Leader Controls */}
             {isLeader && (
@@ -845,14 +1166,14 @@ export const Guild = (): JSX.Element => {
                 w="100%"
               >
                 <Text color="#C8A96E" fontSize="sm" fontWeight={700}>
-                  Leader Controls
+                  {t('guild.leaderControls')}
                 </Text>
 
                 {/* Tax Rate */}
                 <FormControl>
                   <HStack justify="space-between" mb={1}>
                     <FormLabel color="#8A7E6A" fontSize="xs" mb={0}>
-                      Tax Rate
+                      {t('guild.taxRate')}
                     </FormLabel>
                     <Text color="#E8DCC8" fontFamily="mono" fontSize="xs">
                       {taxRate}%
@@ -875,18 +1196,18 @@ export const Guild = (): JSX.Element => {
 
                 <HStack spacing={2} w="100%">
                   <Button flex={1} onClick={onOpenWithdraw} size="sm">
-                    Withdraw Treasury
+                    {t('guild.withdrawTreasury')}
                   </Button>
                   <Button
                     colorScheme="red"
                     flex={1}
                     isLoading={isDisbanding}
-                    loadingText="Disbanding..."
+                    loadingText={t('guild.disbanding')}
                     onClick={handleDisband}
                     size="sm"
                     variant="outline"
                   >
-                    Disband Guild
+                    {t('guild.disbandGuild')}
                   </Button>
                 </HStack>
               </VStack>
@@ -904,7 +1225,7 @@ export const Guild = (): JSX.Element => {
                 w="100%"
               >
                 <Text color="#C8A96E" fontSize="sm" fontWeight={700}>
-                  Pending Applications ({applications.length})
+                  {t('guild.pendingApplications', { count: applications.length })}
                 </Text>
                 {applications.map(app => (
                   <HStack
@@ -924,14 +1245,14 @@ export const Guild = (): JSX.Element => {
                         onClick={() => handleJoinGuild(myGuildId)}
                         size="xs"
                       >
-                        Approve
+                        {t('guild.approve')}
                       </Button>
                       <Button
                         colorScheme="red"
                         size="xs"
                         variant="outline"
                       >
-                        Reject
+                        {t('guild.reject')}
                       </Button>
                     </HStack>
                   </HStack>
@@ -943,7 +1264,7 @@ export const Guild = (): JSX.Element => {
             <VStack spacing={0} w="100%">
               <Flex align="center" justify="space-between" px={1} w="100%">
                 <Text color="#8A7E6A" fontSize="sm">
-                  {members.length} Member{members.length !== 1 ? 's' : ''}
+                  {t('guild.memberCount', { count: members.length })}
                 </Text>
               </Flex>
               <Box
@@ -1012,13 +1333,13 @@ export const Guild = (): JSX.Element => {
                 colorScheme="red"
                 isLoading={isLeaving}
                 leftIcon={<FaSignOutAlt />}
-                loadingText="Leaving..."
+                loadingText={t('guild.leaving')}
                 onClick={handleLeaveGuild}
                 size="sm"
                 variant="outline"
                 w="100%"
               >
-                Leave Guild
+                {t('guild.leaveGuild')}
               </Button>
             )}
           </VStack>

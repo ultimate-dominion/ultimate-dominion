@@ -1,5 +1,6 @@
 import { Box, Text, VStack } from '@chakra-ui/react';
 import { useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 import { useQueue } from '../contexts/QueueContext';
 import { useItems } from '../contexts/ItemsContext';
@@ -17,6 +18,7 @@ type GameEvent = {
 };
 
 export const GameEventFeed = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { gameEvents } = useQueue();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -24,10 +26,10 @@ export const GameEventFeed = (): JSX.Element => {
     return (
       <VStack py={8} spacing={2}>
         <Text color="#5A5040" fontStyle="italic" size="sm">
-          Waiting for game events...
+          {t('gameEventFeed.waiting')}
         </Text>
         <Text color="#3A3228" size="xs">
-          Battles, loot, quests, and new arrivals will appear here
+          {t('gameEventFeed.description')}
         </Text>
       </VStack>
     );
@@ -55,6 +57,7 @@ export const GameEventFeed = (): JSX.Element => {
 
 /** Resolve player name and item name from client game state */
 const EventContent = ({ event }: { event: GameEvent }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { armorTemplates, weaponTemplates, consumableTemplates, spellTemplates } = useItems();
   const { allCharacters } = useMap();
 
@@ -90,7 +93,7 @@ const EventContent = ({ event }: { event: GameEvent }): JSX.Element => {
     return (
       <>
         <Text as="span" color={nameColor} fontWeight={700}>{playerName}</Text>
-        {' found '}
+        {t('gameEventFeed.found')}
         <Text as={RouterLink} to={`${ITEM_PATH}/${meta.itemId}`} color={itemColor} fontWeight={700} _hover={{ textDecoration: 'underline' }}>
           {itemName}
         </Text>

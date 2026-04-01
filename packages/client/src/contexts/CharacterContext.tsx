@@ -337,7 +337,7 @@ const CharacterProviderInner = ({
       isSpawned: true,
       locked: Boolean(data.locked),
       owner: String(data.owner),
-      position: { x: 0, y: 0 },
+      position: { zoneId: 0, x: 0, y: 0 },
       pvpCooldownTimer,
       tokenId: String(data.tokenId),
       worldEncounter: worldEncounterEntry

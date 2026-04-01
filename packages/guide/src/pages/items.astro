@@ -15,7 +15,7 @@ const headings = [
   { depth: 2, slug: 'finding-items', text: 'Finding Items' },
 ];
 
-function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
+function statStr(v: number): string { return v > 0 ? `+${v}` : v < 0 ? `${v}` : '\u2014'; }
 ---
 
 <GuideLayout
@@ -29,52 +29,58 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
     name: 'Ultimate Dominion Items',
     description: 'All weapons, armor, and consumables in Ultimate Dominion.',
     numberOfItems: weapons.length + armors.length + consumables.length,
-    dateModified: '2026-03-12',
+    dateModified: '2026-03-27',
   }} slot="head" />
 
   <h1>Tools of the Trade</h1>
   <p class="text-lg text-text-secondary">
-    Ultimate Dominion has three item categories — weapons, armor, and consumables — across four rarity tiers (Worn, Common, Uncommon, Rare). Weapons are divided into STR, AGI, and INT families. Items account for roughly 60% of a character's total power. All items are on-chain NFTs that can be traded on the player marketplace.
+    Ultimate Dominion has three item categories — weapons, armor, and consumables — across five rarity tiers (Worn, Common, Uncommon, Rare, Epic). Weapons are divided into STR, AGI, and INT families. Items account for roughly 60% of a character's total power. All items are on-chain NFTs that can be traded on the player marketplace.
   </p>
   <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
   <h2 id="rarity-tiers">Rarity Tiers</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Four tiers: Worn, Common, Uncommon, Rare — each progressively more powerful, harder to find, and with higher stat requirements.</em></p>
-  <p>Items come in four rarity tiers, each progressively more powerful and harder to find:</p>
+  <p class="text-sm text-text-secondary mb-2"><em>Five tiers: Worn, Common, Uncommon, Rare, Epic — each progressively more powerful, harder to find, and with higher stat requirements.</em></p>
+  <p>Items come in five rarity tiers, each progressively more powerful and harder to find:</p>
   <div class="flex flex-wrap gap-3 my-4 not-prose">
     <RarityBadge rarity="worn" />
     <RarityBadge rarity="common" />
     <RarityBadge rarity="uncommon" />
     <RarityBadge rarity="rare" />
+    <RarityBadge rarity="epic" />
   </div>
   <p>
-    Higher rarity items have better stats, more stat bonuses, and higher requirements. Rare items are the hardest to find and represent the current pinnacle of power.
+    Higher rarity items have better stats, more stat bonuses, and higher requirements. Epic items are the rarest drops in the cave, with unique on-hit effects.
   </p>
 
   <h2 id="weapons">Weapons</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Three families: STR (swords/axes/maces), AGI (bows/crossbows), INT (staves/wands). Each has min stat requirements.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>Three families: STR (swords/axes/maces), AGI (bows), INT (staves/wands/rods). Many require multiple stats to equip.</em></p>
   <p>
     Weapons determine your base damage and often grant bonus stats. There are three weapon families:
   </p>
   <ul>
-    <li><strong>Strength weapons</strong> — swords, axes, maces, hammers. Require STR to equip.</li>
-    <li><strong>Agility weapons</strong> — bows, crossbows. Require AGI to equip.</li>
-    <li><strong>Intelligence weapons</strong> — staves, wands, rods, scepters. Require INT to equip.</li>
+    <li><strong>Strength weapons</strong> — swords, axes, maces, hammers. Primary STR requirement.</li>
+    <li><strong>Agility weapons</strong> — bows. Primary AGI requirement.</li>
+    <li><strong>Intelligence weapons</strong> — staves, wands, rods. Primary INT requirement.</li>
   </ul>
+
+  <Callout type="info" title="Multi-stat requirements">
+    Many mid and high-tier weapons require multiple stats to equip (e.g., 11 STR + 4 AGI). This rewards balanced stat allocation and prevents pure glass-cannon builds from accessing the best gear.
+  </Callout>
 
   <DataTable headers={['Name', 'Rarity', 'Damage', 'STR', 'AGI', 'INT', 'HP', 'Requires']}>
     {weapons.map((w) => (
       <tr class="hover:bg-surface/50 transition-colors">
-        <td class="px-4 py-2.5 text-white font-medium text-sm">{w.name}</td>
+        <td class="px-4 py-2.5 text-white font-medium text-sm">
+          {w.name}
+          {w.special && <span class="block text-xs text-accent-gold mt-0.5">{w.special}</span>}
+        </td>
         <td class="px-4 py-2.5"><RarityBadge rarity={w.rarity} /></td>
         <td class="px-4 py-2.5 font-mono text-sm">{w.damage}</td>
         <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(w.str)}</td>
         <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(w.agi)}</td>
         <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(w.int)}</td>
         <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(w.hp)}</td>
-        <td class="px-4 py-2.5 text-xs text-text-secondary">
-          {w.minStr > 0 ? `${w.minStr} STR` : w.minAgi > 0 ? `${w.minAgi} AGI` : w.minInt > 0 ? `${w.minInt} INT` : 'None'}
-        </td>
+        <td class="px-4 py-2.5 text-xs text-text-secondary">{w.requires}</td>
       </tr>
     ))}
   </DataTable>
@@ -95,9 +101,7 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
         <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(a.agi)}</td>
         <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(a.int)}</td>
         <td class="px-4 py-2.5 font-mono text-xs text-center">{statStr(a.hp)}</td>
-        <td class="px-4 py-2.5 text-xs text-text-secondary">
-          {a.minStr > 0 ? `${a.minStr} STR` : a.minAgi > 0 ? `${a.minAgi} AGI` : a.minInt > 0 ? `${a.minInt} INT` : 'None'}
-        </td>
+        <td class="px-4 py-2.5 text-xs text-text-secondary">{a.requires}</td>
       </tr>
     ))}
   </DataTable>
@@ -107,9 +111,9 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
   </Callout>
 
   <h2 id="consumables">Consumables</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Single-use items for healing, stat buffs, and combat effects. Dropped by monsters and sold in shops.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>Single-use items for healing, stat buffs, combat effects, and vendor trash. Dropped by monsters and sold in shops.</em></p>
   <p>
-    Consumables are single-use items that provide healing, stat buffs, or other effects during combat. Use them wisely — they're gone after one use.
+    Consumables are single-use items. Healing and buff consumables are used in combat. Offensive consumables apply debuffs to targets. Junk items have no combat use but can be sold to Tal's Shop for gold.
   </p>
 
   <DataTable headers={['Name', 'Rarity', 'Effect']}>
@@ -123,18 +127,15 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
   </DataTable>
 
   <h2 id="equipment-requirements">Equipment Requirements</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Stat-based only (no level requirements). Your STR/AGI/INT determines what you can equip.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>Stat-based only (no level requirements). Many items require multiple stats.</em></p>
   <p>
-    Most items above Worn rarity require minimum stat thresholds to equip. These requirements are based on <strong>stats only</strong> — there are no level requirements for items.
+    Most items above Worn rarity require minimum stat thresholds to equip. Requirements are based on <strong>stats only</strong> — there are no level requirements for items. Many higher-tier items require <strong>multiple stats</strong>, encouraging balanced builds.
   </p>
   <ul>
-    <li><strong>STR weapons/armor</strong> — require minimum Strength.</li>
-    <li><strong>AGI weapons/armor</strong> — require minimum Agility.</li>
-    <li><strong>INT weapons/armor</strong> — require minimum Intelligence.</li>
+    <li><strong>STR weapons/armor</strong> — primary Strength requirement, often with secondary AGI or INT.</li>
+    <li><strong>AGI weapons/armor</strong> — primary Agility requirement, often with secondary STR or INT.</li>
+    <li><strong>INT weapons/armor</strong> — primary Intelligence requirement, often with secondary STR or AGI.</li>
   </ul>
-  <p>
-    You cannot equip an item unless your stats meet the requirement. This means stat allocation (from <a href="/guide/progression">leveling</a>) directly determines which gear you can use.
-  </p>
 
   <h2 id="finding-items">Finding Items</h2>
   <p class="text-sm text-text-secondary mb-2"><em>Monster drops, NPC shops, and the player marketplace — higher-level monsters drop rarer items.</em></p>
@@ -142,7 +143,7 @@ function statStr(v: number): string { return v > 0 ? `+${v}` : '—'; }
     Items enter the game through three channels:
   </p>
   <ul>
-    <li><strong>Monster drops</strong> — defeat <a href="/guide/bestiary">monsters</a> for a chance at loot. Higher-level creatures drop rarer items.</li>
+    <li><strong>Monster drops</strong> — defeat <a href="/guide/bestiary">monsters</a> for a chance at loot. Higher-level creatures drop rarer items. Elite monsters have 2x drop chance.</li>
     <li><strong>Shops</strong> — NPC <a href="/guide/economy">shops</a> sell items at markup prices. Stock is limited and refreshes periodically.</li>
     <li><strong>Marketplace</strong> — buy directly from other players on the <a href="/guide/economy">player marketplace</a>. Prices are set by supply and demand.</li>
   </ul>

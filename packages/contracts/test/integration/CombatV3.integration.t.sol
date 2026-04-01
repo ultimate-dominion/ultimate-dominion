@@ -145,7 +145,7 @@ contract CombatV3IntegrationTest is V3SetUp {
      * -> physical damage calculation -> combat resolution.
      */
     function test_BossAI_INTDominantDefender_CompletesSuccessfully() public {
-        bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, TEST_X, TEST_Y);
+        bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, 1, TEST_X, TEST_Y);
 
         // hasBossAI lives on the mob template, not the spawned MobStats table
         MonsterStats memory tmpl = abi.decode(Mobs.getMobStats(basiliskMobId), (MonsterStats));
@@ -176,7 +176,7 @@ contract CombatV3IntegrationTest is V3SetUp {
      * -> magic damage calculation -> combat resolution.
      */
     function test_BossAI_STRDominantDefender_CompletesSuccessfully() public {
-        bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, TEST_X, TEST_Y);
+        bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, 1, TEST_X, TEST_Y);
 
         // Charlie is STR-dominant: STR=20 > AGI=5, INT=5
         // Boss should pick magic weapon (slot 1) to bypass armor/block
@@ -195,7 +195,7 @@ contract CombatV3IntegrationTest is V3SetUp {
      */
     function test_NoBossAI_DefaultSlot0_CompletesSuccessfully() public {
         // Use a non-boss monster (midLevel has hasBossAI: false)
-        bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, TEST_X, TEST_Y);
+        bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, 1, TEST_X, TEST_Y);
         MonsterStats memory tmplMid = abi.decode(Mobs.getMobStats(midLevelMobId), (MonsterStats));
         assertFalse(tmplMid.hasBossAI, "hasBossAI should be false for non-boss");
 
@@ -214,7 +214,7 @@ contract CombatV3IntegrationTest is V3SetUp {
      * When INT == STR == AGI, the condition (defInt >= defStr && defInt >= defAgi) is true.
      */
     function test_BossAI_BalancedStats_SelectsSlot0() public {
-        bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, TEST_X, TEST_Y);
+        bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, 1, TEST_X, TEST_Y);
 
         // All stats equal → INT >= STR && INT >= AGI → slot 0
         _setupCharlie(15, 15, 15, 300);
@@ -232,7 +232,7 @@ contract CombatV3IntegrationTest is V3SetUp {
      * damage calculation, and encounter end.
      */
     function test_BossAI_FullFight_CompletesSuccessfully() public {
-        bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, TEST_X, TEST_Y);
+        bytes32 bossEntity = world.UD__spawnMob(basiliskMobId, 1, TEST_X, TEST_Y);
 
         // Strong balanced character to survive the boss
         _setupCharlie(15, 15, 15, 500);
@@ -260,7 +260,7 @@ contract CombatV3IntegrationTest is V3SetUp {
             "SpellScaling should be set to STR"
         );
 
-        bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, TEST_X, TEST_Y);
+        bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, 1, TEST_X, TEST_Y);
         int256 monsterHpBefore = Stats.getCurrentHp(monsterEntity);
 
         // Charlie: high STR, low INT — effective with STR-scaled magic
@@ -289,7 +289,7 @@ contract CombatV3IntegrationTest is V3SetUp {
     function test_SpellScaling_INT_LowINTAttacker_CompletesSuccessfully() public {
         SpellScaling.set(magicAttackEffectId, ResistanceStat.Intelligence);
 
-        bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, TEST_X, TEST_Y);
+        bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, 1, TEST_X, TEST_Y);
 
         // Charlie: high STR but low INT — ineffective with INT-scaled magic
         _setupCharlie(50, 15, 1, 200);
@@ -314,7 +314,7 @@ contract CombatV3IntegrationTest is V3SetUp {
             "SpellScaling should be set to AGI"
         );
 
-        bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, TEST_X, TEST_Y);
+        bytes32 monsterEntity = world.UD__spawnMob(midLevelMobId, 1, TEST_X, TEST_Y);
 
         // Charlie: high AGI — effective with AGI-scaled magic
         _setupCharlie(5, 50, 1, 200);
@@ -341,7 +341,7 @@ contract CombatV3IntegrationTest is V3SetUp {
      *         Block halves physical damage. Does not apply to magic.
      */
     function test_Block_PhysicalCombat_HighSTRDefender() public {
-        bytes32 monsterEntity = world.UD__spawnMob(weakMageMobId, TEST_X, TEST_Y);
+        bytes32 monsterEntity = world.UD__spawnMob(weakMageMobId, 1, TEST_X, TEST_Y);
 
         // Charlie: high STR for max block chance
         _setupCharlie(25, 10, 10, 100);
@@ -360,7 +360,7 @@ contract CombatV3IntegrationTest is V3SetUp {
      *         defender can block. Verifies block -> damage/2 path doesn't revert.
      */
     function test_Block_FullEncounter_DoesNotRevert() public {
-        bytes32 monsterEntity = world.UD__spawnMob(dirRatMobId, TEST_X, TEST_Y);
+        bytes32 monsterEntity = world.UD__spawnMob(dirRatMobId, 1, TEST_X, TEST_Y);
 
         // High-STR defender: 30% block chance at cap
         _setupCharlie(25, 8, 8, 60);
@@ -376,7 +376,7 @@ contract CombatV3IntegrationTest is V3SetUp {
      * Contrasts with high-STR tests to show block is STR-dependent.
      */
     function test_Block_LowSTRDefender_NoBlock() public {
-        bytes32 monsterEntity = world.UD__spawnMob(dirRatMobId, TEST_X, TEST_Y);
+        bytes32 monsterEntity = world.UD__spawnMob(dirRatMobId, 1, TEST_X, TEST_Y);
 
         // STR=5 → below threshold of 10, 0% block chance
         _setupCharlie(5, 15, 15, 60);

@@ -99,6 +99,9 @@ const ClassPage = lazyWithReload(() =>
 const Guild = lazyWithReload(() =>
   import('./pages/Guild').then(m => ({ default: m.Guild })),
 );
+const PretextLab = lazyWithReload(() =>
+  import('./pages/PretextLab').then(m => ({ default: m.PretextLab })),
+);
 
 export const HOME_PATH = '/';
 export const MANIFESTO_PATH = '/manifesto';
@@ -116,6 +119,7 @@ export const PRIVACY_PATH = '/privacy';
 export const TERMS_PATH = '/terms';
 export const FAQ_PATH = '/faq';
 export const GUILD_PATH = '/guild';
+export const PRETEXT_LAB_PATH = '/pretext-lab';
 export const BLOG_URL = 'https://ultimatedominion.com/blog';
 export const TAVERN_URL = 'https://tavern.ultimatedominion.com';
 
@@ -142,6 +146,7 @@ const AppRoutes: React.FC = () => {
           <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
           <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
           {SHOW_Z2 && <Route path={GUILD_PATH} element={<Guild />} />}
+          {SHOW_Z2 && <Route path={PRETEXT_LAB_PATH} element={<PretextLab />} />}
           <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
           <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
           <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />

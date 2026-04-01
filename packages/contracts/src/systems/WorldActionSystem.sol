@@ -140,7 +140,7 @@ contract WorldActionSystem is System {
         if (EncounterEntity.getEncounterId(characterId) != bytes32(0)) revert InEncounter();
         if (Stats.getCurrentHp(characterId) <= 0) revert CharacterDead();
 
-        (uint16 x, uint16 y) = IWorld(_world()).UD__getEntityPosition(characterId);
+        (, uint16 x, uint16 y) = IWorld(_world()).UD__getEntityPosition(characterId);
         if (x != 0 || y != 0) revert NotAtRestPosition();
 
         int256 maxHp = Stats.getMaxHp(characterId) + CharacterEquipment.getHpBonus(characterId);

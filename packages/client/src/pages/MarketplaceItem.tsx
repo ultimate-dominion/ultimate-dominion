@@ -32,6 +32,7 @@ import {
 } from '../lib/gameStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { FaCheckCircle } from 'react-icons/fa';
 import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -69,6 +70,7 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 export const MarketplaceItem = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { renderWarning } = useToast();
   const navigate = useNavigate();
   const { itemId: selectedItemId } = useParams();
@@ -444,7 +446,7 @@ export const MarketplaceItem = (): JSX.Element => {
   if (!userCharacter) {
     return (
       <VStack>
-        <Text mt={12}>An error occurred.</Text>
+        <Text mt={12}>{t('common.error')}</Text>
       </VStack>
     );
   }
@@ -452,7 +454,7 @@ export const MarketplaceItem = (): JSX.Element => {
   if (selectedItem == null) {
     return (
       <VStack>
-        <Text>Item not found</Text>
+        <Text>{t('marketplace.itemNotFound')}</Text>
       </VStack>
     );
   }

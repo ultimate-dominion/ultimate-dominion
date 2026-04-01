@@ -19,7 +19,7 @@ import {
 } from "@codegen/index.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {CHARACTERS_NAMESPACE, ITEMS_NAMESPACE, TAL_SHOP_X, TAL_SHOP_Y, ESCROW_ADDRESS} from "../../constants.sol";
-import {Position} from "@codegen/index.sol";
+import {PositionV2} from "@codegen/index.sol";
 import {GoldLib} from "../libraries/GoldLib.sol";
 import {ShopSellTemps} from "@interfaces/Structs.sol";
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
@@ -36,7 +36,8 @@ import {
     OutOfStock,
     InsufficientItemBalance,
     NotOwnShopEncounter,
-    InvalidEncounter
+    InvalidEncounter,
+    ArrayMismatch
 } from "../Errors.sol";
 
 contract ShopSystem is System, ReentrancyGuard {
@@ -48,7 +49,7 @@ contract ShopSystem is System, ReentrancyGuard {
                 || worldData.entity != shopId || worldData.character != characterId
         ) revert InvalidShopEncounter();
         if (!IWorld(_world()).UD__isValidOwner(characterId, _msgSender())) revert Unauthorized();
-        (uint16 characterX, uint16 characterY) = IWorld(_world()).UD__getEntityPosition(characterId);
+        (, uint16 characterX, uint16 characterY) = IWorld(_world()).UD__getEntityPosition(characterId);
         if (!IWorld(_world()).UD__isAtPosition(shopId, characterX, characterY)) revert NotAtShopPosition();
     }
 
@@ -148,6 +149,48 @@ contract ShopSystem is System, ReentrancyGuard {
         ShopSale.set(shopId, characterId, itemId, block.timestamp, false, price);
     }
 
+    /// @notice Batch-sell multiple item types in a single transaction
+    function sellBatch(
+        uint256[] calldata itemIds,
+        uint256[] calldata amounts,
+        bytes32 shopId,
+        bytes32 characterId
+    ) public nonReentrant {
+        PauseLib.requireNotPaused();
+        if (itemIds.length != amounts.length) revert ArrayMismatch();
+        if (itemIds.length > 50) revert ArrayMismatch();
+        _validateShopEncounter(characterId, shopId);
+
+        address seller = _msgSender();
+        address lootManager = ESCROW_ADDRESS;
+        bytes14 ns = ITEMS_NAMESPACE;
+        ResourceId ownersTable = _ownersTableId(ns);
+        uint256 markdown = Shops.getPriceMarkdown(shopId);
+        uint256 totalPrice;
+
+        for (uint256 i; i < itemIds.length; i++) {
+            uint256 itemId = itemIds[i];
+            uint256 amount = amounts[i];
+            if (amount == 0) continue;
+
+            uint256 price = amount * ((Items.getPrice(itemId) * markdown) / 10_000);
+            totalPrice += price;
+
+            uint256 sellerBalance = ERC1155Owners.getBalance(ownersTable, seller, itemId);
+            if (sellerBalance < amount) revert InsufficientItemBalance();
+            ERC1155Owners.setBalance(ownersTable, seller, itemId, sellerBalance - amount);
+
+            uint256 lmBalance = ERC1155Owners.getBalance(ownersTable, lootManager, itemId);
+            ERC1155Owners.setBalance(ownersTable, lootManager, itemId, lmBalance + amount);
+
+            ShopSale.set(shopId, characterId, itemId, block.timestamp, false, price);
+        }
+
+        if (totalPrice > 0) {
+            GoldLib.goldMint(_world(), Characters.getOwner(characterId), totalPrice);
+        }
+    }
+
     function canRestock(bytes32 shopId) public view returns (bool) {
         uint256 lastRecordedIntervalTimestamp = Shops.getRestockTimestamp(shopId);
         if (lastRecordedIntervalTimestamp > block.timestamp) return false;
@@ -179,7 +222,7 @@ contract ShopSystem is System, ReentrancyGuard {
 
         // Fragment II: The Quartermaster - talk to Tal at (9,9)
         bytes32 shopEntityId = WorldEncounter.getEntity(encounterId);
-        (uint16 shopX, uint16 shopY) = Position.get(shopEntityId);
+        (, uint16 shopX, uint16 shopY) = PositionV2.get(shopEntityId);
         if (shopX == TAL_SHOP_X && shopY == TAL_SHOP_Y) {
             SystemSwitch.call(
                 abi.encodeCall(IFragmentSystem.UD__triggerFragment, (characterId, 2, shopX, shopY))

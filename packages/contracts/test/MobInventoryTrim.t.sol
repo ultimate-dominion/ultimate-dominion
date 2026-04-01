@@ -73,7 +73,7 @@ contract Test_MobInventoryTrim is SetUp {
 
     function test_nonBoss_singleWeapon() public {
         vm.prank(deployer);
-        bytes32 entityId = world.UD__spawnMob(normalMobId, 3, 3);
+        bytes32 entityId = world.UD__spawnMob(normalMobId, 1, 3, 3);
 
         // Spawned MobStats should have only 1 item (combat weapon at index 0)
         MobStatsData memory spawned = MobStats.get(entityId);
@@ -83,7 +83,7 @@ contract Test_MobInventoryTrim is SetUp {
 
     function test_boss_twoWeapons() public {
         vm.prank(deployer);
-        bytes32 entityId = world.UD__spawnMob(bossMobId, 4, 4);
+        bytes32 entityId = world.UD__spawnMob(bossMobId, 1, 4, 4);
 
         // Spawned MobStats should have 2 items (boss uses index 0+1)
         MobStatsData memory spawned = MobStats.get(entityId);
@@ -94,7 +94,7 @@ contract Test_MobInventoryTrim is SetUp {
 
     function test_templatePreserved() public {
         vm.prank(deployer);
-        world.UD__spawnMob(normalMobId, 3, 3);
+        world.UD__spawnMob(normalMobId, 1, 3, 3);
 
         // Template (Mobs table) should still have full 5-item inventory
         MonsterStats memory template = abi.decode(Mobs.getMobStats(normalMobId), (MonsterStats));
@@ -105,7 +105,7 @@ contract Test_MobInventoryTrim is SetUp {
 
     function test_bossTemplatePreserved() public {
         vm.prank(deployer);
-        world.UD__spawnMob(bossMobId, 4, 4);
+        world.UD__spawnMob(bossMobId, 1, 4, 4);
 
         // Template should still have full 5-item inventory
         MonsterStats memory template = abi.decode(Mobs.getMobStats(bossMobId), (MonsterStats));

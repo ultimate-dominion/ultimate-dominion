@@ -1,0 +1,890 @@
+{
+  "nav": {
+    "game": "게임",
+    "character": "캐릭터",
+    "marketplace": "거래소",
+    "guild": "길드",
+    "leaderboard": "순위표",
+    "guide": "가이드",
+    "blog": "블로그",
+    "tavern": "선술집",
+    "settings": "설정",
+    "about": "소개",
+    "sound": "소리",
+    "menu": "메뉴",
+    "terms": "이용약관",
+    "privacy": "개인정보"
+  },
+  "beta": {
+    "banner": "베타 — 테스트 월드"
+  },
+  "queue": {
+    "position": "대기열 (#{{position}})"
+  },
+  "language": {
+    "label": "언어"
+  },
+  "common": {
+    "close": "닫기",
+    "cancel": "취소",
+    "continue": "계속",
+    "or": "또는",
+    "no": "아니오",
+    "yes": "예",
+    "complete": "완료",
+    "permissionGranted": "권한이 승인되었습니다!",
+    "allowSpending": "지출 허용",
+    "alwaysAllow": "항상 허용",
+    "noCharacter": "캐릭터를 찾을 수 없습니다. 캐릭터를 선택해 주세요.",
+    "walletNotConnected": "지갑이 연결되지 않았습니다. 지갑을 다시 연결해 주세요.",
+    "error": "오류가 발생했습니다.",
+    "of": "/ {{count}}"
+  },
+  "betaBanner": {
+    "message": "얼리 액세스 — 오류가 발생할 수 있습니다. 문제가 있으면 새로고침하세요.",
+    "reportIssues": "문제 신고"
+  },
+  "badges": {
+    "title": "뱃지",
+    "noneEarned": "아직 획득한 뱃지가 없습니다"
+  },
+  "level": {
+    "max": "MAX",
+    "label": "레벨 {{level}}"
+  },
+  "discord": {
+    "join": "Discord 참여"
+  },
+  "feedback": {
+    "send": "피드백 보내기",
+    "sendAria": "피드백 보내기"
+  },
+  "captcha": {
+    "failed": "인증에 실패했습니다. 다시 시도해 주세요.",
+    "expired": "인증이 만료되었습니다. 다시 인증해 주세요.",
+    "joining": "참여 중...",
+    "joinQueue": "대기열 참여"
+  },
+  "sound": {
+    "mute": "음소거",
+    "unmute": "소리",
+    "muteAria": "소리 끄기",
+    "enableAria": "소리 켜기"
+  },
+  "map": {
+    "autoAdventure": "자동 모험",
+    "serverFull": "서버 만원 ({{current}}/{{max}})",
+    "joinQueue": "대기열 참여",
+    "queuePosition": "대기 순번: #{{position}}",
+    "waitTime": "약 {{minutes}}분 대기",
+    "viewWaitingRoom": "대기실 보기",
+    "slotOpened": "자리가 났습니다!",
+    "spawnNow": "지금 입장",
+    "spawning": "입장 중...",
+    "spawnTooltip": "맵에 입장합니다. 안식처 밖에는 몬스터가 도사리고 있으니 조심하세요.",
+    "spawn": "입장",
+    "expandCompass": "나침반 펼치기",
+    "collapse": "접기",
+    "tileInfo": "{{dir}}: 몬스터 {{monsters}}, 플레이어 {{players}}",
+    "moveDirection": "{{dir}}(으)로 이동"
+  },
+  "signIn": {
+    "title": "로그인하고 플레이하기",
+    "openInBrowser": "브라우저에서 열기",
+    "inAppWarning": "앱 내 브라우저에서는 Google 로그인이 작동하지 않습니다. 아래 링크를 복사하여 Chrome 또는 Safari에서 열어 주세요.",
+    "copied": "복사 완료!",
+    "copyLink": "링크 복사",
+    "continueWithGoogle": "Google로 계속하기",
+    "googleFailed": "Google 로그인에 실패했습니다",
+    "termsAgreement": "로그인하면 다음에 동의하는 것으로 간주됩니다:",
+    "termsOfService": "이용약관",
+    "and": "및",
+    "privacyPolicy": "개인정보 처리방침"
+  },
+  "connectWallet": {
+    "signingIn": "로그인 중...",
+    "settingUp": "계정을 설정하는 중...",
+    "depositInfo": "게임플레이 수수료를 위해 소량의 ETH 입금이 필요합니다. 자금은 세션에 보관되며 언제든 출금할 수 있습니다.",
+    "useGoogle": "대신 Google 로그인 사용",
+    "connecting": "지갑 연결 중...",
+    "ready": "준비 완료",
+    "secureSession": "세션 보안 설정"
+  },
+  "outOfResources": {
+    "title": "자원 부족",
+    "message": "가스를 위한 ETH도 자동 교환할 Gold도 없습니다. 계속 플레이하려면 자원이 필요합니다.",
+    "embeddedAdvice": "몬스터와 싸워 Gold를 획득하세요. 다음 트랜잭션은 후원되어 다시 시작할 수 있습니다.",
+    "embeddedDetail": "Gold를 획득하면 GasStation이 자동으로 ETH로 교환하여 향후 가스 비용을 충당합니다.",
+    "externalAdvice": "메인 지갑에서 ETH를 입금하여 계속 플레이하세요.",
+    "openWallet": "지갑 열기"
+  },
+  "levelUp": {
+    "banner": "레벨 업!",
+    "bannerReached": "레벨 {{level}} 달성",
+    "youHaveReached": "도달한 레벨:",
+    "abilityPoint": "+1 능력치 포인트",
+    "allocateStats": "능력치 분배",
+    "shareText": "Ultimate Dominion에서 레벨 {{level}} 달성."
+  },
+  "editCharacter": {
+    "title": "캐릭터 수정",
+    "namePlaceholder": "이름",
+    "nameRequired": "이름을 입력해야 합니다",
+    "uploadAvatar": "아바타 이미지 업로드",
+    "uploading": "업로드 중...",
+    "avatarRequired": "아바타를 설정해야 합니다",
+    "bioPlaceholder": "자기소개",
+    "bioRequired": "자기소개를 입력해야 합니다",
+    "updating": "업데이트 중...",
+    "update": "업데이트",
+    "updated": "캐릭터가 업데이트되었습니다!",
+    "missingFields": "필수 항목이 누락되었습니다.",
+    "updateFailed": "캐릭터 업데이트에 실패했습니다."
+  },
+  "allowance": {
+    "shopTitle": "상점 권한",
+    "marketplaceTitle": "거래소 권한",
+    "lootManagerTitle": "전리품 관리자 권한",
+    "buyPermission": "{{item}}을(를) 구매하려면 {{price}} Gold 지출 권한을 부여해야 합니다.",
+    "sellPermissionShop": "{{item}}을(를) 판매하려면 상점이 아이템을 관리할 수 있도록 허용해야 합니다.",
+    "sellPermissionMarketplace": "{{item}}을(를) 판매하려면 거래소가 아이템을 관리할 수 있도록 허용해야 합니다.",
+    "goldSpendPermission": "전리품 관리자에게 {{amount}} Gold 지출 권한을 부여하시겠습니까?",
+    "itemPermission": "전리품 관리자가 모든 아이템을 사용할 수 있도록 허용하시겠습니까?",
+    "shopAlwaysAllowTooltip": "매번 승인할 필요 없이 상점에서 Gold를 사용할 수 있게 합니다. 더 빠르고 원활한 경험을 제공합니다.",
+    "marketplaceAlwaysAllowTooltip": "매번 승인할 필요 없이 거래소에서 Gold를 사용할 수 있게 합니다. 더 빠르고 원활한 경험을 제공합니다.",
+    "lootManagerAlwaysAllowTooltip": "매번 승인할 필요 없이 Gold를 소지할 수 있게 합니다. 더 빠르고 원활한 경험을 제공합니다.",
+    "lootManagerSuccess": "전리품 관리자에서 토큰을 사용할 수 있습니다.",
+    "consumeTitle": "소모품 사용 허가",
+    "consumeMessage": "아이템을 소비하려면 게임에서 아이템을 사용할 수 있도록 허가해야 합니다.",
+    "consumeSuccess": "이제 아이템을 소비할 수 있습니다."
+  },
+  "battle": {
+    "victory": "승리!",
+    "defeat": "패배...",
+    "draw": "무승부...",
+    "monsterFled": "{{name}}이(가) 도망쳤습니다!",
+    "youFled": "{{name}}에게서 도망쳤습니다.",
+    "earnedGold": "획득:",
+    "gold": "Gold.",
+    "fleeingCost": "도주 비용:",
+    "carriedGold": "소지 Gold.",
+    "drawMessage": "무승부로 끝났습니다! 양측 모두 전장에서 퇴각했습니다.",
+    "youDefeated": "{{name}}을(를) 쓰러뜨렸습니다!",
+    "youWereKilled": "{{name}}에게 쓰러졌습니다.",
+    "lostGold": "잃은 Gold:",
+    "deathMessage": "사망 시 체력은 회복되지만, 마을 광장에서 부활하게 됩니다.",
+    "pvpShareText": "Ultimate Dominion에서 {{name}}을(를) PvP 전투로 격파.",
+    "pveShareText": "어둠의 동굴에서 {{name}}을(를) 처치.",
+    "itemShareText": "Ultimate Dominion에서 {{rarity}}{{name}}을(를) 발견. 모든 아이템은 영구적이고, 온체인이며, 내 것이다.",
+    "aMonster": "몬스터",
+    "fetchFailed": "전리품을 불러오지 못했습니다.",
+    "criticalHit": "치명타!",
+    "elitePrefix": "엘리트 {{name}}",
+    "drawEnd": "무승부로 전투가 끝났다."
+  },
+  "equip": {
+    "equipItem": "아이템 장착",
+    "unequipItem": "아이템 해제",
+    "makeOffer": "제안하기",
+    "wantEquip": "이 아이템을 장착하시겠습니까?",
+    "wantUnequip": "이 아이템을 해제하시겠습니까?",
+    "wantOffer": "이 아이템에 제안하시겠습니까?",
+    "equipping": "장착 중...",
+    "unequipping": "해제 중...",
+    "equip": "장착",
+    "unequip": "해제",
+    "sellOnMarketplace": "거래소에서 판매",
+    "missingRequirements": "요구 조건 미충족:",
+    "levelRequired": "레벨 {{level}} 필요",
+    "agiRequired": "AGI {{agi}} 필요",
+    "intRequired": "INT {{int}} 필요",
+    "strRequired": "STR {{str}} 필요",
+    "youStat": "(현재: {{value}})",
+    "slotsFull": "모든 장비 슬롯이 찼습니다. 먼저 장비를 해제하세요.",
+    "cannotEquipInBattle": "전투 중에는 아이템을 장착할 수 없습니다.",
+    "cannotUnequipInBattle": "전투 중에는 아이템을 해제할 수 없습니다.",
+    "mustHaveWeapon": "외부 영역에서는 최소 1개의 무기 또는 주문을 장착해야 합니다.",
+    "equippingItem": "{{name}} 장착 중...",
+    "unequippingItem": "{{name}} 해제 중...",
+    "alreadyEquipped": "{{name}}은(는) 이미 장착되어 있습니다",
+    "equipped": "{{name}} 장착 완료",
+    "alreadyUnequipped": "{{name}}은(는) 이미 해제되어 있습니다",
+    "unequipped": "{{name}} 해제 완료"
+  },
+  "fragment": {
+    "fragmentOf": "파편 {{num}} / {{total}}",
+    "xpReward": "+1 XP",
+    "depthsRelicHunter": "심연의 유물 사냥꾼",
+    "allCollected": "{{total}}개의 파편을 모두 수집했습니다. 이제 스러진 자들이 당신을 통해 말합니다. 뱃지가 새겨졌습니다.",
+    "discoveredAt": "({{x}}, {{y}})에서 발견됨",
+    "claiming": "획득 중...",
+    "claimFragment": "파편 획득",
+    "shareText": "Ultimate Dominion에서 파편 {{num}} 발견: {{name}}. 스러진 자들은 수수께끼로 말한다."
+  },
+  "chat": {
+    "title": "채팅",
+    "badgeUnlocked": "모험가 뱃지 — 채팅 해금!",
+    "publicWarning": "이 채팅은 영구적이며 모든 플레이어에게 공개됩니다. 개인정보나 민감한 데이터를 공유하지 마세요.",
+    "locked": "채팅 잠김",
+    "unlockMessage": "레벨 3에 도달하면 전체 채팅이 해금되고 모험가 뱃지를 획득합니다!",
+    "keepAdventuring": "계속 모험하고 몬스터를 물리쳐 레벨을 올리세요.",
+    "checkingAccess": "채팅 접근 권한 확인 중...",
+    "publicDisclaimer": "Ultimate Dominion의 채팅은 공개적이며 영구적입니다. 개인정보나 민감한 데이터를 공유하지 마세요.",
+    "joinChat": "채팅 참여",
+    "login": "로그인",
+    "placeholder": "메시지를 입력하세요...",
+    "sent": "전송: {{time}}"
+  },
+  "roster": {
+    "playersOnline": "{{count}}명 접속 중",
+    "playerOnline": "{{count}}명 접속 중",
+    "online": "접속 중",
+    "all": "전체",
+    "noPlayersFound": "플레이어를 찾을 수 없습니다",
+    "searchPlayers": "플레이어 검색...",
+    "inBattle": "전투 중",
+    "shopping": "쇼핑 중",
+    "cooldown": "쿨다운",
+    "tile": "타일 {{label}}",
+    "safe": "안전",
+    "you": "나",
+    "lv": "Lv{{level}}"
+  },
+  "worldFeed": {
+    "title": "월드",
+    "waiting": "월드 이벤트를 기다리는 중..."
+  },
+  "footer": {
+    "about": "소개",
+    "terms": "이용약관",
+    "privacy": "개인정보",
+    "blog": "블로그"
+  },
+  "share": {
+    "shareWithImage": "이미지와 함께 공유",
+    "shareAria": "공유",
+    "copied": "복사 완료!",
+    "copyText": "텍스트 복사",
+    "copyAria": "클립보드에 복사",
+    "monsterSlain": "몬스터 처치",
+    "pvpVictory": "PvP 승리",
+    "itemFound": "아이템 발견",
+    "levelUpLabel": "레벨 업",
+    "fragmentLabel": "파편 {{num}} / 8",
+    "classChosen": "상위 클래스 선택",
+    "defaultLabel": "Ultimate Dominion"
+  },
+  "health": {
+    "lvl": "Lvl {{level}}",
+    "hp": "HP"
+  },
+  "durability": {
+    "label": "내구도: {{current}}/{{max}}"
+  },
+  "stats": {
+    "gold": "Gold",
+    "getGold": "Gold 얻기",
+    "levelUpButton": "레벨 업!",
+    "fragments": "파편",
+    "xp": "XP"
+  },
+  "wallet": {
+    "account": "계정",
+    "signedInAs": "로그인 계정:",
+    "signOut": "로그아웃",
+    "cannotSignOutBattle": "전투 중에는 로그아웃할 수 없습니다.",
+    "fundSession": "세션에 자금 충전",
+    "fundingPrompt": "게임플레이 트랜잭션 수수료를 위해 소량의 ETH 입금이 필요합니다. 세션에 보관되며 나중에 출금할 수 있습니다.",
+    "sessionBalance": "세션 잔액",
+    "addFunds": "자금 추가",
+    "ethPlaceholder": "ETH 수량",
+    "deposit": "입금",
+    "walletBalance": "지갑 잔액:",
+    "advancedOptions": "고급 옵션",
+    "hideAdvanced": "고급 옵션 숨기기",
+    "withdrawToWallet": "지갑으로 출금",
+    "withdrawalsUnlock": "출금은 레벨 3에서 해금됩니다.",
+    "withdraw": "출금",
+    "resetSession": "세션 초기화",
+    "resetting": "초기화 중...",
+    "resetConfirmTitle": "세션을 초기화하시겠습니까?",
+    "resetConfirmBody": "게임 세션이 초기화됩니다. 남은 ETH는 세션에 보관되며 복구할 수 있습니다.",
+    "reset": "초기화",
+    "disconnect": "연결 해제",
+    "cannotDisconnectBattle": "전투 중에는 연결을 해제할 수 없습니다.",
+    "connecting": "연결 중...",
+    "depositSuccess": "자금이 성공적으로 입금되었습니다!",
+    "withdrawSuccess": "자금이 성공적으로 출금되었습니다!",
+    "sessionReset": "게임 계정이 초기화되었습니다.",
+    "signedOutEmbedded": "성공적으로 로그아웃되었습니다!",
+    "disconnectedExternal": "지갑 연결이 해제되었습니다!",
+    "amountGreaterZero": "금액은 0보다 커야 합니다.",
+    "insufficientExternal": "외부 지갑의 잔액이 부족합니다.",
+    "insufficientSession": "게임 계정의 잔액이 부족합니다."
+  },
+  "invite": {
+    "referralStats": "추천 통계",
+    "codesSent": "전송된 코드",
+    "activated": "활성화됨",
+    "bonusEarned": "획득한 보너스",
+    "yourCodes": "내 초대 코드",
+    "noCodes": "사용 가능한 초대 코드가 없습니다. 목표 달성으로 추가 코드를 획득하세요:",
+    "level3": "레벨 3 — 초대 코드 1개",
+    "level10": "레벨 10 — 초대 코드 1개",
+    "level20": "레벨 20 — 초대 코드 1개",
+    "friendLevel5": "초대한 친구가 레벨 5 달성 — 보너스 코드",
+    "usedCodes": "사용된 코드",
+    "redeemed": "사용 완료",
+    "refreshCodes": "코드 새로고침",
+    "copyLink": "링크 복사",
+    "shareToX": "X에 공유",
+    "bonus": "보너스",
+    "starter": "스타터",
+    "tweetText": "Ultimate Dominion을 플레이 중 — 모든 전투, 모든 흉터, 모든 전리품이 영구적인 RPG.\n\n내 초대 코드로 줄을 건너뛰세요: {{inviteUrl}}\n\n#UltimateDominion"
+  },
+  "goldMerchant": {
+    "title": "Gold 상인",
+    "adventurer": "모험가",
+    "goldLabel": "Gold",
+    "comingSoon": "곧 출시",
+    "comingSoonMessage": "Gold 상인이 물품을 준비하고 있습니다. 곧 여기서 직접 Gold를 구매할 수 있게 됩니다.",
+    "earnGoldNow": "지금은 전투를 통해 Gold를 획득하고 거래소에서 거래하세요.",
+    "preparingCheckout": "결제 준비 중...",
+    "redirecting": "보안 결제 페이지로 이동 중.",
+    "somethingWrong": "문제가 발생했습니다",
+    "tryAgain": "다시 시도"
+  },
+  "npc": {
+    "farewell": "안녕히",
+    "next": "다음",
+    "dialogueFailed": "대화를 시작하지 못했습니다.",
+    "talk": "대화",
+    "examine": "조사",
+    "combatTrainer": "전투 교관",
+    "guildFounder": "길드 창설자"
+  },
+  "consume": {
+    "consumable": "소모품",
+    "consumed": "{{name}}을(를) 사용했습니다!",
+    "equippedReady": "이 소모품은 장착되어 전투 준비가 되어 있습니다.",
+    "notEquipped": "이 소모품은 장착되어 있지 않습니다.",
+    "effectLasts": "효과 지속 시간: {{duration}}.",
+    "slotCount": "슬롯 {{current}}/{{max}} 장착됨",
+    "useThroughBattle": "전투 중에는 전투 패널에서 소모품을 사용하세요.",
+    "mustBeSpawned": "아이템을 사용하려면 맵에 입장해야 합니다.",
+    "healthFull": "체력이 가득 찼습니다.",
+    "maxStacks": "이 아이템은 한 번에 사용할 수 있는 최대 수량에 도달했습니다.",
+    "consuming": "사용 중...",
+    "consume": "사용",
+    "makeOffer": "제안하기",
+    "unequipFirst": "먼저 장비를 해제하세요",
+    "consumingItem": "{{name}} 사용 중...",
+    "consumedSuccess": "{{name}}을(를) 사용했습니다!",
+    "equippedSuccess": "{{name}} 장착 완료!",
+    "unequippedSuccess": "{{name}} 해제 완료!"
+  },
+  "loadout": {
+    "title": "장비 구성",
+    "edit": "편집",
+    "emptySlot": "빈 슬롯",
+    "armorEmpty": "방어구 — 비어 있음",
+    "tapToSetFirst": "탭하여 #1로 설정"
+  },
+  "leveling": {
+    "levelUp": "레벨 업!",
+    "myStats": "내 능력치",
+    "abilityPoints": "능력치 포인트: {{points}}",
+    "notEnoughPoints": "능력치 포인트가 부족합니다.",
+    "unusedPoints": "미사용 능력치 포인트가 있습니다",
+    "agility": "민첩",
+    "intelligence": "지능",
+    "strength": "힘",
+    "agiDesc": "공격을 회피합니다. 치명타 확률이 높아집니다.",
+    "intDesc": "주문 피해. 신비한 힘.",
+    "strDesc": "물리 피해. 순수한 힘.",
+    "base": "기본",
+    "bonus": "보너스",
+    "total": "합계",
+    "divinePowerBonus": "신앙이 깨어나다 — +2 HP",
+    "weavePowerBonus": "위브가 응답하다 — +1 Intelligence",
+    "physicalPowerBonus": "수련이 날카로워지다 — +1 보너스 능력치 포인트",
+    "level5Divine": "신성한 힘으로 +2 HP",
+    "level5Weave": "위브로부터 +1 INT",
+    "level5Physical": "물리 보너스 포인트 분배됨",
+    "level5Success": "레벨 5!{{bonus}}",
+    "level3Badge": "레벨 3! 모험가 뱃지를 획득했습니다!",
+    "leveledUp": "캐릭터 레벨이 올랐습니다!"
+  },
+  "respec": {
+    "title": "능력치 재분배",
+    "remaining": "남은 포인트: {{remaining}}",
+    "cost": "비용: {{cost}} Gold",
+    "fullRespecInfo": "전체 초기화는 클래스, 레벨, 모든 장비를 초기화합니다. 비용: {{cost}} Gold.",
+    "fullReset": "전체 초기화",
+    "cannotDuringCombat": "전투 중에는 능력치를 재분배할 수 없습니다.",
+    "redistributed": "능력치가 재분배되었습니다.",
+    "fullRespecWarning": "전체 초기화는 클래스, 레벨, 장비를 초기화합니다. 되돌릴 수 없습니다.",
+    "fullyReset": "캐릭터가 완전히 초기화되었습니다."
+  },
+  "repair": {
+    "title": "장비 수리",
+    "durability": "내구도 {{current}}/{{max}}",
+    "repairButton": "수리 ({{cost}} Gold)",
+    "repaired": "{{name}} 수리 완료",
+    "failed": "수리 실패"
+  },
+  "itemCard": {
+    "equipped": "장착 중",
+    "restoresHp": "HP {{hp}} 회복",
+    "requires": "요구 조건:"
+  },
+  "miniLeaderboard": {
+    "nearbyRanks": "근접 순위",
+    "statsTab": "능력치",
+    "goldTab": "Gold"
+  },
+  "header": {
+    "openMenu": "메뉴 열기"
+  },
+  "classSymbol": {
+    "intelligence": "지능",
+    "agility": "민첩",
+    "strength": "힘"
+  },
+  "connectWalletBtn": {
+    "signInWithWallet": "지갑으로 로그인",
+    "wrongNetwork": "잘못된 네트워크"
+  },
+  "delegation": {
+    "settingUp": "설정 중...",
+    "authorizePlay": "인증 후 플레이",
+    "fundingSkipped": "세션이 인증되었으나 자금 충전이 생략되었습니다. 설정 메뉴에서 ETH를 입금할 수 있습니다.",
+    "ready": "게임 계정 준비 완료!"
+  },
+  "consumableQuickUse": {
+    "noConsumables": "소모품이 없습니다. 상점을 방문하여 보충하세요."
+  },
+  "gameEventFeed": {
+    "waiting": "게임 이벤트를 기다리는 중...",
+    "description": "전투, 전리품, 퀘스트, 신규 입장이 여기에 표시됩니다",
+    "found": " 발견 "
+  },
+  "shop": {
+    "search": "검색",
+    "stock": "재고",
+    "price": "가격",
+    "noItems": "아이템 없음",
+    "buy": "구매",
+    "sell": "판매",
+    "approve": "승인",
+    "totalCost": "총 비용: {{amount}} $GOLD",
+    "totalReceive": "총 수령액: {{amount}} $GOLD",
+    "currentBalance": "현재 잔액 {{amount}} $GOLD",
+    "boughtItems": "{{name}} {{amount}}개 구매 완료",
+    "soldItems": "{{name}} {{amount}}개를 {{gold}} $GOLD에 판매 완료",
+    "insufficientStock": "재고가 부족합니다.",
+    "notEnoughGold": "이 아이템을 구매하기에 $GOLD가 부족합니다.",
+    "cantSellEquipped": "장착 중인 아이템의 마지막 하나는 판매할 수 없습니다.",
+    "shopkeeperNoGold": "상점 주인의 Gold가 부족합니다. 재고는 12시간마다 보충됩니다.",
+    "maxItems": "최대 {{count}}개",
+    "stats": "능력치",
+    "minDamage": "최소 피해:",
+    "maxDamage": "최대 피해:",
+    "restrictions": "제한 사항",
+    "buyAllowanceSuccess": "권한이 승인되었습니다! 이제 {{name}}을(를) 구매할 수 있습니다",
+    "sellAllowanceSuccess": "권한이 승인되었습니다! 이제 {{name}}을(를) 판매할 수 있습니다",
+    "shopNotFound": "상점을 찾을 수 없습니다",
+    "characterNotFound": "캐릭터를 찾을 수 없습니다",
+    "leaveShop": "상점 나가기",
+    "noSellableItems": "판매할 아이템이 없습니다"
+  },
+  "marketplace": {
+    "bought": "{{name}} 구매 완료!",
+    "sold": "{{name}} 판매 완료!",
+    "notEnoughGold": "$GOLD가 부족합니다",
+    "noListings": "등록된 매물이 없습니다",
+    "itemNotFound": "아이템을 찾을 수 없습니다"
+  },
+  "order": {
+    "from": "판매자: {{name}} ({{address}})",
+    "wantsGoldFor": "{{amount}}개의 {{item}}을(를) {{gold}} $GOLD에 판매",
+    "wantsItemFor": "{{amount}}개의 {{item}}을(를) {{gold}} $GOLD에 구매 희망",
+    "notEnoughGold": "Gold가 부족합니다",
+    "sellItem": "아이템 판매",
+    "buyItem": "아이템 구매",
+    "removeListing": "매물 삭제"
+  },
+  "createListing": {
+    "title": "매물 등록",
+    "allItems": "전체 아이템",
+    "inventory": "인벤토리",
+    "numItems": "수량:",
+    "filterBy": "필터:"
+  },
+  "fragmentCollection": {
+    "title": "파편 ({{claimed}}/{{total}})",
+    "discover": "어둠의 동굴 곳곳에서 전승 파편을 발견하세요",
+    "clickToRead": "클릭하여 읽기",
+    "clickToClaim": "클릭하여 획득!"
+  },
+  "fragmentRead": {
+    "claimed": "획득 완료",
+    "fragmentOf": "파편 {{num}} / {{total}}",
+    "claimedDate": "{{date}} 획득",
+    "tokenId": "토큰 #{{id}}"
+  },
+  "fragmentChain": {
+    "title": "파편 연쇄 ({{completed}}/{{total}})",
+    "complete": "완료",
+    "step": "단계 {{current}}/{{total}}"
+  },
+  "loot": {
+    "title": "획득한 아이템:"
+  },
+  "leaderboardRow": {
+    "statsSummary": "HP {{hp}} • STR {{str}} • AGI {{agi}} • INT {{int}}"
+  },
+  "mapReveal": {
+    "windingDark": "구불어둠"
+  },
+  "advancedClass": {
+    "chooseYourPath": "당신의 길을 선택하라",
+    "permanent": "이 결정은 영구적입니다. 신중히 선택하세요.",
+    "learnMore": "자세히 보기",
+    "bonuses": "보너스",
+    "multipliers": "배율",
+    "classSpell": "클래스 주문",
+    "become": "{{name}}이(가) 되기",
+    "notNow": "지금은 아니오",
+    "chosenMessage": "어둠의 동굴을 걸어 살아남았다.\n길이 정해졌다. 세상이 기억할 것이다.",
+    "shareText": "Ultimate Dominion에서 {{name}}이(가) 되었습니다. 레벨 10 달성."
+  },
+  "characterCreation": {
+    "pageTitle": "캐릭터 생성 | Ultimate Dominion",
+    "identity": {
+      "heading": "당신은 누구인가?",
+      "namePlaceholder": "이름",
+      "raceLabel": "당신의 혈통",
+      "powerLabel": "당신의 힘",
+      "submitButton": "나는 {{name}}, {{power}}의 {{race}}",
+      "submitButtonDefault": "나는 {{name}}",
+      "loadingText": "각성 중...",
+      "warning": "종족과 힘의 원천을 선택하세요."
+    },
+    "stats": {
+      "heading": "동굴이 시험한다",
+      "racePrefix": "종족: {{name}}",
+      "powerPrefix": "힘: {{name}}",
+      "rollButton": "스탯 굴리기",
+      "rerollButton": "스탯 다시 굴리기",
+      "noRerolls": "재굴림 횟수 소진",
+      "rerollsRemaining": "재굴림 {{count}}회 남음 — 무료",
+      "rollingText": "굴리는 중...",
+      "continueButton": "운명을 받아들이다",
+      "buildIndicator": "현재 빌드: ",
+      "buildDominant": "{{stat}} 특화"
+    },
+    "equipment": {
+      "heading": "무장하라",
+      "loading": "장비 불러오는 중...",
+      "weaponLabel": "무기",
+      "armorLabel": "방어구",
+      "recommendedBadge": "빌드에 적합",
+      "combatTriangleHint": "STR은 AGI에 강하다. AGI는 INT에 강하다. INT는 STR에 강하다.",
+      "submitButton": "어둠의 동굴로",
+      "wakingText": "깨어나는 중..."
+    },
+    "celebration": {
+      "journeyBegins": "여정이 시작된다."
+    },
+    "funding": {
+      "heading": "세션 충전",
+      "message": "세션 계정에 Base 네트워크 게임 수수료를 위한 소량의 ETH가 필요합니다. 자금은 세션에 보관되며 언제든 출금할 수 있습니다.",
+      "depositButton": "ETH 입금"
+    },
+    "race": {
+      "human": "인간",
+      "humanDesc": "균형 잡힌 다재다능함",
+      "elf": "엘프",
+      "elfDesc": "우아하고 현명한",
+      "dwarf": "드워프",
+      "dwarfDesc": "튼튼하고 강한"
+    },
+    "powerSource": {
+      "divine": "신성",
+      "divineDesc": "부르면 무언가가 응답한다. 오래된 것이.",
+      "divinePlay": "신앙",
+      "weave": "위브",
+      "weaveDesc": "현실의 직물에 실이 있다. 당신은 그것을 볼 수 있다.",
+      "weavePlay": "마법",
+      "physical": "물리",
+      "physicalDesc": "마법도 없다. 기도도 없다. 오직 육체, 무기, 의지뿐.",
+      "physicalPlay": "무술",
+      "divineTitle": "신성의",
+      "weaveTitle": "위브의",
+      "physicalTitle": "강철 의지"
+    },
+    "selectBothWarning": "시작 무기와 방어구를 모두 선택하세요.",
+    "errors": {
+      "walletInitializing": "지갑 초기화 중 — 잠시 후 다시 시도하세요.",
+      "nameRequired": "이름을 입력하세요.",
+      "avatarUploadFailed": "캐릭터 아바타 업로드 중 문제가 발생했습니다.",
+      "invalidMetadataUrl": "서버에서 유효하지 않은 메타데이터 URL이 반환되었습니다.",
+      "creationFailed": "캐릭터 생성에 실패했습니다."
+    }
+  },
+  "gameBoard": {
+    "pageTitle": "플레이 | Ultimate Dominion",
+    "loading": "게임 로딩 중...",
+    "reload": "새로고침",
+    "reconnecting": "재연결 중...",
+    "statsDrawer": "스탯",
+    "outerRealmsWarning": "조심하세요! 구불어둠에 진입합니다!",
+    "outerRealmsBody1": "<bold>구불어둠</bold>은 레벨 1 캐릭터에게 위험한 곳입니다. 다른 플레이어가 언제든 공격할 수 있습니다.",
+    "outerRealmsBody2": "더 레벨업한 후 진입하는 것을 권장합니다.",
+    "tileDetailsHeading": "타일 정보",
+    "notSpawned": "아직 맵에 소환되지 않았습니다.",
+    "errorOccurred": "오류가 발생했습니다.",
+    "spawnPrompt": "전투를 시작하려면 캐릭터를 <bold>소환</bold>해야 합니다."
+  },
+  "combat": {
+    "moveToFind": "몬스터를 찾으려면 이동하세요.",
+    "noMonstersHere": "여기에는 몬스터가 없습니다. 계속 이동하세요.",
+    "clickToFight": "몬스터를 클릭하여 전투하세요.",
+    "youFled": "도주했습니다!",
+    "youWon": "승리!",
+    "youDied": "패배...",
+    "you": "당신",
+    "used": "사용:",
+    "noEffect": "효과 없음.",
+    "closeToDeath": "사망 위기!",
+    "considerPotion": "포션 사용을 고려하세요.",
+    "smokeCloakActive": "연막 — 확정 탈출",
+    "fleeFirstTurn": "첫 턴 무료",
+    "fleeFirstTurnCost": "PvP 도주 시 골드 소모",
+    "showFewer": "줄여 보기",
+    "initiatingBattle": "전투 시작 중...",
+    "fighting": "{{name}}과(와) 전투 중...",
+    "blockedSome": "{{name}}이(가) 피해를 일부 방어했습니다!",
+    "youBlockedSome": "피해를 일부 방어했습니다!",
+    "elitePrefix": "정예 {{name}}",
+    "criticalHit": "치명타! ",
+    "youAttacked": "<name>{{name}}</name>에게 {{item}}(으)로 <damage>{{damage}}</damage>의 피해를 입혔습니다.",
+    "opponentAttacked": "<name>{{name}}</name>이(가) {{item}}(으)로 당신에게 <damage>{{damage}}</damage>의 피해를 입혔습니다.",
+    "youMissed": "<name>{{name}}</name>에게 {{item}}(으)로 공격했지만 빗나갔습니다.",
+    "opponentMissed": "<name>{{name}}</name>의 {{item}} 공격이 빗나갔습니다.",
+    "poisonDamage": "독이 {{target}}에게 <damage>{{damage}}</damage>의 피해를 입힙니다.",
+    "doubleStrike": "이중 공격!",
+    "youDodgedSpell": "주문을 회피했습니다!",
+    "opponentDodgedSpell": "{{name}}이(가) 주문을 회피했습니다!",
+    "youCast": "{{item}}을(를) 시전했습니다",
+    "youCastOn": "<name>{{name}}</name>에게 {{item}}을(를) 시전했습니다",
+    "opponentCast": "<name>{{name}}</name>이(가) {{item}}을(를) 시전했습니다",
+    "youAffectedBy": "{{effect}}에 영향을 받고 있습니다.",
+    "opponentAffectedBy": "{{name}}이(가) {{effect}}에 영향을 받고 있습니다.",
+    "effectAlreadyActive": "{{effect}}이(가) 이미 활성화되어 있습니다.",
+    "hpCritical": "HP 위험",
+    "hpLow": "HP 부족",
+    "viewResults": "결과 보기",
+    "chooseYourMove": "행동을 선택하세요!",
+    "flee": "도주",
+    "battleDraw": "전투가 무승부로 끝났습니다.",
+    "opponentFled": "{{name}}이(가) 도주했습니다!",
+    "noWeapons": "장착된 아이템이 없습니다. <link>캐릭터 페이지</link>에서 최소 1개의 아이템을 장착하세요.",
+    "useKeysToAct": "1-{{max}} 키로 행동",
+    "youHaveSeconds": "상대가 공격할 수 있기까지 {{seconds}}초 남았습니다.",
+    "opponentsTurn": "상대방의 턴입니다. {{seconds}}초 후에 공격할 수 있습니다.",
+    "opponentTooLong": "상대방이 너무 오래 걸렸습니다.",
+    "youCanAttack": "이제 공격할 수 있습니다!",
+    "aPotion": "포션",
+    "restoredHp": "HP {{amount}} 회복.",
+    "defeatedMonster": "{{name}} 처치!",
+    "defeatedBy": "{{name}}에게 패배.",
+    "drawMonster": "무승부 — {{name}}",
+    "youEarned": "획득:",
+    "noRewards": "보상 없음 — 레벨 범위 초과",
+    "pickedUp": "획득:",
+    "lostGold": "-{{amount}} Gold"
+  },
+  "tile": {
+    "players": "플레이어",
+    "shopsAndPlayers": "상점 & 플레이어",
+    "theAlcove": "안식처",
+    "theWindingDark": "구불어둠",
+    "shops": "상점",
+    "monsters": "몬스터",
+    "battlefield": "전장",
+    "noMonstersArea": "이 지역에 몬스터가 없습니다",
+    "noPlayersArea": "이 지역에 플레이어가 없습니다",
+    "exploreDarkCave": "어둠의 동굴을 탐험하라",
+    "useCompass": "나침반으로 이동하세요",
+    "fireCracklesNear": "근처에서 모닥불이 타오릅니다. 쉬어갈 수 있습니다.",
+    "restByFire": "모닥불에서 휴식",
+    "restingByFire": "모닥불에서 휴식 중...",
+    "fullyRested": "모닥불이 조용히 타오릅니다. 완전히 회복되었습니다.",
+    "moreMonsters": "몬스터 {{count}}마리 더...",
+    "opponentDefeated": "{{name}} 처치됨",
+    "noMovesEquipped": "장착된 기술이 없습니다!",
+    "noMovesBody": "전투를 시작하려면 최소 1개의 무기 또는 주문을 장착해야 합니다. <link>캐릭터 페이지</link>에서 기술을 장착하세요.",
+    "cannotBattleAlcove": "안식처에서는 전투할 수 없습니다",
+    "cannotBattleAlcoveBody": "현재 <bold>안식처</bold>에 있습니다. 다른 플레이어와 전투하려면 <bold>구불어둠</bold>에 진입해야 합니다.",
+    "worldBossReturns": "월드 보스 {{time}} 후 등장",
+    "bossPrefix": "보스",
+    "worldBossStirring": "월드 보스가 꿈틀대는 중...",
+    "viewCharacter": "캐릭터 보기",
+    "inBattle": "전투 중...",
+    "inShop": "상점 이용 중...",
+    "inCooldown": "쿨다운 중...",
+    "levelLabel": "레벨 {{level}}"
+  },
+  "zone": {
+    "darkCave": "어둠의 동굴",
+    "windyPeaks": "바람의 봉우리",
+    "windyPeaksSubtitle": "녹툼의 골수 위 산맥",
+    "windyPeaksNarrative": "공기가 희박해진다. 그림자가 깊어진다. 위에서 고대의 무언가가 꿈틀댄다.",
+    "enterThePeaks": "봉우리로 진입"
+  },
+  "guild": {
+    "pageTitle": "길드 | Ultimate Dominion",
+    "heading": "길드",
+    "createModal": {
+      "title": "길드 생성",
+      "nameLabel": "길드 이름",
+      "namePlaceholder": "길드 이름 입력",
+      "tagLabel": "태그",
+      "tagPlaceholder": "예: FURY",
+      "openLabel": "자유 가입",
+      "descLabel": "설명",
+      "descPlaceholder": "길드를 소개하세요...",
+      "cancel": "취소",
+      "create": "생성",
+      "creating": "생성 중..."
+    },
+    "withdrawModal": {
+      "title": "금고에서 출금",
+      "available": "가용: {{amount}} $GOLD",
+      "amountPlaceholder": "출금 금액",
+      "cancel": "취소",
+      "withdraw": "출금",
+      "withdrawing": "출금 중..."
+    },
+    "directory": {
+      "count": "길드 {{count}}개",
+      "createButton": "길드 생성",
+      "members": "멤버 {{count}}명",
+      "open": "오픈",
+      "closed": "비공개",
+      "join": "가입",
+      "apply": "신청",
+      "emptyTitle": "아직 길드가 없습니다.",
+      "emptySubtitle": "첫 번째로 만들어 보세요!"
+    },
+    "roles": {
+      "leader": "길드장",
+      "officer": "간부",
+      "member": "멤버"
+    },
+    "tooltips": {
+      "leader": "길드장",
+      "promote": "간부로 승격",
+      "demote": "멤버로 강등",
+      "kick": "추방"
+    },
+    "treasury": "$GOLD 금고",
+    "leaderControls": "길드장 관리",
+    "taxRate": "세율",
+    "withdrawTreasury": "금고 출금",
+    "disbandGuild": "길드 해산",
+    "disbanding": "해산 중...",
+    "pendingApplications": "대기 중인 신청 ({{count}})",
+    "approve": "승인",
+    "reject": "거절",
+    "memberCount": "멤버 {{count}}명",
+    "leaveGuild": "길드 탈퇴",
+    "leaving": "탈퇴 중..."
+  },
+  "leaderboard": {
+    "pageTitle": "리더보드 | Ultimate Dominion",
+    "heading": "리더보드",
+    "tabs": {
+      "rankings": "순위",
+      "raceToMax": "만렙 경쟁",
+      "pvpRankings": "PvP 랭킹"
+    },
+    "search": "검색",
+    "filterAll": "전체",
+    "filterStrength": "힘",
+    "filterAgility": "민첩",
+    "filterIntelligence": "지능",
+    "playerCount": "플레이어 {{count}}명",
+    "sortStats": "전체 스탯",
+    "sortLevel": "레벨",
+    "sortGold": "$Gold",
+    "noPlayers": "플레이어 없음",
+    "raceToMaxDesc": "만렙에 먼저 도달한 10명의 플레이어가 영구 구역 정복자 배지를 획득합니다.",
+    "zoneConqueror": "구역 정복자",
+    "noneConquered": "아직 아무도 어둠의 동굴을 정복하지 못했습니다.",
+    "beFirst": "최초로 만렙에 도달하세요!",
+    "badgesRemaining": "배지 {{count}}개 남음",
+    "season": "시즌 {{number}}",
+    "pvpDesc": "PvP 전투의 ELO 레이팅 기준 순위입니다.",
+    "colRank": "#",
+    "colPlayer": "플레이어",
+    "colWL": "승/패",
+    "colWinPct": "승률",
+    "colElo": "ELO",
+    "noPvp": "아직 PvP 기록이 없습니다.",
+    "pvpCta": "다른 플레이어에게 도전해서 순위를 올리세요!",
+    "statsRankChange": "스탯 순위: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}",
+    "goldRankChange": "골드 순위: #{{prevRank}} → #{{rank}} {{arrow}}{{delta}}"
+  },
+  "character": {
+    "notExist": "이 캐릭터는 존재하지 않습니다"
+  },
+  "inventory": {
+    "noArmor": "방어구 없음",
+    "noWeapons": "무기 없음",
+    "noSpells": "주문 없음",
+    "noConsumables": "소모품 없음"
+  },
+  "npc": {
+    "combatTrainer": "전투 훈련사",
+    "guildFounder": "길드 창시자",
+    "talk": "대화",
+    "examine": "조사"
+  },
+  "hud": {
+    "objective": "목표"
+  },
+  "zoneExit": {
+    "narrative": "머리 위로 통로가 열린다. 차가운 바람이 틈새로 밀려든다.",
+    "reassurance": "언제든 어둠의 동굴로 돌아올 수 있습니다.",
+    "leave": "어둠의 동굴 떠나기",
+    "stay": "머무르기",
+    "transitioning": "이동 중..."
+  },
+  "rarity": {
+    "worn": "낡은",
+    "common": "일반",
+    "uncommon": "고급",
+    "rare": "희귀",
+    "epic": "영웅",
+    "legendary": "전설"
+  },
+  "advancedClass": {
+    "none": "",
+    "paladin": "팔라딘",
+    "sorcerer": "소서러",
+    "warrior": "워리어",
+    "druid": "드루이드",
+    "warlock": "워록",
+    "ranger": "레인저",
+    "cleric": "클레릭",
+    "wizard": "위자드",
+    "rogue": "로그"
+  },
+  "boss": {
+    "spawn": "{{name}}이(가) ({{x}}, {{y}})에 출현했습니다!",
+    "slain": "{{winner}}이(가) {{boss}}을(를) 처치했습니다!"
+  }
+}

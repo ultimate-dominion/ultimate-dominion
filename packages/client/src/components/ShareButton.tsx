@@ -1,5 +1,7 @@
 import { HStack, IconButton, Text, Tooltip, useClipboard } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { FaCheck, FaCopy, FaDownload } from 'react-icons/fa';
 import { FaShareNodes } from 'react-icons/fa6';
 
@@ -142,16 +144,20 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
 }
 
 /** Map share type to a human label for the card */
-function getCardSubtitle(params?: Record<string, string>): string {
-  if (!params) return 'Ultimate Dominion';
+function getCardSubtitle(t: TFunction, params?: Record<string, string>): string {
+  if (!params) return t('share.defaultLabel');
   switch (params.type) {
-    case 'kill': return 'Monster Slain';
-    case 'pvp': return 'PvP Victory';
-    case 'drop': return `${params.rarity ? (['Worn', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'][Number(params.rarity)] || '') + ' ' : ''}Item Found`;
-    case 'levelup': return 'Level Up';
-    case 'fragment': return `Fragment ${params.num || ''} of 8`;
-    case 'class': return 'Advanced Class Chosen';
-    default: return 'Ultimate Dominion';
+    case 'kill': return t('share.monsterSlain');
+    case 'pvp': return t('share.pvpVictory');
+    case 'drop': {
+      const rarityKeys = ['rarity.worn', 'rarity.common', 'rarity.uncommon', 'rarity.rare', 'rarity.epic', 'rarity.legendary'];
+      const prefix = params.rarity ? (t(rarityKeys[Number(params.rarity)] || '') + ' ') : '';
+      return `${prefix}${t('share.itemFound')}`;
+    }
+    case 'levelup': return t('share.levelUpLabel');
+    case 'fragment': return t('share.fragmentLabel', { num: params.num || '' });
+    case 'class': return t('share.classChosen');
+    default: return t('share.defaultLabel');
   }
 }
 
@@ -161,6 +167,7 @@ export const ShareButton = ({
   imageSrc,
   colorAccent = '#8A7E6A',
 }: ShareButtonProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const shareUrl = buildShareUrl(shareParams);
   const fullText = `${text}\n\n${shareUrl}\n\n${HASHTAG}`;
   const { hasCopied, onCopy } = useClipboard(fullText);
@@ -170,7 +177,7 @@ export const ShareButton = ({
   const handleShare = useCallback(async () => {
     setIsGenerating(true);
     try {
-      const subtitle = getCardSubtitle(shareParams);
+      const subtitle = getCardSubtitle(t, shareParams);
       const blob = await renderShareCard(text, subtitle, imageSrc, colorAccent);
       const file = new File([blob], 'ultimate-dominion.png', { type: 'image/png' });
 
@@ -211,9 +218,9 @@ export const ShareButton = ({
 
   return (
     <HStack spacing={1}>
-      <Tooltip label="Share with image" placement="top" hasArrow>
+      <Tooltip label={t('share.shareWithImage')} placement="top" hasArrow>
         <IconButton
-          aria-label="Share"
+          aria-label={t('share.shareAria')}
           icon={<FaShareNodes />}
           onClick={handleShare}
           isLoading={isGenerating}
@@ -223,9 +230,9 @@ export const ShareButton = ({
           _hover={{ color: '#E8DCC8', bg: `${colorAccent}20` }}
         />
       </Tooltip>
-      <Tooltip label={hasCopied ? 'Copied!' : 'Copy text'} placement="top" hasArrow>
+      <Tooltip label={hasCopied ? t('share.copied') : t('share.copyText')} placement="top" hasArrow>
         <IconButton
-          aria-label="Copy to clipboard"
+          aria-label={t('share.copyAria')}
           icon={hasCopied ? <FaCheck /> : <FaCopy />}
           onClick={onCopy}
           variant="ghost"
@@ -236,7 +243,7 @@ export const ShareButton = ({
       </Tooltip>
       {hasCopied && (
         <Text fontSize="9px" color="#5A8A3E" fontFamily="mono">
-          Copied!
+          {t('share.copied')}
         </Text>
       )}
     </HStack>

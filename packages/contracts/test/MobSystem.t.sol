@@ -83,24 +83,24 @@ contract Test_MobSystem is SetUp, GasReporter {
     function test_getEntityId() public {
         bytes32 entityId = bytes32(abi.encodePacked(uint32(1), uint192(2), uint16(1), uint16(2)));
 
-        assertEq(world.UD__spawnMob(1, 1, 2), entityId);
+        assertEq(world.UD__spawnMob(1, 1, 1, 2), entityId);
     }
 
     function test_getMobId() public {
-        bytes32 entityId = world.UD__spawnMob(1, 1, 2);
+        bytes32 entityId = world.UD__spawnMob(1, 1, 1, 2);
 
         assertEq(world.UD__getMobId(entityId), 1);
     }
 
     function test_getMobPositionFromId() public {
-        bytes32 entityId = world.UD__spawnMob(1, 1, 2);
+        bytes32 entityId = world.UD__spawnMob(1, 1, 1, 2);
         (uint16 x, uint16 y) = world.UD__getMobPositionFromId(entityId);
         assertEq(x, 1);
         assertEq(y, 2);
     }
 
     function test_getSpawnCounter() public {
-        bytes32 entityId = world.UD__spawnMob(1, 1, 2);
+        bytes32 entityId = world.UD__spawnMob(1, 1, 1, 2);
         assertEq(world.UD__getSpawnCounter(entityId), 2);
     }
 
@@ -108,9 +108,9 @@ contract Test_MobSystem is SetUp, GasReporter {
         vm.startPrank(bob);
         world.UD__spawn(bobCharacterId);
         world.UD__move(bobCharacterId, 0, 1);
-        bytes32[] memory ents = world.UD__getEntitiesAtPosition(0, 1);
+        bytes32[] memory ents = world.UD__getEntitiesAtPosition(1, 0, 1);
 
-        assertEq(world.UD__getEntitiesAtPosition(0, 0).length, 2, "incorrect entities at spawn");
+        assertEq(world.UD__getEntitiesAtPosition(1, 0, 0).length, 2, "incorrect entities at spawn");
         assertLt(ents.length, 7, "incorrect spawned monster lenth");
         assertEq(ents[0], bobCharacterId, "incorrect entity id for bob");
     }
@@ -149,8 +149,8 @@ contract Test_MobSystem is SetUp, GasReporter {
                 strength: 1
             });
             uint256 newMobId = world.UD__createMob(MobType.Monster, abi.encode(newMonster), "test_monster_uri");
-            world.UD__spawnMob(newMobId, 1, 1);
+            world.UD__spawnMob(newMobId, 1, 1, 1);
         }
-        assertEq(world.UD__getEntitiesAtPosition(1, 1).length, 21);
+        assertEq(world.UD__getEntitiesAtPosition(1, 1, 1).length, 21);
     }
 }

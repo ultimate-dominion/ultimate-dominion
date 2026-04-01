@@ -1,4 +1,5 @@
 import { Box, keyframes, Text, VStack } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 const goldenGlow = keyframes`
   0%, 100% {
@@ -47,6 +48,7 @@ type LevelUpBannerProps = {
 };
 
 export const LevelUpBanner: React.FC<LevelUpBannerProps> = ({ level }) => {
+  const { t } = useTranslation('ui');
   return (
     <Box
       animation={`${scaleIn} 0.5s ease-out, ${goldenGlow} 2.5s ease-in-out infinite`}
@@ -70,10 +72,10 @@ export const LevelUpBanner: React.FC<LevelUpBannerProps> = ({ level }) => {
           letterSpacing="wider"
           sx={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
         >
-          LEVEL UP!
+          {t('levelUp.banner')}
         </Text>
         <Text color="#E8DCC8" fontFamily="heading" fontSize="lg">
-          You reached Level {level.toString()}
+          {t('levelUp.bannerReached', { level: level.toString() })}
         </Text>
       </VStack>
     </Box>

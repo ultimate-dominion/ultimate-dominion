@@ -7,7 +7,9 @@ import {
     InvalidShopEncounter,
     Unauthorized,
     OutOfStock,
-    ShopInsufficientGold
+    ShopInsufficientGold,
+    InsufficientItemBalance,
+    ArrayMismatch
 } from "../src/Errors.sol";
 
 import {
@@ -549,5 +551,186 @@ contract Test_ShopSystem is SetUp, GasReporter {
         vm.prank(userA);
         world.UD__endShopEncounter(encounterA);
         endGasReport();
+    }
+
+    // ==================== sellBatch tests ====================
+
+    function _setupSellBatchUser() internal returns (address userA, bytes32 charId) {
+        userA = makeAddr("batchSeller");
+        charId = world.UD__mintCharacter(userA, bytes32("batchSeller"), "test_uri");
+        world.UD__dropGoldToPlayer(charId, 10 ether);
+        vm.startPrank(userA);
+        world.UD__rollStats(bytes32("batchSeller"), charId, Classes.Warrior);
+        world.UD__enterGame(charId, newWeaponId, newArmorId);
+        world.UD__spawn(charId);
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        goldToken.approve(shopSystemAddress, MAX_INT);
+    }
+
+    function test_sellBatch_happyPath() public {
+        uint256 itemA = 5;
+        uint256 itemB = 6;
+        uint256 amountA = 3;
+        uint256 amountB = 2;
+
+        (address userA, bytes32 charId) = _setupSellBatchUser();
+
+        // Drop items as deployer, then switch back to user
+        vm.startPrank(deployer);
+        world.UD__dropItem(charId, itemA, amountA);
+        world.UD__dropItem(charId, itemB, amountB);
+        vm.startPrank(userA);
+
+        createShopEncounter(charId, shopId);
+
+        uint256 goldBefore = goldToken.balanceOf(userA);
+        uint256 balanceABefore = itemsToken.balanceOf(userA, itemA);
+        uint256 balanceBBefore = itemsToken.balanceOf(userA, itemB);
+
+        uint256 expectedGold = (amountA * world.UD__itemMarkdown(shopId, itemA))
+            + (amountB * world.UD__itemMarkdown(shopId, itemB));
+
+        uint256[] memory itemIds = new uint256[](2);
+        uint256[] memory amounts = new uint256[](2);
+        itemIds[0] = itemA;
+        itemIds[1] = itemB;
+        amounts[0] = amountA;
+        amounts[1] = amountB;
+
+        world.UD__sellBatch(itemIds, amounts, shopId, charId);
+
+        assertEq(itemsToken.balanceOf(userA, itemA), balanceABefore - amountA, "itemA balance wrong");
+        assertEq(itemsToken.balanceOf(userA, itemB), balanceBBefore - amountB, "itemB balance wrong");
+        assertEq(goldToken.balanceOf(userA), goldBefore + expectedGold, "gold received wrong");
+    }
+
+    function test_sellBatch_revert_arrayMismatch() public {
+        (address userA, bytes32 charId) = _setupSellBatchUser();
+        createShopEncounter(charId, shopId);
+
+        uint256[] memory itemIds = new uint256[](2);
+        uint256[] memory amounts = new uint256[](1);
+        itemIds[0] = 5;
+        itemIds[1] = 6;
+        amounts[0] = 1;
+
+        vm.expectRevert(ArrayMismatch.selector);
+        world.UD__sellBatch(itemIds, amounts, shopId, charId);
+    }
+
+    function test_sellBatch_revert_insufficientBalance() public {
+        (address userA, bytes32 charId) = _setupSellBatchUser();
+
+        // Drop only 1 of itemA, try to sell 5
+        vm.startPrank(deployer);
+        world.UD__dropItem(charId, 5, 1);
+        vm.startPrank(userA);
+
+        createShopEncounter(charId, shopId);
+
+        uint256[] memory itemIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        itemIds[0] = 5;
+        amounts[0] = 5;
+
+        vm.expectRevert(InsufficientItemBalance.selector);
+        world.UD__sellBatch(itemIds, amounts, shopId, charId);
+    }
+
+    function test_sellBatch_revert_noEncounter() public {
+        (address userA, bytes32 charId) = _setupSellBatchUser();
+        // No shop encounter created
+
+        uint256[] memory itemIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        itemIds[0] = 5;
+        amounts[0] = 1;
+
+        vm.expectRevert(InvalidShopEncounter.selector);
+        world.UD__sellBatch(itemIds, amounts, shopId, charId);
+    }
+
+    function test_sellBatch_skipsZeroAmounts() public {
+        uint256 itemA = 5;
+
+        (address userA, bytes32 charId) = _setupSellBatchUser();
+        vm.startPrank(deployer);
+        world.UD__dropItem(charId, itemA, 2);
+        vm.startPrank(userA);
+
+        createShopEncounter(charId, shopId);
+
+        uint256 goldBefore = goldToken.balanceOf(userA);
+        uint256 expectedGold = 2 * world.UD__itemMarkdown(shopId, itemA);
+
+        // Second entry has amount=0, should be skipped
+        uint256[] memory itemIds = new uint256[](2);
+        uint256[] memory amounts = new uint256[](2);
+        itemIds[0] = itemA;
+        itemIds[1] = 6;
+        amounts[0] = 2;
+        amounts[1] = 0;
+
+        world.UD__sellBatch(itemIds, amounts, shopId, charId);
+
+        assertEq(goldToken.balanceOf(userA), goldBefore + expectedGold, "should only get gold for non-zero items");
+        assertEq(itemsToken.balanceOf(userA, itemA), 0, "itemA should be sold");
+    }
+
+    function test_sellBatch_emptyArray() public {
+        (address userA, bytes32 charId) = _setupSellBatchUser();
+        createShopEncounter(charId, shopId);
+
+        uint256 goldBefore = goldToken.balanceOf(userA);
+
+        uint256[] memory itemIds = new uint256[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        // Should succeed as a no-op, no gold minted
+        world.UD__sellBatch(itemIds, amounts, shopId, charId);
+        assertEq(goldToken.balanceOf(userA), goldBefore, "no gold should be minted for empty batch");
+    }
+
+    function test_sellBatch_revert_unauthorized() public {
+        address userA = makeAddr("batchOwner");
+        address userB = makeAddr("batchThief");
+        bytes32 charA = world.UD__mintCharacter(userA, bytes32("batchOwner"), "test_uri");
+        world.UD__mintCharacter(userB, bytes32("batchThief"), "test_uri_b");
+        world.UD__dropGoldToPlayer(charA, 10 ether);
+        world.UD__dropItem(charA, 5, 1);
+
+        vm.startPrank(userA);
+        world.UD__rollStats(bytes32("batchOwner"), charA, Classes.Warrior);
+        world.UD__enterGame(charA, newWeaponId, newArmorId);
+        world.UD__spawn(charA);
+        itemsToken.setApprovalForAll(shopSystemAddress, true);
+        createShopEncounter(charA, shopId);
+        vm.stopPrank();
+
+        // userB tries to sell userA's items
+        vm.startPrank(userB);
+        uint256[] memory itemIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        itemIds[0] = 5;
+        amounts[0] = 1;
+
+        vm.expectRevert(Unauthorized.selector);
+        world.UD__sellBatch(itemIds, amounts, shopId, charA);
+    }
+
+    function test_sellBatch_revert_batchTooLarge() public {
+        (address userA, bytes32 charId) = _setupSellBatchUser();
+        createShopEncounter(charId, shopId);
+
+        // 51 items should exceed the 50-item cap
+        uint256[] memory itemIds = new uint256[](51);
+        uint256[] memory amounts = new uint256[](51);
+        for (uint256 i; i < 51; i++) {
+            itemIds[i] = 5;
+            amounts[i] = 0;
+        }
+
+        vm.expectRevert(ArrayMismatch.selector);
+        world.UD__sellBatch(itemIds, amounts, shopId, charId);
     }
 }

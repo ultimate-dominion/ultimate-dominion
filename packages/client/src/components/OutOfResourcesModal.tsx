@@ -10,6 +10,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../contexts/AuthContext';
 
@@ -31,6 +32,7 @@ export const OutOfResourcesModal = ({
   onClose: () => void;
   onOpenWalletDetails: () => void;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { authMethod } = useAuth();
 
   return (
@@ -38,29 +40,26 @@ export const OutOfResourcesModal = ({
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>Out of Resources</ModalHeader>
+        <ModalHeader>{t('outOfResources.title')}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} alignItems="start">
             <Text>
-              You have no ETH for gas and no Gold to auto-swap. You need
-              resources to continue playing.
+              {t('outOfResources.message')}
             </Text>
             {authMethod === 'embedded' ? (
               <>
                 <Text fontWeight={700}>
-                  Fight a monster to earn Gold. Your next transaction will be
-                  sponsored so you can get back on your feet.
+                  {t('outOfResources.embeddedAdvice')}
                 </Text>
                 <Text fontSize="sm" color="gray.400">
-                  Once you earn Gold, the GasStation will automatically swap it
-                  for ETH to cover future gas costs.
+                  {t('outOfResources.embeddedDetail')}
                 </Text>
               </>
             ) : (
               <>
                 <Text fontWeight={700}>
-                  Deposit ETH from your main wallet to continue playing.
+                  {t('outOfResources.externalAdvice')}
                 </Text>
                 <Button
                   onClick={() => {
@@ -69,7 +68,7 @@ export const OutOfResourcesModal = ({
                   }}
                   size="sm"
                 >
-                  Open Wallet
+                  {t('outOfResources.openWallet')}
                 </Button>
               </>
             )}
@@ -77,7 +76,7 @@ export const OutOfResourcesModal = ({
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose} size="sm" variant="ghost">
-            Close
+            {t('common.close')}
           </Button>
         </ModalFooter>
       </ModalContent>

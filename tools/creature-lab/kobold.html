@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creature Lab - Kobold</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+    .header { padding: 10px 20px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 16px; }
+    .header h1 { font-size: 14px; color: #888; font-weight: 400; }
+    .header .seed-btn { background: #222; border: 1px solid #333; color: #aaa; padding: 3px 10px; cursor: pointer; font-family: inherit; font-size: 11px; }
+    .header .seed-btn:hover { background: #333; }
+    .main { display: flex; height: calc(100vh - 80px); }
+    .panel { flex: 1; padding: 12px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #1a1a1a; }
+    .panel:last-of-type { border-right: none; }
+    .panel-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    canvas { background: #000; }
+    .ref-strip { width: 180px; border-left: 1px solid #1a1a1a; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+    .ref-strip img { width: 100%; border: 1px solid #222; }
+    .ref-strip .ref-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
+    .controls { padding: 6px 20px; border-top: 1px solid #222; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    .controls label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #666; cursor: pointer; }
+    .controls input[type="range"] { width: 60px; accent-color: #555; }
+    .controls select { background: #1a1a1a; border: 1px solid #333; color: #aaa; font-size: 11px; font-family: inherit; padding: 2px 4px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Creature Lab</h1>
+    <span style="color:#c84">Kobold</span>
+    <button class="seed-btn" id="reseed">Reseed</button>
+    <label style="color:#555; font-size:11px; display:flex; align-items:center; gap:4px; margin-left:auto;">
+      <input type="checkbox" id="animate" style="accent-color:#555"> Animate
+    </label>
+  </div>
+  <div class="main">
+    <div class="panel">
+      <div class="panel-label">Skeleton</div>
+      <canvas id="skel-raw"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-label">ASCII</div>
+      <canvas id="next-ascii"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-label">Painted</div>
+      <canvas id="next-raw"></canvas>
+    </div>
+    <div class="ref-strip">
+      <div class="ref-label">Reference</div>
+      <img src="kobold-ref.webp" alt="D&D Kobold" onerror="this.style.display='none'">
+      <div class="ref-label" style="margin-top:8px;">Goals</div>
+      <div style="font-size:9px; color:#444; line-height:1.6;">
+        3/4 facing player<br>
+        Hunched, aggressive<br>
+        Short spear in hand<br>
+        Crude orange vest<br>
+        Yellow slit-pupil eyes<br>
+        Bony horn crests<br>
+        Digitigrade legs<br>
+        Reptilian tail<br>
+        Scrappy, not cute
+      </div>
+    </div>
+  </div>
+  <div class="controls">
+    <label>Size:
+      <select id="canvas-size">
+        <option value="400">400px</option>
+        <option value="512" selected>512px</option>
+        <option value="640">640px</option>
+      </select>
+    </label>
+    <label>Cell:
+      <select id="cell-size">
+        <option value="3">3px</option>
+        <option value="4" selected>4px</option>
+        <option value="5">5px</option>
+        <option value="6">6px</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="show-grid"> Grid</label>
+    <label><input type="checkbox" id="show-debug" checked> Skeleton debug</label>
+  </div>
+  <script type="module" src="kobold.js"></script>
+</body>
+</html>

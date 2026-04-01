@@ -8,6 +8,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { etherToFixedNumber } from '../utils/helpers';
@@ -37,6 +38,7 @@ export const LeaderboardRow = ({
   index: number;
   top3: boolean;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const navigate = useNavigate();
 
   const totalStats = useMemo(
@@ -106,8 +108,7 @@ export const LeaderboardRow = ({
             fontWeight={500}
             size={{ base: '2xs', lg: 'md' }}
           >
-            HP {maxHp.toString()} • STR {strength.toString()} • AGI{' '}
-            {agility.toString()} • INT {intelligence.toString()}
+            {t('leaderboardRow.statsSummary', { hp: maxHp.toString(), str: strength.toString(), agi: agility.toString(), int: intelligence.toString() })}
           </Text>
         </VStack>
       </Flex>

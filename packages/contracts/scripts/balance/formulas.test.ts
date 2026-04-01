@@ -68,25 +68,18 @@ describe("formulas", () => {
       expect(statPointsForLevel(10, DEFAULT_LC)).toBe(1);
     });
 
-    it("returns mid rate on even levels in mid range", () => {
-      expect(statPointsForLevel(12, DEFAULT_LC)).toBe(1); // even
-      expect(statPointsForLevel(14, DEFAULT_LC)).toBe(1); // even
+    it("returns mid rate for all levels in mid range", () => {
+      expect(statPointsForLevel(11, DEFAULT_LC)).toBe(1);
+      expect(statPointsForLevel(12, DEFAULT_LC)).toBe(1);
+      expect(statPointsForLevel(13, DEFAULT_LC)).toBe(1);
+      expect(statPointsForLevel(14, DEFAULT_LC)).toBe(1);
     });
 
-    it("returns 0 on odd levels in mid range", () => {
-      expect(statPointsForLevel(11, DEFAULT_LC)).toBe(0);
-      expect(statPointsForLevel(13, DEFAULT_LC)).toBe(0);
-    });
-
-    it("returns late rate on every 5th level after midGameCap", () => {
+    it("returns late rate for all levels after midGameCap", () => {
+      expect(statPointsForLevel(51, DEFAULT_LC)).toBe(1);
+      expect(statPointsForLevel(52, DEFAULT_LC)).toBe(1);
       expect(statPointsForLevel(55, DEFAULT_LC)).toBe(1);
       expect(statPointsForLevel(60, DEFAULT_LC)).toBe(1);
-    });
-
-    it("returns 0 on non-5th levels after midGameCap", () => {
-      expect(statPointsForLevel(51, DEFAULT_LC)).toBe(0);
-      expect(statPointsForLevel(52, DEFAULT_LC)).toBe(0);
-      expect(statPointsForLevel(53, DEFAULT_LC)).toBe(0);
     });
   });
 
@@ -115,8 +108,8 @@ describe("formulas", () => {
 
     it("matches hand-calculated sum through mid levels", () => {
       // L1-10: 10 × 1 = 10
-      // L11-12: 0 + 1 = 1 (only even levels)
-      expect(totalStatPointsAtLevel(12, DEFAULT_LC)).toBe(11);
+      // L11-12: 2 × 1 = 2
+      expect(totalStatPointsAtLevel(12, DEFAULT_LC)).toBe(12);
     });
   });
 

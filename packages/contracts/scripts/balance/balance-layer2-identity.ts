@@ -179,8 +179,8 @@ const BASE_ROLLS = {
 
 function statPointsForLevel(level: number): number {
   if (level <= EARLY_GAME_CAP) return STAT_POINTS_EARLY;
-  if (level <= MID_GAME_CAP) return (level % 2 === 0) ? STAT_POINTS_MID : 0;
-  return (level % 5 === 0) ? STAT_POINTS_LATE : 0;
+  if (level <= MID_GAME_CAP) return STAT_POINTS_MID;
+  return STAT_POINTS_LATE;
 }
 
 function hpForLevel(level: number): number {

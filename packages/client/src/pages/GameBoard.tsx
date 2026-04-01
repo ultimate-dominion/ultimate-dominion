@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Trans, useTranslation } from 'react-i18next';
 import { GiPerson } from 'react-icons/gi';
 import { IoIosWarning } from 'react-icons/io';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -24,7 +25,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { getCachedDelegator } from '../lib/delegatorCache';
 
 import { ActionsPanel } from '../components/ActionsPanel';
+import { CurrentObjectiveHud } from '../components/CurrentObjectiveHud';
+import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { BattleOutcomeModal } from '../components/BattleOutcomeModal';
+import { CaveReactionOverlay } from '../components/CaveReactionOverlay';
 import { RankChangeToast } from '../components/RankChangeToast';
 import { ConsumableQuickUse } from '../components/ConsumableQuickUse';
 import { EquippedLoadout } from '../components/EquippedLoadout';
@@ -43,6 +47,8 @@ import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
+import { SHOW_Z2 } from '../lib/env';
+import { BattleWorldTicker } from '../components/pretext/game/BattleWorldTicker';
 import { useGameStore, wasPreHydrated } from '../lib/gameStore/store';
 import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
@@ -50,6 +56,7 @@ import { BATTLE_OUTCOME_SEEN_KEY, MAX_LEVEL } from '../utils/constants';
 import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 
 export const GameBoard = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     isOpen: isOuterRealmsInfoModalOpen,
     onOpen: onOpenOuterRealmsInfoModal,
@@ -72,8 +79,16 @@ export const GameBoard = (): JSX.Element => {
     onClose: onCloseLevelUpModal,
   } = useDisclosure();
 
+  const {
+    isOpen: isClassModalOpen,
+    onOpen: onOpenClassModal,
+    onClose: onCloseClassModal,
+  } = useDisclosure();
+
   const [showMapReveal, setShowMapReveal] = useState(false);
   const [showZoneTransition, setShowZoneTransition] = useState(false);
+  const [showCaveReaction, setShowCaveReaction] = useState(false);
+  const [classJustSelected, setClassJustSelected] = useState(false);
 
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const location = useLocation();
@@ -83,10 +98,10 @@ export const GameBoard = (): JSX.Element => {
     isSynced,
     network: { worldContract },
   } = useMUD();
-  const { character, isMoveEquipped, isRefreshing } = useCharacter();
+  const { character, isMoveEquipped, isRefreshing, refreshCharacter } = useCharacter();
   const { currentZone, inSafetyZone, isSpawned, position } = useMap();
   const { attackProgress, continueToBattleOutcome, currentBattle, lastestBattleOutcome } = useBattle();
-  const { autoAdventureMode, moveProgress } = useMovement();
+  const { autoAdventureMode, clearPendingZoneTransition, moveProgress, pendingZoneTransition } = useMovement();
   const { isMapFull, queueStatus } = useQueue();
   const hydrated = useGameStore((s) => s.hydrated);
   const isReconnecting = useGameStore((s) => s.isReconnecting);
@@ -108,11 +123,69 @@ export const GameBoard = (): JSX.Element => {
 
   const handleLevelUpClose = useCallback(() => {
     onCloseLevelUpModal();
+
+    // L10: chain to advanced class selection
+    if (
+      SHOW_Z2 &&
+      character &&
+      Number(character.level) >= 10 &&
+      !character.hasSelectedAdvancedClass
+    ) {
+      setTimeout(() => onOpenClassModal(), 500);
+      return;
+    }
+
+    // L5: map reveal
     const key = `map-reveal-seen-${worldContract.address}-${character?.id}`;
     if (character && Number(character.level) >= 5 && !localStorage.getItem(key)) {
       setTimeout(() => setShowMapReveal(true), 500);
     }
-  }, [character, onCloseLevelUpModal, worldContract.address]);
+  }, [character, onCloseLevelUpModal, onOpenClassModal, worldContract.address]);
+
+  // Class selection callbacks
+  const onClassSelected = useCallback(() => {
+    refreshCharacter();
+    setClassJustSelected(true);
+  }, [refreshCharacter]);
+
+  const handleClassModalClose = useCallback(() => {
+    onCloseClassModal();
+    if (classJustSelected) {
+      setClassJustSelected(false);
+      const caveReactionKey = `cave-reaction-seen-${worldContract.address}-${character?.id}`;
+      if (!localStorage.getItem(caveReactionKey)) {
+        localStorage.setItem(caveReactionKey, 'true');
+        setTimeout(() => setShowCaveReaction(true), 700);
+      }
+    }
+  }, [character?.id, classJustSelected, onCloseClassModal, worldContract.address]);
+
+  // Fallback: auto-open class modal for players who log in at L10 without having gone through the battle chain
+  useEffect(() => {
+    if (
+      SHOW_Z2 &&
+      character &&
+      Number(character.level) >= 10 &&
+      !character.hasSelectedAdvancedClass &&
+      !isClassModalOpen &&
+      !isBattleOutcomeModalOpen &&
+      !isLevelUpModalOpen
+    ) {
+      const key = `class-modal-prompted-${worldContract.address}-${character.id}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, 'true');
+        setTimeout(() => onOpenClassModal(), 1000);
+      }
+    }
+  }, [character, isBattleOutcomeModalOpen, isClassModalOpen, isLevelUpModalOpen, onOpenClassModal, worldContract.address]);
+
+  // Wire zone transition overlay from MovementContext
+  useEffect(() => {
+    if (pendingZoneTransition) {
+      clearPendingZoneTransition();
+      setShowZoneTransition(true);
+    }
+  }, [clearPendingZoneTransition, pendingZoneTransition]);
 
   // Grace period: cached session lets player land here before auth resolves.
   // Wait up to 5s for auth to catch up before redirecting.
@@ -253,14 +326,14 @@ export const GameBoard = (): JSX.Element => {
     if (hasCachedSession && wasPreHydrated) {
       return (
         <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minH="calc(100vh - 125px)" gap={4}>
-          <Text color="rgba(196, 184, 158, 0.5)" fontSize="sm">Loading game...</Text>
+          <Text color="rgba(196, 184, 158, 0.5)" fontSize="sm">{t('gameBoard.loading')}</Text>
           {loadingTooLong && (
             <Button
               onClick={() => window.location.reload()}
               size="sm"
               variant="outline"
             >
-              Reload
+              {t('gameBoard.reload')}
             </Button>
           )}
         </Box>
@@ -272,7 +345,7 @@ export const GameBoard = (): JSX.Element => {
   return (
     <>
     <Helmet>
-      <title>Play | Ultimate Dominion</title>
+      <title>{t('gameBoard.pageTitle')}</title>
     </Helmet>
     {isReconnecting && (
       <Box
@@ -289,7 +362,7 @@ export const GameBoard = (): JSX.Element => {
         pointerEvents="all"
       >
         <Text color="rgba(196, 184, 158, 0.8)" fontSize="md" fontWeight="medium">
-          Reconnecting...
+          {t('gameBoard.reconnecting')}
         </Text>
       </Box>
     )}
@@ -319,6 +392,8 @@ export const GameBoard = (): JSX.Element => {
         gap={0}
         overflow="hidden"
       >
+        {SHOW_Z2 && <BattleWorldTicker />}
+        {SHOW_Z2 && <CurrentObjectiveHud />}
         <Box
           flex={!isDesktop && currentBattle ? 'none' : '1'}
           minH={0}
@@ -366,7 +441,7 @@ export const GameBoard = (): JSX.Element => {
           <DrawerOverlay />
           <DrawerContent maxH="60vh" borderTopRadius="lg">
             <DrawerCloseButton />
-            <DrawerHeader>Stats</DrawerHeader>
+            <DrawerHeader>{t('gameBoard.statsDrawer')}</DrawerHeader>
             <DrawerBody className="data-dense" overflowY="auto" pb={6}>
               <StatsPanel />
               {isSpawned && !currentBattle && stage >= OnboardingStage.FIRST_BLOOD && (
@@ -383,23 +458,17 @@ export const GameBoard = (): JSX.Element => {
       </Box>
 
       <InfoModal
-        heading="Careful! You're about to enter the Winding Dark!"
+        heading={t('gameBoard.outerRealmsWarning')}
         isOpen={isOuterRealmsInfoModalOpen}
         onClose={onAcknowledgeOuterRealmsWarning}
       >
         <VStack p={4} spacing={4}>
           <IoIosWarning color="orange" size={40} />
           <Text mt={4}>
-            The{' '}
-            <Text as="span" fontWeight={700}>
-              Winding Dark
-            </Text>{' '}
-            is a dangerous place for a level 1 character. Any other player could
-            attack you at any time.
+            <Trans i18nKey="gameBoard.outerRealmsBody1" ns="ui" components={{ bold: <Text as="span" fontWeight={700} /> }} />
           </Text>
           <Text>
-            It is recommended that you level up your character more before
-            entering.
+            {t('gameBoard.outerRealmsBody2')}
           </Text>
         </VStack>
       </InfoModal>
@@ -423,6 +492,21 @@ export const GameBoard = (): JSX.Element => {
           character={character}
           isOpen={isLevelUpModalOpen}
           onClose={handleLevelUpClose}
+        />
+      )}
+
+      {SHOW_Z2 && character && (
+        <AdvancedClassModal
+          isOpen={isClassModalOpen}
+          onClose={handleClassModalClose}
+          characterId={character.id}
+          onClassSelected={onClassSelected}
+        />
+      )}
+
+      {showCaveReaction && (
+        <CaveReactionOverlay
+          onComplete={() => setShowCaveReaction(false)}
         />
       )}
 

@@ -173,7 +173,24 @@ export async function assertAdvancedClass(
  * Read and return current stats for comparison.
  */
 export async function getStats(charId: Hex): Promise<StatsData> {
-  return (await readWorld("UD__getStats", [charId])) as StatsData;
+  const raw = await readWorld("UD__getStats", [charId]);
+  // Strip viem's numeric tuple indices — spreads with named overrides
+  // must not carry stale positional values
+  return {
+    strength: raw.strength,
+    agility: raw.agility,
+    class: raw.class,
+    intelligence: raw.intelligence,
+    maxHp: raw.maxHp,
+    currentHp: raw.currentHp,
+    experience: raw.experience,
+    level: raw.level,
+    powerSource: raw.powerSource,
+    race: raw.race,
+    startingArmor: raw.startingArmor,
+    advancedClass: raw.advancedClass,
+    hasSelectedAdvancedClass: raw.hasSelectedAdvancedClass,
+  };
 }
 
 /**

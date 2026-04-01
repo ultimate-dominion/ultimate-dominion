@@ -126,6 +126,57 @@ export const worldAbi = parseAbi([
   "function UD__adminDropItem(bytes32 characterId, uint256 itemId, uint256 amount) external",
   "function UD__adminClearEncounterState(bytes32 entityId) external",
   "function UD__adminMoveEntity(bytes32 entityId, uint16 x, uint16 y) external",
+  "function UD__adminCreateItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) external returns (uint256)",
+
+  // Guild system
+  "function UD__createGuild(bytes32 characterId, string name, string tag, bool isOpen, string description) external returns (uint256 guildId)",
+  "function UD__joinGuild(bytes32 characterId, uint256 guildId) external",
+  "function UD__applyToGuild(bytes32 characterId, uint256 guildId) external",
+  "function UD__approveApplication(bytes32 officerCharId, bytes32 applicantCharId) external",
+  "function UD__rejectApplication(bytes32 officerCharId, bytes32 applicantCharId) external",
+  "function UD__leaveGuild(bytes32 characterId) external",
+  "function UD__kickMember(bytes32 officerCharId, bytes32 targetCharId) external",
+  "function UD__disbandGuild(bytes32 characterId) external",
+  "function UD__setTaxRate(bytes32 characterId, uint256 newRate) external",
+  "function UD__setIsOpen(bytes32 characterId, bool isOpen) external",
+  "function UD__setDescription(bytes32 characterId, string description) external",
+  "function UD__promoteMember(bytes32 leaderCharId, bytes32 targetCharId) external",
+  "function UD__demoteMember(bytes32 leaderCharId, bytes32 targetCharId) external",
+  "function UD__withdrawTreasury(bytes32 characterId, uint256 amount) external",
+  "function UD__getGuildBonus() external pure returns (uint256 goldBonus, uint256 xpBonus, uint256 dropBonus)",
+  "function UD__isGuildMember(bytes32 characterId) external view returns (bool)",
+
+  // PvP
+  "function UD__isValidPvP(bytes32[] attackers, bytes32[] defenders, uint16 x, uint16 y) external view returns (bool)",
+  "function UD__fleePvp(bytes32 entityId) external",
+
+  // Item reading
+  "function UD__getItemEffects(uint256 itemId) external view returns (bytes32[])",
+
+  // Shop encounter
+  "function UD__endShopEncounter(bytes32 encounterId) external",
+  "function UD__canRestock(bytes32 shopId) external view returns (bool)",
+  "function UD__restock(bytes32 shopId) external returns (bool)",
+
+  // Consumables
+  "function UD__useWorldConsumableItem(bytes32 characterId, bytes32 targetEntityId, uint256 tokenId) external",
+
+  // Durability
+  "function UD__repairItem(bytes32 characterId, uint256 itemId) external",
+
+  // Respec
+  "function UD__statRespec(bytes32 characterId, (int256 strength, int256 agility, uint8 class, int256 intelligence, int256 maxHp, int256 currentHp, uint256 experience, uint256 level, uint8 powerSource, uint8 race, uint8 startingArmor, uint8 advancedClass, bool hasSelectedAdvancedClass) desiredStats) external",
+  "function UD__fullRespec(bytes32 characterId) external",
+  "function UD__getRespecCost(bytes32 characterId) external view returns (uint256 statCost, uint256 fullCost)",
+  "function UD__isInEncounter(bytes32 entityId) external view returns (bool)",
+
+  // Fragments
+  "function UD__triggerFragment(bytes32 characterId, uint8 fragmentType, uint16 tileX, uint16 tileY) external",
+  "function UD__claimFragment(bytes32 characterId, uint8 fragmentType) external returns (uint256 tokenId)",
+
+  // PvP seasons (admin)
+  "function UD__startSeason(uint256 seasonEnd) external",
+  "function UD__endSeason() external",
 ]);
 
 // Minimal ERC20 ABI for gold balance reads
@@ -190,6 +241,13 @@ export enum EncounterType {
   PvP = 0,
   PvE = 1,
   World = 2,
+}
+
+export enum GuildRank {
+  None = 0,
+  Member = 1,
+  Officer = 2,
+  Leader = 3,
 }
 
 export enum OrderStatus {
@@ -277,6 +335,8 @@ export async function sendTx(
       if (receipt.status === "reverted") {
         throw new Error(`Transaction reverted: ${hash}`);
       }
+      // Wait for RPC cluster to sync — reads may hit a different node than the write
+      await sleep(2000);
       return hash;
     } catch (err: any) {
       const msg = err?.message ?? "";
@@ -311,6 +371,7 @@ export async function readWorld(
     abi: worldAbi,
     functionName: functionName as any,
     args: args as any,
+    account: deployerAccount,
   });
 }
 
@@ -326,7 +387,7 @@ export interface TestWallet {
 
 export async function createTestWallet(
   seed: string,
-  fundAmount: bigint = BigInt("10000000000000000"), // 0.01 ETH default
+  fundAmount: bigint = BigInt("1000000000000000"), // 0.001 ETH default
 ): Promise<TestWallet> {
   const privKey = keccak256(
     encodePacked(["string"], [`smoke_test_${seed}`]),
@@ -347,6 +408,8 @@ export async function createTestWallet(
       value: fundAmount,
     } as any);
     await publicClient.waitForTransactionReceipt({ hash });
+    // Wait for RPC cluster sync so subsequent TXs see the new balance
+    await sleep(2000);
   }
 
   return { wallet, account, address: account.address };

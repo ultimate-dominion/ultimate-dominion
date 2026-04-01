@@ -1,5 +1,6 @@
 import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -50,6 +51,7 @@ export const LevelingPanel = ({
   onLevelComplete?: () => void;
 }): JSX.Element => {
   const { renderSuccess, renderWarning } = useToast();
+  const { t } = useTranslation('ui');
   const {
     delegatorAddress,
     systemCalls: { levelCharacter },
@@ -65,22 +67,12 @@ export const LevelingPanel = ({
   );
   const [newStrength, setNewStrength] = useState(character.baseStats.strength);
 
-  // Calculate ability points based on diminishing returns system
-  // Must match StatCalculator.calculateStatPointsForLevel in contracts
-  // Levels 1-10: +2 stat points per level (STAT_POINTS_EARLY)
-  // Levels 11-50: +1 stat point every 2 levels (STAT_POINTS_MID)
-  // Levels 51-100: +1 stat point every 5 levels (STAT_POINTS_LATE)
+  // Calculate ability points — must match StatCalculator.calculateStatPointsForLevel in contracts
+  // +1 stat point per level at all tiers
   const calculateAbilityPointsForLevel = useCallback(
     (nextLevel: bigint, powerSource: PowerSource): number => {
       const level = Number(nextLevel);
-      let points: number;
-      if (level <= 10) {
-        points = 1; // Early game: +1 per level (balance patch)
-      } else if (level <= 50) {
-        points = level % 2 === 0 ? 1 : 0; // Mid game: +1 every 2 levels
-      } else {
-        points = level % 5 === 0 ? 1 : 0; // Late game: +1 every 5 levels
-      }
+      let points = 1;
       // Physical power source bonus at level 5
       if (level === 5 && powerSource === PowerSource.Physical) {
         points += 1;
@@ -138,7 +130,7 @@ export const LevelingPanel = ({
             replenishAbilityPoint = true;
           }
           if (!replenishAbilityPoint && abilityPoints <= 0) {
-            renderWarning('You do not have enough ability points.');
+            renderWarning(t('leveling.notEnoughPoints'));
             return;
           }
 
@@ -150,7 +142,7 @@ export const LevelingPanel = ({
             replenishAbilityPoint = true;
           }
           if (!replenishAbilityPoint && abilityPoints <= 0) {
-            renderWarning('You do not have enough ability points.');
+            renderWarning(t('leveling.notEnoughPoints'));
             return;
           }
 
@@ -162,7 +154,7 @@ export const LevelingPanel = ({
             replenishAbilityPoint = true;
           }
           if (!replenishAbilityPoint && abilityPoints <= 0) {
-            renderWarning('You do not have enough ability points.');
+            renderWarning(t('leveling.notEnoughPoints'));
             return;
           }
 
@@ -197,7 +189,7 @@ export const LevelingPanel = ({
     (stat: 'str' | 'agi' | 'int') => {
       if (levelTx.isLoading) return;
       if (abilityPoints <= 0) {
-        renderWarning('You do not have enough ability points.');
+        renderWarning(t('leveling.notEnoughPoints'));
         return;
       }
 
@@ -221,7 +213,7 @@ export const LevelingPanel = ({
 
   const onLevelCharacter = useCallback(async () => {
     if (abilityPoints > 0) {
-      renderWarning('You have unused ability points');
+      renderWarning(t('leveling.unusedPoints'));
       return;
     }
     if (!delegatorAddress) return;
@@ -273,16 +265,16 @@ export const LevelingPanel = ({
       } else {
         if (newLevel === 5) {
           const bonusMsg: Record<number, string> = {
-            [PowerSource.Divine]: '+2 HP from your Divine power',
-            [PowerSource.Weave]: '+1 INT from the Weave',
-            [PowerSource.Physical]: 'Physical bonus point allocated',
+            [PowerSource.Divine]: t('leveling.level5Divine'),
+            [PowerSource.Weave]: t('leveling.level5Weave'),
+            [PowerSource.Physical]: t('leveling.level5Physical'),
           };
           const msg = bonusMsg[character.baseStats.powerSource];
-          renderSuccess(`Level 5!${msg ? ` ${msg}.` : ''}`);
+          renderSuccess(t('leveling.level5Success', { bonus: msg ? ` ${msg}.` : '' }));
         } else if (newLevel === 3) {
-          renderSuccess('Level 3! You earned the Adventurer Badge!');
+          renderSuccess(t('leveling.level3Badge'));
         } else {
-          renderSuccess('Character leveled up!');
+          renderSuccess(t('leveling.leveledUp'));
         }
       }
     }
@@ -344,11 +336,11 @@ export const LevelingPanel = ({
 
   const powerSourceBonusText = useMemo(() => {
     const ps = character.baseStats.powerSource;
-    if (ps === PowerSource.Divine) return 'Your faith stirs \u2014 +2 HP';
-    if (ps === PowerSource.Weave) return 'The Weave responds \u2014 +1 Intelligence';
-    if (ps === PowerSource.Physical) return 'Your discipline sharpens \u2014 +1 bonus ability point';
+    if (ps === PowerSource.Divine) return t('leveling.divinePowerBonus');
+    if (ps === PowerSource.Weave) return t('leveling.weavePowerBonus');
+    if (ps === PowerSource.Physical) return t('leveling.physicalPowerBonus');
     return '';
-  }, [character.baseStats.powerSource]);
+  }, [character.baseStats.powerSource, t]);
 
   const Wrapper = compact
     ? ({ children }: { children: ReactNode }) => (
@@ -375,10 +367,10 @@ export const LevelingPanel = ({
       <VStack>
         <HStack color="#D4A54A" justify="space-between" px={6} w="100%">
           <Text alignSelf="start" fontWeight={700}>
-            {compact ? 'Level Up!' : 'My Stats'}
+            {compact ? t('leveling.levelUp') : t('leveling.myStats')}
           </Text>
           <Text alignSelf="start" fontWeight={700}>
-            Ability Points: {abilityPoints}
+            {t('leveling.abilityPoints', { points: abilityPoints })}
           </Text>
         </HStack>
         {canLevel && nextLevel === BigInt(5) && character.baseStats.powerSource !== PowerSource.None && (
@@ -415,9 +407,9 @@ export const LevelingPanel = ({
         {compact && canLevel && (
           <VStack spacing={3} px={4} py={4} w="100%">
             {([
-              { key: 'agi' as const, abbrev: 'AGI', name: 'Agility', color: '#5A8A3E', desc: 'Dodge attacks. Higher crit chance.' },
-              { key: 'int' as const, abbrev: 'INT', name: 'Intelligence', color: '#4A7AB5', desc: 'Spell damage. Arcane force.' },
-              { key: 'str' as const, abbrev: 'STR', name: 'Strength', color: '#B85C3A', desc: 'Physical damage. Raw power.' },
+              { key: 'agi' as const, abbrev: 'AGI', name: t('leveling.agility'), color: '#5A8A3E', desc: t('leveling.agiDesc') },
+              { key: 'int' as const, abbrev: 'INT', name: t('leveling.intelligence'), color: '#4A7AB5', desc: t('leveling.intDesc') },
+              { key: 'str' as const, abbrev: 'STR', name: t('leveling.strength'), color: '#B85C3A', desc: t('leveling.strDesc') },
             ] as const).map(({ key, abbrev, name, color, desc }) => {
               const value = key === 'agi' ? newAgility : key === 'int' ? newIntelligence : newStrength;
               const increased = key === 'agi' ? agilityIncreased : key === 'int' ? intelligenceIncreased : strengthIncreased;
@@ -490,16 +482,16 @@ export const LevelingPanel = ({
             w="50%"
           >
             <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
-              Base
+              {t('leveling.base')}
             </Text>
             {!canLevel && (
               <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
-                Bonus
+                {t('leveling.bonus')}
               </Text>
             )}
             {!canLevel && (
               <Text size={{ base: '2xs', xl: 'xs' }} w="33%">
-                Total
+                {t('leveling.total')}
               </Text>
             )}
           </HStack>
@@ -524,7 +516,7 @@ export const LevelingPanel = ({
               fontWeight={500}
               size={{ base: '2xs', sm: 'xs' }}
             >
-              Agility
+              {t('leveling.agility')}
             </Text>
           </Text>
           <HStack justifyContent="end" textAlign="end" w="50%">
@@ -605,7 +597,7 @@ export const LevelingPanel = ({
               fontWeight={500}
               size={{ base: '2xs', sm: 'xs' }}
             >
-              Intelligence
+              {t('leveling.intelligence')}
             </Text>
           </Text>
           <HStack justifyContent="end" textAlign="end" w="50%">
@@ -687,7 +679,7 @@ export const LevelingPanel = ({
               fontWeight={500}
               size={{ base: '2xs', sm: 'xs' }}
             >
-              Strength
+              {t('leveling.strength')}
             </Text>
           </Text>
           <HStack justifyContent="end" textAlign="end" w="50%">
@@ -765,7 +757,7 @@ export const LevelingPanel = ({
             size="sm"
             variant="gold"
           >
-            Level Up!
+            {t('leveling.levelUp')}
           </Button>
         )}
       </VStack>

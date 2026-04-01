@@ -33,7 +33,7 @@ contract Test_PveGoldMint is SetUp {
         vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
 
-        entityId = world.UD__spawnMob(5, 0, 1);
+        entityId = world.UD__spawnMob(5, 1, 0, 1);
 
         // spawn bob
         vm.prank(bob);

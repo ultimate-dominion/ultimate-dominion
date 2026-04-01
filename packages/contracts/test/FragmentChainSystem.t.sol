@@ -7,7 +7,6 @@ import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
 import {
     Admin,
-    Position,
     NpcDialogue,
     NpcDialogueData,
     FragmentChainProgress,
