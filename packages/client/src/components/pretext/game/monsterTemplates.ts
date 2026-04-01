@@ -315,160 +315,155 @@ function drawLimb(
 // Side profile: hunched rodent, long snout, big ears, bald tail, clawed feet
 // ---------------------------------------------------------------------------
 function drawDireRat(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // === LAYER 1: Base shapes ===
-
-  // Main body — horizontal mass, hunched
-  ctx.fillStyle = bodyGrad(ctx, w * 0.45, h * 0.43, w * 0.24, 155, 120, 80, 130, 100, 65);
+  // Grounded rat anatomy: long low torso, smaller ears, less toy-like face.
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.48, h * 0.46, w * 0.28, 150, 124, 88, 70, 56, 40, 188, 162, 122);
   ctx.beginPath();
-  ctx.moveTo(w * 0.22, h * 0.28);
-  ctx.bezierCurveTo(w * 0.32, h * 0.18, w * 0.55, h * 0.18, w * 0.68, h * 0.28);
-  ctx.bezierCurveTo(w * 0.74, h * 0.34, w * 0.74, h * 0.56, w * 0.68, h * 0.62);
-  ctx.bezierCurveTo(w * 0.56, h * 0.70, w * 0.34, h * 0.70, w * 0.22, h * 0.62);
-  ctx.bezierCurveTo(w * 0.17, h * 0.56, w * 0.17, h * 0.34, w * 0.22, h * 0.28);
+  ctx.moveTo(w * 0.24, h * 0.33);
+  ctx.bezierCurveTo(w * 0.34, h * 0.22, w * 0.56, h * 0.21, w * 0.70, h * 0.32);
+  ctx.bezierCurveTo(w * 0.77, h * 0.38, w * 0.78, h * 0.57, w * 0.69, h * 0.65);
+  ctx.bezierCurveTo(w * 0.58, h * 0.73, w * 0.38, h * 0.74, w * 0.24, h * 0.67);
+  ctx.bezierCurveTo(w * 0.18, h * 0.60, w * 0.17, h * 0.40, w * 0.24, h * 0.33);
   ctx.fill();
 
-  // Haunches — rear bulk
-  ctx.fillStyle = bodyGrad(ctx, w * 0.62, h * 0.42, w * 0.16, 145, 110, 70);
-  fillEllipse(ctx, w * 0.62, h * 0.42, w * 0.15, h * 0.18);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.66, h * 0.46, w * 0.16, 132, 106, 72, 102, 82, 56);
+  fillEllipse(ctx, w * 0.66, h * 0.47, w * 0.16, h * 0.18);
 
-  // === LAYER 2: Ambient occlusion ===
-  ambientOcclusion(ctx, w * 0.25, h * 0.42, w * 0.04, h * 0.06, 0.2);
-  ambientOcclusion(ctx, w * 0.50, h * 0.42, w * 0.03, h * 0.04, 0.15);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.38, h * 0.54, w * 0.16, 128, 108, 82, 98, 82, 60);
+  fillEllipse(ctx, w * 0.42, h * 0.60, w * 0.18, h * 0.08);
 
-  // === LAYER 3: Fur texture — DENSE, covers entire body ===
-  // Back fur (darker, coarser)
-  furTexture(ctx, w * 0.22, h * 0.20, w * 0.48, h * 0.25, w * 0.025,
-    'rgb(70,50,30)', 'rgb(180,150,110)', 120, -0.3);
-  // Side fur (medium)
-  furTexture(ctx, w * 0.20, h * 0.35, w * 0.50, h * 0.20, w * 0.020,
-    'rgb(80,60,38)', 'rgb(170,140,100)', 80, 0.2);
-  // Belly fur (lighter, sparser)
-  furTexture(ctx, w * 0.25, h * 0.52, w * 0.40, h * 0.12, w * 0.018,
-    'rgb(100,78,52)', 'rgb(195,170,130)', 50, 0.5);
-  // Haunch fur (thick matted)
-  furTexture(ctx, w * 0.52, h * 0.28, w * 0.20, h * 0.28, w * 0.022,
-    'rgb(75,55,35)', 'rgb(165,135,95)', 60, 0.1);
+  ambientOcclusion(ctx, w * 0.28, h * 0.47, w * 0.05, h * 0.07, 0.24);
+  ambientOcclusion(ctx, w * 0.53, h * 0.48, w * 0.05, h * 0.06, 0.18);
+  ambientOcclusion(ctx, w * 0.40, h * 0.62, w * 0.12, h * 0.04, 0.18);
 
-  // === LAYER 4: Body highlights — muscle definition ===
-  highlight(ctx, w * 0.40, h * 0.32, w * 0.06, 'rgb(200,170,130)', 0.15);
-  highlight(ctx, w * 0.60, h * 0.38, w * 0.05, 'rgb(190,160,120)', 0.12);
-  highlight(ctx, w * 0.35, h * 0.50, w * 0.04, 'rgb(185,155,115)', 0.10);
-
-  // === LAYER 5: Head ===
-  ctx.fillStyle = bodyGrad(ctx, w * 0.16, h * 0.38, w * 0.12, 145, 110, 75);
+  ctx.strokeStyle = 'rgba(85,62,42,0.55)';
+  ctx.lineWidth = w * 0.010;
   ctx.beginPath();
-  ctx.moveTo(w * 0.22, h * 0.26);
-  ctx.bezierCurveTo(w * 0.13, h * 0.24, w * 0.06, h * 0.30, w * 0.04, h * 0.37);
-  ctx.bezierCurveTo(w * 0.02, h * 0.42, w * 0.04, h * 0.50, w * 0.10, h * 0.52);
-  ctx.bezierCurveTo(w * 0.16, h * 0.54, w * 0.22, h * 0.52, w * 0.25, h * 0.46);
-  ctx.bezierCurveTo(w * 0.27, h * 0.38, w * 0.27, h * 0.30, w * 0.22, h * 0.26);
+  ctx.moveTo(w * 0.28, h * 0.35);
+  ctx.quadraticCurveTo(w * 0.48, h * 0.28, w * 0.69, h * 0.36);
+  ctx.moveTo(w * 0.30, h * 0.43);
+  ctx.quadraticCurveTo(w * 0.48, h * 0.36, w * 0.66, h * 0.42);
+  ctx.moveTo(w * 0.32, h * 0.53);
+  ctx.quadraticCurveTo(w * 0.48, h * 0.50, w * 0.62, h * 0.55);
+  ctx.stroke();
+
+  furTexture(ctx, w * 0.22, h * 0.24, w * 0.52, h * 0.28, w * 0.022,
+    'rgb(74,56,36)', 'rgb(175,145,108)', 95, -0.2);
+  furTexture(ctx, w * 0.22, h * 0.46, w * 0.46, h * 0.18, w * 0.017,
+    'rgb(92,72,48)', 'rgb(185,160,122)', 55, 0.5);
+  furTexture(ctx, w * 0.53, h * 0.28, w * 0.20, h * 0.26, w * 0.019,
+    'rgb(68,52,34)', 'rgb(154,126,92)', 42, 0.15);
+
+  highlight(ctx, w * 0.42, h * 0.34, w * 0.05, 'rgb(200,172,132)', 0.10);
+  highlight(ctx, w * 0.58, h * 0.44, w * 0.04, 'rgb(182,154,116)', 0.10);
+
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.17, h * 0.43, w * 0.14, 148, 120, 88, 66, 50, 38, 186, 156, 122);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.26, h * 0.33);
+  ctx.bezierCurveTo(w * 0.20, h * 0.27, w * 0.10, h * 0.30, w * 0.05, h * 0.38);
+  ctx.bezierCurveTo(w * 0.02, h * 0.44, w * 0.03, h * 0.52, w * 0.10, h * 0.56);
+  ctx.bezierCurveTo(w * 0.17, h * 0.58, w * 0.24, h * 0.54, w * 0.28, h * 0.48);
+  ctx.bezierCurveTo(w * 0.31, h * 0.40, w * 0.30, h * 0.35, w * 0.26, h * 0.33);
   ctx.fill();
-  // Head fur
-  furTexture(ctx, w * 0.04, h * 0.26, w * 0.22, h * 0.26, w * 0.016,
-    'rgb(65,48,28)', 'rgb(160,130,90)', 40, -0.1);
 
-  // Snout — pointed
-  ctx.fillStyle = 'rgb(85,65,45)';
+  furTexture(ctx, w * 0.05, h * 0.31, w * 0.21, h * 0.24, w * 0.014,
+    'rgb(66,48,30)', 'rgb(156,126,90)', 36, 0.0);
+
+  ctx.fillStyle = 'rgb(118,92,72)';
   ctx.beginPath();
-  ctx.moveTo(w * 0.06, h * 0.35);
-  ctx.bezierCurveTo(w * 0.02, h * 0.36, w * -0.01, h * 0.39, w * -0.02, h * 0.40);
-  ctx.bezierCurveTo(w * -0.01, h * 0.43, w * 0.02, h * 0.45, w * 0.06, h * 0.45);
+  ctx.moveTo(w * 0.08, h * 0.41);
+  ctx.bezierCurveTo(w * 0.02, h * 0.40, w * -0.03, h * 0.42, w * -0.04, h * 0.45);
+  ctx.bezierCurveTo(w * -0.03, h * 0.49, w * 0.01, h * 0.51, w * 0.08, h * 0.50);
   ctx.closePath();
   ctx.fill();
 
-  // Nose (pinkish, bright)
-  ctx.fillStyle = 'rgb(200,140,130)';
-  fillCircle(ctx, w * 0.00, h * 0.405, w * 0.016);
+  ctx.fillStyle = 'rgb(176,128,120)';
+  fillCircle(ctx, w * -0.005, h * 0.455, w * 0.014);
 
-  // Eye — LARGE, glowing red (key focal point)
-  highlight(ctx, w * 0.13, h * 0.36, w * 0.025, 'rgb(255,80,60)', 0.3);
-  ctx.fillStyle = 'rgb(230,50,40)';
-  fillCircle(ctx, w * 0.13, h * 0.36, w * 0.018);
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = 'rgb(165,60,44)';
+  fillCircle(ctx, w * 0.145, h * 0.405, w * 0.020);
+  ctx.restore();
+  ctx.fillStyle = 'rgb(142,44,32)';
+  fillCircle(ctx, w * 0.145, h * 0.405, w * 0.013);
   ctx.fillStyle = '#000';
-  fillCircle(ctx, w * 0.132, h * 0.36, w * 0.007);
-  ctx.fillStyle = 'rgb(255,200,200)';
-  fillCircle(ctx, w * 0.126, h * 0.354, w * 0.004);
+  fillCircle(ctx, w * 0.149, h * 0.406, w * 0.005);
+  ctx.fillStyle = 'rgb(240,210,200)';
+  fillCircle(ctx, w * 0.140, h * 0.399, w * 0.003);
 
-  // Ears — large, prominent
-  ctx.fillStyle = 'rgb(120,90,65)';
+  ctx.fillStyle = 'rgb(120,95,72)';
   ctx.beginPath();
-  ctx.moveTo(w * 0.14, h * 0.26);
-  ctx.bezierCurveTo(w * 0.11, h * 0.14, w * 0.13, h * 0.06, w * 0.17, h * 0.04);
-  ctx.bezierCurveTo(w * 0.21, h * 0.06, w * 0.22, h * 0.16, w * 0.20, h * 0.24);
+  ctx.moveTo(w * 0.18, h * 0.31);
+  ctx.bezierCurveTo(w * 0.15, h * 0.18, w * 0.17, h * 0.12, w * 0.21, h * 0.11);
+  ctx.bezierCurveTo(w * 0.24, h * 0.14, w * 0.24, h * 0.22, w * 0.22, h * 0.29);
   ctx.closePath();
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(w * 0.21, h * 0.24);
-  ctx.bezierCurveTo(w * 0.19, h * 0.12, w * 0.22, h * 0.04, w * 0.26, h * 0.02);
-  ctx.bezierCurveTo(w * 0.29, h * 0.05, w * 0.29, h * 0.16, w * 0.27, h * 0.24);
+  ctx.moveTo(w * 0.24, h * 0.30);
+  ctx.bezierCurveTo(w * 0.22, h * 0.18, w * 0.25, h * 0.11, w * 0.28, h * 0.10);
+  ctx.bezierCurveTo(w * 0.31, h * 0.14, w * 0.31, h * 0.22, w * 0.28, h * 0.30);
   ctx.closePath();
   ctx.fill();
-  // Inner ear (flesh pink)
-  ctx.fillStyle = 'rgb(175,120,110)';
+  ctx.fillStyle = 'rgb(162,118,110)';
   ctx.beginPath();
-  ctx.moveTo(w * 0.16, h * 0.22);
-  ctx.bezierCurveTo(w * 0.13, h * 0.14, w * 0.15, h * 0.08, w * 0.17, h * 0.07);
-  ctx.bezierCurveTo(w * 0.19, h * 0.10, w * 0.20, h * 0.17, w * 0.19, h * 0.22);
+  ctx.moveTo(w * 0.19, h * 0.28);
+  ctx.bezierCurveTo(w * 0.17, h * 0.22, w * 0.18, h * 0.16, w * 0.20, h * 0.15);
+  ctx.bezierCurveTo(w * 0.22, h * 0.18, w * 0.22, h * 0.23, w * 0.21, h * 0.28);
   ctx.closePath();
   ctx.fill();
 
-  // Teeth — exposed, yellowish (visible even at small sizes)
-  ctx.fillStyle = 'rgb(230,220,190)';
+  ctx.fillStyle = 'rgb(214,206,182)';
   ctx.beginPath();
-  ctx.moveTo(w * 0.03, h * 0.42);
-  ctx.lineTo(w * 0.01, h * 0.47);
-  ctx.lineTo(w * 0.04, h * 0.43);
+  ctx.moveTo(w * 0.04, h * 0.47);
+  ctx.lineTo(w * 0.02, h * 0.52);
+  ctx.lineTo(w * 0.05, h * 0.48);
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(w * 0.06, h * 0.42);
-  ctx.lineTo(w * 0.05, h * 0.47);
-  ctx.lineTo(w * 0.07, h * 0.43);
+  ctx.moveTo(w * 0.07, h * 0.47);
+  ctx.lineTo(w * 0.06, h * 0.52);
+  ctx.lineTo(w * 0.08, h * 0.48);
   ctx.fill();
 
-  // === LAYER 6: Tail — thick, curving, scabby ===
-  ctx.strokeStyle = 'rgb(155,115,95)';
+  ctx.strokeStyle = 'rgb(152,116,98)';
   ctx.lineCap = 'round';
-  ctx.lineWidth = w * 0.038;
+  ctx.lineWidth = w * 0.030;
   ctx.beginPath();
-  ctx.moveTo(w * 0.72, h * 0.40);
-  ctx.bezierCurveTo(w * 0.80, h * 0.30, w * 0.88, h * 0.20, w * 0.95, h * 0.10);
+  ctx.moveTo(w * 0.76, h * 0.45);
+  ctx.bezierCurveTo(w * 0.83, h * 0.35, w * 0.92, h * 0.24, w * 1.00, h * 0.10);
   ctx.stroke();
-  ctx.strokeStyle = 'rgb(140,100,80)';
-  ctx.lineWidth = w * 0.020;
+  ctx.strokeStyle = 'rgba(98,70,56,0.45)';
+  ctx.lineWidth = w * 0.008;
   ctx.beginPath();
-  ctx.moveTo(w * 0.92, h * 0.14);
-  ctx.bezierCurveTo(w * 0.96, h * 0.08, w * 0.98, h * 0.04, w * 1.00, h * 0.02);
+  ctx.moveTo(w * 0.80, h * 0.42);
+  ctx.bezierCurveTo(w * 0.88, h * 0.33, w * 0.95, h * 0.23, w * 0.99, h * 0.15);
   ctx.stroke();
 
-  // === LAYER 7: Legs with mass ===
-  drawLimb(ctx, w * 0.30, h * 0.58, w * 0.28, h * 0.68, w * 0.24, h * 0.78, w * 0.024, 'rgb(110,85,55)');
-  drawLimb(ctx, w * 0.36, h * 0.60, w * 0.35, h * 0.70, w * 0.32, h * 0.80, w * 0.022, 'rgb(100,75,50)');
-  drawLimb(ctx, w * 0.56, h * 0.58, w * 0.54, h * 0.70, w * 0.50, h * 0.82, w * 0.028, 'rgb(110,85,55)');
-  drawLimb(ctx, w * 0.62, h * 0.56, w * 0.61, h * 0.68, w * 0.58, h * 0.80, w * 0.026, 'rgb(100,75,50)');
+  drawLimb(ctx, w * 0.31, h * 0.62, w * 0.29, h * 0.72, w * 0.26, h * 0.82, w * 0.020, 'rgb(108,82,56)');
+  drawLimb(ctx, w * 0.40, h * 0.63, w * 0.39, h * 0.73, w * 0.37, h * 0.83, w * 0.019, 'rgb(102,78,54)');
+  drawLimb(ctx, w * 0.58, h * 0.61, w * 0.56, h * 0.73, w * 0.53, h * 0.84, w * 0.023, 'rgb(108,82,56)');
+  drawLimb(ctx, w * 0.66, h * 0.60, w * 0.64, h * 0.72, w * 0.62, h * 0.83, w * 0.021, 'rgb(100,76,52)');
 
-  // Claws (bright ivory — visible focal points)
-  ctx.fillStyle = 'rgb(210,200,180)';
-  for (const lx of [0.24, 0.32, 0.50, 0.58]) {
-    const ly = lx < 0.40 ? 0.80 : 0.82;
+  ctx.fillStyle = 'rgb(200,192,172)';
+  for (const lx of [0.26, 0.37, 0.53, 0.62]) {
+    const ly = lx < 0.45 ? 0.83 : 0.84;
     for (let c = 0; c < 3; c++) {
       ctx.beginPath();
       ctx.moveTo(w * (lx + c * 0.012 - 0.012), h * ly);
-      ctx.lineTo(w * (lx + c * 0.012 - 0.018), h * (ly + 0.06));
-      ctx.lineTo(w * (lx + c * 0.012 - 0.006), h * (ly + 0.04));
+      ctx.lineTo(w * (lx + c * 0.012 - 0.018), h * (ly + 0.045));
+      ctx.lineTo(w * (lx + c * 0.012 - 0.005), h * (ly + 0.03));
       ctx.fill();
     }
   }
 
-  // Whiskers (thicker for visibility)
-  ctx.strokeStyle = 'rgb(120,100,75)';
-  ctx.lineWidth = w * 0.006;
+  ctx.strokeStyle = 'rgba(138,116,84,0.75)';
+  ctx.lineWidth = w * 0.004;
   ctx.beginPath();
-  ctx.moveTo(w * 0.03, h * 0.39);
-  ctx.lineTo(w * -0.04, h * 0.33);
-  ctx.moveTo(w * 0.03, h * 0.41);
-  ctx.lineTo(w * -0.04, h * 0.39);
-  ctx.moveTo(w * 0.03, h * 0.43);
-  ctx.lineTo(w * -0.04, h * 0.47);
+  ctx.moveTo(w * 0.05, h * 0.43);
+  ctx.lineTo(w * -0.02, h * 0.39);
+  ctx.moveTo(w * 0.05, h * 0.45);
+  ctx.lineTo(w * -0.03, h * 0.45);
+  ctx.moveTo(w * 0.05, h * 0.47);
+  ctx.lineTo(w * -0.02, h * 0.52);
   ctx.stroke();
 }
 
@@ -2270,6 +2265,136 @@ function drawBasilisk(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.restore();
 }
 
+function drawBasiliskIllustrated(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.86, h * 0.43, w * 0.22, 110, 126, 82, 48, 58, 38, 154, 170, 110);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.76, h * 0.48);
+  ctx.bezierCurveTo(w * 0.88, h * 0.42, w * 0.96, h * 0.30, w * 1.02, h * 0.12);
+  ctx.bezierCurveTo(w * 1.00, h * 0.10, w * 0.96, h * 0.12, w * 0.93, h * 0.16);
+  ctx.bezierCurveTo(w * 0.86, h * 0.28, w * 0.80, h * 0.36, w * 0.72, h * 0.44);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.53, h * 0.48, w * 0.34, 134, 146, 98, 56, 62, 42, 188, 196, 136);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.24, h * 0.38);
+  ctx.bezierCurveTo(w * 0.34, h * 0.24, w * 0.58, h * 0.22, w * 0.74, h * 0.34);
+  ctx.bezierCurveTo(w * 0.80, h * 0.40, w * 0.80, h * 0.56, w * 0.73, h * 0.64);
+  ctx.bezierCurveTo(w * 0.60, h * 0.76, w * 0.38, h * 0.77, w * 0.24, h * 0.65);
+  ctx.bezierCurveTo(w * 0.18, h * 0.58, w * 0.18, h * 0.46, w * 0.24, h * 0.38);
+  ctx.fill();
+
+  ctx.fillStyle = bodyGrad(ctx, w * 0.39, h * 0.41, w * 0.15, 150, 162, 114, 120, 130, 90);
+  fillEllipse(ctx, w * 0.39, h * 0.43, w * 0.15, h * 0.14);
+  ctx.fillStyle = bodyGrad(ctx, w * 0.66, h * 0.50, w * 0.15, 122, 136, 90, 92, 104, 70);
+  fillEllipse(ctx, w * 0.66, h * 0.52, w * 0.14, h * 0.15);
+  ambientOcclusion(ctx, w * 0.52, h * 0.63, w * 0.22, h * 0.07, 0.24);
+  ambientOcclusion(ctx, w * 0.33, h * 0.48, w * 0.06, h * 0.08, 0.22);
+  ambientOcclusion(ctx, w * 0.69, h * 0.50, w * 0.08, h * 0.08, 0.18);
+
+  ctx.fillStyle = 'rgb(86,98,58)';
+  for (const [sx, sy, sw, sh] of [[0.36, 0.28, 0.018, 0.08], [0.41, 0.24, 0.024, 0.11], [0.47, 0.22, 0.028, 0.12], [0.54, 0.23, 0.026, 0.11], [0.60, 0.25, 0.022, 0.10], [0.66, 0.28, 0.018, 0.08]] as [number, number, number, number][]) {
+    ctx.beginPath();
+    ctx.moveTo(w * (sx - sw), h * 0.34);
+    ctx.lineTo(w * sx, h * sy);
+    ctx.lineTo(w * (sx + sw), h * (0.34 + sh * 0.15));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.16, h * 0.40, w * 0.16, 142, 154, 108, 54, 60, 42, 200, 208, 148);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.30, h * 0.41);
+  ctx.bezierCurveTo(w * 0.23, h * 0.32, w * 0.15, h * 0.28, w * 0.08, h * 0.33);
+  ctx.bezierCurveTo(w * 0.02, h * 0.38, w * -0.01, h * 0.47, w * 0.05, h * 0.55);
+  ctx.bezierCurveTo(w * 0.12, h * 0.61, w * 0.22, h * 0.61, w * 0.28, h * 0.54);
+  ctx.bezierCurveTo(w * 0.32, h * 0.49, w * 0.33, h * 0.45, w * 0.30, h * 0.41);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgb(88,98,66)';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.10, h * 0.37);
+  ctx.lineTo(w * 0.16, h * 0.29);
+  ctx.lineTo(w * 0.23, h * 0.30);
+  ctx.lineTo(w * 0.18, h * 0.39);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = 'rgb(96,82,60)';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.06, h * 0.46);
+  ctx.bezierCurveTo(w * 0.00, h * 0.46, w * -0.03, h * 0.49, w * -0.02, h * 0.53);
+  ctx.bezierCurveTo(w * 0.02, h * 0.56, w * 0.09, h * 0.57, w * 0.14, h * 0.55);
+  ctx.lineTo(w * 0.11, h * 0.49);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = 'rgb(210,198,154)';
+  for (const tx of [0.02, 0.05, 0.08]) {
+    ctx.beginPath();
+    ctx.moveTo(w * tx, h * 0.53);
+    ctx.lineTo(w * (tx + 0.010), h * 0.58);
+    ctx.lineTo(w * (tx + 0.018), h * 0.53);
+    ctx.fill();
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = 'rgb(140,255,92)';
+  fillCircle(ctx, w * 0.13, h * 0.40, w * 0.035);
+  fillCircle(ctx, w * 0.18, h * 0.38, w * 0.030);
+  ctx.restore();
+  ctx.fillStyle = 'rgb(168,255,116)';
+  fillEllipse(ctx, w * 0.13, h * 0.40, w * 0.015, h * 0.010);
+  fillEllipse(ctx, w * 0.18, h * 0.38, w * 0.013, h * 0.009);
+  ctx.strokeStyle = 'rgb(20,28,14)';
+  ctx.lineWidth = w * 0.004;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.13, h * 0.392);
+  ctx.lineTo(w * 0.13, h * 0.408);
+  ctx.moveTo(w * 0.18, h * 0.373);
+  ctx.lineTo(w * 0.18, h * 0.389);
+  ctx.stroke();
+
+  scaleTexture(ctx, w * 0.23, h * 0.30, w * 0.52, h * 0.30, w * 0.022, 'rgba(62,72,44,0.48)', 'rgba(198,210,150,0.22)', 0.78);
+  scaleTexture(ctx, w * 0.05, h * 0.32, w * 0.22, h * 0.18, w * 0.016, 'rgba(58,68,42,0.42)', 'rgba(205,214,156,0.18)', 0.82);
+  scaleTexture(ctx, w * 0.70, h * 0.36, w * 0.24, h * 0.14, w * 0.018, 'rgba(56,66,40,0.40)', 'rgba(182,196,140,0.16)', 0.74);
+
+  ctx.strokeStyle = 'rgba(70,76,48,0.45)';
+  ctx.lineWidth = w * 0.008;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.28, h * 0.39);
+  ctx.quadraticCurveTo(w * 0.48, h * 0.29, w * 0.73, h * 0.38);
+  ctx.moveTo(w * 0.25, h * 0.49);
+  ctx.quadraticCurveTo(w * 0.46, h * 0.42, w * 0.70, h * 0.49);
+  ctx.moveTo(w * 0.28, h * 0.60);
+  ctx.quadraticCurveTo(w * 0.46, h * 0.57, w * 0.66, h * 0.60);
+  ctx.stroke();
+
+  drawLimb(ctx, w * 0.36, h * 0.61, w * 0.34, h * 0.74, w * 0.30, h * 0.89, w * 0.020, 'rgb(110,118,78)');
+  drawLimb(ctx, w * 0.48, h * 0.62, w * 0.49, h * 0.75, w * 0.47, h * 0.90, w * 0.019, 'rgb(102,110,72)');
+  drawLimb(ctx, w * 0.64, h * 0.60, w * 0.66, h * 0.72, w * 0.64, h * 0.88, w * 0.021, 'rgb(92,100,66)');
+  drawLimb(ctx, w * 0.73, h * 0.56, w * 0.76, h * 0.68, w * 0.75, h * 0.84, w * 0.019, 'rgb(84,92,60)');
+
+  ctx.fillStyle = 'rgb(204,194,160)';
+  for (const [fx, fy] of [[0.30, 0.89], [0.47, 0.90], [0.64, 0.88], [0.75, 0.84]] as [number, number][]) {
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(w * fx, h * fy);
+      ctx.lineTo(w * (fx - 0.014 + i * 0.014), h * (fy + 0.06));
+      ctx.lineTo(w * (fx - 0.004 + i * 0.014), h * (fy + 0.03));
+      ctx.fill();
+    }
+  }
+
+  highlight(ctx, w * 0.38, h * 0.34, w * 0.05, 'rgb(210,218,160)', 0.18);
+  highlight(ctx, w * 0.56, h * 0.35, w * 0.05, 'rgb(196,206,148)', 0.16);
+  highlight(ctx, w * 0.24, h * 0.35, w * 0.03, 'rgb(220,228,168)', 0.14);
+  highlight(ctx, w * 0.74, h * 0.41, w * 0.03, 'rgb(176,188,132)', 0.12);
+  ambientOcclusion(ctx, w * 0.13, h * 0.50, w * 0.10, h * 0.05, 0.25);
+  ambientOcclusion(ctx, w * 0.36, h * 0.60, w * 0.07, h * 0.04, 0.22);
+  ambientOcclusion(ctx, w * 0.64, h * 0.58, w * 0.07, h * 0.04, 0.20);
+}
+
 // ---------------------------------------------------------------------------
 // Template registry
 // ---------------------------------------------------------------------------
@@ -2390,6 +2515,6 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
       brightnessBoost: 1.2,
       charDensityFloor: 0.12,
     },
-    draw: drawBasilisk,
+    draw: drawBasiliskIllustrated,
   },
 ];
