@@ -13,6 +13,8 @@ export type CanvasOptions = {
   onResize?: (width: number, height: number) => void;
   /** Enable pointer/touch event forwarding */
   interactive?: boolean;
+  /** Render a single frame instead of running a RAF loop */
+  static?: boolean;
 };
 
 export type CanvasState = {
@@ -31,7 +33,7 @@ export type CanvasState = {
  * Every Pretext demo component uses this.
  */
 export function useCanvas(options: CanvasOptions = {}): CanvasState {
-  const { onFrame, onResize, interactive = false } = options;
+  const { onFrame, onResize, interactive = false, static: isStatic = false } = options;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -81,9 +83,19 @@ export function useCanvas(options: CanvasOptions = {}): CanvasState {
     return () => observer.disconnect();
   }, [dpr]);
 
-  // RAF loop
+  // Store static flag in ref so RAF effect doesn't restart when it changes
+  const isStaticRef = useRef(isStatic);
+  isStaticRef.current = isStatic;
+
+  // RAF loop (skipped in static mode)
   useEffect(() => {
     if (!ctx || !onFrameRef.current) return;
+
+    if (isStaticRef.current) {
+      // Single render — call onFrame once with elapsed=0
+      onFrameRef.current(ctx, 0, 0);
+      return;
+    }
 
     let rafId: number;
     let lastTime = performance.now();
