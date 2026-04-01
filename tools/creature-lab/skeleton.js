@@ -244,36 +244,35 @@ export const direRatSkeleton = {
     { id: 'rump',    x: 0.72, y: 0.42, radius: 0.050 },
   ],
   limbs: [
-    // Near front leg — reaching forward-down like an arm
+    // Near front leg — reaching forward, elbow bent, gripping
     { attach: 'chest', side: 'near', segments: [
-      { x: 0.28, y: 0.48, radius: 0.045 },  // shoulder — inside body mass
-      { x: 0.22, y: 0.60, radius: 0.022 },  // elbow — angled forward, thicker
-      { x: 0.18, y: 0.72, radius: 0.014 },  // forearm — tapers
-      { x: 0.16, y: 0.84, radius: 0.018 },  // paw — wide for grip
+      { x: 0.28, y: 0.48, radius: 0.045 },  // shoulder — inside body
+      { x: 0.20, y: 0.58, radius: 0.022 },  // elbow — forward
+      { x: 0.15, y: 0.70, radius: 0.014 },  // forearm — angles down
+      { x: 0.14, y: 0.84, radius: 0.018 },  // paw — far ahead, gripping
     ]},
-    // Far front leg — behind near, slightly more tucked
+    // Far front leg — slightly tucked back
     { attach: 'chest', side: 'far', segments: [
       { x: 0.34, y: 0.46, radius: 0.035 },
-      { x: 0.30, y: 0.58, radius: 0.016 },
-      { x: 0.27, y: 0.70, radius: 0.011 },
-      { x: 0.26, y: 0.84, radius: 0.014 },
+      { x: 0.28, y: 0.56, radius: 0.016 },
+      { x: 0.24, y: 0.68, radius: 0.011 },
+      { x: 0.23, y: 0.84, radius: 0.014 },
     ]},
-    // Near rear leg — everything above body-bottom is HIDDEN
-    // Hip body-bottom ≈ y=0.455. First visible segment starts there.
+    // Near rear leg — digitigrade zig-zag: haunch→knee BACK→shin FORWARD→paw
     { attach: 'hip', side: 'near', segments: [
-      { x: 0.58, y: 0.34, radius: 0.095 },  // haunch — fully hidden in body
-      { x: 0.56, y: 0.46, radius: 0.030 },  // emerges from body — still chunky
-      { x: 0.54, y: 0.58, radius: 0.013 },  // knee — thin
-      { x: 0.53, y: 0.72, radius: 0.010 },  // shin — thin stick
-      { x: 0.53, y: 0.84, radius: 0.016 },  // paw
+      { x: 0.58, y: 0.34, radius: 0.095 },  // haunch — hidden in body
+      { x: 0.60, y: 0.46, radius: 0.030 },  // thigh emerges, angling BACK
+      { x: 0.64, y: 0.58, radius: 0.016 },  // knee — BEHIND hip (high x)
+      { x: 0.58, y: 0.72, radius: 0.011 },  // shin — angles FORWARD (low x)
+      { x: 0.54, y: 0.84, radius: 0.016 },  // paw — plants forward of knee
     ]},
-    // Far rear leg
+    // Far rear leg — same zig-zag, offset
     { attach: 'hip', side: 'far', segments: [
       { x: 0.66, y: 0.34, radius: 0.080 },  // haunch — hidden
-      { x: 0.66, y: 0.46, radius: 0.024 },  // emerges from body
-      { x: 0.66, y: 0.58, radius: 0.011 },  // knee
-      { x: 0.66, y: 0.72, radius: 0.008 },  // shin
-      { x: 0.66, y: 0.84, radius: 0.013 },  // paw
+      { x: 0.68, y: 0.46, radius: 0.024 },  // thigh angling back
+      { x: 0.72, y: 0.58, radius: 0.013 },  // knee — behind
+      { x: 0.68, y: 0.72, radius: 0.009 },  // shin — forward
+      { x: 0.65, y: 0.84, radius: 0.013 },  // paw
     ]},
   ],
   tail: {
