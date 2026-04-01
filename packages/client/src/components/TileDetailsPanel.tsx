@@ -50,6 +50,7 @@ import { useFloatingDamageSignals } from '../hooks/useFloatingDamageSignals';
 import { BattleFloatingDamage, type BattleFloatingDamageHandle } from './pretext/game/BattleFloatingDamage';
 import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
 import { BattleSceneCanvas } from './pretext/game/BattleSceneCanvas';
+import { BattleDeathScreen } from './pretext/game/BattleDeathScreen';
 import { ThreatWeightedName } from './pretext/game/ThreatWeightedName';
 import { classifyWeapon } from './pretext/game/weaponAnimations';
 import { useBattleSceneSignals, type BattleSceneHandle } from '../hooks/useBattleSceneSignals';
@@ -199,6 +200,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     currentBattle,
     dotActions,
     lastestBattleOutcome,
+    onContinueToBattleOutcome,
     opponent,
     statusEffectActions,
     userCharacterForBattleRendering,
@@ -770,6 +772,17 @@ export const TileDetailsPanel = (): JSX.Element => {
   const opponentDefeated = opponentDisplayedHp <= 0n && battleOver;
   const userDefeated = userDisplayedHp <= 0n && battleOver;
 
+  // Death screen overlay (SHOW_Z2)
+  const [showDeathScreen, setShowDeathScreen] = useState(false);
+  const deathScreenShownRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!SHOW_Z2 || !userDefeated || !currentBattle || !opponent) return;
+    // Only show once per encounter
+    if (deathScreenShownRef.current === currentBattle.encounterId) return;
+    deathScreenShownRef.current = currentBattle.encounterId;
+    setShowDeathScreen(true);
+  }, [userDefeated, currentBattle, opponent]);
+
   if (!character) {
     return (
       <Box>
@@ -876,6 +889,19 @@ export const TileDetailsPanel = (): JSX.Element => {
               ))}
             </HStack>
           </HStack>
+          {/* Death screen overlay */}
+          {showDeathScreen && (
+            <BattleDeathScreen
+              characterName={userCharacterForBattleRendering.name}
+              monsterName={opponent.name}
+              zoneName="Dark Cave"
+              level={Number(userCharacterForBattleRendering.level)}
+              onComplete={() => {
+                setShowDeathScreen(false);
+                onContinueToBattleOutcome(true);
+              }}
+            />
+          )}
         </Box>
       );
     }
