@@ -6,9 +6,9 @@ import { MONSTER_TEMPLATES_REDUX } from './monsterTemplatesRedux';
 import type { MonsterTemplate } from './monsterTemplates';
 
 /**
- * Renders a monster as ASCII art in the battle view.
- * Looks up the template by name from MONSTER_TEMPLATES_REDUX,
- * falls back to null render if no match.
+ * Renders a monster as ASCII art backdrop in the battle view.
+ * Sits behind the monster's stats as an atmospheric layer,
+ * scoped to the monster's half of the battle panel.
  */
 export function BattleMonsterAscii({
   monsterName,
@@ -29,19 +29,18 @@ export function BattleMonsterAscii({
       if (!template) return;
       const { width, height } = ctx.canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = '#0a0a0a';
-      ctx.fillRect(0, 0, width, height);
       renderMonster(ctx, template, 0, 0, width, height, {
-        elapsed,
+        elapsed: defeated ? 0 : elapsed,
         cellSize: 5,
         enable3D: false,
-        enableGlow: true,
+        enableGlow: !defeated,
+        enableBgFill: true,
       });
     },
-    [template],
+    [template, defeated],
   );
 
-  const { canvasRef } = useCanvas({ onFrame });
+  const { canvasRef } = useCanvas({ onFrame, static: defeated });
 
   if (!template) return null;
 
@@ -52,8 +51,8 @@ export function BattleMonsterAscii({
       left="0"
       right="0"
       bottom="0"
-      zIndex={10}
-      opacity={defeated ? 0.4 : hit ? 0 : 1}
+      zIndex={1}
+      opacity={defeated ? 0.3 : hit ? 0 : 0.85}
       filter={defeated ? 'grayscale(100%)' : undefined}
       animation={hit ? 'flicker .7s infinite' : 'none'}
       pointerEvents="none"
