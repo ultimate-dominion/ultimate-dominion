@@ -993,16 +993,27 @@ export function createSystemCalls(
       return { success: false, error: 'In encounter.' };
     }
 
-    // Read position from the Zustand store (updated synchronously from receipts)
-    // instead of relying on React state or optimistic refs which can be stale.
-    const pos = getTableValue('PositionV2', characterEntity) as
-      | { zoneId: number; x: number; y: number } | undefined;
-    if (!pos) {
-      return { success: false, error: 'Position not found.' };
+    // Pre-flight: read on-chain position to avoid mismatch between client store
+    // and contract state (production has Position/PositionV2 table divergence).
+    let x: number;
+    let y: number;
+    try {
+      const onChainPos = await worldContract.read.UD__getEntityPosition([
+        characterEntity as `0x${string}`,
+      ]);
+      // getEntityPosition returns (uint256 zoneId, uint16 x, uint16 y)
+      x = Number(onChainPos[1]);
+      y = Number(onChainPos[2]);
+    } catch {
+      // Fallback to store if chain read fails
+      const pos = getTableValue('PositionV2', characterEntity) as
+        | { zoneId: number; x: number; y: number } | undefined;
+      if (!pos) {
+        return { success: false, error: 'Position not found.' };
+      }
+      x = Number(pos.x);
+      y = Number(pos.y);
     }
-
-    let x = Number(pos.x);
-    let y = Number(pos.y);
     switch (direction) {
       case 'up': y += 1; break;
       case 'down': y -= 1; break;
@@ -1072,12 +1083,13 @@ export function createSystemCalls(
             if (diagResult === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
               console.warn(`[move] Position stale after revert — refreshing from chain`);
               try {
-                const [cx, cy] = await worldContract.read.UD__getEntityPosition([
+                const chainPos = await worldContract.read.UD__getEntityPosition([
                   characterEntity as `0x${string}`,
                 ]);
-                x = Number(cx);
-                y = Number(cy);
-                useGameStore.getState().setRow('Position', characterEntity, { x, y });
+                // Returns (uint256 zoneId, uint16 x, uint16 y)
+                x = Number(chainPos[1]);
+                y = Number(chainPos[2]);
+                useGameStore.getState().setRow('PositionV2', characterEntity, { zoneId: Number(chainPos[0]), x, y });
                 switch (direction) {
                   case 'up': y += 1; break;
                   case 'down': y -= 1; break;
