@@ -304,6 +304,58 @@ const DIRE_RAT_SKELETON: Skeleton = {
   },
 };
 
+// -- Kobold skeleton: hunched bipedal, 3/4 view, spear in near hand -----------
+// Reference: D&D 2e Monster Manual kobold — small scaly reptilian, pointed snout,
+// bony horns, crude orange vest, digitigrade legs. Hunched aggressive stance.
+// Spine runs top-left (head) to center-bottom (hip), forward lean.
+const KOBOLD_SKELETON: Skeleton = {
+  spine: [
+    { id: 'snout',  x: 0.22, y: 0.16, radius: 0.014 },
+    { id: 'head',   x: 0.30, y: 0.20, radius: 0.046 },
+    { id: 'neck',   x: 0.36, y: 0.28, radius: 0.026 },
+    { id: 'chest',  x: 0.42, y: 0.38, radius: 0.058 },
+    { id: 'belly',  x: 0.44, y: 0.50, radius: 0.050 },
+    { id: 'hip',    x: 0.46, y: 0.60, radius: 0.044 },
+  ],
+  limbs: [
+    // Near arm — spear arm, reaching forward-left
+    { attach: 'chest', side: 'near', segments: [
+      { x: 0.36, y: 0.36, radius: 0.024 },
+      { x: 0.28, y: 0.44, radius: 0.012 },
+      { x: 0.20, y: 0.42, radius: 0.008 },
+      { x: 0.16, y: 0.40, radius: 0.012 },
+    ]},
+    // Far arm — behind body
+    { attach: 'chest', side: 'far', segments: [
+      { x: 0.48, y: 0.38, radius: 0.019 },
+      { x: 0.54, y: 0.46, radius: 0.010 },
+      { x: 0.56, y: 0.42, radius: 0.007 },
+      { x: 0.58, y: 0.40, radius: 0.010 },
+    ]},
+    // Near leg — forward, digitigrade
+    { attach: 'hip', side: 'near', segments: [
+      { x: 0.40, y: 0.64, radius: 0.028 },
+      { x: 0.36, y: 0.74, radius: 0.015 },
+      { x: 0.38, y: 0.84, radius: 0.011 },
+      { x: 0.34, y: 0.93, radius: 0.015 },
+    ]},
+    // Far leg — back, digitigrade
+    { attach: 'hip', side: 'far', segments: [
+      { x: 0.50, y: 0.64, radius: 0.023 },
+      { x: 0.54, y: 0.74, radius: 0.012 },
+      { x: 0.52, y: 0.84, radius: 0.009 },
+      { x: 0.54, y: 0.93, radius: 0.012 },
+    ]},
+  ],
+  tail: {
+    points: [
+      { x: 0.50, y: 0.62 }, { x: 0.60, y: 0.58 }, { x: 0.70, y: 0.52 },
+      { x: 0.80, y: 0.44 }, { x: 0.88, y: 0.38 },
+    ],
+    startWidth: 0.014, endWidth: 0.003,
+  },
+};
+
 function drawDireRatRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
   // Skeleton-based clean renderer — bold shapes, no noise, let ASCII add texture
   const sk = DIRE_RAT_SKELETON;
@@ -443,41 +495,286 @@ function drawDireRatRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
   }
 }
 
-function drawFungalShamanRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  ctx.strokeStyle = 'rgb(98,74,44)';
-  ctx.lineWidth = w * 0.04;
-  ctx.lineCap = 'round';
+function drawKoboldRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  // Skeleton-based kobold — hunched reptilian, 3/4 view, short spear, crude vest
+  // HIGH CONTRAST: dark olive-brown scales, bright orange vest, glowing yellow eyes
+  const sk = KOBOLD_SKELETON;
+  const snout = sk.spine.find(n => n.id === 'snout')!;
+  const head = sk.spine.find(n => n.id === 'head')!;
+  const chest = sk.spine.find(n => n.id === 'chest')!;
+  const belly = sk.spine.find(n => n.id === 'belly')!;
+
+  // PALETTE
+  const scaleDark = [52, 42, 32];
+  const scaleMid = [78, 64, 48];
+  const scaleLight = [108, 90, 66];
+  const scaleShadow = [26, 20, 14];
+  const vestDark = [148, 58, 18];
+  const vestMid = [190, 95, 35];
+  const vestLight = [222, 138, 52];
+  const eyeGlow = [255, 210, 40];
+  const eyeCore = [255, 248, 150];
+  const teethColor = [215, 205, 185];
+  const spearWood = [108, 80, 48];
+  const spearTip = [185, 178, 162];
+  const hornColor = [72, 58, 42];
+
+  // 1. TAIL — thin reptilian, extends right and up
+  const tp = sk.tail.points;
+  ctx.strokeStyle = `rgb(${scaleDark.join(',')})`;
+  ctx.lineCap = 'round'; ctx.lineWidth = w * 0.016;
   ctx.beginPath();
-  ctx.moveTo(w * 0.72, h * 0.10);
-  ctx.bezierCurveTo(w * 0.69, h * 0.34, w * 0.66, h * 0.60, w * 0.63, h * 0.92);
+  ctx.moveTo(w * tp[0].x, h * tp[0].y);
+  ctx.bezierCurveTo(w * tp[1].x, h * tp[1].y, w * tp[2].x, h * tp[2].y, w * tp[3].x, h * tp[3].y);
   ctx.stroke();
-  ctx.fillStyle = bodyGrad(ctx, w * 0.42, h * 0.22, w * 0.24, 188, 84, 160, 90, 44, 90);
+  ctx.lineWidth = w * 0.008;
+  ctx.strokeStyle = `rgb(${scaleMid.join(',')})`;
   ctx.beginPath();
-  ctx.moveTo(w * 0.18, h * 0.30);
-  ctx.bezierCurveTo(w * 0.12, h * 0.14, w * 0.22, h * 0.04, w * 0.40, h * 0.03);
-  ctx.bezierCurveTo(w * 0.58, h * 0.04, w * 0.66, h * 0.16, w * 0.60, h * 0.30);
+  ctx.moveTo(w * tp[3].x, h * tp[3].y);
+  ctx.quadraticCurveTo(w * tp[4].x, h * tp[4].y, w * (tp[4].x + 0.04), h * (tp[4].y - 0.02));
+  ctx.stroke();
+  // Tail top-edge highlight
+  ctx.strokeStyle = `rgba(${scaleLight.join(',')},0.22)`;
+  ctx.lineWidth = w * 0.003;
+  ctx.beginPath();
+  ctx.moveTo(w * tp[0].x, h * (tp[0].y - 0.012));
+  ctx.bezierCurveTo(w * tp[1].x, h * (tp[1].y - 0.012), w * tp[2].x, h * (tp[2].y - 0.012), w * tp[3].x, h * (tp[3].y - 0.012));
+  ctx.stroke();
+
+  // 2. FAR LIMBS — dark, behind body
+  for (const limb of sk.limbs) {
+    if (limb.side === 'far') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${scaleShadow.join(',')})`);
+  }
+
+  // 3. SPEAR — diagonal from lower-right (butt) through hand to upper-left (tip)
+  ctx.strokeStyle = `rgb(${spearWood.join(',')})`;
+  ctx.lineWidth = w * 0.011; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.52, h * 0.68); // butt end behind body
+  ctx.lineTo(w * 0.16, h * 0.40); // through hand grip
+  ctx.stroke();
+  ctx.lineWidth = w * 0.009;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.16, h * 0.40);
+  ctx.lineTo(w * 0.04, h * 0.24); // toward tip
+  ctx.stroke();
+  // Spear tip — bright leaf-shaped
+  ctx.fillStyle = `rgb(${spearTip.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.04, h * 0.24);
+  ctx.bezierCurveTo(w * 0.025, h * 0.20, w * 0.015, h * 0.16, w * 0.02, h * 0.12);
+  ctx.bezierCurveTo(w * 0.035, h * 0.16, w * 0.05, h * 0.20, w * 0.04, h * 0.24);
+  ctx.fill();
+  // Tip edge highlight
+  ctx.strokeStyle = 'rgba(220,215,200,0.40)';
+  ctx.lineWidth = w * 0.003;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.025, h * 0.20);
+  ctx.lineTo(w * 0.02, h * 0.12);
+  ctx.stroke();
+  // Binding wraps where blade meets shaft
+  ctx.strokeStyle = `rgb(${scaleDark.join(',')})`;
+  ctx.lineWidth = w * 0.006;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.035, h * 0.245);
+  ctx.lineTo(w * 0.045, h * 0.235);
+  ctx.stroke();
+
+  // 4. BODY — skeleton outline with olive-brown gradient
+  const bodyFill = bodyGrad3(ctx, w * belly.x, h * belly.y, w * 0.22,
+    scaleMid[0], scaleMid[1], scaleMid[2],
+    scaleShadow[0], scaleShadow[1], scaleShadow[2],
+    scaleLight[0], scaleLight[1], scaleLight[2]);
+  drawSkeletonBodyOutline(ctx, sk.spine, w, h, bodyFill);
+
+  // 5. VEST — crude orange cloth, chest to belly
+  const vTop = 0.30;
+  const vBot = 0.56;
+  ctx.fillStyle = bodyGrad3(ctx, w * chest.x, h * chest.y, w * 0.14,
+    vestMid[0], vestMid[1], vestMid[2],
+    vestDark[0], vestDark[1], vestDark[2],
+    vestLight[0], vestLight[1], vestLight[2]);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.34, h * vTop);
+  ctx.bezierCurveTo(w * 0.30, h * 0.34, w * 0.30, h * 0.48, w * 0.32, h * vBot);
+  ctx.bezierCurveTo(w * 0.38, h * 0.58, w * 0.48, h * 0.58, w * 0.52, h * vBot);
+  ctx.bezierCurveTo(w * 0.54, h * 0.48, w * 0.52, h * 0.34, w * 0.50, h * vTop);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = bodyGrad(ctx, w * 0.40, h * 0.57, w * 0.16, 164, 142, 102, 82, 62, 42);
+  // Vest stitching edge
+  ctx.strokeStyle = `rgb(${vestDark.join(',')})`;
+  ctx.lineWidth = w * 0.004;
+  ctx.stroke();
+  // Vest V-neck opening
+  ctx.strokeStyle = `rgb(${scaleMid.join(',')})`;
+  ctx.lineWidth = w * 0.005;
   ctx.beginPath();
-  ctx.moveTo(w * 0.34, h * 0.34);
-  ctx.bezierCurveTo(w * 0.28, h * 0.44, w * 0.26, h * 0.62, w * 0.32, h * 0.80);
-  ctx.bezierCurveTo(w * 0.40, h * 0.84, w * 0.50, h * 0.82, w * 0.54, h * 0.76);
-  ctx.bezierCurveTo(w * 0.54, h * 0.58, w * 0.52, h * 0.44, w * 0.48, h * 0.34);
-  ctx.closePath();
+  ctx.moveTo(w * 0.38, h * vTop);
+  ctx.lineTo(w * 0.42, h * 0.36);
+  ctx.lineTo(w * 0.46, h * vTop);
+  ctx.stroke();
+  // Vest AO — shadow under belt line
+  ambientOcclusion(ctx, w * chest.x, h * 0.54, w * 0.06, h * 0.015, 0.28);
+  // Vest highlight — catches light on chest
+  highlight(ctx, w * 0.40, h * 0.36, w * 0.025, `rgb(${vestLight.join(',')})`, 0.18);
+
+  // 6. NEAR LIMBS — slightly lighter than body
+  for (const limb of sk.limbs) {
+    if (limb.side === 'near') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${scaleDark.join(',')})`);
+  }
+
+  // 7. CLAWED FEET
+  for (const limb of sk.limbs) {
+    const foot = limb.segments[limb.segments.length - 1];
+    if (foot.y < 0.85) continue;
+    ctx.fillStyle = limb.side === 'near' ? `rgb(${scaleDark.join(',')})` : `rgb(${scaleShadow.join(',')})`;
+    fillEllipse(ctx, w * foot.x, h * foot.y, w * (foot.radius + 0.004), h * 0.010);
+    ctx.fillStyle = `rgb(${teethColor.join(',')})`;
+    for (let c = -1; c <= 1; c++) {
+      const cx = w * foot.x + c * w * 0.007;
+      ctx.beginPath();
+      ctx.moveTo(cx, h * foot.y + h * 0.004);
+      ctx.lineTo(cx - w * 0.003, h * foot.y + h * 0.028);
+      ctx.lineTo(cx + w * 0.003, h * foot.y + h * 0.018);
+      ctx.fill();
+    }
+  }
+
+  // 8. NEAR HAND gripping spear — overlay on shaft
+  ctx.fillStyle = `rgb(${scaleMid.join(',')})`;
+  fillEllipse(ctx, w * 0.16, h * 0.40, w * 0.013, w * 0.010);
+  ctx.fillStyle = `rgb(${scaleDark.join(',')})`;
+  for (let f = 0; f < 3; f++) {
+    fillCircle(ctx, w * (0.155 + f * 0.005), h * (0.395 + f * 0.004), w * 0.004);
+  }
+
+  // 9. HEAD — angular lizard skull, 3/4 view
+  const hx = head.x, hy = head.y, hr = head.radius;
+  const sx = snout.x, sy = snout.y;
+  ctx.fillStyle = bodyGrad3(ctx, w * hx, h * hy, w * hr * 2.2,
+    scaleMid[0], scaleMid[1], scaleMid[2],
+    scaleShadow[0], scaleShadow[1], scaleShadow[2],
+    scaleLight[0], scaleLight[1], scaleLight[2]);
+  ctx.beginPath();
+  ctx.moveTo(w * (hx + hr * 0.7), h * (hy - hr * 0.9));
+  ctx.bezierCurveTo(w * (hx - 0.01), h * (hy - hr * 1.2), w * (sx + 0.02), h * (sy - 0.05), w * (sx - 0.03), h * sy);
+  ctx.bezierCurveTo(w * (sx - 0.05), h * (sy + 0.05), w * (sx - 0.01), h * (sy + 0.10), w * hx, h * (hy + hr * 0.9));
+  ctx.bezierCurveTo(w * (hx + hr * 0.5), h * (hy + hr * 0.5), w * (hx + hr * 0.9), h * (hy + hr * 0.1), w * (hx + hr * 0.7), h * (hy - hr * 0.9));
   ctx.fill();
-  ctx.fillStyle = 'rgb(170,208,86)';
-  fillCircle(ctx, w * 0.31, h * 0.16, w * 0.02);
-  fillCircle(ctx, w * 0.42, h * 0.11, w * 0.025);
-  fillCircle(ctx, w * 0.53, h * 0.17, w * 0.016);
-  ctx.fillStyle = 'rgb(112,255,78)';
-  fillCircle(ctx, w * 0.36, h * 0.33, w * 0.012);
-  fillCircle(ctx, w * 0.43, h * 0.33, w * 0.012);
-  drawLimb(ctx, w * 0.33, h * 0.47, w * 0.26, h * 0.58, w * 0.22, h * 0.70, w * 0.012, 'rgb(104,84,58)');
-  drawLimb(ctx, w * 0.48, h * 0.48, w * 0.56, h * 0.50, w * 0.64, h * 0.50, w * 0.012, 'rgb(104,84,58)');
-  drawLimb(ctx, w * 0.36, h * 0.78, w * 0.34, h * 0.88, w * 0.31, h * 0.96, w * 0.015, 'rgb(92,72,50)');
-  drawLimb(ctx, w * 0.46, h * 0.78, w * 0.46, h * 0.89, w * 0.46, h * 0.97, w * 0.015, 'rgb(92,72,50)');
-  highlight(ctx, w * 0.70, h * 0.08, w * 0.05, 'rgb(142,255,94)', 0.25);
+
+  // Brow ridge shadow
+  ambientOcclusion(ctx, w * (hx - 0.01), h * (hy + 0.01), w * 0.04, h * 0.012, 0.32);
+
+  // 10. HORNS — bony crests
+  ctx.fillStyle = `rgb(${hornColor.join(',')})`;
+  // Center horn
+  ctx.beginPath();
+  ctx.moveTo(w * (hx - 0.01), h * (hy - hr));
+  ctx.lineTo(w * (hx + 0.005), h * (hy - hr - 0.055));
+  ctx.lineTo(w * (hx + 0.016), h * (hy - hr));
+  ctx.fill();
+  // Near-side horn
+  ctx.beginPath();
+  ctx.moveTo(w * (hx + 0.03), h * (hy - hr * 0.6));
+  ctx.lineTo(w * (hx + 0.048), h * (hy - hr - 0.030));
+  ctx.lineTo(w * (hx + 0.042), h * (hy - hr * 0.5));
+  ctx.fill();
+  // Horn tips catch light
+  ctx.fillStyle = `rgb(${scaleLight.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * (hx + 0.002), h * (hy - hr - 0.035));
+  ctx.lineTo(w * (hx + 0.005), h * (hy - hr - 0.055));
+  ctx.lineTo(w * (hx + 0.010), h * (hy - hr - 0.035));
+  ctx.fill();
+  // Small back-of-head spines
+  for (let i = 0; i < 3; i++) {
+    const spx = hx + hr * 0.4 + i * 0.022;
+    const spy = hy - hr * 0.3 + i * 0.02;
+    ctx.fillStyle = `rgb(${hornColor.join(',')})`;
+    ctx.beginPath();
+    ctx.moveTo(w * spx, h * spy);
+    ctx.lineTo(w * (spx + 0.008), h * (spy - 0.025));
+    ctx.lineTo(w * (spx + 0.012), h * spy);
+    ctx.fill();
+  }
+
+  // 11. SNOUT nub + nostrils
+  ctx.fillStyle = `rgb(${scaleDark.join(',')})`;
+  ctx.beginPath(); ctx.arc(w * (sx - 0.025), h * (sy + 0.005), w * 0.016, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = `rgb(${scaleShadow.join(',')})`;
+  fillCircle(ctx, w * (sx - 0.035), h * (sy - 0.002), w * 0.004);
+  fillCircle(ctx, w * (sx - 0.030), h * (sy + 0.008), w * 0.003);
+
+  // 12. MOUTH — slight snarl
+  ctx.fillStyle = 'rgb(15,8,5)';
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.035), h * (sy + 0.018));
+  ctx.quadraticCurveTo(w * (sx - 0.005), h * (sy + 0.045), w * (hx - 0.01), h * (hy + hr * 0.45));
+  ctx.quadraticCurveTo(w * (sx - 0.01), h * (sy + 0.035), w * (sx - 0.035), h * (sy + 0.018));
+  ctx.fill();
+  // Fangs — bright, visible in ASCII
+  ctx.fillStyle = `rgb(${teethColor.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.025), h * (sy + 0.018));
+  ctx.lineTo(w * (sx - 0.032), h * (sy + 0.055));
+  ctx.lineTo(w * (sx - 0.018), h * (sy + 0.025));
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.008), h * (sy + 0.025));
+  ctx.lineTo(w * (sx - 0.014), h * (sy + 0.050));
+  ctx.lineTo(w * (sx + 0.002), h * (sy + 0.032));
+  ctx.fill();
+  // Smaller lower fangs
+  ctx.fillStyle = 'rgb(195,185,168)';
+  ctx.beginPath();
+  ctx.moveTo(w * (sx - 0.020), h * (sy + 0.038));
+  ctx.lineTo(w * (sx - 0.024), h * (sy + 0.022));
+  ctx.lineTo(w * (sx - 0.014), h * (sy + 0.035));
+  ctx.fill();
+
+  // 13. EYES — THE BRIGHTEST THING. Yellow-gold, glowing.
+  // Near eye — large, toward viewer
+  const eNx = hx - 0.008, eNy = hy - 0.012;
+  ambientOcclusion(ctx, w * eNx, h * eNy, w * 0.022, w * 0.018, 0.38);
+  // Outer glow halo
+  ctx.save(); ctx.globalAlpha = 0.28;
+  ctx.fillStyle = `rgb(${eyeGlow.join(',')})`;
+  fillCircle(ctx, w * eNx, h * eNy, w * 0.024);
+  ctx.restore();
+  // Iris
+  ctx.fillStyle = `rgb(${eyeGlow.join(',')})`;
+  fillCircle(ctx, w * eNx, h * eNy, w * 0.015);
+  // Core — hottest
+  ctx.fillStyle = `rgb(${eyeCore.join(',')})`;
+  fillCircle(ctx, w * eNx, h * eNy, w * 0.009);
+  // Vertical slit pupil
+  ctx.fillStyle = 'rgb(10,5,2)';
+  ctx.beginPath();
+  ctx.ellipse(w * (eNx + 0.002), h * eNy, w * 0.002, w * 0.010, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Specular highlights
+  ctx.fillStyle = 'rgb(255,255,255)';
+  fillCircle(ctx, w * (eNx - 0.006), h * (eNy - 0.006), w * 0.004);
+  ctx.fillStyle = 'rgba(255,252,235,0.5)';
+  fillCircle(ctx, w * (eNx + 0.005), h * (eNy + 0.003), w * 0.002);
+
+  // Far eye — dimmer, partially hidden
+  const eFx = sx + 0.008, eFy = sy - 0.035;
+  ctx.save(); ctx.globalAlpha = 0.55;
+  ctx.fillStyle = `rgba(${eyeGlow.join(',')},0.22)`;
+  fillCircle(ctx, w * eFx, h * eFy, w * 0.016);
+  ctx.fillStyle = `rgb(${eyeGlow.join(',')})`;
+  fillCircle(ctx, w * eFx, h * eFy, w * 0.010);
+  ctx.fillStyle = `rgb(${eyeCore.join(',')})`;
+  fillCircle(ctx, w * eFx, h * eFy, w * 0.006);
+  ctx.restore();
+
+  // 14. Scale texture — subtle on body
+  scaleTexture(ctx, w * (chest.x - 0.07), h * (chest.y + 0.06), w * 0.14, h * 0.16,
+    w * 0.010, `rgba(${scaleShadow.join(',')},0.35)`, `rgba(${scaleLight.join(',')},0.15)`, 0.55);
+  // Head scales
+  scaleTexture(ctx, w * (hx - 0.03), h * (hy - 0.03), w * 0.06, h * 0.05,
+    w * 0.006, `rgba(${scaleShadow.join(',')},0.30)`, `rgba(${scaleLight.join(',')},0.12)`, 0.7);
 }
 
 function drawCavernBruteRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
@@ -680,7 +977,7 @@ function drawBasiliskRedux(ctx: CanvasRenderingContext2D, w: number, h: number) 
 
 export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
   { id: 'redux-dire-rat', name: 'Dire Rat', gridWidth: 14, gridHeight: 8, monsterClass: 1, level: 1, atmosphere: { r: 140, g: 110, b: 70, intensity: 0.10 }, draw: drawDireRatRedux },
-  { id: 'redux-fungal-shaman', name: 'Fungal Shaman', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 2, atmosphere: { r: 78, g: 148, b: 52, intensity: 0.12 }, draw: drawFungalShamanRedux },
+  { id: 'redux-kobold', name: 'Kobold', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 2, atmosphere: { r: 160, g: 120, b: 50, intensity: 0.10 }, draw: drawKoboldRedux },
   { id: 'redux-cavern-brute', name: 'Cavern Brute', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 3, atmosphere: { r: 156, g: 116, b: 58, intensity: 0.10 }, draw: drawCavernBruteRedux },
   { id: 'redux-crystal-elemental', name: 'Crystal Elemental', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.15 }, draw: drawCrystalElementalRedux },
   { id: 'redux-ironhide-troll', name: 'Ironhide Troll', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 5, atmosphere: { r: 96, g: 156, b: 70, intensity: 0.12 }, draw: drawIronhideTrollRedux },
