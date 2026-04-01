@@ -28,11 +28,11 @@ const base: MUDChain = {
   rpcUrls: {
     default: {
       http: [(process.env.RPC_HTTP_URL || "https://mainnet.base.org") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://base-rpc.publicnode.com"],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : [],
     },
     public: {
       http: [(process.env.RPC_HTTP_URL || "https://mainnet.base.org") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://base-rpc.publicnode.com"],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : [],
     },
   },
   blockExplorers: {

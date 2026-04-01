@@ -12,10 +12,11 @@ const baseHttpRpcs = [
   import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL,
 ].filter(Boolean) as string[];
 
+// publicnode.com removed — same issue as drpc: free public RPCs poison
+// viem's fallback ranking, causing stale reads and connection spam.
 const baseWsRpcs = [
   import.meta.env.VITE_WS_RPC_URL,
   import.meta.env.VITE_WS_RPC_FALLBACK_URL,
-  'wss://base-rpc.publicnode.com',
 ].filter(Boolean) as string[];
 
 

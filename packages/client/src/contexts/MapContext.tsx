@@ -337,7 +337,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const inBattle = !!encounterId && encounterId !== zeroHash;
 
         const spawnedEntityData = spawnedTable[entity];
-        const isEntitySpawned = Boolean(spawnedEntityData?.spawned ?? false);
+        // A monster is only "spawned" if the Spawned table says so AND it hasn't
+        // been marked dead via EncounterEntity.died. The died flag arrives via WS
+        // before Spawned.spawned flips to false, creating a ghost window.
+        const isDead = Boolean(encounterData?.died);
+        const isEntitySpawned = Boolean(spawnedEntityData?.spawned ?? false) && !isDead;
 
         const positionEntityData = positionTable[entity];
         const posX = toNumber(positionEntityData?.x ?? 0);
