@@ -13,24 +13,6 @@
  * - High contrast: deepest darks AND brightest whites in the same creature
  */
 
-import basiliskSrc from './assets/basilisk-source.png';
-
-// ---------------------------------------------------------------------------
-// Source image preloader — loads PNGs for image-based templates
-// ---------------------------------------------------------------------------
-
-const sourceImages = new Map<string, HTMLImageElement>();
-
-function preloadSourceImage(id: string, src: string): void {
-  if (sourceImages.has(id)) return;
-  const img = new Image();
-  img.src = src;
-  sourceImages.set(id, img);
-}
-
-// Kick off preloads immediately at module init
-preloadSourceImage('basilisk', basiliskSrc);
-
 export type MonsterTemplate = {
   id: string;
   name: string;
@@ -2069,35 +2051,223 @@ function drawDuskDrake(ctx: CanvasRenderingContext2D, w: number, h: number) {
 }
 
 // ---------------------------------------------------------------------------
-// 11. Basilisk — L12, Boss, Warrior — v2 Menacing Rewrite
-// Side view: massive serpent king, angular head, heavy coils, deep shadows
-// Uses hue-shifted color ramps, deep internal contrast, angular silhouette
+// 11. Basilisk — L12, Boss, Warrior — Procedural
+// Side view: massive eight-legged reptile, low-slung armored body, petrifying gaze
+// Swamp-green palette with toxic yellow-green eye. Wide 26x9 grid = sprawling beast.
 // ---------------------------------------------------------------------------
 function drawBasilisk(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  // Image-based template: paint the pre-loaded source image onto the canvas.
-  // The renderer's character selection, lighting, gamma, and rim coloring
-  // all operate on this image data downstream.
-  const img = sourceImages.get('basilisk');
-  if (img && img.complete && img.naturalWidth > 0) {
-    // Center the image in the canvas, maintaining aspect ratio
-    const imgAspect = img.naturalWidth / img.naturalHeight;
-    const canvasAspect = w / h;
-    let dw: number, dh: number, dx: number, dy: number;
-    if (imgAspect > canvasAspect) {
-      // Image wider than canvas — fit to width
-      dw = w;
-      dh = w / imgAspect;
-      dx = 0;
-      dy = (h - dh) / 2;
-    } else {
-      // Image taller than canvas — fit to height
-      dh = h;
-      dw = h * imgAspect;
-      dx = (w - dw) / 2;
-      dy = 0;
-    }
-    ctx.drawImage(img, dx, dy, dw, dh);
+  // --- Tail: thick, trailing right, tapers to a bony club ---
+  ctx.fillStyle = bodyGrad(ctx, w * 0.82, h * 0.48, w * 0.12, 65, 85, 45, 45, 60, 30);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.72, h * 0.40);
+  ctx.bezierCurveTo(w * 0.80, h * 0.36, w * 0.90, h * 0.38, w * 0.96, h * 0.42);
+  ctx.bezierCurveTo(w * 0.98, h * 0.46, w * 0.97, h * 0.54, w * 0.94, h * 0.52);
+  ctx.bezierCurveTo(w * 0.86, h * 0.52, w * 0.78, h * 0.50, w * 0.72, h * 0.48);
+  ctx.closePath();
+  ctx.fill();
+  // Tail club — bony knob
+  ctx.fillStyle = 'rgb(120,110,80)';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.95, h * 0.40);
+  ctx.bezierCurveTo(w * 0.98, h * 0.38, w * 1.00, h * 0.44, w * 0.98, h * 0.48);
+  ctx.bezierCurveTo(w * 0.99, h * 0.52, w * 0.97, h * 0.54, w * 0.95, h * 0.50);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Body: massive low oval, fills most of the frame ---
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.45, h * 0.46, w * 0.26,
+    95, 130, 60,   // core: saturated swamp green
+    35, 50, 25,    // shadow: dark olive
+    130, 160, 75,  // highlight: bright moss
+  );
+  ctx.beginPath();
+  ctx.moveTo(w * 0.20, h * 0.34);
+  ctx.bezierCurveTo(w * 0.30, h * 0.24, w * 0.55, h * 0.22, w * 0.72, h * 0.30);
+  ctx.bezierCurveTo(w * 0.78, h * 0.36, w * 0.78, h * 0.54, w * 0.72, h * 0.60);
+  ctx.bezierCurveTo(w * 0.58, h * 0.68, w * 0.34, h * 0.68, w * 0.20, h * 0.58);
+  ctx.bezierCurveTo(w * 0.14, h * 0.50, w * 0.14, h * 0.40, w * 0.20, h * 0.34);
+  ctx.fill();
+
+  // Side light across body
+  ctx.fillStyle = sideLight(ctx, w * 0.18, h * 0.26, w * 0.75, h * 0.64, 110, 140, 70);
+  ctx.fill();
+
+  // --- Dorsal ridge: bony plates along spine ---
+  ctx.fillStyle = 'rgb(140,130,90)';
+  for (let i = 0; i < 9; i++) {
+    const px = 0.26 + i * 0.055;
+    const plateH = (i < 3 || i > 6) ? 0.06 : 0.09; // taller in center
+    const plateW = 0.022;
+    ctx.beginPath();
+    ctx.moveTo(w * (px - plateW), h * 0.30);
+    ctx.lineTo(w * px, h * (0.30 - plateH));
+    ctx.lineTo(w * (px + plateW), h * 0.30);
+    ctx.closePath();
+    ctx.fill();
   }
+  // Plate highlights
+  ctx.fillStyle = 'rgba(200,190,140,0.35)';
+  for (let i = 0; i < 9; i++) {
+    const px = 0.26 + i * 0.055;
+    const plateH = (i < 3 || i > 6) ? 0.06 : 0.09;
+    ctx.beginPath();
+    ctx.moveTo(w * px, h * (0.30 - plateH));
+    ctx.lineTo(w * (px + 0.008), h * (0.30 - plateH * 0.4));
+    ctx.lineTo(w * (px - 0.004), h * (0.30 - plateH * 0.3));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // --- Neck: thick, angled forward ---
+  ctx.fillStyle = bodyGrad(ctx, w * 0.15, h * 0.36, w * 0.10, 100, 135, 65, 75, 100, 50);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.22, h * 0.36);
+  ctx.bezierCurveTo(w * 0.16, h * 0.32, w * 0.10, h * 0.28, w * 0.08, h * 0.22);
+  ctx.bezierCurveTo(w * 0.06, h * 0.18, w * 0.08, h * 0.14, w * 0.12, h * 0.14);
+  ctx.bezierCurveTo(w * 0.16, h * 0.16, w * 0.18, h * 0.26, w * 0.22, h * 0.34);
+  ctx.bezierCurveTo(w * 0.24, h * 0.38, w * 0.24, h * 0.40, w * 0.22, h * 0.42);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Head: angular, wedge-shaped, facing left ---
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.07, h * 0.14, w * 0.06,
+    110, 145, 70,
+    40, 55, 28,
+    145, 175, 90,
+  );
+  ctx.beginPath();
+  ctx.moveTo(w * 0.10, h * 0.12);
+  ctx.bezierCurveTo(w * 0.06, h * 0.08, w * 0.01, h * 0.10, w * 0.00, h * 0.14);
+  ctx.bezierCurveTo(w * -0.01, h * 0.18, w * 0.02, h * 0.22, w * 0.06, h * 0.22);
+  ctx.bezierCurveTo(w * 0.10, h * 0.22, w * 0.13, h * 0.18, w * 0.12, h * 0.14);
+  ctx.closePath();
+  ctx.fill();
+
+  // Jaw — slightly open, heavy
+  ctx.fillStyle = 'rgb(80,105,50)';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.01, h * 0.17);
+  ctx.bezierCurveTo(w * 0.00, h * 0.20, w * 0.02, h * 0.24, w * 0.06, h * 0.24);
+  ctx.bezierCurveTo(w * 0.08, h * 0.24, w * 0.10, h * 0.22, w * 0.08, h * 0.20);
+  ctx.lineTo(w * 0.01, h * 0.17);
+  ctx.fill();
+
+  // Teeth — jagged
+  ctx.fillStyle = 'rgb(230,225,200)';
+  for (let i = 0; i < 5; i++) {
+    const tx = 0.015 + i * 0.012;
+    ctx.beginPath();
+    ctx.moveTo(w * tx, h * 0.19);
+    ctx.lineTo(w * (tx + 0.004), h * 0.22);
+    ctx.lineTo(w * (tx + 0.008), h * 0.19);
+    ctx.fill();
+  }
+
+  // --- THE EYE: petrifying gaze — toxic green, the signature ---
+  // Outer toxic haze
+  ctx.save();
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = 'rgb(160,255,80)';
+  fillCircle(ctx, w * 0.065, h * 0.13, w * 0.035);
+  ctx.restore();
+  // Mid glow
+  ctx.save();
+  ctx.globalAlpha = 0.50;
+  ctx.fillStyle = 'rgb(120,255,60)';
+  fillCircle(ctx, w * 0.065, h * 0.13, w * 0.022);
+  ctx.restore();
+  // Bright core
+  ctx.fillStyle = 'rgb(180,255,120)';
+  fillCircle(ctx, w * 0.065, h * 0.13, w * 0.014);
+  // Hot center
+  ctx.fillStyle = 'rgb(230,255,200)';
+  fillCircle(ctx, w * 0.065, h * 0.13, w * 0.007);
+  // Vertical slit pupil
+  ctx.strokeStyle = 'rgb(20,40,10)';
+  ctx.lineWidth = w * 0.004;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.065, h * 0.115);
+  ctx.lineTo(w * 0.065, h * 0.145);
+  ctx.stroke();
+
+  // --- Eight legs: 4 pairs, heavy and clawed ---
+  // Near-side legs (4, brighter)
+  const nearLegColor = 'rgb(80,110,50)';
+  const farLegColor = 'rgb(55,75,35)';
+  const clawColor = 'rgb(160,150,110)';
+
+  // Far-side legs first (behind body)
+  drawLimb(ctx, w * 0.30, h * 0.58, w * 0.28, h * 0.72, w * 0.26, h * 0.88, w * 0.018, farLegColor);
+  drawLimb(ctx, w * 0.42, h * 0.60, w * 0.40, h * 0.74, w * 0.38, h * 0.90, w * 0.016, farLegColor);
+  drawLimb(ctx, w * 0.54, h * 0.60, w * 0.52, h * 0.73, w * 0.50, h * 0.88, w * 0.016, farLegColor);
+  drawLimb(ctx, w * 0.66, h * 0.56, w * 0.64, h * 0.70, w * 0.63, h * 0.86, w * 0.015, farLegColor);
+
+  // Near-side legs (in front)
+  drawLimb(ctx, w * 0.28, h * 0.56, w * 0.25, h * 0.70, w * 0.22, h * 0.86, w * 0.022, nearLegColor);
+  drawLimb(ctx, w * 0.40, h * 0.58, w * 0.37, h * 0.72, w * 0.35, h * 0.88, w * 0.020, nearLegColor);
+  drawLimb(ctx, w * 0.52, h * 0.58, w * 0.50, h * 0.71, w * 0.48, h * 0.86, w * 0.020, nearLegColor);
+  drawLimb(ctx, w * 0.64, h * 0.54, w * 0.62, h * 0.68, w * 0.60, h * 0.84, w * 0.018, nearLegColor);
+
+  // Claws on near-side feet
+  for (const fx of [0.22, 0.35, 0.48, 0.60]) {
+    ctx.fillStyle = clawColor;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(w * fx, h * 0.86);
+      ctx.lineTo(w * (fx - 0.012 + i * 0.012), h * 0.92);
+      ctx.lineTo(w * (fx - 0.006 + i * 0.012), h * 0.87);
+      ctx.fill();
+    }
+  }
+
+  // --- Belly plates: lighter underbelly segments ---
+  ctx.fillStyle = 'rgba(130,150,90,0.30)';
+  for (let i = 0; i < 8; i++) {
+    const sx = 0.24 + i * 0.06;
+    fillEllipse(ctx, w * sx, h * 0.60, w * 0.024, h * 0.04);
+  }
+
+  // === TEXTURE PASS ===
+
+  // 1. Scale texture across body
+  scaleTexture(ctx, w * 0.22, h * 0.30, w * 0.50, h * 0.30, w * 0.022,
+    'rgba(30,45,18,0.45)', 'rgba(150,180,90,0.25)', 0.7);
+  // Neck scales — finer
+  scaleTexture(ctx, w * 0.08, h * 0.14, w * 0.14, h * 0.18, w * 0.016,
+    'rgba(35,50,20,0.40)', 'rgba(140,170,85,0.22)', 0.8);
+  // Tail scales
+  scaleTexture(ctx, w * 0.72, h * 0.38, w * 0.22, h * 0.14, w * 0.018,
+    'rgba(28,40,16,0.40)', 'rgba(120,145,70,0.20)', 0.6);
+
+  // 2. Dorsal plate bone texture
+  stoneTexture(ctx, w * 0.26, h * 0.22, w * 0.50, h * 0.08, 8,
+    'rgba(80,75,50,0.35)', 'rgba(200,190,140,0.20)');
+
+  // 3. Ambient occlusion at joints
+  ambientOcclusion(ctx, w * 0.22, h * 0.38, w * 0.04, h * 0.03, 0.25); // neck-body
+  ambientOcclusion(ctx, w * 0.72, h * 0.44, w * 0.04, h * 0.03, 0.22); // body-tail
+  for (const lx of [0.28, 0.40, 0.52, 0.64]) {
+    ambientOcclusion(ctx, w * lx, h * 0.58, w * 0.03, h * 0.02, 0.20); // leg joints
+  }
+
+  // 4. Highlights on dorsal plates and head ridges
+  highlight(ctx, w * 0.04, h * 0.10, w * 0.010, 'rgb(180,200,140)', 0.35); // brow ridge
+  highlight(ctx, w * 0.96, h * 0.42, w * 0.010, 'rgb(170,160,120)', 0.30); // tail club
+  highlight(ctx, w * 0.45, h * 0.24, w * 0.012, 'rgb(190,200,140)', 0.30); // tallest plate
+
+  // 5. Petrifying gaze particle trails — faint green wisps from eye
+  ctx.save();
+  ctx.strokeStyle = 'rgba(120,255,60,0.15)';
+  ctx.lineWidth = w * 0.003;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 4; i++) {
+    const startY = h * (0.11 + i * 0.015);
+    ctx.beginPath();
+    ctx.moveTo(w * 0.05, startY);
+    ctx.quadraticCurveTo(w * 0.02, startY - h * 0.02, w * (-0.01 - i * 0.01), startY - h * 0.01);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // ---------------------------------------------------------------------------
