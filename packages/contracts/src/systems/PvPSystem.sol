@@ -23,7 +23,7 @@ import {
 } from "@codegen/index.sol";
 import {EncounterType, ItemType} from "@codegen/common.sol";
 import {Action, CombatFlagsResult} from "@interfaces/Structs.sol";
-import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID} from "../../constants.sol";
+import {PVP_TIMER, SMOKE_CLOAK_EFFECT_STAT_ID, ZONE_DARK_CAVE, ZONE_ORIGIN_SPACING} from "../../constants.sol";
 import {
     NoWeaponsEquipped,
     Unauthorized,
@@ -57,7 +57,7 @@ contract PvPSystem is System {
                 _isValidPvP = false;
                 break;
             }
-            if (entityX < 5 && entityY < 5) {
+            if (_isInSafetyZone(entityX, entityY)) {
                 _isValidPvP = false;
                 break;
             }
@@ -81,7 +81,7 @@ contract PvPSystem is System {
                     _isValidPvP = false;
                     break;
                 }
-                if (entityX < 5 && entityY < 5) {
+                if (_isInSafetyZone(entityX, entityY)) {
                     _isValidPvP = false;
                     break;
                 }
@@ -293,6 +293,21 @@ contract PvPSystem is System {
         } else {
             revert UnrecognizedEncounterType();
         }
+    }
+
+    /// @dev Safety zone = first 5x5 tiles of Zone 1 (Dark Cave) only.
+    /// Uses global Position coords: Zone 1 origin is (0,0), so safety is x<5 && y<5.
+    /// Zone-aware so future zones with different origins won't false-positive.
+    function _isInSafetyZone(uint16 globalX, uint16 globalY) internal pure returns (bool) {
+        // Zone 1 origin is (0, 0). Zone 2+ origins are offset by ZONE_ORIGIN_SPACING (100).
+        // Safety zone only applies to Zone 1, so check global coords fall within Z1's 5x5 corner.
+        uint16 z1OriginX = 0;
+        uint16 z1OriginY = 0;
+        uint16 relX = globalX - z1OriginX;
+        uint16 relY = globalY - z1OriginY;
+        // If coords are outside Zone 1 grid (10x10), not in Z1 safety zone.
+        if (relX >= 10 || relY >= 10) return false;
+        return relX < 5 && relY < 5;
     }
 
     function _setCharacterSpawns(CombatEncounterData memory encounterData) internal {
