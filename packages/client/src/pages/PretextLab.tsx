@@ -17,6 +17,7 @@ import { AncientMapView } from '../components/pretext/AncientMapView';
 import { LoreFragment } from '../components/pretext/LoreFragment';
 import { ChatBubbles } from '../components/pretext/ChatBubbles';
 import { MonsterGallery } from '../components/pretext/game/MonsterGallery';
+import { MonsterGalleryRedux } from '../components/pretext/game/MonsterGalleryRedux';
 
 type Demo = {
   id: string;
@@ -46,6 +47,7 @@ const DEMOS: Demo[] = [
   { id: 'chat-bubbles', name: 'Chat Bubbles', description: 'Pre-measured tight message bubbles', component: ChatBubbles, category: 'experimental' },
   // Game integration
   { id: 'monster-gallery', name: 'Monster Gallery', description: 'All 11 Z1 monsters as ASCII art', component: MonsterGallery, category: 'game' },
+  { id: 'monster-gallery-ii', name: 'Monster Gallery II', description: 'Redrawn Z1 monsters in a second beta tab', component: MonsterGalleryRedux, category: 'game' },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
