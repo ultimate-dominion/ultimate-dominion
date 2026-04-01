@@ -183,11 +183,38 @@ function drawNewDireRat(ctx, w, h) {
   ctx.bezierCurveTo(w * 0.85, h * 0.28, w * 0.90, h * 0.21, w * 0.92, h * 0.26);
   ctx.stroke();
 
-  // -- REAR LEGS -- thin, crouched, coiled
-  // Far rear leg (partially hidden)
-  drawOrganicLimb(ctx, w * 0.66, h * 0.54, w * 0.72, h * 0.70, w * 0.67, h * 0.84, w * 0.012, `rgb(${furShadow.join(',')})`, 1.0);
-  // Near rear leg — bent, crouching
-  drawOrganicLimb(ctx, w * 0.60, h * 0.56, w * 0.64, h * 0.72, w * 0.58, h * 0.84, w * 0.015, `rgb(${furDark.join(',')})`, 2.0);
+  // -- REAR HAUNCHES -- thick, muscular, integrated into body
+  // Near haunch — visible bulge merging with body
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.62, h * 0.50, w * 0.10,
+    furMid[0], furMid[1], furMid[2],
+    furShadow[0], furShadow[1], furShadow[2],
+    furLight[0], furLight[1], furLight[2]
+  );
+  ctx.beginPath();
+  ctx.moveTo(w * 0.56, h * 0.48);
+  ctx.bezierCurveTo(w * 0.58, h * 0.42, w * 0.68, h * 0.40, w * 0.72, h * 0.46);
+  ctx.bezierCurveTo(w * 0.74, h * 0.54, w * 0.70, h * 0.68, w * 0.62, h * 0.72);
+  ctx.bezierCurveTo(w * 0.56, h * 0.70, w * 0.54, h * 0.56, w * 0.56, h * 0.48);
+  ctx.fill();
+  // Haunch AO — crease where haunch meets belly
+  ambientOcclusion(ctx, w * 0.60, h * 0.62, w * 0.06, h * 0.04, 0.30);
+  // Haunch highlight — top catches light
+  highlight(ctx, w * 0.64, h * 0.46, w * 0.04, `rgb(${furLight.join(',')})`, 0.10);
+
+  // Far haunch — darker, partially hidden behind body
+  ctx.fillStyle = `rgb(${furShadow.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.62, h * 0.50);
+  ctx.bezierCurveTo(w * 0.64, h * 0.44, w * 0.72, h * 0.44, w * 0.74, h * 0.50);
+  ctx.bezierCurveTo(w * 0.75, h * 0.58, w * 0.72, h * 0.68, w * 0.66, h * 0.70);
+  ctx.bezierCurveTo(w * 0.62, h * 0.66, w * 0.60, h * 0.56, w * 0.62, h * 0.50);
+  ctx.fill();
+
+  // Thin lower rear legs — only below the knee joint
+  // Far rear lower leg
+  drawOrganicLimb(ctx, w * 0.66, h * 0.68, w * 0.70, h * 0.76, w * 0.67, h * 0.84, w * 0.008, `rgb(${furShadow.join(',')})`, 1.0);
+  // Near rear lower leg
+  drawOrganicLimb(ctx, w * 0.60, h * 0.70, w * 0.63, h * 0.78, w * 0.58, h * 0.84, w * 0.010, `rgb(${furDark.join(',')})`, 2.0);
 
   // -- BODY -- elongated, low crouch, angled forward
   // Main body mass — longer, flatter
@@ -254,11 +281,36 @@ function drawNewDireRat(ctx, w, h) {
   // SSS warm edge
   sssEdgeGlow(ctx, w * 0.44, h * 0.46, w * 0.28, h * 0.20, 0.08);
 
-  // -- FRONT LEGS -- thin, crouched, reaching
-  // Far front leg — slightly back
-  drawOrganicLimb(ctx, w * 0.32, h * 0.58, w * 0.28, h * 0.72, w * 0.32, h * 0.84, w * 0.010, `rgb(${furShadow.join(',')})`, 3.0);
-  // Near front leg — reaching forward, bent
-  drawOrganicLimb(ctx, w * 0.26, h * 0.54, w * 0.18, h * 0.70, w * 0.20, h * 0.84, w * 0.014, `rgb(${furDark.join(',')})`, 4.0);
+  // -- FRONT SHOULDERS -- integrated into chest, then thin lower legs
+  // Near shoulder mass — blends with chest
+  ctx.fillStyle = bodyGradHueShift(ctx, w * 0.28, h * 0.52, w * 0.08,
+    furMid[0], furMid[1], furMid[2],
+    furShadow[0], furShadow[1], furShadow[2],
+    furLight[0], furLight[1], furLight[2]
+  );
+  ctx.beginPath();
+  ctx.moveTo(w * 0.24, h * 0.46);
+  ctx.bezierCurveTo(w * 0.22, h * 0.50, w * 0.22, h * 0.60, w * 0.24, h * 0.66);
+  ctx.bezierCurveTo(w * 0.28, h * 0.68, w * 0.32, h * 0.64, w * 0.32, h * 0.58);
+  ctx.bezierCurveTo(w * 0.32, h * 0.52, w * 0.30, h * 0.46, w * 0.24, h * 0.46);
+  ctx.fill();
+  // Shoulder AO
+  ambientOcclusion(ctx, w * 0.26, h * 0.60, w * 0.04, h * 0.04, 0.25);
+
+  // Far shoulder — darker, behind
+  ctx.fillStyle = `rgb(${furShadow.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.30, h * 0.48);
+  ctx.bezierCurveTo(w * 0.28, h * 0.52, w * 0.28, h * 0.62, w * 0.30, h * 0.66);
+  ctx.bezierCurveTo(w * 0.34, h * 0.67, w * 0.36, h * 0.62, w * 0.36, h * 0.56);
+  ctx.bezierCurveTo(w * 0.36, h * 0.50, w * 0.34, h * 0.48, w * 0.30, h * 0.48);
+  ctx.fill();
+
+  // Thin lower front legs — below the elbow
+  // Far front lower leg
+  drawOrganicLimb(ctx, w * 0.32, h * 0.64, w * 0.30, h * 0.74, w * 0.32, h * 0.84, w * 0.007, `rgb(${furShadow.join(',')})`, 3.0);
+  // Near front lower leg — reaching forward
+  drawOrganicLimb(ctx, w * 0.24, h * 0.64, w * 0.20, h * 0.74, w * 0.20, h * 0.84, w * 0.009, `rgb(${furDark.join(',')})`, 4.0);
 
   // -- PAWS + CLAWS -- spread wider for active stance
   for (const [px, py, size, alpha] of [[0.20, 0.84, 0.022, 1.0], [0.32, 0.84, 0.016, 0.8], [0.58, 0.84, 0.020, 1.0], [0.66, 0.84, 0.015, 0.75]]) {
