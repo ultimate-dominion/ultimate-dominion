@@ -33,8 +33,8 @@
       }
     },
     {
-      "name": "Fungal Shaman",
-      "metadataUri": "monster:fungal_shaman",
+      "name": "Kobold",
+      "metadataUri": "monster:kobold",
       "stats": {
         "agility": 4,
         "armor": 0,
@@ -66,8 +66,8 @@
       }
     },
     {
-      "name": "Cavern Brute",
-      "metadataUri": "monster:cavern_brute",
+      "name": "Goblin",
+      "metadataUri": "monster:goblin",
       "stats": {
         "agility": 4,
         "armor": 1,
@@ -99,8 +99,8 @@
       }
     },
     {
-      "name": "Crystal Elemental",
-      "metadataUri": "monster:crystal_elemental",
+      "name": "Giant Spider",
+      "metadataUri": "monster:giant_spider",
       "stats": {
         "agility": 5,
         "armor": 1,
@@ -134,8 +134,8 @@
       }
     },
     {
-      "name": "Ironhide Troll",
-      "metadataUri": "monster:ironhide_troll",
+      "name": "Skeleton",
+      "metadataUri": "monster:skeleton",
       "stats": {
         "agility": 6,
         "armor": 2,
@@ -178,8 +178,8 @@
       }
     },
     {
-      "name": "Phase Spider",
-      "metadataUri": "monster:phase_spider",
+      "name": "Goblin Shaman",
+      "metadataUri": "monster:goblin_shaman",
       "stats": {
         "agility": 12,
         "armor": 0,
@@ -222,8 +222,8 @@
       }
     },
     {
-      "name": "Bonecaster",
-      "metadataUri": "monster:bonecaster",
+      "name": "Gelatinous Ooze",
+      "metadataUri": "monster:gelatinous_ooze",
       "stats": {
         "agility": 7,
         "armor": 0,
@@ -268,8 +268,8 @@
       }
     },
     {
-      "name": "Rock Golem",
-      "metadataUri": "monster:rock_golem",
+      "name": "Bugbear",
+      "metadataUri": "monster:bugbear",
       "stats": {
         "agility": 8,
         "armor": 3,
@@ -317,8 +317,8 @@
       }
     },
     {
-      "name": "Pale Stalker",
-      "metadataUri": "monster:pale_stalker",
+      "name": "Carrion Crawler",
+      "metadataUri": "monster:carrion_crawler",
       "stats": {
         "agility": 15,
         "armor": 0,
@@ -365,8 +365,8 @@
       }
     },
     {
-      "name": "Dusk Drake",
-      "metadataUri": "monster:dusk_drake",
+      "name": "Hook Horror",
+      "metadataUri": "monster:hook_horror",
       "stats": {
         "agility": 13,
         "armor": 2,
