@@ -132,6 +132,10 @@ function drawCurrentDireRat(ctx, w, h) {
 // Designed to survive ASCII conversion — contrast > color, silhouette > detail
 // ==========================================================================
 function drawNewDireRat(ctx, w, h) {
+  // Shift everything right so snout/nose/whiskers don't clip left edge
+  ctx.save();
+  ctx.translate(w * 0.06, 0);
+
   // COLOR PALETTE — dark creature with hot accents
   // Fur: near-black with subtle warm undertone
   const furDark = [28, 20, 16];
@@ -149,33 +153,41 @@ function drawNewDireRat(ctx, w, h) {
   const earPink = [160, 70, 80];      // warm pink interior
   const noseWet = [140, 70, 65];      // wet shine
 
-  // -- TAIL -- long, whip-like, curving up and back
+  // -- TAIL -- S-curve, arcs up then curls toward the viewer
   ctx.strokeStyle = `rgb(${skinDark.join(',')})`;
-  ctx.lineCap = 'round'; ctx.lineWidth = w * 0.020;
+  ctx.lineCap = 'round'; ctx.lineWidth = w * 0.018;
   ctx.beginPath();
   ctx.moveTo(w * 0.78, h * 0.44);
-  ctx.bezierCurveTo(w * 0.86, h * 0.36, w * 0.94, h * 0.30, w * 1.00, h * 0.18);
+  // Rise up over the haunches
+  ctx.bezierCurveTo(w * 0.84, h * 0.30, w * 0.90, h * 0.22, w * 0.92, h * 0.28);
   ctx.stroke();
-  // Thinner tail tip
+  // Thinner mid-section curving toward viewer (down and right)
   ctx.strokeStyle = `rgb(${skinMid.join(',')})`;
-  ctx.lineWidth = w * 0.010;
+  ctx.lineWidth = w * 0.012;
   ctx.beginPath();
-  ctx.moveTo(w * 0.94, h * 0.30);
-  ctx.bezierCurveTo(w * 0.97, h * 0.24, w * 1.00, h * 0.18, w * 1.02, h * 0.12);
+  ctx.moveTo(w * 0.92, h * 0.28);
+  ctx.bezierCurveTo(w * 0.95, h * 0.36, w * 0.96, h * 0.48, w * 0.93, h * 0.58);
   ctx.stroke();
-  // Tail highlight
-  ctx.strokeStyle = `rgba(${skinLight.join(',')},0.25)`;
-  ctx.lineWidth = w * 0.005;
+  // Thin tip curling forward
+  ctx.strokeStyle = `rgb(${skinMid.join(',')})`;
+  ctx.lineWidth = w * 0.006;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.93, h * 0.58);
+  ctx.bezierCurveTo(w * 0.90, h * 0.66, w * 0.86, h * 0.70, w * 0.84, h * 0.68);
+  ctx.stroke();
+  // Tail highlight — top edge catches light
+  ctx.strokeStyle = `rgba(${skinLight.join(',')},0.22)`;
+  ctx.lineWidth = w * 0.004;
   ctx.beginPath();
   ctx.moveTo(w * 0.80, h * 0.42);
-  ctx.bezierCurveTo(w * 0.88, h * 0.34, w * 0.95, h * 0.28, w * 1.00, h * 0.16);
+  ctx.bezierCurveTo(w * 0.85, h * 0.28, w * 0.90, h * 0.21, w * 0.92, h * 0.26);
   ctx.stroke();
 
-  // -- REAR LEGS -- powerful haunches, coiled, pushed back
+  // -- REAR LEGS -- thin, crouched, coiled
   // Far rear leg (partially hidden)
-  drawOrganicLimb(ctx, w * 0.66, h * 0.54, w * 0.70, h * 0.68, w * 0.66, h * 0.84, w * 0.020, `rgb(${furShadow.join(',')})`, 1.0);
-  // Near rear leg — thicker, visible
-  drawOrganicLimb(ctx, w * 0.60, h * 0.56, w * 0.62, h * 0.70, w * 0.58, h * 0.84, w * 0.026, `rgb(${furDark.join(',')})`, 2.0);
+  drawOrganicLimb(ctx, w * 0.66, h * 0.54, w * 0.72, h * 0.70, w * 0.67, h * 0.84, w * 0.012, `rgb(${furShadow.join(',')})`, 1.0);
+  // Near rear leg — bent, crouching
+  drawOrganicLimb(ctx, w * 0.60, h * 0.56, w * 0.64, h * 0.72, w * 0.58, h * 0.84, w * 0.015, `rgb(${furDark.join(',')})`, 2.0);
 
   // -- BODY -- elongated, low crouch, angled forward
   // Main body mass — longer, flatter
@@ -242,11 +254,11 @@ function drawNewDireRat(ctx, w, h) {
   // SSS warm edge
   sssEdgeGlow(ctx, w * 0.44, h * 0.46, w * 0.28, h * 0.20, 0.08);
 
-  // -- FRONT LEGS -- reaching forward, dynamic
+  // -- FRONT LEGS -- thin, crouched, reaching
   // Far front leg — slightly back
-  drawOrganicLimb(ctx, w * 0.32, h * 0.58, w * 0.30, h * 0.70, w * 0.32, h * 0.84, w * 0.016, `rgb(${furShadow.join(',')})`, 3.0);
-  // Near front leg — reaching forward
-  drawOrganicLimb(ctx, w * 0.26, h * 0.54, w * 0.22, h * 0.68, w * 0.20, h * 0.84, w * 0.022, `rgb(${furDark.join(',')})`, 4.0);
+  drawOrganicLimb(ctx, w * 0.32, h * 0.58, w * 0.28, h * 0.72, w * 0.32, h * 0.84, w * 0.010, `rgb(${furShadow.join(',')})`, 3.0);
+  // Near front leg — reaching forward, bent
+  drawOrganicLimb(ctx, w * 0.26, h * 0.54, w * 0.18, h * 0.70, w * 0.20, h * 0.84, w * 0.014, `rgb(${furDark.join(',')})`, 4.0);
 
   // -- PAWS + CLAWS -- spread wider for active stance
   for (const [px, py, size, alpha] of [[0.20, 0.84, 0.022, 1.0], [0.32, 0.84, 0.016, 0.8], [0.58, 0.84, 0.020, 1.0], [0.66, 0.84, 0.015, 0.75]]) {
@@ -479,14 +491,14 @@ function drawNewDireRat(ctx, w, h) {
   ctx.closePath();
   ctx.fill();
 
-  // -- WHISKERS -- thin, catching light
+  // -- WHISKERS -- thin, catching light (shortened to stay in bounds)
   ctx.strokeStyle = 'rgba(120,100,80,0.40)'; ctx.lineWidth = w * 0.003; ctx.lineCap = 'round';
   for (const [bx, by] of [[0.03, 0.45], [0.04, 0.47], [0.03, 0.49]]) {
     const droop = rand() * 0.02;
     ctx.beginPath(); ctx.moveTo(w * bx, h * by);
-    ctx.quadraticCurveTo(w * (bx - 0.06), h * (by - 0.01 + droop), w * (bx - 0.10), h * (by + droop)); ctx.stroke();
+    ctx.quadraticCurveTo(w * (bx - 0.04), h * (by - 0.01 + droop), w * (bx - 0.07), h * (by + droop)); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(w * (bx + 0.02), h * (by - 0.01));
-    ctx.quadraticCurveTo(w * (bx - 0.03), h * (by - 0.04 + droop), w * (bx - 0.07), h * (by - 0.03 + droop)); ctx.stroke();
+    ctx.quadraticCurveTo(w * (bx - 0.02), h * (by - 0.03 + droop), w * (bx - 0.05), h * (by - 0.02 + droop)); ctx.stroke();
   }
 
   // -- HACKLES -- dark spikes along the longer spine
@@ -517,6 +529,9 @@ function drawNewDireRat(ctx, w, h) {
   ctx.globalCompositeOperation = 'multiply';
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   fillEllipse(ctx, w * 0.44, h * 0.90, w * 0.30, h * 0.025);
+  ctx.restore();
+
+  // Undo the initial translate
   ctx.restore();
 }
 
