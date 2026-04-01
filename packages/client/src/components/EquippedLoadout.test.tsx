@@ -142,8 +142,8 @@ describe('EquippedLoadout', () => {
   // --- Slot ordering tests ---
 
   it('renders equipped weapons and spells in action slots', () => {
-    const sword = makeWeapon('0xsword', 'Sword');
-    const fireball = makeSpell('0xfire', 'Fireball');
+    const sword = makeWeapon('1', 'Sword');
+    const fireball = makeSpell('2', 'Fireball');
     characterState.equippedWeapons = [sword] as any[];
     characterState.equippedSpells = [fireball] as any[];
 
@@ -158,9 +158,9 @@ describe('EquippedLoadout', () => {
   });
 
   it('persists order to localStorage via promoteToFirst', () => {
-    const sword = makeWeapon('0xsword', 'Sword');
-    const axe = makeWeapon('0xaxe', 'Axe');
-    const bow = makeWeapon('0xbow', 'Bow');
+    const sword = makeWeapon('1', 'Sword');
+    const axe = makeWeapon('2', 'Axe');
+    const bow = makeWeapon('3', 'Bow');
     characterState.equippedWeapons = [sword, axe, bow] as any[];
 
     const { container } = render(<EquippedLoadout />);
@@ -174,13 +174,13 @@ describe('EquippedLoadout', () => {
   });
 
   it('respects saved order from localStorage', () => {
-    const sword = makeWeapon('0xsword', 'Sword');
-    const fireball = makeSpell('0xfire', 'Fireball');
+    const sword = makeWeapon('1', 'Sword');
+    const fireball = makeSpell('2', 'Fireball');
     characterState.equippedWeapons = [sword] as any[];
     characterState.equippedSpells = [fireball] as any[];
 
     // Save order with fireball first
-    localStorage.setItem('ud_action_order_0x01', JSON.stringify(['0xfire', '0xsword']));
+    localStorage.setItem('ud_action_order_0x01', JSON.stringify(['2', '1']));
 
     const { container } = render(<EquippedLoadout />);
 
@@ -192,8 +192,8 @@ describe('EquippedLoadout', () => {
   });
 
   it('does not modify localStorage during battle', () => {
-    const sword = makeWeapon('0xsword', 'Sword');
-    const axe = makeWeapon('0xaxe', 'Axe');
+    const sword = makeWeapon('1', 'Sword');
+    const axe = makeWeapon('2', 'Axe');
     characterState.equippedWeapons = [sword, axe] as any[];
     battleState.currentBattle = {
       encounterId: '0xbattle',
@@ -216,7 +216,7 @@ describe('EquippedLoadout', () => {
   // --- Edge cases ---
 
   it('handles single equipped item correctly', () => {
-    characterState.equippedWeapons = [makeWeapon('0xsword', 'Sword')] as any[];
+    characterState.equippedWeapons = [makeWeapon('1', 'Sword')] as any[];
 
     const { container } = render(<EquippedLoadout />);
 

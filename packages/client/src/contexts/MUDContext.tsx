@@ -171,7 +171,12 @@ const MUDProviderInner = ({
   children: ReactNode;
   setupResult: SetupResult;
 }): JSX.Element => {
-  const { authMethod, embeddedWalletClient, ownerAddress } = useAuth();
+  const {
+    authMethod,
+    embeddedWalletClient,
+    getEmbeddedIdentityToken,
+    ownerAddress,
+  } = useAuth();
   const { data: externalWalletClient } = useWalletClient();
 
   const {
@@ -353,6 +358,7 @@ const MUDProviderInner = ({
 
     const systemCalls = createSystemCalls({
       ...setupResult.network,
+      getEmbeddedIdentityToken,
       waitForTransaction: embeddedWaitForTransaction,
       delegatorAddress: ownerAddress,
       worldContract,
@@ -377,6 +383,7 @@ const MUDProviderInner = ({
     authMethod,
     embeddedSetup,
     embeddedWalletClient,
+    getEmbeddedIdentityToken,
     ownerAddress,
     setupResult,
   ]);
@@ -474,18 +481,33 @@ const MUDProviderInner = ({
   // Retry on failure + periodic re-registration to survive relayer redeploys.
   // =============================================
   const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
-  const FUND_API_KEY = import.meta.env.VITE_FUND_API_KEY;
+  const WORLD_ADDRESS = import.meta.env.VITE_WORLD_ADDRESS;
 
   const callRelayerFund = useCallback(async (
     burnerAddress: string,
     delegatorAddress: string,
   ): Promise<boolean> => {
-    if (!RELAYER_URL || !FUND_API_KEY) return false;
+    if (!RELAYER_URL) return false;
     try {
+      const isEmbeddedRegistration =
+        authMethod === 'embedded' &&
+        burnerAddress.toLowerCase() === delegatorAddress.toLowerCase();
+      const identityToken = isEmbeddedRegistration
+        ? await getEmbeddedIdentityToken()
+        : null;
+      if (isEmbeddedRegistration && !identityToken) return false;
+
       const res = await fetch(`${RELAYER_URL}/fund`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': FUND_API_KEY },
-        body: JSON.stringify({ address: burnerAddress, delegatorAddress }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(identityToken ? { Authorization: `Bearer ${identityToken}` } : {}),
+        },
+        body: JSON.stringify({
+          address: burnerAddress,
+          delegatorAddress,
+          worldAddress: WORLD_ADDRESS,
+        }),
       });
       const data = await res.json();
       console.info('[Gas] MetaMask fund response:', data.status);
@@ -494,7 +516,7 @@ const MUDProviderInner = ({
       console.warn('[Gas] MetaMask funding failed:', err);
       return false;
     }
-  }, [RELAYER_URL, FUND_API_KEY]);
+  }, [RELAYER_URL, WORLD_ADDRESS, authMethod, getEmbeddedIdentityToken]);
 
   const registerBurnerWithRelayer = useCallback(async (
     burnerAddress: string,

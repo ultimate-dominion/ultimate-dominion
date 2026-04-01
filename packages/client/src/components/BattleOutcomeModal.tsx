@@ -39,8 +39,6 @@ import {
   type Weapon,
 } from '../utils/types';
 
-import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
-
 import { ItemCard } from './ItemCard';
 import { getItemImage } from '../utils/itemImages';
 import { getMonsterImage } from '../utils/monsterImages';
@@ -48,7 +46,6 @@ import { LootReveal } from './LootReveal';
 import { ShareButton } from './ShareButton';
 import { ItemEquipModal } from './ItemEquipModal';
 import { LevelUpBanner } from './LevelUpBanner';
-import { LevelingPanel } from './LevelingPanel';
 import { PolygonalCard } from './PolygonalCard';
 
 type BattleOutcomeModalProps = {
@@ -80,7 +77,6 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
     return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
   }, [opponent, t]);
-  const stage = useOnboardingStage();
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [consumables, setConsumables] = useState<Consumable[]>([]);

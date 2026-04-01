@@ -35,9 +35,17 @@ const mockedGetTableValue = vi.mocked(getTableValue);
 
 const TEST_WALLET = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address;
 const TEST_DELEGATOR = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' as Address;
+const TEST_WORLD = '0x1111111111111111111111111111111111111111' as Address;
 const TEST_ENTITY = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const TEST_ENTITY_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
 const FAKE_TX_HASH = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890' as `0x${string}`;
+const ZERO_LENGTHS = ('0x' + '00'.repeat(32)) as `0x${string}`;
+
+const encodeUint16Hex = (value: number) => value.toString(16).padStart(4, '0');
+const encodeUint256Hex = (value: bigint | number) => BigInt(value).toString(16).padStart(64, '0');
+
+const encodePositionV2Static = (zoneId: bigint | number, x: number, y: number) =>
+  (`0x${encodeUint256Hex(zoneId)}${encodeUint16Hex(x)}${encodeUint16Hex(y)}`) as `0x${string}`;
 
 // ── Mock Factory ────────────────────────────────────────────────────
 
@@ -73,6 +81,7 @@ function createMockNetwork(overrides: {
   };
 
   const worldContract = {
+    address: TEST_WORLD,
     write: new Proxy({} as Record<string, unknown>, writeHandler),
     read: new Proxy({} as Record<string, unknown>, readHandler),
     simulate: new Proxy({} as Record<string, unknown>, simulateHandler),
@@ -81,6 +90,9 @@ function createMockNetwork(overrides: {
   const publicClient = {
     getChainId: vi.fn().mockResolvedValue(chainId),
     getBlockNumber: vi.fn().mockResolvedValue(BigInt(200)),
+    getBalance: vi.fn().mockResolvedValue(BigInt(0)),
+    readContract: vi.fn(),
+    simulateContract: vi.fn().mockResolvedValue({ result: undefined }),
   };
 
   const walletClient = {
@@ -303,30 +315,19 @@ describe('createSystemCalls — receipt awaiting regression guard', () => {
   });
 
   it('unequipItem returns failure when receipt is reverted', async () => {
-    // unequipItem awaits waitForTransaction but returns { success: true }
-    // unconditionally after await — let's verify it at least awaits
-    const result = await calls.unequipItem(TEST_ENTITY, '1');
-    expect(waitForTransaction).toHaveBeenCalled();
-    // unequipItem doesn't check receipt status — it returns success: true after await.
-    // This is acceptable since it does await (not fire-and-forget).
-    // If it were fire-and-forget, waitForTransaction wouldn't be called before return.
+    await expectFailure(calls.unequipItem(TEST_ENTITY, '1'));
   });
 
   it('equipItems returns failure when receipt is reverted', async () => {
-    // Same pattern as unequipItem — awaits but returns success: true
-    const result = await calls.equipItems(TEST_ENTITY, ['1']);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.equipItems(TEST_ENTITY, ['1']));
   });
 
   it('enterGame returns failure when receipt is reverted', async () => {
-    // enterGame awaits but returns success: true unconditionally
-    const result = await calls.enterGame(TEST_ENTITY, BigInt(1), BigInt(1));
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.enterGame(TEST_ENTITY, BigInt(1), BigInt(1)));
   });
 
   it('levelCharacter returns failure when receipt is reverted', async () => {
-    // levelCharacter awaits but returns success: true unconditionally
-    const result = await calls.levelCharacter(TEST_ENTITY, {
+    await expectFailure(calls.levelCharacter(TEST_ENTITY, {
       strength: BigInt(10),
       agility: BigInt(10),
       intelligence: BigInt(10),
@@ -340,34 +341,27 @@ describe('createSystemCalls — receipt awaiting regression guard', () => {
       startingArmor: ArmorType.Plate,
       advancedClass: AdvancedClass.Warrior,
       hasSelectedAdvancedClass: true,
-    });
-    expect(waitForTransaction).toHaveBeenCalled();
+    }));
   });
 
   it('chooseRace returns failure when receipt is reverted', async () => {
-    // awaits but returns success: true unconditionally
-    const result = await calls.chooseRace(TEST_ENTITY, Race.Human);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.chooseRace(TEST_ENTITY, Race.Human));
   });
 
   it('choosePowerSource returns failure when receipt is reverted', async () => {
-    const result = await calls.choosePowerSource(TEST_ENTITY, PowerSource.Divine);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.choosePowerSource(TEST_ENTITY, PowerSource.Divine));
   });
 
   it('rollStats returns failure when receipt is reverted', async () => {
-    const result = await calls.rollStats(TEST_ENTITY, StatsClasses.Strength);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.rollStats(TEST_ENTITY, StatsClasses.Strength));
   });
 
   it('rollBaseStats returns failure when receipt is reverted', async () => {
-    const result = await calls.rollBaseStats(TEST_ENTITY);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.rollBaseStats(TEST_ENTITY));
   });
 
   it('selectAdvancedClass returns failure when receipt is reverted', async () => {
-    const result = await calls.selectAdvancedClass(TEST_ENTITY, AdvancedClass.Paladin);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.selectAdvancedClass(TEST_ENTITY, AdvancedClass.Paladin));
   });
 
   it('move returns failure when receipt is reverted', async () => {
@@ -515,14 +509,14 @@ describe('createSystemCalls — error handling', () => {
   });
 
   it('returns insufficient funds message', async () => {
-    const { network } = createMockNetwork();
-    // Create an error that classifyError will detect as insufficient funds
-    const fundsError = new Error('insufficient funds for gas');
-    // Add walk method to mimic BaseError
-    (fundsError as Record<string, unknown>).walk = () => null;
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: () => vi.fn().mockRejectedValue(fundsError),
-    });
+	    const { network } = createMockNetwork();
+	    // Create an error that classifyError will detect as insufficient funds
+	    const fundsError = new Error('insufficient funds for gas');
+	    // Add walk method to mimic BaseError
+	    (fundsError as unknown as Record<string, unknown>).walk = () => null;
+	    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+	      get: () => vi.fn().mockRejectedValue(fundsError),
+	    });
     const calls = createSystemCalls(network);
     mockOwnership();
 
@@ -577,8 +571,11 @@ describe('createSystemCalls — move stale position recovery', () => {
       .mockRejectedValueOnce(new Error('0x87822d34'))
       .mockResolvedValueOnce(FAKE_TX_HASH);
 
-    // UD__getEntityPosition returns corrected position (2, 3)
-    const getPositionFn = vi.fn().mockResolvedValue([2, 3]);
+    network.publicClient.readContract = vi.fn().mockResolvedValue([
+      encodePositionV2Static(1n, 2, 3),
+      ZERO_LENGTHS,
+      '0x',
+    ]);
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
@@ -587,19 +584,12 @@ describe('createSystemCalls — move stale position recovery', () => {
       },
     });
 
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
-    });
-
     const calls = createSystemCalls(network);
 
     const result = await calls.move(TEST_ENTITY, 'right');
     expect(result.success).toBe(true);
     expect(moveWriteFn).toHaveBeenCalledTimes(2);
-    expect(getPositionFn).toHaveBeenCalledWith([TEST_ENTITY]);
+    expect(network.publicClient.readContract).toHaveBeenCalledTimes(1);
     expect(waitForTransaction).toHaveBeenCalled();
   });
 
@@ -611,7 +601,11 @@ describe('createSystemCalls — move stale position recovery', () => {
       .mockRejectedValueOnce(new Error('0x87822d34'))
       .mockResolvedValueOnce(FAKE_TX_HASH);
 
-    const getPositionFn = vi.fn().mockResolvedValue([5, 7]);
+    network.publicClient.readContract = vi.fn().mockResolvedValue([
+      encodePositionV2Static(1n, 5, 7),
+      ZERO_LENGTHS,
+      '0x',
+    ]);
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
@@ -620,17 +614,11 @@ describe('createSystemCalls — move stale position recovery', () => {
       },
     });
 
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
-    });
-
     const calls = createSystemCalls(network);
 
     await calls.move(TEST_ENTITY, 'up');
     expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 5, y: 7 });
+    expect(mockSetRow).toHaveBeenCalledWith('PositionV2', TEST_ENTITY, { zoneId: 1n, x: 5, y: 7 });
   });
 
   it('applies direction correctly to corrected chain position', async () => {
@@ -641,8 +629,11 @@ describe('createSystemCalls — move stale position recovery', () => {
       .mockRejectedValueOnce(new Error('0x87822d34'))
       .mockResolvedValueOnce(FAKE_TX_HASH);
 
-    // Chain position is (4, 4)
-    const getPositionFn = vi.fn().mockResolvedValue([4, 4]);
+    network.publicClient.readContract = vi.fn().mockResolvedValue([
+      encodePositionV2Static(1n, 4, 4),
+      ZERO_LENGTHS,
+      '0x',
+    ]);
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
@@ -651,18 +642,11 @@ describe('createSystemCalls — move stale position recovery', () => {
       },
     });
 
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
-    });
-
     const calls = createSystemCalls(network);
 
     await calls.move(TEST_ENTITY, 'down');
     // direction 'down' → y - 1: target should be (4, 3)
-    expect(moveWriteFn).toHaveBeenLastCalledWith([TEST_ENTITY, 4, 3]);
+    expect(moveWriteFn).toHaveBeenLastCalledWith([TEST_ENTITY, 4, 3], { gas: BigInt(8_000_000) });
   });
 
   it('returns failure when chain position read fails', async () => {
@@ -672,19 +656,12 @@ describe('createSystemCalls — move stale position recovery', () => {
     const moveWriteFn = vi.fn()
       .mockRejectedValueOnce(new Error('0x87822d34'));
 
-    const getPositionFn = vi.fn().mockRejectedValue(new Error('RPC error'));
+    network.publicClient.readContract = vi.fn().mockRejectedValue(new Error('RPC error'));
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
         if (prop === 'UD__move') return moveWriteFn;
         return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
       },
     });
 
@@ -704,19 +681,16 @@ describe('createSystemCalls — move stale position recovery', () => {
       .mockRejectedValueOnce(new Error('0x87822d34'))
       .mockRejectedValueOnce(retryError);
 
-    const getPositionFn = vi.fn().mockResolvedValue([0, 0]);
+    network.publicClient.readContract = vi.fn().mockResolvedValue([
+      encodePositionV2Static(1n, 0, 0),
+      ZERO_LENGTHS,
+      '0x',
+    ]);
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
         if (prop === 'UD__move') return moveWriteFn;
         return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
       },
     });
 
@@ -1049,7 +1023,7 @@ describe('createSystemCalls — error messaging selector extraction', () => {
     const result = await calls.rest(TEST_ENTITY);
     expect(result.success).toBe(false);
     // Should get the friendly message, not the raw error
-    expect(result.error).toBe('Invalid combat — monster may have moved or died. Try again.');
+    expect(result.error).toBe('Your target has vanished into the shadows. Try again.');
   });
 });
 
@@ -1064,13 +1038,11 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     globalThis.fetch = originalFetch;
     // Set env vars for relayer
     import.meta.env.VITE_RELAYER_URL = 'https://relay.test';
-    import.meta.env.VITE_FUND_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
     delete import.meta.env.VITE_RELAYER_URL;
-    delete import.meta.env.VITE_FUND_API_KEY;
   });
 
   function createNetworkWithGasRetry(opts: {
@@ -1110,6 +1082,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     };
 
     const worldContract = {
+      address: TEST_WORLD,
       write: new Proxy({} as Record<string, unknown>, writeHandler),
       read: new Proxy({} as Record<string, unknown>, {
         get: () => vi.fn().mockResolvedValue(BigInt(0)),
@@ -1122,6 +1095,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     const walletClient = { account: { address: TEST_WALLET } };
 
     const network = {
+      delegatorAddress: TEST_DELEGATOR,
       publicClient,
       walletClient,
       waitForTransaction,
@@ -1134,7 +1108,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
 
   it('retries after requesting emergency funding on insufficient funds', async () => {
     const { network, setBalance } = createNetworkWithGasRetry({ writeFailCount: 1 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     // Mock fetch for relayer /fund call
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
@@ -1156,14 +1130,45 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
       'https://relay.test/fund',
       expect.objectContaining({
         method: 'POST',
-        headers: expect.objectContaining({ 'x-api-key': 'test-api-key' }),
+        body: JSON.stringify({
+          address: TEST_WALLET,
+          delegatorAddress: TEST_DELEGATOR,
+          worldAddress: TEST_WORLD,
+        }),
+      }),
+    );
+  });
+
+  it('sends embedded identity token when emergency funding an embedded wallet', async () => {
+    const { network, setBalance } = createNetworkWithGasRetry({ writeFailCount: 1 });
+    mockOwnership(TEST_WALLET);
+    delete network.delegatorAddress;
+
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
+    let balanceCallCount = 0;
+    network.publicClient.getBalance = vi.fn().mockImplementation(async () => {
+      balanceCallCount++;
+      return balanceCallCount <= 1 ? BigInt(0) : BigInt(1000000000000000);
+    });
+
+    const calls = createSystemCalls({
+      ...network,
+      getEmbeddedIdentityToken: async () => 'embedded-token',
+    });
+    const result = await calls.rest(TEST_ENTITY);
+
+    expect(result.success).toBe(true);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://relay.test/fund',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer embedded-token' }),
       }),
     );
   });
 
   it('fails if funding request fails', async () => {
     const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     // Mock fetch to fail
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
@@ -1178,7 +1183,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
   it('fails if funding arrives but retry also fails', async () => {
     // Both attempts fail with insufficient funds
     const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
     let balanceCallCount = 0;
@@ -1217,7 +1222,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     delete import.meta.env.VITE_RELAYER_URL;
 
     const { network } = createNetworkWithGasRetry({ writeFailCount: 1 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     globalThis.fetch = vi.fn();
 
@@ -1230,7 +1235,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
 
   it('retries immediately when relayer says player already has funds', async () => {
     const { network } = createNetworkWithGasRetry({ writeFailCount: 1 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     // Relayer returns already_funded — player's balance recovered
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'already_funded' }) });
@@ -1247,7 +1252,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
 
   it('fails when funding accepted but balance never increases (timeout)', async () => {
     const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     // Relayer accepts the request
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
@@ -1297,6 +1302,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     };
 
     const worldContract = {
+      address: TEST_WORLD,
       write: new Proxy({} as Record<string, unknown>, writeHandler),
       read: new Proxy({} as Record<string, unknown>, {
         get: () => vi.fn().mockResolvedValue(BigInt(0)),
@@ -1307,7 +1313,13 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     };
 
     const walletClient = { account: { address: TEST_WALLET } };
-    const network = { publicClient, walletClient, waitForTransaction, worldContract };
+    const network = {
+      delegatorAddress: TEST_DELEGATOR,
+      publicClient,
+      walletClient,
+      waitForTransaction,
+      worldContract,
+    };
 
     // Track fetch calls
     globalThis.fetch = vi.fn().mockResolvedValue({
@@ -1315,7 +1327,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
       json: async () => ({ status: 'funded' }),
     });
 
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const calls = createSystemCalls(network as any);
 

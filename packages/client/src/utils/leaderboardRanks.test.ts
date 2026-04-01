@@ -9,6 +9,9 @@ const makeCharacter = (
 ): Character =>
   ({
     id,
+    agility: stats.agi,
+    strength: stats.str,
+    intelligence: stats.int,
     baseStats: {
       agility: stats.agi,
       strength: stats.str,
@@ -60,7 +63,7 @@ describe('computeRanks', () => {
     expect(computeRanks(chars, 'poor')?.goldRank).toBe(3);
   });
 
-  it('handles ties with dense ranking (same rank for equal values)', () => {
+  it('handles ties with competition ranking semantics (same rank for equal values)', () => {
     const chars = [
       makeCharacter('a', { agi: 10n, str: 10n, int: 10n }, 100n),
       makeCharacter('b', { agi: 10n, str: 10n, int: 10n }, 100n),

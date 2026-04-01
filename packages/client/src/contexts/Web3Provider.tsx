@@ -1,23 +1,10 @@
 'use client';
 
-import '@rainbow-me/rainbowkit/styles.css';
-import {
-  connectorsForWallets,
-  darkTheme,
-  getDefaultWallets,
-  RainbowKitProvider,
-} from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createConfig, fallback, http, WagmiProvider } from 'wagmi';
+import { injected } from 'wagmi/connectors';
 
-import { SUPPORTED_CHAINS, WALLET_CONNECT_PROJECT_ID } from '../lib/web3';
-
-const { wallets } = getDefaultWallets();
-
-const connectors = connectorsForWallets(wallets, {
-  appName: 'Ultimate Dominion',
-  projectId: WALLET_CONNECT_PROJECT_ID,
-});
+import { SUPPORTED_CHAINS } from '../lib/web3';
 
 const transports = Object.fromEntries(
   SUPPORTED_CHAINS.map(chain => {
@@ -29,7 +16,7 @@ const transports = Object.fromEntries(
 
 const wagmiConfig = createConfig({
   chains: SUPPORTED_CHAINS,
-  connectors,
+  connectors: [injected({ shimDisconnect: true })],
   transports,
 });
 
@@ -41,7 +28,7 @@ export const Web3Provider: React.FC<React.PropsWithChildren> = ({
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme()}>{children}</RainbowKitProvider>
+        {children}
       </QueryClientProvider>
     </WagmiProvider>
   );

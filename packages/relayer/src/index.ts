@@ -16,6 +16,7 @@ import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcMana
 import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, trackPlayer, getFundedCount } from './balanceMonitor.js';
 import { startPoolFunder, stopPoolFunder, getFunderStatus } from './poolFunder.js';
 import { loadFundedAddresses, saveFundedAddresses, loadFulfilledSessions, saveFulfilledSessions, loadPlayerMap, savePlayerMap } from './persistence.js';
+import { authorizeFundingRequest } from './fundAuth.js';
 
 // Gold purchase dedup (stripeSessionId → fulfilled) — persisted to disk
 const fulfilledSessions = loadFulfilledSessions();
@@ -150,21 +151,18 @@ async function main() {
 
   // Fund a new user's wallet
   app.post('/fund', async (req, res) => {
-    // API key auth — prevents unauthenticated ETH drain
-    if (!config.fundApiKey) {
-      res.status(503).json({ error: 'Fund endpoint not configured' });
-      return;
-    }
-    const apiKey = req.headers['x-api-key'] as string;
-    if (apiKey !== config.fundApiKey) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const { address, delegatorAddress } = req.body as { address?: string; delegatorAddress?: string };
+    const { address, delegatorAddress, worldAddress } = req.body as {
+      address?: string;
+      delegatorAddress?: string;
+      worldAddress?: string;
+    };
 
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
       res.status(400).json({ error: 'Invalid address' });
+      return;
+    }
+    if (worldAddress && !/^0x[a-fA-F0-9]{40}$/.test(worldAddress)) {
+      res.status(400).json({ error: 'Invalid worldAddress' });
       return;
     }
 
@@ -174,6 +172,24 @@ async function main() {
     const delegator = (delegatorAddress && /^0x[a-fA-F0-9]{40}$/.test(delegatorAddress))
       ? delegatorAddress
       : address;
+
+    const authHeader = typeof req.headers.authorization === 'string'
+      ? req.headers.authorization
+      : undefined;
+    const identityToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice('Bearer '.length)
+      : undefined;
+
+    const authResult = await authorizeFundingRequest({
+      address: address as Address,
+      delegatorAddress: delegator as Address,
+      identityToken,
+      worldAddress,
+    });
+    if (!authResult.ok) {
+      res.status(authResult.status).json({ error: authResult.error });
+      return;
+    }
 
     const normalizedAddress = address.toLowerCase();
 

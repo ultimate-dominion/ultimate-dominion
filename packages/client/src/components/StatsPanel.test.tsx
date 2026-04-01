@@ -10,6 +10,13 @@ let mockCharacter: any = null;
 let mockGameValues: Record<string, any> = {};
 let mockGameTables: Record<string, Record<string, any>> = {};
 let mockLeaderboardRank: any = null;
+const mockNearbyRanks = {
+  dataRankBy: 'stats',
+  isLoading: false,
+  nearby: [],
+  rankBy: 'stats',
+  setRankBy: vi.fn(),
+};
 
 // --- vi.mock declarations ---
 
@@ -39,6 +46,23 @@ vi.mock('../hooks/useLeaderboardRank', () => ({
   useLeaderboardRank: () => mockLeaderboardRank,
 }));
 
+vi.mock('../hooks/useNearbyRanks', () => ({
+  useNearbyRanks: () => mockNearbyRanks,
+}));
+
+vi.mock('../hooks/useOnboardingStage', () => ({
+  OnboardingStage: {
+    PRE_SPAWN: 0,
+    JUST_SPAWNED: 1,
+    FIRST_STEPS: 2,
+    FIRST_BLOOD: 3,
+    SETTLING_IN: 4,
+    ESTABLISHED: 5,
+    VETERAN: 6,
+  },
+  useOnboardingStage: () => 6,
+}));
+
 vi.mock('../lib/gameStore', () => ({
   useGameValue: (_table: string, _key: string | undefined) => {
     if (!_key) return undefined;
@@ -66,6 +90,10 @@ vi.mock('./EquippedLoadout', () => ({
   EquippedLoadout: () => null,
 }));
 
+vi.mock('./LevelUpModal', () => ({
+  LevelUpModal: () => null,
+}));
+
 vi.mock('./Level', () => ({
   Level: (props: any) => (
     <div
@@ -75,6 +103,10 @@ vi.mock('./Level', () => ({
       data-maxed={props.maxed}
     />
   ),
+}));
+
+vi.mock('./MiniLeaderboard', () => ({
+  MiniLeaderboard: () => null,
 }));
 
 vi.mock('@chakra-ui/react', async () => {

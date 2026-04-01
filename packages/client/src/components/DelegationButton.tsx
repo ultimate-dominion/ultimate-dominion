@@ -64,25 +64,6 @@ export const DelegationButton = ({
       // check (the TX was just confirmed above).
       await getBurner(true);
 
-      // Register burner→delegator with relayer for gas monitoring.
-      // The relayer will track this burner and auto-fund when low,
-      // charging gold from the delegator (MetaMask wallet).
-      const relayerUrl = import.meta.env.VITE_RELAYER_URL;
-      const fundApiKey = import.meta.env.VITE_FUND_API_KEY;
-      if (relayerUrl && fundApiKey) {
-        fetch(`${relayerUrl}/fund`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': fundApiKey,
-          },
-          body: JSON.stringify({
-            address: burnerAddress,
-            delegatorAddress: externalWalletClient.account.address,
-          }),
-        }).catch(err => console.warn('[DelegationButton] Relayer registration failed:', err));
-      }
-
       // Force an immediate balance refresh so App.tsx doesn't flash
       // the WalletDetailsModal for a stale '0' balance.
       getBurnerBalance();

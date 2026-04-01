@@ -10,7 +10,9 @@ import {
   BaseError,
   ContractFunctionRevertedError,
   Hash,
+  Hex,
   InsufficientFundsError,
+  concat,
   keccak256,
   stringToHex,
   toBytes,
@@ -39,23 +41,38 @@ import { SetupNetworkResult } from './setupNetwork';
 
 // Return value: 'funded' = ETH sent, 'has_funds' = already above threshold, false = failed
 type FundingResult = 'funded' | 'has_funds' | false;
+type IdentityTokenGetter = () => Promise<string | null> | string | null;
 
 async function requestEmergencyFunding(
   address: string,
-  delegatorAddress?: string,
+  options: {
+    delegatorAddress?: string;
+    getEmbeddedIdentityToken?: IdentityTokenGetter;
+    worldAddress?: string;
+  } = {},
 ): Promise<FundingResult> {
   // Read lazily so tests can override import.meta.env at runtime
   const relayerUrl = import.meta.env.VITE_RELAYER_URL as string | undefined;
-  const fundApiKey = import.meta.env.VITE_FUND_API_KEY as string | undefined;
-  if (!relayerUrl || !fundApiKey) return false;
+  if (!relayerUrl) return false;
+
+  const { delegatorAddress, getEmbeddedIdentityToken, worldAddress } = options;
+  const isEmbeddedFunding =
+    !delegatorAddress ||
+    delegatorAddress.toLowerCase() === address.toLowerCase();
+
+  const identityToken = isEmbeddedFunding
+    ? await getEmbeddedIdentityToken?.() ?? null
+    : null;
+  if (isEmbeddedFunding && !identityToken) return false;
+
   try {
     const res = await fetch(`${relayerUrl}/fund`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': fundApiKey,
+        ...(identityToken ? { Authorization: `Bearer ${identityToken}` } : {}),
       },
-      body: JSON.stringify({ address, delegatorAddress }),
+      body: JSON.stringify({ address, delegatorAddress, worldAddress }),
     });
     if (!res.ok) return false;
     try {
@@ -224,12 +241,16 @@ const getContractError = (error: unknown): string => {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSystemCalls(
   {
+    getEmbeddedIdentityToken,
     publicClient,
     walletClient,
     waitForTransaction,
     worldContract,
     delegatorAddress,
-  }: SetupNetworkResult & { delegatorAddress?: Address },
+  }: SetupNetworkResult & {
+    delegatorAddress?: Address;
+    getEmbeddedIdentityToken?: IdentityTokenGetter;
+  },
 ) {
   // Account to use for diagnostic simulations (eth_call).
   // Without this, simulate() runs with from=address(0), which causes
@@ -276,7 +297,11 @@ export function createSystemCalls(
 
           // Dedup concurrent funding requests — share the inflight promise
           if (!inflightFunding) {
-            inflightFunding = requestEmergencyFunding(gasRetryAddress, delegatorAddress)
+            inflightFunding = requestEmergencyFunding(gasRetryAddress, {
+              delegatorAddress,
+              getEmbeddedIdentityToken,
+              worldAddress: worldContract.address,
+            })
               .finally(() => { inflightFunding = null; });
           }
           const fundResult = await inflightFunding;
@@ -310,6 +335,15 @@ export function createSystemCalls(
   // Replace worldContract.write for all system calls in this closure.
   // The original worldContract is unchanged — only our local reference is proxied.
   const wrappedWorldContract = { ...worldContract, write: proxiedWrite };
+
+  const resultFromReceipt = (
+    receipt: { status: 'reverted' | 'success' },
+    failureMessage: string,
+  ): { error?: string; success: boolean } => (
+    receipt.status === 'success'
+      ? { success: true }
+      : { success: false, error: failureMessage }
+  );
 
   // Check whether a monster is alive in the local store.
   const isMonsterAlive = (monsterId: string): boolean => {
@@ -377,7 +411,15 @@ export function createSystemCalls(
   // player lands on a tile. Prevents "No enemies here" errors by evicting
   // ghosts BEFORE the player clicks Fight.
   // ---------------------------------------------------------------------------
-  const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000' as const;
+  const tableResourceId = (namespace: string, name: string): Hex =>
+    concat([
+      stringToHex('tb', { size: 2 }),
+      stringToHex(namespace, { size: 14 }),
+      stringToHex(name, { size: 16 }),
+    ]);
+
+  const SPAWNED_TABLE_ID = tableResourceId('UD', 'Spawned');
+  const POSITION_V2_TABLE_ID = tableResourceId('UD', 'PositionV2');
   const GET_RECORD_ABI = [
     {
       type: 'function' as const,
@@ -395,17 +437,64 @@ export function createSystemCalls(
     },
   ] as const;
 
+  type RawStoreRecord = readonly [Hex, Hex, Hex];
+  type ChainPosition = { zoneId: bigint; x: number; y: number };
+
+  const readStoreRecord = async (
+    tableId: Hex,
+    entityId: `0x${string}`,
+    label: string,
+  ): Promise<RawStoreRecord | null> => {
+    if (typeof publicClient.readContract !== 'function') return null;
+
+    try {
+      return await publicClient.readContract({
+        address: worldContract.address,
+        abi: GET_RECORD_ABI,
+        functionName: 'getRecord',
+        args: [tableId, [entityId]],
+      }) as RawStoreRecord;
+    } catch (error) {
+      console.warn(`[store] Failed reading ${label} from chain`, error);
+      return null;
+    }
+  };
+
+  const decodePositionV2Record = (
+    record: RawStoreRecord | null,
+  ): ChainPosition | null => {
+    if (!record) return null;
+
+    const staticData = record[0] ?? '0x';
+    const expectedLength = 2 + 64 + 4 + 4; // zoneId:uint256 + x:uint16 + y:uint16
+    if (staticData.length < expectedLength) return null;
+
+    try {
+      const zoneId = BigInt(`0x${staticData.slice(2, 66)}`);
+      const x = Number.parseInt(staticData.slice(66, 70), 16);
+      const y = Number.parseInt(staticData.slice(70, 74), 16);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+      return { zoneId, x, y };
+    } catch {
+      return null;
+    }
+  };
+
+  const readCanonicalPosition = async (
+    entityId: `0x${string}`,
+  ): Promise<ChainPosition | null> =>
+    decodePositionV2Record(
+      await readStoreRecord(POSITION_V2_TABLE_ID, entityId, 'PositionV2'),
+    );
+
   const validateTileMonsters = async (monsterIds: string[]): Promise<void> => {
     if (monsterIds.length === 0) return;
 
     const results = await Promise.allSettled(
       monsterIds.map(async (id) => {
-        const [staticData] = await publicClient.readContract({
-          address: worldContract.address,
-          abi: GET_RECORD_ABI,
-          functionName: 'getRecord',
-          args: [SPAWNED_TABLE_ID, [id as `0x${string}`]],
-        });
+        const record = await readStoreRecord(SPAWNED_TABLE_ID, id as `0x${string}`, 'Spawned');
+        if (!record) return { id, isAlive: null as boolean | null };
+        const staticData = record?.[0] ?? '0x';
         // Spawned table: single bool field. 0x01 = alive, 0x00 or empty = dead.
         const isAlive = staticData.length >= 4 && staticData.slice(0, 4) === '0x01';
         return { id, isAlive };
@@ -414,7 +503,7 @@ export function createSystemCalls(
 
     const ghosts: string[] = [];
     for (const r of results) {
-      if (r.status === 'fulfilled' && !r.value.isAlive) {
+      if (r.status === 'fulfilled' && r.value.isAlive === false) {
         ghosts.push(r.value.id);
       }
     }
@@ -757,12 +846,8 @@ export function createSystemCalls(
         starterArmorId,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to enter game.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -784,8 +869,8 @@ export function createSystemCalls(
         itemIds.map(itemId => BigInt(itemId)),
       ]);
 
-      await waitForTransaction(tx);
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to equip items.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -890,12 +975,8 @@ export function createSystemCalls(
         formattedNewStats,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to level character.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1024,6 +1105,25 @@ export function createSystemCalls(
   const MAX_ON_CHAIN_RETRIES = 1;
 
   type Direction = 'up' | 'down' | 'left' | 'right';
+  type MoveDiagnosticResult =
+    | { result: 'pass' }
+    | { result: 'timeout' }
+    | { result: 'transient' }
+    | { result: 'not_spawned' | 'invalid_move' | 'error'; error: unknown };
+
+  const applyDirection = (
+    position: Pick<ChainPosition, 'x' | 'y'>,
+    direction: Direction,
+  ): { x: number; y: number } => {
+    let { x, y } = position;
+    switch (direction) {
+      case 'up': y += 1; break;
+      case 'down': y -= 1; break;
+      case 'left': x -= 1; break;
+      case 'right': x += 1; break;
+    }
+    return { x, y };
+  };
 
   const move = async (
     characterEntity: string,
@@ -1055,21 +1155,70 @@ export function createSystemCalls(
       return { success: false, error: 'Position not found.' };
     }
 
-    let x = Number(pos.x);
-    let y = Number(pos.y);
-    switch (direction) {
-      case 'up': y += 1; break;
-      case 'down': y -= 1; break;
-      case 'left': x -= 1; break;
-      case 'right': x += 1; break;
-    }
+    let { x, y } = applyDirection(
+      { x: Number(pos.x), y: Number(pos.y) },
+      direction,
+    );
 
     isMovePending = true;
     try {
       await waitForMoveCooldown();
 
-      let args: readonly [`0x${string}`, number, number] = [characterEntity as `0x${string}`, x, y];
+      let args: [`0x${string}`, number, number] = [characterEntity as `0x${string}`, x, y];
       let onChainRetries = 0;
+
+      const syncPositionFromChain = async (): Promise<boolean> => {
+        const canonicalPos = await readCanonicalPosition(
+          characterEntity as `0x${string}`,
+        );
+        if (!canonicalPos) return false;
+
+        const store = useGameStore.getState();
+        store.setRow('Position', characterEntity, {
+          x: canonicalPos.x,
+          y: canonicalPos.y,
+        });
+        store.setRow('PositionV2', characterEntity, canonicalPos);
+
+        const nextPosition = applyDirection(canonicalPos, direction);
+        x = nextPosition.x;
+        y = nextPosition.y;
+        args = [characterEntity as `0x${string}`, x, y];
+        return true;
+      };
+
+      const diagnoseMove = async (timeoutMs: number): Promise<MoveDiagnosticResult> => {
+        let timedOut = false;
+        try {
+          await Promise.race([
+            worldContract.simulate.UD__move(args, { account: diagAccount }).then(() => undefined),
+            new Promise<void>((_, reject) => setTimeout(() => {
+              timedOut = true;
+              reject(new Error('diag timeout'));
+            }, timeoutMs)),
+          ]);
+          return { result: 'pass' };
+        } catch (error) {
+          if (timedOut) return { result: 'timeout' };
+          if (isNotSpawnedError(error)) {
+            return { result: 'not_spawned', error };
+          }
+          if (isInvalidMoveError(error)) {
+            return { result: 'invalid_move', error };
+          }
+          if (isMoveTooFastError(error) || isTransientRpcError(error)) {
+            return { result: 'transient' };
+          }
+          return { result: 'error', error };
+        }
+      };
+
+      const handleNotSpawned = () => {
+        console.warn('[move] Character is not spawned — updating store');
+        useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
+        onMoveRevert();
+        return { success: false as const, error: 'Session expired — respawn to continue.' };
+      };
 
       // Always skip simulation for moves. MOVE_COOLDOWN is 0 on-chain, but
       // Base flashblocks propagate state faster than block headers — eth_call
@@ -1095,54 +1244,23 @@ export function createSystemCalls(
             // returning 400/429 — we'd rather return a warning quickly and
             // let the player retry than lock them out.
             const DIAG_TIMEOUT_MS = 1500;
-            let diagResult: 'pass' | 'not_spawned' | 'invalid_move' | 'transient' | 'timeout' | 'error' = 'error';
-            let diagError: unknown;
+            const diagnostic = await diagnoseMove(DIAG_TIMEOUT_MS);
 
-            try {
-              await Promise.race([
-                worldContract.simulate.UD__move(args, { account: diagAccount }).then(() => { diagResult = 'pass'; }),
-                new Promise<void>((_, reject) => setTimeout(() => {
-                  diagResult = 'timeout';
-                  reject(new Error('diag timeout'));
-                }, DIAG_TIMEOUT_MS)),
-              ]);
-            } catch (e) {
-              if (diagResult !== 'timeout') {
-                diagError = e;
-                if (isNotSpawnedError(e)) diagResult = 'not_spawned';
-                else if (isInvalidMoveError(e)) diagResult = 'invalid_move';
-                else if (isMoveTooFastError(e) || isTransientRpcError(e)) diagResult = 'transient';
-                else diagResult = 'error';
-              }
+            if (diagnostic.result === 'not_spawned') {
+              return handleNotSpawned();
             }
 
-            if (diagResult === 'not_spawned') {
-              console.warn('[move] Character is not spawned — updating store');
-              useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
-              onMoveRevert();
-              return { success: false, error: 'Session expired — respawn to continue.' };
+            if (
+              diagnostic.result === 'invalid_move' &&
+              onChainRetries < MAX_ON_CHAIN_RETRIES &&
+              await syncPositionFromChain()
+            ) {
+              onChainRetries++;
+              console.warn(`[move] Position stale after revert — re-reading chain (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
+              continue;
             }
 
-            if (diagResult === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
-              console.warn(`[move] Position stale after revert — re-reading store`);
-              const freshPos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
-                | { x: number; y: number } | undefined;
-              if (freshPos) {
-                x = Number(freshPos.x);
-                y = Number(freshPos.y);
-                switch (direction) {
-                  case 'up': y += 1; break;
-                  case 'down': y -= 1; break;
-                  case 'left': x -= 1; break;
-                  case 'right': x += 1; break;
-                }
-                args = [characterEntity as `0x${string}`, x, y] as const;
-                onChainRetries++;
-                continue;
-              }
-            }
-
-            if (diagResult === 'pass' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
+            if (diagnostic.result === 'pass' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
               onChainRetries++;
               console.warn(`[move] Simulation now passes — retrying (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
               await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
@@ -1150,20 +1268,43 @@ export function createSystemCalls(
             }
 
             // Timeout, transient, MoveTooFast, or retries exhausted — warn and let player retry
-            if (diagResult === 'error' && diagError) {
-              console.error(`[move] Diagnostic error:`, diagError);
+            if (diagnostic.result === 'error') {
+              console.error(`[move] Diagnostic error:`, diagnostic.error);
               onMoveRevert();
-              return { success: false, error: getContractError(diagError) };
+              return { success: false, error: getContractError(diagnostic.error) };
             }
-            console.warn(`[move] On-chain revert — ${diagResult} (target: ${x},${y})`);
+            console.warn(`[move] On-chain revert — ${diagnostic.result} (target: ${x},${y})`);
             onMoveRevert();
             return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
           }
           onMoveSuccess();
           return { success: true };
         } catch (e) {
+          if (
+            isInvalidMoveError(e) &&
+            onChainRetries < MAX_ON_CHAIN_RETRIES &&
+            await syncPositionFromChain()
+          ) {
+            onChainRetries++;
+            console.warn(`[move] Position stale before submission — re-reading chain (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
+            continue;
+          }
+
           // Stale-state / transient errors → yellow warning, not red error
           if (isMoveTooFastError(e) || isTransientRpcError(e)) {
+            const diagnostic = await diagnoseMove(500);
+            if (diagnostic.result === 'not_spawned') {
+              return handleNotSpawned();
+            }
+            if (
+              diagnostic.result === 'invalid_move' &&
+              onChainRetries < MAX_ON_CHAIN_RETRIES &&
+              await syncPositionFromChain()
+            ) {
+              onChainRetries++;
+              console.warn(`[move] Position stale after transient error — re-reading chain (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
+              continue;
+            }
             return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
           }
           return {
@@ -1398,6 +1539,9 @@ export function createSystemCalls(
       ]);
 
       const receipt = await waitForTransaction(tx);
+      if (receipt.status !== 'success') {
+        return { success: false, error: 'Failed to roll stats.' };
+      }
       const blockNumber = receipt.blockNumber;
 
       const chainId = await publicClient.getChainId();
@@ -1412,7 +1556,6 @@ export function createSystemCalls(
       }
 
       return {
-        error: undefined,
         success: true,
       };
     } catch (e) {
@@ -1514,8 +1657,8 @@ export function createSystemCalls(
         BigInt(itemId),
       ]);
 
-      await waitForTransaction(tx);
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to unequip item.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1648,12 +1791,8 @@ export function createSystemCalls(
         race,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to choose race.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1675,12 +1814,8 @@ export function createSystemCalls(
         powerSource,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to choose power source.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1705,6 +1840,9 @@ export function createSystemCalls(
       ]);
 
       const receipt = await waitForTransaction(tx);
+      if (receipt.status !== 'success') {
+        return { success: false, error: 'Failed to roll base stats.' };
+      }
       const blockNumber = receipt.blockNumber;
 
       const chainId = await publicClient.getChainId();
@@ -1719,7 +1857,6 @@ export function createSystemCalls(
       }
 
       return {
-        error: undefined,
         success: true,
       };
     } catch (e) {
@@ -1743,12 +1880,8 @@ export function createSystemCalls(
         advancedClass,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to select advanced class.');
     } catch (e) {
       return {
         error: getContractError(e),

@@ -125,6 +125,10 @@ vi.mock('../components/ItemEquipModal', () => ({
   ItemEquipModal: () => null,
 }));
 
+vi.mock('../components/RespecPanel', () => ({
+  RespecPanel: () => null,
+}));
+
 vi.mock('../components/Level', () => ({
   Level: (props: any) => (
     <div

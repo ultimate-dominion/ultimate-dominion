@@ -10,7 +10,8 @@ export type RankResult = {
  * Compute a character's stats rank and gold rank among all characters.
  * Stats rank: sorted by sum of base agility + strength + intelligence (desc).
  * Gold rank: sorted by gold balance (desc, bigint comparison).
- * Ties share the same rank (dense ranking).
+ * Ties share the same rank; later ranks include gaps because they are based on
+ * how many players sit strictly above the target.
  */
 export const computeRanks = (
   allCharacters: Character[],
