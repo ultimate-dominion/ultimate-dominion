@@ -49,6 +49,7 @@ import { SHOW_Z2 } from '../lib/env';
 import { useFloatingDamageSignals } from '../hooks/useFloatingDamageSignals';
 import { BattleFloatingDamage, type BattleFloatingDamageHandle } from './pretext/game/BattleFloatingDamage';
 import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
+import { ThreatWeightedName } from './pretext/game/ThreatWeightedName';
 import {
   ADVANCED_CLASS_COLORS,
   ADVANCED_CLASS_I18N_KEYS,
@@ -927,13 +928,22 @@ export const TileDetailsPanel = (): JSX.Element => {
                     </Avatar>
                   )}
                   <HStack>
-                    <Text
-                      fontWeight={700}
-                      size={{ base: 'sm', lg: 'lg' }}
-                      color={opponentDefeated ? 'red.400' : undefined}
-                    >
-                      {opponentDefeated ? t('tile.opponentDefeated', { name: opponent.name }) : opponent.name}
-                    </Text>
+                    {SHOW_Z2 ? (
+                      <ThreatWeightedName
+                        name={opponentDefeated ? t('tile.opponentDefeated', { name: opponent.name }) : opponent.name}
+                        threat={Number(opponent.level)}
+                        defeated={opponentDefeated}
+                        fontSize={{ base: 'sm', lg: 'lg' }}
+                      />
+                    ) : (
+                      <Text
+                        fontWeight={700}
+                        size={{ base: 'sm', lg: 'lg' }}
+                        color={opponentDefeated ? 'red.400' : undefined}
+                      >
+                        {opponentDefeated ? t('tile.opponentDefeated', { name: opponent.name }) : opponent.name}
+                      </Text>
+                    )}
                     <ClassSymbol
                       entityClass={opponent.entityClass}
                       mb={1}
