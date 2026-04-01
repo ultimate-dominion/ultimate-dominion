@@ -52,6 +52,7 @@ import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
 import { BattleSceneCanvas } from './pretext/game/BattleSceneCanvas';
 import { BattleBossSplash, hasBossSplashBeenSeen } from './pretext/game/BattleBossSplash';
 import { BattleDeathScreen } from './pretext/game/BattleDeathScreen';
+import { TextDissolve } from './pretext/game/TextDissolve';
 import { ThreatWeightedName } from './pretext/game/ThreatWeightedName';
 import { classifyWeapon } from './pretext/game/weaponAnimations';
 import { useBattleSceneSignals, type BattleSceneHandle } from '../hooks/useBattleSceneSignals';
@@ -784,6 +785,16 @@ export const TileDetailsPanel = (): JSX.Element => {
     setShowDeathScreen(true);
   }, [userDefeated, currentBattle, opponent]);
 
+  // Defeat dissolve overlay (SHOW_Z2) — monster name dissolves on kill
+  const [showDefeatDissolve, setShowDefeatDissolve] = useState(false);
+  const defeatDissolveShownRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!SHOW_Z2 || !opponentDefeated || !currentBattle || !opponent) return;
+    if (defeatDissolveShownRef.current === currentBattle.encounterId) return;
+    defeatDissolveShownRef.current = currentBattle.encounterId;
+    setShowDefeatDissolve(true);
+  }, [opponentDefeated, currentBattle, opponent]);
+
   // Boss splash overlay (SHOW_Z2) — first encounter with elite/boss only
   const [showBossSplash, setShowBossSplash] = useState(false);
   const bossSplashShownRef = useRef<string | null>(null);
@@ -903,6 +914,16 @@ export const TileDetailsPanel = (): JSX.Element => {
               ))}
             </HStack>
           </HStack>
+          {/* Monster name dissolve on defeat */}
+          {showDefeatDissolve && (
+            <TextDissolve
+              text={opponent.name}
+              color="#B83A2A"
+              active={showDefeatDissolve}
+              fontSize={24}
+              onComplete={() => setShowDefeatDissolve(false)}
+            />
+          )}
           {/* Boss splash overlay — first encounter with elite/boss */}
           {showBossSplash && (
             <BattleBossSplash
