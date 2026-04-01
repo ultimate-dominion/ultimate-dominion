@@ -234,55 +234,55 @@ export function drawDebugSkeleton(ctx, skeleton, w, h) {
 // Compact and round, NOT elongated. Think "angry dark boulder with a face."
 export const direRatSkeleton = {
   spine: [
-    { id: 'snout',   x: 0.12, y: 0.54, radius: 0.025 },
-    { id: 'head',    x: 0.17, y: 0.48, radius: 0.065 },
-    { id: 'neck',    x: 0.26, y: 0.42, radius: 0.070 },
-    // Back ARCHES UP — humped, aggressive
-    { id: 'chest',   x: 0.38, y: 0.32, radius: 0.115 },
-    { id: 'belly',   x: 0.52, y: 0.28, radius: 0.130 },
-    { id: 'hip',     x: 0.64, y: 0.34, radius: 0.115 },
-    { id: 'rump',    x: 0.72, y: 0.42, radius: 0.050 },
+    // FULLY CROUCHED — belly near ground, stubby legs, head low
+    { id: 'snout',   x: 0.10, y: 0.70, radius: 0.025 },
+    { id: 'head',    x: 0.16, y: 0.64, radius: 0.065 },
+    { id: 'neck',    x: 0.26, y: 0.56, radius: 0.074 },
+    { id: 'chest',   x: 0.38, y: 0.48, radius: 0.120 },
+    { id: 'belly',   x: 0.52, y: 0.44, radius: 0.140 },
+    { id: 'hip',     x: 0.64, y: 0.48, radius: 0.125 },
+    { id: 'rump',    x: 0.72, y: 0.56, radius: 0.058 },
   ],
   limbs: [
-    // Near front leg — reaching forward, elbow bent, gripping
+    // Near front leg — stubby, crouched, paw reaching forward
     { attach: 'chest', side: 'near', segments: [
-      { x: 0.28, y: 0.48, radius: 0.045 },  // shoulder — inside body
-      { x: 0.20, y: 0.58, radius: 0.022 },  // elbow — forward
-      { x: 0.15, y: 0.70, radius: 0.014 },  // forearm — angles down
-      { x: 0.14, y: 0.84, radius: 0.018 },  // paw — far ahead, gripping
+      { x: 0.26, y: 0.62, radius: 0.040 },  // shoulder — in body
+      { x: 0.20, y: 0.70, radius: 0.018 },  // elbow
+      { x: 0.16, y: 0.76, radius: 0.012 },  // forearm
+      { x: 0.14, y: 0.84, radius: 0.018 },  // paw
     ]},
-    // Far front leg — slightly tucked back
+    // Far front leg
     { attach: 'chest', side: 'far', segments: [
-      { x: 0.34, y: 0.46, radius: 0.035 },
-      { x: 0.28, y: 0.56, radius: 0.016 },
-      { x: 0.24, y: 0.68, radius: 0.011 },
+      { x: 0.34, y: 0.60, radius: 0.032 },
+      { x: 0.28, y: 0.68, radius: 0.014 },
+      { x: 0.24, y: 0.76, radius: 0.010 },
       { x: 0.23, y: 0.84, radius: 0.014 },
     ]},
-    // Near rear leg — digitigrade zig-zag: haunch→knee BACK→shin FORWARD→paw
+    // Near rear leg — stubby zig-zag, compressed
     { attach: 'hip', side: 'near', segments: [
-      { x: 0.58, y: 0.34, radius: 0.095 },  // haunch — hidden in body
-      { x: 0.60, y: 0.46, radius: 0.030 },  // thigh emerges, angling BACK
-      { x: 0.64, y: 0.58, radius: 0.016 },  // knee — BEHIND hip (high x)
-      { x: 0.58, y: 0.72, radius: 0.011 },  // shin — angles FORWARD (low x)
-      { x: 0.54, y: 0.84, radius: 0.016 },  // paw — plants forward of knee
+      { x: 0.58, y: 0.48, radius: 0.100 },  // haunch — hidden in body
+      { x: 0.60, y: 0.60, radius: 0.026 },  // thigh emerges back
+      { x: 0.65, y: 0.70, radius: 0.013 },  // knee — behind
+      { x: 0.59, y: 0.78, radius: 0.010 },  // shin — forward
+      { x: 0.55, y: 0.84, radius: 0.016 },  // paw
     ]},
-    // Far rear leg — same zig-zag, offset
+    // Far rear leg
     { attach: 'hip', side: 'far', segments: [
-      { x: 0.66, y: 0.34, radius: 0.080 },  // haunch — hidden
-      { x: 0.68, y: 0.46, radius: 0.024 },  // thigh angling back
-      { x: 0.72, y: 0.58, radius: 0.013 },  // knee — behind
-      { x: 0.68, y: 0.72, radius: 0.009 },  // shin — forward
-      { x: 0.65, y: 0.84, radius: 0.013 },  // paw
+      { x: 0.66, y: 0.48, radius: 0.085 },  // haunch — hidden
+      { x: 0.68, y: 0.60, radius: 0.020 },  // thigh
+      { x: 0.72, y: 0.70, radius: 0.011 },  // knee — behind
+      { x: 0.68, y: 0.78, radius: 0.008 },  // shin
+      { x: 0.66, y: 0.84, radius: 0.013 },  // paw
     ]},
   ],
   tail: {
     points: [
-      { x: 0.74, y: 0.44 },
-      { x: 0.82, y: 0.36 },
-      { x: 0.90, y: 0.34 },
-      { x: 0.94, y: 0.42 },
-      { x: 0.93, y: 0.52 },
-      { x: 0.88, y: 0.58 },
+      { x: 0.74, y: 0.58 },
+      { x: 0.82, y: 0.50 },
+      { x: 0.90, y: 0.48 },
+      { x: 0.94, y: 0.56 },
+      { x: 0.93, y: 0.66 },
+      { x: 0.88, y: 0.72 },
     ],
     startWidth: 0.018,
     endWidth: 0.003,
