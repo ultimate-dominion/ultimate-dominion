@@ -19,8 +19,10 @@ import SafeTypist from './SafeTypist';
 
 import { SHOW_Z2 } from '../lib/env';
 import { BattleCombatLog } from './pretext/game/BattleCombatLog';
+import { CombatTypewriter } from './pretext/game/CombatTypewriter';
 import { GameItemTooltip } from './pretext/game/GameItemTooltip';
 import { useCombatLogEntries } from '../hooks/useCombatLogEntries';
+import { useCombatNarrative } from '../hooks/useCombatNarrative';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
@@ -302,6 +304,19 @@ export const ActionsPanel = (): JSX.Element => {
     () => [...spellTemplates, ...weaponTemplates],
     [spellTemplates, weaponTemplates],
   );
+
+  const combatNarrative = useCombatNarrative({
+    visibleOutcomes,
+    pendingTurn,
+    dotActions,
+    statusEffectActions,
+    characterId: character?.id,
+    opponentName: opponentDisplayName,
+    opponent: opponent && 'mobId' in opponent ? opponent as Monster : null,
+    encounterType: currentBattle?.encounterType,
+    spellAndWeaponTemplates,
+    combatConsumables,
+  });
 
   const STAT_LABELS: Record<StatsClasses, string> = {
     [StatsClasses.Strength]: 'STR',
@@ -809,7 +824,14 @@ export const ActionsPanel = (): JSX.Element => {
           return null;
         })()}
 
-        {!autoAdventureMode && opponent &&
+        {SHOW_Z2 && !autoAdventureMode && opponent && combatNarrative && (
+          <CombatTypewriter
+            segments={combatNarrative.segments}
+            narrativeKey={combatNarrative.key}
+            isEnemyAttack={combatNarrative.isEnemyAttack}
+          />
+        )}
+        {!SHOW_Z2 && !autoAdventureMode && opponent &&
           (() => {
             const seenDotTurns = new Set<string>();
             const logSize = { base: '2xs' as const, sm: 'xs' as const, lg: 'sm' as const };
