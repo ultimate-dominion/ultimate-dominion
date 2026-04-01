@@ -32,12 +32,22 @@ import { buildCharacter } from '../utils/buildCharacter';
 import {
   type Character,
   type Monster,
+  type Npc,
+  type NpcInteraction,
   type Shop,
+  type WorldBoss,
+  MobType,
 } from '../utils/types';
 
 import { useCharacter } from './CharacterContext';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
+
+/** Map NPC metadataUri prefix to interaction type and display name */
+const NPC_METADATA_MAP: Record<string, { name: string; interaction: NpcInteraction }> = {
+  'npc:vel_morrow': { name: 'Vel Morrow', interaction: 'respec' },
+  'npc:edric_thorne': { name: 'Edric Thorne', interaction: 'guild' },
+};
 
 const SHOP_MOB_ID_TO_NAME: Record<string, string> = {
   '1': `General Store`,
@@ -118,9 +128,12 @@ type MapContextType = {
   onSpawn: () => void;
   otherCharactersOnTile: Character[];
   position: { x: number; y: number } | null;
+  allNpcs: Npc[];
+  npcsOnTile: Npc[];
   refreshEntities: () => void;
   shopsOnTile: Shop[];
   visibleMonstersOnTile: Monster[];
+  worldBosses: WorldBoss[];
 };
 
 const MapContext = createContext<MapContextType>({
@@ -138,9 +151,12 @@ const MapContext = createContext<MapContextType>({
   onSpawn: () => {},
   otherCharactersOnTile: [],
   position: null,
+  allNpcs: [],
+  npcsOnTile: [],
   refreshEntities: () => {},
   shopsOnTile: [],
   visibleMonstersOnTile: [],
+  worldBosses: [],
 });
 
 export type MapProviderProps = {
@@ -187,6 +203,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const tokenURITable = useGameTable('CharactersTokenURI');
   const worldStatusEffectsTable = useGameTable('WorldStatusEffects');
   const mobStatsTable = useGameTable('MobStats');
+  const worldBossTable = useGameTable('WorldBossV2');
+  const mobsTable = useGameTable('Mobs');
 
   // Player's position from the store (canonical — no optimistic updates)
   // Try PositionV2 first (zone-relative coords deployed via beta contract leak),
@@ -515,6 +533,81 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     ) as Character[];
   }, [zonedCharacters, delegatorAddress, position]);
 
+  // World bosses for the current zone
+  const worldBosses = useMemo((): WorldBoss[] => {
+    return Object.entries(worldBossTable)
+      .map(([key, row]) => ({
+        bossId: key,
+        mobId: toNumber(row.mobId),
+        zoneId: toNumber(row.zoneId),
+        spawnX: toNumber(row.spawnX),
+        spawnY: toNumber(row.spawnY),
+        entityId: (row.entityId as string) ?? '',
+        isAlive: !!row.entityId && row.entityId !== zeroHash,
+        respawnSeconds: toNumber(row.respawnSeconds),
+        lastKilledAt: toNumber(row.lastKilledAt),
+        spawnedAt: toNumber(row.spawnedAt),
+        active: Boolean(row.active),
+      }))
+      .filter(b => b.active && b.zoneId === currentZone);
+  }, [worldBossTable, currentZone]);
+
+  // NPC entities: spawned + position, but not shops/characters/monsters
+  // Detected by checking the Mobs template table for MobType.NPC
+  const allNpcEntities = useMemo(() => {
+    return Object.keys(positionTable).filter(key => {
+      if (!spawnedTable[key]) return false;
+      if (shopsTable[key] || charactersTable[key] || statsTable[key]) return false;
+      try {
+        const { mobId } = decodeMobInstanceId(key as `0x${string}`);
+        const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
+        const mobData = mobsTable[mobKey];
+        return mobData && toNumber(mobData.mobType) === MobType.NPC;
+      } catch {
+        return false;
+      }
+    });
+  }, [positionTable, spawnedTable, shopsTable, charactersTable, statsTable, mobsTable]);
+
+  const allNpcs = useMemo((): Npc[] => {
+    if (!isSynced) return [];
+    try {
+      return allNpcEntities.map(entity => {
+        const posData = positionTable[entity];
+        const x = toNumber(posData?.x ?? 0);
+        const y = toNumber(posData?.y ?? 0);
+        const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
+        const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
+        const mobData = mobsTable[mobKey];
+        const metadataUri = typeof mobData?.mobMetadata === 'string' ? mobData.mobMetadata : '';
+        const npcMeta = NPC_METADATA_MAP[metadataUri] ?? { name: `NPC #${mobId}`, interaction: 'dialogue' as const };
+
+        return {
+          entityId: entity,
+          mobId: mobId.toString(),
+          name: npcMeta.name,
+          interaction: npcMeta.interaction,
+          position: { x, y },
+          metadataUri,
+        };
+      });
+    } catch (e) {
+      renderError((e as Error)?.message ?? 'Failed to fetch NPCs.', e);
+      return [];
+    }
+  }, [allNpcEntities, positionTable, mobsTable, isSynced, renderError]);
+
+  const zonedNpcs = useMemo(() => {
+    return allNpcs.filter(n => isInZone(n.position.x, n.position.y, currentZone));
+  }, [allNpcs, currentZone]);
+
+  const npcsOnTile = useMemo(() => {
+    if (!position || (position.x === 0 && position.y === 0)) return [];
+    return zonedNpcs.filter(
+      n => n.position.x === position.x && n.position.y === position.y,
+    );
+  }, [zonedNpcs, position]);
+
   // Proactive ghost validation — verify monsters on the current tile are alive
   // on-chain. Prevents "No enemies here" errors by evicting ghosts before the
   // player clicks Fight. Fires once per tile, not per render.
@@ -627,8 +720,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         otherCharactersOnTile,
         position,
         refreshEntities,
+        allNpcs: zonedNpcs,
+        npcsOnTile,
         shopsOnTile,
         visibleMonstersOnTile,
+        worldBosses,
       }}
     >
       {children}
