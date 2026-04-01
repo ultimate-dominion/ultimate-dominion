@@ -993,27 +993,17 @@ export function createSystemCalls(
       return { success: false, error: 'In encounter.' };
     }
 
-    // Pre-flight: read on-chain position to avoid mismatch between client store
-    // and contract state (production has Position/PositionV2 table divergence).
-    let x: number;
-    let y: number;
-    try {
-      const onChainPos = await worldContract.read.UD__getEntityPosition([
-        characterEntity as `0x${string}`,
-      ]);
-      // getEntityPosition returns (uint16 x, uint16 y)
-      x = Number(onChainPos[0]);
-      y = Number(onChainPos[1]);
-    } catch {
-      // Fallback to store if chain read fails
-      const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
-        | { x: number; y: number } | undefined;
-      if (!pos) {
-        return { success: false, error: 'Position not found.' };
-      }
-      x = Number(pos.x);
-      y = Number(pos.y);
+    // Read position from the Zustand store (updated synchronously from receipts).
+    // Position table is canonical (contract writes to it after upgrade).
+    // PositionV2 fallback kept for any legacy state still in the store.
+    const pos = (getTableValue('Position', characterEntity) ?? getTableValue('PositionV2', characterEntity)) as
+      | { x: number; y: number } | undefined;
+    if (!pos) {
+      return { success: false, error: 'Position not found.' };
     }
+
+    let x = Number(pos.x);
+    let y = Number(pos.y);
     switch (direction) {
       case 'up': y += 1; break;
       case 'down': y -= 1; break;
@@ -1089,7 +1079,7 @@ export function createSystemCalls(
                 // Returns (uint16 x, uint16 y)
                 x = Number(chainPos[0]);
                 y = Number(chainPos[1]);
-                useGameStore.getState().setRow('PositionV2', characterEntity, { zoneId: 1, x, y });
+                useGameStore.getState().setRow('Position', characterEntity, { x, y });
                 switch (direction) {
                   case 'up': y += 1; break;
                   case 'down': y -= 1; break;
@@ -1156,8 +1146,8 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'autoAdventure');
     if (ownershipError) return ownershipError;
 
-    // Same store-based position read as move — uses Zustand (updated from receipts)
-    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+    // Same store-based position read as move — Position is canonical after contract upgrade
+    const pos = (getTableValue('Position', characterEntity) ?? getTableValue('PositionV2', characterEntity)) as
       | { x: number; y: number } | undefined;
     if (!pos) {
       return { success: false, error: 'Position not found.' };
