@@ -1001,9 +1001,9 @@ export function createSystemCalls(
       const onChainPos = await worldContract.read.UD__getEntityPosition([
         characterEntity as `0x${string}`,
       ]);
-      // getEntityPosition returns (uint256 zoneId, uint16 x, uint16 y)
-      x = Number(onChainPos[1]);
-      y = Number(onChainPos[2]);
+      // getEntityPosition returns (uint16 x, uint16 y)
+      x = Number(onChainPos[0]);
+      y = Number(onChainPos[1]);
     } catch {
       // Fallback to store if chain read fails
       const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
@@ -1086,10 +1086,10 @@ export function createSystemCalls(
                 const chainPos = await worldContract.read.UD__getEntityPosition([
                   characterEntity as `0x${string}`,
                 ]);
-                // Returns (uint256 zoneId, uint16 x, uint16 y)
-                x = Number(chainPos[1]);
-                y = Number(chainPos[2]);
-                useGameStore.getState().setRow('PositionV2', characterEntity, { zoneId: Number(chainPos[0]), x, y });
+                // Returns (uint16 x, uint16 y)
+                x = Number(chainPos[0]);
+                y = Number(chainPos[1]);
+                useGameStore.getState().setRow('PositionV2', characterEntity, { zoneId: 1, x, y });
                 switch (direction) {
                   case 'up': y += 1; break;
                   case 'down': y -= 1; break;
