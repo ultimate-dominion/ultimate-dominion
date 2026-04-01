@@ -45,6 +45,9 @@ import {
 } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getMonsterImage } from '../utils/monsterImages';
+import { SHOW_Z2 } from '../lib/env';
+import { useFloatingDamageSignals } from '../hooks/useFloatingDamageSignals';
+import { BattleFloatingDamage, type BattleFloatingDamageHandle } from './pretext/game/BattleFloatingDamage';
 import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
 import {
   ADVANCED_CLASS_COLORS,
@@ -234,10 +237,34 @@ export const TileDetailsPanel = (): JSX.Element => {
     : sortedMonsters.slice(0, MONSTER_COLLAPSE_LIMIT);
   const hiddenMonsterCount = sortedMonsters.length - MONSTER_COLLAPSE_LIMIT;
 
-  const { isCounterattackPending, pendingCounterattackDamage } = useCombatPacing({
+  const { isCounterattackPending, pendingCounterattackDamage, visibleOutcomes } = useCombatPacing({
     attackOutcomes,
     characterId: character?.id,
     isInBattle: !!currentBattle,
+  });
+
+  // Floating damage numbers overlay
+  const floatingDamageRef = useRef<BattleFloatingDamageHandle>(null);
+  const battleContainerRef = useRef<HTMLDivElement>(null);
+  const [battleContainerSize, setBattleContainerSize] = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    const el = battleContainerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      setBattleContainerSize({ w: width, h: height });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [currentBattle]);
+
+  useFloatingDamageSignals({
+    visibleOutcomes,
+    characterId: character?.id,
+    damageRef: floatingDamageRef,
+    containerWidth: battleContainerSize.w,
+    containerHeight: battleContainerSize.h,
   });
 
   const encounterTx = useTransaction({
@@ -769,7 +796,8 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   if (currentBattle && opponent && userCharacterForBattleRendering && !autoAdventureMode) {
     return (
-      <Box h={{ base: 'auto', lg: '100%' }} position="relative">
+      <Box ref={battleContainerRef} h={{ base: 'auto', lg: '100%' }} position="relative">
+        {SHOW_Z2 && <BattleFloatingDamage ref={floatingDamageRef} />}
         <style>
           {`
           @keyframes flicker {
