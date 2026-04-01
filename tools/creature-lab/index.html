@@ -37,11 +37,15 @@
   </div>
   <div class="main">
     <div class="panel">
+      <div class="panel-label">Skeleton</div>
+      <canvas id="skel-raw"></canvas>
+    </div>
+    <div class="panel">
       <div class="panel-label">ASCII</div>
       <canvas id="next-ascii"></canvas>
     </div>
     <div class="panel">
-      <div class="panel-label">Raw Template</div>
+      <div class="panel-label">Painted</div>
       <canvas id="next-raw"></canvas>
     </div>
     <div class="ref-strip">
@@ -76,6 +80,7 @@
       </select>
     </label>
     <label><input type="checkbox" id="show-grid"> Grid</label>
+    <label><input type="checkbox" id="show-debug" checked> Skeleton debug</label>
   </div>
   <script type="module" src="main.js"></script>
 </body>

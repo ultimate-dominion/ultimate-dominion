@@ -7,6 +7,9 @@ import {
   sssEdgeGlow,
 } from './helpers.js';
 import { renderAscii } from './ascii-renderer.js';
+import {
+  drawCreatureFromSkeleton, drawDebugSkeleton, direRatSkeleton,
+} from './skeleton.js';
 
 // ==========================================================================
 // CURRENT Dire Rat — exact port from monsterTemplates.ts (side profile)
@@ -596,10 +599,21 @@ let animating = false;
 let animStart = 0;
 let rafId = null;
 
+// Try to load optimized skeleton from JSON (set via optimize.mjs)
+let activeSkeleton = direRatSkeleton;
+try {
+  const resp = await fetch('./optimized-skeleton.json');
+  if (resp.ok) {
+    activeSkeleton = await resp.json();
+    console.log('Loaded optimized skeleton');
+  }
+} catch (e) { /* use default */ }
+
 function render(elapsed = 0) {
   const size = parseInt(document.getElementById('canvas-size').value);
   const cellSize = parseInt(document.getElementById('cell-size').value);
   const showGrid = document.getElementById('show-grid').checked;
+  const showDebug = document.getElementById('show-debug').checked;
   const asciiOpts = {
     elapsed,
     cellSize,
@@ -610,29 +624,38 @@ function render(elapsed = 0) {
 
   const canvasW = size;
   const canvasH = Math.round(size * 4 / 7);
+  const maxDisplay = 420;
+  const displayW = `${Math.min(canvasW, maxDisplay)}px`;
+  const displayH = `${Math.min(canvasH, Math.round(maxDisplay * 4 / 7))}px`;
+
+  // -- Skeleton view --
+  const c1 = document.getElementById('skel-raw');
+  c1.width = canvasW; c1.height = canvasH;
+  c1.style.width = displayW; c1.style.height = displayH;
+  const ctx1 = c1.getContext('2d');
+  ctx1.fillStyle = '#000'; ctx1.fillRect(0, 0, canvasW, canvasH);
+  drawCreatureFromSkeleton(ctx1, activeSkeleton, canvasW, canvasH);
+  if (showDebug) drawDebugSkeleton(ctx1, activeSkeleton, canvasW, canvasH);
 
   // -- ASCII --
   const c2 = document.getElementById('next-ascii');
   c2.width = canvasW; c2.height = canvasH;
-  c2.style.width = `${Math.min(canvasW, 500)}px`;
-  c2.style.height = `${Math.min(canvasH, Math.round(500 * 4 / 7))}px`;
+  c2.style.width = displayW; c2.style.height = displayH;
   const ctx2 = c2.getContext('2d');
   ctx2.fillStyle = '#000'; ctx2.fillRect(0, 0, canvasW, canvasH);
-
   renderAscii(ctx2, (tctx, tw, th) => { setSeed(currentSeed); drawNewDireRat(tctx, tw, th); }, 0, 0, canvasW, canvasH, asciiOpts);
 
-  // -- Raw Template --
+  // -- Painted (hand-drawn version) --
   const c3 = document.getElementById('next-raw');
   c3.width = canvasW; c3.height = canvasH;
-  c3.style.width = `${Math.min(canvasW, 500)}px`;
-  c3.style.height = `${Math.min(canvasH, Math.round(500 * 4 / 7))}px`;
+  c3.style.width = displayW; c3.style.height = displayH;
   const ctx3 = c3.getContext('2d');
   ctx3.fillStyle = '#000'; ctx3.fillRect(0, 0, canvasW, canvasH);
   setSeed(currentSeed);
   drawNewDireRat(ctx3, canvasW, canvasH);
 
   if (showGrid) {
-    for (const canvas of [c2, c3]) {
+    for (const canvas of [c1, c2, c3]) {
       const gctx = canvas.getContext('2d');
       gctx.strokeStyle = 'rgba(255,255,255,0.08)'; gctx.lineWidth = 1;
       const step = canvasW / 10;
@@ -671,7 +694,7 @@ document.getElementById('animate').addEventListener('change', (e) => {
   }
 });
 
-for (const id of ['canvas-size', 'cell-size', 'show-grid']) {
+for (const id of ['canvas-size', 'cell-size', 'show-grid', 'show-debug']) {
   document.getElementById(id).addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
 }
 
