@@ -56,7 +56,12 @@ function MonsterPreview({
       const monsterH = height - labelH;
 
       const cellSize = viewSize === 'tile' ? 3 : viewSize === 'combat' ? 4 : 3;
-      renderMonster(ctx, template, 0, 0, width, monsterH, { elapsed, cellSize });
+      renderMonster(ctx, template, 0, 0, width, monsterH, {
+        elapsed,
+        cellSize,
+        enable3D: false,
+        enableGlow: false,
+      });
 
       // Name label (skip on tile view)
       if (viewSize !== 'tile') {
@@ -80,7 +85,7 @@ function MonsterPreview({
     [template, viewSize],
   );
 
-  const { canvasRef } = useCanvas({ onFrame });
+  const { canvasRef } = useCanvas({ onFrame, static: true });
   const config = SIZE_CONFIG[viewSize];
 
   return (
