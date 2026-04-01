@@ -45,6 +45,7 @@ import {
 } from '../utils/constants';
 import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getMonsterImage } from '../utils/monsterImages';
+import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
 import {
   ADVANCED_CLASS_COLORS,
   ADVANCED_CLASS_I18N_KEYS,
@@ -868,28 +869,14 @@ export const TileDetailsPanel = (): JSX.Element => {
               {currentBattle.encounterType === EncounterType.PvE ? (
                 <VStack mt={{ base: 2, lg: 6 }} spacing={0}>
                   {isDesktop && (
-                    <Avatar
-                      animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
-                      bgColor="grey300"
-                      boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                      filter={opponentDefeated ? 'grayscale(100%)' : undefined}
-                      mb={{ base: 1, lg: 2 }}
-                      opacity={opponentDefeated ? 0.4 : isMonsterHit ? 0 : 1}
-                      size={{ base: '2xs', lg: 'md' }}
-                      src={getMonsterImage(opponent.name)}
-                      name={opponent.name}
-                    >
-                      {!getMonsterImage(opponent.name) && (
-                        <Text
-                          animation={
-                            isMonsterHit ? 'flicker .7s infinite' : 'none'
-                          }
-                          fontSize="42px"
-                        >
-                          {getEmoji(opponent.name)}
-                        </Text>
-                      )}
-                    </Avatar>
+                    <Box mb={{ base: 1, lg: 2 }}>
+                      <BattleMonsterAscii
+                        monsterName={opponent.name}
+                        defeated={opponentDefeated}
+                        hit={isMonsterHit}
+                        size={96}
+                      />
+                    </Box>
                   )}
                   <HStack>
                     <Text
