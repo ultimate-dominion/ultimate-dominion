@@ -4,19 +4,18 @@
 
 import { MUDChain } from '@latticexyz/common/chains';
 
-// Primary RPC from env, then dedicated fallback, then public fallbacks.
-// drpc.org removed — persistent 500s poison viem's fallback ranking,
-// causing stale reads that break gas estimation and TX execution.
+// ORDER MATTERS — viem ranks fallbacks by array position.
+// Primary: rpc.ultimatedominion.com (our node). Fallback: Alchemy.
+// NEVER add free public RPCs (publicnode, drpc, mainnet.base.org) —
+// they poison viem's fallback ranking with stale reads and 500s.
 const baseHttpRpcs = [
-  import.meta.env.VITE_HTTPS_RPC_URL,
-  import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL,
+  import.meta.env.VITE_HTTPS_RPC_URL,     // primary: our node
+  import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL,  // fallback: alchemy
 ].filter(Boolean) as string[];
 
-// publicnode.com removed — same issue as drpc: free public RPCs poison
-// viem's fallback ranking, causing stale reads and connection spam.
 const baseWsRpcs = [
-  import.meta.env.VITE_WS_RPC_URL,
-  import.meta.env.VITE_WS_RPC_FALLBACK_URL,
+  import.meta.env.VITE_WS_RPC_URL,        // primary: our node
+  import.meta.env.VITE_WS_RPC_FALLBACK_URL,     // fallback: alchemy
 ].filter(Boolean) as string[];
 
 
