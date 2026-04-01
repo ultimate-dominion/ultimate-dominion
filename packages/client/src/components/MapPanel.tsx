@@ -36,6 +36,7 @@ import { PolygonalCard } from './PolygonalCard';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassArrowSvg, CompassRoseOrnamentSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
+import { GameAncientMap } from './pretext/game/GameAncientMap';
 
 /** Safe zone boundaries per zone (display coords, top-down grid) */
 const SAFE_ZONE_BY_ZONE: Record<number, { topLeft: { x: number; y: number }; bottomRight: { x: number; y: number } }> = {
@@ -278,6 +279,34 @@ export const MapPanel = (): JSX.Element => {
               {currentZoneName}
             </Heading>
           </HStack>
+          {SHOW_Z2 ? (
+            <Box
+              aspectRatio="1/1"
+              maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
+              maxW="100%"
+              m="0 auto"
+              mt={1}
+            >
+              <GameAncientMap
+                gridSize={stage >= OnboardingStage.VETERAN ? MAP_SIZE : 5}
+                displayPosition={displayPosition}
+                allMonsters={allMonsters}
+                allCharacters={allCharacters}
+                allShops={allShops}
+                allNpcs={allNpcs}
+                worldBosses={worldBosses}
+                safeZone={SAFE_ZONE_BY_ZONE[currentZone] ?? null}
+                exitTile={
+                  character?.hasSelectedAdvancedClass && currentZone === 1
+                    ? EXIT_TILE
+                    : null
+                }
+                isSpawned={isSpawned}
+                currentZone={currentZone}
+                delegatorAddress={delegatorAddress}
+              />
+            </Box>
+          ) : (
           <Box
             aspectRatio="1/1"
             border="0.5px solid"
@@ -467,6 +496,7 @@ export const MapPanel = (): JSX.Element => {
               );
             })}
           </Box>
+          )}
           {stage >= OnboardingStage.SETTLING_IN && (
             <HStack
               justifyContent="end"
