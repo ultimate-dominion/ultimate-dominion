@@ -994,9 +994,9 @@ export function createSystemCalls(
     }
 
     // Read position from the Zustand store (updated synchronously from receipts).
-    // Position table is canonical (contract writes to it after upgrade).
-    // PositionV2 fallback kept for any legacy state still in the store.
-    const pos = (getTableValue('Position', characterEntity) ?? getTableValue('PositionV2', characterEntity)) as
+    // PositionV2 is canonical — the deployed contract writes (zoneId, x, y) to it.
+    // Position fallback kept for any legacy state still in the store.
+    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
       | { x: number; y: number } | undefined;
     if (!pos) {
       return { success: false, error: 'Position not found.' };
@@ -1071,15 +1071,12 @@ export function createSystemCalls(
             }
 
             if (diagResult === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
-              console.warn(`[move] Position stale after revert — refreshing from chain`);
-              try {
-                const chainPos = await worldContract.read.UD__getEntityPosition([
-                  characterEntity as `0x${string}`,
-                ]);
-                // Returns (uint16 x, uint16 y)
-                x = Number(chainPos[0]);
-                y = Number(chainPos[1]);
-                useGameStore.getState().setRow('Position', characterEntity, { x, y });
+              console.warn(`[move] Position stale after revert — re-reading store`);
+              const freshPos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+                | { x: number; y: number } | undefined;
+              if (freshPos) {
+                x = Number(freshPos.x);
+                y = Number(freshPos.y);
                 switch (direction) {
                   case 'up': y += 1; break;
                   case 'down': y -= 1; break;
@@ -1089,8 +1086,6 @@ export function createSystemCalls(
                 args = [characterEntity as `0x${string}`, x, y] as const;
                 onChainRetries++;
                 continue;
-              } catch {
-                // Chain read failed — fall through
               }
             }
 
@@ -1146,8 +1141,8 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'autoAdventure');
     if (ownershipError) return ownershipError;
 
-    // Same store-based position read as move — Position is canonical after contract upgrade
-    const pos = (getTableValue('Position', characterEntity) ?? getTableValue('PositionV2', characterEntity)) as
+    // Same store-based position read as move — PositionV2 is canonical (contract writes to it)
+    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
       | { x: number; y: number } | undefined;
     if (!pos) {
       return { success: false, error: 'Position not found.' };
