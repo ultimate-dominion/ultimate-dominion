@@ -599,13 +599,14 @@ let animating = false;
 let animStart = 0;
 let rafId = null;
 
-// Try to load optimized skeleton from JSON (set via optimize.mjs)
+// Use the in-code skeleton (hand-tuned active pose).
+// To override, place optimized-skeleton.json in this directory.
 let activeSkeleton = direRatSkeleton;
 try {
   const resp = await fetch('./optimized-skeleton.json');
   if (resp.ok) {
     activeSkeleton = await resp.json();
-    console.log('Loaded optimized skeleton');
+    console.log('Loaded optimized skeleton from JSON');
   }
 } catch (e) { /* use default */ }
 
