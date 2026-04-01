@@ -16,6 +16,9 @@ import { useMap } from '../contexts/MapContext';
 import { CLASS_COLORS } from '../utils/types';
 import { CHARACTERS_PATH } from '../Routes';
 import { PolygonalCard } from './PolygonalCard';
+import { SHOW_Z2 } from '../lib/env';
+import { useCharacter } from '../contexts/CharacterContext';
+import { GameChatBubbles } from './pretext/game/GameChatBubbles';
 
 // Ember glow animation for recent world events
 const emberGlow = keyframes`
@@ -242,6 +245,7 @@ const WorldTab: React.FC<{ messages: FeedMessage[] }> = ({ messages }) => {
 
 const ChatTab: React.FC<{ messages: ChatMessage[] }> = ({ messages }) => {
   const { allCharacters } = useMap();
+  const { character } = useCharacter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -249,6 +253,18 @@ const ChatTab: React.FC<{ messages: ChatMessage[] }> = ({ messages }) => {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  if (SHOW_Z2) {
+    return (
+      <Box flex="1" minH={0} h="100%">
+        <GameChatBubbles
+          messages={messages}
+          allCharacters={allCharacters}
+          selfCharacterId={character?.id}
+        />
+      </Box>
+    );
+  }
 
   return (
     <VStack className="data-dense" flex="1" overflowY="auto" p={2} spacing={1.5}>
