@@ -48,6 +48,7 @@ import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
 import { SHOW_Z2 } from '../lib/env';
+import { BattleWorldTicker } from '../components/pretext/game/BattleWorldTicker';
 import { useGameStore, wasPreHydrated } from '../lib/gameStore/store';
 import { CHARACTER_CREATION_PATH, HOME_PATH, WAITING_ROOM_PATH } from '../Routes';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
@@ -391,6 +392,7 @@ export const GameBoard = (): JSX.Element => {
         gap={0}
         overflow="hidden"
       >
+        {SHOW_Z2 && <BattleWorldTicker />}
         {SHOW_Z2 && <CurrentObjectiveHud />}
         <Box
           flex={!isDesktop && currentBattle ? 'none' : '1'}
