@@ -189,20 +189,6 @@ uint256 constant GUILD_MAX_LEVEL = 3;
 // The Pact Badge
 uint256 constant BADGE_GUILD_FOUNDER = 60;              // Social badge range (60-69)
 
-// Guild Stat Buffs
-int256 constant GUILD_BUFF_FLAT_STAT = 3;              // +3 STR/AGI/INT
-int256 constant GUILD_BUFF_FLAT_HP = 5;                 // +5 maxHP for Resilience
-uint256 constant GUILD_BUFF_DAILY_COST = 200 ether;     // 200 gold/day per active buff
-uint256 constant GUILD_BUFF_PERIOD = 1 days;
-
-// Guild Upgrades
-uint256 constant GUILD_UPGRADE_LEVEL_2_COST = 1000 ether;
-uint256 constant GUILD_UPGRADE_LEVEL_3_COST = 2500 ether;
-uint256 constant GUILD_MAX_LEVEL = 3;
-
-// The Pact Badge
-uint256 constant BADGE_GUILD_FOUNDER = 60;              // Social badge range (60-69)
-
 // ======== Phase 5: PvP Rankings ========
 int256 constant ELO_DEFAULT_RATING = 1000;
 int256 constant ELO_K_FACTOR = 32;
