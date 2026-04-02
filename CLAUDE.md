@@ -1,5 +1,9 @@
 # Ultimate Dominion - Project Memory
 
+## Shared Workflow
+
+Read `AGENTS.md` first for the agent-neutral session flow, safety model, memory routing, and handoff rules. This file remains the deep project reference and Claude-facing rulebook.
+
 ## Game Manifesto (Design North Star)
 
 Full manifesto: `packages/client/src/pages/Manifesto.tsx`. Core principles: permanent world (no shortcuts), player-authored stories (emergent > scripted), provable on-chain ownership, invisible tech (no crypto jargon in UI), meaningful consequences, fair economics. **Filter: Does this make the world more permanent, more player-driven, and more worth coming back to in a year?**
@@ -51,6 +55,8 @@ Full manifesto: `packages/client/src/pages/Manifesto.tsx`. Core principles: perm
 
 ### Git Workflow
 - Commit style: conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`).
+- Active implementation work happens in a named worktree/workbranch, not in the main checkout.
+- Workbranches/worktrees are durable session state. Never delete, prune, or remove one unless Michael explicitly asks.
 - Only commit what was worked on in the current session — don't sweep in unrelated uncommitted changes.
 - Don't push without asking.
 
@@ -75,9 +81,13 @@ Full manifesto: `packages/client/src/pages/Manifesto.tsx`. Core principles: perm
 
 ### Status Updates
 - Before any operation that takes more than 10 seconds, say what you're doing and roughly how long it'll take.
+- Explain results in plain English by default. Lead with what changed for players, whether it is local, beta, or prod, and any real risk.
+- Do not expect Michael to phrase requests like an engineer even when the task is technical.
 
 ### Definition of Done
 - Every task needs a verification command, commit hash, or live URL before it's closed. No closing on vibes.
+- Local baseline: the build passes.
+- Standard validation path: local build, beta deploy on `dev`, then the relevant integration tests in beta.
 
 ### Learn From Mistakes
 - After any error that takes more than one attempt to fix, write the root cause and solution to `~/.claude/projects/-Users-michaelorourke/memory/learnings.md` (general) or `mud-gotchas.md` (MUD-specific) before moving on.
