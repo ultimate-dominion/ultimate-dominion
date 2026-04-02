@@ -1306,7 +1306,6 @@ describe('createSystemCalls — validateTileMonsters', () => {
   const ZERO_HASH = '0x' + '00'.repeat(32);
   const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000';
   const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900';
-  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000';
 
   const makeSpawnedRecord = (spawned: boolean) =>
     [spawned ? '0x01' : '0x00', '0x' + '00'.repeat(32), '0x'] as const;
@@ -1316,17 +1315,10 @@ describe('createSystemCalls — validateTileMonsters', () => {
     died = false,
   ) => [`0x${encounterId.slice(2)}${died ? '01' : '00'}`, '0x' + '00'.repeat(32), '0x'] as const;
 
-  const makePositionRecord = (x: number, y: number) => [
-    `0x${x.toString(16).padStart(4, '0')}${y.toString(16).padStart(4, '0')}`,
-    '0x' + '00'.repeat(32),
-    '0x',
-  ] as const;
-
   const mockValidationReads = (
     states: Record<string, {
       encounterId?: string;
       died?: boolean;
-      position?: { x: number; y: number };
       spawned?: boolean;
     }>,
   ) => vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
@@ -1336,10 +1328,6 @@ describe('createSystemCalls — validateTileMonsters', () => {
     if (tableId === SPAWNED_TABLE_ID) return makeSpawnedRecord(state.spawned ?? true);
     if (tableId === ENCOUNTER_ENTITY_TABLE_ID) {
       return makeEncounterRecord(state.encounterId ?? ZERO_HASH, state.died ?? false);
-    }
-    if (tableId === POSITION_TABLE_ID) {
-      const position = state.position ?? { x: 1, y: 1 };
-      return makePositionRecord(position.x, position.y);
     }
     throw new Error(`Unexpected table ${tableId}`);
   });
@@ -1446,28 +1434,5 @@ describe('createSystemCalls — validateTileMonsters', () => {
       died: false,
     }));
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', BUSY_MONSTER, { spawned: false });
-  });
-
-  it('reconciles monsters whose on-chain position no longer matches the current tile', async () => {
-    const { network } = createMockNetwork();
-    const MOVED_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000ddd';
-    mockedGetTableValue.mockImplementation((table: string, entity: string) => {
-      if (entity !== MOVED_MONSTER) return undefined;
-      if (table === 'PositionV2') return { zoneId: 1, x: 1, y: 1 } as ReturnType<typeof getTableValue>;
-      return undefined;
-    });
-    network.publicClient.readContract = mockValidationReads({
-      [MOVED_MONSTER]: { position: { x: 4, y: 2 }, spawned: true },
-    });
-
-    const calls = createSystemCalls(network);
-    await calls.validateTileMonsters([MOVED_MONSTER], { x: 1, y: 1 });
-
-    expect(mockSetRow).toHaveBeenCalledWith('Position', MOVED_MONSTER, { x: 4, y: 2 });
-    expect(mockSetRow).toHaveBeenCalledWith('PositionV2', MOVED_MONSTER, expect.objectContaining({
-      zoneId: 1,
-      x: 4,
-      y: 2,
-    }));
   });
 });

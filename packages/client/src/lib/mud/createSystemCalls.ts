@@ -438,31 +438,16 @@ export function createSystemCalls(
     return { encounterId, died };
   };
 
-  const decodePositionRecord = (record: RawStoreRecord | null): { x: number; y: number } | null => {
-    if (!record) return null;
-    const staticData = record[0] ?? '0x';
-    if (staticData.length < 10) return null;
-    return {
-      x: parseInt(staticData.slice(2, 6), 16),
-      y: parseInt(staticData.slice(6, 10), 16),
-    };
-  };
-
   const syncMonsterSnapshot = (
     monsterId: string,
     snapshot: {
       encounter: { encounterId: Hex; died: boolean } | null;
-      position: { x: number; y: number } | null;
       spawned: boolean | null;
     },
-    expectedPosition?: { x: number; y: number },
   ): void => {
     const store = useGameStore.getState();
     const currentEncounter = getTableValue('EncounterEntity', monsterId) as
       | { encounterId?: string; died?: boolean }
-      | undefined;
-    const currentPositionV2 = getTableValue('PositionV2', monsterId) as
-      | { zoneId?: unknown; x?: unknown; y?: unknown }
       | undefined;
 
     if (snapshot.spawned === false) {
@@ -479,21 +464,6 @@ export function createSystemCalls(
         });
       }
     }
-
-    if (
-      snapshot.position &&
-      expectedPosition &&
-      (snapshot.position.x !== expectedPosition.x || snapshot.position.y !== expectedPosition.y)
-    ) {
-      store.setRow('Position', monsterId, snapshot.position);
-      if (currentPositionV2) {
-        store.setRow('PositionV2', monsterId, {
-          ...currentPositionV2,
-          x: snapshot.position.x,
-          y: snapshot.position.y,
-        });
-      }
-    }
   };
 
   const validateTileMonsters = async (
@@ -504,18 +474,14 @@ export function createSystemCalls(
 
     const results = await Promise.allSettled(
       monsterIds.map(async (id) => {
-        const [spawnedRecord, encounterRecord, positionRecord] = await Promise.all([
+        const [spawnedRecord, encounterRecord] = await Promise.all([
           readStoreRecord(SPAWNED_TABLE_ID, id as `0x${string}`, 'Spawned'),
           readStoreRecord(ENCOUNTER_ENTITY_TABLE_ID, id as `0x${string}`, 'EncounterEntity'),
-          expectedPosition
-            ? readStoreRecord(POSITION_TABLE_ID, id as `0x${string}`, 'Position')
-            : Promise.resolve(null),
         ]);
 
         return {
           encounter: decodeEncounterEntityRecord(encounterRecord),
           id,
-          position: decodePositionRecord(positionRecord),
           spawned: decodeSpawnedRecord(spawnedRecord),
         };
       }),
@@ -524,25 +490,18 @@ export function createSystemCalls(
     for (const r of results) {
       if (r.status !== 'fulfilled') continue;
 
-      const { encounter, id, position, spawned } = r.value;
-      const movedOffTile = Boolean(
-        position &&
-        expectedPosition &&
-        (position.x !== expectedPosition.x || position.y !== expectedPosition.y),
-      );
+      const { encounter, id, spawned } = r.value;
       const inEncounter = Boolean(encounter && encounter.encounterId !== zeroHash);
       const isGhost = spawned === false || Boolean(encounter?.died);
 
-      if (!isGhost && !inEncounter && !movedOffTile) continue;
+      if (!isGhost && !inEncounter) continue;
 
-      syncMonsterSnapshot(id, { encounter, position, spawned }, expectedPosition);
+      syncMonsterSnapshot(id, { encounter, spawned });
 
       if (isGhost) {
         console.warn(`[validateTile] Evicted ghost monster ${id.slice(0, 10)}`);
       } else if (inEncounter) {
         console.warn(`[validateTile] Marked monster ${id.slice(0, 10)} as busy in encounter`);
-      } else if (movedOffTile && position) {
-        console.warn(`[validateTile] Moved stale monster ${id.slice(0, 10)} to (${position.x},${position.y})`);
       }
     }
   };
