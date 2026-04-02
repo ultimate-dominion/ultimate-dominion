@@ -24,6 +24,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
+import { zeroHash } from 'viem';
 
 import { getTableValue, toBigInt } from '../lib/gameStore';
 
@@ -131,7 +132,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const {
     delegatorAddress,
-    systemCalls: { createEncounter, autoFight, rest },
+    systemCalls: { createEncounter, autoFight, rest, validateTileMonsters },
   } = useMUD();
   const { pendingEcho } = useFragments();
 
@@ -221,7 +222,29 @@ export const TileDetailsPanel = (): JSX.Element => {
     showSuccessToast: false,
   });
 
-  const { renderSuccess } = useToast();
+  const { renderSuccess, renderWarning } = useToast();
+
+  const validateCombatTarget = useCallback(async (monsterId: string) => {
+    if (!position) return false;
+
+    await validateTileMonsters([monsterId], position);
+
+    const encounter = getTableValue('EncounterEntity', monsterId) as
+      | { encounterId?: string; died?: boolean }
+      | undefined;
+    const spawned = getTableValue('Spawned', monsterId) as
+      | { spawned?: boolean }
+      | undefined;
+    const localPosition = (getTableValue('PositionV2', monsterId) ?? getTableValue('Position', monsterId)) as
+      | { x?: unknown; y?: unknown }
+      | undefined;
+
+    if (encounter?.died || spawned?.spawned === false) return false;
+    if (encounter?.encounterId && encounter.encounterId !== zeroHash) return false;
+    if (!localPosition) return false;
+
+    return Number(localPosition.x) === position.x && Number(localPosition.y) === position.y;
+  }, [position, validateTileMonsters]);
 
   const onRest = useCallback(async () => {
     if (!character) return;
@@ -342,12 +365,11 @@ export const TileDetailsPanel = (): JSX.Element => {
       if (!character) return;
       if (!delegatorAddress) return;
 
-      // Click-time validation: re-read store to catch ghosts that slipped
-      // through the reactive filter (race condition between render and click).
       if (encounterType === EncounterType.PvE) {
-        const ee = getTableValue('EncounterEntity', opponent.id) as { died?: boolean } | undefined;
-        const sp = getTableValue('Spawned', opponent.id) as { spawned?: boolean } | undefined;
-        if (ee?.died || sp?.spawned === false) return;
+        if (!await validateCombatTarget(opponent.id)) {
+          renderWarning('No enemies here — try moving to another tile.');
+          return;
+        }
       }
 
       // Auto adventure + PvE: single-tx fight, no battle screen
@@ -455,6 +477,8 @@ export const TileDetailsPanel = (): JSX.Element => {
       equippedSpells,
       equippedWeapons,
       refreshCharacter,
+      renderWarning,
+      validateCombatTarget,
     ],
   );
 

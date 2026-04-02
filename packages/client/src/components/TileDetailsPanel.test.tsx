@@ -74,6 +74,12 @@ const mockRest = vi.fn().mockResolvedValue({ success: true, error: null });
 const mockRefreshCharacter = vi.fn().mockResolvedValue(undefined);
 const mockEncounterExecute = vi.fn();
 const mockRestExecute = vi.fn();
+const mockRenderError = vi.fn();
+const mockRenderSuccess = vi.fn();
+const mockRenderWarning = vi.fn();
+const mockValidateTileMonsters = vi.fn();
+const mockGetTableValue = vi.fn();
+const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 // --- Context mocks ---
 
@@ -139,8 +145,9 @@ vi.mock('../hooks/useBattleHpAnimation', () => ({
 
 vi.mock('../hooks/useToast', () => ({
   useToast: () => ({
-    renderError: vi.fn(),
-    renderSuccess: vi.fn(),
+    renderError: mockRenderError,
+    renderSuccess: mockRenderSuccess,
+    renderWarning: mockRenderWarning,
   }),
 }));
 
@@ -151,7 +158,7 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('../lib/gameStore', () => ({
-  getTableValue: () => null,
+  getTableValue: (...args: unknown[]) => mockGetTableValue(...args),
   toBigInt: (v: unknown) => BigInt(v as number),
 }));
 
@@ -199,6 +206,11 @@ vi.mock('@chakra-ui/react', async () => {
 
 function setDefaults() {
   txCallCount = 0;
+  mockRenderError.mockReset();
+  mockRenderSuccess.mockReset();
+  mockRenderWarning.mockReset();
+  mockValidateTileMonsters.mockReset();
+  mockGetTableValue.mockReset();
 
   battleState = {
     attackOutcomes: [],
@@ -244,8 +256,18 @@ function setDefaults() {
       autoFight: mockAutoFight,
       createEncounter: mockCreateEncounter,
       rest: mockRest,
+      validateTileMonsters: mockValidateTileMonsters,
     },
   };
+
+  mockValidateTileMonsters.mockResolvedValue(undefined);
+  mockGetTableValue.mockImplementation((table: string, entityId: string) => {
+    if (entityId !== testMonster.id) return null;
+    if (table === 'EncounterEntity') return { encounterId: ZERO_HASH, died: false };
+    if (table === 'Spawned') return { spawned: true };
+    if (table === 'Position' || table === 'PositionV2') return { x: 1, y: 1 };
+    return null;
+  });
 
   // Default: execute calls the callback and returns result (success path)
   mockEncounterExecute.mockImplementation(async (fn: () => Promise<unknown>) => {
@@ -255,6 +277,76 @@ function setDefaults() {
     return await fn();
   });
 }
+
+describe('TileDetailsPanel — Combat Target Validation', () => {
+  beforeEach(() => {
+    setDefaults();
+    vi.useFakeTimers();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('blocks manual encounters when click-time validation moves the monster off tile', async () => {
+    movementState.autoAdventureMode = false;
+    let stale = false;
+
+    mockValidateTileMonsters.mockImplementation(async () => {
+      stale = true;
+    });
+    mockGetTableValue.mockImplementation((table: string, entityId: string) => {
+      if (entityId !== testMonster.id) return null;
+      if (table === 'EncounterEntity') return { encounterId: ZERO_HASH, died: false };
+      if (table === 'Spawned') return { spawned: true };
+      if (table === 'Position' || table === 'PositionV2') {
+        return stale ? { x: 2, y: 1 } : { x: 1, y: 1 };
+      }
+      return null;
+    });
+
+    render(<TileDetailsPanel />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
+    });
+
+    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id], { x: 1, y: 1 });
+    expect(mockEncounterExecute).not.toHaveBeenCalled();
+    expect(mockCreateEncounter).not.toHaveBeenCalled();
+    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
+  });
+
+  it('blocks auto-fight when click-time validation moves the monster off tile', async () => {
+    let stale = false;
+
+    mockValidateTileMonsters.mockImplementation(async () => {
+      stale = true;
+    });
+    mockGetTableValue.mockImplementation((table: string, entityId: string) => {
+      if (entityId !== testMonster.id) return null;
+      if (table === 'EncounterEntity') return { encounterId: ZERO_HASH, died: false };
+      if (table === 'Spawned') return { spawned: true };
+      if (table === 'Position' || table === 'PositionV2') {
+        return stale ? { x: 2, y: 1 } : { x: 1, y: 1 };
+      }
+      return null;
+    });
+
+    render(<TileDetailsPanel />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
+    });
+
+    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id], { x: 1, y: 1 });
+    expect(mockEncounterExecute).not.toHaveBeenCalled();
+    expect(mockAutoFight).not.toHaveBeenCalled();
+    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
+  });
+});
 
 describe('TileDetailsPanel — Loading Screen Timing', () => {
   beforeEach(() => {
@@ -286,7 +378,7 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
     expect(monsterButton).toBeTruthy();
 
     // Click starts the TX — loading screen should show while TX is in flight
-    act(() => {
+    await act(async () => {
       fireEvent.click(monsterButton!);
     });
 
@@ -325,7 +417,7 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
     render(<TileDetailsPanel />);
 
     const monsterButton = screen.getByText('Dire Rat').closest('button');
-    act(() => {
+    await act(async () => {
       fireEvent.click(monsterButton!);
     });
 
