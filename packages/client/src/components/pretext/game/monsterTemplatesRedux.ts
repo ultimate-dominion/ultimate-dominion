@@ -1133,6 +1133,500 @@ function drawGoblinRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
   fillCircle(ctx, w * (hx + 0.01), h * (hy - hr * 0.8), w * 0.008);
 }
 
+function furTextureDirectional(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, h: number,
+  length: number,
+  dark: string, light: string,
+  count: number,
+  direction: (fx: number, fy: number) => number,
+) {
+  ctx.lineCap = 'round';
+  for (let i = 0; i < count; i++) {
+    const px = x + Math.random() * w;
+    const py = y + Math.random() * h;
+    const len = length * (0.7 + Math.random() * 0.6);
+    const angle = direction(px, py) + (Math.random() - 0.5) * 0.6;
+    ctx.strokeStyle = Math.random() < 0.28 ? light : dark;
+    ctx.lineWidth = Math.max(1, w * 0.02);
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.quadraticCurveTo(
+      px + Math.cos(angle) * len * 0.35,
+      py + Math.sin(angle) * len * 0.35,
+      px + Math.cos(angle) * len,
+      py + Math.sin(angle) * len,
+    );
+    ctx.stroke();
+  }
+}
+
+const SKELETON_CLEAN_SKELETON: Skeleton = {
+  spine: [
+    { id: 'jaw', x: 0.20, y: 0.20, radius: 0.020 },
+    { id: 'head', x: 0.26, y: 0.12, radius: 0.072 },
+    { id: 'neck', x: 0.32, y: 0.24, radius: 0.018 },
+    { id: 'chest', x: 0.38, y: 0.36, radius: 0.065 },
+    { id: 'belly', x: 0.40, y: 0.48, radius: 0.025 },
+    { id: 'hip', x: 0.42, y: 0.56, radius: 0.045 },
+  ],
+  tail: { points: [], startWidth: 0, endWidth: 0 },
+  limbs: [
+    { attach: 'chest', side: 'near', segments: [
+      { x: 0.30, y: 0.32, radius: 0.018 },
+      { x: 0.20, y: 0.38, radius: 0.014 },
+      { x: 0.14, y: 0.44, radius: 0.011 },
+      { x: 0.08, y: 0.48, radius: 0.015 },
+    ]},
+    { attach: 'chest', side: 'far', segments: [
+      { x: 0.46, y: 0.34, radius: 0.016 },
+      { x: 0.52, y: 0.42, radius: 0.012 },
+      { x: 0.54, y: 0.50, radius: 0.010 },
+      { x: 0.54, y: 0.56, radius: 0.013 },
+    ]},
+    { attach: 'hip', side: 'near', segments: [
+      { x: 0.36, y: 0.60, radius: 0.020 },
+      { x: 0.30, y: 0.72, radius: 0.016 },
+      { x: 0.28, y: 0.83, radius: 0.012 },
+      { x: 0.26, y: 0.93, radius: 0.016 },
+    ]},
+    { attach: 'hip', side: 'far', segments: [
+      { x: 0.48, y: 0.60, radius: 0.018 },
+      { x: 0.54, y: 0.72, radius: 0.014 },
+      { x: 0.58, y: 0.83, radius: 0.010 },
+      { x: 0.60, y: 0.93, radius: 0.014 },
+    ]},
+  ],
+};
+
+function drawSkeletonRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const sk = SKELETON_CLEAN_SKELETON;
+  const jaw = sk.spine.find(n => n.id === 'jaw')!;
+  const head = sk.spine.find(n => n.id === 'head')!;
+  const neck = sk.spine.find(n => n.id === 'neck')!;
+  const chest = sk.spine.find(n => n.id === 'chest')!;
+  const belly = sk.spine.find(n => n.id === 'belly')!;
+  const hip = sk.spine.find(n => n.id === 'hip')!;
+  const boneDark = [55, 48, 38];
+  const boneMid = [95, 82, 66];
+  const boneLight = [145, 128, 105];
+  const boneShadow = [28, 22, 16];
+  const eyeGlow = [70, 225, 100];
+  const eyeCore = [160, 255, 180];
+  const swordBlade = [110, 102, 88];
+  const swordEdge = [155, 145, 128];
+
+  for (const limb of sk.limbs) {
+    if (limb.side === 'far') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${boneShadow.join(',')})`);
+  }
+
+  const handX = 0.08; const handY = 0.48;
+  ctx.strokeStyle = `rgb(${swordBlade.join(',')})`;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = w * 0.016;
+  ctx.beginPath();
+  ctx.moveTo(w * handX, h * handY);
+  ctx.bezierCurveTo(w * 0.10, h * 0.34, w * 0.13, h * 0.20, w * 0.18, h * 0.10);
+  ctx.stroke();
+  ctx.strokeStyle = `rgb(${swordEdge.join(',')})`;
+  ctx.lineWidth = w * 0.004;
+  ctx.beginPath();
+  ctx.moveTo(w * (handX - 0.004), h * (handY - 0.004));
+  ctx.bezierCurveTo(w * 0.095, h * 0.34, w * 0.125, h * 0.20, w * 0.175, h * 0.10);
+  ctx.stroke();
+
+  drawSkeletonBodyOutline(ctx, sk.spine, w, h, bodyGrad3(
+    ctx, w * chest.x, h * chest.y, w * 0.16,
+    boneMid[0], boneMid[1], boneMid[2],
+    boneShadow[0], boneShadow[1], boneShadow[2],
+    boneLight[0], boneLight[1], boneLight[2],
+  ));
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+  ctx.lineWidth = w * 0.004;
+  for (let i = 0; i < 6; i++) {
+    const t = i / 6;
+    const ry = chest.y - 0.07 + t * 0.16;
+    ctx.beginPath();
+    ctx.moveTo(w * (chest.x + 0.005), h * ry);
+    ctx.bezierCurveTo(w * (chest.x - 0.018), h * (ry + 0.01), w * (chest.x - 0.040), h * (ry + 0.02), w * (chest.x - 0.054), h * (ry + 0.026));
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = `rgb(${boneShadow.join(',')})`;
+  ctx.lineWidth = w * 0.007;
+  ctx.beginPath();
+  ctx.moveTo(w * neck.x, h * (neck.y + 0.02));
+  ctx.bezierCurveTo(w * (chest.x - 0.01), h * chest.y, w * belly.x, h * belly.y, w * hip.x, h * (hip.y - 0.01));
+  ctx.stroke();
+  for (let i = 0; i < 10; i++) {
+    const t = i / 10;
+    const vx = neck.x + t * (hip.x - neck.x);
+    const vy = neck.y + 0.03 + t * (hip.y - neck.y - 0.04);
+    ctx.fillStyle = t > 0.5 && t < 0.85 ? `rgb(${boneLight.join(',')})` : `rgb(${boneMid.join(',')})`;
+    fillCircle(ctx, w * vx, h * vy, w * (t > 0.5 && t < 0.85 ? 0.007 : 0.005));
+  }
+
+  for (const limb of sk.limbs) {
+    if (limb.side === 'near') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${boneDark.join(',')})`);
+  }
+
+  const hx = head.x; const hy = head.y; const hr = head.radius;
+  ctx.fillStyle = bodyGrad3(ctx, w * hx, h * hy, w * hr * 2.4,
+    boneMid[0], boneMid[1], boneMid[2],
+    boneShadow[0], boneShadow[1], boneShadow[2],
+    boneLight[0], boneLight[1], boneLight[2]);
+  fillEllipse(ctx, w * hx, h * hy, w * hr * 1.15, h * hr * 1.0);
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  fillEllipse(ctx, w * (hx - hr * 0.25), h * (hy + hr * 0.12), w * 0.040, h * 0.018);
+  fillEllipse(ctx, w * (hx + hr * 0.10), h * (hy + hr * 0.15), w * 0.030, h * 0.014);
+  ctx.fillStyle = `rgb(${eyeGlow.join(',')})`;
+  fillCircle(ctx, w * (hx - hr * 0.28), h * (hy + hr * 0.10), w * 0.010);
+  ctx.fillStyle = `rgb(${eyeCore.join(',')})`;
+  fillCircle(ctx, w * (hx - hr * 0.28), h * (hy + hr * 0.10), w * 0.005);
+  ctx.fillStyle = 'rgb(6,4,3)';
+  ctx.beginPath();
+  ctx.moveTo(w * (jaw.x - 0.030), h * (jaw.y + 0.003));
+  ctx.quadraticCurveTo(w * jaw.x, h * (jaw.y + 0.018), w * (hx + hr * 0.1), h * (jaw.y + 0.006));
+  ctx.strokeStyle = `rgb(${boneLight.join(',')})`;
+  ctx.lineWidth = w * 0.003;
+  ctx.stroke();
+}
+
+const GOBLIN_SHAMAN_SKELETON: Skeleton = {
+  spine: [
+    { id: 'jaw', x: 0.30, y: 0.40, radius: 0.014 },
+    { id: 'head', x: 0.36, y: 0.30, radius: 0.074 },
+    { id: 'neck', x: 0.40, y: 0.44, radius: 0.042 },
+    { id: 'chest', x: 0.44, y: 0.54, radius: 0.082 },
+    { id: 'belly', x: 0.46, y: 0.64, radius: 0.078 },
+    { id: 'hip', x: 0.46, y: 0.74, radius: 0.065 },
+  ],
+  tail: { points: [], startWidth: 0, endWidth: 0 },
+  limbs: [
+    { attach: 'chest', side: 'near', segments: [
+      { x: 0.40, y: 0.52, radius: 0.028 },
+      { x: 0.34, y: 0.58, radius: 0.020 },
+      { x: 0.28, y: 0.64, radius: 0.016 },
+      { x: 0.24, y: 0.68, radius: 0.018 },
+    ]},
+    { attach: 'chest', side: 'far', segments: [
+      { x: 0.48, y: 0.50, radius: 0.024 },
+      { x: 0.52, y: 0.42, radius: 0.018 },
+      { x: 0.54, y: 0.36, radius: 0.014 },
+      { x: 0.56, y: 0.32, radius: 0.016 },
+    ]},
+    { attach: 'hip', side: 'near', segments: [
+      { x: 0.38, y: 0.78, radius: 0.036 },
+      { x: 0.34, y: 0.86, radius: 0.028 },
+      { x: 0.32, y: 0.94, radius: 0.024 },
+    ]},
+    { attach: 'hip', side: 'far', segments: [
+      { x: 0.54, y: 0.78, radius: 0.030 },
+      { x: 0.58, y: 0.86, radius: 0.022 },
+      { x: 0.60, y: 0.94, radius: 0.020 },
+    ]},
+  ],
+};
+
+function drawGoblinShamanRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const sk = GOBLIN_SHAMAN_SKELETON;
+  const head = sk.spine.find(n => n.id === 'head')!;
+  const chest = sk.spine.find(n => n.id === 'chest')!;
+  const belly = sk.spine.find(n => n.id === 'belly')!;
+  const hip = sk.spine.find(n => n.id === 'hip')!;
+  const skinDark = [52, 58, 28];
+  const skinMid = [72, 82, 38];
+  const skinShadow = [28, 32, 14];
+  const robeDark = [42, 18, 12];
+  const robeMid = [68, 28, 18];
+  const robeLight = [88, 40, 24];
+  const hatMid = [72, 30, 18];
+  const hatDark = [48, 20, 14];
+  const orbGlow = [255, 180, 40];
+  const orbCore = [255, 220, 100];
+  const eyeOuter = [200, 160, 30];
+  const eyeCore = [255, 200, 50];
+  const staffX = 0.56;
+
+  for (const limb of sk.limbs) {
+    if (limb.side === 'far') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${skinShadow.join(',')})`);
+  }
+
+  ctx.strokeStyle = 'rgb(120,105,80)';
+  ctx.lineWidth = w * 0.014;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(w * staffX, h * 0.92);
+  ctx.bezierCurveTo(w * 0.55, h * 0.60, w * 0.57, h * 0.28, w * 0.555, h * 0.06);
+  ctx.stroke();
+
+  drawSkeletonBodyOutline(ctx, sk.spine, w, h, `rgb(${robeDark.join(',')})`);
+  ctx.fillStyle = bodyGrad3(ctx, w * chest.x, h * chest.y, w * 0.12,
+    robeMid[0], robeMid[1], robeMid[2], 22, 10, 8, robeLight[0], robeLight[1], robeLight[2]);
+  fillEllipse(ctx, w * chest.x, h * chest.y, w * chest.radius * 1.2, h * chest.radius * 1.1);
+  ctx.fillStyle = `rgba(22,10,8,0.55)`;
+  for (let f = 0; f < 4; f++) {
+    const fx = chest.x - 0.04 + f * 0.025;
+    ctx.beginPath();
+    ctx.moveTo(w * fx, h * (chest.y - 0.02));
+    ctx.bezierCurveTo(w * (fx - 0.005), h * belly.y, w * (fx + 0.005), h * hip.y, w * fx, h * (hip.y + 0.04));
+    ctx.stroke();
+  }
+
+  for (const limb of sk.limbs) {
+    if (limb.side === 'near') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${skinDark.join(',')})`);
+  }
+
+  const hx = head.x; const hy = head.y; const hr = head.radius;
+  ctx.fillStyle = bodyGrad3(ctx, w * hx, h * hy, w * hr,
+    skinMid[0], skinMid[1], skinMid[2], skinShadow[0], skinShadow[1], skinShadow[2], skinDark[0], skinDark[1], skinDark[2]);
+  fillEllipse(ctx, w * hx, h * hy, w * hr, h * hr * 0.9);
+  ctx.fillStyle = `rgb(${hatDark.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * (hx - hr * 1.2), h * (hy - hr * 0.2));
+  ctx.quadraticCurveTo(w * hx, h * (hy - hr * 0.6), w * (hx + hr * 1.4), h * (hy - hr * 0.1));
+  ctx.quadraticCurveTo(w * hx, h * (hy - hr * 0.1), w * (hx - hr * 1.2), h * (hy - hr * 0.2));
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = `rgb(${hatMid.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * (hx - hr * 0.8), h * (hy - hr * 0.3));
+  ctx.quadraticCurveTo(w * (hx + 0.02), h * (hy - hr * 3.0), w * (hx + hr * 1.0), h * (hy - hr * 3.4));
+  ctx.quadraticCurveTo(w * (hx + hr * 0.5), h * (hy - hr * 1.6), w * (hx + hr * 1.0), h * (hy - hr * 0.2));
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = `rgb(${eyeOuter.join(',')})`;
+  fillCircle(ctx, w * (hx - 0.01), h * (hy + 0.005), w * 0.015);
+  ctx.fillStyle = `rgb(${eyeCore.join(',')})`;
+  fillCircle(ctx, w * (hx - 0.01), h * (hy + 0.005), w * 0.009);
+
+  const orbX = staffX - 0.005; const orbY = 0.07;
+  const halo = ctx.createRadialGradient(w * orbX, h * orbY, 0, w * orbX, h * orbY, w * 0.08);
+  halo.addColorStop(0, `rgba(${orbGlow.join(',')},0.5)`);
+  halo.addColorStop(0.4, `rgba(${orbGlow.join(',')},0.15)`);
+  halo.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = halo;
+  fillCircle(ctx, w * orbX, h * orbY, w * 0.08);
+  ctx.fillStyle = `rgb(${orbGlow.join(',')})`;
+  fillCircle(ctx, w * orbX, h * orbY, w * 0.022);
+  ctx.fillStyle = `rgb(${orbCore.join(',')})`;
+  fillCircle(ctx, w * orbX, h * orbY, w * 0.014);
+}
+
+function drawDrip(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) {
+  ctx.beginPath();
+  ctx.moveTo(x - width, y);
+  ctx.bezierCurveTo(x - width * 0.8, y + height * 0.4, x - width * 0.3, y + height * 0.8, x, y + height);
+  ctx.bezierCurveTo(x + width * 0.3, y + height * 0.8, x + width * 0.8, y + height * 0.4, x + width, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawGelatinousOozeRedux(ctx: CanvasRenderingContext2D, _w: number, _h: number) {
+  const w = _w; const h = _h;
+  const bodyDark = [6, 22, 18];
+  const bodyMid = [12, 38, 32];
+  const bodyLight = [20, 58, 48];
+  const bodyBright = [32, 85, 68];
+  const slimeGlow = [60, 210, 160];
+  const innerGlow = [40, 150, 110];
+  const boneColor = [220, 210, 170];
+  const metalBright = [230, 235, 245];
+  const fTL = { x: 0.15, y: 0.23 };
+  const fTR = { x: 0.81, y: 0.27 };
+  const fBR = { x: 0.78, y: 0.80 };
+  const fBL = { x: 0.18, y: 0.82 };
+
+  const puddleGrad = ctx.createRadialGradient(w * 0.48, h * 0.86, 0, w * 0.48, h * 0.86, w * 0.38);
+  puddleGrad.addColorStop(0, `rgba(${bodyMid.join(',')},0.5)`);
+  puddleGrad.addColorStop(0.6, `rgba(${bodyDark.join(',')},0.3)`);
+  puddleGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = puddleGrad;
+  fillEllipse(ctx, w * 0.48, h * 0.86, w * 0.38, h * 0.06);
+
+  const bodyGradLocal = ctx.createLinearGradient(w * 0.14, 0, w * 0.82, 0);
+  bodyGradLocal.addColorStop(0, `rgb(${bodyMid.join(',')})`);
+  bodyGradLocal.addColorStop(0.3, `rgb(${bodyDark.join(',')})`);
+  bodyGradLocal.addColorStop(0.6, `rgb(${bodyMid.join(',')})`);
+  bodyGradLocal.addColorStop(1, `rgb(${bodyDark.join(',')})`);
+  ctx.fillStyle = bodyGradLocal;
+  ctx.beginPath();
+  ctx.moveTo(w * fTL.x, h * fTL.y);
+  ctx.bezierCurveTo(w * 0.35, h * 0.215, w * 0.60, h * 0.26, w * fTR.x, h * fTR.y);
+  ctx.bezierCurveTo(w * 0.825, h * 0.40, w * 0.80, h * 0.65, w * fBR.x, h * fBR.y);
+  ctx.bezierCurveTo(w * 0.60, h * 0.83, w * 0.38, h * 0.86, w * fBL.x, h * fBL.y);
+  ctx.bezierCurveTo(w * 0.155, h * 0.60, w * 0.13, h * 0.35, w * fTL.x, h * fTL.y);
+  ctx.closePath();
+  ctx.fill();
+
+  const glowGrad = ctx.createRadialGradient(w * 0.46, h * 0.50, 0, w * 0.46, h * 0.50, w * 0.30);
+  glowGrad.addColorStop(0, `rgba(${innerGlow.join(',')},0.40)`);
+  glowGrad.addColorStop(0.4, `rgba(${innerGlow.join(',')},0.18)`);
+  glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glowGrad;
+  fillEllipse(ctx, w * 0.46, h * 0.50, w * 0.28, h * 0.24);
+
+  ctx.fillStyle = `rgb(${boneColor.join(',')})`;
+  fillEllipse(ctx, w * 0.40, h * 0.50, w * 0.055, h * 0.05);
+  ctx.fillStyle = 'rgb(5,15,12)';
+  fillEllipse(ctx, w * 0.382, h * 0.515, w * 0.014, h * 0.012);
+  fillEllipse(ctx, w * 0.415, h * 0.517, w * 0.012, h * 0.010);
+
+  ctx.fillStyle = `rgb(${metalBright.join(',')})`;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.596, h * 0.36);
+  ctx.lineTo(w * 0.604, h * 0.26);
+  ctx.lineTo(w * 0.622, h * 0.27);
+  ctx.lineTo(w * 0.618, h * 0.36);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = `rgb(${slimeGlow.join(',')})`;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = w * 0.006;
+  ctx.beginPath();
+  ctx.moveTo(w * fTL.x, h * fTL.y);
+  ctx.bezierCurveTo(w * 0.135, h * 0.35, w * 0.16, h * 0.60, w * fBL.x, h * fBL.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(w * fTL.x, h * fTL.y);
+  ctx.bezierCurveTo(w * 0.35, h * 0.215, w * 0.60, h * 0.26, w * fTR.x, h * fTR.y);
+  ctx.stroke();
+
+  ctx.fillStyle = `rgb(${slimeGlow.join(',')})`;
+  drawDrip(ctx, w * 0.22, h * 0.23, w * 0.006, h * 0.12);
+  drawDrip(ctx, w * 0.52, h * 0.24, w * 0.007, h * 0.14);
+  fillCircle(ctx, w * 0.22, h * 0.36, w * 0.008);
+  fillCircle(ctx, w * 0.52, h * 0.39, w * 0.009);
+  ambientOcclusion(ctx, w * fBL.x, h * fBL.y, w * 0.06, h * 0.04, 0.4);
+  highlight(ctx, w * 0.28, h * 0.34, w * 0.08, `rgba(${bodyBright.join(',')},0.25)`, 0.35);
+  ctx.fillStyle = `rgba(${bodyLight.join(',')},0.18)`;
+  fillEllipse(ctx, w * 0.28, h * 0.34, w * 0.08, h * 0.05);
+}
+
+const BUGBEAR_SKELETON: Skeleton = {
+  spine: [
+    { id: 'snout', x: 0.20, y: 0.25, radius: 0.035 },
+    { id: 'head', x: 0.28, y: 0.20, radius: 0.088 },
+    { id: 'neck', x: 0.36, y: 0.30, radius: 0.075 },
+    { id: 'chest', x: 0.46, y: 0.42, radius: 0.140 },
+    { id: 'belly', x: 0.50, y: 0.58, radius: 0.125 },
+    { id: 'hip', x: 0.52, y: 0.70, radius: 0.100 },
+  ],
+  tail: { points: [], startWidth: 0, endWidth: 0 },
+  limbs: [
+    { attach: 'chest', side: 'near', segments: [
+      { x: 0.38, y: 0.40, radius: 0.052 }, { x: 0.30, y: 0.52, radius: 0.042 }, { x: 0.24, y: 0.64, radius: 0.034 }, { x: 0.20, y: 0.76, radius: 0.028 },
+    ]},
+    { attach: 'chest', side: 'far', segments: [
+      { x: 0.50, y: 0.38, radius: 0.044 }, { x: 0.42, y: 0.30, radius: 0.034 }, { x: 0.32, y: 0.26, radius: 0.028 }, { x: 0.22, y: 0.30, radius: 0.026 },
+    ]},
+    { attach: 'hip', side: 'near', segments: [
+      { x: 0.44, y: 0.76, radius: 0.054 }, { x: 0.40, y: 0.84, radius: 0.044 }, { x: 0.38, y: 0.92, radius: 0.038 }, { x: 0.36, y: 0.98, radius: 0.034 },
+    ]},
+    { attach: 'hip', side: 'far', segments: [
+      { x: 0.58, y: 0.76, radius: 0.048 }, { x: 0.62, y: 0.84, radius: 0.038 }, { x: 0.64, y: 0.92, radius: 0.034 }, { x: 0.66, y: 0.98, radius: 0.030 },
+    ]},
+  ],
+};
+
+function drawBugbearRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const sk = BUGBEAR_SKELETON;
+  const snout = sk.spine.find(n => n.id === 'snout')!;
+  const head = sk.spine.find(n => n.id === 'head')!;
+  const chest = sk.spine.find(n => n.id === 'chest')!;
+  const belly = sk.spine.find(n => n.id === 'belly')!;
+  const furDark = [52, 34, 22];
+  const furMid = [78, 52, 34];
+  const furLight = [108, 76, 48];
+  const furShadow = [30, 18, 12];
+  const skinPink = [120, 68, 58];
+  const metalMid = [98, 108, 112];
+  const metalDark = [68, 78, 82];
+  const metalLight = [148, 158, 162];
+  const eyeOuter = [220, 160, 30];
+  const eyeCore = [255, 230, 100];
+  const clawColor = [160, 148, 130];
+
+  const furDir = (fx: number, fy: number) => Math.atan2(fy - h * chest.y, fx - w * chest.x) + Math.PI * 0.15;
+
+  for (const limb of sk.limbs) {
+    if (limb.side === 'far') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${furShadow.join(',')})`);
+  }
+
+  ctx.strokeStyle = 'rgb(58,42,28)';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = w * 0.018;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.20, h * 0.76);
+  ctx.lineTo(w * 0.16, h * 0.92);
+  ctx.stroke();
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.16, h * 0.94, w * 0.045, metalMid[0], metalMid[1], metalMid[2], metalDark[0], metalDark[1], metalDark[2], metalLight[0], metalLight[1], metalLight[2]);
+  fillCircle(ctx, w * 0.16, h * 0.94, w * 0.036);
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2 + 0.3;
+    const bx = w * 0.16 + Math.cos(angle) * w * 0.034;
+    const by = h * 0.94 + Math.sin(angle) * w * 0.034;
+    const tx = w * 0.16 + Math.cos(angle) * w * 0.056;
+    const ty = h * 0.94 + Math.sin(angle) * w * 0.056;
+    ctx.fillStyle = `rgb(${metalLight.join(',')})`;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(tx, ty);
+    ctx.lineTo(bx + 2, by + 2);
+    ctx.fill();
+  }
+
+  drawSkeletonBodyOutline(ctx, sk.spine, w, h, bodyGrad3(
+    ctx, w * chest.x, h * chest.y, w * 0.28,
+    furMid[0], furMid[1], furMid[2],
+    furShadow[0], furShadow[1], furShadow[2],
+    furLight[0], furLight[1], furLight[2],
+  ));
+  furTextureDirectional(ctx, w * 0.24, h * 0.16, w * 0.38, h * 0.58, w * 0.022, `rgb(${furShadow.join(',')})`, `rgb(${furLight.join(',')})`, 140, furDir);
+
+  const pauldronX = chest.x - 0.06; const pauldronY = chest.y - 0.10;
+  ctx.fillStyle = bodyGrad3(ctx, w * pauldronX, h * pauldronY, w * 0.09, metalMid[0], metalMid[1], metalMid[2], metalDark[0], metalDark[1], metalDark[2], metalLight[0], metalLight[1], metalLight[2]);
+  fillEllipse(ctx, w * pauldronX, h * pauldronY, w * 0.08, h * 0.06);
+
+  for (const limb of sk.limbs) {
+    if (limb.side === 'near') drawSkeletonLimbChain(ctx, limb.segments, w, h, `rgb(${furDark.join(',')})`);
+  }
+
+  const hx = head.x; const hy = head.y; const hr = head.radius;
+  ctx.fillStyle = bodyGrad3(ctx, w * hx, h * hy, w * hr * 2.5,
+    furMid[0], furMid[1], furMid[2], furShadow[0], furShadow[1], furShadow[2], furLight[0], furLight[1], furLight[2]);
+  fillEllipse(ctx, w * hx, h * hy, w * hr * 1.5, h * hr * 1.3);
+  const sx = snout.x; const sy = snout.y;
+  ctx.fillStyle = bodyGrad3(ctx, w * sx, h * (sy + 0.02), w * 0.08, skinPink[0], skinPink[1], skinPink[2], furDark[0], furDark[1], furDark[2], furMid[0], furMid[1], furMid[2]);
+  fillEllipse(ctx, w * (sx - 0.02), h * (sy + 0.03), w * 0.080, h * 0.060);
+  ctx.fillStyle = 'rgb(18,12,10)';
+  fillEllipse(ctx, w * (sx - 0.06), h * (sy + 0.005), w * 0.022, w * 0.018);
+  ctx.fillStyle = `rgb(${eyeOuter.join(',')})`;
+  fillCircle(ctx, w * (hx - 0.04), h * (hy + 0.005), w * 0.022);
+  ctx.fillStyle = `rgb(${eyeCore.join(',')})`;
+  fillCircle(ctx, w * (hx - 0.04), h * (hy + 0.005), w * 0.014);
+
+  for (const limb of sk.limbs) {
+    const foot = limb.segments[limb.segments.length - 1];
+    if (foot.y < 0.92) continue;
+    ctx.fillStyle = limb.side === 'near' ? `rgb(${furDark.join(',')})` : `rgb(${furShadow.join(',')})`;
+    fillEllipse(ctx, w * foot.x, h * foot.y, w * (foot.radius + 0.010), h * 0.016);
+    ctx.fillStyle = `rgb(${clawColor.join(',')})`;
+    for (let c = -1; c <= 1; c++) {
+      const cx = w * foot.x + c * w * 0.010;
+      const cy = h * foot.y + h * 0.008;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx - w * 0.004, cy + h * 0.028);
+      ctx.lineTo(cx + w * 0.004, cy + h * 0.018);
+      ctx.fill();
+    }
+  }
+}
+
 function drawCavernBruteRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillStyle = bodyGrad(ctx, w * 0.44, h * 0.40, w * 0.28, 178, 152, 120, 82, 64, 44);
   ctx.beginPath();
@@ -1337,10 +1831,10 @@ export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
   { id: 'redux-kobold', name: 'Kobold', gridWidth: 7, gridHeight: 5, monsterClass: 2, level: 2, atmosphere: { r: 160, g: 120, b: 50, intensity: 0.10 }, draw: drawKoboldRedux },
   { id: 'redux-goblin', name: 'Goblin', gridWidth: 7, gridHeight: 7, monsterClass: 0, level: 3, atmosphere: { r: 96, g: 120, b: 48, intensity: 0.10 }, draw: drawGoblinRedux },
   { id: 'redux-giant-spider', name: 'Giant Spider', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.15 }, draw: drawPhaseSpiderRedux },
-  { id: 'redux-skeleton', name: 'Skeleton', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 5, atmosphere: { r: 96, g: 156, b: 70, intensity: 0.12 }, draw: drawIronhideTrollRedux },
-  { id: 'redux-goblin-shaman', name: 'Goblin Shaman', gridWidth: 12, gridHeight: 11, monsterClass: 1, level: 6, atmosphere: { r: 106, g: 70, b: 164, intensity: 0.12 }, draw: drawPhaseSpiderRedux },
-  { id: 'redux-gelatinous-ooze', name: 'Gelatinous Ooze', gridWidth: 10, gridHeight: 14, monsterClass: 2, level: 7, atmosphere: { r: 66, g: 182, b: 56, intensity: 0.12 }, draw: drawBonecasterRedux },
-  { id: 'redux-bugbear', name: 'Bugbear', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 8, atmosphere: { r: 172, g: 138, b: 72, intensity: 0.10 }, draw: drawRockGolemRedux },
+  { id: 'redux-skeleton', name: 'Skeleton', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 5, atmosphere: { r: 96, g: 156, b: 70, intensity: 0.12 }, draw: drawSkeletonRedux },
+  { id: 'redux-goblin-shaman', name: 'Goblin Shaman', gridWidth: 12, gridHeight: 11, monsterClass: 1, level: 6, atmosphere: { r: 106, g: 70, b: 164, intensity: 0.12 }, draw: drawGoblinShamanRedux },
+  { id: 'redux-gelatinous-ooze', name: 'Gelatinous Ooze', gridWidth: 10, gridHeight: 14, monsterClass: 2, level: 7, atmosphere: { r: 66, g: 182, b: 56, intensity: 0.12 }, draw: drawGelatinousOozeRedux },
+  { id: 'redux-bugbear', name: 'Bugbear', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 8, atmosphere: { r: 172, g: 138, b: 72, intensity: 0.10 }, draw: drawBugbearRedux },
   { id: 'redux-carrion-crawler', name: 'Carrion Crawler', gridWidth: 10, gridHeight: 13, monsterClass: 1, level: 9, atmosphere: { r: 144, g: 168, b: 208, intensity: 0.14 }, draw: drawPaleStalkerRedux },
   { id: 'redux-hook-horror', name: 'Hook Horror', gridWidth: 14, gridHeight: 12, monsterClass: 2, level: 10, atmosphere: { r: 136, g: 82, b: 178, intensity: 0.12 }, draw: drawDuskDrakeRedux },
   { id: 'redux-basilisk', name: 'Basilisk', gridWidth: 26, gridHeight: 9, monsterClass: 0, level: 12, isBoss: true, atmosphere: { r: 52, g: 86, b: 36, intensity: 0.10 }, renderOverrides: { gamma: 0.72, ambient: 0.45, brightnessBoost: 1.15, charDensityFloor: 0.14 }, draw: drawBasiliskRedux },
