@@ -47,6 +47,7 @@ describe('useCombatPacing', () => {
       attackerId: PLAYER_ID,
       defenderId: MONSTER_ID,
       currentTurn: 1n,
+      defenderDied: true,
     });
 
     const { result } = renderHook(() =>
@@ -59,8 +60,15 @@ describe('useCombatPacing', () => {
 
     expect(result.current.visibleOutcomes).toEqual([playerAttack]);
     expect(result.current.isCounterattackPending).toBe(false);
+    expect(result.current.isBattleResolutionPending).toBe(true);
     expect(result.current.pendingCounterattackDamage).toBe(0n);
     expect(result.current.pendingTurn).toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(700);
+    });
+
+    expect(result.current.isBattleResolutionPending).toBe(false);
   });
 
   it('full turn (player + monster) — counterattack hidden for 600ms, then revealed', () => {
@@ -87,6 +95,7 @@ describe('useCombatPacing', () => {
     // During delay: counterattack hidden
     expect(result.current.visibleOutcomes).toEqual([playerAttack]);
     expect(result.current.isCounterattackPending).toBe(true);
+    expect(result.current.isBattleResolutionPending).toBe(true);
     expect(result.current.pendingCounterattackDamage).toBe(5n);
     expect(result.current.pendingTurn).toBe(1n);
 
@@ -97,6 +106,7 @@ describe('useCombatPacing', () => {
 
     expect(result.current.visibleOutcomes).toEqual([playerAttack, monsterAttack]);
     expect(result.current.isCounterattackPending).toBe(false);
+    expect(result.current.isBattleResolutionPending).toBe(false);
     expect(result.current.pendingCounterattackDamage).toBe(0n);
     expect(result.current.pendingTurn).toBeNull();
   });
@@ -229,6 +239,7 @@ describe('useCombatPacing', () => {
     rerender({ isInBattle: false });
 
     expect(result.current.isCounterattackPending).toBe(false);
+    expect(result.current.isBattleResolutionPending).toBe(false);
     expect(result.current.pendingTurn).toBeNull();
   });
 
@@ -292,6 +303,46 @@ describe('useCombatPacing', () => {
     });
 
     expect(result.current.pendingCounterattackDamage).toBe(0n);
+  });
+
+  it('lethal counterattack stays pending after reveal so the finisher can play', () => {
+    const playerAttack = makeOutcome({
+      attackerId: PLAYER_ID,
+      defenderId: MONSTER_ID,
+      currentTurn: 1n,
+    });
+    const monsterAttack = makeOutcome({
+      attackerId: MONSTER_ID,
+      defenderId: PLAYER_ID,
+      attackerDamageDelt: 42n,
+      currentTurn: 1n,
+      defenderDied: true,
+    });
+
+    const { result } = renderHook(() =>
+      useCombatPacing({
+        attackOutcomes: [playerAttack, monsterAttack],
+        characterId: PLAYER_ID,
+        isInBattle: true,
+      }),
+    );
+
+    expect(result.current.isCounterattackPending).toBe(true);
+    expect(result.current.isBattleResolutionPending).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+
+    expect(result.current.visibleOutcomes).toEqual([playerAttack, monsterAttack]);
+    expect(result.current.isCounterattackPending).toBe(false);
+    expect(result.current.isBattleResolutionPending).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(700);
+    });
+
+    expect(result.current.isBattleResolutionPending).toBe(false);
   });
 
   // --- Edge cases ---

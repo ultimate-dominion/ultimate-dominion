@@ -245,7 +245,12 @@ export const TileDetailsPanel = (): JSX.Element => {
     : sortedMonsters.slice(0, MONSTER_COLLAPSE_LIMIT);
   const hiddenMonsterCount = sortedMonsters.length - MONSTER_COLLAPSE_LIMIT;
 
-  const { isCounterattackPending, pendingCounterattackDamage, visibleOutcomes } = useCombatPacing({
+  const {
+    isBattleResolutionPending,
+    isCounterattackPending,
+    pendingCounterattackDamage,
+    visibleOutcomes,
+  } = useCombatPacing({
     attackOutcomes,
     characterId: character?.id,
     isInBattle: !!currentBattle,
@@ -781,7 +786,8 @@ export const TileDetailsPanel = (): JSX.Element => {
     isInBattle: !!currentBattle,
   });
 
-  const battleOver = currentBattle?.encounterId === lastestBattleOutcome?.encounterId;
+  const battleResolved = currentBattle?.encounterId === lastestBattleOutcome?.encounterId;
+  const battleOver = Boolean(battleResolved && !isBattleResolutionPending);
   const opponentDefeated = opponentDisplayedHp <= 0n && battleOver;
   const userDefeated = userDisplayedHp <= 0n && battleOver;
 

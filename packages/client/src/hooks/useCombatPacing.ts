@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AttackOutcomeType } from '../utils/types';
 
 const COUNTERATTACK_DELAY_MS = 600;
+const FINISHER_DELAY_MS = 700;
 const SAFETY_TIMEOUT_MS = 1500;
 
 export function useCombatPacing({
@@ -15,50 +16,48 @@ export function useCombatPacing({
 }): {
   visibleOutcomes: AttackOutcomeType[];
   isCounterattackPending: boolean;
+  isBattleResolutionPending: boolean;
   pendingCounterattackDamage: bigint;
   pendingTurn: bigint | null;
 } {
   const lastRevealedTurn = useRef<bigint>(0n);
+  const lastResolvedTurn = useRef<bigint>(0n);
   const delayTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finisherTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const safetyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hiddenTurn, setHiddenTurn] = useState<bigint | null>(null);
+  const [finisherTurn, setFinisherTurn] = useState<bigint | null>(null);
 
-  // Find the max turn across all outcomes
   const maxTurn = useMemo(() => {
     if (attackOutcomes.length === 0) return 0n;
     return attackOutcomes.reduce(
-      (max, a) => (a.currentTurn > max ? a.currentTurn : max),
+      (max, outcome) => (outcome.currentTurn > max ? outcome.currentTurn : max),
       0n,
     );
   }, [attackOutcomes]);
 
-  // Identify the counterattack for a given turn:
-  // an outcome where the attacker is NOT the player (and not self-use)
   const counterattackForTurn = useMemo(() => {
     if (!characterId || maxTurn === 0n) return null;
     return (
       attackOutcomes.find(
-        a =>
-          a.currentTurn === maxTurn &&
-          a.attackerId.toLowerCase() !== characterId.toLowerCase() &&
-          a.attackerId.toLowerCase() !== a.defenderId.toLowerCase(),
+        outcome =>
+          outcome.currentTurn === maxTurn &&
+          outcome.attackerId.toLowerCase() !== characterId.toLowerCase() &&
+          outcome.attackerId.toLowerCase() !== outcome.defenderId.toLowerCase(),
       ) ?? null
     );
   }, [attackOutcomes, characterId, maxTurn]);
 
-  // Trigger delay when a new turn arrives with a counterattack
   useEffect(() => {
     if (!isInBattle || maxTurn === 0n) return;
     if (maxTurn <= lastRevealedTurn.current) return;
 
-    // No counterattack (monster died on player's attack) — reveal immediately
     if (!counterattackForTurn) {
       lastRevealedTurn.current = maxTurn;
       setHiddenTurn(null);
       return;
     }
 
-    // Start the delay
     setHiddenTurn(maxTurn);
 
     delayTimeout.current = setTimeout(() => {
@@ -75,48 +74,88 @@ export function useCombatPacing({
       if (delayTimeout.current) clearTimeout(delayTimeout.current);
       if (safetyTimeout.current) clearTimeout(safetyTimeout.current);
     };
-  }, [isInBattle, maxTurn, counterattackForTurn]);
+  }, [counterattackForTurn, isInBattle, maxTurn]);
 
-  // Reset when battle ends
+  const visibleOutcomes = useMemo(() => {
+    if (hiddenTurn === null || !characterId) return attackOutcomes;
+    return attackOutcomes.filter(
+      outcome =>
+        !(
+          outcome.currentTurn === hiddenTurn &&
+          outcome.attackerId.toLowerCase() !== characterId.toLowerCase() &&
+          outcome.attackerId.toLowerCase() !== outcome.defenderId.toLowerCase()
+        ),
+    );
+  }, [attackOutcomes, characterId, hiddenTurn]);
+
+  const visibleMaxTurn = useMemo(() => {
+    if (visibleOutcomes.length === 0) return 0n;
+    return visibleOutcomes.reduce(
+      (max, outcome) => (outcome.currentTurn > max ? outcome.currentTurn : max),
+      0n,
+    );
+  }, [visibleOutcomes]);
+
+  const latestVisibleTurnIsLethal = useMemo(() => {
+    if (visibleMaxTurn === 0n) return false;
+    return visibleOutcomes.some(
+      outcome =>
+        outcome.currentTurn === visibleMaxTurn &&
+        (outcome.attackerDied || outcome.defenderDied),
+    );
+  }, [visibleMaxTurn, visibleOutcomes]);
+
+  useEffect(() => {
+    if (!isInBattle || hiddenTurn !== null || visibleMaxTurn === 0n) return;
+    if (visibleMaxTurn <= lastResolvedTurn.current) return;
+
+    lastResolvedTurn.current = visibleMaxTurn;
+
+    if (!latestVisibleTurnIsLethal) {
+      setFinisherTurn(null);
+      return;
+    }
+
+    setFinisherTurn(visibleMaxTurn);
+    if (finisherTimeout.current) clearTimeout(finisherTimeout.current);
+    finisherTimeout.current = setTimeout(() => {
+      setFinisherTurn(current => (current === visibleMaxTurn ? null : current));
+    }, FINISHER_DELAY_MS);
+  }, [hiddenTurn, isInBattle, latestVisibleTurnIsLethal, visibleMaxTurn]);
+
   useEffect(() => {
     if (!isInBattle) {
       lastRevealedTurn.current = 0n;
+      lastResolvedTurn.current = 0n;
       setHiddenTurn(null);
+      setFinisherTurn(null);
       if (delayTimeout.current) clearTimeout(delayTimeout.current);
+      if (finisherTimeout.current) clearTimeout(finisherTimeout.current);
       if (safetyTimeout.current) clearTimeout(safetyTimeout.current);
     }
   }, [isInBattle]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (delayTimeout.current) clearTimeout(delayTimeout.current);
+      if (finisherTimeout.current) clearTimeout(finisherTimeout.current);
       if (safetyTimeout.current) clearTimeout(safetyTimeout.current);
     };
   }, []);
 
   const isCounterattackPending = hiddenTurn !== null;
+  const isBattleResolutionPending =
+    hiddenTurn !== null || finisherTurn !== null;
 
   const pendingCounterattackDamage = useMemo(() => {
     if (!isCounterattackPending || !counterattackForTurn) return 0n;
     return counterattackForTurn.attackerDamageDelt;
-  }, [isCounterattackPending, counterattackForTurn]);
-
-  const visibleOutcomes = useMemo(() => {
-    if (hiddenTurn === null || !characterId) return attackOutcomes;
-    return attackOutcomes.filter(
-      a =>
-        !(
-          a.currentTurn === hiddenTurn &&
-          a.attackerId.toLowerCase() !== characterId.toLowerCase() &&
-          a.attackerId.toLowerCase() !== a.defenderId.toLowerCase()
-        ),
-    );
-  }, [attackOutcomes, hiddenTurn, characterId]);
+  }, [counterattackForTurn, isCounterattackPending]);
 
   return {
     visibleOutcomes,
     isCounterattackPending,
+    isBattleResolutionPending,
     pendingCounterattackDamage,
     pendingTurn: hiddenTurn,
   };

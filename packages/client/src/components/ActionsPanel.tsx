@@ -69,7 +69,7 @@ export const ActionsPanel = (): JSX.Element => {
   const { autoAdventureMode, isRefreshing, onToggleAutoAdventure } = useMovement();
   const stage = useOnboardingStage();
 
-  const { visibleOutcomes, pendingTurn } = useCombatPacing({
+  const { visibleOutcomes, pendingTurn, isBattleResolutionPending } = useCombatPacing({
     attackOutcomes,
     characterId: character?.id,
     isInBattle: !!currentBattle,
@@ -204,9 +204,14 @@ export const ActionsPanel = (): JSX.Element => {
     return () => window.removeEventListener('keydown', listener);
   }, [attackButtonFocus]);
 
-  const battleOver = useMemo(
+  const battleResolved = useMemo(
     () => currentBattle?.encounterId === lastestBattleOutcome?.encounterId,
     [currentBattle, lastestBattleOutcome],
+  );
+
+  const battleOver = useMemo(
+    () => battleResolved && !isBattleResolutionPending,
+    [battleResolved, isBattleResolutionPending],
   );
 
 
@@ -256,6 +261,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   const canAttack = useMemo(() => {
     if (!currentBattle) return false;
+    if (battleResolved) return false;
 
     if (currentBattle.encounterType === EncounterType.PvE) {
       return true;
@@ -270,7 +276,7 @@ export const ActionsPanel = (): JSX.Element => {
     }
 
     return false;
-  }, [currentBattle, userTurn, turnTimeLeft]);
+  }, [battleResolved, currentBattle, userTurn, turnTimeLeft]);
 
   const weaponsAndSpells = useMemo(
     () => [...equippedWeapons, ...equippedSpells],
@@ -366,6 +372,7 @@ export const ActionsPanel = (): JSX.Element => {
   const canFlee = useMemo(() => {
     if (!character) return false;
     if (!currentBattle) return false;
+    if (battleResolved) return false;
 
     const isAttacker = currentBattle.attackers.includes(character.id);
 
@@ -378,7 +385,7 @@ export const ActionsPanel = (): JSX.Element => {
     }
 
     return false;
-  }, [character, currentBattle]);
+  }, [battleResolved, character, currentBattle]);
 
   const hasSmokeCover = useMemo(() => {
     if (!character) return false;

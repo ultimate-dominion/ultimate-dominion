@@ -47,6 +47,8 @@ import { ShareButton } from './ShareButton';
 import { ItemEquipModal } from './ItemEquipModal';
 import { LevelUpBanner } from './LevelUpBanner';
 import { PolygonalCard } from './PolygonalCard';
+import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
+import { MONSTER_TEMPLATES_REDUX } from './pretext/game/monsterTemplatesRedux';
 
 type BattleOutcomeModalProps = {
   isOpen: boolean;
@@ -77,6 +79,11 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
     return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
   }, [opponent, t]);
+
+  const hasAsciiPortrait = useMemo(() => {
+    if (!opponent) return false;
+    return MONSTER_TEMPLATES_REDUX.some(template => template.name === opponent.name);
+  }, [opponent]);
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [consumables, setConsumables] = useState<Consumable[]>([]);
@@ -327,15 +334,34 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     ? t('battle.youDefeated', { name: opponentDisplayName })
                     : t('battle.youWereKilled', { name: opponentDisplayName })}
                 </Text>
-                {opponent && currentBattle?.encounterType !== EncounterType.PvP && getMonsterImage(opponent.name) && (
-                  <Image
-                    src={getMonsterImage(opponent.name)}
-                    alt={opponent.name}
-                    boxSize={{ base: '100px', sm: '120px' }}
-                    objectFit="contain"
-                    opacity={winner === character.id ? 1 : 0.4}
-                    filter={winner !== character.id ? 'grayscale(0.6)' : undefined}
-                  />
+                {opponent && currentBattle?.encounterType !== EncounterType.PvP && (
+                  hasAsciiPortrait ? (
+                    <Box
+                      bg="rgba(12,10,8,0.92)"
+                      border="1px solid"
+                      borderColor="rgba(90,78,60,0.45)"
+                      borderRadius="md"
+                      h={{ base: '120px', sm: '144px' }}
+                      maxW="240px"
+                      overflow="hidden"
+                      position="relative"
+                      w="100%"
+                    >
+                      <BattleMonsterAscii
+                        defeated={winner !== character.id}
+                        monsterName={opponent.name}
+                      />
+                    </Box>
+                  ) : getMonsterImage(opponent.name) ? (
+                    <Image
+                      src={getMonsterImage(opponent.name)}
+                      alt={opponent.name}
+                      boxSize={{ base: '100px', sm: '120px' }}
+                      objectFit="contain"
+                      opacity={winner === character.id ? 1 : 0.4}
+                      filter={winner !== character.id ? 'grayscale(0.6)' : undefined}
+                    />
+                  ) : null
                 )}
                 {winner !== character.id && goldDropped > 0n && (
                   <Text>

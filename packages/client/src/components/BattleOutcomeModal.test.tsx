@@ -88,6 +88,16 @@ vi.mock('./LevelUpBanner', () => ({
   ),
 }));
 
+vi.mock('./pretext/game/BattleMonsterAscii', () => ({
+  BattleMonsterAscii: (props: any) => (
+    <div
+      data-defeated={String(Boolean(props.defeated))}
+      data-name={props.monsterName}
+      data-testid="battle-monster-ascii"
+    />
+  ),
+}));
+
 vi.mock('./PolygonalCard', () => ({
   PolygonalCard: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 }));
@@ -213,10 +223,28 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    expect(screen.getByText('Victory!')).toBeDefined();
-    expect(screen.getByText(/You defeated/)).toBeDefined();
+    expect(screen.getByText('battle.victory')).toBeDefined();
+    expect(screen.getByText('battle.youDefeated')).toBeDefined();
     expect(screen.queryByTestId('leveling-panel')).toBeNull();
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
+  });
+
+  it('renders ascii monster art in the PvE victory modal', () => {
+    mockCharacter = makeCharacter({ level: 5n, experience: 5000n });
+    mockOpponent = { name: 'Skeleton' };
+    mockCurrentBattle = { encounterType: 1, currentTurn: 1n, maxTurns: 2n };
+
+    render(
+      <BattleOutcomeModal
+        isOpen={true}
+        onClose={vi.fn()}
+        battleOutcome={makeWinOutcome() as any}
+      />,
+    );
+
+    const portrait = screen.getByTestId('battle-monster-ascii');
+    expect(portrait.getAttribute('data-name')).toBe('Skeleton');
+    expect(portrait.getAttribute('data-defeated')).toBe('false');
   });
 
   // --- Happy path: non-maxed character with enough XP ---
@@ -387,7 +415,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    expect(screen.getByText('Defeat...')).toBeDefined();
+    expect(screen.getByText('battle.defeat')).toBeDefined();
     // LevelingPanel and LevelUpBanner gated by winner === character.id
     expect(screen.queryByTestId('leveling-panel')).toBeNull();
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
@@ -413,7 +441,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    expect(screen.getByText('Draw...')).toBeDefined();
+    expect(screen.getByText('battle.draw')).toBeDefined();
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });
 
@@ -433,7 +461,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    expect(screen.getByText('Defeat...')).toBeDefined();
+    expect(screen.getByText('battle.defeat')).toBeDefined();
     expect(screen.queryByTestId('leveling-panel')).toBeNull();
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });
