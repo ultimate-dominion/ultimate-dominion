@@ -263,12 +263,12 @@ describe('startSync checkpoint', () => {
     return promise;
   }
 
-  it('uses checkpoint - 100 as effective start block', async () => {
+  it('uses checkpoint + 1 as effective start block', async () => {
     const handle = await startWithCheckpoint(500000n);
 
     expect(vi.mocked(syncToPostgres)).toHaveBeenCalledWith(
       expect.objectContaining({
-        startBlock: 499900n, // 500000 - 100
+        startBlock: 500001n,
       }),
     );
 
@@ -287,49 +287,48 @@ describe('startSync checkpoint', () => {
     handle.stopSync();
   });
 
-  it('clamps effective start block to env START_BLOCK when checkpoint is too small', async () => {
-    // checkpoint 50 - 100 = -50, should clamp to START_BLOCK (0)
+  it('starts from the next block even for small checkpoints', async () => {
     const handle = await startWithCheckpoint(50n);
 
     expect(vi.mocked(syncToPostgres)).toHaveBeenCalledWith(
       expect.objectContaining({
-        startBlock: 0n,
+        startBlock: 51n,
       }),
     );
 
     handle.stopSync();
   });
 
-  it('saves checkpoint periodically in storedBlockLogs$ subscriber', async () => {
-    const handle = await startWithCheckpoint(null);
+  it('saves checkpoint every 5 committed blocks in storedBlockLogs$ subscriber', async () => {
+    const handle = await startWithCheckpoint(100n);
 
     expect(storedBlockLogsSubscriber).not.toBeNull();
 
-    // First call — should not save yet (interval not elapsed)
-    await storedBlockLogsSubscriber.next({ blockNumber: 100n, logs: [] });
+    await storedBlockLogsSubscriber.next({ blockNumber: 104n, logs: [] });
     expect(mockSaveCheckpoint).not.toHaveBeenCalled();
 
-    // Advance 30s and fire another block
-    await vi.advanceTimersByTimeAsync(30_000);
-    await storedBlockLogsSubscriber.next({ blockNumber: 200n, logs: [] });
-    expect(mockSaveCheckpoint).toHaveBeenCalledWith(200n);
+    await storedBlockLogsSubscriber.next({ blockNumber: 105n, logs: [] });
+    expect(mockSaveCheckpoint).toHaveBeenCalledWith(105n);
 
     handle.stopSync();
   });
 
-  it('logs error but does not throw when checkpoint save fails', async () => {
-    const handle = await startWithCheckpoint(null);
+  it('logs error and retries later when checkpoint save fails', async () => {
+    const handle = await startWithCheckpoint(100n);
 
     mockSaveCheckpoint.mockRejectedValueOnce(new Error('db down'));
 
-    // Advance past the checkpoint interval
-    await vi.advanceTimersByTimeAsync(30_000);
-    await storedBlockLogsSubscriber.next({ blockNumber: 300n, logs: [] });
+    await storedBlockLogsSubscriber.next({ blockNumber: 105n, logs: [] });
 
     expect(vi.mocked(console.error)).toHaveBeenCalledWith(
       '[sync] Checkpoint save failed:',
       expect.any(Error),
     );
+    expect(mockSaveCheckpoint).toHaveBeenCalledWith(105n);
+
+    mockSaveCheckpoint.mockResolvedValueOnce(undefined);
+    await storedBlockLogsSubscriber.next({ blockNumber: 106n, logs: [] });
+    expect(mockSaveCheckpoint).toHaveBeenCalledWith(106n);
 
     handle.stopSync();
   });
