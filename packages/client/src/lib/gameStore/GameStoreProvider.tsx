@@ -9,6 +9,7 @@ import { idbSnapshotPromise } from './store';
 const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
 const INDEXER_WS_URL = import.meta.env.VITE_INDEXER_WS_URL || 'ws://localhost:3001/ws';
 const WORLD_ADDRESS = import.meta.env.VITE_WORLD_ADDRESS || '';
+const SNAPSHOT_BOOT_TIMEOUT_MS = 5000;
 
 /** Re-hydrate if tab was hidden longer than this (ms) */
 const STALE_THRESHOLD = 2 * 60 * 1000; // 2 minutes
@@ -16,6 +17,96 @@ const STALE_THRESHOLD = 2 * 60 * 1000; // 2 minutes
 type Props = {
   children: ReactNode;
 };
+
+type BootstrapGameStoreOptions = {
+  cancelled: () => boolean;
+  idbSnapshot: FullSnapshot | null;
+  fetchSnapshot: () => Promise<FullSnapshot>;
+  hydrateSnapshot: (snapshot: FullSnapshot) => void;
+  connectWs: (snapshot: FullSnapshot) => void;
+  cacheSnapshot: (snapshot: FullSnapshot) => void;
+  getCurrentBlock: () => number;
+  timeoutMs?: number;
+};
+
+type BootstrapResult =
+  | { type: 'snapshot'; snapshot: FullSnapshot }
+  | { type: 'error'; error: Error }
+  | { type: 'timeout' };
+
+type NetworkBootstrapResult =
+  | { type: 'snapshot'; snapshot: FullSnapshot }
+  | { type: 'error'; error: Error };
+
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
+}
+
+export async function bootstrapGameStore({
+  cancelled,
+  idbSnapshot,
+  fetchSnapshot,
+  hydrateSnapshot,
+  connectWs,
+  cacheSnapshot,
+  getCurrentBlock,
+  timeoutMs = SNAPSHOT_BOOT_TIMEOUT_MS,
+}: BootstrapGameStoreOptions): Promise<void> {
+  const networkPromise: Promise<NetworkBootstrapResult> = fetchSnapshot()
+    .then((snapshot): NetworkBootstrapResult => ({ type: 'snapshot', snapshot }))
+    .catch((error): NetworkBootstrapResult => ({ type: 'error', error: toError(error) }));
+
+  const firstResult: BootstrapResult = await Promise.race([
+    networkPromise,
+    new Promise<BootstrapResult>((resolve) => {
+      setTimeout(() => resolve({ type: 'timeout' }), timeoutMs);
+    }),
+  ]);
+
+  if (firstResult.type === 'snapshot') {
+    if (cancelled()) return;
+    hydrateSnapshot(firstResult.snapshot);
+    cacheSnapshot(firstResult.snapshot);
+    connectWs(firstResult.snapshot);
+    return;
+  }
+
+  if (firstResult.type === 'error') {
+    if (!idbSnapshot) throw firstResult.error;
+    if (cancelled()) return;
+    console.warn('[gameStore] Fresh snapshot failed — booting from IndexedDB:', firstResult.error.message);
+    hydrateSnapshot(idbSnapshot);
+    connectWs(idbSnapshot);
+    return;
+  }
+
+  if (!idbSnapshot) {
+    throw new Error(`Snapshot fetch timed out after ${timeoutMs}ms`);
+  }
+
+  if (cancelled()) return;
+  console.warn(`[gameStore] Snapshot fetch stalled — booting from IndexedDB block ${idbSnapshot.block}`);
+  hydrateSnapshot(idbSnapshot);
+  connectWs(idbSnapshot);
+
+  const eventualResult: NetworkBootstrapResult = await networkPromise;
+  if (eventualResult.type === 'error') {
+    console.warn('[gameStore] Fresh snapshot failed after IndexedDB fallback:', eventualResult.error.message);
+    return;
+  }
+  if (cancelled()) return;
+
+  cacheSnapshot(eventualResult.snapshot);
+  const currentBlock = getCurrentBlock();
+  if (eventualResult.snapshot.block > currentBlock) {
+    console.log(`[gameStore] Fresh snapshot arrived after fallback at block ${eventualResult.snapshot.block}`);
+    hydrateSnapshot(eventualResult.snapshot);
+  } else {
+    console.log(
+      `[gameStore] Skipping fresh snapshot block ${eventualResult.snapshot.block} — store already at block ${currentBlock}`,
+    );
+  }
+}
 
 async function fetchSnapshot(): Promise<FullSnapshot> {
   const response = await fetch(`${INDEXER_API_URL}/snapshot`);
@@ -42,6 +133,44 @@ export function GameStoreProvider({ children }: Props) {
 
     async function init() {
       try {
+        const hydrateSnapshot = (snapshot: FullSnapshot) => {
+          console.log(`[gameStore] Hydrating with ${Object.keys(snapshot.tables).length} tables at block ${snapshot.block}`);
+          useGameStore.getState().hydrate(snapshot);
+        };
+
+        const cacheSnapshot = (snapshot: FullSnapshot) => {
+          if (!WORLD_ADDRESS) return;
+          // IndexedDB: full snapshot (24MB+ is fine, no size limit issues)
+          writeSnapshotToIDB(WORLD_ADDRESS, snapshot);
+          // localStorage: Characters table only (~50KB) for synchronous fast-path
+          if (snapshot.tables.Characters) {
+            writeCachedCharacters(WORLD_ADDRESS, snapshot.tables.Characters);
+          }
+          // localStorage: full snapshot (will fail silently if too large)
+          writeCachedSnapshot(WORLD_ADDRESS, snapshot);
+        };
+
+        const connectWs = (snapshot: FullSnapshot) => {
+          if (wsRef.current) {
+            wsRef.current.dispose();
+          }
+          const store = useGameStore.getState();
+          const ws = new WSClient(INDEXER_WS_URL, store, snapshot.block, {
+            onRequestSnapshot: () => {
+              console.log('[gameStore] WS requested snapshot re-fetch after repeated failures');
+              fetchSnapshot()
+                .then((snap) => {
+                  if (cancelled) return;
+                  hydrateSnapshot(snap);
+                  cacheSnapshot(snap);
+                })
+                .catch((err) => console.error('[gameStore] Snapshot re-fetch failed:', err));
+            },
+          });
+          wsRef.current = ws;
+          ws.connect();
+        };
+
         if (wasPreHydrated) {
           console.log('[gameStore] Pre-loaded from cache at block', useGameStore.getState().currentBlock);
         }
@@ -58,43 +187,15 @@ export function GameStoreProvider({ children }: Props) {
 
         // Fetch fresh snapshot from indexer
         console.log('[gameStore] Fetching snapshot from', INDEXER_API_URL);
-        const snapshot = await fetchSnapshot();
-        if (cancelled) return;
-
-        console.log(`[gameStore] Hydrating with ${Object.keys(snapshot.tables).length} tables at block ${snapshot.block}`);
-        useGameStore.getState().hydrate(snapshot);
-
-        // Cache for next refresh
-        if (WORLD_ADDRESS) {
-          // IndexedDB: full snapshot (24MB+ is fine, no size limit issues)
-          writeSnapshotToIDB(WORLD_ADDRESS, snapshot);
-          // localStorage: Characters table only (~50KB) for synchronous fast-path
-          if (snapshot.tables.Characters) {
-            writeCachedCharacters(WORLD_ADDRESS, snapshot.tables.Characters);
-          }
-          // localStorage: full snapshot (will fail silently if too large)
-          writeCachedSnapshot(WORLD_ADDRESS, snapshot);
-        }
-
-        // 4. Connect WebSocket from fresh block
-        const store = useGameStore.getState();
-        const ws = new WSClient(INDEXER_WS_URL, store, snapshot.block, {
-          onRequestSnapshot: () => {
-            console.log('[gameStore] WS requested snapshot re-fetch after repeated failures');
-            fetchSnapshot()
-              .then((snap) => {
-                if (cancelled) return;
-                useGameStore.getState().hydrate(snap);
-                if (WORLD_ADDRESS) {
-                  writeSnapshotToIDB(WORLD_ADDRESS, snap);
-                  writeCachedSnapshot(WORLD_ADDRESS, snap);
-                }
-              })
-              .catch((err) => console.error('[gameStore] Snapshot re-fetch failed:', err));
-          },
+        await bootstrapGameStore({
+          cancelled: () => cancelled,
+          idbSnapshot,
+          fetchSnapshot,
+          hydrateSnapshot,
+          connectWs,
+          cacheSnapshot,
+          getCurrentBlock: () => useGameStore.getState().currentBlock,
         });
-        wsRef.current = ws;
-        ws.connect();
       } catch (err) {
         if (!cancelled) {
           console.error('[gameStore] Init error:', err);
