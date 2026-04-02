@@ -34,36 +34,35 @@ export function drawGelatinousOozeClean(ctx, skeleton, w, h) {
   const metalDark = [110, 115, 120];  // dagger handle/guard
 
   // --- CUBE GEOMETRY ---
-  // Slightly irregular cube, leaning slightly left (facing left)
-  // Top-left, top-right, bottom-right, bottom-left with slight wobble
-  const cubeL = 0.18;   // left edge
-  const cubeR = 0.78;   // right edge
-  const cubeT = 0.12;   // top edge
-  const cubeB = 0.88;   // bottom edge
+  // Roughly square — wider and shorter than before
+  const cubeL = 0.14;   // left edge
+  const cubeR = 0.82;   // right edge
+  const cubeT = 0.18;   // top edge (pushed down)
+  const cubeB = 0.82;   // bottom edge (pulled up)
 
   // Top face vanishing points (3/4 perspective)
-  const topTL = { x: 0.22, y: 0.12 };
-  const topTR = { x: 0.82, y: 0.16 };
-  const topBL = { x: 0.18, y: 0.18 };
-  const topBR = { x: 0.78, y: 0.22 };
+  const topTL = { x: 0.18, y: 0.18 };
+  const topTR = { x: 0.86, y: 0.22 };
+  const topBL = { x: 0.14, y: 0.24 };
+  const topBR = { x: 0.82, y: 0.28 };
 
   // Front face corners (irregular — it's organic, alive, slightly melting)
-  const fTL = { x: 0.19, y: 0.17 };
-  const fTR = { x: 0.77, y: 0.21 };
-  const fBR = { x: 0.74, y: 0.84 };
-  const fBL = { x: 0.22, y: 0.86 };
+  const fTL = { x: 0.15, y: 0.23 };
+  const fTR = { x: 0.81, y: 0.27 };
+  const fBR = { x: 0.78, y: 0.80 };
+  const fBL = { x: 0.18, y: 0.82 };
 
   // --- 1. PUDDLE / BASE OOZE ---
   // Dark ooze spreading at the base
   const puddleGrad = ctx.createRadialGradient(
-    w * 0.48, h * 0.90, 0,
-    w * 0.48, h * 0.90, w * 0.35
+    w * 0.48, h * 0.86, 0,
+    w * 0.48, h * 0.86, w * 0.38
   );
   puddleGrad.addColorStop(0, `rgba(${bodyMid},0.5)`);
   puddleGrad.addColorStop(0.6, `rgba(${bodyDark},0.3)`);
   puddleGrad.addColorStop(1, `rgba(0,0,0,0)`);
   ctx.fillStyle = puddleGrad;
-  fillEllipse(ctx, w * 0.48, h * 0.90, w * 0.34, h * 0.06);
+  fillEllipse(ctx, w * 0.48, h * 0.86, w * 0.38, h * 0.06);
 
   // --- 2. MAIN CUBE BODY ---
   // Back shadow (depth)
@@ -120,8 +119,8 @@ export function drawGelatinousOozeClean(ctx, skeleton, w, h) {
 
   // --- 4. INNER GLOW — eerie light emanating from center ---
   const glowGrad = ctx.createRadialGradient(
-    w * 0.44, h * 0.48, 0,
-    w * 0.44, h * 0.48, w * 0.28
+    w * 0.46, h * 0.50, 0,
+    w * 0.46, h * 0.50, w * 0.30
   );
   glowGrad.addColorStop(0, `rgba(${innerGlow},0.40)`);
   glowGrad.addColorStop(0.4, `rgba(${innerGlow},0.18)`);
@@ -387,59 +386,59 @@ export function drawGelatinousOozeClean(ctx, skeleton, w, h) {
   // --- 8. DRIPPING SLIME — from top edges ---
   ctx.fillStyle = `rgb(${slimeGlow})`;
   // Drip 1 — left side, long
-  drawDrip(ctx, w * 0.24, h * 0.17, w * 0.006, h * 0.12);
+  drawDrip(ctx, w * 0.22, h * 0.23, w * 0.006, h * 0.12);
   // Drip 2 — center-left
-  drawDrip(ctx, w * 0.38, h * 0.15, w * 0.005, h * 0.08);
+  drawDrip(ctx, w * 0.38, h * 0.22, w * 0.005, h * 0.08);
   // Drip 3 — center
-  drawDrip(ctx, w * 0.50, h * 0.16, w * 0.007, h * 0.14);
+  drawDrip(ctx, w * 0.52, h * 0.24, w * 0.007, h * 0.14);
   // Drip 4 — right side
   ctx.fillStyle = `rgb(${bodyBright})`;
-  drawDrip(ctx, w * 0.66, h * 0.19, w * 0.005, h * 0.06);
+  drawDrip(ctx, w * 0.70, h * 0.26, w * 0.005, h * 0.06);
 
   // Drip droplets at tips
   ctx.fillStyle = `rgb(${slimeGlow})`;
-  fillCircle(ctx, w * 0.24, h * 0.30, w * 0.008);
-  fillCircle(ctx, w * 0.50, h * 0.31, w * 0.009);
-  fillCircle(ctx, w * 0.38, h * 0.24, w * 0.006);
+  fillCircle(ctx, w * 0.22, h * 0.36, w * 0.008);
+  fillCircle(ctx, w * 0.52, h * 0.39, w * 0.009);
+  fillCircle(ctx, w * 0.38, h * 0.31, w * 0.006);
 
   // --- 9. TOP SURFACE DRIPS ---
   // Slime running over the top face
   ctx.fillStyle = `rgba(${slimeGlow},0.35)`;
-  fillEllipse(ctx, w * 0.35, h * 0.14, w * 0.06, h * 0.012);
-  fillEllipse(ctx, w * 0.55, h * 0.17, w * 0.04, h * 0.008);
-  fillEllipse(ctx, w * 0.70, h * 0.19, w * 0.03, h * 0.006);
+  fillEllipse(ctx, w * 0.32, h * 0.20, w * 0.06, h * 0.012);
+  fillEllipse(ctx, w * 0.55, h * 0.23, w * 0.04, h * 0.008);
+  fillEllipse(ctx, w * 0.74, h * 0.25, w * 0.03, h * 0.006);
 
   // --- 10. SURFACE REFLECTIONS — specular highlights on the front face ---
   // Large soft highlight upper-left (main light source)
   const reflGrad = ctx.createRadialGradient(
-    w * 0.30, h * 0.28, 0,
-    w * 0.30, h * 0.28, w * 0.10
+    w * 0.28, h * 0.34, 0,
+    w * 0.28, h * 0.34, w * 0.10
   );
   reflGrad.addColorStop(0, `rgba(${slimeGlow},0.25)`);
   reflGrad.addColorStop(0.5, `rgba(${slimeGlow},0.08)`);
   reflGrad.addColorStop(1, `rgba(0,0,0,0)`);
   ctx.fillStyle = reflGrad;
-  fillEllipse(ctx, w * 0.30, h * 0.28, w * 0.08, h * 0.05);
+  fillEllipse(ctx, w * 0.28, h * 0.34, w * 0.08, h * 0.05);
 
   // Smaller specular dot
   ctx.fillStyle = `rgba(180,255,220,0.20)`;
-  fillCircle(ctx, w * 0.28, h * 0.25, w * 0.012);
+  fillCircle(ctx, w * 0.26, h * 0.31, w * 0.012);
 
   // --- 10b. MELTING BASE — ooze spreading at ground ---
   // Ooze tongue extending forward-left
   ctx.fillStyle = `rgb(${bodyMid})`;
   ctx.beginPath();
   ctx.moveTo(w * fBL.x, h * fBL.y);
-  ctx.bezierCurveTo(w * 0.18, h * 0.90, w * 0.14, h * 0.92, w * 0.12, h * 0.93);
-  ctx.bezierCurveTo(w * 0.14, h * 0.95, w * 0.20, h * 0.92, w * (fBL.x + 0.04), h * (fBL.y + 0.02));
+  ctx.bezierCurveTo(w * 0.14, h * 0.86, w * 0.10, h * 0.88, w * 0.08, h * 0.90);
+  ctx.bezierCurveTo(w * 0.10, h * 0.92, w * 0.16, h * 0.88, w * (fBL.x + 0.04), h * (fBL.y + 0.02));
   ctx.closePath();
   ctx.fill();
   // Ooze tongue right side
   ctx.fillStyle = `rgba(${bodyDark},0.8)`;
   ctx.beginPath();
   ctx.moveTo(w * fBR.x, h * fBR.y);
-  ctx.bezierCurveTo(w * 0.78, h * 0.88, w * 0.80, h * 0.90, w * 0.82, h * 0.91);
-  ctx.bezierCurveTo(w * 0.80, h * 0.93, w * 0.76, h * 0.90, w * (fBR.x - 0.02), h * (fBR.y + 0.02));
+  ctx.bezierCurveTo(w * 0.82, h * 0.84, w * 0.84, h * 0.86, w * 0.86, h * 0.88);
+  ctx.bezierCurveTo(w * 0.84, h * 0.90, w * 0.80, h * 0.86, w * (fBR.x - 0.02), h * (fBR.y + 0.02));
   ctx.closePath();
   ctx.fill();
 
@@ -500,10 +499,10 @@ function render(elapsed = 0) {
   // Simple cube outline for debug
   ctx1.strokeStyle = 'rgb(30,80,60)';
   ctx1.lineWidth = 2;
-  ctx1.strokeRect(canvasW * 0.18, canvasH * 0.18, canvasW * 0.60, canvasH * 0.68);
+  ctx1.strokeRect(canvasW * 0.14, canvasH * 0.23, canvasW * 0.68, canvasH * 0.58);
   ctx1.fillStyle = 'rgb(10,30,25)';
   ctx1.font = '11px monospace';
-  ctx1.fillText('No skeleton — amorphous', canvasW * 0.25, canvasH * 0.50);
+  ctx1.fillText('No skeleton — amorphous', canvasW * 0.25, canvasH * 0.52);
 
   // -- ASCII --
   const c2 = document.getElementById('next-ascii');
