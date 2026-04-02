@@ -14,11 +14,13 @@ import {
 // ── Mocks ───────────────────────────────────────────────────────────
 
 const mockSetRow = vi.fn();
+const mockGameTables: Record<string, Record<string, unknown>> = {};
 vi.mock('../gameStore', () => ({
   getTableValue: vi.fn(),
   useGameStore: {
     getState: () => ({
       setRow: mockSetRow,
+      tables: mockGameTables,
     }),
   },
 }));
@@ -37,7 +39,18 @@ const TEST_WALLET = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address;
 const TEST_DELEGATOR = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' as Address;
 const TEST_ENTITY = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const TEST_ENTITY_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
+const TEST_MONSTER_2 = '0x000000000000000000000000000000000000000000000000000000000000beef';
 const FAKE_TX_HASH = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890' as `0x${string}`;
+
+const resetMockGameTables = () => {
+  Object.keys(mockGameTables).forEach(key => {
+    delete mockGameTables[key];
+  });
+};
+
+beforeEach(() => {
+  resetMockGameTables();
+});
 
 // ── Mock Factory ────────────────────────────────────────────────────
 
@@ -877,6 +890,29 @@ describe('createSystemCalls — ghost monster pre-flight validation', () => {
     expect(waitForTransaction).not.toHaveBeenCalled();
   });
 
+  it('autoFight keeps other monsters on the tile when target is ghosted', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnershipWithMonster('dead');
+    mockGameTables['Spawned'] = {
+      [TEST_MONSTER]: { spawned: true },
+      [TEST_MONSTER_2]: { spawned: true },
+    };
+    mockGameTables['Position'] = {
+      [TEST_MONSTER]: { x: 1, y: 1 },
+      [TEST_MONSTER_2]: { x: 1, y: 1 },
+    };
+    mockGameTables['Characters'] = {};
+
+    const calls = createSystemCalls(network);
+    const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
+
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
+    expect(waitForTransaction).not.toHaveBeenCalled();
+  });
+
   it('autoFight proceeds normally when monster is alive', async () => {
     const { network, waitForTransaction } = createMockNetwork();
     mockOwnershipWithMonster('alive');
@@ -901,6 +937,34 @@ describe('createSystemCalls — ghost monster pre-flight validation', () => {
     expect(result.severity).toBe('warning');
     expect(result.error).toContain('No enemies here');
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+    expect(waitForTransaction).not.toHaveBeenCalled();
+  });
+
+  it('createEncounter keeps other monsters on the tile when one target is ghosted', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnershipWithMonster('dead');
+    mockGameTables['Spawned'] = {
+      [TEST_MONSTER]: { spawned: true },
+      [TEST_MONSTER_2]: { spawned: true },
+    };
+    mockGameTables['Position'] = {
+      [TEST_MONSTER]: { x: 1, y: 1 },
+      [TEST_MONSTER_2]: { x: 1, y: 1 },
+    };
+    mockGameTables['Characters'] = {};
+
+    const calls = createSystemCalls(network);
+
+    const result = await calls.createEncounter(
+      EncounterType.PvE,
+      [TEST_ENTITY],
+      [TEST_MONSTER],
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
+    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
     expect(waitForTransaction).not.toHaveBeenCalled();
   });
 

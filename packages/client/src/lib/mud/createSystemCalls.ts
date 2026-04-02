@@ -337,67 +337,55 @@ export function createSystemCalls(
     return !ee?.died && sp?.spawned !== false;
   };
 
-  // Mark a ghost monster as dead/despawned in the local store so it
-  // disappears from the UI immediately (MapContext filters on these).
-  const evictGhostMonster = (monsterId: string) => {
-    const store = useGameStore.getState();
-    store.setRow('Spawned', monsterId, { spawned: false });
-    store.setRow('EncounterEntity', monsterId, {
-      ...(getTableValue('EncounterEntity', monsterId) ?? {}),
-      died: true,
-    });
-    console.warn(`[ghost] Evicted ghost monster ${monsterId.slice(0, 10)}`);
+  type SetBatchUpdate = BatchUpdate & {
+    type: 'set';
+    data: NonNullable<BatchUpdate['data']>;
   };
 
-  // When a ghost is detected, evict ALL monsters on the same tile to prevent
-  // the player from clicking dead monsters one-by-one. The next WS update or
-  // snapshot re-fetch will bring back any that are actually still alive.
-  // Uses applyBatch for a single Zustand set() / React render.
-  const evictAllMonstersOnTile = (ghostMonsterId: string) => {
-    const pos = (getTableValue('Position', ghostMonsterId) ??
-      getTableValue('PositionV2', ghostMonsterId)) as
-      | { zoneId?: unknown; x?: unknown; y?: unknown } | undefined;
-    if (!pos) {
-      evictGhostMonster(ghostMonsterId);
-      return;
-    }
+  const buildGhostEvictionUpdates = (monsterId: string): [SetBatchUpdate, SetBatchUpdate] => [
+    { type: 'set', table: 'Spawned', keyBytes: monsterId, data: { spawned: false } },
+    {
+      type: 'set',
+      table: 'EncounterEntity',
+      keyBytes: monsterId,
+      data: {
+        ...(getTableValue('EncounterEntity', monsterId) ?? {}),
+        died: true,
+      },
+    },
+  ];
+
+  // Only evict confirmed ghost targets. Clearing the whole tile hides valid
+  // mobs and can strand players on productive grind tiles after one stale read.
+  const evictGhostMonsters = (monsterIds: string[]) => {
+    const uniqueMonsterIds = Array.from(new Set(monsterIds));
+    if (uniqueMonsterIds.length === 0) return;
 
     const store = useGameStore.getState();
-    const tables = store.tables ?? {};
-    const spawnedTable = tables['Spawned'] || {};
-    const positionTableV1 = tables['Position'] || {};
-    const positionTableV2 = tables['PositionV2'] || {};
-    const charactersTable = tables['Characters'] || {};
-
-    const gx = String(pos.x);
-    const gy = String(pos.y);
-    const batch: BatchUpdate[] = [];
-
-    for (const entityId of Object.keys(spawnedTable)) {
-      if (charactersTable[entityId]) continue; // skip player characters
-      const ePos = (positionTableV1[entityId] ?? positionTableV2[entityId]) as
-        | { zoneId?: unknown; x?: unknown; y?: unknown } | undefined;
-      if (!ePos) continue;
-      if (String(ePos.x) !== gx || String(ePos.y) !== gy) continue;
-
-      batch.push({ type: 'set', table: 'Spawned', keyBytes: entityId, data: { spawned: false } });
-      batch.push({
-        type: 'set', table: 'EncounterEntity', keyBytes: entityId,
-        data: { ...(getTableValue('EncounterEntity', entityId) ?? {}), died: true },
-      });
-    }
+    const batch = uniqueMonsterIds.flatMap(buildGhostEvictionUpdates);
 
     if (batch.length > 0 && typeof store.applyBatch === 'function') {
       store.applyBatch(batch);
-    } else if (batch.length > 0) {
+    } else {
       for (let i = 0; i < batch.length; i += 2) {
         const spawnedUpdate = batch[i];
         const encounterUpdate = batch[i + 1];
+        if (!spawnedUpdate || !encounterUpdate) continue;
         store.setRow('Spawned', spawnedUpdate.keyBytes, spawnedUpdate.data);
         store.setRow('EncounterEntity', encounterUpdate.keyBytes, encounterUpdate.data);
       }
     }
-    console.warn(`[ghost] Evicted ${batch.length / 2} monsters on tile (${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
+
+    if (uniqueMonsterIds.length === 1) {
+      console.warn(`[ghost] Evicted ghost monster ${uniqueMonsterIds[0].slice(0, 10)}`);
+      return;
+    }
+
+    console.warn(`[ghost] Evicted ${uniqueMonsterIds.length} targeted ghost monsters`);
+  };
+
+  const evictGhostMonster = (monsterId: string) => {
+    evictGhostMonsters([monsterId]);
   };
 
   // ---------------------------------------------------------------------------
@@ -628,12 +616,12 @@ export function createSystemCalls(
     group2: string[],
   ): SystemCallReturn => {
     // Pre-flight: for PvE, verify all opponents are still alive in the store.
-    // If any are ghosts, evict ALL monsters on the same tile so the player
-    // doesn't have to click through dead monsters one-by-one.
+    // If any are ghosts, evict only those targets and keep the rest of the tile
+    // intact for continued grinding.
     if (encounterType === EncounterType.PvE) {
       const deadTargets = group2.filter(id => !isMonsterAlive(id));
       if (deadTargets.length > 0) {
-        deadTargets.forEach(evictAllMonstersOnTile);
+        evictGhostMonsters(deadTargets);
         return {
           success: false,
           error: 'No enemies here — try moving to another tile.',
@@ -671,7 +659,7 @@ export function createSystemCalls(
           ], { account: diagAccount });
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
-            group2.forEach(evictAllMonstersOnTile);
+            evictGhostMonsters(group2);
             return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
@@ -689,7 +677,7 @@ export function createSystemCalls(
         return { success: false, error: 'Updating game — reloading...' };
       }
       if (encounterType === EncounterType.PvE && isGhostMonsterError(e)) {
-        group2.forEach(evictAllMonstersOnTile);
+        evictGhostMonsters(group2);
         return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
       }
       // Fallback: if gas estimation somehow leaks through (shouldn't with gas
@@ -703,7 +691,7 @@ export function createSystemCalls(
           ], { account: diagAccount });
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
-            group2.forEach(evictAllMonstersOnTile);
+            evictGhostMonsters(group2);
             return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
@@ -1377,7 +1365,7 @@ export function createSystemCalls(
 
     // Pre-flight: verify monster is still alive in the store.
     if (!isMonsterAlive(monsterId)) {
-      evictAllMonstersOnTile(monsterId);
+      evictGhostMonster(monsterId);
       return {
         success: false,
         error: 'No enemies here — try moving to another tile.',
@@ -1411,7 +1399,7 @@ export function createSystemCalls(
             return { success: false, error: 'Session expired — respawn to continue.' };
           }
           if (isGhostMonsterError(diagError)) {
-            evictAllMonstersOnTile(monsterId);
+            evictGhostMonster(monsterId);
             return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
@@ -1426,7 +1414,7 @@ export function createSystemCalls(
         return { success: false, error: 'Updating game — reloading...' };
       }
       if (isGhostMonsterError(e)) {
-        evictAllMonstersOnTile(monsterId);
+        evictGhostMonster(monsterId);
         return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
       }
       return {
