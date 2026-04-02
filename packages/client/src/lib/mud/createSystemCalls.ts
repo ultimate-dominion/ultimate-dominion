@@ -659,7 +659,7 @@ export function createSystemCalls(
           ], { account: diagAccount });
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
-            evictGhostMonsters(group2);
+            await validateTileMonsters(group2);
             return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
@@ -677,7 +677,7 @@ export function createSystemCalls(
         return { success: false, error: 'Updating game — reloading...' };
       }
       if (encounterType === EncounterType.PvE && isGhostMonsterError(e)) {
-        evictGhostMonsters(group2);
+        await validateTileMonsters(group2);
         return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
       }
       // Fallback: if gas estimation somehow leaks through (shouldn't with gas
@@ -691,7 +691,7 @@ export function createSystemCalls(
           ], { account: diagAccount });
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
-            evictGhostMonsters(group2);
+            await validateTileMonsters(group2);
             return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
