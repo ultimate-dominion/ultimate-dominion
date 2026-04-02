@@ -96,16 +96,20 @@ export async function bootstrapGameStore({
   }
   if (cancelled()) return;
 
+  if (eventualResult.snapshot.block < idbSnapshot.block) {
+    console.log(
+      `[gameStore] Skipping older fresh snapshot block ${eventualResult.snapshot.block} after IndexedDB fallback block ${idbSnapshot.block}`,
+    );
+    return;
+  }
+
   cacheSnapshot(eventualResult.snapshot);
   const currentBlock = getCurrentBlock();
-  if (eventualResult.snapshot.block > currentBlock) {
-    console.log(`[gameStore] Fresh snapshot arrived after fallback at block ${eventualResult.snapshot.block}`);
-    hydrateSnapshot(eventualResult.snapshot);
-  } else {
-    console.log(
-      `[gameStore] Skipping fresh snapshot block ${eventualResult.snapshot.block} — store already at block ${currentBlock}`,
-    );
-  }
+  console.log(
+    `[gameStore] Applying authoritative snapshot block ${eventualResult.snapshot.block} after IndexedDB fallback (store block ${currentBlock})`,
+  );
+  hydrateSnapshot(eventualResult.snapshot);
+  connectWs(eventualResult.snapshot);
 }
 
 async function fetchSnapshot(): Promise<FullSnapshot> {

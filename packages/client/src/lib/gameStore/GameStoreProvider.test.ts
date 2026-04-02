@@ -54,7 +54,7 @@ describe('bootstrapGameStore', () => {
     expect(cacheSnapshot).toHaveBeenCalledWith(snapshot);
   });
 
-  it('boots from IndexedDB after a timeout, then upgrades when a fresher snapshot arrives', async () => {
+  it('boots from IndexedDB after a timeout, then upgrades and reconnects when the fresh snapshot arrives', async () => {
     vi.useFakeTimers();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -96,7 +96,79 @@ describe('bootstrapGameStore', () => {
     expect(cacheSnapshot).toHaveBeenCalledWith(freshSnapshot);
     expect(hydrateSnapshot).toHaveBeenCalledTimes(2);
     expect(hydrateSnapshot).toHaveBeenNthCalledWith(2, freshSnapshot);
+    expect(connectWs).toHaveBeenCalledTimes(2);
+    expect(connectWs).toHaveBeenNthCalledWith(2, freshSnapshot);
+  });
+
+  it('upgrades from the eventual snapshot even if websocket updates already advanced the local block', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const idbSnapshot = makeSnapshot(90);
+    const freshSnapshot = makeSnapshot(140);
+    const network = deferred<FullSnapshot>();
+    const hydrateSnapshot = vi.fn();
+    const connectWs = vi.fn();
+    const cacheSnapshot = vi.fn();
+    let currentBlock = 141;
+
+    const promise = bootstrapGameStore({
+      cancelled: () => false,
+      idbSnapshot,
+      fetchSnapshot: () => network.promise,
+      hydrateSnapshot,
+      connectWs,
+      cacheSnapshot,
+      getCurrentBlock: () => currentBlock,
+      timeoutMs: 1000,
+    });
+
+    await vi.advanceTimersByTimeAsync(1000);
+
+    network.resolve(freshSnapshot);
+    await promise;
+
+    expect(cacheSnapshot).toHaveBeenCalledWith(freshSnapshot);
+    expect(hydrateSnapshot).toHaveBeenNthCalledWith(1, idbSnapshot);
+    expect(hydrateSnapshot).toHaveBeenNthCalledWith(2, freshSnapshot);
+    expect(connectWs).toHaveBeenNthCalledWith(1, idbSnapshot);
+    expect(connectWs).toHaveBeenNthCalledWith(2, freshSnapshot);
+  });
+
+  it('skips the eventual fresh snapshot if it is older than the IndexedDB fallback snapshot', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const idbSnapshot = makeSnapshot(120);
+    const staleSnapshot = makeSnapshot(110);
+    const network = deferred<FullSnapshot>();
+    const hydrateSnapshot = vi.fn();
+    const connectWs = vi.fn();
+    const cacheSnapshot = vi.fn();
+
+    const promise = bootstrapGameStore({
+      cancelled: () => false,
+      idbSnapshot,
+      fetchSnapshot: () => network.promise,
+      hydrateSnapshot,
+      connectWs,
+      cacheSnapshot,
+      getCurrentBlock: () => 130,
+      timeoutMs: 1000,
+    });
+
+    await vi.advanceTimersByTimeAsync(1000);
+
+    network.resolve(staleSnapshot);
+    await promise;
+
+    expect(cacheSnapshot).not.toHaveBeenCalled();
+    expect(hydrateSnapshot).toHaveBeenCalledTimes(1);
+    expect(hydrateSnapshot).toHaveBeenCalledWith(idbSnapshot);
     expect(connectWs).toHaveBeenCalledTimes(1);
+    expect(connectWs).toHaveBeenCalledWith(idbSnapshot);
   });
 
   it('boots from IndexedDB immediately if the fresh snapshot fails', async () => {
