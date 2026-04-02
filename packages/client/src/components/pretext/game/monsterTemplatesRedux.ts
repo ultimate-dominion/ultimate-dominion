@@ -1336,7 +1336,7 @@ export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
   { id: 'redux-dire-rat', name: 'Dire Rat', gridWidth: 14, gridHeight: 8, monsterClass: 1, level: 1, atmosphere: { r: 140, g: 110, b: 70, intensity: 0.10 }, draw: drawDireRatRedux },
   { id: 'redux-kobold', name: 'Kobold', gridWidth: 7, gridHeight: 5, monsterClass: 2, level: 2, atmosphere: { r: 160, g: 120, b: 50, intensity: 0.10 }, draw: drawKoboldRedux },
   { id: 'redux-goblin', name: 'Goblin', gridWidth: 7, gridHeight: 7, monsterClass: 0, level: 3, atmosphere: { r: 96, g: 120, b: 48, intensity: 0.10 }, draw: drawGoblinRedux },
-  { id: 'redux-giant-spider', name: 'Giant Spider', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.15 }, draw: drawCrystalElementalRedux },
+  { id: 'redux-giant-spider', name: 'Giant Spider', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.15 }, draw: drawPhaseSpiderRedux },
   { id: 'redux-skeleton', name: 'Skeleton', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 5, atmosphere: { r: 96, g: 156, b: 70, intensity: 0.12 }, draw: drawIronhideTrollRedux },
   { id: 'redux-goblin-shaman', name: 'Goblin Shaman', gridWidth: 12, gridHeight: 11, monsterClass: 1, level: 6, atmosphere: { r: 106, g: 70, b: 164, intensity: 0.12 }, draw: drawPhaseSpiderRedux },
   { id: 'redux-gelatinous-ooze', name: 'Gelatinous Ooze', gridWidth: 10, gridHeight: 14, monsterClass: 2, level: 7, atmosphere: { r: 66, g: 182, b: 56, intensity: 0.12 }, draw: drawBonecasterRedux },
