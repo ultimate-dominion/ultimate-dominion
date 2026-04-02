@@ -672,6 +672,24 @@ describe('createSystemCalls — move stale position recovery', () => {
     expect(result.error).toContain('moving too fast');
   });
 
+  it('updates Position immediately after a successful move receipt', async () => {
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    const calls = createSystemCalls(network);
+    const result = await calls.move(TEST_ENTITY, 'up');
+
+    expect(result.success).toBe(true);
+    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 1, y: 2 });
+  });
+
   it('syncs Position from chain after a successful spawn', async () => {
     const { network } = createMockNetwork();
     mockOwnership();

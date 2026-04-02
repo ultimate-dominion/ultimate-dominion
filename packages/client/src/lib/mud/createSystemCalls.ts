@@ -1263,6 +1263,7 @@ export function createSystemCalls(
             onMoveRevert();
             return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
           }
+          useGameStore.getState().setRow('Position', characterEntity, { x, y });
           onMoveSuccess();
           return { success: true };
         } catch (e) {
