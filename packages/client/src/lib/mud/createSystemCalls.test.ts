@@ -1540,4 +1540,25 @@ describe('createSystemCalls — validateTileMonsters', () => {
     }));
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', BUSY_MONSTER, { spawned: false });
   });
+
+  it('syncs monsters off the current tile to their on-chain position', async () => {
+    const { network } = createMockNetwork();
+    const OFF_TILE_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000ddd';
+
+    network.publicClient.readContract = mockValidationReads({
+      [OFF_TILE_MONSTER]: { spawned: true },
+    });
+    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__getEntityPosition') return vi.fn().mockResolvedValue([1, 4]);
+        return vi.fn().mockResolvedValue(BigInt(0));
+      },
+    });
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([OFF_TILE_MONSTER], { x: 1, y: 3 });
+
+    expect(mockSetRow).toHaveBeenCalledWith('Position', OFF_TILE_MONSTER, { x: 1, y: 4 });
+    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', OFF_TILE_MONSTER, { spawned: false });
+  });
 });

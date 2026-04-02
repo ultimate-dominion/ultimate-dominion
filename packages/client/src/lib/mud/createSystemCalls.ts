@@ -346,6 +346,32 @@ export function createSystemCalls(
     }
   };
 
+  const syncMonsterPositionFromChain = async (
+    monsterId: string,
+  ): Promise<{ x: number; y: number } | null> => {
+    try {
+      const [chainX, chainY] = await worldContract.read.UD__getEntityPosition([
+        monsterId as `0x${string}`,
+      ]) as readonly [bigint | number, bigint | number];
+      const position = { x: Number(chainX), y: Number(chainY) };
+      const currentPosition = getTableValue('Position', monsterId) as
+        | { x?: number; y?: number }
+        | undefined;
+
+      if (
+        Number(currentPosition?.x) !== position.x ||
+        Number(currentPosition?.y) !== position.y
+      ) {
+        useGameStore.getState().setRow('Position', monsterId, position);
+      }
+
+      return position;
+    } catch (error) {
+      console.warn(`[position] Failed to sync monster ${monsterId.slice(0, 10)} from chain`, error);
+      return null;
+    }
+  };
+
   // Check whether a monster is alive in the local store.
   const isMonsterAlive = (monsterId: string): boolean => {
     const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean } | undefined;
@@ -510,6 +536,7 @@ export function createSystemCalls(
         ]);
 
         return {
+          chainPosition: expectedPosition ? await syncMonsterPositionFromChain(id) : null,
           encounter: decodeEncounterEntityRecord(encounterRecord),
           id,
           spawned: decodeSpawnedRecord(spawnedRecord),
@@ -520,15 +547,24 @@ export function createSystemCalls(
     for (const r of results) {
       if (r.status !== 'fulfilled') continue;
 
-      const { encounter, id, spawned } = r.value;
+      const { chainPosition, encounter, id, spawned } = r.value;
       const inEncounter = Boolean(encounter && encounter.encounterId !== zeroHash);
-      const isGhost = spawned === false || Boolean(encounter?.died);
+      const offTile = Boolean(
+        expectedPosition &&
+        chainPosition &&
+        (chainPosition.x !== expectedPosition.x || chainPosition.y !== expectedPosition.y),
+      );
+      const isGhost = spawned === false || Boolean(encounter?.died) || offTile;
 
       if (!isGhost && !inEncounter) continue;
 
       syncMonsterSnapshot(id, { encounter, spawned });
 
-      if (isGhost) {
+      if (offTile) {
+        console.warn(
+          `[validateTile] Synced off-tile monster ${id.slice(0, 10)} to (${chainPosition?.x},${chainPosition?.y})`,
+        );
+      } else if (isGhost) {
         console.warn(`[validateTile] Evicted ghost monster ${id.slice(0, 10)}`);
       } else if (inEncounter) {
         console.warn(`[validateTile] Marked monster ${id.slice(0, 10)} as busy in encounter`);
