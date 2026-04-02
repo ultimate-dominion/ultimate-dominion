@@ -17,10 +17,6 @@ const chunkGroups = [
     packages: ['@privy-io', '@safe-global', '@walletconnect', '@tanstack/react-query', 'viem', 'wagmi'],
   },
   {
-    name: 'mud-vendor',
-    packages: ['@latticexyz', 'rxjs', 'zustand'],
-  },
-  {
     name: 'chat-vendor',
     packages: ['@pushprotocol', 'micro-ftch'],
   },
