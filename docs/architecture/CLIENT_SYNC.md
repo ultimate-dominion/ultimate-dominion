@@ -66,6 +66,34 @@ The `WSClient` maintains a persistent WebSocket connection to the indexer. All t
 4. **When adding new UD-namespace tables**, they're automatically covered by receipt decoding (they're in `mudConfig.tables`).
 5. **When adding new non-UD tables**, they'll be covered by delta + WS. No code change needed.
 
+## Prod Ghost Mob Incident (April 2026)
+
+**What happened:** Prod started rendering attackable monsters that the contract immediately rejected with `No enemies here`. The first symptom looked like an indexer issue because fresh snapshot data still showed those mobs as spawned and on-tile.
+
+**What actually broke:** The client had two competing position sources:
+
+- Monsters and shops were being polluted by leaked `PositionV2` rows from the Zone 2 rollout.
+- The player path still preferred `PositionV2` over legacy `Position`.
+- The deployed PvE contract path (`MapSystem.isAtPosition` / `PvESystem.isValidPvE`) still validated combat against legacy `Position`.
+
+That meant the UI could believe the player and monsters were co-located while the contract checked a different tile. The indexer was not inventing the bug; it was faithfully serving stale-but-real mixed table state.
+
+**The fix:** On prod, prefer legacy `Position` for any path that must agree with on-chain encounter validation:
+
+- player position in `MapContext`
+- player movement / auto-adventure in `createSystemCalls`
+- click-time monster validation in `TileDetailsPanel`
+
+Keep using `PositionV2.zoneId` for zone membership filtering. Do not treat `PositionV2` as canonical for combat/movement until the deployed contract path does too.
+
+**Operational rule:** If prod shows ghost mobs again, compare all three before blaming the indexer:
+
+1. snapshot `Position` vs `PositionV2` for the player
+2. snapshot `Spawned` / `EncounterEntity` / `Position` for the monster
+3. the contract code path currently used for encounter validity
+
+If the client and contract are reading different position tables, the bug is in reconciliation logic even when the snapshot looks healthy.
+
 ---
 
-*Last updated: March 13, 2026*
+*Last updated: April 2, 2026*

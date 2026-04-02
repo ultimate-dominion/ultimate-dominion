@@ -374,7 +374,20 @@ curl -s https://indexer-production-d6df.up.railway.app/api/health
 
 # Full infra status
 curl -s https://indexer-production-d6df.up.railway.app/api/status
+
+# Snapshot sanity — compare legacy Position vs PositionV2 on at least one
+# active player and one reported ghost mob before shipping a client hotfix
+curl -s https://indexer-production-d6df.up.railway.app/api/snapshot
 ```
+
+If prod UI reports ghost mobs or "No enemies here" while the tile visibly has enemies:
+
+- Do not assume it is "just the indexer"
+- Compare snapshot `Position` and `PositionV2` for the player entity
+- Compare `Spawned`, `EncounterEntity`, and `Position` for the reported monster entity
+- Check which table the deployed contract path actually uses for PvE validation before patching the client
+
+This exact failure happened on April 2, 2026: prod client paths preferred stale `PositionV2` while the contract still validated against legacy `Position`, creating fake on-tile encounters even with a fresh snapshot.
 
 ### Relayer
 
