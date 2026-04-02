@@ -385,6 +385,7 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 - [x] Gold withdrawal design ✓ (MetaMask only, embedded wallet locked by design)
 - [x] sourcemap: false ✓
 - [x] Ghost mob prod hotfix ✓ stale client monster targets now reconcile against on-chain state before combat (`0b61f384`)
+- [x] Ghost cleanup no longer clears whole prod tiles ✓ stale targets are evicted without hiding valid mobs on the same tile (`fc728097`)
 
 ### Should Do
 - [ ] Verify contracts on Basescan
