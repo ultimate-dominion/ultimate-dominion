@@ -17,7 +17,7 @@
   "4": {
     "name": "Souls That Linger",
     "narrative": "The Crystal Elemental shatters, and from within its fractured core, a constellation of pale light spills free.\n\nUnlike the shards that scatter and fade, these motes hover, waiting, and you hear a voice like wind through empty halls:\n\n*\"You seek the truth. They all did, once.\"*\n\nImages flood your mind: A great ritual. Hooded figures around a pit of absolute darkness. Power being summoned - and something going terribly, horribly wrong.\n\n*\"We were the witnesses. We are all that remains of the world before. Trapped in crystal, waiting to be freed.\"*\n\nThe light begins to fade.\n\n*\"Find the Marrow at the center. There, you will understand what we became.\"*\n\nAnd then it's gone, leaving only the echo of ancient sorrow.",
-    "hint": "Defeat a Crystal Elemental."
+    "hint": "Defeat a Giant Spider."
   },
   "5": {
     "name": "The Marrow",
@@ -27,12 +27,12 @@
   "6": {
     "name": "Death of the Death God",
     "narrative": "The Bonecaster crumbles, and with its destruction comes a flood of knowledge:\n\nThere was a god of death once. Not cruel, not kind - simply the keeper of the final door. Souls passed through it, and found rest beyond.\n\nBut the mages of this place wanted more. They wanted power over death itself. They performed a ritual to bind the Death God, to steal its dominion.\n\nThey succeeded.\n\nAnd when the Death God died, the doors to the beyond closed forever.\n\nNow the dead cannot leave. They linger, twist, become the monsters that haunt these halls. The mages too are trapped here, their consciousness scattered across a thousand screaming forms.\n\nThis isn't a dungeon. It's a tomb. A tomb for a god.\n\nAnd somewhere in its depths, the god's corpse still holds power.",
-    "hint": "Defeat the Bonecaster."
+    "hint": "Defeat the Gelatinous Ooze."
   },
   "7": {
     "name": "Betrayer's Truth",
     "narrative": "As the Pale Stalker dissolves into the darkness it once commanded, its final message burns into your mind:\n\n*\"There was one among them who knew the truth. Who tried to stop it.\"*\n\nYou see him: a young mage, face twisted with horror as his colleagues complete the ritual. He screams, tries to break the circle, but it's too late.\n\n*\"He was the first to realize what they'd done. The first to try to undo it.\"*\n\n*\"For a thousand years he's worked in shadow. Guiding the lost. Hoping one would finally be strong enough.\"*\n\nThe voice fades, but not before whispering one last thing:\n\n*\"Tal Carden was there, at the beginning. Ask him about the door. Ask him why he really stays.\"*\n\nThe merchant with blind eyes. The quartermaster who never leaves.\n\nHow long has he truly been waiting?",
-    "hint": "Defeat the Pale Stalker."
+    "hint": "Defeat the Carrion Crawler."
   },
   "8": {
     "name": "Blood Price",

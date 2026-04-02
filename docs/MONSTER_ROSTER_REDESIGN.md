@@ -28,17 +28,17 @@ Neither Z1 nor Z2 monsters are finalized on-chain — this is the time to get th
 | 12 | Basilisk (boss) | **Basilisk** | STR | Keep — petrifying gaze boss. May need art refresh. |
 
 ### Art Status
-- [x] Dire Rat — skeleton system, done
-- [x] Kobold — skeleton system, extreme crouch + spear + S-curve tail, done
-- [ ] Goblin
-- [ ] Giant Spider
-- [ ] Skeleton
-- [ ] Goblin Shaman
-- [ ] Gelatinous Ooze
-- [ ] Bugbear
-- [ ] Carrion Crawler
-- [ ] Hook Horror
-- [ ] Basilisk (refresh?)
+- [x] Dire Rat — skeleton system, quadruped, red-orange eyes, fur texture
+- [x] Kobold — skeleton system, extreme crouch, spear thrust, S-curve tail
+- [x] Goblin — skeleton system, oversized head, huge ears, two-handed axe overhead
+- [x] Giant Spider — modified skeleton (5-node spine, 8 limbs), cluster of red eyes, wide leg spread
+- [x] Skeleton — skeleton system, ribcage with dark gaps, skull brow ridge, sword up
+- [x] Goblin Shaman — skeleton system, pointed hat, staff with glowing amber orb, big ears, tattered robes
+- [x] Gelatinous Ooze — no skeleton (pure canvas), translucent cube, dissolved skull/bones/dagger inside
+- [ ] Bugbear — large muscular goblinoid, shaggy fur, bear-like snout, massive club
+- [ ] Carrion Crawler — segmented worm body, multiple legs (centipede), face tentacles
+- [ ] Hook Horror — bird-like head, hooked beak, massive hook-claws, exoskeleton
+- [ ] Basilisk — large lizard/serpent, petrifying gaze eyes (bright), thick scales, heavy tail
 
 ---
 

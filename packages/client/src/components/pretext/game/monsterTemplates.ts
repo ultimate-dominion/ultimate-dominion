@@ -2412,7 +2412,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'fungal-shaman',
-    name: 'Fungal Shaman',
+    name: 'Kobold',
     gridWidth: 10,
     gridHeight: 12,
     monsterClass: 2,
@@ -2422,7 +2422,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'cavern-brute',
-    name: 'Cavern Brute',
+    name: 'Goblin',
     gridWidth: 10,
     gridHeight: 12,
     monsterClass: 0,
@@ -2432,7 +2432,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'crystal-elemental',
-    name: 'Crystal Elemental',
+    name: 'Giant Spider',
     gridWidth: 10,
     gridHeight: 12,
     monsterClass: 2,
@@ -2442,7 +2442,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'ironhide-troll',
-    name: 'Ironhide Troll',
+    name: 'Skeleton',
     gridWidth: 10,
     gridHeight: 12,
     monsterClass: 0,
@@ -2452,7 +2452,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'phase-spider',
-    name: 'Phase Spider',
+    name: 'Goblin Shaman',
     gridWidth: 12,
     gridHeight: 11,
     monsterClass: 1,
@@ -2462,7 +2462,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'bonecaster',
-    name: 'Bonecaster',
+    name: 'Gelatinous Ooze',
     gridWidth: 10,
     gridHeight: 14,
     monsterClass: 2,
@@ -2472,7 +2472,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'rock-golem',
-    name: 'Rock Golem',
+    name: 'Bugbear',
     gridWidth: 10,
     gridHeight: 12,
     monsterClass: 0,
@@ -2482,7 +2482,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'pale-stalker',
-    name: 'Pale Stalker',
+    name: 'Carrion Crawler',
     gridWidth: 10,
     gridHeight: 13,
     monsterClass: 1,
@@ -2492,7 +2492,7 @@ export const MONSTER_TEMPLATES: MonsterTemplate[] = [
   },
   {
     id: 'dusk-drake',
-    name: 'Dusk Drake',
+    name: 'Hook Horror',
     gridWidth: 14,
     gridHeight: 12,
     monsterClass: 2,

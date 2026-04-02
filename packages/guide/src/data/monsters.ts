@@ -25,7 +25,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'A Rogue-class creature — Strength-based attacks have the triangle advantage. Very low HP and stats make this a quick fight for any build. Drops all three starter weapons and the rare Dire Rat Fang (poisons on hit).',
   },
   {
-    name: 'Fungal Shaman',
+    name: 'Kobold',
     level: 2,
     monsterClass: 'Mage',
     hp: 12, str: 3, agi: 4, int: 8, armor: 0, xp: 400,
@@ -33,7 +33,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'A Mage-class caster — Agility builds have the edge. Watch for magical damage; INT is its strongest stat at 8. Drops the Sporecap Wand (uncommon) and Spore Cloud consumable.',
   },
   {
-    name: 'Cavern Brute',
+    name: 'Goblin',
     level: 3,
     monsterClass: 'Warrior',
     hp: 18, str: 9, agi: 4, int: 3, armor: 1, xp: 550,
@@ -41,7 +41,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'A Warrior with decent STR and the first armor you\'ll face. Intelligence-based attacks bypass the combat triangle. Drops the uncommon Notched Cleaver and Padded Armor.',
   },
   {
-    name: 'Crystal Elemental',
+    name: 'Giant Spider',
     level: 4,
     monsterClass: 'Mage',
     hp: 16, str: 4, agi: 5, int: 10, armor: 1, xp: 800,
@@ -49,7 +49,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'High INT makes this a dangerous caster. Agility builds counter it well. Has 1 armor. Drops the Crystal Shard — a hybrid STR/INT weapon.',
   },
   {
-    name: 'Ironhide Troll',
+    name: 'Skeleton',
     level: 5,
     monsterClass: 'Warrior',
     hp: 26, str: 11, agi: 6, int: 5, armor: 2, xp: 1000,
@@ -57,7 +57,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'The first real tank — 26 HP, 2 armor, and 11 STR. Intelligence builds have the triangle advantage. Drops the rare Gnarled Cudgel and epic Trollhide Cleaver. Also drops combat tonics and offensive consumables.',
   },
   {
-    name: 'Phase Spider',
+    name: 'Goblin Shaman',
     level: 6,
     monsterClass: 'Rogue',
     hp: 22, str: 8, agi: 12, int: 5, armor: 0, xp: 1325,
@@ -65,7 +65,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'Extremely agile at 12 AGI — hard to hit with physical attacks. Strength builds have the triangle advantage. May poison on hit. Drops the epic Phasefang and uncommon Spider Silk Wraps.',
   },
   {
-    name: 'Bonecaster',
+    name: 'Gelatinous Ooze',
     level: 7,
     monsterClass: 'Mage',
     hp: 26, str: 6, agi: 7, int: 13, armor: 0, xp: 2000,
@@ -73,7 +73,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'A powerful caster with the highest INT so far at 13. Agility builds counter it. Watch for heavy magic damage — bring healing. Drops the rare Bone Staff.',
   },
   {
-    name: 'Rock Golem',
+    name: 'Bugbear',
     level: 8,
     monsterClass: 'Warrior',
     hp: 38, str: 14, agi: 8, int: 7, armor: 3, xp: 2500,
@@ -81,7 +81,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'Massive HP pool (38) and the highest armor in the cave (3). Intelligence has the triangle advantage. Drops rare Stone Maul and Carved Stone Plate — one of the best farming targets for STR gear.',
   },
   {
-    name: 'Pale Stalker',
+    name: 'Carrion Crawler',
     level: 9,
     monsterClass: 'Rogue',
     hp: 34, str: 10, agi: 15, int: 7, armor: 0, xp: 3250,
@@ -89,7 +89,7 @@ export const darkCaveMonsters: Monster[] = [
     combatTip: 'Blazing fast with 15 AGI — the evasion king. Strength builds dominate via the combat triangle. Drops the rare Darkwood Bow (inflicts bleed) and Stalker\'s Vest.',
   },
   {
-    name: 'Dusk Drake',
+    name: 'Hook Horror',
     level: 10,
     monsterClass: 'Mage',
     hp: 52, str: 13, agi: 13, int: 15, armor: 2, xp: 6500,
