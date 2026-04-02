@@ -572,6 +572,37 @@ export function createSystemCalls(
     }
   };
 
+  const preflightPveEncounter = async (
+    group1: string[],
+    group2: string[],
+  ): Promise<SystemCallReturn | null> => {
+    try {
+      await worldContract.simulate.UD__createEncounter([
+        EncounterType.PvE,
+        group1 as `0x${string}`[],
+        group2 as `0x${string}`[],
+      ], { account: diagAccount });
+      return null;
+    } catch (diagError) {
+      if (isGhostMonsterError(diagError)) {
+        const syncedPosition = await syncCharacterPositionFromChain(group1[0]);
+        const expectedPosition = syncedPosition ?? getStoredPosition(group1[0], {
+          preferLegacyPosition: true,
+        });
+        await validateTileMonsters(group2, expectedPosition);
+        return {
+          success: false,
+          error: 'No enemies here — try moving to another tile.',
+          severity: 'warning',
+        };
+      }
+      return {
+        success: false,
+        error: getContractError(diagError),
+      };
+    }
+  };
+
   // Selectors for ghost monster revert errors (InvalidCombatEntity / InvalidPvE).
   const INVALID_COMBAT_ENTITY_SELECTOR = '1af235ec';
   const INVALID_PVE_SELECTOR = 'adee4371';
@@ -680,6 +711,9 @@ export function createSystemCalls(
           severity: 'warning',
         };
       }
+
+      const preflight = await preflightPveEncounter(group1, group2);
+      if (preflight) return preflight;
     }
 
     try {

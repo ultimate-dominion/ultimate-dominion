@@ -1033,6 +1033,43 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
   });
 
+  it('createEncounter preflight blocks bad PvE clicks before sending tx and syncs tile state from chain', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    mockOwnershipWithMonster('alive');
+    network.publicClient.readContract = mockValidationReads({
+      [TEST_MONSTER]: { spawned: true },
+    });
+
+    const writeSpy = vi.fn().mockResolvedValue(FAKE_TX_HASH);
+    network.worldContract.write = {
+      UD__createEncounter: writeSpy,
+    };
+    network.worldContract.simulate = {
+      UD__createEncounter: vi.fn().mockRejectedValue(new Error('0xadee4371')),
+    };
+    network.worldContract.read = {
+      UD__getEntityPosition: vi.fn().mockImplementation(async ([entityId]: [`0x${string}`]) => {
+        if (entityId === TEST_ENTITY) return [1, 1];
+        if (entityId === TEST_MONSTER) return [2, 1];
+        return [0, 0];
+      }),
+    };
+
+    const calls = createSystemCalls(network);
+    const result = await calls.createEncounter(
+      EncounterType.PvE,
+      [TEST_ENTITY],
+      [TEST_MONSTER],
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.severity).toBe('warning');
+    expect(result.error).toContain('No enemies here');
+    expect(writeSpy).not.toHaveBeenCalled();
+    expect(waitForTransaction).not.toHaveBeenCalled();
+    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_MONSTER, { x: 2, y: 1 });
+  });
+
   it('createEncounter keeps live monsters on on-chain ghost revert via diagnostic simulation (PvE)', async () => {
     // TX goes on-chain (gas estimation skipped), reverts, then diagnostic
     // simulation finds ghost monster error
@@ -1043,9 +1080,11 @@ describe('createSystemCalls — ghost monster error recovery', () => {
       [TEST_MONSTER_2]: { spawned: true },
     });
 
-    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
-      get: () => vi.fn().mockRejectedValue(new Error('0x1af235ec')),
-    });
+    network.worldContract.simulate = {
+      UD__createEncounter: vi.fn()
+        .mockResolvedValueOnce({ result: undefined })
+        .mockRejectedValueOnce(new Error('0x1af235ec')),
+    };
     const calls = createSystemCalls(network);
 
     const result = await calls.createEncounter(
@@ -1056,7 +1095,7 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
     expect(result.error).toContain('No enemies here');
-    expect(waitForTransaction).toHaveBeenCalled(); // TX was sent (gas est skipped)
+    expect(waitForTransaction).toHaveBeenCalled(); // preflight passed, tx was sent
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
   });
@@ -1076,10 +1115,12 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: () => vi.fn().mockRejectedValue(genericError),
     });
-    // Simulation reveals the ghost monster error
-    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
-      get: () => vi.fn().mockRejectedValue(new Error('0xadee4371')),
-    });
+    // Preflight passes, fallback simulation reveals the ghost monster error
+    network.worldContract.simulate = {
+      UD__createEncounter: vi.fn()
+        .mockResolvedValueOnce({ result: undefined })
+        .mockRejectedValueOnce(new Error('0xadee4371')),
+    };
     const calls = createSystemCalls(network);
 
     const result = await calls.createEncounter(

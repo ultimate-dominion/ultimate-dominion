@@ -19,6 +19,7 @@ import {
   toBigInt,
   toNumber,
   useGameTable,
+  useGameStore,
   useGameValue,
 } from '../lib/gameStore';
 import { getCachedMetadata } from '../hooks/useCharacterMetadata';
@@ -164,6 +165,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const posDataV1 = useGameValue('Position', character?.id);
   const posData = posDataV1 ?? posDataV2;
   const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
+  const storeHydrated = useGameStore((state) => state.hydrated);
+  const hydrateVersion = useGameStore((state) => state.hydrateVersion);
 
   // Zone awareness — read CharacterZone table (0 or unset = zone 1)
   const characterZoneData = useGameValue('CharacterZone', character?.id);
@@ -499,15 +502,19 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   // Proactive ghost validation — verify monsters on the current tile are alive
   // on-chain. Prevents "No enemies here" errors by evicting ghosts before the
-  // player clicks Fight. Fires once per tile, not per render.
+  // player clicks Fight. Fires once per tile per fresh snapshot hydrate, so an
+  // IndexedDB preload cannot "consume" validation before the real snapshot
+  // overwrites the store.
   const prevTileRef = useRef<string>('');
   useEffect(() => {
-    const tileKey = position ? `${position.x},${position.y}` : '';
-    if (tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
+    const tileKey = storeHydrated && position
+      ? `${hydrateVersion}:${position.x},${position.y}`
+      : '';
+    if (!tileKey || tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
     prevTileRef.current = tileKey;
 
     validateTileMonsters(monstersOnTile.map(m => m.id), position ?? undefined);
-  }, [position, monstersOnTile, validateTileMonsters]);
+  }, [storeHydrated, hydrateVersion, position, monstersOnTile, validateTileMonsters]);
 
   // Clear spawn waiting state when Spawned value updates from store sync
   useEffect(() => {
