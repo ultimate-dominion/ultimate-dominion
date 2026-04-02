@@ -74,6 +74,11 @@ const mockRest = vi.fn().mockResolvedValue({ success: true, error: null });
 const mockRefreshCharacter = vi.fn().mockResolvedValue(undefined);
 const mockEncounterExecute = vi.fn();
 const mockRestExecute = vi.fn();
+const mockRenderError = vi.fn();
+const mockRenderSuccess = vi.fn();
+const mockRenderWarning = vi.fn();
+const mockValidateTileMonsters = vi.fn();
+const mockGetTableValue = vi.fn();
 
 // --- Context mocks ---
 
@@ -139,8 +144,9 @@ vi.mock('../hooks/useBattleHpAnimation', () => ({
 
 vi.mock('../hooks/useToast', () => ({
   useToast: () => ({
-    renderError: vi.fn(),
-    renderSuccess: vi.fn(),
+    renderError: mockRenderError,
+    renderSuccess: mockRenderSuccess,
+    renderWarning: mockRenderWarning,
   }),
 }));
 
@@ -151,7 +157,7 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('../lib/gameStore', () => ({
-  getTableValue: () => null,
+  getTableValue: (...args: unknown[]) => mockGetTableValue(...args),
   toBigInt: (v: unknown) => BigInt(v as number),
 }));
 
@@ -212,6 +218,17 @@ vi.mock('@chakra-ui/react', async () => {
 
 function setDefaults() {
   txCallCount = 0;
+  mockAutoFight.mockClear();
+  mockCreateEncounter.mockClear();
+  mockRest.mockClear();
+  mockRefreshCharacter.mockClear();
+  mockEncounterExecute.mockClear();
+  mockRestExecute.mockClear();
+  mockRenderError.mockReset();
+  mockRenderSuccess.mockReset();
+  mockRenderWarning.mockReset();
+  mockValidateTileMonsters.mockReset();
+  mockGetTableValue.mockReset();
 
   battleState = {
     attackOutcomes: [],
@@ -259,8 +276,12 @@ function setDefaults() {
       autoFight: mockAutoFight,
       createEncounter: mockCreateEncounter,
       rest: mockRest,
+      validateTileMonsters: mockValidateTileMonsters,
     },
   };
+
+  mockValidateTileMonsters.mockResolvedValue(undefined);
+  mockGetTableValue.mockReturnValue(null);
 
   // Default: execute calls the callback and returns result (success path)
   mockEncounterExecute.mockImplementation(async (fn: () => Promise<unknown>) => {
@@ -405,6 +426,70 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
 
     // Loading screen should be gone — battle view should render (manual mode shows full battle UI)
     expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
+  });
+});
+
+describe('TileDetailsPanel — Combat Target Validation', () => {
+  beforeEach(() => {
+    setDefaults();
+    vi.useFakeTimers();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('blocks manual encounters when click-time validation evicts the monster', async () => {
+    movementState.autoAdventureMode = false;
+    let ghosted = false;
+
+    mockValidateTileMonsters.mockImplementation(async () => {
+      ghosted = true;
+    });
+    mockGetTableValue.mockImplementation((table: string, entityId: string) => {
+      if (entityId !== testMonster.id) return null;
+      if (table === 'EncounterEntity') return ghosted ? { died: true } : null;
+      if (table === 'Spawned') return ghosted ? { spawned: false } : { spawned: true };
+      return null;
+    });
+
+    render(<TileDetailsPanel />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
+    });
+
+    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id]);
+    expect(mockEncounterExecute).not.toHaveBeenCalled();
+    expect(mockCreateEncounter).not.toHaveBeenCalled();
+    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
+  });
+
+  it('blocks auto-fight when click-time validation evicts the monster', async () => {
+    let ghosted = false;
+
+    mockValidateTileMonsters.mockImplementation(async () => {
+      ghosted = true;
+    });
+    mockGetTableValue.mockImplementation((table: string, entityId: string) => {
+      if (entityId !== testMonster.id) return null;
+      if (table === 'EncounterEntity') return ghosted ? { died: true } : null;
+      if (table === 'Spawned') return ghosted ? { spawned: false } : { spawned: true };
+      return null;
+    });
+
+    render(<TileDetailsPanel />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
+    });
+
+    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id]);
+    expect(mockEncounterExecute).not.toHaveBeenCalled();
+    expect(mockAutoFight).not.toHaveBeenCalled();
+    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
   });
 });
 

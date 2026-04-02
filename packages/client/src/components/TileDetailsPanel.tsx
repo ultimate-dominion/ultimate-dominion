@@ -158,7 +158,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const {
     delegatorAddress,
-    systemCalls: { createEncounter, autoFight, rest },
+    systemCalls: { createEncounter, autoFight, rest, validateTileMonsters },
   } = useMUD();
   const { pendingEcho } = useFragments();
 
@@ -302,7 +302,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     showSuccessToast: false,
   });
 
-  const { renderSuccess } = useToast();
+  const { renderSuccess, renderWarning } = useToast();
 
   const onRest = useCallback(async () => {
     if (!character) return;
@@ -319,6 +319,14 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
   const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);
+
+  const validateCombatTarget = useCallback(async (monsterId: string) => {
+    await validateTileMonsters([monsterId]);
+
+    const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean } | undefined;
+    const sp = getTableValue('Spawned', monsterId) as { spawned?: boolean } | undefined;
+    return !(ee?.died || sp?.spawned === false);
+  }, [validateTileMonsters]);
 
   // Clear waiting state when ALL battle data is ready (not just currentBattle)
   // Battle view requires: currentBattle + opponent + userCharacterForBattleRendering
@@ -424,12 +432,13 @@ export const TileDetailsPanel = (): JSX.Element => {
       if (!character) return;
       if (!delegatorAddress) return;
 
-      // Click-time validation: re-read store to catch ghosts that slipped
-      // through the reactive filter (race condition between render and click).
       if (encounterType === EncounterType.PvE) {
-        const ee = getTableValue('EncounterEntity', opponent.id) as { died?: boolean } | undefined;
-        const sp = getTableValue('Spawned', opponent.id) as { spawned?: boolean } | undefined;
-        if (ee?.died || sp?.spawned === false) return;
+        // Re-check on-chain state right before sending the combat tx so stale
+        // tile data gets evicted instead of producing a revert.
+        if (!await validateCombatTarget(opponent.id)) {
+          renderWarning('No enemies here — try moving to another tile.');
+          return;
+        }
       }
 
       // Auto adventure + PvE: single-tx fight, no battle screen
@@ -537,6 +546,8 @@ export const TileDetailsPanel = (): JSX.Element => {
       equippedSpells,
       equippedWeapons,
       refreshCharacter,
+      renderWarning,
+      validateCombatTarget,
     ],
   );
 
