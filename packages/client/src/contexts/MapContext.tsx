@@ -29,6 +29,7 @@ import {
   decodeMobInstanceId,
 } from '../utils/helpers';
 import { buildCharacter } from '../utils/buildCharacter';
+import { entityInZone, resolveEntityPositionData } from './mapPosition';
 import {
   type Character,
   type Monster,
@@ -69,38 +70,6 @@ const ZONE_NAMES: Record<number, string> = {
 function toDisplayPosition(raw: { x: number; y: number }, zoneId: number): { x: number; y: number } {
   const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
   return { x: raw.x - origin.x, y: raw.y - origin.y };
-}
-
-/** Check if a raw position falls within a zone's coordinate bounds */
-function isInZone(rawX: number, rawY: number, zoneId: number, gridSize = 10): boolean {
-  const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
-  return rawX >= origin.x && rawX < origin.x + gridSize
-    && rawY >= origin.y && rawY < origin.y + gridSize;
-}
-
-/**
- * Check if an entity belongs to the given zone using PositionV2 zoneId.
- * PositionV2 stores zone-RELATIVE coords (0-9), so coordinate bounds alone
- * can't distinguish zones — we must check the zoneId field directly.
- * Falls back to coordinate bounds for legacy Position-only entities.
- */
-function entityInZone(
-  entityId: string,
-  targetZone: number,
-  posV2Table: Record<string, any>,
-  posV1Table: Record<string, any>,
-  toNum: (v: unknown) => number,
-): boolean {
-  const v2 = posV2Table[entityId];
-  if (v2) {
-    const zoneId = toNum(v2.zoneId);
-    return zoneId === 0 ? targetZone === 1 : zoneId === targetZone;
-  }
-  const v1 = posV1Table[entityId];
-  if (v1) {
-    return isInZone(toNum(v1.x), toNum(v1.y), targetZone);
-  }
-  return false;
 }
 
 type MapContextType = {
@@ -246,19 +215,22 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // Filtered entity lists computed from reactive tables
   const allShopEntities = useMemo(() => {
     return Object.keys(positionTable).filter(key =>
-      spawnedTable[key] && shopsTable[key] && !charactersTable[key]
+      spawnedTable[key] &&
+      shopsTable[key] &&
+      !charactersTable[key] &&
+      Boolean(positionTableV1[key] ?? positionTableV2[key])
     );
-  }, [positionTable, spawnedTable, shopsTable, charactersTable]);
+  }, [positionTable, positionTableV1, positionTableV2, spawnedTable, shopsTable, charactersTable]);
 
   const allMonsterEntities = useMemo(() => {
     return Object.keys(spawnedTable).filter(key =>
       spawnedTable[key]?.spawned &&
       statsTable[key] &&
       !charactersTable[key] &&
-      positionTable[key] &&
+      Boolean(positionTableV1[key] ?? positionTableV2[key]) &&
       !encounterEntityTable[key]?.died
     );
-  }, [spawnedTable, statsTable, charactersTable, positionTable, encounterEntityTable]);
+  }, [spawnedTable, statsTable, charactersTable, positionTableV1, positionTableV2, encounterEntityTable]);
 
   const allCharacterEntities = useMemo(() => {
     return Object.keys(charactersTable).filter(key => statsTable[key]);
@@ -343,7 +315,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const isDead = Boolean(encounterData?.died);
         const isEntitySpawned = Boolean(spawnedEntityData?.spawned ?? false) && !isDead;
 
-        const positionEntityData = positionTable[entity];
+        const positionEntityData = resolveEntityPositionData(entity, positionTableV2, positionTableV1, {
+          preferLegacyPosition: true,
+        });
         const posX = toNumber(positionEntityData?.x ?? 0);
         const posY = toNumber(positionEntityData?.y ?? 0);
 
@@ -400,7 +374,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
     try {
       const _shops: Shop[] = allShopEntities.map(entity => {
-        const positionEntityData = getTableValue('PositionV2', entity) ?? getTableValue('Position', entity);
+        const positionEntityData = getTableValue('Position', entity) ?? getTableValue('PositionV2', entity);
         const shopData = getTableValue('Shops', entity);
 
         if (!positionEntityData || !shopData) {
@@ -465,13 +439,17 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // Zone 2 entities whose zone-relative coords overlap with Zone 1's range.
   const zonedMonsters = useMemo(() => {
     return allMonsters.filter(m =>
-      entityInZone(m.id, currentZone, positionTableV2, positionTableV1, toNumber),
+      entityInZone(m.id, currentZone, positionTableV2, positionTableV1, toNumber, {
+        preferLegacyPosition: true,
+      }),
     );
   }, [allMonsters, currentZone, positionTableV2, positionTableV1]);
 
   const zonedShops = useMemo(() => {
     return allShops.filter(s =>
-      entityInZone(s.shopId, currentZone, positionTableV2, positionTableV1, toNumber),
+      entityInZone(s.shopId, currentZone, positionTableV2, positionTableV1, toNumber, {
+        preferLegacyPosition: true,
+      }),
     );
   }, [allShops, currentZone, positionTableV2, positionTableV1]);
 
