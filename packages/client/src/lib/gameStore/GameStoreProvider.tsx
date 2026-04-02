@@ -103,8 +103,15 @@ export async function bootstrapGameStore({
     return;
   }
 
-  cacheSnapshot(eventualResult.snapshot);
   const currentBlock = getCurrentBlock();
+  if (eventualResult.snapshot.block < currentBlock) {
+    console.log(
+      `[gameStore] Skipping fresh snapshot block ${eventualResult.snapshot.block} after IndexedDB fallback because live store already advanced to block ${currentBlock}`,
+    );
+    return;
+  }
+
+  cacheSnapshot(eventualResult.snapshot);
   console.log(
     `[gameStore] Applying authoritative snapshot block ${eventualResult.snapshot.block} after IndexedDB fallback (store block ${currentBlock})`,
   );

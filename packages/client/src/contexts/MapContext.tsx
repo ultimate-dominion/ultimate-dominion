@@ -28,7 +28,6 @@ import { useTransaction } from '../hooks/useTransaction';
 import { useQueue } from './QueueContext';
 import {
   decodeMobInstanceId,
-  mobEntityMatchesPosition,
 } from '../utils/helpers';
 import { buildCharacter } from '../utils/buildCharacter';
 import { entityInZone, resolveEntityPositionData } from './mapPosition';
@@ -462,7 +461,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       m =>
         m.isSpawned &&
         Number(m.currentHp) > 0 &&
-        mobEntityMatchesPosition(m.id, position),
+        m.position.x === position.x &&
+        m.position.y === position.y,
     );
     return result;
   }, [zonedMonsters, position]);

@@ -43,7 +43,7 @@ import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
-import { etherToFixedNumber, getEmoji, mobEntityMatchesPosition, removeEmoji } from '../utils/helpers';
+import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
 import { getMonsterImage } from '../utils/monsterImages';
 import {
   ADVANCED_CLASS_COLORS,
@@ -226,7 +226,6 @@ export const TileDetailsPanel = (): JSX.Element => {
 
   const validateCombatTarget = useCallback(async (monsterId: string) => {
     if (!position) return false;
-    if (!mobEntityMatchesPosition(monsterId, position)) return false;
 
     await validateTileMonsters([monsterId], position);
 

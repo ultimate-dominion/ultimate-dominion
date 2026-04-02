@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { decodeMobInstancePosition, mobEntityMatchesPosition } from '../utils/helpers';
+import { decodeMobInstancePosition } from '../utils/helpers';
 import { entityInZone, resolveEntityPositionData } from './mapPosition';
 
 describe('MapContext position resolution', () => {
@@ -76,14 +76,5 @@ describe('MapContext position resolution', () => {
     const monsterId = '0x000000050000000000000000000000000000000000000000000012f700010003';
 
     expect(decodeMobInstancePosition(monsterId)).toEqual({ x: 1, y: 3 });
-  });
-
-  it('rejects stale tile placement when the monster id encodes a different tile', () => {
-    const validTarget = '0x0000000500000000000000000000000000000000000000000000131500010001';
-    const staleTarget = '0x000000050000000000000000000000000000000000000000000012f700010003';
-
-    expect(mobEntityMatchesPosition(validTarget, { x: 1, y: 1 })).toBe(true);
-    expect(mobEntityMatchesPosition(staleTarget, { x: 1, y: 1 })).toBe(false);
-    expect(mobEntityMatchesPosition(staleTarget, { x: 1, y: 3 })).toBe(true);
   });
 });

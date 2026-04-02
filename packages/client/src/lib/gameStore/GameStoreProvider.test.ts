@@ -100,7 +100,7 @@ describe('bootstrapGameStore', () => {
     expect(connectWs).toHaveBeenNthCalledWith(2, freshSnapshot);
   });
 
-  it('upgrades from the eventual snapshot even if websocket updates already advanced the local block', async () => {
+  it('skips the eventual snapshot when websocket updates already advanced the local block beyond it', async () => {
     vi.useFakeTimers();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -129,11 +129,11 @@ describe('bootstrapGameStore', () => {
     network.resolve(freshSnapshot);
     await promise;
 
-    expect(cacheSnapshot).toHaveBeenCalledWith(freshSnapshot);
-    expect(hydrateSnapshot).toHaveBeenNthCalledWith(1, idbSnapshot);
-    expect(hydrateSnapshot).toHaveBeenNthCalledWith(2, freshSnapshot);
-    expect(connectWs).toHaveBeenNthCalledWith(1, idbSnapshot);
-    expect(connectWs).toHaveBeenNthCalledWith(2, freshSnapshot);
+    expect(cacheSnapshot).not.toHaveBeenCalled();
+    expect(hydrateSnapshot).toHaveBeenCalledTimes(1);
+    expect(hydrateSnapshot).toHaveBeenCalledWith(idbSnapshot);
+    expect(connectWs).toHaveBeenCalledTimes(1);
+    expect(connectWs).toHaveBeenCalledWith(idbSnapshot);
   });
 
   it('skips the eventual fresh snapshot if it is older than the IndexedDB fallback snapshot', async () => {
