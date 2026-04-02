@@ -2,86 +2,274 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Creature Lab - Dire Rat</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Creature Lab</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
-    .header { padding: 10px 20px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 16px; }
-    .header h1 { font-size: 14px; color: #888; font-weight: 400; }
-    .header .seed-btn { background: #222; border: 1px solid #333; color: #aaa; padding: 3px 10px; cursor: pointer; font-family: inherit; font-size: 11px; }
-    .header .seed-btn:hover { background: #333; }
-    .main { display: flex; height: calc(100vh - 80px); }
-    .panel { flex: 1; padding: 12px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #1a1a1a; }
-    .panel:last-of-type { border-right: none; }
-    .panel-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
-    canvas { background: #000; }
-    .ref-strip { width: 180px; border-left: 1px solid #1a1a1a; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
-    .ref-strip img { width: 100%; border: 1px solid #222; }
-    .ref-strip .ref-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
-    .controls { padding: 6px 20px; border-top: 1px solid #222; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-    .controls label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #666; cursor: pointer; }
-    .controls input[type="range"] { width: 60px; accent-color: #555; }
-    .controls select { background: #1a1a1a; border: 1px solid #333; color: #aaa; font-size: 11px; font-family: inherit; padding: 2px 4px; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; min-height: 100vh; }
+    .header { padding: 16px 24px; border-bottom: 1px solid #222; }
+    .header h1 { font-size: 16px; color: #888; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; }
+    .header p { font-size: 11px; color: #444; margin-top: 4px; }
+    .zone-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 3px; padding: 24px 24px 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; padding: 8px 24px 24px; }
+    .card {
+      background: #111; border: 1px solid #1a1a1a; border-radius: 4px;
+      overflow: hidden; transition: border-color 0.15s;
+      text-decoration: none; color: inherit; display: block;
+    }
+    .card:hover { border-color: #333; }
+    .card.done:hover { border-color: #4a4; }
+    .card.todo { opacity: 0.5; }
+    .card.todo:hover { opacity: 0.7; border-color: #333; }
+    .card-img {
+      width: 100%; height: 160px; object-fit: cover;
+      border-bottom: 1px solid #1a1a1a; background: #080808;
+    }
+    .card-img-placeholder {
+      width: 100%; height: 160px; display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px solid #1a1a1a; background: #080808;
+      font-size: 28px; color: #222;
+    }
+    .card-body { padding: 10px 12px; }
+    .card-name { font-size: 13px; color: #ccc; }
+    .card-meta { font-size: 10px; color: #555; margin-top: 4px; display: flex; gap: 8px; align-items: center; }
+    .badge {
+      font-size: 9px; padding: 1px 5px; border-radius: 2px;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .badge-done { background: #1a2a1a; color: #4a4; border: 1px solid #2a3a2a; }
+    .badge-todo { background: #1a1a1a; color: #444; border: 1px solid #222; }
+    .summary { padding: 16px 24px; border-top: 1px solid #222; margin-top: 8px; font-size: 11px; color: #444; display: flex; gap: 20px; }
+    .summary span { color: #555; }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>Creature Lab</h1>
-    <span style="color:#444">Dire Rat</span>
-    <button class="seed-btn" id="reseed">Reseed</button>
-    <span style="color:#333; font-size:10px" id="seed-display">seed: 0</span>
-    <label style="color:#555; font-size:11px; display:flex; align-items:center; gap:4px; margin-left:auto;">
-      <input type="checkbox" id="animate" style="accent-color:#555"> Animate
-    </label>
+    <p>Ultimate Dominion ASCII creature art pipeline</p>
   </div>
-  <div class="main">
-    <div class="panel">
-      <div class="panel-label">Skeleton</div>
-      <canvas id="skel-raw"></canvas>
+
+  <div class="zone-label">Z1 -- Dark Cave</div>
+  <div class="grid">
+    <a class="card done" href="dire-rat.html">
+      <img class="card-img" src="refs/rat-ref.png" alt="Dire Rat">
+      <div class="card-body">
+        <div class="card-name">Dire Rat</div>
+        <div class="card-meta">
+          <span>L1</span>
+          <span class="badge badge-done">done</span>
+        </div>
+      </div>
+    </a>
+    <a class="card done" href="kobold.html">
+      <img class="card-img" src="refs/kobold-ref.webp" alt="Kobold">
+      <div class="card-body">
+        <div class="card-name">Kobold</div>
+        <div class="card-meta">
+          <span>L2</span>
+          <span class="badge badge-done">done</span>
+        </div>
+      </div>
+    </a>
+    <a class="card done" href="goblin.html">
+      <img class="card-img" src="refs/goblin-ref.webp" alt="Goblin">
+      <div class="card-body">
+        <div class="card-name">Goblin</div>
+        <div class="card-meta">
+          <span>L3</span>
+          <span class="badge badge-done">done</span>
+        </div>
+      </div>
+    </a>
+    <a class="card done" href="giant-spider.html">
+      <img class="card-img" src="refs/giant-spider-ref.jpg" alt="Giant Spider">
+      <div class="card-body">
+        <div class="card-name">Giant Spider</div>
+        <div class="card-meta">
+          <span>L4</span>
+          <span class="badge badge-done">done</span>
+        </div>
+      </div>
+    </a>
+    <a class="card done" href="skeleton-creature.html">
+      <img class="card-img" src="refs/skeleton-ref.webp" alt="Skeleton">
+      <div class="card-body">
+        <div class="card-name">Skeleton</div>
+        <div class="card-meta">
+          <span>L5</span>
+          <span class="badge badge-done">done</span>
+        </div>
+      </div>
+    </a>
+    <a class="card done" href="goblin-shaman.html">
+      <img class="card-img" src="refs/goblin-shaman-ref.webp" alt="Goblin Shaman">
+      <div class="card-body">
+        <div class="card-name">Goblin Shaman</div>
+        <div class="card-meta">
+          <span>L6</span>
+          <span class="badge badge-done">done</span>
+        </div>
+      </div>
+    </a>
+    <a class="card done" href="gelatinous-ooze.html">
+      <img class="card-img" src="refs/gelatinous-ooze-ref.webp" alt="Gelatinous Ooze">
+      <div class="card-body">
+        <div class="card-name">Gelatinous Ooze</div>
+        <div class="card-meta">
+          <span>L7</span>
+          <span class="badge badge-done">done</span>
+        </div>
+      </div>
+    </a>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Bugbear</div>
+        <div class="card-meta">
+          <span>L8</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
     </div>
-    <div class="panel">
-      <div class="panel-label">ASCII</div>
-      <canvas id="next-ascii"></canvas>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Carrion Crawler</div>
+        <div class="card-meta">
+          <span>L9</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
     </div>
-    <div class="panel">
-      <div class="panel-label">Painted</div>
-      <canvas id="next-raw"></canvas>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Hook Horror</div>
+        <div class="card-meta">
+          <span>L10</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
     </div>
-    <div class="ref-strip">
-      <div class="ref-label">Target</div>
-      <img src="rat-ref.png" alt="D&D Dire Rat" onerror="this.style.display='none'">
-      <div class="ref-label" style="margin-top:8px;">Goals</div>
-      <div style="font-size:9px; color:#444; line-height:1.6;">
-        3/4 angle at player<br>
-        Aggressive crouch<br>
-        Eyes alive + bright<br>
-        Weight on paws<br>
-        Hackles raised<br>
-        Snarling teeth<br>
-        Feel > fidelity
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Basilisk</div>
+        <div class="card-meta">
+          <span>Boss</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
       </div>
     </div>
   </div>
-  <div class="controls">
-    <label>Size:
-      <select id="canvas-size">
-        <option value="400">400px</option>
-        <option value="512" selected>512px</option>
-        <option value="640">640px</option>
-      </select>
-    </label>
-    <label>Cell:
-      <select id="cell-size">
-        <option value="3">3px</option>
-        <option value="4" selected>4px</option>
-        <option value="5">5px</option>
-        <option value="6">6px</option>
-      </select>
-    </label>
-    <label><input type="checkbox" id="show-grid"> Grid</label>
-    <label><input type="checkbox" id="show-debug" checked> Skeleton debug</label>
+
+  <div class="zone-label">Z2 -- Windy Peaks</div>
+  <div class="grid">
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Dire Wolf</div>
+        <div class="card-meta">
+          <span>L11</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Harpy</div>
+        <div class="card-meta">
+          <span>L12</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Ogre</div>
+        <div class="card-meta">
+          <span>L13</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Worg</div>
+        <div class="card-meta">
+          <span>L14</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Orc</div>
+        <div class="card-meta">
+          <span>L15</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Orc Shaman</div>
+        <div class="card-meta">
+          <span>L16</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Troll</div>
+        <div class="card-meta">
+          <span>L17</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Griffon</div>
+        <div class="card-meta">
+          <span>L18</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Manticore</div>
+        <div class="card-meta">
+          <span>L19</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
+    <div class="card todo">
+      <div class="card-img-placeholder">?</div>
+      <div class="card-body">
+        <div class="card-name">Korrath's Warden</div>
+        <div class="card-meta">
+          <span>Boss</span>
+          <span class="badge badge-todo">todo</span>
+        </div>
+      </div>
+    </div>
   </div>
-  <script type="module" src="main.js"></script>
+
+  <div class="summary">
+    <span>7 / 21 complete</span>
+    <span>Z1: 7/11</span>
+    <span>Z2: 0/10</span>
+  </div>
 </body>
 </html>

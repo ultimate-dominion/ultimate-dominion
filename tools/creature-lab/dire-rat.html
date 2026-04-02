@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Creature Lab - Kobold</title>
+  <title>Creature Lab - Dire Rat</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,8 +28,9 @@
 <body>
   <div class="header">
     <h1>Creature Lab</h1>
-    <span style="color:#c84">Kobold</span>
+    <span style="color:#444">Dire Rat</span>
     <button class="seed-btn" id="reseed">Reseed</button>
+    <span style="color:#333; font-size:10px" id="seed-display">seed: 0</span>
     <label style="color:#555; font-size:11px; display:flex; align-items:center; gap:4px; margin-left:auto;">
       <input type="checkbox" id="animate" style="accent-color:#555"> Animate
     </label>
@@ -48,19 +49,17 @@
       <canvas id="next-raw"></canvas>
     </div>
     <div class="ref-strip">
-      <div class="ref-label">Reference</div>
-      <img src="refs/kobold-ref.webp" alt="D&D Kobold" onerror="this.style.display='none'">
+      <div class="ref-label">Target</div>
+      <img src="refs/rat-ref.png" alt="D&D Dire Rat" onerror="this.style.display='none'">
       <div class="ref-label" style="margin-top:8px;">Goals</div>
       <div style="font-size:9px; color:#444; line-height:1.6;">
-        3/4 facing player<br>
-        Hunched, aggressive<br>
-        Short spear in hand<br>
-        Crude orange vest<br>
-        Yellow slit-pupil eyes<br>
-        Bony horn crests<br>
-        Digitigrade legs<br>
-        Reptilian tail<br>
-        Scrappy, not cute
+        3/4 angle at player<br>
+        Aggressive crouch<br>
+        Eyes alive + bright<br>
+        Weight on paws<br>
+        Hackles raised<br>
+        Snarling teeth<br>
+        Feel > fidelity
       </div>
     </div>
   </div>
@@ -83,6 +82,6 @@
     <label><input type="checkbox" id="show-grid"> Grid</label>
     <label><input type="checkbox" id="show-debug" checked> Skeleton debug</label>
   </div>
-  <script type="module" src="kobold.js"></script>
+  <script type="module" src="dire-rat.js"></script>
 </body>
 </html>
