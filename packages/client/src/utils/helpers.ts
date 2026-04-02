@@ -179,12 +179,35 @@ export const decodeMonsterStats = (statsBytes: string): MonsterStats => {
 export const getStatSymbol = (stat: string): string =>
   Number(stat) >= 0 ? '+' : '';
 
+const MONSTER_URI_ALIASES: Record<string, string> = {
+  'monster:fungal_shaman': 'monster:kobold',
+  'monster:cavern_brute': 'monster:goblin',
+  'monster:crystal_elemental': 'monster:giant_spider',
+  'monster:ironhide_troll': 'monster:skeleton',
+  'monster:phase_spider': 'monster:goblin_shaman',
+  'monster:bonecaster': 'monster:gelatinous_ooze',
+  'monster:rock_golem': 'monster:bugbear',
+  'monster:pale_stalker': 'monster:carrion_crawler',
+  'monster:dusk_drake': 'monster:hook_horror',
+  'monster:ridge_stalker': 'monster:dire_wolf',
+  'monster:frost_wraith': 'monster:harpy',
+  'monster:granite_sentinel': 'monster:ogre',
+  'monster:gale_phantom': 'monster:worg',
+  'monster:blighthorn': 'monster:orc',
+  'monster:storm_shrike': 'monster:orc_shaman',
+  'monster:hollow_scout': 'monster:troll',
+  'monster:ironpeak_charger': 'monster:griffon',
+  'monster:peakfire_wraith': 'monster:manticore',
+};
+
+const normalizeTextUri = (uri: string): string => MONSTER_URI_ALIASES[uri] ?? uri;
+
 /**
  * Parse a text-only URI (e.g., "monster:training_dummy", "text:Hero") into a display name
  * Converts underscores to spaces and capitalizes each word
  */
 export const parseTextUri = (uri: string): string => {
-  const parts = uri.split(':');
+  const parts = normalizeTextUri(uri).split(':');
   if (parts.length < 2) return uri;
   const rawName = parts.slice(1).join(':'); // Handle names with colons
   return rawName
@@ -240,10 +263,14 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
 
   // Handle text-only URIs (no HTTP fetch needed)
   if (isTextOnlyUri(uri)) {
-    const name = parseTextUri(uri);
+    const canonicalUri = normalizeTextUri(uri);
+    const name = parseTextUri(canonicalUri);
     return {
       name,
-      description: i18n.t(uri, { ns: 'items', defaultValue: '' }),
+      description: i18n.t(canonicalUri, {
+        ns: 'items',
+        defaultValue: i18n.t(uri, { ns: 'items', defaultValue: '' }),
+      }),
       image: '',
     };
   }
@@ -402,4 +429,3 @@ export const shortenAddress = (address: string, length = 4): string =>
 export const startsWithVowel = (str: string): boolean => {
   return /^[aeiou]/i.test(str);
 };
-
