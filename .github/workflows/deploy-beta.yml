@@ -31,7 +31,8 @@ jobs:
         with:
           version: v0.3.0
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - name: Build contracts
+        run: pnpm --filter contracts build
 
       - name: Deploy contracts (mud deploy)
         working-directory: packages/contracts
