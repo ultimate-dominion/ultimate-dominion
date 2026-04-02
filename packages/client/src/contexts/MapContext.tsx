@@ -157,12 +157,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const worldStatusEffectsTable = useGameTable('WorldStatusEffects');
   const mobStatsTable = useGameTable('MobStats');
 
-  // Player's position from the store (canonical — no optimistic updates)
-  // Try PositionV2 first (zone-relative coords deployed via beta contract leak),
-  // fall back to legacy Position table for unaffected characters.
+  // Player position should follow the legacy Position table when both exist.
+  // Prod combat/movement validation still reads Position on-chain, while leaked
+  // PositionV2 rows can remain stale and drift from contract truth.
   const posDataV2 = useGameValue('PositionV2', character?.id);
   const posDataV1 = useGameValue('Position', character?.id);
-  const posData = posDataV2 ?? posDataV1;
+  const posData = posDataV1 ?? posDataV2;
   const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
 
   // Zone awareness — read CharacterZone table (0 or unset = zone 1)

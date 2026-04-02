@@ -235,7 +235,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     const spawned = getTableValue('Spawned', monsterId) as
       | { spawned?: boolean }
       | undefined;
-    const localPosition = (getTableValue('PositionV2', monsterId) ?? getTableValue('Position', monsterId)) as
+    const localPosition = (getTableValue('Position', monsterId) ?? getTableValue('PositionV2', monsterId)) as
       | { x?: unknown; y?: unknown }
       | undefined;
 

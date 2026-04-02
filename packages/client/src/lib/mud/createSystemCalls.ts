@@ -313,6 +313,23 @@ export function createSystemCalls(
   // The original worldContract is unchanged — only our local reference is proxied.
   const wrappedWorldContract = { ...worldContract, write: proxiedWrite };
 
+  const getStoredPosition = (
+    entityId: string,
+    options?: { preferLegacyPosition?: boolean },
+  ): { x: number; y: number } | undefined => {
+    const legacyPosition = getTableValue('Position', entityId) as
+      | { x: number; y: number }
+      | undefined;
+    const positionV2 = getTableValue('PositionV2', entityId) as
+      | { x: number; y: number }
+      | undefined;
+
+    if (options?.preferLegacyPosition) {
+      return legacyPosition ?? positionV2;
+    }
+    return positionV2 ?? legacyPosition;
+  };
+
   // Check whether a monster is alive in the local store.
   const isMonsterAlive = (monsterId: string): boolean => {
     const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean } | undefined;
@@ -337,7 +354,8 @@ export function createSystemCalls(
   // snapshot re-fetch will bring back any that are actually still alive.
   // Uses applyBatch for a single Zustand set() / React render.
   const evictAllMonstersOnTile = (ghostMonsterId: string) => {
-    const pos = getTableValue('PositionV2', ghostMonsterId) as
+    const pos = (getTableValue('Position', ghostMonsterId) ??
+      getTableValue('PositionV2', ghostMonsterId)) as
       | { zoneId?: unknown; x?: unknown; y?: unknown } | undefined;
     if (!pos) {
       evictGhostMonster(ghostMonsterId);
@@ -345,21 +363,22 @@ export function createSystemCalls(
     }
 
     const store = useGameStore.getState();
-    const spawnedTable = store.tables['Spawned'] || {};
-    const positionTable = store.tables['PositionV2'] || {};
-    const charactersTable = store.tables['Characters'] || {};
+    const tables = store.tables ?? {};
+    const spawnedTable = tables['Spawned'] || {};
+    const positionTableV1 = tables['Position'] || {};
+    const positionTableV2 = tables['PositionV2'] || {};
+    const charactersTable = tables['Characters'] || {};
 
-    const gz = String(pos.zoneId);
     const gx = String(pos.x);
     const gy = String(pos.y);
     const batch: BatchUpdate[] = [];
 
     for (const entityId of Object.keys(spawnedTable)) {
       if (charactersTable[entityId]) continue; // skip player characters
-      const ePos = positionTable[entityId] as
+      const ePos = (positionTableV1[entityId] ?? positionTableV2[entityId]) as
         | { zoneId?: unknown; x?: unknown; y?: unknown } | undefined;
       if (!ePos) continue;
-      if (String(ePos.zoneId) !== gz || String(ePos.x) !== gx || String(ePos.y) !== gy) continue;
+      if (String(ePos.x) !== gx || String(ePos.y) !== gy) continue;
 
       batch.push({ type: 'set', table: 'Spawned', keyBytes: entityId, data: { spawned: false } });
       batch.push({
@@ -368,10 +387,17 @@ export function createSystemCalls(
       });
     }
 
-    if (batch.length > 0) {
+    if (batch.length > 0 && typeof store.applyBatch === 'function') {
       store.applyBatch(batch);
+    } else if (batch.length > 0) {
+      for (let i = 0; i < batch.length; i += 2) {
+        const spawnedUpdate = batch[i];
+        const encounterUpdate = batch[i + 1];
+        store.setRow('Spawned', spawnedUpdate.keyBytes, spawnedUpdate.data);
+        store.setRow('EncounterEntity', encounterUpdate.keyBytes, encounterUpdate.data);
+      }
     }
-    console.warn(`[ghost] Evicted ${batch.length / 2} monsters on tile (${gz},${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
+    console.warn(`[ghost] Evicted ${batch.length / 2} monsters on tile (${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
   };
 
   // ---------------------------------------------------------------------------
@@ -1127,11 +1153,10 @@ export function createSystemCalls(
       return { success: false, error: 'In encounter.' };
     }
 
-    // Read position from the Zustand store (updated synchronously from receipts).
-    // PositionV2 is canonical — the deployed contract writes (zoneId, x, y) to it.
-    // Position fallback kept for any legacy state still in the store.
-    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
-      | { x: number; y: number } | undefined;
+    // Prod movement/combat validation still uses legacy Position on-chain.
+    // Prefer it when both tables exist so stale leaked PositionV2 rows do not
+    // send moves from the wrong tile.
+    const pos = getStoredPosition(characterEntity, { preferLegacyPosition: true });
     if (!pos) {
       return { success: false, error: 'Position not found.' };
     }
@@ -1206,8 +1231,7 @@ export function createSystemCalls(
 
             if (diagResult === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
               console.warn(`[move] Position stale after revert — re-reading store`);
-              const freshPos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
-                | { x: number; y: number } | undefined;
+              const freshPos = getStoredPosition(characterEntity, { preferLegacyPosition: true });
               if (freshPos) {
                 x = Number(freshPos.x);
                 y = Number(freshPos.y);
@@ -1275,9 +1299,7 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'autoAdventure');
     if (ownershipError) return ownershipError;
 
-    // Same store-based position read as move — PositionV2 is canonical (contract writes to it)
-    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
-      | { x: number; y: number } | undefined;
+    const pos = getStoredPosition(characterEntity, { preferLegacyPosition: true });
     if (!pos) {
       return { success: false, error: 'Position not found.' };
     }

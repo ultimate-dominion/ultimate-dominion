@@ -729,6 +729,50 @@ describe('createSystemCalls — move stale position recovery', () => {
     expect(result.error).toBeDefined();
     expect(waitForTransaction).not.toHaveBeenCalled();
   });
+
+  it('prefers legacy Position over stale PositionV2 for move origin', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
+    const moveWriteFn = vi.fn().mockResolvedValue(FAKE_TX_HASH);
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    mockedGetTableValue.mockImplementation((table: string, entity: string) => {
+      if (table === 'Characters' && entity === TEST_ENTITY) {
+        return { owner: TEST_WALLET } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'SessionTimer') {
+        return { lastAction: 0 } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'WorldEncounter') {
+        return { end: '0' } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'CombatEncounter') {
+        return { end: '0' } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'PositionV2') {
+        return { x: 0, y: 0 } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'Position') {
+        return { x: 0, y: 2 } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'EncounterEntity') {
+        return undefined;
+      }
+      return undefined;
+    });
+
+    const calls = createSystemCalls(network);
+
+    const result = await calls.move(TEST_ENTITY, 'right');
+    expect(result.success).toBe(true);
+    expect(moveWriteFn).toHaveBeenCalledWith([TEST_ENTITY, 1, 2], expect.anything());
+    expect(waitForTransaction).toHaveBeenCalled();
+  });
 });
 
 // ── Suite E: On-chain Revert Diagnosis ─────────────────────────────

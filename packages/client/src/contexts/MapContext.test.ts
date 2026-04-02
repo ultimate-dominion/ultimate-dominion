@@ -45,4 +45,17 @@ describe('MapContext position resolution', () => {
       preferLegacyPosition: true,
     })).toBe(true);
   });
+
+  it('prefers legacy Position rows for player position when V2 drifts', () => {
+    const positionV1 = {
+      player: { x: 0, y: 2 },
+    };
+    const positionV2 = {
+      player: { zoneId: 0, x: 0, y: 0 },
+    };
+
+    expect(resolveEntityPositionData('player', positionV2, positionV1, {
+      preferLegacyPosition: true,
+    })).toEqual({ x: 0, y: 2 });
+  });
 });
