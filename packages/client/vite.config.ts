@@ -3,34 +3,6 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const chunkGroups = [
-  {
-    name: 'react-vendor',
-    packages: ['react', 'react-dom', 'react-router', 'scheduler'],
-  },
-  {
-    name: 'ui-vendor',
-    packages: ['@chakra-ui', '@emotion', '@zag-js', 'framer-motion', 'react-icons'],
-  },
-  {
-    name: 'auth-vendor',
-    packages: ['@privy-io', '@safe-global', '@walletconnect', '@tanstack/react-query', 'viem', 'wagmi'],
-  },
-  {
-    name: 'chat-vendor',
-    packages: ['@pushprotocol', 'micro-ftch'],
-  },
-];
-
-function getManualChunk(id: string) {
-  if (!id.includes('/node_modules/')) return undefined;
-
-  const group = chunkGroups.find(({ packages }) =>
-    packages.some(pkg => id.includes(`/${pkg}/`) || id.includes(`/${pkg}@`)),
-  );
-  return group?.name;
-}
-
 export default defineConfig(({ command }) => {
   return {
     plugins: [react()],
@@ -60,11 +32,6 @@ export default defineConfig(({ command }) => {
       commonjsOptions: {
         // Handle 'use client' directives
         transformMixedEsModules: true,
-      },
-      rollupOptions: {
-        output: {
-          manualChunks: getManualChunk,
-        },
       },
     },
     optimizeDeps: {
