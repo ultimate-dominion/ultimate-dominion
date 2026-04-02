@@ -534,7 +534,7 @@ describe('createSystemCalls — error handling', () => {
     // Create an error that classifyError will detect as insufficient funds
     const fundsError = new Error('insufficient funds for gas');
     // Add walk method to mimic BaseError
-    (fundsError as Record<string, unknown>).walk = () => null;
+    (fundsError as Error & { walk: () => null }).walk = () => null;
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: () => vi.fn().mockRejectedValue(fundsError),
     });
@@ -583,16 +583,26 @@ describe('createSystemCalls — move stale position recovery', () => {
     vi.clearAllMocks();
   });
 
-  it('retries with chain position when simulation returns InvalidMove', async () => {
-    const { network, waitForTransaction } = createMockNetwork();
-    mockOwnership();
+  it('retries with chain position when on-chain diagnosis returns invalid_move', async () => {
+    const { network } = createMockNetwork();
+    const waitForTransaction = vi.fn()
+      .mockResolvedValueOnce({ status: 'reverted', blockNumber: BigInt(100), gasUsed: BigInt(141097) })
+      .mockResolvedValueOnce({ status: 'success', blockNumber: BigInt(101), gasUsed: BigInt(141097) });
+    network.waitForTransaction = waitForTransaction;
 
-    // First UD__move call (simulation) throws InvalidMove, second succeeds
-    const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'))
-      .mockResolvedValueOnce(FAKE_TX_HASH);
+    mockedGetTableValue.mockImplementation((table: string, entity: string) => {
+      if (table === 'Characters' && entity === TEST_ENTITY) {
+        return { owner: TEST_WALLET } as ReturnType<typeof getTableValue>;
+      }
+      if (table === 'SessionTimer') return { lastAction: 0 } as ReturnType<typeof getTableValue>;
+      if (table === 'WorldEncounter') return { end: '0' } as ReturnType<typeof getTableValue>;
+      if (table === 'CombatEncounter') return { end: '0' } as ReturnType<typeof getTableValue>;
+      if (table === 'Position') return { x: 0, y: 2 } as ReturnType<typeof getTableValue>;
+      if (table === 'EncounterEntity') return undefined;
+      return undefined;
+    });
 
-    // UD__getEntityPosition returns corrected position (2, 3)
+    const moveWriteFn = vi.fn().mockResolvedValue(FAKE_TX_HASH);
     const getPositionFn = vi.fn().mockResolvedValue([2, 3]);
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
@@ -601,7 +611,12 @@ describe('createSystemCalls — move stale position recovery', () => {
         return vi.fn().mockResolvedValue(FAKE_TX_HASH);
       },
     });
-
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return vi.fn().mockRejectedValue(new Error('0x87822d34'));
+        return vi.fn().mockResolvedValue({ result: undefined });
+      },
+    });
     network.worldContract.read = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
         if (prop === 'UD__getEntityPosition') return getPositionFn;
@@ -610,124 +625,58 @@ describe('createSystemCalls — move stale position recovery', () => {
     });
 
     const calls = createSystemCalls(network);
-
     const result = await calls.move(TEST_ENTITY, 'right');
+
     expect(result.success).toBe(true);
-    expect(moveWriteFn).toHaveBeenCalledTimes(2);
+    expect(waitForTransaction).toHaveBeenCalledTimes(2);
     expect(getPositionFn).toHaveBeenCalledWith([TEST_ENTITY]);
-    expect(waitForTransaction).toHaveBeenCalled();
+    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 2, y: 3 });
+    expect(moveWriteFn).toHaveBeenNthCalledWith(1, [TEST_ENTITY, 1, 2], expect.anything());
+    expect(moveWriteFn).toHaveBeenNthCalledWith(2, [TEST_ENTITY, 3, 3], expect.anything());
   });
 
-  it('updates Zustand store with corrected chain position', async () => {
+  it('returns warning when chain position sync fails after invalid_move', async () => {
     const { network } = createMockNetwork();
+    const waitForTransaction = vi.fn().mockResolvedValue({
+      status: 'reverted',
+      blockNumber: BigInt(100),
+      gasUsed: BigInt(141097),
+    });
+    network.waitForTransaction = waitForTransaction;
     mockOwnership();
-
-    const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'))
-      .mockResolvedValueOnce(FAKE_TX_HASH);
-
-    const getPositionFn = vi.fn().mockResolvedValue([5, 7]);
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
+        if (prop === 'UD__move') return vi.fn().mockResolvedValue(FAKE_TX_HASH);
         return vi.fn().mockResolvedValue(FAKE_TX_HASH);
       },
     });
-
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return vi.fn().mockRejectedValue(new Error('0x87822d34'));
+        return vi.fn().mockResolvedValue({ result: undefined });
+      },
+    });
     network.worldContract.read = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
+        if (prop === 'UD__getEntityPosition') return vi.fn().mockRejectedValue(new Error('RPC error'));
         return vi.fn().mockResolvedValue(BigInt(0));
       },
     });
 
     const calls = createSystemCalls(network);
-
-    await calls.move(TEST_ENTITY, 'up');
-    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 5, y: 7 });
-  });
-
-  it('applies direction correctly to corrected chain position', async () => {
-    const { network } = createMockNetwork();
-    mockOwnership();
-
-    const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'))
-      .mockResolvedValueOnce(FAKE_TX_HASH);
-
-    // Chain position is (4, 4)
-    const getPositionFn = vi.fn().mockResolvedValue([4, 4]);
-
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
-        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
-    });
-
-    const calls = createSystemCalls(network);
-
-    await calls.move(TEST_ENTITY, 'down');
-    // direction 'down' → y - 1: target should be (4, 3)
-    expect(moveWriteFn).toHaveBeenLastCalledWith([TEST_ENTITY, 4, 3]);
-  });
-
-  it('returns failure when chain position read fails', async () => {
-    const { network, waitForTransaction } = createMockNetwork();
-    mockOwnership();
-
-    const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'));
-
-    const getPositionFn = vi.fn().mockRejectedValue(new Error('RPC error'));
-
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
-        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
-    });
-
-    const calls = createSystemCalls(network);
-
     const result = await calls.move(TEST_ENTITY, 'right');
+
     expect(result.success).toBe(false);
-    expect(waitForTransaction).not.toHaveBeenCalled();
+    expect(result.severity).toBe('warning');
+    expect(result.error).toContain('moving too fast');
   });
 
-  it('returns failure when retry move also fails', async () => {
-    const { network, waitForTransaction } = createMockNetwork();
+  it('syncs Position from chain after a successful spawn', async () => {
+    const { network } = createMockNetwork();
     mockOwnership();
-
-    const retryError = new Error('NotSpawned');
-    const moveWriteFn = vi.fn()
-      .mockRejectedValueOnce(new Error('0x87822d34'))
-      .mockRejectedValueOnce(retryError);
 
     const getPositionFn = vi.fn().mockResolvedValue([0, 0]);
-
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
-        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-
     network.worldContract.read = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
         if (prop === 'UD__getEntityPosition') return getPositionFn;
@@ -736,11 +685,11 @@ describe('createSystemCalls — move stale position recovery', () => {
     });
 
     const calls = createSystemCalls(network);
+    const result = await calls.spawn(TEST_ENTITY);
 
-    const result = await calls.move(TEST_ENTITY, 'left');
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
-    expect(waitForTransaction).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(getPositionFn).toHaveBeenCalledWith([TEST_ENTITY]);
+    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 0, y: 0 });
   });
 
   it('prefers legacy Position over stale PositionV2 for move origin', async () => {
@@ -796,35 +745,21 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
   });
 
   it('detects NotSpawned after on-chain revert and updates store', async () => {
-    // Simulate: MoveTooFast bypass → TX reverts → re-sim finds NotSpawned
-    const { network, waitForTransaction: waitFn } = createMockNetwork({ receiptStatus: 'reverted' });
+    const { network } = createMockNetwork({ receiptStatus: 'reverted' });
     mockOwnership();
-
-    let moveCallCount = 0;
-    const moveWriteFn = vi.fn().mockImplementation(() => {
-      moveCallCount++;
-      if (moveCallCount === 1) {
-        // First sim: MoveTooFast (stale RPC)
-        return Promise.reject(new Error('0x326f4b4f'));
-      }
-      if (moveCallCount === 2) {
-        // MoveTooFast bypass: send with gas → returns TX hash (receipt will be reverted)
-        return Promise.resolve(FAKE_TX_HASH);
-      }
-      // Third call: diagnostic re-simulation → NotSpawned
-      return Promise.reject(new Error('0xbd45e4f6'));
-    });
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
+        if (prop === 'UD__move') return vi.fn().mockResolvedValue(FAKE_TX_HASH);
         return vi.fn().mockResolvedValue(FAKE_TX_HASH);
       },
     });
 
-    // Simulate rejects with NotSpawned so diagnosis detects despawn
     network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
-      get: () => vi.fn().mockRejectedValue(new Error('0xbd45e4f6')),
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return vi.fn().mockRejectedValue(new Error('0xbd45e4f6'));
+        return vi.fn().mockResolvedValue({ result: undefined });
+      },
     });
 
     const calls = createSystemCalls(network);
@@ -1168,7 +1103,7 @@ describe('createSystemCalls — error messaging selector extraction', () => {
     const result = await calls.rest(TEST_ENTITY);
     expect(result.success).toBe(false);
     // Should get the friendly message, not the raw error
-    expect(result.error).toBe('Invalid combat — monster may have moved or died. Try again.');
+    expect(result.error).toBe('Your target has vanished into the shadows. Try again.');
   });
 });
 

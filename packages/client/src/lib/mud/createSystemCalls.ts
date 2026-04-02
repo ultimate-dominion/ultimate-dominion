@@ -330,6 +330,22 @@ export function createSystemCalls(
     return positionV2 ?? legacyPosition;
   };
 
+  const syncCharacterPositionFromChain = async (
+    characterEntity: string,
+  ): Promise<{ x: number; y: number } | null> => {
+    try {
+      const [chainX, chainY] = await worldContract.read.UD__getEntityPosition([
+        characterEntity as `0x${string}`,
+      ]) as readonly [bigint | number, bigint | number];
+      const position = { x: Number(chainX), y: Number(chainY) };
+      useGameStore.getState().setRow('Position', characterEntity, position);
+      return position;
+    } catch (error) {
+      console.warn(`[position] Failed to sync ${characterEntity.slice(0, 10)} from chain`, error);
+      return null;
+    }
+  };
+
   // Check whether a monster is alive in the local store.
   const isMonsterAlive = (monsterId: string): boolean => {
     const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean } | undefined;
@@ -1189,25 +1205,20 @@ export function createSystemCalls(
             // returning 400/429 — we'd rather return a warning quickly and
             // let the player retry than lock them out.
             const DIAG_TIMEOUT_MS = 1500;
-            let diagResult: 'pass' | 'not_spawned' | 'invalid_move' | 'transient' | 'timeout' | 'error' = 'error';
+            let diagResult: 'pass' | 'not_spawned' | 'invalid_move' | 'transient' | 'timeout' | 'error';
             let diagError: unknown;
 
             try {
-              await Promise.race([
-                worldContract.simulate.UD__move(args, { account: diagAccount }).then(() => { diagResult = 'pass'; }),
-                new Promise<void>((_, reject) => setTimeout(() => {
-                  diagResult = 'timeout';
-                  reject(new Error('diag timeout'));
-                }, DIAG_TIMEOUT_MS)),
+              diagResult = await Promise.race([
+                worldContract.simulate.UD__move(args, { account: diagAccount }).then(() => 'pass' as const),
+                new Promise<'timeout'>(resolve => setTimeout(() => resolve('timeout'), DIAG_TIMEOUT_MS)),
               ]);
             } catch (e) {
-              if (diagResult !== 'timeout') {
-                diagError = e;
-                if (isNotSpawnedError(e)) diagResult = 'not_spawned';
-                else if (isInvalidMoveError(e)) diagResult = 'invalid_move';
-                else if (isMoveTooFastError(e) || isTransientRpcError(e)) diagResult = 'transient';
-                else diagResult = 'error';
-              }
+              diagError = e;
+              if (isNotSpawnedError(e)) diagResult = 'not_spawned';
+              else if (isInvalidMoveError(e)) diagResult = 'invalid_move';
+              else if (isMoveTooFastError(e) || isTransientRpcError(e)) diagResult = 'transient';
+              else diagResult = 'error';
             }
 
             if (diagResult === 'not_spawned') {
@@ -1218,8 +1229,8 @@ export function createSystemCalls(
             }
 
             if (diagResult === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
-              console.warn(`[move] Position stale after revert — re-reading store`);
-              const freshPos = getStoredPosition(characterEntity, { preferLegacyPosition: true });
+              console.warn(`[move] Position stale after revert — syncing from chain`);
+              const freshPos = await syncCharacterPositionFromChain(characterEntity);
               if (freshPos) {
                 x = Number(freshPos.x);
                 y = Number(freshPos.y);
@@ -1554,6 +1565,9 @@ export function createSystemCalls(
       ]);
 
       const txResult = await waitForTransaction(tx);
+      if (txResult.status === 'success') {
+        await syncCharacterPositionFromChain(characterEntity);
+      }
       return {
         error: txResult.status === 'success' ? undefined : 'Failed to spawn.',
         success: txResult.status === 'success',
