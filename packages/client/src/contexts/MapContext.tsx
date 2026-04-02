@@ -28,6 +28,7 @@ import { useTransaction } from '../hooks/useTransaction';
 import { useQueue } from './QueueContext';
 import {
   decodeMobInstanceId,
+  mobEntityMatchesPosition,
 } from '../utils/helpers';
 import { buildCharacter } from '../utils/buildCharacter';
 import { entityInZone, resolveEntityPositionData } from './mapPosition';
@@ -441,19 +442,11 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // Uses PositionV2 zoneId (not coordinate bounds) to correctly exclude
   // Zone 2 entities whose zone-relative coords overlap with Zone 1's range.
   const zonedMonsters = useMemo(() => {
-    return allMonsters.filter(m =>
-      entityInZone(m.id, currentZone, positionTableV2, positionTableV1, toNumber, {
-        preferLegacyPosition: true,
-      }),
-    );
+    return allMonsters.filter(m => entityInZone(m.id, currentZone, positionTableV2, positionTableV1, toNumber));
   }, [allMonsters, currentZone, positionTableV2, positionTableV1]);
 
   const zonedShops = useMemo(() => {
-    return allShops.filter(s =>
-      entityInZone(s.shopId, currentZone, positionTableV2, positionTableV1, toNumber, {
-        preferLegacyPosition: true,
-      }),
-    );
+    return allShops.filter(s => entityInZone(s.shopId, currentZone, positionTableV2, positionTableV1, toNumber));
   }, [allShops, currentZone, positionTableV2, positionTableV1]);
 
   const zonedCharacters = useMemo(() => {
@@ -469,8 +462,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       m =>
         m.isSpawned &&
         Number(m.currentHp) > 0 &&
-        m.position.x === position.x &&
-        m.position.y === position.y,
+        mobEntityMatchesPosition(m.id, position),
     );
     return result;
   }, [zonedMonsters, position]);

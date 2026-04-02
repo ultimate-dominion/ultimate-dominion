@@ -139,6 +139,38 @@ export const decodeMobInstanceId = (
   return { mobId: mobIdBigInt.toString() };
 };
 
+export const decodeMobInstancePosition = (
+  monsterId: `0x${string}`,
+): {
+  x: number;
+  y: number;
+} => {
+  const monsterIdBigInt = hexToBigInt(monsterId);
+  const y = Number(monsterIdBigInt & 0xffffn);
+  const x = Number((monsterIdBigInt >> 16n) & 0xffffn);
+
+  return { x, y };
+};
+
+/**
+ * Mob entity ids encode their spawn tile. Use that as a sanity check when
+ * stale snapshot Position rows render monsters on the wrong tile.
+ */
+export const mobEntityMatchesPosition = (
+  monsterId: string,
+  position: { x: number; y: number } | null | undefined,
+): boolean => {
+  if (!position) return false;
+
+  try {
+    const encodedPosition = decodeMobInstancePosition(monsterId as `0x${string}`);
+    return encodedPosition.x === position.x && encodedPosition.y === position.y;
+  } catch {
+    // Fail open for unexpected ids so we do not hide valid entities on decode issues.
+    return true;
+  }
+};
+
 export const decodeMonsterStats = (statsBytes: string): MonsterStats => {
   const monsterTemplateStats = decodeAbiParameters(
     [
@@ -398,4 +430,3 @@ export const shortenAddress = (address: string, length = 4): string =>
 export const startsWithVowel = (str: string): boolean => {
   return /^[aeiou]/i.test(str);
 };
-
