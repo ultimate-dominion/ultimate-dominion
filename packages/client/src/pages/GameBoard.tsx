@@ -107,6 +107,7 @@ export const GameBoard = (): JSX.Element => {
   const isReconnecting = useGameStore((s) => s.isReconnecting);
   const isDesktop = useBreakpointValue({ base: false, lg: true });
   const stage = useOnboardingStage();
+  const isExpandedBattleLayout = Boolean(isDesktop && currentBattle && !autoAdventureMode);
 
   const nextLevelRow = useGameValue(
     'Levels',
@@ -383,7 +384,7 @@ export const GameBoard = (): JSX.Element => {
         </PolygonalCard>
       </GridItem>
       <GridItem
-        colSpan={{ base: 1, lg: 8 }}
+        colSpan={{ base: 1, lg: isExpandedBattleLayout ? 12 : 8 }}
         colStart={{ base: 0, lg: 5 }}
         rowSpan={{ base: 'auto', lg: 12 }}
         rowStart={{ base: 0, lg: 0 }}
@@ -424,6 +425,7 @@ export const GameBoard = (): JSX.Element => {
         colStart={{ base: 0, lg: 13 }}
         rowSpan={{ base: 'auto', lg: 12 }}
         rowStart={{ base: 'auto', lg: 0 }}
+        display={{ base: 'block', lg: isExpandedBattleLayout ? 'none' : 'block' }}
       >
         <MapPanel />
       </GridItem>
