@@ -6,7 +6,8 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
     }
   }
   </script>
@@ -249,6 +250,23 @@
         atmosphere: [180,130,40,0.12],
         gameGrid: { w: 12, h: 8  }, labGrid: { w: 12, h: 8  },
         goals: 'Low-slung stocky quadruped\nMassive flat head with open jaw\nDorsal quill spines neck to tail\nAmber vertical-slit eyes\nDark amber-brown scales\nForked tongue' },
+
+      // ── GLB geometry tests ───────────────────────────────────────────────
+      // These load real skinned-mesh GLBs to validate the toon+ASCII pipeline
+      // with fluid organic geometry. Quaternius pack will replace these once
+      // downloaded manually (see glb/README.md).
+      { slug: 'glb-soldier', name: 'Soldier [GLB]', level: 0, status: 'wip', type: 'glb', glbFile: 'glb/Soldier.glb',
+        atmosphere: [100,120,160,0.10],
+        gameGrid: { w: 7, h: 9 }, labGrid: { w: 7, h: 9 },
+        goals: 'Skinned biped from GLB\nHumanoid skeleton + walk/run animations\nToon material overlay' },
+      { slug: 'glb-horse', name: 'Horse [GLB]', level: 0, status: 'wip', type: 'glb', glbFile: 'glb/Horse.glb',
+        atmosphere: [140,110,70,0.10],
+        gameGrid: { w: 12, h: 8 }, labGrid: { w: 12, h: 8 },
+        goals: 'Skinned quadruped from GLB\nGallop animation\nTest organic limb curves vs primitives' },
+      { slug: 'glb-dungeon', name: 'Dungeon [GLB]', level: 0, status: 'wip', type: 'glb', glbFile: 'glb/dungeon_warkarma.glb',
+        atmosphere: [80,60,100,0.14],
+        gameGrid: { w: 12, h: 9 }, labGrid: { w: 12, h: 9 },
+        goals: 'Multi-creature dungeon scene\nTest complex scene in ASCII pipeline' },
     ];
 
     // Populate dropdown
@@ -342,6 +360,26 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') lightbox.classList.remove('active'); });
 
     // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    // Rebuild the clip dropdown from an array of names.
+    // Standardised names (idle/attack/etc.) stay; unknown names are also shown.
+    function _updateClipSelect(names) {
+      const sel = document.getElementById('clip-select');
+      const current = sel.value;
+      sel.innerHTML = '';
+      names.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      // Restore selection if still available, otherwise default to first
+      sel.value = names.includes(current) ? current : names[0] ?? 'idle';
+    }
+
+    // -------------------------------------------------------------------------
     // Load creature
     // -------------------------------------------------------------------------
     async function loadCreature(index) {
@@ -395,6 +433,44 @@
         cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
       }
 
+      // ── GLB creatures — skip 2D module, load geometry directly ──────────────
+      if (c.type === 'glb') {
+        // Synthetic currentMod so render() has gridW/gridH and doesn't bail out
+        currentMod = {
+          draw: (ctx, sk, w, h) => { ctx.fillStyle='#111'; ctx.fillRect(0,0,w,h); },
+          skeleton: { spine: [] },
+          gridW: c.labGrid.w,
+          gridH: c.labGrid.h,
+        };
+        // Force 3D on for GLB creatures
+        document.getElementById('use-3d').checked = true;
+        currentBundle3D = null;
+        document.getElementById('clip-select').classList.remove('visible');
+        document.getElementById('stance-select').style.display = 'none';
+        try {
+          const { loadGLBCreature } = await import('./glb-loader.js');
+          const size = 512;
+          const gh = Math.round(size * c.labGrid.h / c.labGrid.w);
+          currentBundle3D = await loadGLBCreature(c.glbFile, c.labGrid.w, c.labGrid.h, getThreeRenderer(size, gh));
+          statusMsg.textContent = '';
+          // Populate clip dropdown from actual GLB clip names
+          _updateClipSelect(currentBundle3D.bundle.clipNames);
+          document.getElementById('clip-select').classList.add('visible');
+          const stances = currentBundle3D.bundle.stances;
+          if (stances && stances.length > 1) {
+            document.getElementById('stance-select').style.display = 'inline-block';
+            document.getElementById('stance-select').value = '0';
+          }
+        } catch (e) {
+          console.error('GLB load failed', c.glbFile, e);
+          statusMsg.textContent = `⚠ GLB: ${e.message}`;
+          statusMsg.className = 'status-msg error';
+        }
+        render();
+        return;
+      }
+
+      // ── Standard JS creatures ─────────────────────────────────────────────
       try {
         const mod = await import(`./${c.slug}.js`);
         currentMod = mod.default;
@@ -410,6 +486,7 @@
 
       // Try loading 3D module (non-fatal if missing)
       currentBundle3D = null;
+      _updateClipSelect(['idle','attack','block','hit','death']);
       document.getElementById('clip-select').classList.remove('visible');
       document.getElementById('stance-select').style.display = 'none';
       if (document.getElementById('use-3d').checked) {
