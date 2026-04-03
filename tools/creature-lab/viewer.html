@@ -256,6 +256,7 @@
       // with fluid organic geometry. Quaternius pack will replace these once
       // downloaded manually (see glb/README.md).
       { slug: 'glb-fox', name: 'Fox [GLB]', level: 0, status: 'wip', type: 'glb', glbFile: 'glb/Fox.glb',
+        glbYaw: -Math.PI * 0.58,  // quadruped reads better slightly less rotated
         atmosphere: [180,120,60,0.12],
         gameGrid: { w: 10, h: 7 }, labGrid: { w: 10, h: 7 },
         goals: 'Skinned quadruped — Survey/Walk/Run clips\nProxy for basilisk/dire-rat organic limb curves' },
@@ -459,7 +460,10 @@
           const { loadGLBCreature } = await import('./glb-loader.js');
           const size = 512;
           const gh = Math.round(size * c.labGrid.h / c.labGrid.w);
-          currentBundle3D = await loadGLBCreature(c.glbFile, c.labGrid.w, c.labGrid.h, getThreeRenderer(size, gh));
+          currentBundle3D = await loadGLBCreature(c.glbFile, c.labGrid.w, c.labGrid.h, getThreeRenderer(size, gh), {
+            yaw:   c.glbYaw   ?? undefined,
+            pitch: c.glbPitch ?? undefined,
+          });
           statusMsg.textContent = '';
           // Populate clip dropdown from actual GLB clip names
           _updateClipSelect(currentBundle3D.bundle.clipNames);

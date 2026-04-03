@@ -102,7 +102,17 @@ export function applyToonMaterials(model, toonGradMap) {
  * @returns {Promise<{ drawFn, bundle }>}
  */
 export async function loadGLBCreature(url, gridW, gridH, threeRenderer, opts = {}) {
-  const { toon = true, targetHeight = 1.8 } = opts;
+  const {
+    toon = true,
+    targetHeight = 1.8,
+    // 3/4 left-facing orientation — matches UD creature visual language.
+    // Most GLBs face +Z (toward camera). Rotating Y by -120° puts them
+    // facing left with ~30° depth visible, creating the side/front split
+    // the ASCII sampler needs to produce varied character densities.
+    // Override per-creature: yaw:0 = front, yaw:-Math.PI/2 = pure side.
+    yaw   = -Math.PI * 0.65,   // ~-117° — 3/4 left-front
+    pitch = -0.08,              // slight downward tilt — mild elevation angle
+  } = opts;
 
   const gltf = await new Promise((resolve, reject) => {
     new GLTFLoader().load(url, resolve, undefined, reject);
@@ -125,6 +135,12 @@ export async function loadGLBCreature(url, gridW, gridH, threeRenderer, opts = {
 
   const model = gltf.scene;
   fitModel(model, targetHeight);
+
+  // Orient to 3/4 left-facing view — creature faces left toward player.
+  // Applied after fitModel so centering is correct first.
+  model.rotation.order = 'YXZ';
+  model.rotation.y = yaw;
+  model.rotation.x = pitch;
 
   if (toon) {
     // 7-stop toon gradient — wide contrast range so ASCII gets dark shadows
