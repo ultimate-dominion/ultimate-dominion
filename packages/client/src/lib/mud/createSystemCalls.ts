@@ -334,10 +334,15 @@ export function createSystemCalls(
     characterEntity: string,
   ): Promise<{ x: number; y: number } | null> => {
     try {
-      const [chainX, chainY] = await worldContract.read.UD__getEntityPosition([
-        characterEntity as `0x${string}`,
-      ]) as readonly [bigint | number, bigint | number];
-      const position = { x: Number(chainX), y: Number(chainY) };
+      // Read Position directly from MUD store via getRecord instead of the
+      // UD__getEntityPosition view function, which is broken on production.
+      const record = await readStoreRecord(POSITION_TABLE_ID, characterEntity as `0x${string}`, 'Position');
+      if (!record) return null;
+      const staticData = record[0] ?? '0x';
+      if (staticData === '0x' || staticData.length < 10) return null;
+      const x = parseInt(staticData.slice(2, 6), 16);
+      const y = parseInt(staticData.slice(6, 10), 16);
+      const position = { x, y };
       useGameStore.getState().setRow('Position', characterEntity, position);
       return position;
     } catch (error) {
@@ -350,10 +355,18 @@ export function createSystemCalls(
     monsterId: string,
   ): Promise<{ x: number; y: number } | null> => {
     try {
-      const [chainX, chainY] = await worldContract.read.UD__getEntityPosition([
-        monsterId as `0x${string}`,
-      ]) as readonly [bigint | number, bigint | number];
-      const position = { x: Number(chainX), y: Number(chainY) };
+      // Read Position directly from MUD store via getRecord instead of the
+      // UD__getEntityPosition view function, which is broken on production
+      // (MapSystem view always returns (0,0) — likely a stale system deploy).
+      const record = await readStoreRecord(POSITION_TABLE_ID, monsterId as `0x${string}`, 'Position');
+      if (!record) return null;
+      const staticData = record[0] ?? '0x';
+      // Position table: uint16 x + uint16 y = 4 bytes = 10 hex chars with 0x prefix
+      if (staticData === '0x' || staticData.length < 10) return null;
+      const x = parseInt(staticData.slice(2, 6), 16);
+      const y = parseInt(staticData.slice(6, 10), 16);
+      const position = { x, y };
+
       const currentPosition = getTableValue('Position', monsterId) as
         | { x?: number; y?: number }
         | undefined;

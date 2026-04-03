@@ -579,6 +579,11 @@ describe('createSystemCalls — error handling', () => {
 // ── Suite D: Move Stale Position Recovery ───────────────────────────
 
 describe('createSystemCalls — move stale position recovery', () => {
+  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000';
+
+  const makePositionRecord = (x: number, y: number) =>
+    [`0x${x.toString(16).padStart(4, '0')}${y.toString(16).padStart(4, '0')}`, '0x' + '00'.repeat(32), '0x'] as const;
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -603,7 +608,6 @@ describe('createSystemCalls — move stale position recovery', () => {
     });
 
     const moveWriteFn = vi.fn().mockResolvedValue(FAKE_TX_HASH);
-    const getPositionFn = vi.fn().mockResolvedValue([2, 3]);
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
@@ -617,11 +621,11 @@ describe('createSystemCalls — move stale position recovery', () => {
         return vi.fn().mockResolvedValue({ result: undefined });
       },
     });
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
+    // Position read now uses readStoreRecord via publicClient.readContract
+    network.publicClient.readContract = vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
+      const [tableId] = args;
+      if (tableId === POSITION_TABLE_ID) return makePositionRecord(2, 3);
+      return ['0x', '0x' + '00'.repeat(32), '0x'];
     });
 
     const calls = createSystemCalls(network);
@@ -629,7 +633,6 @@ describe('createSystemCalls — move stale position recovery', () => {
 
     expect(result.success).toBe(true);
     expect(waitForTransaction).toHaveBeenCalledTimes(2);
-    expect(getPositionFn).toHaveBeenCalledWith([TEST_ENTITY]);
     expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 2, y: 3 });
     expect(moveWriteFn).toHaveBeenNthCalledWith(1, [TEST_ENTITY, 1, 2], expect.anything());
     expect(moveWriteFn).toHaveBeenNthCalledWith(2, [TEST_ENTITY, 3, 3], expect.anything());
@@ -657,12 +660,8 @@ describe('createSystemCalls — move stale position recovery', () => {
         return vi.fn().mockResolvedValue({ result: undefined });
       },
     });
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return vi.fn().mockRejectedValue(new Error('RPC error'));
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
-    });
+    // Position read now uses readStoreRecord — mock to reject
+    network.publicClient.readContract = vi.fn().mockRejectedValue(new Error('RPC error'));
 
     const calls = createSystemCalls(network);
     const result = await calls.move(TEST_ENTITY, 'right');
@@ -694,19 +693,17 @@ describe('createSystemCalls — move stale position recovery', () => {
     const { network } = createMockNetwork();
     mockOwnership();
 
-    const getPositionFn = vi.fn().mockResolvedValue([0, 0]);
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return getPositionFn;
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
+    // Position read now uses readStoreRecord via publicClient.readContract
+    network.publicClient.readContract = vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
+      const [tableId] = args;
+      if (tableId === POSITION_TABLE_ID) return makePositionRecord(0, 0);
+      return ['0x', '0x' + '00'.repeat(32), '0x'];
     });
 
     const calls = createSystemCalls(network);
     const result = await calls.spawn(TEST_ENTITY);
 
     expect(result.success).toBe(true);
-    expect(getPositionFn).toHaveBeenCalledWith([TEST_ENTITY]);
     expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 0, y: 0 });
   });
 
@@ -943,6 +940,7 @@ describe('createSystemCalls — ghost monster error recovery', () => {
   const ZERO_HASH = '0x' + '00'.repeat(32);
   const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000';
   const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900';
+  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000';
 
   const makeSpawnedRecord = (spawned: boolean) =>
     [spawned ? '0x01' : '0x00', '0x' + '00'.repeat(32), '0x'] as const;
@@ -952,11 +950,15 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     died = false,
   ) => [`0x${encounterId.slice(2)}${died ? '01' : '00'}`, '0x' + '00'.repeat(32), '0x'] as const;
 
+  const makePositionRecord = (x: number, y: number) =>
+    [`0x${x.toString(16).padStart(4, '0')}${y.toString(16).padStart(4, '0')}`, '0x' + '00'.repeat(32), '0x'] as const;
+
   const mockValidationReads = (
     states: Record<string, {
       encounterId?: string;
       died?: boolean;
       spawned?: boolean;
+      position?: { x: number; y: number };
     }>,
   ) => vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
     const [tableId, [entityId]] = args;
@@ -965,6 +967,10 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     if (tableId === SPAWNED_TABLE_ID) return makeSpawnedRecord(state.spawned ?? true);
     if (tableId === ENCOUNTER_ENTITY_TABLE_ID) {
       return makeEncounterRecord(state.encounterId ?? ZERO_HASH, state.died ?? false);
+    }
+    if (tableId === POSITION_TABLE_ID) {
+      const pos = state.position ?? { x: 0, y: 0 };
+      return makePositionRecord(pos.x, pos.y);
     }
     throw new Error(`Unexpected table ${tableId}`);
   });
@@ -1036,8 +1042,11 @@ describe('createSystemCalls — ghost monster error recovery', () => {
   it('createEncounter preflight blocks bad PvE clicks before sending tx and syncs tile state from chain', async () => {
     const { network, waitForTransaction } = createMockNetwork();
     mockOwnershipWithMonster('alive');
+    // Position reads now go through readStoreRecord (publicClient.readContract)
+    // instead of the broken UD__getEntityPosition view function
     network.publicClient.readContract = mockValidationReads({
-      [TEST_MONSTER]: { spawned: true },
+      [TEST_ENTITY]: { spawned: true, position: { x: 1, y: 1 } },
+      [TEST_MONSTER]: { spawned: true, position: { x: 2, y: 1 } },
     });
 
     const writeSpy = vi.fn().mockResolvedValue(FAKE_TX_HASH);
@@ -1046,13 +1055,6 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     };
     network.worldContract.simulate = {
       UD__createEncounter: vi.fn().mockRejectedValue(new Error('0xadee4371')),
-    };
-    network.worldContract.read = {
-      UD__getEntityPosition: vi.fn().mockImplementation(async ([entityId]: [`0x${string}`]) => {
-        if (entityId === TEST_ENTITY) return [1, 1];
-        if (entityId === TEST_MONSTER) return [2, 1];
-        return [0, 0];
-      }),
     };
 
     const calls = createSystemCalls(network);
@@ -1452,6 +1454,7 @@ describe('createSystemCalls — validateTileMonsters', () => {
   const ZERO_HASH = '0x' + '00'.repeat(32);
   const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000';
   const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900';
+  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000';
 
   const makeSpawnedRecord = (spawned: boolean) =>
     [spawned ? '0x01' : '0x00', '0x' + '00'.repeat(32), '0x'] as const;
@@ -1461,11 +1464,15 @@ describe('createSystemCalls — validateTileMonsters', () => {
     died = false,
   ) => [`0x${encounterId.slice(2)}${died ? '01' : '00'}`, '0x' + '00'.repeat(32), '0x'] as const;
 
+  const makePositionRecord = (x: number, y: number) =>
+    [`0x${x.toString(16).padStart(4, '0')}${y.toString(16).padStart(4, '0')}`, '0x' + '00'.repeat(32), '0x'] as const;
+
   const mockValidationReads = (
     states: Record<string, {
       encounterId?: string;
       died?: boolean;
       spawned?: boolean;
+      position?: { x: number; y: number };
     }>,
   ) => vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
     const [tableId, [entityId]] = args;
@@ -1474,6 +1481,10 @@ describe('createSystemCalls — validateTileMonsters', () => {
     if (tableId === SPAWNED_TABLE_ID) return makeSpawnedRecord(state.spawned ?? true);
     if (tableId === ENCOUNTER_ENTITY_TABLE_ID) {
       return makeEncounterRecord(state.encounterId ?? ZERO_HASH, state.died ?? false);
+    }
+    if (tableId === POSITION_TABLE_ID) {
+      const pos = state.position ?? { x: 0, y: 0 };
+      return makePositionRecord(pos.x, pos.y);
     }
     throw new Error(`Unexpected table ${tableId}`);
   });
@@ -1588,14 +1599,9 @@ describe('createSystemCalls — validateTileMonsters', () => {
     const { network } = createMockNetwork();
     const OFF_TILE_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000ddd';
 
+    // Position now read via readStoreRecord (publicClient.readContract) not UD__getEntityPosition
     network.publicClient.readContract = mockValidationReads({
-      [OFF_TILE_MONSTER]: { spawned: true },
-    });
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return vi.fn().mockResolvedValue([1, 4]);
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
+      [OFF_TILE_MONSTER]: { spawned: true, position: { x: 1, y: 4 } },
     });
 
     const calls = createSystemCalls(network);
@@ -1612,13 +1618,7 @@ describe('createSystemCalls — validateTileMonsters', () => {
     const CLEARED_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000eee';
 
     network.publicClient.readContract = mockValidationReads({
-      [CLEARED_MONSTER]: { spawned: false },
-    });
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return vi.fn().mockResolvedValue([0, 0]);
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
+      [CLEARED_MONSTER]: { spawned: false, position: { x: 0, y: 0 } },
     });
 
     const calls = createSystemCalls(network);
@@ -1634,9 +1634,6 @@ describe('createSystemCalls — validateTileMonsters', () => {
     // position=(0,0) is an unambiguous death signal — removeEntityFromBoard sets both
     // Spawned=false AND Position=(0,0) atomically in the same TX. So if Position=(0,0),
     // the mob is dead regardless of what the concurrent Spawned read returned.
-    // Previous behavior: only set Position=(0,0) in store, leaving Spawned=true — the
-    // monster would re-appear in monstersOnTile on the next indexer snapshot that
-    // hasn't delivered the Spawned=false delta yet.
     // New behavior: call evictGhostMonsters which sets Spawned=false AND died=true,
     // preventing re-animation via stale indexer events until the next snapshot sync.
     const { network } = createMockNetwork();
@@ -1644,13 +1641,7 @@ describe('createSystemCalls — validateTileMonsters', () => {
 
     // Simulate race: spawned=true (stale read) but position=(0,0) (current read)
     network.publicClient.readContract = mockValidationReads({
-      [RACE_MONSTER]: { spawned: true },
-    });
-    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__getEntityPosition') return vi.fn().mockResolvedValue([0, 0]);
-        return vi.fn().mockResolvedValue(BigInt(0));
-      },
+      [RACE_MONSTER]: { spawned: true, position: { x: 0, y: 0 } },
     });
 
     const calls = createSystemCalls(network);
