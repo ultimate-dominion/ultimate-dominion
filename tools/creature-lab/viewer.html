@@ -505,17 +505,21 @@
       draw(ctx3, skeleton, canvasW, canvasH);
 
       // Game view — matches actual in-game render:
-      //   • Redux draw fn (same as game uses)
+      //   • Redux draw fn (same as game uses), or 3D drawFn when 3D mode is active
       //   • Portrait panel ~380×560 (2× the ~190×280 CSS panel in-game at dpr:2)
       //   • cellSize:10 (= 5 CSS px × dpr:2 → same column count as game)
-      //   • enable3D:false (game passes this to renderMonster — no perspective warp)
       //   • Atmosphere drawn BEFORE ascii cells (matching renderMonster order)
       const cr = CREATURES[currentIndex];
       const reduxId = SLUG_TO_REDUX[cr.slug];
       const reduxTpl = reduxId ? REDUX_BY_SLUG[reduxId] : null;
-      const gameDraw = reduxTpl ? reduxTpl.draw : (ctx, w, h) => draw(ctx, skeleton, w, h);
-      const gW = cr.gameGrid.w;
-      const gH = cr.gameGrid.h;
+      // When 3D is active, use the 3D scene as source (shows exact in-game look if we ship 3D)
+      // When 2D, fall back to Redux draw fn (current game) or lab draw fn
+      const gameDraw = use3D
+        ? (tctx, tw, th) => currentBundle3D.drawFn(tctx, tw, th)
+        : (reduxTpl ? reduxTpl.draw : (ctx, w, h) => draw(ctx, skeleton, w, h));
+      // 3D spec is built for labGrid dims; 2D uses gameGrid
+      const gW = use3D ? cr.labGrid.w : cr.gameGrid.w;
+      const gH = use3D ? cr.labGrid.h : cr.gameGrid.h;
       const GAME_PANEL_W = 380;
       const GAME_PANEL_H = 560;
       const GAME_CELL = 10;
@@ -523,6 +527,8 @@
       c4.width = GAME_PANEL_W; c4.height = GAME_PANEL_H;
       const ctx4 = c4.getContext('2d');
       ctx4.fillStyle = '#000'; ctx4.fillRect(0, 0, GAME_PANEL_W, GAME_PANEL_H);
+      const p4Label = c4.closest('.panel').querySelector('.panel-label');
+      p4Label.textContent = use3D ? 'Game View (3D)' : 'Game View';
 
       // Atmosphere FIRST (matches game's renderMonster order)
       const [atmR, atmG, atmB, atmI = 0.10] = cr.atmosphere;
@@ -537,11 +543,9 @@
       ctx4.fillStyle = grad;
       ctx4.fillRect(0, 0, GAME_PANEL_W, GAME_PANEL_H);
 
-      // ASCII render — matches game's renderMonster({enable3D:false, enableHalfBlock:false})
-      // enableHalfBlock:false = all cells render as text chars, no colored blocks (game default)
-      // enable3D:false = no perspective foreshortening, no depth extrusion, no ground shadow
-      renderAscii(ctx4, (tctx, tw, th) => gameDraw(tctx, tw, th), 0, 0, GAME_PANEL_W, GAME_PANEL_H,
-        { elapsed, cellSize: GAME_CELL, level: cr.level, gridWidth: gW, gridHeight: gH, enable3D: false, enableHalfBlock: false });
+      // ASCII render — enableHalfBlock:false matches game default (text chars, not colored blocks)
+      renderAscii(ctx4, gameDraw, 0, 0, GAME_PANEL_W, GAME_PANEL_H,
+        { elapsed, cellSize: GAME_CELL, level: cr.level, gridWidth: gW, gridHeight: gH, enableHalfBlock: false, useShapeVector: useShape });
     }
 
     function animationLoop(ts) {
