@@ -20,7 +20,8 @@ const CLIP_NAME_MAP = [
   // Standard names first — most packs use these
   { keys: ['idle', 'breathing', 'breath', 'stand'],       target: 'idle'   },
   { keys: ['attack', 'swing', 'bite', 'slash', 'strike',
-            'chop', 'spellcast', 'cast', 'shoot', 'stab'], target: 'attack' },
+            'chop', 'spellcast', 'cast', 'shoot', 'stab',
+            'punch', 'kick', 'throw'],                     target: 'attack' },
   { keys: ['hit', 'hurt', 'damage', 'impact', 'flinch'],  target: 'hit'    },
   { keys: ['death', 'die', 'dead', 'fall'],                target: 'death'  },
   { keys: ['walk', 'run', 'move', 'crawl'],                target: 'walk'   },
