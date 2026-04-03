@@ -29,6 +29,18 @@
 
 export const BIPED_RIG = {
   name: 'biped',
+
+  // Three idle stance variants — picked randomly when the creature spawns.
+  // Applied as the group's initial transform; idle animation plays on top.
+  stances: [
+    // 0 — axe raised overhead, default upright threat
+    { position: [0, 0, 0],       rotation: [0, 0, 0],     scale: [1, 1, 1] },
+    // 1 — weight forward, forward lean into player
+    { position: [-0.05, -0.04, 0], rotation: [0, 0, 0.06], scale: [1.00, 0.96, 1] },
+    // 2 — wide planted stance, rotated slightly away
+    { position: [0.04, 0.02, 0],  rotation: [0, 0, -0.05], scale: [1.05, 0.97, 1] },
+  ],
+
   clips: {
     idle: {
       duration: 2.4,
@@ -139,6 +151,17 @@ export const BIPED_RIG = {
 
 export const QUADRUPED_RIG = {
   name: 'quadruped',
+
+  // Three idle stances — low-slung body, variations in crouch depth and head angle.
+  stances: [
+    // 0 — default standing alert
+    { position: [0, 0, 0],       rotation: [0, 0, 0],      scale: [1, 1, 1] },
+    // 1 — stalking low, body closer to ground
+    { position: [-0.04, -0.05, 0], rotation: [0, 0, 0],    scale: [1.04, 0.88, 1] },
+    // 2 — reared warning, front raised
+    { position: [0.04, 0.05, 0],  rotation: [0, 0, 0.12],  scale: [0.96, 1.08, 1] },
+  ],
+
   clips: {
     idle: {
       duration: 2.2,
@@ -212,6 +235,17 @@ export const QUADRUPED_RIG = {
 
 export const SERPENTINE_RIG = {
   name: 'serpentine',
+
+  // Three idle stances — body weight distribution shifts the whole read.
+  stances: [
+    // 0 — default upright front
+    { position: [0, 0, 0],       rotation: [0, 0, 0],      scale: [1, 1, 1] },
+    // 1 — coiled compact, lower center of mass
+    { position: [0, -0.05, 0],   rotation: [0, 0, 0],      scale: [1.06, 0.88, 1] },
+    // 2 — raised front loom, head end tilted toward player
+    { position: [-0.06, 0.05, 0], rotation: [0, 0, 0.14],  scale: [0.95, 1.10, 1] },
+  ],
+
   clips: {
     idle: {
       duration: 3.0,

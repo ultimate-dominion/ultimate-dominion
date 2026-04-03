@@ -111,8 +111,14 @@
       <select id="clip-select" class="clip-select" title="Animation clip">
         <option value="idle">idle</option>
         <option value="attack">attack</option>
+        <option value="block">block</option>
         <option value="hit">hit</option>
         <option value="death">death</option>
+      </select>
+      <select id="stance-select" class="clip-select" title="Idle stance variant" style="display:none">
+        <option value="0">stance 1</option>
+        <option value="1">stance 2</option>
+        <option value="2">stance 3</option>
       </select>
       <label class="animate-label">
         <input type="checkbox" id="animate" style="accent-color:#555"> Animate
@@ -405,6 +411,7 @@
       // Try loading 3D module (non-fatal if missing)
       currentBundle3D = null;
       document.getElementById('clip-select').classList.remove('visible');
+      document.getElementById('stance-select').style.display = 'none';
       if (document.getElementById('use-3d').checked) {
         try {
           const mod3d = await import(`./${c.slug}-3d.js`);
@@ -413,6 +420,11 @@
             const h = Math.round(size * c.labGrid.h / c.labGrid.w);
             currentBundle3D = mod3d.default.makeDrawFn(getThreeRenderer(size, h));
             document.getElementById('clip-select').classList.add('visible');
+            const stances = currentBundle3D.bundle.stances;
+            if (stances && stances.length > 1) {
+              document.getElementById('stance-select').style.display = 'inline-block';
+              document.getElementById('stance-select').value = '0';
+            }
           }
         } catch (_) { /* no 3D version — silent fallback to 2D */ }
       }
@@ -431,7 +443,8 @@
 
       // FPS tracking + mixer tick
       const now = performance.now();
-      const frameDt = fpsFrameTs > 0 ? now - fpsFrameTs : 0;
+      // Cap at 100ms so a paused tab doesn't jump the mixer forward on resume
+      const frameDt = fpsFrameTs > 0 ? Math.min(now - fpsFrameTs, 100) : 0;
       if (animating && frameDt > 0) {
         document.getElementById('fps-display').textContent = `${Math.round(1000 / frameDt)}fps`;
       }
@@ -586,10 +599,29 @@
     // 3D toggle — reload the creature to pick up (or drop) the 3D module
     document.getElementById('use-3d').addEventListener('change', () => loadCreature(currentIndex));
 
+    // Stance selector — applies a preset group transform so you can preview all 3 variants
+    document.getElementById('stance-select').addEventListener('change', (e) => {
+      if (!currentBundle3D?.bundle) return;
+      const { group, stances } = currentBundle3D.bundle;
+      const s = stances[parseInt(e.target.value, 10)] ?? stances[0];
+      group.position.set(...s.position);
+      group.rotation.set(...s.rotation);
+      group.scale.set(...s.scale);
+      render(animating ? performance.now() - animStart : 0);
+    });
+
     // Clip selector — drive animation on the current 3D bundle
+    // Auto-starts the RAF loop so the mixer actually ticks (no need to check Animate first)
     document.getElementById('clip-select').addEventListener('change', (e) => {
       if (currentBundle3D && currentBundle3D.bundle) {
         currentBundle3D.bundle.playClip(e.target.value);
+        if (!animating) {
+          animating = true;
+          document.getElementById('animate').checked = true;
+          animStart = performance.now();
+          fpsFrameTs = 0;
+          if (!rafId) rafId = requestAnimationFrame(animationLoop);
+        }
       }
     });
     document.addEventListener('keydown', (e) => {

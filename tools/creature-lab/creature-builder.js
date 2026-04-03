@@ -427,7 +427,14 @@ export function buildCreature(spec) {
     }
   }
 
-  return { scene, camera, group, mixer, clips, actions, playClip, weaponGroup };
+  // Expose stances so callers can apply a random starting pose.
+  // Usage: const s = bundle.stances[Math.floor(Math.random()*3)];
+  //        bundle.group.position.set(...s.position);
+  //        bundle.group.rotation.set(...s.rotation);
+  //        bundle.group.scale.set(...s.scale);
+  const stances = rig?.stances ?? [{ position:[0,0,0], rotation:[0,0,0], scale:[1,1,1] }];
+
+  return { scene, camera, group, mixer, clips, actions, playClip, weaponGroup, stances };
 }
 
 // --------------------------------------------------------------------------
