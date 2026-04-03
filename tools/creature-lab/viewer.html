@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>Creature Lab — Viewer</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
+    }
+  }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,6 +31,9 @@
     .animate-label { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; cursor: pointer; }
     .status-msg { font-size: 10px; color: #555; }
     .status-msg.error { color: #844; }
+    .fps { font-size: 10px; color: #383; min-width: 36px; text-align: right; }
+    .clip-select { background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 11px; font-family: inherit; padding: 2px 5px; display: none; }
+    .clip-select.visible { display: inline-block; }
 
     /* Main layout — 2×2 panel grid + right strip, fills remaining viewport */
     .main { display: grid; grid-template-columns: 1fr 1fr 200px; grid-template-rows: 1fr 1fr; flex: 1; min-height: 0; overflow: hidden; }
@@ -93,8 +103,21 @@
         <input type="checkbox" id="full-chars" style="accent-color:#555"> Full chars
       </label>
       <label class="animate-label">
+        <input type="checkbox" id="use-shape" style="accent-color:#555"> Shape ⬡
+      </label>
+      <label class="animate-label">
+        <input type="checkbox" id="use-3d" style="accent-color:#555"> 3D
+      </label>
+      <select id="clip-select" class="clip-select" title="Animation clip">
+        <option value="idle">idle</option>
+        <option value="attack">attack</option>
+        <option value="hit">hit</option>
+        <option value="death">death</option>
+      </select>
+      <label class="animate-label">
         <input type="checkbox" id="animate" style="accent-color:#555"> Animate
       </label>
+      <span class="fps" id="fps-display"></span>
     </div>
   </div>
 
@@ -148,6 +171,17 @@
     import { renderAscii, PALETTES, COMPOSITE_PALETTES } from './ascii-renderer.js';
     import { drawBodyOutline, drawLimbChain, drawDebugSkeleton } from './skeleton.js';
     import { MONSTER_TEMPLATES_REDUX } from './game-draws.js';
+    import { createThreeRenderer } from './three-bridge.js';
+
+    // ---- Three.js singleton (shared across all creatures) ----
+    let threeRenderer = null;
+    let currentBundle3D = null;  // { drawFn, bundle } from makeDrawFn()
+    let fpsFrameTs = 0;
+
+    function getThreeRenderer(w, h) {
+      if (!threeRenderer) threeRenderer = createThreeRenderer(w, h);
+      return threeRenderer;
+    }
 
     // Build lookup: creature slug → actual game draw function
     // Only creatures with REAL Redux implementations are listed here.
@@ -362,12 +396,28 @@
           throw new Error('module has no default export with draw()');
         }
         statusMsg.textContent = '';
-        render();
       } catch (e) {
         console.error('Failed to load', c.slug, e);
         statusMsg.textContent = `⚠ ${e.message}`;
         statusMsg.className = 'status-msg error';
       }
+
+      // Try loading 3D module (non-fatal if missing)
+      currentBundle3D = null;
+      document.getElementById('clip-select').classList.remove('visible');
+      if (document.getElementById('use-3d').checked) {
+        try {
+          const mod3d = await import(`./${c.slug}-3d.js`);
+          if (mod3d.default && typeof mod3d.default.makeDrawFn === 'function') {
+            const size = 512;
+            const h = Math.round(size * c.labGrid.h / c.labGrid.w);
+            currentBundle3D = mod3d.default.makeDrawFn(getThreeRenderer(size, h));
+            document.getElementById('clip-select').classList.add('visible');
+          }
+        } catch (_) { /* no 3D version — silent fallback to 2D */ }
+      }
+
+      if (currentMod) render();
 
       renderHistory(c.slug);
     }
@@ -378,6 +428,17 @@
     function render(elapsed = 0) {
       if (!currentMod) return;
       const { draw, skeleton, gridW, gridH } = currentMod;
+
+      // FPS tracking
+      const now = performance.now();
+      if (animating && fpsFrameTs > 0) {
+        const dt = now - fpsFrameTs;
+        if (dt > 0) document.getElementById('fps-display').textContent = `${Math.round(1000 / dt)}fps`;
+      }
+      fpsFrameTs = now;
+
+      const use3D = document.getElementById('use-3d').checked && !!currentBundle3D;
+      const useShape = document.getElementById('use-shape').checked;
 
       const size = 512;
       const cellSize = parseInt(document.getElementById('cell-size').value, 10);
@@ -396,33 +457,47 @@
         charZones,
         enableHalfBlock: !fullChars,
         charDensityFloor: fullChars ? 0.08 : 0.30,
+        useShapeVector: useShape,
       };
 
-      // Skeleton
+      // Panel 1 — Skeleton (2D mode) or 3D Raw (3D mode)
       const c1 = document.getElementById('skel-raw');
       c1.width = canvasW; c1.height = canvasH;
       const ctx1 = c1.getContext('2d');
       ctx1.fillStyle = '#000'; ctx1.fillRect(0, 0, canvasW, canvasH);
-      if (skeleton.limbs) {
-        for (let i = 0; i < skeleton.limbs.length; i += 2)
-          drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(38,22,48)');
+      const p1Label = c1.closest('.panel').querySelector('.panel-label');
+      if (use3D) {
+        p1Label.textContent = '3D Raw';
+        // Render the 3D scene to the 2D canvas
+        currentBundle3D.drawFn(ctx1, canvasW, canvasH);
+      } else {
+        p1Label.textContent = 'Skeleton';
+        if (skeleton.limbs) {
+          for (let i = 0; i < skeleton.limbs.length; i += 2)
+            drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(38,22,48)');
+        }
+        if (skeleton.spine && skeleton.spine.length > 1)
+          drawBodyOutline(ctx1, skeleton.spine, canvasW, canvasH, 'rgb(68,52,112)');
+        if (skeleton.limbs) {
+          for (let i = 1; i < skeleton.limbs.length; i += 2)
+            drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(92,74,142)');
+        }
+        drawDebugSkeleton(ctx1, skeleton, canvasW, canvasH);
       }
-      if (skeleton.spine && skeleton.spine.length > 1)
-        drawBodyOutline(ctx1, skeleton.spine, canvasW, canvasH, 'rgb(68,52,112)');
-      if (skeleton.limbs) {
-        for (let i = 1; i < skeleton.limbs.length; i += 2)
-          drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(92,74,142)');
-      }
-      drawDebugSkeleton(ctx1, skeleton, canvasW, canvasH);
 
-      // ASCII
+      // Panel 2 — ASCII (2D or 3D source)
       const c2 = document.getElementById('next-ascii');
       c2.width = canvasW; c2.height = canvasH;
       const ctx2 = c2.getContext('2d');
       ctx2.fillStyle = '#000'; ctx2.fillRect(0, 0, canvasW, canvasH);
-      renderAscii(ctx2, (tctx, tw, th) => draw(tctx, skeleton, tw, th), 0, 0, canvasW, canvasH, asciiOpts);
+      const p2Label = c2.closest('.panel').querySelector('.panel-label');
+      p2Label.textContent = use3D ? '3D ASCII' : 'ASCII';
+      const asciiDrawSrc = use3D
+        ? (tctx, tw, th) => currentBundle3D.drawFn(tctx, tw, th)
+        : (tctx, tw, th) => draw(tctx, skeleton, tw, th);
+      renderAscii(ctx2, asciiDrawSrc, 0, 0, canvasW, canvasH, asciiOpts);
 
-      // Painted
+      // Panel 3 — Painted (always 2D)
       const c3 = document.getElementById('next-raw');
       c3.width = canvasW; c3.height = canvasH;
       const ctx3 = c3.getContext('2d');
@@ -477,8 +552,15 @@
 
     document.getElementById('animate').addEventListener('change', (e) => {
       animating = e.target.checked;
-      if (animating) { animStart = performance.now(); rafId = requestAnimationFrame(animationLoop); }
-      else { if (rafId) cancelAnimationFrame(rafId); render(0); }
+      if (animating) {
+        animStart = performance.now();
+        fpsFrameTs = 0;
+        rafId = requestAnimationFrame(animationLoop);
+      } else {
+        if (rafId) cancelAnimationFrame(rafId);
+        document.getElementById('fps-display').textContent = '';
+        render(0);
+      }
     });
 
     document.getElementById('prev').addEventListener('click', () => loadCreature(currentIndex - 1));
@@ -490,6 +572,17 @@
     document.getElementById('palette-select').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
     document.getElementById('cell-size').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
     document.getElementById('full-chars').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+    document.getElementById('use-shape').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+
+    // 3D toggle — reload the creature to pick up (or drop) the 3D module
+    document.getElementById('use-3d').addEventListener('change', () => loadCreature(currentIndex));
+
+    // Clip selector — drive animation on the current 3D bundle
+    document.getElementById('clip-select').addEventListener('change', (e) => {
+      if (currentBundle3D && currentBundle3D.bundle) {
+        currentBundle3D.bundle.playClip(e.target.value);
+      }
+    });
     document.addEventListener('keydown', (e) => {
       if (lightbox.classList.contains('active')) return;
       if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;

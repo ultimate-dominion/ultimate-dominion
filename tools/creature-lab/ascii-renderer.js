@@ -30,6 +30,54 @@ export const COMPOSITE_PALETTES = {
     { maxLum: 1.00, chars: "▒ᛟ▓█",  colorTint: [252, 224, 112, 0.13] }, // highlight: push bright areas toward gold
   ],
 };
+// Shape-vector palette — ~80 chars spanning all visual families.
+// Used with useShapeVector:true for shape-aware char selection.
+// Chars chosen to have diverse 6-zone ink distributions:
+//   verticals (l|I!), diagonals (/\vV^), wide (wmnu), curved (csoO),
+//   crosses (+*x#@), blocks (░▒▓█), organic (•◉○), runes (ᚾᛁᚱ)
+export const SHAPE_PALETTE = [
+  // sparse / near-empty
+  ' ', '·', '.', "'", '`', ',', ':', ';',
+  // horizontals
+  '-', '_', '~',
+  // verticals
+  '|', 'l', 'I', '!', 'i', '1', 'ᛁ',
+  // diagonals NE-SW
+  '/', 'v', 'V',
+  // diagonals NW-SE
+  '\\', '^', 'A',
+  // top-heavy
+  'T', 'r', '7', 'f',
+  // bottom-heavy / wide bottom
+  'w', 'W', 'u', 'U', 'n', 'm',
+  // left-curves
+  ')', '}', ']', 'J', 'j',
+  // right-curves
+  '(', '{', '[', 'b', 'd',
+  // open-right curves
+  'c', 'C', '<', 'ᚾ',
+  // open-left curves
+  's', 'S', '>', 'ᚱ',
+  // symmetric medium
+  'o', 'O', '0', 'e', 'p', 'q',
+  // crosses / stars
+  '+', '*', 'x', 'X', '†', '‡', '÷',
+  // medium-dense mixed
+  'k', 'K', 'y', 'Y', 'z', 'Z', 'h', 'H',
+  'g', '&', '$', '%',
+  // runes (medium density, interesting shapes)
+  'ᛃ', 'ᛒ', 'ᛖ', 'ᛟ', 'ᚷ', 'ᚠ',
+  // organic Unicode
+  '•', '◦', '○', '◉', '●',
+  // half-blocks (strong directional)
+  '▀', '▄', '▌', '▐',
+  '▖', '▗', '▘', '▝',
+  // dense fills
+  '░', '▒', '▓', '█',
+  // dense ASCII
+  '#', '@', 'B', 'M', '8',
+];
+
 const EDGE_CHARS = ['-', '/', '|', '\\', '-', '/', '|', '\\'];
 const EDGE_GRADIENT_THRESHOLD = 0.08;
 const TEMPLATE_RES = 512;
@@ -46,6 +94,7 @@ const BG_FILL_BRIGHTNESS = 0.30;
 const BG_FILL_ALPHA = 0.35;
 
 const charBrightnessCache = new Map();
+const charShapeCache = new Map();
 
 function buildCharBrightness(palette) {
   if (charBrightnessCache.has(palette)) return charBrightnessCache.get(palette);
@@ -67,6 +116,64 @@ function buildCharBrightness(palette) {
     return sum / (size * size * 255);
   });
   charBrightnessCache.set(palette, result);
+  return result;
+}
+
+// 6-zone shape vector: [TL, TC, TR, BL, BC, BR] ink density per zone.
+// Zones split horizontally into thirds, vertically into halves.
+// Each value is average alpha coverage 0-1. Cached per palette string.
+// Must be called after fonts are loaded (document.fonts.ready).
+function buildCharShapeVector(paletteArr) {
+  const key = Array.isArray(paletteArr) ? paletteArr.join('') : paletteArr;
+  if (charShapeCache.has(key)) return charShapeCache.get(key);
+  const size = 16;
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  const chars = Array.isArray(paletteArr) ? paletteArr : Array.from(paletteArr);
+  const x1 = Math.floor(size / 3), x2 = Math.floor(size * 2 / 3);
+  const yMid = size / 2;
+
+  const result = chars.map(char => {
+    ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = '#fff';
+    ctx.font = `400 ${size}px ${FONT}`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.fillText(char, size / 2, size / 2);
+    const d = ctx.getImageData(0, 0, size, size).data;
+
+    let tl = 0, tc = 0, tr = 0, bl = 0, bc = 0, br = 0;
+    let tlN = 0, tcN = 0, trN = 0, blN = 0, bcN = 0, brN = 0;
+    let totalAlpha = 0;
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const a = d[(y * size + x) * 4 + 3] / 255;
+        totalAlpha += a;
+        if (y < yMid) {
+          if (x < x1)       { tl += a; tlN++; }
+          else if (x < x2)  { tc += a; tcN++; }
+          else               { tr += a; trN++; }
+        } else {
+          if (x < x1)       { bl += a; blN++; }
+          else if (x < x2)  { bc += a; bcN++; }
+          else               { br += a; brN++; }
+        }
+      }
+    }
+    const brightness = totalAlpha / (size * size);
+    const shape = new Float32Array([
+      tlN ? tl / tlN : 0,
+      tcN ? tc / tcN : 0,
+      trN ? tr / trN : 0,
+      blN ? bl / blN : 0,
+      bcN ? bc / bcN : 0,
+      brN ? br / brN : 0,
+    ]);
+    return { char, brightness, shape };
+  });
+
+  charShapeCache.set(key, result);
   return result;
 }
 
@@ -191,6 +298,51 @@ function computeNormals(data, imgW, imgH, cols, rows) {
   return normals;
 }
 
+// Pre-compute 6D shape vectors for every cell in the ASCII grid.
+// Returns Float32Array of length cols*rows*6 — layout: [tl,tc,tr,bl,bc,br, tl,tc,...].
+// Called once per frame when useShapeVector:true, before the cell loop.
+function computeShapeVectors(data, imgW, imgH, cols, rows) {
+  const out = new Float32Array(cols * rows * 6);
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x0 = Math.floor((col / cols) * imgW);
+      const y0 = Math.floor((row / rows) * imgH);
+      const x1 = Math.max(x0 + 1, Math.ceil(((col + 1) / cols) * imgW));
+      const y1 = Math.max(y0 + 1, Math.ceil(((row + 1) / rows) * imgH));
+      const midX = (x0 + x1) / 2;
+      const midY = (y0 + y1) / 2;
+      const xThird = x0 + (x1 - x0) / 3;
+      const xTwoThird = x0 + (x1 - x0) * 2 / 3;
+
+      let tl=0,tc=0,tr=0,bl=0,bc=0,br=0;
+      let tlN=0,tcN=0,trN=0,blN=0,bcN=0,brN=0;
+      for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+          const idx = (y * imgW + x) * 4;
+          const lum = (0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2]) / 255;
+          if (y < midY) {
+            if (x < xThird)      { tl += lum; tlN++; }
+            else if (x < xTwoThird) { tc += lum; tcN++; }
+            else                  { tr += lum; trN++; }
+          } else {
+            if (x < xThird)      { bl += lum; blN++; }
+            else if (x < xTwoThird) { bc += lum; bcN++; }
+            else                  { br += lum; brN++; }
+          }
+        }
+      }
+      const base = (row * cols + col) * 6;
+      out[base]   = tlN ? tl / tlN : 0;
+      out[base+1] = tcN ? tc / tcN : 0;
+      out[base+2] = trN ? tr / trN : 0;
+      out[base+3] = blN ? bl / blN : 0;
+      out[base+4] = bcN ? bc / bcN : 0;
+      out[base+5] = brN ? br / brN : 0;
+    }
+  }
+  return out;
+}
+
 function getWeight(level, isBoss, brightness) {
   if (isBoss || level >= 10) return brightness < 0.3 ? 600 : 700;
   if (level >= 7) return brightness < 0.25 ? 400 : brightness < 0.55 ? 600 : 700;
@@ -217,9 +369,14 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
     enableHalfBlock = true,
     charPalette = CHAR_PALETTE,
     charZones = null,
+    useShapeVector = false,
   } = opts;
 
-  const charBrightness = charZones ? null : buildCharBrightness(charPalette);
+  // Shape vector mode: use SHAPE_PALETTE by default when useShapeVector is on
+  const effectivePalette = useShapeVector ? (charPalette === CHAR_PALETTE ? SHAPE_PALETTE.join('') : charPalette) : charPalette;
+  const charBrightness = (charZones || useShapeVector) ? null : buildCharBrightness(effectivePalette);
+  // Shape vectors are calibrated lazily on first use; precomputed grid built after template stage
+  const charVectors = useShapeVector ? buildCharShapeVector(SHAPE_PALETTE) : null;
 
   if (width < 20 || height < 20) return;
 
@@ -271,9 +428,11 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
   const centerY = y + (height - renderH) / 2 + bobY;
 
   const normals = computeNormals(tplData.data, tw, th, cols, rows);
+  // Pre-compute per-cell shape vectors once (only in shape vector mode)
+  const shapeVectors = useShapeVector ? computeShapeVectors(tplData.data, tw, th, cols, rows) : null;
   const fontSize = actualCellW * 1.2;
   const brightness = charBrightness;
-  const palette = charPalette;
+  const palette = effectivePalette;
 
   // -- Ground shadow (3D mode only) --
   if (enable3D) {
@@ -327,7 +486,33 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
       const charLum = Math.max(charDensityFloor, litLum);
       let char;
       let selectedZone = null;
-      if (charZones) {
+
+      if (useShapeVector && shapeVectors) {
+        // 6D shape vector nearest-neighbor: filter by brightness (±0.28), then closest shape
+        const base = (row * cols + col) * 6;
+        const s0=shapeVectors[base],s1=shapeVectors[base+1],s2=shapeVectors[base+2];
+        const s3=shapeVectors[base+3],s4=shapeVectors[base+4],s5=shapeVectors[base+5];
+        let bestChar = ' ';
+        let bestDist = Infinity;
+        const LUM_TOL = 0.28;
+        for (let ci = 0; ci < charVectors.length; ci++) {
+          const cv = charVectors[ci];
+          if (Math.abs(cv.brightness - charLum) > LUM_TOL) continue;
+          const cs = cv.shape;
+          const dist = (s0-cs[0])**2 + (s1-cs[1])**2 + (s2-cs[2])**2
+                     + (s3-cs[3])**2 + (s4-cs[4])**2 + (s5-cs[5])**2;
+          if (dist < bestDist) { bestDist = dist; bestChar = cv.char; }
+        }
+        // fallback: if nothing matched within tolerance, use nearest brightness
+        if (bestChar === ' ' && charVectors.length > 0) {
+          let bestDiff = 1;
+          for (let ci = 0; ci < charVectors.length; ci++) {
+            const diff = Math.abs(charVectors[ci].brightness - charLum);
+            if (diff < bestDiff) { bestDiff = diff; bestChar = charVectors[ci].char; }
+          }
+        }
+        char = bestChar;
+      } else if (charZones) {
         selectedZone = charZones.find(z => charLum <= z.maxLum) ?? charZones[charZones.length - 1];
         const zb = buildCharBrightness(selectedZone.chars);
         let bestIdx = 0, bestDiff = 1;
