@@ -432,95 +432,97 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
   const nearPrev = nearLeg.segments[nearLeg.segments.length - 2];
   drawFootClaws(ctx, nearFoot, nearPrev, w, h, clawColor, 1);
 
-  // MASSIVE FAR HOOK — rises steeply upper-right, long curl back left over body
-  ctx.fillStyle = bodyGrad3(ctx, w * 0.84, h * 0.12, w * 0.26,
+  // FAR HOOK — thin scythe blade, rises up-right then curls back left
+  // Outer (convex) spine: long elegant curve
+  // Inner (concave) edge: closely parallels spine — THIN blade, not a plate
+  const farHookGrad = bodyGrad3(ctx, w * 0.86, h * 0.10, w * 0.20,
     hookMid[0], hookMid[1], hookMid[2],
     hookDark[0], hookDark[1], hookDark[2],
     hookLight[0], hookLight[1], hookLight[2]);
+  ctx.fillStyle = farHookGrad;
   ctx.beginPath();
-  ctx.moveTo(w * 0.79, h * 0.24);   // arm lower connection
-  ctx.bezierCurveTo(w * 0.88, h * 0.20, w * 0.98, h * 0.14, w * 0.98, h * 0.04);
-  ctx.bezierCurveTo(w * 0.98, h * -0.04, w * 0.88, h * -0.06, w * 0.64, h * 0.00);
-  // inner concave edge returns
-  ctx.bezierCurveTo(w * 0.74, h * 0.04, w * 0.82, h * 0.10, w * 0.80, h * 0.18);
-  ctx.bezierCurveTo(w * 0.80, h * 0.20, w * 0.79, h * 0.22, w * 0.79, h * 0.24);
+  // outer edge (convex back of blade)
+  ctx.moveTo(w * 0.82, h * 0.22);
+  ctx.bezierCurveTo(w * 0.90, h * 0.18, w * 0.98, h * 0.12, w * 0.97, h * 0.03);
+  ctx.bezierCurveTo(w * 0.96, h * -0.04, w * 0.85, h * -0.05, w * 0.66, h * 0.01);
+  // sharp tip
+  ctx.lineTo(w * 0.68, h * 0.05);
+  // inner edge (concave cutting edge) — closely parallel, THIN blade
+  ctx.bezierCurveTo(w * 0.82, h * 0.03, w * 0.90, h * 0.04, w * 0.92, h * 0.10);
+  ctx.bezierCurveTo(w * 0.93, h * 0.16, w * 0.86, h * 0.20, w * 0.80, h * 0.22);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = rgba(hookDark, 0.50);
-  ctx.lineWidth = Math.max(1, w * 0.003);
-  ctx.stroke();
-  // Serrations on inner concave edge of far hook
-  ctx.fillStyle = rgba(hookDark, 0.90);
-  for (let t = 0; t <= 1; t += 0.18) {
-    const sx = 0.80 + t * (0.70 - 0.80);
-    const sy = 0.18 + t * (0.02 - 0.18);
+  // Serrations on inner (concave) edge
+  ctx.fillStyle = rgba(hookDark, 0.85);
+  for (let t = 0.1; t < 1.0; t += 0.22) {
+    const sx = 0.80 + t * (0.68 - 0.80);
+    const sy = 0.22 + t * (0.05 - 0.22);
     ctx.beginPath();
-    ctx.moveTo(w * (sx - 0.012), h * (sy - 0.008));
-    ctx.lineTo(w * (sx + 0.006), h * (sy + 0.030));
-    ctx.lineTo(w * (sx + 0.018), h * (sy - 0.006));
-    ctx.closePath();
-    ctx.fill();
-  }
-  // Highlight spine
-  ctx.strokeStyle = rgba(hookLight, 0.38);
-  ctx.lineWidth = Math.max(1, w * 0.004);
-  ctx.beginPath();
-  ctx.moveTo(w * 0.78, h * 0.20);
-  ctx.bezierCurveTo(w * 0.88, h * 0.16, w * 0.96, h * 0.10, w * 0.96, h * 0.04);
-  ctx.bezierCurveTo(w * 0.96, h * -0.02, w * 0.86, h * -0.04, w * 0.66, h * 0.01);
-  ctx.stroke();
-  // Far arm connection nub
-  ctx.fillStyle = bodyGrad3(ctx, w * 0.82, h * 0.18, w * 0.06,
-    hookMid[0], hookMid[1], hookMid[2],
-    hookDark[0], hookDark[1], hookDark[2],
-    hookLight[0], hookLight[1], hookLight[2]);
-  fillEllipse(ctx, w * 0.82, h * 0.18, w * 0.040, h * 0.030);
-
-  // MASSIVE NEAR HOOK — sweeps left, curls downward (explicit bezier sickle)
-  ctx.fillStyle = bodyGrad3(ctx, w * 0.12, h * 0.44, w * 0.22,
-    hookMid[0], hookMid[1], hookMid[2],
-    hookDark[0], hookDark[1], hookDark[2],
-    hookLight[0], hookLight[1], hookLight[2]);
-  ctx.beginPath();
-  // outer (convex) edge: from arm top-side, sweeps left then curls down
-  ctx.moveTo(w * 0.20, h * 0.36);   // arm upper connection
-  ctx.bezierCurveTo(w * 0.10, h * 0.30, w * 0.02, h * 0.34, w * 0.00, h * 0.46);
-  ctx.bezierCurveTo(w * -0.02, h * 0.56, w * 0.04, h * 0.64, w * 0.14, h * 0.66);
-  // inner (concave) edge: returns toward arm
-  ctx.bezierCurveTo(w * 0.18, h * 0.60, w * 0.22, h * 0.52, w * 0.22, h * 0.44);
-  ctx.bezierCurveTo(w * 0.22, h * 0.40, w * 0.20, h * 0.38, w * 0.20, h * 0.36);
-  ctx.closePath();
-  ctx.fill();
-  // Edge line
-  ctx.strokeStyle = rgba(hookDark, 0.50);
-  ctx.lineWidth = Math.max(1, w * 0.003);
-  ctx.stroke();
-  // Serrations on inner concave edge of near hook
-  ctx.fillStyle = rgba(hookDark, 0.90);
-  for (let t = 0; t <= 1; t += 0.18) {
-    const sx = 0.20 + t * (0.14 - 0.20);
-    const sy = 0.44 + t * (0.66 - 0.44);
-    ctx.beginPath();
-    ctx.moveTo(w * (sx + 0.008), h * (sy - 0.012));
-    ctx.lineTo(w * (sx - 0.028), h * (sy + 0.006));
-    ctx.lineTo(w * (sx + 0.006), h * (sy + 0.018));
+    ctx.moveTo(w * sx, h * sy);
+    ctx.lineTo(w * (sx - 0.016), h * (sy + 0.025));
+    ctx.lineTo(w * (sx + 0.010), h * (sy + 0.018));
     ctx.closePath();
     ctx.fill();
   }
   // Highlight along outer spine
-  ctx.strokeStyle = rgba(hookLight, 0.38);
-  ctx.lineWidth = Math.max(1, w * 0.004);
+  ctx.strokeStyle = rgba(hookLight, 0.50);
+  ctx.lineWidth = Math.max(1.5, w * 0.005);
   ctx.beginPath();
-  ctx.moveTo(w * 0.18, h * 0.34);
-  ctx.bezierCurveTo(w * 0.08, h * 0.28, w * 0.00, h * 0.34, w * -0.02, h * 0.46);
-  ctx.bezierCurveTo(w * -0.03, h * 0.56, w * 0.04, h * 0.62, w * 0.14, h * 0.65);
+  ctx.moveTo(w * 0.82, h * 0.22);
+  ctx.bezierCurveTo(w * 0.90, h * 0.18, w * 0.97, h * 0.12, w * 0.96, h * 0.03);
+  ctx.bezierCurveTo(w * 0.95, h * -0.03, w * 0.84, h * -0.04, w * 0.67, h * 0.02);
   ctx.stroke();
-  // Near arm connection nub
-  ctx.fillStyle = bodyGrad3(ctx, w * 0.16, h * 0.42, w * 0.06,
+  // Arm connection nub
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.82, h * 0.20, w * 0.05,
     hookMid[0], hookMid[1], hookMid[2],
     hookDark[0], hookDark[1], hookDark[2],
     hookLight[0], hookLight[1], hookLight[2]);
-  fillEllipse(ctx, w * 0.16, h * 0.42, w * 0.042, h * 0.032);
+  fillEllipse(ctx, w * 0.82, h * 0.20, w * 0.038, h * 0.028);
+
+  // NEAR HOOK — thin scythe blade, sweeps far left then curls tip downward
+  // Same pattern: outer convex spine, inner concave edge closely parallel
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.08, h * 0.44, w * 0.20,
+    hookMid[0], hookMid[1], hookMid[2],
+    hookDark[0], hookDark[1], hookDark[2],
+    hookLight[0], hookLight[1], hookLight[2]);
+  ctx.beginPath();
+  // outer edge (convex back of blade)
+  ctx.moveTo(w * 0.20, h * 0.36);
+  ctx.bezierCurveTo(w * 0.08, h * 0.28, w * -0.02, h * 0.34, w * -0.02, h * 0.50);
+  ctx.bezierCurveTo(w * -0.02, h * 0.60, w * 0.06, h * 0.68, w * 0.16, h * 0.68);
+  // sharp tip
+  ctx.lineTo(w * 0.18, h * 0.64);
+  // inner edge (concave cutting edge) — closely parallel, THIN blade
+  ctx.bezierCurveTo(w * 0.10, h * 0.62, w * 0.06, h * 0.54, w * 0.06, h * 0.46);
+  ctx.bezierCurveTo(w * 0.06, h * 0.36, w * 0.12, h * 0.32, w * 0.20, h * 0.40);
+  ctx.closePath();
+  ctx.fill();
+  // Serrations on inner (concave) cutting edge
+  ctx.fillStyle = rgba(hookDark, 0.85);
+  for (let t = 0.1; t < 1.0; t += 0.22) {
+    const sx = 0.20 + t * (0.18 - 0.20);
+    const sy = 0.40 + t * (0.64 - 0.40);
+    ctx.beginPath();
+    ctx.moveTo(w * sx, h * sy);
+    ctx.lineTo(w * (sx + 0.022), h * (sy + 0.012));
+    ctx.lineTo(w * (sx + 0.014), h * (sy - 0.016));
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Highlight along outer spine
+  ctx.strokeStyle = rgba(hookLight, 0.50);
+  ctx.lineWidth = Math.max(1.5, w * 0.005);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.20, h * 0.36);
+  ctx.bezierCurveTo(w * 0.08, h * 0.28, w * -0.01, h * 0.34, w * -0.01, h * 0.50);
+  ctx.bezierCurveTo(w * -0.01, h * 0.60, w * 0.07, h * 0.67, w * 0.16, h * 0.67);
+  ctx.stroke();
+  // Arm connection nub
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.16, h * 0.40, w * 0.05,
+    hookMid[0], hookMid[1], hookMid[2],
+    hookDark[0], hookDark[1], hookDark[2],
+    hookLight[0], hookLight[1], hookLight[2]);
+  fillEllipse(ctx, w * 0.16, h * 0.40, w * 0.040, h * 0.030);
 
   // HIGHLIGHTS
   highlight(ctx, w * 0.52, h * 0.34, w * 0.09, rgba(bodyHi, 0.20), 0.28);
