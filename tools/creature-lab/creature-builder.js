@@ -13,6 +13,7 @@
 
 import * as THREE from 'three';
 import { makeCreatureCamera, addCreatureLighting } from './three-bridge.js';
+import { RIGS } from './creature-rigs.js';
 
 // --------------------------------------------------------------------------
 // Toon gradient texture
@@ -130,7 +131,12 @@ function makeCoordFns(gridW, gridH, viewH = 2.2) {
  * @returns {{ scene, camera, group, mixer, clips, playClip }}
  */
 export function buildCreature(spec) {
-  const { palette, gridW, gridH, body, limbs = [], tail, head, accessories = [] } = spec;
+  const {
+    palette, gridW, gridH, body, limbs = [], tail, head,
+    accessories = [], weapons = [],
+    rig: rigName,
+    skinColor, armorColor, weaponColor,
+  } = spec;
   const { toX, toY, toR, toV3 } = makeCoordFns(gridW, gridH);
 
   // Palette indices (rough mapping to luminance bands)
@@ -149,6 +155,18 @@ export function buildCreature(spec) {
   const matHi     = makeMat(paletteColor(palette, iHi),     gradMap);
   const matRim    = makeMat(paletteColor(palette, iRim),    gradMap);
 
+  // Per-part color overrides — skin vs armor vs weapon can differ
+  // skinColor  → near limbs, head, exposed flesh
+  // armorColor → body segments, far limbs, clothing
+  // weaponColor → weapon geometry
+  function colorMat(rgb) {
+    return makeMat(new THREE.Color(rgb[0]/255, rgb[1]/255, rgb[2]/255), gradMap);
+  }
+  const matSkin   = skinColor   ? colorMat(skinColor)   : matLight;
+  const matArmor  = armorColor  ? colorMat(armorColor)  : matMid;
+  const matWeapon = weaponColor ? colorMat(weaponColor) : matLight;
+  const matWeaponEdge = makeMat(paletteColor(palette, iRim), gradMap); // bright edge highlight
+
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0, 0, 0);
   addCreatureLighting(scene);
@@ -164,7 +182,8 @@ export function buildCreature(spec) {
     const r = toR(node.radius);
     // Sphere at each spine node — oblate (wider in x, shallower in z)
     const isHead = node.id === 'head' || node.id === 'snout';
-    const mat = isHead ? matLight : (i < 2 ? matMid : matMid);
+    // Head uses skinMat (exposed flesh), body uses armorMat (clothing/scales)
+    const mat = isHead ? matSkin : matArmor;
     group.add(sphereMesh(pos, r, mat, isHead ? 1.5 : 1.3, 1.0, isHead ? 0.75 : 0.65));
 
     // Cylinder segment to next spine node
@@ -172,7 +191,7 @@ export function buildCreature(spec) {
       const next = spineNodes[i + 1];
       const p2 = toV3(next.x, next.y, 0);
       const r2 = toR(next.radius);
-      const seg = segmentMesh(pos, p2, r, r2, matMid);
+      const seg = segmentMesh(pos, p2, r, r2, matArmor);
       if (seg) group.add(seg);
     }
   });
@@ -181,16 +200,16 @@ export function buildCreature(spec) {
   if (spineNodes.length >= 4) {
     const s1 = spineNodes[Math.floor(spineNodes.length * 0.25)];
     const s2 = spineNodes[Math.floor(spineNodes.length * 0.75)];
-    const bellyY = Math.max(s1.y, s2.y) + 0.04; // slightly below spine
+    const bellyY = Math.max(s1.y, s2.y) + 0.04;
     const bellyX = (s1.x + s2.x) / 2;
     const bellyR = toR((s1.radius + s2.radius) / 2 * 0.7);
     const bellyW = Math.abs(toX(s2.x) - toX(s1.x)) * 0.8;
     const belly = new THREE.Mesh(
       new THREE.CapsuleGeometry(bellyR * 0.5, bellyW, 8, 8),
-      matLight
+      matSkin  // belly = exposed skin color
     );
     belly.position.set(toX(bellyX), toY(bellyY) - bellyR * 0.3, -bellyR * 0.1);
-    belly.rotation.z = Math.PI / 2; // lay capsule on its side
+    belly.rotation.z = Math.PI / 2;
     belly.scale.set(1, 0.5, 0.4);
     group.add(belly);
   }
@@ -199,24 +218,25 @@ export function buildCreature(spec) {
   limbs.forEach(limb => {
     const zOff = limb.side === 'far' ? -0.06 : 0.10;
     const baseR = toR(limb.radius ?? 0.04);
+    // near limbs = front-facing skin; far limbs = behind-body shadow/armor
+    const limbMat = limb.side === 'far' ? matShadow : matSkin;
     limb.positions.forEach((pos, i) => {
       const r = baseR * (1 - i * 0.18);
       const p = toV3(pos[0], pos[1], zOff);
-      const mat = limb.side === 'far' ? matShadow : matMid;
-      group.add(sphereMesh(p, r, mat, 1, 1, 0.75));
+      group.add(sphereMesh(p, r, limbMat, 1, 1, 0.75));
 
       if (i > 0) {
         const prev = limb.positions[i - 1];
         const p1 = toV3(prev[0], prev[1], zOff);
         const r1 = baseR * (1 - (i - 1) * 0.18);
-        const seg = segmentMesh(p1, p, r1, r, mat);
+        const seg = segmentMesh(p1, p, r1, r, limbMat);
         if (seg) group.add(seg);
       }
     });
 
     // Claw tips
     const last = limb.positions[limb.positions.length - 1];
-    const clawMat = matLight;
+    const clawMat = matSkin;
     [-0.022, 0, 0.022].forEach(offset => {
       const tip = new THREE.Mesh(
         new THREE.ConeGeometry(toR(0.008), toR(0.032), 4),
@@ -348,15 +368,36 @@ export function buildCreature(spec) {
     }
   });
 
+  // ---- Weapons ---------------------------------------------------------------
+  // Built after limbs so weapon group can find the hand tip position.
+  // The weapon Group is named 'weapon' so animation tracks can target it.
+  let weaponGroup = null;
+  if (weapons.length > 0) {
+    weaponGroup = _buildWeaponGroup(weapons[0], spec.limbs ?? [], {
+      toX, toY, toR, toV3, matWeapon, matWeaponEdge, matShadow, matRim,
+    });
+    if (weaponGroup) group.add(weaponGroup);
+  }
+
   // ---- Camera + AnimationMixer --------------------------------------------
   const camera = makeCreatureCamera(gridW, gridH);
   const mixer = new THREE.AnimationMixer(group);
 
-  // Build standard animation clips
-  const clips = buildStandardClips(group, spineNodes, { toX, toY, toR });
+  // Resolve rig — use named rig or fall back to legacy buildStandardClips
+  const rig = rigName ? RIGS[rigName] : null;
+  const clips = rig
+    ? _buildRigClips(rig, weaponGroup)
+    : _buildLegacyClips(group);
+
   const actions = {};
   Object.entries(clips).forEach(([name, clip]) => {
-    actions[name] = mixer.clipAction(clip);
+    const action = mixer.clipAction(clip);
+    const clipDef = rig?.clips[name];
+    if (clipDef) {
+      action.loop = clipDef.loop === 'once' ? THREE.LoopOnce : THREE.LoopRepeat;
+      action.clampWhenFinished = clipDef.clampWhenFinished ?? false;
+    }
+    actions[name] = action;
   });
 
   // Start idle by default
@@ -367,62 +408,202 @@ export function buildCreature(spec) {
     const next = actions[name];
     if (!next || next === currentAction) return;
     if (currentAction) currentAction.crossFadeTo(next, fadeTime, false);
+    // Reset one-shot clips so they play from the start
+    if (next.loop === THREE.LoopOnce) {
+      next.reset();
+    }
     next.play();
     currentAction = next;
-    // One-shot clips (hit, attack) fade back to idle
-    if (name === 'hit' || name === 'attack') {
-      const onFinish = () => {
+
+    const clipDef = rig?.clips[name];
+    const shouldReturnToIdle = clipDef ? clipDef.returnToIdle : (name === 'hit' || name === 'attack');
+    if (shouldReturnToIdle) {
+      const onFinish = (e) => {
+        if (e.action !== next) return;
         mixer.removeEventListener('finished', onFinish);
-        playClip('idle', 0.2);
+        playClip('idle', 0.22);
       };
       mixer.addEventListener('finished', onFinish);
     }
   }
 
-  return { scene, camera, group, mixer, clips, playClip };
+  return { scene, camera, group, mixer, clips, actions, playClip, weaponGroup };
 }
 
 // --------------------------------------------------------------------------
-// Standard animation clips
+// Rig-based animation clips
 // --------------------------------------------------------------------------
 
-function buildStandardClips(group, spineNodes, { toX, toY, toR }) {
+/**
+ * Build AnimationClips from a rig definition.
+ * Tracks targeting 'weapon.*' are skipped if no weaponGroup exists.
+ */
+function _buildRigClips(rig, weaponGroup) {
   const clips = {};
-
-  // Idle: gentle breathing — scale group Y slightly
-  {
-    const times = [0, 1.2, 2.4];
-    const vals  = [1, 1, 1,  1, 1.025, 1,  1, 1, 1];
-    const track = new THREE.VectorKeyframeTrack(`${group.uuid}.scale`, times, vals);
-    clips.idle = new THREE.AnimationClip('idle', 2.4, [track]);
+  for (const [clipName, clipDef] of Object.entries(rig.clips)) {
+    const tracks = [];
+    for (const t of clipDef.tracks) {
+      if (t.path.startsWith('weapon') && !weaponGroup) continue;
+      tracks.push(new THREE.VectorKeyframeTrack(t.path, t.times, t.values));
+    }
+    clips[clipName] = new THREE.AnimationClip(clipName, clipDef.duration, tracks);
   }
-
-  // Attack: surge forward (-x) then snap back
-  {
-    const times = [0, 0.18, 0.42, 0.70];
-    const vals  = [0,0,0,  -0.22,0.04,0,  -0.28,0.02,0,  0,0,0];
-    const track = new THREE.VectorKeyframeTrack(`${group.uuid}.position`, times, vals);
-    clips.attack = new THREE.AnimationClip('attack', 0.70, [track]);
-  }
-
-  // Hit: knockback +x then return
-  {
-    const times = [0, 0.08, 0.25];
-    const vals  = [0,0,0,  0.15,0,0,  0,0,0];
-    const track = new THREE.VectorKeyframeTrack(`${group.uuid}.position`, times, vals);
-    clips.hit = new THREE.AnimationClip('hit', 0.25, [track]);
-  }
-
-  // Death: sink down + scale to zero
-  {
-    const times = [0, 0.6, 1.4];
-    const posVals = [0,0,0,  0,-0.3,0,  0,-0.8,0];
-    const scaleVals = [1,1,1,  0.9,0.6,0.9,  0,0,0];
-    clips.death = new THREE.AnimationClip('death', 1.4, [
-      new THREE.VectorKeyframeTrack(`${group.uuid}.position`, times, posVals),
-      new THREE.VectorKeyframeTrack(`${group.uuid}.scale`, times, scaleVals),
-    ]);
-  }
-
   return clips;
+}
+
+/**
+ * Legacy clips for creatures without a rig (fallback).
+ * Fixed to use '.' prefix paths so Three.js PropertyBinding resolves to root.
+ */
+function _buildLegacyClips() {
+  const clips = {};
+  clips.idle = new THREE.AnimationClip('idle', 2.4, [
+    new THREE.VectorKeyframeTrack('.scale', [0, 1.2, 2.4], [1,1,1, 1,1.025,1, 1,1,1]),
+  ]);
+  clips.attack = new THREE.AnimationClip('attack', 0.65, [
+    new THREE.VectorKeyframeTrack('.position', [0, 0.18, 0.38, 0.65], [0,0,0, -0.18,0.04,0, -0.26,0.02,0, 0,0,0]),
+  ]);
+  clips.block = new THREE.AnimationClip('block', 0.28, [
+    new THREE.VectorKeyframeTrack('.position', [0, 0.28], [0,0,0, 0.18,0,0]),
+  ]);
+  clips.hit = new THREE.AnimationClip('hit', 0.28, [
+    new THREE.VectorKeyframeTrack('.position', [0, 0.08, 0.28], [0,0,0, 0.20,0,0, 0,0,0]),
+  ]);
+  clips.death = new THREE.AnimationClip('death', 1.20, [
+    new THREE.VectorKeyframeTrack('.position', [0, 0.5, 1.20], [0,0,0, 0,-0.2,0, 0,-0.7,0]),
+    new THREE.VectorKeyframeTrack('.scale',    [0, 0.6, 1.20], [1,1,1, 0.9,0.7,0.9, 0,0,0]),
+  ]);
+  return clips;
+}
+
+// --------------------------------------------------------------------------
+// Weapon geometry
+// --------------------------------------------------------------------------
+
+/**
+ * Build a weapon Group positioned at the weapon hand tip.
+ * The Group is named 'weapon' so animation tracks can target it.
+ * Grip is at the Group's local origin — rotation animates around grip point.
+ */
+function _buildWeaponGroup(weaponSpec, limbSpecs, { toX, toY, toR, toV3, matWeapon, matWeaponEdge, matShadow, matRim }) {
+  const { type = 'axe', hand = 'near', size = 0.15 } = weaponSpec;
+  const s = toR(size);
+
+  // Find the weapon hand's tip position from limb specs
+  const handLimb = limbSpecs.find(l => l.side === hand);
+  if (!handLimb || !handLimb.positions?.length) return null;
+
+  const tip = handLimb.positions[handLimb.positions.length - 1];
+  const zOff = hand === 'near' ? 0.12 : -0.08;
+  const handPos = toV3(tip[0], tip[1], zOff);
+
+  const wGroup = new THREE.Group();
+  wGroup.name = 'weapon';
+  wGroup.position.copy(handPos);
+
+  if (type === 'axe') {
+    // Handle: from grip (y=0) upward
+    const handle = new THREE.Mesh(
+      new THREE.CylinderGeometry(s * 0.055, s * 0.07, s * 1.15, 6),
+      matWeapon
+    );
+    handle.position.set(0, s * 0.575, 0);
+    wGroup.add(handle);
+
+    // Axe head: box offset to one side (cutting edge left = toward player)
+    const axeHead = new THREE.Mesh(
+      new THREE.BoxGeometry(s * 0.75, s * 0.28, s * 0.14),
+      matWeapon
+    );
+    axeHead.position.set(-s * 0.18, s * 1.08, 0);
+    wGroup.add(axeHead);
+
+    // Cutting edge highlight — bright rim to catch the glow in ASCII
+    const edge = new THREE.Mesh(
+      new THREE.BoxGeometry(s * 0.08, s * 0.32, s * 0.16),
+      matWeaponEdge
+    );
+    edge.position.set(-s * 0.54, s * 1.08, 0);
+    wGroup.add(edge);
+
+    // Back spike (rear of axe head)
+    const spike = new THREE.Mesh(
+      new THREE.ConeGeometry(s * 0.06, s * 0.22, 4),
+      matWeapon
+    );
+    spike.position.set(s * 0.40, s * 1.05, 0);
+    spike.rotation.z = -Math.PI / 2;
+    wGroup.add(spike);
+
+  } else if (type === 'sword') {
+    // Blade: thin cylinder from grip upward
+    const blade = new THREE.Mesh(
+      new THREE.CylinderGeometry(s * 0.03, s * 0.05, s * 1.4, 6),
+      matWeapon
+    );
+    blade.position.set(0, s * 0.7, 0);
+    wGroup.add(blade);
+
+    // Crossguard
+    const guard = new THREE.Mesh(
+      new THREE.BoxGeometry(s * 0.55, s * 0.08, s * 0.12),
+      matShadow
+    );
+    guard.position.set(0, s * 0.18, 0);
+    wGroup.add(guard);
+
+    // Blade tip highlight
+    const tip2 = new THREE.Mesh(
+      new THREE.ConeGeometry(s * 0.03, s * 0.18, 4),
+      matWeaponEdge
+    );
+    tip2.position.set(0, s * 1.47, 0);
+    wGroup.add(tip2);
+
+  } else if (type === 'staff') {
+    // Pole
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(s * 0.045, s * 0.055, s * 1.5, 6),
+      matWeapon
+    );
+    pole.position.set(0, s * 0.75, 0);
+    wGroup.add(pole);
+
+    // Orb at top
+    const orb = new THREE.Mesh(
+      new THREE.SphereGeometry(s * 0.14, 8, 6),
+      matRim  // bright glow-triggering color
+    );
+    orb.position.set(0, s * 1.56, 0);
+    wGroup.add(orb);
+
+  } else if (type === 'spear') {
+    const shaft = new THREE.Mesh(
+      new THREE.CylinderGeometry(s * 0.04, s * 0.05, s * 1.6, 6),
+      matWeapon
+    );
+    shaft.position.set(0, s * 0.8, 0);
+    wGroup.add(shaft);
+
+    const speartip = new THREE.Mesh(
+      new THREE.ConeGeometry(s * 0.07, s * 0.28, 4),
+      matWeaponEdge
+    );
+    speartip.position.set(0, s * 1.74, 0);
+    wGroup.add(speartip);
+
+  } else if (type === 'claw') {
+    // Just the claw tip cluster — 3 curved spikes
+    for (let i = -1; i <= 1; i++) {
+      const claw = new THREE.Mesh(
+        new THREE.ConeGeometry(s * 0.055, s * 0.35, 4),
+        matWeaponEdge
+      );
+      claw.position.set(i * s * 0.18, s * 0.22, 0.02);
+      claw.rotation.z = i * 0.22;
+      wGroup.add(claw);
+    }
+  }
+
+  return wGroup;
 }
