@@ -498,14 +498,21 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // IndexedDB preload cannot "consume" validation before the real snapshot
   // overwrites the store.
   const prevTileRef = useRef<string>('');
+  // Guard against concurrent validateTileMonsters calls: rapid hydrateVersion
+  // increments (one per indexer snapshot) each produce a distinct tileKey that
+  // bypasses the prevTileRef dedup, launching many concurrent RPC reads that all
+  // resolve together in a burst. Only allow one validation at a time.
+  const validateInFlightRef = useRef(false);
   useEffect(() => {
     const tileKey = storeHydrated && position
       ? `${hydrateVersion}:${position.x},${position.y}`
       : '';
     if (!tileKey || tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
+    if (validateInFlightRef.current) return;
     prevTileRef.current = tileKey;
-
-    validateTileMonsters(monstersOnTile.map(m => m.id), position ?? undefined);
+    validateInFlightRef.current = true;
+    validateTileMonsters(monstersOnTile.map(m => m.id), position ?? undefined)
+      .finally(() => { validateInFlightRef.current = false; });
   }, [storeHydrated, hydrateVersion, position, monstersOnTile, validateTileMonsters]);
 
   // Clear spawn waiting state when Spawned value updates from store sync

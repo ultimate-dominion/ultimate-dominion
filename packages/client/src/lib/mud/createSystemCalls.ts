@@ -572,7 +572,21 @@ export function createSystemCalls(
 
       if (!isGhost && !inEncounter) continue;
 
-      syncMonsterSnapshot(id, { encounter, spawned });
+      if (offTile || inEncounter) {
+        // Off-tile: mob is alive on chain but at a different position — don't evict,
+        // just sync encounter/spawned state. Position was already updated by the
+        // concurrent syncMonsterPositionFromChain call above.
+        // In-encounter: mob is alive and busy — sync encounter state only.
+        syncMonsterSnapshot(id, { encounter, spawned });
+      } else {
+        // Confirmed dead (Position=0,0, Spawned=false on chain, or encounter.died).
+        // Use evictGhostMonsters which sets BOTH Spawned=false AND died=true atomically.
+        // syncMonsterSnapshot only sets Spawned=false when spawned===false from chain,
+        // missing the TOCTOU case where Spawned=true and Position=0,0 land on different
+        // RPC nodes. The died=true gate in allMonsterEntities prevents stale indexer
+        // Spawned=true events from re-animating this mob until the next snapshot sync.
+        evictGhostMonsters([id]);
+      }
 
       if (offTile) {
         console.warn(

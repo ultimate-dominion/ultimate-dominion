@@ -1494,8 +1494,9 @@ describe('createSystemCalls — validateTileMonsters', () => {
 
     await calls.validateTileMonsters([MONSTER_A, MONSTER_B]);
 
-    // Only MONSTER_B (dead) should be evicted
+    // Only MONSTER_B (dead) should be evicted — evictGhostMonsters sets both flags
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', MONSTER_B, { spawned: false });
+    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', MONSTER_B, expect.objectContaining({ died: true }));
     // MONSTER_A (alive) should NOT be evicted
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', MONSTER_A, expect.anything());
   });
@@ -1558,8 +1559,9 @@ describe('createSystemCalls — validateTileMonsters', () => {
     const calls = createSystemCalls(network);
     await calls.validateTileMonsters([MONSTER_A, MONSTER_B]);
 
-    // Only MONSTER_A (confirmed dead) should be evicted
+    // Only MONSTER_A (confirmed dead) should be evicted — evictGhostMonsters sets both flags
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', MONSTER_A, { spawned: false });
+    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', MONSTER_A, expect.objectContaining({ died: true }));
     // MONSTER_B (RPC failed) should NOT be evicted (benefit of the doubt)
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', MONSTER_B, expect.anything());
   });
@@ -1605,7 +1607,7 @@ describe('createSystemCalls — validateTileMonsters', () => {
 
   it('evicts monster when chain position is (0,0) — position was cleared by removeEntityFromBoard', async () => {
     // Mob killed: Position=(0,0), Spawned=false on chain.
-    // positionIsCleared triggers ghost eviction regardless of spawned value.
+    // positionIsCleared triggers full eviction (Spawned=false AND died=true).
     const { network } = createMockNetwork();
     const CLEARED_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000eee';
 
@@ -1622,17 +1624,21 @@ describe('createSystemCalls — validateTileMonsters', () => {
     const calls = createSystemCalls(network);
     await calls.validateTileMonsters([CLEARED_MONSTER], { x: 3, y: 5 });
 
-    // Should be evicted (either via spawned=false or positionIsCleared)
+    // evictGhostMonsters sets both Spawned=false and died=true
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', CLEARED_MONSTER, { spawned: false });
+    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', CLEARED_MONSTER, expect.objectContaining({ died: true }));
   });
 
-  it('does NOT false-evict a live monster when chain reads land on different blocks (TOCTOU guard)', async () => {
+  it('fully evicts a monster when spawned=true but position=(0,0) — TOCTOU race on chain reads', async () => {
     // Race: Spawned read → block N (spawned=true, alive) | Position read → block N+1 (position=0,0, killed).
-    // Previously this caused a false "Synced off-tile" eviction.
-    // Now positionIsCleared evicts it but does NOT log "Synced off-tile" — the monster is dead,
-    // just detected via position instead of spawned flag.
-    // This test verifies that a monster with spawned=true AND position=(0,0) is still evicted
-    // (correct — (0,0) is an impossible live-mob position) but NOT via the off-tile path.
+    // position=(0,0) is an unambiguous death signal — removeEntityFromBoard sets both
+    // Spawned=false AND Position=(0,0) atomically in the same TX. So if Position=(0,0),
+    // the mob is dead regardless of what the concurrent Spawned read returned.
+    // Previous behavior: only set Position=(0,0) in store, leaving Spawned=true — the
+    // monster would re-appear in monstersOnTile on the next indexer snapshot that
+    // hasn't delivered the Spawned=false delta yet.
+    // New behavior: call evictGhostMonsters which sets Spawned=false AND died=true,
+    // preventing re-animation via stale indexer events until the next snapshot sync.
     const { network } = createMockNetwork();
     const RACE_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000fff';
 
@@ -1650,10 +1656,10 @@ describe('createSystemCalls — validateTileMonsters', () => {
     const calls = createSystemCalls(network);
     await calls.validateTileMonsters([RACE_MONSTER], { x: 3, y: 5 });
 
-    // positionIsCleared should trigger eviction (position=0,0 is a cleared board position)
-    // The Position row should be updated to (0,0) and the monster effectively evicted
+    // Position updated to (0,0) from chain
     expect(mockSetRow).toHaveBeenCalledWith('Position', RACE_MONSTER, { x: 0, y: 0 });
-    // Spawned is NOT set to false (chain said true — we respect that; WS will correct it)
-    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', RACE_MONSTER, { spawned: false });
+    // evictGhostMonsters called: sets Spawned=false AND died=true to prevent re-animation
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', RACE_MONSTER, { spawned: false });
+    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', RACE_MONSTER, expect.objectContaining({ died: true }));
   });
 });
