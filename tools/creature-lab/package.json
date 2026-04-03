@@ -4,6 +4,8 @@
   "type": "module",
   "main": "main.js",
   "scripts": {
+    "serve": "npx serve . -p 3456 --cors",
+    "lab": "npx serve . -p 3456 --cors & sleep 1 && open http://localhost:3456/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
