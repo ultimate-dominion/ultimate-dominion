@@ -162,23 +162,24 @@
   <script type="module">
     import { renderAscii } from './ascii-renderer.js';
 
-    // Creature config: slug → { gridW, gridH, level }
+    // Creature config — use game grid dimensions for closest match to in-game look
     const CONFIGS = {
-      'dire-rat':          { gridW: 7,  gridH: 4,  level: 1  },
+      'dire-rat':          { gridW: 14, gridH: 8,  level: 1  },
       'kobold':            { gridW: 7,  gridH: 5,  level: 2  },
       'goblin':            { gridW: 7,  gridH: 7,  level: 3  },
-      'giant-spider':      { gridW: 7,  gridH: 5,  level: 4  },
-      'skeleton-creature': { gridW: 7,  gridH: 5,  level: 5  },
-      'goblin-shaman':     { gridW: 7,  gridH: 7,  level: 6  },
-      'gelatinous-ooze':   { gridW: 7,  gridH: 7,  level: 7  },
-      'bugbear':           { gridW: 7,  gridH: 7,  level: 8  },
+      'giant-spider':      { gridW: 10, gridH: 12, level: 4  },
+      'skeleton-creature': { gridW: 10, gridH: 12, level: 5  },
+      'goblin-shaman':     { gridW: 12, gridH: 11, level: 6  },
+      'gelatinous-ooze':   { gridW: 10, gridH: 14, level: 7  },
+      'bugbear':           { gridW: 10, gridH: 12, level: 8  },
       'carrion-crawler':   { gridW: 10, gridH: 13, level: 9  },
       'hook-horror':       { gridW: 14, gridH: 12, level: 10 },
     };
 
     const PREVIEW_W = 180;
     const PREVIEW_H = 140;
-    const CELL = 4;
+    const RENDER_SIZE = 420;  // render at high res, scale down for crisp thumbnails
+    const CELL = 3;           // smaller cell = more ASCII density = more detail
 
     async function renderCard(slug) {
       const card = document.querySelector(`[data-slug="${slug}"]`);
@@ -189,26 +190,30 @@
         const mod = (await import(`./${slug}.js`)).default;
         if (!mod || typeof mod.draw !== 'function') return;
 
-        const { draw, skeleton, gridW, gridH } = mod;
-        const cfg = CONFIGS[slug] || { gridW, gridH, level: 1 };
+        const { draw, skeleton } = mod;
+        const cfg = CONFIGS[slug] || { gridW: 7, gridH: 7, level: 1 };
 
-        // Scale to fit preview box
-        const scale = Math.min(PREVIEW_W / gridW, PREVIEW_H / gridH);
-        const cW = Math.round(gridW * scale * (CELL / 4));
-        const cH = Math.round(gridH * scale * (CELL / 4));
+        // Render at high resolution for crisp downscaled display
+        const cW = RENDER_SIZE;
+        const cH = Math.round(RENDER_SIZE * cfg.gridH / cfg.gridW);
+
+        // Scale down to fit preview box while preserving aspect ratio
+        const scale = Math.min(PREVIEW_W / cW, PREVIEW_H / cH);
+        const displayW = Math.round(cW * scale);
+        const displayH = Math.round(cH * scale);
 
         const canvas = document.createElement('canvas');
         canvas.width = cW;
         canvas.height = cH;
-        canvas.style.width = `${Math.min(cW, PREVIEW_W)}px`;
-        canvas.style.height = `${Math.min(cH, PREVIEW_H)}px`;
+        canvas.style.width = `${displayW}px`;
+        canvas.style.height = `${displayH}px`;
 
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, cW, cH);
 
         renderAscii(ctx, (tctx, tw, th) => draw(tctx, skeleton, tw, th),
-          0, 0, cW, cH, { cellSize: CELL, level: cfg.level, gridWidth: gridW, gridHeight: gridH });
+          0, 0, cW, cH, { cellSize: CELL, level: cfg.level, gridWidth: cfg.gridW, gridHeight: cfg.gridH });
 
         // Replace placeholder
         preview.querySelector('.placeholder')?.remove();

@@ -689,7 +689,8 @@ function render(elapsed = 0) {
     }
   }
 
-  document.getElementById('seed-display').textContent = `seed: ${currentSeed}`;
+  const sd = document.getElementById('seed-display');
+  if (sd) sd.textContent = `seed: ${currentSeed}`;
 }
 
 function animationLoop(ts) {
@@ -698,29 +699,30 @@ function animationLoop(ts) {
   rafId = requestAnimationFrame(animationLoop);
 }
 
-// Controls
-document.getElementById('reseed').addEventListener('click', () => {
-  currentSeed = Math.floor(Math.random() * 100000);
-  render(animating ? performance.now() - animStart : 0);
-});
+// Controls — only register when we're on the dire-rat standalone page
+if (typeof document !== 'undefined' && document.getElementById('seed-display')) {
+  document.getElementById('reseed').addEventListener('click', () => {
+    currentSeed = Math.floor(Math.random() * 100000);
+    render(animating ? performance.now() - animStart : 0);
+  });
 
-document.getElementById('animate').addEventListener('change', (e) => {
-  animating = e.target.checked;
-  if (animating) {
-    animStart = performance.now();
-    rafId = requestAnimationFrame(animationLoop);
-  } else if (rafId) {
-    cancelAnimationFrame(rafId);
-    render(0);
+  document.getElementById('animate').addEventListener('change', (e) => {
+    animating = e.target.checked;
+    if (animating) {
+      animStart = performance.now();
+      rafId = requestAnimationFrame(animationLoop);
+    } else if (rafId) {
+      cancelAnimationFrame(rafId);
+      render(0);
+    }
+  });
+
+  for (const id of ['canvas-size', 'cell-size', 'show-grid', 'show-debug']) {
+    document.getElementById(id).addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
   }
-});
 
-for (const id of ['canvas-size', 'cell-size', 'show-grid', 'show-debug']) {
-  document.getElementById(id).addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+  render();
 }
-
-// Initial render
-if (typeof document !== 'undefined') render();
 
 // HMR
 if (import.meta.hot) {
