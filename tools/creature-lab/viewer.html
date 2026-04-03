@@ -429,15 +429,20 @@
       if (!currentMod) return;
       const { draw, skeleton, gridW, gridH } = currentMod;
 
-      // FPS tracking
+      // FPS tracking + mixer tick
       const now = performance.now();
-      if (animating && fpsFrameTs > 0) {
-        const dt = now - fpsFrameTs;
-        if (dt > 0) document.getElementById('fps-display').textContent = `${Math.round(1000 / dt)}fps`;
+      const frameDt = fpsFrameTs > 0 ? now - fpsFrameTs : 0;
+      if (animating && frameDt > 0) {
+        document.getElementById('fps-display').textContent = `${Math.round(1000 / frameDt)}fps`;
       }
       fpsFrameTs = now;
 
       const use3D = document.getElementById('use-3d').checked && !!currentBundle3D;
+
+      // Tick 3D AnimationMixer every frame so idle/attack/hit/death clips actually play
+      if (use3D && currentBundle3D?.bundle?.mixer) {
+        currentBundle3D.bundle.mixer.update(frameDt / 1000);
+      }
       const useShape = document.getElementById('use-shape').checked;
 
       const size = 512;

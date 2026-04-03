@@ -6,25 +6,25 @@ import { makeThreeDrawFn } from './three-bridge.js';
 export { drawGoblinClean, goblinSkeleton } from './goblin.js';
 
 // --------------------------------------------------------------------------
-// Toon palette — matches goblin.js color bands
-//   skinShadow [32,40,16]     lum 0.117
-//   skinDark   [58,72,28]     lum 0.193
-//   leatherDark[62,44,28]     lum 0.162
-//   skinMid    [88,108,42]    lum 0.330
-//   leatherMid [92,68,42]     lum 0.270
-//   skinLight  [118,142,58]   lum 0.484
-//   leatherLight[118,90,56]   lum 0.353
-//   eyeOuter   [255,160,20]   lum 0.645
-//   teethColor [210,200,175]  lum 0.790
+// Toon palette — goblin green skin is the dominant read.
+// Index ordering matters: creature-builder assigns matMid to body segments
+// and far-limbs, so index 2 MUST be a green skin tone not leather.
+//   0 DEEP    lum 0.05  very dark green-black
+//   1 SHADOW  lum 0.12  dark green (skinShadow)
+//   2 MID     lum 0.22  mid-dark green (skinDark) — body segments, far limbs
+//   3 —       lum 0.35  mid green (skinMid) — toon gradient fill
+//   4 LIGHT   lum 0.50  bright green (skinLight) — head, belly, near limbs
+//   5 HI      lum 0.65  amber-orange (eyes) — glow trigger
+//   6 RIM     lum 0.80  near-white (teeth, highlight) — strong glow
 // --------------------------------------------------------------------------
 export const GOBLIN_PALETTE = [
-  { r: 32,  g: 40,  b: 16  },  // 0 DEEP
-  { r: 58,  g: 72,  b: 28  },  // 1 SHADOW
-  { r: 62,  g: 44,  b: 28  },  // 2 LEATHER (warm mid)
-  { r: 88,  g: 108, b: 42  },  // 3 MID
-  { r: 118, g: 142, b: 58  },  // 4 LIGHT
-  { r: 255, g: 160, b: 20  },  // 5 HI (eye glow)
-  { r: 210, g: 200, b: 175 },  // 6 RIM
+  { r: 18,  g: 26,  b: 8   },  // 0 DEEP — near black, green tint
+  { r: 32,  g: 40,  b: 16  },  // 1 SHADOW — skinShadow dark green
+  { r: 58,  g: 72,  b: 28  },  // 2 MID — skinDark mid-dark green ← was leather-brown
+  { r: 88,  g: 108, b: 42  },  // 3 — skinMid (toon gradient fill)
+  { r: 118, g: 142, b: 58  },  // 4 LIGHT — skinLight bright green
+  { r: 255, g: 160, b: 20  },  // 5 HI — eye glow orange
+  { r: 210, g: 200, b: 175 },  // 6 RIM — teeth / near-white highlights
 ];
 
 export const GRID_W = 7;
