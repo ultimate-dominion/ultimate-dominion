@@ -6,10 +6,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; min-height: 100vh; display: flex; flex-direction: column; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
     /* Header */
-    .header { padding: 8px 16px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; background: #0a0a0a; }
+    .header { padding: 8px 16px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .back { color: #555; text-decoration: none; font-size: 11px; padding: 3px 8px; border: 1px solid #2a2a2a; }
     .back:hover { color: #888; border-color: #444; }
     .nav-btn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #666; padding: 3px 10px; cursor: pointer; font-family: inherit; font-size: 16px; line-height: 1; }
@@ -20,22 +20,21 @@
     .badge-wip  { background: #2a2a1a; color: #aa8; border: 1px solid #3a3a2a; }
     .badge-todo { background: #1a1a1a; color: #444; border: 1px solid #222; }
     select#creature-select { background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 11px; font-family: inherit; padding: 3px 6px; }
-    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-    .seed-btn { background: #222; border: 1px solid #333; color: #aaa; padding: 3px 10px; cursor: pointer; font-family: inherit; font-size: 11px; }
-    .seed-btn:hover { background: #333; }
-    .open-link { color: #555; text-decoration: none; font-size: 10px; }
-    .open-link:hover { color: #888; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .animate-label { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; cursor: pointer; }
+    .status-msg { font-size: 10px; color: #555; }
+    .status-msg.error { color: #844; }
 
-    /* Main layout — 2×2 panel grid + right strip */
-    .main { display: grid; grid-template-columns: 1fr 1fr 200px; grid-template-rows: auto auto; }
-    .panel { padding: 12px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; min-height: 280px; }
-    .panel-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; flex-shrink: 0; }
-    canvas { background: #000; max-width: 100%; }
+    /* Main layout — 2×2 panel grid + right strip, fills remaining viewport */
+    .main { display: grid; grid-template-columns: 1fr 1fr 200px; grid-template-rows: 1fr 1fr; flex: 1; min-height: 0; overflow: hidden; }
+    .panel { overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
+    .panel-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; flex-shrink: 0; }
+    canvas { display: block; background: #000; max-width: 100%; max-height: 100%; }
 
     /* Right strip spans both rows */
-    .ref-strip { grid-row: 1 / 3; width: 200px; border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
-    .ref-section { padding: 10px; border-bottom: 1px solid #1a1a1a; }
-    .ref-section:last-child { border-bottom: none; flex: 1; overflow-y: auto; }
+    .ref-strip { grid-row: 1 / 3; grid-column: 3; overflow-y: auto; border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; }
+    .ref-section { padding: 10px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; }
+    .ref-section.history-section { flex: 1; overflow-y: auto; }
     .ref-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
     .ref-img { width: 100%; border: 1px solid #222; display: block; }
     .goals-text { font-size: 9px; color: #444; line-height: 1.7; }
@@ -49,13 +48,6 @@
     .history-meta { font-size: 8px; color: #444; padding: 3px 5px; display: flex; justify-content: space-between; }
     .history-meta .v { color: #666; }
     .history-meta .note { color: #3a3a3a; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
-
-    /* Controls */
-    .controls { padding: 5px 16px; border-top: 1px solid #222; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; flex-shrink: 0; position: sticky; bottom: 0; z-index: 20; background: #0a0a0a; }
-    .controls label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #666; cursor: pointer; }
-    .controls select { background: #1a1a1a; border: 1px solid #333; color: #aaa; font-size: 11px; font-family: inherit; padding: 2px 4px; }
-    .loading-msg { color: #555; font-size: 10px; margin-left: 8px; }
-    .error-msg { color: #844; font-size: 10px; margin-left: 8px; }
 
     /* Lightbox */
     .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 100; align-items: center; justify-content: center; cursor: pointer; }
@@ -73,9 +65,8 @@
     <span class="badge" id="status-badge"></span>
     <select id="creature-select"></select>
     <div class="header-right">
-      <a class="open-link" id="open-link" href="#">↗ solo</a>
-      <button class="seed-btn" id="reseed">Reseed</button>
-      <label style="color:#555;font-size:11px;display:flex;align-items:center;gap:4px;">
+      <span id="status-msg" class="status-msg"></span>
+      <label class="animate-label">
         <input type="checkbox" id="animate" style="accent-color:#555"> Animate
       </label>
     </div>
@@ -112,34 +103,13 @@
         <div id="goals-text" class="goals-text"></div>
       </div>
       <!-- Iterations -->
-      <div class="ref-section" style="flex:1;overflow-y:auto;min-height:0;">
+      <div class="ref-section history-section">
         <div class="ref-label" id="history-label">Iterations</div>
         <div id="history-list" class="history-list">
-          <div class="history-empty" id="history-empty">Run render-creature.mjs with --save to capture versions</div>
+          <div class="history-empty" id="history-empty">Run render-creature.mjs --save to capture versions</div>
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="controls">
-    <label>Size:
-      <select id="canvas-size">
-        <option value="400">400</option>
-        <option value="512" selected>512</option>
-        <option value="640">640</option>
-      </select>
-    </label>
-    <label>Cell:
-      <select id="cell-size">
-        <option value="3">3px</option>
-        <option value="4" selected>4px</option>
-        <option value="5">5px</option>
-        <option value="6">6px</option>
-      </select>
-    </label>
-    <label><input type="checkbox" id="show-grid"> Grid</label>
-    <label><input type="checkbox" id="show-debug" checked> Debug</label>
-    <span id="status-text" class="loading-msg"></span>
   </div>
 
   <!-- Lightbox -->
@@ -254,7 +224,6 @@
       empty.style.display = 'none';
       label.textContent = `Iterations (${versions.length})`;
 
-      // Show newest first
       for (const ver of [...versions].reverse()) {
         const item = document.createElement('div');
         item.className = 'history-item';
@@ -304,7 +273,6 @@
       document.title = `Creature Lab — ${c.name}`;
       document.getElementById('creature-name').textContent = c.name;
       document.getElementById('creature-select').value = c.slug;
-      document.getElementById('open-link').href = `${c.slug}.html`;
 
       const badge = document.getElementById('status-badge');
       badge.textContent = c.status;
@@ -333,59 +301,49 @@
 
       history.replaceState(null, '', `?creature=${c.slug}`);
 
-      const statusText = document.getElementById('status-text');
-      statusText.textContent = 'loading…';
-      statusText.className = 'loading-msg';
+      const statusMsg = document.getElementById('status-msg');
+      statusMsg.textContent = 'loading…';
+      statusMsg.className = 'status-msg';
       currentMod = null;
 
-      // Clear canvases
       for (const id of ['skel-raw', 'next-ascii', 'next-raw', 'game-ascii']) {
         const cv = document.getElementById(id);
         cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
       }
 
       try {
-        // No cache-buster — use bare import path
         const mod = await import(`./${c.slug}.js`);
         currentMod = mod.default;
         if (!currentMod || typeof currentMod.draw !== 'function') {
           throw new Error('module has no default export with draw()');
         }
-        statusText.textContent = '';
+        statusMsg.textContent = '';
         render();
       } catch (e) {
         console.error('Failed to load', c.slug, e);
-        statusText.textContent = `⚠ ${e.message}`;
-        statusText.className = 'error-msg';
+        statusMsg.textContent = `⚠ ${e.message}`;
+        statusMsg.className = 'status-msg error';
       }
 
-      // Load history async (don't block render)
       renderHistory(c.slug);
     }
 
     // -------------------------------------------------------------------------
-    // Render
+    // Render — fixed quality settings, no controls bar
     // -------------------------------------------------------------------------
     function render(elapsed = 0) {
       if (!currentMod) return;
       const { draw, skeleton, gridW, gridH } = currentMod;
 
-      const size = parseInt(document.getElementById('canvas-size').value, 10);
-      const cellSize = parseInt(document.getElementById('cell-size').value, 10);
-      const showGrid = document.getElementById('show-grid').checked;
-      const showDebug = document.getElementById('show-debug').checked;
-
+      const size = 512;
+      const cellSize = 3;
       const canvasW = size;
       const canvasH = Math.round(size * gridH / gridW);
-      const maxDisplay = 520;
-      const displayW = `${Math.min(canvasW, maxDisplay)}px`;
-      const displayH = `${Math.min(canvasH, Math.round(maxDisplay * gridH / gridW))}px`;
       const asciiOpts = { elapsed, cellSize, level: CREATURES[currentIndex].level, gridWidth: gridW, gridHeight: gridH };
 
-      // Skeleton panel
+      // Skeleton
       const c1 = document.getElementById('skel-raw');
       c1.width = canvasW; c1.height = canvasH;
-      c1.style.width = displayW; c1.style.height = displayH;
       const ctx1 = c1.getContext('2d');
       ctx1.fillStyle = '#000'; ctx1.fillRect(0, 0, canvasW, canvasH);
       if (skeleton.limbs) {
@@ -397,40 +355,33 @@
         for (let i = 1; i < skeleton.limbs.length; i += 2)
           drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(92,74,142)');
       }
-      if (showDebug) drawDebugSkeleton(ctx1, skeleton, canvasW, canvasH);
+      drawDebugSkeleton(ctx1, skeleton, canvasW, canvasH);
 
-      // ASCII panel
+      // ASCII
       const c2 = document.getElementById('next-ascii');
       c2.width = canvasW; c2.height = canvasH;
-      c2.style.width = displayW; c2.style.height = displayH;
       const ctx2 = c2.getContext('2d');
       ctx2.fillStyle = '#000'; ctx2.fillRect(0, 0, canvasW, canvasH);
       renderAscii(ctx2, (tctx, tw, th) => draw(tctx, skeleton, tw, th), 0, 0, canvasW, canvasH, asciiOpts);
 
-      // Painted panel
+      // Painted
       const c3 = document.getElementById('next-raw');
       c3.width = canvasW; c3.height = canvasH;
-      c3.style.width = displayW; c3.style.height = displayH;
       const ctx3 = c3.getContext('2d');
       ctx3.fillStyle = '#000'; ctx3.fillRect(0, 0, canvasW, canvasH);
       draw(ctx3, skeleton, canvasW, canvasH);
 
-      // Game panel — game grid dimensions + atmospheric glow
+      // Game view — game grid dims + atmospheric glow
       const cr = CREATURES[currentIndex];
       const gW = cr.gameGrid.w;
       const gH = cr.gameGrid.h;
       const gameCanvasH = Math.round(size * gH / gW);
-      const displayGameH = `${Math.min(gameCanvasH, Math.round(maxDisplay * gH / gW))}px`;
-      const gameAsciiOpts = { elapsed, cellSize, level: cr.level, gridWidth: gW, gridHeight: gH };
-
       const c4 = document.getElementById('game-ascii');
       c4.width = canvasW; c4.height = gameCanvasH;
-      c4.style.width = displayW; c4.style.height = displayGameH;
       const ctx4 = c4.getContext('2d');
       ctx4.fillStyle = '#000'; ctx4.fillRect(0, 0, canvasW, gameCanvasH);
-      renderAscii(ctx4, (tctx, tw, th) => draw(tctx, skeleton, tw, th), 0, 0, canvasW, gameCanvasH, gameAsciiOpts);
-
-      // Atmospheric glow overlay (matches game renderer)
+      renderAscii(ctx4, (tctx, tw, th) => draw(tctx, skeleton, tw, th), 0, 0, canvasW, gameCanvasH,
+        { elapsed, cellSize, level: cr.level, gridWidth: gW, gridHeight: gH });
       const [atmR, atmG, atmB, atmI = 0.10] = cr.atmosphere;
       const glowCX = canvasW / 2;
       const glowCY = gameCanvasH * 0.42;
@@ -442,23 +393,6 @@
       grad.addColorStop(1,    'rgba(0,0,0,0)');
       ctx4.fillStyle = grad;
       ctx4.fillRect(0, 0, canvasW, gameCanvasH);
-
-      if (showGrid) {
-        for (const canvas of [c1, c2, c3]) {
-          const gctx = canvas.getContext('2d');
-          gctx.strokeStyle = 'rgba(255,255,255,0.06)'; gctx.lineWidth = 1;
-          const step = canvasW / 10;
-          for (let x = 0; x <= canvasW; x += step) { gctx.beginPath(); gctx.moveTo(x, 0); gctx.lineTo(x, canvasH); gctx.stroke(); }
-          for (let y = 0; y <= canvasH; y += step) { gctx.beginPath(); gctx.moveTo(0, y); gctx.lineTo(canvasW, y); gctx.stroke(); }
-        }
-        // Game panel grid uses its own dims
-        const g4ctx = c4.getContext('2d');
-        g4ctx.strokeStyle = 'rgba(255,255,255,0.06)'; g4ctx.lineWidth = 1;
-        const gStep = canvasW / gW;
-        for (let x = 0; x <= canvasW; x += gStep) { g4ctx.beginPath(); g4ctx.moveTo(x, 0); g4ctx.lineTo(x, gameCanvasH); g4ctx.stroke(); }
-        const hStep = gameCanvasH / gH;
-        for (let y = 0; y <= gameCanvasH; y += hStep) { g4ctx.beginPath(); g4ctx.moveTo(0, y); g4ctx.lineTo(canvasW, y); g4ctx.stroke(); }
-      }
     }
 
     function animationLoop(ts) {
@@ -467,17 +401,12 @@
       rafId = requestAnimationFrame(animationLoop);
     }
 
-    // Controls
-    document.getElementById('reseed').addEventListener('click', () => render(animating ? performance.now() - animStart : 0));
     document.getElementById('animate').addEventListener('change', (e) => {
       animating = e.target.checked;
       if (animating) { animStart = performance.now(); rafId = requestAnimationFrame(animationLoop); }
       else { if (rafId) cancelAnimationFrame(rafId); render(0); }
     });
-    for (const id of ['canvas-size', 'cell-size', 'show-grid', 'show-debug'])
-      document.getElementById(id).addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
 
-    // Navigation
     document.getElementById('prev').addEventListener('click', () => loadCreature(currentIndex - 1));
     document.getElementById('next').addEventListener('click', () => loadCreature(currentIndex + 1));
     document.getElementById('creature-select').addEventListener('change', (e) => {
