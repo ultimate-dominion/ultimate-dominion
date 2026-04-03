@@ -441,26 +441,26 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
     hookLight[0], hookLight[1], hookLight[2]);
   ctx.fillStyle = farHookGrad;
   ctx.beginPath();
-  // outer edge (convex back of blade)
+  // outer edge — clamp top to y≥0.03 so the hook stays in frame
   ctx.moveTo(w * 0.82, h * 0.22);
-  ctx.bezierCurveTo(w * 0.90, h * 0.18, w * 0.98, h * 0.12, w * 0.97, h * 0.03);
-  ctx.bezierCurveTo(w * 0.96, h * -0.04, w * 0.85, h * -0.05, w * 0.66, h * 0.01);
+  ctx.bezierCurveTo(w * 0.90, h * 0.18, w * 0.97, h * 0.12, w * 0.96, h * 0.05);
+  ctx.bezierCurveTo(w * 0.96, h * 0.03, w * 0.86, h * 0.03, w * 0.68, h * 0.05);
   // sharp tip
-  ctx.lineTo(w * 0.68, h * 0.05);
-  // inner edge (concave cutting edge) — closely parallel, THIN blade
-  ctx.bezierCurveTo(w * 0.82, h * 0.03, w * 0.90, h * 0.04, w * 0.92, h * 0.10);
-  ctx.bezierCurveTo(w * 0.93, h * 0.16, w * 0.86, h * 0.20, w * 0.80, h * 0.22);
+  ctx.lineTo(w * 0.70, h * 0.09);
+  // inner edge — closely parallel, THIN blade
+  ctx.bezierCurveTo(w * 0.82, h * 0.07, w * 0.90, h * 0.08, w * 0.92, h * 0.12);
+  ctx.bezierCurveTo(w * 0.93, h * 0.17, w * 0.86, h * 0.20, w * 0.80, h * 0.22);
   ctx.closePath();
   ctx.fill();
-  // Serrations on inner (concave) edge
+  // Serrations
   ctx.fillStyle = rgba(hookDark, 0.85);
   for (let t = 0.1; t < 1.0; t += 0.22) {
-    const sx = 0.80 + t * (0.68 - 0.80);
-    const sy = 0.22 + t * (0.05 - 0.22);
+    const sx = 0.80 + t * (0.70 - 0.80);
+    const sy = 0.22 + t * (0.09 - 0.22);
     ctx.beginPath();
     ctx.moveTo(w * sx, h * sy);
-    ctx.lineTo(w * (sx - 0.016), h * (sy + 0.025));
-    ctx.lineTo(w * (sx + 0.010), h * (sy + 0.018));
+    ctx.lineTo(w * (sx - 0.016), h * (sy + 0.022));
+    ctx.lineTo(w * (sx + 0.010), h * (sy + 0.016));
     ctx.closePath();
     ctx.fill();
   }
@@ -469,8 +469,8 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
   ctx.lineWidth = Math.max(1.5, w * 0.005);
   ctx.beginPath();
   ctx.moveTo(w * 0.82, h * 0.22);
-  ctx.bezierCurveTo(w * 0.90, h * 0.18, w * 0.97, h * 0.12, w * 0.96, h * 0.03);
-  ctx.bezierCurveTo(w * 0.95, h * -0.03, w * 0.84, h * -0.04, w * 0.67, h * 0.02);
+  ctx.bezierCurveTo(w * 0.90, h * 0.18, w * 0.96, h * 0.12, w * 0.95, h * 0.05);
+  ctx.bezierCurveTo(w * 0.95, h * 0.03, w * 0.85, h * 0.03, w * 0.69, h * 0.05);
   ctx.stroke();
   // Arm connection nub
   ctx.fillStyle = bodyGrad3(ctx, w * 0.82, h * 0.20, w * 0.05,
@@ -486,25 +486,25 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
     hookDark[0], hookDark[1], hookDark[2],
     hookLight[0], hookLight[1], hookLight[2]);
   ctx.beginPath();
-  // outer edge (convex back of blade)
+  // outer edge — clamp left to x≥0.03 so hook stays in frame
   ctx.moveTo(w * 0.20, h * 0.36);
-  ctx.bezierCurveTo(w * 0.08, h * 0.28, w * -0.02, h * 0.34, w * -0.02, h * 0.50);
-  ctx.bezierCurveTo(w * -0.02, h * 0.60, w * 0.06, h * 0.68, w * 0.16, h * 0.68);
+  ctx.bezierCurveTo(w * 0.09, h * 0.28, w * 0.03, h * 0.34, w * 0.03, h * 0.50);
+  ctx.bezierCurveTo(w * 0.03, h * 0.60, w * 0.08, h * 0.68, w * 0.18, h * 0.68);
   // sharp tip
-  ctx.lineTo(w * 0.18, h * 0.64);
-  // inner edge (concave cutting edge) — closely parallel, THIN blade
-  ctx.bezierCurveTo(w * 0.10, h * 0.62, w * 0.06, h * 0.54, w * 0.06, h * 0.46);
-  ctx.bezierCurveTo(w * 0.06, h * 0.36, w * 0.12, h * 0.32, w * 0.20, h * 0.40);
+  ctx.lineTo(w * 0.20, h * 0.64);
+  // inner edge — closely parallel, THIN blade
+  ctx.bezierCurveTo(w * 0.12, h * 0.62, w * 0.09, h * 0.54, w * 0.09, h * 0.46);
+  ctx.bezierCurveTo(w * 0.09, h * 0.36, w * 0.13, h * 0.32, w * 0.20, h * 0.40);
   ctx.closePath();
   ctx.fill();
   // Serrations on inner (concave) cutting edge
   ctx.fillStyle = rgba(hookDark, 0.85);
   for (let t = 0.1; t < 1.0; t += 0.22) {
-    const sx = 0.20 + t * (0.18 - 0.20);
+    const sx = 0.20 + t * (0.20 - 0.20);
     const sy = 0.40 + t * (0.64 - 0.40);
     ctx.beginPath();
     ctx.moveTo(w * sx, h * sy);
-    ctx.lineTo(w * (sx + 0.022), h * (sy + 0.012));
+    ctx.lineTo(w * (sx + 0.022), h * (sy + 0.010));
     ctx.lineTo(w * (sx + 0.014), h * (sy - 0.016));
     ctx.closePath();
     ctx.fill();
@@ -514,8 +514,8 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
   ctx.lineWidth = Math.max(1.5, w * 0.005);
   ctx.beginPath();
   ctx.moveTo(w * 0.20, h * 0.36);
-  ctx.bezierCurveTo(w * 0.08, h * 0.28, w * -0.01, h * 0.34, w * -0.01, h * 0.50);
-  ctx.bezierCurveTo(w * -0.01, h * 0.60, w * 0.07, h * 0.67, w * 0.16, h * 0.67);
+  ctx.bezierCurveTo(w * 0.09, h * 0.28, w * 0.04, h * 0.34, w * 0.04, h * 0.50);
+  ctx.bezierCurveTo(w * 0.04, h * 0.60, w * 0.09, h * 0.67, w * 0.18, h * 0.67);
   ctx.stroke();
   // Arm connection nub
   ctx.fillStyle = bodyGrad3(ctx, w * 0.16, h * 0.40, w * 0.05,
