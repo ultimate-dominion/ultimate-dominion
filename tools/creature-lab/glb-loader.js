@@ -18,24 +18,33 @@ import { makeCreatureCamera, makeThreeDrawFn } from './three-bridge.js';
 // to our standard clip names (idle / attack / hit / death / walk / block).
 const CLIP_NAME_MAP = [
   // Standard names first — most packs use these
-  { keys: ['idle', 'breathing', 'breath', 'stand'],       target: 'idle'   },
+  { keys: ['idle', 'breathing', 'breath', 'stand',
+            'floating'],                                    target: 'idle'   },
   { keys: ['attack', 'swing', 'bite', 'slash', 'strike',
             'chop', 'spellcast', 'cast', 'shoot', 'stab',
-            'punch', 'kick', 'throw'],                     target: 'attack' },
-  { keys: ['hit', 'hurt', 'damage', 'impact', 'flinch'],  target: 'hit'    },
+            'punch', 'kick', 'throw', 'headbutt', 'weapon'], target: 'attack' },
+  { keys: ['hit', 'hurt', 'damage', 'impact', 'flinch',
+            'hitrecieve', 'hitreact'],                      target: 'hit'    },
   { keys: ['death', 'die', 'dead', 'fall'],                target: 'death'  },
-  { keys: ['walk', 'run', 'move', 'crawl'],                target: 'walk'   },
+  { keys: ['walk', 'run', 'move', 'crawl', 'fly', 'swim'], target: 'walk'   },
   { keys: ['block', 'guard', 'parry', 'defend'],           target: 'block'  },
-  // KayKit skeleton-specific: awaken = idle (dormant pose / rise-from-dead)
+  // KayKit skeleton-specific: awaken = idle
   { keys: ['awaken', 'inactive', 'spawn'],                 target: 'idle'   },
 ];
 
+// Strip common armature-prefix conventions before mapping.
+// Quaternius: "CharacterArmature|Idle" → "Idle"
+// Mixamo:     "mixamo.com/Idle"        → "Idle"
+function stripArmaturePrefix(name) {
+  return name.replace(/^[^|]+\|/, '').replace(/^mixamo\.com\//, '');
+}
+
 function normaliseClipName(rawName) {
-  const lower = rawName.toLowerCase();
+  const lower = stripArmaturePrefix(rawName).toLowerCase();
   for (const { keys, target } of CLIP_NAME_MAP) {
     if (keys.some(k => lower.includes(k))) return target;
   }
-  return rawName; // keep original if no match
+  return stripArmaturePrefix(rawName); // clean display name if no match
 }
 
 // --------------------------------------------------------------------------
@@ -176,14 +185,15 @@ export async function loadGLBCreature(url, gridW, gridH, threeRenderer, opts = {
   const clips  = {};
   const seenTargets = new Set();
   gltf.animations.forEach(clip => {
-    const target = normaliseClipName(clip.name);
+    const target   = normaliseClipName(clip.name);   // 'idle' / 'attack' / etc., or stripped display name
+    const stripped = stripArmaturePrefix(clip.name); // 'Idle', 'Punch', etc.
     // First clip wins for each target name
     if (!seenTargets.has(target)) {
       clips[target] = clip;
       seenTargets.add(target);
     }
-    // Also store by original name for explicit access
-    clips[clip.name] = clip;
+    // Also store by stripped name for explicit access via dropdown
+    if (stripped !== target) clips[stripped] = clip;
   });
 
   // Build actions
