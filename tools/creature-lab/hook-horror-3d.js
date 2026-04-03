@@ -34,6 +34,7 @@ export const GRID_H = 12;
 // Head up roaring, wide stance
 // --------------------------------------------------------------------------
 export const HOOK_HORROR_3D_SPEC = {
+  rig: 'biped',
   palette: HOOK_HORROR_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

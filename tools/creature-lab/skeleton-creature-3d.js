@@ -31,6 +31,7 @@ export const GRID_H = 5;
 // Skeleton 3D spec — undead warrior mid-sword-swing, forward lean
 // --------------------------------------------------------------------------
 export const SKELETON_CREATURE_3D_SPEC = {
+  rig: 'biped',
   palette: SKELETON_CREATURE_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

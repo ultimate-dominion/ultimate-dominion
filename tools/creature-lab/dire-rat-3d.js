@@ -32,6 +32,7 @@ export const GRID_H = 4;
 // Dire Rat 3D spec — ground-hugging 3/4 profile, stubby legs, long tail
 // --------------------------------------------------------------------------
 export const DIRE_RAT_3D_SPEC = {
+  rig: 'quadruped',
   palette: DIRE_RAT_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

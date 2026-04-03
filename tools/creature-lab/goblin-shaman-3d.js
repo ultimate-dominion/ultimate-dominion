@@ -34,6 +34,7 @@ export const GRID_H = 7;
 // Goblin Shaman 3D spec — hunched caster, staff extended upward
 // --------------------------------------------------------------------------
 export const GOBLIN_SHAMAN_3D_SPEC = {
+  rig: 'biped',
   palette: GOBLIN_SHAMAN_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

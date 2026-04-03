@@ -45,6 +45,7 @@ export const GRID_H = 8;
 // Basilisk 3D spec — coordinates lifted from basiliskSkeleton + draw data
 // --------------------------------------------------------------------------
 export const BASILISK_3D_SPEC = {
+  rig: 'quadruped',
   palette: BASILISK_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

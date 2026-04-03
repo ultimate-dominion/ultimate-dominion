@@ -35,6 +35,7 @@ export const GRID_H = 7;
 // Bugbear 3D spec — massive hulk, morningstar at side, far arm reaching hard left
 // --------------------------------------------------------------------------
 export const BUGBEAR_3D_SPEC = {
+  rig: 'biped',
   palette: BUGBEAR_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

@@ -33,6 +33,7 @@ export const GRID_H = 5;
 // Kobold 3D spec — extreme crouch, lunging forward, spear arm extended
 // --------------------------------------------------------------------------
 export const KOBOLD_3D_SPEC = {
+  rig: 'biped',
   palette: KOBOLD_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

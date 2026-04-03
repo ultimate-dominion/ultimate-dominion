@@ -33,6 +33,7 @@ export const GRID_H = 7;
 // Body spine is a single center node representing the blob mass
 // --------------------------------------------------------------------------
 export const GELATINOUS_OOZE_3D_SPEC = {
+  rig: 'serpentine',
   palette: GELATINOUS_OOZE_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

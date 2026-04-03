@@ -35,6 +35,7 @@ export const GRID_H = 13;
 // are as defined in the export — the builder handles orientation.
 // --------------------------------------------------------------------------
 export const CARRION_CRAWLER_3D_SPEC = {
+  rig: 'serpentine',
   palette: CARRION_CRAWLER_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,

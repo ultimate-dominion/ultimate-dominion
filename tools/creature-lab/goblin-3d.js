@@ -34,9 +34,24 @@ export const GRID_H = 7;
 // Goblin 3D spec — squat barrel-chested, axe raised overhead, wide stance
 // --------------------------------------------------------------------------
 export const GOBLIN_3D_SPEC = {
+  rig: 'biped',
   palette: GOBLIN_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,
+
+  // Per-part color overrides
+  skinColor:   [88, 108, 42],   // skinMid green — head, near limbs
+  armorColor:  [42, 30, 18],    // dark leather — body, far limbs
+  weaponColor: [105, 98, 85],   // aged iron axe head
+  // weaponEdge uses palette RIM [210, 200, 175] — bright glint on cutting edge
+
+  weapons: [
+    {
+      type: 'axe',
+      hand: 'near',   // attaches to the first 'near' limb tip (raised arm)
+      size: 0.175,    // world-unit reach (handle length)
+    },
+  ],
 
   body: {
     spine: [

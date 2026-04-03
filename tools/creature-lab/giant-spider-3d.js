@@ -34,6 +34,7 @@ export const GRID_H = 5;
 // Giant Spider 3D spec — 8 legs (4 near + 4 far), large abdomen, no head section
 // --------------------------------------------------------------------------
 export const GIANT_SPIDER_3D_SPEC = {
+  rig: 'quadruped',
   palette: GIANT_SPIDER_PALETTE,
   gridW: GRID_W,
   gridH: GRID_H,
