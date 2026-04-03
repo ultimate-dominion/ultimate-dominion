@@ -89,6 +89,9 @@
         </select>
       </label>
       <label class="animate-label">
+        <input type="checkbox" id="full-chars" style="accent-color:#555"> Full chars
+      </label>
+      <label class="animate-label">
         <input type="checkbox" id="animate" style="accent-color:#555"> Animate
       </label>
     </div>
@@ -381,7 +384,15 @@
       const canvasH = Math.round(size * gridH / gridW);
       const selectedPalette = document.getElementById('palette-select').value;
       const charPalette = PALETTES[selectedPalette] || PALETTES.default;
-      const asciiOpts = { elapsed, cellSize, level: CREATURES[currentIndex].level, gridWidth: gridW, gridHeight: gridH, charPalette };
+      const fullChars = document.getElementById('full-chars').checked;
+      const asciiOpts = {
+        elapsed, cellSize,
+        level: CREATURES[currentIndex].level,
+        gridWidth: gridW, gridHeight: gridH,
+        charPalette,
+        enableHalfBlock: !fullChars,
+        charDensityFloor: fullChars ? 0.08 : 0.30,
+      };
 
       // Skeleton
       const c1 = document.getElementById('skel-raw');
@@ -474,6 +485,7 @@
     });
     document.getElementById('palette-select').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
     document.getElementById('cell-size').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+    document.getElementById('full-chars').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
     document.addEventListener('keydown', (e) => {
       if (lightbox.classList.contains('active')) return;
       if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
