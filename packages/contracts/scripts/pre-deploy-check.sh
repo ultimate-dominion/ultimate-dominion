@@ -79,6 +79,23 @@ echo "  Deployer:    $(cast wallet address --private-key "${PRIVATE_KEY}" 2>/dev
 echo "===================="
 echo ""
 
+# ── Production: reject dirty working tree ──
+# Incident 2026-04-03: deploying from uncommitted state baked stale codegen
+# into system bytecodes, breaking all on-chain systems for days.
+if [ "${ENV_LABEL}" = "production" ]; then
+  if [ -n "$(git diff --name-only HEAD -- packages/contracts/)" ]; then
+    echo ""
+    echo "FATAL: Dirty working tree detected in packages/contracts/."
+    echo ""
+    echo "  Production deploys must come from committed code."
+    echo "  Uncommitted changes risk deploying stale or partial bytecodes."
+    echo ""
+    echo "  Commit your changes first, then re-run deploy:mainnet."
+    echo ""
+    exit 1
+  fi
+fi
+
 # ── Verify the world exists on-chain ──
 CODE=$(cast code "${WORLD_ADDRESS}" --rpc-url "${RPC_URL}" 2>/dev/null || echo "0x")
 if [ "${CODE}" = "0x" ] || [ -z "${CODE}" ]; then
