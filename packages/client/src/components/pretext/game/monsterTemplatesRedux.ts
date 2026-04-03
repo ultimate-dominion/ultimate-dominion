@@ -257,6 +257,14 @@ function bodyGrad3(
   return g;
 }
 
+function rgb(parts: number[]) {
+  return `rgb(${parts.join(',')})`;
+}
+
+function rgba(parts: number[], alpha: number) {
+  return `rgba(${parts.join(',')},${alpha})`;
+}
+
 const DIRE_RAT_SKELETON: Skeleton = {
   spine: [
     { id: 'snout',   x: 0.10, y: 0.84, radius: 0.025 },
@@ -1627,6 +1635,403 @@ function drawBugbearRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
   }
 }
 
+const CARRION_CRAWLER_SKELETON: Skeleton = {
+  spine: [
+    { id: 'snout', x: 0.80, y: 0.25, radius: 0.050 },
+    { id: 'head', x: 0.72, y: 0.23, radius: 0.100 },
+    { id: 'neck', x: 0.66, y: 0.34, radius: 0.116 },
+    { id: 'chest', x: 0.58, y: 0.46, radius: 0.134 },
+    { id: 'mid', x: 0.47, y: 0.58, radius: 0.148 },
+    { id: 'rump', x: 0.35, y: 0.69, radius: 0.156 },
+    { id: 'tail', x: 0.24, y: 0.79, radius: 0.144 },
+  ],
+  limbs: [
+    { attach: 'tail', side: 'far', segments: [
+      { x: 0.22, y: 0.84, radius: 0.026 }, { x: 0.19, y: 0.89, radius: 0.016 }, { x: 0.18, y: 0.93, radius: 0.010 },
+    ]},
+    { attach: 'rump', side: 'far', segments: [
+      { x: 0.34, y: 0.79, radius: 0.028 }, { x: 0.34, y: 0.86, radius: 0.017 }, { x: 0.35, y: 0.91, radius: 0.010 },
+    ]},
+    { attach: 'mid', side: 'far', segments: [
+      { x: 0.45, y: 0.70, radius: 0.026 }, { x: 0.48, y: 0.78, radius: 0.016 }, { x: 0.50, y: 0.86, radius: 0.010 },
+    ]},
+    { attach: 'chest', side: 'far', segments: [
+      { x: 0.56, y: 0.60, radius: 0.024 }, { x: 0.61, y: 0.69, radius: 0.015 }, { x: 0.64, y: 0.79, radius: 0.010 },
+    ]},
+    { attach: 'tail', side: 'near', segments: [
+      { x: 0.29, y: 0.82, radius: 0.030 }, { x: 0.30, y: 0.89, radius: 0.018 }, { x: 0.31, y: 0.93, radius: 0.011 },
+    ]},
+    { attach: 'rump', side: 'near', segments: [
+      { x: 0.42, y: 0.78, radius: 0.032 }, { x: 0.47, y: 0.86, radius: 0.018 }, { x: 0.50, y: 0.92, radius: 0.011 },
+    ]},
+    { attach: 'mid', side: 'near', segments: [
+      { x: 0.53, y: 0.68, radius: 0.030 }, { x: 0.58, y: 0.78, radius: 0.017 }, { x: 0.61, y: 0.87, radius: 0.011 },
+    ]},
+    { attach: 'chest', side: 'near', segments: [
+      { x: 0.63, y: 0.58, radius: 0.028 }, { x: 0.69, y: 0.67, radius: 0.016 }, { x: 0.74, y: 0.79, radius: 0.010 },
+    ]},
+  ],
+  tail: { points: [], startWidth: 0, endWidth: 0 },
+};
+
+function drawCarrionCrawlerPlateRedux(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+  shellMid: number[],
+  shellDark: number[],
+  shellHi: number[],
+) {
+  ctx.fillStyle = bodyGrad3(
+    ctx,
+    w * x,
+    h * (y - ry * 0.25),
+    w * rx * 1.2,
+    shellMid[0], shellMid[1], shellMid[2],
+    shellDark[0], shellDark[1], shellDark[2],
+    shellHi[0], shellHi[1], shellHi[2],
+  );
+  ctx.beginPath();
+  ctx.moveTo(w * (x - rx * 0.92), h * (y + ry * 0.18));
+  ctx.bezierCurveTo(w * (x - rx * 0.84), h * (y - ry * 0.74), w * (x - rx * 0.16), h * (y - ry * 1.18), w * (x + rx * 0.42), h * (y - ry * 0.88));
+  ctx.bezierCurveTo(w * (x + rx * 0.92), h * (y - ry * 0.50), w * (x + rx * 0.96), h * (y + ry * 0.10), w * (x + rx * 0.46), h * (y + ry * 0.28));
+  ctx.bezierCurveTo(w * (x + rx * 0.04), h * (y + ry * 0.42), w * (x - rx * 0.54), h * (y + ry * 0.42), w * (x - rx * 0.92), h * (y + ry * 0.18));
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = rgba(shellDark, 0.45);
+  ctx.lineWidth = Math.max(1, w * 0.004);
+  ctx.stroke();
+
+  ctx.strokeStyle = rgba(shellHi, 0.35);
+  ctx.lineWidth = Math.max(1, w * 0.0025);
+  ctx.beginPath();
+  ctx.moveTo(w * (x - rx * 0.58), h * (y - ry * 0.08));
+  ctx.quadraticCurveTo(w * (x - rx * 0.04), h * (y - ry * 0.72), w * (x + rx * 0.46), h * (y - ry * 0.18));
+  ctx.stroke();
+}
+
+function drawCarrionCrawlerFootClawsRedux(
+  ctx: CanvasRenderingContext2D,
+  foot: LimbSegment,
+  w: number,
+  h: number,
+  clawColor: number[],
+  lift = 1,
+) {
+  ctx.fillStyle = rgb(clawColor);
+  for (let i = -1; i <= 1; i++) {
+    const cx = w * foot.x + i * w * 0.010;
+    const cy = h * foot.y - h * 0.006 * lift;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx - w * 0.006, cy + h * 0.028);
+    ctx.lineTo(cx + w * 0.004, cy + h * 0.018);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function drawCarrionCrawlerMandibleRedux(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  originX: number,
+  originY: number,
+  side: number,
+  hookDark: number[],
+  hookLight: number[],
+) {
+  ctx.fillStyle = bodyGrad3(
+    ctx,
+    w * (originX + side * 0.012),
+    h * (originY + 0.02),
+    w * 0.10,
+    hookLight[0], hookLight[1], hookLight[2],
+    hookDark[0], hookDark[1], hookDark[2],
+    194, 198, 204,
+  );
+  ctx.beginPath();
+  ctx.moveTo(w * originX, h * originY);
+  ctx.quadraticCurveTo(w * (originX + side * 0.14), h * (originY + 0.02), w * (originX + side * 0.18), h * (originY + 0.13));
+  ctx.quadraticCurveTo(w * (originX + side * 0.09), h * (originY + 0.09), w * (originX + side * 0.03), h * (originY + 0.03));
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = rgba(hookLight, 0.35);
+  ctx.lineWidth = Math.max(1, w * 0.003);
+  ctx.beginPath();
+  ctx.moveTo(w * (originX + side * 0.03), h * (originY + 0.02));
+  ctx.quadraticCurveTo(w * (originX + side * 0.12), h * (originY + 0.03), w * (originX + side * 0.15), h * (originY + 0.10));
+  ctx.stroke();
+}
+
+function drawCarrionCrawlerTentacleRedux(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  startX: number,
+  startY: number,
+  c1x: number,
+  c1y: number,
+  endX: number,
+  endY: number,
+  width: number,
+  tentacleDark: number[],
+  tentacleLight: number[],
+  tipColor: number[],
+) {
+  ctx.strokeStyle = rgb(tentacleDark);
+  ctx.lineWidth = w * width;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(w * startX, h * startY);
+  ctx.bezierCurveTo(w * c1x, h * c1y, w * (endX * 0.7 + c1x * 0.3), h * (endY * 0.7 + c1y * 0.3), w * endX, h * endY);
+  ctx.stroke();
+
+  ctx.strokeStyle = rgba(tentacleLight, 0.35);
+  ctx.lineWidth = Math.max(1, w * width * 0.32);
+  ctx.beginPath();
+  ctx.moveTo(w * (startX + 0.004), h * (startY - 0.004));
+  ctx.bezierCurveTo(
+    w * (c1x + 0.004),
+    h * (c1y - 0.004),
+    w * (endX * 0.7 + c1x * 0.3 + 0.004),
+    h * (endY * 0.7 + c1y * 0.3 - 0.004),
+    w * (endX + 0.004),
+    h * (endY - 0.004),
+  );
+  ctx.stroke();
+
+  const dx = endX - c1x;
+  const dy = endY - c1y;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = dx / len;
+  const ny = dy / len;
+  const px = -ny;
+  const py = nx;
+
+  ctx.fillStyle = rgb(tipColor);
+  ctx.beginPath();
+  ctx.moveTo(w * (endX + nx * 0.012), h * (endY + ny * 0.012));
+  ctx.lineTo(w * (endX - nx * 0.006 + px * 0.018), h * (endY - ny * 0.006 + py * 0.018));
+  ctx.lineTo(w * (endX - nx * 0.010), h * (endY - ny * 0.014));
+  ctx.lineTo(w * (endX - nx * 0.006 - px * 0.018), h * (endY - ny * 0.006 - py * 0.018));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCarrionCrawlerRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  ctx.save();
+  ctx.translate(w, 0);
+  ctx.scale(-1, 1);
+
+  const sk = CARRION_CRAWLER_SKELETON;
+  const shellDark = [20, 32, 16];
+  const shellMid = [40, 66, 30];
+  const shellLight = [72, 106, 52];
+  const shellHi = [108, 144, 80];
+  const bellyBase = [172, 136, 112];
+  const bellyLight = [204, 178, 148];
+  const bellyShadow = [96, 64, 50];
+  const mawDark = [16, 10, 8];
+  const hookDark = [70, 72, 76];
+  const hookLight = [134, 138, 146];
+  const tentacleDark = [78, 110, 58];
+  const tentacleLight = [132, 172, 96];
+  const tentacleTip = [158, 88, 70];
+  const eyeStem = [106, 138, 78];
+  const eyeOuter = [214, 226, 186];
+  const eyeCore = [22, 18, 12];
+  const teethColor = [236, 224, 194];
+  const clawColor = [186, 166, 140];
+
+  const head = sk.spine.find((node) => node.id === 'head')!;
+  const neck = sk.spine.find((node) => node.id === 'neck')!;
+  const chest = sk.spine.find((node) => node.id === 'chest')!;
+  const mid = sk.spine.find((node) => node.id === 'mid')!;
+  const rump = sk.spine.find((node) => node.id === 'rump')!;
+  const tail = sk.spine.find((node) => node.id === 'tail')!;
+
+  ambientOcclusion(ctx, w * 0.50, h * 0.92, w * 0.36, h * 0.05, 0.34);
+  ambientOcclusion(ctx, w * 0.68, h * 0.66, w * 0.16, h * 0.03, 0.22);
+
+  for (const limb of sk.limbs) {
+    if (limb.side === 'far') {
+      drawSkeletonLimbChain(ctx, limb.segments, w, h, rgb([28, 44, 20]));
+    }
+  }
+
+  drawSkeletonBodyOutline(
+    ctx,
+    sk.spine,
+    w,
+    h,
+    bodyGrad3(
+      ctx,
+      w * mid.x,
+      h * mid.y,
+      w * 0.36,
+      shellMid[0], shellMid[1], shellMid[2],
+      shellDark[0], shellDark[1], shellDark[2],
+      shellLight[0], shellLight[1], shellLight[2],
+    ),
+  );
+
+  for (const node of [tail, rump, mid, chest, neck, head]) {
+    ctx.fillStyle = bodyGrad3(
+      ctx,
+      w * node.x,
+      h * (node.y - 0.01),
+      w * node.radius * 1.3,
+      shellMid[0], shellMid[1], shellMid[2],
+      shellDark[0], shellDark[1], shellDark[2],
+      shellLight[0], shellLight[1], shellLight[2],
+    );
+    fillEllipse(ctx, w * node.x, h * node.y, w * node.radius * 1.05, h * node.radius * 0.88);
+  }
+
+  const bellyPlates = [
+    { x: 0.28, y: 0.86, rx: 0.075, ry: 0.050 },
+    { x: 0.39, y: 0.75, rx: 0.078, ry: 0.052 },
+    { x: 0.50, y: 0.63, rx: 0.078, ry: 0.052 },
+    { x: 0.61, y: 0.51, rx: 0.072, ry: 0.048 },
+    { x: 0.70, y: 0.38, rx: 0.060, ry: 0.044 },
+  ];
+  for (const plate of bellyPlates) {
+    ctx.fillStyle = bodyGrad3(
+      ctx,
+      w * plate.x,
+      h * plate.y,
+      w * plate.rx * 1.2,
+      bellyBase[0], bellyBase[1], bellyBase[2],
+      bellyShadow[0], bellyShadow[1], bellyShadow[2],
+      bellyLight[0], bellyLight[1], bellyLight[2],
+    );
+    fillEllipse(ctx, w * plate.x, h * plate.y, w * plate.rx, h * plate.ry);
+    ctx.strokeStyle = rgba(bellyShadow, 0.34);
+    ctx.lineWidth = Math.max(1, w * 0.003);
+    ctx.beginPath();
+    ctx.moveTo(w * (plate.x - plate.rx * 0.72), h * plate.y);
+    ctx.quadraticCurveTo(w * plate.x, h * (plate.y + plate.ry * 0.46), w * (plate.x + plate.rx * 0.72), h * plate.y);
+    ctx.stroke();
+  }
+
+  for (const plate of [
+    { x: 0.25, y: 0.72, rx: 0.115, ry: 0.130 },
+    { x: 0.37, y: 0.61, rx: 0.118, ry: 0.135 },
+    { x: 0.49, y: 0.49, rx: 0.115, ry: 0.130 },
+    { x: 0.61, y: 0.36, rx: 0.100, ry: 0.112 },
+    { x: 0.70, y: 0.24, rx: 0.082, ry: 0.094 },
+  ]) {
+    drawCarrionCrawlerPlateRedux(ctx, w, h, plate.x, plate.y, plate.rx, plate.ry, shellLight, shellDark, shellHi);
+  }
+
+  ctx.strokeStyle = rgba(shellHi, 0.18);
+  ctx.lineWidth = Math.max(1, w * 0.004);
+  for (const ridge of [0.34, 0.46, 0.58, 0.68]) {
+    ctx.beginPath();
+    ctx.moveTo(w * (ridge - 0.03), h * (0.84 - ridge * 0.46));
+    ctx.quadraticCurveTo(w * ridge, h * (0.72 - ridge * 0.44), w * (ridge + 0.05), h * (0.78 - ridge * 0.58));
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = bodyGrad3(
+    ctx,
+    w * head.x,
+    h * (head.y - 0.02),
+    w * 0.16,
+    shellLight[0], shellLight[1], shellLight[2],
+    shellDark[0], shellDark[1], shellDark[2],
+    shellHi[0], shellHi[1], shellHi[2],
+  );
+  ctx.beginPath();
+  ctx.moveTo(w * 0.64, h * 0.18);
+  ctx.bezierCurveTo(w * 0.66, h * 0.08, w * 0.78, h * 0.09, w * 0.84, h * 0.18);
+  ctx.bezierCurveTo(w * 0.86, h * 0.26, w * 0.82, h * 0.32, w * 0.74, h * 0.34);
+  ctx.bezierCurveTo(w * 0.66, h * 0.31, w * 0.62, h * 0.24, w * 0.64, h * 0.18);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = rgb(mawDark);
+  fillEllipse(ctx, w * 0.79, h * 0.32, w * 0.13, h * 0.058);
+  ctx.fillStyle = rgba([120, 32, 22], 0.45);
+  fillEllipse(ctx, w * 0.79, h * 0.325, w * 0.088, h * 0.026);
+
+  ctx.fillStyle = rgb(teethColor);
+  for (let i = 0; i < 9; i++) {
+    const x = 0.70 + i * 0.018;
+    const topSize = i % 2 === 0 ? 0.030 : 0.022;
+    ctx.beginPath();
+    ctx.moveTo(w * x, h * 0.278);
+    ctx.lineTo(w * (x + 0.009), h * (0.278 + topSize));
+    ctx.lineTo(w * (x + 0.018), h * 0.279);
+    ctx.closePath();
+    ctx.fill();
+  }
+  for (let i = 0; i < 9; i++) {
+    const x = 0.70 + i * 0.018;
+    const botSize = i % 2 === 0 ? 0.026 : 0.018;
+    ctx.beginPath();
+    ctx.moveTo(w * (x + 0.003), h * 0.362);
+    ctx.lineTo(w * (x + 0.011), h * (0.362 - botSize));
+    ctx.lineTo(w * (x + 0.019), h * 0.362);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  drawCarrionCrawlerMandibleRedux(ctx, w, h, 0.74, 0.27, -1, hookDark, hookLight);
+  drawCarrionCrawlerMandibleRedux(ctx, w, h, 0.84, 0.27, 1, hookDark, hookLight);
+
+  drawCarrionCrawlerTentacleRedux(ctx, w, h, 0.71, 0.31, 0.63, 0.25, 0.57, 0.19, 0.014, tentacleDark, tentacleLight, tentacleTip);
+  drawCarrionCrawlerTentacleRedux(ctx, w, h, 0.73, 0.34, 0.64, 0.38, 0.60, 0.42, 0.013, tentacleDark, tentacleLight, tentacleTip);
+  drawCarrionCrawlerTentacleRedux(ctx, w, h, 0.76, 0.36, 0.72, 0.41, 0.71, 0.44, 0.011, tentacleDark, tentacleLight, tentacleTip);
+  drawCarrionCrawlerTentacleRedux(ctx, w, h, 0.82, 0.36, 0.86, 0.41, 0.89, 0.44, 0.011, tentacleDark, tentacleLight, tentacleTip);
+  drawCarrionCrawlerTentacleRedux(ctx, w, h, 0.85, 0.31, 0.91, 0.27, 0.95, 0.22, 0.012, tentacleDark, tentacleLight, tentacleTip);
+  drawCarrionCrawlerTentacleRedux(ctx, w, h, 0.79, 0.37, 0.80, 0.41, 0.80, 0.45, 0.010, tentacleDark, tentacleLight, tentacleTip);
+
+  for (const eye of [
+    { sx: 0.73, sy: 0.16, ex: 0.70, ey: 0.10 },
+    { sx: 0.79, sy: 0.17, ex: 0.82, ey: 0.11 },
+  ]) {
+    ctx.strokeStyle = rgb(eyeStem);
+    ctx.lineWidth = w * 0.010;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(w * eye.sx, h * eye.sy);
+    ctx.quadraticCurveTo(w * ((eye.sx + eye.ex) / 2), h * (eye.sy - 0.03), w * eye.ex, h * eye.ey);
+    ctx.stroke();
+    ctx.fillStyle = rgb(eyeOuter);
+    fillCircle(ctx, w * eye.ex, h * eye.ey, w * 0.018);
+    ctx.fillStyle = rgb(eyeCore);
+    fillCircle(ctx, w * eye.ex, h * eye.ey, w * 0.008);
+    ctx.fillStyle = 'rgb(248,248,240)';
+    fillCircle(ctx, w * (eye.ex - 0.004), h * (eye.ey - 0.004), w * 0.0035);
+  }
+
+  for (const limb of sk.limbs) {
+    if (limb.side === 'near') {
+      drawSkeletonLimbChain(ctx, limb.segments, w, h, rgb([48, 74, 34]));
+    }
+  }
+
+  for (const limb of sk.limbs) {
+    const foot = limb.segments[limb.segments.length - 1];
+    drawCarrionCrawlerFootClawsRedux(ctx, foot, w, h, clawColor, limb.side === 'near' ? 1 : 0.8);
+  }
+
+  highlight(ctx, w * 0.44, h * 0.48, w * 0.09, rgba(shellHi, 0.22), 0.28);
+  highlight(ctx, w * 0.69, h * 0.20, w * 0.07, rgba(shellHi, 0.28), 0.28);
+  ambientOcclusion(ctx, w * 0.55, h * 0.66, w * 0.16, h * 0.04, 0.28);
+  ambientOcclusion(ctx, w * 0.78, h * 0.36, w * 0.10, h * 0.03, 0.20);
+
+  ctx.restore();
+}
+
 function drawCavernBruteRedux(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.fillStyle = bodyGrad(ctx, w * 0.44, h * 0.40, w * 0.28, 178, 152, 120, 82, 64, 44);
   ctx.beginPath();
@@ -1835,7 +2240,7 @@ export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
   { id: 'redux-goblin-shaman', name: 'Goblin Shaman', gridWidth: 12, gridHeight: 11, monsterClass: 1, level: 6, atmosphere: { r: 106, g: 70, b: 164, intensity: 0.12 }, draw: drawGoblinShamanRedux },
   { id: 'redux-gelatinous-ooze', name: 'Gelatinous Ooze', gridWidth: 10, gridHeight: 14, monsterClass: 2, level: 7, atmosphere: { r: 66, g: 182, b: 56, intensity: 0.12 }, draw: drawGelatinousOozeRedux },
   { id: 'redux-bugbear', name: 'Bugbear', gridWidth: 10, gridHeight: 12, monsterClass: 0, level: 8, atmosphere: { r: 172, g: 138, b: 72, intensity: 0.10 }, draw: drawBugbearRedux },
-  { id: 'redux-carrion-crawler', name: 'Carrion Crawler', gridWidth: 10, gridHeight: 13, monsterClass: 1, level: 9, atmosphere: { r: 144, g: 168, b: 208, intensity: 0.14 }, draw: drawPaleStalkerRedux },
+  { id: 'redux-carrion-crawler', name: 'Carrion Crawler', gridWidth: 10, gridHeight: 13, monsterClass: 1, level: 9, atmosphere: { r: 144, g: 168, b: 208, intensity: 0.14 }, draw: drawCarrionCrawlerRedux },
   { id: 'redux-hook-horror', name: 'Hook Horror', gridWidth: 14, gridHeight: 12, monsterClass: 2, level: 10, atmosphere: { r: 136, g: 82, b: 178, intensity: 0.12 }, draw: drawDuskDrakeRedux },
   { id: 'redux-basilisk', name: 'Basilisk', gridWidth: 26, gridHeight: 9, monsterClass: 0, level: 12, isBoss: true, atmosphere: { r: 52, g: 86, b: 36, intensity: 0.10 }, renderOverrides: { gamma: 0.72, ambient: 0.45, brightnessBoost: 1.15, charDensityFloor: 0.14 }, draw: drawBasiliskRedux },
 ];

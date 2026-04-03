@@ -16,6 +16,7 @@ describe('MONSTER_TEMPLATES_REDUX', () => {
       ['Goblin Shaman', 'drawGoblinShamanRedux'],
       ['Gelatinous Ooze', 'drawGelatinousOozeRedux'],
       ['Bugbear', 'drawBugbearRedux'],
+      ['Carrion Crawler', 'drawCarrionCrawlerRedux'],
     ]);
 
     for (const [monsterName, drawName] of expectations) {
