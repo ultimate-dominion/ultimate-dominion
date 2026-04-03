@@ -35,5 +35,5 @@ Temper is installed as the operating layer for this repo.
 
 - Keep full-flow live verification explicit. Promote only when needed: smoke.
 - Do not read root `test` as real release confidence until the repo splits lint from verification.
-- Use Temper to keep the repo's good habits explicit instead of letting them drift back into chat.
+- Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in.
 - Recurring failure modes to keep visible: Root `test` currently resolves to lint-style validation rather than a real test or verify path.; deep verification has shared-state steps that should stay promoted, not default: smoke

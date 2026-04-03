@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-03T17:22:55.532Z",
+  "generated_at": "2026-04-03T19:38:56.418Z",
   "project": {
     "name": "ultimate-dominion",
     "root": "/Users/michaelorourke/ultimate-dominion",
@@ -141,14 +141,14 @@
   },
   "workflow_memory": {
     "release_pattern": "beta environment is modeled; prod environment is modeled; 5 GitHub workflow files detected",
-    "continuity_pattern": "repo-native session tracking exists; 4 handoff surfaces detected",
+    "continuity_pattern": "repo-native session tracking exists",
     "recurring_failure_modes": [
       "Root `test` currently resolves to lint-style validation rather than a real test or verify path.",
       "deep verification has shared-state steps that should stay promoted, not default: smoke"
     ],
     "recent_signals": [
-      "2409 local commits available for pattern inference",
-      "recent commit mix fix:6, docs:5, chore:1",
+      "2431 local commits available for pattern inference",
+      "recent commit mix fix:8, chore:2, docs:2",
       "top recommendations split-root-test-from-lint, gate-live-verification"
     ]
   },
@@ -166,10 +166,10 @@
       "message": "Do not read root `test` as real release confidence until the repo splits lint from verification."
     },
     {
-      "id": "preserve-working-habits",
-      "phase": "always",
+      "id": "keep-workflow-context-current",
+      "phase": "session",
       "priority": "medium",
-      "message": "Use Temper to keep the repo's good habits explicit instead of letting them drift back into chat."
+      "message": "Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in."
     },
     {
       "id": "watch-recurring-failure-modes",

@@ -51,12 +51,12 @@
 
 ## Workflow Memory
 - release pattern: beta environment is modeled; prod environment is modeled; 5 GitHub workflow files detected
-- continuity pattern: repo-native session tracking exists; 4 handoff surfaces detected
+- continuity pattern: repo-native session tracking exists
 - recurring failure modes: Root `test` currently resolves to lint-style validation rather than a real test or verify path.; deep verification has shared-state steps that should stay promoted, not default: smoke
-- recent signals: 2409 local commits available for pattern inference; recent commit mix fix:6, docs:5, chore:1; top recommendations split-root-test-from-lint, gate-live-verification
+- recent signals: 2431 local commits available for pattern inference; recent commit mix fix:8, chore:2, docs:2; top recommendations split-root-test-from-lint, gate-live-verification
 
 ## Resurfacing
 - Keep full-flow live verification explicit. Promote only when needed: smoke.
 - Do not read root `test` as real release confidence until the repo splits lint from verification.
-- Use Temper to keep the repo's good habits explicit instead of letting them drift back into chat.
+- Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in.
 - Recurring failure modes to keep visible: Root `test` currently resolves to lint-style validation rather than a real test or verify path.; deep verification has shared-state steps that should stay promoted, not default: smoke

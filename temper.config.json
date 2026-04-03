@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-03T17:22:55.208Z",
+  "generated_at": "2026-04-03T19:38:56.167Z",
   "mode": "onboarded",
   "name": "ultimate-dominion",
   "family": "data-driven-progression-rpg",
@@ -36,12 +36,7 @@
       "agents": "AGENTS.md",
       "session": "SESSION.md",
       "claude": "CLAUDE.md",
-      "handoffs": [
-        "HANDOFF_monster-images-beta.md",
-        "HANDOFF_prod-ghost-mob-live-repair.md",
-        "HANDOFF_prod-ghost-mob-root-cause.md",
-        "HANDOFF_prod-ghost-mob.md"
-      ],
+      "handoffs": [],
       "claude_rules": [
         ".claude/rules/api.md",
         ".claude/rules/client.md",
@@ -382,7 +377,7 @@
     }
   },
   "onboarding": {
-    "generated_at": "2026-04-03T17:22:55.251Z",
+    "generated_at": "2026-04-03T19:38:56.205Z",
     "lifecycle": {
       "id": "live",
       "label": "Live Service / Existing Users Likely",
@@ -390,14 +385,14 @@
         "A beta environment is explicitly modeled in repo workflows or deploy rules.",
         "A production environment is explicitly modeled, which usually means operator mistakes have real user impact.",
         "Both beta and prod exist alongside GitHub workflows, so release discipline already matters.",
-        "The repo has 2409 commits locally, which suggests an established system rather than a throwaway prototype.",
+        "The repo has 2431 commits locally, which suggests an established system rather than a throwaway prototype.",
         "The stack includes live-service overlays, so environment mistakes can mutate real state or real services."
       ],
       "operator_habit": "Treat default automation as a safety rail, not a shortcut. Beta and prod paths should stay explicit.",
       "player_impact": "Small workflow mistakes can hit players directly through progression, deploy, or economy surfaces."
     },
     "efficiency": {
-      "score": 80,
+      "score": 70,
       "current_startup_tokens": "~5K-15K tokens",
       "projected_startup_tokens": "~2K-5K tokens"
     },
@@ -410,14 +405,14 @@
     },
     "memory": {
       "release_pattern": "beta environment is modeled; prod environment is modeled; 5 GitHub workflow files detected",
-      "continuity_pattern": "repo-native session tracking exists; 4 handoff surfaces detected",
+      "continuity_pattern": "repo-native session tracking exists",
       "recurring_failure_modes": [
         "Root `test` currently resolves to lint-style validation rather than a real test or verify path.",
         "deep verification has shared-state steps that should stay promoted, not default: smoke"
       ],
       "recent_signals": [
-        "2409 local commits available for pattern inference",
-        "recent commit mix fix:6, docs:5, chore:1",
+        "2431 local commits available for pattern inference",
+        "recent commit mix fix:8, chore:2, docs:2",
         "top recommendations split-root-test-from-lint, gate-live-verification"
       ]
     },
@@ -435,10 +430,10 @@
         "message": "Do not read root `test` as real release confidence until the repo splits lint from verification."
       },
       {
-        "id": "preserve-working-habits",
-        "phase": "always",
+        "id": "keep-workflow-context-current",
+        "phase": "session",
         "priority": "medium",
-        "message": "Use Temper to keep the repo's good habits explicit instead of letting them drift back into chat."
+        "message": "Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in."
       },
       {
         "id": "watch-recurring-failure-modes",
@@ -459,9 +454,9 @@
         "title": "Keep live-stateful verification out of the default `ship full` path"
       },
       {
-        "id": "surface-strengths-over-time",
+        "id": "codify-operator-context",
         "priority": "medium",
-        "title": "Use Temper to preserve and reinforce what already works"
+        "title": "Codify startup, session, and handoff surfaces"
       }
     ]
   }

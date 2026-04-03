@@ -15,15 +15,14 @@
 
 ## What Temper Sees
 - environments: local:*, beta:dev, prod:main
-- workflow surfaces: agents=AGENTS.md; session=SESSION.md; claude=CLAUDE.md; handoffs=HANDOFF_monster-images-beta.md, HANDOFF_prod-ghost-mob-live-repair.md, HANDOFF_prod-ghost-mob-root-cause.md, HANDOFF_prod-ghost-mob.md; claude_rules=.claude/rules/api.md, .claude/rules/client.md, .claude/rules/deploy.md, .claude/rules/game.md, .claude/rules/indexer.md, .claude/rules/solidity.md
+- workflow surfaces: agents=AGENTS.md; session=SESSION.md; claude=CLAUDE.md; claude_rules=.claude/rules/api.md, .claude/rules/client.md, .claude/rules/deploy.md, .claude/rules/game.md, .claude/rules/indexer.md, .claude/rules/solidity.md
 - source of truth: packages/contracts/zones/dark_cave/effects.json, packages/contracts/zones/dark_cave/items.json, packages/contracts/zones/dark_cave/monsters.json, packages/contracts/zones/windy_peaks/effects.json, packages/contracts/zones/windy_peaks/items.json, packages/contracts/zones/windy_peaks/monsters.json, packages/contracts/worlds.json, packages/contracts/mud.config.ts, monsters.json, CHANGELOG.md
 - github workflows: .github/workflows/ci.yml, .github/workflows/deploy-beta.yml, .github/workflows/release.yml, .github/workflows/smoke.yml, .github/workflows/sync-dev.yml
-- git history: 2409 commits; recent types chore:1, docs:5, fix:6
+- git history: 2431 commits; recent types fix:8, chore:2, docs:2
 
 ## What Already Looks Good
 - The repo already has explicit operator context files for startup and session continuity.
 - Domain rules are already broken out into file-scoped guidance instead of one giant doc.
-- Handoff artifacts exist, which lowers restart tax between sessions and agents.
 - The project distinguishes local, beta, and prod instead of treating release as one flat surface.
 - Temper can detect canonical data and workflow surfaces without custom per-project code.
 - GitHub workflow files exist, so the repo has machine-readable release or validation paths.
@@ -33,27 +32,27 @@
 - A beta environment is explicitly modeled in repo workflows or deploy rules.
 - A production environment is explicitly modeled, which usually means operator mistakes have real user impact.
 - Both beta and prod exist alongside GitHub workflows, so release discipline already matters.
-- The repo has 2409 commits locally, which suggests an established system rather than a throwaway prototype.
+- The repo has 2431 commits locally, which suggests an established system rather than a throwaway prototype.
 - The stack includes live-service overlays, so environment mistakes can mutate real state or real services.
 - operator habit: Treat default automation as a safety rail, not a shortcut. Beta and prod paths should stay explicit.
 - player impact: Small workflow mistakes can hit players directly through progression, deploy, or economy surfaces.
 
 ## Workflow Memory
 - release pattern: beta environment is modeled; prod environment is modeled; 5 GitHub workflow files detected
-- continuity pattern: repo-native session tracking exists; 4 handoff surfaces detected
+- continuity pattern: repo-native session tracking exists
 - recurring failure mode: Root `test` currently resolves to lint-style validation rather than a real test or verify path.
 - recurring failure mode: deep verification has shared-state steps that should stay promoted, not default: smoke
-- recent signal: 2409 local commits available for pattern inference
-- recent signal: recent commit mix fix:6, docs:5, chore:1
+- recent signal: 2431 local commits available for pattern inference
+- recent signal: recent commit mix fix:8, chore:2, docs:2
 - recent signal: top recommendations split-root-test-from-lint, gate-live-verification
 
 ## Token Efficiency
-- score: 80/100
+- score: 70/100
+- No handoff docs detected. End-of-session context is more likely to get lost.
 - Root `test` is acting like lint. That creates false confidence and expensive backtracking.
 - Default `ship full` currently includes live-stateful verification. That is expensive, slower, and easier to misuse.
 - Shared operating instructions exist, which lowers repeated orientation cost.
 - Session state is already explicit, which helps carry work across turns and agents.
-- Handoff artifacts exist, which reduces restart tax and duplicated investigation.
 - Domain-specific rule files exist, so assistants can stay narrower and cheaper.
 - Canonical source-of-truth surfaces are detectable, which is one of the biggest token savers in long-lived repos.
 
@@ -87,7 +86,7 @@
 ## Resurfacing
 - [high] Keep full-flow live verification explicit. Promote only when needed: smoke.
 - [high] Do not read root `test` as real release confidence until the repo splits lint from verification.
-- [medium] Use Temper to keep the repo's good habits explicit instead of letting them drift back into chat.
+- [medium] Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in.
 - [medium] Recurring failure modes to keep visible: Root `test` currently resolves to lint-style validation rather than a real test or verify path.; deep verification has shared-state steps that should stay promoted, not default: smoke
 
 ## Recommendations
@@ -103,9 +102,9 @@
 - player impact: Reduces accidental mutation of shared game state while keeping beta confidence available when it matters.
 - tradeoff: One more explicit step when you want deep environment validation.
 - token impact: Cuts long, expensive runs from the default path and avoids recovery sessions after accidental live writes.
-- [medium] Use Temper to preserve and reinforce what already works
-- why: Strong repos still leak tokens when their good habits stay implicit instead of machine-readable.
-- operator change: Let Temper keep the workflow contract current and keep reviewing its recommendations as the repo evolves.
-- player impact: Existing quality stays durable as more agents or contributors touch the project.
-- tradeoff: The repo gains one more contract file and periodic review of recommendations.
-- token impact: Maintains low startup cost instead of letting entropy push the repo back toward repeated orientation.
+- [medium] Codify startup, session, and handoff surfaces
+- why: Every missing operator doc pushes context back into chat, which is the most expensive place to store it.
+- operator change: Keep AGENTS, SESSION, and handoff docs short, current, and repo-native.
+- player impact: Less operator drift means fewer avoidable mistakes during hotfixes and live changes.
+- tradeoff: Requires a few minutes of discipline at the start and end of a workstream.
+- token impact: This is one of the biggest recurring token savings because the same explanation stops repeating.

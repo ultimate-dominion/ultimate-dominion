@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-03T17:22:55.251Z",
+  "generated_at": "2026-04-03T19:38:56.205Z",
   "lifecycle": {
     "id": "live",
     "label": "Live Service / Existing Users Likely",
@@ -7,80 +7,80 @@
       "A beta environment is explicitly modeled in repo workflows or deploy rules.",
       "A production environment is explicitly modeled, which usually means operator mistakes have real user impact.",
       "Both beta and prod exist alongside GitHub workflows, so release discipline already matters.",
-      "The repo has 2409 commits locally, which suggests an established system rather than a throwaway prototype.",
+      "The repo has 2431 commits locally, which suggests an established system rather than a throwaway prototype.",
       "The stack includes live-service overlays, so environment mistakes can mutate real state or real services."
     ],
     "operator_habit": "Treat default automation as a safety rail, not a shortcut. Beta and prod paths should stay explicit.",
     "player_impact": "Small workflow mistakes can hit players directly through progression, deploy, or economy surfaces."
   },
   "history": {
-    "commit_count": 2409,
+    "commit_count": 2431,
     "recent": [
       {
-        "hash": "65cc7685",
+        "hash": "cfef9e9a",
+        "date": "2026-04-03",
+        "subject": "fix: read Position via MUD store getRecord instead of broken UD__getEntityPosition view"
+      },
+      {
+        "hash": "41a187fb",
+        "date": "2026-04-03",
+        "subject": "fix: prevent ghost-mob re-animation and concurrent validate bursts"
+      },
+      {
+        "hash": "4e7350da",
+        "date": "2026-04-03",
+        "subject": "fix: prevent TOCTOU false-positive ghost eviction in validateTileMonsters"
+      },
+      {
+        "hash": "f66aca17",
+        "date": "2026-04-03",
+        "subject": "chore: install Temper — config, assistant surfaces, workflow files"
+      },
+      {
+        "hash": "c5553faa",
         "date": "2026-04-03",
         "subject": "chore: update temper to feat/assistant-onboarding-flow branch"
       },
       {
-        "hash": "b19a6950",
+        "hash": "965c4109",
         "date": "2026-04-02",
         "subject": "docs: handoff prod ghost mob live repair"
       },
       {
-        "hash": "e883a064",
-        "date": "2026-04-02",
-        "subject": "docs: capture prod ghost mob incident"
-      },
-      {
-        "hash": "dbb74892",
+        "hash": "17d5cbf5",
         "date": "2026-04-02",
         "subject": "docs: add shared agent workflow (AGENTS.md) and update CLAUDE.md"
       },
       {
-        "hash": "62dad543",
-        "date": "2026-04-01",
-        "subject": "fix: document RPC ordering contract in supportedChains.ts"
+        "hash": "9b1cd4b2",
+        "date": "2026-04-02",
+        "subject": "fix: stop stale monster tile rewind"
       },
       {
-        "hash": "aa5e60a4",
-        "date": "2026-04-01",
-        "subject": "fix: ghost monsters visible on tiles + remove publicnode WSS fallback"
+        "hash": "1cae9bee",
+        "date": "2026-04-02",
+        "subject": "fix: sanity check prod monster tile placement"
       },
       {
-        "hash": "f093e10d",
-        "date": "2026-04-01",
-        "subject": "docs: commit balance docs, deploy state, and durability init script"
+        "hash": "e96db59e",
+        "date": "2026-04-02",
+        "subject": "fix: promote fresh snapshot after idb boot"
       },
       {
-        "hash": "9fcdbafb",
-        "date": "2026-04-01",
-        "subject": "docs: update indexer URL to current US-region endpoint"
+        "hash": "9ffe3297",
+        "date": "2026-04-02",
+        "subject": "fix: unblock game boot when snapshot stalls"
       },
       {
-        "hash": "d53d3b3c",
-        "date": "2026-04-01",
-        "subject": "fix: update stale beta world address, zone-aware PvP safety check"
-      },
-      {
-        "hash": "4689b9df",
-        "date": "2026-04-01",
-        "subject": "fix: sync main → dev on every push, not weekly"
-      },
-      {
-        "hash": "41b5d00f",
-        "date": "2026-04-01",
-        "subject": "fix: clamp displayed character level to 10 on prod"
-      },
-      {
-        "hash": "a7ba6118",
-        "date": "2026-04-01",
-        "subject": "fix: filter Z2 entities by zoneId, not coordinate bounds"
+        "hash": "1c27af3c",
+        "date": "2026-04-02",
+        "subject": "fix: revalidate ghost mobs after snapshot hydrate"
       }
     ],
     "conventional_counts": {
-      "chore": 1,
-      "docs": 5,
-      "fix": 6
+      "fix": 8,
+      "chore": 2,
+      "docs": 2
     }
   },
   "workflows": {
@@ -134,7 +134,6 @@
   "strengths": [
     "The repo already has explicit operator context files for startup and session continuity.",
     "Domain rules are already broken out into file-scoped guidance instead of one giant doc.",
-    "Handoff artifacts exist, which lowers restart tax between sessions and agents.",
     "The project distinguishes local, beta, and prod instead of treating release as one flat surface.",
     "Temper can detect canonical data and workflow surfaces without custom per-project code.",
     "GitHub workflow files exist, so the repo has machine-readable release or validation paths.",
@@ -148,31 +147,31 @@
     "prod_branch": "main"
   },
   "efficiency": {
-    "score": 80,
+    "score": 70,
     "current_startup_tokens": "~5K-15K tokens",
     "projected_startup_tokens": "~2K-5K tokens",
     "waste": [
+      "No handoff docs detected. End-of-session context is more likely to get lost.",
       "Root `test` is acting like lint. That creates false confidence and expensive backtracking.",
       "Default `ship full` currently includes live-stateful verification. That is expensive, slower, and easier to misuse."
     ],
     "payoffs": [
       "Shared operating instructions exist, which lowers repeated orientation cost.",
       "Session state is already explicit, which helps carry work across turns and agents.",
-      "Handoff artifacts exist, which reduces restart tax and duplicated investigation.",
       "Domain-specific rule files exist, so assistants can stay narrower and cheaper.",
       "Canonical source-of-truth surfaces are detectable, which is one of the biggest token savers in long-lived repos."
     ]
   },
   "memory": {
     "release_pattern": "beta environment is modeled; prod environment is modeled; 5 GitHub workflow files detected",
-    "continuity_pattern": "repo-native session tracking exists; 4 handoff surfaces detected",
+    "continuity_pattern": "repo-native session tracking exists",
     "recurring_failure_modes": [
       "Root `test` currently resolves to lint-style validation rather than a real test or verify path.",
       "deep verification has shared-state steps that should stay promoted, not default: smoke"
     ],
     "recent_signals": [
-      "2409 local commits available for pattern inference",
-      "recent commit mix fix:6, docs:5, chore:1",
+      "2431 local commits available for pattern inference",
+      "recent commit mix fix:8, chore:2, docs:2",
       "top recommendations split-root-test-from-lint, gate-live-verification"
     ]
   },
@@ -190,10 +189,10 @@
       "message": "Do not read root `test` as real release confidence until the repo splits lint from verification."
     },
     {
-      "id": "preserve-working-habits",
-      "phase": "always",
+      "id": "keep-workflow-context-current",
+      "phase": "session",
       "priority": "medium",
-      "message": "Use Temper to keep the repo's good habits explicit instead of letting them drift back into chat."
+      "message": "Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in."
     },
     {
       "id": "watch-recurring-failure-modes",
@@ -466,14 +465,14 @@
       "token_impact": "Cuts long, expensive runs from the default path and avoids recovery sessions after accidental live writes."
     },
     {
-      "id": "surface-strengths-over-time",
+      "id": "codify-operator-context",
       "priority": "medium",
-      "title": "Use Temper to preserve and reinforce what already works",
-      "why": "Strong repos still leak tokens when their good habits stay implicit instead of machine-readable.",
-      "operator_change": "Let Temper keep the workflow contract current and keep reviewing its recommendations as the repo evolves.",
-      "player_impact": "Existing quality stays durable as more agents or contributors touch the project.",
-      "tradeoff": "The repo gains one more contract file and periodic review of recommendations.",
-      "token_impact": "Maintains low startup cost instead of letting entropy push the repo back toward repeated orientation."
+      "title": "Codify startup, session, and handoff surfaces",
+      "why": "Every missing operator doc pushes context back into chat, which is the most expensive place to store it.",
+      "operator_change": "Keep AGENTS, SESSION, and handoff docs short, current, and repo-native.",
+      "player_impact": "Less operator drift means fewer avoidable mistakes during hotfixes and live changes.",
+      "tradeoff": "Requires a few minutes of discipline at the start and end of a workstream.",
+      "token_impact": "This is one of the biggest recurring token savings because the same explanation stops repeating."
     }
   ]
 }

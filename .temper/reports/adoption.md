@@ -22,7 +22,6 @@
 - agents: AGENTS.md
 - session: SESSION.md
 - claude: CLAUDE.md
-- handoffs: HANDOFF_monster-images-beta.md, HANDOFF_prod-ghost-mob-live-repair.md, HANDOFF_prod-ghost-mob-root-cause.md, HANDOFF_prod-ghost-mob.md
 - claude_rules: .claude/rules/api.md, .claude/rules/client.md, .claude/rules/deploy.md, .claude/rules/game.md, .claude/rules/indexer.md, .claude/rules/solidity.md
 
 ## Inferred Commands
