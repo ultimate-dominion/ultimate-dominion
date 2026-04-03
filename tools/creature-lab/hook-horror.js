@@ -397,6 +397,8 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
 const GRID_W = 14;
 const GRID_H = 12;
 
+export default { draw: drawHookHorrorClean, skeleton: hookHorrorSkeleton, gridW: GRID_W, gridH: GRID_H };
+
 function render(elapsed = 0) {
   const size = parseInt(document.getElementById('canvas-size').value, 10);
   const cellSize = parseInt(document.getElementById('cell-size').value, 10);

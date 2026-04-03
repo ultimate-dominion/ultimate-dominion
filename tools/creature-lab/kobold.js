@@ -432,6 +432,9 @@ export function drawKoboldClean(ctx, skeleton, w, h) {
 const GRID_W = 7;
 const GRID_H = 5;
 
+export default { draw: drawKoboldClean, skeleton: koboldSkeleton, gridW: GRID_W, gridH: GRID_H };
+
+if (typeof document !== 'undefined') {
 function render(elapsed = 0) {
   const size = parseInt(document.getElementById('canvas-size').value);
   const cellSize = parseInt(document.getElementById('cell-size').value);
@@ -517,3 +520,4 @@ for (const id of ['canvas-size', 'cell-size', 'show-grid', 'show-debug']) {
 }
 
 render();
+}

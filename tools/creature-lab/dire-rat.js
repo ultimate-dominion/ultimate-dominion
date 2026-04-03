@@ -592,6 +592,14 @@ function drawNewDireRat(ctx, w, h) {
 
 
 // ==========================================================================
+// Standard creature interface — used by viewer.html and render-creature.mjs
+// ==========================================================================
+export function drawDireRatClean(ctx, skeleton, w, h) {
+  drawCleanCreature(ctx, skeleton, w, h, { bodyGradHueShift, fillCircle, fillEllipse });
+}
+export default { draw: drawDireRatClean, skeleton: direRatSkeleton, gridW: 7, gridH: 4 };
+
+// ==========================================================================
 // Harness
 // ==========================================================================
 let currentSeed = Math.floor(Math.random() * 100000);
@@ -712,7 +720,7 @@ for (const id of ['canvas-size', 'cell-size', 'show-grid', 'show-debug']) {
 }
 
 // Initial render
-render();
+if (typeof document !== 'undefined') render();
 
 // HMR
 if (import.meta.hot) {
