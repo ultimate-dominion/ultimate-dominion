@@ -9,11 +9,24 @@ const CHAR_PALETTE = " .`',:-~^;*+!=?#@";
 
 // Alternative palettes — pass as opts.charPalette to experiment
 export const PALETTES = {
-  default:  " .`',:-~^;*+!=?#@",
-  blocks:   " ░▒▓█",
-  organic:  " .·∙•◦○◉●",
-  dense:    " .,:;i!|lIYXZAUDB$#@",
-  runes:    " .ᚹᚺᚾᛁᛃᛇᛈᛊᛏᛒᛖᛗᚱᚲᚷᚠᛟ",
+  default:   " .`',:-~^;*+!=?#@",
+  blocks:    " ░▒▓█",
+  organic:   " .·∙•◦○◉●",
+  dense:     " .,:;i!|lIYXZAUDB$#@",
+  runes:     " .ᚹᚺᚾᛁᛃᛇᛈᛊᛏᛒᛖᛗᚱᚲᚷᚠᛟ",
+  composite: " ·∙ᛁᚾᛃ•ᚱᛒ○ᛖ◉▒ᛟ▓█",
+};
+
+// Zone-based composite: guarantees different character families per luminance zone.
+// Pass as opts.charZones — overrides opts.charPalette for char selection.
+// Each zone: { maxLum, chars } — chars auto-calibrated by pixel coverage within the zone.
+export const COMPOSITE_PALETTES = {
+  arcane: [
+    { maxLum: 0.15, chars: " ·∙ᛁ"  },   // dark:      sparse dots + thin runic stroke
+    { maxLum: 0.40, chars: "ᚾᛃᚱ•"  },   // shadow:    runic symbols for body texture
+    { maxLum: 0.65, chars: "ᛒ○ᛖ◉"  },   // body:      fuller runes + organic circles
+    { maxLum: 1.00, chars: "▒ᛟ▓█"  },   // highlight: solid blocks for lit surfaces
+  ],
 };
 const EDGE_CHARS = ['-', '/', '|', '\\', '-', '/', '|', '\\'];
 const EDGE_GRADIENT_THRESHOLD = 0.08;
@@ -201,9 +214,10 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
     enable3D = true,
     enableHalfBlock = true,
     charPalette = CHAR_PALETTE,
+    charZones = null,
   } = opts;
 
-  const charBrightness = buildCharBrightness(charPalette);
+  const charBrightness = charZones ? null : buildCharBrightness(charPalette);
 
   if (width < 20 || height < 20) return;
 
@@ -309,12 +323,24 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
 
       const litLum = Math.min(1, color.lum * lightMul);
       const charLum = Math.max(charDensityFloor, litLum);
-      let bestIdx = 0, bestDiff = 1;
-      for (let i = 0; i < brightness.length; i++) {
-        const diff = Math.abs(brightness[i] - charLum);
-        if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+      let char;
+      if (charZones) {
+        const zone = charZones.find(z => charLum <= z.maxLum) ?? charZones[charZones.length - 1];
+        const zb = buildCharBrightness(zone.chars);
+        let bestIdx = 0, bestDiff = 1;
+        for (let i = 0; i < zb.length; i++) {
+          const diff = Math.abs(zb[i] - charLum);
+          if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+        }
+        char = zone.chars[bestIdx];
+      } else {
+        let bestIdx = 0, bestDiff = 1;
+        for (let i = 0; i < brightness.length; i++) {
+          const diff = Math.abs(brightness[i] - charLum);
+          if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+        }
+        char = palette[bestIdx];
       }
-      const char = palette[bestIdx];
       if (char === ' ') continue;
 
       const waveX = Math.sin(elapsed * 0.003 + col * 0.4 + row * 0.3) * 0.4 + Math.sin(elapsed * 0.0017 + col * 0.23 + row * 0.17) * 0.2;

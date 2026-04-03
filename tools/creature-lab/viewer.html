@@ -86,6 +86,7 @@
           <option value="organic">organic ·∙•●</option>
           <option value="dense">dense</option>
           <option value="runes">runes ᚠᚱᛟ</option>
+          <option value="composite">composite ᚾ▒◉</option>
         </select>
       </label>
       <label class="animate-label">
@@ -144,7 +145,7 @@
   </div>
 
   <script type="module">
-    import { renderAscii, PALETTES } from './ascii-renderer.js';
+    import { renderAscii, PALETTES, COMPOSITE_PALETTES } from './ascii-renderer.js';
     import { drawBodyOutline, drawLimbChain, drawDebugSkeleton } from './skeleton.js';
     import { MONSTER_TEMPLATES_REDUX } from './game-draws.js';
 
@@ -383,13 +384,16 @@
       const canvasW = size;
       const canvasH = Math.round(size * gridH / gridW);
       const selectedPalette = document.getElementById('palette-select').value;
-      const charPalette = PALETTES[selectedPalette] || PALETTES.default;
+      const isComposite = selectedPalette === 'composite';
+      const charPalette = isComposite ? PALETTES.default : (PALETTES[selectedPalette] || PALETTES.default);
+      const charZones = isComposite ? COMPOSITE_PALETTES.arcane : undefined;
       const fullChars = document.getElementById('full-chars').checked;
       const asciiOpts = {
         elapsed, cellSize,
         level: CREATURES[currentIndex].level,
         gridWidth: gridW, gridHeight: gridH,
         charPalette,
+        charZones,
         enableHalfBlock: !fullChars,
         charDensityFloor: fullChars ? 0.08 : 0.30,
       };
