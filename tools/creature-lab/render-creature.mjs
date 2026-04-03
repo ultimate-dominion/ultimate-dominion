@@ -38,7 +38,7 @@ const REGISTRY = {
   'gelatinous-ooze':   { gridW: 7,  gridH: 7,  ref: 'gelatinous-ooze-ref.webp' },
   'bugbear':           { gridW: 7,  gridH: 7,  ref: 'bugbear-ref.webp' },
   'carrion-crawler':   { gridW: 10, gridH: 13, ref: 'carrion-crawler-ref.webp' },
-  'hook-horror':       { gridW: 14, gridH: 12, ref: 'hook-horror-ref.png' },
+  'hook-horror':       { gridW: 14, gridH: 12, ref: 'hook-horror-ref.webp' },
 };
 
 // Parse args

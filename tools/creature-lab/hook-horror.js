@@ -22,35 +22,37 @@ function rgba(parts, alpha) {
 
 export const hookHorrorSkeleton = {
   spine: [
-    { id: 'beak', x: 0.22, y: 0.30, radius: 0.026 },
-    { id: 'head', x: 0.31, y: 0.26, radius: 0.066 },
-    { id: 'neck', x: 0.41, y: 0.33, radius: 0.058 },
-    { id: 'shoulder', x: 0.52, y: 0.42, radius: 0.142 },
-    { id: 'belly', x: 0.57, y: 0.58, radius: 0.126 },
-    { id: 'hip', x: 0.60, y: 0.75, radius: 0.100 },
+    { id: 'beak',     x: 0.18, y: 0.14, radius: 0.024 },  // beak jutting forward-up
+    { id: 'head',     x: 0.28, y: 0.12, radius: 0.066 },  // head RAISED — roaring upward
+    { id: 'neck',     x: 0.38, y: 0.24, radius: 0.058 },  // short thick neck
+    { id: 'shoulder', x: 0.50, y: 0.36, radius: 0.145 },  // massive muscular shoulders
+    { id: 'belly',    x: 0.55, y: 0.56, radius: 0.126 },  // thick belly
+    { id: 'hip',      x: 0.58, y: 0.72, radius: 0.100 },  // wide hips
   ],
   limbs: [
+    // Far arm — rises from right shoulder, hook sweeps up-right
     { attach: 'shoulder', side: 'far', segments: [
-      { x: 0.61, y: 0.38, radius: 0.044 },
-      { x: 0.73, y: 0.22, radius: 0.038 },
-      { x: 0.83, y: 0.10, radius: 0.032 },
-      { x: 0.87, y: 0.05, radius: 0.019 },
+      { x: 0.62, y: 0.30, radius: 0.044 },   // far shoulder
+      { x: 0.74, y: 0.20, radius: 0.038 },   // arm rising up-right
+      { x: 0.84, y: 0.16, radius: 0.030 },   // hook connection
     ]},
+    // Near arm — exits from left shoulder, hook sweeps hard left
     { attach: 'shoulder', side: 'near', segments: [
-      { x: 0.45, y: 0.55, radius: 0.050 },
-      { x: 0.31, y: 0.75, radius: 0.042 },
-      { x: 0.18, y: 0.90, radius: 0.032 },
-      { x: 0.10, y: 0.96, radius: 0.019 },
+      { x: 0.42, y: 0.40, radius: 0.050 },   // near shoulder
+      { x: 0.28, y: 0.44, radius: 0.042 },   // arm going left
+      { x: 0.16, y: 0.42, radius: 0.034 },   // hook connection
     ]},
+    // Far leg — back-right stance
     { attach: 'hip', side: 'far', segments: [
-      { x: 0.67, y: 0.82, radius: 0.050 },
-      { x: 0.72, y: 0.92, radius: 0.038 },
+      { x: 0.66, y: 0.80, radius: 0.050 },
+      { x: 0.72, y: 0.90, radius: 0.038 },
       { x: 0.76, y: 0.98, radius: 0.026 },
     ]},
+    // Near leg — forward-left, wide stance
     { attach: 'hip', side: 'near', segments: [
-      { x: 0.53, y: 0.82, radius: 0.054 },
-      { x: 0.48, y: 0.93, radius: 0.040 },
-      { x: 0.44, y: 0.99, radius: 0.028 },
+      { x: 0.50, y: 0.80, radius: 0.054 },
+      { x: 0.44, y: 0.91, radius: 0.040 },
+      { x: 0.40, y: 0.99, radius: 0.028 },
     ]},
   ],
 };
@@ -159,24 +161,24 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
   const farLeg = skeleton.limbs[2];
   const nearLeg = skeleton.limbs[3];
 
-  const bodyDark = [28, 22, 46];
-  const bodyMid = [58, 46, 96];
-  const bodyLight = [102, 82, 156];
-  const bodyHi = [150, 126, 204];
-  const hideDark = [66, 46, 92];
-  const hideMid = [92, 70, 132];
-  const hideLight = [136, 108, 184];
-  const hookDark = [44, 26, 16];
-  const hookMid = [92, 56, 34];
-  const hookLight = [162, 116, 82];
-  const clawColor = [176, 148, 118];
-  const mouthDark = [20, 8, 12];
-  const mouthRed = [104, 24, 32];
-  const boneDark = [122, 90, 62];
-  const boneLight = [214, 188, 154];
-  const eyeOuter = 'rgb(248,198,132)';
-  const eyeCore = 'rgb(52,26,12)';
-  const eyeGlow = 'rgba(255,214,154,0.26)';
+  const bodyDark = [26, 20, 44];
+  const bodyMid = [62, 48, 102];
+  const bodyLight = [108, 86, 162];
+  const bodyHi = [155, 130, 210];
+  const hideDark = [70, 50, 96];
+  const hideMid = [96, 72, 138];
+  const hideLight = [140, 112, 188];
+  const hookDark = [52, 36, 18];
+  const hookMid = [128, 96, 58];    // lighter, sandier
+  const hookLight = [198, 165, 114]; // bone/sandy highlight
+  const clawColor = [185, 158, 124];
+  const mouthDark = [18, 8, 12];
+  const mouthRed = [112, 28, 36];
+  const boneDark = [130, 96, 66];
+  const boneLight = [218, 192, 156];
+  const eyeGreen = 'rgb(88,200,80)';
+  const eyeCore = 'rgb(14,38,12)';
+  const eyeGlow = 'rgba(100,255,80,0.30)';
 
   ambientOcclusion(ctx, w * 0.56, h * 0.96, w * 0.28, h * 0.05, 0.34);
   ambientOcclusion(ctx, w * 0.48, h * 0.70, w * 0.16, h * 0.05, 0.22);
@@ -272,89 +274,156 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
   );
   fillEllipse(ctx, w * neck.x, h * neck.y, w * 0.08, h * 0.07);
 
+  // HEAD FIN — dark jagged spines projecting UP from top of skull
+  ctx.fillStyle = rgba([18, 12, 30], 0.95);
+  for (const [bx, by, tx, ty] of [
+    [0.26, 0.10, 0.24, 0.02],
+    [0.30, 0.09, 0.29, 0.01],
+    [0.34, 0.10, 0.35, 0.02],
+    [0.38, 0.12, 0.40, 0.04],
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(w * (bx - 0.012), h * by);
+    ctx.lineTo(w * tx, h * ty);
+    ctx.lineTo(w * (bx + 0.012), h * by);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // OPEN MOUTH — upper jaw going up-left, lower jaw drooping down
+  // Throat cavity
   ctx.fillStyle = rgb(mouthDark);
   ctx.beginPath();
-  ctx.moveTo(w * 0.27, h * 0.25);
-  ctx.lineTo(w * 0.12, h * 0.34);
-  ctx.lineTo(w * 0.27, h * 0.44);
-  ctx.lineTo(w * 0.35, h * 0.35);
-  ctx.closePath();
+  ctx.moveTo(w * 0.28, h * 0.09);  // upper jaw root
+  ctx.bezierCurveTo(w * 0.20, h * 0.06, w * 0.14, h * 0.06, w * 0.12, h * 0.10);  // upper jaw tip
+  ctx.bezierCurveTo(w * 0.14, h * 0.16, w * 0.20, h * 0.18, w * 0.26, h * 0.19);  // lower jaw
+  ctx.bezierCurveTo(w * 0.30, h * 0.18, w * 0.32, h * 0.16, w * 0.28, h * 0.09);
   ctx.fill();
+  // Throat glow
+  ctx.fillStyle = rgba([mouthRed[0], mouthRed[1], mouthRed[2]], 0.55);
+  fillEllipse(ctx, w * 0.22, h * 0.14, w * 0.06, h * 0.04);
 
-  ctx.fillStyle = bodyGrad3(
-    ctx,
-    w * 0.24,
-    h * 0.28,
-    w * 0.12,
+  // Upper jaw — bone-colored beak shape
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.20, h * 0.09, w * 0.12,
     hookMid[0], hookMid[1], hookMid[2],
     hookDark[0], hookDark[1], hookDark[2],
-    hookLight[0], hookLight[1], hookLight[2],
-  );
+    hookLight[0], hookLight[1], hookLight[2]);
   ctx.beginPath();
-  ctx.moveTo(w * 0.34, h * 0.23);
-  ctx.quadraticCurveTo(w * 0.22, h * 0.18, w * 0.11, h * 0.32);
-  ctx.quadraticCurveTo(w * 0.21, h * 0.30, w * 0.30, h * 0.32);
-  ctx.closePath();
+  ctx.moveTo(w * 0.30, h * 0.09);
+  ctx.bezierCurveTo(w * 0.22, h * 0.05, w * 0.16, h * 0.04, w * 0.11, h * 0.10);  // upper edge
+  ctx.bezierCurveTo(w * 0.14, h * 0.13, w * 0.18, h * 0.13, w * 0.26, h * 0.12);  // lower edge
+  ctx.bezierCurveTo(w * 0.28, h * 0.11, w * 0.30, h * 0.10, w * 0.30, h * 0.09);
   ctx.fill();
 
-  ctx.beginPath();
-  ctx.moveTo(w * 0.30, h * 0.32);
-  ctx.quadraticCurveTo(w * 0.20, h * 0.40, w * 0.13, h * 0.45);
-  ctx.quadraticCurveTo(w * 0.25, h * 0.45, w * 0.35, h * 0.38);
-  ctx.quadraticCurveTo(w * 0.35, h * 0.35, w * 0.30, h * 0.32);
-  ctx.fill();
-
-  ctx.fillStyle = rgba([160, 44, 48], 0.45);
-  fillEllipse(ctx, w * 0.22, h * 0.37, w * 0.07, h * 0.04);
-
-  ctx.fillStyle = rgb(boneLight);
-  for (const tooth of [
-    [0.19, 0.29, 0.016],
-    [0.24, 0.28, 0.018],
-  ]) {
-    ctx.beginPath();
-    ctx.moveTo(w * tooth[0], h * tooth[1]);
-    ctx.lineTo(w * (tooth[0] + 0.006), h * (tooth[1] + tooth[2]));
-    ctx.lineTo(w * (tooth[0] + 0.012), h * tooth[1]);
-    ctx.closePath();
-    ctx.fill();
-  }
-  for (const tooth of [
-    [0.18, 0.41, 0.015],
-    [0.26, 0.41, 0.017],
-  ]) {
-    ctx.beginPath();
-    ctx.moveTo(w * tooth[0], h * tooth[1]);
-    ctx.lineTo(w * (tooth[0] + 0.006), h * (tooth[1] - tooth[2]));
-    ctx.lineTo(w * (tooth[0] + 0.012), h * tooth[1]);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  ctx.fillStyle = rgb(hookDark);
+  // Lower jaw — shorter, hangs down
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.20, h * 0.18, w * 0.10,
+    hookMid[0], hookMid[1], hookMid[2],
+    hookDark[0], hookDark[1], hookDark[2],
+    hookLight[0], hookLight[1], hookLight[2]);
   ctx.beginPath();
   ctx.moveTo(w * 0.28, h * 0.18);
-  ctx.lineTo(w * 0.24, h * 0.11);
-  ctx.lineTo(w * 0.31, h * 0.15);
-  ctx.closePath();
+  ctx.bezierCurveTo(w * 0.22, h * 0.19, w * 0.16, h * 0.18, w * 0.13, h * 0.14);  // lower edge
+  ctx.bezierCurveTo(w * 0.14, h * 0.12, w * 0.18, h * 0.12, w * 0.26, h * 0.15);  // upper edge
+  ctx.bezierCurveTo(w * 0.28, h * 0.16, w * 0.28, h * 0.17, w * 0.28, h * 0.18);
   ctx.fill();
+
+  // Teeth — upper row (pointing down into cavity)
+  ctx.fillStyle = rgb(boneLight);
+  for (const [tx, ty, len] of [[0.19, 0.12, 0.018], [0.23, 0.11, 0.020], [0.27, 0.11, 0.016]]) {
+    ctx.beginPath();
+    ctx.moveTo(w * tx, h * ty);
+    ctx.lineTo(w * (tx + 0.005), h * (ty + len));
+    ctx.lineTo(w * (tx + 0.011), h * ty);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Teeth — lower row (pointing up)
+  for (const [tx, ty, len] of [[0.18, 0.16, 0.016], [0.22, 0.16, 0.018], [0.26, 0.16, 0.014]]) {
+    ctx.beginPath();
+    ctx.moveTo(w * tx, h * ty);
+    ctx.lineTo(w * (tx + 0.005), h * (ty - len));
+    ctx.lineTo(w * (tx + 0.010), h * ty);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // CAT WHISKERS — thin white lines from snout area
+  ctx.strokeStyle = 'rgba(230,225,210,0.80)';
+  ctx.lineWidth = w * 0.003;
+  ctx.lineCap = 'round';
+  for (const [ox, oy, ex, ey] of [
+    [0.20, 0.10, 0.04, 0.07],
+    [0.20, 0.12, 0.03, 0.12],
+    [0.20, 0.14, 0.04, 0.17],
+    [0.22, 0.10, 0.06, 0.06],
+    [0.22, 0.14, 0.06, 0.18],
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(w * ox, h * oy);
+    ctx.lineTo(w * ex, h * ey);
+    ctx.stroke();
+  }
+
+  // SINGLE GREEN EYE — large, prominent, glowing
+  drawEye(ctx, w * 0.30, h * 0.10, w * 0.018, eyeGreen, eyeCore, eyeGlow);
+
+  // BACK SPINE FINS — dark jagged spines projecting upward from the back
+  ctx.fillStyle = rgba([18, 12, 30], 0.92);
+  for (const [bx, by, tx, ty] of [
+    [0.56, 0.28, 0.54, 0.18],
+    [0.62, 0.26, 0.62, 0.15],
+    [0.67, 0.28, 0.68, 0.17],
+    [0.72, 0.30, 0.74, 0.20],
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(w * (bx - 0.016), h * by);
+    ctx.lineTo(w * tx, h * ty);
+    ctx.lineTo(w * (bx + 0.016), h * by);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Side membrane webbing — behind left arm, dark
+  ctx.fillStyle = rgba([18, 14, 32], 0.68);
   ctx.beginPath();
-  ctx.moveTo(w * 0.36, h * 0.17);
-  ctx.lineTo(w * 0.40, h * 0.10);
-  ctx.lineTo(w * 0.34, h * 0.15);
+  ctx.moveTo(w * 0.40, h * 0.34);
+  ctx.bezierCurveTo(w * 0.30, h * 0.28, w * 0.20, h * 0.32, w * 0.16, h * 0.40);
+  ctx.bezierCurveTo(w * 0.22, h * 0.46, w * 0.32, h * 0.44, w * 0.42, h * 0.42);
   ctx.closePath();
   ctx.fill();
 
-  drawEye(ctx, w * 0.25, h * 0.24, w * 0.010, eyeOuter, eyeCore, eyeGlow);
-  drawEye(ctx, w * 0.32, h * 0.25, w * 0.008, eyeOuter, eyeCore, eyeGlow);
+  // MUSCLE RIDGES — prominent on chest and abdomen
+  ctx.strokeStyle = rgba(bodyHi, 0.28);
+  ctx.lineWidth = Math.max(1.5, w * 0.005);
+  for (const ridge of [
+    [0.44, 0.38, 0.56, 0.28, 0.68, 0.32],
+    [0.42, 0.48, 0.55, 0.38, 0.66, 0.42],
+    [0.44, 0.58, 0.56, 0.50, 0.65, 0.54],
+    [0.46, 0.66, 0.57, 0.60, 0.63, 0.64],
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(w * ridge[0], h * ridge[1]);
+    ctx.quadraticCurveTo(w * ridge[2], h * ridge[3], w * ridge[4], h * ridge[5]);
+    ctx.stroke();
+  }
+  // Vertical center muscle divider
+  ctx.strokeStyle = rgba(bodyDark, 0.40);
+  ctx.lineWidth = Math.max(1, w * 0.004);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.50, h * 0.36);
+  ctx.bezierCurveTo(w * 0.50, h * 0.48, w * 0.52, h * 0.58, w * 0.54, h * 0.66);
+  ctx.stroke();
 
-  drawHookBlade(ctx, w, h, 0.87, 0.05, 0.99, -0.02, 0.70, 0.31, 0.032, hookMid, hookDark, hookLight);
-
+  // NEAR ARM LIMBS + NEAR HOOK (drawn last, in front)
   drawLimbChain(ctx, nearLeg.segments, w, h, rgb([72, 56, 108]));
   drawLimbChain(ctx, nearArm.segments, w, h, rgb([86, 68, 124]));
-  drawLimbChain(ctx, farArm.segments.slice(2), w, h, rgb([96, 58, 34]));
-  drawLimbChain(ctx, nearArm.segments.slice(2), w, h, rgb([112, 66, 38]));
+  // Arm connection bulge (thick shoulder)
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.42, h * 0.40, w * 0.06,
+    hideMid[0], hideMid[1], hideMid[2],
+    bodyDark[0], bodyDark[1], bodyDark[2],
+    hideLight[0], hideLight[1], hideLight[2]);
+  fillEllipse(ctx, w * 0.42, h * 0.40, w * 0.052, h * 0.044);
 
+  // FEET CLAWS
   const farFoot = farLeg.segments[farLeg.segments.length - 1];
   const farPrev = farLeg.segments[farLeg.segments.length - 2];
   drawFootClaws(ctx, farFoot, farPrev, w, h, clawColor, 0.55);
@@ -363,35 +432,103 @@ export function drawHookHorrorClean(ctx, skeleton, w, h) {
   const nearPrev = nearLeg.segments[nearLeg.segments.length - 2];
   drawFootClaws(ctx, nearFoot, nearPrev, w, h, clawColor, 1);
 
-  ctx.fillStyle = bodyGrad3(
-    ctx,
-    w * 0.87,
-    h * 0.05,
-    w * 0.08,
+  // MASSIVE FAR HOOK — rises steeply upper-right, long curl back left over body
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.84, h * 0.12, w * 0.26,
     hookMid[0], hookMid[1], hookMid[2],
     hookDark[0], hookDark[1], hookDark[2],
-    hookLight[0], hookLight[1], hookLight[2],
-  );
-  fillEllipse(ctx, w * 0.87, h * 0.05, w * 0.032, h * 0.022);
-  ctx.fillStyle = bodyGrad3(
-    ctx,
-    w * 0.10,
-    h * 0.96,
-    w * 0.09,
+    hookLight[0], hookLight[1], hookLight[2]);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.79, h * 0.24);   // arm lower connection
+  ctx.bezierCurveTo(w * 0.88, h * 0.20, w * 0.98, h * 0.14, w * 0.98, h * 0.04);
+  ctx.bezierCurveTo(w * 0.98, h * -0.04, w * 0.88, h * -0.06, w * 0.64, h * 0.00);
+  // inner concave edge returns
+  ctx.bezierCurveTo(w * 0.74, h * 0.04, w * 0.82, h * 0.10, w * 0.80, h * 0.18);
+  ctx.bezierCurveTo(w * 0.80, h * 0.20, w * 0.79, h * 0.22, w * 0.79, h * 0.24);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = rgba(hookDark, 0.50);
+  ctx.lineWidth = Math.max(1, w * 0.003);
+  ctx.stroke();
+  // Serrations on inner concave edge of far hook
+  ctx.fillStyle = rgba(hookDark, 0.90);
+  for (let t = 0; t <= 1; t += 0.18) {
+    const sx = 0.80 + t * (0.70 - 0.80);
+    const sy = 0.18 + t * (0.02 - 0.18);
+    ctx.beginPath();
+    ctx.moveTo(w * (sx - 0.012), h * (sy - 0.008));
+    ctx.lineTo(w * (sx + 0.006), h * (sy + 0.030));
+    ctx.lineTo(w * (sx + 0.018), h * (sy - 0.006));
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Highlight spine
+  ctx.strokeStyle = rgba(hookLight, 0.38);
+  ctx.lineWidth = Math.max(1, w * 0.004);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.78, h * 0.20);
+  ctx.bezierCurveTo(w * 0.88, h * 0.16, w * 0.96, h * 0.10, w * 0.96, h * 0.04);
+  ctx.bezierCurveTo(w * 0.96, h * -0.02, w * 0.86, h * -0.04, w * 0.66, h * 0.01);
+  ctx.stroke();
+  // Far arm connection nub
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.82, h * 0.18, w * 0.06,
     hookMid[0], hookMid[1], hookMid[2],
     hookDark[0], hookDark[1], hookDark[2],
-    hookLight[0], hookLight[1], hookLight[2],
-  );
-  fillEllipse(ctx, w * 0.10, h * 0.96, w * 0.030, h * 0.022);
+    hookLight[0], hookLight[1], hookLight[2]);
+  fillEllipse(ctx, w * 0.82, h * 0.18, w * 0.040, h * 0.030);
 
-  drawHookBlade(ctx, w, h, 0.10, 0.96, -0.10, 0.94, 0.24, 0.98, 0.040, hookMid, hookDark, hookLight);
+  // MASSIVE NEAR HOOK — sweeps left, curls downward (explicit bezier sickle)
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.12, h * 0.44, w * 0.22,
+    hookMid[0], hookMid[1], hookMid[2],
+    hookDark[0], hookDark[1], hookDark[2],
+    hookLight[0], hookLight[1], hookLight[2]);
+  ctx.beginPath();
+  // outer (convex) edge: from arm top-side, sweeps left then curls down
+  ctx.moveTo(w * 0.20, h * 0.36);   // arm upper connection
+  ctx.bezierCurveTo(w * 0.10, h * 0.30, w * 0.02, h * 0.34, w * 0.00, h * 0.46);
+  ctx.bezierCurveTo(w * -0.02, h * 0.56, w * 0.04, h * 0.64, w * 0.14, h * 0.66);
+  // inner (concave) edge: returns toward arm
+  ctx.bezierCurveTo(w * 0.18, h * 0.60, w * 0.22, h * 0.52, w * 0.22, h * 0.44);
+  ctx.bezierCurveTo(w * 0.22, h * 0.40, w * 0.20, h * 0.38, w * 0.20, h * 0.36);
+  ctx.closePath();
+  ctx.fill();
+  // Edge line
+  ctx.strokeStyle = rgba(hookDark, 0.50);
+  ctx.lineWidth = Math.max(1, w * 0.003);
+  ctx.stroke();
+  // Serrations on inner concave edge of near hook
+  ctx.fillStyle = rgba(hookDark, 0.90);
+  for (let t = 0; t <= 1; t += 0.18) {
+    const sx = 0.20 + t * (0.14 - 0.20);
+    const sy = 0.44 + t * (0.66 - 0.44);
+    ctx.beginPath();
+    ctx.moveTo(w * (sx + 0.008), h * (sy - 0.012));
+    ctx.lineTo(w * (sx - 0.028), h * (sy + 0.006));
+    ctx.lineTo(w * (sx + 0.006), h * (sy + 0.018));
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Highlight along outer spine
+  ctx.strokeStyle = rgba(hookLight, 0.38);
+  ctx.lineWidth = Math.max(1, w * 0.004);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.18, h * 0.34);
+  ctx.bezierCurveTo(w * 0.08, h * 0.28, w * 0.00, h * 0.34, w * -0.02, h * 0.46);
+  ctx.bezierCurveTo(w * -0.03, h * 0.56, w * 0.04, h * 0.62, w * 0.14, h * 0.65);
+  ctx.stroke();
+  // Near arm connection nub
+  ctx.fillStyle = bodyGrad3(ctx, w * 0.16, h * 0.42, w * 0.06,
+    hookMid[0], hookMid[1], hookMid[2],
+    hookDark[0], hookDark[1], hookDark[2],
+    hookLight[0], hookLight[1], hookLight[2]);
+  fillEllipse(ctx, w * 0.16, h * 0.42, w * 0.042, h * 0.032);
 
-  highlight(ctx, w * 0.55, h * 0.36, w * 0.08, rgba(bodyHi, 0.18), 0.26);
-  highlight(ctx, w * 0.39, h * 0.46, w * 0.06, rgba(bodyHi, 0.16), 0.22);
-  highlight(ctx, w * 0.82, h * 0.12, w * 0.05, rgba([224, 190, 158], 0.18), 0.28);
-  highlight(ctx, w * 0.12, h * 0.94, w * 0.05, rgba([224, 190, 158], 0.18), 0.30);
-  ambientOcclusion(ctx, w * 0.44, h * 0.64, w * 0.16, h * 0.05, 0.24);
-  ambientOcclusion(ctx, w * 0.30, h * 0.82, w * 0.14, h * 0.04, 0.24);
+  // HIGHLIGHTS
+  highlight(ctx, w * 0.52, h * 0.34, w * 0.09, rgba(bodyHi, 0.20), 0.28);
+  highlight(ctx, w * 0.40, h * 0.44, w * 0.07, rgba(bodyHi, 0.16), 0.24);
+  highlight(ctx, w * 0.82, h * 0.10, w * 0.06, rgba([224, 195, 145], 0.22), 0.30);
+  highlight(ctx, w * 0.10, h * 0.38, w * 0.06, rgba([224, 195, 145], 0.22), 0.30);
+  ambientOcclusion(ctx, w * 0.50, h * 0.66, w * 0.18, h * 0.05, 0.26);
+  ambientOcclusion(ctx, w * 0.38, h * 0.82, w * 0.14, h * 0.04, 0.24);
 }
 
 const GRID_W = 14;
