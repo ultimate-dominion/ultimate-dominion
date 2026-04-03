@@ -23,10 +23,9 @@ export const basiliskSkeleton = {
     { id: 'neck',     x: 0.34, y: 0.42, radius: 0.082 },  // thick neck, head cocked forward
     { id: 'shoulder', x: 0.47, y: 0.40, radius: 0.114 },  // heavy front body
     { id: 'mid',      x: 0.60, y: 0.43, radius: 0.102 },  // mid body
-    { id: 'hip',      x: 0.73, y: 0.48, radius: 0.090 },  // rear body
-    { id: 'tail',     x: 0.86, y: 0.36, radius: 0.042 },  // tail lifts
-    { id: 'tailtip',  x: 0.96, y: 0.24, radius: 0.016 },  // tip curls high
+    { id: 'hip',      x: 0.73, y: 0.48, radius: 0.090 },  // rear body — body outline stops here
   ],
+  // tail drawn explicitly for boss-level control
   limbs: [
     // Far front leg
     { attach: 'shoulder', side: 'far', segments: [
@@ -65,8 +64,6 @@ export function drawBasiliskClean(ctx, skeleton, w, h) {
   const shoulder = skeleton.spine.find(n => n.id === 'shoulder');
   const mid      = skeleton.spine.find(n => n.id === 'mid');
   const hip      = skeleton.spine.find(n => n.id === 'hip');
-  const tail     = skeleton.spine.find(n => n.id === 'tail');
-  const tailtip  = skeleton.spine.find(n => n.id === 'tailtip');
 
   // PALETTE
   const bodyDark   = [28, 16, 6];
@@ -162,17 +159,18 @@ export function drawBasiliskClean(ctx, skeleton, w, h) {
     bodyHi[0],    bodyHi[1],    bodyHi[2]);
   drawBodyOutline(ctx, skeleton.spine, w, h, bodyFill);
 
-  // Belly — warmer, lighter underside
-  const bellyG = ctx.createLinearGradient(w*0.20, h*0.60, w*0.20, h*0.80);
-  bellyG.addColorStop(0,   `rgba(${bodyMid},0.9)`);
-  bellyG.addColorStop(0.6, `rgba(${bodyDark},0.5)`);
+  // Belly — warmer, lighter underside (gradient starts transparent to avoid hard edge at top)
+  const bellyG = ctx.createLinearGradient(w*0.20, h*0.52, w*0.20, h*0.80);
+  bellyG.addColorStop(0,   'rgba(0,0,0,0)');
+  bellyG.addColorStop(0.25, `rgba(${bodyMid},0.55)`);
+  bellyG.addColorStop(0.65, `rgba(${bodyDark},0.45)`);
   bellyG.addColorStop(1,   'rgba(0,0,0,0)');
   ctx.fillStyle = bellyG;
   ctx.beginPath();
-  ctx.moveTo(w*0.16, h*0.62);
+  ctx.moveTo(w*0.16, h*0.60);
   ctx.bezierCurveTo(w*0.28, h*0.70, w*0.50, h*0.72, w*0.74, h*0.68);
-  ctx.bezierCurveTo(w*0.82, h*0.64, w*0.86, h*0.58, w*0.84, h*0.54);
-  ctx.bezierCurveTo(w*0.72, h*0.58, w*0.50, h*0.62, w*0.22, h*0.60);
+  ctx.bezierCurveTo(w*0.82, h*0.64, w*0.86, h*0.58, w*0.84, h*0.52);
+  ctx.bezierCurveTo(w*0.72, h*0.56, w*0.50, h*0.60, w*0.22, h*0.58);
   ctx.closePath();
   ctx.fill();
 
@@ -231,8 +229,8 @@ export function drawBasiliskClean(ctx, skeleton, w, h) {
     [mid.x,            mid.y - 0.07,       0.017, 0.078],
     [0.67,             0.30,               0.015, 0.066],
     [hip.x,            hip.y - 0.09,       0.013, 0.054],
-    [tail.x,           tail.y - 0.06,      0.010, 0.042],
-    [tailtip.x - 0.04, tailtip.y - 0.02,   0.007, 0.028],
+    [0.84,             0.34,               0.010, 0.042],
+    [0.91,             0.22,               0.007, 0.028],
   ];
 
   for (const [qx, qy, hw, qh] of quillData) {
@@ -267,7 +265,75 @@ export function drawBasiliskClean(ctx, skeleton, w, h) {
   }
 
   // -------------------------------------------------------------------------
-  // 6. MASSIVE HEAD — wide flat croc skull, raised in threat pose
+  // 6. TAIL — thick armored spike, sweeps up high then barbed tip
+  //    Drawn explicitly so it's not tangled with the body outline
+  // -------------------------------------------------------------------------
+  // Tail base comes from hip, sweeps up-right, tip curls back with a spike
+  // Thick at root, tapers sharply to a point — like a scorpion tail but lizard
+  const tailGrad = ctx.createLinearGradient(w*0.72, h*0.46, w*0.94, h*0.14);
+  tailGrad.addColorStop(0,   `rgb(${bodyMid})`);
+  tailGrad.addColorStop(0.5, `rgb(${bodyDark})`);
+  tailGrad.addColorStop(1,   `rgb(${spineDark})`);
+
+  // Main tail body — thick tapered shape
+  ctx.fillStyle = tailGrad;
+  ctx.beginPath();
+  ctx.moveTo(w*0.76, h*0.44);          // root upper
+  ctx.bezierCurveTo(
+    w*0.84, h*0.32,
+    w*0.90, h*0.22,
+    w*0.94, h*0.16                      // tip upper
+  );
+  ctx.lineTo(w*0.96, h*0.18);          // tip lower
+  ctx.bezierCurveTo(
+    w*0.90, h*0.26,
+    w*0.85, h*0.36,
+    w*0.80, h*0.52                      // root lower
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Tail armor plates — 3 scale ridges along the top
+  for (const [tx, ty, tw2, th2] of [
+    [0.80, 0.38, 0.022, 0.060],
+    [0.86, 0.28, 0.016, 0.048],
+    [0.91, 0.20, 0.012, 0.036],
+  ]) {
+    ctx.fillStyle = `rgb(${spineDark})`;
+    ctx.beginPath();
+    ctx.moveTo(w*(tx - tw2), h*(ty + th2*0.3));
+    ctx.lineTo(w*tx,          h*(ty - th2));
+    ctx.lineTo(w*(tx + tw2), h*(ty + th2*0.3));
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${spineLight},0.55)`;
+    ctx.lineWidth = Math.max(1, w*0.002);
+    ctx.beginPath(); ctx.moveTo(w*(tx-tw2*0.1), h*(ty+th2*0.1)); ctx.lineTo(w*tx, h*(ty-th2*0.9)); ctx.stroke();
+  }
+
+  // Barbed spike at tip — pointed backward (threatening)
+  ctx.fillStyle = `rgb(${spineDark})`;
+  ctx.beginPath();
+  ctx.moveTo(w*0.94, h*0.16);          // spike root
+  ctx.lineTo(w*0.98, h*0.10);          // spike tip (up-right)
+  ctx.lineTo(w*0.96, h*0.18);          // spike base
+  ctx.closePath();
+  ctx.fill();
+  // Highlight on spike
+  ctx.strokeStyle = `rgba(${spineLight},0.70)`;
+  ctx.lineWidth = Math.max(1, w*0.002);
+  ctx.beginPath(); ctx.moveTo(w*0.94, h*0.17); ctx.lineTo(w*0.97, h*0.11); ctx.stroke();
+
+  // Tail highlight along top ridge
+  ctx.strokeStyle = `rgba(${bodyHi},0.35)`;
+  ctx.lineWidth = Math.max(2, w*0.004);
+  ctx.beginPath();
+  ctx.moveTo(w*0.77, h*0.44);
+  ctx.bezierCurveTo(w*0.84, h*0.33, w*0.90, h*0.23, w*0.94, h*0.16);
+  ctx.stroke();
+
+  // -------------------------------------------------------------------------
+  // 7. MASSIVE HEAD — wide flat croc skull, raised in threat pose
   // -------------------------------------------------------------------------
   const hx = head.x, hy = head.y, hr = head.radius;
 
