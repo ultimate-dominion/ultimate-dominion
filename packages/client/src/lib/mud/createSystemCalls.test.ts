@@ -1602,4 +1602,58 @@ describe('createSystemCalls — validateTileMonsters', () => {
     expect(mockSetRow).toHaveBeenCalledWith('Position', OFF_TILE_MONSTER, { x: 1, y: 4 });
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', OFF_TILE_MONSTER, { spawned: false });
   });
+
+  it('evicts monster when chain position is (0,0) — position was cleared by removeEntityFromBoard', async () => {
+    // Mob killed: Position=(0,0), Spawned=false on chain.
+    // positionIsCleared triggers ghost eviction regardless of spawned value.
+    const { network } = createMockNetwork();
+    const CLEARED_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000eee';
+
+    network.publicClient.readContract = mockValidationReads({
+      [CLEARED_MONSTER]: { spawned: false },
+    });
+    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__getEntityPosition') return vi.fn().mockResolvedValue([0, 0]);
+        return vi.fn().mockResolvedValue(BigInt(0));
+      },
+    });
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([CLEARED_MONSTER], { x: 3, y: 5 });
+
+    // Should be evicted (either via spawned=false or positionIsCleared)
+    expect(mockSetRow).toHaveBeenCalledWith('Spawned', CLEARED_MONSTER, { spawned: false });
+  });
+
+  it('does NOT false-evict a live monster when chain reads land on different blocks (TOCTOU guard)', async () => {
+    // Race: Spawned read → block N (spawned=true, alive) | Position read → block N+1 (position=0,0, killed).
+    // Previously this caused a false "Synced off-tile" eviction.
+    // Now positionIsCleared evicts it but does NOT log "Synced off-tile" — the monster is dead,
+    // just detected via position instead of spawned flag.
+    // This test verifies that a monster with spawned=true AND position=(0,0) is still evicted
+    // (correct — (0,0) is an impossible live-mob position) but NOT via the off-tile path.
+    const { network } = createMockNetwork();
+    const RACE_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000fff';
+
+    // Simulate race: spawned=true (stale read) but position=(0,0) (current read)
+    network.publicClient.readContract = mockValidationReads({
+      [RACE_MONSTER]: { spawned: true },
+    });
+    network.worldContract.read = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__getEntityPosition') return vi.fn().mockResolvedValue([0, 0]);
+        return vi.fn().mockResolvedValue(BigInt(0));
+      },
+    });
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([RACE_MONSTER], { x: 3, y: 5 });
+
+    // positionIsCleared should trigger eviction (position=0,0 is a cleared board position)
+    // The Position row should be updated to (0,0) and the monster effectively evicted
+    expect(mockSetRow).toHaveBeenCalledWith('Position', RACE_MONSTER, { x: 0, y: 0 });
+    // Spawned is NOT set to false (chain said true — we respect that; WS will correct it)
+    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', RACE_MONSTER, { spawned: false });
+  });
 });

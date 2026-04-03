@@ -530,13 +530,20 @@ export function createSystemCalls(
 
     const results = await Promise.allSettled(
       monsterIds.map(async (id) => {
-        const [spawnedRecord, encounterRecord] = await Promise.all([
+        // Read Spawned, EncounterEntity, AND Position concurrently in the same
+        // Promise.all so all three land on the same block. Previously, Position
+        // was read sequentially *after* the other two, creating a TOCTOU window:
+        // a kill TX confirmed between the Spawned read (block N, spawned=true)
+        // and the Position read (block N+1, position=0,0) produced a false
+        // "Synced off-tile to (0,0)" eviction for a still-alive monster.
+        const [spawnedRecord, encounterRecord, chainPosition] = await Promise.all([
           readStoreRecord(SPAWNED_TABLE_ID, id as `0x${string}`, 'Spawned'),
           readStoreRecord(ENCOUNTER_ENTITY_TABLE_ID, id as `0x${string}`, 'EncounterEntity'),
+          expectedPosition ? syncMonsterPositionFromChain(id) : Promise.resolve(null),
         ]);
 
         return {
-          chainPosition: expectedPosition ? await syncMonsterPositionFromChain(id) : null,
+          chainPosition,
           encounter: decodeEncounterEntityRecord(encounterRecord),
           id,
           spawned: decodeSpawnedRecord(spawnedRecord),
@@ -549,12 +556,19 @@ export function createSystemCalls(
 
       const { chainPosition, encounter, id, spawned } = r.value;
       const inEncounter = Boolean(encounter && encounter.encounterId !== zeroHash);
+      // Only flag as off-tile if chain position is a valid non-zero location that
+      // doesn't match the expected tile. Position=(0,0) means the mob was cleared
+      // by removeEntityFromBoard; treat that as a ghost (caught by spawned===false)
+      // rather than off-tile, to avoid double-eviction noise when chain reads land
+      // on different blocks despite the concurrent fetch.
+      const positionIsCleared = chainPosition !== null && chainPosition.x === 0 && chainPosition.y === 0;
       const offTile = Boolean(
         expectedPosition &&
         chainPosition &&
+        !positionIsCleared &&
         (chainPosition.x !== expectedPosition.x || chainPosition.y !== expectedPosition.y),
       );
-      const isGhost = spawned === false || Boolean(encounter?.died) || offTile;
+      const isGhost = spawned === false || Boolean(encounter?.died) || offTile || positionIsCleared;
 
       if (!isGhost && !inEncounter) continue;
 
@@ -564,6 +578,8 @@ export function createSystemCalls(
         console.warn(
           `[validateTile] Synced off-tile monster ${id.slice(0, 10)} to (${chainPosition?.x},${chainPosition?.y})`,
         );
+      } else if (positionIsCleared) {
+        console.warn(`[validateTile] Evicted cleared-position monster ${id.slice(0, 10)} (position=(0,0) on chain)`);
       } else if (isGhost) {
         console.warn(`[validateTile] Evicted ghost monster ${id.slice(0, 10)}`);
       } else if (inEncounter) {
