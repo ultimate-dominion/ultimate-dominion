@@ -146,3 +146,17 @@ After every git commit, check `docs/operations/launch_checklist.md` for items th
 | Indexer | https://indexer-us-production.up.railway.app |
 
 **What's live for players:** Dark Cave (10x10 grid, levels 1-10), 3 races (Human/Elf/Dwarf), 9 advanced classes at level 10, turn-based PvE + PvP combat, NPC shop, player marketplace, escrow-based PvP economy, lore fragments, badges (Adventurer/Founder/Zone Conqueror), Tavern chat at level 3. Gas relayer abstracts all blockchain interaction.
+
+<!-- TEMPER_RUNTIME:BEGIN -->
+## Temper
+
+Temper is installed as the operating layer for this repo.
+
+- Read `.temper/assistants/shared-canon.json` before major design or release guidance.
+- Use `pnpm exec temper coach --cwd . --json --intent "<what you're designing>"` before major design, balance, UX, infra, security, or release guidance.
+- Use `pnpm exec temper ship lite --cwd . --intent "<what you just built>"` for narrow implementation confidence.
+- Use `pnpm exec temper ship full --cwd . --intent "<summary>"` for player-facing, infra, economy, security, or multi-system work.
+- Read `SESSION.md` first and use `pnpm exec temper handoff --cwd . --slug <slug> --summary "<summary>" --next "<next step>"` when leaving a workstream.
+- Treat `temper.config.json`, `.temper/assistants/shared-canon.json`, and `.temper/assistants/*.md` as the local Temper operating contract.
+- Promote gated full steps explicitly with `pnpm exec temper ship full --cwd . --promote <step>` when you intend to run them.
+<!-- TEMPER_RUNTIME:END -->

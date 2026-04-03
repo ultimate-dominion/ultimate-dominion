@@ -106,3 +106,17 @@ Start with `MEMORY.md`, then read only the relevant topic files:
 - Preferred handoff artifact: `~/Documents/ultimate-dominion/docs/handoffs/YYYY-MM-DD_[task-slug].md`
 - If you create `HANDOFF_*.md` in repo root for compatibility with existing Claude tooling, archive it immediately after writing it.
 - Include branch/worktree, commit hashes, decisions made, blockers, exact next steps, deploy state, and anything surprising.
+
+<!-- TEMPER_RUNTIME:BEGIN -->
+## Temper
+
+Temper is installed as the operating layer for this repo.
+
+- Read `.temper/assistants/shared-canon.json` before major design or release guidance.
+- Use `pnpm exec temper coach --cwd . --json --intent "<what you're designing>"` before major design, balance, UX, infra, security, or release guidance.
+- Use `pnpm exec temper ship lite --cwd . --intent "<what you just built>"` for narrow implementation confidence.
+- Use `pnpm exec temper ship full --cwd . --intent "<summary>"` for player-facing, infra, economy, security, or multi-system work.
+- Read `SESSION.md` first and use `pnpm exec temper handoff --cwd . --slug <slug> --summary "<summary>" --next "<next step>"` when leaving a workstream.
+- Treat `temper.config.json`, `.temper/assistants/shared-canon.json`, and `.temper/assistants/*.md` as the local Temper operating contract.
+- Promote gated full steps explicitly with `pnpm exec temper ship full --cwd . --promote <step>` when you intend to run them.
+<!-- TEMPER_RUNTIME:END -->

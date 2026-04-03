@@ -1,0 +1,468 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-03T17:22:55.208Z",
+  "mode": "onboarded",
+  "name": "ultimate-dominion",
+  "family": "data-driven-progression-rpg",
+  "stack": {
+    "id": "browser-typescript-monorepo",
+    "overlays": [
+      "mud-onchain",
+      "react-client",
+      "railway-service"
+    ]
+  },
+  "package_manager": "pnpm",
+  "paths": {
+    "source_of_truth": [
+      "packages/contracts/zones/dark_cave/effects.json",
+      "packages/contracts/zones/dark_cave/items.json",
+      "packages/contracts/zones/dark_cave/monsters.json",
+      "packages/contracts/zones/windy_peaks/effects.json",
+      "packages/contracts/zones/windy_peaks/items.json",
+      "packages/contracts/zones/windy_peaks/monsters.json",
+      "packages/contracts/worlds.json",
+      "packages/contracts/mud.config.ts",
+      "monsters.json",
+      "CHANGELOG.md"
+    ],
+    "generated": [
+      ".astro",
+      ".mud",
+      "dist",
+      "src/codegen"
+    ],
+    "workflow": {
+      "agents": "AGENTS.md",
+      "session": "SESSION.md",
+      "claude": "CLAUDE.md",
+      "handoffs": [
+        "HANDOFF_monster-images-beta.md",
+        "HANDOFF_prod-ghost-mob-live-repair.md",
+        "HANDOFF_prod-ghost-mob-root-cause.md",
+        "HANDOFF_prod-ghost-mob.md"
+      ],
+      "claude_rules": [
+        ".claude/rules/api.md",
+        ".claude/rules/client.md",
+        ".claude/rules/deploy.md",
+        ".claude/rules/game.md",
+        ".claude/rules/indexer.md",
+        ".claude/rules/solidity.md"
+      ]
+    }
+  },
+  "environments": {
+    "local": {
+      "label": "Local",
+      "branch": "*"
+    },
+    "beta": {
+      "label": "Beta",
+      "branch": "dev"
+    },
+    "prod": {
+      "label": "Production",
+      "branch": "main"
+    }
+  },
+  "commands": {
+    "build": {
+      "cmd": [
+        "pnpm",
+        "build"
+      ],
+      "cwd": ".",
+      "source": "root:scripts.build"
+    },
+    "test": {
+      "cmd": [
+        "pnpm",
+        "test"
+      ],
+      "cwd": ".",
+      "source": "root:scripts.test"
+    },
+    "release_notes": {
+      "cmd": [
+        "pnpm",
+        "changelog:dry"
+      ],
+      "cwd": ".",
+      "source": "root:scripts.changelog:dry"
+    },
+    "typecheck": {
+      "cmd": [
+        "pnpm",
+        "--filter",
+        "client",
+        "run",
+        "typecheck"
+      ],
+      "cwd": ".",
+      "source": "client:scripts.typecheck"
+    },
+    "smoke": {
+      "cmd": [
+        "pnpm",
+        "--filter",
+        "contracts",
+        "run",
+        "test:smoke:all"
+      ],
+      "cwd": ".",
+      "source": "contracts:scripts.test:smoke:all"
+    },
+    "balance_verify": {
+      "cmd": [
+        "pnpm",
+        "--filter",
+        "contracts",
+        "run",
+        "test:balance"
+      ],
+      "cwd": ".",
+      "source": "contracts:scripts.test:balance"
+    }
+  },
+  "ship": {
+    "lite": {
+      "steps": [
+        "build",
+        "test",
+        "release_notes"
+      ],
+      "gated_steps": [],
+      "discovered_steps": [
+        "build",
+        "test",
+        "release_notes"
+      ]
+    },
+    "full": {
+      "steps": [
+        "build",
+        "typecheck",
+        "test",
+        "balance_verify",
+        "release_notes"
+      ],
+      "gated_steps": [
+        "smoke"
+      ],
+      "discovered_steps": [
+        "build",
+        "typecheck",
+        "test",
+        "balance_verify",
+        "smoke",
+        "release_notes"
+      ]
+    }
+  },
+  "assistants": {
+    "install_claude_commands": true,
+    "install_codex_guides": true
+  },
+  "notes": [],
+  "execution_policy": {
+    "commands": {
+      "build": {
+        "id": "build",
+        "cmd": [
+          "pnpm",
+          "build"
+        ],
+        "source": "root:scripts.build",
+        "script": "pnpm recursive run build",
+        "risk": "expensive_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Runs local verification or compile work without explicit remote mutation."
+        ]
+      },
+      "test": {
+        "id": "test",
+        "cmd": [
+          "pnpm",
+          "test"
+        ],
+        "source": "root:scripts.test",
+        "script": "pnpm --filter client run lint",
+        "risk": "safe_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Runs local verification or compile work without explicit remote mutation."
+        ]
+      },
+      "release_notes": {
+        "id": "release_notes",
+        "cmd": [
+          "pnpm",
+          "changelog:dry"
+        ],
+        "source": "root:scripts.changelog:dry",
+        "script": "node scripts/changelog.mjs --dry-run",
+        "risk": "safe_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Generates local release metadata without mutating runtime state."
+        ]
+      },
+      "typecheck": {
+        "id": "typecheck",
+        "cmd": [
+          "pnpm",
+          "--filter",
+          "client",
+          "run",
+          "typecheck"
+        ],
+        "source": "client:scripts.typecheck",
+        "script": "tsc --noEmit",
+        "risk": "expensive_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Runs local verification or compile work without explicit remote mutation."
+        ]
+      },
+      "smoke": {
+        "id": "smoke",
+        "cmd": [
+          "pnpm",
+          "--filter",
+          "contracts",
+          "run",
+          "test:smoke:all"
+        ],
+        "source": "contracts:scripts.test:smoke:all",
+        "script": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/ --reporter=verbose --sequence.concurrent=false'",
+        "risk": "live_stateful",
+        "effect": "beta_or_target_env",
+        "requires_confirmation": true,
+        "reasons": [
+          "Depends on environment credentials or mutates a shared runtime surface."
+        ]
+      },
+      "balance_verify": {
+        "id": "balance_verify",
+        "cmd": [
+          "pnpm",
+          "--filter",
+          "contracts",
+          "run",
+          "test:balance"
+        ],
+        "source": "contracts:scripts.test:balance",
+        "script": "vitest run scripts/balance/",
+        "risk": "expensive_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Runs local verification or compile work without explicit remote mutation."
+        ]
+      }
+    },
+    "hook_recommendations": {
+      "lite": {
+        "current_steps": [
+          "build",
+          "test",
+          "release_notes"
+        ],
+        "recommended_default": [
+          "build",
+          "test",
+          "release_notes"
+        ],
+        "gated_live": [],
+        "blocked_prod": [],
+        "notes": []
+      },
+      "full": {
+        "current_steps": [
+          "build",
+          "typecheck",
+          "test",
+          "balance_verify",
+          "smoke",
+          "release_notes"
+        ],
+        "recommended_default": [
+          "build",
+          "typecheck",
+          "test",
+          "balance_verify",
+          "release_notes"
+        ],
+        "gated_live": [
+          "smoke"
+        ],
+        "blocked_prod": [],
+        "notes": [
+          "Temper would keep full local-by-default and promote riskier steps only after explicit confirmation.",
+          "These full steps touch shared runtime state or require real environment credentials."
+        ]
+      }
+    },
+    "lifecycle": {
+      "stages": [
+        "discovered",
+        "recommended",
+        "blessed",
+        "gated"
+      ],
+      "promote_command": "temper ship <lite|full> --promote <step>",
+      "confirmation_rules": [
+        "Live-stateful steps start gated and require explicit `--promote <step>` to run.",
+        "Production-sensitive steps require both `--promote <step>` and `--confirm-prod`."
+      ],
+      "ship_modes": {
+        "lite": {
+          "discovered_steps": [
+            "build",
+            "test",
+            "release_notes"
+          ],
+          "recommended_steps": [
+            "build",
+            "test",
+            "release_notes"
+          ],
+          "blessed_steps": [
+            "build",
+            "test",
+            "release_notes"
+          ],
+          "gated_steps": [],
+          "prod_confirmation_steps": [],
+          "notes": [
+            "lite blessed default stays local-first: build, test, release_notes"
+          ]
+        },
+        "full": {
+          "discovered_steps": [
+            "build",
+            "typecheck",
+            "test",
+            "balance_verify",
+            "smoke",
+            "release_notes"
+          ],
+          "recommended_steps": [
+            "build",
+            "typecheck",
+            "test",
+            "balance_verify",
+            "release_notes",
+            "smoke"
+          ],
+          "blessed_steps": [
+            "build",
+            "typecheck",
+            "test",
+            "balance_verify",
+            "release_notes"
+          ],
+          "gated_steps": [
+            "smoke"
+          ],
+          "prod_confirmation_steps": [],
+          "notes": [
+            "full blessed default stays local-first: build, typecheck, test, balance_verify, release_notes",
+            "full gated steps require explicit promotion: smoke",
+            "smoke: Depends on environment credentials or mutates a shared runtime surface."
+          ]
+        }
+      }
+    }
+  },
+  "onboarding": {
+    "generated_at": "2026-04-03T17:22:55.251Z",
+    "lifecycle": {
+      "id": "live",
+      "label": "Live Service / Existing Users Likely",
+      "reasons": [
+        "A beta environment is explicitly modeled in repo workflows or deploy rules.",
+        "A production environment is explicitly modeled, which usually means operator mistakes have real user impact.",
+        "Both beta and prod exist alongside GitHub workflows, so release discipline already matters.",
+        "The repo has 2409 commits locally, which suggests an established system rather than a throwaway prototype.",
+        "The stack includes live-service overlays, so environment mistakes can mutate real state or real services."
+      ],
+      "operator_habit": "Treat default automation as a safety rail, not a shortcut. Beta and prod paths should stay explicit.",
+      "player_impact": "Small workflow mistakes can hit players directly through progression, deploy, or economy surfaces."
+    },
+    "efficiency": {
+      "score": 80,
+      "current_startup_tokens": "~5K-15K tokens",
+      "projected_startup_tokens": "~2K-5K tokens"
+    },
+    "operator_answers": {
+      "name": "ultimate-dominion",
+      "family": "data-driven-progression-rpg",
+      "stack": "browser-typescript-monorepo",
+      "beta_branch": "dev",
+      "prod_branch": "main"
+    },
+    "memory": {
+      "release_pattern": "beta environment is modeled; prod environment is modeled; 5 GitHub workflow files detected",
+      "continuity_pattern": "repo-native session tracking exists; 4 handoff surfaces detected",
+      "recurring_failure_modes": [
+        "Root `test` currently resolves to lint-style validation rather than a real test or verify path.",
+        "deep verification has shared-state steps that should stay promoted, not default: smoke"
+      ],
+      "recent_signals": [
+        "2409 local commits available for pattern inference",
+        "recent commit mix fix:6, docs:5, chore:1",
+        "top recommendations split-root-test-from-lint, gate-live-verification"
+      ]
+    },
+    "resurfacing": [
+      {
+        "id": "promote-gated-full-steps",
+        "phase": "ship",
+        "priority": "high",
+        "message": "Keep full-flow live verification explicit. Promote only when needed: smoke."
+      },
+      {
+        "id": "root-test-is-lint",
+        "phase": "ship",
+        "priority": "high",
+        "message": "Do not read root `test` as real release confidence until the repo splits lint from verification."
+      },
+      {
+        "id": "preserve-working-habits",
+        "phase": "always",
+        "priority": "medium",
+        "message": "Use Temper to keep the repo's good habits explicit instead of letting them drift back into chat."
+      },
+      {
+        "id": "watch-recurring-failure-modes",
+        "phase": "always",
+        "priority": "medium",
+        "message": "Recurring failure modes to keep visible: Root `test` currently resolves to lint-style validation rather than a real test or verify path.; deep verification has shared-state steps that should stay promoted, not default: smoke"
+      }
+    ],
+    "recommendations": [
+      {
+        "id": "split-root-test-from-lint",
+        "priority": "high",
+        "title": "Split root lint from root verification"
+      },
+      {
+        "id": "gate-live-verification",
+        "priority": "high",
+        "title": "Keep live-stateful verification out of the default `ship full` path"
+      },
+      {
+        "id": "surface-strengths-over-time",
+        "priority": "medium",
+        "title": "Use Temper to preserve and reinforce what already works"
+      }
+    ]
+  }
+}
