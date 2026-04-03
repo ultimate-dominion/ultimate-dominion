@@ -95,6 +95,10 @@
       <div class="panel-label">Painted</div>
       <canvas id="next-raw"></canvas>
     </div>
+    <div class="panel">
+      <div class="panel-label">Game View</div>
+      <canvas id="game-ascii"></canvas>
+    </div>
 
     <div class="ref-strip">
       <!-- Reference -->
@@ -149,26 +153,48 @@
     import { renderAscii } from './ascii-renderer.js';
     import { drawBodyOutline, drawLimbChain, drawDebugSkeleton } from './skeleton.js';
 
+    // gameGrid: actual grid dimensions used in-game (determines ASCII density & aspect ratio)
+    // labGrid: dimensions used in the creature lab for development
     const CREATURES = [
-      { slug: 'dire-rat',          name: 'Dire Rat',        level: 1,  zone: 'Z1', status: 'done', ref: 'refs/rat-ref.png',
+      { slug: 'dire-rat',          name: 'Dire Rat',        level: 1,  status: 'done', ref: 'refs/rat-ref.png',
+        atmosphere: [140,110,70,0.10],
+        gameGrid: { w: 14, h: 8  }, labGrid: { w: 7,  h: 4  },
         goals: 'Hunched charge pose\nFacing left\nFur texture\nGlowing red eyes\nBig incisor teeth' },
-      { slug: 'kobold',            name: 'Kobold',          level: 2,  zone: 'Z1', status: 'done', ref: 'refs/kobold-ref.webp',
+      { slug: 'kobold',            name: 'Kobold',          level: 2,  status: 'done', ref: 'refs/kobold-ref.webp',
+        atmosphere: [160,120,50,0.10],
+        gameGrid: { w: 7,  h: 5  }, labGrid: { w: 7,  h: 5  },
         goals: 'Extreme crouch, spear lunge\nDigitigrade legs\nScaly green-brown skin\nLarge yellow eyes' },
-      { slug: 'goblin',            name: 'Goblin',          level: 3,  zone: 'Z1', status: 'done', ref: 'refs/goblin-ref.webp',
+      { slug: 'goblin',            name: 'Goblin',          level: 3,  status: 'done', ref: 'refs/goblin-ref.webp',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
         goals: '3/4 facing left, mid-swing axe\nOlive-green skin, HUGE ears\nBig head, wide snarl\nCrude leather armor' },
-      { slug: 'giant-spider',      name: 'Giant Spider',    level: 4,  zone: 'Z1', status: 'done', ref: 'refs/giant-spider-ref.jpg',
+      { slug: 'giant-spider',      name: 'Giant Spider',    level: 4,  status: 'done', ref: 'refs/giant-spider-ref.jpg',
+        atmosphere: [72,164,226,0.15],
+        gameGrid: { w: 10, h: 12 }, labGrid: { w: 7,  h: 5  },
         goals: 'Low hunting stance\n8 legs spread wide\nAbdomen raised\nFangs forward' },
-      { slug: 'skeleton-creature', name: 'Skeleton',        level: 5,  zone: 'Z1', status: 'done', ref: 'refs/skeleton-ref.webp',
+      { slug: 'skeleton-creature', name: 'Skeleton',        level: 5,  status: 'done', ref: 'refs/skeleton-ref.webp',
+        atmosphere: [96,156,70,0.12],
+        gameGrid: { w: 10, h: 12 }, labGrid: { w: 7,  h: 5  },
         goals: 'Sword raised overhead\nGreen glowing eyes\nExposed ribcage\nBone white with shadow' },
-      { slug: 'goblin-shaman',     name: 'Goblin Shaman',   level: 6,  zone: 'Z1', status: 'done', ref: 'refs/goblin-shaman-ref.webp',
+      { slug: 'goblin-shaman',     name: 'Goblin Shaman',   level: 6,  status: 'done', ref: 'refs/goblin-shaman-ref.webp',
+        atmosphere: [106,70,164,0.12],
+        gameGrid: { w: 12, h: 11 }, labGrid: { w: 7,  h: 7  },
         goals: 'Staff raised, casting pose\nPurple-green magical glow\nRobes and bone fetishes' },
-      { slug: 'gelatinous-ooze',   name: 'Gelatinous Ooze', level: 7,  zone: 'Z1', status: 'done', ref: 'refs/gelatinous-ooze-ref.webp',
+      { slug: 'gelatinous-ooze',   name: 'Gelatinous Ooze', level: 7,  status: 'done', ref: 'refs/gelatinous-ooze-ref.webp',
+        atmosphere: [66,182,56,0.12],
+        gameGrid: { w: 10, h: 14 }, labGrid: { w: 7,  h: 7  },
         goals: 'Translucent cube form\nDripping edges\nObject trapped inside\nBlue-green tint' },
-      { slug: 'bugbear',           name: 'Bugbear',         level: 8,  zone: 'Z1', status: 'wip',  ref: 'refs/bugbear-ref.webp',
+      { slug: 'bugbear',           name: 'Bugbear',         level: 8,  status: 'wip',  ref: 'refs/bugbear-ref.webp',
+        atmosphere: [172,138,72,0.10],
+        gameGrid: { w: 10, h: 12 }, labGrid: { w: 7,  h: 7  },
         goals: 'Massive hunched brawler\nClub raised overhead\nMatted grey-brown fur\nYellow fangs, red eyes' },
-      { slug: 'carrion-crawler',   name: 'Carrion Crawler', level: 9,  zone: 'Z1', status: 'done', ref: 'refs/carrion-crawler-ref.webp',
+      { slug: 'carrion-crawler',   name: 'Carrion Crawler', level: 9,  status: 'done', ref: 'refs/carrion-crawler-ref.webp',
+        atmosphere: [144,168,208,0.14],
+        gameGrid: { w: 10, h: 13 }, labGrid: { w: 10, h: 13 },
         goals: 'Long segmented body\nTentacles spread forward\nMandibles open\nInsectoid green-brown' },
-      { slug: 'hook-horror',       name: 'Hook Horror',     level: 10, zone: 'Z1', status: 'wip',  ref: 'refs/hook-horror-ref.png',
+      { slug: 'hook-horror',       name: 'Hook Horror',     level: 10, status: 'wip',  ref: 'refs/hook-horror-ref.png',
+        atmosphere: [136,82,178,0.12],
+        gameGrid: { w: 14, h: 12 }, labGrid: { w: 14, h: 12 },
         goals: 'Hunched cave predator\nBeaked screaming face\nOne hook low, one overhead\nPurple-blue flesh\nBrown scythe forearms\nDigitigrade legs' },
     ];
 
@@ -314,7 +340,7 @@
       currentMod = null;
 
       // Clear canvases
-      for (const id of ['skel-raw', 'next-ascii', 'next-raw']) {
+      for (const id of ['skel-raw', 'next-ascii', 'next-raw', 'game-ascii']) {
         const cv = document.getElementById(id);
         cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
       }
@@ -390,6 +416,34 @@
       ctx3.fillStyle = '#000'; ctx3.fillRect(0, 0, canvasW, canvasH);
       draw(ctx3, skeleton, canvasW, canvasH);
 
+      // Game panel — game grid dimensions + atmospheric glow
+      const cr = CREATURES[currentIndex];
+      const gW = cr.gameGrid.w;
+      const gH = cr.gameGrid.h;
+      const gameCanvasH = Math.round(size * gH / gW);
+      const displayGameH = `${Math.min(gameCanvasH, Math.round(maxDisplay * gH / gW))}px`;
+      const gameAsciiOpts = { elapsed, cellSize, level: cr.level, gridWidth: gW, gridHeight: gH };
+
+      const c4 = document.getElementById('game-ascii');
+      c4.width = canvasW; c4.height = gameCanvasH;
+      c4.style.width = displayW; c4.style.height = displayGameH;
+      const ctx4 = c4.getContext('2d');
+      ctx4.fillStyle = '#000'; ctx4.fillRect(0, 0, canvasW, gameCanvasH);
+      renderAscii(ctx4, (tctx, tw, th) => draw(tctx, skeleton, tw, th), 0, 0, canvasW, gameCanvasH, gameAsciiOpts);
+
+      // Atmospheric glow overlay (matches game renderer)
+      const [atmR, atmG, atmB, atmI = 0.10] = cr.atmosphere;
+      const glowCX = canvasW / 2;
+      const glowCY = gameCanvasH * 0.42;
+      const glowRad = Math.max(canvasW, gameCanvasH) * 0.65;
+      const grad = ctx4.createRadialGradient(glowCX, glowCY, 0, glowCX, glowCY, glowRad);
+      grad.addColorStop(0,    `rgba(${atmR},${atmG},${atmB},${atmI})`);
+      grad.addColorStop(0.35, `rgba(${atmR},${atmG},${atmB},${atmI * 0.5})`);
+      grad.addColorStop(0.7,  `rgba(${atmR},${atmG},${atmB},${atmI * 0.15})`);
+      grad.addColorStop(1,    'rgba(0,0,0,0)');
+      ctx4.fillStyle = grad;
+      ctx4.fillRect(0, 0, canvasW, gameCanvasH);
+
       if (showGrid) {
         for (const canvas of [c1, c2, c3]) {
           const gctx = canvas.getContext('2d');
@@ -398,6 +452,13 @@
           for (let x = 0; x <= canvasW; x += step) { gctx.beginPath(); gctx.moveTo(x, 0); gctx.lineTo(x, canvasH); gctx.stroke(); }
           for (let y = 0; y <= canvasH; y += step) { gctx.beginPath(); gctx.moveTo(0, y); gctx.lineTo(canvasW, y); gctx.stroke(); }
         }
+        // Game panel grid uses its own dims
+        const g4ctx = c4.getContext('2d');
+        g4ctx.strokeStyle = 'rgba(255,255,255,0.06)'; g4ctx.lineWidth = 1;
+        const gStep = canvasW / gW;
+        for (let x = 0; x <= canvasW; x += gStep) { g4ctx.beginPath(); g4ctx.moveTo(x, 0); g4ctx.lineTo(x, gameCanvasH); g4ctx.stroke(); }
+        const hStep = gameCanvasH / gH;
+        for (let y = 0; y <= gameCanvasH; y += hStep) { g4ctx.beginPath(); g4ctx.moveTo(0, y); g4ctx.lineTo(canvasW, y); g4ctx.stroke(); }
       }
     }
 
