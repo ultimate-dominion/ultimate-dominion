@@ -12,7 +12,7 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { makeCreatureCamera, addCreatureLighting, makeThreeDrawFn } from './three-bridge.js';
+import { makeCreatureCamera, makeThreeDrawFn } from './three-bridge.js';
 
 // Clip name normalisation — maps whatever the artist called their animations
 // to our standard clip names (idle / attack / hit / death / walk / block).
@@ -58,15 +58,23 @@ function fitModel(model, targetHeight = 1.8) {
 // --------------------------------------------------------------------------
 // Toon material pass — replace PBR materials with MeshToonMaterial so the
 // ASCII renderer gets the same flat-shaded banding we use for spec creatures.
-// Call this after load if you want the toon look; skip for PBR sampling.
+//
+// Key insight: most game GLBs store color in albedo textures, not m.color.
+// m.color is almost always white (1,1,1) and multiplying by that blows out
+// the gradient. We use a fixed mid-gray base so the gradient does the work.
 // --------------------------------------------------------------------------
 export function applyToonMaterials(model, toonGradMap) {
   model.traverse(node => {
     if (!node.isMesh) return;
     const old = Array.isArray(node.material) ? node.material : [node.material];
     const next = old.map(m => {
+      // Check if the base color is meaningfully non-white (artist painted it).
+      // Threshold: if luminance < 0.85, trust the color; otherwise use mid-gray.
+      const c = m.color ?? new THREE.Color(0.5, 0.5, 0.5);
+      const lum = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
+      const baseColor = lum < 0.85 ? c.clone().multiplyScalar(0.85) : new THREE.Color(0.52, 0.50, 0.48);
       const toon = new THREE.MeshToonMaterial({
-        color: m.color ?? new THREE.Color(0.5, 0.5, 0.5),
+        color: baseColor,
         gradientMap: toonGradMap,
       });
       m.dispose();
@@ -102,21 +110,36 @@ export async function loadGLBCreature(url, gridW, gridH, threeRenderer, opts = {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0, 0, 0);
-  addCreatureLighting(scene);
+
+  // GLB-specific lighting — lower ambient so shadow areas go genuinely dark.
+  // The ASCII renderer needs a real luminance range to pick varied characters.
+  // creature-builder uses ambient=0.35 which is fine for primitives but lifts
+  // the shadow floor too high on real meshes with complex geometry.
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+  keyLight.position.set(1.5, 2.0, 3.0);  // upper-right, toward viewer
+  scene.add(keyLight);
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.25);
+  fillLight.position.set(-1.2, -0.5, 1.5);
+  scene.add(fillLight);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.10));  // very low — let shadows be dark
 
   const model = gltf.scene;
   fitModel(model, targetHeight);
 
   if (toon) {
-    // Build a simple 5-stop gradient matching the creature-builder toon look
+    // 7-stop toon gradient — wide contrast range so ASCII gets dark shadows
+    // and bright highlights to drive character selection across the full set.
+    // NearestFilter gives hard toon bands (no linear interpolation).
     const gradData = new Uint8Array([
-      20,  12,   8, 255,   // deep shadow
-      70,  55,  40, 255,   // shadow
-      140, 110,  75, 255,  // mid
-      200, 170, 120, 255,  // light
-      240, 220, 180, 255,  // highlight
+       8,   6,   5, 255,   // 0 deep shadow  — near-black
+      32,  28,  24, 255,   // 1 shadow
+      72,  66,  60, 255,   // 2 dark mid
+     118, 108, 100, 255,   // 3 mid          — this is where most surfaces land
+     168, 155, 142, 255,   // 4 light mid
+     210, 198, 184, 255,   // 5 lit
+     245, 235, 222, 255,   // 6 highlight    — rim/specular catch
     ]);
-    const gradMap = new THREE.DataTexture(gradData, 5, 1);
+    const gradMap = new THREE.DataTexture(gradData, 7, 1);
     gradMap.minFilter = THREE.NearestFilter;
     gradMap.magFilter = THREE.NearestFilter;
     gradMap.needsUpdate = true;
