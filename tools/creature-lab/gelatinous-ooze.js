@@ -478,7 +478,7 @@ const GRID_H = 7;
 
 export default { draw: drawGelatinousOozeClean, skeleton: gelatinousOozeSkeleton, gridW: GRID_W, gridH: GRID_H };
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && document.getElementById('canvas-size')) {
 function render(elapsed = 0) {
   const size = parseInt(document.getElementById('canvas-size').value);
   const cellSize = parseInt(document.getElementById('cell-size').value);
@@ -494,7 +494,7 @@ function render(elapsed = 0) {
   const asciiOpts = { elapsed, cellSize, level: 7, gridWidth: GRID_W, gridHeight: GRID_H };
 
   // -- Skeleton view (just shows the cube outline for this creature) --
-  const c1 = document.getElementById('skel-raw');
+  const c1 = document.getElementById('canvas-size');
   c1.width = canvasW; c1.height = canvasH;
   c1.style.width = displayW; c1.style.height = displayH;
   const ctx1 = c1.getContext('2d');

@@ -188,6 +188,8 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
     gamma = GAMMA,
     ambient = 0.70,
     charDensityFloor = 0.30,
+    enable3D = true,
+    enableHalfBlock = true,
   } = opts;
 
   if (width < 20 || height < 20) return;
@@ -224,10 +226,10 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
   const renderH = rows * actualCellH;
 
   // -- 3D params --
-  const bobY = Math.sin(elapsed * 0.0018) * 3;
-  const swayX = Math.sin(elapsed * 0.0013) * 1.5;
-  const breathScale = 1 + Math.sin(elapsed * 0.0025) * 0.012;
-  const perspectiveAmount = 0.12;
+  const bobY = enable3D ? Math.sin(elapsed * 0.0018) * 3 : 0;
+  const swayX = enable3D ? Math.sin(elapsed * 0.0013) * 1.5 : 0;
+  const breathScale = enable3D ? 1 + Math.sin(elapsed * 0.0025) * 0.012 : 1;
+  const perspectiveAmount = enable3D ? 0.12 : 0;
 
   const lightAngle = elapsed * 0.0008;
   const lxRaw = Math.cos(lightAngle) * 0.6;
@@ -243,17 +245,19 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
   const fontSize = actualCellW * 1.2;
   const brightness = charBrightness;
 
-  // -- Ground shadow --
-  ctx.save();
-  const shadowH = renderH * 0.1;
-  const shadowY = centerY + renderH * breathScale + shadowH * 0.5;
-  const shadowW = renderW * 0.65;
-  ctx.globalAlpha = 0.12;
-  ctx.fillStyle = 'rgb(20, 15, 10)';
-  ctx.beginPath();
-  ctx.ellipse(centerX + renderW / 2, shadowY, shadowW / 2, shadowH / 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // -- Ground shadow (3D mode only) --
+  if (enable3D) {
+    ctx.save();
+    const shadowH = renderH * 0.1;
+    const shadowY = centerY + renderH * breathScale + shadowH * 0.5;
+    const shadowW = renderW * 0.65;
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = 'rgb(20, 15, 10)';
+    ctx.beginPath();
+    ctx.ellipse(centerX + renderW / 2, shadowY, shadowW / 2, shadowH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 
   // -- Build cells --
   const cells = [];
@@ -332,7 +336,7 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
         if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || gridIndex[nr * cols + nc] < 0) emptyNeighbors++;
       }
       const cell = cells[idx];
-      if (emptyNeighbors === 0) { cell.isInterior = true; continue; }
+      if (emptyNeighbors === 0) { cell.isInterior = enableHalfBlock; continue; }
       const rimStrength = Math.min(1, emptyNeighbors / 3);
       const rowNorm = (row / (rows - 1 || 1)) * 2 - 1;
       const colNorm = (col / (cols - 1 || 1)) * 2 - 1;
@@ -376,23 +380,25 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
     ctx.fillRect(c.x - c.cellW * 0.5, c.y - c.cellH * 0.5, c.cellW, c.cellH);
   }
 
-  // -- Depth extrusion --
+  // -- Depth extrusion (3D mode only) --
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
-  for (let layer = DEPTH_LAYERS; layer >= 1; layer--) {
-    const ox = layer * DEPTH_OFFSET, oy = layer * DEPTH_OFFSET;
-    const darken = 0.15 + (DEPTH_LAYERS - layer) * 0.05;
-    const layerAlpha = 0.25 - layer * 0.05;
-    for (const c of cells) {
-      const dr = Math.floor(c.r * darken), dg = Math.floor(c.g * darken), db = Math.floor(c.b * darken);
-      const da = c.a * layerAlpha;
-      if (c.isInterior) {
-        ctx.fillStyle = `rgba(${dr},${dg},${db},${da})`;
-        ctx.fillRect(c.x - c.cellW * 0.5 + ox, c.y - c.cellH * 0.5 + oy, c.cellW, c.cellH);
-      } else {
-        ctx.font = `${c.weight} ${c.fontSize}px ${FONT}`;
-        ctx.fillStyle = `rgba(${dr},${dg},${db},${da})`;
-        ctx.fillText(c.char, c.x + ox, c.y + oy);
+  if (enable3D) {
+    for (let layer = DEPTH_LAYERS; layer >= 1; layer--) {
+      const ox = layer * DEPTH_OFFSET, oy = layer * DEPTH_OFFSET;
+      const darken = 0.15 + (DEPTH_LAYERS - layer) * 0.05;
+      const layerAlpha = 0.25 - layer * 0.05;
+      for (const c of cells) {
+        const dr = Math.floor(c.r * darken), dg = Math.floor(c.g * darken), db = Math.floor(c.b * darken);
+        const da = c.a * layerAlpha;
+        if (c.isInterior) {
+          ctx.fillStyle = `rgba(${dr},${dg},${db},${da})`;
+          ctx.fillRect(c.x - c.cellW * 0.5 + ox, c.y - c.cellH * 0.5 + oy, c.cellW, c.cellH);
+        } else {
+          ctx.font = `${c.weight} ${c.fontSize}px ${FONT}`;
+          ctx.fillStyle = `rgba(${dr},${dg},${db},${da})`;
+          ctx.fillText(c.char, c.x + ox, c.y + oy);
+        }
       }
     }
   }

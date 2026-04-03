@@ -124,17 +124,13 @@
     import { MONSTER_TEMPLATES_REDUX } from './game-draws.js';
 
     // Build lookup: creature slug → actual game draw function
+    // Only creatures with REAL Redux implementations are listed here.
+    // Others fall back to the lab draw fn so the Game View shows the actual art.
+    // (giant-spider through hook-horror use unrelated Z2 stub functions in monsterTemplatesRedux.ts)
     const SLUG_TO_REDUX = {
-      'dire-rat':          'redux-dire-rat',
-      'kobold':            'redux-kobold',
-      'goblin':            'redux-goblin',
-      'giant-spider':      'redux-giant-spider',
-      'skeleton-creature': 'redux-skeleton',
-      'goblin-shaman':     'redux-goblin-shaman',
-      'gelatinous-ooze':   'redux-gelatinous-ooze',
-      'bugbear':           'redux-bugbear',
-      'carrion-crawler':   'redux-carrion-crawler',
-      'hook-horror':       'redux-hook-horror',
+      'dire-rat': 'redux-dire-rat',
+      'kobold':   'redux-kobold',
+      'goblin':   'redux-goblin',
     };
     const REDUX_BY_SLUG = Object.fromEntries(
       MONSTER_TEMPLATES_REDUX.map(t => [t.id, t])
@@ -368,7 +364,8 @@
         for (let i = 0; i < skeleton.limbs.length; i += 2)
           drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(38,22,48)');
       }
-      drawBodyOutline(ctx1, skeleton.spine, canvasW, canvasH, 'rgb(68,52,112)');
+      if (skeleton.spine && skeleton.spine.length > 1)
+        drawBodyOutline(ctx1, skeleton.spine, canvasW, canvasH, 'rgb(68,52,112)');
       if (skeleton.limbs) {
         for (let i = 1; i < skeleton.limbs.length; i += 2)
           drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(92,74,142)');
@@ -389,32 +386,44 @@
       ctx3.fillStyle = '#000'; ctx3.fillRect(0, 0, canvasW, canvasH);
       draw(ctx3, skeleton, canvasW, canvasH);
 
-      // Game view — actual Redux draw fn + game grid dims + atmosphere
+      // Game view — matches actual in-game render:
+      //   • Redux draw fn (same as game uses)
+      //   • Portrait panel ~380×560 (2× the ~190×280 CSS panel in-game at dpr:2)
+      //   • cellSize:10 (= 5 CSS px × dpr:2 → same column count as game)
+      //   • enable3D:false (game passes this to renderMonster — no perspective warp)
+      //   • Atmosphere drawn BEFORE ascii cells (matching renderMonster order)
       const cr = CREATURES[currentIndex];
       const reduxId = SLUG_TO_REDUX[cr.slug];
       const reduxTpl = reduxId ? REDUX_BY_SLUG[reduxId] : null;
       const gameDraw = reduxTpl ? reduxTpl.draw : (ctx, w, h) => draw(ctx, skeleton, w, h);
       const gW = cr.gameGrid.w;
       const gH = cr.gameGrid.h;
-      const gameCanvasH = Math.round(size * gH / gW);
+      const GAME_PANEL_W = 380;
+      const GAME_PANEL_H = 560;
+      const GAME_CELL = 10;
       const c4 = document.getElementById('game-ascii');
-      c4.width = canvasW; c4.height = gameCanvasH;
+      c4.width = GAME_PANEL_W; c4.height = GAME_PANEL_H;
       const ctx4 = c4.getContext('2d');
-      ctx4.fillStyle = '#000'; ctx4.fillRect(0, 0, canvasW, gameCanvasH);
-      // cellSize:5 matches the actual game (BattleMonsterAscii.tsx uses cellSize:5)
-      renderAscii(ctx4, (tctx, tw, th) => gameDraw(tctx, tw, th), 0, 0, canvasW, gameCanvasH,
-        { elapsed, cellSize: 5, level: cr.level, gridWidth: gW, gridHeight: gH });
+      ctx4.fillStyle = '#000'; ctx4.fillRect(0, 0, GAME_PANEL_W, GAME_PANEL_H);
+
+      // Atmosphere FIRST (matches game's renderMonster order)
       const [atmR, atmG, atmB, atmI = 0.10] = cr.atmosphere;
-      const glowCX = canvasW / 2;
-      const glowCY = gameCanvasH * 0.42;
-      const glowRad = Math.max(canvasW, gameCanvasH) * 0.65;
+      const glowCX = GAME_PANEL_W / 2;
+      const glowCY = GAME_PANEL_H * 0.42;
+      const glowRad = Math.max(GAME_PANEL_W, GAME_PANEL_H) * 0.65;
       const grad = ctx4.createRadialGradient(glowCX, glowCY, 0, glowCX, glowCY, glowRad);
       grad.addColorStop(0,    `rgba(${atmR},${atmG},${atmB},${atmI})`);
       grad.addColorStop(0.35, `rgba(${atmR},${atmG},${atmB},${atmI * 0.5})`);
       grad.addColorStop(0.7,  `rgba(${atmR},${atmG},${atmB},${atmI * 0.15})`);
       grad.addColorStop(1,    'rgba(0,0,0,0)');
       ctx4.fillStyle = grad;
-      ctx4.fillRect(0, 0, canvasW, gameCanvasH);
+      ctx4.fillRect(0, 0, GAME_PANEL_W, GAME_PANEL_H);
+
+      // ASCII render — matches game's renderMonster({enable3D:false, enableHalfBlock:false})
+      // enableHalfBlock:false = all cells render as text chars, no colored blocks (game default)
+      // enable3D:false = no perspective foreshortening, no depth extrusion, no ground shadow
+      renderAscii(ctx4, (tctx, tw, th) => gameDraw(tctx, tw, th), 0, 0, GAME_PANEL_W, GAME_PANEL_H,
+        { elapsed, cellSize: GAME_CELL, level: cr.level, gridWidth: gW, gridHeight: gH, enable3D: false, enableHalfBlock: false });
     }
 
     function animationLoop(ts) {

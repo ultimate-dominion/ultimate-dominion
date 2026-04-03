@@ -459,7 +459,7 @@ function render(elapsed = 0) {
 
   const asciiOpts = { elapsed, cellSize, level: 9, gridWidth: GRID_W, gridHeight: GRID_H };
 
-  const c1 = document.getElementById('skel-raw');
+  const c1 = document.getElementById('canvas-size');
   c1.width = canvasW; c1.height = canvasH;
   c1.style.width = displayW; c1.style.height = displayH;
   const ctx1 = c1.getContext('2d');
@@ -514,7 +514,7 @@ function render(elapsed = 0) {
   }
 }
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && document.getElementById('canvas-size')) {
   let animating = false;
   let animStart = 0;
   let rafId = null;

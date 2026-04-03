@@ -48,7 +48,7 @@ const doSave   = args.includes('--save');
 const doAll    = args.includes('--all');
 const noteIdx  = args.indexOf('--note');
 const note     = noteIdx >= 0 ? args[noteIdx + 1] : '';
-const slugArg  = args.find(a => !a.startsWith('--') && a !== (args[noteIdx + 1] || null));
+const slugArg  = args.find(a => !a.startsWith('--') && a !== (noteIdx >= 0 ? args[noteIdx + 1] : null));
 
 if (!slugArg && !doAll) {
   console.error('Usage: node render-creature.mjs <slug> [--ref] [--save] [--note "desc"]');

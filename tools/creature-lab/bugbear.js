@@ -19,41 +19,41 @@ function bodyGrad3(ctx, cx, cy, r, midR, midG, midB, sR, sG, sB, hiR, hiG, hiB) 
 // ==========================================================================
 export const bugbearSkeleton = {
   spine: [
-    { id: 'snout',  x: 0.20, y: 0.25, radius: 0.035 },   // bear snout, juts forward-left
-    { id: 'head',   x: 0.28, y: 0.20, radius: 0.088 },   // BIG skull, hunched forward
-    { id: 'neck',   x: 0.36, y: 0.30, radius: 0.075 },   // thick bull neck — barely visible
-    { id: 'chest',  x: 0.46, y: 0.42, radius: 0.140 },   // MASSIVE barrel chest — WIDE
-    { id: 'belly',  x: 0.50, y: 0.58, radius: 0.125 },   // thick muscular gut
-    { id: 'hip',    x: 0.52, y: 0.70, radius: 0.100 },   // wide hips, powerful base
+    { id: 'snout',  x: 0.18, y: 0.18, radius: 0.032 },   // bear snout juts left
+    { id: 'head',   x: 0.27, y: 0.14, radius: 0.082 },   // skull — higher up, more upright
+    { id: 'neck',   x: 0.37, y: 0.25, radius: 0.070 },   // thick neck
+    { id: 'chest',  x: 0.46, y: 0.38, radius: 0.148 },   // MASSIVE barrel chest
+    { id: 'belly',  x: 0.50, y: 0.54, radius: 0.122 },   // thick gut
+    { id: 'hip',    x: 0.52, y: 0.66, radius: 0.098 },   // wide hips
   ],
   limbs: [
-    // Near arm — extended forward/down, holding morningstar low
+    // Near arm — long, weapon-arm hangs to thigh level with heavy mace
     { attach: 'chest', side: 'near', segments: [
-      { x: 0.38, y: 0.40, radius: 0.052 },  // huge shoulder
-      { x: 0.30, y: 0.52, radius: 0.042 },  // thick upper arm
-      { x: 0.24, y: 0.64, radius: 0.034 },  // forearm
-      { x: 0.20, y: 0.76, radius: 0.028 },  // wrist — morningstar grip
+      { x: 0.36, y: 0.38, radius: 0.054 },  // shoulder
+      { x: 0.33, y: 0.52, radius: 0.044 },  // upper arm — arm hangs naturally
+      { x: 0.38, y: 0.65, radius: 0.038 },  // forearm
+      { x: 0.44, y: 0.78, radius: 0.032 },  // wrist at thigh level — weapon grip
     ]},
-    // Far arm — reaching out/forward with armored gauntlet
+    // Far arm — reaching aggressively hard left, nearly horizontal
     { attach: 'chest', side: 'far', segments: [
-      { x: 0.50, y: 0.38, radius: 0.044 },  // far shoulder
-      { x: 0.42, y: 0.30, radius: 0.034 },  // elbow up and forward
-      { x: 0.32, y: 0.26, radius: 0.028 },  // forearm reaching
-      { x: 0.22, y: 0.30, radius: 0.026 },  // armored gauntlet extended
+      { x: 0.52, y: 0.34, radius: 0.042 },  // far shoulder
+      { x: 0.40, y: 0.22, radius: 0.036 },  // elbow up and forward
+      { x: 0.26, y: 0.18, radius: 0.030 },  // forearm extending
+      { x: 0.12, y: 0.24, radius: 0.026 },  // clawed hand — deep left reach
     ]},
-    // Near leg — forward, planted wide, THICK
+    // Near leg — forward, wide
     { attach: 'hip', side: 'near', segments: [
-      { x: 0.44, y: 0.76, radius: 0.054 },  // massive thigh
-      { x: 0.40, y: 0.84, radius: 0.044 },  // thick knee
-      { x: 0.38, y: 0.92, radius: 0.038 },  // shin with armor
-      { x: 0.36, y: 0.98, radius: 0.034 },  // big foot
+      { x: 0.43, y: 0.73, radius: 0.056 },  // thigh
+      { x: 0.38, y: 0.82, radius: 0.046 },  // knee
+      { x: 0.35, y: 0.90, radius: 0.040 },  // shin
+      { x: 0.33, y: 0.97, radius: 0.036 },  // foot
     ]},
     // Far leg — back, weight bearing
     { attach: 'hip', side: 'far', segments: [
-      { x: 0.58, y: 0.76, radius: 0.048 },  // far thigh
-      { x: 0.62, y: 0.84, radius: 0.038 },  // far knee
-      { x: 0.64, y: 0.92, radius: 0.034 },  // far shin
-      { x: 0.66, y: 0.98, radius: 0.030 },  // far foot
+      { x: 0.60, y: 0.73, radius: 0.050 },  // thigh
+      { x: 0.63, y: 0.82, radius: 0.040 },  // knee
+      { x: 0.65, y: 0.90, radius: 0.036 },  // shin
+      { x: 0.67, y: 0.97, radius: 0.032 },  // foot
     ]},
   ],
 };
@@ -103,54 +103,55 @@ export function drawBugbearClean(ctx, skeleton, w, h) {
     if (limb.side === 'far') drawLimbChain(ctx, limb.segments, w, h, `rgb(${furShadow})`);
   }
 
-  // 2. FAR ARM — armored gauntlet reaching forward
+  // 2. FAR ARM — armored gauntlet reaching hard left, claws forward
   const farHand = skeleton.limbs[1].segments[3];
   // Gauntlet armor on far hand
-  ctx.fillStyle = bodyGrad3(ctx, w * farHand.x, h * farHand.y, w * 0.04,
+  ctx.fillStyle = bodyGrad3(ctx, w * farHand.x, h * farHand.y, w * 0.05,
     metalMid[0], metalMid[1], metalMid[2],
     metalDark[0], metalDark[1], metalDark[2],
     metalLight[0], metalLight[1], metalLight[2]);
-  fillEllipse(ctx, w * farHand.x, h * farHand.y, w * 0.024, w * 0.020);
+  fillEllipse(ctx, w * farHand.x, h * farHand.y, w * 0.032, w * 0.026);
   // Gauntlet knuckle studs
   ctx.fillStyle = `rgb(${metalHighlight})`;
-  fillCircle(ctx, w * (farHand.x - 0.010), h * (farHand.y - 0.005), w * 0.004);
-  fillCircle(ctx, w * (farHand.x + 0.002), h * (farHand.y - 0.006), w * 0.004);
-  // Far claws extending from gauntlet
+  fillCircle(ctx, w * (farHand.x - 0.012), h * (farHand.y - 0.006), w * 0.005);
+  fillCircle(ctx, w * (farHand.x + 0.000), h * (farHand.y - 0.007), w * 0.005);
+  fillCircle(ctx, w * (farHand.x + 0.012), h * (farHand.y - 0.005), w * 0.005);
+  // Far claws extending leftward from gauntlet
   ctx.fillStyle = `rgb(${clawColor})`;
   for (let c = 0; c < 4; c++) {
-    const cx_ = w * (farHand.x - 0.014 + c * 0.009);
-    const cy_ = h * (farHand.y + 0.008);
+    const cx_ = w * (farHand.x - 0.010 + c * 0.007);
+    const cy_ = h * (farHand.y + 0.006);
     ctx.beginPath();
     ctx.moveTo(cx_, cy_);
-    ctx.lineTo(cx_ - w * 0.004, cy_ + h * 0.030);
-    ctx.lineTo(cx_ + w * 0.003, cy_ + h * 0.020);
+    ctx.lineTo(cx_ - w * 0.006, cy_ + h * 0.032);
+    ctx.lineTo(cx_ + w * 0.004, cy_ + h * 0.022);
     ctx.fill();
   }
 
-  // 3. MORNINGSTAR — shaft + spiked ball, hanging low from near hand
-  const mhx = 0.20, mhy = 0.76;  // near hand position (weapon grip)
-  // Shaft
+  // 3. MORNINGSTAR — shaft + spiked ball, held at thigh, ball near foot level
+  const mhx = 0.44, mhy = 0.78;  // near hand at thigh level
+  // Shaft angled down-right — long heavy weapon
   ctx.strokeStyle = `rgb(${leatherDark})`;
   ctx.lineCap = 'round';
-  ctx.lineWidth = w * 0.018;
+  ctx.lineWidth = w * 0.020;
   ctx.beginPath();
   ctx.moveTo(w * mhx, h * mhy);
-  ctx.lineTo(w * (mhx - 0.04), h * (mhy + 0.16));
+  ctx.lineTo(w * (mhx + 0.14), h * (mhy + 0.14));
   ctx.stroke();
   // Shaft wood grain highlight
   ctx.strokeStyle = `rgba(100,75,48,0.3)`;
-  ctx.lineWidth = w * 0.005;
+  ctx.lineWidth = w * 0.006;
   ctx.beginPath();
   ctx.moveTo(w * (mhx + 0.003), h * (mhy + 0.02));
-  ctx.lineTo(w * (mhx - 0.035), h * (mhy + 0.14));
+  ctx.lineTo(w * (mhx + 0.13), h * (mhy + 0.12));
   ctx.stroke();
-  // Spiked ball
-  const ballX = mhx - 0.04, ballY = mhy + 0.18;
+  // Spiked ball — bigger, more menacing
+  const ballX = mhx + 0.15, ballY = mhy + 0.16;
   ctx.fillStyle = bodyGrad3(ctx, w * ballX, h * ballY, w * 0.045,
     metalMid[0], metalMid[1], metalMid[2],
     metalDark[0], metalDark[1], metalDark[2],
     metalLight[0], metalLight[1], metalLight[2]);
-  fillCircle(ctx, w * ballX, h * ballY, w * 0.036);
+  fillCircle(ctx, w * ballX, h * ballY, w * 0.046);
   // Metal highlight on ball
   ctx.fillStyle = `rgba(${metalHighlight},0.35)`;
   fillCircle(ctx, w * (ballX - 0.008), h * (ballY - 0.010), w * 0.014);
@@ -325,11 +326,11 @@ export function drawBugbearClean(ctx, skeleton, w, h) {
 
   // 11. NEAR HAND gripping morningstar
   ctx.fillStyle = `rgb(${furDark})`;
-  fillEllipse(ctx, w * mhx, h * mhy, w * 0.022, w * 0.018);
+  fillEllipse(ctx, w * mhx, h * mhy, w * 0.030, w * 0.024);
   // Fingers wrapped around shaft
   ctx.fillStyle = `rgb(${skinPink})`;
   for (let f = 0; f < 4; f++) {
-    fillCircle(ctx, w * (mhx - 0.008 + f * 0.005), h * (mhy + 0.004 + f * 0.003), w * 0.006);
+    fillCircle(ctx, w * (mhx - 0.006 + f * 0.006), h * (mhy + 0.006 + f * 0.004), w * 0.007);
   }
 
   // 12. FEET — big clawed beast feet
@@ -583,7 +584,7 @@ const GRID_H = 7;
 
 export default { draw: drawBugbearClean, skeleton: bugbearSkeleton, gridW: GRID_W, gridH: GRID_H };
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && document.getElementById('canvas-size')) {
 function render(elapsed = 0) {
   const size = parseInt(document.getElementById('canvas-size').value);
   const cellSize = parseInt(document.getElementById('cell-size').value);
@@ -600,7 +601,7 @@ function render(elapsed = 0) {
   const asciiOpts = { elapsed, cellSize, level: 3, gridWidth: GRID_W, gridHeight: GRID_H };
 
   // -- Skeleton view --
-  const c1 = document.getElementById('skel-raw');
+  const c1 = document.getElementById('canvas-size');
   c1.width = canvasW; c1.height = canvasH;
   c1.style.width = displayW; c1.style.height = displayH;
   const ctx1 = c1.getContext('2d');

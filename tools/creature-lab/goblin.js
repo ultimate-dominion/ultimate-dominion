@@ -416,7 +416,7 @@ const GRID_H = 7;
 
 export default { draw: drawGoblinClean, skeleton: goblinSkeleton, gridW: GRID_W, gridH: GRID_H };
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && document.getElementById('canvas-size')) {
 function render(elapsed = 0) {
   const size = parseInt(document.getElementById('canvas-size').value);
   const cellSize = parseInt(document.getElementById('cell-size').value);
@@ -433,7 +433,7 @@ function render(elapsed = 0) {
   const asciiOpts = { elapsed, cellSize, level: 3, gridWidth: GRID_W, gridHeight: GRID_H };
 
   // -- Skeleton view --
-  const c1 = document.getElementById('skel-raw');
+  const c1 = document.getElementById('canvas-size');
   c1.width = canvasW; c1.height = canvasH;
   c1.style.width = displayW; c1.style.height = displayH;
   const ctx1 = c1.getContext('2d');
