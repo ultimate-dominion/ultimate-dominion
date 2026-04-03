@@ -85,13 +85,14 @@ export function drawBasiliskClean(ctx, skeleton, w, h) {
   const SPINE_SHADOW = 'rgb(36,20,6)';
   const SPINE_RIM    = 'rgb(245,228,155)';
   const MOUTH_DEEP   = 'rgb(18,4,4)';
-  const MOUTH_RED    = 'rgb(160,32,18)';   // vivid — glow-adjacent
-  const TEETH        = 'rgb(228,216,185)';
-  const TONGUE       = 'rgb(195,38,28)';
+  const MOUTH_RED    = 'rgb(180,36,18)';   // vivid — glow-adjacent, brighter than before
+  const TEETH        = 'rgb(252,248,236)'; // lum 0.96 — near-white, strong glow, reads as blocks
+  const TONGUE       = 'rgb(210,40,28)';
   const EYE_IRIS     = 'rgb(255,185,18)';  // lum 0.75 — triggers glow
   const EYE_HI       = 'rgb(255,240,120)'; // lum 0.93 — strong glow
   const EYE_DEEP     = 'rgb(8,3,1)';
-  const CLAW         = 'rgb(195,178,142)';
+  const CLAW         = 'rgb(210,192,148)'; // slightly brighter claws
+  const BELLY        = 'rgb(142,112,64)';  // lum 0.43 — sandy underbelly, lighter than scales
 
   setSeed(77);
 
@@ -205,26 +206,44 @@ export function drawBasiliskClean(ctx, skeleton, w, h) {
   ctx.closePath();
   ctx.fill();
 
-  // Under-belly — near-black, creates weight
-  ctx.fillStyle = DEEP;
+  // Under-belly — sandy tan plate, lighter than the dark body scales
+  // This creates a visible belly region that maps to organic-zone chars
+  ctx.fillStyle = BELLY;
   ctx.beginPath();
-  ctx.moveTo(w*0.22, h*0.60);
-  ctx.bezierCurveTo(w*0.36, h*0.68, w*0.58, h*0.70, w*0.78, h*0.66);
-  ctx.bezierCurveTo(w*0.82, h*0.62, w*0.82, h*0.58, w*0.78, h*0.56);
-  ctx.bezierCurveTo(w*0.58, h*0.62, w*0.36, h*0.62, w*0.22, h*0.58);
+  ctx.moveTo(w*0.22, h*0.58);
+  ctx.bezierCurveTo(w*0.36, h*0.66, w*0.58, h*0.68, w*0.78, h*0.64);
+  ctx.bezierCurveTo(w*0.82, h*0.60, w*0.82, h*0.56, w*0.78, h*0.54);
+  ctx.bezierCurveTo(w*0.58, h*0.60, w*0.36, h*0.60, w*0.22, h*0.56);
   ctx.closePath();
   ctx.fill();
 
+  // Belly underline — dark edge to ground the creature
+  ctx.fillStyle = DEEP;
+  ctx.globalAlpha = 0.60;
+  ctx.beginPath();
+  ctx.moveTo(w*0.22, h*0.60);
+  ctx.bezierCurveTo(w*0.36, h*0.68, w*0.58, h*0.70, w*0.78, h*0.66);
+  ctx.bezierCurveTo(w*0.82, h*0.63, w*0.82, h*0.60, w*0.78, h*0.58);
+  ctx.bezierCurveTo(w*0.58, h*0.63, w*0.36, h*0.63, w*0.22, h*0.60);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
   // -------------------------------------------------------------------------
-  // 4. SCALE PLATES — alternating MID/SHADOW strips give texture for normals
+  // 4. SCALE PLATES — three-tone mix: SHADOW/MID/LIGHT gives color spread
+  //    Dark scales → sparse rune chars
+  //    Mid scales  → angular rune chars
+  //    Light scales → organic-circle chars  (different family = visible variety)
   // -------------------------------------------------------------------------
   setSeed(77);
-  for (let i = 0; i < 56; i++) {
-    const sx2 = 0.26 + rand()*0.52, sy2 = 0.34 + rand()*0.22;
-    const sr = 0.010 + rand()*0.014;
-    ctx.fillStyle = (i % 3 === 0) ? SHADOW : MID;
-    ctx.globalAlpha = 0.35 + rand()*0.20;
-    fillEllipse(ctx, w*sx2, h*sy2, w*sr, h*(sr*0.55));
+  for (let i = 0; i < 68; i++) {
+    const sx2 = 0.26 + rand()*0.52, sy2 = 0.34 + rand()*0.24;
+    const sr = 0.009 + rand()*0.013;
+    // 30% dark, 50% mid, 20% light — more light scales = more char variety
+    const t = rand();
+    ctx.fillStyle = t < 0.28 ? SHADOW : t < 0.78 ? MID : LIGHT;
+    ctx.globalAlpha = 0.30 + rand()*0.25;
+    fillEllipse(ctx, w*sx2, h*sy2, w*sr, h*(sr*0.52));
   }
   ctx.globalAlpha = 1;
 
@@ -391,10 +410,13 @@ export function drawBasiliskClean(ctx, skeleton, w, h) {
   ctx.bezierCurveTo(w*(hx+hr*0.25),h*(hy+hr*0.80),w*(hx+hr*0.30),h*(hy+hr*0.30),w*(hx-hr*0.55),h*(hy+hr*0.15));
   ctx.fill();
 
-  // Vivid red glow at throat — MOUTH_RED hits lum ~0.22, contrast against DEEP
+  // Vivid red throat glow — full opacity for strong red contrast against dark jaws
   ctx.fillStyle = MOUTH_RED;
-  ctx.globalAlpha = 0.75;
-  fillEllipse(ctx, w*(sx+0.05), h*(sy+0.03), w*0.10, h*0.055);
+  fillEllipse(ctx, w*(sx+0.05), h*(sy+0.03), w*0.12, h*0.062);
+  // Second pass — brighter hot center
+  ctx.fillStyle = 'rgb(220,52,28)';
+  ctx.globalAlpha = 0.70;
+  fillEllipse(ctx, w*(sx+0.04), h*(sy+0.02), w*0.06, h*0.034);
   ctx.globalAlpha = 1;
 
   // Upper jaw — MID base, LIGHT on top

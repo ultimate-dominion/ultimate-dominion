@@ -20,12 +20,14 @@ export const PALETTES = {
 // Zone-based composite: guarantees different character families per luminance zone.
 // Pass as opts.charZones — overrides opts.charPalette for char selection.
 // Each zone: { maxLum, chars } — chars auto-calibrated by pixel coverage within the zone.
+// colorTint: [r, g, b, strength 0-1] — blends zone color toward a target hue.
+// Keep strength ≤ 0.15 so it works as atmosphere for any creature, not a hard color override.
 export const COMPOSITE_PALETTES = {
   arcane: [
-    { maxLum: 0.15, chars: " ·∙ᛁ"  },   // dark:      sparse dots + thin runic stroke
-    { maxLum: 0.40, chars: "ᚾᛃᚱ•"  },   // shadow:    runic symbols for body texture
-    { maxLum: 0.65, chars: "ᛒ○ᛖ◉"  },   // body:      fuller runes + organic circles
-    { maxLum: 1.00, chars: "▒ᛟ▓█"  },   // highlight: solid blocks for lit surfaces
+    { maxLum: 0.15, chars: " ·∙ᛁ",  colorTint: [8, 5, 2, 0.12]     },  // dark:      deepen shadows, hint of warmth
+    { maxLum: 0.40, chars: "ᚾᛃᚱ•",  colorTint: [120, 72, 18, 0.10]  },  // shadow:    anchor dark amber (scales)
+    { maxLum: 0.65, chars: "ᛒ○ᛖ◉",  colorTint: [195, 148, 48, 0.08] },  // body:      warm mid push
+    { maxLum: 1.00, chars: "▒ᛟ▓█",  colorTint: [252, 224, 112, 0.13] }, // highlight: push bright areas toward gold
   ],
 };
 const EDGE_CHARS = ['-', '/', '|', '\\', '-', '/', '|', '\\'];
@@ -324,15 +326,16 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
       const litLum = Math.min(1, color.lum * lightMul);
       const charLum = Math.max(charDensityFloor, litLum);
       let char;
+      let selectedZone = null;
       if (charZones) {
-        const zone = charZones.find(z => charLum <= z.maxLum) ?? charZones[charZones.length - 1];
-        const zb = buildCharBrightness(zone.chars);
+        selectedZone = charZones.find(z => charLum <= z.maxLum) ?? charZones[charZones.length - 1];
+        const zb = buildCharBrightness(selectedZone.chars);
         let bestIdx = 0, bestDiff = 1;
         for (let i = 0; i < zb.length; i++) {
           const diff = Math.abs(zb[i] - charLum);
           if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
         }
-        char = zone.chars[bestIdx];
+        char = selectedZone.chars[bestIdx];
       } else {
         let bestIdx = 0, bestDiff = 1;
         for (let i = 0; i < brightness.length; i++) {
@@ -351,7 +354,13 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
       const cellX = rowOffsetX + col * rowCellW + rowCellW / 2 + waveX;
       const cellY = drawY + rowCellH / 2 + waveY;
 
-      const litR = color.r * lightMul, litG = color.g * lightMul, litB = color.b * lightMul;
+      let litR = color.r * lightMul, litG = color.g * lightMul, litB = color.b * lightMul;
+      if (selectedZone?.colorTint) {
+        const [tr, tg, tb, ts] = selectedZone.colorTint;
+        litR = litR * (1 - ts) + (tr / 255) * ts;
+        litG = litG * (1 - ts) + (tg / 255) * ts;
+        litB = litB * (1 - ts) + (tb / 255) * ts;
+      }
       const r = Math.min(255, Math.floor(Math.pow(Math.min(1, litR), gamma) * 255));
       const g = Math.min(255, Math.floor(Math.pow(Math.min(1, litG), gamma) * 255));
       const b = Math.min(255, Math.floor(Math.pow(Math.min(1, litB), gamma) * 255));
