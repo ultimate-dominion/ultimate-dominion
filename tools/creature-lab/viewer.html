@@ -66,6 +66,16 @@
     <select id="creature-select"></select>
     <div class="header-right">
       <span id="status-msg" class="status-msg"></span>
+      <label class="animate-label" style="gap:4px">
+        <span style="color:#444;font-size:10px">Palette</span>
+        <select id="palette-select" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:11px;font-family:inherit;padding:2px 5px">
+          <option value="default">default</option>
+          <option value="blocks">blocks ░▒▓</option>
+          <option value="organic">organic ·∙•●</option>
+          <option value="dense">dense</option>
+          <option value="runes">runes ᚠᚱᛟ</option>
+        </select>
+      </label>
       <label class="animate-label">
         <input type="checkbox" id="animate" style="accent-color:#555"> Animate
       </label>
@@ -119,7 +129,7 @@
   </div>
 
   <script type="module">
-    import { renderAscii } from './ascii-renderer.js';
+    import { renderAscii, PALETTES } from './ascii-renderer.js';
     import { drawBodyOutline, drawLimbChain, drawDebugSkeleton } from './skeleton.js';
     import { MONSTER_TEMPLATES_REDUX } from './game-draws.js';
 
@@ -357,7 +367,9 @@
       const cellSize = 3;
       const canvasW = size;
       const canvasH = Math.round(size * gridH / gridW);
-      const asciiOpts = { elapsed, cellSize, level: CREATURES[currentIndex].level, gridWidth: gridW, gridHeight: gridH };
+      const selectedPalette = document.getElementById('palette-select').value;
+      const charPalette = PALETTES[selectedPalette] || PALETTES.default;
+      const asciiOpts = { elapsed, cellSize, level: CREATURES[currentIndex].level, gridWidth: gridW, gridHeight: gridH, charPalette };
 
       // Skeleton
       const c1 = document.getElementById('skel-raw');
@@ -448,6 +460,7 @@
       const idx = CREATURES.findIndex(c => c.slug === e.target.value);
       if (idx >= 0) loadCreature(idx);
     });
+    document.getElementById('palette-select').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
     document.addEventListener('keydown', (e) => {
       if (lightbox.classList.contains('active')) return;
       if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;

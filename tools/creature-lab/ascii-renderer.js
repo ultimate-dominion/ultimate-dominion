@@ -6,6 +6,15 @@
 
 const FONT = 'Cormorant Garamond, Georgia, serif';
 const CHAR_PALETTE = " .`',:-~^;*+!=?#@";
+
+// Alternative palettes — pass as opts.charPalette to experiment
+export const PALETTES = {
+  default:  " .`',:-~^;*+!=?#@",
+  blocks:   " ░▒▓█",
+  organic:  " .·∙•◦○◉●",
+  dense:    " .,:;i!|lIYXZAUDB$#@",
+  runes:    " .ᚹᚺᚾᛁᛃᛇᛈᛊᛏᛒᛖᛗᚱᚲᚷᚠᛟ",
+};
 const EDGE_CHARS = ['-', '/', '|', '\\', '-', '/', '|', '\\'];
 const EDGE_GRADIENT_THRESHOLD = 0.08;
 const TEMPLATE_RES = 512;
@@ -21,15 +30,16 @@ const GLOW_BLUR_MAX = 14;
 const BG_FILL_BRIGHTNESS = 0.30;
 const BG_FILL_ALPHA = 0.35;
 
-let charBrightness = null;
+const charBrightnessCache = new Map();
 
-function buildCharBrightness() {
+function buildCharBrightness(palette) {
+  if (charBrightnessCache.has(palette)) return charBrightnessCache.get(palette);
   const canvas = document.createElement('canvas');
   const size = 16;
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
-  return Array.from(CHAR_PALETTE).map((char) => {
+  const result = Array.from(palette).map((char) => {
     ctx.clearRect(0, 0, size, size);
     ctx.fillStyle = '#fff';
     ctx.font = `400 ${size}px ${FONT}`;
@@ -41,6 +51,8 @@ function buildCharBrightness() {
     for (let i = 3; i < imageData.data.length; i += 4) sum += imageData.data[i];
     return sum / (size * size * 255);
   });
+  charBrightnessCache.set(palette, result);
+  return result;
 }
 
 // -- Noise --
@@ -175,8 +187,6 @@ function getWeight(level, isBoss, brightness) {
 // Public: render a template draw function through the full ASCII pipeline
 // ==========================================================================
 export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
-  if (!charBrightness) charBrightness = buildCharBrightness();
-
   const {
     elapsed = 0,
     cellSize = 4,
@@ -190,7 +200,10 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
     charDensityFloor = 0.30,
     enable3D = true,
     enableHalfBlock = true,
+    charPalette = CHAR_PALETTE,
   } = opts;
+
+  const charBrightness = buildCharBrightness(charPalette);
 
   if (width < 20 || height < 20) return;
 
@@ -244,6 +257,7 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
   const normals = computeNormals(tplData.data, tw, th, cols, rows);
   const fontSize = actualCellW * 1.2;
   const brightness = charBrightness;
+  const palette = charPalette;
 
   // -- Ground shadow (3D mode only) --
   if (enable3D) {
@@ -300,7 +314,7 @@ export function renderAscii(ctx, drawFn, x, y, width, height, opts = {}) {
         const diff = Math.abs(brightness[i] - charLum);
         if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
       }
-      const char = CHAR_PALETTE[bestIdx];
+      const char = palette[bestIdx];
       if (char === ' ') continue;
 
       const waveX = Math.sin(elapsed * 0.003 + col * 0.4 + row * 0.3) * 0.4 + Math.sin(elapsed * 0.0017 + col * 0.23 + row * 0.17) * 0.2;
