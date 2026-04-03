@@ -121,6 +121,24 @@
   <script type="module">
     import { renderAscii } from './ascii-renderer.js';
     import { drawBodyOutline, drawLimbChain, drawDebugSkeleton } from './skeleton.js';
+    import { MONSTER_TEMPLATES_REDUX } from './game-draws.js';
+
+    // Build lookup: creature slug → actual game draw function
+    const SLUG_TO_REDUX = {
+      'dire-rat':          'redux-dire-rat',
+      'kobold':            'redux-kobold',
+      'goblin':            'redux-goblin',
+      'giant-spider':      'redux-giant-spider',
+      'skeleton-creature': 'redux-skeleton',
+      'goblin-shaman':     'redux-goblin-shaman',
+      'gelatinous-ooze':   'redux-gelatinous-ooze',
+      'bugbear':           'redux-bugbear',
+      'carrion-crawler':   'redux-carrion-crawler',
+      'hook-horror':       'redux-hook-horror',
+    };
+    const REDUX_BY_SLUG = Object.fromEntries(
+      MONSTER_TEMPLATES_REDUX.map(t => [t.id, t])
+    );
 
     // gameGrid: actual grid dimensions used in-game (determines ASCII density & aspect ratio)
     // labGrid: dimensions used in the creature lab for development
@@ -371,8 +389,11 @@
       ctx3.fillStyle = '#000'; ctx3.fillRect(0, 0, canvasW, canvasH);
       draw(ctx3, skeleton, canvasW, canvasH);
 
-      // Game view — game grid dims + atmospheric glow
+      // Game view — actual Redux draw fn + game grid dims + atmosphere
       const cr = CREATURES[currentIndex];
+      const reduxId = SLUG_TO_REDUX[cr.slug];
+      const reduxTpl = reduxId ? REDUX_BY_SLUG[reduxId] : null;
+      const gameDraw = reduxTpl ? reduxTpl.draw : (ctx, w, h) => draw(ctx, skeleton, w, h);
       const gW = cr.gameGrid.w;
       const gH = cr.gameGrid.h;
       const gameCanvasH = Math.round(size * gH / gW);
@@ -380,8 +401,9 @@
       c4.width = canvasW; c4.height = gameCanvasH;
       const ctx4 = c4.getContext('2d');
       ctx4.fillStyle = '#000'; ctx4.fillRect(0, 0, canvasW, gameCanvasH);
-      renderAscii(ctx4, (tctx, tw, th) => draw(tctx, skeleton, tw, th), 0, 0, canvasW, gameCanvasH,
-        { elapsed, cellSize, level: cr.level, gridWidth: gW, gridHeight: gH });
+      // cellSize:5 matches the actual game (BattleMonsterAscii.tsx uses cellSize:5)
+      renderAscii(ctx4, (tctx, tw, th) => gameDraw(tctx, tw, th), 0, 0, canvasW, gameCanvasH,
+        { elapsed, cellSize: 5, level: cr.level, gridWidth: gW, gridHeight: gH });
       const [atmR, atmG, atmB, atmI = 0.10] = cr.atmosphere;
       const glowCX = canvasW / 2;
       const glowCY = gameCanvasH * 0.42;
