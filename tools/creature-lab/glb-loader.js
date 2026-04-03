@@ -17,12 +17,16 @@ import { makeCreatureCamera, makeThreeDrawFn } from './three-bridge.js';
 // Clip name normalisation — maps whatever the artist called their animations
 // to our standard clip names (idle / attack / hit / death / walk / block).
 const CLIP_NAME_MAP = [
-  { keys: ['idle', 'breathing', 'breath', 'stand'],      target: 'idle'   },
-  { keys: ['attack', 'swing', 'bite', 'slash', 'strike'], target: 'attack' },
-  { keys: ['hit', 'hurt', 'damage', 'impact', 'flinch'], target: 'hit'    },
-  { keys: ['death', 'die', 'dead', 'fall'],               target: 'death'  },
-  { keys: ['walk', 'run', 'move', 'crawl'],               target: 'walk'   },
-  { keys: ['block', 'guard', 'parry', 'defend'],          target: 'block'  },
+  // Standard names first — most packs use these
+  { keys: ['idle', 'breathing', 'breath', 'stand'],       target: 'idle'   },
+  { keys: ['attack', 'swing', 'bite', 'slash', 'strike',
+            'chop', 'spellcast', 'cast', 'shoot', 'stab'], target: 'attack' },
+  { keys: ['hit', 'hurt', 'damage', 'impact', 'flinch'],  target: 'hit'    },
+  { keys: ['death', 'die', 'dead', 'fall'],                target: 'death'  },
+  { keys: ['walk', 'run', 'move', 'crawl'],                target: 'walk'   },
+  { keys: ['block', 'guard', 'parry', 'defend'],           target: 'block'  },
+  // KayKit skeleton-specific: awaken = idle (dormant pose / rise-from-dead)
+  { keys: ['awaken', 'inactive', 'spawn'],                 target: 'idle'   },
 ];
 
 function normaliseClipName(rawName) {

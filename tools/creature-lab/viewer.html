@@ -276,6 +276,44 @@
         atmosphere: [80,60,100,0.14],
         gameGrid: { w: 12, h: 9 }, labGrid: { w: 12, h: 9 },
         goals: 'Multi-creature dungeon scene\nTest complex scene in ASCII pipeline' },
+
+      // KayKit Skeleton Pack — 4 animated undead, 90+ clips each (CC0)
+      // Animations include Idle, 1H_Melee_Attack_*, Hit_A/B, Death_A/B/C_Skeletons, Block, Walking_*, Running_*
+      { slug: 'glb-skeleton-warrior', name: 'Skeleton Warrior', level: 3, status: 'wip', type: 'glb',
+        glbFile: 'glb/Skeleton_Warrior.glb',
+        atmosphere: [120,80,180,0.14],
+        gameGrid: { w: 7, h: 9 }, labGrid: { w: 7, h: 9 },
+        goals: 'KayKit undead warrior — axe/sword attacks\nDeath_C_Skeletons has bone-collapse anim\nSkeletons_Awaken clip for spawn effect' },
+      { slug: 'glb-skeleton-mage', name: 'Skeleton Mage', level: 5, status: 'wip', type: 'glb',
+        glbFile: 'glb/Skeleton_Mage.glb',
+        atmosphere: [80,120,200,0.12],
+        gameGrid: { w: 7, h: 9 }, labGrid: { w: 7, h: 9 },
+        goals: 'KayKit undead mage — Spellcast_* animations\nSpellcast_Summon + Spawn_Air for dramatic intro' },
+      { slug: 'glb-skeleton-rogue', name: 'Skeleton Rogue', level: 4, status: 'wip', type: 'glb',
+        glbFile: 'glb/Skeleton_Rogue.glb',
+        atmosphere: [140,80,100,0.12],
+        gameGrid: { w: 7, h: 9 }, labGrid: { w: 7, h: 9 },
+        goals: 'KayKit undead rogue — Dualwield attacks + Dodge_*\nSneaky fast attacker archetype' },
+      { slug: 'glb-skeleton-minion', name: 'Skeleton Minion', level: 1, status: 'wip', type: 'glb',
+        glbFile: 'glb/Skeleton_Minion.glb',
+        atmosphere: [100,90,130,0.10],
+        gameGrid: { w: 7, h: 9 }, labGrid: { w: 7, h: 9 },
+        goals: 'KayKit basic skeleton — Unarmed_Melee attacks\nEarly-zone low-HP undead encounter' },
+
+      // Xbot — humanoid with idle/walk/run/sneak — Mixamo-rigged biped
+      { slug: 'glb-xbot', name: 'Xbot [humanoid]', level: 0, status: 'wip', type: 'glb',
+        glbFile: 'glb/Xbot.glb',
+        atmosphere: [60,80,140,0.10],
+        gameGrid: { w: 7, h: 9 }, labGrid: { w: 7, h: 9 },
+        goals: 'Mixamo-rigged humanoid — idle/walk/run/sneak_pose\nProxy for goblin/orc body shape evaluation' },
+
+      // Bird morph-target creatures (no bone rig — morph animation only)
+      { slug: 'glb-flamingo', name: 'Flamingo [bird]', level: 0, status: 'wip', type: 'glb',
+        glbFile: 'glb/Flamingo.glb',
+        glbYaw: -Math.PI * 0.55,
+        atmosphere: [200,120,120,0.10],
+        gameGrid: { w: 8, h: 7 }, labGrid: { w: 8, h: 7 },
+        goals: 'Morph-target wing flap — tests non-skeletal animation\nProxy for bat/harpy body shape' },
     ];
 
     // Populate dropdown
