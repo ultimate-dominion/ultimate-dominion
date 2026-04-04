@@ -28,7 +28,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GLB_DIR   = path.join(__dirname, 'glb');
 const FORGE_LOG = path.join(__dirname, 'creature-forge-log.json');
 
-// Meshy test mode key — returns sample data, no credits consumed
+// Meshy test mode key — returns real sample GLB assets, no credits consumed.
+// The API responds immediately (SUCCEEDED with no wait) and returns a real
+// downloadable GLB from Meshy's sample asset library.
 const TEST_KEY  = 'msy_dummy_api_key_for_test_mode_12345678';
 const MESHY_KEY = process.env.MESHY_API_KEY || TEST_KEY;
 const IS_TEST   = MESHY_KEY === TEST_KEY;
@@ -80,22 +82,23 @@ function buildMeshyPrompt(name, description, typeHint, attempt) {
 function scoreHeuristic(taskResult) {
   const scores = { silhouette_clarity: 0, scary_factor: 0, ascii_contrast: 0, rig_compat: 0 };
 
-  // Meshy provides thumbnail URL and mesh stats in the task result
-  // We check what we can from the metadata alone
-  const polycount = taskResult?.model_file_size ?? 0;
-  const hasTexture = !!(taskResult?.texture_urls?.base_color);
+  // Meshy task result fields we can use for heuristic scoring
+  const hasGlb     = !!(taskResult?.model_urls?.glb);
+  const hasTexture = Array.isArray(taskResult?.texture_urls)
+    ? taskResult.texture_urls.length > 0
+    : !!(taskResult?.texture_urls?.base_color);
 
-  // Higher polycount = more detailed silhouette (rough proxy)
-  scores.silhouette_clarity = polycount > 200000 ? 0.75 : polycount > 50000 ? 0.65 : 0.50;
+  // GLB present = generation succeeded and model is downloadable
+  scores.silhouette_clarity = hasGlb ? 0.75 : 0.40;
 
   // Texture presence = surface definition aids scary factor
-  scores.scary_factor = hasTexture ? 0.70 : 0.55;
+  scores.scary_factor = hasTexture ? 0.70 : 0.60;
 
-  // ASCII contrast depends on texture contrast — assume moderate
-  scores.ascii_contrast = hasTexture ? 0.72 : 0.58;
+  // ASCII contrast: untextured preview still has geometry — moderate baseline
+  scores.ascii_contrast = hasTexture ? 0.72 : 0.62;
 
-  // All Meshy humanoid outputs in A-pose should rig cleanly
-  scores.rig_compat = 0.80;
+  // All Meshy A-pose outputs should rig cleanly in Mixamo
+  scores.rig_compat = hasGlb ? 0.80 : 0.40;
 
   const avg = Object.values(scores).reduce((a, b) => a + b, 0) / 4;
   return { scores, avg, method: 'heuristic' };
@@ -229,26 +232,22 @@ async function pollTask(taskId, label = 'task') {
 
 async function generateAttempt(slug, prompt, attempt) {
   log(`\n  Attempt ${attempt + 1}: generating mesh...`);
-  if (IS_TEST) {
-    log('  [TEST MODE] Simulating Meshy API response...');
-    // Return mock data so the full pipeline logic can be exercised
-    return {
-      mock: true,
-      task_id: `test-task-${attempt}`,
-      status: 'SUCCEEDED',
-      model_urls: { glb: null },
-      texture_urls: { base_color: 'mock://texture' },
-      model_file_size: 350000,
-    };
-  }
-
+  // Test mode: API returns immediately with a real sample GLB (no credits used).
+  // Production mode: waits ~90s for preview + texture pass.
   const previewId = await createPreviewTask(prompt);
-  log(`  Preview task: ${previewId}`);
+  log(`  Task: ${previewId}`);
   const preview = await pollTask(previewId, 'preview');
+
+  // In test mode the preview already has a GLB — skip the refine step
+  // (refine costs credits and test mode doesn't support it meaningfully).
+  if (IS_TEST) {
+    log('  [TEST MODE] Using preview GLB (skipping texture refine)');
+    return preview;
+  }
 
   log('  Refining with PBR textures...');
   const refineId = await createRefineTask(previewId);
-  const refined = await pollTask(refineId, 'texture pass');
+  const refined  = await pollTask(refineId, 'texture pass');
   return refined;
 }
 
@@ -320,13 +319,12 @@ async function forgeCreature(name, description, opts = {}) {
 
   // Download GLB
   const outPath = path.join(GLB_DIR, `${slug}.glb`);
-  if (bestResult.mock) {
-    log(`\n[TEST MODE] Would download GLB to: ${outPath}`);
-    log('No file written in test mode.');
-  } else if (bestResult.model_urls?.glb) {
+  if (bestResult.model_urls?.glb) {
     log(`\nDownloading GLB → glb/${slug}.glb`);
     await downloadFile(bestResult.model_urls.glb, outPath);
     log(`Saved: ${outPath} (${(fs.statSync(outPath).size / 1024).toFixed(0)} KB)`);
+  } else {
+    log('\nNo GLB URL in result — skipping download.');
   }
 
   // Log to forge history
