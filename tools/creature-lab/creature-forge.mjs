@@ -2,14 +2,17 @@
 // ==========================================================================
 // creature-forge.mjs — Automated scary monster pipeline
 //
-// Generates game-ready GLB creatures via Meshy.ai text-to-3D API.
-// Iterates on prompts using Claude vision evaluation until quality threshold
-// is met, then downloads the winning GLB ready for Mixamo rigging.
+// Generates game-ready animated GLB creatures via Meshy.ai API:
+//   1. text-to-3D (v2): mesh + PBR textures
+//   2. rigging (v1): auto-rig skeleton (humanoids only, 5 credits)
+//   3. animations (v1): idle, walk, attack, death per-clip (3 credits each)
+//   4. merge: gltf-transform combines clips into one animated GLB
 //
 // Usage:
-//   node creature-forge.mjs "Bone Tyrant" "massive undead warrior, exposed vertebrae, cracked plate armor"
-//   node creature-forge.mjs "Stone Troll" "hulking cave troll, mossy rock-like skin, dragging a club" --iterations 3
-//   node creature-forge.mjs --list          # show all generated creatures
+//   node creature-forge.mjs "Kobold" "small reptilian humanoid" --type humanoid
+//   node creature-forge.mjs "Stone Troll" "hulking cave troll" --type beast --iterations 3
+//   node creature-forge.mjs --rig kobold <meshTaskId>   # rig an already-generated mesh
+//   node creature-forge.mjs --list                      # show all generated creatures
 //
 // API Keys (set in environment):
 //   MESHY_API_KEY   — Meshy Pro key (msy_xxx). Defaults to test mode key.
@@ -23,6 +26,8 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import { fileURLToPath } from 'url';
+import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GLB_DIR   = path.join(__dirname, 'glb');
@@ -158,21 +163,26 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 // --------------------------------------------------------------------------
 
 const MESHY_BASE = 'https://api.meshy.ai/openapi/v2';
+const MESHY_V1   = 'https://api.meshy.ai/openapi/v1';
+
+function meshyHeaders() {
+  return { 'Authorization': `Bearer ${MESHY_KEY}`, 'Content-Type': 'application/json' };
+}
 
 async function meshyPost(endpoint, body) {
-  return httpsRequest(`${MESHY_BASE}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${MESHY_KEY}`,
-      'Content-Type': 'application/json',
-    },
-  }, body);
+  return httpsRequest(`${MESHY_BASE}${endpoint}`, { method: 'POST', headers: meshyHeaders() }, body);
 }
 
 async function meshyGet(endpoint) {
-  return httpsRequest(`${MESHY_BASE}${endpoint}`, {
-    headers: { 'Authorization': `Bearer ${MESHY_KEY}` },
-  });
+  return httpsRequest(`${MESHY_BASE}${endpoint}`, { headers: meshyHeaders() });
+}
+
+async function meshyPostV1(endpoint, body) {
+  return httpsRequest(`${MESHY_V1}${endpoint}`, { method: 'POST', headers: meshyHeaders() }, body);
+}
+
+async function meshyGetV1(endpoint) {
+  return httpsRequest(`${MESHY_V1}${endpoint}`, { headers: meshyHeaders() });
 }
 
 async function createPreviewTask(prompt) {
@@ -224,6 +234,182 @@ async function pollTask(taskId, label = 'task') {
     waited += interval;
   }
   throw new Error('Meshy task timed out after 5 minutes');
+}
+
+async function pollV1Task(taskId, v1Endpoint, label) {
+  const maxWait = 600; // 10 min — rigging can be slow
+  const interval = 10;
+  let waited = 0;
+  process.stdout.write(`  Waiting for ${label}`);
+  while (waited < maxWait) {
+    const task = await meshyGetV1(`/${v1Endpoint}/${taskId}`);
+    if (task.status === 'SUCCEEDED') {
+      process.stdout.write(' done\n');
+      return task;
+    }
+    if (task.status === 'FAILED') {
+      process.stdout.write('\n');
+      throw new Error(`Task failed: ${task.task_error?.message ?? 'unknown'}`);
+    }
+    const progress = task.progress ?? '?';
+    process.stdout.write(` ${progress}%`);
+    await sleep(interval * 1000);
+    waited += interval;
+  }
+  throw new Error(`Task timed out after ${maxWait / 60} minutes`);
+}
+
+// --------------------------------------------------------------------------
+// Meshy v1 Rigging + Animation pipeline
+// --------------------------------------------------------------------------
+
+// Animation clips to generate for humanoid creatures.
+// action_id reference: 0=idle, 4=attack, 8=death, 9=hit_react, 30=walk
+const HUMANOID_CLIPS = [
+  { name: 'idle',      actionId: 0  },
+  { name: 'walk',      actionId: 30 },
+  { name: 'attack',    actionId: 4  },
+  { name: 'death',     actionId: 8  },
+  { name: 'hit_react', actionId: 9  },
+];
+
+async function rigModel(inputTaskId) {
+  log('\n  Submitting to Meshy Rigging (5 credits)...');
+  const res = await meshyPostV1('/rigging', { input_task_id: inputTaskId });
+  if (!res.result) throw new Error(`Rigging error: ${JSON.stringify(res)}`);
+  const rigTaskId = res.result;
+  log(`  Rig task: ${rigTaskId}`);
+  return await pollV1Task(rigTaskId, 'rigging', 'rigging');
+}
+
+async function animateClip(rigTaskId, actionId, clipName) {
+  const res = await meshyPostV1('/animations', {
+    rig_task_id: rigTaskId,
+    action_id: actionId,
+  });
+  if (!res.result) throw new Error(`Animation error: ${JSON.stringify(res)}`);
+  const animTaskId = res.result;
+  return await pollV1Task(animTaskId, 'animations', `animation/${clipName}`);
+}
+
+// Merge multiple single-animation GLBs into one GLB with multiple named clips.
+// All input GLBs must share the same skeleton node names (same Meshy rig).
+async function mergeAnimationGLBs(clipPaths, clipNames, outputPath) {
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+
+  const docs = [];
+  for (const p of clipPaths) docs.push(await io.read(p));
+  if (docs.length === 0) throw new Error('No animation GLBs to merge');
+
+  const baseDoc = docs[0];
+
+  // Rename the first animation
+  const baseAnims = baseDoc.getRoot().listAnimations();
+  if (baseAnims[0]) baseAnims[0].setName(clipNames[0]);
+
+  // Node-name → node map for base doc (remapping target refs)
+  const baseNodeMap = new Map();
+  baseDoc.getRoot().listNodes().forEach(n => baseNodeMap.set(n.getName(), n));
+
+  for (let i = 1; i < docs.length; i++) {
+    const srcDoc   = docs[i];
+    const clipName = clipNames[i] ?? `clip_${i}`;
+
+    for (const srcAnim of srcDoc.getRoot().listAnimations()) {
+      const dstAnim = baseDoc.createAnimation(clipName);
+
+      const samplerMap = new Map();
+      for (const srcSampler of srcAnim.listSamplers()) {
+        const inAcc  = srcSampler.getInput();
+        const outAcc = srcSampler.getOutput();
+
+        const dstInput = baseDoc.createAccessor()
+          .setType(inAcc.getType())
+          .setArray(inAcc.getArray().slice());
+        const dstOutput = baseDoc.createAccessor()
+          .setType(outAcc.getType())
+          .setArray(outAcc.getArray().slice());
+        const dstSampler = baseDoc.createAnimationSampler()
+          .setInput(dstInput)
+          .setOutput(dstOutput)
+          .setInterpolation(srcSampler.getInterpolation());
+
+        dstAnim.addSampler(dstSampler);
+        samplerMap.set(srcSampler, dstSampler);
+      }
+
+      for (const srcChannel of srcAnim.listChannels()) {
+        const srcNode = srcChannel.getTargetNode();
+        const dstNode = baseNodeMap.get(srcNode?.getName());
+        if (!dstNode) continue;
+
+        const dstChannel = baseDoc.createAnimationChannel()
+          .setTargetNode(dstNode)
+          .setTargetPath(srcChannel.getTargetPath())
+          .setSampler(samplerMap.get(srcChannel.getSampler()));
+
+        dstAnim.addChannel(dstChannel);
+      }
+    }
+  }
+
+  await io.write(outputPath, baseDoc);
+}
+
+// Full rig + animate pipeline for a humanoid creature.
+// meshTaskId — the Meshy v2 text-to-3d refine task ID for the mesh.
+async function rigAndAnimateCreature(slug, meshTaskId) {
+  log(`\n=== Rig + Animate: ${slug} ===`);
+  log(`  Mesh task: ${meshTaskId}`);
+
+  // 1. Rig
+  let rigTask;
+  try {
+    rigTask = await rigModel(meshTaskId);
+    log(`  Rig complete: ${rigTask.id}`);
+  } catch (e) {
+    log(`  Rigging failed: ${e.message}`);
+    throw e;
+  }
+
+  // 2. Animate each clip
+  const animDir = path.join(GLB_DIR, `${slug}-anim-clips`);
+  fs.mkdirSync(animDir, { recursive: true });
+
+  const downloaded = [];
+  for (const clip of HUMANOID_CLIPS) {
+    log(`\n  Animating clip: ${clip.name} (action_id=${clip.actionId}, 3 credits)...`);
+    try {
+      const animTask = await animateClip(rigTask.id, clip.actionId, clip.name);
+      const url = animTask.result?.animation_glb_url ?? animTask.model_url ?? animTask.model_urls?.glb;
+      if (!url) { log(`  ⚠ No model URL for ${clip.name} — skipping`); continue; }
+      const dest = path.join(animDir, `${clip.name}.glb`);
+      await downloadFile(url, dest);
+      log(`  ✓ ${clip.name}.glb (${(fs.statSync(dest).size / 1024).toFixed(0)} KB)`);
+      downloaded.push({ name: clip.name, path: dest });
+    } catch (e) {
+      log(`  ⚠ ${clip.name} failed: ${e.message}`);
+    }
+  }
+
+  if (downloaded.length === 0) {
+    throw new Error('All animation clips failed — cannot produce animated GLB');
+  }
+
+  // 3. Merge into single animated GLB
+  const outPath = path.join(GLB_DIR, `${slug}-animated.glb`);
+  log(`\n  Merging ${downloaded.length} clips into ${slug}-animated.glb...`);
+  await mergeAnimationGLBs(
+    downloaded.map(d => d.path),
+    downloaded.map(d => d.name),
+    outPath,
+  );
+  const kb = (fs.statSync(outPath).size / 1024).toFixed(0);
+  log(`  ✓ Merged: ${outPath} (${kb} KB)`);
+  log(`\n  Animation clips in: glb/${slug}-anim-clips/`);
+  log(`  Done. Copy to public/models/creatures/${slug}-animated.glb for the game.`);
+
+  return outPath;
 }
 
 // --------------------------------------------------------------------------
@@ -327,11 +513,28 @@ async function forgeCreature(name, description, opts = {}) {
     log('\nNo GLB URL in result — skipping download.');
   }
 
-  // Log to forge history
-  appendForgeLog({ slug, name, description, type, prompt: bestPrompt, score: bestScore, timestamp: new Date().toISOString() });
+  // Log to forge history (store task ID so rig step can be resumed)
+  const meshTaskId = bestResult.id ?? null;
+  appendForgeLog({
+    slug, name, description, type,
+    mesh_task_id: meshTaskId,
+    prompt: bestPrompt, score: bestScore,
+    timestamp: new Date().toISOString(),
+  });
 
-  // Print next steps
-  printNextSteps(slug, name);
+  // Auto-rig humanoid creatures
+  if (type === 'humanoid' && meshTaskId && !IS_TEST) {
+    log('\n  Humanoid creature — starting rig + animate pipeline...');
+    try {
+      await rigAndAnimateCreature(slug, meshTaskId);
+    } catch (e) {
+      log(`\n  Rig pipeline failed: ${e.message}`);
+      log(`  Run manually: node creature-forge.mjs --rig ${slug} ${meshTaskId}`);
+    }
+  } else {
+    // Print next steps (manual Mixamo flow for non-humanoids)
+    printNextSteps(slug, name);
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -412,38 +615,57 @@ if (args.includes('--list')) {
   process.exit(0);
 }
 
-if (args.length < 2 && !args.includes('--dry-run')) {
-  console.log(`
+// --rig <slug> <meshTaskId> — rig + animate an already-generated mesh
+if (args.includes('--rig')) {
+  const rigIdx = args.indexOf('--rig');
+  const slug = args[rigIdx + 1];
+  const meshTaskId = args[rigIdx + 2];
+  if (!slug || !meshTaskId) {
+    console.error('Usage: node creature-forge.mjs --rig <slug> <meshTaskId>');
+    process.exit(1);
+  }
+  rigAndAnimateCreature(slug, meshTaskId).catch(err => {
+    console.error('Rig failed:', err.message);
+    process.exit(1);
+  });
+} else {
+  if (args.length < 2 && !args.includes('--dry-run')) {
+    console.log(`
 Usage:
   node creature-forge.mjs <name> <description> [options]
+  node creature-forge.mjs --rig <slug> <meshTaskId>
 
 Options:
   --iterations N     Number of generation attempts (default: 2)
   --type <type>      Creature type: undead | demon | beast | humanoid | elemental
+                     humanoid — auto-rigs + animates after mesh generation
   --threshold N      Quality threshold 0-1 (default: 0.65)
   --dry-run          Print prompts only, no API calls
   --list             Show all forged creatures
+  --rig <slug> <id>  Run rig + animate on an existing mesh task ID
 
 Examples:
-  node creature-forge.mjs "Bone Tyrant" "massive undead warrior, exposed vertebrae, cracked armor"
-  node creature-forge.mjs "Void Demon" "winged demon, obsidian skin, molten eye sockets" --type demon
-  node creature-forge.mjs "Cave Troll" "hulking troll, stone-like hide, dragging chains" --type beast --iterations 3
+  node creature-forge.mjs "Kobold" "small reptilian humanoid, crude dagger" --type humanoid
+  node creature-forge.mjs "Void Demon" "winged demon, obsidian skin" --type demon
+  node creature-forge.mjs "Cave Troll" "hulking troll, stone-like hide" --type beast --iterations 3
+  node creature-forge.mjs --rig kobold 019d59c0-958e-7f73-9377-41cbdbb713ff
 
 API:
   Set MESHY_API_KEY env var for real generation. Defaults to Meshy test mode (no credits).
 `);
-  process.exit(0);
+    process.exit(0);
+  }
+
+  // Parse args
+  const name        = args[0];
+  const description = args[1];
+  const iterations  = parseInt(args[args.indexOf('--iterations') + 1] ?? '2', 10) || 2;
+  const type        = args.includes('--type') ? args[args.indexOf('--type') + 1] : null;
+  const threshold   = parseFloat(args[args.indexOf('--threshold') + 1] ?? '0.65') || QUALITY_THRESHOLD;
+  const dryRun      = args.includes('--dry-run');
+
+  forgeCreature(name, description, { iterations, type, threshold, dryRun }).catch(err => {
+    console.error('Fatal:', err.message);
+    process.exit(1);
+  });
 }
-
-// Parse args
-const name        = args[0];
-const description = args[1];
-const iterations  = parseInt(args[args.indexOf('--iterations') + 1] ?? '2', 10) || 2;
-const type        = args.includes('--type') ? args[args.indexOf('--type') + 1] : null;
-const threshold   = parseFloat(args[args.indexOf('--threshold') + 1] ?? '0.65') || QUALITY_THRESHOLD;
-const dryRun      = args.includes('--dry-run');
-
-forgeCreature(name, description, { iterations, type, threshold, dryRun }).catch(err => {
-  console.error('Fatal:', err.message);
-  process.exit(1);
-});

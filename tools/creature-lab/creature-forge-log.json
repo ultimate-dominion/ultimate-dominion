@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "void-demon",
+    "name": "Void Demon",
+    "description": "winged demon, obsidian armor, molten eye sockets, barbed tail",
+    "type": "demon",
+    "prompt": "A Void Demon: winged demon, obsidian armor, molten eye sockets, barbed tail. Key features: horns, cloven hooves, barbed tail, dark chitin armor, sulfurous veins. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-04T13:03:03.706Z"
+  },
+  {
+    "slug": "void-demon",
+    "name": "Void Demon",
+    "description": "winged demon, obsidian armor, molten eye sockets, barbed tail",
+    "type": "demon",
+    "prompt": "A Void Demon: winged demon, obsidian armor, molten eye sockets, barbed tail. Key features: horns, cloven hooves, barbed tail, dark chitin armor, sulfurous veins. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.6,
+        "ascii_contrast": 0.62,
+        "rig_compat": 0.8
+      },
+      "avg": 0.6925000000000001,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-04T13:06:14.089Z"
+  },
+  {
+    "slug": "dire-rat",
+    "name": "Dire Rat",
+    "description": "large diseased sewer rat, matted fur with bald patches, oversized yellowed teeth, festering wounds, aggressive hunched posture, long scaly tail",
+    "type": "beast",
+    "prompt": "A Dire Rat: large diseased sewer rat, matted fur with bald patches, oversized yellowed teeth, festering wounds, aggressive hunched posture, long scaly tail. Key features: quadruped, predator stance, claws, matted fur, scarred hide. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-04T13:30:06.887Z"
+  },
+  {
+    "slug": "kobold",
+    "name": "Kobold",
+    "description": "small reptilian humanoid, digitigrade legs, lizard-like scaled skin in greenish-brown, crude leather armor with shoulder pads, holding a rusty short dagger in one hand, hunched aggressive attack stance, large yellow slit-pupil eyes, narrow pointed snout with small fangs, long thin tail, clawed three-fingered hands, bony angular face, emaciated ribcage visible, dark cave creature",
+    "type": "humanoid",
+    "prompt": "A Kobold: small reptilian humanoid, digitigrade legs, lizard-like scaled skin in greenish-brown, crude leather armor with shoulder pads, holding a rusty short dagger in one hand, hunched aggressive attack stance, large yellow slit-pupil eyes, narrow pointed snout with small fangs, long thin tail, clawed three-fingered hands, bony angular face, emaciated ribcage visible, dark cave creature. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-04T18:33:43.807Z"
+  }
+]
