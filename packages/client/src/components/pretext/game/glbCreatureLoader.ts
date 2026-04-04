@@ -20,6 +20,7 @@ let _rendererReady = false;
 async function getSharedRenderer(): Promise<import('three').WebGLRenderer> {
   if (_sharedRenderer && _rendererReady) return _sharedRenderer;
 
+  console.log('[glbCreatureLoader] creating shared WebGL renderer');
   const THREE = await import('three');
   _sharedRenderer = new THREE.WebGLRenderer({
     antialias: false,
@@ -146,6 +147,7 @@ export async function loadGLBCreature(
 ): Promise<void> {
   if (creatureCache.has(url)) return;
 
+  console.log('[glbCreatureLoader] loading', url);
   // Reserve slot immediately so concurrent callers don't double-load
   creatureCache.set(url, { loaded: false, drawFn: null });
 
@@ -259,6 +261,7 @@ export async function loadGLBCreature(
     ctx.drawImage(renderer.domElement, 0, 0, w, h);
   };
 
+  console.log('[glbCreatureLoader] ready', url, '— clips:', Object.keys(actions).join(', '));
   creatureCache.set(url, { loaded: true, drawFn });
 }
 
@@ -293,7 +296,7 @@ export function makeGLBDrawFn(
     if (!loadStarted) {
       loadStarted = true;
       loadGLBCreature(url, gridW, gridH, yaw).catch((err) => {
-        console.warn('[glbCreatureLoader] Failed to load', url, err);
+        console.error('[glbCreatureLoader] FAILED to load', url, err);
       });
     }
   };
