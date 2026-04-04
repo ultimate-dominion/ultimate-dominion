@@ -8,10 +8,9 @@ WORKDIR /app
 COPY package.json ./
 RUN pnpm install
 
-# cache-bust: v3-snapshot-exclude
 COPY tsconfig.json ./
 COPY src/ ./src/
-RUN pnpm build
+RUN echo "build-v0.2.4-$(date +%s)" > /tmp/build-marker && pnpm build
 
 FROM node:20-slim
 
