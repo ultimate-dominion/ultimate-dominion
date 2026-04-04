@@ -892,32 +892,18 @@ export const TileDetailsPanel = (): JSX.Element => {
               userDefeated={userDefeated}
             />
           </Box>
-          {/* Compact player cockpit bar */}
+          {/* Compact stats bar — player left, opponent right */}
           <HStack
             bg="rgba(18,16,14,0.95)"
             borderTop="1px solid"
             borderColor="rgba(58,50,40,0.6)"
             px={4}
             py={1}
-            spacing={3}
+            spacing={0}
             align="center"
+            justify="space-between"
           >
-            <HealthBar
-              maxHp={userCharacterForBattleRendering.maxHp}
-              currentHp={userDisplayedHp}
-              isDotTicking={isUserDotTicking}
-              level={userCharacterForBattleRendering.level}
-              statusEffects={userCharacterStatusEffects}
-              flex={1}
-            />
-            <Text fontWeight={600} size="sm" color="#E8DCC8" whiteSpace="nowrap">
-              {userCharacterForBattleRendering.name}
-            </Text>
-            <ClassSymbol
-              advancedClass={userCharacterForBattleRendering.advancedClass}
-              entityClass={userCharacterForBattleRendering.entityClass}
-              theme="dark"
-            />
+            {/* Player stats (left) */}
             <HStack spacing={2}>
               {([
                 { label: 'AGI', color: '#5A8A3E', base: userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier, mod: activeUserBattleEffectModifications.agiModifier },
@@ -929,6 +915,25 @@ export const TileDetailsPanel = (): JSX.Element => {
                   <Text fontFamily="mono" size="2xs">{(base + mod).toString()}</Text>
                 </HStack>
               ))}
+            </HStack>
+
+            {/* Opponent stats (right) */}
+            <HStack spacing={2}>
+              {([
+                { label: 'AGI', color: '#5A8A3E', stat: opponent.agility, expiredMod: expiredOpponentEffectModifications.agiModifier, activeMod: activeBattleEffectModifications.agiModifier },
+                { label: 'INT', color: '#4A7AB5', stat: opponent.intelligence, expiredMod: expiredOpponentEffectModifications.intModifier, activeMod: activeBattleEffectModifications.intModifier },
+                { label: 'STR', color: '#B85C3A', stat: opponent.strength, expiredMod: expiredOpponentEffectModifications.strModifier, activeMod: activeBattleEffectModifications.strModifier },
+              ] as const).map(({ label, color, stat, expiredMod, activeMod }) => {
+                if (!stat) return null;
+                const base = stat - expiredMod;
+                const effective = base + activeMod;
+                return (
+                  <HStack key={label} spacing={0.5}>
+                    <Text size="2xs" color={color} fontWeight={600}>{label}</Text>
+                    <Text fontFamily="mono" size="2xs">{effective.toString()}</Text>
+                  </HStack>
+                );
+              })}
             </HStack>
           </HStack>
           {/* Monster name dissolve on defeat */}

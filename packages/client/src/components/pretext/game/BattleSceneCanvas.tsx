@@ -418,7 +418,7 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
         ctx.fillStyle = vigGrd;
         ctx.fillRect(0, 0, w * 0.3, h);
 
-        // ── HUD: Monster name + HP bar (top-right area) ────────────────
+        // ── HUD: Monster name (top-right area) ─────────────────────────
 
         const hudPad = 12;
         const barW = Math.min(200, w * 0.35);
@@ -431,18 +431,6 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
           monsterX + hudPad,
           hudPad,
           p.monsterDefeated,
-        );
-
-        drawHpBar(
-          ctx,
-          monsterX + hudPad,
-          hudPad + 22,
-          barW,
-          barH,
-          p.monsterHp,
-          p.monsterMaxHp,
-          p.monsterDefeated ? 'Defeated' : `Lv.${p.monsterLevel}`,
-          true,
         );
 
         // ── HUD: Player HP bar (bottom-left) ───────────────────────────
@@ -459,6 +447,20 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
           p.userMaxHp,
           p.userName,
           false,
+        );
+
+        // ── HUD: Monster HP bar (bottom-right) ─────────────────────────
+
+        drawHpBar(
+          ctx,
+          w - hudPad - barW,
+          h - hudPad - barH,
+          barW,
+          barH,
+          p.monsterHp,
+          p.monsterMaxHp,
+          p.monsterDefeated ? 'Defeated' : `Lv.${p.monsterLevel}`,
+          true,
         );
       },
       [template],
