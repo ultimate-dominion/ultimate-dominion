@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-03T19:38:56.167Z",
+  "generated_at": "2026-04-04T14:40:26.409Z",
   "mode": "onboarded",
   "name": "ultimate-dominion",
   "family": "data-driven-progression-rpg",
@@ -377,7 +377,7 @@
     }
   },
   "onboarding": {
-    "generated_at": "2026-04-03T19:38:56.205Z",
+    "generated_at": "2026-04-04T14:40:26.447Z",
     "lifecycle": {
       "id": "live",
       "label": "Live Service / Existing Users Likely",
@@ -385,7 +385,7 @@
         "A beta environment is explicitly modeled in repo workflows or deploy rules.",
         "A production environment is explicitly modeled, which usually means operator mistakes have real user impact.",
         "Both beta and prod exist alongside GitHub workflows, so release discipline already matters.",
-        "The repo has 2431 commits locally, which suggests an established system rather than a throwaway prototype.",
+        "The repo has 2441 commits locally, which suggests an established system rather than a throwaway prototype.",
         "The stack includes live-service overlays, so environment mistakes can mutate real state or real services."
       ],
       "operator_habit": "Treat default automation as a safety rail, not a shortcut. Beta and prod paths should stay explicit.",
@@ -411,8 +411,8 @@
         "deep verification has shared-state steps that should stay promoted, not default: smoke"
       ],
       "recent_signals": [
-        "2431 local commits available for pattern inference",
-        "recent commit mix fix:8, chore:2, docs:2",
+        "2441 local commits available for pattern inference",
+        "recent commit mix chore:8, fix:4",
         "top recommendations split-root-test-from-lint, gate-live-verification"
       ]
     },

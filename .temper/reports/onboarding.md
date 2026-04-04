@@ -18,7 +18,7 @@
 - workflow surfaces: agents=AGENTS.md; session=SESSION.md; claude=CLAUDE.md; claude_rules=.claude/rules/api.md, .claude/rules/client.md, .claude/rules/deploy.md, .claude/rules/game.md, .claude/rules/indexer.md, .claude/rules/solidity.md
 - source of truth: packages/contracts/zones/dark_cave/effects.json, packages/contracts/zones/dark_cave/items.json, packages/contracts/zones/dark_cave/monsters.json, packages/contracts/zones/windy_peaks/effects.json, packages/contracts/zones/windy_peaks/items.json, packages/contracts/zones/windy_peaks/monsters.json, packages/contracts/worlds.json, packages/contracts/mud.config.ts, monsters.json, CHANGELOG.md
 - github workflows: .github/workflows/ci.yml, .github/workflows/deploy-beta.yml, .github/workflows/release.yml, .github/workflows/smoke.yml, .github/workflows/sync-dev.yml
-- git history: 2431 commits; recent types fix:8, chore:2, docs:2
+- git history: 2441 commits; recent types chore:8, fix:4
 
 ## What Already Looks Good
 - The repo already has explicit operator context files for startup and session continuity.
@@ -32,7 +32,7 @@
 - A beta environment is explicitly modeled in repo workflows or deploy rules.
 - A production environment is explicitly modeled, which usually means operator mistakes have real user impact.
 - Both beta and prod exist alongside GitHub workflows, so release discipline already matters.
-- The repo has 2431 commits locally, which suggests an established system rather than a throwaway prototype.
+- The repo has 2441 commits locally, which suggests an established system rather than a throwaway prototype.
 - The stack includes live-service overlays, so environment mistakes can mutate real state or real services.
 - operator habit: Treat default automation as a safety rail, not a shortcut. Beta and prod paths should stay explicit.
 - player impact: Small workflow mistakes can hit players directly through progression, deploy, or economy surfaces.
@@ -42,8 +42,8 @@
 - continuity pattern: repo-native session tracking exists
 - recurring failure mode: Root `test` currently resolves to lint-style validation rather than a real test or verify path.
 - recurring failure mode: deep verification has shared-state steps that should stay promoted, not default: smoke
-- recent signal: 2431 local commits available for pattern inference
-- recent signal: recent commit mix fix:8, chore:2, docs:2
+- recent signal: 2441 local commits available for pattern inference
+- recent signal: recent commit mix chore:8, fix:4
 - recent signal: top recommendations split-root-test-from-lint, gate-live-verification
 
 ## Token Efficiency

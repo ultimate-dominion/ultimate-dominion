@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-03T19:38:56.418Z",
+  "generated_at": "2026-04-04T14:40:26.682Z",
   "project": {
     "name": "ultimate-dominion",
     "root": "/Users/michaelorourke/ultimate-dominion",
@@ -147,8 +147,8 @@
       "deep verification has shared-state steps that should stay promoted, not default: smoke"
     ],
     "recent_signals": [
-      "2431 local commits available for pattern inference",
-      "recent commit mix fix:8, chore:2, docs:2",
+      "2441 local commits available for pattern inference",
+      "recent commit mix chore:8, fix:4",
       "top recommendations split-root-test-from-lint, gate-live-verification"
     ]
   },
