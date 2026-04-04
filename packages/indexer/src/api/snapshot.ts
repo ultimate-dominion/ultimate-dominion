@@ -59,6 +59,13 @@ function shouldExcludeRow(
 export function createSnapshotRouter(syncHandle: SyncHandle): Router {
   const router = Router();
 
+  router.get('/debug', (_req, res) => {
+    const tables = Array.from(syncHandle.tableNameMap.keys());
+    const excluded = tables.filter(t => SNAPSHOT_EXCLUDE_TABLES.has(t));
+    const notExcluded = tables.filter(t => !SNAPSHOT_EXCLUDE_TABLES.has(t) && !t.includes('__'));
+    res.json({ excludeSet: Array.from(SNAPSHOT_EXCLUDE_TABLES), excluded, totalTables: tables.length, sampleNotExcluded: notExcluded.slice(0, 10) });
+  });
+
   router.get('/', async (_req, res) => {
     try {
       const snapshot: Record<string, Record<string, Record<string, unknown>>> = {};
