@@ -1,4 +1,5 @@
 import type { MonsterTemplate } from './monsterTemplates';
+import { makeGLBDrawFn } from './glbCreatureLoader';
 
 function fillEllipse(
   ctx: CanvasRenderingContext2D,
@@ -2232,7 +2233,8 @@ function drawBasiliskRedux(ctx: CanvasRenderingContext2D, w: number, h: number) 
 
 export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
   // ── Zone 1: Dark Cave (Levels 1-12) ──
-  { id: 'redux-dire-rat', name: 'Dire Rat', gridWidth: 14, gridHeight: 8, monsterClass: 1, level: 1, atmosphere: { r: 140, g: 110, b: 70, intensity: 0.10 }, draw: drawDireRatRedux },
+  { id: 'redux-dire-rat', name: 'Dire Rat', gridWidth: 10, gridHeight: 7, monsterClass: 1, level: 1, atmosphere: { r: 140, g: 110, b: 70, intensity: 0.10 },
+    draw: makeGLBDrawFn('/models/creatures/dire-rat.glb', 10, 7, drawDireRatRedux) },
   { id: 'redux-kobold', name: 'Kobold', gridWidth: 7, gridHeight: 5, monsterClass: 2, level: 2, atmosphere: { r: 160, g: 120, b: 50, intensity: 0.10 }, draw: drawKoboldRedux },
   { id: 'redux-goblin', name: 'Goblin', gridWidth: 7, gridHeight: 7, monsterClass: 0, level: 3, atmosphere: { r: 96, g: 120, b: 48, intensity: 0.10 }, draw: drawGoblinRedux },
   { id: 'redux-giant-spider', name: 'Giant Spider', gridWidth: 10, gridHeight: 12, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.15 }, draw: drawPhaseSpiderRedux },
