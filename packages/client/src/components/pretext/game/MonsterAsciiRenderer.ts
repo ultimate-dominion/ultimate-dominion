@@ -133,7 +133,32 @@ function ensureInit() {
 
 const TEMPLATE_RES = 512;
 
+// Canvas elements reused for dynamic (animated) templates — avoids per-frame allocation
+const dynamicCanvasCache = new Map<string, { c: HTMLCanvasElement; ctx: CanvasRenderingContext2D }>();
+
 function getTemplateImage(template: MonsterTemplate): TemplateData {
+  // Dynamic templates (GLB creatures) re-render every frame — skip the image cache
+  if (template.dynamic) {
+    const w = TEMPLATE_RES;
+    const h = Math.round(TEMPLATE_RES * template.gridHeight / template.gridWidth);
+    let dc = dynamicCanvasCache.get(template.id);
+    if (!dc) {
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      dc = { c, ctx: c.getContext('2d', { willReadFrequently: true })! };
+      dynamicCanvasCache.set(template.id, dc);
+    }
+    dc.ctx.fillStyle = '#000';
+    dc.ctx.fillRect(0, 0, w, h);
+    template.draw(dc.ctx, w, h);
+    const data = dc.ctx.getImageData(0, 0, w, h);
+    applyBrightnessBoost(data.data, w, h, template.renderOverrides?.brightnessBoost);
+    // Skip noise for dynamic templates — GLB toon shading provides natural variation
+    applyContourBrightening(data.data, w, h);
+    return { data, w, h, normals: null, normalCols: 0, normalRows: 0 };
+  }
+
   let cached = templateCache.get(template.id);
   if (cached) return cached;
 
@@ -1213,4 +1238,5 @@ export function renderMonster(
 /** Clear all caches */
 export function clearCache(): void {
   templateCache.clear();
+  dynamicCanvasCache.clear();
 }

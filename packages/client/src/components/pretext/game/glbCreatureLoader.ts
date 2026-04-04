@@ -258,7 +258,12 @@ export async function loadGLBCreature(
     }
 
     renderer.render(scene, camera);
+    // WebGL origin is bottom-left; Canvas2D is top-left — flip vertically
+    ctx.save();
+    ctx.translate(0, h);
+    ctx.scale(1, -1);
     ctx.drawImage(renderer.domElement, 0, 0, w, h);
+    ctx.restore();
   };
 
   console.log('[glbCreatureLoader] ready', url, '— clips:', Object.keys(actions).join(', '));

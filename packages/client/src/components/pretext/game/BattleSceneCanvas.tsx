@@ -344,7 +344,7 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
           renderMonster(ctx, template, monsterX, monsterY, monsterW, monsterH, {
             elapsed: p.monsterDefeated ? 0 : elapsed,
             cellSize: 5,
-            enable3D: false,
+            enable3D: true,
             enableGlow: !p.monsterDefeated,
             enableBgFill: true,
             animation: state.monsterAnim,
