@@ -207,9 +207,10 @@
     // labGrid: dimensions used in the creature lab for development
     const CREATURES = [
       { slug: 'dire-rat',          name: 'Dire Rat',        level: 1,  status: 'done', ref: 'refs/rat-ref.png',
+        type: 'glb', glbFile: 'glb/dire-rat-animated.glb',
         atmosphere: [140,110,70,0.10],
-        gameGrid: { w: 14, h: 8  }, labGrid: { w: 7,  h: 4  },
-        goals: 'Hunched charge pose\nFacing left\nFur texture\nGlowing red eyes\nBig incisor teeth' },
+        gameGrid: { w: 10, h: 7 }, labGrid: { w: 10, h: 7 },
+        goals: 'Meshy + Mesh2Motion animated GLB\nBite/Idle Alert/Walk/Sneak/Jump/Bark/Death\nLive in-game on beta' },
       { slug: 'kobold',            name: 'Kobold',          level: 2,  status: 'done', ref: 'refs/kobold-ref.webp',
         atmosphere: [160,120,50,0.10],
         gameGrid: { w: 7,  h: 5  }, labGrid: { w: 7,  h: 5  },
@@ -375,18 +376,6 @@
         atmosphere: [60,80,180,0.14],
         gameGrid: { w: 8, h: 9 }, labGrid: { w: 8, h: 9 },
         goals: 'Tentacle creature — unique non-humanoid silhouette\nTests ASCII multi-limb density variation' },
-
-      // Meshy-generated creatures (creature-forge pipeline)
-      { slug: 'glb-dire-rat-animated', name: 'Dire Rat [Animated]', level: 1, status: 'wip', type: 'glb',
-        glbFile: 'glb/dire-rat-animated.glb',
-        atmosphere: [140,110,70,0.12],
-        gameGrid: { w: 10, h: 7 }, labGrid: { w: 10, h: 7 },
-        goals: 'Meshy mesh + Mesh2Motion rig — Bite/Idle Alert/Death/Walk/Sneak/Jump/Bark\nFirst fully animated Forge creature' },
-      { slug: 'glb-dire-rat-forge', name: 'Dire Rat [Mesh]', level: 1, status: 'wip', type: 'glb',
-        glbFile: 'glb/dire-rat.glb',
-        atmosphere: [140,110,70,0.12],
-        gameGrid: { w: 10, h: 7 }, labGrid: { w: 10, h: 7 },
-        goals: 'Meshy-generated diseased rat — static mesh reference' },
 
       // Meshy test mode sample — validates the creature-forge pipeline
       { slug: 'glb-void-demon', name: 'Void Demon [Forge Test]', level: 7, status: 'wip', type: 'glb',
