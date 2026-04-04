@@ -120,11 +120,14 @@ export async function loadGLBCreature(url, gridW, gridH, threeRenderer, opts = {
     toon = true,
     targetHeight = 1.8,
     // 3/4 left-facing orientation — matches UD creature visual language.
-    // Most GLBs face +Z (toward camera). Rotating Y by -120° puts them
-    // facing left with ~30° depth visible, creating the side/front split
-    // the ASCII sampler needs to produce varied character densities.
-    // Override per-creature: yaw:0 = front, yaw:-Math.PI/2 = pure side.
-    yaw   = -Math.PI * 0.65,   // ~-117° — 3/4 left-front
+    // Most game GLBs (KayKit, Quaternius, Mixamo) face -Z (away from camera)
+    // in their rest pose. Rotating Y by +117° puts them facing left with the
+    // face on the LEFT of canvas and ~30° depth visible.
+    //   yaw=0         → default rest pose (front or back depending on exporter)
+    //   yaw=+Math.PI  → full 180° flip
+    //   yaw=+Math.PI*0.65 → 3/4 left-front for -Z facing models (KayKit/Quaternius)
+    //   yaw=-Math.PI*0.25 → 3/4 left-front for +Z facing models (Three.js examples)
+    yaw   = Math.PI * 0.65,    // ~+117° — 3/4 left-front for -Z-facing models
     pitch = -0.08,              // slight downward tilt — mild elevation angle
   } = opts;
 
