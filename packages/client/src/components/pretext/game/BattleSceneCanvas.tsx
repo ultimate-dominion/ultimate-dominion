@@ -24,6 +24,11 @@ import { Box } from '@chakra-ui/react';
 import { useCanvas } from '../hooks/useCanvas';
 import { renderMonster, type AnimationState } from './MonsterAsciiRenderer';
 import { MONSTER_TEMPLATES_REDUX } from './monsterTemplatesRedux';
+import { loadGLBCreature } from './glbCreatureLoader';
+
+// Kick off GLB loading immediately when the battle scene module loads —
+// don't wait for the first encounter frame, which may be too late on slow connections.
+loadGLBCreature('/models/creatures/dire-rat.glb', 10, 7).catch(() => {/* handled inside */});
 import type { MonsterTemplate } from './monsterTemplates';
 import { COLORS, FONTS, fontString } from '../theme';
 import { usePretextFonts } from '../hooks/usePretextFonts';
