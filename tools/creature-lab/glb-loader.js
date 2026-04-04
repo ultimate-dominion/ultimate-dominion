@@ -22,14 +22,18 @@ const CLIP_NAME_MAP = [
             'floating'],                                    target: 'idle'   },
   { keys: ['attack', 'swing', 'bite', 'slash', 'strike',
             'chop', 'spellcast', 'cast', 'shoot', 'stab',
-            'punch', 'kick', 'throw', 'headbutt', 'weapon'], target: 'attack' },
+            'punch', 'kick', 'throw', 'headbutt', 'weapon',
+            'bark', 'snap', 'pounce', 'claw'],               target: 'attack' },
   { keys: ['hit', 'hurt', 'damage', 'impact', 'flinch',
             'hitrecieve', 'hitreact'],                      target: 'hit'    },
   { keys: ['death', 'die', 'dead', 'fall'],                target: 'death'  },
-  { keys: ['walk', 'run', 'move', 'crawl', 'fly', 'swim'], target: 'walk'   },
+  { keys: ['walk', 'run', 'move', 'crawl', 'fly', 'swim',
+            'sneak', 'trot', 'gallop', 'jump', 'leap'],       target: 'walk'   },
   { keys: ['block', 'guard', 'parry', 'defend'],           target: 'block'  },
   // KayKit skeleton-specific: awaken = idle
   { keys: ['awaken', 'inactive', 'spawn'],                 target: 'idle'   },
+  // Mesh2Motion quadruped clips
+  { keys: ['idle alert', 'alert', 'look'],                 target: 'idle'   },
 ];
 
 // Strip common armature-prefix conventions before mapping.
@@ -82,13 +86,26 @@ export function applyToonMaterials(model, toonGradMap) {
     if (!node.isMesh) return;
     const old = Array.isArray(node.material) ? node.material : [node.material];
     const next = old.map(m => {
-      // Check if the base color is meaningfully non-white (artist painted it).
-      // Threshold: if luminance < 0.85, trust the color; otherwise use mid-gray.
-      const c = m.color ?? new THREE.Color(0.5, 0.5, 0.5);
-      const lum = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
-      const baseColor = lum < 0.85 ? c.clone().multiplyScalar(0.85) : new THREE.Color(0.52, 0.50, 0.48);
+      // If the material has an albedo texture (map), preserve it on the toon
+      // material — texture carries fur/skin detail that drives ASCII variety.
+      // Only fall back to flat color when no texture exists.
+      const albedoMap = m.map ?? null;
+
+      let baseColor;
+      if (albedoMap) {
+        // Texture present: use white so the texture colors come through unmodified.
+        // Darken slightly (0.82) to give the gradient room to add highlights.
+        baseColor = new THREE.Color(0.82, 0.82, 0.82);
+      } else {
+        // No texture: check if artist painted a meaningful color onto m.color.
+        const c = m.color ?? new THREE.Color(0.5, 0.5, 0.5);
+        const lum = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
+        baseColor = lum < 0.85 ? c.clone().multiplyScalar(0.85) : new THREE.Color(0.52, 0.50, 0.48);
+      }
+
       const toon = new THREE.MeshToonMaterial({
         color: baseColor,
+        map: albedoMap,       // keep albedo texture — fur/skin detail
         gradientMap: toonGradMap,
       });
       m.dispose();
