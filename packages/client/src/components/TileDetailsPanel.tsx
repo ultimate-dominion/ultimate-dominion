@@ -892,49 +892,68 @@ export const TileDetailsPanel = (): JSX.Element => {
               userDefeated={userDefeated}
             />
           </Box>
-          {/* Compact stats bar — player left, opponent right */}
+          {/* Battle HUD — player left, opponent right */}
           <HStack
             bg="rgba(18,16,14,0.95)"
             borderTop="1px solid"
             borderColor="rgba(58,50,40,0.6)"
             px={4}
-            py={1}
-            spacing={0}
-            align="center"
+            py={1.5}
+            spacing={4}
+            align="start"
             justify="space-between"
           >
-            {/* Player stats (left) */}
-            <HStack spacing={2}>
-              {([
-                { label: 'AGI', color: '#5A8A3E', base: userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier, mod: activeUserBattleEffectModifications.agiModifier },
-                { label: 'INT', color: '#4A7AB5', base: userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier, mod: activeUserBattleEffectModifications.intModifier },
-                { label: 'STR', color: '#B85C3A', base: userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier, mod: activeUserBattleEffectModifications.strModifier },
-              ] as const).map(({ label, color, base, mod }) => (
-                <HStack key={label} spacing={0.5}>
-                  <Text size="2xs" color={color} fontWeight={600}>{label}</Text>
-                  <Text fontFamily="mono" size="2xs">{(base + mod).toString()}</Text>
-                </HStack>
-              ))}
-            </HStack>
-
-            {/* Opponent stats (right) */}
-            <HStack spacing={2}>
-              {([
-                { label: 'AGI', color: '#5A8A3E', stat: opponent.agility, expiredMod: expiredOpponentEffectModifications.agiModifier, activeMod: activeBattleEffectModifications.agiModifier },
-                { label: 'INT', color: '#4A7AB5', stat: opponent.intelligence, expiredMod: expiredOpponentEffectModifications.intModifier, activeMod: activeBattleEffectModifications.intModifier },
-                { label: 'STR', color: '#B85C3A', stat: opponent.strength, expiredMod: expiredOpponentEffectModifications.strModifier, activeMod: activeBattleEffectModifications.strModifier },
-              ] as const).map(({ label, color, stat, expiredMod, activeMod }) => {
-                if (!stat) return null;
-                const base = stat - expiredMod;
-                const effective = base + activeMod;
-                return (
+            {/* Player side (left) */}
+            <VStack align="start" spacing={0.5} flex={1}>
+              <HealthBar
+                maxHp={userCharacterForBattleRendering.maxHp}
+                currentHp={userDisplayedHp}
+                isDotTicking={isUserDotTicking}
+                statusEffects={userCharacterStatusEffects}
+                w="100%"
+              />
+              <HStack spacing={2}>
+                {([
+                  { label: 'AGI', color: '#5A8A3E', base: userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier, mod: activeUserBattleEffectModifications.agiModifier },
+                  { label: 'INT', color: '#4A7AB5', base: userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier, mod: activeUserBattleEffectModifications.intModifier },
+                  { label: 'STR', color: '#B85C3A', base: userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier, mod: activeUserBattleEffectModifications.strModifier },
+                ] as const).map(({ label, color, base, mod }) => (
                   <HStack key={label} spacing={0.5}>
                     <Text size="2xs" color={color} fontWeight={600}>{label}</Text>
-                    <Text fontFamily="mono" size="2xs">{effective.toString()}</Text>
+                    <Text fontFamily="mono" size="2xs">{(base + mod).toString()}</Text>
                   </HStack>
-                );
-              })}
-            </HStack>
+                ))}
+              </HStack>
+            </VStack>
+
+            {/* Opponent side (right) */}
+            <VStack align="end" spacing={0.5} flex={1}>
+              <HealthBar
+                maxHp={opponent.maxHp}
+                currentHp={opponentDisplayedHp}
+                isDotTicking={isOpponentDotTicking}
+                level={opponent.level}
+                statusEffects={opponentStatusEffects}
+                w="100%"
+              />
+              <HStack spacing={2}>
+                {([
+                  { label: 'AGI', color: '#5A8A3E', stat: opponent.agility, expiredMod: expiredOpponentEffectModifications.agiModifier, activeMod: activeBattleEffectModifications.agiModifier },
+                  { label: 'INT', color: '#4A7AB5', stat: opponent.intelligence, expiredMod: expiredOpponentEffectModifications.intModifier, activeMod: activeBattleEffectModifications.intModifier },
+                  { label: 'STR', color: '#B85C3A', stat: opponent.strength, expiredMod: expiredOpponentEffectModifications.strModifier, activeMod: activeBattleEffectModifications.strModifier },
+                ] as const).map(({ label, color, stat, expiredMod, activeMod }) => {
+                  if (!stat) return null;
+                  const base = stat - expiredMod;
+                  const effective = base + activeMod;
+                  return (
+                    <HStack key={label} spacing={0.5}>
+                      <Text size="2xs" color={color} fontWeight={600}>{label}</Text>
+                      <Text fontFamily="mono" size="2xs">{effective.toString()}</Text>
+                    </HStack>
+                  );
+                })}
+              </HStack>
+            </VStack>
           </HStack>
           {/* Monster name dissolve on defeat */}
           {showDefeatDissolve && (
