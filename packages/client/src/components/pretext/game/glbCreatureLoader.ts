@@ -257,13 +257,7 @@ export async function loadGLBCreature(
     }
 
     renderer.render(scene, camera);
-    // ctx.drawImage from a WebGL canvas gives Y-inverted output in Canvas2D.
-    // Flip vertically to correct it.
-    ctx.save();
-    ctx.translate(0, h);
-    ctx.scale(1, -1);
     ctx.drawImage(renderer.domElement, 0, 0, w, h);
-    ctx.restore();
   };
 
   console.log('[glbCreatureLoader] ready', url, '— clips:', Object.keys(actions).join(', '));
