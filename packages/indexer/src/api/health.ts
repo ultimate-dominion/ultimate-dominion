@@ -56,7 +56,6 @@ export function createHealthRouter(syncHandle: SyncHandle, broadcaster: Broadcas
         chainHead,
         lag,
         tables: syncHandle.tables.size,
-        version: '0.2.4',
       });
     } catch (err) {
       res.status(503).json({

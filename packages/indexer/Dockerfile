@@ -10,7 +10,7 @@ RUN pnpm install
 
 COPY tsconfig.json ./
 COPY src/ ./src/
-RUN echo "build-v0.2.4-$(date +%s)" > /tmp/build-marker && pnpm build
+RUN pnpm build
 
 FROM node:20-slim
 
