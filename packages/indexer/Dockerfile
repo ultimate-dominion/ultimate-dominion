@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json ./
 RUN pnpm install
 
-# cache-bust: v2
+# cache-bust: v3-snapshot-exclude
 COPY tsconfig.json ./
 COPY src/ ./src/
 RUN pnpm build
