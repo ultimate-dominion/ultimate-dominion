@@ -19,7 +19,6 @@ import {
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
-import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
 import { useGoldMerchant } from '../contexts/GoldMerchantContext';
@@ -37,7 +36,6 @@ import { Level } from './Level';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
-  const { currentBattle } = useBattle();
   const { character } = useCharacter();
   const { fragments } = useFragments();
   const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
@@ -176,79 +174,77 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </HStack>
 
-      {!currentBattle && (
-        <VStack mt={3} spacing={0} w="100%">
-          {/* HP bar */}
-          <Box px={2} py={1.5} w="100%">
-            <HStack justifyContent="space-between" mb={1}>
-              <Text fontWeight={700} size="sm">HP</Text>
-              <Text color="#8A7E6A" fontFamily="mono" fontWeight={700} size="sm">
-                {currentHpWithFloor.toString()}/{maxHp.toString()}
-              </Text>
-            </HStack>
+      <VStack mt={3} spacing={0} w="100%">
+        {/* HP bar */}
+        <Box px={2} py={1.5} w="100%">
+          <HStack justifyContent="space-between" mb={1}>
+            <Text fontWeight={700} size="sm">HP</Text>
+            <Text color="#8A7E6A" fontFamily="mono" fontWeight={700} size="sm">
+              {currentHpWithFloor.toString()}/{maxHp.toString()}
+            </Text>
+          </HStack>
+          <Box
+            bg="#14120F"
+            borderRadius="md"
+            boxShadow={
+              Number(currentHpWithFloor) / Number(maxHp) <= 0.3
+                ? `${DARK_INSET_SHADOW}, 0 0 6px 1px rgba(139,32,32,0.5)`
+                : DARK_INSET_SHADOW
+            }
+            h="10px"
+            overflow="hidden"
+            transition="box-shadow 0.3s ease"
+            w="100%"
+          >
             <Box
-              bg="#14120F"
-              borderRadius="md"
-              boxShadow={
-                Number(currentHpWithFloor) / Number(maxHp) <= 0.3
-                  ? `${DARK_INSET_SHADOW}, 0 0 6px 1px rgba(139,32,32,0.5)`
-                  : DARK_INSET_SHADOW
+              bg={
+                Number(currentHpWithFloor) / Number(maxHp) > 0.6
+                  ? '#5A8A3E'
+                  : Number(currentHpWithFloor) / Number(maxHp) > 0.3
+                    ? '#C87A2A'
+                    : '#8B2020'
               }
-              h="10px"
-              overflow="hidden"
-              transition="box-shadow 0.3s ease"
-              w="100%"
-            >
-              <Box
-                bg={
-                  Number(currentHpWithFloor) / Number(maxHp) > 0.6
-                    ? '#5A8A3E'
-                    : Number(currentHpWithFloor) / Number(maxHp) > 0.3
-                      ? '#C87A2A'
-                      : '#8B2020'
-                }
-                borderRadius="md"
-                h="100%"
-                transition="width 0.25s ease-out, background-color 0.25s ease-out"
-                w={`${(Number(currentHpWithFloor) / Number(maxHp)) * 100}%`}
-              />
-            </Box>
+              borderRadius="md"
+              h="100%"
+              transition="width 0.25s ease-out, background-color 0.25s ease-out"
+              w={`${(Number(currentHpWithFloor) / Number(maxHp)) * 100}%`}
+            />
           </Box>
+        </Box>
 
-          {/* Stats — compact single row */}
-          {stage >= OnboardingStage.FIRST_STEPS && (
-            <HStack
-              justifyContent="center"
-              px={2}
-              py={1.5}
-              spacing={2}
-              w="100%"
-            >
-              <Text color="#5A8A3E" fontFamily="mono" size="sm">
-                AGI{' '}
-                <Text as="span" color="#E8DCC8" fontWeight={700}>
-                  {(agility - expiredEffectModifications.agiModifier).toString()}
-                </Text>
+        {/* Stats — compact single row */}
+        {stage >= OnboardingStage.FIRST_STEPS && (
+          <HStack
+            justifyContent="center"
+            px={2}
+            py={1.5}
+            spacing={2}
+            w="100%"
+          >
+            <Text color="#5A8A3E" fontFamily="mono" size="sm">
+              AGI{' '}
+              <Text as="span" color="#E8DCC8" fontWeight={700}>
+                {(agility - expiredEffectModifications.agiModifier).toString()}
               </Text>
-              <Text color="#5A5040" size="sm">·</Text>
-              <Text color="#4A7AB5" fontFamily="mono" size="sm">
-                INT{' '}
-                <Text as="span" color="#E8DCC8" fontWeight={700}>
-                  {(intelligence - expiredEffectModifications.intModifier).toString()}
-                </Text>
+            </Text>
+            <Text color="#5A5040" size="sm">·</Text>
+            <Text color="#4A7AB5" fontFamily="mono" size="sm">
+              INT{' '}
+              <Text as="span" color="#E8DCC8" fontWeight={700}>
+                {(intelligence - expiredEffectModifications.intModifier).toString()}
               </Text>
-              <Text color="#5A5040" size="sm">·</Text>
-              <Text color="#B85C3A" fontFamily="mono" size="sm">
-                STR{' '}
-                <Text as="span" color="#E8DCC8" fontWeight={700}>
-                  {(strength - expiredEffectModifications.strModifier).toString()}
-                </Text>
+            </Text>
+            <Text color="#5A5040" size="sm">·</Text>
+            <Text color="#B85C3A" fontFamily="mono" size="sm">
+              STR{' '}
+              <Text as="span" color="#E8DCC8" fontWeight={700}>
+                {(strength - expiredEffectModifications.strModifier).toString()}
               </Text>
-            </HStack>
-          )}
+            </Text>
+          </HStack>
+        )}
 
-        </VStack>
-      )}
+      </VStack>
 
       {stage >= OnboardingStage.FIRST_STEPS && (
         <>
