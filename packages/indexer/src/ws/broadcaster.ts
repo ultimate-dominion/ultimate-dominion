@@ -6,6 +6,14 @@ import { queryUpdatedRows, sql, mudSchema } from '../db/connection.js';
 import { extractKeyBytes, serializeRow, resolveResourceName, snakeToPascal, fixAbbreviations } from '../naming.js';
 import { GAME_NAMESPACE } from '../sync/startSync.js';
 
+// Tables skipped during WS resume (catch-up). These are either combat logs
+// that accumulate tens of thousands of rows or tables only needed during live
+// combat — the same tables excluded from the REST snapshot.
+const WS_RESUME_EXCLUDE = new Set([
+  'RngLogs', 'RandomNumbers', 'ActionOutcome', 'CombatOutcome',
+  'DamageOverTimeApplied', 'CombatFlags', 'SpellUsesTrackin',
+]);
+
 type Client = {
   ws: WebSocket;
   subscribedTables: Set<string>; // empty = all tables
@@ -185,6 +193,10 @@ export class Broadcaster {
     for (const [logicalName, pgTableName] of this.tableNameMap) {
       // Skip reverse mappings
       if (logicalName === pgTableName && logicalName.includes('__')) continue;
+
+      // Skip combat log tables during resume — tens of thousands of rows
+      // that the client only needs during live combat, not on catch-up.
+      if (WS_RESUME_EXCLUDE.has(logicalName)) continue;
 
       // Skip if client has table filter and this table isn't in it
       if (client.subscribedTables.size > 0 && !client.subscribedTables.has(logicalName)) {

@@ -17,6 +17,7 @@ const COMBAT_LOG_TABLES = [
   'ud__random_numbers',
   'ud__combat_outcome',
   'ud__damage_over_time_ap', // truncated: damage_over_time_applied
+  'ud__combat_flags',
 ];
 
 const PRUNE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour

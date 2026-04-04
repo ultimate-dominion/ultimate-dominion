@@ -11,6 +11,8 @@ const SNAPSHOT_EXCLUDE_TABLES = new Set([
   'ActionOutcome',         // Live turns via WS
   'CombatOutcome',         // Live results via WS
   'DamageOverTimeApplied', // Live DoT via WS
+  'CombatFlags',           // Live combat only via WS (58K rows / 22MB)
+  'SpellUsesTrackin',      // Not used by client (MUD name truncation)
 ]);
 
 // Tables processed in the first pass to build the dead entity set.

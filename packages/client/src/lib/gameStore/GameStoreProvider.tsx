@@ -9,7 +9,7 @@ import { idbSnapshotPromise } from './store';
 const INDEXER_API_URL = import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api';
 const INDEXER_WS_URL = import.meta.env.VITE_INDEXER_WS_URL || 'ws://localhost:3001/ws';
 const WORLD_ADDRESS = import.meta.env.VITE_WORLD_ADDRESS || '';
-const SNAPSHOT_BOOT_TIMEOUT_MS = 5000;
+const SNAPSHOT_BOOT_TIMEOUT_MS = 15000;
 
 /** Re-hydrate if tab was hidden longer than this (ms) */
 const STALE_THRESHOLD = 2 * 60 * 1000; // 2 minutes
