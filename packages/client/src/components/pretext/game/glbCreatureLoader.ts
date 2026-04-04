@@ -180,10 +180,13 @@ export async function loadGLBCreature(
   applyToonMaterials(model, gradMap, THREE);
   scene.add(model);
 
-  // Orthographic camera sized to grid
+  // Orthographic camera sized to grid.
+  // top/bottom are swapped (top = -vH/2) to flip the Y axis and correct the
+  // WebGL→Canvas2D coordinate mismatch — ctx.drawImage from a WebGL canvas
+  // produces a Y-inverted image relative to Canvas2D without this.
   const vH = 2.2;
   const vW = vH * (gridW / gridH);
-  const camera = new THREE.OrthographicCamera(-vW / 2, vW / 2, vH / 2, -vH / 2, 0.01, 100);
+  const camera = new THREE.OrthographicCamera(-vW / 2, vW / 2, -vH / 2, vH / 2, 0.01, 100);
   camera.position.set(0, 0, 5);
   camera.lookAt(0, 0, 0);
 
@@ -258,12 +261,7 @@ export async function loadGLBCreature(
     }
 
     renderer.render(scene, camera);
-    // WebGL origin is bottom-left; Canvas2D is top-left — flip vertically
-    ctx.save();
-    ctx.translate(0, h);
-    ctx.scale(1, -1);
     ctx.drawImage(renderer.domElement, 0, 0, w, h);
-    ctx.restore();
   };
 
   console.log('[glbCreatureLoader] ready', url, '— clips:', Object.keys(actions).join(', '));
