@@ -15,7 +15,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-    .header { padding: 6px 14px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .header { padding: 5px 14px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .header a { color: #555; text-decoration: none; font-size: 11px; padding: 2px 8px; border: 1px solid #2a2a2a; }
     .header a:hover { color: #888; border-color: #444; }
     .creature-name { color: #6a4; font-size: 13px; }
@@ -27,35 +27,44 @@
     .nav-btn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #666; padding: 2px 8px; cursor: pointer; font-family: inherit; font-size: 14px; }
     .nav-btn:hover { color: #aaa; border-color: #444; }
 
-    /* Main layout: ref strip left, clip rows fill the rest */
     .main { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 
-    .ref-strip { width: 160px; flex-shrink: 0; border-right: 1px solid #1a1a1a; display: flex; flex-direction: column; padding: 8px; gap: 6px; overflow-y: auto; }
+    .ref-strip { width: 140px; flex-shrink: 0; border-right: 1px solid #1a1a1a; display: flex; flex-direction: column; padding: 6px; gap: 4px; overflow-y: auto; }
     .ref-label { font-size: 8px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
     .ref-img { width: 100%; border: 1px solid #222; display: block; }
     .ref-3d { width: 100%; border: 1px solid #222; display: block; background: #000; }
 
     .clips-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
 
-    .clip-row { flex: 1; display: flex; align-items: stretch; border-bottom: 1px solid #111; min-height: 0; overflow: hidden; }
-    .clip-label { width: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; border-right: 1px solid #111; writing-mode: vertical-lr; text-orientation: mixed; }
-    .clip-label.pass { color: #4a4; }
-    .clip-label.fail { color: #844; }
-    .clip-frames { flex: 1; display: flex; align-items: center; gap: 0; overflow: hidden; }
-    .clip-frames canvas { flex: 1; min-width: 0; height: 100%; object-fit: contain; background: #000; border-right: 1px solid rgba(255,255,255,0.04); }
+    /* Column headers */
+    .col-headers { display: flex; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; }
+    .col-headers .spacer { width: 52px; flex-shrink: 0; }
+    .col-headers .col-label { flex: 1; text-align: center; font-size: 8px; color: #444; text-transform: uppercase; letter-spacing: 1px; padding: 3px 0; }
+    .col-headers .col-label.game { color: #6a4; }
 
-    .loading-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; color: #555; font-size: 13px; z-index: 10; }
+    .clip-row { flex: 1; display: flex; align-items: stretch; border-bottom: 1px solid #0e0e0e; min-height: 0; overflow: hidden; }
+    .clip-label { width: 52px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; border-right: 1px solid #111; }
+    .clip-label .clip-name { writing-mode: vertical-lr; text-orientation: mixed; }
+    .clip-label.missing { color: #533; }
+
+    .clip-panels { flex: 1; display: flex; min-height: 0; }
+    .clip-canvas-wrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    .clip-canvas-wrap canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #000; }
+    .clip-canvas-wrap.game { border-left: 1px solid #1a1a1a; }
+
+    .loading-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #555; font-size: 13px; z-index: 10; gap: 8px; }
     .loading-overlay.hidden { display: none; }
+    .progress-bar { width: 200px; height: 3px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #4a4; width: 0%; transition: width 0.2s; }
 
-    /* Verdict bar at bottom */
-    .verdict-bar { flex-shrink: 0; padding: 6px 14px; border-top: 1px solid #1a1a1a; display: flex; align-items: center; gap: 12px; font-size: 11px; }
-    .verdict-bar button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 4px 14px; cursor: pointer; font-family: inherit; font-size: 11px; }
+    .verdict-bar { flex-shrink: 0; padding: 5px 14px; border-top: 1px solid #1a1a1a; display: flex; align-items: center; gap: 12px; font-size: 11px; }
+    .verdict-bar button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 3px 14px; cursor: pointer; font-family: inherit; font-size: 11px; }
     .verdict-bar button:hover { border-color: #555; color: #ccc; }
     .verdict-bar button.approve { border-color: #3a5a3a; color: #6a6; }
     .verdict-bar button.approve:hover { background: #1a2a1a; color: #8c8; }
     .verdict-bar button.reject { border-color: #5a3a3a; color: #a66; }
     .verdict-bar button.reject:hover { background: #2a1a1a; color: #c88; }
-    .verdict-note { flex: 1; background: #111; border: 1px solid #222; color: #aaa; padding: 4px 8px; font-family: inherit; font-size: 11px; }
+    .verdict-note { flex: 1; background: #111; border: 1px solid #222; color: #aaa; padding: 3px 8px; font-family: inherit; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -73,17 +82,24 @@
   </div>
 
   <div class="main" style="position:relative">
-    <div class="loading-overlay" id="loading">Rendering all clips...</div>
+    <div class="loading-overlay" id="loading">
+      <span id="loading-text">Loading creature...</span>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
 
     <div class="ref-strip">
       <div class="ref-label">Reference</div>
       <img id="ref-img" class="ref-img" src="" style="display:none">
-      <div class="ref-label" style="margin-top:8px">3D Model</div>
+      <div class="ref-label" style="margin-top:6px">3D Model</div>
       <canvas id="ref-3d" class="ref-3d" width="256" height="256"></canvas>
     </div>
 
     <div class="clips-area" id="clips-area">
-      <!-- clip rows injected here -->
+      <div class="col-headers">
+        <div class="spacer"></div>
+        <div class="col-label">Lab (3px half-block)</div>
+        <div class="col-label game">Game View (10px + atmosphere)</div>
+      </div>
     </div>
   </div>
 
@@ -95,39 +111,55 @@
 
   <script type="module">
     import * as THREE from 'three';
-    import { renderAscii, PALETTES, COMPOSITE_PALETTES } from './ascii-renderer.js';
+    import { renderAscii } from './ascii-renderer.js';
     import { createThreeRenderer } from './three-bridge.js';
     import { loadGLBCreature } from './glb-loader.js';
 
-    // ---- Creature registry (same as viewer.html) ----
     const CREATURES = [
       { slug: 'dire-rat',        name: 'Dire Rat',        level: 1,  status: 'done', ref: 'refs/rat-ref.png',
-        type: 'glb', glbFile: 'glb/dire-rat-animated.glb', atmosphere: [140,110,70,0.10],
-        labGrid: { w: 10, h: 7 } },
+        type: 'glb', glbFile: 'glb/dire-rat-animated.glb',
+        atmosphere: [140,110,70,0.10], labGrid: { w: 10, h: 7 }, gameGrid: { w: 10, h: 7 } },
       { slug: 'kobold',          name: 'Kobold',          level: 2,  status: 'done', ref: 'refs/kobold-ref.webp',
-        type: 'glb', glbFile: 'glb/kobold-animated.glb', atmosphere: [160,120,50,0.10],
-        labGrid: { w: 7, h: 7 } },
+        type: 'glb', glbFile: 'glb/kobold-animated.glb',
+        atmosphere: [160,120,50,0.10], labGrid: { w: 7, h: 7 }, gameGrid: { w: 7, h: 7 } },
       { slug: 'goblin',          name: 'Goblin',          level: 3,  status: 'done', ref: 'refs/goblin-ref.webp',
-        type: 'glb', glbFile: 'glb/goblin-animated.glb', atmosphere: [96,120,48,0.10],
-        labGrid: { w: 7, h: 7 } },
+        type: 'glb', glbFile: 'glb/goblin-animated.glb',
+        atmosphere: [96,120,48,0.10], labGrid: { w: 7, h: 7 }, gameGrid: { w: 7, h: 7 } },
       { slug: 'skeleton',        name: 'Skeleton',        level: 5,  status: 'done', ref: 'refs/skeleton-ref.webp',
-        type: 'glb', glbFile: 'glb/skeleton-animated.glb', atmosphere: [96,156,70,0.12],
-        labGrid: { w: 7, h: 7 } },
+        type: 'glb', glbFile: 'glb/skeleton-animated.glb',
+        atmosphere: [96,156,70,0.12], labGrid: { w: 7, h: 7 }, gameGrid: { w: 7, h: 7 } },
       { slug: 'goblin-shaman',   name: 'Goblin Shaman',   level: 6,  status: 'done', ref: 'refs/goblin-shaman-ref.webp',
-        type: 'glb', glbFile: 'glb/goblin-shaman-animated.glb', atmosphere: [106,70,164,0.12],
-        labGrid: { w: 7, h: 7 } },
+        type: 'glb', glbFile: 'glb/goblin-shaman-animated.glb',
+        atmosphere: [106,70,164,0.12], labGrid: { w: 7, h: 7 }, gameGrid: { w: 7, h: 7 } },
       { slug: 'bugbear',         name: 'Bugbear',         level: 8,  status: 'done', ref: 'refs/bugbear-ref.webp',
-        type: 'glb', glbFile: 'glb/bugbear-animated.glb', atmosphere: [172,138,72,0.10],
-        labGrid: { w: 7, h: 7 } },
+        type: 'glb', glbFile: 'glb/bugbear-animated.glb',
+        atmosphere: [172,138,72,0.10], labGrid: { w: 7, h: 7 }, gameGrid: { w: 7, h: 7 } },
     ];
 
     const REVIEW_CLIPS = ['idle', 'attack', 'hit', 'death', 'walk'];
-    const FRAMES_PER_CLIP = 8;
-    const CELL_SIZE = 3;  // game-quality ASCII
-    const FRAME_DT = 1 / 12;  // advance mixer 1/12s per frame capture (~12fps playback)
+    const CAPTURE_FPS = 20;
+    const PLAYBACK_FPS = 16;
+    const MIN_FRAMES = 12;
+    const MAX_FRAMES = 48;
+
+    // Game view matches viewer.html Game View panel
+    const GAME_PANEL_W = 380;
+    const GAME_PANEL_H = 560;
+    const GAME_CELL = 10;
+
+    // Lab view
+    const LAB_SIZE = 512;
+    const LAB_CELL = 3;
 
     let threeRenderer = null;
     let currentIndex = 0;
+    let animRunning = false;
+    let rafId = null;
+
+    // Pre-rendered frames: { clipName: { lab: ImageData[], game: ImageData[] } }
+    let clipFrames = {};
+    let clipCanvases = {};  // { clipName: { lab: canvas, game: canvas } }
+    let frameIndices = {};
 
     function getThreeRenderer(w, h) {
       if (!threeRenderer) threeRenderer = createThreeRenderer(w, h);
@@ -143,140 +175,257 @@
       sel.appendChild(opt);
     });
 
-    // ---- Build clip rows ----
+    // ---- Build clip rows (two canvases per row: lab + game) ----
     function buildClipRows() {
       const area = document.getElementById('clips-area');
+      // Keep column headers, clear the rest
+      const headers = area.querySelector('.col-headers');
       area.innerHTML = '';
+      area.appendChild(headers);
+
+      clipCanvases = {};
       for (const clip of REVIEW_CLIPS) {
         const row = document.createElement('div');
         row.className = 'clip-row';
-        row.id = `row-${clip}`;
 
         const label = document.createElement('div');
         label.className = 'clip-label';
         label.id = `label-${clip}`;
-        label.textContent = clip;
+        label.innerHTML = `<span class="clip-name">${clip}</span>`;
         row.appendChild(label);
 
-        const frames = document.createElement('div');
-        frames.className = 'clip-frames';
-        frames.id = `frames-${clip}`;
+        const panels = document.createElement('div');
+        panels.className = 'clip-panels';
 
-        for (let i = 0; i < FRAMES_PER_CLIP; i++) {
-          const canvas = document.createElement('canvas');
-          canvas.id = `frame-${clip}-${i}`;
-          canvas.width = 256;
-          canvas.height = 256;
-          frames.appendChild(canvas);
-        }
-        row.appendChild(frames);
+        // Lab canvas
+        const labWrap = document.createElement('div');
+        labWrap.className = 'clip-canvas-wrap';
+        const labCanvas = document.createElement('canvas');
+        labWrap.appendChild(labCanvas);
+        panels.appendChild(labWrap);
+
+        // Game canvas
+        const gameWrap = document.createElement('div');
+        gameWrap.className = 'clip-canvas-wrap game';
+        const gameCanvas = document.createElement('canvas');
+        gameWrap.appendChild(gameCanvas);
+        panels.appendChild(gameWrap);
+
+        row.appendChild(panels);
         area.appendChild(row);
+
+        clipCanvases[clip] = { lab: labCanvas, game: gameCanvas };
       }
     }
 
-    // ---- Render all clips for a creature ----
-    async function renderAllClips(creature) {
+    // ---- Draw atmosphere glow (matches viewer.html exactly) ----
+    function drawAtmosphere(ctx, w, h, atm) {
+      const [r, g, b, intensity = 0.10] = atm;
+      const cx = w / 2;
+      const cy = h * 0.42;
+      const rad = Math.max(w, h) * 0.65;
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+      grad.addColorStop(0,    `rgba(${r},${g},${b},${intensity})`);
+      grad.addColorStop(0.35, `rgba(${r},${g},${b},${intensity * 0.5})`);
+      grad.addColorStop(0.7,  `rgba(${r},${g},${b},${intensity * 0.15})`);
+      grad.addColorStop(1,    'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // ---- Pre-render all frames for all clips ----
+    async function captureAllClips(creature) {
       const loading = document.getElementById('loading');
+      const loadingText = document.getElementById('loading-text');
+      const progressFill = document.getElementById('progress-fill');
       loading.classList.remove('hidden');
-      document.getElementById('status').textContent = 'loading GLB...';
+      loadingText.textContent = 'Loading GLB...';
+      progressFill.style.width = '0%';
 
       const { w: gridW, h: gridH } = creature.labGrid;
-      const size = 256;
-      const canvasH = Math.round(size * gridH / gridW);
+      const { w: gameGridW, h: gameGridH } = creature.gameGrid;
+      const labH = Math.round(LAB_SIZE * gridH / gridW);
 
       let bundle3D;
       try {
         bundle3D = await loadGLBCreature(
           creature.glbFile, gridW, gridH,
-          getThreeRenderer(size, canvasH)
+          getThreeRenderer(LAB_SIZE, labH)
         );
       } catch (e) {
-        document.getElementById('status').textContent = `GLB load failed: ${e.message}`;
+        document.getElementById('status').textContent = `GLB failed: ${e.message}`;
         loading.classList.add('hidden');
         return;
       }
 
       const { drawFn, bundle } = bundle3D;
-      const { mixer, actions, playClip } = bundle;
+      const { mixer, actions } = bundle;
 
-      // Render the 3D reference image (static pose)
+      // Render 3D reference
       const ref3d = document.getElementById('ref-3d');
       ref3d.width = 256; ref3d.height = Math.round(256 * gridH / gridW);
       const ref3dCtx = ref3d.getContext('2d');
       ref3dCtx.fillStyle = '#000'; ref3dCtx.fillRect(0, 0, ref3d.width, ref3d.height);
       drawFn(ref3dCtx, ref3d.width, ref3d.height);
 
-      // For each clip: play it, advance mixer through frames, capture ASCII
+      // Offscreen canvases
+      const labOff = document.createElement('canvas');
+      labOff.width = LAB_SIZE; labOff.height = labH;
+      const labCtx = labOff.getContext('2d');
+
+      const gameOff = document.createElement('canvas');
+      gameOff.width = GAME_PANEL_W; gameOff.height = GAME_PANEL_H;
+      const gameCtx = gameOff.getContext('2d');
+
+      clipFrames = {};
+      frameIndices = {};
+
+      const totalClips = REVIEW_CLIPS.length;
+      let clipsDone = 0;
+
       for (const clipName of REVIEW_CLIPS) {
-        document.getElementById('status').textContent = `rendering ${clipName}...`;
+        loadingText.textContent = `Capturing ${clipName}...`;
 
         const hasClip = !!actions[clipName];
         const label = document.getElementById(`label-${clipName}`);
 
         if (!hasClip) {
-          label.textContent = `${clipName} (missing)`;
-          label.classList.add('fail');
-          // Clear frames
-          for (let i = 0; i < FRAMES_PER_CLIP; i++) {
-            const c = document.getElementById(`frame-${clipName}-${i}`);
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, c.width, c.height);
-            ctx.fillStyle = '#333'; ctx.font = '10px monospace';
-            ctx.fillText('no clip', 4, 14);
-          }
+          label.classList.add('missing');
+          label.innerHTML = `<span class="clip-name">${clipName}</span><span style="font-size:7px;color:#533">missing</span>`;
+          clipFrames[clipName] = { lab: [], game: [] };
+          clipsDone++;
+          progressFill.style.width = `${(clipsDone / totalClips) * 100}%`;
           continue;
         }
 
-        // Force-play this clip: stop all, reset, play
-        Object.values(actions).forEach(a => { a.stop(); });
+        // Stop all, reset, play
+        Object.values(actions).forEach(a => a.stop());
         const action = actions[clipName];
         action.reset();
-        // For one-shot clips, set loop to LoopOnce so we see the full arc
         action.loop = THREE.LoopOnce;
         action.clampWhenFinished = true;
         action.play();
-        mixer.update(0);  // force initial pose
+        mixer.update(0);
 
-        // Get clip duration to evenly space frames
         const clip = action.getClip();
         const duration = clip ? clip.duration : 1.0;
-        const frameDt = duration / FRAMES_PER_CLIP;
+        const numFrames = Math.min(MAX_FRAMES, Math.max(MIN_FRAMES, Math.round(duration * CAPTURE_FPS)));
+        const frameDt = duration / numFrames;
 
-        for (let i = 0; i < FRAMES_PER_CLIP; i++) {
-          // Advance mixer
+        const labFrames = [];
+        const gameFrames = [];
+
+        // Set canvas sizes
+        const lc = clipCanvases[clipName].lab;
+        lc.width = LAB_SIZE; lc.height = labH;
+        const gc = clipCanvases[clipName].game;
+        gc.width = GAME_PANEL_W; gc.height = GAME_PANEL_H;
+
+        for (let i = 0; i < numFrames; i++) {
           if (i > 0) mixer.update(frameDt);
 
-          const canvas = document.getElementById(`frame-${clipName}-${i}`);
-          canvas.width = size; canvas.height = canvasH;
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#000'; ctx.fillRect(0, 0, size, canvasH);
-
-          // Render ASCII at game quality (3px cells)
-          renderAscii(ctx, (tctx, tw, th) => drawFn(tctx, tw, th), 0, 0, size, canvasH, {
-            cellSize: CELL_SIZE,
+          // --- Lab render (bright, half-blocks, 3px) ---
+          labCtx.fillStyle = '#000';
+          labCtx.fillRect(0, 0, LAB_SIZE, labH);
+          renderAscii(labCtx, (tctx, tw, th) => drawFn(tctx, tw, th), 0, 0, LAB_SIZE, labH, {
+            cellSize: LAB_CELL,
             level: creature.level,
             gridWidth: gridW,
             gridHeight: gridH,
+            enableHalfBlock: true,
+            brightnessBoost: 2.5,
+            gamma: 0.35,
+            ambient: 0.85,
+          });
+          labFrames.push(labCtx.getImageData(0, 0, LAB_SIZE, labH));
+
+          // --- Game render (atmosphere + 10px cells, no half-block) ---
+          gameCtx.fillStyle = '#000';
+          gameCtx.fillRect(0, 0, GAME_PANEL_W, GAME_PANEL_H);
+          drawAtmosphere(gameCtx, GAME_PANEL_W, GAME_PANEL_H, creature.atmosphere);
+          renderAscii(gameCtx, (tctx, tw, th) => drawFn(tctx, tw, th), 0, 0, GAME_PANEL_W, GAME_PANEL_H, {
+            cellSize: GAME_CELL,
+            level: creature.level,
+            gridWidth: gameGridW,
+            gridHeight: gameGridH,
             enableHalfBlock: false,
           });
+          gameFrames.push(gameCtx.getImageData(0, 0, GAME_PANEL_W, GAME_PANEL_H));
         }
 
+        clipFrames[clipName] = { lab: labFrames, game: gameFrames };
+        frameIndices[clipName] = 0;
         label.textContent = clipName;
-        label.classList.remove('fail');
+        label.classList.remove('missing');
+
+        clipsDone++;
+        progressFill.style.width = `${(clipsDone / totalClips) * 100}%`;
+        await new Promise(r => setTimeout(r, 0));
       }
 
-      // Return to idle after capturing
+      // Return to idle
       if (actions.idle) {
         Object.values(actions).forEach(a => a.stop());
         actions.idle.reset().play();
       }
 
-      document.getElementById('status').textContent = `${Object.keys(actions).length} clips rendered`;
+      const totalFrameCount = Object.values(clipFrames).reduce((s, f) => s + f.lab.length + f.game.length, 0);
+      document.getElementById('status').textContent = `${totalFrameCount} frames — playing`;
       loading.classList.add('hidden');
+      startPlayback();
+    }
+
+    // ---- Playback loop ----
+    let lastFrameTime = 0;
+    const frameDuration = 1000 / PLAYBACK_FPS;
+
+    function startPlayback() {
+      animRunning = true;
+      lastFrameTime = 0;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(playbackLoop);
+    }
+
+    function stopPlayback() {
+      animRunning = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    function playbackLoop(ts) {
+      if (!animRunning) return;
+      if (ts - lastFrameTime < frameDuration) {
+        rafId = requestAnimationFrame(playbackLoop);
+        return;
+      }
+      lastFrameTime = ts;
+
+      for (const clipName of REVIEW_CLIPS) {
+        const frames = clipFrames[clipName];
+        if (!frames || frames.lab.length === 0) continue;
+
+        const idx = frameIndices[clipName] % frames.lab.length;
+
+        // Lab canvas
+        const labCanvas = clipCanvases[clipName].lab;
+        labCanvas.getContext('2d').putImageData(frames.lab[idx], 0, 0);
+
+        // Game canvas
+        if (frames.game.length > 0) {
+          const gameCanvas = clipCanvases[clipName].game;
+          const gIdx = idx % frames.game.length;
+          gameCanvas.getContext('2d').putImageData(frames.game[gIdx], 0, 0);
+        }
+
+        frameIndices[clipName] = idx + 1;
+      }
+
+      rafId = requestAnimationFrame(playbackLoop);
     }
 
     // ---- Load creature ----
     async function loadCreature(index) {
+      stopPlayback();
       currentIndex = ((index % CREATURES.length) + CREATURES.length) % CREATURES.length;
       const c = CREATURES[currentIndex];
 
@@ -291,28 +440,21 @@
       else { refImg.style.display = 'none'; }
 
       history.replaceState(null, '', `?creature=${c.slug}`);
-
       buildClipRows();
-      await renderAllClips(c);
+      await captureAllClips(c);
     }
 
-    // ---- Verdict buttons (write to localStorage for now) ----
+    // ---- Verdict ----
     function saveVerdict(approved) {
       const c = CREATURES[currentIndex];
       const note = document.getElementById('verdict-note').value.trim();
-      const key = `creature-review-${c.slug}`;
-      const entry = {
-        slug: c.slug,
-        approved,
-        note,
-        timestamp: new Date().toISOString(),
-      };
-      // Append to history
-      const history = JSON.parse(localStorage.getItem(key) || '[]');
-      history.push(entry);
-      localStorage.setItem(key, JSON.stringify(history));
+      const entry = { slug: c.slug, approved, note, timestamp: new Date().toISOString() };
 
-      // Also write a combined log
+      const key = `creature-review-${c.slug}`;
+      const hist = JSON.parse(localStorage.getItem(key) || '[]');
+      hist.push(entry);
+      localStorage.setItem(key, JSON.stringify(hist));
+
       const log = JSON.parse(localStorage.getItem('creature-review-log') || '[]');
       log.push(entry);
       localStorage.setItem('creature-review-log', JSON.stringify(log));
