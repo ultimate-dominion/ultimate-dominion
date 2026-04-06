@@ -1,5 +1,5 @@
 FROM node:20-slim AS builder
-# cache-bust: 2026-04-06-v2
+
 RUN corepack enable && corepack prepare pnpm@9.15.5 --activate
 
 WORKDIR /app
