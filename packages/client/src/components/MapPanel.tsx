@@ -529,6 +529,48 @@ export const MapPanel = (): JSX.Element => {
           <ChatPanel inline />
         </Box>
       )}
+
+      {/* Full-screen world map overlay */}
+      {showWorldMap && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          zIndex={1000}
+          bg="rgba(18, 16, 14, 0.95)"
+          display="flex"
+          flexDirection="column"
+        >
+          <HStack
+            px={6}
+            py={3}
+            justifyContent="space-between"
+            flexShrink={0}
+          >
+            <Heading size="md" color="textHeading" fontFamily="heading">
+              The World
+            </Heading>
+            <IconButton
+              aria-label="Close world map"
+              icon={<FaMap />}
+              size="sm"
+              variant="ghost"
+              color="textMuted"
+              _hover={{ color: 'amber' }}
+              onClick={() => setShowWorldMap(false)}
+            />
+          </HStack>
+          <Box flex={1} position="relative" mx={4} mb={4}>
+            <AncientMapView
+              zoneVisibility={{ 1: 'discovered', 2: currentZone >= 2 ? 'discovered' : 'rumored' }}
+              currentZone={currentZone}
+              onZoneClick={() => setShowWorldMap(false)}
+            />
+          </Box>
+        </Box>
+      )}
     </Stack>
   );
 };
@@ -866,47 +908,6 @@ const NavigationCompass = ({
         >
           {t('map.collapse')}
         </Text>
-      )}
-      {/* Full-screen world map overlay */}
-      {showWorldMap && (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          zIndex={1000}
-          bg="rgba(18, 16, 14, 0.95)"
-          display="flex"
-          flexDirection="column"
-        >
-          <HStack
-            px={6}
-            py={3}
-            justifyContent="space-between"
-            flexShrink={0}
-          >
-            <Heading size="md" color="textHeading" fontFamily="heading">
-              The World
-            </Heading>
-            <IconButton
-              aria-label="Close world map"
-              icon={<FaMap />}
-              size="sm"
-              variant="ghost"
-              color="textMuted"
-              _hover={{ color: 'amber' }}
-              onClick={() => setShowWorldMap(false)}
-            />
-          </HStack>
-          <Box flex={1} position="relative" mx={4} mb={4}>
-            <AncientMapView
-              zoneVisibility={{ 1: 'discovered', 2: currentZone >= 2 ? 'discovered' : 'rumored' }}
-              currentZone={currentZone}
-              onZoneClick={() => setShowWorldMap(false)}
-            />
-          </Box>
-        </Box>
       )}
     </Box>
   );
