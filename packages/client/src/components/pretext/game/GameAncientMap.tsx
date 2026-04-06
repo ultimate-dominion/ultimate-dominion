@@ -41,12 +41,20 @@ const SAFE_ZONE_CHARS = ['.', ',', '_', '-', "'"];
 const SAFE_ZONE_COLOR = '#3A3020';
 
 // Entity marker characters
-const PLAYER_CHAR = '@';
 const MONSTER_CHAR = 'M';
 const SHOP_CHAR = '$';
 const NPC_CHAR = '?';
 const BOSS_CHAR = 'X';
 const EXIT_CHAR = 'O';
+
+// Dragon piece image — loaded once at module level
+let _dragonImg: HTMLImageElement | null = null;
+let _dragonLoaded = false;
+if (typeof window !== 'undefined') {
+  _dragonImg = new Image();
+  _dragonImg.onload = () => { _dragonLoaded = true; };
+  _dragonImg.src = '/images/ud-dragon.svg';
+}
 
 // Fog of war characters — dense, mysterious glyphs that writhe in the dark
 const FOG_CHARS = ['░', '▒', '▓', '█', '╬', '╫', '╪', '┼', '╳', '◊', '∷', '≈'];
@@ -310,14 +318,20 @@ export function GameAncientMap({
 
           // --- Entity rendering (priority order) ---
 
-          // Player position — bright amber @
+          // Player position — UD dragon piece
           if (isPlayerTile && isSpawned) {
-            ctx.font = `700 ${fontSize + 2}px Fira Code`;
-            ctx.fillStyle = COLORS.amber;
-            ctx.shadowColor = COLORS.amber;
-            ctx.shadowBlur = 6 + Math.sin(elapsed / 600) * 3;
-            ctx.fillText(PLAYER_CHAR, cx, cy);
-            ctx.shadowBlur = 0;
+            if (_dragonLoaded && _dragonImg) {
+              const dragonH = cellSize * 0.85;
+              const dragonW = dragonH * (_dragonImg.naturalWidth / _dragonImg.naturalHeight);
+              ctx.shadowColor = COLORS.amber;
+              ctx.shadowBlur = 6 + Math.sin(elapsed / 600) * 3;
+              ctx.drawImage(_dragonImg, cx - dragonW / 2, cy - dragonH / 2, dragonW, dragonH);
+              ctx.shadowBlur = 0;
+            } else {
+              ctx.font = `700 ${fontSize + 2}px Fira Code`;
+              ctx.fillStyle = COLORS.amber;
+              ctx.fillText('@', cx, cy);
+            }
             continue;
           }
 
@@ -373,28 +387,17 @@ export function GameAncientMap({
             ctx.fillStyle = '#B85C3A';
             ctx.globalAlpha = (isHovered ? 1 : 0.7) * revealAlpha;
             ctx.fillText(MONSTER_CHAR, cx, cy);
-            // Monster count in corner
-            if (entities.monsters > 1) {
-              ctx.font = `600 ${Math.max(7, fontSize - 4)}px Fira Code`;
-              ctx.fillStyle = '#B85C3A';
-              ctx.textAlign = 'right';
-              ctx.fillText(
-                String(entities.monsters),
-                offsetX + (col + 1) * cellSize - 2,
-                offsetY + (row + 1) * cellSize - fontSize * 0.4,
-              );
-              ctx.textAlign = 'center';
-            }
             ctx.globalAlpha = 1;
             continue;
           }
 
-          // Other players on tile
+          // Other players on tile — subtle dot
           if (entities && entities.players > 0) {
-            ctx.font = `500 ${fontSize - 1}px Fira Code`;
             ctx.fillStyle = COLORS.success;
-            ctx.globalAlpha = 0.6 * revealAlpha;
-            ctx.fillText(String(entities.players), cx, cy);
+            ctx.globalAlpha = 0.5 * revealAlpha;
+            ctx.beginPath();
+            ctx.arc(cx, cy, Math.max(2, cellSize * 0.12), 0, Math.PI * 2);
+            ctx.fill();
             ctx.globalAlpha = 1;
             continue;
           }
@@ -483,28 +486,6 @@ export function GameAncientMap({
       }
       ctx.restore();
 
-      // Axis labels
-      ctx.font = `500 ${Math.max(7, fontSize - 3)}px Fira Code`;
-      ctx.fillStyle = COLORS.textMuted;
-      ctx.globalAlpha = 0.5;
-      ctx.textAlign = 'center';
-      for (let i = 0; i < gridSize; i++) {
-        // Bottom — column numbers
-        ctx.fillText(
-          String(i),
-          offsetX + i * cellSize + cellSize / 2,
-          offsetY + gridSize * cellSize + Math.max(8, fontSize - 2),
-        );
-        // Left — row numbers (display y)
-        ctx.textAlign = 'right';
-        ctx.fillText(
-          String(gridSize - 1 - i),
-          offsetX - 4,
-          offsetY + i * cellSize + cellSize / 2,
-        );
-        ctx.textAlign = 'center';
-      }
-      ctx.globalAlpha = 1;
 
       // Hover tooltip
       const hover = hoverRef.current;
