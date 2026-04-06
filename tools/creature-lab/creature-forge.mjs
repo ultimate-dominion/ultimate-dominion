@@ -64,14 +64,128 @@ const TYPE_HINTS = {
   undead_dragon: 'skeletal wings, rib cage visible, tail barb, draconic skull',
 };
 
-function buildMeshyPrompt(name, description, typeHint, attempt) {
+// --------------------------------------------------------------------------
+// Attack archetype system — drives Meshy prompt strategy and quality gates
+//
+// Each archetype defines:
+//   - promptHints: structural guidance for Meshy (what to emphasize in the mesh)
+//   - poseHints: posing guidance (what the A/T-pose should convey about the attack)
+//   - qualityGates: archetype-specific checks for the 5-check rubric
+// --------------------------------------------------------------------------
+const ATTACK_ARCHETYPES = {
+  weapon: {
+    label: 'Weapon-wielder',
+    promptHints: [
+      'weapon held in one or both hands, clearly separate from arm geometry',
+      'weapon must be at least 15% of body height',
+      'distinct weapon silhouette — blade/head shape clearly readable',
+      'hand grip visible with fingers wrapped around weapon handle',
+    ],
+    poseHints: 'weapon arm extended or raised for clear weapon silhouette in A-pose',
+    qualityGates: {
+      signatureFeature: 'weapon must be visually separate from hand/arm, with distinct blade/head shape',
+      asciiSurvival: 'weapon silhouette must survive ASCII compression — look for distinct shape at arm tip',
+      animReadability: 'attack clip must show weapon arc — wind-up with weapon back, swing through, follow-through',
+    },
+    examples: ['goblin (bone cleaver)', 'skeleton (rusty longsword)', 'bugbear (spiked morningstar)', 'kobold (scimitar)'],
+  },
+  claw: {
+    label: 'Claw attacker',
+    promptHints: [
+      'large prominent claws or hooks at end of forelimbs',
+      'claws must extend well beyond the arm/hand — at least 20% of limb length',
+      'splayed fingers/digits showing individual claw tips',
+      'forearms thicker than upper arms to emphasize claw weight',
+    ],
+    poseHints: 'arms spread wide in A-pose showing full claw span, claws pointed outward',
+    qualityGates: {
+      signatureFeature: 'claws/hooks must be visible at limb tips, extending past the arm bounding box',
+      asciiSurvival: 'claw spread must read in ASCII — individual digits or hook curve distinguishable',
+      animReadability: 'attack clip must show claw swipe — one arm winds back, rakes forward with spread claws',
+    },
+    examples: ['hook-horror (scythe hooks)', 'dire-rat (bite/claws)', 'owlbear (bear claws)'],
+  },
+  tail: {
+    label: 'Tail/tentacle attacker',
+    promptHints: [
+      'long prominent tail or tentacles extending from body',
+      'tail must be at least 30% of total body length',
+      'tail has distinct tip feature — barb, stinger, club, or split',
+      'tail has visible thickness tapering from base to tip',
+    ],
+    poseHints: 'tail extended straight back or slightly curved for full length visibility',
+    qualityGates: {
+      signatureFeature: 'tail/tentacles must extend well past body bounding box with distinct tip shape',
+      asciiSurvival: 'tail curve and tip must survive ASCII — look for continuous line extending from body',
+      animReadability: 'attack clip must show tail whip — coil back, snap forward, impact position',
+    },
+    examples: ['basilisk (tail whip)', 'carrion-crawler (tentacles)', 'manticore (tail spikes)'],
+  },
+  bite: {
+    label: 'Bite/jaw attacker',
+    promptHints: [
+      'oversized head with wide-opening jaw',
+      'visible teeth or fangs, jaw can open at least 30 degrees',
+      'head is at least 20% of body mass — dominant feature',
+      'neck thick and muscular to support lunging bite',
+    ],
+    poseHints: 'head slightly forward, jaw partially open showing teeth in rest pose',
+    qualityGates: {
+      signatureFeature: 'head/jaw must be the dominant feature — oversized relative to body, teeth visible',
+      asciiSurvival: 'jaw opening and teeth must read in ASCII — look for gap in head silhouette',
+      animReadability: 'attack clip must show lunge — head draws back, snaps forward with jaw wide',
+    },
+    examples: ['dire-rat (bite)', 'basilisk (petrifying gaze + bite)', 'mimic (toothy maw)'],
+  },
+  magic: {
+    label: 'Magic/spell caster',
+    promptHints: [
+      'staff, wand, or orb held in one hand — distinct magical focus item',
+      'magical focus must glow or have distinct visual energy',
+      'robes, cloth, or ethereal wisps around the body',
+      'free hand posed as if channeling or casting',
+    ],
+    poseHints: 'one hand holding staff/focus, other hand open and raised as if casting',
+    qualityGates: {
+      signatureFeature: 'magical focus (staff/wand/orb) must be clearly visible and distinct from body',
+      asciiSurvival: 'staff/focus silhouette must survive ASCII — look for thin vertical line or bright spot',
+      animReadability: 'attack clip must show cast — raise staff/hand, channel energy, release',
+    },
+    examples: ['goblin-shaman (skull staff)', 'lich (phylactery)', 'dark mage (fire orb)'],
+  },
+  amorphous: {
+    label: 'Amorphous/formless',
+    promptHints: [
+      'no clear skeleton or limb structure — blob, ooze, or shifting form',
+      'translucent or semi-transparent surface showing internal structure',
+      'irregular asymmetric edges — dripping, flowing, or pulsing',
+      'internal objects or bones visible through surface',
+    ],
+    poseHints: 'not applicable — amorphous creatures have no skeleton to pose',
+    qualityGates: {
+      signatureFeature: 'form must be clearly non-humanoid — blobby, flowing, or shifting shape',
+      asciiSurvival: 'organic irregular outline must read in ASCII — not a rectangle or circle',
+      animReadability: 'idle must show pulsing or flowing motion — attack shows engulf or pseudopod strike',
+    },
+    examples: ['gelatinous-ooze (engulf)', 'black pudding (acid)', 'shoggoth (tentacle mass)'],
+    meshyWarning: 'Meshy struggles with amorphous forms — canvas art is usually better for these.',
+  },
+};
+
+function buildMeshyPrompt(name, description, typeHint, attempt, archetype = null) {
   const variation = attempt > 0
     ? `Variation ${attempt + 1}: emphasize more extreme proportions, larger silhouette, more damage/scars. `
     : '';
+
+  const archetypeHints = archetype && ATTACK_ARCHETYPES[archetype]
+    ? `Attack style: ${ATTACK_ARCHETYPES[archetype].promptHints.join('. ')}. ${ATTACK_ARCHETYPES[archetype].poseHints}. `
+    : '';
+
   return [
     variation,
     `A ${name}: ${description}. `,
     typeHint ? `Key features: ${typeHint}. ` : '',
+    archetypeHints,
     `Style: ${HORROR_STYLE}. `,
     'Clean topology for animation. Distinct profile silhouette. ',
     'Black background for maximum contrast.',
@@ -445,12 +559,22 @@ async function forgeCreature(name, description, opts = {}) {
   const {
     iterations = 2,
     type       = null,      // undead | demon | beast | humanoid | elemental
+    archetype  = null,      // weapon | claw | tail | bite | magic | amorphous
     threshold  = QUALITY_THRESHOLD,
     dryRun     = false,
   } = opts;
 
   const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   log(`\n=== Creature Forge: ${name} (${slug}) ===`);
+  if (archetype) {
+    const arch = ATTACK_ARCHETYPES[archetype];
+    if (arch) {
+      log(`  Archetype: ${arch.label}`);
+      if (arch.meshyWarning) log(`  WARNING: ${arch.meshyWarning}`);
+    } else {
+      log(`  Unknown archetype: ${archetype} — ignoring`);
+    }
+  }
   if (dryRun) { log('[DRY RUN] Printing prompt only.\n'); }
 
   const typeHint = type ? TYPE_HINTS[type] : null;
@@ -460,7 +584,7 @@ async function forgeCreature(name, description, opts = {}) {
   let bestPrompt  = null;
 
   for (let i = 0; i < iterations; i++) {
-    const prompt = buildMeshyPrompt(name, description, typeHint, i);
+    const prompt = buildMeshyPrompt(name, description, typeHint, i, archetype);
     log(`\n[Attempt ${i + 1}/${iterations}]`);
     log(`  Prompt: ${prompt.slice(0, 120)}...`);
 
@@ -516,7 +640,7 @@ async function forgeCreature(name, description, opts = {}) {
   // Log to forge history (store task ID so rig step can be resumed)
   const meshTaskId = bestResult.id ?? null;
   appendForgeLog({
-    slug, name, description, type,
+    slug, name, description, type, archetype,
     mesh_task_id: meshTaskId,
     prompt: bestPrompt, score: bestScore,
     timestamp: new Date().toISOString(),
@@ -636,18 +760,29 @@ Usage:
   node creature-forge.mjs --rig <slug> <meshTaskId>
 
 Options:
-  --iterations N     Number of generation attempts (default: 2)
-  --type <type>      Creature type: undead | demon | beast | humanoid | elemental
-                     humanoid — auto-rigs + animates after mesh generation
-  --threshold N      Quality threshold 0-1 (default: 0.65)
-  --dry-run          Print prompts only, no API calls
-  --list             Show all forged creatures
-  --rig <slug> <id>  Run rig + animate on an existing mesh task ID
+  --iterations N       Number of generation attempts (default: 2)
+  --type <type>        Creature type: undead | demon | beast | humanoid | elemental
+                       humanoid — auto-rigs + animates after mesh generation
+  --archetype <arch>   Attack archetype: weapon | claw | tail | bite | magic | amorphous
+                       Adds archetype-specific structural hints to the Meshy prompt
+  --threshold N        Quality threshold 0-1 (default: 0.65)
+  --dry-run            Print prompts only, no API calls
+  --list               Show all forged creatures
+  --rig <slug> <id>    Run rig + animate on an existing mesh task ID
+
+Archetypes:
+  weapon     — Weapon-wielder (goblin, skeleton, bugbear)
+  claw       — Claw/hook attacker (hook-horror, dire-rat, owlbear)
+  tail       — Tail/tentacle attacker (basilisk, carrion-crawler, manticore)
+  bite       — Bite/jaw attacker (dire-rat, mimic, basilisk)
+  magic      — Spell caster (goblin-shaman, lich, dark mage)
+  amorphous  — Formless (gelatinous-ooze) — Meshy struggles with these
 
 Examples:
-  node creature-forge.mjs "Kobold" "small reptilian humanoid, crude dagger" --type humanoid
-  node creature-forge.mjs "Void Demon" "winged demon, obsidian skin" --type demon
-  node creature-forge.mjs "Cave Troll" "hulking troll, stone-like hide" --type beast --iterations 3
+  node creature-forge.mjs "Kobold" "small reptilian humanoid, crude dagger" --type humanoid --archetype weapon
+  node creature-forge.mjs "Hook Horror" "cave predator with scythe hooks" --type beast --archetype claw
+  node creature-forge.mjs "Basilisk" "stocky quadruped, petrifying gaze" --type beast --archetype bite
+  node creature-forge.mjs "Cave Troll" "hulking troll, stone-like hide" --type beast --archetype claw --iterations 3
   node creature-forge.mjs --rig kobold 019d59c0-958e-7f73-9377-41cbdbb713ff
 
 API:
@@ -661,10 +796,11 @@ API:
   const description = args[1];
   const iterations  = parseInt(args[args.indexOf('--iterations') + 1] ?? '2', 10) || 2;
   const type        = args.includes('--type') ? args[args.indexOf('--type') + 1] : null;
+  const archetype   = args.includes('--archetype') ? args[args.indexOf('--archetype') + 1] : null;
   const threshold   = parseFloat(args[args.indexOf('--threshold') + 1] ?? '0.65') || QUALITY_THRESHOLD;
   const dryRun      = args.includes('--dry-run');
 
-  forgeCreature(name, description, { iterations, type, threshold, dryRun }).catch(err => {
+  forgeCreature(name, description, { iterations, type, archetype, threshold, dryRun }).catch(err => {
     console.error('Fatal:', err.message);
     process.exit(1);
   });

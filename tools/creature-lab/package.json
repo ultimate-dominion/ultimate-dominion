@@ -15,6 +15,7 @@
   "dependencies": {
     "@gltf-transform/core": "^4.3.0",
     "@gltf-transform/extensions": "^4.3.0",
-    "canvas": "^3.2.3"
+    "canvas": "^3.2.3",
+    "puppeteer": "^24.40.0"
   }
 }
