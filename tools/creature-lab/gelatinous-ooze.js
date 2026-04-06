@@ -16,10 +16,177 @@ export const gelatinousOozeSkeleton = {
   limbs: [],
 };
 
+// Durations (seconds) for each clip — used by review.html frame capture
+export const CLIP_DURATIONS = { idle: 2.0, attack: 1.0, hit: 0.7, death: 1.5, walk: 1.5 };
+
+// --------------------------------------------------------------------------
+// Animation offset computation — transforms the static draw into clips
+// --------------------------------------------------------------------------
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function computeAnimOffsets(anim) {
+  const o = { scaleX: 1, scaleY: 1, shiftX: 0, shiftY: 0, pseudopod: 0, rotation: 0 };
+  if (!anim) return o;
+  const { clip, t } = anim;
+
+  switch (clip) {
+    case 'idle': {
+      const s = Math.sin(t * Math.PI * 2);
+      const s2 = Math.sin(t * Math.PI * 4);
+      o.scaleX = 1 + s * 0.015;
+      o.scaleY = 1 - s * 0.012;
+      o.rotation = s * 0.02;
+      o.shiftY = s2 * 0.005;
+      break;
+    }
+    case 'attack': {
+      // Body shifts RIGHT to create room for tentacles extending LEFT
+      if (t < 0.2) {
+        const p = t / 0.2;
+        o.scaleX = lerp(1, 0.92, p);
+        o.shiftX = lerp(0, 0.18, p);    // pull body right
+        o.pseudopod = lerp(0, 0.15, p);
+      } else if (t < 0.45) {
+        const p = (t - 0.2) / 0.25;
+        o.scaleX = lerp(0.92, 0.88, p);
+        o.shiftX = lerp(0.18, 0.22, p);  // body stays right
+        o.pseudopod = lerp(0.15, 1, p);   // tentacles lash out
+      } else {
+        const p = (t - 0.45) / 0.55;
+        o.scaleX = lerp(0.88, 1, p);
+        o.shiftX = lerp(0.22, 0, p);     // body returns
+        o.pseudopod = lerp(1, 0, p);
+      }
+      break;
+    }
+    case 'hit': {
+      if (t < 0.12) {
+        const p = t / 0.12;
+        o.scaleX = lerp(1, 1.15, p);
+        o.scaleY = lerp(1, 0.88, p);
+        o.shiftX = lerp(0, 0.04, p);
+      } else if (t < 0.35) {
+        const p = (t - 0.12) / 0.23;
+        o.scaleX = lerp(1.15, 0.94, p);
+        o.scaleY = lerp(0.88, 1.05, p);
+        o.shiftX = lerp(0.04, -0.01, p);
+      } else {
+        const p = (t - 0.35) / 0.65;
+        o.scaleX = lerp(0.94, 1, p);
+        o.scaleY = lerp(1.05, 1, p);
+        o.shiftX = lerp(-0.01, 0, p);
+      }
+      break;
+    }
+    case 'death': {
+      if (t < 0.3) {
+        const p = t / 0.3;
+        o.scaleX = lerp(1, 1.2, p);
+        o.scaleY = lerp(1, 0.6, p);
+        o.shiftY = lerp(0, 0.10, p);
+      } else {
+        const p = (t - 0.3) / 0.7;
+        o.scaleX = lerp(1.2, 1.6, p);
+        o.scaleY = lerp(0.6, 0.15, p);
+        o.shiftY = lerp(0.10, 0.35, p);
+      }
+      break;
+    }
+    case 'walk': {
+      const s = Math.sin(t * Math.PI * 2);
+      const c = Math.cos(t * Math.PI * 4);
+      o.shiftX = s * 0.03;
+      o.scaleX = 1 + c * 0.01;
+      o.scaleY = 1 - c * 0.008;
+      break;
+    }
+  }
+  return o;
+}
+
+// Pseudopods — multiple ooze tentacles lashing LEFT toward the enemy
+function drawPseudopod(ctx, w, h, ext) {
+  // Tentacles extend LEFT from the cube's left edge
+  // angle: radians from left-pointing horizontal (0 = straight left, negative = up-left, positive = down-left)
+  const tentacles = [
+    { originY: 0.28, angle: -0.60, reach: 0.55, thick: 0.024, delay: 0.02, wiggle: 4.0 },  // upper short — flicks up
+    { originY: 0.36, angle: -0.30, reach: 1.20, thick: 0.038, delay: 0.00, wiggle: 3.0 },  // upper long — reaches far
+    { originY: 0.46, angle: -0.05, reach: 1.60, thick: 0.048, delay: 0.03, wiggle: 2.5 },  // MAIN — longest, nearly straight, thick
+    { originY: 0.54, angle:  0.12, reach: 1.30, thick: 0.040, delay: 0.06, wiggle: 3.5 },  // center-low — very long
+    { originY: 0.62, angle:  0.35, reach: 0.70, thick: 0.032, delay: 0.10, wiggle: 3.8 },  // mid — medium
+    { originY: 0.70, angle:  0.55, reach: 1.10, thick: 0.035, delay: 0.14, wiggle: 2.8 },  // lower — long, whips down
+    { originY: 0.78, angle:  0.75, reach: 0.45, thick: 0.022, delay: 0.18, wiggle: 4.5 },  // lowest — short flick
+  ];
+
+  for (const t of tentacles) {
+    const localExt = Math.max(0, Math.min(1, (ext - t.delay) / (1 - t.delay)));
+    if (localExt < 0.01) continue;
+
+    const startX = 0.18;  // left edge of cube
+    const startY = t.originY;
+    const curveReach = localExt * t.reach;
+
+    // End point — extends LEFT (negative X)
+    const endX = startX - Math.cos(t.angle) * curveReach;
+    const endY = startY + Math.sin(t.angle) * curveReach;
+    const thickness = t.thick * (1 - localExt * 0.5);
+
+    // Wiggly path — use cubic bezier with offset control points
+    const wigAmp = 0.12 * localExt;
+    const wigFreq = t.wiggle;
+    // Two control points for cubic bezier — offset perpendicular to direction for wiggle
+    const frac1 = 0.33, frac2 = 0.66;
+    const dx = endX - startX, dy = endY - startY;
+    const nx = -dy, ny = dx;  // perpendicular
+    const len = Math.sqrt(nx * nx + ny * ny) || 1;
+    const px = nx / len, py = ny / len;
+
+    const cp1x = startX + dx * frac1 + px * Math.sin(localExt * Math.PI * wigFreq) * wigAmp;
+    const cp1y = startY + dy * frac1 + py * Math.sin(localExt * Math.PI * wigFreq) * wigAmp;
+    const cp2x = startX + dx * frac2 - px * Math.sin(localExt * Math.PI * wigFreq * 1.3) * wigAmp * 0.8;
+    const cp2y = startY + dy * frac2 - py * Math.sin(localExt * Math.PI * wigFreq * 1.3) * wigAmp * 0.8;
+
+    const grad = ctx.createLinearGradient(w * startX, h * startY, w * endX, h * endY);
+    grad.addColorStop(0, 'rgb(20,58,48)');
+    grad.addColorStop(0.5, 'rgb(40,150,110)');
+    grad.addColorStop(1, 'rgb(60,210,160)');
+
+    // Top edge of tentacle
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(w * startX, h * (startY - thickness));
+    ctx.bezierCurveTo(
+      w * cp1x, h * (cp1y - thickness * 0.8),
+      w * cp2x, h * (cp2y - thickness * 0.5),
+      w * endX, h * endY
+    );
+    // Bottom edge (return)
+    ctx.bezierCurveTo(
+      w * cp2x, h * (cp2y + thickness * 0.5),
+      w * cp1x, h * (cp1y + thickness * 0.8),
+      w * startX, h * (startY + thickness)
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Tip glow
+    if (localExt > 0.3) {
+      const glowR = w * thickness * 1.0;
+      const glow = ctx.createRadialGradient(w * endX, h * endY, 0, w * endX, h * endY, glowR);
+      glow.addColorStop(0, `rgba(60,210,160,${localExt * 0.6})`);
+      glow.addColorStop(1, 'rgba(60,210,160,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(w * endX, h * endY, glowR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
 // ==========================================================================
 // CLEAN RENDER — translucent cube with dissolved contents
 // ==========================================================================
-export function drawGelatinousOozeClean(ctx, skeleton, w, h) {
+export function drawGelatinousOozeClean(ctx, skeleton, w, h, anim = null) {
   // --- PALETTE ---
   // Dark teal-green, paint dark for ASCII renderer
   const bodyDark  = [6, 22, 18];      // very dark teal
@@ -51,6 +218,15 @@ export function drawGelatinousOozeClean(ctx, skeleton, w, h) {
   const fTR = { x: 0.81, y: 0.27 };
   const fBR = { x: 0.78, y: 0.80 };
   const fBL = { x: 0.18, y: 0.82 };
+
+  // --- ANIMATION TRANSFORM ---
+  const _a = computeAnimOffsets(anim);
+  const _cx = w * 0.48, _cy = h * 0.52;
+  ctx.save();
+  ctx.translate(_cx + w * _a.shiftX, _cy + h * _a.shiftY);
+  ctx.scale(_a.scaleX, _a.scaleY);
+  if (_a.rotation) ctx.rotate(_a.rotation);
+  ctx.translate(-_cx, -_cy);
 
   // --- 1. PUDDLE / BASE OOZE ---
   // Dark ooze spreading at the base
@@ -450,6 +626,13 @@ export function drawGelatinousOozeClean(ctx, skeleton, w, h) {
   // Inner corners darkness
   ambientOcclusion(ctx, w * fTL.x, h * fTL.y, w * 0.04, h * 0.04, 0.2);
   ambientOcclusion(ctx, w * fTR.x, h * fTR.y, w * 0.04, h * 0.04, 0.15);
+
+  // --- PSEUDOPOD (attack animation) ---
+  if (_a.pseudopod > 0.01) {
+    drawPseudopod(ctx, w, h, _a.pseudopod);
+  }
+
+  ctx.restore();
 }
 
 // Helper: draw a tapered drip
@@ -513,8 +696,9 @@ function render(elapsed = 0) {
   c2.style.width = displayW; c2.style.height = displayH;
   const ctx2 = c2.getContext('2d');
   ctx2.fillStyle = '#000'; ctx2.fillRect(0, 0, canvasW, canvasH);
+  const animState = elapsed > 0 ? { clip: 'idle', t: (elapsed % 2000) / 2000 } : null;
   renderAscii(ctx2, (tctx, tw, th) => {
-    drawGelatinousOozeClean(tctx, sk, tw, th);
+    drawGelatinousOozeClean(tctx, sk, tw, th, animState);
   }, 0, 0, canvasW, canvasH, asciiOpts);
 
   // -- Painted --
@@ -523,7 +707,7 @@ function render(elapsed = 0) {
   c3.style.width = displayW; c3.style.height = displayH;
   const ctx3 = c3.getContext('2d');
   ctx3.fillStyle = '#000'; ctx3.fillRect(0, 0, canvasW, canvasH);
-  drawGelatinousOozeClean(ctx3, sk, canvasW, canvasH);
+  drawGelatinousOozeClean(ctx3, sk, canvasW, canvasH, animState);
 
   if (showGrid) {
     for (const canvas of [c1, c2, c3]) {

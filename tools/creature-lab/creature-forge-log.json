@@ -165,5 +165,245 @@
       "method": "heuristic"
     },
     "timestamp": "2026-04-06T11:34:25.305Z"
+  },
+  {
+    "slug": "goblin",
+    "name": "Goblin",
+    "description": "massive bone cleaver right hand, blade wider than torso, arm out, blade past body. Wiry green, big ears",
+    "type": "humanoid",
+    "archetype": "weapon",
+    "mesh_task_id": "019d6303-79fc-7830-8959-d78d044bce2c",
+    "prompt": "A Goblin: massive bone cleaver right hand, blade wider than torso, arm out, blade past body. Wiry green, big ears. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Attack style: weapon held in one or both hands, clearly separate from arm geometry. weapon must be at least 15% of body height. distinct weapon silhouette — blade/head shape clearly readable. hand grip visible with fingers wrapped around weapon handle. weapon arm extended or raised for clear weapon silhouette in A-pose. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.6,
+        "ascii_contrast": 0.62,
+        "rig_compat": 0.8
+      },
+      "avg": 0.6925000000000001,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T13:37:49.717Z"
+  },
+  {
+    "slug": "goblin",
+    "name": "Goblin",
+    "description": "massive bone cleaver right hand, blade wider than torso, arm out, blade past body. Wiry green, big ears",
+    "type": "humanoid",
+    "archetype": "weapon",
+    "mesh_task_id": "019d6307-29e5-774f-9f64-678908c99d8a",
+    "prompt": "A Goblin: massive bone cleaver right hand, blade wider than torso, arm out, blade past body. Wiry green, big ears. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Attack style: weapon held in one or both hands, clearly separate from arm geometry. weapon must be at least 15% of body height. distinct weapon silhouette — blade/head shape clearly readable. hand grip visible with fingers wrapped around weapon handle. weapon arm extended or raised for clear weapon silhouette in A-pose. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T13:43:18.971Z"
+  },
+  {
+    "slug": "dire-rat",
+    "name": "Dire Rat",
+    "description": "large diseased sewer rat, matted fur, oversized yellowed teeth, aggressive hunched posture, long scaly tail, solid connected mesh",
+    "type": "beast",
+    "archetype": "bite",
+    "mesh_task_id": "019d6361-fbfb-737c-85d6-266748baf655",
+    "prompt": "A Dire Rat: large diseased sewer rat, matted fur, oversized yellowed teeth, aggressive hunched posture, long scaly tail, solid connected mesh. Key features: quadruped, predator stance, claws, matted fur, scarred hide. Attack style: oversized head with wide-opening jaw. visible teeth or fangs, jaw can open at least 30 degrees. head is at least 20% of body mass — dominant feature. neck thick and muscular to support lunging bite. head slightly forward, jaw partially open showing teeth in rest pose. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T15:22:43.136Z"
+  },
+  {
+    "slug": "goblin",
+    "name": "Goblin",
+    "description": "wiry goblin with jagged blade fused to right forearm, blade extends from wrist as arm extension, olive-green warty skin, big ears, crooked teeth, leather armor, hunched stance",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d637f-e602-786c-a810-37a5432b82d8",
+    "prompt": "A Goblin: wiry goblin with jagged blade fused to right forearm, blade extends from wrist as arm extension, olive-green warty skin, big ears, crooked teeth, leather armor, hunched stance. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T15:56:22.364Z"
+  },
+  {
+    "slug": "giant-spider",
+    "name": "Giant Spider",
+    "description": "giant cave spider, 8 thick hairy legs, bulbous dark abdomen, prominent fangs, dark carapace, aggressive stance",
+    "type": "beast",
+    "archetype": null,
+    "mesh_task_id": "019d63cd-1bba-73df-a1e7-f47cbaa18572",
+    "prompt": "A Giant Spider: giant cave spider, 8 thick hairy legs, bulbous dark abdomen, prominent fangs, dark carapace, aggressive stance. Key features: quadruped, predator stance, claws, matted fur, scarred hide. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.6,
+        "ascii_contrast": 0.62,
+        "rig_compat": 0.8
+      },
+      "avg": 0.6925000000000001,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T17:18:03.886Z"
+  },
+  {
+    "slug": "hook-horror",
+    "name": "Hook Horror",
+    "description": "bipedal insectoid, huge bone hooks fused to forearms as arm extensions, vulture beak head, dark chitin exoskeleton, hunched stance",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d63cd-2e21-7ade-8b76-b773990074f8",
+    "prompt": "A Hook Horror: bipedal insectoid, huge bone hooks fused to forearms as arm extensions, vulture beak head, dark chitin exoskeleton, hunched stance. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.6,
+        "ascii_contrast": 0.62,
+        "rig_compat": 0.8
+      },
+      "avg": 0.6925000000000001,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T17:18:09.168Z"
+  },
+  {
+    "slug": "basilisk",
+    "name": "Basilisk",
+    "description": "low-slung 8-legged reptilian lizard, heavy armored scales, massive jaw, glowing yellow eyes, thick clubbed tail",
+    "type": "beast",
+    "archetype": null,
+    "mesh_task_id": "019d63cd-427c-7fdc-aaed-f23058df1cf6",
+    "prompt": "A Basilisk: low-slung 8-legged reptilian lizard, heavy armored scales, massive jaw, glowing yellow eyes, thick clubbed tail. Key features: quadruped, predator stance, claws, matted fur, scarred hide. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.6,
+        "ascii_contrast": 0.62,
+        "rig_compat": 0.8
+      },
+      "avg": 0.6925000000000001,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T17:18:15.667Z"
+  },
+  {
+    "slug": "giant-spider",
+    "name": "Giant Spider",
+    "description": "giant cave spider, 8 thick hairy legs, bulbous dark abdomen, prominent fangs, dark carapace, aggressive stance",
+    "type": "beast",
+    "archetype": null,
+    "mesh_task_id": "019d63d0-ca02-7b57-a2f1-f873560f6cf2",
+    "prompt": "A Giant Spider: giant cave spider, 8 thick hairy legs, bulbous dark abdomen, prominent fangs, dark carapace, aggressive stance. Key features: quadruped, predator stance, claws, matted fur, scarred hide. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T17:24:07.835Z"
+  },
+  {
+    "slug": "hook-horror",
+    "name": "Hook Horror",
+    "description": "bipedal insectoid, huge bone hooks fused to forearms as arm extensions, vulture beak head, dark chitin exoskeleton, hunched stance",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d63d7-0ceb-7267-9946-326536824f15",
+    "prompt": "A Hook Horror: bipedal insectoid, huge bone hooks fused to forearms as arm extensions, vulture beak head, dark chitin exoskeleton, hunched stance. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T17:30:59.408Z"
+  },
+  {
+    "slug": "basilisk",
+    "name": "Basilisk",
+    "description": "low-slung 8-legged reptilian lizard, heavy armored scales, massive jaw, glowing yellow eyes, thick clubbed tail",
+    "type": "beast",
+    "archetype": null,
+    "mesh_task_id": "019d63e8-70d3-7b8a-bf36-e97303e123ff",
+    "prompt": "A Basilisk: low-slung 8-legged reptilian lizard, heavy armored scales, massive jaw, glowing yellow eyes, thick clubbed tail. Key features: quadruped, predator stance, claws, matted fur, scarred hide. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T17:49:43.731Z"
+  },
+  {
+    "slug": "hook-horror",
+    "name": "Hook Horror",
+    "description": "bipedal insectoid with MASSIVE curved bone hooks replacing both hands, hooks are enormous — each hook is half the creature's height, thick scythe-like bone blades curving forward from the wrists, vulture beak head, dark chitin exoskeleton, powerful hunched torso, digitigrade legs",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d63ff-982d-70df-9007-720d7f5a74b6",
+    "prompt": "Variation 2: emphasize more extreme proportions, larger silhouette, more damage/scars. A Hook Horror: bipedal insectoid with MASSIVE curved bone hooks replacing both hands, hooks are enormous — each hook is half the creature's height, thick scythe-like bone blades curving forward from the wrists, vulture beak head, dark chitin exoskeleton, powerful hunched torso, digitigrade legs. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T18:15:04.609Z"
+  },
+  {
+    "slug": "basilisk",
+    "name": "Basilisk",
+    "description": "massive hulking 8-legged reptilian beast, extremely fat and wide body like an overfed komodo dragon, bloated belly dragging low, thick armor-plated scales, enormous gaping jaw with rows of serrated teeth, glowing menacing yellow eyes, massive spiked clubbed tail, zone boss monster",
+    "type": "beast",
+    "archetype": null,
+    "mesh_task_id": "019d6400-8deb-7138-aa61-46f55bf00bd6",
+    "prompt": "Variation 2: emphasize more extreme proportions, larger silhouette, more damage/scars. A Basilisk: massive hulking 8-legged reptilian beast, extremely fat and wide body like an overfed komodo dragon, bloated belly dragging low, thick armor-plated scales, enormous gaping jaw with rows of serrated teeth, glowing menacing yellow eyes, massive spiked clubbed tail, zone boss monster. Key features: quadruped, predator stance, claws, matted fur, scarred hide. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T18:16:27.793Z"
   }
 ]

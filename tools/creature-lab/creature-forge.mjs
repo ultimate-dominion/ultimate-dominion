@@ -377,15 +377,51 @@ async function pollV1Task(taskId, v1Endpoint, label) {
 // Meshy v1 Rigging + Animation pipeline
 // --------------------------------------------------------------------------
 
-// Animation clips to generate for humanoid creatures.
-// action_id reference: 0=idle, 4=attack, 8=death, 9=hit_react, 30=walk
+// --------------------------------------------------------------------------
+// Meshy v1 animation action_id reference
+//
+// Full library: https://docs.meshy.ai/en/api/animation-library (584+ IDs)
+//
+// CRITICAL: action_id 9 is ForwardLeft_Run_Fight (a RUNNING anim), NOT hit react.
+// Actual hit reactions are in the 171-179 range.
+// action_id 4 is a generic unarmed punch — useless for weapon-wielding creatures.
+// Use weapon-specific IDs from the 85-242 range instead.
+// --------------------------------------------------------------------------
+
+// Weapon type → best Meshy attack action_id
+const WEAPON_ATTACK_IDS = {
+  sword:   219,  // Right_Hand_Sword_Slash
+  axe:     237,  // Charged_Axe_Chop
+  hammer:  128,  // Heavy_Hammer_Swing
+  mace:    128,  // Heavy_Hammer_Swing (closest to mace/morningstar)
+  staff:   125,  // Charged_Spell_Cast
+  spear:   240,  // Thrust_Slash
+  dagger:   92,  // Double_Combo_Attack
+  bow:     224,  // Archery_Shot
+  unarmed:   4,  // Attack (generic punch — only for truly unarmed)
+  bite:      4,  // fallback for beasts (Meshy API is humanoid-only anyway)
+};
+
+// Default humanoid clips — used when no weapon type is specified
 const HUMANOID_CLIPS = [
-  { name: 'idle',      actionId: 0  },
-  { name: 'walk',      actionId: 30 },
-  { name: 'attack',    actionId: 4  },
-  { name: 'death',     actionId: 8  },
-  { name: 'hit_react', actionId: 9  },
+  { name: 'idle',      actionId: 0   },
+  { name: 'walk',      actionId: 30  },
+  { name: 'attack',    actionId: 219 },  // Right_Hand_Sword_Slash (safe default)
+  { name: 'death',     actionId: 187 },  // Knock_Down (more dramatic than 8=Dead)
+  { name: 'hit_react', actionId: 178 },  // Hit_Reaction (NOT 9 which is running)
 ];
+
+// Build creature-specific clip sets based on weapon type
+function getClipsForWeapon(weaponType) {
+  const attackId = WEAPON_ATTACK_IDS[weaponType] ?? WEAPON_ATTACK_IDS.sword;
+  return [
+    { name: 'idle',      actionId: 0   },
+    { name: 'walk',      actionId: 30  },
+    { name: 'attack',    actionId: attackId },
+    { name: 'death',     actionId: 187 },
+    { name: 'hit_react', actionId: 178 },
+  ];
+}
 
 async function rigModel(inputTaskId) {
   log('\n  Submitting to Meshy Rigging (5 credits)...');
@@ -472,9 +508,11 @@ async function mergeAnimationGLBs(clipPaths, clipNames, outputPath) {
 
 // Full rig + animate pipeline for a humanoid creature.
 // meshTaskId — the Meshy v2 text-to-3d refine task ID for the mesh.
-async function rigAndAnimateCreature(slug, meshTaskId) {
+// weaponType — optional weapon type for attack animation selection
+async function rigAndAnimateCreature(slug, meshTaskId, weaponType = null) {
   log(`\n=== Rig + Animate: ${slug} ===`);
   log(`  Mesh task: ${meshTaskId}`);
+  if (weaponType) log(`  Weapon type: ${weaponType}`);
 
   // 1. Rig
   let rigTask;
@@ -486,12 +524,13 @@ async function rigAndAnimateCreature(slug, meshTaskId) {
     throw e;
   }
 
-  // 2. Animate each clip
+  // 2. Animate each clip — use weapon-specific attack if provided
+  const clips = weaponType ? getClipsForWeapon(weaponType) : HUMANOID_CLIPS;
   const animDir = path.join(GLB_DIR, `${slug}-anim-clips`);
   fs.mkdirSync(animDir, { recursive: true });
 
   const downloaded = [];
-  for (const clip of HUMANOID_CLIPS) {
+  for (const clip of clips) {
     log(`\n  Animating clip: ${clip.name} (action_id=${clip.actionId}, 3 credits)...`);
     try {
       const animTask = await animateClip(rigTask.id, clip.actionId, clip.name);
@@ -739,8 +778,235 @@ if (args.includes('--list')) {
   process.exit(0);
 }
 
+// --------------------------------------------------------------------------
+// Reanimate — re-rig + reanimate an existing creature with correct action_ids
+// --------------------------------------------------------------------------
+
+// Known creature → weapon mappings for Dark Cave humanoids
+const CREATURE_WEAPONS = {
+  kobold:         'spear',   // bone spear → action_id 240 (Thrust_Slash)
+  goblin:         'axe',     // bone cleaver → action_id 237 (Charged_Axe_Chop)
+  skeleton:       'sword',   // rusty longsword → action_id 219 (Right_Hand_Sword_Slash)
+  'goblin-shaman': 'staff',  // skull staff → action_id 125 (Charged_Spell_Cast)
+  bugbear:        'mace',    // spiked morningstar → action_id 128 (Heavy_Hammer_Swing)
+};
+
+// Find the latest forge log entry for a slug that has a mesh_task_id
+function findMeshTaskId(slug) {
+  try {
+    const log = JSON.parse(fs.readFileSync(FORGE_LOG, 'utf8'));
+    // Search backwards for latest entry with this slug and a mesh_task_id
+    for (let i = log.length - 1; i >= 0; i--) {
+      if (log[i].slug === slug && log[i].mesh_task_id) return log[i].mesh_task_id;
+    }
+  } catch {}
+  return null;
+}
+
+async function reanimateCreature(slug, weaponType) {
+  const meshTaskId = findMeshTaskId(slug);
+  if (!meshTaskId) {
+    console.error(`No mesh_task_id found for "${slug}" in forge log.`);
+    console.error('Run --list to see available creatures.');
+    process.exit(1);
+  }
+
+  const weapon = weaponType || CREATURE_WEAPONS[slug];
+  if (!weapon) {
+    console.error(`No weapon type specified and no default for "${slug}".`);
+    console.error(`Use --weapon <type> or add to CREATURE_WEAPONS mapping.`);
+    console.error(`Available: ${Object.keys(WEAPON_ATTACK_IDS).join(', ')}`);
+    process.exit(1);
+  }
+
+  const clips = getClipsForWeapon(weapon);
+  const attackClip = clips.find(c => c.name === 'attack');
+  log(`\n=== Reanimate: ${slug} ===`);
+  log(`  Mesh task: ${meshTaskId}`);
+  log(`  Weapon: ${weapon} → attack action_id=${attackClip.actionId}`);
+  log(`  Hit react: action_id=178, Death: action_id=187`);
+  log(`  Credits: 5 (rig) + ${clips.length * 3} (${clips.length} clips × 3) = ${5 + clips.length * 3} total`);
+
+  await rigAndAnimateCreature(slug, meshTaskId, weapon);
+
+  log(`\n=== ${slug} reanimate complete ===`);
+}
+
+// Candidate attack action_ids — dramatic full-body motion that works with baked-in weapons
+const ATTACK_CANDIDATES = {
+  99:  'Reaping_Swing',
+  105: 'Triple_Combo_Attack',
+  91:  'Double_Blade_Spin',
+  92:  'Double_Combo_Attack',
+  90:  'Counterstrike',
+  102: 'Sword_Judgment',
+  97:  'Left_Slash',
+  19:  'Skill_03',
+  96:  'Kung_Fu_Punch',
+  100: 'Rightward_Spin',
+};
+
+async function testAttacks(slug, attackIds = null) {
+  const meshTaskId = findMeshTaskId(slug);
+  if (!meshTaskId) {
+    console.error(`No mesh_task_id found for "${slug}" in forge log.`);
+    process.exit(1);
+  }
+
+  const ids = attackIds || Object.keys(ATTACK_CANDIDATES).map(Number);
+  const standardClips = [
+    { name: 'idle',      actionId: 0   },
+    { name: 'walk',      actionId: 30  },
+    { name: 'death',     actionId: 187 },
+    { name: 'hit_react', actionId: 178 },
+  ];
+
+  const totalCredits = 5 + (standardClips.length + ids.length) * 3;
+  log(`\n=== Test Attacks: ${slug} ===`);
+  log(`  Mesh task: ${meshTaskId}`);
+  log(`  Standard clips: ${standardClips.map(c => c.name).join(', ')}`);
+  log(`  Attack variants: ${ids.map(id => `${id}(${ATTACK_CANDIDATES[id] || '?'})`).join(', ')}`);
+  log(`  Credits: 5 (rig) + ${(standardClips.length + ids.length) * 3} (${standardClips.length + ids.length} clips × 3) = ${totalCredits} total`);
+
+  // 1. Rig
+  log('\n--- Rigging ---');
+  let rigTask;
+  try {
+    rigTask = await rigModel(meshTaskId);
+    log(`  Rig complete: ${rigTask.id}`);
+  } catch (e) {
+    log(`  Rigging failed: ${e.message}`);
+    throw e;
+  }
+
+  // 2. Generate standard clips
+  const animDir = path.join(GLB_DIR, `${slug}-anim-clips`);
+  fs.mkdirSync(animDir, { recursive: true });
+  const downloaded = [];
+
+  log('\n--- Standard Clips ---');
+  for (const clip of standardClips) {
+    log(`  ${clip.name} (action_id=${clip.actionId})...`);
+    try {
+      const animTask = await animateClip(rigTask.id, clip.actionId, clip.name);
+      const url = animTask.result?.animation_glb_url ?? animTask.model_url ?? animTask.model_urls?.glb;
+      if (!url) { log(`    no URL — skipping`); continue; }
+      const dest = path.join(animDir, `${clip.name}.glb`);
+      await downloadFile(url, dest);
+      log(`    done (${(fs.statSync(dest).size / 1024).toFixed(0)} KB)`);
+      downloaded.push({ name: clip.name, path: dest });
+    } catch (e) {
+      log(`    failed: ${e.message}`);
+    }
+  }
+
+  // 3. Generate attack variants
+  log('\n--- Attack Variants ---');
+  for (const id of ids) {
+    const label = ATTACK_CANDIDATES[id] || `action_${id}`;
+    const clipName = `attack_${id}`;
+    log(`  ${clipName} — ${label} (action_id=${id})...`);
+    try {
+      const animTask = await animateClip(rigTask.id, id, clipName);
+      const url = animTask.result?.animation_glb_url ?? animTask.model_url ?? animTask.model_urls?.glb;
+      if (!url) { log(`    no URL — skipping`); continue; }
+      const dest = path.join(animDir, `${clipName}.glb`);
+      await downloadFile(url, dest);
+      log(`    done (${(fs.statSync(dest).size / 1024).toFixed(0)} KB)`);
+      downloaded.push({ name: clipName, path: dest });
+    } catch (e) {
+      log(`    failed: ${e.message}`);
+    }
+  }
+
+  if (downloaded.length === 0) {
+    throw new Error('All clips failed');
+  }
+
+  // 4. Merge into single GLB
+  const outPath = path.join(GLB_DIR, `${slug}-animated.glb`);
+  log(`\n--- Merging ${downloaded.length} clips → ${slug}-animated.glb ---`);
+  await mergeAnimationGLBs(
+    downloaded.map(d => d.path),
+    downloaded.map(d => d.name),
+    outPath,
+  );
+  log(`  Done: ${outPath} (${(fs.statSync(outPath).size / 1024).toFixed(0)} KB)`);
+
+  // List what's in the GLB
+  log(`\n  Clips in ${slug}-animated.glb:`);
+  downloaded.forEach(d => log(`    ${d.name}`));
+  log(`\n  Open review.html to compare attack variants.`);
+
+  return { outPath, clips: downloaded.map(d => d.name) };
+}
+
+async function reanimateAll() {
+  const slugs = Object.keys(CREATURE_WEAPONS);
+  const totalCredits = slugs.length * (5 + 5 * 3); // 5 rig + 5 clips × 3 each
+  log(`\n=== Reanimate All Humanoids ===`);
+  log(`  Creatures: ${slugs.join(', ')}`);
+  log(`  Total credits: ${totalCredits} (${slugs.length} × 20)`);
+  log('');
+
+  const results = { success: [], failed: [] };
+  for (const slug of slugs) {
+    try {
+      await reanimateCreature(slug, CREATURE_WEAPONS[slug]);
+      results.success.push(slug);
+    } catch (err) {
+      log(`\n  FAILED: ${slug} — ${err.message}`);
+      results.failed.push(slug);
+    }
+  }
+
+  log('\n=== Reanimate Summary ===');
+  log(`  Success: ${results.success.join(', ') || 'none'}`);
+  if (results.failed.length) log(`  Failed: ${results.failed.join(', ')}`);
+}
+
+// --------------------------------------------------------------------------
+// CLI dispatch
+// --------------------------------------------------------------------------
+
+// --test-attacks <slug> [--ids 99,105,91] — rig once, try multiple attack action_ids
+if (args.includes('--test-attacks')) {
+  const idx = args.indexOf('--test-attacks');
+  const slug = args[idx + 1];
+  if (!slug || slug.startsWith('--')) {
+    console.error('Usage: node creature-forge.mjs --test-attacks <slug> [--ids 99,105,91]');
+    process.exit(1);
+  }
+  const idsArg = args.includes('--ids') ? args[args.indexOf('--ids') + 1] : null;
+  const attackIds = idsArg ? idsArg.split(',').map(Number) : null;
+  testAttacks(slug, attackIds).catch(err => {
+    console.error('Test attacks failed:', err.message);
+    process.exit(1);
+  });
+}
+// --reanimate-all — batch re-rig + reanimate all Dark Cave humanoids
+else if (args.includes('--reanimate-all')) {
+  reanimateAll().catch(err => {
+    console.error('Fatal:', err.message);
+    process.exit(1);
+  });
+}
+// --reanimate <slug> [--weapon <type>] — re-rig + reanimate one creature
+else if (args.includes('--reanimate')) {
+  const idx = args.indexOf('--reanimate');
+  const slug = args[idx + 1];
+  if (!slug || slug.startsWith('--')) {
+    console.error('Usage: node creature-forge.mjs --reanimate <slug> [--weapon <type>]');
+    process.exit(1);
+  }
+  const weaponType = args.includes('--weapon') ? args[args.indexOf('--weapon') + 1] : null;
+  reanimateCreature(slug, weaponType).catch(err => {
+    console.error('Reanimate failed:', err.message);
+    process.exit(1);
+  });
+}
 // --rig <slug> <meshTaskId> — rig + animate an already-generated mesh
-if (args.includes('--rig')) {
+else if (args.includes('--rig')) {
   const rigIdx = args.indexOf('--rig');
   const slug = args[rigIdx + 1];
   const meshTaskId = args[rigIdx + 2];
@@ -748,7 +1014,8 @@ if (args.includes('--rig')) {
     console.error('Usage: node creature-forge.mjs --rig <slug> <meshTaskId>');
     process.exit(1);
   }
-  rigAndAnimateCreature(slug, meshTaskId).catch(err => {
+  const weaponType = args.includes('--weapon') ? args[args.indexOf('--weapon') + 1] : null;
+  rigAndAnimateCreature(slug, meshTaskId, weaponType).catch(err => {
     console.error('Rig failed:', err.message);
     process.exit(1);
   });
@@ -757,7 +1024,9 @@ if (args.includes('--rig')) {
     console.log(`
 Usage:
   node creature-forge.mjs <name> <description> [options]
-  node creature-forge.mjs --rig <slug> <meshTaskId>
+  node creature-forge.mjs --rig <slug> <meshTaskId> [--weapon <type>]
+  node creature-forge.mjs --reanimate <slug> [--weapon <type>]
+  node creature-forge.mjs --reanimate-all
 
 Options:
   --iterations N       Number of generation attempts (default: 2)
@@ -765,10 +1034,21 @@ Options:
                        humanoid — auto-rigs + animates after mesh generation
   --archetype <arch>   Attack archetype: weapon | claw | tail | bite | magic | amorphous
                        Adds archetype-specific structural hints to the Meshy prompt
+  --weapon <type>      Weapon type for attack animation: sword | axe | hammer | mace |
+                       staff | spear | dagger | bow | unarmed | bite
   --threshold N        Quality threshold 0-1 (default: 0.65)
   --dry-run            Print prompts only, no API calls
   --list               Show all forged creatures
   --rig <slug> <id>    Run rig + animate on an existing mesh task ID
+  --reanimate <slug>   Re-rig + reanimate creature with correct weapon action_ids
+  --reanimate-all      Re-rig + reanimate ALL Dark Cave humanoids (100 credits)
+
+Weapon → Attack action_id mapping:
+  sword=219   axe=237    hammer=128   mace=128   staff=125
+  spear=240   dagger=92  bow=224      unarmed=4  bite=4
+
+Dark Cave creature weapons (used by --reanimate-all):
+  kobold=spear  goblin=axe  skeleton=sword  goblin-shaman=staff  bugbear=mace
 
 Archetypes:
   weapon     — Weapon-wielder (goblin, skeleton, bugbear)
@@ -780,10 +1060,9 @@ Archetypes:
 
 Examples:
   node creature-forge.mjs "Kobold" "small reptilian humanoid, crude dagger" --type humanoid --archetype weapon
-  node creature-forge.mjs "Hook Horror" "cave predator with scythe hooks" --type beast --archetype claw
-  node creature-forge.mjs "Basilisk" "stocky quadruped, petrifying gaze" --type beast --archetype bite
-  node creature-forge.mjs "Cave Troll" "hulking troll, stone-like hide" --type beast --archetype claw --iterations 3
-  node creature-forge.mjs --rig kobold 019d59c0-958e-7f73-9377-41cbdbb713ff
+  node creature-forge.mjs --rig kobold 019d59c0-958e-7f73-9377-41cbdbb713ff --weapon spear
+  node creature-forge.mjs --reanimate skeleton --weapon sword
+  node creature-forge.mjs --reanimate-all
 
 API:
   Set MESHY_API_KEY env var for real generation. Defaults to Meshy test mode (no credits).
@@ -797,6 +1076,7 @@ API:
   const iterations  = parseInt(args[args.indexOf('--iterations') + 1] ?? '2', 10) || 2;
   const type        = args.includes('--type') ? args[args.indexOf('--type') + 1] : null;
   const archetype   = args.includes('--archetype') ? args[args.indexOf('--archetype') + 1] : null;
+  const weaponType  = args.includes('--weapon') ? args[args.indexOf('--weapon') + 1] : null;
   const threshold   = parseFloat(args[args.indexOf('--threshold') + 1] ?? '0.65') || QUALITY_THRESHOLD;
   const dryRun      = args.includes('--dry-run');
 

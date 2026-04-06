@@ -44,11 +44,15 @@ function stripArmaturePrefix(name) {
 }
 
 function normaliseClipName(rawName) {
-  const lower = stripArmaturePrefix(rawName).toLowerCase();
+  const stripped = stripArmaturePrefix(rawName);
+  const lower = stripped.toLowerCase();
+  // Preserve variant suffixes like attack_99, hit_react — don't collapse them
+  if (/^(attack|hit|idle|walk|death|block)_\d+/.test(lower)) return lower;
+  if (lower === 'hit_react') return 'hit';
   for (const { keys, target } of CLIP_NAME_MAP) {
     if (keys.some(k => lower.includes(k))) return target;
   }
-  return stripArmaturePrefix(rawName); // clean display name if no match
+  return stripped; // clean display name if no match
 }
 
 // --------------------------------------------------------------------------
