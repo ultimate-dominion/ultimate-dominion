@@ -16,7 +16,11 @@ packages/api/dev-storage/
 /items.json
 /monsters.json
 mprocs.log
-.claude/
+# Ignore private Claude Code session data; settings and scripts are shared
+.claude/settings.local.json
+.claude/worktrees/
+.claude/agents/
+.claude/skills/
 CODEBASE_ANALYSIS.md
 
 # Build artifacts
