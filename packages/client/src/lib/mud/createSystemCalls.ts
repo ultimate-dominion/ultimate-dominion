@@ -419,6 +419,7 @@ export function createSystemCalls(
     ]);
 
   const SPAWNED_TABLE_ID = tableResourceId('UD', 'Spawned');
+  const POSITION_TABLE_ID = tableResourceId('UD', 'Position');
   const GET_RECORD_ABI = [
     {
       type: 'function' as const,
@@ -458,16 +459,40 @@ export function createSystemCalls(
     }
   };
 
-  const validateTileMonsters = async (monsterIds: string[]): Promise<void> => {
+  const validateTileMonsters = async (
+    monsterIds: string[],
+    tilePosition?: { x: number; y: number },
+  ): Promise<void> => {
     if (monsterIds.length === 0) return;
 
     const results = await Promise.allSettled(
       monsterIds.map(async (id) => {
+        // Check Spawned table
         const record = await readStoreRecord(SPAWNED_TABLE_ID, id as `0x${string}`, 'Spawned');
         if (!record) return { id, isAlive: null as boolean | null };
         const staticData = record?.[0] ?? '0x';
-        // Spawned table: single bool field. 0x01 = alive, 0x00 or empty = dead.
         const isAlive = staticData.length >= 4 && staticData.slice(0, 4) === '0x01';
+        if (!isAlive) return { id, isAlive: false };
+
+        // Check Position table — monster may be alive but on a different tile
+        if (tilePosition) {
+          const posRecord = await readStoreRecord(POSITION_TABLE_ID, id as `0x${string}`, 'Position');
+          if (posRecord) {
+            const posData = posRecord[0] ?? '0x';
+            // Position table: uint16 x + uint16 y = 4 bytes
+            if (posData.length >= 10) {
+              const chainX = parseInt(posData.slice(2, 6), 16);
+              const chainY = parseInt(posData.slice(6, 10), 16);
+              if (chainX !== tilePosition.x || chainY !== tilePosition.y) {
+                console.warn(`[validateTile] Monster ${id.slice(0, 10)} at (${chainX},${chainY}) but client shows (${tilePosition.x},${tilePosition.y}) — evicting`);
+                // Sync correct position to local store
+                useGameStore.getState().setRow('Position', id, { x: chainX, y: chainY });
+                return { id, isAlive: false };
+              }
+            }
+          }
+        }
+
         return { id, isAlive };
       }),
     );

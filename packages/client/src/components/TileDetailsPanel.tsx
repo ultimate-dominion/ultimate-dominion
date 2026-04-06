@@ -25,6 +25,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
+import { zeroHash } from 'viem';
 
 import { getTableValue, toBigInt } from '../lib/gameStore';
 
@@ -326,12 +327,22 @@ export const TileDetailsPanel = (): JSX.Element => {
   const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);
 
   const validateCombatTarget = useCallback(async (monsterId: string) => {
-    await validateTileMonsters([monsterId]);
+    if (!position) return false;
 
-    const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean } | undefined;
+    await validateTileMonsters([monsterId], position);
+
+    const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean; encounterId?: string } | undefined;
     const sp = getTableValue('Spawned', monsterId) as { spawned?: boolean } | undefined;
-    return !(ee?.died || sp?.spawned === false);
-  }, [validateTileMonsters]);
+    const localPos = (getTableValue('Position', monsterId) ?? getTableValue('PositionV2', monsterId)) as
+      | { x?: unknown; y?: unknown }
+      | undefined;
+
+    if (ee?.died || sp?.spawned === false) return false;
+    if (ee?.encounterId && ee.encounterId !== zeroHash) return false;
+    if (!localPos) return false;
+
+    return Number(localPos.x) === position.x && Number(localPos.y) === position.y;
+  }, [position, validateTileMonsters]);
 
   // Clear waiting state when ALL battle data is ready (not just currentBattle)
   // Battle view requires: currentBattle + opponent + userCharacterForBattleRendering

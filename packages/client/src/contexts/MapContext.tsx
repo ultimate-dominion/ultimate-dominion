@@ -617,7 +617,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     if (tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
     prevTileRef.current = tileKey;
 
-    validateTileMonsters(monstersOnTile.map(m => m.id));
+    validateTileMonsters(monstersOnTile.map(m => m.id), position ?? undefined);
   }, [position, monstersOnTile, validateTileMonsters]);
 
   // Clear spawn waiting state when Spawned value updates from store sync
