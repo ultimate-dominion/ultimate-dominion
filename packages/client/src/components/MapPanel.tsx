@@ -14,7 +14,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaStoreAlt, FaUser, FaSkullCrossbones } from 'react-icons/fa';
+import { FaGlobeAmericas, FaMap, FaStoreAlt, FaUser, FaSkullCrossbones } from 'react-icons/fa';
 
 
 import { useTranslation } from 'react-i18next';
@@ -37,6 +37,7 @@ import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassArrowSvg, CompassRoseOrnamentSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
 import { GameAncientMap } from './pretext/game/GameAncientMap';
+import { AncientMapView } from './pretext/AncientMapView';
 
 /** Safe zone boundaries per zone (display coords, top-down grid) */
 const SAFE_ZONE_BY_ZONE: Record<number, { topLeft: { x: number; y: number }; bottomRight: { x: number; y: number } }> = {
@@ -106,6 +107,7 @@ export const MapPanel = (): JSX.Element => {
     reportSpawned,
   } = useQueue();
   const [showCaptcha, setShowCaptcha] = useState(false);
+  const [mapView, setMapView] = useState<'zone' | 'world'>('zone');
   const stage = useOnboardingStage();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
@@ -274,12 +276,38 @@ export const MapPanel = (): JSX.Element => {
             h={{ base: '36px', md: '46px' }}
             px="20px"
             width="100%"
+            justifyContent="space-between"
           >
             <Heading size="sm">
-              {currentZoneName}
+              {mapView === 'world' ? 'The World' : currentZoneName}
             </Heading>
+            {SHOW_Z2 && (
+              <IconButton
+                aria-label={mapView === 'zone' ? 'Show world map' : 'Show zone map'}
+                icon={mapView === 'zone' ? <FaGlobeAmericas /> : <FaMap />}
+                size="xs"
+                variant="ghost"
+                color="textMuted"
+                _hover={{ color: 'amber' }}
+                onClick={() => setMapView(v => v === 'zone' ? 'world' : 'zone')}
+              />
+            )}
           </HStack>
-          {SHOW_Z2 ? (
+          {SHOW_Z2 && mapView === 'world' ? (
+            <Box
+              position="relative"
+              maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
+              w="100%"
+              flex="1"
+              mt={1}
+            >
+              <AncientMapView
+                zoneVisibility={{ 1: 'discovered', 2: currentZone >= 2 ? 'discovered' : 'rumored' }}
+                currentZone={currentZone}
+                onZoneClick={() => setMapView('zone')}
+              />
+            </Box>
+          ) : SHOW_Z2 ? (
             <Box
               position="relative"
               aspectRatio="1/1"

@@ -42,7 +42,7 @@ const DEMOS: Demo[] = [
   { id: 'death-screen', name: 'Death Screen', description: 'Dramatic epitaph typography', component: DeathScreen, category: 'spectacle' },
   { id: 'zone-transition', name: 'Zone Transition', description: 'Dark Souls-style zone name reveal', component: ZoneTransition, category: 'spectacle' },
   // Experimental
-  { id: 'ancient-map', name: 'Ancient Map', description: 'Typographic terrain map', component: AncientMapView, category: 'experimental' },
+  { id: 'world-map', name: 'World Map', description: 'Authored world overview with zones', component: AncientMapView, category: 'experimental' },
   { id: 'lore-fragment', name: 'Lore Fragment', description: 'Illuminated manuscript page', component: LoreFragment, category: 'experimental' },
   { id: 'chat-bubbles', name: 'Chat Bubbles', description: 'Pre-measured tight message bubbles', component: ChatBubbles, category: 'experimental' },
   // Game integration
