@@ -153,13 +153,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // hydrated stays false — cache data drives rendering, not redirects
     }),
 
-  hydrate: (snapshot) =>
-    set((state) => ({
+  hydrate: (snapshot) => {
+    // Fresh snapshot is authoritative — clear eviction protection so
+    // monsters that respawned since eviction are visible again.
+    _evictionProtection.clear();
+    return set((state) => ({
       tables: snapshot.tables,
       currentBlock: snapshot.block,
       hydrated: true,
       hydrateVersion: state.hydrateVersion + 1,
-    })),
+    }));
+  },
 
   setConnected: (connected) => set({ connected }),
   setCurrentBlock: (block) => set({ currentBlock: block }),
@@ -194,6 +198,29 @@ export function getTableEntries(table: string): Record<string, TableRow> {
 // ---------------------------------------------------------------------------
 const _receiptProtection = new Map<string, number>(); // `table:keyBytes` → block
 
+// ---------------------------------------------------------------------------
+// Eviction protection — prevents WS from re-adding ghost monsters that were
+// evicted by on-chain validation. Without this, stale indexer data overwrites
+// the local eviction and the ghost monster reappears in an infinite loop.
+// Cleared on full snapshot hydration (hydrateVersion change) since the fresh
+// snapshot from the indexer is authoritative.
+// ---------------------------------------------------------------------------
+const _evictionProtection = new Set<string>(); // `table:keyBytes`
+
+/** Mark rows as eviction-protected (called by ghost eviction). */
+export function markEvictedRows(
+  entries: { table: string; keyBytes: string }[],
+): void {
+  for (const { table, keyBytes } of entries) {
+    _evictionProtection.add(`${table}:${keyBytes}`);
+  }
+}
+
+/** Clear all eviction protection (called after fresh snapshot hydration). */
+export function clearEvictionProtection(): void {
+  _evictionProtection.clear();
+}
+
 /** Mark rows as protected at a given block (called by receipt processing). */
 export function markReceiptRows(
   entries: { table: string; keyBytes: string }[],
@@ -222,6 +249,10 @@ export function isStaleForRow(
   keyBytes: string,
   sourceBlock: number,
 ): boolean {
+  // Eviction protection — ghost monsters evicted by on-chain validation
+  // must not be re-added by the WS until the next full snapshot hydration.
+  if (_evictionProtection.has(`${table}:${keyBytes}`)) return true;
+
   const protBlock = _receiptProtection.get(`${table}:${keyBytes}`);
   if (protBlock === undefined) return false;
   if (sourceBlock >= protBlock) {

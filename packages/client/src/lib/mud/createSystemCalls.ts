@@ -32,7 +32,7 @@ import {
   StatsClasses,
 } from '../../utils/types';
 
-import { getTableValue, useGameStore, type BatchUpdate } from '../gameStore';
+import { getTableValue, markEvictedRows, useGameStore, type BatchUpdate } from '../gameStore';
 import { SetupNetworkResult } from './setupNetwork';
 
 // ==================== Emergency gas funding ====================
@@ -362,6 +362,11 @@ export function createSystemCalls(
       ...(getTableValue('EncounterEntity', monsterId) ?? {}),
       died: true,
     });
+    // Protect evicted rows from being re-added by stale WS updates.
+    markEvictedRows([
+      { table: 'Spawned', keyBytes: monsterId },
+      { table: 'EncounterEntity', keyBytes: monsterId },
+    ]);
     console.warn(`[ghost] Evicted ghost monster ${monsterId.slice(0, 10)}`);
   };
 
@@ -403,6 +408,10 @@ export function createSystemCalls(
 
     if (batch.length > 0) {
       store.applyBatch(batch);
+      // Protect evicted rows from being re-added by stale WS updates.
+      markEvictedRows(
+        batch.map(u => ({ table: u.table, keyBytes: u.keyBytes })),
+      );
     }
     console.warn(`[ghost] Evicted ${batch.length / 2} monsters on tile (${gz},${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
   };
