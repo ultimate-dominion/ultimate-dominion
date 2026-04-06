@@ -70,5 +70,24 @@
       "method": "heuristic"
     },
     "timestamp": "2026-04-04T18:33:43.807Z"
+  },
+  {
+    "slug": "kobold",
+    "name": "Kobold",
+    "description": "small reptilian humanoid gripping a long crude bone spear in both hands, spear tip raised high and prominent — weapon is taller than the creature and clearly visible, digitigrade legs, lizard-like scaled skin in greenish-brown, crude leather armor, hunched aggressive attack stance, large yellow slit-pupil eyes, narrow pointed snout with small fangs, long thin tail, clawed three-fingered hands, dark cave creature",
+    "type": "humanoid",
+    "mesh_task_id": "019d6271-7a9c-7ed7-be39-3f5dacc21ed1",
+    "prompt": "A Kobold: small reptilian humanoid gripping a long crude bone spear in both hands, spear tip raised high and prominent — weapon is taller than the creature and clearly visible, digitigrade legs, lizard-like scaled skin in greenish-brown, crude leather armor, hunched aggressive attack stance, large yellow slit-pupil eyes, narrow pointed snout with small fangs, long thin tail, clawed three-fingered hands, dark cave creature. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-06T10:59:56.888Z"
   }
 ]
