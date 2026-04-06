@@ -1,7 +1,6 @@
-import { useCallback, useRef, useMemo, useEffect } from 'react';
+import { useCallback, useRef, useMemo, useEffect, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { useCanvas } from '../hooks/useCanvas';
-import { usePretextFonts } from '../hooks/usePretextFonts';
 import { COLORS } from '../theme';
 import type { Character, Monster, Npc, Shop, WorldBoss } from '../../../utils/types';
 
@@ -96,7 +95,11 @@ export function GameAncientMap({
   currentZone,
   delegatorAddress,
 }: Props) {
-  const { ready } = usePretextFonts();
+  // Simple font readiness — no dependency on @chenglou/pretext
+  const [fontsReady, setFontsReady] = useState(false);
+  useEffect(() => {
+    document.fonts.ready.then(() => setFontsReady(true));
+  }, []);
   const hoverRef = useRef<{ col: number; row: number } | null>(null);
 
   // Fog of war state — persistent across sessions
@@ -577,7 +580,7 @@ export function GameAncientMap({
     hoverRef.current = null;
   }, []);
 
-  if (!ready) return null;
+  if (!fontsReady) return null;
 
   return (
     <Box position="relative" w="100%" h="100%">
