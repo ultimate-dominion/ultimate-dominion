@@ -281,6 +281,7 @@ export const MapPanel = (): JSX.Element => {
           </HStack>
           {SHOW_Z2 ? (
             <Box
+              position="relative"
               aspectRatio="1/1"
               maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
               maxW="100%"
