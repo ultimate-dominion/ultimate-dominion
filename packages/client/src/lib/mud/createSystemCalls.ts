@@ -430,7 +430,9 @@ export function createSystemCalls(
 
   const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000' as const;
   const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900' as const;
-  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000' as const;
+  // PositionV2 (zoneId: uint256, x: uint16, y: uint16) — the table the combat system uses.
+  // The old "Position" table has stale data for pre-migration monsters.
+  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e5632000000000000' as const;
   const GET_RECORD_ABI = [
     {
       type: 'function' as const,
@@ -472,18 +474,22 @@ export function createSystemCalls(
     monsterId: string,
   ): Promise<{ x: number; y: number } | null> => {
     try {
-      const record = await readStoreRecord(POSITION_TABLE_ID, monsterId as `0x${string}`, 'Position');
+      const record = await readStoreRecord(POSITION_TABLE_ID, monsterId as `0x${string}`, 'PositionV2');
       if (!record) return null;
       const staticData = record[0] ?? '0x';
-      if (staticData === '0x' || staticData.length < 10) return null;
-      const x = parseInt(staticData.slice(2, 6), 16);
-      const y = parseInt(staticData.slice(6, 10), 16);
+      // PositionV2 schema: uint256 zoneId (32 bytes = 64 hex) + uint16 x (2 bytes = 4 hex) + uint16 y (2 bytes = 4 hex)
+      // Total static data: 36 bytes = 72 hex chars + '0x' prefix = 74 chars
+      // If record is empty or too short, monster has no PositionV2 data.
+      if (staticData === '0x' || staticData.length < 74) return null;
+      const x = parseInt(staticData.slice(66, 70), 16);
+      const y = parseInt(staticData.slice(70, 74), 16);
       const position = { x, y };
-      const currentPosition = getTableValue('Position', monsterId) as
+      // Sync to both Position and PositionV2 tables in the store
+      const currentPosition = getTableValue('PositionV2', monsterId) as
         | { x?: number; y?: number }
         | undefined;
       if (Number(currentPosition?.x) !== position.x || Number(currentPosition?.y) !== position.y) {
-        useGameStore.getState().setRow('Position', monsterId, position);
+        useGameStore.getState().setRow('PositionV2', monsterId, position);
       }
       return position;
     } catch (error) {
