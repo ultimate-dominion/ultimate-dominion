@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { gzipSync } from 'node:zlib';
 import type { SyncHandle } from '../sync/startSync.js';
 import { sql, mudSchema } from '../db/connection.js';
 import { extractKeyBytes, serializeRow } from '../naming.js';
@@ -58,52 +59,75 @@ function shouldExcludeRow(
 
 // --- In-memory snapshot cache ---
 // The snapshot is identical for all clients at a given block. Cache the built
-// response object so concurrent/repeated requests don't each query ~265 tables.
-// Invalidated automatically when a new block is indexed.
-let cachedBlock = -1;
+// JSON + pre-compressed gzip buffer so concurrent/repeated requests skip both
+// the 265-table query cycle AND on-the-fly compression.
+//
+// TTL-based (not block-based) because Base produces blocks every ~2s — a pure
+// block cache would miss almost every request. 3s TTL means at most ~1 block
+// of staleness, which is well within the client's tolerance (WS catches up).
+const CACHE_TTL_MS = 3000;
+
 let cachedJson: string | null = null;
+let cachedGzip: Buffer | null = null;
+let cachedAt = 0;
 let cacheBuilding = false;
 let cacheBuildPromise: Promise<string> | null = null;
 
 /** Reset cache state — used by tests only. */
 export function _resetSnapshotCache() {
-  cachedBlock = -1;
   cachedJson = null;
+  cachedGzip = null;
+  cachedAt = 0;
   cacheBuilding = false;
   cacheBuildPromise = null;
+}
+
+function isCacheFresh(): boolean {
+  return cachedJson !== null && (Date.now() - cachedAt) < CACHE_TTL_MS;
+}
+
+function sendSnapshot(res: import('express').Response, json: string, gzip: Buffer | null, cacheStatus: string, acceptsGzip: boolean) {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'public, max-age=2');
+  res.setHeader('X-Snapshot-Cache', cacheStatus);
+  if (acceptsGzip && gzip) {
+    res.setHeader('Content-Encoding', 'gzip');
+    res.setHeader('Content-Length', gzip.length);
+    res.removeHeader('Transfer-Encoding');
+    res.end(gzip);
+  } else {
+    res.send(json);
+  }
 }
 
 export function createSnapshotRouter(syncHandle: SyncHandle): Router {
   const router = Router();
 
-  router.get('/', async (_req, res) => {
+  router.get('/', async (req, res) => {
     try {
-      const currentBlock = syncHandle.latestStoredBlockNumber;
+      const acceptsGzip = (req.headers['accept-encoding'] ?? '').includes('gzip');
 
-      // Serve from cache if block hasn't advanced
-      if (cachedJson && cachedBlock === currentBlock) {
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Cache-Control', 'public, max-age=2');
-        res.setHeader('X-Snapshot-Cache', 'HIT');
-        res.send(cachedJson);
+      // Serve from cache if TTL hasn't expired
+      if (isCacheFresh() && cachedJson) {
+        sendSnapshot(res, cachedJson, cachedGzip, 'HIT', acceptsGzip);
         return;
       }
 
-      // If another request is already building the cache for this block, wait for it
+      // If another request is already building the cache, wait for it
       if (cacheBuilding && cacheBuildPromise) {
-        const json = await cacheBuildPromise;
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Cache-Control', 'public, max-age=2');
-        res.setHeader('X-Snapshot-Cache', 'COALESCED');
-        res.send(json);
-        return;
+        await cacheBuildPromise;
+        if (cachedJson) {
+          sendSnapshot(res, cachedJson, cachedGzip, 'COALESCED', acceptsGzip);
+          return;
+        }
       }
 
       // Build fresh snapshot
       cacheBuilding = true;
       cacheBuildPromise = buildSnapshot(syncHandle).then((json) => {
-        cachedBlock = syncHandle.latestStoredBlockNumber;
         cachedJson = json;
+        cachedGzip = gzipSync(json);
+        cachedAt = Date.now();
         cacheBuilding = false;
         cacheBuildPromise = null;
         return json;
@@ -114,10 +138,7 @@ export function createSnapshotRouter(syncHandle: SyncHandle): Router {
       });
 
       const json = await cacheBuildPromise;
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Cache-Control', 'public, max-age=2');
-      res.setHeader('X-Snapshot-Cache', 'MISS');
-      res.send(json);
+      sendSnapshot(res, json, cachedGzip, 'MISS', acceptsGzip);
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
