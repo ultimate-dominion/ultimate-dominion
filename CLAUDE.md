@@ -143,7 +143,7 @@ After every git commit, check `docs/operations/launch_checklist.md` for items th
 | Guide | https://ud-guide.vercel.app |
 | Tavern (forum) | https://tavern.ultimatedominion.com |
 | Relayer | https://8453.relay.ultimatedominion.com |
-| Indexer | https://indexer-us-production.up.railway.app |
+| Indexer | https://indexer-production-d6df.up.railway.app |
 
 **What's live for players:** Dark Cave (10x10 grid, levels 1-10), 3 races (Human/Elf/Dwarf), 9 advanced classes at level 10, turn-based PvE + PvP combat, NPC shop, player marketplace, escrow-based PvP economy, lore fragments, badges (Adventurer/Founder/Zone Conqueror), Tavern chat at level 3. Gas relayer abstracts all blockchain interaction.
 
