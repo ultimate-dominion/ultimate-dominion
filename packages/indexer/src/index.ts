@@ -1,5 +1,4 @@
 import express from 'express';
-import compression from 'compression';
 import cors from 'cors';
 import { createServer } from 'http';
 import { config } from './config.js';
@@ -26,7 +25,6 @@ async function main() {
 
   // Express app
   const app = express();
-  app.use(compression());
   app.use(cors({ origin: config.server.corsOrigins }));
   app.use(express.json());
 
