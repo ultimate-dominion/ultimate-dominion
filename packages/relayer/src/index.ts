@@ -142,7 +142,7 @@ async function main() {
           rpcStatus: getRpcStatus(),
         });
       } else {
-        res.json({ status: 'ok', service: 'ud-gas-station' });
+        res.json({ status: 'ok', service: 'ud-gas-station', version: 'dev-2026-04-06' });
       }
     } catch (err) {
       res.status(500).json({ status: 'error' });
