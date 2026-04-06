@@ -542,6 +542,8 @@ export const MapPanel = (): JSX.Element => {
           bg="rgba(18, 16, 14, 0.95)"
           display="flex"
           flexDirection="column"
+          onClick={() => setShowWorldMap(false)}
+          cursor="pointer"
         >
           <HStack
             px={6}
