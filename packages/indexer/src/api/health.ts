@@ -21,6 +21,7 @@ export function createHealthRouter(syncHandle: SyncHandle, broadcaster: Broadcas
 
       res.json({
         status: lag < 50 ? 'healthy' : 'lagging',
+        version: '0.2.6',
         indexedBlock,
         chainHead,
         lag,
