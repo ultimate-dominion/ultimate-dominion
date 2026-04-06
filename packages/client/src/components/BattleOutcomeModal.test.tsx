@@ -150,7 +150,7 @@ function makeWinOutcome(overrides: Record<string, any> = {}) {
   };
 }
 
-// MAX_LEVEL = 10 (from constants.ts). BattleOutcomeModal no longer renders an
+// MAX_LEVEL = 20 (from constants.ts). BattleOutcomeModal no longer renders an
 // inline LevelingPanel; it only shows a LevelUpBanner when the battle newly
 // triggers eligibility or the character already leveled.
 
@@ -173,10 +173,10 @@ describe('BattleOutcomeModal — max level behavior', () => {
     cleanup();
   });
 
-  // --- Happy path: maxed character (level 10) ---
+  // --- Happy path: maxed character (level 20) ---
 
   it('does NOT render inline leveling UI when character is at max level', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
     const outcome = makeWinOutcome();
 
     render(
@@ -191,11 +191,11 @@ describe('BattleOutcomeModal — max level behavior', () => {
   });
 
   it('does NOT render LevelUpBanner when character is at max level', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
 
     // Provide next level data so the XP comparison would pass if not maxed
-    const nextLevelKey = '0x' + 'a'.padStart(64, '0');
-    mockGameValues[nextLevelKey] = { experience: 4000n };
+    const nextLevelKey = '0x' + '14'.padStart(64, '0');
+    mockGameValues[nextLevelKey] = { experience: 80000n };
 
     const outcome = makeWinOutcome();
 
@@ -212,7 +212,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
   });
 
   it('shows victory text but no leveling UI when maxed and winning', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
     const outcome = makeWinOutcome();
 
     render(

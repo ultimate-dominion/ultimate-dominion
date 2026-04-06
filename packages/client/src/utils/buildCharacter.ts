@@ -125,9 +125,7 @@ export function buildCharacter(
     inBattle,
     intelligence: toBigInt(statsData.intelligence),
     isSpawned: isEntitySpawned,
-    // Clamp to L10 — protects against residual on-chain data from
-    // the L20 exploit window (Z2 contracts accidentally deployed to prod).
-    level: toBigInt(statsData.level) > 10n ? 10n : toBigInt(statsData.level),
+    level: toBigInt(statsData.level),
     locked: Boolean(characterData.locked),
     maxHp: toBigInt(statsData.maxHp),
     owner: characterData.owner as string,
