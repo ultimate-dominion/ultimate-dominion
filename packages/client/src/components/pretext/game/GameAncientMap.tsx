@@ -40,11 +40,9 @@ const ZONE_TERRAIN: Record<number, { chars: string[]; color: string; weight: num
 const SAFE_ZONE_CHARS = ['.', ',', '_', '-', "'"];
 const SAFE_ZONE_COLOR = '#3A3020';
 
-// Entity marker characters
-const MONSTER_CHAR = 'M';
+// Entity marker characters — only NPCs/shops/exits shown on map
 const SHOP_CHAR = '$';
 const NPC_CHAR = '?';
-const BOSS_CHAR = 'X';
 const EXIT_CHAR = 'O';
 
 // Dragon piece image — loaded once at module level
@@ -259,18 +257,6 @@ export function GameAncientMap({
             ctx.globalAlpha = 0.15 + Math.sin((fogSeed + elapsed / 4000) * 0.5) * 0.05;
             ctx.fillText(fogChar, cx, cy);
 
-            // Dim silhouette hint for important POIs (boss, shop, exit)
-            if (entities?.boss) {
-              ctx.fillStyle = COLORS.danger;
-              ctx.globalAlpha = 0.08 + Math.sin(elapsed / 2000) * 0.04;
-              ctx.font = `700 ${fontSize + 2}px Fira Code`;
-              ctx.fillText('?', cx, cy);
-            } else if (entities?.shops) {
-              ctx.fillStyle = COLORS.glow;
-              ctx.globalAlpha = 0.08;
-              ctx.font = `700 ${fontSize}px Fira Code`;
-              ctx.fillText('?', cx, cy);
-            }
             ctx.globalAlpha = 1;
             continue;
           }
@@ -335,33 +321,7 @@ export function GameAncientMap({
             continue;
           }
 
-          // Boss tile — pulsing red X
-          if (entities?.boss) {
-            ctx.font = `700 ${fontSize + 2}px Fira Code`;
-            ctx.fillStyle = COLORS.danger;
-            ctx.shadowColor = COLORS.danger;
-            ctx.shadowBlur = 4 + Math.sin(elapsed / 1000) * 4;
-            ctx.globalAlpha = (0.7 + Math.sin(elapsed / 1500) * 0.3) * revealAlpha;
-            ctx.fillText(BOSS_CHAR, cx, cy);
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 1;
-            continue;
-          }
-
-          // Exit tile — pulsing portal
-          if (entities?.isExit) {
-            ctx.font = `700 ${fontSize}px Fira Code`;
-            ctx.fillStyle = '#B4C6D4';
-            ctx.shadowColor = '#B4C6D4';
-            ctx.shadowBlur = 4 + Math.sin(elapsed / 800) * 4;
-            ctx.globalAlpha = (0.5 + Math.sin(elapsed / 1200) * 0.3) * revealAlpha;
-            ctx.fillText(EXIT_CHAR, cx, cy);
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 1;
-            continue;
-          }
-
-          // Shops
+          // Shops — discovered through fog
           if (entities?.shops) {
             ctx.font = `700 ${fontSize}px Fira Code`;
             ctx.fillStyle = COLORS.glow;
@@ -371,7 +331,7 @@ export function GameAncientMap({
             continue;
           }
 
-          // NPCs
+          // NPCs — discovered through fog
           if (entities?.npcs) {
             ctx.font = `700 ${fontSize}px Fira Code`;
             ctx.fillStyle = '#4fc3f7';
@@ -381,23 +341,15 @@ export function GameAncientMap({
             continue;
           }
 
-          // Monsters on tile
-          if (entities && entities.monsters > 0) {
-            ctx.font = `600 ${fontSize}px Fira Code`;
-            ctx.fillStyle = '#B85C3A';
-            ctx.globalAlpha = (isHovered ? 1 : 0.7) * revealAlpha;
-            ctx.fillText(MONSTER_CHAR, cx, cy);
-            ctx.globalAlpha = 1;
-            continue;
-          }
-
-          // Other players on tile — subtle dot
-          if (entities && entities.players > 0) {
-            ctx.fillStyle = COLORS.success;
-            ctx.globalAlpha = 0.5 * revealAlpha;
-            ctx.beginPath();
-            ctx.arc(cx, cy, Math.max(2, cellSize * 0.12), 0, Math.PI * 2);
-            ctx.fill();
+          // Exit tile — subtle portal marker
+          if (entities?.isExit) {
+            ctx.font = `700 ${fontSize}px Fira Code`;
+            ctx.fillStyle = '#B4C6D4';
+            ctx.shadowColor = '#B4C6D4';
+            ctx.shadowBlur = 4 + Math.sin(elapsed / 800) * 4;
+            ctx.globalAlpha = (0.5 + Math.sin(elapsed / 1200) * 0.3) * revealAlpha;
+            ctx.fillText(EXIT_CHAR, cx, cy);
+            ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
             continue;
           }
@@ -499,11 +451,8 @@ export function GameAncientMap({
         if (!isHoverVisited) {
           parts.push('Unexplored');
         } else {
-          if (ent?.monsters) parts.push(`${ent.monsters} monster${ent.monsters > 1 ? 's' : ''}`);
-          if (ent?.players) parts.push(`${ent.players} player${ent.players > 1 ? 's' : ''}`);
           if (ent?.shops) parts.push('Shop');
           if (ent?.npcs) parts.push('NPC');
-          if (ent?.boss) parts.push('BOSS');
           if (ent?.isExit) parts.push('Zone Exit');
         }
 
