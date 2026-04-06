@@ -56,124 +56,191 @@ function shouldExcludeRow(
   return false;
 }
 
+// --- In-memory snapshot cache ---
+// The snapshot is identical for all clients at a given block. Cache the built
+// response object so concurrent/repeated requests don't each query ~265 tables.
+// Invalidated automatically when a new block is indexed.
+let cachedBlock = -1;
+let cachedJson: string | null = null;
+let cacheBuilding = false;
+let cacheBuildPromise: Promise<string> | null = null;
+
+/** Reset cache state — used by tests only. */
+export function _resetSnapshotCache() {
+  cachedBlock = -1;
+  cachedJson = null;
+  cacheBuilding = false;
+  cacheBuildPromise = null;
+}
+
 export function createSnapshotRouter(syncHandle: SyncHandle): Router {
   const router = Router();
 
   router.get('/', async (_req, res) => {
     try {
-      const snapshot: Record<string, Record<string, Record<string, unknown>>> = {};
+      const currentBlock = syncHandle.latestStoredBlockNumber;
 
-      // Step 1a: Build character entity key set FIRST so Position/Spawned
-      // filtering never strips data for player characters.
-      // Characters at (0,0) are legitimate (that's the spawn point) — only
-      // dead mobs at (0,0) should be filtered.
-      const characterEntityKeys = new Set<string>();
-      const charactersTable = syncHandle.tableNameMap.get('Characters');
-      if (charactersTable) {
-        try {
-          const charRows = await sql.unsafe(
-            `SELECT * FROM "${mudSchema}"."${charactersTable}"`
-          );
-          for (const row of charRows) {
-            characterEntityKeys.add(extractKeyBytes(row as Record<string, unknown>));
-          }
-        } catch (err) {
-          console.error('[snapshot] Error querying Characters for key set:', (err as Error).message);
-        }
+      // Serve from cache if block hasn't advanced
+      if (cachedJson && cachedBlock === currentBlock) {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'public, max-age=2');
+        res.setHeader('X-Snapshot-Cache', 'HIT');
+        res.send(cachedJson);
+        return;
       }
 
-      // Step 1b: Build dead entity set from Position and Spawned tables.
-      // Dead mobs have position (0,0) AND spawned=false. We collect keys from
-      // both tables so we can exclude dead entities from Stats, MobStats, etc.
-      const deadEntityKeys = new Set<string>();
-
-      // Position — entities at (0,0) are despawned (unless they're characters)
-      const positionTable = syncHandle.tableNameMap.get('Position');
-      if (positionTable) {
-        try {
-          const posRows = await sql.unsafe(
-            `SELECT * FROM "${mudSchema}"."${positionTable}"`
-          );
-          const posData: Record<string, Record<string, unknown>> = {};
-          for (const row of posRows) {
-            const keyBytes = extractKeyBytes(row as Record<string, unknown>);
-            const serialized = serializeRow(row as Record<string, unknown>);
-            if (serialized.x === 0 && serialized.y === 0 && !characterEntityKeys.has(keyBytes)) {
-              deadEntityKeys.add(keyBytes);
-            } else {
-              posData[keyBytes] = serialized;
-            }
-          }
-          if (Object.keys(posData).length > 0) {
-            snapshot['Position'] = posData;
-          }
-        } catch (err) {
-          console.error('[snapshot] Error querying Position:', (err as Error).message);
-        }
+      // If another request is already building the cache for this block, wait for it
+      if (cacheBuilding && cacheBuildPromise) {
+        const json = await cacheBuildPromise;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'public, max-age=2');
+        res.setHeader('X-Snapshot-Cache', 'COALESCED');
+        res.send(json);
+        return;
       }
 
-      // 1c: Spawned — entities with spawned=false are dead
-      const spawnedTable = syncHandle.tableNameMap.get('Spawned');
-      if (spawnedTable) {
-        try {
-          const spawnedRows = await sql.unsafe(
-            `SELECT * FROM "${mudSchema}"."${spawnedTable}"`
-          );
-          const spawnedData: Record<string, Record<string, unknown>> = {};
-          for (const row of spawnedRows) {
-            const keyBytes = extractKeyBytes(row as Record<string, unknown>);
-            const serialized = serializeRow(row as Record<string, unknown>);
-            if (serialized.spawned === false) {
-              deadEntityKeys.add(keyBytes);
-            } else {
-              spawnedData[keyBytes] = serialized;
-            }
-          }
-          if (Object.keys(spawnedData).length > 0) {
-            snapshot['Spawned'] = spawnedData;
-          }
-        } catch (err) {
-          console.error('[snapshot] Error querying Spawned:', (err as Error).message);
-        }
-      }
-
-      // Step 2: Iterate remaining tables with filtering
-      for (const [logicalName, pgTableName] of syncHandle.tableNameMap) {
-        if (logicalName === pgTableName && logicalName.includes('__')) continue;
-        if (SNAPSHOT_EXCLUDE_TABLES.has(logicalName)) continue;
-        if (FIRST_PASS_TABLES.has(logicalName)) continue;
-
-        try {
-          const rows = await sql.unsafe(
-            `SELECT * FROM "${mudSchema}"."${pgTableName}"`
-          );
-
-          const tableData: Record<string, Record<string, unknown>> = {};
-          for (const row of rows) {
-            const keyBytes = extractKeyBytes(row as Record<string, unknown>);
-            const serialized = serializeRow(row as Record<string, unknown>);
-
-            if (shouldExcludeRow(logicalName, serialized, deadEntityKeys, characterEntityKeys, keyBytes)) continue;
-
-            tableData[keyBytes] = serialized;
-          }
-
-          if (Object.keys(tableData).length > 0) {
-            snapshot[logicalName] = tableData;
-          }
-        } catch (err) {
-          console.error(`[snapshot] Error querying table ${pgTableName}:`, (err as Error).message);
-        }
-      }
-
-      res.json({
-        block: syncHandle.latestStoredBlockNumber,
-        tables: snapshot,
+      // Build fresh snapshot
+      cacheBuilding = true;
+      cacheBuildPromise = buildSnapshot(syncHandle).then((json) => {
+        cachedBlock = syncHandle.latestStoredBlockNumber;
+        cachedJson = json;
+        cacheBuilding = false;
+        cacheBuildPromise = null;
+        return json;
+      }).catch((err) => {
+        cacheBuilding = false;
+        cacheBuildPromise = null;
+        throw err;
       });
+
+      const json = await cacheBuildPromise;
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'public, max-age=2');
+      res.setHeader('X-Snapshot-Cache', 'MISS');
+      res.send(json);
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
     }
   });
 
   return router;
+}
+
+async function buildSnapshot(syncHandle: SyncHandle): Promise<string> {
+  const start = Date.now();
+  const snapshot: Record<string, Record<string, Record<string, unknown>>> = {};
+
+  // Step 1a: Build character entity key set FIRST so Position/Spawned
+  // filtering never strips data for player characters.
+  // Characters at (0,0) are legitimate (that's the spawn point) — only
+  // dead mobs at (0,0) should be filtered.
+  const characterEntityKeys = new Set<string>();
+  const charactersTable = syncHandle.tableNameMap.get('Characters');
+  if (charactersTable) {
+    try {
+      const charRows = await sql.unsafe(
+        `SELECT * FROM "${mudSchema}"."${charactersTable}"`
+      );
+      for (const row of charRows) {
+        characterEntityKeys.add(extractKeyBytes(row as Record<string, unknown>));
+      }
+    } catch (err) {
+      console.error('[snapshot] Error querying Characters for key set:', (err as Error).message);
+    }
+  }
+
+  // Step 1b: Build dead entity set from Position and Spawned tables.
+  // Dead mobs have position (0,0) AND spawned=false. We collect keys from
+  // both tables so we can exclude dead entities from Stats, MobStats, etc.
+  const deadEntityKeys = new Set<string>();
+
+  // Position — entities at (0,0) are despawned (unless they're characters)
+  const positionTable = syncHandle.tableNameMap.get('Position');
+  if (positionTable) {
+    try {
+      const posRows = await sql.unsafe(
+        `SELECT * FROM "${mudSchema}"."${positionTable}"`
+      );
+      const posData: Record<string, Record<string, unknown>> = {};
+      for (const row of posRows) {
+        const keyBytes = extractKeyBytes(row as Record<string, unknown>);
+        const serialized = serializeRow(row as Record<string, unknown>);
+        if (serialized.x === 0 && serialized.y === 0 && !characterEntityKeys.has(keyBytes)) {
+          deadEntityKeys.add(keyBytes);
+        } else {
+          posData[keyBytes] = serialized;
+        }
+      }
+      if (Object.keys(posData).length > 0) {
+        snapshot['Position'] = posData;
+      }
+    } catch (err) {
+      console.error('[snapshot] Error querying Position:', (err as Error).message);
+    }
+  }
+
+  // 1c: Spawned — entities with spawned=false are dead
+  const spawnedTable = syncHandle.tableNameMap.get('Spawned');
+  if (spawnedTable) {
+    try {
+      const spawnedRows = await sql.unsafe(
+        `SELECT * FROM "${mudSchema}"."${spawnedTable}"`
+      );
+      const spawnedData: Record<string, Record<string, unknown>> = {};
+      for (const row of spawnedRows) {
+        const keyBytes = extractKeyBytes(row as Record<string, unknown>);
+        const serialized = serializeRow(row as Record<string, unknown>);
+        if (serialized.spawned === false) {
+          deadEntityKeys.add(keyBytes);
+        } else {
+          spawnedData[keyBytes] = serialized;
+        }
+      }
+      if (Object.keys(spawnedData).length > 0) {
+        snapshot['Spawned'] = spawnedData;
+      }
+    } catch (err) {
+      console.error('[snapshot] Error querying Spawned:', (err as Error).message);
+    }
+  }
+
+  // Step 2: Iterate remaining tables with filtering
+  for (const [logicalName, pgTableName] of syncHandle.tableNameMap) {
+    if (logicalName === pgTableName && logicalName.includes('__')) continue;
+    if (SNAPSHOT_EXCLUDE_TABLES.has(logicalName)) continue;
+    if (FIRST_PASS_TABLES.has(logicalName)) continue;
+
+    try {
+      const rows = await sql.unsafe(
+        `SELECT * FROM "${mudSchema}"."${pgTableName}"`
+      );
+
+      const tableData: Record<string, Record<string, unknown>> = {};
+      for (const row of rows) {
+        const keyBytes = extractKeyBytes(row as Record<string, unknown>);
+        const serialized = serializeRow(row as Record<string, unknown>);
+
+        if (shouldExcludeRow(logicalName, serialized, deadEntityKeys, characterEntityKeys, keyBytes)) continue;
+
+        tableData[keyBytes] = serialized;
+      }
+
+      if (Object.keys(tableData).length > 0) {
+        snapshot[logicalName] = tableData;
+      }
+    } catch (err) {
+      console.error(`[snapshot] Error querying table ${pgTableName}:`, (err as Error).message);
+    }
+  }
+
+  const json = JSON.stringify({
+    block: syncHandle.latestStoredBlockNumber,
+    tables: snapshot,
+  });
+
+  const elapsed = Date.now() - start;
+  const sizeMB = (json.length / 1024 / 1024).toFixed(1);
+  console.log(`[snapshot] Built in ${elapsed}ms (${sizeMB}MB, block ${syncHandle.latestStoredBlockNumber})`);
+
+  return json;
 }

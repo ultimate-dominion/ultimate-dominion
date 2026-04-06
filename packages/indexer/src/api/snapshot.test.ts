@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { createSnapshotRouter } from './snapshot.js';
+import { createSnapshotRouter, _resetSnapshotCache } from './snapshot.js';
 import type { SyncHandle } from '../sync/startSync.js';
 
 // Mock db connection
@@ -97,6 +97,7 @@ function mockDbQueries(opts: {
 describe('GET /snapshot', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    _resetSnapshotCache();
   });
 
   it('returns snapshot with block number', async () => {
@@ -395,5 +396,61 @@ describe('GET /snapshot', () => {
     expect(res.body.block).toBe(100);
 
     consoleSpy.mockRestore();
+  });
+
+  it('serves cached snapshot on second request at same block', async () => {
+    const mockSql = vi.mocked(sql.unsafe);
+
+    // First request — builds snapshot
+    mockDbQueries({
+      position: [{ __key_bytes: '0xactive', x: 5, y: 3 }],
+      spawned: [{ __key_bytes: '0xactive', spawned: true }],
+    });
+    const handle = makeSyncHandle();
+    const app = createApp(handle);
+
+    const res1 = await request(app).get('/snapshot');
+    expect(res1.status).toBe(200);
+    expect(res1.headers['x-snapshot-cache']).toBe('MISS');
+    const callCountAfterFirst = mockSql.mock.calls.length;
+
+    // Second request at same block — should serve from cache, no new DB queries
+    const res2 = await request(app).get('/snapshot');
+    expect(res2.status).toBe(200);
+    expect(res2.headers['x-snapshot-cache']).toBe('HIT');
+    expect(res2.body).toEqual(res1.body);
+    expect(mockSql.mock.calls.length).toBe(callCountAfterFirst); // no new queries
+  });
+
+  it('rebuilds snapshot when block advances', async () => {
+    const mockSql = vi.mocked(sql.unsafe);
+
+    // First request at block 100
+    mockDbQueries({});
+    const handle = makeSyncHandle({ latestStoredBlockNumber: 100 });
+    const app = createApp(handle);
+
+    const res1 = await request(app).get('/snapshot');
+    expect(res1.status).toBe(200);
+    expect(res1.body.block).toBe(100);
+    expect(res1.headers['x-snapshot-cache']).toBe('MISS');
+
+    // Advance block
+    (handle as any).latestStoredBlockNumber = 101;
+    mockDbQueries({});
+
+    const res2 = await request(app).get('/snapshot');
+    expect(res2.status).toBe(200);
+    expect(res2.body.block).toBe(101);
+    expect(res2.headers['x-snapshot-cache']).toBe('MISS');
+  });
+
+  it('sets Cache-Control header for CDN caching', async () => {
+    mockDbQueries({});
+    const app = createApp(makeSyncHandle());
+    const res = await request(app).get('/snapshot');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['cache-control']).toBe('public, max-age=2');
   });
 });
