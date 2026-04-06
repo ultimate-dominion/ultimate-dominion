@@ -16,6 +16,7 @@ import {
   keccak256,
   stringToHex,
   toBytes,
+  zeroHash,
 } from 'viem';
 
 import { INSUFFICIENT_FUNDS_MESSAGE, reloadIfStaleChunk } from '../../utils/errors';
@@ -418,8 +419,9 @@ export function createSystemCalls(
       stringToHex(name, { size: 16 }),
     ]);
 
-  const SPAWNED_TABLE_ID = tableResourceId('UD', 'Spawned');
-  const POSITION_TABLE_ID = tableResourceId('UD', 'Position');
+  const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000' as const;
+  const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900' as const;
+  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000' as const;
   const GET_RECORD_ABI = [
     {
       type: 'function' as const,
@@ -444,8 +446,6 @@ export function createSystemCalls(
     entityId: `0x${string}`,
     label: string,
   ): Promise<RawStoreRecord | null> => {
-    if (typeof publicClient.readContract !== 'function') return null;
-
     try {
       return await publicClient.readContract({
         address: worldContract.address,
@@ -454,59 +454,126 @@ export function createSystemCalls(
         args: [tableId, [entityId]],
       }) as RawStoreRecord;
     } catch (error) {
-      console.warn(`[store] Failed reading ${label} from chain`, error);
+      console.warn(`[store] Failed reading ${label} for ${entityId.slice(0, 10)}`, error);
       return null;
+    }
+  };
+
+  const syncMonsterPositionFromChain = async (
+    monsterId: string,
+  ): Promise<{ x: number; y: number } | null> => {
+    try {
+      const record = await readStoreRecord(POSITION_TABLE_ID, monsterId as `0x${string}`, 'Position');
+      if (!record) return null;
+      const staticData = record[0] ?? '0x';
+      if (staticData === '0x' || staticData.length < 10) return null;
+      const x = parseInt(staticData.slice(2, 6), 16);
+      const y = parseInt(staticData.slice(6, 10), 16);
+      const position = { x, y };
+      const currentPosition = getTableValue('Position', monsterId) as
+        | { x?: number; y?: number }
+        | undefined;
+      if (Number(currentPosition?.x) !== position.x || Number(currentPosition?.y) !== position.y) {
+        useGameStore.getState().setRow('Position', monsterId, position);
+      }
+      return position;
+    } catch (error) {
+      console.warn(`[position] Failed to sync monster ${monsterId.slice(0, 10)} from chain`, error);
+      return null;
+    }
+  };
+
+  const decodeSpawnedRecord = (record: RawStoreRecord | null): boolean | null => {
+    if (!record) return null;
+    const staticData = record[0] ?? '0x';
+    if (staticData === '0x') return false;
+    return staticData.length >= 4 && staticData.slice(0, 4) === '0x01';
+  };
+
+  const decodeEncounterEntityRecord = (
+    record: RawStoreRecord | null,
+  ): { encounterId: Hex; died: boolean } | null => {
+    if (!record) return null;
+    const staticData = record[0] ?? '0x';
+    const encounterId = staticData.length >= 66
+      ? `0x${staticData.slice(2, 66)}` as Hex
+      : zeroHash;
+    const died = staticData.length >= 68 && staticData.slice(66, 68) === '01';
+    return { encounterId, died };
+  };
+
+  const syncMonsterSnapshot = (
+    monsterId: string,
+    snapshot: {
+      encounter: { encounterId: Hex; died: boolean } | null;
+      spawned: boolean | null;
+    },
+  ): void => {
+    const store = useGameStore.getState();
+    const currentEncounter = getTableValue('EncounterEntity', monsterId) as
+      | { encounterId?: string; died?: boolean }
+      | undefined;
+    if (snapshot.spawned === false) {
+      store.setRow('Spawned', monsterId, { spawned: false });
+    }
+    if (snapshot.encounter) {
+      const { encounterId, died } = snapshot.encounter;
+      if ((currentEncounter?.encounterId ?? zeroHash) !== encounterId || Boolean(currentEncounter?.died) !== died) {
+        store.setRow('EncounterEntity', monsterId, { ...currentEncounter, encounterId, died });
+      }
     }
   };
 
   const validateTileMonsters = async (
     monsterIds: string[],
-    tilePosition?: { x: number; y: number },
+    expectedPosition?: { x: number; y: number },
   ): Promise<void> => {
     if (monsterIds.length === 0) return;
 
     const results = await Promise.allSettled(
       monsterIds.map(async (id) => {
-        // Check Spawned table
-        const record = await readStoreRecord(SPAWNED_TABLE_ID, id as `0x${string}`, 'Spawned');
-        if (!record) return { id, isAlive: null as boolean | null };
-        const staticData = record?.[0] ?? '0x';
-        const isAlive = staticData.length >= 4 && staticData.slice(0, 4) === '0x01';
-        if (!isAlive) return { id, isAlive: false };
-
-        // Check Position table — monster may be alive but on a different tile
-        if (tilePosition) {
-          const posRecord = await readStoreRecord(POSITION_TABLE_ID, id as `0x${string}`, 'Position');
-          if (posRecord) {
-            const posData = posRecord[0] ?? '0x';
-            // Position table: uint16 x + uint16 y = 4 bytes
-            if (posData.length >= 10) {
-              const chainX = parseInt(posData.slice(2, 6), 16);
-              const chainY = parseInt(posData.slice(6, 10), 16);
-              if (chainX !== tilePosition.x || chainY !== tilePosition.y) {
-                console.warn(`[validateTile] Monster ${id.slice(0, 10)} at (${chainX},${chainY}) but client shows (${tilePosition.x},${tilePosition.y}) — evicting`);
-                // Sync correct position to local store
-                useGameStore.getState().setRow('Position', id, { x: chainX, y: chainY });
-                return { id, isAlive: false };
-              }
-            }
-          }
-        }
-
-        return { id, isAlive };
+        // Read Spawned, EncounterEntity, AND Position concurrently so all three
+        // land on the same block — prevents TOCTOU false-positive evictions.
+        const [spawnedRecord, encounterRecord, chainPosition] = await Promise.all([
+          readStoreRecord(SPAWNED_TABLE_ID, id as `0x${string}`, 'Spawned'),
+          readStoreRecord(ENCOUNTER_ENTITY_TABLE_ID, id as `0x${string}`, 'EncounterEntity'),
+          expectedPosition ? syncMonsterPositionFromChain(id) : Promise.resolve(null),
+        ]);
+        return {
+          chainPosition,
+          encounter: decodeEncounterEntityRecord(encounterRecord),
+          id,
+          spawned: decodeSpawnedRecord(spawnedRecord),
+        };
       }),
     );
 
-    const ghosts: string[] = [];
     for (const r of results) {
-      if (r.status === 'fulfilled' && r.value.isAlive === false) {
-        ghosts.push(r.value.id);
-      }
-    }
+      if (r.status !== 'fulfilled') continue;
+      const { chainPosition, encounter, id, spawned } = r.value;
+      const inEncounter = Boolean(encounter && encounter.encounterId !== zeroHash);
+      const positionIsCleared = chainPosition !== null && chainPosition.x === 0 && chainPosition.y === 0;
+      const offTile = Boolean(
+        expectedPosition && chainPosition && !positionIsCleared &&
+        (chainPosition.x !== expectedPosition.x || chainPosition.y !== expectedPosition.y),
+      );
+      const isGhost = spawned === false || Boolean(encounter?.died) || offTile || positionIsCleared;
 
-    if (ghosts.length > 0) {
-      console.warn(`[validateTile] Found ${ghosts.length} ghost(s) on tile — evicting`);
-      ghosts.forEach(evictGhostMonster);
+      if (!isGhost && !inEncounter) continue;
+
+      if (offTile || inEncounter) {
+        syncMonsterSnapshot(id, { encounter, spawned });
+      } else {
+        evictGhostMonster(id);
+      }
+
+      if (offTile) {
+        console.warn(`[validateTile] Synced off-tile monster ${id.slice(0, 10)} to (${chainPosition?.x},${chainPosition?.y})`);
+      } else if (positionIsCleared) {
+        console.warn(`[validateTile] Evicted cleared-position monster ${id.slice(0, 10)}`);
+      } else if (isGhost) {
+        console.warn(`[validateTile] Evicted ghost monster ${id.slice(0, 10)}`);
+      }
     }
   };
 

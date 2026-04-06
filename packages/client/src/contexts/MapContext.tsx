@@ -18,6 +18,7 @@ import {
   getTableValue,
   toBigInt,
   toNumber,
+  useGameStore,
   useGameTable,
   useGameValue,
 } from '../lib/gameStore';
@@ -610,15 +611,23 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   // Proactive ghost validation — verify monsters on the current tile are alive
   // on-chain. Prevents "No enemies here" errors by evicting ghosts before the
-  // player clicks Fight. Fires once per tile, not per render.
+  // player clicks Fight. Fires once per tile and once per snapshot hydration
+  // (hydrateVersion changes after reconnect, ensuring stale data is rechecked).
+  const storeHydrated = useGameStore((state) => state.hydrated);
+  const hydrateVersion = useGameStore((state) => state.hydrateVersion);
   const prevTileRef = useRef<string>('');
+  const validateInFlightRef = useRef(false);
   useEffect(() => {
-    const tileKey = position ? `${position.x},${position.y}` : '';
-    if (tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
+    const tileKey = storeHydrated && position
+      ? `${hydrateVersion}:${position.x},${position.y}`
+      : '';
+    if (!tileKey || tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
+    if (validateInFlightRef.current) return;
     prevTileRef.current = tileKey;
-
-    validateTileMonsters(monstersOnTile.map(m => m.id), position ?? undefined);
-  }, [position, monstersOnTile, validateTileMonsters]);
+    validateInFlightRef.current = true;
+    validateTileMonsters(monstersOnTile.map(m => m.id), position ?? undefined)
+      .finally(() => { validateInFlightRef.current = false; });
+  }, [storeHydrated, hydrateVersion, position, monstersOnTile, validateTileMonsters]);
 
   // Clear spawn waiting state when Spawned value updates from store sync
   useEffect(() => {
