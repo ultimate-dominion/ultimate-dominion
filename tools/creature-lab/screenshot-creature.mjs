@@ -388,6 +388,47 @@ async function screenshotCreature(slug, opts = {}) {
 }
 
 // --------------------------------------------------------------------------
+// Review page screenshot — single image with all clips at 3px game quality
+// --------------------------------------------------------------------------
+async function screenshotReview(slug) {
+  const creature = CREATURES.find(c => c.slug === slug);
+  const isGLB = creature?.type === 'glb';
+  if (!isGLB) {
+    console.log(`  ${slug} is not a GLB creature — review page requires GLB. Skipping.`);
+    return;
+  }
+
+  console.log(`\nReview screenshot: ${slug}…`);
+  const { server, port } = await startServer();
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--enable-webgl', '--use-gl=angle', '--use-angle=metal'],
+    });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1400, height: 900 });
+    await page.goto(`http://127.0.0.1:${port}/review.html?creature=${slug}`, {
+      waitUntil: 'networkidle2', timeout: 30000,
+    });
+    // Wait for all clips to finish rendering
+    await page.waitForFunction(
+      () => document.getElementById('loading')?.classList.contains('hidden'),
+      { timeout: 60000 },
+    );
+    await new Promise(r => setTimeout(r, 500));
+
+    const outPath = resolve(RENDERS_DIR, `${slug}-review.png`);
+    await page.screenshot({ path: outPath, type: 'png' });
+    console.log(`  review     → ${outPath}`);
+  } finally {
+    if (browser) await browser.close();
+    server.close();
+  }
+}
+
+// --------------------------------------------------------------------------
 // CLI
 // --------------------------------------------------------------------------
 const args = process.argv.slice(2);
@@ -400,6 +441,7 @@ Usage:
   node screenshot-creature.mjs <slug> --anim-only     — just animation frame strips
   node screenshot-creature.mjs <slug> --clip <name>   — single animation clip strip
   node screenshot-creature.mjs <slug> --composite     — panels + composite only
+  node screenshot-creature.mjs <slug> --review        — review page (all clips at 3px)
   node screenshot-creature.mjs --all                  — screenshot every creature
 
 Outputs go to renders/<slug>-*.png
@@ -413,6 +455,7 @@ const doAll = args.includes('--all');
 const panelsOnly = args.includes('--panels-only');
 const animOnly = args.includes('--anim-only');
 const compositeOnly = args.includes('--composite');
+const reviewOnly = args.includes('--review');
 const clipIdx = args.indexOf('--clip');
 const clipFilter = clipIdx >= 0 ? args[clipIdx + 1] : null;
 const slugArg = args.find(a => !a.startsWith('--') && a !== clipFilter);
@@ -421,7 +464,11 @@ const slugs = doAll ? CREATURES.map(c => c.slug) : [slugArg];
 
 for (const slug of slugs) {
   if (!slug) continue;
-  await screenshotCreature(slug, { panelsOnly, animOnly, clipFilter, composite: compositeOnly });
+  if (reviewOnly) {
+    await screenshotReview(slug);
+  } else {
+    await screenshotCreature(slug, { panelsOnly, animOnly, clipFilter, composite: compositeOnly });
+  }
 }
 
 console.log('\nDone.');

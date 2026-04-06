@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creature Review</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+    .header { padding: 6px 14px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .header a { color: #555; text-decoration: none; font-size: 11px; padding: 2px 8px; border: 1px solid #2a2a2a; }
+    .header a:hover { color: #888; border-color: #444; }
+    .creature-name { color: #6a4; font-size: 13px; }
+    .badge { font-size: 9px; padding: 1px 5px; text-transform: uppercase; letter-spacing: 1px; }
+    .badge-done { color: #4a4; } .badge-wip { color: #aa8; }
+    select { background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 11px; font-family: inherit; padding: 2px 6px; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .status { font-size: 10px; color: #555; }
+    .nav-btn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #666; padding: 2px 8px; cursor: pointer; font-family: inherit; font-size: 14px; }
+    .nav-btn:hover { color: #aaa; border-color: #444; }
+
+    /* Main layout: ref strip left, clip rows fill the rest */
+    .main { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+    .ref-strip { width: 160px; flex-shrink: 0; border-right: 1px solid #1a1a1a; display: flex; flex-direction: column; padding: 8px; gap: 6px; overflow-y: auto; }
+    .ref-label { font-size: 8px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
+    .ref-img { width: 100%; border: 1px solid #222; display: block; }
+    .ref-3d { width: 100%; border: 1px solid #222; display: block; background: #000; }
+
+    .clips-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+
+    .clip-row { flex: 1; display: flex; align-items: stretch; border-bottom: 1px solid #111; min-height: 0; overflow: hidden; }
+    .clip-label { width: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; border-right: 1px solid #111; writing-mode: vertical-lr; text-orientation: mixed; }
+    .clip-label.pass { color: #4a4; }
+    .clip-label.fail { color: #844; }
+    .clip-frames { flex: 1; display: flex; align-items: center; gap: 0; overflow: hidden; }
+    .clip-frames canvas { flex: 1; min-width: 0; height: 100%; object-fit: contain; background: #000; border-right: 1px solid rgba(255,255,255,0.04); }
+
+    .loading-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; color: #555; font-size: 13px; z-index: 10; }
+    .loading-overlay.hidden { display: none; }
+
+    /* Verdict bar at bottom */
+    .verdict-bar { flex-shrink: 0; padding: 6px 14px; border-top: 1px solid #1a1a1a; display: flex; align-items: center; gap: 12px; font-size: 11px; }
+    .verdict-bar button { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 4px 14px; cursor: pointer; font-family: inherit; font-size: 11px; }
+    .verdict-bar button:hover { border-color: #555; color: #ccc; }
+    .verdict-bar button.approve { border-color: #3a5a3a; color: #6a6; }
+    .verdict-bar button.approve:hover { background: #1a2a1a; color: #8c8; }
+    .verdict-bar button.reject { border-color: #5a3a3a; color: #a66; }
+    .verdict-bar button.reject:hover { background: #2a1a1a; color: #c88; }
+    .verdict-note { flex: 1; background: #111; border: 1px solid #222; color: #aaa; padding: 4px 8px; font-family: inherit; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="index.html">Lab</a>
+    <a href="viewer.html">Viewer</a>
+    <button class="nav-btn" id="prev">&#8249;</button>
+    <button class="nav-btn" id="next">&#8250;</button>
+    <span class="creature-name" id="creature-name">--</span>
+    <span class="badge" id="badge"></span>
+    <select id="creature-select"></select>
+    <div class="header-right">
+      <span class="status" id="status">loading...</span>
+    </div>
+  </div>
+
+  <div class="main" style="position:relative">
+    <div class="loading-overlay" id="loading">Rendering all clips...</div>
+
+    <div class="ref-strip">
+      <div class="ref-label">Reference</div>
+      <img id="ref-img" class="ref-img" src="" style="display:none">
+      <div class="ref-label" style="margin-top:8px">3D Model</div>
+      <canvas id="ref-3d" class="ref-3d" width="256" height="256"></canvas>
+    </div>
+
+    <div class="clips-area" id="clips-area">
+      <!-- clip rows injected here -->
+    </div>
+  </div>
+
+  <div class="verdict-bar">
+    <input class="verdict-note" id="verdict-note" placeholder="Notes (what works, what doesn't)...">
+    <button class="reject" id="btn-reject">Reject</button>
+    <button class="approve" id="btn-approve">Approve</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { renderAscii, PALETTES, COMPOSITE_PALETTES } from './ascii-renderer.js';
+    import { createThreeRenderer } from './three-bridge.js';
+    import { loadGLBCreature } from './glb-loader.js';
+
+    // ---- Creature registry (same as viewer.html) ----
+    const CREATURES = [
+      { slug: 'dire-rat',        name: 'Dire Rat',        level: 1,  status: 'done', ref: 'refs/rat-ref.png',
+        type: 'glb', glbFile: 'glb/dire-rat-animated.glb', atmosphere: [140,110,70,0.10],
+        labGrid: { w: 10, h: 7 } },
+      { slug: 'kobold',          name: 'Kobold',          level: 2,  status: 'done', ref: 'refs/kobold-ref.webp',
+        type: 'glb', glbFile: 'glb/kobold-animated.glb', atmosphere: [160,120,50,0.10],
+        labGrid: { w: 7, h: 7 } },
+      { slug: 'goblin',          name: 'Goblin',          level: 3,  status: 'done', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-animated.glb', atmosphere: [96,120,48,0.10],
+        labGrid: { w: 7, h: 7 } },
+      { slug: 'skeleton',        name: 'Skeleton',        level: 5,  status: 'done', ref: 'refs/skeleton-ref.webp',
+        type: 'glb', glbFile: 'glb/skeleton-animated.glb', atmosphere: [96,156,70,0.12],
+        labGrid: { w: 7, h: 7 } },
+      { slug: 'goblin-shaman',   name: 'Goblin Shaman',   level: 6,  status: 'done', ref: 'refs/goblin-shaman-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-shaman-animated.glb', atmosphere: [106,70,164,0.12],
+        labGrid: { w: 7, h: 7 } },
+      { slug: 'bugbear',         name: 'Bugbear',         level: 8,  status: 'done', ref: 'refs/bugbear-ref.webp',
+        type: 'glb', glbFile: 'glb/bugbear-animated.glb', atmosphere: [172,138,72,0.10],
+        labGrid: { w: 7, h: 7 } },
+    ];
+
+    const REVIEW_CLIPS = ['idle', 'attack', 'hit', 'death', 'walk'];
+    const FRAMES_PER_CLIP = 8;
+    const CELL_SIZE = 3;  // game-quality ASCII
+    const FRAME_DT = 1 / 12;  // advance mixer 1/12s per frame capture (~12fps playback)
+
+    let threeRenderer = null;
+    let currentIndex = 0;
+
+    function getThreeRenderer(w, h) {
+      if (!threeRenderer) threeRenderer = createThreeRenderer(w, h);
+      return threeRenderer;
+    }
+
+    // ---- Populate dropdown ----
+    const sel = document.getElementById('creature-select');
+    CREATURES.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.slug;
+      opt.textContent = `L${c.level} ${c.name}`;
+      sel.appendChild(opt);
+    });
+
+    // ---- Build clip rows ----
+    function buildClipRows() {
+      const area = document.getElementById('clips-area');
+      area.innerHTML = '';
+      for (const clip of REVIEW_CLIPS) {
+        const row = document.createElement('div');
+        row.className = 'clip-row';
+        row.id = `row-${clip}`;
+
+        const label = document.createElement('div');
+        label.className = 'clip-label';
+        label.id = `label-${clip}`;
+        label.textContent = clip;
+        row.appendChild(label);
+
+        const frames = document.createElement('div');
+        frames.className = 'clip-frames';
+        frames.id = `frames-${clip}`;
+
+        for (let i = 0; i < FRAMES_PER_CLIP; i++) {
+          const canvas = document.createElement('canvas');
+          canvas.id = `frame-${clip}-${i}`;
+          canvas.width = 256;
+          canvas.height = 256;
+          frames.appendChild(canvas);
+        }
+        row.appendChild(frames);
+        area.appendChild(row);
+      }
+    }
+
+    // ---- Render all clips for a creature ----
+    async function renderAllClips(creature) {
+      const loading = document.getElementById('loading');
+      loading.classList.remove('hidden');
+      document.getElementById('status').textContent = 'loading GLB...';
+
+      const { w: gridW, h: gridH } = creature.labGrid;
+      const size = 256;
+      const canvasH = Math.round(size * gridH / gridW);
+
+      let bundle3D;
+      try {
+        bundle3D = await loadGLBCreature(
+          creature.glbFile, gridW, gridH,
+          getThreeRenderer(size, canvasH)
+        );
+      } catch (e) {
+        document.getElementById('status').textContent = `GLB load failed: ${e.message}`;
+        loading.classList.add('hidden');
+        return;
+      }
+
+      const { drawFn, bundle } = bundle3D;
+      const { mixer, actions, playClip } = bundle;
+
+      // Render the 3D reference image (static pose)
+      const ref3d = document.getElementById('ref-3d');
+      ref3d.width = 256; ref3d.height = Math.round(256 * gridH / gridW);
+      const ref3dCtx = ref3d.getContext('2d');
+      ref3dCtx.fillStyle = '#000'; ref3dCtx.fillRect(0, 0, ref3d.width, ref3d.height);
+      drawFn(ref3dCtx, ref3d.width, ref3d.height);
+
+      // For each clip: play it, advance mixer through frames, capture ASCII
+      for (const clipName of REVIEW_CLIPS) {
+        document.getElementById('status').textContent = `rendering ${clipName}...`;
+
+        const hasClip = !!actions[clipName];
+        const label = document.getElementById(`label-${clipName}`);
+
+        if (!hasClip) {
+          label.textContent = `${clipName} (missing)`;
+          label.classList.add('fail');
+          // Clear frames
+          for (let i = 0; i < FRAMES_PER_CLIP; i++) {
+            const c = document.getElementById(`frame-${clipName}-${i}`);
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, c.width, c.height);
+            ctx.fillStyle = '#333'; ctx.font = '10px monospace';
+            ctx.fillText('no clip', 4, 14);
+          }
+          continue;
+        }
+
+        // Force-play this clip: stop all, reset, play
+        Object.values(actions).forEach(a => { a.stop(); });
+        const action = actions[clipName];
+        action.reset();
+        // For one-shot clips, set loop to LoopOnce so we see the full arc
+        action.loop = THREE.LoopOnce;
+        action.clampWhenFinished = true;
+        action.play();
+        mixer.update(0);  // force initial pose
+
+        // Get clip duration to evenly space frames
+        const clip = action.getClip();
+        const duration = clip ? clip.duration : 1.0;
+        const frameDt = duration / FRAMES_PER_CLIP;
+
+        for (let i = 0; i < FRAMES_PER_CLIP; i++) {
+          // Advance mixer
+          if (i > 0) mixer.update(frameDt);
+
+          const canvas = document.getElementById(`frame-${clipName}-${i}`);
+          canvas.width = size; canvas.height = canvasH;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#000'; ctx.fillRect(0, 0, size, canvasH);
+
+          // Render ASCII at game quality (3px cells)
+          renderAscii(ctx, (tctx, tw, th) => drawFn(tctx, tw, th), 0, 0, size, canvasH, {
+            cellSize: CELL_SIZE,
+            level: creature.level,
+            gridWidth: gridW,
+            gridHeight: gridH,
+            enableHalfBlock: false,
+          });
+        }
+
+        label.textContent = clipName;
+        label.classList.remove('fail');
+      }
+
+      // Return to idle after capturing
+      if (actions.idle) {
+        Object.values(actions).forEach(a => a.stop());
+        actions.idle.reset().play();
+      }
+
+      document.getElementById('status').textContent = `${Object.keys(actions).length} clips rendered`;
+      loading.classList.add('hidden');
+    }
+
+    // ---- Load creature ----
+    async function loadCreature(index) {
+      currentIndex = ((index % CREATURES.length) + CREATURES.length) % CREATURES.length;
+      const c = CREATURES[currentIndex];
+
+      document.getElementById('creature-name').textContent = c.name;
+      document.getElementById('creature-select').value = c.slug;
+      const badge = document.getElementById('badge');
+      badge.textContent = c.status;
+      badge.className = `badge badge-${c.status}`;
+
+      const refImg = document.getElementById('ref-img');
+      if (c.ref) { refImg.src = c.ref; refImg.style.display = 'block'; }
+      else { refImg.style.display = 'none'; }
+
+      history.replaceState(null, '', `?creature=${c.slug}`);
+
+      buildClipRows();
+      await renderAllClips(c);
+    }
+
+    // ---- Verdict buttons (write to localStorage for now) ----
+    function saveVerdict(approved) {
+      const c = CREATURES[currentIndex];
+      const note = document.getElementById('verdict-note').value.trim();
+      const key = `creature-review-${c.slug}`;
+      const entry = {
+        slug: c.slug,
+        approved,
+        note,
+        timestamp: new Date().toISOString(),
+      };
+      // Append to history
+      const history = JSON.parse(localStorage.getItem(key) || '[]');
+      history.push(entry);
+      localStorage.setItem(key, JSON.stringify(history));
+
+      // Also write a combined log
+      const log = JSON.parse(localStorage.getItem('creature-review-log') || '[]');
+      log.push(entry);
+      localStorage.setItem('creature-review-log', JSON.stringify(log));
+
+      document.getElementById('verdict-note').value = '';
+      document.getElementById('status').textContent = `${approved ? 'Approved' : 'Rejected'} — ${note || 'no note'}`;
+    }
+
+    document.getElementById('btn-approve').addEventListener('click', () => saveVerdict(true));
+    document.getElementById('btn-reject').addEventListener('click', () => saveVerdict(false));
+
+    // ---- Navigation ----
+    document.getElementById('prev').addEventListener('click', () => loadCreature(currentIndex - 1));
+    document.getElementById('next').addEventListener('click', () => loadCreature(currentIndex + 1));
+    document.getElementById('creature-select').addEventListener('change', (e) => {
+      const idx = CREATURES.findIndex(c => c.slug === e.target.value);
+      if (idx >= 0) loadCreature(idx);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.key === 'ArrowLeft') loadCreature(currentIndex - 1);
+      if (e.key === 'ArrowRight') loadCreature(currentIndex + 1);
+    });
+
+    // ---- Init ----
+    const params = new URLSearchParams(location.search);
+    const initSlug = params.get('creature');
+    if (initSlug) {
+      const idx = CREATURES.findIndex(c => c.slug === initSlug);
+      if (idx >= 0) currentIndex = idx;
+    }
+    loadCreature(currentIndex);
+  </script>
+</body>
+</html>

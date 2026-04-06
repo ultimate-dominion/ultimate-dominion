@@ -70,6 +70,7 @@
 <body>
   <div class="header">
     <a class="back" href="index.html">← Lab</a>
+    <a class="back" href="review.html" title="Review all clips at game quality">Review</a>
     <button class="nav-btn" id="prev" title="Previous (←)">‹</button>
     <button class="nav-btn" id="next" title="Next (→)">›</button>
     <span class="creature-name" id="creature-name">—</span>
@@ -224,6 +225,26 @@
         atmosphere: [96,120,48,0.10],
         gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
         goals: 'Meshy v2 mesh + v1 rig + v1 animations\nBone cleaver weapon\nIdle/Walk/Attack/Death/HitReact' },
+      { slug: 'goblin-skill03-merged', name: 'Goblin Skill_03 MERGED (weapon test)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-skill03-merged.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Skill_03 motion + original mesh (has weapon)\nIf weapon visible here, swap is good' },
+      { slug: 'goblin-skill01',    name: 'Goblin Skill_01 (action 17)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-skill_01.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Probe: Skill_01 attack animation candidate\nCompare vs current attack (action_id=4)' },
+      { slug: 'goblin-skill02',    name: 'Goblin Skill_02 (action 18)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-skill_02.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Probe: Skill_02 attack animation candidate' },
+      { slug: 'goblin-skill03',    name: 'Goblin Skill_03 (action 19)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-skill_03.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Probe: Skill_03 attack animation candidate' },
       { slug: 'giant-spider',      name: 'Giant Spider',    level: 4,  status: 'done', ref: 'refs/giant-spider-ref.jpg',
         atmosphere: [72,164,226,0.15],
         gameGrid: { w: 10, h: 12 }, labGrid: { w: 7,  h: 5  },
