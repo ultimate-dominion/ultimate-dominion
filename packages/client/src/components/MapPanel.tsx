@@ -107,7 +107,7 @@ export const MapPanel = (): JSX.Element => {
     reportSpawned,
   } = useQueue();
   const [showCaptcha, setShowCaptcha] = useState(false);
-  const [mapView, setMapView] = useState<'zone' | 'world'>('zone');
+  const [showWorldMap, setShowWorldMap] = useState(false);
   const stage = useOnboardingStage();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
@@ -279,35 +279,21 @@ export const MapPanel = (): JSX.Element => {
             justifyContent="space-between"
           >
             <Heading size="sm">
-              {mapView === 'world' ? 'The World' : currentZoneName}
+              {currentZoneName}
             </Heading>
             {SHOW_Z2 && (
               <IconButton
-                aria-label={mapView === 'zone' ? 'Show world map' : 'Show zone map'}
-                icon={mapView === 'zone' ? <FaGlobeAmericas /> : <FaMap />}
+                aria-label="Show world map"
+                icon={<FaGlobeAmericas />}
                 size="xs"
                 variant="ghost"
                 color="textMuted"
                 _hover={{ color: 'amber' }}
-                onClick={() => setMapView(v => v === 'zone' ? 'world' : 'zone')}
+                onClick={() => setShowWorldMap(true)}
               />
             )}
           </HStack>
-          {SHOW_Z2 && mapView === 'world' ? (
-            <Box
-              position="relative"
-              maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
-              w="100%"
-              flex="1"
-              mt={1}
-            >
-              <AncientMapView
-                zoneVisibility={{ 1: 'discovered', 2: currentZone >= 2 ? 'discovered' : 'rumored' }}
-                currentZone={currentZone}
-                onZoneClick={() => setMapView('zone')}
-              />
-            </Box>
-          ) : SHOW_Z2 ? (
+          {SHOW_Z2 ? (
             <Box
               position="relative"
               aspectRatio="1/1"
@@ -880,6 +866,47 @@ const NavigationCompass = ({
         >
           {t('map.collapse')}
         </Text>
+      )}
+      {/* Full-screen world map overlay */}
+      {showWorldMap && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          zIndex={1000}
+          bg="rgba(18, 16, 14, 0.95)"
+          display="flex"
+          flexDirection="column"
+        >
+          <HStack
+            px={6}
+            py={3}
+            justifyContent="space-between"
+            flexShrink={0}
+          >
+            <Heading size="md" color="textHeading" fontFamily="heading">
+              The World
+            </Heading>
+            <IconButton
+              aria-label="Close world map"
+              icon={<FaMap />}
+              size="sm"
+              variant="ghost"
+              color="textMuted"
+              _hover={{ color: 'amber' }}
+              onClick={() => setShowWorldMap(false)}
+            />
+          </HStack>
+          <Box flex={1} position="relative" mx={4} mb={4}>
+            <AncientMapView
+              zoneVisibility={{ 1: 'discovered', 2: currentZone >= 2 ? 'discovered' : 'rumored' }}
+              currentZone={currentZone}
+              onZoneClick={() => setShowWorldMap(false)}
+            />
+          </Box>
+        </Box>
       )}
     </Box>
   );
