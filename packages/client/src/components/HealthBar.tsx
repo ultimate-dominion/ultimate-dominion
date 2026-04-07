@@ -1,12 +1,12 @@
 import {
   Badge,
   Box,
-  Flex,
   HStack,
   StackProps,
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { DARK_INSET_SHADOW } from '../utils/theme';
 
 const STATUS_EFFECT_COLOR_MAPPING: { [key: string]: string } = {
   'AGI boost': 'yellow',
@@ -52,49 +52,47 @@ export const HealthBar = ({
 
   return (
     <VStack spacing={0.5} {...stackProps}>
-      {!!level && (
-        <Text alignSelf="start" size={{ base: '3xs', md: '2xs' }}>
-          Lvl {level.toString()}
+      <HStack justifyContent="space-between" w="100%">
+        <HStack spacing={1}>
+          <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
+            HP
+          </Text>
+          {!!level && (
+            <Text color="#8A7E6A" size={{ base: '3xs', md: '2xs' }}>
+              Lvl {level.toString()}
+            </Text>
+          )}
+        </HStack>
+        <Text color="#8A7E6A" fontFamily="mono" fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
+          {currentHpWithFloor.toString()}/{maxHp.toString()}
         </Text>
-      )}
-      <Flex
-        bgColor="grey100"
-        borderRadius="10px"
+      </HStack>
+      <Box
+        bg="#14120F"
+        borderRadius="md"
         boxShadow={
           isDotTicking
-            ? '0 0 8px 2px rgba(128,0,128,0.6), -2px 2px 3px 0px #00000040'
-            : '-2px 2px 3px 0px #00000040'
+            ? `${DARK_INSET_SHADOW}, 0 0 8px 2px rgba(128,0,128,0.6)`
+            : health <= 30
+              ? `${DARK_INSET_SHADOW}, 0 0 6px 1px rgba(139,32,32,0.5)`
+              : DARK_INSET_SHADOW
         }
-        h={{ base: '14px', md: '16px' }}
+        h="10px"
         overflow="hidden"
-        position="relative"
-        transition="box-shadow 0.3s"
-        width="100%"
-      >
-        <Box
-          borderRadius="10px"
-          bgColor={barColor}
-          h="100%"
-          position="absolute"
-          transition="all 0.5s"
-          w={`${health}%`}
-        />
-        <Text
-          color="#E8DCC8"
-          fontWeight={500}
-          position="absolute"
-          left={3}
-          size={{ base: '2xs', md: 'xs' }}
-        >
-          HP
-        </Text>
-      </Flex>
-      <HStack
-        justify={statusEffects && statusEffects[0] ? 'space-between' : 'end'}
+        transition="box-shadow 0.3s ease"
         w="100%"
       >
-        <HStack>
-          {statusEffects?.slice(0, 3).map(statusEffect => (
+        <Box
+          bg={barColor}
+          borderRadius="md"
+          h="100%"
+          transition="width 0.25s ease-out, background-color 0.25s ease-out"
+          w={`${health}%`}
+        />
+      </Box>
+      {statusEffects && statusEffects[0] && (
+        <HStack w="100%">
+          {statusEffects.slice(0, 3).map(statusEffect => (
             <Badge
               bgColor={STATUS_EFFECT_COLOR_MAPPING[statusEffect] ?? 'red'}
               color="white"
@@ -106,10 +104,7 @@ export const HealthBar = ({
             </Badge>
           ))}
         </HStack>
-        <Text size={{ base: '2xs', md: 'xs' }}>
-          {currentHpWithFloor.toString()} / {maxHp.toString()}
-        </Text>
-      </HStack>
+      )}
     </VStack>
   );
 };
