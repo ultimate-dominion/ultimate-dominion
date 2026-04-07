@@ -1,4 +1,5 @@
-import { Request, Response } from "express";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { Request, Response } from "express";
 import { setCors } from "../lib/cors.js";
 import {
   Has,
@@ -32,6 +33,8 @@ import { getNetworkConfig } from "../lib/getNetworkConfig.js";
 // Increase polling intervals but decrease wait time between them
 const MAX_POLL_INTERVALS = 30;
 const POLL_INTERVAL_MS = 250; // Reduced from 500ms to 250ms
+type HandlerRequest = VercelRequest | Request;
+type HandlerResponse = VercelResponse | Response;
 
 function createViemClientConfig(chain: MUDChain): {
   readonly chain: MUDChain;
@@ -59,8 +62,8 @@ function createViemClientConfig(chain: MUDChain): {
 }
 
 export default async function sessionBooting(
-  req: Request,
-  res: Response
+  req: HandlerRequest,
+  res: HandlerResponse
 ) {
   if (setCors(req, res, "GET, OPTIONS")) return res.status(204).end();
 

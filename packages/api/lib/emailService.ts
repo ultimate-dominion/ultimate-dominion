@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || '';
 const IS_DEV_MODE = !RESEND_API_KEY;
+type AudienceContact = { id: string; email: string; created_at: string };
 
 let resend: Resend | null = null;
 if (!IS_DEV_MODE) {
@@ -269,7 +270,7 @@ export async function listContacts(): Promise<Array<{ id: string; email: string;
       console.error('Resend listContacts error:', error);
       return [];
     }
-    return (data?.data ?? []).map((c) => ({
+    return (data?.data ?? []).map((c: AudienceContact) => ({
       id: c.id,
       email: c.email,
       created_at: c.created_at,
@@ -279,4 +280,3 @@ export async function listContacts(): Promise<Array<{ id: string; email: string;
     return [];
   }
 }
-

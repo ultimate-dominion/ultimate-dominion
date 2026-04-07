@@ -23,8 +23,8 @@ type PinataClient = {
 let pinata: PinataClient | null = null;
 if (!IS_DEV_MODE) {
   try {
-    // @ts-expect-error - Pinata SDK initialization type mismatch
-    pinata = new pinataSDK({ pinataJWTKey: PINATA_JWT });
+    const PinataSDK = pinataSDK as unknown as new (args: { pinataJWTKey: string }) => PinataClient;
+    pinata = new PinataSDK({ pinataJWTKey: PINATA_JWT });
     
     // Test Pinata connection on startup
     if (pinata) {

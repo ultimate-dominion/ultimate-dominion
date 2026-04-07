@@ -1,10 +1,13 @@
-import { Request, Response } from "express";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { Request, Response } from "express";
 import { uploadJsonToPinata } from "../lib/fileStorage.js";
 import { setCors } from "../lib/cors.js";
+type HandlerRequest = VercelRequest | Request;
+type HandlerResponse = VercelResponse | Response;
 
 export default async function uploadMetadata(
-  req: Request,
-  res: Response
+  req: HandlerRequest,
+  res: HandlerResponse
 ) {
   if (setCors(req, res)) return res.status(204).end();
 

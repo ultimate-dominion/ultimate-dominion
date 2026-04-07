@@ -1,8 +1,11 @@
-import { Request, Response } from "express";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { Request, Response } from "express";
 import { DRIP_SCHEDULE, listContacts, sendDripEmail } from "../lib/emailService.js";
 import { setCors } from "../lib/cors.js";
+type HandlerRequest = VercelRequest | Request;
+type HandlerResponse = VercelResponse | Response;
 
-export default async function drip(req: Request, res: Response) {
+export default async function drip(req: HandlerRequest, res: HandlerResponse) {
   if (setCors(req, res, "GET, OPTIONS")) return res.status(204).end();
 
   if (req.method !== "GET") {

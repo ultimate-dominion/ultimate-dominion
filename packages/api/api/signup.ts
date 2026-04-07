@@ -1,10 +1,13 @@
-import { Request, Response } from "express";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { Request, Response } from "express";
 import { addContact, sendWelcomeEmail } from "../lib/emailService.js";
 import { setCors } from "../lib/cors.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type HandlerRequest = VercelRequest | Request;
+type HandlerResponse = VercelResponse | Response;
 
-export default async function signup(req: Request, res: Response) {
+export default async function signup(req: HandlerRequest, res: HandlerResponse) {
   if (setCors(req, res)) return res.status(204).end();
 
   if (req.method !== "POST") {

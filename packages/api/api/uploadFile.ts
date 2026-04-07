@@ -1,16 +1,19 @@
-import formidable from "formidable";
+import formidable, { type File as FormidableFile } from "formidable";
 import sharp from "sharp";
-import { Request, Response } from "express";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { Request, Response } from "express";
 import { join } from "path";
 import { mkdtemp, readFile, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 
 import { uploadFileToPinata } from "../lib/fileStorage.js";
 import { setCors } from "../lib/cors.js";
+type HandlerRequest = VercelRequest | Request;
+type HandlerResponse = VercelResponse | Response;
 
 export default async function uploadFile(
-  req: Request,
-  res: Response
+  req: HandlerRequest,
+  res: HandlerResponse
 ) {
   if (setCors(req, res)) return res.status(204).end();
 
@@ -31,12 +34,11 @@ export default async function uploadFile(
     const [fields, files] = await form.parse(req);
 
     // Get the first file from the files object
-    const fileArray = Object.values(files)[0];
-    if (!fileArray || !fileArray[0]) {
+    const firstEntry = Object.values(files)[0] as FormidableFile[] | FormidableFile | undefined;
+    const file = Array.isArray(firstEntry) ? firstEntry[0] : firstEntry;
+    if (!file) {
       return res.status(400).json({ error: "No file provided" });
     }
-
-    const file = fileArray[0];
 
     // Validate mimetype is an image
     if (!file.mimetype || !file.mimetype.startsWith('image/')) {

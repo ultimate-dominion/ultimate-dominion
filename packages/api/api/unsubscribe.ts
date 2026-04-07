@@ -1,10 +1,14 @@
-import { Request, Response } from "express";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { Request, Response } from "express";
 import { Resend } from "resend";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || '';
+type AudienceContact = { id: string; email: string };
+type HandlerRequest = VercelRequest | Request;
+type HandlerResponse = VercelResponse | Response;
 
-export default async function unsubscribe(req: Request, res: Response) {
+export default async function unsubscribe(req: HandlerRequest, res: HandlerResponse) {
   // Only GET — this is a link clicked from an email
   if (req.method !== "GET") {
     return res.status(405).send("Method not allowed");
@@ -33,7 +37,7 @@ export default async function unsubscribe(req: Request, res: Response) {
 
     // Find contact by email
     const { data: contacts } = await resend.contacts.list({ audienceId: RESEND_AUDIENCE_ID });
-    const contact = contacts?.data?.find(c => c.email.toLowerCase() === email.toLowerCase());
+    const contact = contacts?.data?.find((c: AudienceContact) => c.email.toLowerCase() === email.toLowerCase());
 
     if (!contact) {
       return res.send(page("You've been unsubscribed."));

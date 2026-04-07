@@ -4,7 +4,8 @@
  * for collection by the server-side metrics aggregator.
  */
 
-import { Request, Response } from 'express';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { Request, Response } from "express";
 
 interface MetricEntry {
   type: string;
@@ -13,6 +14,8 @@ interface MetricEntry {
   timestamp: number;
   meta?: Record<string, unknown>;
 }
+type HandlerRequest = VercelRequest | Request;
+type HandlerResponse = VercelResponse | Response;
 
 // Simple rate limit: 20 req/min per IP (metrics flush less often than errors)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -35,12 +38,17 @@ setInterval(() => {
   }
 }, 300_000);
 
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: HandlerRequest, res: HandlerResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
+  const forwardedFor = req.headers["x-forwarded-for"];
+  const realIp = req.headers["x-real-ip"];
+  const ip =
+    (typeof forwardedFor === "string" ? forwardedFor.split(",")[0]?.trim() : forwardedFor?.[0]) ||
+    (typeof realIp === "string" ? realIp : realIp?.[0]) ||
+    "unknown";
   if (isRateLimited(ip)) {
     return res.status(429).json({ error: 'Rate limited' });
   }
