@@ -41,7 +41,7 @@ jobs:
           RPC_URL: ${{ secrets.BASE_RPC_URL }}
           WORLD_ADDRESS: ${{ secrets.BETA_WORLD_ADDRESS }}
         run: >
-          mud deploy
+          pnpm exec mud deploy
           --forgeScriptOptions="--slow"
           --profile=base-mainnet
           --worldAddress $WORLD_ADDRESS
