@@ -577,8 +577,8 @@ These parameters can be adjusted on-chain without redeployment:
 - [ ] Fee recipient: single wallet, multisig, or DAO treasury
 - [x] **GasStation redesign**: Rewritten to swap via Uniswap V3 on-chain + relayer off-chain path. Fallback to burn+treasury when pool not configured.
 - [x] Uniswap V3 pool deployment (beta): 1% fee tier pool at `0x4338173e5557Eed1638c03c28f3502AD9Bb03e0f`. Production pool pending.
-- [x] Gas batching UX: Auto-swap triggers when ETH balance < 0.0001 ETH, rate-limited to once per 60s client-side
-- [x] ~~Relayer batch charging~~ — `batchChargeGasGoldWithCounts()` implemented with fault tolerance, partial charges, per-player tx counts. Relayer `gasCharge.ts` module with 5-min flush + 1-hour swap scheduler.
+- [x] Gas UX tuning: relayer primary path refills burner wallets below `0.00005 ETH` up to `0.00015 ETH`; embedded visible-Gold auto-swap fallback triggers only below `0.00002 ETH`
+- [x] ~~Relayer batch charging~~ — replaced by immediate hidden-reserve charging via `fundAndCharge()` after each successful top-up, with Gold -> ETH swap recovery on the relayer side
 - [x] ~~Death penalty~~ — Implemented: PvE 5% escrow burn, PvP 50% loss (10% burn + 40% to winners)
 - [ ] LP incentive system design — Patron of the Realm (single-sided ETH deposit, protocol pairs with gold) vs standard LP farming
 - [ ] Anti-speculation: marketplace cooldown (24-48h relist delay) implementation

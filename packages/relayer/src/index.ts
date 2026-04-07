@@ -16,6 +16,7 @@ import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcMana
 import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, trackPlayer, getFundedCount } from './balanceMonitor.js';
 import { startPoolFunder, stopPoolFunder, getFunderStatus } from './poolFunder.js';
 import { loadFundedAddresses, saveFundedAddresses, loadFulfilledSessions, saveFulfilledSessions, loadPlayerMap, savePlayerMap } from './persistence.js';
+import { getPlayerTopUpAmount, needsPlayerTopUp } from './playerFunding.js';
 
 // Gold purchase dedup (stripeSessionId → fulfilled) — persisted to disk
 const fulfilledSessions = loadFulfilledSessions();
@@ -54,7 +55,7 @@ const recentFundings: number[] = []; // timestamps
 const ipFundings = new Map<string, number[]>(); // ip -> timestamps
 const emergencyFundTimestamps = new Map<string, number>(); // address -> last emergency fund time
 
-const EMERGENCY_FUND_COOLDOWN_MS = 60_000; // 1 per address per 60s
+const EMERGENCY_FUND_COOLDOWN_MS = 15_000; // allow active players to refill quickly without opening a spam loop
 
 function emergencyFundOk(address: string): boolean {
   const last = emergencyFundTimestamps.get(address);
@@ -87,7 +88,7 @@ async function main() {
   console.log(`Pool:    ${allAddresses.length} EOA(s)`);
   console.log(`Chain:   ${config.chainId}`);
   console.log(`Port:    ${config.port}`);
-  console.log(`Funding: ${formatEther(config.fundingAmount)} ETH per user`);
+  console.log(`Funding: refill below ${formatEther(config.minPlayerBalance)} ETH up to ${formatEther(config.targetPlayerBalance)} ETH`);
 
   // Initialize all wallet nonces from chain
   await initializePool(publicClient);
@@ -174,25 +175,33 @@ async function main() {
       : address;
 
     const normalizedAddress = address.toLowerCase();
+    let topUpAmount = config.targetPlayerBalance;
 
     // Already funded — check if they need emergency gas before rejecting
     if (fundedAddresses.has(normalizedAddress)) {
       trackPlayer(address as Address, delegator as Address);
       try {
         const balance = await publicClient.getBalance({ address: address as Address });
-        if (balance >= config.minPlayerBalance) {
+        if (!needsPlayerTopUp(balance)) {
+          res.json({ status: 'already_funded', balance: formatEther(balance) });
+          return;
+        }
+        topUpAmount = getPlayerTopUpAmount(balance);
+        if (topUpAmount <= 0n) {
           res.json({ status: 'already_funded', balance: formatEther(balance) });
           return;
         }
         // Below minimum — allow emergency re-fund with per-address rate limit
         if (!emergencyFundOk(normalizedAddress)) {
           console.warn(`[fund] Emergency re-fund rate limited: ${address} balance=${formatEther(balance)}`);
-          res.status(429).json({ error: 'Emergency re-fund rate limited — try again in 60s' });
+          res.status(429).json({ error: 'Emergency re-fund rate limited — try again in 15s' });
           return;
         }
         // Lock before async work to prevent concurrent duplicate fundings
         emergencyFundTimestamps.set(normalizedAddress, Date.now());
-        console.info(`[fund] Emergency re-fund: ${address} balance=${formatEther(balance)} < min=${formatEther(config.minPlayerBalance)}`);
+        console.info(
+          `[fund] Emergency re-fund: ${address} balance=${formatEther(balance)} < min=${formatEther(config.minPlayerBalance)} | top-up=${formatEther(topUpAmount)}`,
+        );
         // Fall through to funding logic below
       } catch {
         // Balance check failed — don't re-fund blindly
@@ -205,7 +214,8 @@ async function main() {
     if (!fundedAddresses.has(normalizedAddress)) {
       try {
         const balance = await publicClient.getBalance({ address: address as Address });
-        if (balance >= config.fundingAmount) {
+        topUpAmount = getPlayerTopUpAmount(balance);
+        if (topUpAmount <= 0n) {
           fundedAddresses.add(normalizedAddress);
           saveFundedAddresses(fundedAddresses);
           trackPlayer(address as Address, delegator as Address);
@@ -236,7 +246,7 @@ async function main() {
     try {
       const txHash = await sendRelayerTx({
         to: address as Address,
-        value: config.fundingAmount,
+        value: topUpAmount,
       });
 
       fundedAddresses.add(normalizedAddress);
@@ -257,8 +267,8 @@ async function main() {
         console.error(`[fund] fundAndCharge failed for ${delegator}:`, err)
       );
 
-      console.log(`[fund] Funded ${address} (delegator: ${delegator}) with ${formatEther(config.fundingAmount)} ETH — tx: ${txHash}`);
-      res.json({ status: 'funded', txHash, amount: formatEther(config.fundingAmount) });
+      console.log(`[fund] Funded ${address} (delegator: ${delegator}) with ${formatEther(topUpAmount)} ETH — tx: ${txHash}`);
+      res.json({ status: 'funded', txHash, amount: formatEther(topUpAmount) });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[fund] Failed to fund ${address}:`, message);

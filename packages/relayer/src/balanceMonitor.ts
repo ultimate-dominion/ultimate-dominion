@@ -4,6 +4,7 @@ import { gasChargingEnabled } from './config.js';
 import { publicClient, sendRelayerTx } from './tx.js';
 import { callFundAndCharge } from './gasCharge.js';
 import { getCharacterId, getPlayerLevel, getGoldPerGasCharge } from './chainReader.js';
+import { getPlayerTopUpAmount, needsPlayerTopUp } from './playerFunding.js';
 
 // ==================== State ====================
 
@@ -47,10 +48,10 @@ async function doTopUp(address: Address, amount: bigint, reason: string): Promis
 /**
  * Check all tracked players and apply the funding decision tree:
  *
- * 1. ETH >= minPlayerBalance → skip (has gas)
- * 2. No character → free top-up (new player)
- * 3. Level < 3 → free top-up (onboarding)
- * 4. Level 3+ → top-up + charge gold (fundAndCharge handles partial/zero reserve on-chain)
+ * 1. ETH >= minPlayerBalance → skip (has enough for active play)
+ * 2. No character → free top-up to target buffer (new player)
+ * 3. Level < 3 → free top-up to target buffer (onboarding)
+ * 4. Level 3+ → top-up to target buffer + charge hidden reserve
  */
 async function checkBalances(): Promise<void> {
   if (trackedPlayers.size === 0) return;
@@ -66,13 +67,16 @@ async function checkBalances(): Promise<void> {
 
     try {
       const ethBalance = await publicClient.getBalance({ address: burnerAddress });
-      if (ethBalance >= config.minPlayerBalance) continue; // Has enough ETH
+      if (!needsPlayerTopUp(ethBalance)) continue;
+
+      const topUpAmount = getPlayerTopUpAmount(ethBalance);
+      if (topUpAmount <= 0n) continue;
 
       // --- Level gating ---
 
       // If gas charging not configured, free top-up for everyone (backward compat)
       if (!gasChargingEnabled) {
-        await doTopUp(burnerAddress, config.fundingAmount, 'free (gas charging disabled)');
+        await doTopUp(burnerAddress, topUpAmount, 'free (gas charging disabled)');
         continue;
       }
 
@@ -80,7 +84,7 @@ async function checkBalances(): Promise<void> {
       const characterId = await getCharacterId(delegatorAddress);
       if (!characterId) {
         // No character yet — new player, free top-up
-        await doTopUp(burnerAddress, config.fundingAmount, 'free (no character)');
+        await doTopUp(burnerAddress, topUpAmount, 'free (no character)');
         continue;
       }
 
@@ -88,19 +92,19 @@ async function checkBalances(): Promise<void> {
       const level = await getPlayerLevel(characterId);
       if (level === null) {
         // RPC failure — fail open, free top-up
-        await doTopUp(burnerAddress, config.fundingAmount, 'free (level read failed)');
+        await doTopUp(burnerAddress, topUpAmount, 'free (level read failed)');
         continue;
       }
 
       if (level < 3n) {
         // Below level 3 — free gas
-        await doTopUp(burnerAddress, config.fundingAmount, 'free (level < 3)');
+        await doTopUp(burnerAddress, topUpAmount, 'free (level < 3)');
         continue;
       }
 
       // Level 3+ — always top up, charge Gold if they can afford it.
       // Never leave a player stranded — they'll earn Gold from the next battle.
-      await doTopUp(burnerAddress, config.fundingAmount, goldPerCharge ? 'charged' : 'free (no charge config)');
+      await doTopUp(burnerAddress, topUpAmount, goldPerCharge ? 'charged' : 'free (no charge config)');
 
       // Charge Gold atomically on-chain
       if (goldPerCharge) {
@@ -118,7 +122,9 @@ async function checkBalances(): Promise<void> {
 // ==================== Lifecycle ====================
 
 export function startBalanceMonitor(): void {
-  console.log(`[balanceMonitor] Starting — check every 60s, min balance ${formatEther(config.minPlayerBalance)} ETH`);
+  console.log(
+    `[balanceMonitor] Starting — check every 60s, min ${formatEther(config.minPlayerBalance)} ETH, target ${formatEther(config.targetPlayerBalance)} ETH`,
+  );
 
   monitorTimer = setInterval(() => {
     checkBalances().catch(err => console.error('[balanceMonitor] Error:', err));

@@ -7,21 +7,24 @@ import { type Address } from 'viem';
 // Mock config
 vi.mock('./config.js', () => ({
   config: {
-    fundingAmount: 1_000_000_000_000_000n,   // 0.001 ETH
-    minPlayerBalance: 300_000_000_000_000n,  // 0.0003 ETH
+    fundingAmount: 150_000_000_000_000n,       // 0.00015 ETH compatibility alias
+    targetPlayerBalance: 150_000_000_000_000n, // 0.00015 ETH
+    minPlayerBalance: 50_000_000_000_000n,     // 0.00005 ETH
   },
   gasChargingEnabled: true,
 }));
 
 // Mock tx module
 const mockGetBalance = vi.fn<(args: { address: Address }) => Promise<bigint>>();
-const mockSendRelayerTx = vi.fn<() => Promise<`0x${string}`>>().mockResolvedValue('0xdeadbeef' as `0x${string}`);
+const mockSendRelayerTx = vi
+  .fn<(params: { to: Address; value: bigint }) => Promise<`0x${string}`>>()
+  .mockResolvedValue('0xdeadbeef' as `0x${string}`);
 
 vi.mock('./tx.js', () => ({
   publicClient: {
     getBalance: (args: { address: Address }) => mockGetBalance(args),
   },
-  sendRelayerTx: () => mockSendRelayerTx(),
+  sendRelayerTx: (params: { to: Address; value: bigint }) => mockSendRelayerTx(params),
 }));
 
 // Mock chainReader
@@ -87,6 +90,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
+    expect(mockSendRelayerTx).toHaveBeenCalledWith({ to: BURNER, value: 150_000_000_000_000n });
     expect(mockCallFundAndCharge).not.toHaveBeenCalled();
 
     (configMod as any).gasChargingEnabled = true;
@@ -100,6 +104,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
+    expect(mockSendRelayerTx).toHaveBeenCalledWith({ to: BURNER, value: 150_000_000_000_000n });
     expect(mockCallFundAndCharge).not.toHaveBeenCalled();
   });
 
@@ -112,6 +117,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
+    expect(mockSendRelayerTx).toHaveBeenCalledWith({ to: BURNER, value: 150_000_000_000_000n });
     expect(mockCallFundAndCharge).not.toHaveBeenCalled();
   });
 
@@ -124,19 +130,19 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
+    expect(mockSendRelayerTx).toHaveBeenCalledWith({ to: BURNER, value: 150_000_000_000_000n });
     expect(mockCallFundAndCharge).toHaveBeenCalledWith(DELEGATOR);
   });
 
-  it('tops up level 3+ player even with zero gold (no skip zone)', async () => {
+  it('tops up only the delta needed to restore the target buffer', async () => {
     trackPlayer(BURNER, DELEGATOR);
-    mockGetBalance.mockResolvedValue(100_000_000_000_000n); // 0.0001 ETH — previously in skip zone
+    mockGetBalance.mockResolvedValue(40_000_000_000_000n); // 0.00004 ETH — just below threshold
     mockGetCharacterId.mockResolvedValue(CHARACTER_ID);
     mockGetPlayerLevel.mockResolvedValue(5n);
 
     await runOneCheck();
 
-    // Should STILL top up — no more skip zone
-    expect(mockSendRelayerTx).toHaveBeenCalled();
+    expect(mockSendRelayerTx).toHaveBeenCalledWith({ to: BURNER, value: 110_000_000_000_000n });
     expect(mockCallFundAndCharge).toHaveBeenCalledWith(DELEGATOR);
   });
 
@@ -149,6 +155,7 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockSendRelayerTx).toHaveBeenCalled();
+    expect(mockSendRelayerTx).toHaveBeenCalledWith({ to: BURNER, value: 150_000_000_000_000n });
     expect(mockCallFundAndCharge).not.toHaveBeenCalled();
   });
 
@@ -164,5 +171,6 @@ describe('balanceMonitor decision tree', () => {
     await runOneCheck();
 
     expect(mockCallFundAndCharge).toHaveBeenCalledWith(mmDelegator);
+    expect(mockSendRelayerTx).toHaveBeenCalledWith({ to: mmBurner, value: 150_000_000_000_000n });
   });
 });

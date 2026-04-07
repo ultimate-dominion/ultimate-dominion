@@ -16,6 +16,14 @@ const relayerPrivateKeys: Hex[] = multiKeys
   ? multiKeys.split(',').map(k => k.trim() as Hex)
   : [singleKey as Hex];
 
+const targetPlayerBalance = BigInt(
+  process.env.TARGET_PLAYER_BALANCE || process.env.FUNDING_AMOUNT || '150000000000000',
+); // 0.00015 ETH
+const minPlayerBalance = BigInt(process.env.MIN_PLAYER_BALANCE || '50000000000000'); // 0.00005 ETH
+if (minPlayerBalance > targetPlayerBalance) {
+  throw new Error('MIN_PLAYER_BALANCE must be less than or equal to TARGET_PLAYER_BALANCE');
+}
+
 export const config = {
   relayerPrivateKeys,
   relayerPrivateKey: relayerPrivateKeys[0],  // backward compat — first key is primary
@@ -33,8 +41,9 @@ export const config = {
     .filter(Boolean),
 
   // Gas funding config
-  fundingAmount: BigInt(process.env.FUNDING_AMOUNT || '1000000000000000'), // 0.001 ETH
-  minPlayerBalance: BigInt(process.env.MIN_PLAYER_BALANCE || '300000000000000'), // 0.0003 ETH
+  fundingAmount: targetPlayerBalance, // backward compat alias for older call sites / envs
+  targetPlayerBalance,
+  minPlayerBalance,
   maxFundingsPerMinute: parseInt(process.env.MAX_FUNDINGS_PER_MINUTE || '10', 10),
 
   // Gas charging & Gold swap (optional — disabled if WORLD_ADDRESS or GOLD_TOKEN not set)

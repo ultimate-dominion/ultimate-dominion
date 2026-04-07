@@ -198,10 +198,11 @@ The GasStation system handles gas economics for both auth paths. The goal: playe
 - Embedded: Relayer sends a one-time ETH seed on first login (via `/fund` endpoint)
 - External: Player deposits 0.0005 ETH during the delegation step
 
-**Level 3+ (auto-swap kicks in):**
-- The `useGasStation` hook (mounted in `App.tsx`) monitors the active wallet's ETH balance, which MUDContext polls every 30 seconds
-- When balance drops below 0.0001 ETH (the `GAS_THRESHOLD`), the hook calls `buyGas(characterId, goldAmount)` on the GasStation contract
-- Default swap: 50 Gold per auto-swap, rate-limited to once per 60 seconds client-side
+**Level 3+ (embedded fallback only):**
+- The relayer remains the primary gas path for embedded wallets, refilling below `0.00005 ETH` up to `0.00015 ETH`
+- The `useGasStation` hook is an emergency visible-Gold fallback for embedded wallets only
+- When burner balance drops below `0.00002 ETH`, the hook calls `buyGas(characterId, goldAmount)` on the GasStation contract
+- Default client fallback swap: all available Gold up to `5 Gold`, rate-limited to once per `30 seconds` on success
 
 ### GasStationSystem Contract
 
@@ -218,12 +219,12 @@ Both modes enforce:
 
 ### Relayer Gas Charging (Embedded Path)
 
-For embedded wallet users, the self-hosted relayer sponsors gas by submitting transactions on the player's behalf. The relayer periodically charges Gold from embedded players via `chargeGasGold()` or `batchChargeGasGoldWithCounts()`:
+For embedded wallet users, the self-hosted relayer sponsors gas by topping up the burner wallet, then immediately calling `fundAndCharge()` against the hidden reserve path:
 
-- Only callable by the configured relayer address
-- Transfers Gold from player to relayer (total supply unchanged)
-- Supports batch charging across multiple players in a single transaction
-- Fault-tolerant batch mode: skips ineligible players (wrong character, below level 3, zero Gold), charges partial amounts when full charge exceeds balance
+- Only the configured relayer address can call the charge path
+- Level `< 3` players remain free
+- Level `>= 3` players are charged from hidden reserve, not visible wallet Gold
+- Funding and charging are decoupled for UX: if the charge fails, the player still receives ETH and is not stranded
 
 ### Out of Resources
 
