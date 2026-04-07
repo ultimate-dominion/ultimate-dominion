@@ -14,7 +14,10 @@ export function resolveCurrentBattle(
   allBattles: CombatDetails[],
   combatOutcomeTable: Record<string, TableRow>,
   lastSeenEncounterId: string | null,
+  combatStateReady = true,
 ): CombatDetails | null {
+  if (!combatStateReady) return null;
+
   // A battle is "active" if end===0 AND no CombatOutcome exists yet.
   const activeBattle = allBattles
     .filter(b => b.end === BigInt(0) && !combatOutcomeTable[b.encounterId])

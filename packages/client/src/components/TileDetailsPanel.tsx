@@ -333,7 +333,7 @@ export const TileDetailsPanel = (): JSX.Element => {
 
     const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean; encounterId?: string } | undefined;
     const sp = getTableValue('Spawned', monsterId) as { spawned?: boolean } | undefined;
-    const localPos = (getTableValue('Position', monsterId) ?? getTableValue('PositionV2', monsterId)) as
+    const localPos = (getTableValue('PositionV2', monsterId) ?? getTableValue('Position', monsterId)) as
       | { x?: unknown; y?: unknown }
       | undefined;
 

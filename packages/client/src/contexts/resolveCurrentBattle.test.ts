@@ -31,6 +31,11 @@ describe('resolveCurrentBattle — no battles', () => {
   it('returns null when no battles and lastSeen is set', () => {
     expect(resolveCurrentBattle([], {}, '0xold')).toBeNull();
   });
+
+  it('returns null until combat state is authoritative', () => {
+    const battle = makeBattle('0xa', 100);
+    expect(resolveCurrentBattle([battle], {}, null, false)).toBeNull();
+  });
 });
 
 // ─── Active battle (end===0, no outcome) ─────────────────────

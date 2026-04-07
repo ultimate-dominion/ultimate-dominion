@@ -19,7 +19,9 @@ export function useReactiveEntity(entityId: string | undefined): Character | nul
   const statsData = useGameValue('Stats', entityId);
   const characterData = useGameValue('Characters', entityId);
   const encounterData = useGameValue('EncounterEntity', entityId);
-  const posData = useGameValue('Position', entityId);
+  const posDataV2 = useGameValue('PositionV2', entityId);
+  const posDataV1 = useGameValue('Position', entityId);
+  const posData = posDataV2 ?? posDataV1;
   const spawnedData = useGameValue('Spawned', entityId);
   const effectsData = useGameValue('WorldStatusEffects', entityId);
 
@@ -59,6 +61,8 @@ export function useReactiveEntity(entityId: string | undefined): Character | nul
     statsData,
     goldData,
     encounterData,
+    posDataV1,
+    posDataV2,
     posData,
     spawnedData,
     metadata,

@@ -16,6 +16,7 @@ import {
 const mockSetRow = vi.fn();
 vi.mock('../gameStore', () => ({
   getTableValue: vi.fn(),
+  markEvictedRows: vi.fn(),
   useGameStore: {
     getState: () => ({
       setRow: mockSetRow,
@@ -1279,10 +1280,13 @@ describe('createSystemCalls — validateTileMonsters', () => {
 
   it('evicts monsters whose on-chain Spawned is false', async () => {
     const { network } = createMockNetwork();
-    // Mock readContract: first monster alive (0x01), second dead (0x00)
+    // Each monster validation reads Spawned and EncounterEntity.
+    // First monster: spawned=true, no encounter. Second monster: spawned=false, no encounter.
     network.publicClient.readContract = vi.fn()
       .mockResolvedValueOnce(['0x01', '0x' + '00'.repeat(32), '0x'])
-      .mockResolvedValueOnce(['0x00', '0x' + '00'.repeat(32), '0x']);
+      .mockResolvedValueOnce(['0x' + '00'.repeat(32), '0x' + '00'.repeat(32), '0x'])
+      .mockResolvedValueOnce(['0x00', '0x' + '00'.repeat(32), '0x'])
+      .mockResolvedValueOnce(['0x' + '00'.repeat(32), '0x' + '00'.repeat(32), '0x']);
 
     const calls = createSystemCalls(network);
     const MONSTER_A = '0x0000000000000000000000000000000000000000000000000000000000000aaa';

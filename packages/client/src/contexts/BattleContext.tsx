@@ -13,6 +13,7 @@ import {
   getTableValue,
   toBigInt,
   toNumber,
+  useGameStore,
   useGameTable,
   useGameValue,
 } from '../lib/gameStore';
@@ -95,10 +96,11 @@ export const BattleProvider = ({
   const {
     authMethod,
     delegatorAddress,
-    systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp, forceEndCombatEncounter },
+    systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp },
   } = useMUD();
   const { character, equippedSpells, equippedWeapons } = useCharacter();
   const { allMonsters, position } = useMap();
+  const combatStateReady = useGameStore((state) => state.hydrated);
 
   const { renderError } = useToast();
   const {
@@ -156,17 +158,13 @@ export const BattleProvider = ({
 
   const currentBattle = useMemo(() => {
     const lastSeenEncounterId = localStorage.getItem(BATTLE_OUTCOME_SEEN_KEY);
-    return resolveCurrentBattle(allBattles, combatOutcomeTable, lastSeenEncounterId);
+    return resolveCurrentBattle(allBattles, combatOutcomeTable, lastSeenEncounterId, combatStateReady);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allBattles, combatOutcomeTable, acknowledgeVersion]);
-
-  // Ghost encounter safety: if an "active" battle (end=0) has NO opponent
-  // (monster can't be found — ghost/dead), auto-dismiss + force-end on-chain.
-  // Only fires when opponent is null; real battles with a found opponent are never touched.
-  const ghostDismissedRef = useRef<string | null>(null);
-  const opponentRef = useRef<unknown>(null); // updated below after opponent is derived
+  }, [allBattles, combatOutcomeTable, acknowledgeVersion, combatStateReady]);
 
   const lastestBattleOutcome = useMemo(() => {
+    if (!combatStateReady) return null;
+
     // Include battles where CombatOutcome exists even if end hasn't synced yet
     // (splice event delay). This ensures battleOver=true as soon as outcome arrives.
     const latestCompletedBattle =
@@ -201,7 +199,7 @@ export const BattleProvider = ({
       playerFled: Boolean(combatOutcome.playerFled),
       winner,
     } as CombatOutcomeType;
-  }, [allBattles, combatOutcomeTable]);
+  }, [allBattles, combatOutcomeTable, combatStateReady]);
 
   const lastProcessedEncounterRef = useRef<string | null>(null);
 
@@ -300,31 +298,6 @@ export const BattleProvider = ({
     }
     return cached;
   }, [liveOpponent, reactiveOpponentStats]);
-
-  // Keep opponentRef in sync for ghost dismiss check (avoids stale closures)
-  opponentRef.current = opponent;
-
-  // Ghost dismiss effect — placed after opponent is derived so the ref is current.
-  // Only fires when opponent is null (ghost monster can't be found).
-  useEffect(() => {
-    if (!currentBattle || currentBattle.end !== BigInt(0)) return;
-    if (ghostDismissedRef.current === currentBattle.encounterId) return;
-    const check = () => {
-      if (ghostDismissedRef.current === currentBattle.encounterId) return;
-      // If opponent was found, this is a real battle — don't touch it
-      if (opponentRef.current) return;
-      const ageSeconds = Math.floor(Date.now() / 1000) - Number(currentBattle.start);
-      if (ageSeconds < 30) return; // give 30s for opponent to load
-      ghostDismissedRef.current = currentBattle.encounterId;
-      console.warn('[battle] Ghost encounter (no opponent after', ageSeconds, 's) — force-ending', currentBattle.encounterId);
-      localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, currentBattle.encounterId);
-      setAcknowledgeVersion(v => v + 1);
-      forceEndCombatEncounter(currentBattle.encounterId);
-    };
-    check();
-    const id = setInterval(check, 5000);
-    return () => clearInterval(id);
-  }, [currentBattle?.encounterId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fully reactive user character for battle rendering
   const userCharacterForBattleRendering = useReactiveEntity(character?.id);

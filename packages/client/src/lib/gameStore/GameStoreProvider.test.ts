@@ -31,6 +31,7 @@ afterEach(() => {
 describe('bootstrapGameStore', () => {
   it('hydrates the fresh snapshot and connects ws when the network returns in time', async () => {
     const snapshot = makeSnapshot(120);
+    const preloadSnapshot = vi.fn();
     const hydrateSnapshot = vi.fn();
     const connectWs = vi.fn();
     const cacheSnapshot = vi.fn();
@@ -39,6 +40,7 @@ describe('bootstrapGameStore', () => {
       cancelled: () => false,
       idbSnapshot: null,
       fetchSnapshot: async () => snapshot,
+      preloadSnapshot,
       hydrateSnapshot,
       connectWs,
       cacheSnapshot,
@@ -48,6 +50,7 @@ describe('bootstrapGameStore', () => {
 
     expect(hydrateSnapshot).toHaveBeenCalledTimes(1);
     expect(hydrateSnapshot).toHaveBeenCalledWith(snapshot);
+    expect(preloadSnapshot).not.toHaveBeenCalled();
     expect(connectWs).toHaveBeenCalledTimes(1);
     expect(connectWs).toHaveBeenCalledWith(snapshot);
     expect(cacheSnapshot).toHaveBeenCalledTimes(1);
@@ -62,6 +65,7 @@ describe('bootstrapGameStore', () => {
     const idbSnapshot = makeSnapshot(90);
     const freshSnapshot = makeSnapshot(140);
     const network = deferred<FullSnapshot>();
+    const preloadSnapshot = vi.fn();
     const hydrateSnapshot = vi.fn();
     const connectWs = vi.fn();
     const cacheSnapshot = vi.fn();
@@ -71,6 +75,7 @@ describe('bootstrapGameStore', () => {
       cancelled: () => false,
       idbSnapshot,
       fetchSnapshot: () => network.promise,
+      preloadSnapshot,
       hydrateSnapshot: (snapshot) => {
         currentBlock = snapshot.block;
         hydrateSnapshot(snapshot);
@@ -83,8 +88,9 @@ describe('bootstrapGameStore', () => {
 
     await vi.advanceTimersByTimeAsync(1000);
 
-    expect(hydrateSnapshot).toHaveBeenCalledTimes(1);
-    expect(hydrateSnapshot).toHaveBeenCalledWith(idbSnapshot);
+    expect(preloadSnapshot).toHaveBeenCalledTimes(1);
+    expect(preloadSnapshot).toHaveBeenCalledWith(idbSnapshot);
+    expect(hydrateSnapshot).not.toHaveBeenCalled();
     expect(connectWs).toHaveBeenCalledTimes(1);
     expect(connectWs).toHaveBeenCalledWith(idbSnapshot);
     expect(cacheSnapshot).not.toHaveBeenCalled();
@@ -94,13 +100,13 @@ describe('bootstrapGameStore', () => {
 
     expect(cacheSnapshot).toHaveBeenCalledTimes(1);
     expect(cacheSnapshot).toHaveBeenCalledWith(freshSnapshot);
-    expect(hydrateSnapshot).toHaveBeenCalledTimes(2);
-    expect(hydrateSnapshot).toHaveBeenNthCalledWith(2, freshSnapshot);
+    expect(hydrateSnapshot).toHaveBeenCalledTimes(1);
+    expect(hydrateSnapshot).toHaveBeenCalledWith(freshSnapshot);
     expect(connectWs).toHaveBeenCalledTimes(2);
     expect(connectWs).toHaveBeenNthCalledWith(2, freshSnapshot);
   });
 
-  it('skips the eventual snapshot when websocket updates already advanced the local block beyond it', async () => {
+  it('still applies the first authoritative snapshot even when websocket updates already advanced the local block beyond it', async () => {
     vi.useFakeTimers();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -108,6 +114,7 @@ describe('bootstrapGameStore', () => {
     const idbSnapshot = makeSnapshot(90);
     const freshSnapshot = makeSnapshot(140);
     const network = deferred<FullSnapshot>();
+    const preloadSnapshot = vi.fn();
     const hydrateSnapshot = vi.fn();
     const connectWs = vi.fn();
     const cacheSnapshot = vi.fn();
@@ -117,6 +124,7 @@ describe('bootstrapGameStore', () => {
       cancelled: () => false,
       idbSnapshot,
       fetchSnapshot: () => network.promise,
+      preloadSnapshot,
       hydrateSnapshot,
       connectWs,
       cacheSnapshot,
@@ -129,11 +137,15 @@ describe('bootstrapGameStore', () => {
     network.resolve(freshSnapshot);
     await promise;
 
-    expect(cacheSnapshot).not.toHaveBeenCalled();
+    expect(preloadSnapshot).toHaveBeenCalledTimes(1);
+    expect(preloadSnapshot).toHaveBeenCalledWith(idbSnapshot);
+    expect(cacheSnapshot).toHaveBeenCalledTimes(1);
+    expect(cacheSnapshot).toHaveBeenCalledWith(freshSnapshot);
     expect(hydrateSnapshot).toHaveBeenCalledTimes(1);
-    expect(hydrateSnapshot).toHaveBeenCalledWith(idbSnapshot);
-    expect(connectWs).toHaveBeenCalledTimes(1);
-    expect(connectWs).toHaveBeenCalledWith(idbSnapshot);
+    expect(hydrateSnapshot).toHaveBeenCalledWith(freshSnapshot);
+    expect(connectWs).toHaveBeenCalledTimes(2);
+    expect(connectWs).toHaveBeenNthCalledWith(1, idbSnapshot);
+    expect(connectWs).toHaveBeenNthCalledWith(2, freshSnapshot);
   });
 
   it('skips the eventual fresh snapshot if it is older than the IndexedDB fallback snapshot', async () => {
@@ -144,6 +156,7 @@ describe('bootstrapGameStore', () => {
     const idbSnapshot = makeSnapshot(120);
     const staleSnapshot = makeSnapshot(110);
     const network = deferred<FullSnapshot>();
+    const preloadSnapshot = vi.fn();
     const hydrateSnapshot = vi.fn();
     const connectWs = vi.fn();
     const cacheSnapshot = vi.fn();
@@ -152,6 +165,7 @@ describe('bootstrapGameStore', () => {
       cancelled: () => false,
       idbSnapshot,
       fetchSnapshot: () => network.promise,
+      preloadSnapshot,
       hydrateSnapshot,
       connectWs,
       cacheSnapshot,
@@ -164,9 +178,10 @@ describe('bootstrapGameStore', () => {
     network.resolve(staleSnapshot);
     await promise;
 
+    expect(preloadSnapshot).toHaveBeenCalledTimes(1);
+    expect(preloadSnapshot).toHaveBeenCalledWith(idbSnapshot);
     expect(cacheSnapshot).not.toHaveBeenCalled();
-    expect(hydrateSnapshot).toHaveBeenCalledTimes(1);
-    expect(hydrateSnapshot).toHaveBeenCalledWith(idbSnapshot);
+    expect(hydrateSnapshot).not.toHaveBeenCalled();
     expect(connectWs).toHaveBeenCalledTimes(1);
     expect(connectWs).toHaveBeenCalledWith(idbSnapshot);
   });
@@ -175,6 +190,7 @@ describe('bootstrapGameStore', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const idbSnapshot = makeSnapshot(77);
+    const preloadSnapshot = vi.fn();
     const hydrateSnapshot = vi.fn();
     const connectWs = vi.fn();
     const cacheSnapshot = vi.fn();
@@ -185,6 +201,7 @@ describe('bootstrapGameStore', () => {
       fetchSnapshot: async () => {
         throw new Error('boom');
       },
+      preloadSnapshot,
       hydrateSnapshot,
       connectWs,
       cacheSnapshot,
@@ -192,8 +209,9 @@ describe('bootstrapGameStore', () => {
       timeoutMs: 100,
     });
 
-    expect(hydrateSnapshot).toHaveBeenCalledTimes(1);
-    expect(hydrateSnapshot).toHaveBeenCalledWith(idbSnapshot);
+    expect(preloadSnapshot).toHaveBeenCalledTimes(1);
+    expect(preloadSnapshot).toHaveBeenCalledWith(idbSnapshot);
+    expect(hydrateSnapshot).not.toHaveBeenCalled();
     expect(connectWs).toHaveBeenCalledTimes(1);
     expect(connectWs).toHaveBeenCalledWith(idbSnapshot);
     expect(cacheSnapshot).not.toHaveBeenCalled();
@@ -207,6 +225,7 @@ describe('bootstrapGameStore', () => {
       cancelled: () => false,
       idbSnapshot: null,
       fetchSnapshot: () => network.promise,
+      preloadSnapshot: vi.fn(),
       hydrateSnapshot: vi.fn(),
       connectWs: vi.fn(),
       cacheSnapshot: vi.fn(),

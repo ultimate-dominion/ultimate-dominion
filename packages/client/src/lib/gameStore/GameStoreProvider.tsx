@@ -22,6 +22,7 @@ type BootstrapGameStoreOptions = {
   cancelled: () => boolean;
   idbSnapshot: FullSnapshot | null;
   fetchSnapshot: () => Promise<FullSnapshot>;
+  preloadSnapshot: (snapshot: FullSnapshot) => void;
   hydrateSnapshot: (snapshot: FullSnapshot) => void;
   connectWs: (snapshot: FullSnapshot) => void;
   cacheSnapshot: (snapshot: FullSnapshot) => void;
@@ -46,6 +47,7 @@ export async function bootstrapGameStore({
   cancelled,
   idbSnapshot,
   fetchSnapshot,
+  preloadSnapshot,
   hydrateSnapshot,
   connectWs,
   cacheSnapshot,
@@ -75,7 +77,7 @@ export async function bootstrapGameStore({
     if (!idbSnapshot) throw firstResult.error;
     if (cancelled()) return;
     console.warn('[gameStore] Fresh snapshot failed — booting from IndexedDB:', firstResult.error.message);
-    hydrateSnapshot(idbSnapshot);
+    preloadSnapshot(idbSnapshot);
     connectWs(idbSnapshot);
     return;
   }
@@ -86,7 +88,7 @@ export async function bootstrapGameStore({
 
   if (cancelled()) return;
   console.warn(`[gameStore] Snapshot fetch stalled — booting from IndexedDB block ${idbSnapshot.block}`);
-  hydrateSnapshot(idbSnapshot);
+  preloadSnapshot(idbSnapshot);
   connectWs(idbSnapshot);
 
   const eventualResult: NetworkBootstrapResult = await networkPromise;
@@ -104,16 +106,9 @@ export async function bootstrapGameStore({
   }
 
   const currentBlock = getCurrentBlock();
-  if (eventualResult.snapshot.block < currentBlock) {
-    console.log(
-      `[gameStore] Skipping fresh snapshot block ${eventualResult.snapshot.block} after IndexedDB fallback because live store already advanced to block ${currentBlock}`,
-    );
-    return;
-  }
-
   cacheSnapshot(eventualResult.snapshot);
   console.log(
-    `[gameStore] Applying authoritative snapshot block ${eventualResult.snapshot.block} after IndexedDB fallback (store block ${currentBlock})`,
+    `[gameStore] Applying first authoritative snapshot block ${eventualResult.snapshot.block} after IndexedDB fallback (cached/WS block ${currentBlock})`,
   );
   hydrateSnapshot(eventualResult.snapshot);
   connectWs(eventualResult.snapshot);
@@ -147,6 +142,11 @@ export function GameStoreProvider({ children }: Props) {
         const hydrateSnapshot = (snapshot: FullSnapshot) => {
           console.log(`[gameStore] Hydrating with ${Object.keys(snapshot.tables).length} tables at block ${snapshot.block}`);
           useGameStore.getState().hydrate(snapshot);
+        };
+
+        const preloadSnapshot = (snapshot: FullSnapshot) => {
+          console.log(`[gameStore] Preloading fallback snapshot with ${Object.keys(snapshot.tables).length} tables at block ${snapshot.block}`);
+          useGameStore.getState().preloadTables(snapshot);
         };
 
         const cacheSnapshot = (snapshot: FullSnapshot) => {
@@ -202,6 +202,7 @@ export function GameStoreProvider({ children }: Props) {
           cancelled: () => cancelled,
           idbSnapshot,
           fetchSnapshot,
+          preloadSnapshot,
           hydrateSnapshot,
           connectWs,
           cacheSnapshot,
