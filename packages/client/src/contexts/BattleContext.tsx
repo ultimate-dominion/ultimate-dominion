@@ -95,7 +95,7 @@ export const BattleProvider = ({
   const {
     authMethod,
     delegatorAddress,
-    systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp },
+    systemCalls: { checkCombatFragmentTriggers, endTurn, fleePvp, forceEndCombatEncounter },
   } = useMUD();
   const { character, equippedSpells, equippedWeapons } = useCharacter();
   const { allMonsters, position } = useMap();
@@ -161,18 +161,24 @@ export const BattleProvider = ({
   }, [allBattles, combatOutcomeTable, acknowledgeVersion]);
 
   // Ghost encounter safety: if an "active" battle (end=0) started more than
-  // 15 seconds ago with no opponent loaded, it's stale — auto-dismiss.
-  // Uses an interval so it retries even if the first check is too early.
+  // 15 seconds ago, it's stale — auto-dismiss from UI AND force-end on-chain
+  // so the character isn't locked in a dead encounter.
+  const ghostDismissedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!currentBattle || currentBattle.end !== BigInt(0)) return;
+    if (ghostDismissedRef.current === currentBattle.encounterId) return;
     const check = () => {
       const ageSeconds = Math.floor(Date.now() / 1000) - Number(currentBattle.start);
-      if (ageSeconds < 15) return; // still fresh, wait
-      console.warn('[battle] Ghost encounter detected (age:', ageSeconds, 's) — auto-dismissing', currentBattle.encounterId);
+      if (ageSeconds < 15) return;
+      if (ghostDismissedRef.current === currentBattle.encounterId) return;
+      ghostDismissedRef.current = currentBattle.encounterId;
+      console.warn('[battle] Ghost encounter detected (age:', ageSeconds, 's) — auto-dismissing + force-ending on-chain', currentBattle.encounterId);
       localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, currentBattle.encounterId);
       setAcknowledgeVersion(v => v + 1);
+      // Fire-and-forget: resolve the encounter on-chain so the character is freed
+      forceEndCombatEncounter(currentBattle.encounterId);
     };
-    check(); // immediate first check
+    check();
     const id = setInterval(check, 5000);
     return () => clearInterval(id);
   }, [currentBattle?.encounterId]); // eslint-disable-line react-hooks/exhaustive-deps

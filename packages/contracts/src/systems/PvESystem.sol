@@ -72,6 +72,17 @@ contract PvESystem is System {
                 }
             }
         }
+        // Require monsters to be alive and spawned — prevents ghost encounter race condition
+        // where a monster dies between client validation and chain execution.
+        if (_isValidPvE) {
+            bytes32[] memory mobs = _attackersAreMobs ? attackers : defenders;
+            for (uint256 i; i < mobs.length; i++) {
+                if (!Spawned.getSpawned(mobs[i]) || Stats.getCurrentHp(mobs[i]) <= 0) {
+                    _isValidPvE = false;
+                    break;
+                }
+            }
+        }
         // Require player characters to have at least 1 weapon or spell equipped
         if (_isValidPvE) {
             bytes32[] memory players = _attackersAreMobs ? defenders : attackers;

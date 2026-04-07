@@ -842,6 +842,30 @@ export function createSystemCalls(
     }
   };
 
+  const forceEndCombatEncounter = async (encounterId: string): SystemCallReturn => {
+    const encounter = getTableValue('CombatEncounter', encounterId);
+    if (!encounter || BigInt(encounter.end as string | number) !== BigInt(0)) {
+      return { success: true };
+    }
+
+    try {
+      console.warn('[ghost] Force-ending stuck combat encounter', encounterId);
+      const tx = await wrappedWorldContract.write.UD__endEncounter([
+        encounterId as `0x${string}`,
+        BigInt(1),
+        false,
+      ]);
+      await waitForTransaction(tx);
+      return { success: true };
+    } catch (e) {
+      console.error('[ghost] Failed to force-end encounter', e);
+      return {
+        error: getContractError(e),
+        success: false,
+      };
+    }
+  };
+
   const endTurn = async (
     encounterId: string,
     playerId: string,
@@ -2320,6 +2344,7 @@ export function createSystemCalls(
     endShopEncounter,
     endWorldEncounter,
     endTurn,
+    forceEndCombatEncounter,
     enterGame,
     equipItems,
     fleePvp,
