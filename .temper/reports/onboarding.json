@@ -1,0 +1,477 @@
+{
+  "generated_at": "2026-04-04T14:40:26.447Z",
+  "lifecycle": {
+    "id": "live",
+    "label": "Live Service / Existing Users Likely",
+    "reasons": [
+      "A beta environment is explicitly modeled in repo workflows or deploy rules.",
+      "A production environment is explicitly modeled, which usually means operator mistakes have real user impact.",
+      "Both beta and prod exist alongside GitHub workflows, so release discipline already matters.",
+      "The repo has 2441 commits locally, which suggests an established system rather than a throwaway prototype.",
+      "The stack includes live-service overlays, so environment mistakes can mutate real state or real services."
+    ],
+    "operator_habit": "Treat default automation as a safety rail, not a shortcut. Beta and prod paths should stay explicit.",
+    "player_impact": "Small workflow mistakes can hit players directly through progression, deploy, or economy surfaces."
+  },
+  "history": {
+    "commit_count": 2441,
+    "recent": [
+      {
+        "hash": "c889a49e",
+        "date": "2026-04-04",
+        "subject": "chore: remove diagnostic code from indexer"
+      },
+      {
+        "hash": "74293085",
+        "date": "2026-04-04",
+        "subject": "chore: force Docker rebuild with dynamic layer"
+      },
+      {
+        "hash": "968e11f1",
+        "date": "2026-04-04",
+        "subject": "chore: add version to health endpoint for deploy verification"
+      },
+      {
+        "hash": "1811bc93",
+        "date": "2026-04-04",
+        "subject": "chore: bump indexer to 0.2.4 — force Docker layer rebuild"
+      },
+      {
+        "hash": "2f021946",
+        "date": "2026-04-04",
+        "subject": "chore: add snapshot debug endpoint to diagnose exclusion"
+      },
+      {
+        "hash": "b045045e",
+        "date": "2026-04-04",
+        "subject": "chore: bust Docker cache for indexer snapshot exclusion"
+      },
+      {
+        "hash": "a642be6f",
+        "date": "2026-04-04",
+        "subject": "chore: bump indexer to 0.2.3 for deploy cache bust"
+      },
+      {
+        "hash": "cc5fc1fa",
+        "date": "2026-04-04",
+        "subject": "fix: reduce snapshot from 30MB to ~8MB — unblock game boot"
+      },
+      {
+        "hash": "620385b3",
+        "date": "2026-04-03",
+        "subject": "fix: add forge clean to deploy scripts + dirty-tree guard for production"
+      },
+      {
+        "hash": "864d7f5b",
+        "date": "2026-04-03",
+        "subject": "chore: regenerate Temper operating contract with voice rewrite"
+      },
+      {
+        "hash": "cfef9e9a",
+        "date": "2026-04-03",
+        "subject": "fix: read Position via MUD store getRecord instead of broken UD__getEntityPosition view"
+      },
+      {
+        "hash": "41a187fb",
+        "date": "2026-04-03",
+        "subject": "fix: prevent ghost-mob re-animation and concurrent validate bursts"
+      }
+    ],
+    "conventional_counts": {
+      "chore": 8,
+      "fix": 4
+    }
+  },
+  "workflows": {
+    "count": 5,
+    "files": [
+      {
+        "path": ".github/workflows/ci.yml",
+        "triggers": [
+          "push",
+          "pull_request"
+        ],
+        "environments": []
+      },
+      {
+        "path": ".github/workflows/deploy-beta.yml",
+        "triggers": [
+          "workflow_dispatch"
+        ],
+        "environments": [
+          "beta",
+          "mainnet"
+        ]
+      },
+      {
+        "path": ".github/workflows/release.yml",
+        "triggers": [
+          "push"
+        ],
+        "environments": []
+      },
+      {
+        "path": ".github/workflows/smoke.yml",
+        "triggers": [
+          "push",
+          "pull_request"
+        ],
+        "environments": [
+          "beta"
+        ]
+      },
+      {
+        "path": ".github/workflows/sync-dev.yml",
+        "triggers": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "environments": []
+      }
+    ]
+  },
+  "strengths": [
+    "The repo already has explicit operator context files for startup and session continuity.",
+    "Domain rules are already broken out into file-scoped guidance instead of one giant doc.",
+    "The project distinguishes local, beta, and prod instead of treating release as one flat surface.",
+    "Temper can detect canonical data and workflow surfaces without custom per-project code.",
+    "GitHub workflow files exist, so the repo has machine-readable release or validation paths.",
+    "The repo has enough local history for Temper to infer patterns instead of guessing from a shallow snapshot."
+  ],
+  "operator_answers": {
+    "name": "ultimate-dominion",
+    "family": "data-driven-progression-rpg",
+    "stack": "browser-typescript-monorepo",
+    "beta_branch": "dev",
+    "prod_branch": "main"
+  },
+  "efficiency": {
+    "score": 70,
+    "current_startup_tokens": "~5K-15K tokens",
+    "projected_startup_tokens": "~2K-5K tokens",
+    "waste": [
+      "No handoff docs detected. End-of-session context is more likely to get lost.",
+      "Root `test` is acting like lint. That creates false confidence and expensive backtracking.",
+      "Default `ship full` currently includes live-stateful verification. That is expensive, slower, and easier to misuse."
+    ],
+    "payoffs": [
+      "Shared operating instructions exist, which lowers repeated orientation cost.",
+      "Session state is already explicit, which helps carry work across turns and agents.",
+      "Domain-specific rule files exist, so assistants can stay narrower and cheaper.",
+      "Canonical source-of-truth surfaces are detectable, which is one of the biggest token savers in long-lived repos."
+    ]
+  },
+  "memory": {
+    "release_pattern": "beta environment is modeled; prod environment is modeled; 5 GitHub workflow files detected",
+    "continuity_pattern": "repo-native session tracking exists",
+    "recurring_failure_modes": [
+      "Root `test` currently resolves to lint-style validation rather than a real test or verify path.",
+      "deep verification has shared-state steps that should stay promoted, not default: smoke"
+    ],
+    "recent_signals": [
+      "2441 local commits available for pattern inference",
+      "recent commit mix chore:8, fix:4",
+      "top recommendations split-root-test-from-lint, gate-live-verification"
+    ]
+  },
+  "resurfacing": [
+    {
+      "id": "promote-gated-full-steps",
+      "phase": "ship",
+      "priority": "high",
+      "message": "Keep full-flow live verification explicit. Promote only when needed: smoke."
+    },
+    {
+      "id": "root-test-is-lint",
+      "phase": "ship",
+      "priority": "high",
+      "message": "Do not read root `test` as real release confidence until the repo splits lint from verification."
+    },
+    {
+      "id": "keep-workflow-context-current",
+      "phase": "session",
+      "priority": "medium",
+      "message": "Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in."
+    },
+    {
+      "id": "watch-recurring-failure-modes",
+      "phase": "always",
+      "priority": "medium",
+      "message": "Recurring failure modes to keep visible: Root `test` currently resolves to lint-style validation rather than a real test or verify path.; deep verification has shared-state steps that should stay promoted, not default: smoke"
+    }
+  ],
+  "script_audit": {
+    "root_scripts": {
+      "build": "pnpm recursive run build",
+      "build:client": "pnpm --filter 'client' run build",
+      "start:client": "pnpm --filter 'client' run preview",
+      "dev": "mprocs",
+      "dev:client": "pnpm --filter 'client' run dev",
+      "dev:contracts": "pnpm --filter 'contracts' dev",
+      "foundry:up": "curl -L https://foundry.paradigm.xyz | bash && bash $HOME/.foundry/bin/foundryup",
+      "foundry:install": "foundryup --install v0.3.0",
+      "mud:up": "pnpm mud set-version --tag main && pnpm install",
+      "format:client": "pnpm --filter 'client' run format",
+      "lint:client": "pnpm --filter 'client' run lint",
+      "test": "pnpm --filter client run lint",
+      "changelog": "node scripts/changelog.mjs",
+      "changelog:dry": "node scripts/changelog.mjs --dry-run"
+    },
+    "issues": [
+      {
+        "id": "root-test-is-lint",
+        "severity": "high",
+        "message": "Root `test` currently resolves to lint-style validation rather than a real test or verify path.",
+        "evidence": "pnpm --filter client run lint"
+      }
+    ]
+  },
+  "execution_policy": {
+    "commands": {
+      "build": {
+        "id": "build",
+        "cmd": [
+          "pnpm",
+          "build"
+        ],
+        "source": "root:scripts.build",
+        "script": "pnpm recursive run build",
+        "risk": "expensive_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Runs local verification or compile work without explicit remote mutation."
+        ]
+      },
+      "test": {
+        "id": "test",
+        "cmd": [
+          "pnpm",
+          "test"
+        ],
+        "source": "root:scripts.test",
+        "script": "pnpm --filter client run lint",
+        "risk": "safe_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Runs local verification or compile work without explicit remote mutation."
+        ]
+      },
+      "release_notes": {
+        "id": "release_notes",
+        "cmd": [
+          "pnpm",
+          "changelog:dry"
+        ],
+        "source": "root:scripts.changelog:dry",
+        "script": "node scripts/changelog.mjs --dry-run",
+        "risk": "safe_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Generates local release metadata without mutating runtime state."
+        ]
+      },
+      "typecheck": {
+        "id": "typecheck",
+        "cmd": [
+          "pnpm",
+          "--filter",
+          "client",
+          "run",
+          "typecheck"
+        ],
+        "source": "client:scripts.typecheck",
+        "script": "tsc --noEmit",
+        "risk": "expensive_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Runs local verification or compile work without explicit remote mutation."
+        ]
+      },
+      "smoke": {
+        "id": "smoke",
+        "cmd": [
+          "pnpm",
+          "--filter",
+          "contracts",
+          "run",
+          "test:smoke:all"
+        ],
+        "source": "contracts:scripts.test:smoke:all",
+        "script": "bash -c 'set -a && source .env.testnet && set +a && vitest run scripts/smoke-test/ --reporter=verbose --sequence.concurrent=false'",
+        "risk": "live_stateful",
+        "effect": "beta_or_target_env",
+        "requires_confirmation": true,
+        "reasons": [
+          "Depends on environment credentials or mutates a shared runtime surface."
+        ]
+      },
+      "balance_verify": {
+        "id": "balance_verify",
+        "cmd": [
+          "pnpm",
+          "--filter",
+          "contracts",
+          "run",
+          "test:balance"
+        ],
+        "source": "contracts:scripts.test:balance",
+        "script": "vitest run scripts/balance/",
+        "risk": "expensive_local",
+        "effect": "local",
+        "requires_confirmation": false,
+        "reasons": [
+          "Runs local verification or compile work without explicit remote mutation."
+        ]
+      }
+    },
+    "hook_recommendations": {
+      "lite": {
+        "current_steps": [
+          "build",
+          "test",
+          "release_notes"
+        ],
+        "recommended_default": [
+          "build",
+          "test",
+          "release_notes"
+        ],
+        "gated_live": [],
+        "blocked_prod": [],
+        "notes": []
+      },
+      "full": {
+        "current_steps": [
+          "build",
+          "typecheck",
+          "test",
+          "balance_verify",
+          "smoke",
+          "release_notes"
+        ],
+        "recommended_default": [
+          "build",
+          "typecheck",
+          "test",
+          "balance_verify",
+          "release_notes"
+        ],
+        "gated_live": [
+          "smoke"
+        ],
+        "blocked_prod": [],
+        "notes": [
+          "Temper would keep full local-by-default and promote riskier steps only after explicit confirmation.",
+          "These full steps touch shared runtime state or require real environment credentials."
+        ]
+      }
+    },
+    "lifecycle": {
+      "stages": [
+        "discovered",
+        "recommended",
+        "blessed",
+        "gated"
+      ],
+      "promote_command": "temper ship <lite|full> --promote <step>",
+      "confirmation_rules": [
+        "Live-stateful steps start gated and require explicit `--promote <step>` to run.",
+        "Production-sensitive steps require both `--promote <step>` and `--confirm-prod`."
+      ],
+      "ship_modes": {
+        "lite": {
+          "discovered_steps": [
+            "build",
+            "test",
+            "release_notes"
+          ],
+          "recommended_steps": [
+            "build",
+            "test",
+            "release_notes"
+          ],
+          "blessed_steps": [
+            "build",
+            "test",
+            "release_notes"
+          ],
+          "gated_steps": [],
+          "prod_confirmation_steps": [],
+          "notes": [
+            "lite blessed default stays local-first: build, test, release_notes"
+          ]
+        },
+        "full": {
+          "discovered_steps": [
+            "build",
+            "typecheck",
+            "test",
+            "balance_verify",
+            "smoke",
+            "release_notes"
+          ],
+          "recommended_steps": [
+            "build",
+            "typecheck",
+            "test",
+            "balance_verify",
+            "release_notes",
+            "smoke"
+          ],
+          "blessed_steps": [
+            "build",
+            "typecheck",
+            "test",
+            "balance_verify",
+            "release_notes"
+          ],
+          "gated_steps": [
+            "smoke"
+          ],
+          "prod_confirmation_steps": [],
+          "notes": [
+            "full blessed default stays local-first: build, typecheck, test, balance_verify, release_notes",
+            "full gated steps require explicit promotion: smoke",
+            "smoke: Depends on environment credentials or mutates a shared runtime surface."
+          ]
+        }
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "id": "split-root-test-from-lint",
+      "priority": "high",
+      "title": "Split root lint from root verification",
+      "why": "Humans and assistants both read `test` as a confidence signal. If it only lints, the repo looks safer than it is.",
+      "operator_change": "Rename the root lint path or add a stronger root verify path that matches what `test` implies.",
+      "player_impact": "Fewer releases will be called validated when only style checks ran.",
+      "tradeoff": "One-time script and CI cleanup. Slightly more explicit command names afterward.",
+      "token_impact": "Saves rework tokens by reducing false-positive confidence during shipping."
+    },
+    {
+      "id": "gate-live-verification",
+      "priority": "high",
+      "title": "Keep live-stateful verification out of the default `ship full` path",
+      "why": "Environment-bound smoke tests and sync-style commands are valuable, but they should be promoted deliberately, not inferred as routine local validation.",
+      "operator_change": "Use `ship full` for local/deep local confidence and run beta/live verification as an explicit next step.",
+      "player_impact": "Reduces accidental mutation of shared game state while keeping beta confidence available when it matters.",
+      "tradeoff": "One more explicit step when you want deep environment validation.",
+      "token_impact": "Cuts long, expensive runs from the default path and avoids recovery sessions after accidental live writes."
+    },
+    {
+      "id": "codify-operator-context",
+      "priority": "medium",
+      "title": "Codify startup, session, and handoff surfaces",
+      "why": "Every missing operator doc pushes context back into chat, which is the most expensive place to store it.",
+      "operator_change": "Keep AGENTS, SESSION, and handoff docs short, current, and repo-native.",
+      "player_impact": "Less operator drift means fewer avoidable mistakes during hotfixes and live changes.",
+      "tradeoff": "Requires a few minutes of discipline at the start and end of a workstream.",
+      "token_impact": "This is one of the biggest recurring token savings because the same explanation stops repeating."
+    }
+  ]
+}

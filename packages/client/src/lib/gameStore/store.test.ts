@@ -19,6 +19,7 @@ beforeEach(() => {
     connected: false,
     currentBlock: 0,
     hydrated: false,
+    hydrateVersion: 0,
   });
 });
 
@@ -62,6 +63,7 @@ describe('hydrate', () => {
     expect(state.tables).toEqual(snap.tables);
     expect(state.currentBlock).toBe(300);
     expect(state.hydrated).toBe(true);
+    expect(state.hydrateVersion).toBe(1);
   });
 
   it('sets hydrated even after preloadTables left it false', () => {
@@ -73,7 +75,19 @@ describe('hydrate', () => {
 
     useGameStore.getState().hydrate(fresh);
     expect(useGameStore.getState().hydrated).toBe(true);
+    expect(useGameStore.getState().hydrateVersion).toBe(1);
     expect(useGameStore.getState().tables.Battles).toBeDefined();
+  });
+
+  it('increments hydrateVersion on every fresh hydrate but not preloadTables', () => {
+    useGameStore.getState().preloadTables(makeSnapshot(100));
+    expect(useGameStore.getState().hydrateVersion).toBe(0);
+
+    useGameStore.getState().hydrate(makeSnapshot(200));
+    expect(useGameStore.getState().hydrateVersion).toBe(1);
+
+    useGameStore.getState().hydrate(makeSnapshot(300));
+    expect(useGameStore.getState().hydrateVersion).toBe(2);
   });
 });
 

@@ -30,6 +30,7 @@
     "husky": "^9.0.11",
     "mprocs": "^0.6.4",
     "rimraf": "^3.0.2",
+    "temper": "link:../temper",
     "typescript": "5.3.3"
   },
   "engines": {

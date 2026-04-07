@@ -41,13 +41,14 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
     pollingInterval: 250,
   });
 
-  // Determine effective start block from checkpoint
-  const SAFETY_BUFFER = 100n;
+  // Determine effective start block from checkpoint. Checkpoints record the
+  // latest block already committed to Postgres, so resume from the next block
+  // instead of replaying dynamic-array splice events.
   const checkpoint = await bootstrapCheckpoint(mudSchema) ?? await getCheckpoint();
   let effectiveStartBlock = config.world.startBlock;
   if (checkpoint !== null) {
-    const buffered = checkpoint - SAFETY_BUFFER;
-    effectiveStartBlock = buffered > config.world.startBlock ? buffered : config.world.startBlock;
+    const nextBlock = checkpoint + 1n;
+    effectiveStartBlock = nextBlock > config.world.startBlock ? nextBlock : config.world.startBlock;
     console.log(`[sync] Checkpoint: ${checkpoint}, effective start block: ${effectiveStartBlock}`);
   } else {
     console.log(`[sync] No checkpoint found, starting from env START_BLOCK: ${config.world.startBlock}`);
@@ -85,21 +86,24 @@ export async function startSync(broadcaster: Broadcaster): Promise<SyncHandle> {
   // Subscribe to stored block logs for WS broadcasting.
   // This fires AFTER data is committed to Postgres, so latestStoredBlockNumber
   // is safe to use for delta queries (unlike latestBlockNumber$ which can race ahead).
-  const CHECKPOINT_INTERVAL_MS = 30_000;
-  let lastCheckpointSave = Date.now();
+  const CHECKPOINT_BLOCK_INTERVAL = 5n;
+  let lastCheckpointBlock = checkpoint ?? effectiveStartBlock;
 
   sync.storedBlockLogs$.subscribe({
     next: async ({ blockNumber, logs }) => {
       handle.latestBlockNumber = Number(blockNumber);
       handle.latestStoredBlockNumber = Number(blockNumber);
 
-      // Periodic checkpoint save (every 30s, fire-and-forget)
-      const now = Date.now();
-      if (now - lastCheckpointSave >= CHECKPOINT_INTERVAL_MS) {
-        lastCheckpointSave = now;
-        saveCheckpoint(BigInt(blockNumber)).catch((err) =>
-          console.error('[sync] Checkpoint save failed:', err),
-        );
+      // Save checkpoints every 5 committed blocks to minimize replay after a
+      // crash without re-applying non-idempotent splice events.
+      const blockNumberBigInt = BigInt(blockNumber);
+      if (blockNumberBigInt - lastCheckpointBlock >= CHECKPOINT_BLOCK_INTERVAL) {
+        try {
+          await saveCheckpoint(blockNumberBigInt);
+          lastCheckpointBlock = blockNumberBigInt;
+        } catch (err) {
+          console.error('[sync] Checkpoint save failed:', err);
+        }
       }
 
       if (logs.length === 0) return;

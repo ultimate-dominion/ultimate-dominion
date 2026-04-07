@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-04T14:40:26.655Z",
+  "project": {
+    "name": "ultimate-dominion",
+    "root": "/Users/michaelorourke/ultimate-dominion"
+  },
+  "session_file": "SESSION.md",
+  "session_data_file": ".temper/workflow/session.json",
+  "handoff_pattern": "HANDOFF_<slug>.md",
+  "handoff_template_file": ".temper/workflow/HANDOFF_TEMPLATE.md",
+  "token_strategy": [
+    "Read the Temper-managed session block in SESSION.md first.",
+    "Read the relevant HANDOFF_<slug>.md before relying on chat history.",
+    "Keep the session board short and point to handoff docs for detail."
+  ],
+  "handoff_command": "pnpm exec temper handoff --cwd . --slug <slug> --summary \"<summary>\" --next \"<next step>\"",
+  "current_branch": "main"
+}

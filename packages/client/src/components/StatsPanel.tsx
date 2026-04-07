@@ -180,7 +180,7 @@ export const StatsPanel = (): JSX.Element => {
 
       {!currentBattle && (
         <VStack mt={3} spacing={0} w="100%">
-          {/* HP bar */}
+          {/* HP bar — hidden during battle (shown in battle pane instead) */}
           <Box px={2} py={1.5} w="100%">
             <HStack justifyContent="space-between" mb={1}>
               <Text fontWeight={700} size="sm">{t('health.hp')}</Text>

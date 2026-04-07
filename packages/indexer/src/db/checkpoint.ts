@@ -2,8 +2,8 @@ import { sql } from './connection.js';
 
 /**
  * Sync checkpoint — stores the latest block number committed to Postgres.
- * On restart, we resume from (checkpoint - SAFETY_BUFFER) instead of
- * replaying from START_BLOCK (~450k+ blocks).
+ * On restart, we resume from checkpoint + 1 so splice events are never
+ * replayed against already-mutated dynamic-array state.
  */
 
 /** Create the checkpoint table in the queue schema (singleton row) */

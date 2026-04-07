@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-04T14:40:26.681Z",
+  "entries": [
+    {
+      "workstream": "main",
+      "branch": "main",
+      "status": "active",
+      "next": "Split root lint from root verification",
+      "handoff": "none",
+      "updated_at": "2026-04-04T14:40:26.681Z"
+    }
+  ]
+}

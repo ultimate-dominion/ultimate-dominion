@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-04T14:40:26.682Z",
+  "project": {
+    "name": "ultimate-dominion",
+    "root": "/Users/michaelorourke/ultimate-dominion",
+    "family": "data-driven-progression-rpg",
+    "stack": "browser-typescript-monorepo",
+    "package_manager": "pnpm"
+  },
+  "contract_files": [
+    "temper.config.json",
+    ".temper/assistants/shared-canon.json",
+    ".temper/assistants/shared-canon.md",
+    ".temper/assistants/README.md"
+  ],
+  "runtime": {
+    "command": "pnpm exec temper",
+    "cwd": "."
+  },
+  "defaults": [
+    "Treat Temper as the operating layer for this repo.",
+    "Fetch doctrine and routing before major design or release guidance.",
+    "Use ship lite for narrow implementation confidence.",
+    "Use ship full for player-facing, infra, economy, security, or multi-system work."
+  ],
+  "capabilities": [
+    {
+      "id": "coach",
+      "when": "before designing a new system, feature, or data model — run this first, not after",
+      "command": "pnpm exec temper coach --cwd . --json --intent \"<what you're designing>\"",
+      "result": "fetch doctrine and routing before you answer"
+    },
+    {
+      "id": "ship_lite",
+      "when": "after the first working version of a feature is done — before moving to the next thing",
+      "command": "pnpm exec temper ship lite --cwd . --intent \"<what you just built>\"",
+      "result": "run the default low-risk ship path"
+    },
+    {
+      "id": "ship_full",
+      "when": "before sharing with anyone, or when touching player-facing, economy, or multi-system code",
+      "command": "pnpm exec temper ship full --cwd . --intent \"<summary>\"",
+      "result": "run the deeper blessed ship path and surface any gated follow-ups"
+    },
+    {
+      "id": "hotfix",
+      "when": "something is broken in a live environment and you need a recovery plan",
+      "command": "pnpm exec temper hotfix --cwd . --json --env prod --intent \"<what broke>\"",
+      "result": "route the response through the hotfix doctrine surface"
+    },
+    {
+      "id": "handoff",
+      "when": "ending a session, switching to a different workstream, or handing work to another agent",
+      "command": "pnpm exec temper handoff --cwd . --slug <slug> --summary \"<summary>\" --next \"<next step>\"",
+      "result": "write a canonical restart artifact and update SESSION.md"
+    }
+  ],
+  "execution_policy": {
+    "stages": [
+      "discovered",
+      "recommended",
+      "blessed",
+      "gated"
+    ],
+    "promote_command": "temper ship <lite|full> --promote <step>",
+    "confirmation_rules": [
+      "Live-stateful steps start gated and require explicit `--promote <step>` to run.",
+      "Production-sensitive steps require both `--promote <step>` and `--confirm-prod`."
+    ],
+    "modes": {
+      "lite": {
+        "mode": "lite",
+        "discovered": [
+          "build",
+          "test",
+          "release_notes"
+        ],
+        "recommended": [
+          "build",
+          "test",
+          "release_notes"
+        ],
+        "blessed": [
+          "build",
+          "test",
+          "release_notes"
+        ],
+        "gated": [],
+        "prod_confirmation": [],
+        "notes": [
+          "lite blessed default stays local-first: build, test, release_notes"
+        ]
+      },
+      "full": {
+        "mode": "full",
+        "discovered": [
+          "build",
+          "typecheck",
+          "test",
+          "balance_verify",
+          "smoke",
+          "release_notes"
+        ],
+        "recommended": [
+          "build",
+          "typecheck",
+          "test",
+          "balance_verify",
+          "release_notes",
+          "smoke"
+        ],
+        "blessed": [
+          "build",
+          "typecheck",
+          "test",
+          "balance_verify",
+          "release_notes"
+        ],
+        "gated": [
+          "smoke"
+        ],
+        "prod_confirmation": [],
+        "notes": [
+          "full blessed default stays local-first: build, typecheck, test, balance_verify, release_notes",
+          "full gated steps require explicit promotion: smoke",
+          "smoke: Depends on environment credentials or mutates a shared runtime surface."
+        ]
+      }
+    }
+  },
+  "continuity": {
+    "session_file": "SESSION.md",
+    "handoff_pattern": "HANDOFF_<slug>.md",
+    "handoff_command": "pnpm exec temper handoff --cwd . --slug <slug> --summary \"<summary>\" --next \"<next step>\"",
+    "token_strategy": [
+      "Read SESSION.md first for the active board.",
+      "Read the relevant HANDOFF_<slug>.md for restart detail.",
+      "Keep the session board short and push detail into handoffs."
+    ]
+  },
+  "workflow_memory": {
+    "release_pattern": "beta environment is modeled; prod environment is modeled; 5 GitHub workflow files detected",
+    "continuity_pattern": "repo-native session tracking exists",
+    "recurring_failure_modes": [
+      "Root `test` currently resolves to lint-style validation rather than a real test or verify path.",
+      "deep verification has shared-state steps that should stay promoted, not default: smoke"
+    ],
+    "recent_signals": [
+      "2441 local commits available for pattern inference",
+      "recent commit mix chore:8, fix:4",
+      "top recommendations split-root-test-from-lint, gate-live-verification"
+    ]
+  },
+  "resurfacing": [
+    {
+      "id": "promote-gated-full-steps",
+      "phase": "ship",
+      "priority": "high",
+      "message": "Keep full-flow live verification explicit. Promote only when needed: smoke."
+    },
+    {
+      "id": "root-test-is-lint",
+      "phase": "ship",
+      "priority": "high",
+      "message": "Do not read root `test` as real release confidence until the repo splits lint from verification."
+    },
+    {
+      "id": "keep-workflow-context-current",
+      "phase": "session",
+      "priority": "medium",
+      "message": "Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in."
+    },
+    {
+      "id": "watch-recurring-failure-modes",
+      "phase": "always",
+      "priority": "medium",
+      "message": "Recurring failure modes to keep visible: Root `test` currently resolves to lint-style validation rather than a real test or verify path.; deep verification has shared-state steps that should stay promoted, not default: smoke"
+    }
+  ]
+}
