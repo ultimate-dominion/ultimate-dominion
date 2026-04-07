@@ -27,12 +27,12 @@ const base: MUDChain = {
   nativeCurrency: { decimals: 18, name: "Ether", symbol: "ETH" },
   rpcUrls: {
     default: {
-      http: [(process.env.RPC_HTTP_URL || "https://mainnet.base.org") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://base-rpc.publicnode.com"],
+      http: [(process.env.RPC_HTTP_URL || "https://rpc.ultimatedominion.com") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://rpc.ultimatedominion.com"],
     },
     public: {
-      http: [(process.env.RPC_HTTP_URL || "https://mainnet.base.org") as string],
-      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://base-rpc.publicnode.com"],
+      http: [(process.env.RPC_HTTP_URL || "https://rpc.ultimatedominion.com") as string],
+      webSocket: process.env.RPC_WS_URL ? [process.env.RPC_WS_URL] : ["wss://rpc.ultimatedominion.com"],
     },
   },
   blockExplorers: {

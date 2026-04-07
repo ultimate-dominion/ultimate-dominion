@@ -12,7 +12,7 @@ import { base } from 'viem/chains';
  */
 
 const WORLD_ADDRESS = process.env.WORLD_ADDRESS as Address;
-const RPC_URL = process.env.RPC_HTTP_URL || 'https://mainnet.base.org';
+const RPC_URL = process.env.RPC_HTTP_URL || 'https://rpc.ultimatedominion.com';
 const GAS_STATION_MIN_LEVEL = 3;
 
 // ABI fragments for reading character data from the World contract
