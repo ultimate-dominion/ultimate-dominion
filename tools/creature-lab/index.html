@@ -205,10 +205,38 @@
     </a>
   </div>
 
+  <div class="zone-label">Player Characters</div>
+  <div class="grid" id="pc-grid">
+    <a class="card done" href="review.html?creature=human" data-slug="human">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Human</div>
+        <div class="card-meta"><span>Base</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="review.html?creature=elf" data-slug="elf">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Elf</div>
+        <div class="card-meta"><span>Base</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="review.html?creature=dwarf" data-slug="dwarf">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Dwarf</div>
+        <div class="card-meta"><span>Base</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+  </div>
+
   <div class="summary">
-    <span>18 / 21 complete</span>
+    <span>21 / 24 complete</span>
     <span>Z1: 11 done</span>
     <span>Z2: 7 done, 3 todo</span>
+    <span>PCs: 3 done</span>
   </div>
 
   <script type="importmap">
@@ -246,6 +274,10 @@
       'troll':             { gridW: 10, gridH: 12, level: 17, glb: 'glb/troll-animated.glb' },
       'griffon':           { gridW: 12, gridH: 10, level: 18, glb: 'glb/griffon-animated.glb' },
       'korraths-warden':   { gridW: 16, gridH: 14, level: 20, glb: 'glb/korraths-warden-animated.glb' },
+      // Player Characters
+      'human':             { gridW: 7,  gridH: 7,  level: 1,  glb: 'glb/human-animated.glb' },
+      'elf':               { gridW: 7,  gridH: 7,  level: 1,  glb: 'glb/elf-animated.glb' },
+      'dwarf':             { gridW: 7,  gridH: 7,  level: 1,  glb: 'glb/dwarf-animated.glb' },
     };
 
     const PREVIEW_W = 180;

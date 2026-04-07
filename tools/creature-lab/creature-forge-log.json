@@ -545,5 +545,65 @@
       "method": "heuristic"
     },
     "timestamp": "2026-04-07T20:49:39.418Z"
+  },
+  {
+    "slug": "human",
+    "name": "Human",
+    "description": "athletic human adventurer in simple linen undershirt and worn trousers, leather belt, soft boots, empty hands at sides in ready fighting stance, average build with balanced proportions, short practical hair, determined expression, bare forearms visible, no weapons, no armor plates, no shield",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d69dd-7b63-77f3-81e8-e81b1f9130d8",
+    "prompt": "A Human: athletic human adventurer in simple linen undershirt and worn trousers, leather belt, soft boots, empty hands at sides in ready fighting stance, average build with balanced proportions, short practical hair, determined expression, bare forearms visible, no weapons, no armor plates, no shield. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T21:34:53.378Z"
+  },
+  {
+    "slug": "dwarf",
+    "name": "Dwarf",
+    "description": "stocky broad-shouldered dwarf in rough wool undershirt and sturdy trousers, wide leather belt with iron buckle, thick boots, empty hands at sides in solid fighting stance, very short and wide build, thick braided beard, barrel chest, massive forearms, no weapons, no armor plates, no helmet",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d69dd-9bc3-7694-b4df-a48c8b68b649",
+    "prompt": "A Dwarf: stocky broad-shouldered dwarf in rough wool undershirt and sturdy trousers, wide leather belt with iron buckle, thick boots, empty hands at sides in solid fighting stance, very short and wide build, thick braided beard, barrel chest, massive forearms, no weapons, no armor plates, no helmet. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T21:35:18.198Z"
+  },
+  {
+    "slug": "elf",
+    "name": "Elf",
+    "description": "tall slender elf in light cloth tunic and fitted leggings, thin leather wraps on forearms, soft leather shoes, empty hands at sides in graceful ready stance, elongated pointed ears, angular refined features, lithe narrow shoulders, long limbs, no weapons, no armor, no cape, no hood",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d69e4-3826-795a-b1fb-b4fa38fcc258",
+    "prompt": "Variation 2: emphasize more extreme proportions, larger silhouette, more damage/scars. A Elf: tall slender elf in light cloth tunic and fitted leggings, thin leather wraps on forearms, soft leather shoes, empty hands at sides in graceful ready stance, elongated pointed ears, angular refined features, lithe narrow shoulders, long limbs, no weapons, no armor, no cape, no hood. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T21:42:39.431Z"
   }
 ]
