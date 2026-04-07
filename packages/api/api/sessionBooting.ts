@@ -33,8 +33,6 @@ import { getNetworkConfig } from "../lib/getNetworkConfig.js";
 // Increase polling intervals but decrease wait time between them
 const MAX_POLL_INTERVALS = 30;
 const POLL_INTERVAL_MS = 250; // Reduced from 500ms to 250ms
-type HandlerRequest = VercelRequest | Request;
-type HandlerResponse = VercelResponse | Response;
 
 function createViemClientConfig(chain: MUDChain): {
   readonly chain: MUDChain;
@@ -62,13 +60,23 @@ function createViemClientConfig(chain: MUDChain): {
 }
 
 export default async function sessionBooting(
-  req: HandlerRequest,
-  res: HandlerResponse
+  req: VercelRequest,
+  res: VercelResponse
+) : Promise<unknown>;
+export default async function sessionBooting(
+  req: Request,
+  res: Response
+) : Promise<unknown>;
+export default async function sessionBooting(
+  req: VercelRequest | Request,
+  res: VercelResponse | Response
 ) {
-  if (setCors(req, res, "GET, OPTIONS")) return res.status(204).end();
+  const request = req as VercelRequest & Request;
+  const response = res as VercelResponse & Response;
+  if (setCors(request, response, "GET, OPTIONS")) return response.status(204).end();
 
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (request.method !== "GET") {
+    return response.status(405).json({ error: "Method not allowed" });
   }
 
   try {
@@ -162,8 +170,8 @@ export default async function sessionBooting(
     
     while (syncProgress?.step !== SyncStep.LIVE) {
       if (pollIntervals >= MAX_POLL_INTERVALS) {
-        return res.status(500).json({ 
-          error: "Syncing took too long", 
+        return response.status(500).json({
+          error: "Syncing took too long",
           currentStep: syncProgress?.step,
           elapsedTime: `${(Date.now() - startTime) / 1000}s`,
           pollIntervals: pollIntervals
@@ -236,12 +244,12 @@ export default async function sessionBooting(
       }
     }
 
-    return res.status(200).json({ expiredCharacterIds: expiredCharacterIds });
+    return response.status(200).json({ expiredCharacterIds: expiredCharacterIds });
   } catch (error) {
     console.error("[sessionBooting] Error:", error);
-    return res.status(500).json({ 
-      error: "Something went wrong", 
-      message: error instanceof Error ? error.message : String(error) 
+    return response.status(500).json({
+      error: "Something went wrong",
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 }

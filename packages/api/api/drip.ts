@@ -2,28 +2,30 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { Request, Response } from "express";
 import { DRIP_SCHEDULE, listContacts, sendDripEmail } from "../lib/emailService.js";
 import { setCors } from "../lib/cors.js";
-type HandlerRequest = VercelRequest | Request;
-type HandlerResponse = VercelResponse | Response;
 
-export default async function drip(req: HandlerRequest, res: HandlerResponse) {
-  if (setCors(req, res, "GET, OPTIONS")) return res.status(204).end();
+export default async function drip(req: VercelRequest, res: VercelResponse): Promise<unknown>;
+export default async function drip(req: Request, res: Response): Promise<unknown>;
+export default async function drip(req: VercelRequest | Request, res: VercelResponse | Response) {
+  const request = req as VercelRequest & Request;
+  const response = res as VercelResponse & Response;
+  if (setCors(request, response, "GET, OPTIONS")) return response.status(204).end();
 
-  if (req.method !== "GET") {
-    return res.status(405).json({ success: false, error: "Method not allowed" });
+  if (request.method !== "GET") {
+    return response.status(405).json({ success: false, error: "Method not allowed" });
   }
 
   // Verify cron secret — Vercel sends this automatically for cron invocations
-  const authHeader = req.headers.authorization;
+  const authHeader = request.headers.authorization;
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return res.status(401).json({ success: false, error: "Unauthorized" });
+    return response.status(401).json({ success: false, error: "Unauthorized" });
   }
 
   try {
     const contacts = await listContacts();
     if (contacts.length === 0) {
-      return res.status(200).json({ success: true, processed: 0, sent: 0 });
+      return response.status(200).json({ success: true, processed: 0, sent: 0 });
     }
 
     const now = Date.now();
@@ -47,9 +49,9 @@ export default async function drip(req: HandlerRequest, res: HandlerResponse) {
     }
 
     console.log(`Drip cron: processed ${contacts.length} contacts, sent ${sent} emails`);
-    return res.status(200).json({ success: true, processed: contacts.length, sent });
+    return response.status(200).json({ success: true, processed: contacts.length, sent });
   } catch (error: unknown) {
     console.error('Error in drip cron:', error);
-    return res.status(500).json({ success: false, error: "Drip processing failed" });
+    return response.status(500).json({ success: false, error: "Drip processing failed" });
   }
 }

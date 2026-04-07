@@ -14,8 +14,6 @@ interface MetricEntry {
   timestamp: number;
   meta?: Record<string, unknown>;
 }
-type HandlerRequest = VercelRequest | Request;
-type HandlerResponse = VercelResponse | Response;
 
 // Simple rate limit: 20 req/min per IP (metrics flush less often than errors)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -38,25 +36,29 @@ setInterval(() => {
   }
 }, 300_000);
 
-export default async function handler(req: HandlerRequest, res: HandlerResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<unknown>;
+export default async function handler(req: Request, res: Response): Promise<unknown>;
+export default async function handler(req: VercelRequest | Request, res: VercelResponse | Response) {
+  const request = req as VercelRequest & Request;
+  const response = res as VercelResponse & Response;
+  if (request.method !== 'POST') {
+    return response.status(405).json({ error: 'Method not allowed' });
   }
 
-  const forwardedFor = req.headers["x-forwarded-for"];
-  const realIp = req.headers["x-real-ip"];
+  const forwardedFor = request.headers["x-forwarded-for"];
+  const realIp = request.headers["x-real-ip"];
   const ip =
     (typeof forwardedFor === "string" ? forwardedFor.split(",")[0]?.trim() : forwardedFor?.[0]) ||
     (typeof realIp === "string" ? realIp : realIp?.[0]) ||
     "unknown";
   if (isRateLimited(ip)) {
-    return res.status(429).json({ error: 'Rate limited' });
+    return response.status(429).json({ error: 'Rate limited' });
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const body = typeof request.body === 'string' ? JSON.parse(request.body) : request.body;
     if (!body?.metrics?.length) {
-      return res.status(400).json({ error: 'No metrics in payload' });
+      return response.status(400).json({ error: 'No metrics in payload' });
     }
 
     const metrics: MetricEntry[] = body.metrics.slice(0, 100);
@@ -74,8 +76,8 @@ export default async function handler(req: HandlerRequest, res: HandlerResponse)
       );
     }
 
-    return res.status(200).json({ received: metrics.length });
+    return response.status(200).json({ received: metrics.length });
   } catch {
-    return res.status(400).json({ error: 'Invalid payload' });
+    return response.status(400).json({ error: 'Invalid payload' });
   }
 }

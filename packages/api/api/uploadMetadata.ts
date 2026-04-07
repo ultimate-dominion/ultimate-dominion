@@ -2,25 +2,27 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { Request, Response } from "express";
 import { uploadJsonToPinata } from "../lib/fileStorage.js";
 import { setCors } from "../lib/cors.js";
-type HandlerRequest = VercelRequest | Request;
-type HandlerResponse = VercelResponse | Response;
 
+export default async function uploadMetadata(req: VercelRequest, res: VercelResponse): Promise<unknown>;
+export default async function uploadMetadata(req: Request, res: Response): Promise<unknown>;
 export default async function uploadMetadata(
-  req: HandlerRequest,
-  res: HandlerResponse
+  req: VercelRequest | Request,
+  res: VercelResponse | Response
 ) {
-  if (setCors(req, res)) return res.status(204).end();
+  const request = req as VercelRequest & Request;
+  const response = res as VercelResponse & Response;
+  if (setCors(request, response)) return response.status(204).end();
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (request.method !== "POST") {
+    return response.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const jsonData = req.body;
+    const jsonData = request.body;
 
     // Validate metadata schema
     if (!jsonData || typeof jsonData !== 'object' || !jsonData.name) {
-      return res.status(400).json({ error: "Invalid metadata: 'name' field is required" });
+      return response.status(400).json({ error: "Invalid metadata: 'name' field is required" });
     }
 
     // Generate a filename based on character name or timestamp
@@ -32,13 +34,13 @@ export default async function uploadMetadata(
 
     if (!cid) {
       console.error('Failed to get CID from Pinata');
-      return res.status(500).json({ error: "Error uploading metadata" });
+      return response.status(500).json({ error: "Error uploading metadata" });
     }
 
     const gatewayUrl = `https://violet-magnetic-tick-248.mypinata.cloud/ipfs/${cid}`;
-    return res.status(200).json({ url: gatewayUrl });
+    return response.status(200).json({ url: gatewayUrl });
   } catch (error: unknown) {
     console.error('Error in uploadMetadata:', error);
-    return res.status(500).json({ error: "Error uploading metadata" });
+    return response.status(500).json({ error: "Error uploading metadata" });
   }
 }

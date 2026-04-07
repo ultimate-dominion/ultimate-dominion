@@ -8,41 +8,43 @@ import { tmpdir } from "os";
 
 import { uploadFileToPinata } from "../lib/fileStorage.js";
 import { setCors } from "../lib/cors.js";
-type HandlerRequest = VercelRequest | Request;
-type HandlerResponse = VercelResponse | Response;
 
+export default async function uploadFile(req: VercelRequest, res: VercelResponse): Promise<unknown>;
+export default async function uploadFile(req: Request, res: Response): Promise<unknown>;
 export default async function uploadFile(
-  req: HandlerRequest,
-  res: HandlerResponse
+  req: VercelRequest | Request,
+  res: VercelResponse | Response
 ) {
-  if (setCors(req, res)) return res.status(204).end();
+  const request = req as VercelRequest & Request;
+  const response = res as VercelResponse & Response;
+  if (setCors(request, response)) return response.status(204).end();
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (request.method !== "POST") {
+    return response.status(405).json({ error: "Method not allowed" });
   }
 
-  const fileName = req.query.name as string;
+  const fileName = request.query.name as string;
 
   // Validate fileName: alphanumeric, hyphens, dots only
   if (!fileName || !/^[a-zA-Z0-9._-]+$/.test(fileName)) {
-    return res.status(400).json({ error: "Invalid file name" });
+    return response.status(400).json({ error: "Invalid file name" });
   }
 
   const form = formidable({ maxFileSize: 10 * 1024 * 1024 }); // 10MB limit (sharp compresses before IPFS upload)
 
   try {
-    const [fields, files] = await form.parse(req);
+    const [_fields, files] = await form.parse(request);
 
     // Get the first file from the files object
     const firstEntry = Object.values(files)[0] as FormidableFile[] | FormidableFile | undefined;
     const file = Array.isArray(firstEntry) ? firstEntry[0] : firstEntry;
     if (!file) {
-      return res.status(400).json({ error: "No file provided" });
+      return response.status(400).json({ error: "No file provided" });
     }
 
     // Validate mimetype is an image
     if (!file.mimetype || !file.mimetype.startsWith('image/')) {
-      return res.status(400).json({ error: "Only image files are allowed" });
+      return response.status(400).json({ error: "Only image files are allowed" });
     }
 
     // Process image with sharp (skip for GIFs to preserve animation)
@@ -64,12 +66,12 @@ export default async function uploadFile(
     // Upload to Pinata
     const cid = await uploadFileToPinata(tempFilePath, fileName);
     if (!cid) {
-      return res.status(500).json({ error: "Error uploading file" });
+      return response.status(500).json({ error: "Error uploading file" });
     }
 
-    return res.status(200).json({ cid });
+    return response.status(200).json({ cid });
   } catch (error) {
     console.error('Error in uploadFile:', error);
-    return res.status(500).json({ error: "Error uploading file" });
+    return response.status(500).json({ error: "Error uploading file" });
   }
 }

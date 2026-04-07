@@ -5,18 +5,20 @@ import { Resend } from "resend";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || '';
 type AudienceContact = { id: string; email: string };
-type HandlerRequest = VercelRequest | Request;
-type HandlerResponse = VercelResponse | Response;
 
-export default async function unsubscribe(req: HandlerRequest, res: HandlerResponse) {
+export default async function unsubscribe(req: VercelRequest, res: VercelResponse): Promise<unknown>;
+export default async function unsubscribe(req: Request, res: Response): Promise<unknown>;
+export default async function unsubscribe(req: VercelRequest | Request, res: VercelResponse | Response) {
+  const request = req as VercelRequest & Request;
+  const response = res as VercelResponse & Response;
   // Only GET — this is a link clicked from an email
-  if (req.method !== "GET") {
-    return res.status(405).send("Method not allowed");
+  if (request.method !== "GET") {
+    return response.status(405).send("Method not allowed");
   }
 
-  const token = req.query.token as string;
+  const token = request.query.token as string;
   if (!token) {
-    return res.status(400).send(page("Invalid unsubscribe link."));
+    return response.status(400).send(page("Invalid unsubscribe link."));
   }
 
   let email: string;
@@ -24,12 +26,12 @@ export default async function unsubscribe(req: HandlerRequest, res: HandlerRespo
     email = Buffer.from(token, 'base64url').toString('utf-8');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error();
   } catch {
-    return res.status(400).send(page("Invalid unsubscribe link."));
+    return response.status(400).send(page("Invalid unsubscribe link."));
   }
 
   if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) {
     console.error('[unsubscribe] Missing RESEND_API_KEY or RESEND_AUDIENCE_ID');
-    return res.status(500).send(page("Something went wrong. Please try again later."));
+    return response.status(500).send(page("Something went wrong. Please try again later."));
   }
 
   try {
@@ -40,7 +42,7 @@ export default async function unsubscribe(req: HandlerRequest, res: HandlerRespo
     const contact = contacts?.data?.find((c: AudienceContact) => c.email.toLowerCase() === email.toLowerCase());
 
     if (!contact) {
-      return res.send(page("You've been unsubscribed."));
+      return response.send(page("You've been unsubscribed."));
     }
 
     // Update contact to unsubscribed
@@ -51,10 +53,10 @@ export default async function unsubscribe(req: HandlerRequest, res: HandlerRespo
     });
 
     console.log(`[unsubscribe] Unsubscribed: ${email}`);
-    return res.send(page("You've been unsubscribed. You won't receive any more emails from us."));
+    return response.send(page("You've been unsubscribed. You won't receive any more emails from us."));
   } catch (err) {
     console.error('[unsubscribe] Error:', err);
-    return res.status(500).send(page("Something went wrong. Please try again later."));
+    return response.status(500).send(page("Something went wrong. Please try again later."));
   }
 }
 
