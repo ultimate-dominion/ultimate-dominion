@@ -10,7 +10,7 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import { DARK_INSET_SHADOW } from '../utils/theme';
+
 import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useMemo, useState } from 'react';
 import { GiTwoCoins } from 'react-icons/gi';
@@ -32,6 +32,7 @@ import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage
 
 import { ClassSymbol } from './ClassSymbol';
 import { EquippedLoadout } from './EquippedLoadout';
+import { HealthBar } from './HealthBar';
 import { LevelUpModal } from './LevelUpModal';
 import { MiniLeaderboard } from './MiniLeaderboard';
 import { Level } from './Level';
@@ -143,8 +144,6 @@ export const StatsPanel = (): JSX.Element => {
     strength,
   } = character;
 
-  const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
-
   return (
     <VStack spacing={0}>
       <HStack
@@ -181,41 +180,13 @@ export const StatsPanel = (): JSX.Element => {
       {!currentBattle && (
         <VStack mt={3} spacing={0} w="100%">
           {/* HP bar — hidden during battle (shown in battle pane instead) */}
-          <Box px={2} py={1.5} w="100%">
-            <HStack justifyContent="space-between" mb={1}>
-              <Text fontWeight={700} size="sm">{t('health.hp')}</Text>
-              <Text color="#8A7E6A" fontFamily="mono" fontWeight={700} size="sm">
-                {currentHpWithFloor.toString()}/{maxHp.toString()}
-              </Text>
-            </HStack>
-            <Box
-              bg="#14120F"
-              borderRadius="md"
-              boxShadow={
-                Number(currentHpWithFloor) / Number(maxHp) <= 0.3
-                  ? `${DARK_INSET_SHADOW}, 0 0 6px 1px rgba(139,32,32,0.5)`
-                  : DARK_INSET_SHADOW
-              }
-              h="10px"
-              overflow="hidden"
-              transition="box-shadow 0.3s ease"
-              w="100%"
-            >
-              <Box
-                bg={
-                  Number(currentHpWithFloor) / Number(maxHp) > 0.6
-                    ? '#5A8A3E'
-                    : Number(currentHpWithFloor) / Number(maxHp) > 0.3
-                      ? '#C87A2A'
-                      : '#8B2020'
-                }
-                borderRadius="md"
-                h="100%"
-                transition="width 0.25s ease-out, background-color 0.25s ease-out"
-                w={`${(Number(currentHpWithFloor) / Number(maxHp)) * 100}%`}
-              />
-            </Box>
-          </Box>
+          <HealthBar
+            currentHp={currentHp}
+            maxHp={maxHp}
+            px={2}
+            py={1.5}
+            w="100%"
+          />
 
           {/* Stats — compact single row */}
           {stage >= OnboardingStage.FIRST_STEPS && (
