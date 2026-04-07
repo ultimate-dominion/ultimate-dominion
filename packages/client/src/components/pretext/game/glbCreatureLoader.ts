@@ -124,9 +124,46 @@ function normaliseClipName(rawName: string): string {
 interface CreatureState {
   loaded: boolean;
   drawFn: ((ctx: CanvasRenderingContext2D, w: number, h: number) => void) | null;
+  /** Play a named clip (idle/attack/hit/death/walk). Only available after load. */
+  playClip?: (name: string, fadeTime?: number) => void;
+  /** The Three.js model root — needed for bone attachment */
+  model?: import('three').Object3D;
 }
 
 const creatureCache = new Map<string, CreatureState>();
+
+// ---- Weapon attachment ----------------------------------------------------
+
+/**
+ * Attach a weapon mesh to the RightHand bone of a loaded creature model.
+ * The weapon inherits all animation transforms (idle sway, attack swing, etc.)
+ * automatically because it becomes a child of the bone.
+ *
+ * @returns true if attachment succeeded, false if bone not found
+ */
+export function attachWeapon(
+  model: import('three').Object3D,
+  weaponMesh: import('three').Object3D,
+): boolean {
+  // Meshy rigged models use Mixamo skeleton — RightHand is always present
+  const rightHand = model.getObjectByName('RightHand');
+  if (!rightHand) {
+    console.warn('[glbCreatureLoader] RightHand bone not found — cannot attach weapon');
+    return false;
+  }
+  rightHand.add(weaponMesh);
+  return true;
+}
+
+/**
+ * Get a loaded creature's state (for external animation control / weapon attachment).
+ * Returns null if not yet loaded.
+ */
+export function getCreatureState(url: string): CreatureState | null {
+  const state = creatureCache.get(url);
+  if (!state?.loaded) return null;
+  return state;
+}
 
 // ---- Main loader ---------------------------------------------------------
 
@@ -137,6 +174,8 @@ const creatureCache = new Map<string, CreatureState>();
  * @param url            Public URL of the .glb file (e.g. '/models/creatures/dire-rat.glb')
  * @param gridW / gridH  Creature grid dimensions (for camera aspect)
  * @param yaw            Y rotation in radians for 3/4 left-facing view (default: -Math.PI * 0.33)
+ * @param pitch          X rotation for slight look-down (default: -0.08)
+ * @param opts.playerMode  If true, disable auto-attack loop and face right (+yaw)
  */
 export async function loadGLBCreature(
   url: string,
@@ -144,10 +183,13 @@ export async function loadGLBCreature(
   gridH: number,
   yaw = -Math.PI * 0.33,
   pitch = -0.08,
+  opts?: { playerMode?: boolean },
 ): Promise<void> {
   if (creatureCache.has(url)) return;
 
   console.log('[glbCreatureLoader] loading', url);
+  const isPlayer = opts?.playerMode ?? false;
+
   // Reserve slot immediately so concurrent callers don't double-load
   creatureCache.set(url, { loaded: false, drawFn: null });
 
@@ -209,7 +251,7 @@ export async function loadGLBCreature(
   let currentAction = actions['idle'] ?? Object.values(actions)[0] ?? null;
   currentAction?.play();
 
-  // Auto-attack loop: play attack every 4 seconds during idle
+  // Auto-attack loop: play attack every 4 seconds during idle (monsters only)
   let lastAttackTime = performance.now();
   const ATTACK_INTERVAL_MS = 4000;
 
@@ -240,8 +282,8 @@ export async function loadGLBCreature(
 
     mixer.update(delta);
 
-    // Trigger attack animation periodically
-    if (now - lastAttackTime > ATTACK_INTERVAL_MS && actions['attack']) {
+    // Trigger attack animation periodically (monster auto-attack only)
+    if (!isPlayer && now - lastAttackTime > ATTACK_INTERVAL_MS && actions['attack']) {
       lastAttackTime = now;
       playClip('attack');
     }
@@ -260,8 +302,8 @@ export async function loadGLBCreature(
     ctx.drawImage(renderer.domElement, 0, 0, w, h);
   };
 
-  console.log('[glbCreatureLoader] ready', url, '— clips:', Object.keys(actions).join(', '));
-  creatureCache.set(url, { loaded: true, drawFn });
+  console.log('[glbCreatureLoader] ready', url, '— clips:', Object.keys(actions).join(', '), isPlayer ? '(player)' : '');
+  creatureCache.set(url, { loaded: true, drawFn, playClip, model });
 }
 
 /**

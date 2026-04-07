@@ -24,7 +24,9 @@ import { Box } from '@chakra-ui/react';
 import { useCanvas } from '../hooks/useCanvas';
 import { renderMonster, type AnimationState } from './MonsterAsciiRenderer';
 import { MONSTER_TEMPLATES_REDUX } from './monsterTemplatesRedux';
-import { loadGLBCreature } from './glbCreatureLoader';
+import { loadGLBCreature, getCreatureState } from './glbCreatureLoader';
+import { makeGLBDrawFn } from './glbCreatureLoader';
+import { Race } from '../../../utils/types';
 
 // Kick off GLB loading immediately when the battle scene module loads —
 // don't wait for the first encounter frame, which may be too late on slow connections.
@@ -34,6 +36,58 @@ loadGLBCreature('/models/creatures/goblin.glb', 7, 7).catch(() => {/* handled in
 loadGLBCreature('/models/creatures/skeleton.glb', 7, 7).catch(() => {/* handled inside */});
 loadGLBCreature('/models/creatures/goblin-shaman.glb', 7, 7).catch(() => {/* handled inside */});
 loadGLBCreature('/models/creatures/bugbear.glb', 7, 7).catch(() => {/* handled inside */});
+
+// Preload player character GLBs — mirrored (face right) via positive yaw, player mode
+const PLAYER_YAW = Math.PI * 0.33; // face right (opposite of monster yaw)
+loadGLBCreature('/models/creatures/human-animated.glb', 7, 7, PLAYER_YAW, -0.08, { playerMode: true }).catch(() => {});
+loadGLBCreature('/models/creatures/elf-animated.glb', 7, 7, PLAYER_YAW, -0.08, { playerMode: true }).catch(() => {});
+loadGLBCreature('/models/creatures/dwarf-animated.glb', 7, 7, PLAYER_YAW, -0.08, { playerMode: true }).catch(() => {});
+
+// Map Race enum → GLB URL
+const RACE_GLB_URL: Record<number, string> = {
+  [Race.Human]: '/models/creatures/human-animated.glb',
+  [Race.Elf]: '/models/creatures/elf-animated.glb',
+  [Race.Dwarf]: '/models/creatures/dwarf-animated.glb',
+};
+
+// Fallback draw for player (simple silhouette while GLB loads)
+function drawPlayerFallback(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  ctx.fillStyle = 'rgb(60,55,48)';
+  const cx = w * 0.5, cy = h * 0.4;
+  // Head
+  ctx.beginPath();
+  ctx.arc(cx, cy - h * 0.15, w * 0.08, 0, Math.PI * 2);
+  ctx.fill();
+  // Body
+  ctx.fillRect(cx - w * 0.06, cy - h * 0.05, w * 0.12, h * 0.25);
+}
+
+// Build player MonsterTemplate-compatible objects lazily
+const playerTemplateCache = new Map<number, ReturnType<typeof buildPlayerTemplate>>();
+function buildPlayerTemplate(race: Race) {
+  const url = RACE_GLB_URL[race];
+  if (!url) return null;
+  return {
+    id: `player-${Race[race]?.toLowerCase() ?? 'unknown'}`,
+    name: Race[race] ?? 'Adventurer',
+    gridWidth: 7,
+    gridHeight: 7,
+    monsterClass: 0 as const,
+    level: 1,
+    dynamic: true,
+    draw: makeGLBDrawFn(url, 7, 7, drawPlayerFallback, PLAYER_YAW),
+  };
+}
+
+function getPlayerTemplate(race: Race) {
+  let tpl = playerTemplateCache.get(race);
+  if (!tpl) {
+    tpl = buildPlayerTemplate(race);
+    if (tpl) playerTemplateCache.set(race, tpl);
+  }
+  return tpl;
+}
+
 import type { MonsterTemplate } from './monsterTemplates';
 import { COLORS, FONTS, fontString } from '../theme';
 import { usePretextFonts } from '../hooks/usePretextFonts';
@@ -65,6 +119,8 @@ export type BattleSceneProps = {
   userMaxHp: number;
   userName: string;
   userDefeated: boolean;
+  /** Player character race — determines which GLB model to render on the left */
+  userRace?: Race;
 };
 
 // ── Internal animation state (mutated in RAF, no React state) ───────────
@@ -92,6 +148,10 @@ type SceneState = {
   hitReactionStart: number;
   /** Monster animation state for the renderer */
   monsterAnim: AnimationState | undefined;
+  /** Player hit flash timestamp (-1 = idle) */
+  playerHitStart: number;
+  /** Player attack anim timestamp (-1 = idle) */
+  playerAttackStart: number;
 };
 
 function createSceneState(): SceneState {
@@ -101,6 +161,8 @@ function createSceneState(): SceneState {
     hitReaction: HIT_REACTION_IDLE,
     hitReactionStart: -1,
     monsterAnim: undefined,
+    playerHitStart: -1,
+    playerAttackStart: -1,
   };
 }
 
@@ -191,7 +253,7 @@ function drawMonsterName(
 
   ctx.font = fontString('heading', 16, weight);
   ctx.fillStyle = color;
-  ctx.textAlign = 'left';
+  ctx.textAlign = 'right';
   ctx.textBaseline = 'top';
 
   // Glow for high threat
@@ -203,6 +265,20 @@ function drawMonsterName(
     ctx.restore();
   }
 
+  ctx.fillText(name, x, y);
+}
+
+function drawPlayerName(
+  ctx: CanvasRenderingContext2D,
+  name: string,
+  x: number,
+  y: number,
+  defeated: boolean,
+) {
+  ctx.font = fontString('heading', 14, 400);
+  ctx.fillStyle = defeated ? COLORS.textMuted : COLORS.textBody;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
   ctx.fillText(name, x, y);
 }
 
@@ -220,6 +296,7 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
       userMaxHp,
       userName,
       userDefeated,
+      userRace,
     } = props;
 
     const { ready } = usePretextFonts();
@@ -234,11 +311,18 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
       [monsterName],
     );
 
+    // Player character template (race-based GLB)
+    const playerTemplate = useMemo(
+      () => userRace ? getPlayerTemplate(userRace) : null,
+      [userRace],
+    );
+
     // ── Imperative API ──────────────────────────────────────────────────
 
     const triggerAttack = useCallback((signal: AttackSignal) => {
       const state = stateRef.current;
       const duration = WEAPON_SPEED[signal.weaponType];
+      const p = propsRef.current;
 
       state.attacks.push({
         weaponType: signal.weaponType,
@@ -249,6 +333,15 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
         isPlayerAttack: signal.isPlayerAttack,
         impacted: false,
       });
+
+      // Start player attack animation immediately (swing during projectile flight)
+      if (signal.isPlayerAttack && p.userRace) {
+        const playerUrl = RACE_GLB_URL[p.userRace];
+        if (playerUrl) {
+          const ps = getCreatureState(playerUrl);
+          ps?.playClip?.('attack');
+        }
+      }
     }, []);
 
     useImperativeHandle(ref, () => ({ triggerAttack }), [triggerAttack]);
@@ -298,8 +391,8 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
             // Impact moment
             atk.impacted = true;
 
-            // Trigger monster hit animation
             if (atk.isPlayerAttack) {
+              // Player attack hits monster
               state.hitReactionStart = now;
               state.monsterAnim = { action: 'hit', startTime: now };
 
@@ -309,6 +402,18 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
                 x: w * 0.55,
                 y: h * 0.45,
               });
+
+              state.playerAttackStart = now;
+            } else {
+              // Counterattack hits player
+              state.playerHitStart = now;
+
+              // Trigger player hit animation on GLB
+              const playerUrl = p.userRace ? RACE_GLB_URL[p.userRace] : null;
+              if (playerUrl) {
+                const ps = getCreatureState(playerUrl);
+                ps?.playClip?.('hit');
+              }
             }
           }
 
@@ -422,28 +527,91 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
           );
         }
 
-        // ── Left vignette (player presence) ─────────────────────────────
+        // ── Render player character (left 35%) ──────────────────────────
 
-        const vigGrd = ctx.createLinearGradient(0, 0, w * 0.3, 0);
-        vigGrd.addColorStop(0, 'rgba(10,10,8,0.7)');
+        const playerTpl = playerTemplate;
+        if (playerTpl) {
+          const playerX = 0;
+          const playerW = w * 0.35;
+          const playerY = 0;
+          const playerH = h;
+
+          // Player hit flash
+          let playerFlash = 0;
+          if (state.playerHitStart > 0) {
+            const hitElapsed = now - state.playerHitStart;
+            if (hitElapsed < 400) {
+              playerFlash = Math.max(0, 1 - hitElapsed / 400);
+            } else {
+              state.playerHitStart = -1;
+            }
+          }
+
+          // Reset player attack timestamp
+          if (state.playerAttackStart > 0 && now - state.playerAttackStart > 800) {
+            state.playerAttackStart = -1;
+          }
+
+          ctx.save();
+
+          // Subtle shake when player is hit
+          if (playerFlash > 0) {
+            const pShakeX = playerFlash * (Math.random() - 0.5) * w * 0.008;
+            const pShakeY = playerFlash * (Math.random() - 0.5) * h * 0.008;
+            ctx.translate(pShakeX, pShakeY);
+          }
+
+          renderMonster(ctx, playerTpl, playerX, playerY, playerW, playerH, {
+            elapsed: p.userDefeated ? 0 : elapsed,
+            cellSize: 5,
+            enable3D: true,
+            enableGlow: !p.userDefeated,
+            enableBgFill: true,
+          });
+
+          // Player hit white flash
+          if (playerFlash > 0) {
+            ctx.globalAlpha = playerFlash * 0.25;
+            ctx.fillStyle = '#f44';
+            ctx.fillRect(playerX, playerY, playerW, playerH);
+          }
+
+          // Defeated overlay
+          if (p.userDefeated) {
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(playerX, playerY, playerW, playerH);
+          }
+
+          ctx.restore();
+        }
+
+        // ── Left vignette (edge fade — lighter when player is rendered) ─
+
+        const vigGrd = ctx.createLinearGradient(0, 0, w * (playerTpl ? 0.08 : 0.3), 0);
+        vigGrd.addColorStop(0, playerTpl ? 'rgba(10,10,8,0.4)' : 'rgba(10,10,8,0.7)');
         vigGrd.addColorStop(1, 'rgba(10,10,8,0)');
         ctx.fillStyle = vigGrd;
-        ctx.fillRect(0, 0, w * 0.3, h);
+        ctx.fillRect(0, 0, w * (playerTpl ? 0.08 : 0.3), h);
 
-        // ── HUD: Monster name (top-right area) ─────────────────────────
+        // ── HUD: Names ─────────────────────────────────────────────────
 
         const hudPad = 12;
 
+        // Player name — top-left
+        drawPlayerName(ctx, p.userName, hudPad, hudPad, p.userDefeated);
+
+        // Monster name — top-right
         drawMonsterName(
           ctx,
           p.monsterName,
           p.monsterLevel,
-          monsterX + hudPad,
+          w - hudPad,
           hudPad,
           p.monsterDefeated,
         );
       },
-      [template],
+      [template, playerTemplate],
     );
 
     const { canvasRef } = useCanvas({

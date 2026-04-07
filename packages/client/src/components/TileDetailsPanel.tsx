@@ -901,6 +901,7 @@ export const TileDetailsPanel = (): JSX.Element => {
               userMaxHp={Number(userCharacterForBattleRendering.maxHp)}
               userName={userCharacterForBattleRendering.name}
               userDefeated={userDefeated}
+              userRace={userCharacterForBattleRendering.race}
             />
           </Box>
           {/* Battle HUD — player left, opponent right */}
