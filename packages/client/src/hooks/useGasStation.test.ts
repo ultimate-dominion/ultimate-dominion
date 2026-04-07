@@ -1,49 +1,101 @@
-// @vitest-environment node
-import { describe, it, expect } from 'vitest';
-import { parseEther } from 'viem';
-import { calculateSwapAmount, calculateMinEthOutput } from './useGasStation';
+import { renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('calculateSwapAmount', () => {
-  it('returns null when gold is below minimum (1)', () => {
-    expect(calculateSwapAmount(parseEther('0.5'))).toBeNull();
-    expect(calculateSwapAmount(0n)).toBeNull();
+import { RELAYER_FUND_THRESHOLD, shouldRequestRelayerFunding, useGasStation } from './useGasStation';
+
+let mockAuthMethod: 'embedded' | 'external' | null = 'embedded';
+let mockBurnerAddress = '0x1111111111111111111111111111111111111111';
+let mockBurnerBalance = '0';
+const mockBuyGas = vi.fn();
+
+vi.mock('../contexts/MUDContext', () => ({
+  useMUD: () => ({
+    authMethod: mockAuthMethod,
+    burnerAddress: mockBurnerAddress,
+    burnerBalance: mockBurnerBalance,
+    systemCalls: { buyGas: mockBuyGas },
+  }),
+}));
+
+describe('shouldRequestRelayerFunding', () => {
+  it('returns true below the relayer threshold', () => {
+    expect(shouldRequestRelayerFunding(RELAYER_FUND_THRESHOLD - 1n)).toBe(true);
   });
 
-  it('returns exact gold when between min and max', () => {
-    const three = parseEther('3');
-    expect(calculateSwapAmount(three)).toBe(three);
-  });
-
-  it('caps at 5 Gold when above max', () => {
-    expect(calculateSwapAmount(parseEther('200'))).toBe(parseEther('5'));
-  });
-
-  it('returns exact gold at exactly 1 (minimum)', () => {
-    const one = parseEther('1');
-    expect(calculateSwapAmount(one)).toBe(one);
-  });
-
-  it('returns max at exactly 5', () => {
-    const five = parseEther('5');
-    expect(calculateSwapAmount(five)).toBe(five);
+  it('returns false at or above the relayer threshold', () => {
+    expect(shouldRequestRelayerFunding(RELAYER_FUND_THRESHOLD)).toBe(false);
+    expect(shouldRequestRelayerFunding(RELAYER_FUND_THRESHOLD + 1n)).toBe(false);
   });
 });
 
-describe('calculateMinEthOutput', () => {
-  it('calculates expected ETH for 100 Gold', () => {
-    const result = calculateMinEthOutput(parseEther('100'));
-    // 100 Gold * 800000 / 1e18 = 80000000 wei = 0.00000008 ETH
-    expect(result).toBe(80_000_000n);
+describe('useGasStation', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_RELAYER_URL', 'https://relayer.example');
+    vi.stubEnv('VITE_FUND_API_KEY', 'test-key');
+    mockAuthMethod = 'embedded';
+    mockBurnerAddress = '0x1111111111111111111111111111111111111111';
+    mockBurnerBalance = '0';
+    mockBuyGas.mockReset();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ status: 'funded' }),
+    }) as unknown as typeof fetch;
   });
 
-  it('returns 0 for dust amounts', () => {
-    // Very small gold amounts may round to 0 — that's fine
-    expect(calculateMinEthOutput(1n)).toBe(0n);
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
-  it('scales linearly with gold amount', () => {
-    const single = calculateMinEthOutput(parseEther('1'));
-    const ten = calculateMinEthOutput(parseEther('10'));
-    expect(ten).toBe(single * 10n);
+  it('requests relayer funding for embedded wallets below threshold', () => {
+    mockBurnerBalance = '0.00001';
+
+    renderHook(() => useGasStation());
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://relayer.example/fund',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'test-key',
+        },
+        body: JSON.stringify({ address: mockBurnerAddress }),
+      }),
+    );
+    expect(mockBuyGas).not.toHaveBeenCalled();
+  });
+
+  it('does not request funding for external wallets', () => {
+    mockAuthMethod = 'external';
+    mockBurnerBalance = '0.00001';
+
+    renderHook(() => useGasStation());
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockBuyGas).not.toHaveBeenCalled();
+  });
+
+  it('rate limits repeated relayer requests to once every 15 seconds', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-07T12:00:00.000Z'));
+    mockBurnerBalance = '0.00001';
+
+    const { rerender } = renderHook(() => useGasStation());
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    await Promise.resolve();
+
+    mockBurnerBalance = '0.000009';
+    rerender();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(15_000);
+    mockBurnerBalance = '0.000008';
+    rerender();
+    await Promise.resolve();
+    expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 });
