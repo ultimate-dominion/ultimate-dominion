@@ -177,7 +177,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [x] Eliminate jank, stutters, and failed txs ✓ Auto-retry on reverts (`6ef6b5bd`, `acf453ba`), movement cooldown tracking (`145dbfb1`, `394664db`), move mutex (`52869919`), Alchemy Flashblocks (200ms blocks)
 - [x] Fire-and-forget gameplay actions ✓ (`6b100929`) — removed simulateContract blocking
 - [x] Optimistic progress bars ✓ (`01b17c94`) — asymptotic deceleration on all transactions
-- [x] Ghost mob stale-target reconciliation ✓ click-time combat validation now re-syncs stale PvE targets before battle (`0b61f384`)
+- [x] Ghost encounter hardening ✓ click-time stale-target validation plus authoritative combat bootstrap prevent stale cached PvE state from reviving battles (`0b61f384`, `b0f87e60`)
 
 **Chat**
 - [x] Show usernames in chat ✓ Class-colored character names (`bb442d1e`)
@@ -386,6 +386,7 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 - [x] sourcemap: false ✓
 - [x] Ghost mob prod hotfix ✓ stale client monster targets now reconcile against on-chain state before combat (`0b61f384`)
 - [x] Ghost cleanup no longer clears whole prod tiles ✓ stale targets are evicted without hiding valid mobs on the same tile (`fc728097`)
+- [x] Ghost encounter bootstrap fix on beta branch ✓ stale cached `CombatEncounter` rows no longer boot as authoritative UI state, and client no longer force-ends encounters (`b0f87e60`)
 
 ### Should Do
 - [ ] Verify contracts on Basescan
@@ -420,4 +421,4 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 
 ---
 
-_Last updated: April 2, 2026_
+_Last updated: April 7, 2026_
