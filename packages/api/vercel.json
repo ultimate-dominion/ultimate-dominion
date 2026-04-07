@@ -4,7 +4,6 @@
     { "src": "/api/uploadMetadata", "dest": "/api/uploadMetadata.ts" },
     { "src": "/api/uploadFile", "dest": "/api/uploadFile.ts" },
     { "src": "/api/session", "dest": "/api/sessionBooting.ts" },
-    { "src": "/api/session_lite", "dest": "/api/session_lite.ts" },
     { "src": "/files/(.*)", "dest": "/api/index.ts?file=$1" },
     { "src": "/health", "dest": "/api/health.ts" },
     { "src": "/api/paymasterWebhook", "dest": "/api/paymasterWebhook.ts" },
