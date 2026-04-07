@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creature Lab — Gallery</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; min-height: 100vh; }
+    .header { padding: 10px 24px; border-bottom: 1px solid #222; display: flex; align-items: baseline; gap: 16px; }
+    .header h1 { font-size: 15px; color: #888; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; }
+    .header p { font-size: 11px; color: #444; }
+    .header a { margin-left: auto; font-size: 11px; color: #555; text-decoration: none; padding: 3px 10px; border: 1px solid #2a2a2a; }
+    .header a:hover { color: #888; border-color: #444; }
+    .zone-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 3px; padding: 20px 24px 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; padding: 8px 24px 20px; }
+    .card {
+      background: #111; border: 1px solid #1a1a1a; border-radius: 3px;
+      overflow: hidden;
+    }
+    .card-pair { display: flex; height: 180px; }
+    .card-half { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000; }
+    .card-half + .card-half { border-left: 1px solid #1a1a1a; }
+    .card-half canvas { display: block; }
+    .half-label { position: absolute; top: 3px; left: 5px; font-size: 7px; color: #333; text-transform: uppercase; letter-spacing: 1px; }
+    .card-body { padding: 6px 10px; border-top: 1px solid #1a1a1a; display: flex; align-items: center; gap: 8px; }
+    .card-name { font-size: 12px; color: #bbb; }
+    .card-meta { font-size: 9px; color: #555; display: flex; gap: 8px; margin-left: auto; }
+    .badge { font-size: 8px; padding: 1px 4px; border-radius: 2px; text-transform: uppercase; letter-spacing: 1px; background: #1a2a1a; color: #4a4; border: 1px solid #2a3a2a; }
+    .loading { font-size: 10px; color: #333; }
+    .summary { padding: 14px 24px; border-top: 1px solid #1a1a1a; margin-top: 8px; font-size: 10px; color: #444; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Creature Gallery</h1>
+    <p>All creatures — 3D + ASCII — live animated</p>
+    <a href="index.html">Lab</a>
+  </div>
+
+  <div class="zone-label">Z1 — Dark Cave</div>
+  <div class="grid" id="z1-grid"></div>
+
+  <div class="zone-label">Z2 — Windy Peaks</div>
+  <div class="grid" id="z2-grid"></div>
+
+  <div class="summary" id="summary">Loading...</div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import { renderAscii } from './ascii-renderer.js';
+    import { createThreeRenderer } from './three-bridge.js';
+    import { loadGLBCreature } from './glb-loader.js';
+
+    const CREATURES = [
+      // Z1
+      { slug: 'dire-rat',        name: 'Dire Rat',        zone: 1, level: 1,  gridW: 10, gridH: 7,  glb: 'glb/dire-rat-animated.glb' },
+      { slug: 'kobold',          name: 'Kobold',          zone: 1, level: 2,  gridW: 7,  gridH: 7,  glb: 'glb/kobold-animated.glb' },
+      { slug: 'goblin',          name: 'Goblin',          zone: 1, level: 3,  gridW: 7,  gridH: 7,  glb: 'glb/goblin-animated.glb' },
+      { slug: 'giant-spider',    name: 'Giant Spider',    zone: 1, level: 4,  gridW: 10, gridH: 12, canvas: true },
+      { slug: 'skeleton-creature', name: 'Skeleton',      zone: 1, level: 5,  gridW: 7,  gridH: 7,  glb: 'glb/skeleton-animated.glb' },
+      { slug: 'goblin-shaman',   name: 'Goblin Shaman',   zone: 1, level: 6,  gridW: 7,  gridH: 7,  glb: 'glb/goblin-shaman-animated.glb' },
+      { slug: 'gelatinous-ooze', name: 'Gelatinous Ooze', zone: 1, level: 7,  gridW: 10, gridH: 14, canvas: true },
+      { slug: 'bugbear',         name: 'Bugbear',         zone: 1, level: 8,  gridW: 7,  gridH: 7,  glb: 'glb/bugbear-animated.glb' },
+      { slug: 'carrion-crawler', name: 'Carrion Crawler', zone: 1, level: 9,  gridW: 10, gridH: 13, canvas: true },
+      { slug: 'hook-horror',     name: 'Hook Horror',     zone: 1, level: 10, gridW: 14, gridH: 12, glb: 'glb/hook-horror-animated.glb' },
+      { slug: 'basilisk',        name: 'Basilisk',        zone: 1, level: 12, gridW: 26, gridH: 9,  glb: 'glb/basilisk-animated.glb', isBoss: true },
+      // Z2
+      { slug: 'harpy',           name: 'Harpy',           zone: 2, level: 12, gridW: 10, gridH: 10, glb: 'glb/harpy-animated.glb' },
+      { slug: 'ogre',            name: 'Ogre',            zone: 2, level: 13, gridW: 10, gridH: 12, glb: 'glb/ogre-animated.glb' },
+      { slug: 'orc',             name: 'Orc',             zone: 2, level: 15, gridW: 7,  gridH: 7,  glb: 'glb/orc-animated.glb' },
+      { slug: 'orc-shaman',      name: 'Orc Shaman',      zone: 2, level: 16, gridW: 7,  gridH: 7,  glb: 'glb/orc-shaman-animated.glb' },
+      { slug: 'troll',           name: 'Troll',           zone: 2, level: 17, gridW: 10, gridH: 12, glb: 'glb/troll-animated.glb' },
+      { slug: 'griffon',         name: 'Griffon',         zone: 2, level: 18, gridW: 12, gridH: 10, glb: 'glb/griffon-animated.glb' },
+      { slug: 'korraths-warden', name: "Korrath's Warden", zone: 2, level: 20, gridW: 16, gridH: 14, glb: 'glb/korraths-warden-animated.glb', isBoss: true },
+    ];
+
+    const RENDER_SIZE = 320;
+    const DISPLAY_W = 160;
+    const DISPLAY_H = 180;
+    const CELL = 3;
+
+    let threeRenderer = null;
+
+    // Each loaded creature gets stored here for animation loop
+    const loaded = []; // { creature, drawFn, bundle, rawCanvas, rawCtx, asciiCanvas, asciiCtx, cW, cH }
+
+    function createCard(creature) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.id = `card-${creature.slug}`;
+
+      const pair = document.createElement('div');
+      pair.className = 'card-pair';
+
+      // Left: 3D raw
+      const leftHalf = document.createElement('div');
+      leftHalf.className = 'card-half';
+      const leftLabel = document.createElement('div');
+      leftLabel.className = 'half-label';
+      leftLabel.textContent = '3D';
+      leftHalf.appendChild(leftLabel);
+
+      // Right: ASCII
+      const rightHalf = document.createElement('div');
+      rightHalf.className = 'card-half';
+      const rightLabel = document.createElement('div');
+      rightLabel.className = 'half-label';
+      rightLabel.textContent = 'ASCII';
+      rightHalf.appendChild(rightLabel);
+
+      if (!creature.glb) {
+        leftHalf.innerHTML += '<span class="loading">canvas</span>';
+      }
+
+      pair.appendChild(leftHalf);
+      pair.appendChild(rightHalf);
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      body.innerHTML = `
+        <span class="card-name">${creature.name}</span>
+        <span class="card-meta">
+          <span>L${creature.level}</span>
+          ${creature.isBoss ? '<span class="badge">boss</span>' : '<span class="badge">done</span>'}
+        </span>
+      `;
+
+      card.appendChild(pair);
+      card.appendChild(body);
+
+      const grid = creature.zone === 1 ? document.getElementById('z1-grid') : document.getElementById('z2-grid');
+      grid.appendChild(card);
+
+      return { leftHalf, rightHalf };
+    }
+
+    async function loadCreature(creature) {
+      if (!creature.glb) return null;
+
+      if (!threeRenderer) threeRenderer = createThreeRenderer(RENDER_SIZE, RENDER_SIZE);
+
+      const cW = RENDER_SIZE;
+      const cH = Math.round(RENDER_SIZE * creature.gridH / creature.gridW);
+
+      const { drawFn, bundle } = await loadGLBCreature(
+        creature.glb, creature.gridW, creature.gridH, threeRenderer
+      );
+
+      // Create raw 3D canvas
+      const rawCanvas = document.createElement('canvas');
+      rawCanvas.width = cW;
+      rawCanvas.height = cH;
+      const scaleR = Math.min(DISPLAY_W / cW, DISPLAY_H / cH);
+      rawCanvas.style.width = `${Math.round(cW * scaleR)}px`;
+      rawCanvas.style.height = `${Math.round(cH * scaleR)}px`;
+
+      // Create ASCII canvas
+      const asciiCanvas = document.createElement('canvas');
+      asciiCanvas.width = cW;
+      asciiCanvas.height = cH;
+      asciiCanvas.style.width = `${Math.round(cW * scaleR)}px`;
+      asciiCanvas.style.height = `${Math.round(cH * scaleR)}px`;
+
+      return {
+        creature,
+        drawFn,
+        bundle,
+        rawCanvas,
+        rawCtx: rawCanvas.getContext('2d'),
+        asciiCanvas,
+        asciiCtx: asciiCanvas.getContext('2d'),
+        cW,
+        cH,
+      };
+    }
+
+    // Stagger loading to avoid overwhelming the GPU
+    async function loadAll() {
+      let loadedCount = 0;
+
+      for (const creature of CREATURES) {
+        const { leftHalf, rightHalf } = createCard(creature);
+
+        if (!creature.glb) {
+          // Canvas creatures — load module and render static
+          try {
+            const mod = (await import(`./${creature.slug}.js`)).default;
+            if (mod && typeof mod.draw === 'function') {
+              const cW = RENDER_SIZE;
+              const cH = Math.round(RENDER_SIZE * creature.gridH / creature.gridW);
+              const scaleR = Math.min(DISPLAY_W / cW, DISPLAY_H / cH);
+
+              const asciiCanvas = document.createElement('canvas');
+              asciiCanvas.width = cW;
+              asciiCanvas.height = cH;
+              asciiCanvas.style.width = `${Math.round(cW * scaleR)}px`;
+              asciiCanvas.style.height = `${Math.round(cH * scaleR)}px`;
+              const asciiCtx = asciiCanvas.getContext('2d');
+              asciiCtx.fillStyle = '#000';
+              asciiCtx.fillRect(0, 0, cW, cH);
+
+              renderAscii(asciiCtx, (tctx, tw, th) => mod.draw(tctx, mod.skeleton, tw, th),
+                0, 0, cW, cH, { cellSize: CELL, level: creature.level, gridWidth: creature.gridW, gridHeight: creature.gridH });
+
+              rightHalf.appendChild(asciiCanvas);
+            }
+          } catch (e) {
+            console.warn(`Canvas creature ${creature.slug} failed:`, e);
+          }
+          loadedCount++;
+          continue;
+        }
+
+        try {
+          const entry = await loadCreature(creature);
+          if (entry) {
+            leftHalf.querySelector('.loading')?.remove();
+            leftHalf.appendChild(entry.rawCanvas);
+            rightHalf.appendChild(entry.asciiCanvas);
+            loaded.push(entry);
+          }
+        } catch (e) {
+          console.error(`Failed to load ${creature.slug}:`, e);
+        }
+        loadedCount++;
+        document.getElementById('summary').textContent = `Loaded ${loadedCount} / ${CREATURES.length} creatures`;
+      }
+
+      document.getElementById('summary').textContent = `${CREATURES.length} creatures loaded — all animating`;
+    }
+
+    // Animation loop — tick all mixers and re-render
+    let lastTime = 0;
+    function animate(time) {
+      requestAnimationFrame(animate);
+
+      const dt = lastTime > 0 ? Math.min((time - lastTime) / 1000, 0.1) : 0;
+      lastTime = time;
+
+      for (const entry of loaded) {
+        // Tick the animation mixer
+        entry.bundle.mixer.update(dt);
+
+        // Render 3D raw
+        entry.rawCtx.fillStyle = '#000';
+        entry.rawCtx.fillRect(0, 0, entry.cW, entry.cH);
+        entry.drawFn(entry.rawCtx, entry.cW, entry.cH);
+
+        // Render ASCII
+        entry.asciiCtx.fillStyle = '#000';
+        entry.asciiCtx.fillRect(0, 0, entry.cW, entry.cH);
+        renderAscii(entry.asciiCtx, (tctx, tw, th) => entry.drawFn(tctx, tw, th),
+          0, 0, entry.cW, entry.cH, {
+            cellSize: CELL,
+            level: entry.creature.level,
+            gridWidth: entry.creature.gridW,
+            gridHeight: entry.creature.gridH,
+          });
+      }
+    }
+
+    loadAll().then(() => {
+      requestAnimationFrame(animate);
+    });
+  </script>
+</body>
+</html>
