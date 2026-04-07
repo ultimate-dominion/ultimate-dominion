@@ -505,5 +505,45 @@
       "method": "heuristic"
     },
     "timestamp": "2026-04-07T20:37:49.049Z"
+  },
+  {
+    "slug": "orc-shaman",
+    "name": "Orc Shaman",
+    "description": "hunched elderly orc in ragged dark robes, gnarled wooden staff topped with bleached skull held in both hands — staff taller than creature, glowing green eyes under deep hood, bone trinkets and shrunken heads on belt, tribal white ash face paint, one hand raised channeling dark energy, bare gnarled feet",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d69b2-8829-7af8-acea-0674db42c8bb",
+    "prompt": "A Orc Shaman: hunched elderly orc in ragged dark robes, gnarled wooden staff topped with bleached skull held in both hands — staff taller than creature, glowing green eyes under deep hood, bone trinkets and shrunken heads on belt, tribal white ash face paint, one hand raised channeling dark energy, bare gnarled feet. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T20:48:48.631Z"
+  },
+  {
+    "slug": "troll",
+    "name": "Troll",
+    "description": "towering lanky humanoid, grotesquely long arms reaching past knees, rubbery grey-green skin with regenerating flesh patches, hunched forward posture, hooked nose, sunken bloodshot eyes, jagged yellowed teeth, massive clawed hands with elongated fingers, knobby spine visible, moss growing on shoulders",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d69b3-51d8-7b29-a5b1-6b1c276091f8",
+    "prompt": "A Troll: towering lanky humanoid, grotesquely long arms reaching past knees, rubbery grey-green skin with regenerating flesh patches, hunched forward posture, hooked nose, sunken bloodshot eyes, jagged yellowed teeth, massive clawed hands with elongated fingers, knobby spine visible, moss growing on shoulders. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T20:49:39.418Z"
   }
 ]

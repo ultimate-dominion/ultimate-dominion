@@ -169,8 +169,21 @@
       </div>
     </a>
 
-    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Orc Shaman</div><div class="card-meta"><span>L16</span><span class="badge badge-todo">todo</span></div></div></div>
-    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Troll</div><div class="card-meta"><span>L17</span><span class="badge badge-todo">todo</span></div></div></div>
+    <a class="card done" href="viewer.html?creature=orc-shaman" data-slug="orc-shaman">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Orc Shaman</div>
+        <div class="card-meta"><span>L16</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=troll" data-slug="troll">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Troll</div>
+        <div class="card-meta"><span>L17</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
 
     <a class="card done" href="viewer.html?creature=griffon" data-slug="griffon">
       <div class="card-preview"><span class="placeholder">?</span></div>
@@ -192,9 +205,9 @@
   </div>
 
   <div class="summary">
-    <span>16 / 21 complete</span>
+    <span>18 / 21 complete</span>
     <span>Z1: 11 done</span>
-    <span>Z2: 5 done, 5 todo</span>
+    <span>Z2: 7 done, 3 todo</span>
   </div>
 
   <script type="importmap">
@@ -228,6 +241,8 @@
       'harpy':             { gridW: 10, gridH: 10, level: 12, glb: 'glb/harpy-animated.glb' },
       'ogre':              { gridW: 10, gridH: 12, level: 13, glb: 'glb/ogre-animated.glb' },
       'orc':               { gridW: 7,  gridH: 7,  level: 15, glb: 'glb/orc-animated.glb' },
+      'orc-shaman':        { gridW: 7,  gridH: 7,  level: 16, glb: 'glb/orc-shaman-animated.glb' },
+      'troll':             { gridW: 10, gridH: 12, level: 17, glb: 'glb/troll-animated.glb' },
       'griffon':           { gridW: 12, gridH: 10, level: 18, glb: 'glb/griffon-animated.glb' },
       'korraths-warden':   { gridW: 16, gridH: 14, level: 20, glb: 'glb/korraths-warden-animated.glb' },
     };
