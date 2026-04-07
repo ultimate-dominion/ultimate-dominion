@@ -29,11 +29,11 @@ export function getBattleConsoleState({
     return {
       eyebrow: 'Battle Console',
       title: `Choose your move against ${opponentDisplayName}.`,
-      detail: 'Use the highlighted matchup to keep pressure on the board.',
-      badge: 'PvE',
-      badgeBg: 'rgba(200,122,42,0.12)',
-      badgeBorder: 'rgba(200,122,42,0.35)',
-      badgeColor: '#D4A54A',
+      detail: '',
+      badge: '',
+      badgeBg: '',
+      badgeBorder: '',
+      badgeColor: '',
     };
   }
 

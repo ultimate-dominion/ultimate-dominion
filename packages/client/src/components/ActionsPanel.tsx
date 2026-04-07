@@ -623,9 +623,10 @@ export const ActionsPanel = (): JSX.Element => {
                 size="sm"
                 onClick={onFleePvp}
                 variant="outline"
-                color="#A0522D"
-                borderColor="#A0522D"
-                _hover={{ bg: 'rgba(160,82,45,0.15)' }}
+                color="#D89272"
+                borderColor="rgba(184,92,58,0.45)"
+                bg="rgba(184,92,58,0.10)"
+                _hover={{ bg: 'rgba(184,92,58,0.20)', borderColor: 'rgba(184,92,58,0.65)' }}
               >
                 Flee
               </Button>
@@ -659,7 +660,7 @@ export const ActionsPanel = (): JSX.Element => {
                 borderBottom="1px solid"
                 borderColor="rgba(90,78,60,0.4)"
                 px={{ base: 3, lg: 4 }}
-                py={{ base: 3, lg: 4 }}
+                py={{ base: 2, lg: 3 }}
                 w="100%"
               >
                 <HStack align="start" justify="space-between" spacing={3}>
@@ -680,30 +681,34 @@ export const ActionsPanel = (): JSX.Element => {
                     >
                       {battleConsole.title}
                     </Text>
-                    <Text color="#8A7E6A" size="xs">
-                      {battleConsole.detail}
-                    </Text>
+                    {battleConsole.detail && (
+                      <Text color="#8A7E6A" size="xs">
+                        {battleConsole.detail}
+                      </Text>
+                    )}
                   </VStack>
-                  <Box
-                    bg={battleConsole.badgeBg}
-                    border="1px solid"
-                    borderColor={battleConsole.badgeBorder}
-                    borderRadius="full"
-                    flexShrink={0}
-                    px={3}
-                    py={1}
-                  >
-                    <Text
-                      color={battleConsole.badgeColor}
-                      fontFamily="mono"
-                      fontSize="2xs"
-                      fontWeight={700}
-                      letterSpacing="0.08em"
-                      textTransform="uppercase"
+                  {battleConsole.badge && (
+                    <Box
+                      bg={battleConsole.badgeBg}
+                      border="1px solid"
+                      borderColor={battleConsole.badgeBorder}
+                      borderRadius="full"
+                      flexShrink={0}
+                      px={3}
+                      py={1}
                     >
-                      {battleConsole.badge}
-                    </Text>
-                  </Box>
+                      <Text
+                        color={battleConsole.badgeColor}
+                        fontFamily="mono"
+                        fontSize="2xs"
+                        fontWeight={700}
+                        letterSpacing="0.08em"
+                        textTransform="uppercase"
+                      >
+                        {battleConsole.badge}
+                      </Text>
+                    </Box>
+                  )}
                 </HStack>
                 {currentBattle.encounterType === EncounterType.PvP && (
                   <Progress
@@ -801,7 +806,7 @@ export const ActionsPanel = (): JSX.Element => {
                       py={0}
                       ref={getButtonRef(index)}
                       fontSize="xs"
-                      minH={{ base: '78px', lg: '92px' }}
+                      minH={{ base: '60px', lg: '72px' }}
                       h="auto"
                       justifyContent="flex-start"
                       size={{ base: 'sm', sm: 'sm', lg: 'md' }}
@@ -820,7 +825,7 @@ export const ActionsPanel = (): JSX.Element => {
                       }}
                       whiteSpace="normal"
                     >
-                      <VStack align="stretch" px={3} py={3} spacing={2} w="100%">
+                      <VStack align="stretch" px={3} py={2} spacing={1.5} w="100%">
                         <HStack align="start" justify="space-between" spacing={2} w="100%">
                           <HStack align="start" spacing={2} minW={0}>
                             <Box
@@ -928,15 +933,15 @@ export const ActionsPanel = (): JSX.Element => {
                     Use 1-{Math.min(actionItems.length, 4)} keys to act
                   </Text>
                 )}
-                <Text color="#8A7E6A" fontSize="2xs">
-                  {attackStatusMessage || (
-                    currentBattle.encounterType === EncounterType.PvE
-                      ? 'Pick the cleanest line and keep the tempo.'
-                      : canAttack
+                {(attackStatusMessage || currentBattle.encounterType === EncounterType.PvP) && (
+                  <Text color="#8A7E6A" fontSize="2xs">
+                    {attackStatusMessage || (
+                      canAttack
                         ? 'The clock is yours. Take the opening.'
                         : 'Watch the timer and prepare the counter.'
-                  )}
-                </Text>
+                    )}
+                  </Text>
+                )}
               </VStack>
               {canFlee && (
                 <Button

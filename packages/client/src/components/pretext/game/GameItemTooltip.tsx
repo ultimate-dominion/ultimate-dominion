@@ -136,7 +136,7 @@ export function GameItemTooltip({ item, matchup, opponentClass }: Props) {
       ctx.font = '500 10px "Fira Code"';
       ctx.fillStyle = rColor;
       ctx.globalAlpha = 0.7;
-      ctx.fillText(`${rName} ${typeName}`.toUpperCase(), PAD, y);
+      ctx.fillText(typeName.toUpperCase(), PAD, y);
       ctx.globalAlpha = 1;
       y += 16;
 
