@@ -105,11 +105,11 @@
       </div>
     </a>
 
-    <a class="card wip" href="viewer.html?creature=bugbear" data-slug="bugbear">
+    <a class="card done" href="viewer.html?creature=bugbear" data-slug="bugbear">
       <div class="card-preview"><span class="placeholder">?</span></div>
       <div class="card-body">
         <div class="card-name">Bugbear</div>
-        <div class="card-meta"><span>L8</span><span class="badge badge-wip">wip</span></div>
+        <div class="card-meta"><span>L8</span><span class="badge badge-done">done</span></div>
       </div>
     </a>
 
@@ -121,19 +121,19 @@
       </div>
     </a>
 
-    <a class="card wip" href="viewer.html?creature=hook-horror" data-slug="hook-horror">
+    <a class="card done" href="viewer.html?creature=hook-horror" data-slug="hook-horror">
       <div class="card-preview"><span class="placeholder">?</span></div>
       <div class="card-body">
         <div class="card-name">Hook Horror</div>
-        <div class="card-meta"><span>L10</span><span class="badge badge-wip">wip</span></div>
+        <div class="card-meta"><span>L10</span><span class="badge badge-done">done</span></div>
       </div>
     </a>
 
-    <a class="card wip" href="viewer.html?creature=basilisk" data-slug="basilisk">
+    <a class="card done" href="viewer.html?creature=basilisk" data-slug="basilisk">
       <div class="card-preview"><span class="placeholder">?</span></div>
       <div class="card-body">
         <div class="card-name">Basilisk</div>
-        <div class="card-meta"><span>Boss</span><span class="badge badge-wip">wip</span></div>
+        <div class="card-meta"><span>Boss</span><span class="badge badge-done">done</span></div>
       </div>
     </a>
 
@@ -154,27 +154,38 @@
   </div>
 
   <div class="summary">
-    <span>8 / 21 complete</span>
-    <span>Z1: 8 done, 3 wip, 0 todo</span>
+    <span>11 / 21 complete</span>
+    <span>Z1: 9 done, 2 wip, 0 todo</span>
     <span>Z2: 0/10</span>
   </div>
 
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
   <script type="module">
     import { renderAscii } from './ascii-renderer.js';
+    import { createThreeRenderer } from './three-bridge.js';
+    import { loadGLBCreature } from './glb-loader.js';
 
-    // Creature config — use game grid dimensions for closest match to in-game look
+    // Creature config — matches what's deployed to beta via monsterTemplatesRedux.ts
+    // GLB creatures use the same animated GLBs from packages/client/public/models/creatures/
     const CONFIGS = {
-      'dire-rat':          { gridW: 14, gridH: 8,  level: 1  },
-      'kobold':            { gridW: 7,  gridH: 5,  level: 2  },
-      'goblin':            { gridW: 7,  gridH: 7,  level: 3  },
-      'giant-spider':      { gridW: 10, gridH: 12, level: 4  },
-      'skeleton-creature': { gridW: 10, gridH: 12, level: 5  },
-      'goblin-shaman':     { gridW: 12, gridH: 11, level: 6  },
-      'gelatinous-ooze':   { gridW: 10, gridH: 14, level: 7  },
-      'bugbear':           { gridW: 10, gridH: 12, level: 8  },
-      'carrion-crawler':   { gridW: 10, gridH: 13, level: 9  },
-      'hook-horror':       { gridW: 14, gridH: 12, level: 10 },
-      'basilisk':          { gridW: 12, gridH: 8,  level: 11 },
+      'dire-rat':          { gridW: 10, gridH: 7,  level: 1,  glb: 'glb/dire-rat-animated.glb' },
+      'kobold':            { gridW: 7,  gridH: 7,  level: 2,  glb: 'glb/kobold-animated.glb' },
+      'goblin':            { gridW: 7,  gridH: 7,  level: 3,  glb: 'glb/goblin-animated.glb' },
+      'giant-spider':      { gridW: 10, gridH: 12, level: 4,  canvas: true },
+      'skeleton-creature': { gridW: 7,  gridH: 7,  level: 5,  glb: 'glb/skeleton-animated.glb' },
+      'goblin-shaman':     { gridW: 7,  gridH: 7,  level: 6,  glb: 'glb/goblin-shaman-animated.glb' },
+      'gelatinous-ooze':   { gridW: 10, gridH: 14, level: 7,  canvas: true },
+      'bugbear':           { gridW: 7,  gridH: 7,  level: 8,  glb: 'glb/bugbear-animated.glb' },
+      'carrion-crawler':   { gridW: 10, gridH: 13, level: 9,  canvas: true },
+      'hook-horror':       { gridW: 14, gridH: 12, level: 10, glb: 'glb/hook-horror-animated.glb' },
+      'basilisk':          { gridW: 26, gridH: 9,  level: 12, glb: 'glb/basilisk-animated.glb' },
     };
 
     const PREVIEW_W = 180;
@@ -182,49 +193,85 @@
     const RENDER_SIZE = 420;  // render at high res, scale down for crisp thumbnails
     const CELL = 3;           // smaller cell = more ASCII density = more detail
 
+    let threeRenderer = null;
+
+    async function renderCardGLB(slug, cfg) {
+      if (!threeRenderer) threeRenderer = createThreeRenderer(RENDER_SIZE, RENDER_SIZE);
+
+      const { drawFn } = await loadGLBCreature(cfg.glb, cfg.gridW, cfg.gridH, threeRenderer);
+
+      const cW = RENDER_SIZE;
+      const cH = Math.round(RENDER_SIZE * cfg.gridH / cfg.gridW);
+
+      const scale = Math.min(PREVIEW_W / cW, PREVIEW_H / cH);
+      const displayW = Math.round(cW * scale);
+      const displayH = Math.round(cH * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cW;
+      canvas.height = cH;
+      canvas.style.width = `${displayW}px`;
+      canvas.style.height = `${displayH}px`;
+
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, cW, cH);
+
+      renderAscii(ctx, (tctx, tw, th) => drawFn(tctx, tw, th),
+        0, 0, cW, cH, { cellSize: CELL, level: cfg.level, gridWidth: cfg.gridW, gridHeight: cfg.gridH });
+
+      return canvas;
+    }
+
+    async function renderCardCanvas(slug, cfg) {
+      const mod = (await import(`./${slug}.js`)).default;
+      if (!mod || typeof mod.draw !== 'function') return null;
+
+      const { draw, skeleton } = mod;
+      const cW = RENDER_SIZE;
+      const cH = Math.round(RENDER_SIZE * cfg.gridH / cfg.gridW);
+
+      const scale = Math.min(PREVIEW_W / cW, PREVIEW_H / cH);
+      const displayW = Math.round(cW * scale);
+      const displayH = Math.round(cH * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cW;
+      canvas.height = cH;
+      canvas.style.width = `${displayW}px`;
+      canvas.style.height = `${displayH}px`;
+
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, cW, cH);
+
+      renderAscii(ctx, (tctx, tw, th) => draw(tctx, skeleton, tw, th),
+        0, 0, cW, cH, { cellSize: CELL, level: cfg.level, gridWidth: cfg.gridW, gridHeight: cfg.gridH });
+
+      return canvas;
+    }
+
     async function renderCard(slug) {
       const card = document.querySelector(`[data-slug="${slug}"]`);
       if (!card) return;
       const preview = card.querySelector('.card-preview');
 
       try {
-        const mod = (await import(`./${slug}.js`)).default;
-        if (!mod || typeof mod.draw !== 'function') return;
+        const cfg = CONFIGS[slug] || { gridW: 7, gridH: 7, level: 1, canvas: true };
+        const canvas = cfg.glb
+          ? await renderCardGLB(slug, cfg)
+          : await renderCardCanvas(slug, cfg);
 
-        const { draw, skeleton } = mod;
-        const cfg = CONFIGS[slug] || { gridW: 7, gridH: 7, level: 1 };
-
-        // Render at high resolution for crisp downscaled display
-        const cW = RENDER_SIZE;
-        const cH = Math.round(RENDER_SIZE * cfg.gridH / cfg.gridW);
-
-        // Scale down to fit preview box while preserving aspect ratio
-        const scale = Math.min(PREVIEW_W / cW, PREVIEW_H / cH);
-        const displayW = Math.round(cW * scale);
-        const displayH = Math.round(cH * scale);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = cW;
-        canvas.height = cH;
-        canvas.style.width = `${displayW}px`;
-        canvas.style.height = `${displayH}px`;
-
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, cW, cH);
-
-        renderAscii(ctx, (tctx, tw, th) => draw(tctx, skeleton, tw, th),
-          0, 0, cW, cH, { cellSize: CELL, level: cfg.level, gridWidth: cfg.gridW, gridHeight: cfg.gridH });
-
-        // Replace placeholder
-        preview.querySelector('.placeholder')?.remove();
-        preview.appendChild(canvas);
-      } catch {
-        // leave placeholder
+        if (canvas) {
+          preview.querySelector('.placeholder')?.remove();
+          preview.appendChild(canvas);
+        }
+      } catch (e) {
+        console.error(`[index] failed to render ${slug}:`, e);
       }
     }
 
-    // Load all creature modules progressively
+    // Load all creature thumbnails progressively
     for (const slug of Object.keys(CONFIGS)) {
       renderCard(slug);
     }
