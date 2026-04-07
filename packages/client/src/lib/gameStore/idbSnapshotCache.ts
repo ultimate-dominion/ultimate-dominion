@@ -8,13 +8,21 @@ import { isValidSnapshot } from './snapshotCache';
 
 const DB_NAME = 'ud-game-cache';
 const STORE_NAME = 'snapshots';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bumped to clear stale ghost encounter data (2026-04-07)
+
+/** Max age for cached snapshots — stale IDB data causes ghost battle spinners */
+const MAX_CACHE_AGE_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
-      request.result.createObjectStore(STORE_NAME);
+      const db = request.result;
+      // Clear old stores on version bump to discard stale data
+      if (db.objectStoreNames.contains(STORE_NAME)) {
+        db.deleteObjectStore(STORE_NAME);
+      }
+      db.createObjectStore(STORE_NAME);
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -31,7 +39,15 @@ export async function readSnapshotFromIDB(worldAddress: string): Promise<FullSna
       const request = store.get(worldAddress.toLowerCase());
       request.onsuccess = () => {
         const result = request.result;
-        resolve(isValidSnapshot(result) ? result : null);
+        if (!result || !isValidSnapshot(result)) { resolve(null); return; }
+        // Skip stale caches — ghost battle data can persist indefinitely
+        const cachedAt = (result as Record<string, unknown>).__cachedAt;
+        if (typeof cachedAt === 'number' && Date.now() - cachedAt > MAX_CACHE_AGE_MS) {
+          console.log('[idb] Skipping stale snapshot cache (age:', Math.round((Date.now() - cachedAt) / 60000), 'min)');
+          resolve(null);
+          return;
+        }
+        resolve(result);
       };
       request.onerror = () => resolve(null);
     });
@@ -44,10 +60,12 @@ export async function writeSnapshotToIDB(worldAddress: string, snapshot: FullSna
   try {
     if (!worldAddress) return;
     const db = await openDB();
+    // Attach timestamp for TTL checks on read
+    const withTimestamp = { ...snapshot, __cachedAt: Date.now() };
     return new Promise((resolve) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      store.put(snapshot, worldAddress.toLowerCase());
+      store.put(withTimestamp, worldAddress.toLowerCase());
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();
     });

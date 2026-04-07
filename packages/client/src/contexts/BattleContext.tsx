@@ -160,6 +160,18 @@ export const BattleProvider = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allBattles, combatOutcomeTable, acknowledgeVersion]);
 
+  // Ghost encounter safety: if an "active" battle (end=0) started more than
+  // 2 minutes ago, it's stale cache data from a previous session — auto-dismiss.
+  // No real PvE encounter lasts 2+ minutes without the opponent resolving.
+  useEffect(() => {
+    if (!currentBattle || currentBattle.end !== BigInt(0)) return;
+    const ageSeconds = Math.floor(Date.now() / 1000) - Number(currentBattle.start);
+    if (ageSeconds < 120) return; // legit recent battle, don't touch
+    console.warn('[battle] Ghost encounter detected (age:', ageSeconds, 's) — auto-dismissing', currentBattle.encounterId);
+    localStorage.setItem(BATTLE_OUTCOME_SEEN_KEY, currentBattle.encounterId);
+    setAcknowledgeVersion(v => v + 1);
+  }, [currentBattle?.encounterId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const lastestBattleOutcome = useMemo(() => {
     // Include battles where CombatOutcome exists even if end hasn't synced yet
     // (splice event delay). This ensures battleOver=true as soon as outcome arrives.

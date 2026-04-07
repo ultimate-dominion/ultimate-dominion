@@ -1,6 +1,6 @@
 import type { FullSnapshot, TableRow } from './types';
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2; // Bumped to clear stale ghost encounter data (2026-04-07)
 const CACHE_KEY_PREFIX = 'ud:snapshot';
 
 // ─── Lightweight characters-only cache for fast-path ────────
