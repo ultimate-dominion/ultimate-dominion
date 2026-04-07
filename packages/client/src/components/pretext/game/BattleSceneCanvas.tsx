@@ -50,6 +50,7 @@ import {
   IMPACT_DURATION,
   type HitReaction,
 } from './impactEffects';
+import { getCaveBg, renderCaveBgFlicker, clearCaveBgCache } from './caveBgRenderer';
 import type { AttackSignal, BattleSceneHandle } from '../../../hooks/useBattleSceneSignals';
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -264,6 +265,12 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
         const now = performance.now();
 
         ctx.clearRect(0, 0, w, h);
+
+        // ── Cave background ─────────────────────────────────────────────
+
+        const caveBg = getCaveBg(w, h);
+        ctx.drawImage(caveBg.canvas, 0, 0);
+        renderCaveBgFlicker(ctx, caveBg.cells, elapsed);
 
         // ── Process attack animations ───────────────────────────────────
 
