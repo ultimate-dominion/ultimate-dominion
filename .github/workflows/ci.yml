@@ -11,6 +11,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  client-build:
+    name: Client Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck client
+        run: pnpm --filter client run typecheck
+      - name: Build client (production mode)
+        run: pnpm --filter client run build
+        env:
+          CI: ""
+
   client-tests:
     name: Client Tests
     runs-on: ubuntu-latest

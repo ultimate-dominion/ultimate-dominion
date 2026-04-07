@@ -88,12 +88,12 @@ vi.mock('./LevelUpBanner', () => ({
   ),
 }));
 
-vi.mock('./LevelingPanel', () => ({
-  LevelingPanel: (props: any) => (
+vi.mock('./pretext/game/BattleMonsterAscii', () => ({
+  BattleMonsterAscii: (props: any) => (
     <div
-      data-testid="leveling-panel"
-      data-can-level={String(props.canLevel)}
-      data-compact={String(props.compact)}
+      data-defeated={String(Boolean(props.defeated))}
+      data-name={props.monsterName}
+      data-testid="battle-monster-ascii"
     />
   ),
 }));
@@ -150,7 +150,9 @@ function makeWinOutcome(overrides: Record<string, any> = {}) {
   };
 }
 
-// MAX_LEVEL = 10 (from constants.ts). canLevel = false when Number(character.level) >= MAX_LEVEL.
+// MAX_LEVEL = 20 (from constants.ts). BattleOutcomeModal no longer renders an
+// inline LevelingPanel; it only shows a LevelUpBanner when the battle newly
+// triggers eligibility or the character already leveled.
 
 // --- Tests ---
 
@@ -171,10 +173,10 @@ describe('BattleOutcomeModal — max level behavior', () => {
     cleanup();
   });
 
-  // --- Happy path: maxed character (level 10) ---
+  // --- Happy path: maxed character (level 20) ---
 
-  it('does NOT render LevelingPanel when character is at max level', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+  it('does NOT render inline leveling UI when character is at max level', () => {
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
     const outcome = makeWinOutcome();
 
     render(
@@ -185,16 +187,15 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    // canLevel is false at max level -> no LevelingPanel
     expect(screen.queryByTestId('leveling-panel')).toBeNull();
   });
 
   it('does NOT render LevelUpBanner when character is at max level', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
 
     // Provide next level data so the XP comparison would pass if not maxed
-    const nextLevelKey = '0x' + 'a'.padStart(64, '0');
-    mockGameValues[nextLevelKey] = { experience: 4000n };
+    const nextLevelKey = '0x' + '14'.padStart(64, '0');
+    mockGameValues[nextLevelKey] = { experience: 80000n };
 
     const outcome = makeWinOutcome();
 
@@ -211,7 +212,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
   });
 
   it('shows victory text but no leveling UI when maxed and winning', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
     const outcome = makeWinOutcome();
 
     render(
@@ -222,15 +223,33 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    expect(screen.getByText('Victory!')).toBeDefined();
-    expect(screen.getByText(/You defeated/)).toBeDefined();
+    expect(screen.getByText('battle.victory')).toBeDefined();
+    expect(screen.getByText('battle.youDefeated')).toBeDefined();
     expect(screen.queryByTestId('leveling-panel')).toBeNull();
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });
 
+  it('renders ascii monster art in the PvE victory modal', () => {
+    mockCharacter = makeCharacter({ level: 5n, experience: 5000n });
+    mockOpponent = { name: 'Skeleton' };
+    mockCurrentBattle = { encounterType: 1, currentTurn: 1n, maxTurns: 2n };
+
+    render(
+      <BattleOutcomeModal
+        isOpen={true}
+        onClose={vi.fn()}
+        battleOutcome={makeWinOutcome() as any}
+      />,
+    );
+
+    const portrait = screen.getByTestId('battle-monster-ascii');
+    expect(portrait.getAttribute('data-name')).toBe('Skeleton');
+    expect(portrait.getAttribute('data-defeated')).toBe('false');
+  });
+
   // --- Happy path: non-maxed character with enough XP ---
 
-  it('renders LevelingPanel with canLevel=true when not maxed with enough XP', () => {
+  it('does NOT render inline leveling UI when already eligible before the battle', () => {
     mockCharacter = makeCharacter({ level: 5n, experience: 300n });
 
     const nextLevelKey = '0x' + '5'.padStart(64, '0');
@@ -246,10 +265,8 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    const levelingPanel = screen.getByTestId('leveling-panel');
-    expect(levelingPanel).toBeDefined();
-    expect(levelingPanel.getAttribute('data-can-level')).toBe('true');
-    expect(levelingPanel.getAttribute('data-compact')).toBe('true');
+    expect(screen.queryByTestId('leveling-panel')).toBeNull();
+    expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });
 
   it('renders LevelUpBanner when this battle pushed XP over threshold', () => {
@@ -282,7 +299,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
 
     // justBecameEligible: initialExperience(150) < 200 && 250 >= 200 = true
     expect(screen.getByTestId('level-up-banner')).toBeDefined();
-    expect(screen.getByTestId('leveling-panel')).toBeDefined();
+    expect(screen.queryByTestId('leveling-panel')).toBeNull();
   });
 
   // --- Edge cases ---
@@ -326,7 +343,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
     expect(screen.queryByTestId('leveling-panel')).toBeNull();
   });
 
-  it('level 8 with enough XP shows leveling UI (boundary test)', () => {
+  it('level 8 with enough XP does not render inline leveling UI (boundary test)', () => {
     mockCharacter = makeCharacter({ level: 8n, experience: 5000n });
 
     const nextLevelKey = '0x' + '8'.padStart(64, '0');
@@ -342,12 +359,11 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    const levelingPanel = screen.getByTestId('leveling-panel');
-    expect(levelingPanel).toBeDefined();
-    expect(levelingPanel.getAttribute('data-can-level')).toBe('true');
+    expect(screen.queryByTestId('leveling-panel')).toBeNull();
+    expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });
 
-  it('level 9 is NOT maxed — shows leveling UI with enough XP', () => {
+  it('level 9 is NOT maxed — but still uses the full level-up flow', () => {
     mockCharacter = makeCharacter({ level: 9n, experience: 5000n });
 
     const nextLevelKey = '0x' + '9'.padStart(64, '0');
@@ -363,10 +379,8 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    // level 9 < MAX_LEVEL(10) -> canLevel = true (XP 5000 >= threshold 4000)
-    const levelingPanel = screen.getByTestId('leveling-panel');
-    expect(levelingPanel).toBeDefined();
-    expect(levelingPanel.getAttribute('data-can-level')).toBe('true');
+    expect(screen.queryByTestId('leveling-panel')).toBeNull();
+    expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });
 
   it('renders empty Box when character is null', () => {
@@ -401,7 +415,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    expect(screen.getByText('Defeat...')).toBeDefined();
+    expect(screen.getByText('battle.defeat')).toBeDefined();
     // LevelingPanel and LevelUpBanner gated by winner === character.id
     expect(screen.queryByTestId('leveling-panel')).toBeNull();
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
@@ -427,7 +441,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    expect(screen.getByText('Draw...')).toBeDefined();
+    expect(screen.getByText('battle.draw')).toBeDefined();
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });
 
@@ -447,7 +461,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    expect(screen.getByText('Defeat...')).toBeDefined();
+    expect(screen.getByText('battle.defeat')).toBeDefined();
     expect(screen.queryByTestId('leveling-panel')).toBeNull();
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });

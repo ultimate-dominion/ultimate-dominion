@@ -85,7 +85,7 @@ contract Test_PveRewardBonus is SetUp {
             strength: 5
         });
         testMobId = world.UD__createMob(MobType.Monster, abi.encode(monster), "test_bonus_monster");
-        testEntityId = world.UD__spawnMob(testMobId, 5, 5);
+        testEntityId = world.UD__spawnMob(testMobId, 1, 5, 5);
 
         vm.stopPrank();
     }

@@ -18,7 +18,7 @@ import {
 import type { CombatConstants, Combatant, Weapon, CcHistoryEntry } from "./types.js";
 
 const CC: CombatConstants = {
-  attackModifier: 1.2,
+  attackModifier: 1.0,
   agiAttackModifier: 1.0,
   defenseModifier: 1.0,
   critMultiplier: 2,

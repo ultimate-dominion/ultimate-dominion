@@ -166,7 +166,7 @@ def generate_standard_json(source_path: str, contract_name: str, address: str) -
     contract_identifier = f"{source_path}:{contract_name}"
     result = subprocess.run(
         ["forge", "verify-contract", "--show-standard-json-input",
-         "--rpc-url", "https://mainnet.base.org",
+         "--rpc-url", "https://rpc.ultimatedominion.com",
          address, contract_identifier],
         capture_output=True, text=True, timeout=60, env=env,
         cwd=CONTRACTS_DIR
@@ -283,7 +283,7 @@ def classify_result(response: dict, name: str, results: dict) -> None:
 
 def main():
     world_address = os.environ.get("WORLD_ADDRESS")
-    rpc_url = os.environ.get("RPC_URL", "https://mainnet.base.org")
+    rpc_url = os.environ.get("RPC_URL", "https://rpc.ultimatedominion.com")
 
     if not world_address:
         print("Error: WORLD_ADDRESS env var required", file=sys.stderr)

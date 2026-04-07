@@ -1,5 +1,6 @@
 import { Box, HStack, Image, keyframes, Text, VStack } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import { getItemImage } from '../utils/itemImages';
@@ -9,7 +10,7 @@ import {
   ItemType,
   Rarity,
   RARITY_COLORS,
-  RARITY_NAMES,
+  RARITY_I18N_KEYS,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -172,6 +173,7 @@ const getRevealDelay = (index: number): number => {
 // --- Component ---
 
 export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) => {
+  const { t } = useTranslation('ui');
   const [revealedCount, setRevealedCount] = useState(0);
 
   useEffect(() => {
@@ -208,7 +210,7 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
         />
       )}
 
-      <Text fontWeight="bold" zIndex={1}>Looted Items:</Text>
+      <Text fontWeight="bold" zIndex={1}>{t('loot.title')}</Text>
 
       {items.map((item, index) => {
         const isRevealed = index < revealedCount;
@@ -344,7 +346,7 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
                       mb={0.5}
                       textTransform="uppercase"
                     >
-                      {RARITY_NAMES[rarity as Rarity]}
+                      {t(RARITY_I18N_KEYS[rarity as Rarity])}
                     </Text>
                   )}
 
@@ -389,7 +391,7 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
                     flexShrink={0}
                     _groupHover={{ color: '#8A7E6A' }}
                   >
-                    Equip
+                    {t('equip.equip')}
                   </Text>
                 )}
               </HStack>

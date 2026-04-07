@@ -1,4 +1,5 @@
 import { Box, HStack, Text, Tooltip, VStack } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import {
   GiCrossedSwords,
   GiCrownedSkull,
@@ -7,12 +8,14 @@ import {
   GiMountainRoad,
   GiMountaintop,
   GiWindSlap,
+  GiBlackFlag,
 } from 'react-icons/gi';
 import type { Badge, BadgeType } from '../hooks/useBadges';
 
 const BADGE_ICONS: Record<BadgeType, React.ElementType> = {
   adventurer: GiCrossedSwords,
   founder: GiLaurelsTrophy,
+  guild_founder: GiBlackFlag,
   zone_conqueror: GiCrownedSkull,
   zone_fragment: GiScrollQuill,
   peaks_pioneer: GiMountainRoad,
@@ -73,14 +76,15 @@ export const BadgeIcons = ({ badges }: { badges: Badge[] }): JSX.Element | null 
  * Shows all earned badges with labels and descriptions.
  */
 export const BadgeShowcase = ({ badges }: { badges: Badge[] }): JSX.Element => {
+  const { t } = useTranslation('ui');
   return (
     <VStack align="start" spacing={3} w="100%">
       <Text color="#8A7E6A" fontWeight={600} size="sm" letterSpacing="0.05em" textTransform="uppercase">
-        Badges
+        {t('badges.title')}
       </Text>
       {badges.length === 0 ? (
         <Text color="#5A5040" fontStyle="italic" size="sm">
-          No badges earned yet
+          {t('badges.noneEarned')}
         </Text>
       ) : (
         <HStack spacing={2} rowGap={2} flexWrap="wrap">

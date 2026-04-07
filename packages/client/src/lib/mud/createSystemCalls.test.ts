@@ -14,13 +14,11 @@ import {
 // ── Mocks ───────────────────────────────────────────────────────────
 
 const mockSetRow = vi.fn();
-const mockGameTables: Record<string, Record<string, unknown>> = {};
 vi.mock('../gameStore', () => ({
   getTableValue: vi.fn(),
   useGameStore: {
     getState: () => ({
       setRow: mockSetRow,
-      tables: mockGameTables,
     }),
   },
 }));
@@ -37,20 +35,10 @@ const mockedGetTableValue = vi.mocked(getTableValue);
 
 const TEST_WALLET = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' as Address;
 const TEST_DELEGATOR = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' as Address;
+const TEST_WORLD = '0x1111111111111111111111111111111111111111' as Address;
 const TEST_ENTITY = '0x0000000000000000000000000000000000000000000000000000000000000001';
 const TEST_ENTITY_2 = '0x0000000000000000000000000000000000000000000000000000000000000002';
-const TEST_MONSTER_2 = '0x000000000000000000000000000000000000000000000000000000000000beef';
 const FAKE_TX_HASH = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890' as `0x${string}`;
-
-const resetMockGameTables = () => {
-  Object.keys(mockGameTables).forEach(key => {
-    delete mockGameTables[key];
-  });
-};
-
-beforeEach(() => {
-  resetMockGameTables();
-});
 
 // ── Mock Factory ────────────────────────────────────────────────────
 
@@ -86,6 +74,7 @@ function createMockNetwork(overrides: {
   };
 
   const worldContract = {
+    address: TEST_WORLD,
     write: new Proxy({} as Record<string, unknown>, writeHandler),
     read: new Proxy({} as Record<string, unknown>, readHandler),
     simulate: new Proxy({} as Record<string, unknown>, simulateHandler),
@@ -94,6 +83,9 @@ function createMockNetwork(overrides: {
   const publicClient = {
     getChainId: vi.fn().mockResolvedValue(chainId),
     getBlockNumber: vi.fn().mockResolvedValue(BigInt(200)),
+    getBalance: vi.fn().mockResolvedValue(BigInt(0)),
+    readContract: vi.fn(),
+    simulateContract: vi.fn().mockResolvedValue({ result: undefined }),
   };
 
   const walletClient = {
@@ -316,30 +308,19 @@ describe('createSystemCalls — receipt awaiting regression guard', () => {
   });
 
   it('unequipItem returns failure when receipt is reverted', async () => {
-    // unequipItem awaits waitForTransaction but returns { success: true }
-    // unconditionally after await — let's verify it at least awaits
-    const result = await calls.unequipItem(TEST_ENTITY, '1');
-    expect(waitForTransaction).toHaveBeenCalled();
-    // unequipItem doesn't check receipt status — it returns success: true after await.
-    // This is acceptable since it does await (not fire-and-forget).
-    // If it were fire-and-forget, waitForTransaction wouldn't be called before return.
+    await expectFailure(calls.unequipItem(TEST_ENTITY, '1'));
   });
 
   it('equipItems returns failure when receipt is reverted', async () => {
-    // Same pattern as unequipItem — awaits but returns success: true
-    const result = await calls.equipItems(TEST_ENTITY, ['1']);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.equipItems(TEST_ENTITY, ['1']));
   });
 
   it('enterGame returns failure when receipt is reverted', async () => {
-    // enterGame awaits but returns success: true unconditionally
-    const result = await calls.enterGame(TEST_ENTITY, BigInt(1), BigInt(1));
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.enterGame(TEST_ENTITY, BigInt(1), BigInt(1)));
   });
 
   it('levelCharacter returns failure when receipt is reverted', async () => {
-    // levelCharacter awaits but returns success: true unconditionally
-    const result = await calls.levelCharacter(TEST_ENTITY, {
+    await expectFailure(calls.levelCharacter(TEST_ENTITY, {
       strength: BigInt(10),
       agility: BigInt(10),
       intelligence: BigInt(10),
@@ -353,34 +334,27 @@ describe('createSystemCalls — receipt awaiting regression guard', () => {
       startingArmor: ArmorType.Plate,
       advancedClass: AdvancedClass.Warrior,
       hasSelectedAdvancedClass: true,
-    });
-    expect(waitForTransaction).toHaveBeenCalled();
+    }));
   });
 
   it('chooseRace returns failure when receipt is reverted', async () => {
-    // awaits but returns success: true unconditionally
-    const result = await calls.chooseRace(TEST_ENTITY, Race.Human);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.chooseRace(TEST_ENTITY, Race.Human));
   });
 
   it('choosePowerSource returns failure when receipt is reverted', async () => {
-    const result = await calls.choosePowerSource(TEST_ENTITY, PowerSource.Divine);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.choosePowerSource(TEST_ENTITY, PowerSource.Divine));
   });
 
   it('rollStats returns failure when receipt is reverted', async () => {
-    const result = await calls.rollStats(TEST_ENTITY, StatsClasses.Strength);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.rollStats(TEST_ENTITY, StatsClasses.Strength));
   });
 
   it('rollBaseStats returns failure when receipt is reverted', async () => {
-    const result = await calls.rollBaseStats(TEST_ENTITY);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.rollBaseStats(TEST_ENTITY));
   });
 
   it('selectAdvancedClass returns failure when receipt is reverted', async () => {
-    const result = await calls.selectAdvancedClass(TEST_ENTITY, AdvancedClass.Paladin);
-    expect(waitForTransaction).toHaveBeenCalled();
+    await expectFailure(calls.selectAdvancedClass(TEST_ENTITY, AdvancedClass.Paladin));
   });
 
   it('move returns failure when receipt is reverted', async () => {
@@ -395,7 +369,6 @@ describe('createSystemCalls — receipt awaiting regression guard', () => {
 describe('createSystemCalls — ownership validation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockedGetTableValue.mockReset();
   });
 
   describe('direct wallet (no delegator)', () => {
@@ -468,7 +441,6 @@ describe('createSystemCalls — ownership validation', () => {
 describe('createSystemCalls — encounter guards', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockedGetTableValue.mockReset();
   });
 
   it('endTurn skips chain call when CombatEncounter already ended', async () => {
@@ -530,14 +502,14 @@ describe('createSystemCalls — error handling', () => {
   });
 
   it('returns insufficient funds message', async () => {
-    const { network } = createMockNetwork();
-    // Create an error that classifyError will detect as insufficient funds
-    const fundsError = new Error('insufficient funds for gas');
-    // Add walk method to mimic BaseError
-    (fundsError as Error & { walk: () => null }).walk = () => null;
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: () => vi.fn().mockRejectedValue(fundsError),
-    });
+	    const { network } = createMockNetwork();
+	    // Create an error that classifyError will detect as insufficient funds
+	    const fundsError = new Error('insufficient funds for gas');
+	    // Add walk method to mimic BaseError
+	    (fundsError as unknown as Record<string, unknown>).walk = () => null;
+	    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+	      get: () => vi.fn().mockRejectedValue(fundsError),
+	    });
     const calls = createSystemCalls(network);
     mockOwnership();
 
@@ -576,140 +548,19 @@ describe('createSystemCalls — error handling', () => {
   });
 });
 
-// ── Suite D: Move Stale Position Recovery ───────────────────────────
+// ── Suite D: Move Invalid Position Handling ─────────────────────────
 
-describe('createSystemCalls — move stale position recovery', () => {
-  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000';
-
-  const makePositionRecord = (x: number, y: number) =>
-    [`0x${x.toString(16).padStart(4, '0')}${y.toString(16).padStart(4, '0')}`, '0x' + '00'.repeat(32), '0x'] as const;
-
+describe('createSystemCalls — move invalid position handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('retries with chain position when on-chain diagnosis returns invalid_move', async () => {
-    const { network } = createMockNetwork();
-    const waitForTransaction = vi.fn()
-      .mockResolvedValueOnce({ status: 'reverted', blockNumber: BigInt(100), gasUsed: BigInt(141097) })
-      .mockResolvedValueOnce({ status: 'success', blockNumber: BigInt(101), gasUsed: BigInt(141097) });
-    network.waitForTransaction = waitForTransaction;
-
-    mockedGetTableValue.mockImplementation((table: string, entity: string) => {
-      if (table === 'Characters' && entity === TEST_ENTITY) {
-        return { owner: TEST_WALLET } as ReturnType<typeof getTableValue>;
-      }
-      if (table === 'SessionTimer') return { lastAction: 0 } as ReturnType<typeof getTableValue>;
-      if (table === 'WorldEncounter') return { end: '0' } as ReturnType<typeof getTableValue>;
-      if (table === 'CombatEncounter') return { end: '0' } as ReturnType<typeof getTableValue>;
-      if (table === 'Position') return { x: 0, y: 2 } as ReturnType<typeof getTableValue>;
-      if (table === 'EncounterEntity') return undefined;
-      return undefined;
-    });
-
-    const moveWriteFn = vi.fn().mockResolvedValue(FAKE_TX_HASH);
-
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return moveWriteFn;
-        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return vi.fn().mockRejectedValue(new Error('0x87822d34'));
-        return vi.fn().mockResolvedValue({ result: undefined });
-      },
-    });
-    // Position read now uses readStoreRecord via publicClient.readContract
-    network.publicClient.readContract = vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
-      const [tableId] = args;
-      if (tableId === POSITION_TABLE_ID) return makePositionRecord(2, 3);
-      return ['0x', '0x' + '00'.repeat(32), '0x'];
-    });
-
-    const calls = createSystemCalls(network);
-    const result = await calls.move(TEST_ENTITY, 'right');
-
-    expect(result.success).toBe(true);
-    expect(waitForTransaction).toHaveBeenCalledTimes(2);
-    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 2, y: 3 });
-    expect(moveWriteFn).toHaveBeenNthCalledWith(1, [TEST_ENTITY, 1, 2], expect.anything());
-    expect(moveWriteFn).toHaveBeenNthCalledWith(2, [TEST_ENTITY, 3, 3], expect.anything());
-  });
-
-  it('returns warning when chain position sync fails after invalid_move', async () => {
-    const { network } = createMockNetwork();
-    const waitForTransaction = vi.fn().mockResolvedValue({
-      status: 'reverted',
-      blockNumber: BigInt(100),
-      gasUsed: BigInt(141097),
-    });
-    network.waitForTransaction = waitForTransaction;
-    mockOwnership();
-
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return vi.fn().mockRejectedValue(new Error('0x87822d34'));
-        return vi.fn().mockResolvedValue({ result: undefined });
-      },
-    });
-    // Position read now uses readStoreRecord — mock to reject
-    network.publicClient.readContract = vi.fn().mockRejectedValue(new Error('RPC error'));
-
-    const calls = createSystemCalls(network);
-    const result = await calls.move(TEST_ENTITY, 'right');
-
-    expect(result.success).toBe(false);
-    expect(result.severity).toBe('warning');
-    expect(result.error).toContain('moving too fast');
-  });
-
-  it('updates Position immediately after a successful move receipt', async () => {
-    const { network } = createMockNetwork();
-    mockOwnership();
-
-    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
-      },
-    });
-
-    const calls = createSystemCalls(network);
-    const result = await calls.move(TEST_ENTITY, 'up');
-
-    expect(result.success).toBe(true);
-    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 1, y: 2 });
-  });
-
-  it('syncs Position from chain after a successful spawn', async () => {
-    const { network } = createMockNetwork();
-    mockOwnership();
-
-    // Position read now uses readStoreRecord via publicClient.readContract
-    network.publicClient.readContract = vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
-      const [tableId] = args;
-      if (tableId === POSITION_TABLE_ID) return makePositionRecord(0, 0);
-      return ['0x', '0x' + '00'.repeat(32), '0x'];
-    });
-
-    const calls = createSystemCalls(network);
-    const result = await calls.spawn(TEST_ENTITY);
-
-    expect(result.success).toBe(true);
-    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_ENTITY, { x: 0, y: 0 });
-  });
-
-  it('prefers legacy Position over stale PositionV2 for move origin', async () => {
+  it('returns failure when submission throws InvalidMove before a tx hash exists', async () => {
     const { network, waitForTransaction } = createMockNetwork();
-    const moveWriteFn = vi.fn().mockResolvedValue(FAKE_TX_HASH);
+    mockOwnership();
+
+    const moveWriteFn = vi.fn()
+      .mockRejectedValueOnce(new Error('0x87822d34'));
 
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: (_target, prop) => {
@@ -718,6 +569,38 @@ describe('createSystemCalls — move stale position recovery', () => {
       },
     });
 
+    const calls = createSystemCalls(network);
+
+    const result = await calls.move(TEST_ENTITY, 'right');
+    expect(result.success).toBe(false);
+    expect(moveWriteFn).toHaveBeenCalledTimes(1);
+    expect(waitForTransaction).not.toHaveBeenCalled();
+    expect(network.publicClient.readContract).not.toHaveBeenCalled();
+  });
+
+  it('does not rewrite the store from chain on pre-submit InvalidMove', async () => {
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    const moveWriteFn = vi.fn()
+      .mockRejectedValueOnce(new Error('0x87822d34'));
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    const calls = createSystemCalls(network);
+
+    await calls.move(TEST_ENTITY, 'up');
+    expect(mockSetRow).not.toHaveBeenCalled();
+    expect(network.publicClient.readContract).not.toHaveBeenCalled();
+  });
+
+  it('uses PositionV2 from the receipt-driven store for target calculation', async () => {
+    const { network, waitForTransaction } = createMockNetwork();
     mockedGetTableValue.mockImplementation((table: string, entity: string) => {
       if (table === 'Characters' && entity === TEST_ENTITY) {
         return { owner: TEST_WALLET } as ReturnType<typeof getTableValue>;
@@ -732,10 +615,10 @@ describe('createSystemCalls — move stale position recovery', () => {
         return { end: '0' } as ReturnType<typeof getTableValue>;
       }
       if (table === 'PositionV2') {
-        return { x: 0, y: 0 } as ReturnType<typeof getTableValue>;
+        return { x: 4, y: 4 } as ReturnType<typeof getTableValue>;
       }
       if (table === 'Position') {
-        return { x: 0, y: 2 } as ReturnType<typeof getTableValue>;
+        return { x: 1, y: 1 } as ReturnType<typeof getTableValue>;
       }
       if (table === 'EncounterEntity') {
         return undefined;
@@ -743,12 +626,21 @@ describe('createSystemCalls — move stale position recovery', () => {
       return undefined;
     });
 
+    const moveWriteFn = vi.fn()
+      .mockRejectedValueOnce(new Error('0x87822d34'));
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__move') return moveWriteFn;
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
     const calls = createSystemCalls(network);
 
-    const result = await calls.move(TEST_ENTITY, 'right');
-    expect(result.success).toBe(true);
-    expect(moveWriteFn).toHaveBeenCalledWith([TEST_ENTITY, 1, 2], expect.anything());
-    expect(waitForTransaction).toHaveBeenCalled();
+    await calls.move(TEST_ENTITY, 'down');
+    expect(moveWriteFn).toHaveBeenLastCalledWith([TEST_ENTITY, 4, 3], { gas: BigInt(8_000_000) });
+    expect(waitForTransaction).not.toHaveBeenCalled();
   });
 });
 
@@ -770,11 +662,9 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
       },
     });
 
+    // Simulate rejects with NotSpawned so diagnosis detects despawn
     network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
-      get: (_target, prop) => {
-        if (prop === 'UD__move') return vi.fn().mockRejectedValue(new Error('0xbd45e4f6'));
-        return vi.fn().mockResolvedValue({ result: undefined });
-      },
+      get: () => vi.fn().mockRejectedValue(new Error('0xbd45e4f6')),
     });
 
     const calls = createSystemCalls(network);
@@ -805,6 +695,41 @@ describe('createSystemCalls — on-chain revert diagnosis', () => {
     expect(result.success).toBe(false);
     // With MAX_ON_CHAIN_RETRIES=1: first attempt reverts, sim passes, retries once, second attempt also reverts
     expect(waitFn).toHaveBeenCalledTimes(2);
+  });
+
+  it('useWorldConsumableItem diagnoses masked estimate-gas reverts via simulation', async () => {
+    const { network } = createMockNetwork();
+    mockOwnership();
+
+    const simulateUseItem = vi.fn().mockRejectedValue(new Error(
+      'EstimateGasExecutionError: execution reverted for an unknown reason. data: "0x54962c76"',
+    ));
+
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__useWorldConsumableItem') {
+          return vi.fn().mockRejectedValue(new Error('insufficient funds for intrinsic transaction cost'));
+        }
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__useWorldConsumableItem') return simulateUseItem;
+        return vi.fn().mockResolvedValue({ result: undefined });
+      },
+    });
+
+    const calls = createSystemCalls(network);
+    const result = await calls.useWorldConsumableItem(TEST_ENTITY, '1');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('That item is not equipped.');
+    expect(simulateUseItem).toHaveBeenCalledWith(
+      [TEST_ENTITY, TEST_ENTITY, BigInt(1)],
+      { account: network.walletClient.account.address },
+    );
   });
 });
 
@@ -840,29 +765,6 @@ describe('createSystemCalls — ghost monster pre-flight validation', () => {
     expect(waitForTransaction).not.toHaveBeenCalled();
   });
 
-  it('autoFight keeps other monsters on the tile when target is ghosted', async () => {
-    const { network, waitForTransaction } = createMockNetwork();
-    mockOwnershipWithMonster('dead');
-    mockGameTables['Spawned'] = {
-      [TEST_MONSTER]: { spawned: true },
-      [TEST_MONSTER_2]: { spawned: true },
-    };
-    mockGameTables['Position'] = {
-      [TEST_MONSTER]: { x: 1, y: 1 },
-      [TEST_MONSTER_2]: { x: 1, y: 1 },
-    };
-    mockGameTables['Characters'] = {};
-
-    const calls = createSystemCalls(network);
-    const result = await calls.autoFight(TEST_ENTITY, TEST_MONSTER, '1');
-
-    expect(result.success).toBe(false);
-    expect(result.severity).toBe('warning');
-    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
-    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
-    expect(waitForTransaction).not.toHaveBeenCalled();
-  });
-
   it('autoFight proceeds normally when monster is alive', async () => {
     const { network, waitForTransaction } = createMockNetwork();
     mockOwnershipWithMonster('alive');
@@ -890,34 +792,6 @@ describe('createSystemCalls — ghost monster pre-flight validation', () => {
     expect(waitForTransaction).not.toHaveBeenCalled();
   });
 
-  it('createEncounter keeps other monsters on the tile when one target is ghosted', async () => {
-    const { network, waitForTransaction } = createMockNetwork();
-    mockOwnershipWithMonster('dead');
-    mockGameTables['Spawned'] = {
-      [TEST_MONSTER]: { spawned: true },
-      [TEST_MONSTER_2]: { spawned: true },
-    };
-    mockGameTables['Position'] = {
-      [TEST_MONSTER]: { x: 1, y: 1 },
-      [TEST_MONSTER_2]: { x: 1, y: 1 },
-    };
-    mockGameTables['Characters'] = {};
-
-    const calls = createSystemCalls(network);
-
-    const result = await calls.createEncounter(
-      EncounterType.PvE,
-      [TEST_ENTITY],
-      [TEST_MONSTER],
-    );
-
-    expect(result.success).toBe(false);
-    expect(result.severity).toBe('warning');
-    expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
-    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
-    expect(waitForTransaction).not.toHaveBeenCalled();
-  });
-
   it('createEncounter skips validation for PvP encounters', async () => {
     const { network, waitForTransaction } = createMockNetwork();
     // Even with a dead "monster" ID, PvP should not trigger pre-flight
@@ -937,44 +811,6 @@ describe('createSystemCalls — ghost monster pre-flight validation', () => {
 // ── Suite G: Ghost Monster Error Recovery (Layer 4) ─────────────────
 
 describe('createSystemCalls — ghost monster error recovery', () => {
-  const ZERO_HASH = '0x' + '00'.repeat(32);
-  const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000';
-  const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900';
-  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000';
-
-  const makeSpawnedRecord = (spawned: boolean) =>
-    [spawned ? '0x01' : '0x00', '0x' + '00'.repeat(32), '0x'] as const;
-
-  const makeEncounterRecord = (
-    encounterId: string = ZERO_HASH,
-    died = false,
-  ) => [`0x${encounterId.slice(2)}${died ? '01' : '00'}`, '0x' + '00'.repeat(32), '0x'] as const;
-
-  const makePositionRecord = (x: number, y: number) =>
-    [`0x${x.toString(16).padStart(4, '0')}${y.toString(16).padStart(4, '0')}`, '0x' + '00'.repeat(32), '0x'] as const;
-
-  const mockValidationReads = (
-    states: Record<string, {
-      encounterId?: string;
-      died?: boolean;
-      spawned?: boolean;
-      position?: { x: number; y: number };
-    }>,
-  ) => vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
-    const [tableId, [entityId]] = args;
-    const state = states[entityId];
-    if (!state) throw new Error(`Unexpected entity ${entityId}`);
-    if (tableId === SPAWNED_TABLE_ID) return makeSpawnedRecord(state.spawned ?? true);
-    if (tableId === ENCOUNTER_ENTITY_TABLE_ID) {
-      return makeEncounterRecord(state.encounterId ?? ZERO_HASH, state.died ?? false);
-    }
-    if (tableId === POSITION_TABLE_ID) {
-      const pos = state.position ?? { x: 0, y: 0 };
-      return makePositionRecord(pos.x, pos.y);
-    }
-    throw new Error(`Unexpected table ${tableId}`);
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1013,13 +849,9 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
   });
 
-  it('createEncounter keeps live monsters when a ghost trips InvalidCombatEntity (PvE write throw)', async () => {
+  it('createEncounter evicts group2 on InvalidCombatEntity revert (PvE write throw)', async () => {
     const { network } = createMockNetwork();
     mockOwnershipWithMonster('alive');
-    network.publicClient.readContract = mockValidationReads({
-      [TEST_MONSTER]: { spawned: false },
-      [TEST_MONSTER_2]: { spawned: true },
-    });
 
     // Write throws with selector — caught by isGhostMonsterError directly
     const ghostError = new Error('execution reverted: 0x1af235ec');
@@ -1031,110 +863,62 @@ describe('createSystemCalls — ghost monster error recovery', () => {
     const result = await calls.createEncounter(
       EncounterType.PvE,
       [TEST_ENTITY],
-      [TEST_MONSTER, TEST_MONSTER_2],
+      [TEST_MONSTER],
     );
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
-    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
   });
 
-  it('createEncounter preflight blocks bad PvE clicks before sending tx and syncs tile state from chain', async () => {
-    const { network, waitForTransaction } = createMockNetwork();
+  it('createEncounter evicts group2 on on-chain revert via diagnostic simulation (PvE)', async () => {
+    // TX goes on-chain (gas estimation skipped), reverts, then diagnostic
+    // simulation finds ghost monster error
+    const { network, waitForTransaction } = createMockNetwork({ receiptStatus: 'reverted' });
     mockOwnershipWithMonster('alive');
-    // Position reads now go through readStoreRecord (publicClient.readContract)
-    // instead of the broken UD__getEntityPosition view function
-    network.publicClient.readContract = mockValidationReads({
-      [TEST_ENTITY]: { spawned: true, position: { x: 1, y: 1 } },
-      [TEST_MONSTER]: { spawned: true, position: { x: 2, y: 1 } },
+
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(new Error('0x1af235ec')),
     });
-
-    const writeSpy = vi.fn().mockResolvedValue(FAKE_TX_HASH);
-    network.worldContract.write = {
-      UD__createEncounter: writeSpy,
-    };
-    network.worldContract.simulate = {
-      UD__createEncounter: vi.fn().mockRejectedValue(new Error('0xadee4371')),
-    };
-
     const calls = createSystemCalls(network);
+
     const result = await calls.createEncounter(
       EncounterType.PvE,
       [TEST_ENTITY],
       [TEST_MONSTER],
     );
-
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
     expect(result.error).toContain('No enemies here');
-    expect(writeSpy).not.toHaveBeenCalled();
-    expect(waitForTransaction).not.toHaveBeenCalled();
-    expect(mockSetRow).toHaveBeenCalledWith('Position', TEST_MONSTER, { x: 2, y: 1 });
-  });
-
-  it('createEncounter keeps live monsters on on-chain ghost revert via diagnostic simulation (PvE)', async () => {
-    // TX goes on-chain (gas estimation skipped), reverts, then diagnostic
-    // simulation finds ghost monster error
-    const { network, waitForTransaction } = createMockNetwork({ receiptStatus: 'reverted' });
-    mockOwnershipWithMonster('alive');
-    network.publicClient.readContract = mockValidationReads({
-      [TEST_MONSTER]: { spawned: false },
-      [TEST_MONSTER_2]: { spawned: true },
-    });
-
-    network.worldContract.simulate = {
-      UD__createEncounter: vi.fn()
-        .mockResolvedValueOnce({ result: undefined })
-        .mockRejectedValueOnce(new Error('0x1af235ec')),
-    };
-    const calls = createSystemCalls(network);
-
-    const result = await calls.createEncounter(
-      EncounterType.PvE,
-      [TEST_ENTITY],
-      [TEST_MONSTER, TEST_MONSTER_2],
-    );
-    expect(result.success).toBe(false);
-    expect(result.severity).toBe('warning');
-    expect(result.error).toContain('No enemies here');
-    expect(waitForTransaction).toHaveBeenCalled(); // preflight passed, tx was sent
+    expect(waitForTransaction).toHaveBeenCalled(); // TX was sent (gas est skipped)
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
-    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
   });
 
-  it('createEncounter fallback keeps live monsters when simulation finds a ghost', async () => {
+  it('createEncounter fallback: diagnoses ghost from EstimateGasExecutionError via simulation', async () => {
     // Edge case: gas estimation somehow leaks through (e.g. PvP → PvE mismatch
     // or future code path). The catch block does a fallback simulation.
     const { network } = createMockNetwork();
     mockOwnershipWithMonster('alive');
-    network.publicClient.readContract = mockValidationReads({
-      [TEST_MONSTER]: { spawned: false },
-      [TEST_MONSTER_2]: { spawned: true },
-    });
 
     // Write throws a generic error (no ghost selector)
     const genericError = new Error('execution reverted for an unknown reason');
     network.worldContract.write = new Proxy({} as Record<string, unknown>, {
       get: () => vi.fn().mockRejectedValue(genericError),
     });
-    // Preflight passes, fallback simulation reveals the ghost monster error
-    network.worldContract.simulate = {
-      UD__createEncounter: vi.fn()
-        .mockResolvedValueOnce({ result: undefined })
-        .mockRejectedValueOnce(new Error('0xadee4371')),
-    };
+    // Simulation reveals the ghost monster error
+    network.worldContract.simulate = new Proxy({} as Record<string, unknown>, {
+      get: () => vi.fn().mockRejectedValue(new Error('0xadee4371')),
+    });
     const calls = createSystemCalls(network);
 
     const result = await calls.createEncounter(
       EncounterType.PvE,
       [TEST_ENTITY],
-      [TEST_MONSTER, TEST_MONSTER_2],
+      [TEST_MONSTER],
     );
     expect(result.success).toBe(false);
     expect(result.severity).toBe('warning');
     expect(result.error).toContain('No enemies here');
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', TEST_MONSTER, { spawned: false });
-    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', TEST_MONSTER_2, { spawned: false });
   });
 });
 
@@ -1179,13 +963,11 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     globalThis.fetch = originalFetch;
     // Set env vars for relayer
     import.meta.env.VITE_RELAYER_URL = 'https://relay.test';
-    import.meta.env.VITE_FUND_API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
     delete import.meta.env.VITE_RELAYER_URL;
-    delete import.meta.env.VITE_FUND_API_KEY;
   });
 
   function createNetworkWithGasRetry(opts: {
@@ -1225,6 +1007,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     };
 
     const worldContract = {
+      address: TEST_WORLD,
       write: new Proxy({} as Record<string, unknown>, writeHandler),
       read: new Proxy({} as Record<string, unknown>, {
         get: () => vi.fn().mockResolvedValue(BigInt(0)),
@@ -1237,6 +1020,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     const walletClient = { account: { address: TEST_WALLET } };
 
     const network = {
+      delegatorAddress: TEST_DELEGATOR,
       publicClient,
       walletClient,
       waitForTransaction,
@@ -1249,7 +1033,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
 
   it('retries after requesting emergency funding on insufficient funds', async () => {
     const { network, setBalance } = createNetworkWithGasRetry({ writeFailCount: 1 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     // Mock fetch for relayer /fund call
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
@@ -1271,14 +1055,45 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
       'https://relay.test/fund',
       expect.objectContaining({
         method: 'POST',
-        headers: expect.objectContaining({ 'x-api-key': 'test-api-key' }),
+        body: JSON.stringify({
+          address: TEST_WALLET,
+          delegatorAddress: TEST_DELEGATOR,
+          worldAddress: TEST_WORLD,
+        }),
+      }),
+    );
+  });
+
+  it('sends embedded identity token when emergency funding an embedded wallet', async () => {
+    const { network, setBalance } = createNetworkWithGasRetry({ writeFailCount: 1 });
+    mockOwnership(TEST_WALLET);
+    delete network.delegatorAddress;
+
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
+    let balanceCallCount = 0;
+    network.publicClient.getBalance = vi.fn().mockImplementation(async () => {
+      balanceCallCount++;
+      return balanceCallCount <= 1 ? BigInt(0) : BigInt(1000000000000000);
+    });
+
+    const calls = createSystemCalls({
+      ...network,
+      getEmbeddedIdentityToken: async () => 'embedded-token',
+    });
+    const result = await calls.rest(TEST_ENTITY);
+
+    expect(result.success).toBe(true);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://relay.test/fund',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer embedded-token' }),
       }),
     );
   });
 
   it('fails if funding request fails', async () => {
     const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     // Mock fetch to fail
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: false });
@@ -1293,7 +1108,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
   it('fails if funding arrives but retry also fails', async () => {
     // Both attempts fail with insufficient funds
     const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
     let balanceCallCount = 0;
@@ -1332,7 +1147,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     delete import.meta.env.VITE_RELAYER_URL;
 
     const { network } = createNetworkWithGasRetry({ writeFailCount: 1 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     globalThis.fetch = vi.fn();
 
@@ -1345,7 +1160,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
 
   it('retries immediately when relayer says player already has funds', async () => {
     const { network } = createNetworkWithGasRetry({ writeFailCount: 1 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     // Relayer returns already_funded — player's balance recovered
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'already_funded' }) });
@@ -1362,7 +1177,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
 
   it('fails when funding accepted but balance never increases (timeout)', async () => {
     const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
 
     // Relayer accepts the request
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
@@ -1412,6 +1227,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     };
 
     const worldContract = {
+      address: TEST_WORLD,
       write: new Proxy({} as Record<string, unknown>, writeHandler),
       read: new Proxy({} as Record<string, unknown>, {
         get: () => vi.fn().mockResolvedValue(BigInt(0)),
@@ -1422,7 +1238,13 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     };
 
     const walletClient = { account: { address: TEST_WALLET } };
-    const network = { publicClient, walletClient, waitForTransaction, worldContract };
+    const network = {
+      delegatorAddress: TEST_DELEGATOR,
+      publicClient,
+      walletClient,
+      waitForTransaction,
+      worldContract,
+    };
 
     // Track fetch calls
     globalThis.fetch = vi.fn().mockResolvedValue({
@@ -1430,7 +1252,7 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
       json: async () => ({ status: 'funded' }),
     });
 
-    mockOwnership();
+    mockOwnership(TEST_DELEGATOR);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const calls = createSystemCalls(network as any);
 
@@ -1451,61 +1273,24 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
 // ── Suite: validateTileMonsters (Proactive Ghost Validation) ─────────
 
 describe('createSystemCalls — validateTileMonsters', () => {
-  const ZERO_HASH = '0x' + '00'.repeat(32);
-  const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000';
-  const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900';
-  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000';
-
-  const makeSpawnedRecord = (spawned: boolean) =>
-    [spawned ? '0x01' : '0x00', '0x' + '00'.repeat(32), '0x'] as const;
-
-  const makeEncounterRecord = (
-    encounterId: string = ZERO_HASH,
-    died = false,
-  ) => [`0x${encounterId.slice(2)}${died ? '01' : '00'}`, '0x' + '00'.repeat(32), '0x'] as const;
-
-  const makePositionRecord = (x: number, y: number) =>
-    [`0x${x.toString(16).padStart(4, '0')}${y.toString(16).padStart(4, '0')}`, '0x' + '00'.repeat(32), '0x'] as const;
-
-  const mockValidationReads = (
-    states: Record<string, {
-      encounterId?: string;
-      died?: boolean;
-      spawned?: boolean;
-      position?: { x: number; y: number };
-    }>,
-  ) => vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
-    const [tableId, [entityId]] = args;
-    const state = states[entityId];
-    if (!state) throw new Error(`Unexpected entity ${entityId}`);
-    if (tableId === SPAWNED_TABLE_ID) return makeSpawnedRecord(state.spawned ?? true);
-    if (tableId === ENCOUNTER_ENTITY_TABLE_ID) {
-      return makeEncounterRecord(state.encounterId ?? ZERO_HASH, state.died ?? false);
-    }
-    if (tableId === POSITION_TABLE_ID) {
-      const pos = state.position ?? { x: 0, y: 0 };
-      return makePositionRecord(pos.x, pos.y);
-    }
-    throw new Error(`Unexpected table ${tableId}`);
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('evicts monsters whose on-chain Spawned is false', async () => {
     const { network } = createMockNetwork();
+    // Mock readContract: first monster alive (0x01), second dead (0x00)
+    network.publicClient.readContract = vi.fn()
+      .mockResolvedValueOnce(['0x01', '0x' + '00'.repeat(32), '0x'])
+      .mockResolvedValueOnce(['0x00', '0x' + '00'.repeat(32), '0x']);
+
     const calls = createSystemCalls(network);
     const MONSTER_A = '0x0000000000000000000000000000000000000000000000000000000000000aaa';
     const MONSTER_B = '0x0000000000000000000000000000000000000000000000000000000000000bbb';
-    network.publicClient.readContract = mockValidationReads({
-      [MONSTER_A]: { spawned: true },
-      [MONSTER_B]: { spawned: false },
-    });
 
     await calls.validateTileMonsters([MONSTER_A, MONSTER_B]);
 
-    // Only MONSTER_B (dead) should be evicted — evictGhostMonsters sets both flags
+    // Only MONSTER_B (dead) should be evicted
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', MONSTER_B, { spawned: false });
     expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', MONSTER_B, expect.objectContaining({ died: true }));
     // MONSTER_A (alive) should NOT be evicted
@@ -1514,9 +1299,8 @@ describe('createSystemCalls — validateTileMonsters', () => {
 
   it('does nothing when all monsters are alive', async () => {
     const { network } = createMockNetwork();
-    network.publicClient.readContract = mockValidationReads({
-      [TEST_MONSTER]: { spawned: true },
-    });
+    network.publicClient.readContract = vi.fn()
+      .mockResolvedValue(['0x01', '0x' + '00'.repeat(32), '0x']);
 
     const calls = createSystemCalls(network);
     await calls.validateTileMonsters([TEST_MONSTER]);
@@ -1550,107 +1334,17 @@ describe('createSystemCalls — validateTileMonsters', () => {
     const MONSTER_A = '0x0000000000000000000000000000000000000000000000000000000000000aaa';
     const MONSTER_B = '0x0000000000000000000000000000000000000000000000000000000000000bbb';
 
-    network.publicClient.readContract = vi.fn().mockImplementation(async ({ args }: {
-      args: [string, string[]];
-    }) => {
-      const [tableId, [entityId]] = args;
-      if (entityId === MONSTER_B && tableId === SPAWNED_TABLE_ID) {
-        throw new Error('RPC timeout');
-      }
-      if (entityId === MONSTER_A) {
-        if (tableId === SPAWNED_TABLE_ID) return makeSpawnedRecord(false);
-        if (tableId === ENCOUNTER_ENTITY_TABLE_ID) return makeEncounterRecord();
-      }
-      if (entityId === MONSTER_B && tableId === ENCOUNTER_ENTITY_TABLE_ID) {
-        return makeEncounterRecord();
-      }
-      throw new Error(`Unexpected read ${tableId} ${entityId}`);
-    });
+    // First call returns dead, second fails
+    network.publicClient.readContract = vi.fn()
+      .mockResolvedValueOnce(['0x00', '0x' + '00'.repeat(32), '0x'])
+      .mockRejectedValueOnce(new Error('RPC timeout'));
 
     const calls = createSystemCalls(network);
     await calls.validateTileMonsters([MONSTER_A, MONSTER_B]);
 
-    // Only MONSTER_A (confirmed dead) should be evicted — evictGhostMonsters sets both flags
+    // Only MONSTER_A (confirmed dead) should be evicted
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', MONSTER_A, { spawned: false });
-    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', MONSTER_A, expect.objectContaining({ died: true }));
     // MONSTER_B (RPC failed) should NOT be evicted (benefit of the doubt)
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', MONSTER_B, expect.anything());
-  });
-
-  it('marks monsters already in encounter as unavailable without evicting them', async () => {
-    const { network } = createMockNetwork();
-    const BUSY_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000ccc';
-    const encounterId = '0x' + '11'.repeat(32);
-    network.publicClient.readContract = mockValidationReads({
-      [BUSY_MONSTER]: { encounterId, spawned: true },
-    });
-
-    const calls = createSystemCalls(network);
-    await calls.validateTileMonsters([BUSY_MONSTER]);
-
-    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', BUSY_MONSTER, expect.objectContaining({
-      encounterId,
-      died: false,
-    }));
-    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', BUSY_MONSTER, { spawned: false });
-  });
-
-  it('syncs monsters off the current tile to their on-chain position', async () => {
-    const { network } = createMockNetwork();
-    const OFF_TILE_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000ddd';
-
-    // Position now read via readStoreRecord (publicClient.readContract) not UD__getEntityPosition
-    network.publicClient.readContract = mockValidationReads({
-      [OFF_TILE_MONSTER]: { spawned: true, position: { x: 1, y: 4 } },
-    });
-
-    const calls = createSystemCalls(network);
-    await calls.validateTileMonsters([OFF_TILE_MONSTER], { x: 1, y: 3 });
-
-    expect(mockSetRow).toHaveBeenCalledWith('Position', OFF_TILE_MONSTER, { x: 1, y: 4 });
-    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', OFF_TILE_MONSTER, { spawned: false });
-  });
-
-  it('evicts monster when chain position is (0,0) — position was cleared by removeEntityFromBoard', async () => {
-    // Mob killed: Position=(0,0), Spawned=false on chain.
-    // positionIsCleared triggers full eviction (Spawned=false AND died=true).
-    const { network } = createMockNetwork();
-    const CLEARED_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000eee';
-
-    network.publicClient.readContract = mockValidationReads({
-      [CLEARED_MONSTER]: { spawned: false, position: { x: 0, y: 0 } },
-    });
-
-    const calls = createSystemCalls(network);
-    await calls.validateTileMonsters([CLEARED_MONSTER], { x: 3, y: 5 });
-
-    // evictGhostMonsters sets both Spawned=false and died=true
-    expect(mockSetRow).toHaveBeenCalledWith('Spawned', CLEARED_MONSTER, { spawned: false });
-    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', CLEARED_MONSTER, expect.objectContaining({ died: true }));
-  });
-
-  it('fully evicts a monster when spawned=true but position=(0,0) — TOCTOU race on chain reads', async () => {
-    // Race: Spawned read → block N (spawned=true, alive) | Position read → block N+1 (position=0,0, killed).
-    // position=(0,0) is an unambiguous death signal — removeEntityFromBoard sets both
-    // Spawned=false AND Position=(0,0) atomically in the same TX. So if Position=(0,0),
-    // the mob is dead regardless of what the concurrent Spawned read returned.
-    // New behavior: call evictGhostMonsters which sets Spawned=false AND died=true,
-    // preventing re-animation via stale indexer events until the next snapshot sync.
-    const { network } = createMockNetwork();
-    const RACE_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000fff';
-
-    // Simulate race: spawned=true (stale read) but position=(0,0) (current read)
-    network.publicClient.readContract = mockValidationReads({
-      [RACE_MONSTER]: { spawned: true, position: { x: 0, y: 0 } },
-    });
-
-    const calls = createSystemCalls(network);
-    await calls.validateTileMonsters([RACE_MONSTER], { x: 3, y: 5 });
-
-    // Position updated to (0,0) from chain
-    expect(mockSetRow).toHaveBeenCalledWith('Position', RACE_MONSTER, { x: 0, y: 0 });
-    // evictGhostMonsters called: sets Spawned=false AND died=true to prevent re-animation
-    expect(mockSetRow).toHaveBeenCalledWith('Spawned', RACE_MONSTER, { spawned: false });
-    expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', RACE_MONSTER, expect.objectContaining({ died: true }));
   });
 });

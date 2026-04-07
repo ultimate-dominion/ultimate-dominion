@@ -23,12 +23,12 @@ const headings = [
     '@type': 'Article',
     headline: "Noctum's Wound — Dark Cave Map Guide",
     description: 'Complete map guide for the Dark Cave zone in Ultimate Dominion.',
-    dateModified: '2026-03-12',
+    dateModified: '2026-03-27',
   }} slot="head" />
 
   <h1>Noctum's Wound</h1>
   <p class="text-lg text-text-secondary">
-    The Dark Cave is Ultimate Dominion's first zone — a 10x10 tile grid with coordinates from (0,0) to (9,9). The northwest 5x5 corner is a safe zone (no PvP, levels 1-6). Everything else is a danger zone with PvP enabled and levels 6-10. Key locations: spawn/escrow at (0,0), a lore fragment at (5,5), and Tal's NPC shop at (9,9). Monster level scales with distance from spawn.
+    The Dark Cave is Ultimate Dominion's first zone — a 10x10 tile grid with coordinates from (0,0) to (9,9). The northwest 5x5 corner is a safe zone (no PvP, levels 1-5). Everything else is a danger zone with PvP enabled and levels 6-10. Key locations: spawn/escrow at (0,0), a lore fragment at (5,5), and Tal's NPC shop at (9,9). Monster level scales with distance from spawn. 11 creatures inhabit the cave — one per level plus the Basilisk boss.
   </p>
   <p class="text-xs text-text-secondary/60 mt-2">Last updated: March 2026</p>
 
@@ -107,7 +107,7 @@ const headings = [
   </Callout>
 
   <h2 id="monster-spawning">Monster Spawning</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Level based on Chebyshev distance from (0,0). 0-5 monsters per tile, randomly spawning.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>Level based on Chebyshev distance from (0,0). 0-3 monsters per tile, randomly spawning.</em></p>
   <p>
     Monster level is determined by distance from the spawn point (0,0), measured using Chebyshev distance (the greater of horizontal and vertical distance):
   </p>
@@ -116,7 +116,7 @@ const headings = [
     <li><strong>Distance &ge; 5</strong> — spawns level 6–10 monsters (including the Shadow Dragon).</li>
   </ul>
   <p>
-    Each tile can hold <strong>0 to 5 monsters</strong> at any time. Monsters spawn randomly — the same tile won't always have the same creatures.
+    Each tile can hold <strong>0 to 3 monsters</strong> at any time. Monsters spawn randomly — the same tile won't always have the same creatures.
   </p>
 
   <h2 id="key-locations">Key Locations</h2>

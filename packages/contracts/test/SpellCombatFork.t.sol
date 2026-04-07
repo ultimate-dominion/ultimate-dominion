@@ -80,7 +80,7 @@ contract SpellCombatForkTest is Test {
         SpellConfigData memory cfg = SpellConfig.get(battleCryId);
         assertEq(cfg.strPct, 2500, "strPct");
         assertEq(cfg.hpPct, 1000, "hpPct");
-        assertEq(cfg.armorFlat, 800, "armorFlat");
+        assertEq(cfg.armorFlat, 8, "armorFlat");
         assertEq(cfg.spellMinDamage, 5, "spellMinDamage");
         assertEq(cfg.spellMaxDamage, 10, "spellMaxDamage");
         assertEq(cfg.dmgPerStat, 500, "dmgPerStat");
@@ -94,7 +94,7 @@ contract SpellCombatForkTest is Test {
         SpellConfigData memory cfg = SpellConfig.get(divineShieldId);
         assertEq(cfg.strPct, 1500);
         assertEq(cfg.hpPct, 1500);
-        assertEq(cfg.armorFlat, 1000);
+        assertEq(cfg.armorFlat, 10);
         assertEq(cfg.maxUses, 2);
     }
 
@@ -103,7 +103,7 @@ contract SpellCombatForkTest is Test {
         SpellConfigData memory cfg = SpellConfig.get(entangleId);
         assertEq(cfg.strPct, -1500);
         assertEq(cfg.agiPct, -2500);
-        assertEq(cfg.armorFlat, -300);
+        assertEq(cfg.armorFlat, -3);
         assertFalse(cfg.dmgIsPhysical);
         assertEq(cfg.maxUses, 1);
     }
@@ -121,7 +121,7 @@ contract SpellCombatForkTest is Test {
         SpellConfigData memory cfg = SpellConfig.get(blessingId);
         assertEq(cfg.intPct, 1200);
         assertEq(cfg.hpPct, 1500);
-        assertEq(cfg.armorFlat, 700);
+        assertEq(cfg.armorFlat, 7);
     }
 
     function test_spellConfig_noConfigForBasicAttack() public {
@@ -143,7 +143,7 @@ contract SpellCombatForkTest is Test {
         assertTrue(c.exists);
         assertEq(c.strModifier, 5, "+5 STR (25% of 20)");
         assertEq(c.hpModifier, 5, "+5 HP (10% of 50)");
-        assertEq(c.armorModifier, 800, "+800 armor (flat)");
+        assertEq(c.armorModifier, 8, "+8 armor (flat)");
         assertEq(c.agiModifier, 0);
         assertEq(c.intModifier, 0);
     }
@@ -158,7 +158,7 @@ contract SpellCombatForkTest is Test {
         assertTrue(c.exists);
         assertEq(c.strModifier, -2, "-2 STR (-15% of 14)");
         assertEq(c.agiModifier, -4, "-4 AGI (-25% of 16)");
-        assertEq(c.armorModifier, -300, "-300 armor (flat)");
+        assertEq(c.armorModifier, -3, "-3 armor (flat)");
     }
 
     function test_computeModifiers_pvpSameClass_independent() public {

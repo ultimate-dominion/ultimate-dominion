@@ -1,4 +1,4 @@
-export { useGameStore, getTableValue, getTableEntries, type GameStore, type BatchUpdate } from './store';
+export { useGameStore, getTableValue, getTableEntries, markEvictedRows, type GameStore, type BatchUpdate } from './store';
 export { useGameValue, useGameTable } from './useGameValue';
 export { useGameQuery, useGameFind, hasEntity } from './useGameQuery';
 export { useGameConfig, getGameConfig } from './useGameConfig';

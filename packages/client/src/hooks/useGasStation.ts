@@ -3,6 +3,7 @@ import { parseEther } from 'viem';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { IS_PRODUCTION } from '../lib/env';
 
 const GAS_THRESHOLD = parseEther('0.0001'); // 0.0001 ETH — emergency fallback; relayer tops up at 0.0003
 const MAX_GOLD_PER_SWAP = parseEther('5'); // Cap to avoid huge slippage
@@ -86,10 +87,14 @@ export const useGasStation = (): void => {
     // wasting the burner's already-low gas on a no-op.
     if (authMethod === 'external') return;
 
+    // Beta has no Gold/WETH Uniswap pool — relayer handles gas funding instead.
+    // buyGas() would revert with GasStationDisabled, jamming Privy's tx queue.
+    if (!IS_PRODUCTION) return;
+
     // Embedded (Privy) wallets: auto-swap gold->ETH via on-chain buyGas().
     try {
       const balanceWei = parseEther(burnerBalance);
-      if (balanceWei < GAS_THRESHOLD && balanceWei >= 0n) {
+      if (balanceWei < GAS_THRESHOLD && balanceWei > 0n) {
         attemptSwap();
       }
     } catch {

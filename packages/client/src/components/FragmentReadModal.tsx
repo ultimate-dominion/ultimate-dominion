@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -17,6 +18,8 @@ import {
 import { type FragmentStatus } from '../contexts/FragmentContext';
 import { getFragmentColor, getFragmentImage } from '../utils/fragmentImages';
 import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
+import { SHOW_Z2 } from '../lib/env';
+import { GameLoreReader } from './pretext/game/GameLoreReader';
 
 /* ──────────────────────── Animations ──────────────────────── */
 
@@ -53,6 +56,7 @@ export const FragmentReadModal = ({
   isOpen,
   onClose,
 }: FragmentReadModalProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const color = getFragmentColor(fragment.name);
   const imageSrc = getFragmentImage(fragment.name);
   const modalSize = useBreakpointValue({ base: 'full', md: '2xl' });
@@ -166,7 +170,7 @@ export const FragmentReadModal = ({
                   borderRadius="sm"
                 >
                   <Text fontSize="xs" fontWeight="bold" color={color} letterSpacing="wider">
-                    CLAIMED
+                    {t('fragmentRead.claimed')}
                   </Text>
                 </Box>
               </Box>
@@ -189,7 +193,7 @@ export const FragmentReadModal = ({
                   letterSpacing="widest"
                   textTransform="uppercase"
                 >
-                  Fragment {getRomanNumeral(fragment.fragmentType)}
+                  {t('fragmentRead.fragmentOf', { num: getRomanNumeral(fragment.fragmentType), total: getRomanNumeral(TOTAL_FRAGMENTS) })}
                 </Text>
                 <Box
                   position="absolute"
@@ -212,7 +216,7 @@ export const FragmentReadModal = ({
                   borderRadius="sm"
                 >
                   <Text fontSize="xs" fontWeight="bold" color={color} letterSpacing="wider">
-                    CLAIMED
+                    {t('fragmentRead.claimed')}
                   </Text>
                 </Box>
               </Box>
@@ -237,8 +241,7 @@ export const FragmentReadModal = ({
                 letterSpacing="widest"
                 textTransform="uppercase"
               >
-                Fragment {getRomanNumeral(fragment.fragmentType)} of{' '}
-                {getRomanNumeral(TOTAL_FRAGMENTS)}
+                {t('fragmentRead.fragmentOf', { num: getRomanNumeral(fragment.fragmentType), total: getRomanNumeral(TOTAL_FRAGMENTS) })}
               </Text>
 
               {/* Title with glow */}
@@ -263,6 +266,9 @@ export const FragmentReadModal = ({
               />
 
               {/* Narrative text */}
+              {SHOW_Z2 ? (
+                <GameLoreReader text={fragment.narrative} accentColor={color} />
+              ) : (
               <Text
                 fontSize={{ base: 'sm', md: 'md' }}
                 lineHeight="1.85"
@@ -279,14 +285,15 @@ export const FragmentReadModal = ({
               >
                 {fragment.narrative}
               </Text>
+              )}
 
               {/* Claim metadata */}
               <VStack spacing={0.5} pt={2}>
                 <Text fontSize="xs" color="#5A5147" fontFamily="mono">
-                  Claimed {claimedDate}
+                  {t('fragmentRead.claimedDate', { date: claimedDate })}
                 </Text>
                 <Text fontSize="xs" color="#5A5147" fontFamily="mono">
-                  Token #{fragment.tokenId.toString()}
+                  {t('fragmentRead.tokenId', { id: fragment.tokenId.toString() })}
                 </Text>
               </VStack>
             </VStack>
@@ -315,7 +322,7 @@ export const FragmentReadModal = ({
               borderColor: `${color}60`,
             }}
           >
-            Close
+            {t('common.close')}
           </Button>
         </ModalFooter>
       </ModalContent>

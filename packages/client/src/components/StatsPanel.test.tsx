@@ -10,6 +10,13 @@ let mockCharacter: any = null;
 let mockGameValues: Record<string, any> = {};
 let mockGameTables: Record<string, Record<string, any>> = {};
 let mockLeaderboardRank: any = null;
+const mockNearbyRanks = {
+  dataRankBy: 'stats',
+  isLoading: false,
+  nearby: [],
+  rankBy: 'stats',
+  setRankBy: vi.fn(),
+};
 
 // --- vi.mock declarations ---
 
@@ -39,6 +46,23 @@ vi.mock('../hooks/useLeaderboardRank', () => ({
   useLeaderboardRank: () => mockLeaderboardRank,
 }));
 
+vi.mock('../hooks/useNearbyRanks', () => ({
+  useNearbyRanks: () => mockNearbyRanks,
+}));
+
+vi.mock('../hooks/useOnboardingStage', () => ({
+  OnboardingStage: {
+    PRE_SPAWN: 0,
+    JUST_SPAWNED: 1,
+    FIRST_STEPS: 2,
+    FIRST_BLOOD: 3,
+    SETTLING_IN: 4,
+    ESTABLISHED: 5,
+    VETERAN: 6,
+  },
+  useOnboardingStage: () => 6,
+}));
+
 vi.mock('../lib/gameStore', () => ({
   useGameValue: (_table: string, _key: string | undefined) => {
     if (!_key) return undefined;
@@ -66,6 +90,10 @@ vi.mock('./EquippedLoadout', () => ({
   EquippedLoadout: () => null,
 }));
 
+vi.mock('./LevelUpModal', () => ({
+  LevelUpModal: () => null,
+}));
+
 vi.mock('./Level', () => ({
   Level: (props: any) => (
     <div
@@ -75,6 +103,10 @@ vi.mock('./Level', () => ({
       data-maxed={props.maxed}
     />
   ),
+}));
+
+vi.mock('./MiniLeaderboard', () => ({
+  MiniLeaderboard: () => null,
 }));
 
 vi.mock('@chakra-ui/react', async () => {
@@ -110,7 +142,7 @@ function makeCharacter(overrides: Record<string, any> = {}) {
   };
 }
 
-// MAX_LEVEL = 10 (from constants.ts). maxed = Number(character.level) >= MAX_LEVEL.
+// MAX_LEVEL = 20 (from constants.ts). maxed = Number(character.level) >= MAX_LEVEL.
 
 // --- Tests ---
 
@@ -129,7 +161,7 @@ describe('StatsPanel — max level behavior', () => {
   // --- Happy path: maxed character ---
 
   it('passes maxed=true to Level component when character is at max level', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
 
     render(<StatsPanel />);
 
@@ -139,10 +171,10 @@ describe('StatsPanel — max level behavior', () => {
 
   it('does NOT show "Level Up!" button when character is at max level', () => {
     // Even with XP exceeding any possible threshold
-    mockCharacter = makeCharacter({ level: 10n, experience: 99999n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 99999n });
 
     // Provide next level data so the XP check would pass if not for maxed guard
-    const nextLevelKey = '0x' + 'a'.padStart(64, '0');
+    const nextLevelKey = '0x' + '14'.padStart(64, '0');
     mockGameValues[nextLevelKey] = { experience: 100n };
 
     render(<StatsPanel />);
@@ -151,11 +183,11 @@ describe('StatsPanel — max level behavior', () => {
   });
 
   it('shows XP with "(MAX)" when maxed', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 16000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
 
     render(<StatsPanel />);
 
-    expect(screen.getByText('16000 (MAX)')).toBeDefined();
+    expect(screen.getByText('85000 (MAX)')).toBeDefined();
   });
 
   // --- Happy path: normal character (not maxed) ---
@@ -217,7 +249,7 @@ describe('StatsPanel — max level behavior', () => {
   // --- Edge cases ---
 
   it('treats level > MAX_LEVEL as maxed', () => {
-    mockCharacter = makeCharacter({ level: 15n, experience: 9999n });
+    mockCharacter = makeCharacter({ level: 25n, experience: 99999n });
 
     render(<StatsPanel />);
 
@@ -250,13 +282,13 @@ describe('StatsPanel — max level behavior', () => {
     expect(screen.getByText('Level Up!')).toBeDefined();
   });
 
-  it('level 9 is NOT maxed (below MAX_LEVEL = 10)', () => {
-    mockCharacter = makeCharacter({ level: 9n, experience: 5000n });
+  it('level 19 is NOT maxed (below MAX_LEVEL = 20)', () => {
+    mockCharacter = makeCharacter({ level: 19n, experience: 70000n });
 
-    const nextLevelKey = '0x' + '9'.padStart(64, '0');
-    const currentLevelKey = '0x' + '8'.padStart(64, '0');
-    mockGameValues[nextLevelKey] = { experience: 4000n };
-    mockGameValues[currentLevelKey] = { experience: 2000n };
+    const nextLevelKey = '0x' + '13'.padStart(64, '0');
+    const currentLevelKey = '0x' + '12'.padStart(64, '0');
+    mockGameValues[nextLevelKey] = { experience: 84800n };
+    mockGameValues[currentLevelKey] = { experience: 68800n };
 
     render(<StatsPanel />);
 

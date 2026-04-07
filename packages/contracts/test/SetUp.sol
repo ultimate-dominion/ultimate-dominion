@@ -133,7 +133,7 @@ contract SetUp is Test {
 
         uint256 shopMobId =
             world.UD__createMob(MobType.Shop, abi.encode(newShop), "https://github.com/raid-guild/ultimate-dominion");
-        shopId = world.UD__spawnMob(shopMobId, 0, 0);
+        shopId = world.UD__spawnMob(shopMobId, 1, 0, 0);
 
         uint256[] memory _inventory = new uint256[](1);
         _inventory[0] = 1;

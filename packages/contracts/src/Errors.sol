@@ -173,6 +173,10 @@ error NoApplicationFound();
 error GuildNameTaken();
 error InvalidGuildTag();
 error LeaderNotInactive();
+error InvalidBuffSlot();
+error InvalidBuffType();
+error DuplicateBuffType();
+error GuildMaxLevel();
 
 // PvP Rankings
 error SeasonNotActive();

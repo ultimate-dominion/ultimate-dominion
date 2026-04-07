@@ -6,7 +6,7 @@ import {console} from "forge-std/console.sol";
 import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 
 import {IWorld} from "@world/IWorld.sol";
-import {EntitiesAtPosition, Spawned} from "@codegen/index.sol";
+import {ZoneEntitiesAtPos, Spawned} from "@codegen/index.sol";
 
 /**
  * @title WipeMonsters
@@ -30,20 +30,22 @@ contract WipeMonsters is Script {
         console.log("World:", _worldAddress);
 
         // Collect all monster entityIds first (avoid mutating arrays during iteration)
-        bytes32[] memory monstersToRemove = new bytes32[](2000); // max 20 per tile * 100 tiles
+        bytes32[] memory monstersToRemove = new bytes32[](4000); // max 20 per tile * 200 tiles (2 zones)
         uint256 monsterCount;
 
-        for (uint16 x = 0; x < 10; x++) {
-            for (uint16 y = 0; y < 10; y++) {
-                bytes32[] memory entities = EntitiesAtPosition.getEntities(x, y);
-                for (uint256 i = 0; i < entities.length; i++) {
-                    bytes32 entityId = entities[i];
-                    // Characters have a valid ERC721 owner; monsters don't
-                    bool isCharacter = world.UD__isValidCharacterId(entityId);
-                    if (!isCharacter && Spawned.getSpawned(entityId)) {
-                        monstersToRemove[monsterCount] = entityId;
-                        monsterCount++;
-                        console.log("  Monster at (%d, %d)", uint256(x), uint256(y));
+        // Iterate all configured zones (1-2 for now)
+        for (uint256 zoneId = 1; zoneId <= 2; zoneId++) {
+            for (uint16 x = 0; x < 10; x++) {
+                for (uint16 y = 0; y < 10; y++) {
+                    bytes32[] memory entities = ZoneEntitiesAtPos.getEntities(zoneId, x, y);
+                    for (uint256 i = 0; i < entities.length; i++) {
+                        bytes32 entityId = entities[i];
+                        bool isCharacter = world.UD__isValidCharacterId(entityId);
+                        if (!isCharacter && Spawned.getSpawned(entityId)) {
+                            monstersToRemove[monsterCount] = entityId;
+                            monsterCount++;
+                            console.log("  Monster at zone %d (%d, %d)", zoneId, uint256(x), uint256(y));
+                        }
                     }
                 }
             }

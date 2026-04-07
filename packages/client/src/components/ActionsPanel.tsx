@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Grid,
   HStack,
   Image,
   Progress,
@@ -14,8 +15,16 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
+import { Trans, useTranslation } from 'react-i18next';
 import SafeTypist from './SafeTypist';
+import { getBattleConsoleState } from './battleConsole';
 
+import { SHOW_Z2 } from '../lib/env';
+import { BattleCombatLog } from './pretext/game/BattleCombatLog';
+import { CombatTypewriter } from './pretext/game/CombatTypewriter';
+import { GameItemTooltip } from './pretext/game/GameItemTooltip';
+import { useCombatLogEntries } from '../hooks/useCombatLogEntries';
+import { useCombatNarrative } from '../hooks/useCombatNarrative';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
@@ -29,7 +38,6 @@ import {
   BATTLE_OUTCOME_SEEN_KEY,
   SLOT_ORDER_KEY_PREFIX,
   STATUS_EFFECT_NAME_MAPPING,
-  STATUS_EFFECT_DESCRIPTION_MAPPING,
 } from '../utils/constants';
 import { getItemImage } from '../utils/itemImages';
 import { etherToFixedNumber, removeEmoji } from '../utils/helpers';
@@ -37,21 +45,10 @@ import { ConsumableQuickUse } from './ConsumableQuickUse';
 import { ItemEquipModal } from './ItemEquipModal';
 import { PotionSvg } from './SVGs/PotionSvg';
 
-export const MONSTER_MOVE_MAPPING: Record<string, string> = {
-  '1': 'Razor Claws',      // Dire Rat
-  '2': 'Elemental Burst',  // Fungal Shaman
-  '3': 'Stone Fist',       // Cavern Brute
-  '4': 'Elemental Burst',  // Crystal Elemental
-  '5': 'Crushing Slam',    // Ironhide Troll
-  '6': 'Venomous Bite',    // Phase Spider
-  '7': 'Dark Magic',       // Bonecaster
-  '8': 'Crushing Slam',    // Rock Golem
-  '9': 'Shadow Strike',    // Pale Stalker
-  '10': 'Elemental Burst', // Dusk Drake
-  '11': 'Basilisk Fangs',  // Basilisk (boss)
-};
-
 export const ActionsPanel = (): JSX.Element => {
+  const { t } = useTranslation('ui');
+  const { t: te } = useTranslation('effects');
+  const { t: tm } = useTranslation('monsters');
   const { character, equippedArmor, equippedConsumables, equippedSpells, equippedWeapons, refreshCharacter } =
     useCharacter();
   const { isSpawned, visibleMonstersOnTile, position } = useMap();
@@ -72,18 +69,26 @@ export const ActionsPanel = (): JSX.Element => {
   const { autoAdventureMode, isRefreshing, onToggleAutoAdventure } = useMovement();
   const stage = useOnboardingStage();
 
-  const { visibleOutcomes, pendingTurn } = useCombatPacing({
+  const { visibleOutcomes, pendingTurn, isBattleResolutionPending } = useCombatPacing({
     attackOutcomes,
     characterId: character?.id,
     isInBattle: !!currentBattle,
   });
 
   // Display name prefixed with "Elite" for elite mobs
+  // (declared early so combatLogEntries can reference it)
   const opponentDisplayName = useMemo(() => {
-    if (!opponent) return 'a monster';
+    if (!opponent) return t('battle.aMonster');
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
-    return isElite ? `Elite ${opponent.name}` : opponent.name;
+    return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
   }, [opponent]);
+
+  const combatLogEntries = useCombatLogEntries({
+    visibleOutcomes,
+    dotActions,
+    characterId: character?.id,
+    opponentName: opponentDisplayName,
+  });
 
   const {
     armorTemplates,
@@ -96,6 +101,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   const [turnTimeLeft, setTurnTimeLeft] = useState<number>(32);
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
+  const [hoveredTokenId, setHoveredTokenId] = useState<string | null>(null);
 
   const parentDivRef = useRef<HTMLDivElement>(null);
   const attackButton1Ref = useRef<HTMLButtonElement>(null);
@@ -198,9 +204,14 @@ export const ActionsPanel = (): JSX.Element => {
     return () => window.removeEventListener('keydown', listener);
   }, [attackButtonFocus]);
 
-  const battleOver = useMemo(
+  const battleResolved = useMemo(
     () => currentBattle?.encounterId === lastestBattleOutcome?.encounterId,
     [currentBattle, lastestBattleOutcome],
+  );
+
+  const battleOver = useMemo(
+    () => battleResolved && !isBattleResolutionPending,
+    [battleResolved, isBattleResolutionPending],
   );
 
 
@@ -250,6 +261,7 @@ export const ActionsPanel = (): JSX.Element => {
 
   const canAttack = useMemo(() => {
     if (!currentBattle) return false;
+    if (battleResolved) return false;
 
     if (currentBattle.encounterType === EncounterType.PvE) {
       return true;
@@ -264,7 +276,7 @@ export const ActionsPanel = (): JSX.Element => {
     }
 
     return false;
-  }, [currentBattle, userTurn, turnTimeLeft]);
+  }, [battleResolved, currentBattle, userTurn, turnTimeLeft]);
 
   const weaponsAndSpells = useMemo(
     () => [...equippedWeapons, ...equippedSpells],
@@ -300,6 +312,19 @@ export const ActionsPanel = (): JSX.Element => {
     () => [...spellTemplates, ...weaponTemplates],
     [spellTemplates, weaponTemplates],
   );
+
+  const combatNarrative = useCombatNarrative({
+    visibleOutcomes,
+    pendingTurn,
+    dotActions,
+    statusEffectActions,
+    characterId: character?.id,
+    opponentName: opponentDisplayName,
+    opponent: opponent && 'mobId' in opponent ? opponent as Monster : null,
+    encounterType: currentBattle?.encounterType,
+    spellAndWeaponTemplates,
+    combatConsumables,
+  });
 
   const STAT_LABELS: Record<StatsClasses, string> = {
     [StatsClasses.Strength]: 'STR',
@@ -347,6 +372,7 @@ export const ActionsPanel = (): JSX.Element => {
   const canFlee = useMemo(() => {
     if (!character) return false;
     if (!currentBattle) return false;
+    if (battleResolved) return false;
 
     const isAttacker = currentBattle.attackers.includes(character.id);
 
@@ -359,7 +385,7 @@ export const ActionsPanel = (): JSX.Element => {
     }
 
     return false;
-  }, [character, currentBattle]);
+  }, [battleResolved, character, currentBattle]);
 
   const hasSmokeCover = useMemo(() => {
     if (!character) return false;
@@ -375,6 +401,18 @@ export const ActionsPanel = (): JSX.Element => {
     if (!currentBattle) return false;
     return currentBattle.maxTurns === currentBattle.currentTurn;
   }, [currentBattle]);
+
+  const battleConsole = useMemo(() => {
+    if (!currentBattle || !opponent) return null;
+
+    return getBattleConsoleState({
+      encounterType: currentBattle.encounterType,
+      opponentDisplayName,
+      userTurn,
+      canAttack,
+      turnTimeLeft,
+    });
+  }, [canAttack, currentBattle, opponent, opponentDisplayName, turnTimeLeft, userTurn]);
 
   // Track the last known opponent name so auto-adventure results can capture it
   // even after the dead monster is pruned from allMonsters (opponent goes null).
@@ -453,27 +491,41 @@ export const ActionsPanel = (): JSX.Element => {
     <Box fontWeight={500} maxH="100%" overflowY="auto" ref={parentDivRef}>
       {battleOver && currentBattle && !autoAdventureMode && (
         <VStack
-          bgColor="#1C1814"
+          bg="linear-gradient(180deg, rgba(28,24,20,0.98) 0%, rgba(18,15,12,0.98) 100%)"
+          borderBottom="1px solid"
+          borderColor="rgba(90,78,60,0.55)"
+          boxShadow="0 10px 30px rgba(0,0,0,0.28)"
           position="sticky"
           top={0}
           w="100%"
           zIndex={1}
-          py={{ base: 2, lg: 3 }}
-          px={{ base: 2, lg: 4 }}
-          spacing={2}
+          py={{ base: 3, lg: 4 }}
+          px={{ base: 3, lg: 4 }}
+          spacing={3}
         >
+          <Text
+            color="#8A7E6A"
+            fontFamily="mono"
+            fontSize="2xs"
+            letterSpacing="0.18em"
+            textTransform="uppercase"
+          >
+            Battle Complete
+          </Text>
           {battleDraw ? (
             <Text
+              color="#E8DCC8"
               fontWeight="bold"
-              size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              size={{ base: 'sm', sm: 'md', lg: 'lg' }}
               textAlign="center"
             >
-              The battle ended in a draw.
+              {t('battle.drawEnd')}
             </Text>
           ) : (
             <Text
+              color="#E8DCC8"
               fontWeight="bold"
-              size={{ base: 'xs', sm: 'sm', lg: 'md' }}
+              size={{ base: 'sm', sm: 'md', lg: 'lg' }}
               textAlign="center"
             >
               {lastestBattleOutcome?.winner === character?.id &&
@@ -482,41 +534,67 @@ export const ActionsPanel = (): JSX.Element => {
                 : ''}
               {lastestBattleOutcome?.winner !== character?.id &&
               lastestBattleOutcome?.playerFled
-                ? 'You fled!'
+                ? t('combat.youFled')
                 : ''}
               {lastestBattleOutcome?.winner === character?.id &&
               !lastestBattleOutcome?.playerFled
-                ? 'You won!'
+                ? t('combat.youWon')
                 : ''}
               {lastestBattleOutcome?.winner !== character?.id &&
               !lastestBattleOutcome?.playerFled
-                ? 'You died...'
+                ? t('combat.youDied')
                 : ''}
             </Text>
           )}
           {lastestBattleOutcome && lastestBattleOutcome.winner === character?.id &&
             !lastestBattleOutcome.playerFled &&
             (lastestBattleOutcome.expDropped > 0n || lastestBattleOutcome.goldDropped > 0n) && (
-            <HStack spacing={2} justifyContent="center">
+            <HStack
+              justifyContent="center"
+              spacing={2}
+              flexWrap="wrap"
+            >
               {lastestBattleOutcome.expDropped > 0n && (
-                <Text color="#5A8A3E" fontFamily="mono" fontWeight={600} size="xs">
+                <Box
+                  bg="rgba(90,138,62,0.12)"
+                  border="1px solid"
+                  borderColor="rgba(90,138,62,0.32)"
+                  borderRadius="full"
+                  px={3}
+                  py={1}
+                >
+                  <Text color="#8FCB6C" fontFamily="mono" fontWeight={700} size="xs">
                   +{lastestBattleOutcome.expDropped.toString()} XP
-                </Text>
+                  </Text>
+                </Box>
               )}
               {lastestBattleOutcome.expDropped > 0n && lastestBattleOutcome.goldDropped > 0n && (
                 <Text color="#8A7E6A" size="xs">·</Text>
               )}
               {lastestBattleOutcome.goldDropped > 0n && (
-                <Text color="#D4A54A" fontFamily="mono" fontWeight={600} size="xs">
+                <Box
+                  bg="rgba(200,122,42,0.12)"
+                  border="1px solid"
+                  borderColor="rgba(200,122,42,0.32)"
+                  borderRadius="full"
+                  px={3}
+                  py={1}
+                >
+                  <Text color="#D4A54A" fontFamily="mono" fontWeight={700} size="xs">
                   +{etherToFixedNumber(lastestBattleOutcome.goldDropped)} Gold
-                </Text>
+                  </Text>
+                </Box>
               )}
             </HStack>
           )}
           <Button
             onClick={() => onContinueToBattleOutcome(true)}
             size="sm"
-            variant="white"
+            variant="outline"
+            borderColor="rgba(212,165,74,0.4)"
+            color="#E8DCC8"
+            bg="rgba(255,255,255,0.04)"
+            _hover={{ bg: 'rgba(212,165,74,0.12)', borderColor: 'rgba(212,165,74,0.6)' }}
           >
             View Results
           </Button>
@@ -551,10 +629,10 @@ export const ActionsPanel = (): JSX.Element => {
               </Button>
               <Text size="2xs" color={hasSmokeCover ? '#6B8E6B' : '#8A7E6A'} maxW="200px">
                 {hasSmokeCover
-                  ? 'Smoke Cloak active — flee without gold penalty!'
+                  ? t('combat.smokeCloakActive')
                   : currentBattle.encounterType === EncounterType.PvP
-                    ? 'First turn only. Costs 25% carried gold.'
-                    : 'First turn only.'}
+                    ? t('combat.fleeFirstTurnCost')
+                    : t('combat.fleeFirstTurn')}
               </Text>
             </HStack>
           )}
@@ -565,159 +643,318 @@ export const ActionsPanel = (): JSX.Element => {
         equippedSpellsAndWeapons.length !== 0 &&
         opponent && (
           <VStack
-            bgColor="#1C1814"
+            bg="linear-gradient(180deg, rgba(28,24,20,0.98) 0%, rgba(18,15,12,0.98) 100%)"
+            borderBottom="1px solid"
+            borderColor="rgba(90,78,60,0.55)"
+            boxShadow="0 10px 30px rgba(0,0,0,0.24)"
             position="sticky"
             spacing={0}
             top={0}
             w="100%"
           >
-            {currentBattle.encounterType === EncounterType.PvE && (
-              <Text
-                fontWeight="bold"
-                p={{ base: 2, lg: 4 }}
-                size="xs"
-                textAlign="center"
+            {battleConsole && (
+              <Box
+                borderBottom="1px solid"
+                borderColor="rgba(90,78,60,0.4)"
+                px={{ base: 3, lg: 4 }}
+                py={{ base: 3, lg: 4 }}
+                w="100%"
               >
-                Choose your move!
-              </Text>
-            )}
-
-            {currentBattle.encounterType === EncounterType.PvP && (
-              <>
-                {userTurn && (
-                  <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-                    <Text as="span" fontWeight="bold">
-                      Choose your move!
-                    </Text>{' '}
-                    You have {turnTimeLeft} seconds before your opponent can
-                    attack.
-                  </Text>
-                )}
-                {!userTurn && !canAttack && (
-                  <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-                    It is your opponent&apos;s turn. But you can attack in{' '}
-                    {turnTimeLeft} seconds.
-                  </Text>
-                )}
-                {!userTurn && canAttack && (
-                  <Text p={{ base: 2, lg: 4 }} size="xs" textAlign="center">
-                    Your opponent took too long to make a move.{' '}
-                    <Text as="span" fontWeight={700}>
-                      You can now attack!
+                <HStack align="start" justify="space-between" spacing={3}>
+                  <VStack align="start" flex={1} spacing={1}>
+                    <Text
+                      color="#8A7E6A"
+                      fontFamily="mono"
+                      fontSize="2xs"
+                      letterSpacing="0.18em"
+                      textTransform="uppercase"
+                    >
+                      {battleConsole.eyebrow}
                     </Text>
-                  </Text>
+                    <Text
+                      color="#E8DCC8"
+                      fontWeight={700}
+                      size={{ base: 'sm', lg: 'md' }}
+                    >
+                      {battleConsole.title}
+                    </Text>
+                    <Text color="#8A7E6A" size="xs">
+                      {battleConsole.detail}
+                    </Text>
+                  </VStack>
+                  <Box
+                    bg={battleConsole.badgeBg}
+                    border="1px solid"
+                    borderColor={battleConsole.badgeBorder}
+                    borderRadius="full"
+                    flexShrink={0}
+                    px={3}
+                    py={1}
+                  >
+                    <Text
+                      color={battleConsole.badgeColor}
+                      fontFamily="mono"
+                      fontSize="2xs"
+                      fontWeight={700}
+                      letterSpacing="0.08em"
+                      textTransform="uppercase"
+                    >
+                      {battleConsole.badge}
+                    </Text>
+                  </Box>
+                </HStack>
+                {currentBattle.encounterType === EncounterType.PvP && (
+                  <Progress
+                    borderRadius="full"
+                    mt={3}
+                    size="xs"
+                    value={(turnTimeLeft / 32) * 100}
+                    variant="timer"
+                    w="100%"
+                  />
                 )}
-              </>
+              </Box>
             )}
-            <HStack position="relative" spacing={0} w="100%">
-              {currentBattle.encounterType === EncounterType.PvP && (
-                <Progress
-                  position="absolute"
-                  size="xs"
-                  top={-1}
-                  value={(turnTimeLeft / 32) * 100}
-                  variant="timer"
-                  w="100%"
-                />
-              )}
-              <HStack spacing={0} w="100%" flexWrap={{ base: 'wrap', lg: 'nowrap' }}>
+            <Box position="relative" px={{ base: 2, lg: 4 }} py={{ base: 2, lg: 3 }} w="100%">
+              {SHOW_Z2 && isDesktop && hoveredTokenId && (() => {
+                const hovItem = orderedAttackItems.find(i => i.tokenId === hoveredTokenId);
+                if (!hovItem) return null;
+                const mu = weaponMatchups[hovItem.tokenId];
+                return (
+                  <Box
+                    position="absolute"
+                    bottom="calc(100% - 8px)"
+                    left="50%"
+                    transform="translateX(-50%)"
+                    mb={1}
+                    zIndex={10}
+                    pointerEvents="none"
+                  >
+                    <GameItemTooltip
+                      item={hovItem}
+                      matchup={mu?.matchup}
+                      opponentClass={opponent?.entityClass}
+                    />
+                  </Box>
+                );
+              })()}
+              <Grid
+                gap={2}
+                templateColumns={{ base: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }}
+                w="100%"
+              >
                 {actionItems.map((item, index) => {
                   const icon = getItemImage(removeEmoji(item.name));
                   const matchupData = item.type === 'attack' ? weaponMatchups[item.tokenId] : undefined;
                   const matchup = matchupData?.matchup;
                   const statType = matchupData?.statType;
+                  const accent = item.type === 'consumable'
+                    ? {
+                      bg: 'rgba(90,138,62,0.08)',
+                      border: 'rgba(90,138,62,0.28)',
+                      eyebrow: 'Consumable',
+                      eyebrowColor: '#8FCB6C',
+                    }
+                    : matchup === 'strong'
+                      ? {
+                        bg: 'rgba(90,138,62,0.12)',
+                        border: 'rgba(90,138,62,0.38)',
+                        eyebrow: 'Advantage',
+                        eyebrowColor: '#8FCB6C',
+                      }
+                      : matchup === 'weak'
+                        ? {
+                          bg: 'rgba(184,92,58,0.12)',
+                          border: 'rgba(184,92,58,0.38)',
+                          eyebrow: 'High Risk',
+                          eyebrowColor: '#D89272',
+                        }
+                        : {
+                          bg: 'rgba(255,255,255,0.03)',
+                          border: 'rgba(120,108,92,0.3)',
+                          eyebrow: 'Neutral',
+                          eyebrowColor: '#B7AA95',
+                        };
                   return (
                     <Button
-                      borderLeft={{
-                        base: index % 2 === 0 ? 'none' : '2px',
-                        lg: index === 0 ? 'none' : '2px',
-                      }}
-                      borderTop={{
-                        base: index >= 2 ? '2px' : 'none',
-                        lg: 'none',
-                      }}
-                      borderRadius={0}
-                      borderRight="none"
+                      alignItems="stretch"
+                      bg={accent.bg}
+                      border="1px solid"
+                      borderColor={accent.border}
+                      borderRadius="md"
                       isDisabled={
                         attackingItemId !== null || !canAttack || isFleeing
                       }
                       isLoading={attackingItemId === item.tokenId}
                       key={`action-item-${index}`}
-                      loadingText=""
+                      loadingText={removeEmoji(item.name)}
                       onClick={() => onAttack(item.tokenId)}
+                      onMouseEnter={item.type === 'attack' ? () => setHoveredTokenId(item.tokenId) : undefined}
+                      onMouseLeave={item.type === 'attack' ? () => setHoveredTokenId(null) : undefined}
+                      overflow="hidden"
+                      px={0}
+                      py={0}
                       ref={getButtonRef(index)}
-                      fontSize={
-                        actionItems.length > 2 ? '2xs' : 'xs'
-                      }
+                      fontSize="xs"
+                      minH={{ base: '78px', lg: '92px' }}
+                      h="auto"
+                      justifyContent="flex-start"
                       size={{ base: 'sm', sm: 'sm', lg: 'md' }}
-                      py={{ base: 5, sm: 4, lg: 'unset' }}
-                      variant="outline"
-                      bg={matchup === 'strong' ? 'rgba(90,138,62,0.08)' : matchup === 'weak' ? 'rgba(184,92,58,0.08)' : undefined}
-                      w={{ base: '50%', lg: '100%' }}
+                      variant="ghost"
+                      w="100%"
+                      _active={{ bg: accent.bg }}
+                      _disabled={{
+                        bg: 'rgba(255,255,255,0.02)',
+                        borderColor: 'rgba(120,108,92,0.2)',
+                        opacity: 0.45,
+                      }}
+                      _hover={{
+                        bg: accent.bg,
+                        borderColor: accent.eyebrowColor,
+                        transform: 'translateY(-1px)',
+                      }}
+                      whiteSpace="normal"
                     >
-                      <>
-                        {isDesktop && (
-                          <Text as="span" fontSize="2xs" fontFamily="mono" opacity={0.6} mr={1}>
-                            [{index + 1}]
-                          </Text>
-                        )}
-                        {icon ? (
-                          <Image src={icon} boxSize="20px" mr={1} />
-                        ) : item.type === 'consumable' ? (
-                          <PotionSvg size={3} theme="dark" mr={1} />
-                        ) : null}
-                        {removeEmoji(item.name)}
-                        {matchup === 'strong' && (
-                          <Text as="span" color="#5A8A3E" fontSize="2xs" ml={1}>▲</Text>
-                        )}
-                        {matchup === 'weak' && (
-                          <Text as="span" color="#B85C3A" fontSize="2xs" ml={1}>▼</Text>
-                        )}
-                        {statType !== undefined && (
-                          <Text as="span" fontSize="2xs" ml={1} color={CLASS_COLORS[statType]} opacity={0.7}>
-                            {STAT_LABELS[statType]}
-                          </Text>
-                        )}
-                        {item.type === 'consumable' && 'balance' in item && (
-                          <Text as="span" fontSize="2xs" ml={1} opacity={0.7}>
-                            (x{item.balance.toString()})
-                          </Text>
-                        )}
-                      </>
+                      <VStack align="stretch" px={3} py={3} spacing={2} w="100%">
+                        <HStack align="start" justify="space-between" spacing={2} w="100%">
+                          <HStack align="start" spacing={2} minW={0}>
+                            <Box
+                              bg="rgba(255,255,255,0.06)"
+                              border="1px solid"
+                              borderColor="rgba(120,108,92,0.35)"
+                              borderRadius="sm"
+                              color="#B7AA95"
+                              fontFamily="mono"
+                              fontSize="2xs"
+                              fontWeight={700}
+                              minW="22px"
+                              px={1.5}
+                              py={1}
+                              textAlign="center"
+                            >
+                              {index + 1}
+                            </Box>
+                            <VStack align="start" minW={0} spacing={0.5}>
+                              <HStack spacing={1.5}>
+                                {icon ? (
+                                  <Image src={icon} boxSize="18px" />
+                                ) : item.type === 'consumable' ? (
+                                  <PotionSvg size={3} theme="dark" />
+                                ) : null}
+                                <Text
+                                  color="#E8DCC8"
+                                  fontSize="sm"
+                                  fontWeight={600}
+                                  noOfLines={1}
+                                  textAlign="left"
+                                >
+                                  {removeEmoji(item.name)}
+                                </Text>
+                              </HStack>
+                              <Text
+                                color={accent.eyebrowColor}
+                                fontFamily="mono"
+                                fontSize="2xs"
+                                letterSpacing="0.08em"
+                                textTransform="uppercase"
+                              >
+                                {accent.eyebrow}
+                              </Text>
+                            </VStack>
+                          </HStack>
+                          {statType !== undefined && (
+                            <Text
+                              color={CLASS_COLORS[statType]}
+                              fontFamily="mono"
+                              fontSize="2xs"
+                              fontWeight={700}
+                              letterSpacing="0.08em"
+                              textTransform="uppercase"
+                            >
+                              {STAT_LABELS[statType]}
+                            </Text>
+                          )}
+                        </HStack>
+                        <HStack justify="space-between" spacing={2} w="100%">
+                          <HStack spacing={1}>
+                            {matchup === 'strong' && (
+                              <Text as="span" color="#8FCB6C" fontSize="2xs">▲</Text>
+                            )}
+                            {matchup === 'weak' && (
+                              <Text as="span" color="#D89272" fontSize="2xs">▼</Text>
+                            )}
+                            <Text color="#8A7E6A" fontSize="2xs" textAlign="left">
+                              {item.type === 'consumable'
+                                ? 'Recover and reset your footing.'
+                                : matchup === 'strong'
+                                  ? 'Favored into this target.'
+                                  : matchup === 'weak'
+                                    ? 'Poor matchup into this target.'
+                                    : 'Steady damage option.'}
+                            </Text>
+                          </HStack>
+                          {item.type === 'consumable' && 'balance' in item && (
+                            <Text as="span" color="#B7AA95" fontFamily="mono" fontSize="2xs" opacity={0.8}>
+                              x{item.balance.toString()}
+                            </Text>
+                          )}
+                        </HStack>
+                      </VStack>
                     </Button>
                   );
                 })}
-              </HStack>
-            </HStack>
-            {isDesktop && actionItems.length > 0 && (
-              <Text fontSize="2xs" color="grey400" textAlign="center" mt={1}>
-                Use 1-{Math.min(actionItems.length, 4)} keys to act
-              </Text>
-            )}
-            {canFlee && (
-              <HStack mt={{ base: 2, lg: 0 }} spacing={0} w="100%">
+              </Grid>
+            </Box>
+            <HStack
+              align={{ base: 'start', sm: 'center' }}
+              borderTop="1px solid"
+              borderColor="rgba(90,78,60,0.35)"
+              flexDirection={{ base: 'column', sm: 'row' }}
+              justify="space-between"
+              px={{ base: 3, lg: 4 }}
+              pb={{ base: 3, lg: 4 }}
+              pt={{ base: 0, lg: 0 }}
+              spacing={{ base: 2, sm: 3 }}
+              w="100%"
+            >
+              <VStack align="start" spacing={0.5}>
+                {isDesktop && actionItems.length > 0 && (
+                  <Text color="#8A7E6A" fontFamily="mono" fontSize="2xs">
+                    Use 1-{Math.min(actionItems.length, 4)} keys to act
+                  </Text>
+                )}
+                <Text color="#8A7E6A" fontSize="2xs">
+                  {attackStatusMessage || (
+                    currentBattle.encounterType === EncounterType.PvE
+                      ? 'Pick the cleanest line and keep the tempo.'
+                      : canAttack
+                        ? 'The clock is yours. Take the opening.'
+                        : 'Watch the timer and prepare the counter.'
+                  )}
+                </Text>
+              </VStack>
+              {canFlee && (
                 <Button
-                  borderLeft="none"
-                  borderRadius={0}
-                  borderRight="none"
-                  borderTop="none"
                   isLoading={isFleeing}
-                  fontSize="xs"
-                  size={{ base: 'sm', sm: 'sm', lg: 'md' }}
-                  py={{ base: 5, sm: 4, lg: 'unset' }}
+                  size="sm"
                   onClick={onFleePvp}
                   variant="outline"
-                  color="#A0522D"
-                  borderColor="#A0522D"
-                  _hover={{ bg: 'rgba(160,82,45,0.15)' }}
-                  w="100%"
+                  color="#D89272"
+                  borderColor="rgba(184,92,58,0.45)"
+                  bg="rgba(184,92,58,0.08)"
+                  _hover={{ bg: 'rgba(184,92,58,0.16)', borderColor: 'rgba(184,92,58,0.65)' }}
                 >
                   Flee
                 </Button>
-              </HStack>
-            )}
+              )}
+            </HStack>
           </VStack>
         )}
+      {SHOW_Z2 && currentBattle && !battleOver && (
+        <Box px={{ base: 2, lg: 4 }} pt={2}>
+          <BattleCombatLog entries={combatLogEntries} />
+        </Box>
+      )}
       <Stack p={{ base: 2, lg: 4 }}>
         {!currentBattle && !isSpawned && (
           <SafeTypist
@@ -726,11 +963,7 @@ export const ActionsPanel = (): JSX.Element => {
             stdTypingDelay={10}
           >
             <Text size={{ base: 'xs', sm: 'sm', lg: 'md' }}>
-              In order to begin battling, you must{' '}
-              <Text as="span" fontWeight={700}>
-                spawn
-              </Text>{' '}
-              your character.
+              <Trans i18nKey="gameBoard.spawnPrompt" ns="ui" components={{ bold: <Text as="span" fontWeight={700} /> }} />
             </Text>
           </SafeTypist>
         )}
@@ -740,10 +973,10 @@ export const ActionsPanel = (): JSX.Element => {
             <HStack justify="space-between" w="100%">
               <Text color="#8A7E6A" fontStyle="italic" size="xs">
                 {position.x === 0 && position.y === 0
-                  ? 'Move to a new tile to find monsters.'
+                  ? t('combat.moveToFind')
                   : visibleMonstersOnTile.length === 0
-                    ? 'No monsters here. Try another tile.'
-                    : 'Click on a monster to battle.'}
+                    ? t('combat.noMonstersHere')
+                    : t('combat.clickToFight')}
               </Text>
               {/* Auto-adventure paused — hidden until re-enabled */}
             </HStack>
@@ -773,8 +1006,8 @@ export const ActionsPanel = (): JSX.Element => {
                 </Text>
                 <Text color={isCritical ? '#C08080' : '#8A7E6A'} size="2xs">
                   {isCritical
-                    ? 'You are close to death. Heal before your next fight.'
-                    : 'Consider using a potion before continuing.'}
+                    ? t('combat.closeToDeath')
+                    : t('combat.considerPotion')}
                 </Text>
               </Box>
             );
@@ -782,7 +1015,14 @@ export const ActionsPanel = (): JSX.Element => {
           return null;
         })()}
 
-        {!autoAdventureMode && opponent &&
+        {SHOW_Z2 && !autoAdventureMode && opponent && combatNarrative && (
+          <CombatTypewriter
+            segments={combatNarrative.segments}
+            narrativeKey={combatNarrative.key}
+            isEnemyAttack={combatNarrative.isEnemyAttack}
+          />
+        )}
+        {!SHOW_Z2 && !autoAdventureMode && opponent &&
           (() => {
             const seenDotTurns = new Set<string>();
             const logSize = { base: '2xs' as const, sm: 'xs' as const, lg: 'sm' as const };
@@ -794,7 +1034,7 @@ export const ActionsPanel = (): JSX.Element => {
             const itemName =
               currentBattle?.encounterType === EncounterType.PvE &&
               attack.attackerId !== character?.id
-                ? MONSTER_MOVE_MAPPING[(opponent as Monster).mobId] ?? 'an item'
+                ? tm(`moves.${(opponent as Monster).mobId}`, { defaultValue: 'an item' })
                 : attackItem?.name ?? 'an item';
 
             const possibleStatusEffectAttack = statusEffectActions.find(
@@ -831,7 +1071,7 @@ export const ActionsPanel = (): JSX.Element => {
                     stdTypingDelay={10}
                   >
                     <Text size={logSize}>
-                      {isPlayer ? 'You' : opponentDisplayName} used{' '}
+                      {isPlayer ? t('combat.you') : opponentDisplayName} {t('combat.used')}{' '}
                       <Text as="span" color="green">
                         {consumable ? removeEmoji(consumable.name) : 'a potion'}
                       </Text>
@@ -939,7 +1179,7 @@ export const ActionsPanel = (): JSX.Element => {
                 <Box>
                   <Text size={logSize}>
                     {isCrit && (
-                      <Text as="span" color="#C87A2A" fontWeight={700}>Critical hit! </Text>
+                      <Text as="span" color="#C87A2A" fontWeight={700}>{t('battle.criticalHit')} </Text>
                     )}
                     {isPlayerAttack ? (
                       <Text as="span">
@@ -966,16 +1206,12 @@ export const ActionsPanel = (): JSX.Element => {
                       {affectedText}
                     </Text>
                   </Text>
-                  {STATUS_EFFECT_DESCRIPTION_MAPPING[
-                    possibleStatusEffectAttack.name
-                  ] && (
+                  {te(`descriptions.${possibleStatusEffectAttack.name}`, { defaultValue: '' }) && (
                     <Text
                       size={{ base: '2xs', sm: '2xs', lg: 'xs' }}
                       color={effectColor}
                     >
-                      {STATUS_EFFECT_DESCRIPTION_MAPPING[
-                        possibleStatusEffectAttack.name
-                      ]}
+                      {te(`descriptions.${possibleStatusEffectAttack.name}`)}
                     </Text>
                   )}
                 </Box>
@@ -991,14 +1227,14 @@ export const ActionsPanel = (): JSX.Element => {
                   ) : 'you'}
                   .
                   {effectNames[0] &&
-                    STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]] && (
+                    te(`descriptions.${effectNames[0]}`, { defaultValue: '' }) && (
                       <Text
                         as="span"
                         color="#D08040"
                       >
                         {' '}
-                        {effectNames[0]}.{' '}
-                        {STATUS_EFFECT_DESCRIPTION_MAPPING[effectNames[0]]}
+                        {te(`names.${effectNames[0]}`)}.{' '}
+                        {te(`descriptions.${effectNames[0]}`)}
                       </Text>
                     )}
                 </Text>
@@ -1015,7 +1251,7 @@ export const ActionsPanel = (): JSX.Element => {
                   .{' '}
                   {effectNames[0]
                     ? `${effectNames[0]} is already active.`
-                    : 'It had no effect.'}
+                    : t('combat.noEffect')}
                 </Text>
               );
             } else if (isPlayerAttack) {
@@ -1088,7 +1324,7 @@ export const ActionsPanel = (): JSX.Element => {
                 )}
                 {attack.blocked && (
                   <Text size={{ base: '2xs', sm: '2xs', lg: 'xs' }} color="#8B8B8B" fontWeight={700}>
-                    {isPlayerAttack ? `${opponentDisplayName} blocked some damage.` : 'You blocked some damage.'}
+                    {isPlayerAttack ? t('combat.blockedSome', { name: opponentDisplayName }) : t('combat.youBlockedSome')}
                   </Text>
                 )}
                 {attack.spellDodged && (

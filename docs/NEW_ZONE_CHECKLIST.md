@@ -17,9 +17,9 @@ Everything in this phase is pen-and-paper / doc work. No code yet. Get the desig
 - [ ] Connection to next zone (how do players leave?)
 - [ ] Lore role — what do players LEARN in this zone?
 - [ ] Emotional arc (e.g., "hope → disillusionment → resolve")
-- [ ] Is this a Wound, Decay zone, or civilization?
+- [ ] Is this a Marrow, Fraying zone, or civilization?
 - [ ] Environmental description (what does it look, sound, smell like?)
-- [ ] How the Decay manifests here specifically
+- [ ] How the Fraying manifests here specifically
 
 ## 1.2 Naming Conventions
 
@@ -380,7 +380,7 @@ Zone identity isn't just data — it's visual. Every zone should look and feel d
 ## 2.5 Fragment Art
 
 - [ ] Fragment card art or border design (consistent with zone theme)
-- [ ] Memory Echo tile visual on the map
+- [ ] Impression tile visual on the map
 
 ---
 

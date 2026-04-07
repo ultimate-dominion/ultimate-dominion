@@ -74,9 +74,9 @@ Guilds are called **Orders** in the game world. The term reflects the setting �
 
 Orders are **independent of factions** (Covenant / Unbound). An Order can have members from both factions, or align entirely with one. This is a player decision, not a system restriction. However, Orders that align strongly with a faction may gain narrative recognition in the Living Chronicle.
 
-### The Wound Compels Cooperation
+### The Marrow Compels Cooperation
 
-The Dark Cave — the Wound of Noctum — is hostile to individuals. Monsters spawn from corrupted divine essence. The deeper you go, the worse it gets. Lore-wise, survivors who band together last longer. The Orders are the in-world expression of this truth: alone, you are food. Together, you might survive long enough to matter.
+The Dark Cave — the Marrow of Noctum — is hostile to individuals. Monsters spawn from corrupted divine essence. The deeper you go, the worse it gets. Lore-wise, survivors who band together last longer. The Orders are the in-world expression of this truth: alone, you are food. Together, you might survive long enough to matter.
 
 ---
 
@@ -437,7 +437,7 @@ New lore fragments are unlockable through guild activities:
 | Fragment | Trigger | Content |
 |----------|---------|---------|
 | **The Pact** | Form a guild | "In the dark, the survivors learned what the gods never could — that strength is not solitary. The first pacts were sealed not in temples but in blood and trust." |
-| **The Banner** | Claim first territory | "They drove a banner into corrupted soil and declared: this ground is ours. The Wound did not care. But the other survivors noticed." |
+| **The Banner** | Claim first territory | "They drove a banner into corrupted soil and declared: this ground is ours. The Marrow did not care. But the other survivors noticed." |
 | **The Tax Collector** | Accumulate 10,000 gold in treasury (lifetime) | "Gold flows upward in every civilization. The question is always the same: does it flow back down?" |
 | **Brother's Keeper** | Approve 10 regear requests | "They buried their dead and re-armed the living. This is the oldest economy — loss shared is loss halved." |
 

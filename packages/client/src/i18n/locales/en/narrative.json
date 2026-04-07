@@ -1,0 +1,183 @@
+{
+  "1": {
+    "name": "The Awakening",
+    "narrative": "You open your eyes to darkness. Cold stone beneath your back. The taste of dust and something... older.\n\nHow long have you been here? Days? Years? Time feels meaningless in this place.\n\nA whisper echoes through the cavern - not words, but a feeling. Something ancient stirs in the depths below, and it knows you're here.\n\nYou remember nothing of who you were. Only that you must move forward. Only that something waits for you in the heart of this cave.\n\nRise, fallen one. Your journey begins.",
+    "hint": "Begin your journey in the Dark Cave."
+  },
+  "2": {
+    "name": "The Quartermaster",
+    "narrative": "\"Ah, another one wakes,\" the old man rasps, barely looking up from his wares. \"They always wake eventually.\"\n\nTal Carden - that's what the faded sign reads. His eyes are milky, unseeing, yet he seems to know exactly where you stand.\n\n\"You're wondering about the cave, aren't you? Why you're here. What happened to the others.\"\n\nHe laughs, a dry sound like bones rattling.\n\n\"I've been selling to the lost ones for... longer than I can remember. They come, they fight, they fall. And still the cave hungers.\"\n\nHe slides something across the counter. \"Take this. You'll need it where you're going. As for answers - the crystals remember. They trapped the old souls inside, you know. Shatter one, and maybe it'll talk.\"",
+    "hint": "Speak with Tal Carden at his shop."
+  },
+  "3": {
+    "name": "The Restless",
+    "narrative": "The creature falls, dissipating into motes of shadow.\n\nBut as it dies, something passes through you - memories that aren't your own:\n\n*A soldier, marching beneath unfamiliar stars.*\n*A child, playing in streets that no longer exist.*\n*A merchant, counting coins that have long since crumbled to dust.*\n\nThese monsters were people once. You feel it with terrible certainty. They died here, in this cave, and something... refused to let them rest.\n\nThe darkness seems thicker now, watching.\n\nWhat makes you any different from them?",
+    "hint": "Defeat your first monster."
+  },
+  "4": {
+    "name": "Souls That Linger",
+    "narrative": "The Crystal Elemental shatters, and from within its fractured core, a constellation of pale light spills free.\n\nUnlike the shards that scatter and fade, these motes hover, waiting, and you hear a voice like wind through empty halls:\n\n*\"You seek the truth. They all did, once.\"*\n\nImages flood your mind: A great ritual. Hooded figures around a pit of absolute darkness. Power being summoned - and something going terribly, horribly wrong.\n\n*\"We were the witnesses. We are all that remains of the world before. Trapped in crystal, waiting to be freed.\"*\n\nThe light begins to fade.\n\n*\"Find the Marrow at the center. There, you will understand what we became.\"*\n\nAnd then it's gone, leaving only the echo of ancient sorrow.",
+    "hint": "Defeat a Giant Spider."
+  },
+  "5": {
+    "name": "The Marrow",
+    "narrative": "You stand at the center of the cave, and the ground... breathes.\n\nNo, not breathes. Pulses. Like a heart. Like something alive beneath your feet.\n\nHere, the air tastes of iron and regret. Faint scratches cover the stone - thousands of them, carved by countless desperate hands. Among them, you make out fragments of text:\n\n*\"THE DOOR MUST NEVER OPEN\"*\n*\"HE PROMISED US POWER\"*\n*\"WE WERE FOOLS\"*\n\nAnd beneath all of them, older than the rest, two words carved so deep they've worn smooth:\n\n*\"FORGIVE US\"*\n\nThe pulsing grows stronger. Something beneath the cave knows you've found this place.\n\nSomething is pleased.",
+    "hint": "Reach the center of the cave."
+  },
+  "6": {
+    "name": "Death of the Death God",
+    "narrative": "The Bonecaster crumbles, and with its destruction comes a flood of knowledge:\n\nThere was a god of death once. Not cruel, not kind - simply the keeper of the final door. Souls passed through it, and found rest beyond.\n\nBut the mages of this place wanted more. They wanted power over death itself. They performed a ritual to bind the Death God, to steal its dominion.\n\nThey succeeded.\n\nAnd when the Death God died, the doors to the beyond closed forever.\n\nNow the dead cannot leave. They linger, twist, become the monsters that haunt these halls. The mages too are trapped here, their consciousness scattered across a thousand screaming forms.\n\nThis isn't a dungeon. It's a tomb. A tomb for a god.\n\nAnd somewhere in its depths, the god's corpse still holds power.",
+    "hint": "Defeat the Gelatinous Ooze."
+  },
+  "7": {
+    "name": "Betrayer's Truth",
+    "narrative": "As the Pale Stalker dissolves into the darkness it once commanded, its final message burns into your mind:\n\n*\"There was one among them who knew the truth. Who tried to stop it.\"*\n\nYou see him: a young mage, face twisted with horror as his colleagues complete the ritual. He screams, tries to break the circle, but it's too late.\n\n*\"He was the first to realize what they'd done. The first to try to undo it.\"*\n\n*\"For a thousand years he's worked in shadow. Guiding the lost. Hoping one would finally be strong enough.\"*\n\nThe voice fades, but not before whispering one last thing:\n\n*\"Tal Carden was there, at the beginning. Ask him about the door. Ask him why he really stays.\"*\n\nThe merchant with blind eyes. The quartermaster who never leaves.\n\nHow long has he truly been waiting?",
+    "hint": "Defeat the Carrion Crawler."
+  },
+  "8": {
+    "name": "Blood Price",
+    "narrative": "They fall, and you feel the weight of what you've done.\n\nAnother soul, trapped here forever because of you. Another consciousness that will twist and warp until it becomes something monstrous.\n\nBut with that weight comes understanding:\n\nThis is the cave's true hunger. Not for death, but for souls. Each one that falls here feeds something ancient. Something waiting. Something that grows stronger with every battle.\n\nThe ritual didn't just kill the Death God.\n\nIt replaced it.\n\nAnd the new god growing in the darkness... it's almost ready to wake.\n\nEvery fallen warrior - monster and hero alike - has been building toward this moment. Including you.\n\nThe question is: will you feed the darkness, or find a way to end the cycle forever?\n\nThe choice approaches. The door waits.",
+    "hint": "Defeat another player in combat."
+  },
+  "levelUp": {
+    "default": {
+      "title": "You grow stronger.",
+      "text": "The cave tests you with greater challenges.\n\nYou answer."
+    },
+    "2": {
+      "title": "The cave grows darker.",
+      "text": "Something shifts in the gloom ahead \u2014 hunched shapes, larger than any rat, with eyes that gleam with a terrible intelligence.\n\nYou are not alone down here."
+    },
+    "3": {
+      "title": "The depths stir.",
+      "text": "New sounds echo from passages you haven\u2019t dared explore \u2014 scraping claws, crackling energy, the low hum of something ancient.\n\nThe cave\u2019s true inhabitants make themselves known."
+    },
+    "4": {
+      "title": "The darkness knows your name.",
+      "text": "You move through the cave with purpose now. The creatures that once seemed fearsome give you a wider berth.\n\nBut deeper things are watching \u2014 waiting to see if you are worthy."
+    },
+    "5": {
+      "title": "Beyond the boundary.",
+      "text": "The ancient ward crumbles at your approach. Beyond lies the Winding Dark \u2014 where other adventurers hunt, and are hunted.\n\nThe full map is yours now. Tread carefully."
+    },
+    "6": {
+      "title": "The tunnels remember.",
+      "text": "Your footsteps echo differently now \u2014 the cave reshapes itself around you, passages opening where there were none.\n\nYou are becoming part of this place."
+    },
+    "7": {
+      "title": "A reputation precedes you.",
+      "text": "Other adventurers step aside when you pass. The creatures of the deep hesitate before striking.\n\nFear is a currency, and you are wealthy."
+    },
+    "8": {
+      "title": "The cave reveals its secrets.",
+      "text": "In the deepest passages, you find markings older than memory \u2014 warnings left by those who came before.\n\nThey did not leave. You will."
+    },
+    "9": {
+      "title": "Something stirs above.",
+      "text": "A draft. Cold, clean air from somewhere far overhead. The cave is not the whole world \u2014 there is something beyond the stone.\n\nYou are almost ready to find it."
+    },
+    "10": {
+      "title": "The masters take notice.",
+      "text": "You have walked the Winding Dark and survived. You have earned the right to choose what you become.\n\nThis is not an ending. It is a transformation."
+    },
+    "15": {
+      "title": "The art reveals itself.",
+      "text": "Power flows through you like a river finding its course. The knowledge was always there \u2014 waiting for you to be ready.\n\nYou have learned your class spell."
+    }
+  },
+  "npc": {
+    "vel_morrow": {
+      "title": "The Blade",
+      "defaultFlavor": "She watches the ridge with pale eyes. Always counting exits.",
+      "chain": {
+        "10": {
+          "0": "Her hand rests on her blade. She heard you coming three tiles ago.",
+          "1": "The markers are fresh. Someone from the Covenant is up here."
+        },
+        "11": {
+          "0": "She traces a scar on her forearm without looking at it.",
+          "1": "That letter. Let me see it."
+        },
+        "12": {
+          "0": "Something was here. Recently.",
+          "1": "Her face is blank. That is how you know it is bad.",
+          "2": "I did this to people like you. Maybe to you specifically."
+        }
+      }
+    },
+    "edric_thorne": {
+      "title": "The Mender",
+      "defaultFlavor": "He kneels, hands together. Not praying \u2014 listening.",
+      "chain": {
+        "13": {
+          "0": "His green eyes are too open for this place. They show everything.",
+          "1": "They were both trying to survive. That is the worst part.",
+          "2": "I prayed for you this morning. You do not have to believe it helped."
+        },
+        "14": {
+          "0": "Something in this place still answers prayer. I can feel it.",
+          "1": "Meet me at the shrine. There is something I need to show you."
+        },
+        "15": {
+          "0": "The bones remember what the living have forgotten.",
+          "1": "His hands are shaking. He does not notice.",
+          "2": "Faith intact. Aware it is being tested."
+        }
+      }
+    },
+    "camp_journal": {
+      "title": "Abandoned Camp",
+      "defaultFlavor": "Pages flutter in the wind. The ink is still wet.",
+      "chain": {
+        "12": {
+          "1": "A leather-bound log, left behind or left deliberately."
+        }
+      }
+    },
+    "shrine_inscriptions": {
+      "title": "Ruined Shrine",
+      "defaultFlavor": "Worn stone. The carvings are older than the mountain.",
+      "chain": {
+        "13": {
+          "2": "The inscriptions pulse faintly. Waiting to be read."
+        }
+      }
+    },
+    "edric_at_shrine": {
+      "title": "Edric at the Shrine",
+      "defaultFlavor": "He stands among the ruins, listening to something you cannot hear.",
+      "chain": {
+        "14": {
+          "1": "You came. He sounds surprised. He should not be."
+        }
+      }
+    },
+    "summit_stone": {
+      "title": "Summit Stone",
+      "defaultFlavor": "A monolith carved with thousands of names. A pilgrimage marker.",
+      "chain": {
+        "16": {
+          "2": "The wind screams. Not figuratively."
+        }
+      }
+    }
+  },
+  "milestone": {
+    "3": {
+      "title": "Adventurer",
+      "text": "The cave has tested you, and you have not broken.\n\nFew earn this mark. Fewer still survive what comes next."
+    },
+    "5": {
+      "title": "The Winding Dark",
+      "gate": "The way is open",
+      "text": "The ancient ward crumbles at your approach. Beyond lies a realm where other adventurers hunt \u2014 and are hunted.\n\nThe full map is yours now. Tread carefully."
+    }
+  },
+  "restFlavor": [
+    "The fire crackles softly as warmth seeps into your bones. Your wounds begin to close.",
+    "You sit by the flames and let the heat chase away the cold. Strength returns.",
+    "Embers dance in the dark. The world feels far away. You breathe deep, and heal.",
+    "The fire hisses and pops. For a moment, the dangers beyond feel like a distant memory.",
+    "Sparks drift upward like tiny stars. When you rise, the pain is gone."
+  ]
+}

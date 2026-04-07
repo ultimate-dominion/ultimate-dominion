@@ -37,8 +37,8 @@ async function discoverStarterItems(maxId: number = 200): Promise<{
     try {
       const isStarter = await readWorld("UD__isStarterItem", [BigInt(id)]);
       if (!isStarter) {
-        if (foundAny) consecutiveNonStarter++;
-        if (consecutiveNonStarter >= 10) break;
+        consecutiveNonStarter++;
+        if (foundAny && weapons.length > 0 && armors.length > 0 && consecutiveNonStarter >= 20) break;
         continue;
       }
       foundAny = true;

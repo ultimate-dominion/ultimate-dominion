@@ -3,9 +3,6 @@ import { base } from '../mud/supportedChains';
 
 import { Chain } from 'wagmi/chains';
 
-export const WALLET_CONNECT_PROJECT_ID = import.meta.env
-  .VITE_WALLET_CONNECT_PROJECT_ID;
-
 export const CHAIN_NAME_TO_ID: { [key: string]: number } = {
   Base: base.id,
 };
@@ -30,10 +27,6 @@ export const SUPPORTED_CHAINS: readonly [Chain, ...Chain[]] =
   getSupportedChains();
 
 const validateConfig = () => {
-  if (!WALLET_CONNECT_PROJECT_ID) {
-    throw new Error('VITE_WALLET_CONNECT_PROJECT_ID is not set');
-  }
-
   SUPPORTED_CHAINS.forEach(chain => {
     if (!CHAIN_ID_TO_LABEL[chain.id]) {
       throw new Error(`CHAIN_ID_TO_LABEL[${chain.id}] is not set`);

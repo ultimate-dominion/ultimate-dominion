@@ -1,3 +1,6 @@
+# Feature Flow: dev (beta) → PR → main (production)
+# This workflow syncs hotfixes FROM main back TO dev.
+# It does NOT represent the feature development direction.
 name: Sync main → dev
 
 on:

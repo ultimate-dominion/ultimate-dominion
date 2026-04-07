@@ -8,7 +8,7 @@ import {
     NameExists,
     Stats,
     Spawned,
-    Position,
+    PositionV2,
     CharacterEquipment,
     CharacterFirstActions,
     CharacterZoneCompletion,
@@ -60,8 +60,8 @@ contract DeleteCharacter is Script {
         // 3. Delete Spawned (despawn)
         Spawned.deleteRecord(deleteCharId);
 
-        // 4. Delete Position
-        Position.deleteRecord(deleteCharId);
+        // 4. Delete PositionV2
+        PositionV2.deleteRecord(deleteCharId);
 
         // 5. Delete CharacterEquipment
         CharacterEquipment.deleteRecord(deleteCharId);

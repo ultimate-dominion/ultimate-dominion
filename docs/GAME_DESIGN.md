@@ -393,7 +393,7 @@ Turn-based combat (same system as PvE)
 
 ## Lore Fragments
 
-8 collectible narrative NFTs ("Fragments of the Fallen") that tell the story of Noctum's death and the gods' deicide.
+8 collectible narrative NFTs ("Fragments") that tell the story of Noctum's death and the gods' deicide.
 
 | # | Fragment | Trigger | Status |
 |---|----------|---------|--------|
@@ -401,7 +401,7 @@ Turn-based combat (same system as PvE)
 | 2 | The Quartermaster | Visit shop at (9,9) | `[IMPLEMENTED]` |
 | 3 | The Restless | First monster kill | `[IMPLEMENTED]` |
 | 4 | Souls That Linger | Kill Crystal Elemental (mob #4) | `[IMPLEMENTED]` |
-| 5 | The Wound | Reach center tile (5,5) | `[IMPLEMENTED]` |
+| 5 | The Marrow | Reach center tile (5,5) | `[IMPLEMENTED]` |
 | 6 | Death of Death God | Kill Lich Acolyte (mob #7) | `[IMPLEMENTED]` |
 | 7 | Betrayer's Truth | Kill Shadow Stalker (mob #9) | `[IMPLEMENTED]` |
 | 8 | Blood Price | First PvP kill | `[IMPLEMENTED]` |

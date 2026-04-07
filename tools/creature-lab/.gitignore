@@ -1,0 +1,5 @@
+node_modules/
+debug-*.png
+render-*.png
+*.bak
+renders/

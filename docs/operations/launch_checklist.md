@@ -47,7 +47,7 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] Gold withdrawal design ✓ MetaMask/external wallet users can transfer directly; embedded wallet users cannot withdraw (by design)
 
 **Narrative & Lore**
-- [x] "Fragments of the Fallen" story arc ✓ 8-part story arc complete
+- [x] "Fragments" story arc ✓ 8-part story arc complete
 - [x] FragmentSystem.sol ✓ ERC721 minting on claim
 - [x] Lore fragment triggers ✓ Client-side post-combat triggers (`def60c83`), spawn, shop, PvP, locations
 - [x] Badge system ✓ Adventurer badge at level 3, gates chat access

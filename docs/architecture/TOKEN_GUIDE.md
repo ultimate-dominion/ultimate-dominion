@@ -38,7 +38,7 @@ Each token is deployed idempotently — `PostDeploy` checks `UltimateDominionCon
 | Characters | `"UDCharacters"` | `"UDC"` | `"ipfs://"` |
 | Items | N/A (ERC1155) | N/A | `"ipfs://"` |
 | Badges | `"Ultimate Dominion Badges"` | `"UDB"` | `"ipfs://"` |
-| Fragments | `"Fragments of the Fallen"` | `"FRAGMENT"` | `"ipfs://"` |
+| Fragments | `"Fragments"` | `"FRAGMENT"` | `"ipfs://"` |
 
 ---
 
@@ -162,7 +162,7 @@ Despite using the ERC721 puppet, badges behave like ERC1155 through a composite 
 ### Fragments (ERC721)
 
 **Config field**: `UltimateDominionConfig.fragmentToken`
-**Name**: "Fragments of the Fallen"
+**Name**: "Fragments"
 **Transferable**: Yes (no NoTransferHook)
 
 Lore NFTs triggered by in-game actions (combat kills, tile discovery). 8 fragment types per zone.
@@ -200,7 +200,7 @@ UltimateDominionConfig.getFragmentToken()
 ```
 
 Production World: `0x99d01939F58B965E6E84a1D167E710Abdf5764b0`
-Beta World: `0x4a54538eCD32E1827121f9edb4a87CC4C08536E5`
+Beta World: `0xDc34AC3b06fa0ed899696A72B7706369864E5678`
 
 Query token addresses by calling `UD__getCharacterToken()`, `UD__getGoldToken()`, or `UD__getItemsContract()` on the World.
 

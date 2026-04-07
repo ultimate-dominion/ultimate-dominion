@@ -5,20 +5,17 @@ import { encodeMessage, decodeClientMessage, type ServerMessage, type QueueStats
 import { queryUpdatedRows, sql, mudSchema } from '../db/connection.js';
 import { extractKeyBytes, serializeRow, resolveResourceName, snakeToPascal, fixAbbreviations } from '../naming.js';
 import { GAME_NAMESPACE } from '../sync/startSync.js';
+import type { ChatHandler } from './chatHandler.js';
 
-// Tables skipped during WS resume (catch-up). These are either combat logs
-// that accumulate tens of thousands of rows or tables only needed during live
-// combat — the same tables excluded from the REST snapshot.
-const WS_RESUME_EXCLUDE = new Set([
-  'RngLogs', 'RandomNumbers', 'ActionOutcome', 'CombatOutcome',
-  'DamageOverTimeApplied', 'CombatFlags', 'SpellUsesTrackin',
-]);
-
-type Client = {
+export type ChatClient = {
   ws: WebSocket;
   subscribedTables: Set<string>; // empty = all tables
   lastBlock: number;
+  chatChannels: Set<string>;
+  walletAddress: string | null;
 };
+
+type Client = ChatClient;
 
 export class Broadcaster {
   private clients = new Set<Client>();
@@ -26,9 +23,14 @@ export class Broadcaster {
   private tableNameMap = new Map<string, string>();
   /** tableId (hex) → logical table name */
   private tableIdMap = new Map<string, string>();
+  private chatHandler: ChatHandler | null = null;
 
   setTableNameMap(map: Map<string, string>) {
     this.tableNameMap = map;
+  }
+
+  setChatHandler(handler: ChatHandler) {
+    this.chatHandler = handler;
   }
 
   addClient(ws: WebSocket, currentBlock: number) {
@@ -36,6 +38,8 @@ export class Broadcaster {
       ws,
       subscribedTables: new Set(),
       lastBlock: 0,
+      chatChannels: new Set(['global']),
+      walletAddress: null,
     };
 
     // Send connected message
@@ -57,6 +61,27 @@ export class Broadcaster {
           break;
         case 'ping':
           this.send(client, { type: 'pong' });
+          break;
+        case 'chat:auth':
+          this.chatHandler?.handleAuth(client, msg);
+          break;
+        case 'chat:send':
+          this.chatHandler?.handleSend(client, msg).catch((err) =>
+            console.error('[ws] chat:send error:', err)
+          );
+          break;
+        case 'chat:history':
+          this.chatHandler?.handleHistory(client, msg).catch((err) =>
+            console.error('[ws] chat:history error:', err)
+          );
+          break;
+        case 'chat:join':
+          this.chatHandler?.handleJoin(client, msg).catch((err) =>
+            console.error('[ws] chat:join error:', err)
+          );
+          break;
+        case 'chat:leave':
+          this.chatHandler?.handleLeave(client, msg);
           break;
       }
     });
@@ -178,6 +203,20 @@ export class Broadcaster {
     this.broadcastToAll(msg);
   }
 
+  /** Broadcast a chat message to all clients subscribed to a channel */
+  broadcastToChannel(channel: string, msg: ServerMessage) {
+    for (const client of this.clients) {
+      if (client.chatChannels.has(channel)) {
+        this.send(client, msg);
+      }
+    }
+  }
+
+  /** Send a message to a specific client (used for shadow mute, errors) */
+  sendToClient(client: Client, msg: ServerMessage) {
+    this.send(client, msg);
+  }
+
   private broadcastToAll(msg: ServerMessage) {
     for (const client of this.clients) {
       this.send(client, msg);
@@ -193,10 +232,6 @@ export class Broadcaster {
     for (const [logicalName, pgTableName] of this.tableNameMap) {
       // Skip reverse mappings
       if (logicalName === pgTableName && logicalName.includes('__')) continue;
-
-      // Skip combat log tables during resume — tens of thousands of rows
-      // that the client only needs during live combat, not on catch-up.
-      if (WS_RESUME_EXCLUDE.has(logicalName)) continue;
 
       // Skip if client has table filter and this table isn't in it
       if (client.subscribedTables.size > 0 && !client.subscribedTables.has(logicalName)) {

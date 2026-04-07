@@ -55,15 +55,15 @@ contract SeedFragmentMetadata is Script {
         world.UD__setFragmentMetadata(
             4,
             "Souls That Linger",
-            "The Crystal Elemental shatters, and from within its fractured core, a constellation of pale light spills free.\n\nUnlike the shards that scatter and fade, these motes hover, waiting, and you hear a voice like wind through empty halls:\n\n\"You seek the truth. They all did, once.\"\n\nImages flood your mind: A great ritual. Hooded figures around a pit of absolute darkness. Power being summoned - and something going terribly, horribly wrong.\n\n\"We were the witnesses. We are all that remains of the world before. Trapped in crystal, waiting to be freed.\"\n\nThe light begins to fade.\n\n\"Find the Wound at the center. There, you will understand what we became.\"\n\nAnd then it's gone, leaving only the echo of ancient sorrow.",
+            "The Crystal Elemental shatters, and from within its fractured core, a constellation of pale light spills free.\n\nUnlike the shards that scatter and fade, these motes hover, waiting, and you hear a voice like wind through empty halls:\n\n\"You seek the truth. They all did, once.\"\n\nImages flood your mind: A great ritual. Hooded figures around a pit of absolute darkness. Power being summoned - and something going terribly, horribly wrong.\n\n\"We were the witnesses. We are all that remains of the world before. Trapped in crystal, waiting to be freed.\"\n\nThe light begins to fade.\n\n\"Find the Marrow at the center. There, you will understand what we became.\"\n\nAnd then it's gone, leaving only the echo of ancient sorrow.",
             "Defeat a Crystal Elemental."
         );
         console.log("  Fragment IV seeded");
 
-        // Fragment V: The Wound
+        // Fragment V: The Marrow
         world.UD__setFragmentMetadata(
             5,
-            "The Wound",
+            "The Marrow",
             "You stand at the center of the cave, and the ground... breathes.\n\nNo, not breathes. Pulses. Like a heart. Like something alive beneath your feet.\n\nHere, the air tastes of iron and regret. Faint scratches cover the stone - thousands of them, carved by countless desperate hands. Among them, you make out fragments of text:\n\n\"THE DOOR MUST NEVER OPEN\"\n\"HE PROMISED US POWER\"\n\"WE WERE FOOLS\"\n\nAnd beneath all of them, older than the rest, two words carved so deep they've worn smooth:\n\n\"FORGIVE US\"\n\nThe pulsing grows stronger. Something beneath the cave knows you've found this place.\n\nSomething is pleased.",
             "Reach the center of the cave."
         );

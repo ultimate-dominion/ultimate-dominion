@@ -15,7 +15,13 @@ import {
   type WalletClient,
 } from 'viem';
 import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
-import { usePrivy, useWallets, useLoginWithOAuth, useCreateWallet } from '@privy-io/react-auth';
+import {
+  useCreateWallet,
+  useIdentityToken,
+  useLoginWithOAuth,
+  usePrivy,
+  useWallets,
+} from '@privy-io/react-auth';
 
 import { clearCachedDelegator } from '../lib/delegatorCache';
 import { base } from '../lib/mud/supportedChains';
@@ -46,7 +52,7 @@ export function resolveWalletAction(
 }
 
 const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
-const FUND_API_KEY = import.meta.env.VITE_FUND_API_KEY;
+const WORLD_ADDRESS = import.meta.env.VITE_WORLD_ADDRESS;
 
 type AuthMethod = 'embedded' | 'external' | null;
 
@@ -59,6 +65,7 @@ type AuthContextType = {
   hasInjectedWallet: boolean;
   isAuthenticated: boolean;
   isConnecting: boolean;
+  getEmbeddedIdentityToken: () => Promise<string | null>;
   ownerAddress: Address | null;
   signedInEmail: string | null;
   walletRecoveryFailed: boolean;
@@ -82,6 +89,7 @@ export const AuthProvider = ({
   // --- Privy ---
   const { ready, authenticated, user, logout } = usePrivy();
   const { wallets } = useWallets();
+  const { identityToken } = useIdentityToken();
   const { createWallet } = useCreateWallet();
   const isCreatingWallet = useRef(false);
   const [isConfirmedNewUser, setIsConfirmedNewUser] = useState(false);
@@ -106,6 +114,13 @@ export const AuthProvider = ({
   const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const newUserFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initAddressRef = useRef<string | null>(null);
+  const identityTokenRef = useRef<string | null>(identityToken);
+
+  useEffect(() => {
+    identityTokenRef.current = identityToken;
+  }, [identityToken]);
+
+  const getEmbeddedIdentityToken = useCallback(async () => identityTokenRef.current, []);
 
   // Detect injected wallet (MetaMask etc.)
   useEffect(() => {
@@ -333,7 +348,7 @@ export const AuthProvider = ({
   // Relayer handles dedup (skips if already funded + balance sufficient).
   // Re-registers every 10 min to survive relayer redeploys wiping tracking state.
   useEffect(() => {
-    if (!embeddedAddress || !RELAYER_URL) return;
+    if (!embeddedAddress || !RELAYER_URL || !identityToken) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -344,9 +359,12 @@ export const AuthProvider = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(FUND_API_KEY ? { 'x-api-key': FUND_API_KEY } : {}),
+            Authorization: `Bearer ${identityToken}`,
           },
-          body: JSON.stringify({ address: embeddedAddress }),
+          body: JSON.stringify({
+            address: embeddedAddress,
+            worldAddress: WORLD_ADDRESS,
+          }),
         });
         const data = await res.json();
         console.info('[Gas] Fund response:', data.status);
@@ -386,7 +404,7 @@ export const AuthProvider = ({
       timers.forEach(t => clearTimeout(t));
       clearInterval(reRegInterval);
     };
-  }, [embeddedAddress]);
+  }, [embeddedAddress, identityToken]);
 
   const connectWithGoogle = useCallback(async () => {
     // If already authenticated via Privy (e.g. returning from OAuth redirect),
@@ -481,6 +499,7 @@ export const AuthProvider = ({
         hasInjectedWallet,
         isAuthenticated: true,
         isConnecting: false,
+        getEmbeddedIdentityToken,
         ownerAddress: embeddedAddress,
         signedInEmail,
         walletRecoveryFailed: false,
@@ -500,6 +519,7 @@ export const AuthProvider = ({
         hasInjectedWallet,
         isAuthenticated: true,
         isConnecting: !walletRecoveryFailed,
+        getEmbeddedIdentityToken,
         ownerAddress: null,
         signedInEmail: null,
         walletRecoveryFailed,
@@ -517,6 +537,7 @@ export const AuthProvider = ({
         hasInjectedWallet,
         isAuthenticated: true,
         isConnecting: false,
+        getEmbeddedIdentityToken,
         ownerAddress: wagmiAddress,
         signedInEmail: null,
         walletRecoveryFailed: false,
@@ -533,6 +554,7 @@ export const AuthProvider = ({
       hasInjectedWallet,
       isAuthenticated: false,
       isConnecting,
+      getEmbeddedIdentityToken,
       ownerAddress: null,
       signedInEmail: null,
       walletRecoveryFailed: false,
@@ -543,6 +565,7 @@ export const AuthProvider = ({
     disconnect,
     embeddedAddress,
     embeddedWalletClient,
+    getEmbeddedIdentityToken,
     hasInjectedWallet,
     isConnecting,
     signedInEmail,

@@ -43,18 +43,18 @@ ItemDurability {
 
 ## Durability Values
 
-Durability should scale with item rarity — rarer items last longer, giving players more time before needing repair.
+Max durability scales with rarity — rarer items last longer per repair cycle.
 
-| Rarity | Max Durability | Approx. Combats Before Broken |
-|--------|---------------|-------------------------------|
-| Common | 50 | ~50 |
-| Uncommon | 75 | ~75 |
-| Rare | 100 | ~100 |
-| Very Rare | 150 | ~150 |
-| Legendary | 200 | ~200 |
-| Unique | 300 | ~300 |
+| Rarity | Max Durability | Combats Before Broken | Full Repair Cost |
+|--------|---------------|-----------------------|-----------------|
+| R0 (Worn) | 20 | 20 | 1g |
+| R1 (Common) | 30 | 30 | 7.5g |
+| R2 (Uncommon) | 40 | 40 | 30g |
+| R3 (Rare) | 50 | 50 | 75g |
+| R4 (Epic) | 60 | 60 | 150g |
 
-*These values assume 1 durability lost per combat. Actual loss rate TBD during testing.*
+Durability loss: **1 per combat** (`DURABILITY_LOSS_PER_COMBAT = 1`).
+Repair cost: **flat per-rarity rate per durability point** (not % of item price).
 
 ---
 
@@ -90,62 +90,65 @@ Durability should scale with item rarity — rarer items last longer, giving pla
 
 ### Cost Formula
 ```
-repairCost = (item.price * durabilityLost * REPAIR_COST_PERCENT) / (maxDurability * 100)
+repairCost = pointsToRepair * REPAIR_COST_PER_POINT[rarity]
 ```
 
-Where `REPAIR_COST_PERCENT` is a tunable constant (recommended: **10–20%** of item value for full repair).
+Flat per-rarity cost per durability point (defined in `constants.sol`):
 
-Example: A rare sword worth 500 gold, max durability 100, currently at 30:
-- Durability lost: 70
-- At 15% rate: `(500 * 70 * 15) / (100 * 100)` = **52.5 gold** to fully repair
+| Rarity | Cost Per Point | Full Repair Cost |
+|--------|---------------|-----------------|
+| R0 | 0.05g | 1g |
+| R1 | 0.25g | 7.5g |
+| R2 | 0.75g | 30g |
+| R3 | 1.5g | 75g |
+| R4 | 2.5g | 150g |
 
 ### Repair Behavior
 - Player can repair to full — no partial repair needed
 - Gold is **permanently burned** (not sent to shop)
 - Repair restores `currentDurability` to `maxDurability`
 
-### Repair as Gold Sink — Projections
+### Repair as Gold Sink — Projections (from chain data analysis, March 2026)
 
-Assuming 20 concurrent players, avg level 9, 40 kills/hour:
+**Z1 players** (40 fights/day, BASE_GOLD_DROP=2, income=202g/day):
 
-| Scenario | Daily Repair Gold Burned |
-|----------|------------------------|
-| Conservative (players repair at 20%) | ~15,000 gold |
-| Moderate (players repair at 40%) | ~25,000 gold |
-| Aggressive (players let items break often) | ~35,000 gold |
+| Gear | Daily Repair | % of Income |
+|------|-------------|-------------|
+| R1 weapon + R1 armor | 20g | 10% |
+| R2 weapon + R2 armor | 60g | 30% |
 
-This represents **6–15%** of daily gold generation (~240K/day), making it a meaningful but not punishing sink.
+**Z2 players** (80 fights/day, income=1,204g/day):
+
+| Gear | Daily Repair | % of Income |
+|------|-------------|-------------|
+| R2 weapon + R2 armor | 120g | 10% |
+| R3 weapon + R3 armor | 240g | 20% |
+| R4 weapon + R4 armor | 400g | 25% |
+
+**At 200 DAU**: repair sink burns ~16,500g/day = 20% of total gold minting. Combined with death penalties, consumables, and marketplace fees: **38% total burn rate**.
 
 ---
 
-## Implementation Plan
+## Implementation Status
 
-### Phase 1: Table + Data (Can deploy now)
-- [x] Add `ItemDurability` table to `mud.config.ts`
-- [x] Run `tablegen`
-- [ ] Deploy table to beta via `mud deploy --worldAddress`
-- [ ] Write migration script: set `maxDurability` and `currentDurability` for all existing weapons, armor, and accessories based on rarity
-- [ ] Update `ItemCreationSystem.createItem()` to set durability on new items
+### Contracts — DONE
+- [x] `ItemDurability` + `CharacterItemDurability` tables in `mud.config.ts`
+- [x] `DurabilitySystem.sol` — degrade, repair, equip check, initialize, admin set
+- [x] `EncounterResolveSystem.sol` calls `degradeEquippedItems()` (gas-guarded, line 76-78)
+- [x] `EquipmentSystem.sol` checks `canEquipDurability()` (broken items can't be equipped)
+- [x] Access grants in `EnsureAccess.s.sol`
+- [x] Migration script: `DeployDurabilityData.s.sol`
 
-### Phase 2: Durability Loss (Combat integration)
-- [ ] Create `DurabilitySystem` (new system — **do NOT add to EncounterSystem**, it's at 24KB limit)
-- [ ] `DurabilitySystem.deductDurability(characterId)`: reduces durability by 1 for all equipped weapon/armor/accessories
-- [ ] Call `DurabilitySystem.deductDurability()` from `EncounterSystem` after combat resolves (single external call, minimal bytecode impact)
-- [ ] Handle auto-unequip when item breaks mid-combat
-- [ ] Grant `DurabilitySystem` access to Items namespace
+### Client — DONE
+- [x] `DurabilityBar.tsx` — green/yellow/red progress bar on items
+- [x] `RepairShopPanel.tsx` — full repair UI with cost calculation
+- [x] `createSystemCalls.ts` — `repairItem()` system call
+- [x] i18n strings in en/ko/ja/zh
 
-### Phase 3: Repair System
-- [ ] Add `repairItem(uint256 itemId)` to `ShopSystem` or create dedicated `RepairSystem`
-- [ ] Implement repair cost formula with tunable `REPAIR_COST_PERCENT` constant
-- [ ] Gold is burned (not transferred to shop)
-- [ ] Client UI: repair button in inventory, durability bar on items
-
-### Phase 4: Client UI
-- [ ] Durability bar on item tooltips and inventory cards
-- [ ] Color coding: green (>50%), yellow (25–50%), red (<25%), gray (broken)
-- [ ] "Repair" button in shop interface
-- [ ] Warning when equipping low-durability items
-- [ ] Combat log message when an item breaks
+### Activation — PENDING
+- [ ] Run `DeployDurabilityData.s.sol` for all item IDs (Z1 + Z2) on beta
+- [ ] Run `DeployDurabilityData.s.sol` for all item IDs on production
+- [ ] Verify on beta: fight → durability loss → repair at shop → gold burned
 
 ---
 
@@ -199,12 +202,13 @@ This is fair to existing players — their items start at full durability, same 
 
 ## Open Questions
 
-- [ ] Exact `REPAIR_COST_PERCENT` — start at 10% or 15%?
+- [x] ~~Repair cost model~~ — Resolved: flat per-rarity cost per point (not % of item price)
 - [ ] Should durability loss scale with mob level? (harder fights = more wear)
 - [ ] Should PvP have higher durability loss than PvE? (more risk = more sink)
 - [ ] Blacksmith NPC with repair discount as a future content addition?
 - [ ] Durability potions/buffs that slow degradation? (creates another consumable sink)
+- [ ] Auto-repair toggle as QoL feature
 
 ---
 
-*Last updated: March 5, 2026 — Initial design. Table schema deployed, implementation pending.*
+*Last updated: March 30, 2026 — Full system implemented. Constants rebalanced based on chain data (20 days production). BASE_GOLD_DROP reduced 3→2. Z2 item prices raised ~3x. Durability active on all items (Z1+Z2).*

@@ -27,6 +27,7 @@ export default defineConfig(({ command }) => {
     build: {
       target: 'es2022',
       minify: true,
+      modulePreload: false,
       sourcemap: false,
       commonjsOptions: {
         // Handle 'use client' directives

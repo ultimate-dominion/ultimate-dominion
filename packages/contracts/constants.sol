@@ -41,11 +41,14 @@ address constant CHARACTER_TOKEN_COUNTER_KEY = address(2);
 
 uint256 constant DEFAULT_MAX_TURNS = 15;
 uint256 constant DEFENSE_MODIFIER = 1 ether;
-uint256 constant ATTACK_MODIFIER = 1.2 ether;
+uint256 constant ATTACK_MODIFIER = 1.1 ether;
 uint256 constant AGI_ATTACK_MODIFIER = 1.0 ether;
-uint256 constant EVASION_CAP = 35;
-uint256 constant DOUBLE_STRIKE_CAP = 40;
+uint256 constant EVASION_CAP = 30;
+uint256 constant DOUBLE_STRIKE_CAP = 30;
 uint256 constant DOUBLE_STRIKE_DAMAGE_DIVISOR = 2;
+// Magic resistance: % damage reduction per INT point, capped
+uint256 constant MAGIC_RESIST_PER_INT = 2;
+uint256 constant MAGIC_RESIST_CAP = 30;
 // the amount crits damage is multiplied by
 uint256 constant CRIT_MULTIPLIER = 2;
 // the character's stats are divided by PROFICIENCY_DENOMINATOR when applying stat bonuses
@@ -56,10 +59,10 @@ uint256 constant DEFENDER_HIT_DAMPENER = 30;
 uint256 constant ATTACKER_HIT_DAMPENER = 95;
 
 //Gold Drop constants
-uint256 constant BASE_GOLD_DROP = 3 ether;
+uint256 constant BASE_GOLD_DROP = 2 ether;
 
-// LEVELING - Diminishing returns system
-// Stat points: +2/level (1-10), +1/2 levels (11-50), +1/5 levels (51-100)
+// LEVELING
+// Stat points: +1/level (all tiers)
 // HP: +2/level (1-10), +1/level (11-50), +1/2 levels (51-100)
 int256 constant BASE_HP_GAIN_EARLY = 2;      // Levels 1-10
 int256 constant BASE_HP_GAIN_MID = 1;        // Levels 11-50
@@ -70,13 +73,13 @@ int256 constant STAT_POINTS_LATE = 1;        // Levels 51-100 (every 5 levels)
 uint256 constant EARLY_GAME_CAP = 10;
 uint256 constant MID_GAME_CAP = 50;
 uint256 constant EXP_MODIFIER = 2;
-uint256 constant MAX_LEVEL = 10; // HOTFIX: cap at Z1 until Z2 launches (was 20)
+uint256 constant MAX_LEVEL = 20;
 uint256 constant POWER_SOURCE_BONUS_LEVEL = 5;
 
 // Class multipliers (stored as basis points: 1000 = 100%, 1100 = 110%)
 uint256 constant CLASS_MULTIPLIER_BASE = 1000;  // 100% base
 uint256 constant SESSION_TIMEOUT = 10 minutes;
-uint256 constant PVP_GOLD_DENOMINATOR = 2;
+uint256 constant PVP_GOLD_DENOMINATOR = 4;            // 25% of on-hand gold (was 50%)
 uint256 constant PVP_BASE_XP = 1; // PvP XP = level^2 * 1 (scaled /75 to match /100 XP rescale)
 
 uint256 constant PVP_TIMER = 30 seconds;
@@ -99,8 +102,19 @@ uint256 constant CRYSTAL_ELEMENTAL_MOB_ID = 4;   // Fragment IV: Souls That Ling
 uint256 constant LICH_ACOLYTE_MOB_ID = 7;         // Fragment VI: Death of the Death God
 uint256 constant SHADOW_STALKER_MOB_ID = 9;       // Fragment VII: Betrayer's Truth
 
+// Zone 2 (Windy Peaks) quest chain mob IDs — assigned at deploy time
+// IDs must match deploy-z2-quest-chains.ts output
+uint256 constant COVENANT_SCOUT_MOB_ID = 81;      // Fragment X step 2: Vel's Warning
+uint256 constant COVENANT_TRACKER_MOB_ID = 82;    // Fragment XI step 1: The Orders (drops Sealed Letter)
+uint256 constant FRAYING_GUARDIAN_MOB_ID = 83;     // Fragment XIII step 2: The Shrine
+uint256 constant OSSUARY_GUARDIAN_MOB_ID = 84;     // Fragment XV step 2: Bones of Faith (drops Last Sermon)
+uint256 constant GALE_FURY_MOB_ID = 85;            // Fragment XVI step 2: The Wind's Memory
+
 // GameDelegation constants
 bytes16 constant GAME_DELEGATION_NAME = "GameDelegation";
+
+// World Boss system — counter ID for Counters table (uses _world() as address key)
+uint256 constant WORLD_BOSS_COUNTER_ID = type(uint256).max;
 
 // Elite monster constants
 uint256 constant ELITE_CHANCE = 15;           // 15% spawn chance
@@ -109,6 +123,10 @@ uint256 constant ELITE_HP_MULTIPLIER = 150;   // 1.5x HP
 uint256 constant ELITE_REWARD_MULTIPLIER = 150; // 1.5x XP/gold
 uint256 constant ELITE_DROP_MULTIPLIER = 200; // 2x multiplicative drop chance (elite dc = base * 200 / 100)
 uint256 constant STAT_VARIANCE_PCT = 25;      // ±25% variance on all spawns
+
+// Wind Gust — environmental DOT on Windy Peaks peak ridge tiles
+bytes32 constant WIND_GUST_EFFECT_ID = 0xeebd896a2209e6f4000000000000000000000000000000000000000000000000;
+uint16 constant PEAK_RIDGE_RELATIVE_Y = 8;
 
 // Flashpowder / Smoke Cloak — flee without gold penalty
 bytes8 constant SMOKE_CLOAK_EFFECT_STAT_ID = 0x5db83b18b4d1bdc3; // keccak256(abi.encode("smoke_cloak"))[:8]
@@ -137,11 +155,11 @@ uint256 constant UNISWAP_MIN_OUTPUT = 1;               // Accept any output — 
 // ======== Phase 3: Item Degradation ========
 uint256 constant DURABILITY_LOSS_PER_COMBAT = 1;
 // Repair cost per durability point by rarity (in gold wei)
-uint256 constant REPAIR_COST_R0 = 1 ether;     // Worn
-uint256 constant REPAIR_COST_R1 = 5 ether;     // Common
-uint256 constant REPAIR_COST_R2 = 15 ether;    // Uncommon
-uint256 constant REPAIR_COST_R3 = 50 ether;    // Rare
-uint256 constant REPAIR_COST_R4 = 150 ether;   // Epic
+uint256 constant REPAIR_COST_R0 = 0.05 ether;   // Worn     (full R0 repair: 1g)
+uint256 constant REPAIR_COST_R1 = 0.25 ether;   // Common   (full R1 repair: 7.5g)
+uint256 constant REPAIR_COST_R2 = 0.75 ether;   // Uncommon (full R2 repair: 30g)
+uint256 constant REPAIR_COST_R3 = 1.5 ether;    // Rare     (full R3 repair: 75g)
+uint256 constant REPAIR_COST_R4 = 2.5 ether;    // Epic     (full R4 repair: 150g)
 
 // ======== Phase 3: Respec ========
 uint256 constant STAT_RESPEC_BASE_COST = 50 ether;    // 50 gold at level 1
@@ -149,11 +167,27 @@ uint256 constant FULL_RESPEC_MULTIPLIER = 10;          // full respec = 10x stat
 uint256 constant RESPEC_COST_PER_LEVEL = 10 ether;    // +10 gold per level
 
 // ======== Phase 5: Guilds ========
-uint256 constant GUILD_CREATE_COST = 100 ether;        // 100 gold to create
+uint256 constant GUILD_CREATE_COST = 500 ether;        // 500 gold to create (meaningful commitment)
 uint256 constant GUILD_MAX_MEMBERS = 50;
 uint256 constant GUILD_MAX_TAX_RATE = 5000;            // 50% max (basis points)
 uint256 constant GUILD_INACTIVITY_THRESHOLD = 14 days;
 uint256 constant GUILD_BONUS_BPS = 500;                // 5% flat bonus (gold, XP, drops)
+uint256 constant GUILD_REPAIR_DISCOUNT_BPS = 5000;     // 50% repair discount for members (was 100% free)
+
+// Guild Stat Buffs
+int256 constant GUILD_BUFF_FLAT_STAT = 3;              // +3 STR/AGI/INT
+int256 constant GUILD_BUFF_FLAT_HP = 5;                 // +5 maxHP for Resilience
+uint256 constant GUILD_BUFF_DAILY_COST = 150 ether;     // 150 gold/day per buff (L1-L2 slots)
+uint256 constant GUILD_BUFF_L3_DAILY_COST = 200 ether;  // 200 gold/day per buff (L3 slot — premium)
+uint256 constant GUILD_BUFF_PERIOD = 1 days;
+
+// Guild Upgrades — steep progression, 3 buffs is a Z3+ achievement
+uint256 constant GUILD_UPGRADE_LEVEL_2_COST = 5000 ether;   // ~2 weeks saving for Z2 guild
+uint256 constant GUILD_UPGRADE_LEVEL_3_COST = 25000 ether;  // ~2 months saving, realistically Z3+
+uint256 constant GUILD_MAX_LEVEL = 3;
+
+// The Pact Badge
+uint256 constant BADGE_GUILD_FOUNDER = 60;              // Social badge range (60-69)
 
 // ======== Phase 5: PvP Rankings ========
 int256 constant ELO_DEFAULT_RATING = 1000;

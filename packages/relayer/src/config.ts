@@ -52,8 +52,13 @@ export const config = {
   // Gold purchase (Stripe → Uniswap ETH→Gold)
   goldPurchaseApiKey: process.env.GOLD_PURCHASE_API_KEY || '',
 
-  // Fund endpoint authentication — required to prevent ETH drain
+  // Optional admin/debug key used for detailed health responses.
+  // Do NOT expose this to the browser.
   fundApiKey: process.env.FUND_API_KEY || '',
+
+  // Embedded-wallet funding auth (Privy identity tokens)
+  privyAppId: process.env.PRIVY_APP_ID || '',
+  privyVerificationKey: process.env.PRIVY_VERIFICATION_KEY || '',
 
   // Pool funder config (deployer wallet auto-funds pool wallets)
   funderPrivateKey: (process.env.FUNDER_PRIVATE_KEY || '') as Hex,

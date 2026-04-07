@@ -1,6 +1,10 @@
 /* eslint-disable no-console */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchMetadataFromUri, METADATA_FETCH_TIMEOUT_MS } from './helpers';
+import {
+  fetchMetadataFromUri,
+  METADATA_FETCH_TIMEOUT_MS,
+  parseTextUri,
+} from './helpers';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -41,6 +45,15 @@ describe('fetchMetadataFromUri', () => {
   it('returns metadata for text-only URIs without fetching', async () => {
     const result = await fetchMetadataFromUri('armor:tattered_cloth');
     expect(result.name).toBe('Tattered Cloth');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('maps legacy monster URIs to the renamed roster without fetching', async () => {
+    expect(parseTextUri('monster:fungal_shaman')).toBe('Kobold');
+
+    const result = await fetchMetadataFromUri('monster:crystal_elemental');
+
+    expect(result.name).toBe('Giant Spider');
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -157,4 +170,3 @@ describe('fetchMetadataFromUri', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 });
-

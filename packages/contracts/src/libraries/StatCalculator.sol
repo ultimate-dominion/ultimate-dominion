@@ -177,9 +177,9 @@ library StatCalculator {
         if (level <= EARLY_GAME_CAP) {
             statPoints = STAT_POINTS_EARLY;
         } else if (level <= MID_GAME_CAP) {
-            statPoints = (level % 2 == 0) ? STAT_POINTS_MID : int256(0);
+            statPoints = STAT_POINTS_MID;
         } else {
-            statPoints = (level % 5 == 0) ? STAT_POINTS_LATE : int256(0);
+            statPoints = STAT_POINTS_LATE;
         }
     }
 
@@ -316,14 +316,14 @@ library StatCalculator {
         totalPoints += int256(earlyLevels) * STAT_POINTS_EARLY;
 
         if (level > EARLY_GAME_CAP) {
-            // Mid game: levels 11-50, +1 per 2 levels
+            // Mid game: levels 11-50, +1 per level
             uint256 midLevels = level > MID_GAME_CAP ? MID_GAME_CAP - EARLY_GAME_CAP : level - EARLY_GAME_CAP;
-            totalPoints += int256(midLevels / 2) * STAT_POINTS_MID;
+            totalPoints += int256(midLevels) * STAT_POINTS_MID;
 
             if (level > MID_GAME_CAP) {
-                // Late game: levels 51-100, +1 per 5 levels
+                // Late game: levels 51-100, +1 per level
                 uint256 lateLevels = level - MID_GAME_CAP;
-                totalPoints += int256(lateLevels / 5) * STAT_POINTS_LATE;
+                totalPoints += int256(lateLevels) * STAT_POINTS_LATE;
             }
         }
     }

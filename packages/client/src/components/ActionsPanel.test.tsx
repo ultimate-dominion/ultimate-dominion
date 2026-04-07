@@ -180,6 +180,7 @@ function setDefaults() {
   mapState = {
     isSpawned: true,
     monstersOnTile: [],
+    visibleMonstersOnTile: [],
     position: { x: 1, y: 1 },
   };
 }
@@ -252,7 +253,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText(/Auto Adventure/)).toBeTruthy();
+    expect(screen.getByText('No monsters here. Try another tile.')).toBeTruthy();
     expect(screen.queryByText('Defeated Dire Rat!')).toBeNull();
     expect(screen.queryByText('Defeated by Dire Rat.')).toBeNull();
   });
@@ -331,7 +332,7 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     expect(screen.getByTestId('item-equip-modal')).toBeTruthy();
   });
 
-  it('auto-adventure controls persist when results are showing', () => {
+  it('tile guidance persists when results are showing', () => {
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
 
@@ -339,8 +340,8 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     // Results should show
     expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
-    // Auto-adventure controls should ALSO be visible (additive, not replaced)
-    expect(screen.getByText(/Auto Adventure/)).toBeTruthy();
+    // The idle guidance stays visible while inline results are appended below it.
+    expect(screen.getByText('No monsters here. Try another tile.')).toBeTruthy();
   });
 });
 

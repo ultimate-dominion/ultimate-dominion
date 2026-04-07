@@ -1,5 +1,6 @@
 import { IconButton, Tooltip } from '@chakra-ui/react';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GiQuillInk } from 'react-icons/gi';
 
 import { useCharacter } from '../contexts/CharacterContext';
@@ -9,6 +10,7 @@ const CATEGORY_SLUG = 'beta-feedback';
 
 /** Floating feedback button — opens Discourse with a pre-filled bug/feedback template */
 export const FeedbackButton = (): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { character } = useCharacter();
 
   const openFeedback = useCallback(() => {
@@ -44,12 +46,12 @@ export const FeedbackButton = (): JSX.Element => {
       color="#C4B89E"
       fontFamily="Cinzel, serif"
       fontSize="xs"
-      label="Send Feedback"
+      label={t('feedback.send')}
       placement="right"
       shouldWrapChildren
     >
       <IconButton
-        aria-label="Send feedback"
+        aria-label={t('feedback.sendAria')}
         bg="linear-gradient(135deg, #3A2E1A 0%, #2A2218 100%)"
         border="1px solid #C87A2A"
         borderRadius="lg"

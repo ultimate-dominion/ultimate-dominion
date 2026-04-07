@@ -112,6 +112,12 @@ contract EncounterResolveSystem is System {
                 BoardCleanupLib.removeFromBoard(entityId, areCharacters);
                 EncounterEntity.setDied(entityId, true);
                 WorldStatusEffects.setAppliedStatusEffects(entityId, emptyArray);
+                // Notify world boss system if a mob died
+                if (!areCharacters && gasleft() > 200_000) {
+                    (bool _s,) = address(IWorld(_world())).call(
+                        abi.encodeWithSignature("UD__onWorldBossDeath(bytes32)", entityId)
+                    );
+                }
             }
         }
     }

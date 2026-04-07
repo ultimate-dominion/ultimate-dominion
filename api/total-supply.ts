@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const GOLD_TOKEN = "0x0F046E538926760A737761b555fe1074b6B1e16A";
-const RPC_URL = "https://base.drpc.org";
+const RPC_URL = process.env.RPC_HTTP_URL || "https://rpc.ultimatedominion.com";
 
 // ERC20 totalSupply() selector
 const TOTAL_SUPPLY_SELECTOR = "0x18160ddd";

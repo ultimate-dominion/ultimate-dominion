@@ -1,0 +1,52 @@
+{
+  "shops": [
+    {
+      "name": "Tal Carden",
+      "location": [9, 9],
+      "gold": 10000000000000000000000,
+      "maxGold": 10000000000000000000000,
+      "priceMarkdown": 5000,
+      "priceMarkup": 2500,
+      "restockTimestamp": 0,
+      "inventory": [
+        { "itemName": "Minor Health Potion", "stock": 15, "restock": 15 },
+        { "itemName": "Health Potion", "stock": 10, "restock": 10 },
+        { "itemName": "Greater Health Potion", "stock": 8, "restock": 8 },
+        { "itemName": "Fortifying Stew", "stock": 8, "restock": 8 },
+        { "itemName": "Quickening Berries", "stock": 8, "restock": 8 },
+        { "itemName": "Focusing Tea", "stock": 8, "restock": 8 },
+        { "itemName": "Bloodrage Tonic", "stock": 6, "restock": 6 },
+        { "itemName": "Stoneskin Salve", "stock": 6, "restock": 6 },
+        { "itemName": "Trollblood Ale", "stock": 6, "restock": 6 },
+        { "itemName": "Venom Vial", "stock": 5, "restock": 5 },
+        { "itemName": "Spore Cloud", "stock": 5, "restock": 5 },
+        { "itemName": "Sapping Poison", "stock": 5, "restock": 5 },
+        { "itemName": "Flashpowder", "stock": 5, "restock": 5 },
+        { "itemName": "Antidote", "stock": 8, "restock": 8 },
+        { "itemName": "Peakstone Mail", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Ridgeforged Plate", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Windsworn Plate", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Mountain Hide", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Galebound Leather", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Stormhide Vest", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Frostweave Robe", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Mistcloak", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Wraith Vestments", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Ridgestone Hammer", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Peak Cleaver", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Windforged Axe", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Scrub Bow", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Gale Bow", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Stormfeather Bow", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Frozen Shard", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Rime Staff", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Stormglass Rod", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Warden's Ember", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Windweaver", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Ridgefang", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Viperstrike", "stock": 0, "restock": 0, "buyOnly": true },
+        { "itemName": "Ashveil Staff", "stock": 0, "restock": 0, "buyOnly": true }
+      ]
+    }
+  ]
+}

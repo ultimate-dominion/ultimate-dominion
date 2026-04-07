@@ -8,10 +8,11 @@ interface Props {
   agi: number;
   int: number;
   armor: number;
-  drops: string[];
+  xp?: number;
+  drops?: string[];
 }
 
-const { name, level, monsterClass, hp, str, agi, int, armor, drops } = Astro.props;
+const { name, level, monsterClass, hp, str, agi, int, armor, xp, drops } = Astro.props;
 
 const classColors = {
   Warrior: 'border-red/50 bg-red/5',
@@ -19,7 +20,7 @@ const classColors = {
   Mage: 'border-accent-gold/50 bg-accent-gold/5',
 };
 
-const classIcons = { Warrior: '⚔️', Rogue: '🗡️', Mage: '🔮' };
+const classIcons = { Warrior: '\u2694\uFE0F', Rogue: '\uD83D\uDDE1\uFE0F', Mage: '\uD83D\uDD2E' };
 ---
 
 <div class:list={['guide-card border-l-4', classColors[monsterClass]]}>
@@ -30,6 +31,7 @@ const classIcons = { Warrior: '⚔️', Rogue: '🗡️', Mage: '🔮' };
     </div>
     <div class="text-right">
       <span class="font-mono text-sm text-accent">{hp} HP</span>
+      {xp && <div class="font-mono text-xs text-text-secondary">{xp} XP</div>}
     </div>
   </div>
 
@@ -52,7 +54,7 @@ const classIcons = { Warrior: '⚔️', Rogue: '🗡️', Mage: '🔮' };
     </div>
   </div>
 
-  {drops.length > 0 && (
+  {drops && drops.length > 0 && (
     <div class="border-t border-border pt-2">
       <div class="text-xs text-text-secondary uppercase tracking-wider mb-1">Notable Drops</div>
       <div class="flex flex-wrap gap-1">

@@ -2,16 +2,23 @@
 pragma solidity >=0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {EquipmentCore} from "@systems/equipment/EquipmentCore.sol";
 import {Stats, StatsData, Items, WeaponStats, WeaponStatsData, ArmorStats, ArmorStatsData, StatRestrictions, StatRestrictionsData} from "@codegen/index.sol";
 import { ItemType } from "@codegen/common.sol";
 import {Classes, PowerSource, Race, ArmorType, AdvancedClass} from "@codegen/common.sol";
 
 contract EquipmentCoreTest is Test {
-    EquipmentCore core;
+    address coreAddr;
 
     function setUp() public {
-        core = new EquipmentCore();
+        StoreSwitch.setStoreAddress(address(this));
+        Stats.register();
+        Items.register();
+        WeaponStats.register();
+        ArmorStats.register();
+        StatRestrictions.register();
+        coreAddr = address(new EquipmentCore());
     }
 
     function _makeCharacter(bytes32 characterId, uint256 level, int256 str, int256 agi, int256 intel) internal {
@@ -30,6 +37,14 @@ contract EquipmentCoreTest is Test {
             advancedClass: AdvancedClass.None,
             hasSelectedAdvancedClass: false
         }));
+    }
+
+    function _validateEquipment(bytes32 cid, uint256 itemId) internal returns (bool) {
+        (bool success, bytes memory data) = coreAddr.delegatecall(
+            abi.encodeCall(EquipmentCore.validateEquipment, (cid, itemId))
+        );
+        require(success, "delegatecall failed");
+        return abi.decode(data, (bool));
     }
 
     function test_validateEquipment_weapon_minLevelAndStatsPass() public {
@@ -54,14 +69,12 @@ contract EquipmentCoreTest is Test {
             minStrength: 5
         }));
 
-        bool ok = core.validateEquipment(cid, weaponId);
+        bool ok = _validateEquipment(cid, weaponId);
         assertTrue(ok, "weapon should be valid for character");
     }
 
     function test_validateEquipment_usesTotalStats() public {
         bytes32 cid = bytes32(uint256(10));
-        // Stats table stores total stats (base + equipment bonuses)
-        // base STR would be 7, but with equipment it's 12
         _makeCharacter(cid, 5, 12, 10, 8);
 
         uint256 weaponId = 1002;
@@ -79,10 +92,10 @@ contract EquipmentCoreTest is Test {
         StatRestrictions.set(weaponId, StatRestrictionsData({
             minAgility: 0,
             minIntelligence: 0,
-            minStrength: 10  // above hypothetical base of 7, below total of 12
+            minStrength: 10
         }));
 
-        bool ok = core.validateEquipment(cid, weaponId);
+        bool ok = _validateEquipment(cid, weaponId);
         assertTrue(ok, "should pass using total stats from Stats table");
     }
 
@@ -107,9 +120,7 @@ contract EquipmentCoreTest is Test {
             minStrength: 0
         }));
 
-        bool ok = core.validateEquipment(cid, armorId);
+        bool ok = _validateEquipment(cid, armorId);
         assertFalse(ok, "armor should fail min level");
     }
 }
-
-

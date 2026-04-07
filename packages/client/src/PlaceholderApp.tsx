@@ -5,6 +5,7 @@
 import { Box, Text, VStack } from '@chakra-ui/react';
 import { Helmet } from 'react-helmet-async';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BrowserRouter,
   Link as RouterLink,
@@ -26,105 +27,98 @@ const ExternalRedirect = ({ to }: { to: string }) => {
  * The live game's Manifesto.tsx uses a light theme, so we re-implement
  * the content here to match the dark landing page aesthetic.
  */
-const DarkManifesto = (): JSX.Element => (
-  <Box bg="#12100E" minH="100vh">
-    <Helmet>
-      <title>Manifesto | Ultimate Dominion</title>
-    </Helmet>
-    <VStack
-      justify="center"
-      maxW="650px"
-      minH="100vh"
-      mx="auto"
-      px={{ base: 6, sm: 12 }}
-      py={{ base: 16, sm: 24 }}
-      spacing={8}
-    >
-      <Text
-        color="rgba(196, 184, 158, 0.5)"
-        fontSize={{ base: '13px', sm: '14px' }}
-        fontWeight={600}
-        letterSpacing="0.25em"
-        textTransform="uppercase"
+const DarkManifesto = (): JSX.Element => {
+  const { t } = useTranslation('pages');
+  return (
+    <Box bg="#12100E" minH="100vh">
+      <Helmet>
+        <title>{t('manifesto.metaTitle')}</title>
+      </Helmet>
+      <VStack
+        justify="center"
+        maxW="650px"
+        minH="100vh"
+        mx="auto"
+        px={{ base: 6, sm: 12 }}
+        py={{ base: 16, sm: 24 }}
+        spacing={8}
       >
-        Manifesto
-      </Text>
+        <Text
+          color="rgba(196, 184, 158, 0.5)"
+          fontSize={{ base: '13px', sm: '14px' }}
+          fontWeight={600}
+          letterSpacing="0.25em"
+          textTransform="uppercase"
+        >
+          {t('manifesto.title')}
+        </Text>
 
-      <VStack spacing={6}>
-        <Text
-          color="rgba(196, 184, 158, 0.6)"
-          fontSize={{ base: '16px', sm: '18px' }}
-          fontStyle="italic"
-          fontWeight={400}
-          lineHeight="1.9"
-          textAlign="center"
+        <VStack spacing={6}>
+          <Text
+            color="rgba(196, 184, 158, 0.6)"
+            fontSize={{ base: '16px', sm: '18px' }}
+            fontStyle="italic"
+            fontWeight={400}
+            lineHeight="1.9"
+            textAlign="center"
+          >
+            {t('manifesto.opening')}
+          </Text>
+          <Text
+            color="rgba(196, 184, 158, 0.45)"
+            fontSize={{ base: '15px', sm: '17px' }}
+            fontWeight={400}
+            lineHeight="1.9"
+            textAlign="center"
+          >
+            {t('manifesto.p1')}
+          </Text>
+          <Text
+            color="rgba(196, 184, 158, 0.45)"
+            fontSize={{ base: '15px', sm: '17px' }}
+            fontWeight={400}
+            lineHeight="1.9"
+            textAlign="center"
+          >
+            {t('manifesto.p2')}
+          </Text>
+          <Text
+            color="rgba(196, 184, 158, 0.45)"
+            fontSize={{ base: '15px', sm: '17px' }}
+            fontWeight={400}
+            lineHeight="1.9"
+            textAlign="center"
+          >
+            {t('manifesto.p3')}
+          </Text>
+          <Text
+            color="rgba(196, 184, 158, 0.6)"
+            fontSize={{ base: '15px', sm: '17px' }}
+            fontWeight={500}
+            lineHeight="1.9"
+            textAlign="center"
+          >
+            {t('manifesto.closing')}
+          </Text>
+        </VStack>
+
+        <Box
+          as={RouterLink}
+          color="rgba(196, 184, 158, 0.35)"
+          fontSize="14px"
+          letterSpacing="0.15em"
+          mt={4}
+          textDecoration="none"
+          textTransform="uppercase"
+          to="/"
+          _hover={{ color: 'rgba(196, 184, 158, 0.6)' }}
         >
-          You wake in a cave with no memory and no name. Everything after
-          that is yours.
-        </Text>
-        <Text
-          color="rgba(196, 184, 158, 0.45)"
-          fontSize={{ base: '15px', sm: '17px' }}
-          fontWeight={400}
-          lineHeight="1.9"
-          textAlign="center"
-        >
-          This is a world built for years, not minutes. Progression is slow
-          because the journey is the point. Stories are earned, not skipped.
-          The lore isn&apos;t written for you &mdash; it&apos;s written by
-          what you do, who you fight, what you choose to protect, and what
-          you let burn.
-        </Text>
-        <Text
-          color="rgba(196, 184, 158, 0.45)"
-          fontSize={{ base: '15px', sm: '17px' }}
-          fontWeight={400}
-          lineHeight="1.9"
-          textAlign="center"
-        >
-          Everything here is permanent. Your gold, your weapons, your scars
-          &mdash; they belong to you. Not to a server. Not to us. No one
-          can take them, alter them, or shut them off. You don&apos;t have
-          to take our word for it. You can prove it.
-        </Text>
-        <Text
-          color="rgba(196, 184, 158, 0.45)"
-          fontSize={{ base: '15px', sm: '17px' }}
-          fontWeight={400}
-          lineHeight="1.9"
-          textAlign="center"
-        >
-          You don&apos;t need to download anything. Open your browser. Step
-          into the dark.
-        </Text>
-        <Text
-          color="rgba(196, 184, 158, 0.6)"
-          fontSize={{ base: '15px', sm: '17px' }}
-          fontWeight={500}
-          lineHeight="1.9"
-          textAlign="center"
-        >
-          This is not a game you finish. It&apos;s a world that becomes
-          part of you.
-        </Text>
+          &larr; Back
+        </Box>
       </VStack>
-
-      <Box
-        as={RouterLink}
-        color="rgba(196, 184, 158, 0.35)"
-        fontSize="14px"
-        letterSpacing="0.15em"
-        mt={4}
-        textDecoration="none"
-        textTransform="uppercase"
-        to="/"
-        _hover={{ color: 'rgba(196, 184, 158, 0.6)' }}
-      >
-        &larr; Back
-      </Box>
-    </VStack>
-  </Box>
-);
+    </Box>
+  );
+};
 
 const PlaceholderPage = ({
   title,

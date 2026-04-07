@@ -146,7 +146,7 @@ contract SoulDrainKillTest is V3SetUp {
         _setupWarlock(5, 20, 30, 500);
 
         // Spawn a 1 HP mob
-        bytes32 mobEntity = world.UD__spawnMob(tinyMobId, TEST_X, TEST_Y);
+        bytes32 mobEntity = world.UD__spawnMob(tinyMobId, 1, TEST_X, TEST_Y);
 
         // Verify mob is alive
         assertEq(Stats.getCurrentHp(mobEntity), 1, "mob should start at 1 HP");

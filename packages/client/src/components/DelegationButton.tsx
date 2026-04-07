@@ -1,5 +1,6 @@
 import { Button } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type Account, type Chain, parseEther, type Transport, type WalletClient } from 'viem';
 import { useAccount, useSwitchChain } from 'wagmi';
 
@@ -18,6 +19,7 @@ export const DelegationButton = ({
   externalWalletClient: WalletClient<Transport, Chain, Account>;
   onClose?: () => void;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const { chains, switchChain } = useSwitchChain();
   const { chainId } = useAccount();
   const { burnerAddress, getBurner, getBurnerBalance, network } = useMUD();
@@ -51,35 +53,16 @@ export const DelegationButton = ({
         await network.waitForTransaction(depositTx);
       } catch (depositErr) {
         console.warn('[DelegationButton] Auto-deposit failed:', depositErr);
-        renderWarning('Session authorized but funding skipped. You can deposit ETH from the settings menu.');
+        renderWarning(t('delegation.fundingSkipped'));
       }
 
-      renderSuccess('Game account ready!');
+      renderSuccess(t('delegation.ready'));
 
       // getBurner(true) must complete before the modal closes — it sets
       // delegatorAddress, which triggers ConnectWalletModal's navigation
       // effect. forceCreate=true skips the redundant on-chain delegation
       // check (the TX was just confirmed above).
       await getBurner(true);
-
-      // Register burner→delegator with relayer for gas monitoring.
-      // The relayer will track this burner and auto-fund when low,
-      // charging gold from the delegator (MetaMask wallet).
-      const relayerUrl = import.meta.env.VITE_RELAYER_URL;
-      const fundApiKey = import.meta.env.VITE_FUND_API_KEY;
-      if (relayerUrl && fundApiKey) {
-        fetch(`${relayerUrl}/fund`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': fundApiKey,
-          },
-          body: JSON.stringify({
-            address: burnerAddress,
-            delegatorAddress: externalWalletClient.account.address,
-          }),
-        }).catch(err => console.warn('[DelegationButton] Relayer registration failed:', err));
-      }
 
       // Force an immediate balance refresh so App.tsx doesn't flash
       // the WalletDetailsModal for a stale '0' balance.
@@ -111,10 +94,10 @@ export const DelegationButton = ({
   return (
     <Button
       isLoading={isDelegating}
-      loadingText="Setting up..."
+      loadingText={t('delegation.settingUp')}
       onClick={onSetupDelegation}
     >
-      Authorize & Play
+      {t('delegation.authorizePlay')}
     </Button>
   );
 };

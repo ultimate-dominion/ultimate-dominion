@@ -12,6 +12,7 @@ import {
   Hash,
   Hex,
   InsufficientFundsError,
+  concat,
   keccak256,
   stringToHex,
   toBytes,
@@ -31,7 +32,7 @@ import {
   StatsClasses,
 } from '../../utils/types';
 
-import { getTableValue, useGameStore, type BatchUpdate } from '../gameStore';
+import { getTableValue, markEvictedRows, useGameStore, type BatchUpdate } from '../gameStore';
 import { SetupNetworkResult } from './setupNetwork';
 
 // ==================== Emergency gas funding ====================
@@ -41,23 +42,38 @@ import { SetupNetworkResult } from './setupNetwork';
 
 // Return value: 'funded' = ETH sent, 'has_funds' = already above threshold, false = failed
 type FundingResult = 'funded' | 'has_funds' | false;
+type IdentityTokenGetter = () => Promise<string | null> | string | null;
 
 async function requestEmergencyFunding(
   address: string,
-  delegatorAddress?: string,
+  options: {
+    delegatorAddress?: string;
+    getEmbeddedIdentityToken?: IdentityTokenGetter;
+    worldAddress?: string;
+  } = {},
 ): Promise<FundingResult> {
   // Read lazily so tests can override import.meta.env at runtime
   const relayerUrl = import.meta.env.VITE_RELAYER_URL as string | undefined;
-  const fundApiKey = import.meta.env.VITE_FUND_API_KEY as string | undefined;
-  if (!relayerUrl || !fundApiKey) return false;
+  if (!relayerUrl) return false;
+
+  const { delegatorAddress, getEmbeddedIdentityToken, worldAddress } = options;
+  const isEmbeddedFunding =
+    !delegatorAddress ||
+    delegatorAddress.toLowerCase() === address.toLowerCase();
+
+  const identityToken = isEmbeddedFunding
+    ? await getEmbeddedIdentityToken?.() ?? null
+    : null;
+  if (isEmbeddedFunding && !identityToken) return false;
+
   try {
     const res = await fetch(`${relayerUrl}/fund`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': fundApiKey,
+        ...(identityToken ? { Authorization: `Bearer ${identityToken}` } : {}),
       },
-      body: JSON.stringify({ address, delegatorAddress }),
+      body: JSON.stringify({ address, delegatorAddress, worldAddress }),
     });
     if (!res.ok) return false;
     try {
@@ -226,12 +242,16 @@ const getContractError = (error: unknown): string => {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSystemCalls(
   {
+    getEmbeddedIdentityToken,
     publicClient,
     walletClient,
     waitForTransaction,
     worldContract,
     delegatorAddress,
-  }: SetupNetworkResult & { delegatorAddress?: Address },
+  }: SetupNetworkResult & {
+    delegatorAddress?: Address;
+    getEmbeddedIdentityToken?: IdentityTokenGetter;
+  },
 ) {
   // Account to use for diagnostic simulations (eth_call).
   // Without this, simulate() runs with from=address(0), which causes
@@ -278,7 +298,11 @@ export function createSystemCalls(
 
           // Dedup concurrent funding requests — share the inflight promise
           if (!inflightFunding) {
-            inflightFunding = requestEmergencyFunding(gasRetryAddress, delegatorAddress)
+            inflightFunding = requestEmergencyFunding(gasRetryAddress, {
+              delegatorAddress,
+              getEmbeddedIdentityToken,
+              worldAddress: worldContract.address,
+            })
               .finally(() => { inflightFunding = null; });
           }
           const fundResult = await inflightFunding;
@@ -313,77 +337,14 @@ export function createSystemCalls(
   // The original worldContract is unchanged — only our local reference is proxied.
   const wrappedWorldContract = { ...worldContract, write: proxiedWrite };
 
-  const getStoredPosition = (
-    entityId: string,
-    options?: { preferLegacyPosition?: boolean },
-  ): { x: number; y: number } | undefined => {
-    const legacyPosition = getTableValue('Position', entityId) as
-      | { x: number; y: number }
-      | undefined;
-    const positionV2 = getTableValue('PositionV2', entityId) as
-      | { x: number; y: number }
-      | undefined;
-
-    if (options?.preferLegacyPosition) {
-      return legacyPosition ?? positionV2;
-    }
-    return positionV2 ?? legacyPosition;
-  };
-
-  const syncCharacterPositionFromChain = async (
-    characterEntity: string,
-  ): Promise<{ x: number; y: number } | null> => {
-    try {
-      // Read Position directly from MUD store via getRecord instead of the
-      // UD__getEntityPosition view function, which is broken on production.
-      const record = await readStoreRecord(POSITION_TABLE_ID, characterEntity as `0x${string}`, 'Position');
-      if (!record) return null;
-      const staticData = record[0] ?? '0x';
-      if (staticData === '0x' || staticData.length < 10) return null;
-      const x = parseInt(staticData.slice(2, 6), 16);
-      const y = parseInt(staticData.slice(6, 10), 16);
-      const position = { x, y };
-      useGameStore.getState().setRow('Position', characterEntity, position);
-      return position;
-    } catch (error) {
-      console.warn(`[position] Failed to sync ${characterEntity.slice(0, 10)} from chain`, error);
-      return null;
-    }
-  };
-
-  const syncMonsterPositionFromChain = async (
-    monsterId: string,
-  ): Promise<{ x: number; y: number } | null> => {
-    try {
-      // Read Position directly from MUD store via getRecord instead of the
-      // UD__getEntityPosition view function, which is broken on production
-      // (MapSystem view always returns (0,0) — likely a stale system deploy).
-      const record = await readStoreRecord(POSITION_TABLE_ID, monsterId as `0x${string}`, 'Position');
-      if (!record) return null;
-      const staticData = record[0] ?? '0x';
-      // Position table: uint16 x + uint16 y = 4 bytes = 10 hex chars with 0x prefix
-      if (staticData === '0x' || staticData.length < 10) return null;
-      const x = parseInt(staticData.slice(2, 6), 16);
-      const y = parseInt(staticData.slice(6, 10), 16);
-      const position = { x, y };
-
-      const currentPosition = getTableValue('Position', monsterId) as
-        | { x?: number; y?: number }
-        | undefined;
-
-      if (
-        Number(currentPosition?.x) !== position.x ||
-        Number(currentPosition?.y) !== position.y
-      ) {
-        useGameStore.getState().setRow('Position', monsterId, position);
-      }
-
-      return position;
-    } catch (error) {
-      console.warn(`[position] Failed to sync monster ${monsterId.slice(0, 10)} from chain`, error);
-      return null;
-    }
-  };
+  const resultFromReceipt = (
+    receipt: { status: 'reverted' | 'success' },
+    failureMessage: string,
+  ): { error?: string; success: boolean } => (
+    receipt.status === 'success'
+      ? { success: true }
+      : { success: false, error: failureMessage }
+  );
 
   // Check whether a monster is alive in the local store.
   const isMonsterAlive = (monsterId: string): boolean => {
@@ -392,55 +353,67 @@ export function createSystemCalls(
     return !ee?.died && sp?.spawned !== false;
   };
 
-  type SetBatchUpdate = BatchUpdate & {
-    type: 'set';
-    data: NonNullable<BatchUpdate['data']>;
+  // Mark a ghost monster as dead/despawned in the local store so it
+  // disappears from the UI immediately (MapContext filters on these).
+  const evictGhostMonster = (monsterId: string) => {
+    const store = useGameStore.getState();
+    store.setRow('Spawned', monsterId, { spawned: false });
+    store.setRow('EncounterEntity', monsterId, {
+      ...(getTableValue('EncounterEntity', monsterId) ?? {}),
+      died: true,
+    });
+    // Protect evicted rows from being re-added by stale WS updates.
+    markEvictedRows([
+      { table: 'Spawned', keyBytes: monsterId },
+      { table: 'EncounterEntity', keyBytes: monsterId },
+    ]);
+    console.warn(`[ghost] Evicted ghost monster ${monsterId.slice(0, 10)}`);
   };
 
-  const buildGhostEvictionUpdates = (monsterId: string): [SetBatchUpdate, SetBatchUpdate] => [
-    { type: 'set', table: 'Spawned', keyBytes: monsterId, data: { spawned: false } },
-    {
-      type: 'set',
-      table: 'EncounterEntity',
-      keyBytes: monsterId,
-      data: {
-        ...(getTableValue('EncounterEntity', monsterId) ?? {}),
-        died: true,
-      },
-    },
-  ];
-
-  // Only evict confirmed ghost targets. Clearing the whole tile hides valid
-  // mobs and can strand players on productive grind tiles after one stale read.
-  const evictGhostMonsters = (monsterIds: string[]) => {
-    const uniqueMonsterIds = Array.from(new Set(monsterIds));
-    if (uniqueMonsterIds.length === 0) return;
-
-    const store = useGameStore.getState();
-    const batch = uniqueMonsterIds.flatMap(buildGhostEvictionUpdates);
-
-    if (batch.length > 0 && typeof store.applyBatch === 'function') {
-      store.applyBatch(batch);
-    } else {
-      for (let i = 0; i < batch.length; i += 2) {
-        const spawnedUpdate = batch[i];
-        const encounterUpdate = batch[i + 1];
-        if (!spawnedUpdate || !encounterUpdate) continue;
-        store.setRow('Spawned', spawnedUpdate.keyBytes, spawnedUpdate.data);
-        store.setRow('EncounterEntity', encounterUpdate.keyBytes, encounterUpdate.data);
-      }
-    }
-
-    if (uniqueMonsterIds.length === 1) {
-      console.warn(`[ghost] Evicted ghost monster ${uniqueMonsterIds[0].slice(0, 10)}`);
+  // When a ghost is detected, evict ALL monsters on the same tile to prevent
+  // the player from clicking dead monsters one-by-one. The next WS update or
+  // snapshot re-fetch will bring back any that are actually still alive.
+  // Uses applyBatch for a single Zustand set() / React render.
+  const evictAllMonstersOnTile = (ghostMonsterId: string) => {
+    const pos = getTableValue('PositionV2', ghostMonsterId) as
+      | { zoneId?: unknown; x?: unknown; y?: unknown } | undefined;
+    if (!pos) {
+      evictGhostMonster(ghostMonsterId);
       return;
     }
 
-    console.warn(`[ghost] Evicted ${uniqueMonsterIds.length} targeted ghost monsters`);
-  };
+    const store = useGameStore.getState();
+    const spawnedTable = store.tables['Spawned'] || {};
+    const positionTable = store.tables['PositionV2'] || {};
+    const charactersTable = store.tables['Characters'] || {};
 
-  const evictGhostMonster = (monsterId: string) => {
-    evictGhostMonsters([monsterId]);
+    const gz = String(pos.zoneId);
+    const gx = String(pos.x);
+    const gy = String(pos.y);
+    const batch: BatchUpdate[] = [];
+
+    for (const entityId of Object.keys(spawnedTable)) {
+      if (charactersTable[entityId]) continue; // skip player characters
+      const ePos = positionTable[entityId] as
+        | { zoneId?: unknown; x?: unknown; y?: unknown } | undefined;
+      if (!ePos) continue;
+      if (String(ePos.zoneId) !== gz || String(ePos.x) !== gx || String(ePos.y) !== gy) continue;
+
+      batch.push({ type: 'set', table: 'Spawned', keyBytes: entityId, data: { spawned: false } });
+      batch.push({
+        type: 'set', table: 'EncounterEntity', keyBytes: entityId,
+        data: { ...(getTableValue('EncounterEntity', entityId) ?? {}), died: true },
+      });
+    }
+
+    if (batch.length > 0) {
+      store.applyBatch(batch);
+      // Protect evicted rows from being re-added by stale WS updates.
+      markEvictedRows(
+        batch.map(u => ({ table: u.table, keyBytes: u.keyBytes })),
+      );
+    }
+    console.warn(`[ghost] Evicted ${batch.length / 2} monsters on tile (${gz},${gx},${gy}) after ghost ${ghostMonsterId.slice(0, 10)}`);
   };
 
   // ---------------------------------------------------------------------------
@@ -448,9 +421,18 @@ export function createSystemCalls(
   // player lands on a tile. Prevents "No enemies here" errors by evicting
   // ghosts BEFORE the player clicks Fight.
   // ---------------------------------------------------------------------------
+  const tableResourceId = (namespace: string, name: string): Hex =>
+    concat([
+      stringToHex('tb', { size: 2 }),
+      stringToHex(namespace, { size: 14 }),
+      stringToHex(name, { size: 16 }),
+    ]);
+
   const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000' as const;
   const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900' as const;
-  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e0000000000000000' as const;
+  // PositionV2 (zoneId: uint256, x: uint16, y: uint16) — the table the combat system uses.
+  // The old "Position" table has stale data for pre-migration monsters.
+  const POSITION_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e5632000000000000' as const;
   const GET_RECORD_ABI = [
     {
       type: 'function' as const,
@@ -488,6 +470,34 @@ export function createSystemCalls(
     }
   };
 
+  const syncMonsterPositionFromChain = async (
+    monsterId: string,
+  ): Promise<{ x: number; y: number } | null> => {
+    try {
+      const record = await readStoreRecord(POSITION_TABLE_ID, monsterId as `0x${string}`, 'PositionV2');
+      if (!record) return null;
+      const staticData = record[0] ?? '0x';
+      // PositionV2 schema: uint256 zoneId (32 bytes = 64 hex) + uint16 x (2 bytes = 4 hex) + uint16 y (2 bytes = 4 hex)
+      // Total static data: 36 bytes = 72 hex chars + '0x' prefix = 74 chars
+      // If record is empty or too short, monster has no PositionV2 data.
+      if (staticData === '0x' || staticData.length < 74) return null;
+      const x = parseInt(staticData.slice(66, 70), 16);
+      const y = parseInt(staticData.slice(70, 74), 16);
+      const position = { x, y };
+      // Sync to both Position and PositionV2 tables in the store
+      const currentPosition = getTableValue('PositionV2', monsterId) as
+        | { x?: number; y?: number }
+        | undefined;
+      if (Number(currentPosition?.x) !== position.x || Number(currentPosition?.y) !== position.y) {
+        useGameStore.getState().setRow('PositionV2', monsterId, position);
+      }
+      return position;
+    } catch (error) {
+      console.warn(`[position] Failed to sync monster ${monsterId.slice(0, 10)} from chain`, error);
+      return null;
+    }
+  };
+
   const decodeSpawnedRecord = (record: RawStoreRecord | null): boolean | null => {
     if (!record) return null;
     const staticData = record[0] ?? '0x';
@@ -518,19 +528,13 @@ export function createSystemCalls(
     const currentEncounter = getTableValue('EncounterEntity', monsterId) as
       | { encounterId?: string; died?: boolean }
       | undefined;
-
     if (snapshot.spawned === false) {
       store.setRow('Spawned', monsterId, { spawned: false });
     }
-
     if (snapshot.encounter) {
       const { encounterId, died } = snapshot.encounter;
       if ((currentEncounter?.encounterId ?? zeroHash) !== encounterId || Boolean(currentEncounter?.died) !== died) {
-        store.setRow('EncounterEntity', monsterId, {
-          ...currentEncounter,
-          encounterId,
-          died,
-        });
+        store.setRow('EncounterEntity', monsterId, { ...currentEncounter, encounterId, died });
       }
     }
   };
@@ -543,18 +547,13 @@ export function createSystemCalls(
 
     const results = await Promise.allSettled(
       monsterIds.map(async (id) => {
-        // Read Spawned, EncounterEntity, AND Position concurrently in the same
-        // Promise.all so all three land on the same block. Previously, Position
-        // was read sequentially *after* the other two, creating a TOCTOU window:
-        // a kill TX confirmed between the Spawned read (block N, spawned=true)
-        // and the Position read (block N+1, position=0,0) produced a false
-        // "Synced off-tile to (0,0)" eviction for a still-alive monster.
+        // Read Spawned, EncounterEntity, AND Position concurrently so all three
+        // land on the same block — prevents TOCTOU false-positive evictions.
         const [spawnedRecord, encounterRecord, chainPosition] = await Promise.all([
           readStoreRecord(SPAWNED_TABLE_ID, id as `0x${string}`, 'Spawned'),
           readStoreRecord(ENCOUNTER_ENTITY_TABLE_ID, id as `0x${string}`, 'EncounterEntity'),
           expectedPosition ? syncMonsterPositionFromChain(id) : Promise.resolve(null),
         ]);
-
         return {
           chainPosition,
           encounter: decodeEncounterEntityRecord(encounterRecord),
@@ -566,19 +565,11 @@ export function createSystemCalls(
 
     for (const r of results) {
       if (r.status !== 'fulfilled') continue;
-
       const { chainPosition, encounter, id, spawned } = r.value;
       const inEncounter = Boolean(encounter && encounter.encounterId !== zeroHash);
-      // Only flag as off-tile if chain position is a valid non-zero location that
-      // doesn't match the expected tile. Position=(0,0) means the mob was cleared
-      // by removeEntityFromBoard; treat that as a ghost (caught by spawned===false)
-      // rather than off-tile, to avoid double-eviction noise when chain reads land
-      // on different blocks despite the concurrent fetch.
       const positionIsCleared = chainPosition !== null && chainPosition.x === 0 && chainPosition.y === 0;
       const offTile = Boolean(
-        expectedPosition &&
-        chainPosition &&
-        !positionIsCleared &&
+        expectedPosition && chainPosition && !positionIsCleared &&
         (chainPosition.x !== expectedPosition.x || chainPosition.y !== expectedPosition.y),
       );
       const isGhost = spawned === false || Boolean(encounter?.died) || offTile || positionIsCleared;
@@ -586,63 +577,18 @@ export function createSystemCalls(
       if (!isGhost && !inEncounter) continue;
 
       if (offTile || inEncounter) {
-        // Off-tile: mob is alive on chain but at a different position — don't evict,
-        // just sync encounter/spawned state. Position was already updated by the
-        // concurrent syncMonsterPositionFromChain call above.
-        // In-encounter: mob is alive and busy — sync encounter state only.
         syncMonsterSnapshot(id, { encounter, spawned });
       } else {
-        // Confirmed dead (Position=0,0, Spawned=false on chain, or encounter.died).
-        // Use evictGhostMonsters which sets BOTH Spawned=false AND died=true atomically.
-        // syncMonsterSnapshot only sets Spawned=false when spawned===false from chain,
-        // missing the TOCTOU case where Spawned=true and Position=0,0 land on different
-        // RPC nodes. The died=true gate in allMonsterEntities prevents stale indexer
-        // Spawned=true events from re-animating this mob until the next snapshot sync.
-        evictGhostMonsters([id]);
+        evictGhostMonster(id);
       }
 
       if (offTile) {
-        console.warn(
-          `[validateTile] Synced off-tile monster ${id.slice(0, 10)} to (${chainPosition?.x},${chainPosition?.y})`,
-        );
+        console.warn(`[validateTile] Synced off-tile monster ${id.slice(0, 10)} to (${chainPosition?.x},${chainPosition?.y})`);
       } else if (positionIsCleared) {
-        console.warn(`[validateTile] Evicted cleared-position monster ${id.slice(0, 10)} (position=(0,0) on chain)`);
+        console.warn(`[validateTile] Evicted cleared-position monster ${id.slice(0, 10)}`);
       } else if (isGhost) {
         console.warn(`[validateTile] Evicted ghost monster ${id.slice(0, 10)}`);
-      } else if (inEncounter) {
-        console.warn(`[validateTile] Marked monster ${id.slice(0, 10)} as busy in encounter`);
       }
-    }
-  };
-
-  const preflightPveEncounter = async (
-    group1: string[],
-    group2: string[],
-  ): Promise<SystemCallReturn | null> => {
-    try {
-      await worldContract.simulate.UD__createEncounter([
-        EncounterType.PvE,
-        group1 as `0x${string}`[],
-        group2 as `0x${string}`[],
-      ], { account: diagAccount });
-      return null;
-    } catch (diagError) {
-      if (isGhostMonsterError(diagError)) {
-        const syncedPosition = await syncCharacterPositionFromChain(group1[0]);
-        const expectedPosition = syncedPosition ?? getStoredPosition(group1[0], {
-          preferLegacyPosition: true,
-        });
-        await validateTileMonsters(group2, expectedPosition);
-        return {
-          success: false,
-          error: 'No enemies here — try moving to another tile.',
-          severity: 'warning',
-        };
-      }
-      return {
-        success: false,
-        error: getContractError(diagError),
-      };
     }
   };
 
@@ -742,21 +688,18 @@ export function createSystemCalls(
     group2: string[],
   ): SystemCallReturn => {
     // Pre-flight: for PvE, verify all opponents are still alive in the store.
-    // If any are ghosts, evict only those targets and keep the rest of the tile
-    // intact for continued grinding.
+    // If any are ghosts, evict ALL monsters on the same tile so the player
+    // doesn't have to click through dead monsters one-by-one.
     if (encounterType === EncounterType.PvE) {
       const deadTargets = group2.filter(id => !isMonsterAlive(id));
       if (deadTargets.length > 0) {
-        evictGhostMonsters(deadTargets);
+        deadTargets.forEach(evictAllMonstersOnTile);
         return {
           success: false,
           error: 'No enemies here — try moving to another tile.',
           severity: 'warning',
         };
       }
-
-      const preflight = await preflightPveEncounter(group1, group2);
-      if (preflight) return preflight;
     }
 
     try {
@@ -788,7 +731,7 @@ export function createSystemCalls(
           ], { account: diagAccount });
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
-            await validateTileMonsters(group2);
+            group2.forEach(evictAllMonstersOnTile);
             return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
@@ -806,7 +749,7 @@ export function createSystemCalls(
         return { success: false, error: 'Updating game — reloading...' };
       }
       if (encounterType === EncounterType.PvE && isGhostMonsterError(e)) {
-        await validateTileMonsters(group2);
+        group2.forEach(evictAllMonstersOnTile);
         return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
       }
       // Fallback: if gas estimation somehow leaks through (shouldn't with gas
@@ -820,7 +763,7 @@ export function createSystemCalls(
           ], { account: diagAccount });
         } catch (diagError) {
           if (isGhostMonsterError(diagError)) {
-            await validateTileMonsters(group2);
+            group2.forEach(evictAllMonstersOnTile);
             return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
@@ -981,12 +924,8 @@ export function createSystemCalls(
         starterArmorId,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to enter game.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1008,8 +947,8 @@ export function createSystemCalls(
         itemIds.map(itemId => BigInt(itemId)),
       ]);
 
-      await waitForTransaction(tx);
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to equip items.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1114,12 +1053,8 @@ export function createSystemCalls(
         formattedNewStats,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to level character.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1248,6 +1183,25 @@ export function createSystemCalls(
   const MAX_ON_CHAIN_RETRIES = 1;
 
   type Direction = 'up' | 'down' | 'left' | 'right';
+  type MoveDiagnosticResult =
+    | { result: 'pass' }
+    | { result: 'timeout' }
+    | { result: 'transient' }
+    | { result: 'not_spawned' | 'invalid_move' | 'error'; error: unknown };
+
+  const applyDirection = (
+    position: { x: number; y: number },
+    direction: Direction,
+  ): { x: number; y: number } => {
+    let { x, y } = position;
+    switch (direction) {
+      case 'up': y += 1; break;
+      case 'down': y -= 1; break;
+      case 'left': x -= 1; break;
+      case 'right': x += 1; break;
+    }
+    return { x, y };
+  };
 
   const move = async (
     characterEntity: string,
@@ -1270,29 +1224,59 @@ export function createSystemCalls(
       return { success: false, error: 'In encounter.' };
     }
 
-    // Prod movement/combat validation still uses legacy Position on-chain.
-    // Prefer it when both tables exist so stale leaked PositionV2 rows do not
-    // send moves from the wrong tile.
-    const pos = getStoredPosition(characterEntity, { preferLegacyPosition: true });
+    // Read position from the Zustand store (updated synchronously from receipts).
+    // PositionV2 is canonical — the deployed contract writes (zoneId, x, y) to it.
+    // Position fallback kept for any legacy state still in the store.
+    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+      | { x: number; y: number } | undefined;
     if (!pos) {
       return { success: false, error: 'Position not found.' };
     }
 
-    let x = Number(pos.x);
-    let y = Number(pos.y);
-    switch (direction) {
-      case 'up': y += 1; break;
-      case 'down': y -= 1; break;
-      case 'left': x -= 1; break;
-      case 'right': x += 1; break;
-    }
+    let { x, y } = applyDirection(
+      { x: Number(pos.x), y: Number(pos.y) },
+      direction,
+    );
 
     isMovePending = true;
     try {
       await waitForMoveCooldown();
 
-      let args: readonly [`0x${string}`, number, number] = [characterEntity as `0x${string}`, x, y];
+      let args: [`0x${string}`, number, number] = [characterEntity as `0x${string}`, x, y];
       let onChainRetries = 0;
+
+      const diagnoseMove = async (timeoutMs: number): Promise<MoveDiagnosticResult> => {
+        let timedOut = false;
+        try {
+          await Promise.race([
+            worldContract.simulate.UD__move(args, { account: diagAccount }).then(() => undefined),
+            new Promise<void>((_, reject) => setTimeout(() => {
+              timedOut = true;
+              reject(new Error('diag timeout'));
+            }, timeoutMs)),
+          ]);
+          return { result: 'pass' };
+        } catch (error) {
+          if (timedOut) return { result: 'timeout' };
+          if (isNotSpawnedError(error)) {
+            return { result: 'not_spawned', error };
+          }
+          if (isInvalidMoveError(error)) {
+            return { result: 'invalid_move', error };
+          }
+          if (isMoveTooFastError(error) || isTransientRpcError(error)) {
+            return { result: 'transient' };
+          }
+          return { result: 'error', error };
+        }
+      };
+
+      const handleNotSpawned = () => {
+        console.warn('[move] Character is not spawned — updating store');
+        useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
+        onMoveRevert();
+        return { success: false as const, error: 'Session expired — respawn to continue.' };
+      };
 
       // Always skip simulation for moves. MOVE_COOLDOWN is 0 on-chain, but
       // Base flashblocks propagate state faster than block headers — eth_call
@@ -1318,48 +1302,30 @@ export function createSystemCalls(
             // returning 400/429 — we'd rather return a warning quickly and
             // let the player retry than lock them out.
             const DIAG_TIMEOUT_MS = 1500;
-            let diagResult: 'pass' | 'not_spawned' | 'invalid_move' | 'transient' | 'timeout' | 'error';
-            let diagError: unknown;
+            const diagnostic = await diagnoseMove(DIAG_TIMEOUT_MS);
 
-            try {
-              diagResult = await Promise.race([
-                worldContract.simulate.UD__move(args, { account: diagAccount }).then(() => 'pass' as const),
-                new Promise<'timeout'>(resolve => setTimeout(() => resolve('timeout'), DIAG_TIMEOUT_MS)),
-              ]);
-            } catch (e) {
-              diagError = e;
-              if (isNotSpawnedError(e)) diagResult = 'not_spawned';
-              else if (isInvalidMoveError(e)) diagResult = 'invalid_move';
-              else if (isMoveTooFastError(e) || isTransientRpcError(e)) diagResult = 'transient';
-              else diagResult = 'error';
+            if (diagnostic.result === 'not_spawned') {
+              return handleNotSpawned();
             }
 
-            if (diagResult === 'not_spawned') {
-              console.warn('[move] Character is not spawned — updating store');
-              useGameStore.getState().setRow('Spawned', characterEntity, { spawned: false });
-              onMoveRevert();
-              return { success: false, error: 'Session expired — respawn to continue.' };
-            }
-
-            if (diagResult === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
-              console.warn(`[move] Position stale after revert — syncing from chain`);
-              const freshPos = await syncCharacterPositionFromChain(characterEntity);
+            if (diagnostic.result === 'invalid_move' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
+              console.warn('[move] Position stale after revert — re-reading store');
+              const freshPos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+                | { x: number; y: number } | undefined;
               if (freshPos) {
-                x = Number(freshPos.x);
-                y = Number(freshPos.y);
-                switch (direction) {
-                  case 'up': y += 1; break;
-                  case 'down': y -= 1; break;
-                  case 'left': x -= 1; break;
-                  case 'right': x += 1; break;
-                }
-                args = [characterEntity as `0x${string}`, x, y] as const;
+                const nextPosition = applyDirection(
+                  { x: Number(freshPos.x), y: Number(freshPos.y) },
+                  direction,
+                );
+                x = nextPosition.x;
+                y = nextPosition.y;
+                args = [characterEntity as `0x${string}`, x, y];
                 onChainRetries++;
                 continue;
               }
             }
 
-            if (diagResult === 'pass' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
+            if (diagnostic.result === 'pass' && onChainRetries < MAX_ON_CHAIN_RETRIES) {
               onChainRetries++;
               console.warn(`[move] Simulation now passes — retrying (${onChainRetries}/${MAX_ON_CHAIN_RETRIES})`);
               await new Promise(r => setTimeout(r, ON_CHAIN_RETRY_DELAY_MS));
@@ -1367,16 +1333,15 @@ export function createSystemCalls(
             }
 
             // Timeout, transient, MoveTooFast, or retries exhausted — warn and let player retry
-            if (diagResult === 'error' && diagError) {
-              console.error(`[move] Diagnostic error:`, diagError);
+            if (diagnostic.result === 'error') {
+              console.error(`[move] Diagnostic error:`, diagnostic.error);
               onMoveRevert();
-              return { success: false, error: getContractError(diagError) };
+              return { success: false, error: getContractError(diagnostic.error) };
             }
-            console.warn(`[move] On-chain revert — ${diagResult} (target: ${x},${y})`);
+            console.warn(`[move] On-chain revert — ${diagnostic.result} (target: ${x},${y})`);
             onMoveRevert();
             return { success: false, error: MOVE_STALE_STATE_WARNING, severity: 'warning' };
           }
-          useGameStore.getState().setRow('Position', characterEntity, { x, y });
           onMoveSuccess();
           return { success: true };
         } catch (e) {
@@ -1412,7 +1377,9 @@ export function createSystemCalls(
     const ownershipError = validateCharacterOwnership(characterEntity, 'autoAdventure');
     if (ownershipError) return ownershipError;
 
-    const pos = getStoredPosition(characterEntity, { preferLegacyPosition: true });
+    // Same store-based position read as move — PositionV2 is canonical (contract writes to it)
+    const pos = (getTableValue('PositionV2', characterEntity) ?? getTableValue('Position', characterEntity)) as
+      | { x: number; y: number } | undefined;
     if (!pos) {
       return { success: false, error: 'Position not found.' };
     }
@@ -1490,7 +1457,7 @@ export function createSystemCalls(
 
     // Pre-flight: verify monster is still alive in the store.
     if (!isMonsterAlive(monsterId)) {
-      evictGhostMonster(monsterId);
+      evictAllMonstersOnTile(monsterId);
       return {
         success: false,
         error: 'No enemies here — try moving to another tile.',
@@ -1524,7 +1491,7 @@ export function createSystemCalls(
             return { success: false, error: 'Session expired — respawn to continue.' };
           }
           if (isGhostMonsterError(diagError)) {
-            evictGhostMonster(monsterId);
+            evictAllMonstersOnTile(monsterId);
             return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
           }
           return { success: false, error: getContractError(diagError) };
@@ -1539,7 +1506,7 @@ export function createSystemCalls(
         return { success: false, error: 'Updating game — reloading...' };
       }
       if (isGhostMonsterError(e)) {
-        evictGhostMonster(monsterId);
+        evictAllMonstersOnTile(monsterId);
         return { success: false, error: 'No enemies here — try moving to another tile.', severity: 'warning' };
       }
       return {
@@ -1614,6 +1581,9 @@ export function createSystemCalls(
       ]);
 
       const receipt = await waitForTransaction(tx);
+      if (receipt.status !== 'success') {
+        return { success: false, error: 'Failed to roll stats.' };
+      }
       const blockNumber = receipt.blockNumber;
 
       const chainId = await publicClient.getChainId();
@@ -1628,7 +1598,6 @@ export function createSystemCalls(
       }
 
       return {
-        error: undefined,
         success: true,
       };
     } catch (e) {
@@ -1679,9 +1648,6 @@ export function createSystemCalls(
       ]);
 
       const txResult = await waitForTransaction(tx);
-      if (txResult.status === 'success') {
-        await syncCharacterPositionFromChain(characterEntity);
-      }
       return {
         error: txResult.status === 'success' ? undefined : 'Failed to spawn.',
         success: txResult.status === 'success',
@@ -1733,8 +1699,8 @@ export function createSystemCalls(
         BigInt(itemId),
       ]);
 
-      await waitForTransaction(tx);
-      return { success: true };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to unequip item.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1815,16 +1781,36 @@ export function createSystemCalls(
 
     try {
       const characterId = entity as `0x${string}`;
-
-      const tx = await wrappedWorldContract.write.UD__useWorldConsumableItem([
+      const args: [`0x${string}`, `0x${string}`, bigint] = [
         characterId,
         characterId,
         BigInt(tokenId),
-      ]);
+      ];
+
+      const tx = await wrappedWorldContract.write.UD__useWorldConsumableItem(args);
 
       const receipt = await waitForTransaction(tx);
+      if (receipt.status === 'reverted') {
+        try {
+          await worldContract.simulate.UD__useWorldConsumableItem(args, { account: diagAccount });
+        } catch (diagError) {
+          return { success: false, error: getContractError(diagError) };
+        }
+        return { success: false, error: 'Failed to use item.' };
+      }
       return { success: receipt.status === 'success' };
     } catch (e) {
+      if (isInsufficientFundsError(e)) {
+        try {
+          await worldContract.simulate.UD__useWorldConsumableItem([
+            entity as `0x${string}`,
+            entity as `0x${string}`,
+            BigInt(tokenId),
+          ], { account: diagAccount });
+        } catch (diagError) {
+          return { success: false, error: getContractError(diagError) };
+        }
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -1847,12 +1833,8 @@ export function createSystemCalls(
         race,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to choose race.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1874,12 +1856,8 @@ export function createSystemCalls(
         powerSource,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to choose power source.');
     } catch (e) {
       return {
         error: getContractError(e),
@@ -1904,6 +1882,9 @@ export function createSystemCalls(
       ]);
 
       const receipt = await waitForTransaction(tx);
+      if (receipt.status !== 'success') {
+        return { success: false, error: 'Failed to roll base stats.' };
+      }
       const blockNumber = receipt.blockNumber;
 
       const chainId = await publicClient.getChainId();
@@ -1918,7 +1899,6 @@ export function createSystemCalls(
       }
 
       return {
-        error: undefined,
         success: true,
       };
     } catch (e) {
@@ -1942,12 +1922,8 @@ export function createSystemCalls(
         advancedClass,
       ]);
 
-      await waitForTransaction(tx);
-
-      return {
-        error: undefined,
-        success: true,
-      };
+      const receipt = await waitForTransaction(tx);
+      return resultFromReceipt(receipt, 'Failed to select advanced class.');
     } catch (e) {
       return {
         error: getContractError(e),

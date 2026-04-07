@@ -20,21 +20,22 @@ import {
 // ============================================================
 
 describe("avgGoldPerKill", () => {
-  it("matches on-chain formula: avg of random(0, 3*level) + 0.05", () => {
-    // At level 1: avg = (3 * 1 / 2) + 0.05 = 1.55
-    expect(avgGoldPerKill(1)).toBeCloseTo(1.55, 2);
-    // At level 10: avg = (3 * 10 / 2) + 0.05 = 15.05
-    expect(avgGoldPerKill(10)).toBeCloseTo(15.05, 2);
-    // At level 20: avg = (3 * 20 / 2) + 0.05 = 30.05
-    expect(avgGoldPerKill(20)).toBeCloseTo(30.05, 2);
+  it("matches on-chain formula: avg of random(0, 2*level) + 0.05", () => {
+    // BASE_GOLD_DROP = 2
+    // At level 1: avg = (2 * 1 / 2) + 0.05 = 1.05
+    expect(avgGoldPerKill(1)).toBeCloseTo(1.05, 2);
+    // At level 10: avg = (2 * 10 / 2) + 0.05 = 10.05
+    expect(avgGoldPerKill(10)).toBeCloseTo(10.05, 2);
+    // At level 20: avg = (2 * 20 / 2) + 0.05 = 20.05
+    expect(avgGoldPerKill(20)).toBeCloseTo(20.05, 2);
   });
 
   it("scales linearly with mob level", () => {
     const diff10to20 = avgGoldPerKill(20) - avgGoldPerKill(10);
     const diff1to11 = avgGoldPerKill(11) - avgGoldPerKill(1);
-    // Both should be 15 (1.5 * 10 levels)
-    expect(diff10to20).toBeCloseTo(15, 2);
-    expect(diff1to11).toBeCloseTo(15, 2);
+    // Both should be 10 (BASE_GOLD_DROP/2 * 10 levels = 1.0 * 10)
+    expect(diff10to20).toBeCloseTo(10, 2);
+    expect(diff1to11).toBeCloseTo(10, 2);
   });
 
   it("returns positive for level 0", () => {
@@ -59,48 +60,58 @@ describe("avgVendorGoldPerFight", () => {
   });
 
   it("does not include R3 or R4", () => {
-    // If we included R3: 4/100000 * 750 * 0.50 = 0.015 extra
-    // If we included R4: 3/100000 * 3000 * 0.50 = 0.045 extra
-    // So total would be ~1.335 if R3+ included
     expect(avgVendorGoldPerFight()).toBeLessThan(1.30);
   });
 });
 
 // ============================================================
-//  Repair Costs
+//  Repair Costs (flat per-rarity model)
 // ============================================================
 
 describe("repairCostPerFight", () => {
-  it("scales with item base price", () => {
-    const cheap = repairCostPerFight(50, 50);    // 100g total gear
-    const expensive = repairCostPerFight(500, 500); // 1000g total gear
-    expect(expensive).toBeCloseTo(cheap * 10, 4);
+  it("uses flat per-rarity cost, not item price", () => {
+    // Same rarity = same repair cost regardless of price
+    const cheap = repairCostPerFight(50, 50, 2, 2);
+    const expensive = repairCostPerFight(500, 500, 2, 2);
+    expect(cheap).toBe(expensive);
   });
 
-  it("matches formula: (wpn+arm) * REPAIR_RATE * (DURABILITY_LOSS / DURABILITY_MAX)", () => {
-    // 200g weapon + 100g armor, 8% rate, 2/100 durability loss
-    // = 300 * 0.08 * 0.02 = 0.48
-    expect(repairCostPerFight(200, 100)).toBeCloseTo(0.48, 4);
+  it("R2 weapon + R2 armor = 1.5g/fight", () => {
+    // R2 cost/point = 0.75, loss/fight = 1, two items
+    // (0.75 + 0.75) * 1 = 1.5
+    expect(repairCostPerFight(0, 0, 2, 2)).toBeCloseTo(1.5, 4);
   });
 
-  it("returns 0 for free gear", () => {
-    expect(repairCostPerFight(0, 0)).toBe(0);
+  it("R0 gear is cheapest", () => {
+    expect(repairCostPerFight(0, 0, 0, 0)).toBeCloseTo(0.10, 4);
   });
 
-  it("works with weapon-only (no armor)", () => {
-    expect(repairCostPerFight(100, 0)).toBeCloseTo(0.16, 4);
+  it("R4 gear is most expensive", () => {
+    // (2.5 + 2.5) * 1 = 5.0
+    expect(repairCostPerFight(0, 0, 4, 4)).toBeCloseTo(5.0, 4);
   });
 
-  it("R2 gear repair is under 5% of L15 income", () => {
-    const repair = repairCostPerFight(150, 130);
+  it("scales with rarity tier", () => {
+    const r1 = repairCostPerFight(0, 0, 1, 1);
+    const r3 = repairCostPerFight(0, 0, 3, 3);
+    expect(r3).toBeGreaterThan(r1);
+  });
+
+  it("mixed rarity (R3 weapon + R2 armor)", () => {
+    // 1.5 + 0.75 = 2.25
+    expect(repairCostPerFight(0, 0, 3, 2)).toBeCloseTo(2.25, 4);
+  });
+
+  it("R2 repair is under 10% of L15 farming income", () => {
+    const repair = repairCostPerFight(0, 0, 2, 2);
     const income = avgGoldPerKill(15) + avgVendorGoldPerFight();
-    expect(repair / income).toBeLessThan(0.05);
+    expect(repair / income).toBeLessThan(0.10);
   });
 
-  it("R4 gear repair is significant portion of income", () => {
-    const repair = repairCostPerFight(3000, 2800);
+  it("R4 repair is significant portion of L20 income", () => {
+    const repair = repairCostPerFight(0, 0, 4, 4);
     const income = avgGoldPerKill(20) + avgVendorGoldPerFight();
-    expect(repair / income).toBeGreaterThan(0.10);
+    expect(repair / income).toBeGreaterThan(0.15);
   });
 });
 
@@ -114,15 +125,15 @@ describe("consumableCostPerFight", () => {
     expect(consumableCostPerFight("progression")).toBeLessThan(consumableCostPerFight("boss"));
   });
 
-  it("farming: 0.3 pots × 10g = 3g", () => {
+  it("farming: 0.3 pots x 10g = 3g", () => {
     expect(consumableCostPerFight("farming")).toBeCloseTo(3, 2);
   });
 
-  it("progression: 1.2 pots × 25g = 30g", () => {
+  it("progression: 1.2 pots x 25g = 30g", () => {
     expect(consumableCostPerFight("progression")).toBeCloseTo(30, 2);
   });
 
-  it("boss: 2.0 pots × 60g = 120g", () => {
+  it("boss: 2.0 pots x 60g = 120g", () => {
     expect(consumableCostPerFight("boss")).toBeCloseTo(120, 2);
   });
 });
@@ -144,16 +155,10 @@ describe("netGoldPerFight", () => {
     expect(netGoldPerFight(20, "boss", 3000, 2800)).toBeLessThan(-50);
   });
 
-  it("higher level = more profitable farming (gold scales, repairs don't)", () => {
+  it("higher level = more profitable farming (gold scales, repairs flat)", () => {
     const l11 = netGoldPerFight(11, "farming", 40, 35);
     const l20 = netGoldPerFight(20, "farming", 40, 35);
     expect(l20).toBeGreaterThan(l11);
-  });
-
-  it("more expensive gear = less profitable", () => {
-    const cheap = netGoldPerFight(15, "farming", 50, 50);
-    const expensive = netGoldPerFight(15, "farming", 3000, 2800);
-    expect(cheap).toBeGreaterThan(expensive);
   });
 });
 
@@ -167,14 +172,10 @@ describe("marketplaceIncomePerFight", () => {
   });
 
   it("is very small per fight (rare drops are rare)", () => {
-    // At 40 fights/day, should be single-digit gold
     expect(marketplaceIncomePerFight() * 40).toBeLessThan(10);
   });
 
   it("R3 contributes more than R4 (higher sell rate despite lower price)", () => {
-    // R3: 0.004% × 66% × 2250 × 0.97 = ~0.0576/fight
-    // R4: 0.003% × 5% × 24000 × 0.97 = ~0.0349/fight
-    // R3 should be higher
     const r3Drop = (ECONOMY.DROP_RATES[3] / 100000) * ECONOMY.MARKETPLACE_SELL_RATE[3]!;
     const r4Drop = (ECONOMY.DROP_RATES[4] / 100000) * ECONOMY.MARKETPLACE_SELL_RATE[4]!;
     const r3Value = r3Drop * ECONOMY.VENDOR_PRICES[3]! * ECONOMY.MARKETPLACE_PRICE_MULT[3]!;
@@ -210,7 +211,7 @@ describe("guild tax model", () => {
     const netCost = netGuildCostPerMemberPerDay(15, 40, 150, 130);
     const tax = guildTaxPerMemberPerDay(15, 40);
     expect(netCost).toBeLessThan(tax);
-    expect(netCost).toBeGreaterThan(0); // tax > repair savings
+    expect(netCost).toBeGreaterThan(0);
   });
 
   it("totalGuildSinkPerDay burns 80% of collected tax", () => {
@@ -218,12 +219,10 @@ describe("guild tax model", () => {
     const taxCollected = guildedPlayers * guildTaxPerMemberPerDay(15, 40);
     const totalSink = totalGuildSinkPerDay(100, 15, 40);
     const creationAmortized = Math.max(1, Math.floor(guildedPlayers / ECONOMY.AVG_GUILD_SIZE)) * ECONOMY.GUILD_CREATION_COST / 30;
-    // Total sink should be ~80% of tax + creation amortized
     expect(totalSink).toBeCloseTo(taxCollected * 0.80 + creationAmortized, 0);
   });
 
   it("guild is worth joining: perks > net cost for active players", () => {
-    // At L15 with R2 gear, net guild cost should be < 10% of income
     const gross = dailyGrossIncome(15, 40);
     const netCost = netGuildCostPerMemberPerDay(15, 40, 150, 130);
     expect(netCost / gross).toBeLessThan(0.10);
@@ -253,20 +252,6 @@ describe("completeBurnRate", () => {
     expect(rate).toBeLessThan(1);
   });
 
-  it("increases with more guilded players (higher participation rate)", () => {
-    const base = completeBurnRate(100, 15, 40, 300);
-    // Can't easily change participation rate without mutating ECONOMY,
-    // so just verify the rate is positive and reasonable
-    expect(base).toBeGreaterThan(0.15);
-    expect(base).toBeLessThan(0.50);
-  });
-
-  it("is higher at more expensive gear (more repair cost)", () => {
-    const cheap = completeBurnRate(100, 15, 40, 100);
-    const expensive = completeBurnRate(100, 15, 40, 1000);
-    expect(expensive).toBeGreaterThan(cheap);
-  });
-
   it("at 100 DAU, complete burn rate exceeds 20%", () => {
     expect(completeBurnRate(100, 15, 40, 300)).toBeGreaterThan(0.20);
   });
@@ -274,13 +259,12 @@ describe("completeBurnRate", () => {
 
 // ============================================================
 //  Economic Design Invariants
-//  These tests encode the design rules from ECONOMY_TUNING_GUIDE.md
 // ============================================================
 
 describe("economic design invariants", () => {
   it("farming must be profitable at every Z2 level", () => {
     for (let level = 11; level <= 20; level++) {
-      const net = netGoldPerFight(level, "farming", 80, 70); // R2 gear
+      const net = netGoldPerFight(level, "farming", 80, 70);
       expect(net).toBeGreaterThan(0, `Farming unprofitable at L${level}`);
     }
   });
@@ -293,14 +277,14 @@ describe("economic design invariants", () => {
     expect(netGoldPerFight(20, "boss", 300, 280)).toBeLessThan(-50);
   });
 
-  it("R2 repair is under 5% of farming income", () => {
-    const repair = repairCostPerFight(150, 130);
+  it("R2 repair is under 10% of farming income", () => {
+    const repair = repairCostPerFight(0, 0, 2, 2);
     const income = avgGoldPerKill(15) + avgVendorGoldPerFight();
-    expect(repair / income).toBeLessThan(0.05);
+    expect(repair / income).toBeLessThan(0.10);
   });
 
   it("R4 repair exceeds 15% of farming income", () => {
-    const repair = repairCostPerFight(3000, 2800);
+    const repair = repairCostPerFight(0, 0, 4, 4);
     const income = avgGoldPerKill(20) + avgVendorGoldPerFight();
     expect(repair / income).toBeGreaterThan(0.15);
   });
@@ -311,14 +295,8 @@ describe("economic design invariants", () => {
     expect(netCost / gross).toBeLessThan(0.10);
   });
 
-  it("pure builds pay less in repairs than hybrid builds", () => {
-    const pureRepair = repairCostPerFight(150, 140);   // R3 pure: 150g weapon
-    const hybridRepair = repairCostPerFight(200, 140);  // R3 hybrid: 200g weapon
-    expect(pureRepair).toBeLessThan(hybridRepair);
-  });
-
   it("consumable costs dominate repair costs at R2 gear level", () => {
-    const repair = repairCostPerFight(150, 130);
+    const repair = repairCostPerFight(0, 0, 2, 2);
     const pots = consumableCostPerFight("farming");
     expect(pots).toBeGreaterThan(repair);
   });

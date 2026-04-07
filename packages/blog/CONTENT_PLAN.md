@@ -10,7 +10,7 @@ First 10 posts to establish what Ultimate Dominion is. Each stands alone but bui
 
 2. **What You Actually Do in Ultimate Dominion** — The gameplay loop. Open a URL, make a character, fight monsters, find gear, trade, talk. No tech, no pitch. Just what happens when you play.
 
-3. **The Dark Cave** — Worldbuilding. The grid, the atmosphere, the Wound, the monsters that used to be people. Noctum is dead and death is broken. Pure lore/fiction.
+3. **The Dark Cave** — Worldbuilding. The grid, the atmosphere, the Marrow, the monsters that used to be people. Noctum is dead and death is broken. Pure lore/fiction.
 
 4. **Nine Classes, One Cave** — Character creation, races, power sources, the 9 advanced classes. Why any class can be picked regardless of build. Build theory.
 
@@ -20,7 +20,7 @@ First 10 posts to establish what Ultimate Dominion is. Each stands alone but bui
 
 7. **Gold, Sinks, and Why Your Sword Breaks** — How the economy works. Infinite gold, finite items. Where gold goes when you die. The marketplace fee. Inspired by EVE/Runescape/Neopets.
 
-8. **Fragments of the Fallen** — The 8 lore fragments. What they reveal. The story of the gods, the murder, the mystery. Makes people want to collect them all.
+8. **Fragments** — The 8 lore fragments. What they reveal. The story of the gods, the murder, the mystery. Makes people want to collect them all.
 
 9. **Open a URL and You're Playing** — Why browser-based, why no download, why no app store. Your friend sends you a link, you're in the same world in 30 seconds.
 

@@ -8,13 +8,12 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
-import { useToast } from '../hooks/useToast';
-import { useTransaction } from '../hooks/useTransaction';
-import { encodeBytes32Key, useGameValue } from '../lib/gameStore';
+import { useNpcFlavor } from '../hooks/useNpcFlavor';
 
 import { PolygonalCard } from './PolygonalCard';
 
@@ -23,6 +22,7 @@ interface NpcDialogueModalProps {
   onClose: () => void;
   npcId: string;
   npcName: string;
+  metadataUri: string;
 }
 
 export const NpcDialogueModal = ({
@@ -30,53 +30,37 @@ export const NpcDialogueModal = ({
   onClose,
   npcId,
   npcName,
+  metadataUri,
 }: NpcDialogueModalProps): JSX.Element => {
   const { character } = useCharacter();
   const {
     systemCalls: { talkToNpc },
   } = useMUD();
-  const { renderError } = useToast();
-  const talkTx = useTransaction({ actionName: 'talk to NPC', silent: true });
+  const { t } = useTranslation('ui');
+  const { title, flavor } = useNpcFlavor(metadataUri);
 
-  const [lineIndex, setLineIndex] = useState(0);
+  const [hasTalked, setHasTalked] = useState(false);
 
-  const key = encodeBytes32Key(npcId);
-  const dialogueData = useGameValue('NpcDialogue', key);
-  const rawDialogue = (dialogueData?.dialogue as string) ?? '';
-
-  const lines = useMemo(() => {
-    if (!rawDialogue) return [];
-    return rawDialogue.split('|').filter(Boolean);
-  }, [rawDialogue]);
-
-  const isLastLine = lineIndex >= lines.length - 1;
-
-  // Call talkToNpc system when modal opens
+  // Fire talkToNpc for chain advancement (side-effect only — display uses client narratives)
   useEffect(() => {
-    if (!isOpen || !character) return;
+    if (!isOpen || !character || hasTalked) return;
 
-    talkTx.execute(() => talkToNpc(character.characterId, npcId)).catch((err) => {
-      renderError('Failed to start dialogue.');
-      console.error('[NpcDialogue] talkToNpc error:', err);
-    });
-    // Only fire on open
+    talkToNpc(character.id, npcId)
+      .then(() => setHasTalked(true))
+      .catch((err) => {
+        // Non-fatal — dialogue still shows even if chain call fails
+        console.warn('[NpcDialogue] talkToNpc failed (chain may not advance):', err);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Reset line index when modal reopens
+  // Reset state when modal reopens
   useEffect(() => {
-    if (isOpen) setLineIndex(0);
+    if (isOpen) setHasTalked(false);
   }, [isOpen]);
 
-  const handleNext = useCallback(() => {
-    if (isLastLine) {
-      onClose();
-    } else {
-      setLineIndex((prev) => prev + 1);
-    }
-  }, [isLastLine, onClose]);
-
-  const currentLine = lines[lineIndex] ?? '...';
+  const displayTitle = title || npcName;
+  const displayText = flavor || '...';
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -85,7 +69,7 @@ export const NpcDialogueModal = ({
         <PolygonalCard isModal />
         <ModalHeader pb={1}>
           <Text color="#C8A96E" fontSize="md" fontWeight={700}>
-            {npcName}
+            {displayTitle}
           </Text>
         </ModalHeader>
         <ModalBody px={6} pb={5}>
@@ -97,17 +81,17 @@ export const NpcDialogueModal = ({
               lineHeight="tall"
               minH="60px"
             >
-              &ldquo;{currentLine}&rdquo;
+              &ldquo;{displayText}&rdquo;
             </Text>
             <Button
               alignSelf="flex-end"
               colorScheme="yellow"
-              onClick={handleNext}
+              onClick={onClose}
               size="sm"
               variant="ghost"
               _hover={{ bg: '#1A1612' }}
             >
-              {isLastLine ? 'Farewell' : 'Next'}
+              {t('npc.farewell')}
             </Button>
           </VStack>
         </ModalBody>

@@ -22,6 +22,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
 import { useAllowance } from '../contexts/AllowanceContext';
@@ -77,6 +78,7 @@ export const ShopItemRow = ({
   stock: bigint | null;
   theme: string;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     systemCalls: { buy, sell },
   } = useMUD();
@@ -145,11 +147,6 @@ export const ShopItemRow = ({
     return isEquipped;
   }, [amount, balance, isEquipped, orderType, userCharacter]);
 
-  const shopBroke = useMemo(() => {
-    if (orderType !== OrderType.Selling) return false;
-    return price > BigInt(shop.gold);
-  }, [orderType, price, shop.gold]);
-
   const onBuyOrSell = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -162,10 +159,6 @@ export const ShopItemRow = ({
         return;
       }
       if (unsellableError) {
-        setShowError(true);
-        return;
-      }
-      if (shopBroke) {
         setShowError(true);
         return;
       }
@@ -215,8 +208,8 @@ export const ShopItemRow = ({
         const itemName = name ? removeEmoji(name.toString()) : 'Item';
         renderSuccess(
           orderType == OrderType.Buying
-            ? `Bought ${amount}x ${itemName}`
-            : `Sold ${amount}x ${itemName} for ${etherToFixedNumber(price)} $GOLD`,
+            ? t('shop.boughtItems', { amount, name: itemName })
+            : t('shop.soldItems', { amount, name: itemName, gold: etherToFixedNumber(price) }),
         );
         import('../utils/analytics').then(({ trackShopPurchase, trackShopSale }) => {
           const gold = Number(etherToFixedNumber(price));
@@ -251,7 +244,6 @@ export const ShopItemRow = ({
       renderSuccess,
       sell,
       shop.shopId,
-      shopBroke,
       shopTx,
       unsellableError,
     ],
@@ -353,8 +345,8 @@ export const ShopItemRow = ({
         <ShopAllowanceModal
           completeMessage={
             orderType === OrderType.Buying
-              ? `Allowance was successful! You can now buy ${name}`
-              : `Allowance was successful! You can now sell ${name}`
+              ? t('shop.buyAllowanceSuccess', { name })
+              : t('shop.sellAllowanceSuccess', { name })
           }
           isCompleting={shopTx.isLoading}
           isOpen={isAllowanceOpen}
@@ -373,7 +365,7 @@ export const ShopItemRow = ({
           <ModalCloseButton />
           <ModalHeader>
             <Text fontWeight={700} fontSize={28}>
-              {orderType == OrderType.Buying ? 'Buy' : 'Sell'}{' '}
+              {orderType == OrderType.Buying ? t('shop.buy') : t('shop.sell')}{' '}
               {name ? removeEmoji(name.toString()) : ''}
             </Text>
           </ModalHeader>
@@ -409,7 +401,7 @@ export const ShopItemRow = ({
               </GridItem>
               <GridItem colSpan={{ base: 2, sm: 1 }}>
                 <Text fontWeight={700} size="sm">
-                  Stats
+                  {t('shop.stats')}
                 </Text>
                 {(item.itemType === ItemType.Armor ||
                   (item.itemType === ItemType.Consumable &&
@@ -436,13 +428,13 @@ export const ShopItemRow = ({
                   item.itemType === ItemType.Weapon) && (
                   <>
                     <Text size="sm">
-                      - Min Damage:{' '}
+                      - {t('shop.minDamage')}{' '}
                       {(
                         item as SpellTemplate | WeaponTemplate
                       ).minDamage.toString()}
                     </Text>
                     <Text size="sm">
-                      - Max Damage:{' '}
+                      - {t('shop.maxDamage')}{' '}
                       {(
                         item as SpellTemplate | WeaponTemplate
                       ).maxDamage.toString()}
@@ -467,7 +459,7 @@ export const ShopItemRow = ({
                 )}
 
                 <Text fontWeight={700} mt={8} size="sm">
-                  Restrictions
+                  {t('shop.restrictions')}
                 </Text>
                 <Text size="sm">- LVL {item?.minLevel.toString() || '0'}</Text>
                 <Text size="sm">
@@ -484,7 +476,7 @@ export const ShopItemRow = ({
                 <VStack spacing={4}>
                   <VStack>
                     <Text fontSize={{ base: 'sm' }} fontWeight={500}>
-                      max {stock?.toString() || balance?.toString()} items
+                      {t('shop.maxItems', { count: stock?.toString() || balance?.toString() })}
                     </Text>
                     <HStack>
                       <Button
@@ -580,19 +572,17 @@ export const ShopItemRow = ({
                   <VStack>
                     {orderType == OrderType.Buying ? (
                       <Text fontSize={{ base: 'sm' }} fontWeight={700}>
-                        Total Cost: {etherToFixedNumber(price)} $GOLD
+                        {t('shop.totalCost', { amount: etherToFixedNumber(price) })}
                       </Text>
                     ) : (
                       <Text fontSize={{ base: 'sm' }} fontWeight={700}>
-                        Total to recieve: {etherToFixedNumber(price)} $GOLD
+                        {t('shop.totalReceive', { amount: etherToFixedNumber(price) })}
                       </Text>
                     )}
                     <Text color="#8A7E6A" size="xs">
-                      Current Balance{' '}
-                      {etherToFixedNumber(
+                      {t('shop.currentBalance', { amount: etherToFixedNumber(
                         userCharacter?.externalGoldBalance ?? '0',
-                      )}{' '}
-                      $GOLD
+                      ) })}
                     </Text>
                   </VStack>
                 </VStack>
@@ -607,32 +597,27 @@ export const ShopItemRow = ({
               flexDirection="column"
               isInvalid={
                 showError &&
-                (insufficientGold || unsellableError || insufficientStock || shopBroke)
+                (insufficientGold || unsellableError || insufficientStock)
               }
             >
               {showError && insufficientStock && (
                 <FormHelperText color="red" m={3}>
-                  Insufficient stock.
+                  {t('shop.insufficientStock')}
                 </FormHelperText>
               )}
               {showError && insufficientGold && (
                 <FormHelperText color="red" m={3}>
-                  You don&apos;t have enough $GOLD to buy this.
+                  {t('shop.notEnoughGold')}
                 </FormHelperText>
               )}
               {showError && unsellableError && (
                 <FormHelperText color="red" m={3}>
-                  You can&apos;t sell the last of an equipped item.
-                </FormHelperText>
-              )}
-              {showError && shopBroke && (
-                <FormHelperText color="orange.300" m={3}>
-                  The shopkeeper doesn&apos;t have enough gold. Stock replenishes every 12 hours.
+                  {t('shop.cantSellEquipped')}
                 </FormHelperText>
               )}
               <HStack gap={3}>
                 <Button onClick={onClose} variant="ghost">
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 {authMethod !== 'embedded' && orderType == OrderType.Buying && goldShopAllowance < price && (
                   <Button
@@ -641,7 +626,7 @@ export const ShopItemRow = ({
                       isApprovingGold || isApprovingItems || shopTx.isLoading
                     }
                   >
-                    Approve
+                    {t('shop.approve')}
                   </Button>
                 )}
                 {authMethod !== 'embedded' && orderType == OrderType.Selling && !itemsShopAllowance && (
@@ -651,7 +636,7 @@ export const ShopItemRow = ({
                       isApprovingGold || isApprovingItems || shopTx.isLoading
                     }
                   >
-                    Approve
+                    {t('shop.approve')}
                   </Button>
                 )}
                 {orderType == OrderType.Buying &&
@@ -662,7 +647,7 @@ export const ShopItemRow = ({
                         isApprovingGold || isApprovingItems || shopTx.isLoading
                       }
                     >
-                      Buy
+                      {t('shop.buy')}
                     </Button>
                   )}
                 {orderType == OrderType.Selling &&
@@ -673,7 +658,7 @@ export const ShopItemRow = ({
                         isApprovingGold || isApprovingItems || shopTx.isLoading
                       }
                     >
-                      Sell
+                      {t('shop.sell')}
                     </Button>
                   )}
               </HStack>

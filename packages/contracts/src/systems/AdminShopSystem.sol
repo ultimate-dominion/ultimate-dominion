@@ -14,6 +14,7 @@ contract AdminShopSystem is System {
     }
 
     function adminCreateShop(
+        uint256 zoneId,
         uint16 x,
         uint16 y,
         ShopsData memory shopData,
@@ -23,7 +24,7 @@ contract AdminShopSystem is System {
         uint256 mobId = IWorld(_world()).UD__createMob(MobType.Shop, abi.encode(shopData), shopMetadataUri);
 
         // Spawn at location - create entity ID with position encoded
-        entityId = IWorld(_world()).UD__spawnMob(mobId, x, y);
+        entityId = IWorld(_world()).UD__spawnMob(mobId, zoneId, x, y);
 
         // Configure shop data
         Shops.set(entityId, shopData);
@@ -36,7 +37,7 @@ contract AdminShopSystem is System {
     }
 
     // Spawn a mob at a specific location
-    function adminSpawnMob(uint256 mobId, uint16 x, uint16 y) public onlyAdmin returns (bytes32 entityId) {
-        return IWorld(_world()).UD__spawnMob(mobId, x, y);
+    function adminSpawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) public onlyAdmin returns (bytes32 entityId) {
+        return IWorld(_world()).UD__spawnMob(mobId, zoneId, x, y);
     }
 }

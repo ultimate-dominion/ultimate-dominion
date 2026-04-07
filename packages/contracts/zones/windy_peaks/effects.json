@@ -86,7 +86,7 @@
       "stats": {
         "agiModifier": 0,
         "armorModifier": -3,
-        "damagePerTick": 0,
+        "damagePerTick": 3,
         "hpModifier": 0,
         "intModifier": 0,
         "resistanceStat": 0,
@@ -94,9 +94,9 @@
       },
       "validity": {
         "cooldown": 0,
-        "maxStacks": 1,
+        "maxStacks": 2,
         "validTime": 0,
-        "validTurns": 3
+        "validTurns": 99
       }
     },
     {

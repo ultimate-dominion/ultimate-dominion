@@ -147,9 +147,11 @@ contract CombatSystem is System {
 
         // if the defender is alive and attacker is alive, execute the action
         if (!getDied(actionOutcomeData.attackerId) && !getDied(actionOutcomeData.defenderId)) {
-            // All items (weapons AND consumables) must be equipped in the 4-slot loadout
+            // Combat actions must come from the equipped 4-slot loadout.
+            // World-map consumables intentionally remain usable from inventory.
             bool attackerIsCharacter = IWorld(_world()).UD__isValidCharacterId(actionOutcomeData.attackerId);
-            if (attackerIsCharacter) {
+            bool attackerInEncounter = EncounterEntity.getEncounterId(actionOutcomeData.attackerId) != bytes32(0);
+            if (attackerIsCharacter && attackerInEncounter) {
                 if (!IWorld(_world()).UD__isEquipped(actionOutcomeData.attackerId, actionOutcomeData.itemId)) {
                     revert ItemNotEquipped();
                 }

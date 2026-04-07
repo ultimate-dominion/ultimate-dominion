@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creature Lab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; min-height: 100vh; }
+    .header { padding: 14px 24px; border-bottom: 1px solid #222; display: flex; align-items: baseline; gap: 16px; }
+    .header h1 { font-size: 15px; color: #888; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; }
+    .header p { font-size: 11px; color: #444; }
+    .header a { margin-left: auto; font-size: 11px; color: #555; text-decoration: none; padding: 3px 10px; border: 1px solid #2a2a2a; }
+    .header a:hover { color: #888; border-color: #444; }
+    .zone-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 3px; padding: 20px 24px 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; padding: 8px 24px 20px; }
+    .card {
+      background: #111; border: 1px solid #1a1a1a; border-radius: 3px;
+      overflow: hidden; transition: border-color 0.15s;
+      text-decoration: none; color: inherit; display: block; cursor: pointer;
+    }
+    .card:hover { border-color: #333; }
+    .card.done:hover { border-color: #3a5a3a; }
+    .card.wip:hover  { border-color: #4a4a2a; }
+    .card.todo { opacity: 0.35; pointer-events: none; }
+    /* Canvas preview area */
+    .card-preview { width: 100%; height: 140px; background: #000; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .card-preview canvas { position: absolute; }
+    .card-preview .placeholder { font-size: 24px; color: #1e1e1e; }
+    /* Metadata */
+    .card-body { padding: 8px 10px; border-top: 1px solid #1a1a1a; }
+    .card-name { font-size: 12px; color: #bbb; }
+    .card-meta { font-size: 9px; color: #555; margin-top: 3px; display: flex; gap: 8px; align-items: center; }
+    .badge { font-size: 8px; padding: 1px 4px; border-radius: 2px; text-transform: uppercase; letter-spacing: 1px; }
+    .badge-done { background: #1a2a1a; color: #4a4; border: 1px solid #2a3a2a; }
+    .badge-wip  { background: #2a2a1a; color: #aa8; border: 1px solid #3a3a2a; }
+    .badge-todo { background: #1a1a1a; color: #444; border: 1px solid #222; }
+    .summary { padding: 14px 24px; border-top: 1px solid #1a1a1a; margin-top: 8px; font-size: 10px; color: #444; display: flex; gap: 20px; }
+    .summary span { color: #555; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Creature Lab</h1>
+    <p>Ultimate Dominion ASCII creature art pipeline</p>
+    <a href="viewer.html">Open Viewer ›</a>
+  </div>
+
+  <div class="zone-label">Z1 — Dark Cave</div>
+  <div class="grid" id="z1-grid">
+
+    <a class="card done" href="viewer.html?creature=dire-rat" data-slug="dire-rat">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Dire Rat</div>
+        <div class="card-meta"><span>L1</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=kobold" data-slug="kobold">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Kobold</div>
+        <div class="card-meta"><span>L2</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=goblin" data-slug="goblin">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Goblin</div>
+        <div class="card-meta"><span>L3</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=giant-spider" data-slug="giant-spider">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Giant Spider</div>
+        <div class="card-meta"><span>L4</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=skeleton-creature" data-slug="skeleton-creature">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Skeleton</div>
+        <div class="card-meta"><span>L5</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=goblin-shaman" data-slug="goblin-shaman">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Goblin Shaman</div>
+        <div class="card-meta"><span>L6</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=gelatinous-ooze" data-slug="gelatinous-ooze">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Gelatinous Ooze</div>
+        <div class="card-meta"><span>L7</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=bugbear" data-slug="bugbear">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Bugbear</div>
+        <div class="card-meta"><span>L8</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=carrion-crawler" data-slug="carrion-crawler">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Carrion Crawler</div>
+        <div class="card-meta"><span>L9</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=hook-horror" data-slug="hook-horror">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Hook Horror</div>
+        <div class="card-meta"><span>L10</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=basilisk" data-slug="basilisk">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Basilisk</div>
+        <div class="card-meta"><span>Boss</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="zone-label">Z2 — Windy Peaks</div>
+  <div class="grid">
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Dire Wolf</div><div class="card-meta"><span>L11</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Harpy</div><div class="card-meta"><span>L12</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Ogre</div><div class="card-meta"><span>L13</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Worg</div><div class="card-meta"><span>L14</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Orc</div><div class="card-meta"><span>L15</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Orc Shaman</div><div class="card-meta"><span>L16</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Troll</div><div class="card-meta"><span>L17</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Griffon</div><div class="card-meta"><span>L18</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Manticore</div><div class="card-meta"><span>L19</span><span class="badge badge-todo">todo</span></div></div></div>
+    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Korrath's Warden</div><div class="card-meta"><span>Boss</span><span class="badge badge-todo">todo</span></div></div></div>
+  </div>
+
+  <div class="summary">
+    <span>11 / 21 complete</span>
+    <span>Z1: 9 done, 2 wip, 0 todo</span>
+    <span>Z2: 0/10</span>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import { renderAscii } from './ascii-renderer.js';
+    import { createThreeRenderer } from './three-bridge.js';
+    import { loadGLBCreature } from './glb-loader.js';
+
+    // Creature config — matches what's deployed to beta via monsterTemplatesRedux.ts
+    // GLB creatures use the same animated GLBs from packages/client/public/models/creatures/
+    const CONFIGS = {
+      'dire-rat':          { gridW: 10, gridH: 7,  level: 1,  glb: 'glb/dire-rat-animated.glb' },
+      'kobold':            { gridW: 7,  gridH: 7,  level: 2,  glb: 'glb/kobold-animated.glb' },
+      'goblin':            { gridW: 7,  gridH: 7,  level: 3,  glb: 'glb/goblin-animated.glb' },
+      'giant-spider':      { gridW: 10, gridH: 12, level: 4,  canvas: true },
+      'skeleton-creature': { gridW: 7,  gridH: 7,  level: 5,  glb: 'glb/skeleton-animated.glb' },
+      'goblin-shaman':     { gridW: 7,  gridH: 7,  level: 6,  glb: 'glb/goblin-shaman-animated.glb' },
+      'gelatinous-ooze':   { gridW: 10, gridH: 14, level: 7,  canvas: true },
+      'bugbear':           { gridW: 7,  gridH: 7,  level: 8,  glb: 'glb/bugbear-animated.glb' },
+      'carrion-crawler':   { gridW: 10, gridH: 13, level: 9,  canvas: true },
+      'hook-horror':       { gridW: 14, gridH: 12, level: 10, glb: 'glb/hook-horror-animated.glb' },
+      'basilisk':          { gridW: 26, gridH: 9,  level: 12, glb: 'glb/basilisk-animated.glb' },
+    };
+
+    const PREVIEW_W = 180;
+    const PREVIEW_H = 140;
+    const RENDER_SIZE = 420;  // render at high res, scale down for crisp thumbnails
+    const CELL = 3;           // smaller cell = more ASCII density = more detail
+
+    let threeRenderer = null;
+
+    async function renderCardGLB(slug, cfg) {
+      if (!threeRenderer) threeRenderer = createThreeRenderer(RENDER_SIZE, RENDER_SIZE);
+
+      const { drawFn } = await loadGLBCreature(cfg.glb, cfg.gridW, cfg.gridH, threeRenderer);
+
+      const cW = RENDER_SIZE;
+      const cH = Math.round(RENDER_SIZE * cfg.gridH / cfg.gridW);
+
+      const scale = Math.min(PREVIEW_W / cW, PREVIEW_H / cH);
+      const displayW = Math.round(cW * scale);
+      const displayH = Math.round(cH * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cW;
+      canvas.height = cH;
+      canvas.style.width = `${displayW}px`;
+      canvas.style.height = `${displayH}px`;
+
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, cW, cH);
+
+      renderAscii(ctx, (tctx, tw, th) => drawFn(tctx, tw, th),
+        0, 0, cW, cH, { cellSize: CELL, level: cfg.level, gridWidth: cfg.gridW, gridHeight: cfg.gridH });
+
+      return canvas;
+    }
+
+    async function renderCardCanvas(slug, cfg) {
+      const mod = (await import(`./${slug}.js`)).default;
+      if (!mod || typeof mod.draw !== 'function') return null;
+
+      const { draw, skeleton } = mod;
+      const cW = RENDER_SIZE;
+      const cH = Math.round(RENDER_SIZE * cfg.gridH / cfg.gridW);
+
+      const scale = Math.min(PREVIEW_W / cW, PREVIEW_H / cH);
+      const displayW = Math.round(cW * scale);
+      const displayH = Math.round(cH * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cW;
+      canvas.height = cH;
+      canvas.style.width = `${displayW}px`;
+      canvas.style.height = `${displayH}px`;
+
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, cW, cH);
+
+      renderAscii(ctx, (tctx, tw, th) => draw(tctx, skeleton, tw, th),
+        0, 0, cW, cH, { cellSize: CELL, level: cfg.level, gridWidth: cfg.gridW, gridHeight: cfg.gridH });
+
+      return canvas;
+    }
+
+    async function renderCard(slug) {
+      const card = document.querySelector(`[data-slug="${slug}"]`);
+      if (!card) return;
+      const preview = card.querySelector('.card-preview');
+
+      try {
+        const cfg = CONFIGS[slug] || { gridW: 7, gridH: 7, level: 1, canvas: true };
+        const canvas = cfg.glb
+          ? await renderCardGLB(slug, cfg)
+          : await renderCardCanvas(slug, cfg);
+
+        if (canvas) {
+          preview.querySelector('.placeholder')?.remove();
+          preview.appendChild(canvas);
+        }
+      } catch (e) {
+        console.error(`[index] failed to render ${slug}:`, e);
+      }
+    }
+
+    // Load all creature thumbnails progressively
+    for (const slug of Object.keys(CONFIGS)) {
+      renderCard(slug);
+    }
+  </script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import { sql, mudSchema } from './connection.js';
+import { pruneOldMessages } from './chatStore.js';
 
 /**
  * Periodic pruning of stale records from Postgres.
@@ -99,6 +100,17 @@ export function startPruner(getLatestBlock: () => number): NodeJS.Timeout {
       }
     } catch (err) {
       console.error('[pruner] Error pruning CombatEncounter:', (err as Error).message);
+    }
+
+    // Prune old chat messages (keep 7 days)
+    try {
+      const chatDeleted = await pruneOldMessages(7);
+      if (chatDeleted > 0) {
+        totalDeleted += chatDeleted;
+        console.log(`[pruner] Deleted ${chatDeleted} old chat messages`);
+      }
+    } catch (err) {
+      console.error('[pruner] Error pruning chat messages:', (err as Error).message);
     }
 
     if (totalDeleted > 0) {

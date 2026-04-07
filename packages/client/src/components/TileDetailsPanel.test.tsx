@@ -79,7 +79,6 @@ const mockRenderSuccess = vi.fn();
 const mockRenderWarning = vi.fn();
 const mockValidateTileMonsters = vi.fn();
 const mockGetTableValue = vi.fn();
-const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 // --- Context mocks ---
 
@@ -176,12 +175,25 @@ vi.mock('../utils/fragmentNarratives', () => ({
   getRomanNumeral: () => 'I',
 }));
 
+vi.mock('../hooks/useNpcFlavor', () => ({
+  useNpcFlavor: () => ({ title: '', flavor: '' }),
+}));
+
 vi.mock('./ClassSymbol', () => ({
   ClassSymbol: () => null,
 }));
 
 vi.mock('./FragmentClaimModal', () => ({
   FragmentClaimModal: () => null,
+}));
+
+vi.mock('./NpcDialogueModal', () => ({
+  NpcDialogueModal: ({ npcName, npcId, metadataUri }: { npcName: string; npcId: string; metadataUri: string }) => (
+    <div data-testid="npc-dialogue-modal">
+      <span data-testid="dialogue-npc-name">{npcName}</span>
+      <span data-testid="dialogue-npc-id">{npcId}</span>
+    </div>
+  ),
 }));
 
 vi.mock('./HealthBar', () => ({
@@ -206,6 +218,12 @@ vi.mock('@chakra-ui/react', async () => {
 
 function setDefaults() {
   txCallCount = 0;
+  mockAutoFight.mockClear();
+  mockCreateEncounter.mockClear();
+  mockRest.mockClear();
+  mockRefreshCharacter.mockClear();
+  mockEncounterExecute.mockClear();
+  mockRestExecute.mockClear();
   mockRenderError.mockReset();
   mockRenderSuccess.mockReset();
   mockRenderWarning.mockReset();
@@ -240,10 +258,12 @@ function setDefaults() {
     inSafetyZone: false,
     isSpawned: true,
     monstersOnTile: [testMonster],
+    npcsOnTile: [],
     otherCharactersOnTile: [],
     position: { x: 1, y: 1 },
     shopsOnTile: [],
     visibleMonstersOnTile: [testMonster],
+    worldBosses: [],
   };
 
   fragmentState = {
@@ -261,13 +281,7 @@ function setDefaults() {
   };
 
   mockValidateTileMonsters.mockResolvedValue(undefined);
-  mockGetTableValue.mockImplementation((table: string, entityId: string) => {
-    if (entityId !== testMonster.id) return null;
-    if (table === 'EncounterEntity') return { encounterId: ZERO_HASH, died: false };
-    if (table === 'Spawned') return { spawned: true };
-    if (table === 'Position' || table === 'PositionV2') return { x: 1, y: 1 };
-    return null;
-  });
+  mockGetTableValue.mockReturnValue(null);
 
   // Default: execute calls the callback and returns result (success path)
   mockEncounterExecute.mockImplementation(async (fn: () => Promise<unknown>) => {
@@ -277,76 +291,6 @@ function setDefaults() {
     return await fn();
   });
 }
-
-describe('TileDetailsPanel — Combat Target Validation', () => {
-  beforeEach(() => {
-    setDefaults();
-    vi.useFakeTimers();
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    cleanup();
-    vi.useRealTimers();
-  });
-
-  it('blocks manual encounters when click-time validation moves the monster off tile', async () => {
-    movementState.autoAdventureMode = false;
-    let stale = false;
-
-    mockValidateTileMonsters.mockImplementation(async () => {
-      stale = true;
-    });
-    mockGetTableValue.mockImplementation((table: string, entityId: string) => {
-      if (entityId !== testMonster.id) return null;
-      if (table === 'EncounterEntity') return { encounterId: ZERO_HASH, died: false };
-      if (table === 'Spawned') return { spawned: true };
-      if (table === 'Position' || table === 'PositionV2') {
-        return stale ? { x: 2, y: 1 } : { x: 1, y: 1 };
-      }
-      return null;
-    });
-
-    render(<TileDetailsPanel />);
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
-    });
-
-    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id], { x: 1, y: 1 });
-    expect(mockEncounterExecute).not.toHaveBeenCalled();
-    expect(mockCreateEncounter).not.toHaveBeenCalled();
-    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
-  });
-
-  it('blocks auto-fight when click-time validation moves the monster off tile', async () => {
-    let stale = false;
-
-    mockValidateTileMonsters.mockImplementation(async () => {
-      stale = true;
-    });
-    mockGetTableValue.mockImplementation((table: string, entityId: string) => {
-      if (entityId !== testMonster.id) return null;
-      if (table === 'EncounterEntity') return { encounterId: ZERO_HASH, died: false };
-      if (table === 'Spawned') return { spawned: true };
-      if (table === 'Position' || table === 'PositionV2') {
-        return stale ? { x: 2, y: 1 } : { x: 1, y: 1 };
-      }
-      return null;
-    });
-
-    render(<TileDetailsPanel />);
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
-    });
-
-    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id], { x: 1, y: 1 });
-    expect(mockEncounterExecute).not.toHaveBeenCalled();
-    expect(mockAutoFight).not.toHaveBeenCalled();
-    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
-  });
-});
 
 describe('TileDetailsPanel — Loading Screen Timing', () => {
   beforeEach(() => {
@@ -378,7 +322,7 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
     expect(monsterButton).toBeTruthy();
 
     // Click starts the TX — loading screen should show while TX is in flight
-    await act(async () => {
+    act(() => {
       fireEvent.click(monsterButton!);
     });
 
@@ -417,7 +361,7 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
     render(<TileDetailsPanel />);
 
     const monsterButton = screen.getByText('Dire Rat').closest('button');
-    await act(async () => {
+    act(() => {
       fireEvent.click(monsterButton!);
     });
 
@@ -482,6 +426,70 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
 
     // Loading screen should be gone — battle view should render (manual mode shows full battle UI)
     expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
+  });
+});
+
+describe('TileDetailsPanel — Combat Target Validation', () => {
+  beforeEach(() => {
+    setDefaults();
+    vi.useFakeTimers();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('blocks manual encounters when click-time validation evicts the monster', async () => {
+    movementState.autoAdventureMode = false;
+    let ghosted = false;
+
+    mockValidateTileMonsters.mockImplementation(async () => {
+      ghosted = true;
+    });
+    mockGetTableValue.mockImplementation((table: string, entityId: string) => {
+      if (entityId !== testMonster.id) return null;
+      if (table === 'EncounterEntity') return ghosted ? { died: true } : null;
+      if (table === 'Spawned') return ghosted ? { spawned: false } : { spawned: true };
+      return null;
+    });
+
+    render(<TileDetailsPanel />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
+    });
+
+    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id]);
+    expect(mockEncounterExecute).not.toHaveBeenCalled();
+    expect(mockCreateEncounter).not.toHaveBeenCalled();
+    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
+  });
+
+  it('blocks auto-fight when click-time validation evicts the monster', async () => {
+    let ghosted = false;
+
+    mockValidateTileMonsters.mockImplementation(async () => {
+      ghosted = true;
+    });
+    mockGetTableValue.mockImplementation((table: string, entityId: string) => {
+      if (entityId !== testMonster.id) return null;
+      if (table === 'EncounterEntity') return ghosted ? { died: true } : null;
+      if (table === 'Spawned') return ghosted ? { spawned: false } : { spawned: true };
+      return null;
+    });
+
+    render(<TileDetailsPanel />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
+    });
+
+    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id]);
+    expect(mockEncounterExecute).not.toHaveBeenCalled();
+    expect(mockAutoFight).not.toHaveBeenCalled();
+    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
   });
 });
 
@@ -586,5 +594,90 @@ describe('TileDetailsPanel — Monster Collapse', () => {
     expect(monsterNames[1]).toContain('Close Rat');
     expect(monsterNames[2]).toContain('Mid Rat');
     expect(screen.queryByText('Far Rat')).toBeNull();
+  });
+});
+
+describe('TileDetailsPanel — NPC Dialogue Wiring', () => {
+  beforeEach(() => {
+    setDefaults();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('clicking a dialogue NPC opens NpcDialogueModal with correct props', async () => {
+    mapState.npcsOnTile = [{
+      entityId: '0xvel123',
+      mobId: '25',
+      name: 'Vel Morrow',
+      interaction: 'dialogue',
+      position: { x: 1, y: 1 },
+      metadataUri: 'npc:vel_morrow',
+    }];
+    mapState.monstersOnTile = [];
+    mapState.visibleMonstersOnTile = [];
+
+    render(<TileDetailsPanel />);
+
+    const npcButton = screen.getByText('Vel Morrow').closest('button');
+    expect(npcButton).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(npcButton!);
+    });
+
+    expect(screen.getByTestId('npc-dialogue-modal')).toBeTruthy();
+    expect(screen.getByTestId('dialogue-npc-name').textContent).toBe('Vel Morrow');
+    expect(screen.getByTestId('dialogue-npc-id').textContent).toBe('0xvel123');
+  });
+
+  it('clicking an examine NPC opens NpcDialogueModal', async () => {
+    mapState.npcsOnTile = [{
+      entityId: '0xjournal456',
+      mobId: '30',
+      name: 'Camp Journal',
+      interaction: 'examine',
+      position: { x: 1, y: 1 },
+      metadataUri: 'worldobj:camp_journal',
+    }];
+    mapState.monstersOnTile = [];
+    mapState.visibleMonstersOnTile = [];
+
+    render(<TileDetailsPanel />);
+
+    const npcButton = screen.getByText('Camp Journal').closest('button');
+    expect(npcButton).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(npcButton!);
+    });
+
+    expect(screen.getByTestId('npc-dialogue-modal')).toBeTruthy();
+    expect(screen.getByTestId('dialogue-npc-name').textContent).toBe('Camp Journal');
+  });
+
+  it('clicking a respec NPC does NOT open dialogue modal', async () => {
+    mapState.npcsOnTile = [{
+      entityId: '0xvel123',
+      mobId: '25',
+      name: 'Vel Morrow',
+      interaction: 'respec',
+      position: { x: 1, y: 1 },
+      metadataUri: 'npc:vel_morrow',
+    }];
+    mapState.monstersOnTile = [];
+    mapState.visibleMonstersOnTile = [];
+
+    render(<TileDetailsPanel />);
+
+    const npcButton = screen.getByText('Vel Morrow').closest('button');
+    expect(npcButton).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(npcButton!);
+    });
+
+    expect(screen.queryByTestId('npc-dialogue-modal')).toBeNull();
   });
 });

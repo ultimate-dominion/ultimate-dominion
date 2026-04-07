@@ -86,12 +86,12 @@ describe('MovementContext', () => {
     };
     battleState = { currentBattle: null };
     characterState = {
-      character: { id: '0xplayer', name: 'TestHero' },
+      character: { id: '0xplayer', level: 5n, name: 'TestHero' },
       isMoveEquipped: true,
     };
     mapState = {
       isSpawned: true,
-      position: { x: 5, y: 5 },
+      position: { x: 1, y: 1 },
     };
     chatState = { isMessageInputFocused: false };
 
@@ -209,7 +209,7 @@ describe('MovementContext', () => {
   });
 
   it('does not move when not spawned', async () => {
-    mapState = { isSpawned: false, position: { x: 5, y: 5 } };
+    mapState = { isSpawned: false, position: { x: 1, y: 1 } };
 
     render(
       <MovementProvider>

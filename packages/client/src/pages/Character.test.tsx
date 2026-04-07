@@ -125,6 +125,10 @@ vi.mock('../components/ItemEquipModal', () => ({
   ItemEquipModal: () => null,
 }));
 
+vi.mock('../components/RespecPanel', () => ({
+  RespecPanel: () => null,
+}));
+
 vi.mock('../components/Level', () => ({
   Level: (props: any) => (
     <div
@@ -206,7 +210,7 @@ function makeCharacter(overrides: Record<string, any> = {}) {
   };
 }
 
-// MAX_LEVEL = 10 (from constants.ts). maxed = Number(character.level) >= MAX_LEVEL.
+// MAX_LEVEL = 20 (from constants.ts). maxed = Number(character.level) >= MAX_LEVEL.
 
 // --- Tests ---
 
@@ -224,10 +228,10 @@ describe('CharacterPage — max level behavior', () => {
     cleanup();
   });
 
-  // --- Happy path: maxed character (level >= MAX_LEVEL = 10) ---
+  // --- Happy path: maxed character (level >= MAX_LEVEL = 20) ---
 
   it('maxed is true when character level equals MAX_LEVEL', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
 
     render(<CharacterPage />);
 
@@ -236,7 +240,7 @@ describe('CharacterPage — max level behavior', () => {
   });
 
   it('passes canLevel=false to LevelingPanel when character is at max level', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 5000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
 
     render(<CharacterPage />);
 
@@ -245,7 +249,7 @@ describe('CharacterPage — max level behavior', () => {
   });
 
   it('Level component receives levelPercent = 100 when maxed', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 16000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
 
     render(<CharacterPage />);
 
@@ -254,11 +258,11 @@ describe('CharacterPage — max level behavior', () => {
   });
 
   it('shows XP with "(MAX)" text when maxed', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 16000n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 85000n });
 
     render(<CharacterPage />);
 
-    expect(screen.getByText('16000 XP (MAX)')).toBeDefined();
+    expect(screen.getByText('85000 XP (MAX)')).toBeDefined();
   });
 
   // --- Happy path: normal character (not maxed) ---
@@ -310,7 +314,7 @@ describe('CharacterPage — max level behavior', () => {
   // --- Edge cases ---
 
   it('level exceeding MAX_LEVEL is still maxed', () => {
-    mockCharacter = makeCharacter({ level: 15n, experience: 9999n });
+    mockCharacter = makeCharacter({ level: 25n, experience: 99999n });
 
     render(<CharacterPage />);
 
@@ -322,10 +326,10 @@ describe('CharacterPage — max level behavior', () => {
   });
 
   it('canLevel is false at max level even when XP exceeds any threshold', () => {
-    mockCharacter = makeCharacter({ level: 10n, experience: 99999n });
+    mockCharacter = makeCharacter({ level: 20n, experience: 99999n });
 
-    // Even if there happened to be a Levels[10] entry
-    const nextLevelKey = '0x' + 'a'.padStart(64, '0');
+    // Even if there happened to be a Levels[20] entry
+    const nextLevelKey = '0x' + '14'.padStart(64, '0');
     mockGameValues[nextLevelKey] = { experience: 100n };
 
     render(<CharacterPage />);
@@ -358,13 +362,13 @@ describe('CharacterPage — max level behavior', () => {
     expect(screen.queryByTestId('level')).toBeNull();
   });
 
-  it('level 9 is NOT maxed (below MAX_LEVEL = 10)', () => {
-    mockCharacter = makeCharacter({ level: 9n, experience: 5000n });
+  it('level 19 is NOT maxed (below MAX_LEVEL = 20)', () => {
+    mockCharacter = makeCharacter({ level: 19n, experience: 70000n });
 
-    const nextLevelKey = '0x' + '9'.padStart(64, '0');
-    const currentLevelKey = '0x' + '8'.padStart(64, '0');
-    mockGameValues[nextLevelKey] = { experience: 4000n };
-    mockGameValues[currentLevelKey] = { experience: 2000n };
+    const nextLevelKey = '0x' + '13'.padStart(64, '0');
+    const currentLevelKey = '0x' + '12'.padStart(64, '0');
+    mockGameValues[nextLevelKey] = { experience: 84800n };
+    mockGameValues[currentLevelKey] = { experience: 68800n };
 
     render(<CharacterPage />);
 

@@ -7,6 +7,8 @@ import {
     FragmentChainProgress,
     FragmentChainStep,
     FragmentChainStepData,
+    FragChainReward,
+    FragmentProgress,
     Admin
 } from "@codegen/index.sol";
 import {FragmentType, FragmentTriggerType} from "@codegen/common.sol";
@@ -52,6 +54,17 @@ contract FragmentChainSystem is System {
         bool completed = FragmentChainProgress.getCompleted(characterId, FragmentType(fragmentType));
         if (completed) return; // Already done, no-op
 
+        // Fragment XVI prerequisite: 4+ of fragments IX-XV must be claimed
+        if (fragmentType == 16) {
+            uint256 z2Claimed;
+            for (uint8 i = 9; i <= 15; i++) {
+                if (FragmentProgress.getClaimed(characterId, FragmentType(i))) {
+                    unchecked { z2Claimed++; }
+                }
+            }
+            if (z2Claimed < 4) return; // Not enough fragments, no-op
+        }
+
         uint256 currentStep = FragmentChainProgress.getCurrentStep(characterId, FragmentType(fragmentType));
 
         // Read current step config
@@ -66,6 +79,12 @@ contract FragmentChainSystem is System {
         // Advance step
         uint256 newStep = currentStep + 1;
         FragmentChainProgress.setCurrentStep(characterId, FragmentType(fragmentType), newStep);
+
+        // Drop quest item reward if configured for this step
+        uint256 rewardItemId = FragChainReward.getRewardItemId(FragmentType(fragmentType), currentStep);
+        if (rewardItemId != 0) {
+            IWorld(_world()).UD__dropItem(characterId, rewardItemId, 1);
+        }
 
         emit ChainStepCompleted(characterId, fragmentType, newStep, totalSteps);
 

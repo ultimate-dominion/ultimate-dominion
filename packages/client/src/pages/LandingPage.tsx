@@ -8,6 +8,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 import SafeTypist from '../components/SafeTypist';
 
@@ -20,19 +21,36 @@ const torchGlow = keyframes`
   }
 `;
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const dragonPulse = keyframes`
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.045; }
+`;
+
 export const LandingPage = (): JSX.Element => {
+  const { t } = useTranslation('pages');
+
   return (
     <Box
       minH="100vh"
       px={{ base: 2, sm: 12, md: 20 }}
-      py={{ base: 4, lg: 12 }}
+      py={{ base: 4, lg: 8 }}
     >
-    {/* Logo — top right, above the frame */}
-    <Box display="flex" justifyContent="flex-end" mb={2}>
+    {/* Logo — centered above the frame */}
+    <Box
+      display="flex"
+      justifyContent="center"
+      mb={{ base: 3, md: 4 }}
+      animation={`${fadeIn} 1.5s ease-out`}
+    >
       <Image
-        alt="Ultimate Dominion Logo"
-        src="/images/ultimate-dominion-logo.svg"
-        width={{ base: '160px', sm: '200px' }}
+        alt="Ultimate Dominion"
+        src="/images/ud-logo-dark-horizontal.svg"
+        width={{ base: '260px', sm: '340px', md: '400px' }}
       />
     </Box>
 
@@ -40,7 +58,7 @@ export const LandingPage = (): JSX.Element => {
       border="6px solid #3A3228"
       display="flex"
       flexDirection="column"
-      minH={{ base: 'calc(100vh - 32px)', lg: 'calc(100vh - 96px)' }}
+      minH={{ base: 'calc(100vh - 100px)', lg: 'calc(100vh - 160px)' }}
       p={1.5}
       _after={{
         content: '""',
@@ -54,7 +72,7 @@ export const LandingPage = (): JSX.Element => {
       }}
     >
       <Helmet>
-        <title>Ultimate Dominion — Nothing Is Forgotten</title>
+        <title>{t('landing.metaTitle')}</title>
       </Helmet>
       <Box
         border="0.5px solid #3A3228"
@@ -69,15 +87,27 @@ export const LandingPage = (): JSX.Element => {
           zIndex: 1,
         }}
       >
-        {/* Dragon watermark */}
+        {/* Warm glow behind dragon */}
         <Box
-          backgroundImage="url(/images/ultimate-dominion-logo.svg)"
+          background="radial-gradient(ellipse at center, rgba(200,122,42,0.035) 0%, transparent 65%)"
+          height="80%"
+          left="50%"
+          pointerEvents="none"
+          position="absolute"
+          top="50%"
+          transform="translate(-50%, -50%)"
+          width="80%"
+          zIndex={0}
+        />
+        {/* Dragon watermark — subtle pulse like firelight */}
+        <Box
+          animation={`${dragonPulse} 6s ease-in-out infinite`}
+          backgroundImage="url(/images/ud-dragon.svg)"
           backgroundPosition="center"
           backgroundRepeat="no-repeat"
           backgroundSize="contain"
           height="60%"
           left="50%"
-          opacity={0.02}
           pointerEvents="none"
           position="absolute"
           top="50%"
@@ -92,20 +122,28 @@ export const LandingPage = (): JSX.Element => {
           mt={{ base: 14, sm: 20 }}
           position="relative"
           px={{ base: 2, sm: 14, md: 18 }}
-          spacing={{ base: 14, md: 18 }}
+          spacing={{ base: 10, md: 14 }}
           zIndex={2}
         >
-          <Text
-            color="#8A7E6A"
-            fontFamily="'Cinzel', serif"
-            fontSize={{ base: '13px', sm: '15px' }}
-            fontStyle="italic"
-            letterSpacing="0.3em"
-            textAlign="center"
-            textTransform="uppercase"
-          >
-            Nothing Is Forgotten
-          </Text>
+          <VStack spacing={{ base: 4, md: 5 }}>
+            <Text
+              color="#8A7E6A"
+              fontFamily="'Cinzel', serif"
+              fontSize={{ base: '13px', sm: '15px' }}
+              fontStyle="italic"
+              letterSpacing="0.3em"
+              textAlign="center"
+              textTransform="uppercase"
+            >
+              {t('intro.tagline')}
+            </Text>
+            {/* Ornamental divider */}
+            <Box
+              bg="linear-gradient(90deg, transparent 0%, rgba(200,122,42,0.15) 30%, rgba(212,165,74,0.4) 50%, rgba(200,122,42,0.15) 70%, transparent 100%)"
+              h="1px"
+              w={{ base: '100px', sm: '140px' }}
+            />
+          </VStack>
 
           <Box position="relative" w="100%">
             {/* Invisible spacer — reserves final text height */}
@@ -119,24 +157,16 @@ export const LandingPage = (): JSX.Element => {
               aria-hidden="true"
             >
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
-                As you awaken, your eyes flutter open to the stark, eerie ambiance
-                of a dimly lit cave.
+                {t('intro.p1')}
               </Text>
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                Confusion clouds your mind; the cold, hard ground beneath you
-                offers no comfort. Glimpses of blood and bruises on your body only
-                deepen the mystery, painting a silent story of unseen struggles.
+                {t('intro.p2')}
               </Text>
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                Where are you? How did you end up here?
+                {t('intro.p3')}
               </Text>
               <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                The shadows around you hold secrets, whispering tales of survival
-                and discovery. Gathering your strength, you rise, the weight of
-                uncertainty heavy on your shoulders — yet igniting a spark of
-                determination within. With a deep breath, you take your first step
-                into the unknown, embarking on a journey where every choice carves
-                your path through the darkness.
+                {t('intro.p4')}
               </Text>
             </VStack>
             {/* Typing animation overlaid at exact same position */}
@@ -148,27 +178,19 @@ export const LandingPage = (): JSX.Element => {
                   cursor={{ show: true, blink: true, element: '\u258C', hideWhenDone: true, hideWhenDoneDelay: 500 }}
                 >
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
-                    As you awaken, your eyes flutter open to the stark, eerie ambiance
-                    of a dimly lit cave.
+                    {t('intro.p1')}
                   </Text>
                   <SafeTypist.Delay ms={800} />
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                    Confusion clouds your mind; the cold, hard ground beneath you
-                    offers no comfort. Glimpses of blood and bruises on your body only
-                    deepen the mystery, painting a silent story of unseen struggles.
+                    {t('intro.p2')}
                   </Text>
                   <SafeTypist.Delay ms={600} />
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                    Where are you? How did you end up here?
+                    {t('intro.p3')}
                   </Text>
                   <SafeTypist.Delay ms={1000} />
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }} mt={10}>
-                    The shadows around you hold secrets, whispering tales of survival
-                    and discovery. Gathering your strength, you rise, the weight of
-                    uncertainty heavy on your shoulders — yet igniting a spark of
-                    determination within. With a deep breath, you take your first step
-                    into the unknown, embarking on a journey where every choice carves
-                    your path through the darkness.
+                    {t('intro.p4')}
                   </Text>
                 </SafeTypist>
               </VStack>
@@ -196,7 +218,7 @@ export const LandingPage = (): JSX.Element => {
             transition="all 0.3s"
             _hover={{ bg: 'rgba(200, 122, 42, 0.7)', color: '#E8DCC8', textDecoration: 'none' }}
           >
-            Enter
+            {t('intro.enter')}
           </Box>
 
           <HStack
@@ -210,7 +232,7 @@ export const LandingPage = (): JSX.Element => {
               to="/manifesto"
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
-              Manifesto
+              {t('landing.manifesto')}
             </Link>
             <Text color="#3A3228" userSelect="none">|</Text>
             <Link
@@ -219,7 +241,7 @@ export const LandingPage = (): JSX.Element => {
               to="/guide"
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
-              Guide
+              {t('landing.guide')}
             </Link>
             <Text color="#3A3228" userSelect="none">|</Text>
             <Link
@@ -228,7 +250,7 @@ export const LandingPage = (): JSX.Element => {
               isExternal
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
-              Tavern
+              {t('landing.tavern')}
             </Link>
             <Text color="#3A3228" userSelect="none">|</Text>
             <Link
@@ -246,7 +268,7 @@ export const LandingPage = (): JSX.Element => {
               isExternal
               _hover={{ color: '#D4A54A', textDecoration: 'none' }}
             >
-              Discord
+              {t('landing.discord')}
             </Link>
           </HStack>
         </VStack>

@@ -2,7 +2,7 @@ import { type Address, formatEther } from 'viem';
 import { config } from './config.js';
 import { gasChargingEnabled } from './config.js';
 import { publicClient, sendRelayerTx } from './tx.js';
-import { callFundAndCharge } from './gasCharge.js';
+import { recordFunding } from './gasCharge.js';
 import { getCharacterId, getPlayerLevel, getGoldPerGasCharge } from './chainReader.js';
 
 // ==================== State ====================
@@ -50,7 +50,7 @@ async function doTopUp(address: Address, amount: bigint, reason: string): Promis
  * 1. ETH >= minPlayerBalance → skip (has gas)
  * 2. No character → free top-up (new player)
  * 3. Level < 3 → free top-up (onboarding)
- * 4. Level 3+ → top-up + charge gold (fundAndCharge handles partial/zero reserve on-chain)
+ * 4. Level 3+ → top-up + charge gold (batchCharge handles partial/zero gold)
  */
 async function checkBalances(): Promise<void> {
   if (trackedPlayers.size === 0) return;
@@ -102,11 +102,11 @@ async function checkBalances(): Promise<void> {
       // Never leave a player stranded — they'll earn Gold from the next battle.
       await doTopUp(burnerAddress, config.fundingAmount, goldPerCharge ? 'charged' : 'free (no charge config)');
 
-      // Charge Gold atomically on-chain
+      // Charge Gold if gas charging is configured
       if (goldPerCharge) {
-        callFundAndCharge(delegatorAddress).catch(err =>
-          console.error(`[balanceMonitor] fundAndCharge failed for ${delegatorAddress}:`, err)
-        );
+        recordFunding(delegatorAddress, config.fundingAmount);
+        // batchChargeGasGoldWithCounts already handles partial charges —
+        // if player can't afford the full fee, it takes what they have.
       }
 
     } catch (err) {

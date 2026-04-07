@@ -4,18 +4,17 @@
 
 import { MUDChain } from '@latticexyz/common/chains';
 
-// ORDER MATTERS — viem ranks fallbacks by array position.
-// Primary: rpc.ultimatedominion.com (our node). Fallback: Alchemy.
-// NEVER add free public RPCs (publicnode, drpc, mainnet.base.org) —
+// Primary: OVH node (env), Fallback: Alchemy (env).
+// NEVER add free public RPCs (drpc, publicnode, mainnet.base.org) —
 // they poison viem's fallback ranking with stale reads and 500s.
 const baseHttpRpcs = [
-  import.meta.env.VITE_HTTPS_RPC_URL,     // primary: our node
-  import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL,  // fallback: alchemy
+  import.meta.env.VITE_HTTPS_RPC_URL,
+  import.meta.env.VITE_HTTPS_RPC_FALLBACK_URL,
 ].filter(Boolean) as string[];
 
 const baseWsRpcs = [
-  import.meta.env.VITE_WS_RPC_URL,        // primary: our node
-  import.meta.env.VITE_WS_RPC_FALLBACK_URL,     // fallback: alchemy
+  import.meta.env.VITE_WS_RPC_URL,
+  import.meta.env.VITE_WS_RPC_FALLBACK_URL,
 ].filter(Boolean) as string[];
 
 

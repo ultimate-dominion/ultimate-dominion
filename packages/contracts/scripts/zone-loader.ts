@@ -23,7 +23,7 @@ import { config } from 'dotenv';
 const envFile = process.env.CHAIN_ID === '8453' ? '.env.mainnet' : '.env';
 config({ path: envFile, override: false });
 
-import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, Hex, Address } from 'viem';
+import { createPublicClient, createWalletClient, http, parseAbi, encodeAbiParameters, toHex, concat, Hex, Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { foundry, base } from 'viem/chains';
 import * as fs from 'fs';
@@ -50,12 +50,7 @@ const ZONE_IDS: Record<string, number> = {
   windy_peaks: 2,
 };
 
-/** Y-origin offset per zone. Must match ZONE_ORIGIN_SPACING in constants.sol */
-const ZONE_ORIGIN_SPACING = 100;
-
-function getZoneOriginY(zoneId: number): number {
-  return (zoneId - 1) * ZONE_ORIGIN_SPACING;
-}
+// Coordinates are zone-relative (0-9). No offset needed.
 
 // ============ Types ============
 
@@ -71,6 +66,7 @@ interface ZoneManifest {
     items: boolean;
     monsters: boolean;
     shops: boolean;
+    npcs?: boolean;
   };
 }
 
@@ -170,6 +166,22 @@ interface ShopsJson {
   shops: ShopTemplate[];
 }
 
+interface NPCTemplate {
+  name: string;
+  location: [number, number];
+  alignment: number;
+  storyPathIds: string[];
+  interaction: string;
+  metadataUri: string;
+  level?: number;
+  description?: string;
+  dialogue?: Record<string, string | string[]>;
+}
+
+interface NPCsJson {
+  npcs: NPCTemplate[];
+}
+
 // ItemType and ArmorType — imported from ./lib/encode-stats
 
 // ============ Enums (zone-loader specific) ============
@@ -193,16 +205,38 @@ enum Classes {
   Mage = 2,
 }
 
+// ============ MUD Resource ID Construction ============
+
+/** Build a MUD table ResourceId: 0x7462 (tb) + namespace (14 bytes) + name (16 bytes) */
+function tableResourceId(namespace: string, name: string): Hex {
+  const typeBytes = toHex('tb', { size: 2 });
+  const nsBytes = toHex(namespace, { size: 14 });
+  const nameBytes = toHex(name, { size: 16 });
+  return concat([typeBytes, nsBytes, nameBytes]);
+}
+
+const URI_STORAGE_TABLE_ID = tableResourceId('Items', 'URIStorage');
+const COUNTERS_TABLE_ID = tableResourceId('UD', 'Counters');
+
+function padKey(v: number | bigint | string): Hex {
+  if (typeof v === 'string') {
+    // address — left-pad to 32 bytes
+    return ('0x' + v.replace('0x', '').toLowerCase().padStart(64, '0')) as Hex;
+  }
+  return ('0x' + BigInt(v).toString(16).padStart(64, '0')) as Hex;
+}
+
 // ============ ABI ============
 const worldAbi = parseAbi([
   // Read functions
   'function UD__getCurrentItemsCounter() view returns (uint256)',
+  'function getRecord(bytes32 tableId, bytes32[] keyTuple) view returns (bytes staticData, bytes32 encodedLengths, bytes dynamicData)',
 
   // Direct system functions (require namespace access - works for deployer)
   'function UD__createEffect(uint8 effectType, string name, bytes effectStats) returns (bytes32)',
   'function UD__createItem(uint8 itemType, uint256 supply, uint256 dropChance, uint256 price, uint256 rarity, bytes stats, string itemMetadataURI) returns (uint256)',
   'function UD__createMob(uint8 mobType, bytes stats, string mobMetadataUri) returns (uint256)',
-  'function UD__spawnMob(uint256 mobId, uint16 x, uint16 y) returns (bytes32)',
+  'function UD__spawnMob(uint256 mobId, uint256 zoneId, uint16 x, uint16 y) returns (bytes32)',
   'function UD__setStarterItems(uint8 class, uint256[] itemIds, uint256[] amounts)',
   'function UD__setStarterItemPool(uint256 itemId, bool isStarter)',
   'function UD__setStarterConsumables(uint256[] itemIds, uint256[] amounts)',
@@ -287,6 +321,8 @@ function encodeStatusEffectStats(effect: StatusEffect): Hex {
 
 // encodeArmorStats, encodeWeaponStats, encodeConsumableStats — imported from ./lib/encode-stats
 
+/** Canonical MonsterStats encoding — fields MUST be alphabetical to match Solidity struct.
+ *  Other scripts (deploy-z2-quest-chains.ts) reference this as the source of truth. */
 function encodeMonsterStats(stats: MonsterStats): Hex {
   return encodeAbiParameters(
     [{ type: 'tuple', components: [
@@ -355,6 +391,26 @@ function encodeShopStats(
   );
 }
 
+function encodeNPCStats(
+  name: string,
+  storyPathIds: Hex[],
+  alignment: number
+): Hex {
+  // Field order must match Solidity NPCStats struct: name, storyPathIds, alignment
+  return encodeAbiParameters(
+    [{ type: 'tuple', components: [
+      { name: 'name', type: 'string' },
+      { name: 'storyPathIds', type: 'bytes32[]' },
+      { name: 'alignment', type: 'uint8' },
+    ]}],
+    [{
+      name,
+      storyPathIds,
+      alignment,
+    }]
+  );
+}
+
 // ============ Main ============
 
 async function main() {
@@ -403,16 +459,37 @@ Available zones:
     worldAddress = process.env.WORLD_ADDRESS as Address;
   }
   if (!worldAddress) {
-    const worldsPath = path.join(__dirname, '..', 'worlds.json');
-    if (fs.existsSync(worldsPath)) {
-      const worlds = JSON.parse(fs.readFileSync(worldsPath, 'utf-8'));
-      worldAddress = worlds['31337']?.address as Address;
+    // Only fall back to worlds.json for local anvil (31337).
+    // NEVER auto-resolve mainnet worlds — require explicit WORLD_ADDRESS or --world.
+    const chainId = parseInt(process.env.CHAIN_ID || '31337');
+    if (chainId === 31337) {
+      const worldsPath = path.join(__dirname, '..', 'worlds.json');
+      if (fs.existsSync(worldsPath)) {
+        const worlds = JSON.parse(fs.readFileSync(worldsPath, 'utf-8'));
+        worldAddress = worlds['31337']?.address as Address;
+      }
     }
   }
 
   if (!worldAddress) {
     console.error('Error: World address not found. Use --world <address> or set WORLD_ADDRESS');
     process.exit(1);
+  }
+
+  // ── Production safety guard ──
+  // Never allow writes to the production world without explicit confirmation.
+  // This prevents accidental production runs from env var misconfiguration.
+  const PRODUCTION_WORLD = '0x99d01939F58B965E6E84a1D167E710Abdf5764b0';
+  if (worldAddress.toLowerCase() === PRODUCTION_WORLD.toLowerCase() && !dryRun) {
+    if (!args.includes('--confirm-production')) {
+      console.error('\n' + '!'.repeat(60));
+      console.error('  BLOCKED: World address is PRODUCTION.');
+      console.error(`  ${worldAddress}`);
+      console.error('  To run against production, add --confirm-production');
+      console.error('!'.repeat(60) + '\n');
+      process.exit(1);
+    }
+    console.warn('\n⚠  WARNING: Running against PRODUCTION world ⚠\n');
   }
 
   // Get private key
@@ -477,25 +554,94 @@ Available zones:
     console.log(`Starting nonce: ${currentNonce}`);
   }
 
-  async function sendTx(args: Parameters<typeof walletClient!.writeContract>[0]) {
+  async function sendTx(args: Parameters<typeof walletClient!.writeContract>[0], retries = 3): Promise<`0x${string}`> {
     if (!walletClient) throw new Error('No wallet client');
-    const hash = await walletClient.writeContract({
-      ...args,
-      nonce: currentNonce!,
-    });
-    currentNonce!++;
-    await publicClient.waitForTransactionReceipt({ hash });
-    await sleep(2000);
-    return hash;
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        // Refresh nonce from chain to avoid drift on L2
+        currentNonce = await publicClient.getTransactionCount({ address: account!.address });
+        const hash = await walletClient.writeContract({
+          ...args,
+          nonce: currentNonce,
+        });
+        currentNonce++;
+        await publicClient.waitForTransactionReceipt({ hash });
+        await sleep(1000);
+        return hash;
+      } catch (e: any) {
+        const msg = e?.details || e?.message || '';
+        if ((msg.includes('nonce') || msg.includes('underpriced') || msg.includes('replacement')) && attempt < retries - 1) {
+          console.log(`    Nonce error, retrying (attempt ${attempt + 2}/${retries})...`);
+          await sleep(3000);
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw new Error('sendTx: max retries exceeded');
   }
 
   // Track created item IDs by name for shop inventory resolution
   const itemIdsByName: Map<string, bigint> = new Map();
 
-  // Load dependencies first (recursive)
-  for (const dep of manifest.dependencies) {
-    console.log(`\nLoading dependency: ${dep}`);
-    // TODO: Implement recursive zone loading
+  // Resolve dependency items (populate itemIdsByName from already-deployed zones)
+  if (manifest.dependencies.length > 0) {
+    console.log('\n>>> Resolving Dependency Items <<<');
+
+    // Scan all on-chain item URIs to build uri→id map
+    const uriToId: Map<string, bigint> = new Map();
+    const itemCounter = await publicClient.readContract({
+      address: worldAddress,
+      abi: worldAbi,
+      functionName: 'UD__getCurrentItemsCounter',
+      account: account!,
+    });
+    console.log(`  Scanning ${itemCounter} on-chain items for URI mapping...`);
+
+    for (let id = 1n; id <= itemCounter; id++) {
+      try {
+        const [, , dynamicData] = await publicClient.readContract({
+          address: worldAddress,
+          abi: worldAbi,
+          functionName: 'getRecord',
+          args: [URI_STORAGE_TABLE_ID, [toHex(id, { size: 32 })]],
+        });
+        if (dynamicData && dynamicData !== '0x') {
+          const uri = Buffer.from((dynamicData as string).slice(2), 'hex').toString('utf-8');
+          if (uri) uriToId.set(uri, id);
+        }
+      } catch {
+        // Item may not exist, skip
+      }
+    }
+    console.log(`  Found ${uriToId.size} items with URIs on-chain`);
+
+    // For each dependency, read its items.json and resolve names via URI
+    for (const dep of manifest.dependencies) {
+      const depItemsPath = path.join(__dirname, '..', 'zones', dep, 'items.json');
+      if (!fs.existsSync(depItemsPath)) {
+        console.log(`  Warning: dependency "${dep}" items.json not found, skipping`);
+        continue;
+      }
+      const depItems: ItemsJson = JSON.parse(fs.readFileSync(depItemsPath, 'utf-8'));
+      let resolved = 0;
+
+      for (const armor of depItems.armor || []) {
+        const id = uriToId.get(armor.metadataUri);
+        if (id !== undefined) { itemIdsByName.set(armor.name, id); resolved++; }
+      }
+      for (const weapon of depItems.weapons || []) {
+        const id = uriToId.get(weapon.metadataUri);
+        if (id !== undefined) { itemIdsByName.set(weapon.name, id); resolved++; }
+      }
+      for (const consumable of depItems.consumables || []) {
+        const id = uriToId.get(consumable.metadataUri);
+        if (id !== undefined) { itemIdsByName.set(consumable.name, id); resolved++; }
+      }
+
+      const totalDep = (depItems.armor?.length || 0) + (depItems.weapons?.length || 0) + (depItems.consumables?.length || 0);
+      console.log(`  ${dep}: resolved ${resolved}/${totalDep} items`);
+    }
   }
 
   // Load effects
@@ -760,20 +906,14 @@ Available zones:
           // MobsByLevel is populated by createMob automatically.
           // Also register in zone-scoped MobsByZoneLevel for zone-aware spawning.
           if (zoneId > 0) {
-            // Read mob counter to get the just-created mobId
-            // The counter increments in createMob, so current value = latest mobId
-            const mobCounterAbi = parseAbi(['function UD__getCurrentMobCounter() view returns (uint256)']);
-            let mobId: bigint;
-            try {
-              mobId = await publicClient.readContract({
-                address: worldAddress,
-                abi: mobCounterAbi,
-                functionName: 'UD__getCurrentMobCounter',
-              });
-            } catch {
-              // Fallback: count mobs created so far (1-indexed)
-              mobId = BigInt(createdMobIds.length + 1);
-            }
+            // Read mob counter directly from Counters table (createMob increments it, so current value = latest mobId)
+            const [mobCounterStatic] = await publicClient.readContract({
+              address: worldAddress,
+              abi: worldAbi,
+              functionName: 'getRecord',
+              args: [COUNTERS_TABLE_ID, [padKey(worldAddress), padKey(0)]],
+            });
+            const mobId = BigInt('0x' + (mobCounterStatic as string).slice(2));
             createdMobIds.push({ mobId, level: monster.stats.level });
 
             await sendTx({
@@ -796,13 +936,10 @@ Available zones:
       const shopsData: ShopsJson = JSON.parse(fs.readFileSync(shopsPath, 'utf-8'));
       console.log('\n>>> Loading Shops <<<');
 
-      // Apply zone coordinate offset to shop locations
-      const zoneOriginY = zoneId > 0 ? getZoneOriginY(zoneId) : 0;
-
       for (const shop of shopsData.shops) {
         const spawnX = shop.location[0];
-        const spawnY = shop.location[1] + zoneOriginY;
-        console.log(`  Shop: ${shop.name} at (${spawnX}, ${spawnY})${zoneOriginY > 0 ? ` [offset from (${shop.location[0]}, ${shop.location[1]})]` : ''}`);
+        const spawnY = shop.location[1];
+        console.log(`  Shop: ${shop.name} at zone ${zoneId} (${spawnX}, ${spawnY})`);
 
         // Resolve item names to IDs
         const buyableItems: bigint[] = [];
@@ -889,9 +1026,61 @@ Available zones:
             address: worldAddress,
             abi: worldAbi,
             functionName: 'UD__spawnMob',
-            args: [mobId, spawnX, spawnY],
+            args: [mobId, BigInt(zoneId), spawnX, spawnY],
           });
-          console.log(`    -> Spawned at (${spawnX}, ${spawnY}) with mobId ${mobId}`);
+          console.log(`    -> Spawned at zone ${zoneId} (${spawnX}, ${spawnY}) with mobId ${mobId}`);
+        }
+      }
+    }
+  }
+
+  // Load NPCs
+  if (manifest.load.npcs) {
+    const npcsPath = path.join(zonePath, 'npcs.json');
+    if (fs.existsSync(npcsPath)) {
+      const npcsData: NPCsJson = JSON.parse(fs.readFileSync(npcsPath, 'utf-8'));
+      console.log('\n>>> Loading NPCs <<<');
+
+      // Count existing mobs (monsters + shops) to compute NPC mobIds
+      const monstersPath = path.join(zonePath, 'monsters.json');
+      let existingMobCount = 0;
+      if (fs.existsSync(monstersPath)) {
+        const monstersData: MonstersJson = JSON.parse(fs.readFileSync(monstersPath, 'utf-8'));
+        existingMobCount += monstersData.monsters.length;
+      }
+      const shopsPath = path.join(zonePath, 'shops.json');
+      if (fs.existsSync(shopsPath)) {
+        const shopsData: ShopsJson = JSON.parse(fs.readFileSync(shopsPath, 'utf-8'));
+        existingMobCount += shopsData.shops.length;
+      }
+
+      for (let npcIndex = 0; npcIndex < npcsData.npcs.length; npcIndex++) {
+        const npc = npcsData.npcs[npcIndex];
+        const spawnX = npc.location[0];
+        const spawnY = npc.location[1];
+        console.log(`  NPC: ${npc.name} at zone ${zoneId} (${spawnX}, ${spawnY}) — interaction: ${npc.interaction}`);
+
+        if (!dryRun && walletClient) {
+          const storyPathIds: Hex[] = (npc.storyPathIds || []).map(id => id as Hex);
+          const npcStats = encodeNPCStats(npc.name, storyPathIds, npc.alignment);
+
+          await sendTx({
+            address: worldAddress,
+            abi: worldAbi,
+            functionName: 'UD__createMob',
+            args: [MobType.NPC, npcStats, npc.metadataUri],
+          });
+          console.log(`    -> Created NPC mob template`);
+
+          const mobId = BigInt(existingMobCount + npcIndex + 1);
+
+          await sendTx({
+            address: worldAddress,
+            abi: worldAbi,
+            functionName: 'UD__spawnMob',
+            args: [mobId, BigInt(zoneId), spawnX, spawnY],
+          });
+          console.log(`    -> Spawned at zone ${zoneId} (${spawnX}, ${spawnY}) with mobId ${mobId}`);
         }
       }
     }

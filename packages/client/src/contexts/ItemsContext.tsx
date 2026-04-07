@@ -25,6 +25,7 @@ import {
   type ArmorTemplate,
   type ConsumableTemplate,
   ItemType,
+  type QuestItemTemplate,
   Rarity,
   type SpellTemplate,
   type WeaponTemplate,
@@ -42,6 +43,7 @@ type ItemsContextType = {
   armorTemplates: ArmorTemplate[];
   consumableTemplates: ConsumableTemplate[];
   isLoading: boolean;
+  questItemTemplates: QuestItemTemplate[];
   spellTemplates: SpellTemplate[];
   weaponTemplates: WeaponTemplate[];
 };
@@ -50,6 +52,7 @@ const ItemsContext = createContext<ItemsContextType>({
   armorTemplates: [],
   consumableTemplates: [],
   isLoading: false,
+  questItemTemplates: [],
   spellTemplates: [],
   weaponTemplates: [],
 });
@@ -63,6 +66,7 @@ export const ItemsProvider = ({
 
   const [armorTemplates, setArmorTemplates] = useState<ArmorTemplate[]>([]);
   const [consumableTemplates, setConsumableTemplates] = useState<ConsumableTemplate[]>([]);
+  const [questItemTemplates, setQuestItemTemplates] = useState<QuestItemTemplate[]>([]);
   const [spellTemplates, setSpellTemplates] = useState<SpellTemplate[]>([]);
   const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -347,6 +351,43 @@ export const ItemsProvider = ({
     [baseURIRow, itemsTable],
   );
 
+  const fetchAllQuestItems = useCallback(
+    async (questItemIds: bigint[], uriOverrides?: Record<string, string>): Promise<QuestItemTemplate[]> => {
+      const tokenURITable = getTableEntries('ItemsURIStorage');
+      const baseURI = String(baseURIRow?.uri ?? '');
+
+      const results = await Promise.allSettled(
+        questItemIds.map(async (itemId) => {
+          const keyBytes = encodeUint256Key(itemId);
+          const itemRow = itemsTable[keyBytes];
+          const tokenURIRow = tokenURITable[keyBytes];
+          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
+
+          let metadata = { name: `Quest Item #${itemId}`, description: '', image: '' };
+          try {
+            const fullUri = `${baseURI}${tokenURI}`;
+            if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
+              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+            } else {
+              metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
+            }
+          } catch { /* use fallback name */ }
+
+          return {
+            ...metadata,
+            itemType: toNumber(itemRow?.itemType) as ItemType,
+            rarity: toNumber(itemRow?.rarity) as Rarity,
+            tokenId: itemId.toString(),
+          } as QuestItemTemplate;
+        }),
+      );
+      return results
+        .filter((r): r is PromiseFulfilledResult<QuestItemTemplate> => r.status === 'fulfilled')
+        .map(r => r.value);
+    },
+    [baseURIRow, itemsTable],
+  );
+
   useEffect(() => {
     let cancelled = false;
     const itemEntryCount = Object.keys(itemsTable).length;
@@ -418,6 +459,9 @@ export const ItemsProvider = ({
         const spellIds = allItemIds
           .filter(({ itemType }) => itemType === ItemType.Spell)
           .map(({ itemId }) => itemId);
+        const questItemIds = allItemIds
+          .filter(({ itemType }) => itemType === ItemType.QuestItem)
+          .map(({ itemId }) => itemId);
 
         // Each category loads independently — fast categories aren't blocked by slow ones.
         // This prevents one slow IPFS fetch from leaving ALL template arrays empty.
@@ -434,6 +478,11 @@ export const ItemsProvider = ({
           fetchAllSpells(spellIds, uriOverrides)
             .then(result => { if (!cancelled) setSpellTemplates(result); })
             .catch(e => console.error('[ItemsContext] Error fetching spells:', e)),
+          ...(questItemIds.length > 0 ? [
+            fetchAllQuestItems(questItemIds, uriOverrides)
+              .then(result => { if (!cancelled) setQuestItemTemplates(result); })
+              .catch(e => console.error('[ItemsContext] Error fetching quest items:', e)),
+          ] : []),
         ]);
       } catch (e) {
         if (!cancelled) {
@@ -455,6 +504,7 @@ export const ItemsProvider = ({
     itemsTable,
     fetchAllArmor,
     fetchAllConsumables,
+    fetchAllQuestItems,
     fetchAllSpells,
     fetchAllWeapons,
     publicClient,
@@ -465,9 +515,10 @@ export const ItemsProvider = ({
     armorTemplates,
     consumableTemplates,
     isLoading,
+    questItemTemplates,
     spellTemplates,
     weaponTemplates,
-  }), [armorTemplates, consumableTemplates, isLoading, spellTemplates, weaponTemplates]);
+  }), [armorTemplates, consumableTemplates, isLoading, questItemTemplates, spellTemplates, weaponTemplates]);
 
   return (
     <ItemsContext.Provider value={contextValue}>

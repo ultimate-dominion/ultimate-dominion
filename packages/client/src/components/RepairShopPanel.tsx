@@ -8,6 +8,7 @@ import {
   useToast,
   VStack,
 } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { useCallback, useMemo, useState } from 'react';
 import { formatEther } from 'viem';
 import { GiAnvilImpact } from 'react-icons/gi';
@@ -22,13 +23,13 @@ import {
 } from '../lib/gameStore';
 import { PolygonalCard } from './PolygonalCard';
 
-/** Repair cost per durability point by rarity (in wei) */
+/** Repair cost per durability point by rarity (in wei) — must match constants.sol */
 const REPAIR_COST_PER_POINT: Record<number, bigint> = {
-  0: 1000000000000000000n,   // 1 gold (R0)
-  1: 5000000000000000000n,   // 5 gold (R1)
-  2: 15000000000000000000n,  // 15 gold (R2)
-  3: 50000000000000000000n,  // 50 gold (R3)
-  4: 150000000000000000000n, // 150 gold (R4)
+  0: 50000000000000000n,     // 0.05 gold (R0)
+  1: 250000000000000000n,    // 0.25 gold (R1)
+  2: 750000000000000000n,    // 0.75 gold (R2)
+  3: 1500000000000000000n,   // 1.5 gold (R3)
+  4: 2500000000000000000n,   // 2.5 gold (R4)
 };
 
 interface DamagedItem {
@@ -44,6 +45,7 @@ export const RepairShopPanel = (): JSX.Element | null => {
   const { character, equippedArmor, equippedWeapons, equippedSpells } = useCharacter();
   const { systemCalls: { repairItem } } = useMUD();
   const toast = useToast();
+  const { t } = useTranslation('ui');
   const [repairing, setRepairing] = useState<string | null>(null);
 
   const charDurTable = useGameTable('CharacterItemDurability');
@@ -87,9 +89,9 @@ export const RepairShopPanel = (): JSX.Element | null => {
     const result = await repairItem(character.id as `0x${string}`, item.itemId);
     setRepairing(null);
     if (result.success) {
-      toast({ title: `${item.name} repaired`, status: 'success', duration: 3000 });
+      toast({ title: t('repair.repaired', { name: item.name }), status: 'success', duration: 3000 });
     } else {
-      toast({ title: result.error ?? 'Repair failed', status: 'error', duration: 4000 });
+      toast({ title: result.error ?? t('repair.failed'), status: 'error', duration: 4000 });
     }
   }, [character, repairItem, toast]);
 
@@ -100,7 +102,7 @@ export const RepairShopPanel = (): JSX.Element | null => {
       <HStack mb={4}>
         <GiAnvilImpact color="#C8A96E" size={20} />
         <Text color="#E8DCC8" fontFamily="Cinzel, serif" fontWeight={700}>
-          Repair Equipment
+          {t('repair.title')}
         </Text>
       </HStack>
       <VStack spacing={3} align="stretch">
@@ -125,7 +127,7 @@ export const RepairShopPanel = (): JSX.Element | null => {
                   </Box>
                 </Tooltip>
                 <Text color="#8A7E6A" fontSize="xs">
-                  {item.currentDurability}/{item.maxDurability} durability
+                  {t('repair.durability', { current: item.currentDurability, max: item.maxDurability })}
                 </Text>
               </VStack>
               <Button
@@ -137,7 +139,7 @@ export const RepairShopPanel = (): JSX.Element | null => {
                 onClick={() => handleRepair(item)}
                 _hover={{ bg: 'rgba(200, 169, 110, 0.1)' }}
               >
-                Repair ({formatEther(item.repairCost)} gold)
+                {t('repair.repairButton', { cost: formatEther(item.repairCost) })}
               </Button>
             </HStack>
           );

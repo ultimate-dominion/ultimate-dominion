@@ -19,6 +19,7 @@ import {
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
@@ -37,6 +38,7 @@ import { Level } from './Level';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
   const { currentBattle } = useBattle();
   const { character } = useCharacter();
   const { fragments } = useFragments();
@@ -176,12 +178,12 @@ export const StatsPanel = (): JSX.Element => {
         </HStack>
       </HStack>
 
-      <VStack mt={3} spacing={0} w="100%">
-        {/* HP bar — hidden during battle (shown in battle pane instead) */}
-        {!currentBattle && (
+      {!currentBattle && (
+        <VStack mt={3} spacing={0} w="100%">
+          {/* HP bar — hidden during battle (shown in battle pane instead) */}
           <Box px={2} py={1.5} w="100%">
             <HStack justifyContent="space-between" mb={1}>
-              <Text fontWeight={700} size="sm">HP</Text>
+              <Text fontWeight={700} size="sm">{t('health.hp')}</Text>
               <Text color="#8A7E6A" fontFamily="mono" fontWeight={700} size="sm">
                 {currentHpWithFloor.toString()}/{maxHp.toString()}
               </Text>
@@ -214,41 +216,41 @@ export const StatsPanel = (): JSX.Element => {
               />
             </Box>
           </Box>
-        )}
 
-        {/* Stats — compact single row */}
-        {stage >= OnboardingStage.FIRST_STEPS && (
-          <HStack
-            justifyContent="center"
-            px={2}
-            py={1.5}
-            spacing={2}
-            w="100%"
-          >
-            <Text color="#5A8A3E" fontFamily="mono" size="sm">
-              AGI{' '}
-              <Text as="span" color="#E8DCC8" fontWeight={700}>
-                {(agility - expiredEffectModifications.agiModifier).toString()}
+          {/* Stats — compact single row */}
+          {stage >= OnboardingStage.FIRST_STEPS && (
+            <HStack
+              justifyContent="center"
+              px={2}
+              py={1.5}
+              spacing={2}
+              w="100%"
+            >
+              <Text color="#5A8A3E" fontFamily="mono" size="sm">
+                AGI{' '}
+                <Text as="span" color="#E8DCC8" fontWeight={700}>
+                  {(agility - expiredEffectModifications.agiModifier).toString()}
+                </Text>
               </Text>
-            </Text>
-            <Text color="#5A5040" size="sm">·</Text>
-            <Text color="#4A7AB5" fontFamily="mono" size="sm">
-              INT{' '}
-              <Text as="span" color="#E8DCC8" fontWeight={700}>
-                {(intelligence - expiredEffectModifications.intModifier).toString()}
+              <Text color="#5A5040" size="sm">·</Text>
+              <Text color="#4A7AB5" fontFamily="mono" size="sm">
+                INT{' '}
+                <Text as="span" color="#E8DCC8" fontWeight={700}>
+                  {(intelligence - expiredEffectModifications.intModifier).toString()}
+                </Text>
               </Text>
-            </Text>
-            <Text color="#5A5040" size="sm">·</Text>
-            <Text color="#B85C3A" fontFamily="mono" size="sm">
-              STR{' '}
-              <Text as="span" color="#E8DCC8" fontWeight={700}>
-                {(strength - expiredEffectModifications.strModifier).toString()}
+              <Text color="#5A5040" size="sm">·</Text>
+              <Text color="#B85C3A" fontFamily="mono" size="sm">
+                STR{' '}
+                <Text as="span" color="#E8DCC8" fontWeight={700}>
+                  {(strength - expiredEffectModifications.strModifier).toString()}
+                </Text>
               </Text>
-            </Text>
-          </HStack>
-        )}
+            </HStack>
+          )}
 
-      </VStack>
+        </VStack>
+      )}
 
       {stage >= OnboardingStage.FIRST_STEPS && (
         <>
@@ -261,11 +263,11 @@ export const StatsPanel = (): JSX.Element => {
               maxed={maxed}
             />
             <HStack justifyContent="space-between" mt={1}>
-              <Text color="#8A7E6A" fontWeight={600} size="xs">XP</Text>
+              <Text color="#8A7E6A" fontWeight={600} size="xs">{t('stats.xp')}</Text>
               <Text fontFamily="mono" fontWeight={700} size="xs">
                 {maxed ? (
                   <Text as="span" color="green">
-                    {experience.toString()} (MAX)
+                    {experience.toString()} ({t('level.max')})
                   </Text>
                 ) : (
                   <>
@@ -298,7 +300,7 @@ export const StatsPanel = (): JSX.Element => {
               <HStack spacing={1.5} cursor="default">
                 <GiTwoCoins color="#D4A54A" size={18} />
                 <Text color="yellow" fontWeight={700} size="lg">
-                  Gold
+                  {t('stats.gold')}
                 </Text>
               </HStack>
               <Text
@@ -319,7 +321,7 @@ export const StatsPanel = (): JSX.Element => {
               size="xs"
               variant="gold"
             >
-              Get Gold
+              {t('stats.getGold')}
             </Button>
             {BigInt(experience) >= nextLevelXpRequirement && !maxed && (
               <Button
@@ -327,7 +329,7 @@ export const StatsPanel = (): JSX.Element => {
                 size="xs"
                 variant="gold"
               >
-                Level Up!
+                {t('stats.levelUpButton')}
               </Button>
             )}
           </HStack>
@@ -342,7 +344,7 @@ export const StatsPanel = (): JSX.Element => {
           <Divider borderColor="grey300" mt={1} />
           <VStack px={4} py={3} spacing={1.5} w="100%">
             <Text color="#8A7E6A" fontSize="xs" fontWeight={600}>
-              Fragments
+              {t('stats.fragments')}
             </Text>
             <HStack spacing={1.5}>
               {Array.from({ length: 8 }, (_, i) => {

@@ -12,6 +12,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatEther } from 'viem';
 
 import { useBattle } from '../contexts/BattleContext';
@@ -85,6 +86,7 @@ export const RespecPanel = (): JSX.Element | null => {
     systemCalls: { statRespec, fullRespec },
   } = useMUD();
   const { renderSuccess, renderWarning } = useToast();
+  const { t } = useTranslation('ui');
 
   const respecTx = useTransaction({ actionName: 'stat respec' });
   const fullRespecTx = useTransaction({ actionName: 'full respec' });
@@ -121,7 +123,7 @@ export const RespecPanel = (): JSX.Element | null => {
     );
 
     if (result) {
-      renderSuccess('Stats redistributed.');
+      renderSuccess(t('respec.redistributed'));
       await refreshCharacter();
     }
   }, [character, hasChanges, remaining, str, agi, int_, respecTx, statRespec, renderSuccess, refreshCharacter]);
@@ -129,14 +131,14 @@ export const RespecPanel = (): JSX.Element | null => {
   const handleFullRespec = useCallback(async () => {
     if (!character) return;
 
-    renderWarning('Full respec will reset class, level, and equipment. This cannot be undone.');
+    renderWarning(t('respec.fullRespecWarning'));
 
     const result = await fullRespecTx.execute(() =>
       fullRespec(character.characterId),
     );
 
     if (result) {
-      renderSuccess('Character fully reset.');
+      renderSuccess(t('respec.fullyReset'));
       await refreshCharacter();
     }
   }, [character, fullRespecTx, fullRespec, renderSuccess, renderWarning, refreshCharacter]);
@@ -156,7 +158,7 @@ export const RespecPanel = (): JSX.Element | null => {
       w="100%"
     >
       <Text color="#C8A96E" fontSize="md" fontWeight={700}>
-        Redistribute Stats
+        {t('respec.title')}
       </Text>
 
       <VStack spacing={2} w="100%">
@@ -191,10 +193,10 @@ export const RespecPanel = (): JSX.Element | null => {
 
       <HStack justify="space-between" w="100%">
         <Text color="#8A7E6A" fontSize="xs">
-          Remaining: {remaining}
+          {t('respec.remaining', { remaining })}
         </Text>
         <Text color="#8A7E6A" fontSize="xs">
-          Cost: {formatEther(goldCost)} gold
+          {t('respec.cost', { cost: formatEther(goldCost) })}
         </Text>
       </HStack>
 
@@ -207,15 +209,14 @@ export const RespecPanel = (): JSX.Element | null => {
         variant="outline"
         w="100%"
       >
-        Redistribute Stats
+        {t('respec.title')}
       </Button>
 
       <Divider borderColor="#3A3428" />
 
       <VStack spacing={2} w="100%">
         <Text color="#8A7E6A" fontSize="xs" textAlign="center">
-          Full respec resets class, level, and all equipment.
-          Cost: {formatEther(fullRespecCost)} gold.
+          {t('respec.fullRespecInfo', { cost: formatEther(fullRespecCost) })}
         </Text>
         <Button
           colorScheme="red"
@@ -226,13 +227,13 @@ export const RespecPanel = (): JSX.Element | null => {
           variant="outline"
           w="100%"
         >
-          Full Reset
+          {t('respec.fullReset')}
         </Button>
       </VStack>
 
       {isInBattle && (
         <Text color="red.400" fontSize="xs">
-          Cannot respec during combat.
+          {t('respec.cannotDuringCombat')}
         </Text>
       )}
     </VStack>

@@ -9,13 +9,14 @@ import {
   sendRelayerTx,
 } from './tx.js';
 import { initializePool, getPoolStatus, allAddresses } from './walletPool.js';
-import { startSwapScheduler, stopSwapScheduler } from './gasCharge.js';
-import { callFundAndCharge } from './gasCharge.js';
+import { startSchedulers, stopSchedulers, getPendingChargeCount, getTotalPendingEth } from './gasCharge.js';
+import { recordFunding } from './gasCharge.js';
 import { gasChargingEnabled } from './config.js';
 import { startRpcHealthCheck, stopRpcHealthCheck, getRpcStatus } from './rpcManager.js';
 import { startBalanceMonitor, stopBalanceMonitor, trackFundedAddress, trackPlayer, getFundedCount } from './balanceMonitor.js';
 import { startPoolFunder, stopPoolFunder, getFunderStatus } from './poolFunder.js';
 import { loadFundedAddresses, saveFundedAddresses, loadFulfilledSessions, saveFulfilledSessions, loadPlayerMap, savePlayerMap } from './persistence.js';
+import { authorizeFundingRequest } from './fundAuth.js';
 
 // Gold purchase dedup (stripeSessionId → fulfilled) — persisted to disk
 const fulfilledSessions = loadFulfilledSessions();
@@ -95,8 +96,8 @@ async function main() {
   const balance = await getRelayerBalance();
   console.log(`Primary balance: ${balance} ETH`);
 
-  // Start Gold→ETH swap scheduler (no-op if WORLD_ADDRESS/GOLD_TOKEN not set)
-  startSwapScheduler();
+  // Start gas charge schedulers (no-op if WORLD_ADDRESS/GOLD_TOKEN not set)
+  startSchedulers();
 
   // Start RPC health monitoring (no-op if RPC_FALLBACK_URL not set)
   startRpcHealthCheck();
@@ -134,6 +135,8 @@ async function main() {
           totalInflight: poolStatus.totalInflight,
           chainId: config.chainId,
           gasCharging: gasChargingEnabled,
+          pendingCharges: getPendingChargeCount(),
+          pendingChargeEth: getTotalPendingEth(),
           fundedPlayers: getFundedCount(),
           poolFunder: getFunderStatus(),
           rpcStatus: getRpcStatus(),
@@ -148,21 +151,18 @@ async function main() {
 
   // Fund a new user's wallet
   app.post('/fund', async (req, res) => {
-    // API key auth — prevents unauthenticated ETH drain
-    if (!config.fundApiKey) {
-      res.status(503).json({ error: 'Fund endpoint not configured' });
-      return;
-    }
-    const apiKey = req.headers['x-api-key'] as string;
-    if (apiKey !== config.fundApiKey) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const { address, delegatorAddress } = req.body as { address?: string; delegatorAddress?: string };
+    const { address, delegatorAddress, worldAddress } = req.body as {
+      address?: string;
+      delegatorAddress?: string;
+      worldAddress?: string;
+    };
 
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
       res.status(400).json({ error: 'Invalid address' });
+      return;
+    }
+    if (worldAddress && !/^0x[a-fA-F0-9]{40}$/.test(worldAddress)) {
+      res.status(400).json({ error: 'Invalid worldAddress' });
       return;
     }
 
@@ -172,6 +172,24 @@ async function main() {
     const delegator = (delegatorAddress && /^0x[a-fA-F0-9]{40}$/.test(delegatorAddress))
       ? delegatorAddress
       : address;
+
+    const authHeader = typeof req.headers.authorization === 'string'
+      ? req.headers.authorization
+      : undefined;
+    const identityToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice('Bearer '.length)
+      : undefined;
+
+    const authResult = await authorizeFundingRequest({
+      address: address as Address,
+      delegatorAddress: delegator as Address,
+      identityToken,
+      worldAddress,
+    });
+    if (!authResult.ok) {
+      res.status(authResult.status).json({ error: authResult.error });
+      return;
+    }
 
     const normalizedAddress = address.toLowerCase();
 
@@ -252,10 +270,8 @@ async function main() {
       ipTimestamps.push(Date.now());
       ipFundings.set(ip, ipTimestamps);
 
-      // Charge Gold atomically on-chain (fire-and-forget)
-      callFundAndCharge(delegator as Address).catch(err =>
-        console.error(`[fund] fundAndCharge failed for ${delegator}:`, err)
-      );
+      // Record for gas charging (Gold deduction)
+      recordFunding(delegator as Address, config.fundingAmount);
 
       console.log(`[fund] Funded ${address} (delegator: ${delegator}) with ${formatEther(config.fundingAmount)} ETH — tx: ${txHash}`);
       res.json({ status: 'funded', txHash, amount: formatEther(config.fundingAmount) });
@@ -361,7 +377,7 @@ async function main() {
   // Graceful shutdown
   const shutdown = () => {
     console.log('\n[server] Shutting down...');
-    stopSwapScheduler();
+    stopSchedulers();
     stopRpcHealthCheck();
     stopBalanceMonitor();
     stopPoolFunder();

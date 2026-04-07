@@ -7,7 +7,7 @@ import {StoreSwitch} from "@latticexyz/store/src/StoreSwitch.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
 import {
     Admin,
-    Position,
+    PositionV2,
     NpcDialogue,
     NpcDialogueData,
     FragmentChainProgress,
@@ -38,9 +38,8 @@ contract Test_NpcDialogueSystem is Test {
         StoreSwitch.setStoreAddress(worldAddress);
         world = IWorld(worldAddress);
 
-        // Place the NPC at (5, 5)
-        Position.setX(NPC_ID, TEST_X);
-        Position.setY(NPC_ID, TEST_Y);
+        // Place the NPC at zone 1, (5, 5)
+        PositionV2.set(NPC_ID, 1, TEST_X, TEST_Y);
 
         vm.stopPrank();
     }
@@ -65,8 +64,7 @@ contract Test_NpcDialogueSystem is Test {
 
     function _placeCharacterAt(bytes32 charId, uint16 x, uint16 y) internal {
         vm.startPrank(deployer);
-        Position.setX(charId, x);
-        Position.setY(charId, y);
+        PositionV2.set(charId, 1, x, y);
         vm.stopPrank();
     }
 

@@ -255,6 +255,24 @@ contract Test_EquipmentSystem is SetUp, GasReporter {
         assertEq(modifiedStats.maxHp, int256(baseStats.maxHp) + armorStats.hpModifier);
     }
 
+    function test_worldBuffConsumableCanBeUsedFromInventory() public {
+        uint256 buffConsumableId = startingConsumableId + 1;
+        world.UD__dropItem(bobCharacterId, buffConsumableId, 1);
+
+        AdjustedCombatStats memory baseStats = world.UD__getCombatStats(bobCharacterId);
+
+        vm.startPrank(bob);
+        assertFalse(world.UD__isEquipped(bobCharacterId, buffConsumableId));
+
+        world.UD__useWorldConsumableItem(bobCharacterId, bobCharacterId, buffConsumableId);
+        vm.stopPrank();
+
+        AdjustedCombatStats memory buffedStats = world.UD__getCombatStats(bobCharacterId);
+        assertEq(buffedStats.strength, int256(baseStats.strength) + 5, "world buff should apply from inventory");
+        assertEq(world.UD__getItemBalance(bobCharacterId, buffConsumableId), 0, "buff consumable should be consumed");
+        assertFalse(world.UD__isEquipped(bobCharacterId, buffConsumableId));
+    }
+
     function test_unequipItem() public {
         vm.startPrank(alice);
         world.UD__rollStats(alicesRandomness, alicesCharacterId, Classes.Rogue);

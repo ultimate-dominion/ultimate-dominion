@@ -22,9 +22,9 @@ import {
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {
     MAX_LEVEL,
+    EARLY_GAME_CAP,
     ZONE_DARK_CAVE,
     ZONE_WINDY_PEAKS,
-    ZONE_ORIGIN_SPACING,
     BADGE_ZONE_CONQUEROR_BASE,
     BADGE_ZONE_PIONEER_BASE,
     BADGE_ZONE_FRAGMENT_BASE,
@@ -59,12 +59,12 @@ contract Test_Z2Badges is Test {
         badgesOwnersTable = WorldResourceIdLib.encode(RESOURCE_TABLE, BADGES_NAMESPACE, "Owners");
 
         // Configure zones
-        ZoneConfig.set(ZONE_DARK_CAVE, MAX_LEVEL, BADGE_ZONE_CONQUEROR_BASE);
+        ZoneConfig.set(ZONE_DARK_CAVE, EARLY_GAME_CAP, BADGE_ZONE_CONQUEROR_BASE);
         ZoneConfig.set(ZONE_WINDY_PEAKS, MAX_LEVEL, BADGE_ZONE_CONQUEROR_BASE + 1);
 
         // Configure zone maps
         ZoneMapConfig.set(ZONE_DARK_CAVE, 10, 10, 0, 0, 1);
-        ZoneMapConfig.set(ZONE_WINDY_PEAKS, 10, 10, 0, ZONE_ORIGIN_SPACING, 11);
+        ZoneMapConfig.set(ZONE_WINDY_PEAKS, 10, 10, 0, 0, 11);
 
         vm.stopPrank();
     }
@@ -147,6 +147,44 @@ contract Test_Z2Badges is Test {
 
         assertEq(CharacterZoneCompletion.getRank(charA, ZONE_WINDY_PEAKS), 1);
         assertEq(CharacterZoneCompletion.getRank(charB, ZONE_WINDY_PEAKS), 2);
+    }
+
+    // ==================== Zone Conqueror DC — Level 10 Boundary ====================
+
+    function test_zoneConquerorDC_completesAtLevel10() public {
+        address alice = _getUser();
+        bytes32 charId = _createCharacter(alice);
+        uint256 tokenId = _getTokenId(charId);
+
+        _setLevel(charId, EARLY_GAME_CAP);
+        vm.prank(deployer);
+        world.UD__backfillZoneCompletion(charId);
+
+        assertTrue(CharacterZoneCompletion.getCompleted(charId, ZONE_DARK_CAVE));
+        assertTrue(_badgeExists(BADGE_ZONE_CONQUEROR_BASE, tokenId));
+    }
+
+    function test_zoneConquerorDC_doesNotCompleteAtLevel9() public {
+        address alice = _getUser();
+        bytes32 charId = _createCharacter(alice);
+
+        _setLevel(charId, EARLY_GAME_CAP - 1);
+        vm.prank(deployer);
+        world.UD__backfillZoneCompletion(charId);
+
+        assertFalse(CharacterZoneCompletion.getCompleted(charId, ZONE_DARK_CAVE));
+    }
+
+    function test_zoneConquerorDC_level10DoesNotCompleteWP() public {
+        address alice = _getUser();
+        bytes32 charId = _createCharacter(alice);
+
+        _setLevel(charId, EARLY_GAME_CAP);
+        vm.prank(deployer);
+        world.UD__backfillZoneCompletion(charId);
+
+        assertTrue(CharacterZoneCompletion.getCompleted(charId, ZONE_DARK_CAVE));
+        assertFalse(CharacterZoneCompletion.getCompleted(charId, ZONE_WINDY_PEAKS));
     }
 
     // ==================== Peaks Pioneer — Happy Path ====================

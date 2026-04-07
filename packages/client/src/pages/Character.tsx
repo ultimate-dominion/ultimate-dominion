@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -64,6 +65,7 @@ import {
   type Armor,
   type Character,
   type Consumable,
+  type QuestItemTemplate,
   type Spell,
   type Weapon,
 } from '../utils/types';
@@ -71,6 +73,7 @@ import {
 export const CharacterPage = (): JSX.Element => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const { isSynced } = useMUD();
@@ -382,7 +385,7 @@ export const CharacterPage = (): JSX.Element => {
                 variant="filled"
               >
                 <CardBody>
-                  <Text fontWeight="bold">This character does not exist</Text>
+                  <Text fontWeight="bold">{t('character.notExist')}</Text>
                 </CardBody>
               </Card>
             </Center>
@@ -409,10 +412,12 @@ export const CharacterPage = (): JSX.Element => {
 };
 
 const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     armorTemplates,
     consumableTemplates,
     isLoading: isLoadingItemTemplates,
+    questItemTemplates,
     spellTemplates,
     weaponTemplates,
   } = useItems();
@@ -546,6 +551,23 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       });
   }, [weaponTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
 
+  const inventoryQuestItems = useMemo(() => {
+    if (isLoadingItemTemplates || questItemTemplates.length === 0) return [];
+    return questItemTemplates
+      .map(qi => {
+        const compositeKey = encodeCompositeKey(ownerKey, encodeUint256Key(BigInt(qi.tokenId)));
+        const itemOwner = itemsOwnersTable[compositeKey];
+        return {
+          ...qi,
+          balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+          itemId: compositeKey,
+          owner: character.owner,
+        };
+      })
+      .filter(qi => qi.balance !== BigInt(0))
+      .sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
+  }, [questItemTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
+
   // Equipped items derived from inventory + equipment IDs — fully synchronous
   const equippedArmor = useMemo(() =>
     equippedArmorIds.map(id => inventoryArmor.find(a => a.tokenId === id.toString())).filter(Boolean) as Armor[],
@@ -633,7 +655,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryArmor.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No armor</Text>}
+          {inventoryArmor.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noArmor')}</Text>}
           {inventoryArmor.map((ar, i) => {
             const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
             return (
@@ -670,7 +692,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryWeapons.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No weapons</Text>}
+          {inventoryWeapons.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noWeapons')}</Text>}
           {inventoryWeapons.map((item, i) => {
             const isEquipped = equippedWeaponIds.includes(
               BigInt(item.tokenId),
@@ -703,7 +725,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventorySpells.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No spells</Text>}
+          {inventorySpells.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noSpells')}</Text>}
           {inventorySpells.map((item, i) => {
             const isEquipped = equippedSpellIds.includes(
               BigInt(item.tokenId),
@@ -739,7 +761,7 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryConsumables.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">No consumables</Text>}
+          {inventoryConsumables.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noConsumables')}</Text>}
           {inventoryConsumables.map((consumable, i) => {
             const isEquipped = equippedConsumableIds.includes(
               BigInt(consumable.tokenId),
@@ -758,6 +780,48 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
             );
           })}
         </Grid>
+        {SHOW_Z2 && inventoryQuestItems.length > 0 && (
+          <>
+            <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
+            <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+              Quest Items ({inventoryQuestItems.length})
+            </Text>
+            <Grid
+              templateColumns={{
+                base: 'repeat(1, 1fr)',
+                sm: 'repeat(1, 1fr)',
+                md: 'repeat(2, 1fr)',
+                xl: 'repeat(3, 1fr)',
+              }}
+              gap={2}
+              mt={4}
+            >
+              {inventoryQuestItems.map((qi, i) => (
+                <GridItem key={i}>
+                  <Box
+                    border="1px solid"
+                    borderColor="#3A3428"
+                    borderRadius="md"
+                    p={3}
+                    bg="rgba(155, 175, 191, 0.04)"
+                  >
+                    <Text fontWeight="bold" fontSize="sm" color="#E8DCC8">
+                      {qi.name}
+                    </Text>
+                    {qi.description && (
+                      <Text fontSize="xs" color="#8A7E6A" mt={1} fontStyle="italic" noOfLines={3}>
+                        {qi.description}
+                      </Text>
+                    )}
+                    <Text fontSize="2xs" color="#6A6055" mt={1}>
+                      Permanent memento
+                    </Text>
+                  </Box>
+                </GridItem>
+              ))}
+            </Grid>
+          </>
+        )}
         {selectedItem && (
           <ItemEquipModal
             isEquipped={

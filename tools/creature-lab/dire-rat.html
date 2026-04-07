@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creature Lab - Dire Rat</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header { padding: 8px 16px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .header a { color: #555; text-decoration: none; font-size: 11px; padding: 3px 8px; border: 1px solid #2a2a2a; }
+    .header a:hover { color: #888; border-color: #444; }
+    .header h1 { font-size: 13px; color: #6a4; }
+    .status-msg { font-size: 10px; color: #555; }
+    .status-msg.error { color: #844; }
+    .animate-label { margin-left: auto; display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; cursor: pointer; }
+    .clip-select { background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 11px; font-family: inherit; padding: 2px 5px; }
+    .main { display: grid; grid-template-columns: 1fr 1fr 180px; flex: 1; min-height: 0; overflow: hidden; }
+    .panel { overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border-right: 1px solid #1a1a1a; }
+    .panel-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; flex-shrink: 0; }
+    canvas { display: block; background: #000; max-width: 100%; max-height: 100%; }
+    .ref-strip { overflow-y: auto; border-left: 1px solid #1a1a1a; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .ref-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 1px; }
+    .ref-strip img { width: 100%; border: 1px solid #222; }
+    .goals-text { font-size: 9px; color: #444; line-height: 1.7; }
+    .controls { padding: 6px 16px; border-top: 1px solid #222; display: flex; gap: 14px; align-items: center; flex-shrink: 0; }
+    .controls label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #666; cursor: pointer; }
+    select { background: #1a1a1a; border: 1px solid #333; color: #aaa; font-size: 11px; font-family: inherit; padding: 2px 4px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="viewer.html">← Lab</a>
+    <h1>Dire Rat</h1>
+    <span style="font-size:9px; padding:1px 5px; background:#1a2a1a; color:#4a4; border:1px solid #2a3a2a; text-transform:uppercase; letter-spacing:1px;">done</span>
+    <span class="status-msg" id="status-msg">loading…</span>
+    <label class="animate-label">
+      <input type="checkbox" id="animate" style="accent-color:#555"> Animate
+    </label>
+    <select id="clip-select" style="display:none"></select>
+  </div>
+
+  <div class="main">
+    <div class="panel">
+      <div class="panel-label">3D Render</div>
+      <canvas id="canvas-3d"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-label">ASCII</div>
+      <canvas id="canvas-ascii"></canvas>
+    </div>
+    <div class="ref-strip">
+      <div class="ref-label">Reference</div>
+      <img src="refs/rat-ref.png" alt="Dire Rat ref" onerror="this.style.display='none'">
+      <div class="ref-label" style="margin-top:10px;">Status</div>
+      <div class="goals-text">
+        Live on beta<br>
+        Meshy + Mesh2Motion<br>
+        11 animation clips<br>
+        Bite / Idle Alert<br>
+        Walk / Sneak / Jump<br>
+        Bark / Death
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label>Cell:
+      <select id="cell-size">
+        <option value="3">3px</option>
+        <option value="4">4px</option>
+        <option value="5" selected>5px</option>
+        <option value="6">6px</option>
+      </select>
+    </label>
+  </div>
+
+  <script type="module">
+    import { loadGLBCreature } from './glb-loader.js';
+    import { renderAscii } from './ascii-renderer.js';
+
+    const GRID_W = 10;
+    const GRID_H = 7;
+    const GLB_FILE = 'glb/dire-rat-animated.glb';
+
+    // Shared WebGL renderer
+    let threeRenderer = null;
+    function getRenderer(w, h) {
+      if (threeRenderer) {
+        const sz = threeRenderer.getSize(new (threeRenderer.getSize.constructor)(0, 0));
+        if (sz.x !== w || sz.y !== h) threeRenderer.setSize(w, h);
+        return threeRenderer;
+      }
+      // Bootstrap Three.js renderer inline to avoid circular imports
+      return null; // will be set after loadGLBCreature
+    }
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let bundle = null;
+    let animating = false;
+    let animStart = 0;
+    let rafId = null;
+
+    const statusMsg = document.getElementById('status-msg');
+    const clipSel = document.getElementById('clip-select');
+
+    // ── Load ─────────────────────────────────────────────────────────────────
+    const SIZE = 512;
+    const H = Math.round(SIZE * GRID_H / GRID_W);
+
+    // We need a Three.js renderer to pass to loadGLBCreature — bootstrap it
+    // by importing Three dynamically (same as glb-loader.js does internally).
+    const THREE = await import('three');
+    threeRenderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: false });
+    threeRenderer.setSize(SIZE, H);
+    threeRenderer.setPixelRatio(1);
+    threeRenderer.toneMapping = THREE.NoToneMapping;
+    threeRenderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    threeRenderer.shadowMap.enabled = false;
+
+    try {
+      bundle = await loadGLBCreature(GLB_FILE, GRID_W, GRID_H, threeRenderer);
+      statusMsg.textContent = '';
+
+      // Populate clip dropdown
+      const names = bundle.bundle.clipNames ?? Object.keys(bundle.bundle.actions ?? {});
+      clipSel.innerHTML = '';
+      names.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        clipSel.appendChild(opt);
+      });
+      clipSel.value = 'idle';
+      clipSel.style.display = 'inline-block';
+
+      clipSel.addEventListener('change', () => {
+        bundle.bundle.playClip(clipSel.value);
+      });
+    } catch (e) {
+      statusMsg.textContent = `⚠ ${e.message}`;
+      statusMsg.className = 'status-msg error';
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    let lastTs = 0;
+
+    function render(elapsed = 0) {
+      if (!bundle) return;
+
+      const cellSize = parseInt(document.getElementById('cell-size').value, 10);
+      const canvasW = SIZE;
+      const canvasH = H;
+
+      // Tick mixer
+      const now = performance.now();
+      const dt = lastTs > 0 ? Math.min(now - lastTs, 100) / 1000 : 0;
+      lastTs = now;
+      bundle.bundle.mixer.update(dt);
+
+      // 3D render panel
+      const c3d = document.getElementById('canvas-3d');
+      c3d.width = canvasW; c3d.height = canvasH;
+      c3d.style.maxWidth = '100%'; c3d.style.maxHeight = '100%';
+      const ctx3d = c3d.getContext('2d');
+      ctx3d.fillStyle = '#000';
+      ctx3d.fillRect(0, 0, canvasW, canvasH);
+      bundle.drawFn(ctx3d, canvasW, canvasH);
+
+      // ASCII render panel
+      const casc = document.getElementById('canvas-ascii');
+      casc.width = canvasW; casc.height = canvasH;
+      casc.style.maxWidth = '100%'; casc.style.maxHeight = '100%';
+      const ctxAsc = casc.getContext('2d');
+      ctxAsc.fillStyle = '#000';
+      ctxAsc.fillRect(0, 0, canvasW, canvasH);
+      renderAscii(ctxAsc, bundle.drawFn, 0, 0, canvasW, canvasH, {
+        elapsed,
+        cellSize,
+        level: 1,
+        gridWidth: GRID_W,
+        gridHeight: GRID_H,
+      });
+    }
+
+    function loop(ts) {
+      if (!animating) return;
+      render(ts - animStart);
+      rafId = requestAnimationFrame(loop);
+    }
+
+    document.getElementById('animate').addEventListener('change', (e) => {
+      animating = e.target.checked;
+      if (animating) { animStart = performance.now(); lastTs = 0; rafId = requestAnimationFrame(loop); }
+      else { if (rafId) cancelAnimationFrame(rafId); render(0); }
+    });
+    document.getElementById('cell-size').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+
+    // Initial render once loaded
+    if (bundle) render(0);
+  </script>
+</body>
+</html>

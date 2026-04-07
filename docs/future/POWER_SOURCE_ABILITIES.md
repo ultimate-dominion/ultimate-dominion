@@ -473,7 +473,7 @@ This distinction matters narratively: class abilities are *trained*, power sourc
 
 ### The Three Sources of Power
 
-In Noctum's Wound, where the gods are dead and magic is broken, three currents of power still flow:
+In Noctum's Marrow, where the gods are dead and magic is broken, three currents of power still flow:
 
 **Divine** — The residue of dead gods. Faith echoes. Prayers still catch on something, even if no one's listening. Divine characters tap into the leftover channels of godly power — faith as infrastructure, long after its builders died.
 

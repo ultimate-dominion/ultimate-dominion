@@ -14,6 +14,8 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
+
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
@@ -46,6 +48,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
   ...item
 }): JSX.Element => {
   const navigate = useNavigate();
+  const { t } = useTranslation('ui');
   const { renderError, renderSuccess } = useToast();
   const {
     delegatorAddress,
@@ -91,15 +94,15 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
   const onEquipItem = useCallback(async () => {
     if (!character) {
-      renderError('No character found. Please select a character.');
+      renderError(t('common.noCharacter'));
       return;
     }
     if (!delegatorAddress) {
-      renderError('Wallet not connected. Please reconnect your wallet.');
+      renderError(t('common.walletNotConnected'));
       return;
     }
 
-    setStatusText(`Equipping ${item.name}...`);
+    setStatusText(t('equip.equippingItem', { name: item.name }));
     const result = await equipTx.execute(async () => {
       const { error, success } = await equipItems(character.id, [item.tokenId]);
       if (error && !success) {
@@ -111,9 +114,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
     if (result !== undefined) {
       if (result === 'already-equipped') {
-        renderSuccess(`${item.name} is already equipped`);
+        renderSuccess(t('equip.alreadyEquipped', { name: item.name }));
       } else {
-        renderSuccess(`${item.name} equipped`);
+        renderSuccess(t('equip.equipped', { name: item.name }));
       }
       closeAndReset();
     } else {
@@ -128,19 +131,20 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     item,
     renderError,
     renderSuccess,
+    t,
   ]);
 
   const onUnequipItem = useCallback(async () => {
     if (!character) {
-      renderError('No character found. Please select a character.');
+      renderError(t('common.noCharacter'));
       return;
     }
     if (!delegatorAddress) {
-      renderError('Wallet not connected. Please reconnect your wallet.');
+      renderError(t('common.walletNotConnected'));
       return;
     }
 
-    setStatusText(`Unequipping ${item.name}...`);
+    setStatusText(t('equip.unequippingItem', { name: item.name }));
     const result = await unequipTx.execute(async () => {
       const { error, success } = await unequipItem(character.id, item.tokenId);
       if (error && !success) {
@@ -152,9 +156,9 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
 
     if (result !== undefined) {
       if (result === 'not-equipped') {
-        renderSuccess(`${item.name} is already unequipped`);
+        renderSuccess(t('equip.alreadyUnequipped', { name: item.name }));
       } else {
-        renderSuccess(`${item.name} unequipped`);
+        renderSuccess(t('equip.unequipped', { name: item.name }));
       }
       closeAndReset();
     } else {
@@ -167,6 +171,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
     item,
     renderError,
     renderSuccess,
+    t,
     unequipTx,
     unequipItem,
   ]);
@@ -227,26 +232,25 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         <ModalContent>
           <PolygonalCard isModal />
           <ModalHeader>
-            {isOwner ? 'Unequip Item' : 'Make an offer'}
+            {isOwner ? t('equip.unequipItem') : t('equip.makeOffer')}
           </ModalHeader>
           {!isLoading && <ModalCloseButton />}
           <ModalBody px={{ base: 6, sm: 8 }}>
             {isOwner ? (
-              <Text mb={6}>Do you want to unequip this item?</Text>
+              <Text mb={6}>{t('equip.wantUnequip')}</Text>
             ) : (
-              <Text mb={6}>Do you want to make an offer for this item?</Text>
+              <Text mb={6}>{t('equip.wantOffer')}</Text>
             )}
             <ItemCard {...item} />
 
             {!!currentBattle && isNotGameBoard && isOwner && (
               <Text color="red" fontWeight="bold" mt={4} size="sm">
-                You cannot unequip items during a battle.
+                {t('equip.cannotUnequipInBattle')}
               </Text>
             )}
             {isOneMoveEquipped && isOwner && (
               <Text color="red" fontWeight="bold" mt={4} size="sm">
-                You must have at least 1 weapon or spell equipped in the Outer
-                Realms.
+                {t('equip.mustHaveWeapon')}
               </Text>
             )}
             {statusText && (
@@ -257,7 +261,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
           </ModalBody>
           <ModalFooter gap={3} flexWrap="wrap" justifyContent="center">
             <Button isDisabled={isLoading} onClick={onClose} variant="ghost">
-              No
+              {t('common.no')}
             </Button>
             <Button
               isDisabled={
@@ -266,7 +270,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                 isOwner
               }
               isLoading={unequipTx.isLoading}
-              loadingText="Unequipping..."
+              loadingText={t('equip.unequipping')}
               onClick={() =>
                 isOwner
                   ? onUnequipItem()
@@ -275,7 +279,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                     )
               }
             >
-              {isOwner ? 'Unequip' : 'Yes'}
+              {isOwner ? t('equip.unequip') : t('common.yes')}
             </Button>
             {isOwner && (
               <Button
@@ -284,7 +288,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
                 variant="outline"
                 size="sm"
               >
-                Sell on Marketplace
+                {t('equip.sellOnMarketplace')}
               </Button>
             )}
           </ModalFooter>
@@ -299,55 +303,55 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
       <ModalContent>
         <PolygonalCard isModal />
         <ModalHeader>
-          {isOwner ? 'Equip Item' : 'Make an offer'}
+          {isOwner ? t('equip.equipItem') : t('equip.makeOffer')}
         </ModalHeader>
         {!isLoading && <ModalCloseButton />}
         <ModalBody px={{ base: 6, sm: 8 }}>
           {isOwner ? (
-            <Text mb={6}>Do you want to equip this item?</Text>
+            <Text mb={6}>{t('equip.wantEquip')}</Text>
           ) : (
-            <Text mb={6}>Do you want to make an offer for this item?</Text>
+            <Text mb={6}>{t('equip.wantOffer')}</Text>
           )}
           <ItemCard {...item} />
           {isMissingRequirements && isOwner && character && (
             <VStack align="start" mt={4} spacing={1}>
               <Text color="red" fontWeight="bold" size="sm">
-                Missing requirements:
+                {t('equip.missingRequirements')}
               </Text>
               {BigInt(character.level) < BigInt(item.minLevel) && (
                 <HStack>
-                  <Text color="red" size="sm">Level {item.minLevel.toString()} required</Text>
-                  <Text color="grey400" size="sm">(you: {character.level.toString()})</Text>
+                  <Text color="red" size="sm">{t('equip.levelRequired', { level: item.minLevel.toString() })}</Text>
+                  <Text color="grey400" size="sm">{t('equip.youStat', { value: character.level.toString() })}</Text>
                 </HStack>
               )}
               {BigInt(character.agility) < BigInt(item.statRestrictions.minAgility) && (
                 <HStack>
-                  <Text color="red" size="sm">AGI {item.statRestrictions.minAgility.toString()} required</Text>
-                  <Text color="grey400" size="sm">(you: {character.agility.toString()})</Text>
+                  <Text color="red" size="sm">{t('equip.agiRequired', { agi: item.statRestrictions.minAgility.toString() })}</Text>
+                  <Text color="grey400" size="sm">{t('equip.youStat', { value: character.agility.toString() })}</Text>
                 </HStack>
               )}
               {BigInt(character.intelligence) < BigInt(item.statRestrictions.minIntelligence) && (
                 <HStack>
-                  <Text color="red" size="sm">INT {item.statRestrictions.minIntelligence.toString()} required</Text>
-                  <Text color="grey400" size="sm">(you: {character.intelligence.toString()})</Text>
+                  <Text color="red" size="sm">{t('equip.intRequired', { int: item.statRestrictions.minIntelligence.toString() })}</Text>
+                  <Text color="grey400" size="sm">{t('equip.youStat', { value: character.intelligence.toString() })}</Text>
                 </HStack>
               )}
               {BigInt(character.strength) < BigInt(item.statRestrictions.minStrength) && (
                 <HStack>
-                  <Text color="red" size="sm">STR {item.statRestrictions.minStrength.toString()} required</Text>
-                  <Text color="grey400" size="sm">(you: {character.strength.toString()})</Text>
+                  <Text color="red" size="sm">{t('equip.strRequired', { str: item.statRestrictions.minStrength.toString() })}</Text>
+                  <Text color="grey400" size="sm">{t('equip.youStat', { value: character.strength.toString() })}</Text>
                 </HStack>
               )}
             </VStack>
           )}
           {slotsFull && isOwner && (
             <Text color="orange" fontWeight="bold" mt={4} size="sm">
-              All equipment slots are full. Unequip something first.
+              {t('equip.slotsFull')}
             </Text>
           )}
           {!!currentBattle && isNotGameBoard && isOwner && (
             <Text color="red" fontWeight="bold" mt={4} size="sm">
-              You cannot equip items during a battle.
+              {t('equip.cannotEquipInBattle')}
             </Text>
           )}
           {statusText && (
@@ -358,7 +362,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
         </ModalBody>
         <ModalFooter gap={3} flexWrap="wrap" justifyContent="center">
           <Button isDisabled={isLoading} onClick={onClose} variant="ghost">
-            No
+            {t('common.no')}
           </Button>
           <Button
             isDisabled={
@@ -366,14 +370,14 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               (isNotGameBoard && (isMissingRequirements || !!currentBattle) || slotsFull)
             }
             isLoading={isLoading}
-            loadingText="Equipping..."
+            loadingText={t('equip.equipping')}
             onClick={() =>
               isOwner
                 ? onEquipItem()
                 : navigate(`${ITEM_PATH}/${item.tokenId}?${buyingSearchParams}`)
             }
           >
-            {isOwner ? 'Equip' : 'Yes'}
+            {isOwner ? t('equip.equip') : t('common.yes')}
           </Button>
           {isOwner && (
             <Button
@@ -382,7 +386,7 @@ export const ItemEquipModal: React.FC<ItemEquipModalProps> = ({
               variant="outline"
               size="sm"
             >
-              Sell on Marketplace
+              {t('equip.sellOnMarketplace')}
             </Button>
           )}
         </ModalFooter>

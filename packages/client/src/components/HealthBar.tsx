@@ -6,6 +6,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 import { DARK_INSET_SHADOW } from '../utils/theme';
 
 const STATUS_EFFECT_COLOR_MAPPING: { [key: string]: string } = {
@@ -42,6 +43,7 @@ export const HealthBar = ({
   level?: bigint;
   statusEffects?: string[];
 } & StackProps): JSX.Element => {
+  const { t } = useTranslation('ui');
   const currentHpWithFloor = currentHp < BigInt(0) ? BigInt(0) : currentHp;
   const health = Math.min(
     (Number(currentHpWithFloor.toString()) / Number(maxHp.toString())) * 100,
@@ -55,11 +57,11 @@ export const HealthBar = ({
       <HStack justifyContent="space-between" w="100%">
         <HStack spacing={1}>
           <Text fontWeight={700} size={{ base: '2xs', md: 'xs' }}>
-            HP
+            {t('health.hp')}
           </Text>
           {!!level && (
             <Text color="#8A7E6A" size={{ base: '3xs', md: '2xs' }}>
-              Lvl {level.toString()}
+              {t('health.lvl', { level: level.toString() })}
             </Text>
           )}
         </HStack>

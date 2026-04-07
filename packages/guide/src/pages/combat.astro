@@ -13,7 +13,7 @@ const headings = [
   { depth: 3, slug: 'magic-damage', text: 'Magic Damage' },
   { depth: 2, slug: 'critical-hits', text: 'Critical Hits' },
   { depth: 2, slug: 'the-combat-triangle', text: 'The Combat Triangle' },
-  { depth: 2, slug: 'armor', text: 'Armor' },
+  { depth: 2, slug: 'defensive-mechanics', text: 'Defensive Mechanics' },
   { depth: 2, slug: 'status-effects', text: 'Status Effects' },
   { depth: 2, slug: 'combat-constants', text: 'Combat Constants' },
 ];
@@ -21,7 +21,7 @@ const headings = [
 
 <GuideLayout
   title="The Art of Survival"
-  description="Complete combat guide for Ultimate Dominion. Hit formulas, damage calculation, the combat triangle, critical hits, armor, status effects, and turn mechanics explained."
+  description="Complete combat guide for Ultimate Dominion. Hit formulas, damage calculation, the combat triangle, critical hits, armor, block, spell dodge, status effects, and turn mechanics explained."
   breadcrumbs={[{ label: 'Combat' }]}
   headings={headings}
 >
@@ -29,7 +29,7 @@ const headings = [
     '@type': 'Article',
     headline: 'The Art of Survival — Ultimate Dominion Combat Guide',
     description: 'How combat works in Ultimate Dominion: hit chance, damage formulas, the combat triangle, and status effects.',
-    dateModified: '2026-03-12',
+    dateModified: '2026-03-27',
   }} slot="head" />
 
   <h1>The Art of Survival</h1>
@@ -68,11 +68,11 @@ const headings = [
   </Callout>
 
   <p>
-    <strong>Evasion:</strong> AGI differential gives a chance to dodge incoming physical attacks entirely, capped at <strong>25%</strong>. This stacks with the base miss chance, making high-AGI characters slippery targets for melee fighters.
+    <strong>Evasion:</strong> AGI differential gives a chance to dodge incoming physical attacks entirely, capped at <strong>35%</strong>. The formula multiplies the AGI difference by 2, so a 10-point AGI advantage gives 20% evasion. This stacks with the base miss chance, making high-AGI characters very slippery.
   </p>
 
   <p>
-    <strong>Double strike:</strong> AGI-based weapons can trigger a double strike based on the attacker's AGI advantage over the target. A double strike deals <strong>150% damage</strong> on the triggering hit — rewarding speed-focused builds with burst potential.
+    <strong>Double strike:</strong> AGI-based weapons can trigger a double strike based on the attacker's AGI advantage over the target. A double strike deals <strong>150% damage</strong> on the triggering hit, with a cap of <strong>40%</strong> trigger chance. This rewards speed-focused builds with burst potential.
   </p>
 
   <h2 id="damage-calculation">Damage Calculation</h2>
@@ -85,6 +85,7 @@ const headings = [
     <li><strong>&times; 1.2</strong> attack modifier (attacker's advantage).</li>
     <li><strong>+ Stat bonus</strong> — <code>(your STR &times; 1.2) - (target STR &times; 1.0)</code>.</li>
     <li><strong>- Armor</strong> — target's armor &times; 1.0 reduces the damage.</li>
+    <li><strong>Block check</strong> — target may block based on STR (2% per STR, cap 35%), reducing damage by 55%.</li>
     <li><strong>&times; Crit multiplier</strong> — &times;2 on critical hits.</li>
     <li><strong>&times; Combat triangle bonus</strong> — if your dominant stat beats theirs.</li>
     <li><strong>&times; Class multiplier</strong> — your class's physical damage percentage.</li>
@@ -96,26 +97,28 @@ const headings = [
     <li><strong>Base roll</strong> — between spell's min and max damage.</li>
     <li><strong>&times; 1.2</strong> attack modifier.</li>
     <li><strong>+ Stat bonus</strong> — <code>(your INT &times; 1.2) - (target INT &times; 1.0)</code>.</li>
+    <li><strong>Spell dodge check</strong> — target may dodge based on AGI above threshold 10 (2% per AGI, cap 20%).</li>
+    <li><strong>&times; Magic resistance</strong> — target's INT grants 3% resistance per point (cap 40%).</li>
     <li><strong>&times; Crit multiplier</strong> — &times;2 on crit.</li>
     <li><strong>&times; Combat triangle bonus</strong>.</li>
     <li><strong>&times; Class multiplier</strong> — your class's spell damage percentage.</li>
   </ol>
 
-  <Callout type="tip" title="Armor does not block magic — but INT does">
-    Spells bypass armor entirely, but they don't bypass INT defense. Each point of INT grants <strong>2% magic resistance</strong> (capped at 40%), reducing incoming spell damage. Against heavily armored targets, magic is often more efficient than physical attacks — but against high-INT targets, spells lose their edge.
+  <Callout type="tip" title="Armor does not block magic — but INT and AGI do">
+    Spells bypass armor entirely, but they don't bypass INT defense. Each point of INT grants <strong>3% magic resistance</strong> (capped at 40%), reducing incoming spell damage. Additionally, AGI above 10 gives a <strong>spell dodge chance</strong> (2% per point, cap 20%). Against heavily armored targets, magic is more efficient — but against high-INT or high-AGI targets, spells lose their edge.
   </Callout>
 
   <h2 id="critical-hits">Critical Hits</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>~5% base crit chance, x2 damage using max weapon roll, modified by class crit multiplier.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>5% base crit chance + AGI/4 bonus, x2 damage using max weapon roll, modified by class crit multiplier.</em></p>
   <p>
-    Critical hits deal <strong>&times;2 damage</strong> and always use your weapon's <strong>maximum damage</strong> as the base roll (instead of a random value). The base crit chance is approximately <strong>5%</strong>, modified by your class's crit multiplier.
+    Critical hits deal <strong>&times;2 damage</strong> and always use your weapon's <strong>maximum damage</strong> as the base roll (instead of a random value). The base crit chance is <strong>5%</strong>, plus a bonus of <strong>AGI/4</strong> (so 20 AGI adds 5% crit chance). The total is then modified by your class's crit multiplier.
   </p>
   <p>
     The <a href="/guide/classes">Rogue</a> class has a 115% crit multiplier — the highest in the game — making critical hits their defining mechanic.
   </p>
 
   <h2 id="the-combat-triangle">The Combat Triangle</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>STR beats AGI, AGI beats INT, INT beats STR — +4% damage per stat point of advantage, capped at 40%.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>STR beats AGI, AGI beats INT, INT beats STR — +2% damage per stat point of advantage, capped at 12%.</em></p>
   <p>
     The combat triangle is the rock-paper-scissors of Ultimate Dominion. Your <strong>dominant stat</strong> (whichever of STR, AGI, or INT is highest) determines your side:
   </p>
@@ -128,54 +131,60 @@ const headings = [
     <li><strong>INT beats STR</strong> — magic bypasses muscle.</li>
   </ul>
   <p>
-    The bonus is <strong>+4% damage per stat point</strong> of advantage, capped at 40% (on the winning side only — the losing side takes no extra penalty). This means a Warrior with 15 STR fighting a Rogue with 10 AGI gains a +20% damage bonus.
+    The bonus is <strong>+2% damage per stat point</strong> of advantage, capped at <strong>12%</strong> (on the winning side only — the losing side takes no extra penalty). This means a Warrior with 15 STR fighting a Rogue with 9 AGI gains a +12% damage bonus (6 point difference &times; 2%).
   </p>
 
   <Callout type="tip" title="Check the bestiary">
     Every <a href="/guide/bestiary">monster</a> has a class type. Before engaging, check whether your build has the triangle advantage. Retreating to find a more favorable matchup is often smarter than brute-forcing a bad one.
   </Callout>
 
-  <h2 id="armor">Armor</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Flat physical damage reduction per hit. No effect on magic — INT provides 2% magic resistance per point (cap 40%).</em></p>
-  <p>
-    Armor reduces incoming <strong>physical</strong> damage by a flat amount per hit. The formula:
-  </p>
-  <p>
-    <code>Damage reduction = (armor - penetration) &times; 1.0</code>
-  </p>
-  <p>
-    Armor has <strong>no effect</strong> on magic damage. Against spell-heavy enemies, armor is less valuable than raw HP or INT for resistance.
-  </p>
+  <h2 id="defensive-mechanics">Defensive Mechanics</h2>
+  <p class="text-sm text-text-secondary mb-2"><em>Armor, block, evasion, spell dodge, and magic resistance — five layers of defense.</em></p>
+
+  <DataTable headers={['Mechanic', 'Stat', 'Formula', 'Cap']}>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Armor</td><td class="px-4 py-3 text-sm">Equipment</td><td class="px-4 py-3 text-sm">Flat physical damage reduction</td><td class="px-4 py-3 font-mono text-sm">None</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Block</td><td class="px-4 py-3 text-sm">STR</td><td class="px-4 py-3 text-sm">2% chance per STR, 55% damage reduction</td><td class="px-4 py-3 font-mono text-sm">35%</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Evasion</td><td class="px-4 py-3 text-sm">AGI</td><td class="px-4 py-3 text-sm">AGI diff &times; 2 = dodge % (physical only)</td><td class="px-4 py-3 font-mono text-sm">35%</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Spell Dodge</td><td class="px-4 py-3 text-sm">AGI</td><td class="px-4 py-3 text-sm">2% per AGI above threshold 10 (magic only)</td><td class="px-4 py-3 font-mono text-sm">20%</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Magic Resist</td><td class="px-4 py-3 text-sm">INT</td><td class="px-4 py-3 text-sm">3% damage reduction per INT</td><td class="px-4 py-3 font-mono text-sm">40%</td></tr>
+  </DataTable>
+
+  <Callout type="info" title="Block vs magic">
+    Block works against spells too, but at 30% effectiveness (0.30x penalty). A STR-heavy character blocking a spell reduces its damage by only ~16.5% instead of 55%.
+  </Callout>
 
   <h2 id="status-effects">Status Effects</h2>
-  <p class="text-sm text-text-secondary mb-2"><em>Temporary buffs/debuffs from abilities and consumables: hit modifiers, DoT, healing, armor changes, weapon changes, and stuns.</em></p>
+  <p class="text-sm text-text-secondary mb-2"><em>Temporary buffs/debuffs from abilities and consumables: stat modifiers, DoT, healing, armor changes, and more.</em></p>
   <p>
     Some abilities and consumables apply temporary effects that alter combat:
   </p>
 
   <DataTable headers={['Effect', 'Description']}>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Hit Modifier</td><td class="px-4 py-3 text-text-primary">Alters hit probability — makes you more or less likely to connect</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Damage over Time</td><td class="px-4 py-3 text-text-primary">Deals damage at the start of each turn for a duration</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Stat Modifier</td><td class="px-4 py-3 text-text-primary">Temporarily increases or decreases STR, AGI, or INT</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Damage over Time</td><td class="px-4 py-3 text-text-primary">Deals damage at the start of each turn for a duration (poison, bleed)</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">HP Modification</td><td class="px-4 py-3 text-text-primary">Directly adds or removes HP (healing potions, drain effects)</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Armor Modifier</td><td class="px-4 py-3 text-text-primary">Temporarily increases or decreases armor</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Weapon Modifier</td><td class="px-4 py-3 text-text-primary">Temporarily changes weapon damage values</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Stun</td><td class="px-4 py-3 text-text-primary">Causes the affected combatant to skip their turn</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Blind</td><td class="px-4 py-3 text-text-primary">Reduces target AGI by 4 for 6 turns (cooldown: 3 turns)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Poison</td><td class="px-4 py-3 text-text-primary">3 damage/turn for 8 turns, stacks up to 2 (cooldown: 2 turns)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Bleed</td><td class="px-4 py-3 text-text-primary">2 damage/turn for 4 turns (cooldown: 2 turns)</td></tr>
   </DataTable>
 
   <h2 id="combat-constants">Combat Constants</h2>
   <DataTable headers={['Constant', 'Value']}>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Base hit chance</td><td class="px-4 py-3 font-mono text-sm">90%</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Min / Max hit chance</td><td class="px-4 py-3 font-mono text-sm">5% / 98%</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Base crit chance</td><td class="px-4 py-3 font-mono text-sm">~5%</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Base crit chance</td><td class="px-4 py-3 font-mono text-sm">5% + AGI/4</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Crit damage multiplier</td><td class="px-4 py-3 font-mono text-sm">&times;2</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Attack modifier</td><td class="px-4 py-3 font-mono text-sm">&times;1.2</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Defense modifier</td><td class="px-4 py-3 font-mono text-sm">&times;1.0</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Combat triangle bonus</td><td class="px-4 py-3 font-mono text-sm">+4% per stat point (cap 40%)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Combat triangle bonus</td><td class="px-4 py-3 font-mono text-sm">+2% per stat point (cap 12%)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Evasion (AGI)</td><td class="px-4 py-3 font-mono text-sm">AGI diff &times; 2 (cap 35%)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Double strike (AGI weapons)</td><td class="px-4 py-3 font-mono text-sm">150% damage, cap 40% chance</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Block (STR)</td><td class="px-4 py-3 font-mono text-sm">2% per STR (cap 35%), 55% reduction</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Spell dodge (AGI)</td><td class="px-4 py-3 font-mono text-sm">2% per AGI above 10 (cap 20%)</td></tr>
+    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Magic resistance (INT)</td><td class="px-4 py-3 font-mono text-sm">3% per INT point (cap 40%)</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Max turns</td><td class="px-4 py-3 font-mono text-sm">15</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Turn timer</td><td class="px-4 py-3 font-mono text-sm">30 seconds</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Magic resistance</td><td class="px-4 py-3 font-mono text-sm">2% per INT point (cap 40%)</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Evasion cap</td><td class="px-4 py-3 font-mono text-sm">25% (AGI differential)</td></tr>
-    <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Double strike (AGI weapons)</td><td class="px-4 py-3 font-mono text-sm">150% damage on proc</td></tr>
     <tr class="hover:bg-surface/50"><td class="px-4 py-3 text-white font-medium">Max party size</td><td class="px-4 py-3 font-mono text-sm">10</td></tr>
   </DataTable>
 </GuideLayout>

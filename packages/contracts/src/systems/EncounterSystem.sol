@@ -10,15 +10,18 @@ import {
     Stats,
     CombatEncounter,
     CombatEncounterData,
-    Position,
+    Counters,
+    PositionV2,
     SessionTimer,
+    WorldBossV2,
     WorldEncounter,
-    WorldEncounterData
+    WorldEncounterData,
+    ZoneMapConfig
 } from "@codegen/index.sol";
 import {RngRequestType, EncounterType} from "@codegen/common.sol";
 import {Action} from "@interfaces/Structs.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
-import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE} from "../../constants.sol";
+import {DEFAULT_MAX_TURNS, MAX_PARTY_SIZE, ZONE_WINDY_PEAKS, WIND_GUST_EFFECT_ID, PEAK_RIDGE_RELATIVE_Y, WORLD_BOSS_COUNTER_ID} from "../../constants.sol";
 import {Unauthorized, InvalidPvE, InvalidPvP, InvalidEncounter, ExpiredEncounter, NonCombatant, CannotEndTurn, NotCombatEncounter, InvalidEncounterType, InvalidWorldLocation, InvalidShopEncounter, AlreadyInEncounter, InvalidCombatEntity, InvalidGroupSize, CombatantHpZero} from "../Errors.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 
@@ -34,7 +37,7 @@ contract EncounterSystem is System {
                 && !IWorld(_world()).UD__isParticipant(_msgSender(), group2)) {
             revert Unauthorized();
         }
-        (uint16 x, uint16 y) = Position.get(group1[0]);
+        (uint256 zoneId, uint16 x, uint16 y) = PositionV2.get(group1[0]);
 
         if (encounterType == EncounterType.PvE || encounterType == EncounterType.PvP) {
             (bytes32[] memory attackers, bytes32[] memory defenders) = _orderGroupsByAgi(group1, group2);
@@ -70,7 +73,7 @@ contract EncounterSystem is System {
                 attackers: attackers
             }));
         } else if (encounterType == EncounterType.World) {
-            (uint16 group1X, uint16 group1Y) = IWorld(_world()).UD__getEntityPosition(group1[0]);
+            (, uint16 group1X, uint16 group1Y) = IWorld(_world()).UD__getEntityPosition(group1[0]);
 
             if (!IWorld(_world()).UD__isAtPosition(group2[0], group1X, group1Y)) revert InvalidWorldLocation();
             uint256 startTime = block.timestamp;
@@ -104,6 +107,13 @@ contract EncounterSystem is System {
 
         _registerEntities(group1, encounterId);
         _registerEntities(group2, encounterId);
+
+        // Apply wind gust environmental effect on Windy Peaks peak ridge tiles
+        if (encounterType != EncounterType.World && _isPeakTile(zoneId, y)) {
+            bool isBossFight = _isWorldBossFight(group1, group2);
+            _applyWindGust(group1, isBossFight);
+            _applyWindGust(group2, isBossFight);
+        }
     }
 
     /**
@@ -188,6 +198,36 @@ contract EncounterSystem is System {
         } else {
             _attackers = _group1;
             _defenders = _group2;
+        }
+    }
+
+    // ---- Wind Gust environmental effect helpers ----
+
+    function _isPeakTile(uint256 zoneId, uint16 y) internal pure returns (bool) {
+        return zoneId == ZONE_WINDY_PEAKS && y >= PEAK_RIDGE_RELATIVE_Y;
+    }
+
+    function _isWorldBossFight(bytes32[] memory group1, bytes32[] memory group2) internal view returns (bool) {
+        uint256 totalBosses = Counters.getCounter(_world(), WORLD_BOSS_COUNTER_ID);
+        for (uint256 i = 1; i <= totalBosses; i++) {
+            bytes32 bossEntityId = WorldBossV2.getEntityId(i);
+            if (bossEntityId == bytes32(0)) continue;
+            for (uint256 j; j < group1.length; j++) {
+                if (group1[j] == bossEntityId) return true;
+            }
+            for (uint256 j; j < group2.length; j++) {
+                if (group2[j] == bossEntityId) return true;
+            }
+        }
+        return false;
+    }
+
+    function _applyWindGust(bytes32[] memory entities, bool isBossFight) internal {
+        for (uint256 i; i < entities.length; i++) {
+            IWorld(_world()).UD__applyStatusEffect(entities[i], WIND_GUST_EFFECT_ID);
+            if (isBossFight) {
+                IWorld(_world()).UD__applyStatusEffect(entities[i], WIND_GUST_EFFECT_ID);
+            }
         }
     }
 }

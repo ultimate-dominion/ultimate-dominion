@@ -12,6 +12,8 @@ import {
   VStack,
 } from '@chakra-ui/react';
 
+import { useTranslation } from 'react-i18next';
+
 import { useAllowance } from '../contexts/AllowanceContext';
 import { etherToFixedNumber } from '../utils/helpers';
 import { OrderType, SystemToAllow } from '../utils/types';
@@ -37,6 +39,7 @@ export const ShopAllowanceModal = ({
   orderPrice: bigint;
   orderType: OrderType;
 }): JSX.Element => {
+  const { t } = useTranslation('ui');
   const {
     goldShopAllowance,
     isApprovingGold,
@@ -56,17 +59,17 @@ export const ShopAllowanceModal = ({
         <ModalOverlay />
         <ModalContent>
           <PolygonalCard isModal />
-          <ModalHeader>Shop Permissions</ModalHeader>
+          <ModalHeader>{t('allowance.shopTitle')}</ModalHeader>
           <ModalCloseButton />
           <ModalBody p={8}>
             <Text textAlign="center">{completeMessage}</Text>
           </ModalBody>
           <ModalFooter gap={3}>
             <Button onClick={onClose} variant="ghost">
-              Close
+              {t('common.close')}
             </Button>
             <Button isLoading={isCompleting} onClick={onComplete}>
-              Complete
+              {t('common.complete')}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -79,25 +82,23 @@ export const ShopAllowanceModal = ({
       <ModalOverlay />
       <ModalContent>
         <PolygonalCard isModal />
-        <ModalHeader>Shop Permissions</ModalHeader>
+        <ModalHeader>{t('allowance.shopTitle')}</ModalHeader>
         <ModalCloseButton />
         <ModalBody p={8}>
           {orderType === OrderType.Buying && (
             <Text alignSelf="start">
-              In order to buy {itemName}, you need to give permission to spend{' '}
-              {etherToFixedNumber(orderPrice)} Gold.
+              {t('allowance.buyPermission', { item: itemName, price: etherToFixedNumber(orderPrice) })}
             </Text>
           )}
           {orderType === OrderType.Selling && (
             <Text>
-              In order to sell {itemName}, you must allow the shop to manage
-              your items.
+              {t('allowance.sellPermissionShop', { item: itemName })}
             </Text>
           )}
         </ModalBody>
         <ModalFooter alignItems="start" gap={3}>
           <Button onClick={onClose} variant="ghost">
-            Close
+            {t('common.close')}
           </Button>
           {orderType === OrderType.Buying && (
             <VStack spacing={1}>
@@ -107,13 +108,13 @@ export const ShopAllowanceModal = ({
                   onApproveGoldAllowance(SystemToAllow.Shop, orderPrice)
                 }
               >
-                Allow Spending
+                {t('common.allowSpending')}
               </Button>
               {!isApprovingGold && (
                 <Tooltip
                   bg="#14120F"
                   hasArrow
-                  label="This allows you to spend Gold on Shops without having to approve each transaction. It is a faster and smoother experience."
+                  label={t('allowance.shopAlwaysAllowTooltip')}
                   placement="top"
                   shouldWrapChildren
                 >
@@ -134,7 +135,7 @@ export const ShopAllowanceModal = ({
                       textDecoration: 'underline',
                     }}
                   >
-                    Always Allow
+                    {t('common.alwaysAllow')}
                   </Button>
                 </Tooltip>
               )}
@@ -145,7 +146,7 @@ export const ShopAllowanceModal = ({
               isLoading={isApprovingItems}
               onClick={() => onSetApprovalForAllItems(SystemToAllow.Shop)}
             >
-              Allow Spending
+              {t('common.allowSpending')}
             </Button>
           )}
         </ModalFooter>

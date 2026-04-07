@@ -57,8 +57,8 @@ contract Test_LootManagerSystem is SetUp, GasReporter {
         vm.prank(deployer);
         world.grantAccess(_mobSystemId("UD"), address(this));
         spawnedMobId = 5;
-        entityId = world.UD__spawnMob(spawnedMobId, 0, 1);
-        entityId2 = world.UD__spawnMob(spawnedMobId, 0, 1);
+        entityId = world.UD__spawnMob(spawnedMobId, 1, 0, 1);
+        entityId2 = world.UD__spawnMob(spawnedMobId, 1, 0, 1);
 
         // spawn characters
         vm.prank(bob);

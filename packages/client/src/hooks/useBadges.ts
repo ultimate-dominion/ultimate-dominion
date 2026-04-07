@@ -6,6 +6,7 @@ import type { Character } from '../utils/types';
 
 // Badge base IDs from contracts/constants.sol
 const BADGE_FOUNDER = 50;
+const BADGE_GUILD_FOUNDER = 60;
 const BADGE_ZONE_CONQUEROR_BASE = 100; // + zoneId via ZoneConfig.badgeBase
 const BADGE_ZONE_PIONEER_BASE = 150; // + zoneId
 const BADGE_ZONE_FRAGMENT_BASE = 200; // + zoneId
@@ -17,6 +18,7 @@ const MAX_ZONE_CONQUEROR_BADGES = 10;
 export type BadgeType =
   | 'adventurer'
   | 'founder'
+  | 'guild_founder'
   | 'zone_conqueror'
   | 'zone_fragment'
   | 'zone_conqueror_wp'
@@ -40,6 +42,11 @@ const BADGE_INFO: Record<BadgeType, Omit<Badge, 'type'>> = {
     label: 'Founder',
     description: 'Early supporter during launch window',
     color: '#D4A54A',
+  },
+  guild_founder: {
+    label: 'The Pact',
+    description: 'Founded a guild',
+    color: '#7B2D8E',
   },
   zone_conqueror: {
     label: 'Zone Conqueror',
@@ -71,6 +78,7 @@ const BADGE_INFO: Record<BadgeType, Omit<Badge, 'type'>> = {
 // NFT-only badges — require on-chain ownerOf check
 const NFT_BADGE_DEFS: { type: BadgeType; base: number }[] = [
   { type: 'founder', base: BADGE_FOUNDER },
+  { type: 'guild_founder', base: BADGE_GUILD_FOUNDER },
   { type: 'zone_fragment', base: BADGE_ZONE_FRAGMENT_BASE + ZONE_DARK_CAVE },
   { type: 'zone_fragment_wp', base: BADGE_ZONE_FRAGMENT_BASE + ZONE_WINDY_PEAKS },
   { type: 'peaks_pioneer', base: BADGE_ZONE_PIONEER_BASE + ZONE_WINDY_PEAKS },
@@ -79,6 +87,7 @@ const NFT_BADGE_DEFS: { type: BadgeType; base: number }[] = [
 const BADGE_ORDER: BadgeType[] = [
   'adventurer',
   'founder',
+  'guild_founder',
   'zone_conqueror',
   'zone_fragment',
   'peaks_pioneer',

@@ -6,13 +6,14 @@ import {IWorld} from "@world/IWorld.sol";
 import {
     NpcDialogue,
     NpcDialogueData,
-    Position,
+    PositionV2,
     Characters,
     Admin
 } from "@codegen/index.sol";
 import {FragmentType, FragmentTriggerType} from "@codegen/common.sol";
 import {PauseLib} from "../libraries/PauseLib.sol";
 import {NotAtNpcPosition, NpcHasNoDialogue, NotAdmin} from "../Errors.sol";
+import {ZONE_WINDY_PEAKS} from "../../constants.sol";
 
 /**
  * @title NpcDialogueSystem
@@ -32,18 +33,28 @@ contract NpcDialogueSystem is System {
         require(owner == _msgSender(), "Not character owner");
 
         // Validate same position
-        uint16 charX = Position.getX(characterId);
-        uint16 charY = Position.getY(characterId);
-        uint16 npcX = Position.getX(npcId);
-        uint16 npcY = Position.getY(npcId);
+        uint16 charX = PositionV2.getX(characterId);
+        uint16 charY = PositionV2.getY(characterId);
+        uint16 npcX = PositionV2.getX(npcId);
+        uint16 npcY = PositionV2.getY(npcId);
         if (charX != npcX || charY != npcY) revert NotAtNpcPosition();
 
         NpcDialogueData memory dialogue = NpcDialogue.get(npcId);
         if (bytes(dialogue.dialogueLines).length == 0) revert NpcHasNoDialogue();
 
-        // Advance fragment chain if NPC is linked to one
-        if (uint8(dialogue.fragmentType) != 0) {
-            // Encode npcId as trigger data
+        // Advance fragment chain(s) on NPC interaction
+        if (dialogue.zoneId == ZONE_WINDY_PEAKS) {
+            // Z2 NPCs can be linked to multiple chains — try all Z2 chains
+            bytes memory triggerData = abi.encode(npcId);
+            for (uint8 ft = 9; ft <= 16; ft++) {
+                IWorld(_world()).UD__tryAdvanceChain(
+                    characterId, ft,
+                    uint8(FragmentTriggerType.NpcInteract),
+                    triggerData
+                );
+            }
+        } else if (uint8(dialogue.fragmentType) != 0) {
+            // Z1 single-chain behavior
             bytes memory triggerData = abi.encode(npcId);
             IWorld(_world()).UD__tryAdvanceChain(
                 characterId,

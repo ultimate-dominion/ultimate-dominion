@@ -7,7 +7,7 @@ import { seededRng, resolveAttack, type RngFn } from "./combat.js";
 import type { CombatConstants, Combatant, Weapon } from "./types.js";
 
 const CC: CombatConstants = {
-  attackModifier: 1.2,
+  attackModifier: 1.0,
   agiAttackModifier: 1.0,
   defenseModifier: 1.0,
   critMultiplier: 2,

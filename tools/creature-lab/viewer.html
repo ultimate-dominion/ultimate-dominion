@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creature Lab — Viewer</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Header */
+    .header { padding: 8px 16px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .back { color: #555; text-decoration: none; font-size: 11px; padding: 3px 8px; border: 1px solid #2a2a2a; }
+    .back:hover { color: #888; border-color: #444; }
+    .nav-btn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #666; padding: 3px 10px; cursor: pointer; font-family: inherit; font-size: 16px; line-height: 1; }
+    .nav-btn:hover { color: #aaa; border-color: #444; }
+    .creature-name { font-size: 14px; color: #6a4; min-width: 160px; }
+    .badge { font-size: 9px; padding: 1px 5px; border-radius: 2px; text-transform: uppercase; letter-spacing: 1px; }
+    .badge-done { background: #1a2a1a; color: #4a4; border: 1px solid #2a3a2a; }
+    .badge-wip  { background: #2a2a1a; color: #aa8; border: 1px solid #3a3a2a; }
+    .badge-todo { background: #1a1a1a; color: #444; border: 1px solid #222; }
+    select#creature-select { background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 11px; font-family: inherit; padding: 3px 6px; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .animate-label { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; cursor: pointer; }
+    .status-msg { font-size: 10px; color: #555; }
+    .status-msg.error { color: #844; }
+    .fps { font-size: 10px; color: #383; min-width: 36px; text-align: right; }
+    .clip-select { background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 11px; font-family: inherit; padding: 2px 5px; display: none; }
+    .clip-select.visible { display: inline-block; }
+
+    /* Main layout — 2×2 panel grid + right strip, fills remaining viewport */
+    .main { display: grid; grid-template-columns: 1fr 1fr 200px; grid-template-rows: 1fr 1fr; flex: 1; min-height: 0; overflow: hidden; }
+    .panel { overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
+    .panel-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; flex-shrink: 0; }
+    canvas { display: block; background: #000; max-width: 100%; max-height: 100%; }
+
+    /* Right strip spans both rows */
+    .ref-strip { grid-row: 1 / 3; grid-column: 3; overflow-y: auto; border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; }
+    .ref-section { padding: 10px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; }
+    .ref-section.history-section { flex: 1; overflow-y: auto; }
+    .ref-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .ref-img { width: 100%; border: 1px solid #222; display: block; }
+    .goals-text { font-size: 9px; color: #444; line-height: 1.7; }
+
+    /* History */
+    .history-empty { font-size: 9px; color: #2a2a2a; line-height: 1.6; }
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-item { cursor: pointer; border: 1px solid #1a1a1a; transition: border-color 0.1s; }
+    .history-item:hover { border-color: #444; }
+    .history-item img { width: 100%; display: block; }
+    .history-meta { font-size: 8px; color: #444; padding: 3px 5px; display: flex; justify-content: space-between; }
+    .history-meta .v { color: #666; }
+    .history-meta .note { color: #3a3a3a; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
+
+    /* Lightbox */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 100; align-items: center; justify-content: center; cursor: pointer; }
+    .lightbox.active { display: flex; }
+    .lightbox img { max-width: 90vw; max-height: 90vh; border: 1px solid #333; }
+    .lightbox-meta { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a class="back" href="index.html">← Lab</a>
+    <a class="back" href="review.html" title="Review all clips at game quality">Review</a>
+    <button class="nav-btn" id="prev" title="Previous (←)">‹</button>
+    <button class="nav-btn" id="next" title="Next (→)">›</button>
+    <span class="creature-name" id="creature-name">—</span>
+    <span class="badge" id="status-badge"></span>
+    <select id="creature-select"></select>
+    <div class="header-right">
+      <span id="status-msg" class="status-msg"></span>
+      <label class="animate-label" style="gap:4px">
+        <span style="color:#444;font-size:10px">Cell</span>
+        <select id="cell-size" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:11px;font-family:inherit;padding:2px 5px">
+          <option value="3">3px</option>
+          <option value="4">4px</option>
+          <option value="5">5px</option>
+          <option value="6" selected>6px</option>
+          <option value="7">7px</option>
+          <option value="8">8px</option>
+          <option value="10">10px</option>
+        </select>
+      </label>
+      <label class="animate-label" style="gap:4px">
+        <span style="color:#444;font-size:10px">Palette</span>
+        <select id="palette-select" style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:11px;font-family:inherit;padding:2px 5px">
+          <option value="default">default</option>
+          <option value="blocks">blocks ░▒▓</option>
+          <option value="organic">organic ·∙•●</option>
+          <option value="dense">dense</option>
+          <option value="runes">runes ᚠᚱᛟ</option>
+          <option value="composite">composite ᚾ▒◉</option>
+        </select>
+      </label>
+      <label class="animate-label">
+        <input type="checkbox" id="full-chars" style="accent-color:#555"> Full chars
+      </label>
+      <label class="animate-label">
+        <input type="checkbox" id="use-shape" style="accent-color:#555"> Shape ⬡
+      </label>
+      <label class="animate-label">
+        <input type="checkbox" id="use-3d" style="accent-color:#555"> 3D
+      </label>
+      <select id="clip-select" class="clip-select" title="Animation clip">
+        <option value="idle">idle</option>
+        <option value="attack">attack</option>
+        <option value="block">block</option>
+        <option value="hit">hit</option>
+        <option value="death">death</option>
+      </select>
+      <select id="stance-select" class="clip-select" title="Idle stance variant" style="display:none">
+        <option value="0">stance 1</option>
+        <option value="1">stance 2</option>
+        <option value="2">stance 3</option>
+      </select>
+      <label class="animate-label">
+        <input type="checkbox" id="animate" style="accent-color:#555"> Animate
+      </label>
+      <span class="fps" id="fps-display"></span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="panel">
+      <div class="panel-label">Skeleton</div>
+      <canvas id="skel-raw"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-label">ASCII</div>
+      <canvas id="next-ascii"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-label">Painted</div>
+      <canvas id="next-raw"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-label">Game View</div>
+      <canvas id="game-ascii"></canvas>
+    </div>
+
+    <div class="ref-strip">
+      <!-- Reference -->
+      <div class="ref-section">
+        <div class="ref-label">Reference</div>
+        <img id="ref-img" class="ref-img" src="" alt="" style="display:none">
+        <div id="no-ref" class="history-empty">No reference yet</div>
+      </div>
+      <!-- Goals -->
+      <div class="ref-section" id="goals-section" style="display:none">
+        <div class="ref-label">Goals</div>
+        <div id="goals-text" class="goals-text"></div>
+      </div>
+      <!-- Iterations -->
+      <div class="ref-section history-section">
+        <div class="ref-label" id="history-label">Iterations</div>
+        <div id="history-list" class="history-list">
+          <div class="history-empty" id="history-empty">Run render-creature.mjs --save to capture versions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <img id="lightbox-img" src="" alt="">
+    <div class="lightbox-meta" id="lightbox-meta"></div>
+  </div>
+
+  <script type="module">
+    import { renderAscii, PALETTES, COMPOSITE_PALETTES } from './ascii-renderer.js';
+    import { drawBodyOutline, drawLimbChain, drawDebugSkeleton } from './skeleton.js';
+    import { MONSTER_TEMPLATES_REDUX } from './game-draws.js';
+    import { createThreeRenderer } from './three-bridge.js';
+
+    // ---- Three.js singleton (shared across all creatures) ----
+    let threeRenderer = null;
+    let currentBundle3D = null;  // { drawFn, bundle } from makeDrawFn()
+    let fpsFrameTs = 0;
+
+    function getThreeRenderer(w, h) {
+      if (!threeRenderer) threeRenderer = createThreeRenderer(w, h);
+      return threeRenderer;
+    }
+
+    // Build lookup: creature slug → actual game draw function
+    // Only creatures with REAL Redux implementations are listed here.
+    // Others fall back to the lab draw fn so the Game View shows the actual art.
+    // (giant-spider through hook-horror use unrelated Z2 stub functions in monsterTemplatesRedux.ts)
+    const SLUG_TO_REDUX = {
+      'dire-rat':     'redux-dire-rat',
+      'kobold':       'redux-kobold',
+      'goblin':       'redux-goblin',
+      'skeleton':     'redux-skeleton',
+      'goblin-shaman':'redux-goblin-shaman',
+      'bugbear':      'redux-bugbear',
+    };
+    const REDUX_BY_SLUG = Object.fromEntries(
+      MONSTER_TEMPLATES_REDUX.map(t => [t.id, t])
+    );
+
+    // gameGrid: actual grid dimensions used in-game (determines ASCII density & aspect ratio)
+    // labGrid: dimensions used in the creature lab for development
+    const CREATURES = [
+      { slug: 'dire-rat',          name: 'Dire Rat',        level: 1,  status: 'done', ref: 'refs/rat-ref.png',
+        type: 'glb', glbFile: 'glb/dire-rat-animated.glb',
+        atmosphere: [140,110,70,0.10],
+        gameGrid: { w: 10, h: 7 }, labGrid: { w: 10, h: 7 },
+        goals: 'Meshy + Mesh2Motion animated GLB\nBite/Idle Alert/Walk/Sneak/Jump/Bark/Death\nLive in-game on beta' },
+      { slug: 'kobold',            name: 'Kobold',          level: 2,  status: 'done', ref: 'refs/kobold-ref.webp',
+        atmosphere: [160,120,50,0.10],
+        type: 'glb', glbFile: 'glb/kobold-animated.glb',
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Meshy v2 mesh + v1 rig + v1 animations\nIdle/Walk/Attack/Death/HitReact\n5 clips merged via gltf-transform' },
+      { slug: 'goblin',            name: 'Goblin',          level: 3,  status: 'done', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-animated.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Meshy v2 mesh + v1 rig + v1 animations\nBone cleaver weapon\nIdle/Walk/Attack/Death/HitReact' },
+      { slug: 'goblin-v3',            name: 'Goblin v3 (big cleaver + Skill_03)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-animated.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'v3: oversized cleaver prompt + Skill_03 attack (action_id=19)\nCheck weapon visibility in ASCII' },
+      { slug: 'goblin-skill03-merged', name: 'Goblin Skill_03 MERGED (weapon test)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-skill03-merged.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Skill_03 motion + original mesh (has weapon)\nIf weapon visible here, swap is good' },
+      { slug: 'goblin-skill01',    name: 'Goblin Skill_01 (action 17)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-skill_01.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Probe: Skill_01 attack animation candidate\nCompare vs current attack (action_id=4)' },
+      { slug: 'goblin-skill02',    name: 'Goblin Skill_02 (action 18)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-skill_02.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Probe: Skill_02 attack animation candidate' },
+      { slug: 'goblin-skill03',    name: 'Goblin Skill_03 (action 19)', level: 3, status: 'wip', ref: 'refs/goblin-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-skill_03.glb',
+        atmosphere: [96,120,48,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Probe: Skill_03 attack animation candidate' },
+      { slug: 'giant-spider',      name: 'Giant Spider',    level: 4,  status: 'done', ref: 'refs/giant-spider-ref.jpg',
+        atmosphere: [72,164,226,0.15],
+        gameGrid: { w: 10, h: 12 }, labGrid: { w: 7,  h: 5  },
+        goals: 'Low hunting stance\n8 legs spread wide\nAbdomen raised\nFangs forward' },
+      { slug: 'skeleton',          name: 'Skeleton',        level: 5,  status: 'done', ref: 'refs/skeleton-ref.webp',
+        type: 'glb', glbFile: 'glb/skeleton-animated.glb',
+        atmosphere: [96,156,70,0.12],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Meshy v2 mesh + v1 rig + v1 animations\nRusty longsword weapon\nIdle/Walk/Attack/Death/HitReact' },
+      { slug: 'goblin-shaman',     name: 'Goblin Shaman',   level: 6,  status: 'done', ref: 'refs/goblin-shaman-ref.webp',
+        type: 'glb', glbFile: 'glb/goblin-shaman-animated.glb',
+        atmosphere: [106,70,164,0.12],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Meshy v2 mesh + v1 rig + v1 animations\nSkull-topped staff weapon\nIdle/Walk/Attack/Death/HitReact' },
+      { slug: 'gelatinous-ooze',   name: 'Gelatinous Ooze', level: 7,  status: 'done', ref: 'refs/gelatinous-ooze-ref.webp',
+        atmosphere: [66,182,56,0.12],
+        gameGrid: { w: 10, h: 14 }, labGrid: { w: 7,  h: 7  },
+        goals: 'JS canvas art — amorphous, no skeleton to rig\nTranslucent cube form\nDripping edges' },
+      { slug: 'bugbear',           name: 'Bugbear',         level: 8,  status: 'done', ref: 'refs/bugbear-ref.webp',
+        type: 'glb', glbFile: 'glb/bugbear-animated.glb',
+        atmosphere: [172,138,72,0.10],
+        gameGrid: { w: 7,  h: 7  }, labGrid: { w: 7,  h: 7  },
+        goals: 'Meshy v2 mesh + v1 rig + v1 animations\nSpiked morningstar weapon\nIdle/Walk/Attack/Death/HitReact' },
+      { slug: 'carrion-crawler',   name: 'Carrion Crawler', level: 9,  status: 'done', ref: 'refs/carrion-crawler-ref.webp',
+        atmosphere: [144,168,208,0.14],
+        gameGrid: { w: 10, h: 13 }, labGrid: { w: 10, h: 13 },
+        goals: 'Long segmented body\nTentacles spread forward\nMandibles open\nInsectoid green-brown' },
+      { slug: 'hook-horror',       name: 'Hook Horror',     level: 10, status: 'wip',  ref: 'refs/hook-horror-ref.webp',
+        atmosphere: [136,82,178,0.12],
+        gameGrid: { w: 14, h: 12 }, labGrid: { w: 14, h: 12 },
+        goals: 'Hunched cave predator\nBeaked screaming face\nOne hook low, one overhead\nPurple-blue flesh\nBrown scythe forearms\nDigitigrade legs' },
+      { slug: 'basilisk',          name: 'Basilisk',        level: 11, status: 'wip',  ref: 'refs/basilisk-ref.png',
+        atmosphere: [180,130,40,0.12],
+        gameGrid: { w: 12, h: 8  }, labGrid: { w: 12, h: 8  },
+        goals: 'Low-slung stocky quadruped\nMassive flat head with open jaw\nDorsal quill spines neck to tail\nAmber vertical-slit eyes\nDark amber-brown scales\nForked tongue' },
+
+    ];
+
+    // Populate dropdown
+    const sel = document.getElementById('creature-select');
+    CREATURES.forEach((c) => {
+      const opt = document.createElement('option');
+      opt.value = c.slug;
+      opt.textContent = `L${c.level} ${c.name}`;
+      sel.appendChild(opt);
+    });
+
+    let currentIndex = 0;
+    let currentMod = null;
+    let animating = false;
+    let animStart = 0;
+    let rafId = null;
+
+    const params = new URLSearchParams(location.search);
+    const initialSlug = params.get('creature');
+    if (initialSlug) {
+      const idx = CREATURES.findIndex(c => c.slug === initialSlug);
+      if (idx >= 0) currentIndex = idx;
+    }
+
+    // -------------------------------------------------------------------------
+    // History
+    // -------------------------------------------------------------------------
+    let historyManifest = null;
+
+    async function loadManifest() {
+      if (historyManifest !== null) return historyManifest;
+      try {
+        const r = await fetch('renders/history/manifest.json');
+        if (r.ok) historyManifest = await r.json();
+        else historyManifest = {};
+      } catch {
+        historyManifest = {};
+      }
+      return historyManifest;
+    }
+
+    async function renderHistory(slug) {
+      const manifest = await loadManifest();
+      const list = document.getElementById('history-list');
+      const empty = document.getElementById('history-empty');
+      const label = document.getElementById('history-label');
+      list.innerHTML = '';
+
+      const versions = manifest[slug] || [];
+      if (versions.length === 0) {
+        list.appendChild(empty);
+        empty.style.display = 'block';
+        label.textContent = 'Iterations';
+        return;
+      }
+
+      empty.style.display = 'none';
+      label.textContent = `Iterations (${versions.length})`;
+
+      for (const ver of [...versions].reverse()) {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        const img = document.createElement('img');
+        img.src = ver.file;
+        img.alt = `v${ver.v}`;
+        img.loading = 'lazy';
+        const meta = document.createElement('div');
+        meta.className = 'history-meta';
+        const ts = new Date(ver.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        meta.innerHTML = `<span class="v">v${ver.v}</span><span class="note" title="${ver.note || ''}">${ver.note || ts}</span>`;
+        item.appendChild(img);
+        item.appendChild(meta);
+        item.addEventListener('click', () => openLightbox(ver.file, `v${ver.v} — ${ver.note || ts}`));
+        list.appendChild(item);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Lightbox
+    // -------------------------------------------------------------------------
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxMeta = document.getElementById('lightbox-meta');
+
+    function openLightbox(src, label) {
+      lightboxImg.src = src;
+      lightboxMeta.textContent = label;
+      lightbox.classList.add('active');
+    }
+    lightbox.addEventListener('click', () => lightbox.classList.remove('active'));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') lightbox.classList.remove('active'); });
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    // Rebuild the clip dropdown from an array of names.
+    // Standardised names (idle/attack/etc.) stay; unknown names are also shown.
+    function _updateClipSelect(names) {
+      const sel = document.getElementById('clip-select');
+      const current = sel.value;
+      sel.innerHTML = '';
+      names.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      // Restore selection if still available, otherwise default to first
+      sel.value = names.includes(current) ? current : names[0] ?? 'idle';
+    }
+
+    // -------------------------------------------------------------------------
+    // Load creature
+    // -------------------------------------------------------------------------
+    async function loadCreature(index) {
+      if (animating) {
+        animating = false;
+        document.getElementById('animate').checked = false;
+        if (rafId) cancelAnimationFrame(rafId);
+      }
+
+      currentIndex = ((index % CREATURES.length) + CREATURES.length) % CREATURES.length;
+      const c = CREATURES[currentIndex];
+
+      document.title = `Creature Lab — ${c.name}`;
+      document.getElementById('creature-name').textContent = c.name;
+      document.getElementById('creature-select').value = c.slug;
+
+      const badge = document.getElementById('status-badge');
+      badge.textContent = c.status;
+      badge.className = `badge badge-${c.status}`;
+
+      const refImg = document.getElementById('ref-img');
+      const noRef = document.getElementById('no-ref');
+      if (c.ref) {
+        refImg.src = c.ref;
+        refImg.alt = c.name;
+        refImg.style.display = 'block';
+        noRef.style.display = 'none';
+      } else {
+        refImg.style.display = 'none';
+        noRef.style.display = 'block';
+      }
+
+      const goalsSection = document.getElementById('goals-section');
+      const goalsText = document.getElementById('goals-text');
+      if (c.goals) {
+        goalsSection.style.display = 'block';
+        goalsText.innerHTML = c.goals.split('\n').join('<br>');
+      } else {
+        goalsSection.style.display = 'none';
+      }
+
+      history.replaceState(null, '', `?creature=${c.slug}`);
+
+      const statusMsg = document.getElementById('status-msg');
+      statusMsg.textContent = 'loading…';
+      statusMsg.className = 'status-msg';
+      currentMod = null;
+
+      for (const id of ['skel-raw', 'next-ascii', 'next-raw', 'game-ascii']) {
+        const cv = document.getElementById(id);
+        cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+      }
+
+      // ── GLB creatures — skip 2D module, load geometry directly ──────────────
+      if (c.type === 'glb') {
+        // Synthetic currentMod so render() has gridW/gridH and doesn't bail out
+        currentMod = {
+          draw: (ctx, sk, w, h) => { ctx.fillStyle='#111'; ctx.fillRect(0,0,w,h); },
+          skeleton: { spine: [] },
+          gridW: c.labGrid.w,
+          gridH: c.labGrid.h,
+        };
+        // Force 3D on for GLB creatures
+        document.getElementById('use-3d').checked = true;
+        currentBundle3D = null;
+        document.getElementById('clip-select').classList.remove('visible');
+        document.getElementById('stance-select').style.display = 'none';
+        try {
+          const { loadGLBCreature } = await import('./glb-loader.js');
+          const size = 512;
+          const gh = Math.round(size * c.labGrid.h / c.labGrid.w);
+          currentBundle3D = await loadGLBCreature(c.glbFile, c.labGrid.w, c.labGrid.h, getThreeRenderer(size, gh), {
+            yaw:   c.glbYaw   ?? undefined,
+            pitch: c.glbPitch ?? undefined,
+          });
+          statusMsg.textContent = '';
+          // Populate clip dropdown from actual GLB clip names
+          _updateClipSelect(currentBundle3D.bundle.clipNames);
+          document.getElementById('clip-select').classList.add('visible');
+          const stances = currentBundle3D.bundle.stances;
+          if (stances && stances.length > 1) {
+            document.getElementById('stance-select').style.display = 'inline-block';
+            document.getElementById('stance-select').value = '0';
+          }
+        } catch (e) {
+          console.error('GLB load failed', c.glbFile, e);
+          statusMsg.textContent = `⚠ GLB: ${e.message}`;
+          statusMsg.className = 'status-msg error';
+        }
+        render();
+        return;
+      }
+
+      // ── Standard JS creatures ─────────────────────────────────────────────
+      try {
+        const mod = await import(`./${c.slug}.js`);
+        currentMod = mod.default;
+        if (!currentMod || typeof currentMod.draw !== 'function') {
+          throw new Error('module has no default export with draw()');
+        }
+        statusMsg.textContent = '';
+      } catch (e) {
+        console.error('Failed to load', c.slug, e);
+        statusMsg.textContent = `⚠ ${e.message}`;
+        statusMsg.className = 'status-msg error';
+      }
+
+      // Try loading 3D module (non-fatal if missing)
+      currentBundle3D = null;
+      _updateClipSelect(['idle','attack','block','hit','death']);
+      document.getElementById('clip-select').classList.remove('visible');
+      document.getElementById('stance-select').style.display = 'none';
+      if (document.getElementById('use-3d').checked) {
+        try {
+          const mod3d = await import(`./${c.slug}-3d.js`);
+          if (mod3d.default && typeof mod3d.default.makeDrawFn === 'function') {
+            const size = 512;
+            const h = Math.round(size * c.labGrid.h / c.labGrid.w);
+            currentBundle3D = mod3d.default.makeDrawFn(getThreeRenderer(size, h));
+            document.getElementById('clip-select').classList.add('visible');
+            const stances = currentBundle3D.bundle.stances;
+            if (stances && stances.length > 1) {
+              document.getElementById('stance-select').style.display = 'inline-block';
+              document.getElementById('stance-select').value = '0';
+            }
+          }
+        } catch (_) { /* no 3D version — silent fallback to 2D */ }
+      }
+
+      if (currentMod) render();
+
+      renderHistory(c.slug);
+    }
+
+    // -------------------------------------------------------------------------
+    // Render — fixed quality settings, no controls bar
+    // -------------------------------------------------------------------------
+    function render(elapsed = 0) {
+      if (!currentMod) return;
+      const { draw, skeleton, gridW, gridH } = currentMod;
+
+      // FPS tracking + mixer tick
+      const now = performance.now();
+      // Cap at 100ms so a paused tab doesn't jump the mixer forward on resume
+      const frameDt = fpsFrameTs > 0 ? Math.min(now - fpsFrameTs, 100) : 0;
+      if (animating && frameDt > 0) {
+        document.getElementById('fps-display').textContent = `${Math.round(1000 / frameDt)}fps`;
+      }
+      fpsFrameTs = now;
+
+      const use3D = document.getElementById('use-3d').checked && !!currentBundle3D;
+
+      // Tick 3D AnimationMixer every frame so idle/attack/hit/death clips actually play
+      if (use3D && currentBundle3D?.bundle?.mixer) {
+        currentBundle3D.bundle.mixer.update(frameDt / 1000);
+      }
+      const useShape = document.getElementById('use-shape').checked;
+
+      const size = 512;
+      const cellSize = parseInt(document.getElementById('cell-size').value, 10);
+      const canvasW = size;
+      const canvasH = Math.round(size * gridH / gridW);
+      const selectedPalette = document.getElementById('palette-select').value;
+      const isComposite = selectedPalette === 'composite';
+      const charPalette = isComposite ? PALETTES.default : (PALETTES[selectedPalette] || PALETTES.default);
+      const charZones = isComposite ? COMPOSITE_PALETTES.arcane : undefined;
+      const fullChars = document.getElementById('full-chars').checked;
+      const asciiOpts = {
+        elapsed, cellSize,
+        level: CREATURES[currentIndex].level,
+        gridWidth: gridW, gridHeight: gridH,
+        charPalette,
+        charZones,
+        enableHalfBlock: !fullChars,
+        charDensityFloor: fullChars ? 0.08 : 0.30,
+        useShapeVector: useShape,
+      };
+
+      // Panel 1 — Skeleton (2D mode) or 3D Raw (3D mode)
+      const c1 = document.getElementById('skel-raw');
+      c1.width = canvasW; c1.height = canvasH;
+      const ctx1 = c1.getContext('2d');
+      ctx1.fillStyle = '#000'; ctx1.fillRect(0, 0, canvasW, canvasH);
+      const p1Label = c1.closest('.panel').querySelector('.panel-label');
+      if (use3D) {
+        p1Label.textContent = '3D Raw';
+        // Render the 3D scene to the 2D canvas
+        currentBundle3D.drawFn(ctx1, canvasW, canvasH);
+      } else {
+        p1Label.textContent = 'Skeleton';
+        if (skeleton.limbs) {
+          for (let i = 0; i < skeleton.limbs.length; i += 2)
+            drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(38,22,48)');
+        }
+        if (skeleton.spine && skeleton.spine.length > 1)
+          drawBodyOutline(ctx1, skeleton.spine, canvasW, canvasH, 'rgb(68,52,112)');
+        if (skeleton.limbs) {
+          for (let i = 1; i < skeleton.limbs.length; i += 2)
+            drawLimbChain(ctx1, skeleton.limbs[i].segments, canvasW, canvasH, 'rgb(92,74,142)');
+        }
+        drawDebugSkeleton(ctx1, skeleton, canvasW, canvasH);
+      }
+
+      // Panel 2 — ASCII (2D or 3D source)
+      const c2 = document.getElementById('next-ascii');
+      c2.width = canvasW; c2.height = canvasH;
+      const ctx2 = c2.getContext('2d');
+      ctx2.fillStyle = '#000'; ctx2.fillRect(0, 0, canvasW, canvasH);
+      const p2Label = c2.closest('.panel').querySelector('.panel-label');
+      p2Label.textContent = use3D ? '3D ASCII' : 'ASCII';
+      const asciiDrawSrc = use3D
+        ? (tctx, tw, th) => currentBundle3D.drawFn(tctx, tw, th)
+        : (tctx, tw, th) => draw(tctx, skeleton, tw, th);
+      renderAscii(ctx2, asciiDrawSrc, 0, 0, canvasW, canvasH, asciiOpts);
+
+      // Panel 3 — Painted (always 2D)
+      const c3 = document.getElementById('next-raw');
+      c3.width = canvasW; c3.height = canvasH;
+      const ctx3 = c3.getContext('2d');
+      ctx3.fillStyle = '#000'; ctx3.fillRect(0, 0, canvasW, canvasH);
+      draw(ctx3, skeleton, canvasW, canvasH);
+
+      // Game view — matches actual in-game render:
+      //   • Redux draw fn (same as game uses), or 3D drawFn when 3D mode is active
+      //   • Portrait panel ~380×560 (2× the ~190×280 CSS panel in-game at dpr:2)
+      //   • cellSize:10 (= 5 CSS px × dpr:2 → same column count as game)
+      //   • Atmosphere drawn BEFORE ascii cells (matching renderMonster order)
+      const cr = CREATURES[currentIndex];
+      const reduxId = SLUG_TO_REDUX[cr.slug];
+      const reduxTpl = reduxId ? REDUX_BY_SLUG[reduxId] : null;
+      // When 3D is active, use the 3D scene as source (shows exact in-game look if we ship 3D)
+      // When 2D, fall back to Redux draw fn (current game) or lab draw fn
+      const gameDraw = use3D
+        ? (tctx, tw, th) => currentBundle3D.drawFn(tctx, tw, th)
+        : (reduxTpl ? reduxTpl.draw : (ctx, w, h) => draw(ctx, skeleton, w, h));
+      // 3D spec is built for labGrid dims; 2D uses gameGrid
+      const gW = use3D ? cr.labGrid.w : cr.gameGrid.w;
+      const gH = use3D ? cr.labGrid.h : cr.gameGrid.h;
+      const GAME_PANEL_W = 380;
+      const GAME_PANEL_H = 560;
+      const GAME_CELL = 10;
+      const c4 = document.getElementById('game-ascii');
+      c4.width = GAME_PANEL_W; c4.height = GAME_PANEL_H;
+      const ctx4 = c4.getContext('2d');
+      ctx4.fillStyle = '#000'; ctx4.fillRect(0, 0, GAME_PANEL_W, GAME_PANEL_H);
+      const p4Label = c4.closest('.panel').querySelector('.panel-label');
+      p4Label.textContent = use3D ? 'Game View (3D)' : 'Game View';
+
+      // Atmosphere FIRST (matches game's renderMonster order)
+      const [atmR, atmG, atmB, atmI = 0.10] = cr.atmosphere;
+      const glowCX = GAME_PANEL_W / 2;
+      const glowCY = GAME_PANEL_H * 0.42;
+      const glowRad = Math.max(GAME_PANEL_W, GAME_PANEL_H) * 0.65;
+      const grad = ctx4.createRadialGradient(glowCX, glowCY, 0, glowCX, glowCY, glowRad);
+      grad.addColorStop(0,    `rgba(${atmR},${atmG},${atmB},${atmI})`);
+      grad.addColorStop(0.35, `rgba(${atmR},${atmG},${atmB},${atmI * 0.5})`);
+      grad.addColorStop(0.7,  `rgba(${atmR},${atmG},${atmB},${atmI * 0.15})`);
+      grad.addColorStop(1,    'rgba(0,0,0,0)');
+      ctx4.fillStyle = grad;
+      ctx4.fillRect(0, 0, GAME_PANEL_W, GAME_PANEL_H);
+
+      // ASCII render — enableHalfBlock:false matches game default (text chars, not colored blocks)
+      renderAscii(ctx4, gameDraw, 0, 0, GAME_PANEL_W, GAME_PANEL_H,
+        { elapsed, cellSize: GAME_CELL, level: cr.level, gridWidth: gW, gridHeight: gH, enableHalfBlock: false, useShapeVector: useShape });
+    }
+
+    function animationLoop(ts) {
+      if (!animating) return;
+      render(ts - animStart);
+      rafId = requestAnimationFrame(animationLoop);
+    }
+
+    document.getElementById('animate').addEventListener('change', (e) => {
+      animating = e.target.checked;
+      if (animating) {
+        animStart = performance.now();
+        fpsFrameTs = 0;
+        rafId = requestAnimationFrame(animationLoop);
+      } else {
+        if (rafId) cancelAnimationFrame(rafId);
+        document.getElementById('fps-display').textContent = '';
+        render(0);
+      }
+    });
+
+    document.getElementById('prev').addEventListener('click', () => loadCreature(currentIndex - 1));
+    document.getElementById('next').addEventListener('click', () => loadCreature(currentIndex + 1));
+    document.getElementById('creature-select').addEventListener('change', (e) => {
+      const idx = CREATURES.findIndex(c => c.slug === e.target.value);
+      if (idx >= 0) loadCreature(idx);
+    });
+    document.getElementById('palette-select').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+    document.getElementById('cell-size').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+    document.getElementById('full-chars').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+    document.getElementById('use-shape').addEventListener('change', () => render(animating ? performance.now() - animStart : 0));
+
+    // 3D toggle — reload the creature to pick up (or drop) the 3D module
+    document.getElementById('use-3d').addEventListener('change', () => loadCreature(currentIndex));
+
+    // Stance selector — applies a preset group transform so you can preview all 3 variants
+    document.getElementById('stance-select').addEventListener('change', (e) => {
+      if (!currentBundle3D?.bundle) return;
+      const { group, stances } = currentBundle3D.bundle;
+      const s = stances[parseInt(e.target.value, 10)] ?? stances[0];
+      group.position.set(...s.position);
+      group.rotation.set(...s.rotation);
+      group.scale.set(...s.scale);
+      render(animating ? performance.now() - animStart : 0);
+    });
+
+    // Clip selector — drive animation on the current 3D bundle
+    // Auto-starts the RAF loop so the mixer actually ticks (no need to check Animate first)
+    document.getElementById('clip-select').addEventListener('change', (e) => {
+      if (currentBundle3D && currentBundle3D.bundle) {
+        currentBundle3D.bundle.playClip(e.target.value);
+        if (!animating) {
+          animating = true;
+          document.getElementById('animate').checked = true;
+          animStart = performance.now();
+          fpsFrameTs = 0;
+          if (!rafId) rafId = requestAnimationFrame(animationLoop);
+        }
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (lightbox.classList.contains('active')) return;
+      if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+      if (e.key === 'ArrowLeft') loadCreature(currentIndex - 1);
+      if (e.key === 'ArrowRight') loadCreature(currentIndex + 1);
+    });
+
+    loadCreature(currentIndex);
+  </script>
+</body>
+</html>
