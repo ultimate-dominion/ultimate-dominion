@@ -140,23 +140,61 @@
   </div>
 
   <div class="zone-label">Z2 — Windy Peaks</div>
-  <div class="grid">
+  <div class="grid" id="z2-grid">
     <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Dire Wolf</div><div class="card-meta"><span>L11</span><span class="badge badge-todo">todo</span></div></div></div>
-    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Harpy</div><div class="card-meta"><span>L12</span><span class="badge badge-todo">todo</span></div></div></div>
-    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Ogre</div><div class="card-meta"><span>L13</span><span class="badge badge-todo">todo</span></div></div></div>
+
+    <a class="card done" href="viewer.html?creature=harpy" data-slug="harpy">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Harpy</div>
+        <div class="card-meta"><span>L12</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
+    <a class="card done" href="viewer.html?creature=ogre" data-slug="ogre">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Ogre</div>
+        <div class="card-meta"><span>L13</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
     <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Worg</div><div class="card-meta"><span>L14</span><span class="badge badge-todo">todo</span></div></div></div>
-    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Orc</div><div class="card-meta"><span>L15</span><span class="badge badge-todo">todo</span></div></div></div>
+
+    <a class="card done" href="viewer.html?creature=orc" data-slug="orc">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Orc</div>
+        <div class="card-meta"><span>L15</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
     <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Orc Shaman</div><div class="card-meta"><span>L16</span><span class="badge badge-todo">todo</span></div></div></div>
     <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Troll</div><div class="card-meta"><span>L17</span><span class="badge badge-todo">todo</span></div></div></div>
-    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Griffon</div><div class="card-meta"><span>L18</span><span class="badge badge-todo">todo</span></div></div></div>
+
+    <a class="card done" href="viewer.html?creature=griffon" data-slug="griffon">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Griffon</div>
+        <div class="card-meta"><span>L18</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
+
     <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Manticore</div><div class="card-meta"><span>L19</span><span class="badge badge-todo">todo</span></div></div></div>
-    <div class="card todo"><div class="card-preview"><span class="placeholder">?</span></div><div class="card-body"><div class="card-name">Korrath's Warden</div><div class="card-meta"><span>Boss</span><span class="badge badge-todo">todo</span></div></div></div>
+
+    <a class="card done" href="viewer.html?creature=korraths-warden" data-slug="korraths-warden">
+      <div class="card-preview"><span class="placeholder">?</span></div>
+      <div class="card-body">
+        <div class="card-name">Korrath's Warden</div>
+        <div class="card-meta"><span>Boss</span><span class="badge badge-done">done</span></div>
+      </div>
+    </a>
   </div>
 
   <div class="summary">
-    <span>11 / 21 complete</span>
-    <span>Z1: 9 done, 2 wip, 0 todo</span>
-    <span>Z2: 0/10</span>
+    <span>16 / 21 complete</span>
+    <span>Z1: 11 done</span>
+    <span>Z2: 5 done, 5 todo</span>
   </div>
 
   <script type="importmap">
@@ -186,6 +224,12 @@
       'carrion-crawler':   { gridW: 10, gridH: 13, level: 9,  canvas: true },
       'hook-horror':       { gridW: 14, gridH: 12, level: 10, glb: 'glb/hook-horror-animated.glb' },
       'basilisk':          { gridW: 26, gridH: 9,  level: 12, glb: 'glb/basilisk-animated.glb' },
+      // Z2 — Windy Peaks
+      'harpy':             { gridW: 10, gridH: 10, level: 12, glb: 'glb/harpy-animated.glb' },
+      'ogre':              { gridW: 10, gridH: 12, level: 13, glb: 'glb/ogre-animated.glb' },
+      'orc':               { gridW: 7,  gridH: 7,  level: 15, glb: 'glb/orc-animated.glb' },
+      'griffon':           { gridW: 12, gridH: 10, level: 18, glb: 'glb/griffon-animated.glb' },
+      'korraths-warden':   { gridW: 16, gridH: 14, level: 20, glb: 'glb/korraths-warden-animated.glb' },
     };
 
     const PREVIEW_W = 180;

@@ -389,26 +389,31 @@ async function pollV1Task(taskId, v1Endpoint, label) {
 // --------------------------------------------------------------------------
 
 // Weapon type → best Meshy attack action_id
+// UPDATED per ANIMATION_REFERENCE.md visual testing:
+//   - Realistic weapon IDs (219, 237, 128, 240) are wrist-centric = invisible at ASCII
+//   - 19 (Skill_03) = theatrical full-arc, best for precise/light weapons
+//   - 99 (Reaping_Swing) = widest lateral sweep, best for heavy/brutal weapons
+//   - 125-131 (spell casts) = static arms-up, A-pose bleed = DON'T USE
 const WEAPON_ATTACK_IDS = {
-  sword:   219,  // Right_Hand_Sword_Slash
-  axe:     237,  // Charged_Axe_Chop
-  hammer:  128,  // Heavy_Hammer_Swing
-  mace:    128,  // Heavy_Hammer_Swing (closest to mace/morningstar)
-  staff:   125,  // Charged_Spell_Cast
-  spear:   240,  // Thrust_Slash
-  dagger:   92,  // Double_Combo_Attack
-  bow:     224,  // Archery_Shot
-  unarmed:   4,  // Attack (generic punch — only for truly unarmed)
-  bite:      4,  // fallback for beasts (Meshy API is humanoid-only anyway)
+  sword:    19,  // Skill_03 — theatrical full-arc gesture
+  axe:      99,  // Reaping_Swing — widest lateral sweep
+  hammer:   99,  // Reaping_Swing — big creature + big sweep = impact
+  mace:     99,  // Reaping_Swing — heavy weapon sweep
+  staff:    19,  // Skill_03 — reads as casting, staff follows arm
+  spear:    19,  // Skill_03 — spear reads ok with 19's arc
+  dagger:   19,  // Skill_03 — light weapon, precise motion
+  bow:      19,  // Skill_03 — theatrical draw (best available)
+  unarmed:  99,  // Reaping_Swing — full-body claw/punch sweep
+  bite:     99,  // Reaping_Swing — full-body lunge
 };
 
 // Default humanoid clips — used when no weapon type is specified
 const HUMANOID_CLIPS = [
   { name: 'idle',      actionId: 0   },
   { name: 'walk',      actionId: 30  },
-  { name: 'attack',    actionId: 219 },  // Right_Hand_Sword_Slash (safe default)
+  { name: 'attack',    actionId: 19  },  // Skill_03 — theatrical full-arc (visually tested)
   { name: 'death',     actionId: 187 },  // Knock_Down (more dramatic than 8=Dead)
-  { name: 'hit_react', actionId: 178 },  // Hit_Reaction (NOT 9 which is running)
+  { name: 'hit_react', actionId: 100 },  // Rightward_Spin — stumble/knockback reads best
 ];
 
 // Build creature-specific clip sets based on weapon type
@@ -419,7 +424,7 @@ function getClipsForWeapon(weaponType) {
     { name: 'walk',      actionId: 30  },
     { name: 'attack',    actionId: attackId },
     { name: 'death',     actionId: 187 },
-    { name: 'hit_react', actionId: 178 },
+    { name: 'hit_react', actionId: 100 },  // Rightward_Spin — stumble/knockback
   ];
 }
 
@@ -599,6 +604,7 @@ async function forgeCreature(name, description, opts = {}) {
     iterations = 2,
     type       = null,      // undead | demon | beast | humanoid | elemental
     archetype  = null,      // weapon | claw | tail | bite | magic | amorphous
+    weaponType = null,      // sword | axe | hammer | mace | staff | spear | dagger | bow | unarmed
     threshold  = QUALITY_THRESHOLD,
     dryRun     = false,
   } = opts;
@@ -689,7 +695,7 @@ async function forgeCreature(name, description, opts = {}) {
   if (type === 'humanoid' && meshTaskId && !IS_TEST) {
     log('\n  Humanoid creature — starting rig + animate pipeline...');
     try {
-      await rigAndAnimateCreature(slug, meshTaskId);
+      await rigAndAnimateCreature(slug, meshTaskId, weaponType);
     } catch (e) {
       log(`\n  Rig pipeline failed: ${e.message}`);
       log(`  Run manually: node creature-forge.mjs --rig ${slug} ${meshTaskId}`);
@@ -1080,7 +1086,7 @@ API:
   const threshold   = parseFloat(args[args.indexOf('--threshold') + 1] ?? '0.65') || QUALITY_THRESHOLD;
   const dryRun      = args.includes('--dry-run');
 
-  forgeCreature(name, description, { iterations, type, archetype, threshold, dryRun }).catch(err => {
+  forgeCreature(name, description, { iterations, type, archetype, weaponType, threshold, dryRun }).catch(err => {
     console.error('Fatal:', err.message);
     process.exit(1);
   });

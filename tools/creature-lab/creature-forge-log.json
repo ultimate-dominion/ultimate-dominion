@@ -405,5 +405,105 @@
       "method": "heuristic"
     },
     "timestamp": "2026-04-06T18:16:27.793Z"
+  },
+  {
+    "slug": "harpy",
+    "name": "Harpy",
+    "description": "winged humanoid predator, large ragged feathered wings as arm-cape, oversized razor-sharp bird talons for feet, wild matted hair, shrieking face with sharp predatory eyes and pointed teeth, grey-brown mottled feathers on torso, gaunt ribcage visible, long clawed fingers, mountain ambush creature",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d695c-ca16-7b89-bd4b-81d506b544d9",
+    "prompt": "A Harpy: winged humanoid predator, large ragged feathered wings as arm-cape, oversized razor-sharp bird talons for feet, wild matted hair, shrieking face with sharp predatory eyes and pointed teeth, grey-brown mottled feathers on torso, gaunt ribcage visible, long clawed fingers, mountain ambush creature. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T19:17:36.283Z"
+  },
+  {
+    "slug": "ogre",
+    "name": "Ogre",
+    "description": "massive 9-foot hunched brute, enormous gut and barrel chest, tiny flat head with beady eyes and jutting jaw with broken tusks, warty olive-green skin, huge spiked wooden club fused to right forearm extending from wrist, crude animal hide loincloth, enormously thick arms, patches of coarse body hair, battle-scarred",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d696c-efe0-74cd-b7b8-879a7c9a2164",
+    "prompt": "Variation 2: emphasize more extreme proportions, larger silhouette, more damage/scars. A Ogre: massive 9-foot hunched brute, enormous gut and barrel chest, tiny flat head with beady eyes and jutting jaw with broken tusks, warty olive-green skin, huge spiked wooden club fused to right forearm extending from wrist, crude animal hide loincloth, enormously thick arms, patches of coarse body hair, battle-scarred. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T19:33:12.701Z"
+  },
+  {
+    "slug": "orc",
+    "name": "Orc",
+    "description": "muscular green-skinned orc warrior, heavy brow ridge, sharp lower tusks, battle scars across face and chest, iron battle axe blade fused to right forearm extending from wrist, patched leather and rusted chain armor, thick boots, broad powerful shoulders, war paint on face, aggressive fighting stance",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d6973-3dbb-7834-987a-7dc693558ef7",
+    "prompt": "A Orc: muscular green-skinned orc warrior, heavy brow ridge, sharp lower tusks, battle scars across face and chest, iron battle axe blade fused to right forearm extending from wrist, patched leather and rusted chain armor, thick boots, broad powerful shoulders, war paint on face, aggressive fighting stance. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T19:42:32.924Z"
+  },
+  {
+    "slug": "griffon",
+    "name": "Griffon",
+    "description": "eagle-headed beast in semi-upright bipedal pose, large golden-brown feathered wings folded against back, sharp curved beak and fierce golden raptor eyes, front limbs are eagle talons with massive curved claws, muscular lion-like hind legs, long tufted tail, dark feathers on head and wings, tawny fur on body, battle scars on chest",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d699e-d5b6-75c4-9279-c0410869d514",
+    "prompt": "A Griffon: eagle-headed beast in semi-upright bipedal pose, large golden-brown feathered wings folded against back, sharp curved beak and fierce golden raptor eyes, front limbs are eagle talons with massive curved claws, muscular lion-like hind legs, long tufted tail, dark feathers on head and wings, tawny fur on body, battle scars on chest. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T20:28:49.336Z"
+  },
+  {
+    "slug": "korraths-warden",
+    "name": "Korraths Warden",
+    "description": "colossal armored sentinel over 10 feet tall, ancient stone-plated armor with cracks revealing amber glow within, towering horned great helm with narrow visor showing burning eyes, massive war halberd fused to right forearm — weapon half the creature's height, enormous pauldrons and stone gauntlets, tattered war banner on shoulder, rune carvings on chest, wind-eroded battle damage",
+    "type": "humanoid",
+    "archetype": null,
+    "mesh_task_id": "019d69a7-18d0-7a63-ac9e-fc74ca356dc9",
+    "prompt": "A Korraths Warden: colossal armored sentinel over 10 feet tall, ancient stone-plated armor with cracks revealing amber glow within, towering horned great helm with narrow visor showing burning eyes, massive war halberd fused to right forearm — weapon half the creature's height, enormous pauldrons and stone gauntlets, tattered war banner on shoulder, rune carvings on chest, wind-eroded battle damage. Key features: bipedal, muscular, scarred, tribal scarification, crude weapons. Style: dark fantasy, horror aesthetic, asymmetric battle damage, threatening silhouette, sharp angular features, ominous mass, game-ready lowpoly, T-pose or A-pose for rigging. Clean topology for animation. Distinct profile silhouette. Black background for maximum contrast.",
+    "score": {
+      "scores": {
+        "silhouette_clarity": 0.75,
+        "scary_factor": 0.7,
+        "ascii_contrast": 0.72,
+        "rig_compat": 0.8
+      },
+      "avg": 0.7424999999999999,
+      "method": "heuristic"
+    },
+    "timestamp": "2026-04-07T20:37:49.049Z"
   }
 ]
