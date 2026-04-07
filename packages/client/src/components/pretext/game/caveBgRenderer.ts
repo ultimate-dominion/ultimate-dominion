@@ -7,7 +7,7 @@
  *
  * Design goals:
  *   - Establish sense of place (Dark Cave) without competing with the creature
- *   - Very dim characters (opacity 0.06–0.14) in warm earth tones
+ *   - Dim characters (opacity 0.10–0.25) in warm earth tones
  *   - Stalactites from ceiling, stalagmites from floor, rough wall edges
  *   - Subtle animated flicker on ~2% of cells to suggest distant torchlight
  */
@@ -30,11 +30,11 @@ const SPIKE_CHARS = ['|', '/', '\\', 'V', 'v', '^', 'A'];
 type CaveColor = { r: number; g: number; b: number };
 
 const STONE_COLORS: CaveColor[] = [
-  { r: 72, g: 62, b: 48 },   // dark brown stone
-  { r: 85, g: 72, b: 55 },   // medium brown
-  { r: 60, g: 55, b: 45 },   // cool gray-brown
-  { r: 78, g: 68, b: 52 },   // warm gray
-  { r: 55, g: 48, b: 38 },   // deep shadow stone
+  { r: 92, g: 78, b: 58 },   // dark brown stone
+  { r: 105, g: 88, b: 65 },  // medium brown
+  { r: 80, g: 72, b: 58 },   // cool gray-brown
+  { r: 98, g: 85, b: 65 },   // warm gray
+  { r: 70, g: 60, b: 48 },   // deep shadow stone
 ];
 
 const MOSS_COLORS: CaveColor[] = [
@@ -131,7 +131,7 @@ export function generateCaveCells(
             x,
             y,
             ...color,
-            alpha: 0.06 + (1 - rowT / 0.35) * 0.08,
+            alpha: 0.12 + (1 - rowT / 0.35) * 0.14,
             flicker: rand() < 0.03,
           });
           continue;
@@ -150,7 +150,7 @@ export function generateCaveCells(
             x,
             y,
             ...color,
-            alpha: 0.06 + ((rowT - 0.70) / 0.30) * 0.08,
+            alpha: 0.12 + ((rowT - 0.70) / 0.30) * 0.14,
             flicker: rand() < 0.02,
           });
           continue;
@@ -167,7 +167,7 @@ export function generateCaveCells(
             x,
             y,
             ...color,
-            alpha: 0.05 + (1 - edgeX / 0.25) * 0.06,
+            alpha: 0.10 + (1 - edgeX / 0.25) * 0.12,
             flicker: rand() < 0.02,
           });
           continue;
@@ -184,7 +184,7 @@ export function generateCaveCells(
           x,
           y,
           ...color,
-          alpha: 0.04 + rand() * 0.04,
+          alpha: 0.08 + rand() * 0.08,
           flicker: rand() < 0.04,
         });
       }
@@ -252,7 +252,7 @@ export function renderCaveBgFlicker(
     // Each flickering cell gets its own phase based on position
     const phase = cell.x * 0.13 + cell.y * 0.17;
     const flicker = Math.sin(elapsed * 0.002 + phase) * 0.5 + 0.5;
-    const alphaBoost = flicker * 0.06; // oscillates 0–0.06
+    const alphaBoost = flicker * 0.10; // oscillates 0–0.10
     const alpha = cell.alpha + alphaBoost;
 
     // Slight warm shift when "lit" by torchlight

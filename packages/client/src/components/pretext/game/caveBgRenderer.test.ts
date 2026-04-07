@@ -66,8 +66,8 @@ describe('caveBgRenderer', () => {
     it('cells have low alpha values (dim background)', () => {
       const cells = generateCaveCells(400, 300, 8, 42);
       const maxAlpha = Math.max(...cells.map(c => c.alpha));
-      // Background cells should be very dim — max alpha should be well under 0.20
-      expect(maxAlpha).toBeLessThanOrEqual(0.20);
+      // Background cells should be dim — max alpha should be well under 0.35
+      expect(maxAlpha).toBeLessThanOrEqual(0.35);
     });
 
     it('places more cells near edges than in the center', () => {
