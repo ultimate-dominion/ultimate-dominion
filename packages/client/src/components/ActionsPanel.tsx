@@ -4,6 +4,7 @@ import {
   Grid,
   HStack,
   Image,
+  Portal,
   Progress,
   Spinner,
   Stack,
@@ -103,6 +104,7 @@ export const ActionsPanel = (): JSX.Element => {
   const [attackButtonFocus, setAttackButtonFocus] = useState<number>(0);
   const [hoveredTokenId, setHoveredTokenId] = useState<string | null>(null);
 
+  const weaponGridRef = useRef<HTMLDivElement>(null);
   const parentDivRef = useRef<HTMLDivElement>(null);
   const attackButton1Ref = useRef<HTMLButtonElement>(null);
   const attackButton2Ref = useRef<HTMLButtonElement>(null);
@@ -715,27 +717,30 @@ export const ActionsPanel = (): JSX.Element => {
                 )}
               </Box>
             )}
-            <Box position="relative" px={{ base: 2, lg: 4 }} py={{ base: 2, lg: 3 }} w="100%">
+            <Box ref={weaponGridRef} position="relative" px={{ base: 2, lg: 4 }} py={{ base: 2, lg: 3 }} w="100%">
               {SHOW_Z2 && isDesktop && hoveredTokenId && (() => {
                 const hovItem = orderedAttackItems.find(i => i.tokenId === hoveredTokenId);
                 if (!hovItem) return null;
                 const mu = weaponMatchups[hovItem.tokenId];
+                const rect = weaponGridRef.current?.getBoundingClientRect();
+                if (!rect) return null;
                 return (
-                  <Box
-                    position="absolute"
-                    bottom="calc(100% - 8px)"
-                    left="50%"
-                    transform="translateX(-50%)"
-                    mb={1}
-                    zIndex={10}
-                    pointerEvents="none"
-                  >
-                    <GameItemTooltip
-                      item={hovItem}
-                      matchup={mu?.matchup}
-                      opponentClass={opponent?.entityClass}
-                    />
-                  </Box>
+                  <Portal>
+                    <Box
+                      position="fixed"
+                      top={`${rect.top - 8}px`}
+                      left={`${rect.left + rect.width / 2}px`}
+                      transform="translate(-50%, -100%)"
+                      zIndex="tooltip"
+                      pointerEvents="none"
+                    >
+                      <GameItemTooltip
+                        item={hovItem}
+                        matchup={mu?.matchup}
+                        opponentClass={opponent?.entityClass}
+                      />
+                    </Box>
+                  </Portal>
                 );
               })()}
               <Grid

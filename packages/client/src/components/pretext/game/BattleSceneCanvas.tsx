@@ -426,8 +426,6 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
         // ── HUD: Monster name (top-right area) ─────────────────────────
 
         const hudPad = 12;
-        const barW = Math.min(200, w * 0.35);
-        const barH = 18;
 
         drawMonsterName(
           ctx,
@@ -436,36 +434,6 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
           monsterX + hudPad,
           hudPad,
           p.monsterDefeated,
-        );
-
-        // ── HUD: Player HP bar (bottom-left) ───────────────────────────
-
-        const playerBarW = Math.min(180, w * 0.30);
-
-        drawHpBar(
-          ctx,
-          hudPad,
-          h - hudPad - barH,
-          playerBarW,
-          barH,
-          p.userHp,
-          p.userMaxHp,
-          p.userName,
-          false,
-        );
-
-        // ── HUD: Monster HP bar (bottom-right) ─────────────────────────
-
-        drawHpBar(
-          ctx,
-          w - hudPad - barW,
-          h - hudPad - barH,
-          barW,
-          barH,
-          p.monsterHp,
-          p.monsterMaxHp,
-          p.monsterDefeated ? 'Defeated' : `Lv.${p.monsterLevel}`,
-          true,
         );
       },
       [template],

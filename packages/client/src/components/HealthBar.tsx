@@ -54,8 +54,8 @@ export const HealthBar = ({
 
   return (
     <VStack spacing={0} {...stackProps}>
-      <HStack justifyContent="space-between" w="100%">
-        <Text fontWeight={600} size={{ base: '3xs', md: '2xs' }}>
+      <HStack spacing={1.5} w="100%">
+        <Text color="#8A7E6A" fontWeight={600} size="3xs" flexShrink={0}>
           {t('health.hp')}
           {!!level && (
             <Text as="span" color="#8A7E6A">
@@ -63,33 +63,33 @@ export const HealthBar = ({
             </Text>
           )}
         </Text>
-        <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size={{ base: '3xs', md: '2xs' }}>
+        <Flex
+          bgColor="grey100"
+          borderRadius="10px"
+          boxShadow={
+            isDotTicking
+              ? '0 0 8px 2px rgba(128,0,128,0.6), -2px 2px 3px 0px #00000040'
+              : '-2px 2px 3px 0px #00000040'
+          }
+          flex={1}
+          h="6px"
+          overflow="hidden"
+          position="relative"
+          transition="box-shadow 0.3s"
+        >
+          <Box
+            borderRadius="10px"
+            bgColor={barColor}
+            h="100%"
+            position="absolute"
+            transition="all 0.5s"
+            w={`${health}%`}
+          />
+        </Flex>
+        <Text color="#8A7E6A" fontFamily="mono" fontWeight={600} size="3xs" flexShrink={0}>
           {currentHpWithFloor.toString()}/{maxHp.toString()}
         </Text>
       </HStack>
-      <Flex
-        bgColor="grey100"
-        borderRadius="10px"
-        boxShadow={
-          isDotTicking
-            ? '0 0 8px 2px rgba(128,0,128,0.6), -2px 2px 3px 0px #00000040'
-            : '-2px 2px 3px 0px #00000040'
-        }
-        h="8px"
-        overflow="hidden"
-        position="relative"
-        transition="box-shadow 0.3s"
-        width="100%"
-      >
-        <Box
-          borderRadius="10px"
-          bgColor={barColor}
-          h="100%"
-          position="absolute"
-          transition="all 0.5s"
-          w={`${health}%`}
-        />
-      </Flex>
       {statusEffects && statusEffects[0] && (
         <HStack mt={0.5} w="100%">
           {statusEffects.slice(0, 3).map(statusEffect => (
