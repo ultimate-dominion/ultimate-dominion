@@ -101,11 +101,40 @@ async function makeToonGradient(THREE: typeof import('three')) {
   return gradMap;
 }
 
-function applyToonMaterials(
+/**
+ * Rarity-aware toon material for items.
+ *
+ * Per ART_SYSTEM.md:
+ *   R0-1: Monochrome (desaturated gray, like creatures)
+ *   R2:   Single muted color accent at ~30% saturation
+ *   R3:   Color accent at ~60% saturation
+ *   R4+:  Full color preserved, slight emissive boost
+ *
+ * The rarity controls how much of the original texture/material color
+ * bleeds through the toon shader. Higher rarity = more color = more
+ * visual distinction in the ASCII render.
+ */
+function applyItemToonMaterials(
   model: import('three').Object3D,
   gradMap: import('three').DataTexture,
   THREE: typeof import('three'),
+  rarity: number,
 ) {
+  // Color multiplier by rarity — controls how much texture color shows
+  // R0-1: gray (0.82, 0.82, 0.82) — monochrome like creatures
+  // R2:   warm (0.85, 0.80, 0.75) — slight warm tint, muted
+  // R3:   tinted (0.90, 0.82, 0.78) — noticeable color accent
+  // R4+:  vivid (0.95, 0.90, 0.88) — strong color, near-full texture
+  const RARITY_COLOR: [number, number, number][] = [
+    [0.72, 0.70, 0.68], // R0 — dark monochrome
+    [0.78, 0.76, 0.74], // R1 — slightly brighter monochrome
+    [0.85, 0.80, 0.75], // R2 — warm muted tint
+    [0.92, 0.84, 0.78], // R3 — noticeable color accent
+    [0.98, 0.92, 0.88], // R4 — vivid, near-full color
+  ];
+  const [cr, cg, cb] = RARITY_COLOR[Math.min(rarity, 4)];
+  const emissiveIntensity = rarity >= 4 ? 0.08 : rarity >= 3 ? 0.03 : 0;
+
   model.traverse((node) => {
     if (!(node as import('three').Mesh).isMesh) return;
     const mesh = node as import('three').Mesh;
@@ -113,17 +142,30 @@ function applyToonMaterials(
     const next = materials.map((m) => {
       const mat = m as import('three').MeshStandardMaterial;
       const albedoMap = mat.map ?? null;
-      const baseColor = albedoMap
-        ? new THREE.Color(0.82, 0.82, 0.82)
-        : (() => {
-            const c = mat.color ?? new THREE.Color(0.5, 0.5, 0.5);
-            const lum = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
-            return lum < 0.85 ? c.clone().multiplyScalar(0.85) : new THREE.Color(0.52, 0.50, 0.48);
-          })();
+
+      let baseColor: import('three').Color;
+      if (albedoMap) {
+        // Texture present: rarity controls color multiplier
+        baseColor = new THREE.Color(cr, cg, cb);
+      } else {
+        // No texture: use material color with rarity-scaled saturation
+        const c = mat.color ?? new THREE.Color(0.5, 0.5, 0.5);
+        if (rarity <= 1) {
+          // Desaturate to monochrome
+          const lum = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
+          baseColor = new THREE.Color(lum * 0.85, lum * 0.85, lum * 0.85);
+        } else {
+          // Preserve color, scale brightness
+          baseColor = c.clone().multiplyScalar(Math.min(cr + 0.05, 1.0));
+        }
+      }
+
       const toon = new THREE.MeshToonMaterial({
         color: baseColor,
         map: albedoMap,
         gradientMap: gradMap,
+        emissive: emissiveIntensity > 0 ? baseColor.clone() : undefined,
+        emissiveIntensity,
       });
       mat.dispose();
       return toon;
@@ -189,7 +231,7 @@ export async function loadItemModel(slug: string): Promise<void> {
   model.position.sub(center);
 
   const gradMap = await makeToonGradient(THREE);
-  applyToonMaterials(model, gradMap, THREE);
+  applyItemToonMaterials(model, gradMap, THREE, entry.rarity);
   scene.add(model);
 
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 100);

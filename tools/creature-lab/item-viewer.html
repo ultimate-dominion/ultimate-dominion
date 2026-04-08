@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Item Forge — ASCII Viewer</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+
+    .header { padding: 10px 16px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 12px; }
+    .header h1 { font-size: 14px; color: #6a4; font-weight: 400; }
+    .header .count { font-size: 11px; color: #555; }
+    .back { color: #555; text-decoration: none; font-size: 11px; padding: 3px 8px; border: 1px solid #2a2a2a; }
+    .back:hover { color: #888; border-color: #444; }
+    .controls { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .controls label { font-size: 10px; color: #555; display: flex; align-items: center; gap: 4px; }
+    .controls select { background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 11px; font-family: inherit; padding: 2px 5px; }
+
+    .rarity-section { padding: 12px 16px; border-bottom: 1px solid #1a1a1a; }
+    .rarity-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    .r0 .rarity-label { color: #666; }
+    .r1 .rarity-label { color: #888; }
+    .r2 .rarity-label { color: #4a8; }
+    .r3 .rarity-label { color: #48a; }
+    .r4 .rarity-label { color: #a4a; }
+
+    .item-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+    .item-card { width: 160px; border: 1px solid #1a1a1a; background: #0d0d0d; cursor: pointer; transition: border-color 0.15s; }
+    .item-card:hover { border-color: #444; }
+    .item-card.selected { border-color: #6a4; }
+    .item-card canvas { display: block; width: 160px; height: 160px; background: #000; }
+    .item-card .meta { padding: 4px 6px; }
+    .item-card .name { font-size: 10px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-card .type { font-size: 9px; color: #444; }
+    .item-card .pending { display: flex; align-items: center; justify-content: center; width: 160px; height: 160px; font-size: 10px; color: #333; }
+
+    /* Inspector panel (right) */
+    .inspector { position: fixed; top: 0; right: 0; width: 360px; height: 100vh; background: #0d0d0d; border-left: 1px solid #222; display: none; flex-direction: column; z-index: 10; }
+    .inspector.open { display: flex; }
+    .inspector .close { position: absolute; top: 8px; right: 10px; color: #555; cursor: pointer; font-size: 16px; background: none; border: none; font-family: inherit; }
+    .inspector .close:hover { color: #aaa; }
+    .inspector canvas { display: block; width: 100%; height: 320px; background: #000; }
+    .inspector .info { padding: 12px; font-size: 11px; line-height: 1.8; }
+    .inspector .info .label { color: #555; }
+    .inspector .info .value { color: #aaa; }
+    .inspector .desc { font-size: 10px; color: #666; padding: 0 12px 12px; font-style: italic; }
+
+    .content { padding-bottom: 20px; }
+    .content.has-inspector { margin-right: 370px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a class="back" href="index.html">&larr; Lab</a>
+    <h1>Item Forge</h1>
+    <span class="count" id="count">Loading...</span>
+    <div class="controls">
+      <label>
+        Cell
+        <select id="cell-size">
+          <option value="3">3px</option>
+          <option value="4" selected>4px</option>
+          <option value="5">5px</option>
+          <option value="6">6px</option>
+        </select>
+      </label>
+      <label>
+        Filter
+        <select id="filter">
+          <option value="all">All</option>
+          <option value="weapons">Weapons</option>
+          <option value="armor">Armor</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+
+  <div class="inspector" id="inspector">
+    <button class="close" id="close-inspector">&times;</button>
+    <canvas id="inspector-canvas"></canvas>
+    <div class="desc" id="inspector-desc"></div>
+    <div class="info" id="inspector-info"></div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { renderAscii } from './ascii-renderer.js';
+    import { createThreeRenderer, makeThreeDrawFn } from './three-bridge.js';
+    import { applyToonMaterials } from './glb-loader.js';
+
+    // ── State ─────────────────────────────────────────────────────────
+    const renderer = createThreeRenderer(256, 256);
+    let cellSize = 4;
+    let filter = 'all';
+    let selectedSlug = null;
+    const itemStates = new Map(); // slug → { scene, camera, model, drawFn, entry }
+
+    // ── Toon gradient (matches creature lab + client) ──────────────────
+    const gradData = new Uint8Array([
+       8,   6,   5, 255,
+      32,  28,  24, 255,
+      72,  66,  60, 255,
+     118, 108, 100, 255,
+     168, 155, 142, 255,
+     210, 198, 184, 255,
+     245, 235, 222, 255,
+    ]);
+    const toonGrad = new THREE.DataTexture(gradData, 7, 1);
+    toonGrad.minFilter = THREE.NearestFilter;
+    toonGrad.magFilter = THREE.NearestFilter;
+    toonGrad.needsUpdate = true;
+
+    // ── Rarity-aware toon materials ────────────────────────────────────
+    const RARITY_COLOR = [
+      [0.72, 0.70, 0.68], // R0
+      [0.78, 0.76, 0.74], // R1
+      [0.85, 0.80, 0.75], // R2
+      [0.92, 0.84, 0.78], // R3
+      [0.98, 0.92, 0.88], // R4
+    ];
+
+    function applyItemToonMaterials(model, rarity) {
+      const [cr, cg, cb] = RARITY_COLOR[Math.min(rarity, 4)];
+      const emissiveI = rarity >= 4 ? 0.08 : rarity >= 3 ? 0.03 : 0;
+
+      model.traverse(node => {
+        if (!node.isMesh) return;
+        const old = Array.isArray(node.material) ? node.material : [node.material];
+        const next = old.map(m => {
+          const albedoMap = m.map ?? null;
+          let baseColor;
+          if (albedoMap) {
+            baseColor = new THREE.Color(cr, cg, cb);
+          } else {
+            const c = m.color ?? new THREE.Color(0.5, 0.5, 0.5);
+            if (rarity <= 1) {
+              const lum = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
+              baseColor = new THREE.Color(lum * 0.85, lum * 0.85, lum * 0.85);
+            } else {
+              baseColor = c.clone().multiplyScalar(Math.min(cr + 0.05, 1.0));
+            }
+          }
+          const toon = new THREE.MeshToonMaterial({
+            color: baseColor,
+            map: albedoMap,
+            gradientMap: toonGrad,
+            emissive: emissiveI > 0 ? baseColor.clone() : undefined,
+            emissiveIntensity: emissiveI,
+          });
+          m.dispose();
+          return toon;
+        });
+        node.material = Array.isArray(node.material) ? next : next[0];
+      });
+    }
+
+    // ── Load manifest ──────────────────────────────────────────────────
+    let manifest = {};
+    try {
+      const res = await fetch('./item-manifest.json');
+      manifest = await res.json();
+    } catch (e) {
+      console.error('Failed to load manifest:', e);
+    }
+
+    const RARITY_NAMES = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];
+
+    // ── Build UI ───────────────────────────────────────────────────────
+    function buildGrid() {
+      const content = document.getElementById('content');
+      content.innerHTML = '';
+      content.className = selectedSlug ? 'content has-inspector' : 'content';
+
+      // Group by rarity
+      const byRarity = {};
+      for (const [slug, entry] of Object.entries(manifest)) {
+        if (filter !== 'all' && entry.category !== filter) continue;
+        (byRarity[entry.rarity] ??= []).push({ slug, ...entry });
+      }
+
+      let total = 0, generated = 0;
+      for (const [rarity, items] of Object.entries(byRarity).sort((a, b) => a[0] - b[0])) {
+        const section = document.createElement('div');
+        section.className = `rarity-section r${rarity}`;
+        const label = document.createElement('div');
+        label.className = 'rarity-label';
+        label.textContent = `${RARITY_NAMES[rarity] ?? `Rarity ${rarity}`} (${items.length})`;
+        section.appendChild(label);
+
+        const grid = document.createElement('div');
+        grid.className = 'item-grid';
+
+        for (const item of items) {
+          total++;
+          const card = document.createElement('div');
+          card.className = 'item-card' + (item.slug === selectedSlug ? ' selected' : '');
+          card.dataset.slug = item.slug;
+
+          if (item.generated) {
+            generated++;
+            const canvas = document.createElement('canvas');
+            canvas.width = 160;
+            canvas.height = 160;
+            card.appendChild(canvas);
+            loadAndRenderItem(item.slug, item, canvas);
+          } else {
+            const pending = document.createElement('div');
+            pending.className = 'pending';
+            pending.textContent = 'not generated';
+            card.appendChild(pending);
+          }
+
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.innerHTML = `<div class="name">${item.name}</div><div class="type">${item.subtype} &middot; ${item.category}</div>`;
+          card.appendChild(meta);
+
+          card.addEventListener('click', () => openInspector(item.slug, item));
+          grid.appendChild(card);
+        }
+
+        section.appendChild(grid);
+        content.appendChild(section);
+      }
+
+      document.getElementById('count').textContent = `${generated}/${total} generated`;
+    }
+
+    // ── Load + render a single item ────────────────────────────────────
+    async function loadAndRenderItem(slug, entry, canvas) {
+      if (itemStates.has(slug)) {
+        renderToCanvas(slug, canvas);
+        return;
+      }
+
+      const url = `glb/items/${entry.file}`;
+      try {
+        const gltf = await new Promise((resolve, reject) => {
+          new GLTFLoader().load(url, resolve, undefined, reject);
+        });
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0, 0, 0);
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        keyLight.position.set(1.5, 2.0, 3.0);
+        scene.add(keyLight);
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.25);
+        fillLight.position.set(-1.2, -0.5, 1.5);
+        scene.add(fillLight);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+
+        const model = gltf.scene;
+
+        // Fit to unit cube
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z, 0.001);
+        model.scale.setScalar(1.4 / maxDim);
+        box.setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        model.position.sub(center);
+
+        // Slight angle for depth
+        model.rotation.order = 'YXZ';
+        model.rotation.y = -Math.PI * 0.25;
+        model.rotation.x = -0.1;
+
+        applyItemToonMaterials(model, entry.rarity);
+        scene.add(model);
+
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 100);
+        camera.position.set(0, 0, 5);
+        camera.lookAt(0, 0, 0);
+
+        const drawFn = makeThreeDrawFn(scene, camera, renderer);
+        itemStates.set(slug, { scene, camera, model, drawFn, entry });
+
+        renderToCanvas(slug, canvas);
+      } catch (e) {
+        console.error(`Failed to load ${slug}:`, e);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#1a0000';
+        ctx.fillRect(0, 0, 160, 160);
+        ctx.fillStyle = '#622';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('load failed', 80, 80);
+      }
+    }
+
+    function renderToCanvas(slug, canvas) {
+      const state = itemStates.get(slug);
+      if (!state) return;
+
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      renderAscii(ctx, state.drawFn, 0, 0, w, h, {
+        cellSize,
+        enable3D: true,
+        enableGlow: true,
+        enableBgFill: true,
+      });
+    }
+
+    // ── Inspector ──────────────────────────────────────────────────────
+    function openInspector(slug, entry) {
+      selectedSlug = slug;
+      const panel = document.getElementById('inspector');
+      panel.classList.add('open');
+
+      document.getElementById('inspector-desc').textContent = entry.description || '';
+      document.getElementById('inspector-info').innerHTML = `
+        <div><span class="label">Name:</span> <span class="value">${entry.name}</span></div>
+        <div><span class="label">Category:</span> <span class="value">${entry.category}</span></div>
+        <div><span class="label">Subtype:</span> <span class="value">${entry.subtype}</span></div>
+        <div><span class="label">Rarity:</span> <span class="value">${RARITY_NAMES[entry.rarity] ?? entry.rarity}</span></div>
+        <div><span class="label">Socket:</span> <span class="value">${entry.socket}</span></div>
+        <div><span class="label">Generated:</span> <span class="value">${entry.generated ? 'Yes' : 'No'}</span></div>
+      `;
+
+      const canvas = document.getElementById('inspector-canvas');
+      canvas.width = 360;
+      canvas.height = 320;
+
+      if (entry.generated) {
+        loadAndRenderItem(slug, entry, canvas);
+
+        // Animate rotation
+        if (window._inspectorRAF) cancelAnimationFrame(window._inspectorRAF);
+        let yaw = -Math.PI * 0.25;
+        function animateInspector() {
+          const state = itemStates.get(slug);
+          if (!state || selectedSlug !== slug) return;
+          yaw += 0.008;
+          state.model.rotation.y = yaw;
+          renderToCanvas(slug, canvas);
+          window._inspectorRAF = requestAnimationFrame(animateInspector);
+        }
+        animateInspector();
+      }
+
+      buildGrid(); // refresh selection highlight
+    }
+
+    document.getElementById('close-inspector').addEventListener('click', () => {
+      selectedSlug = null;
+      document.getElementById('inspector').classList.remove('open');
+      if (window._inspectorRAF) cancelAnimationFrame(window._inspectorRAF);
+      buildGrid();
+    });
+
+    // ── Controls ───────────────────────────────────────────────────────
+    document.getElementById('cell-size').addEventListener('change', e => {
+      cellSize = parseInt(e.target.value);
+      // Re-render all visible canvases
+      for (const card of document.querySelectorAll('.item-card canvas')) {
+        const slug = card.closest('.item-card').dataset.slug;
+        renderToCanvas(slug, card);
+      }
+    });
+
+    document.getElementById('filter').addEventListener('change', e => {
+      filter = e.target.value;
+      buildGrid();
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────
+    buildGrid();
+  </script>
+</body>
+</html>
