@@ -142,6 +142,64 @@ export const BIPED_RIG = {
         ]},
       ],
     },
+
+    dodge: {
+      duration: 0.35,
+      loop: 'once',
+      clampWhenFinished: false,
+      returnToIdle: true,
+      tracks: [
+        // lateral hop right (away from player) with slight crouch
+        { path: '.position', times: [0, 0.10, 0.22, 0.35], values: [
+          0, 0, 0,
+          0.28, 0.06, 0,     // hop right + slight lift
+          0.32, 0.04, 0,     // apex
+          0, 0, 0,
+        ]},
+        // compress on takeoff, stretch at apex
+        { path: '.scale', times: [0, 0.10, 0.22, 0.35], values: [
+          1,1,1,
+          1.04, 0.92, 1,     // crouch
+          1.02, 0.95, 1,
+          1, 1, 1,
+        ]},
+        // weapon tucks in during dodge
+        { path: 'weapon.rotation', times: [0, 0.10, 0.35], values: [
+          0, 0,  0.00,
+          0, 0,  0.30,       // weapon pulled close
+          0, 0,  0.00,
+        ]},
+      ],
+    },
+
+    walk: {
+      duration: 1.2,
+      loop: 'repeat',
+      tracks: [
+        // forward-back step oscillation
+        { path: '.position', times: [0, 0.3, 0.6, 0.9, 1.2], values: [
+          0, 0, 0,
+         -0.06, 0.02, 0,     // step forward-left
+          0, 0, 0,
+          0.06, 0.02, 0,     // step forward-right
+          0, 0, 0,
+        ]},
+        // slight side sway
+        { path: '.scale', times: [0, 0.3, 0.6, 0.9, 1.2], values: [
+          1,1,1,
+          0.98, 1.01, 1,
+          1, 1, 1,
+          1.02, 0.99, 1,
+          1, 1, 1,
+        ]},
+        // weapon bobs with walk
+        { path: 'weapon.rotation', times: [0, 0.6, 1.2], values: [
+          0, 0, 0.00,
+          0, 0, 0.08,
+          0, 0, 0.00,
+        ]},
+      ],
+    },
   },
 };
 
@@ -226,6 +284,51 @@ export const QUADRUPED_RIG = {
         { path: '.rotation', times: [0, 0.60, 1.10], values: [0,0,0, 0,0,0.18, 0,0,0.72] },
       ],
     },
+
+    dodge: {
+      duration: 0.32,
+      loop: 'once',
+      clampWhenFinished: false,
+      returnToIdle: true,
+      tracks: [
+        // scurry sideways (right = away from player)
+        { path: '.position', times: [0, 0.08, 0.20, 0.32], values: [
+          0, 0, 0,
+          0.22, -0.04, 0,    // low dart right
+          0.30, -0.02, 0,
+          0, 0, 0,
+        ]},
+        // compress body to dart
+        { path: '.scale', times: [0, 0.08, 0.20, 0.32], values: [
+          1,1,1,
+          1.10, 0.85, 1,     // flatten and stretch
+          1.06, 0.90, 1,
+          1, 1, 1,
+        ]},
+      ],
+    },
+
+    walk: {
+      duration: 1.0,
+      loop: 'repeat',
+      tracks: [
+        // low scurrying movement with body compression
+        { path: '.position', times: [0, 0.25, 0.5, 0.75, 1.0], values: [
+          0, 0, 0,
+         -0.05, -0.02, 0,    // step forward, dip
+          0, 0, 0,
+         -0.05, -0.02, 0,    // step forward, dip
+          0, 0, 0,
+        ]},
+        { path: '.scale', times: [0, 0.25, 0.5, 0.75, 1.0], values: [
+          1,1,1,
+          1.04, 0.96, 1,     // compress/extend with each step
+          1, 1, 1,
+          1.04, 0.96, 1,
+          1, 1, 1,
+        ]},
+      ],
+    },
   },
 };
 
@@ -304,6 +407,51 @@ export const SERPENTINE_RIG = {
       tracks: [
         { path: '.position', times: [0, 0.6, 1.40], values: [0,0,0, 0,-0.20,0, 0,-0.55,0] },
         { path: '.scale',    times: [0, 0.8, 1.40], values: [1,1,1, 1.1,0.72,1, 0.05,0.02,0.05] },
+      ],
+    },
+
+    dodge: {
+      duration: 0.38,
+      loop: 'once',
+      clampWhenFinished: false,
+      returnToIdle: true,
+      tracks: [
+        // flowing lateral slide (right = away from player)
+        { path: '.position', times: [0, 0.12, 0.25, 0.38], values: [
+          0, 0, 0,
+          0.20, 0.06, 0,     // rise and slide right
+          0.26, 0.04, 0,
+          0, 0, 0,
+        ]},
+        // body compresses and extends fluidly
+        { path: '.scale', times: [0, 0.12, 0.25, 0.38], values: [
+          1,1,1,
+          0.90, 1.12, 1,     // stretch tall
+          0.94, 1.06, 1,
+          1, 1, 1,
+        ]},
+      ],
+    },
+
+    walk: {
+      duration: 1.4,
+      loop: 'repeat',
+      tracks: [
+        // sinusoidal slither — slow flowing motion
+        { path: '.position', times: [0, 0.35, 0.7, 1.05, 1.4], values: [
+          0, 0, 0,
+         -0.04, 0.015, 0,
+          0, 0.005, 0,
+          0.04, 0.015, 0,
+          0, 0, 0,
+        ]},
+        { path: '.scale', times: [0, 0.35, 0.7, 1.05, 1.4], values: [
+          1,1,1,
+          1.04, 0.97, 1,
+          1, 1, 1,
+          0.96, 1.03, 1,
+          1, 1, 1,
+        ]},
       ],
     },
   },
