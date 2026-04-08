@@ -109,6 +109,8 @@ const CLIP_MAP: { keys: string[]; target: string }[] = [
   { keys: ['hit', 'hurt', 'damage', 'impact', 'flinch', 'hitreact'], target: 'hit' },
   { keys: ['death', 'die', 'dead', 'fall', 'dying'], target: 'death' },
   { keys: ['walk', 'run', 'move', 'crawl', 'sneak', 'trot', 'gallop', 'jump', 'leap'], target: 'walk' },
+  { keys: ['block', 'guard', 'defend', 'shield', 'parry', 'brace'], target: 'block' },
+  { keys: ['dodge', 'evade', 'sidestep', 'roll', 'duck', 'avoid'], target: 'dodge' },
 ];
 
 function normaliseClipName(rawName: string): string {
@@ -124,7 +126,7 @@ function normaliseClipName(rawName: string): string {
 interface CreatureState {
   loaded: boolean;
   drawFn: ((ctx: CanvasRenderingContext2D, w: number, h: number) => void) | null;
-  /** Play a named clip (idle/attack/hit/death/walk). Only available after load. */
+  /** Play a named clip (idle/attack/hit/death/walk/block/dodge). Only available after load. */
   playClip?: (name: string, fadeTime?: number) => void;
   /** The Three.js model root — needed for bone attachment */
   model?: import('three').Object3D;
@@ -132,27 +134,54 @@ interface CreatureState {
 
 const creatureCache = new Map<string, CreatureState>();
 
-// ---- Weapon attachment ----------------------------------------------------
+// ---- Equipment socket attachment ------------------------------------------
 
 /**
- * Attach a weapon mesh to the RightHand bone of a loaded creature model.
- * The weapon inherits all animation transforms (idle sway, attack swing, etc.)
- * automatically because it becomes a child of the bone.
+ * Bone name candidates for each standard socket.
+ * Tries socket node first (from creature-edit.mjs add-sockets), then falls
+ * back to raw bone names from Mixamo, UniRig, and our standard convention.
+ */
+const SOCKET_BONE_CANDIDATES: Record<string, string[]> = {
+  'hand_R.socket': ['hand_R.socket', 'hand_R', 'RightHand', 'mixamorig:RightHand'],
+  'hand_L.socket': ['hand_L.socket', 'hand_L', 'LeftHand', 'mixamorig:LeftHand'],
+  'chest.socket':  ['chest.socket', 'chest', 'Spine2', 'Spine02', 'mixamorig:Spine2'],
+  'head.socket':   ['head.socket', 'head', 'Head', 'mixamorig:Head'],
+  'back.socket':   ['back.socket', 'chest', 'Spine2', 'Spine02', 'mixamorig:Spine2'],
+};
+
+/**
+ * Attach a mesh to any bone socket on a creature model.
+ * Searches socket node first, then known bone name variants.
  *
- * @returns true if attachment succeeded, false if bone not found
+ * @param socketName  Standard socket name (e.g. 'hand_R.socket', 'chest.socket')
+ * @returns true if attachment succeeded, false if no matching bone found
+ */
+export function attachToSocket(
+  model: import('three').Object3D,
+  mesh: import('three').Object3D,
+  socketName: string,
+): boolean {
+  const candidates = SOCKET_BONE_CANDIDATES[socketName] ?? [socketName];
+  for (const name of candidates) {
+    const node = model.getObjectByName(name);
+    if (node) {
+      node.add(mesh);
+      return true;
+    }
+  }
+  console.warn(`[glbCreatureLoader] Socket "${socketName}" not found in model`);
+  return false;
+}
+
+/**
+ * Attach a weapon mesh to the RightHand bone (convenience wrapper).
+ * @deprecated Use attachToSocket(model, mesh, 'hand_R.socket') instead
  */
 export function attachWeapon(
   model: import('three').Object3D,
   weaponMesh: import('three').Object3D,
 ): boolean {
-  // Meshy rigged models use Mixamo skeleton — RightHand is always present
-  const rightHand = model.getObjectByName('RightHand');
-  if (!rightHand) {
-    console.warn('[glbCreatureLoader] RightHand bone not found — cannot attach weapon');
-    return false;
-  }
-  rightHand.add(weaponMesh);
-  return true;
+  return attachToSocket(model, weaponMesh, 'hand_R.socket');
 }
 
 /**
@@ -263,7 +292,7 @@ export async function loadGLBCreature(
     next.play();
     currentAction = next;
 
-    if (['attack', 'hit', 'walk'].includes(name)) {
+    if (['attack', 'hit', 'walk', 'block', 'dodge'].includes(name)) {
       const onFinish = (e: { action: import('three').AnimationAction }) => {
         if (e.action !== next) return;
         mixer.removeEventListener('finished', onFinish);

@@ -68,6 +68,8 @@ export function buildBattleSceneSignal({
     damage: sumDamage(outcome),
     isCrit: (outcome.crit ?? []).some(Boolean),
     isPlayerAttack,
+    blocked: outcome.blocked,
+    dodged: (outcome.miss ?? []).some(Boolean) || outcome.spellDodged,
     callout: buildCallout(outcome, isPlayerAttack, opponentName),
   };
 }

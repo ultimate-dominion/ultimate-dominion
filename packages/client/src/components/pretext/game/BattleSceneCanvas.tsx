@@ -175,6 +175,8 @@ type ActiveAttack = {
   damage: number;
   isCrit: boolean;
   isPlayerAttack: boolean;
+  blocked: boolean;
+  dodged: boolean;
   impacted: boolean;
   callout: AttackSignal['callout'];
 };
@@ -391,6 +393,8 @@ export const BattleSceneCanvas = forwardRef<
       damage: signal.damage,
       isCrit: signal.isCrit,
       isPlayerAttack: signal.isPlayerAttack,
+      blocked: signal.blocked,
+      dodged: signal.dodged,
       impacted: false,
       callout: signal.callout,
     });
@@ -452,28 +456,33 @@ export const BattleSceneCanvas = forwardRef<
           // Impact moment
           atk.impacted = true;
 
+          // Pick defender clip: dodge > block > hit
+          const defenderClip = atk.dodged ? 'dodge' : atk.blocked ? 'block' : 'hit';
+
           if (atk.isPlayerAttack) {
             // Player attack hits monster
             state.hitReactionStart = now;
-            state.monsterAnim = { action: 'hit', startTime: now };
+            state.monsterAnim = { action: defenderClip, startTime: now };
 
-            // Spawn impact effect
-            state.impacts.push({
-              startTime: now,
-              x: w * 0.55,
-              y: h * 0.45,
-            });
+            // Spawn impact effect (skip on dodge — no contact)
+            if (!atk.dodged) {
+              state.impacts.push({
+                startTime: now,
+                x: w * 0.55,
+                y: h * 0.45,
+              });
+            }
 
             state.playerAttackStart = now;
           } else {
             // Counterattack hits player
             state.playerHitStart = now;
 
-            // Trigger player hit animation on GLB
+            // Trigger defender animation on player GLB
             const playerUrl = p.userRace ? RACE_GLB_URL[p.userRace] : null;
             if (playerUrl) {
               const ps = getCreatureState(playerUrl);
-              ps?.playClip?.('hit');
+              ps?.playClip?.(defenderClip);
             }
           }
 

@@ -85,4 +85,67 @@ describe('buildBattleSceneSignal', () => {
       tone: 'miss',
     });
   });
+
+  // ── Block / dodge flags ────────────────────────────────────────────
+
+  it('sets blocked flag from outcome.blocked', () => {
+    const signal = buildBattleSceneSignal({
+      outcome: { ...baseOutcome, blocked: true },
+      characterId: '0xattacker',
+      opponentName: 'Giant Spider',
+      weaponTypeForItem: () => 'melee',
+    });
+
+    expect(signal.blocked).toBe(true);
+    expect(signal.dodged).toBe(false);
+    expect(signal.callout.detail).toContain('through a block');
+  });
+
+  it('sets dodged flag from miss array', () => {
+    const signal = buildBattleSceneSignal({
+      outcome: { ...baseOutcome, miss: [true], damagePerHit: [0n] },
+      characterId: '0xattacker',
+      opponentName: 'Giant Spider',
+      weaponTypeForItem: () => 'melee',
+    });
+
+    expect(signal.dodged).toBe(true);
+    expect(signal.blocked).toBe(false);
+  });
+
+  it('sets dodged flag from spellDodged', () => {
+    const signal = buildBattleSceneSignal({
+      outcome: { ...baseOutcome, spellDodged: true },
+      characterId: '0xattacker',
+      opponentName: 'Giant Spider',
+      weaponTypeForItem: () => 'spell',
+    });
+
+    expect(signal.dodged).toBe(true);
+  });
+
+  it('blocked counterattack mentions "through your block"', () => {
+    const signal = buildBattleSceneSignal({
+      outcome: { ...baseOutcome, attackerId: '0xmonster', blocked: true },
+      characterId: '0xattacker',
+      opponentName: 'Giant Spider',
+      weaponTypeForItem: () => 'melee',
+    });
+
+    expect(signal.blocked).toBe(true);
+    expect(signal.isPlayerAttack).toBe(false);
+    expect(signal.callout.detail).toContain('through your block');
+  });
+
+  it('standard hit has both flags false', () => {
+    const signal = buildBattleSceneSignal({
+      outcome: baseOutcome,
+      characterId: '0xattacker',
+      opponentName: 'Giant Spider',
+      weaponTypeForItem: () => 'melee',
+    });
+
+    expect(signal.blocked).toBe(false);
+    expect(signal.dodged).toBe(false);
+  });
 });

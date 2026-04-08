@@ -12,6 +12,10 @@ export type AttackSignal = {
   damage: number;
   isCrit: boolean;
   isPlayerAttack: boolean;
+  /** Defender blocked the attack (reduced damage, block animation) */
+  blocked: boolean;
+  /** Attack missed / was dodged (no damage, dodge animation) */
+  dodged: boolean;
   callout: {
     title: string;
     detail: string;
