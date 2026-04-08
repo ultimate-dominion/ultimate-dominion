@@ -19,8 +19,11 @@ const getStaticFieldAbi = parseAbi([
 ]);
 
 type EmbeddedLinkedAccount = {
+  chainType?: string;
   type?: string;
   address?: string;
+  wallet_address?: string;
+  owner_address?: string;
   chain_type?: string;
   wallet_client_type?: string;
   connector_type?: string;
@@ -91,14 +94,34 @@ function parsePrivyLinkedAccounts(payload: PrivyIdentityPayload): EmbeddedLinked
   }
 }
 
-function hasEmbeddedWalletClaim(payload: PrivyIdentityPayload, expectedAddress: Address): boolean {
+function isHexAddress(value: string | undefined): value is Address {
+  return typeof value === 'string' && /^0x[a-fA-F0-9]{40}$/.test(value);
+}
+
+function extractLinkedAccountAddresses(account: EmbeddedLinkedAccount): Address[] {
+  const values = [
+    account.address,
+    account.wallet_address,
+    account.owner_address,
+  ];
+
+  return values
+    .filter(isHexAddress)
+    .map(normalizeAddress);
+}
+
+function hasEmbeddedWalletClaim(payload: PrivyIdentityPayload, expectedAddress: Address): {
+  candidateAddresses: Address[];
+  verified: boolean;
+} {
   const normalizedExpected = normalizeAddress(expectedAddress);
   const linkedAccounts = parsePrivyLinkedAccounts(payload);
+  const candidateAddresses = linkedAccounts.flatMap(extractLinkedAccountAddresses);
 
-  return linkedAccounts.some((account) =>
-    account.type === 'wallet' &&
-    (!account.chain_type || account.chain_type === 'ethereum') &&
-    normalizeAddress(account.address || '0x0000000000000000000000000000000000000000') === normalizedExpected);
+  return {
+    candidateAddresses,
+    verified: candidateAddresses.includes(normalizedExpected),
+  };
 }
 
 async function getPrivyVerificationKey(): Promise<Awaited<ReturnType<typeof importJWK>>> {
@@ -120,7 +143,10 @@ async function getPrivyVerificationKey(): Promise<Awaited<ReturnType<typeof impo
   return privyKeyPromise;
 }
 
-async function verifyPrivyIdentityToken(identityToken: string, expectedAddress: Address): Promise<boolean> {
+async function verifyPrivyIdentityToken(identityToken: string, expectedAddress: Address): Promise<{
+  candidateAddresses: Address[];
+  verified: boolean;
+}> {
   const verificationKey = await getPrivyVerificationKey();
   const { payload } = await jwtVerify(identityToken, verificationKey, {
     issuer: 'privy.io',
@@ -168,8 +194,13 @@ export async function authorizeFundingRequest(params: {
     }
 
     try {
-      const verified = await verifyPrivyIdentityToken(identityToken, address);
-      if (!verified) {
+      const verification = await verifyPrivyIdentityToken(identityToken, address);
+      if (!verification.verified) {
+        console.warn('[fundAuth] Embedded identity token did not match wallet', {
+          audience: config.privyAppId,
+          candidates: verification.candidateAddresses,
+          expectedAddress: normalizeAddress(address),
+        });
         return { ok: false, status: 403, error: 'Identity token does not match embedded wallet' };
       }
 

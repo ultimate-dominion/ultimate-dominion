@@ -187,6 +187,13 @@ async function main() {
       worldAddress,
     });
     if (!authResult.ok) {
+      console.warn('[fund] Authorization rejected', {
+        address,
+        delegator,
+        error: authResult.error,
+        status: authResult.status,
+        worldAddress: worldAddress || config.worldAddress,
+      });
       res.status(authResult.status).json({ error: authResult.error });
       return;
     }

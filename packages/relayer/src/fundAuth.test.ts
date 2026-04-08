@@ -112,6 +112,29 @@ describe('authorizeFundingRequest', () => {
     });
   });
 
+  it('accepts embedded wallet funding when the linked account type changes but the signed token still carries the wallet address', async () => {
+    const identityToken = await createIdentityToken(TEST_EMBEDDED, [
+      {
+        address: TEST_EMBEDDED,
+        chainType: 'ethereum',
+        type: 'embedded_wallet',
+      },
+    ]);
+
+    const result = await authorizeFundingRequest({
+      address: TEST_EMBEDDED,
+      delegatorAddress: TEST_EMBEDDED,
+      identityToken,
+      worldAddress: TEST_WORLD,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      authMethod: 'embedded',
+      worldAddress: TEST_WORLD,
+    });
+  });
+
   it('rejects embedded wallet funding when the identity token does not match the wallet', async () => {
     const identityToken = await createIdentityToken(TEST_EMBEDDED);
 
