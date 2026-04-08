@@ -7,6 +7,7 @@
  *
  * Usage:
  *   <CharacterViewer race={Race.Human} />
+ *   <CharacterViewer race={Race.Human} autoReveal equippedItems={[...]} />
  */
 
 import { Box, Text } from '@chakra-ui/react';
@@ -35,8 +36,15 @@ const RACE_GLB_URL: Record<number, string> = {
 };
 
 const DEFAULT_YAW = 0; // face camera for inspection (not 3/4 battle view)
+const REVEAL_DURATION_MS = 8000;
+const REVEAL_TOTAL_RAD = Math.PI * 2; // full 360
 
-// ── Drag state (mutated in events, no React state to avoid re-renders) ──
+// ── Types ──────────────────────────────────────────────────────────────
+
+export type EquippedItemSlot = {
+  name: string;
+  socket: string;
+};
 
 type DragState = {
   active: boolean;
@@ -50,11 +58,21 @@ type DragState = {
 export function CharacterViewer({
   race,
   height = 280,
+  cellSize = 5,
+  autoReveal = false,
+  equippedItems,
+  // Legacy single-weapon prop (use equippedItems instead)
   weaponName,
 }: {
   race: Race;
   height?: number;
-  /** Equipped weapon name from items.json — loads 3D model onto hand socket */
+  /** ASCII cell size — smaller = crisper but more CPU. Card: 6, fullscreen: 4 */
+  cellSize?: number;
+  /** Auto-rotate 360 degrees on mount then stop. The "trophy reveal" for inspection. */
+  autoReveal?: boolean;
+  /** Equipment to attach to bone sockets (weapons, armor visuals) */
+  equippedItems?: EquippedItemSlot[];
+  /** @deprecated Use equippedItems instead */
   weaponName?: string;
 }) {
   const glbUrl = RACE_GLB_URL[race];
@@ -65,29 +83,51 @@ export function CharacterViewer({
     currentYaw: DEFAULT_YAW,
   });
 
+  // Auto-reveal: track mount time for the spin animation
+  const revealStartRef = useRef<number>(autoReveal ? performance.now() : -1);
+
+  // Normalize equipment list: merge legacy weaponName with equippedItems
+  const allItems = useMemo(() => {
+    const items = equippedItems ? [...equippedItems] : [];
+    if (weaponName && !items.some(i => i.name === weaponName)) {
+      items.push({ name: weaponName, socket: 'hand_R.socket' });
+    }
+    return items;
+  }, [equippedItems, weaponName]);
+
+  // Track which items are currently attached (by socket → slug)
+  const attachedRef = useRef<Map<string, string>>(new Map());
+
   // Ensure the GLB is loaded (may already be cached from battle scene)
   useEffect(() => {
     if (!glbUrl) return;
     loadGLBCreature(glbUrl, 7, 7, DEFAULT_YAW, -0.08, { playerMode: true }).catch(() => {});
   }, [glbUrl]);
 
-  // Load + attach equipped weapon to character's hand socket
-  const weaponSlug = weaponName ? itemSlug(weaponName) : null;
-  const weaponAttachedRef = useRef<string | null>(null);
-
+  // Load all equipped item models
   useEffect(() => {
-    if (!weaponSlug) {
-      // Weapon un-equipped — remove attached model
-      if (weaponAttachedRef.current && glbUrl) {
-        const state = getCreatureState(glbUrl);
-        const prev = state?.model?.getObjectByName('__equipped_weapon__');
-        if (prev) prev.removeFromParent();
-        weaponAttachedRef.current = null;
-      }
-      return;
+    for (const item of allItems) {
+      const slug = itemSlug(item.name);
+      if (slug) loadItemModel(slug).catch(() => {});
     }
-    loadItemModel(weaponSlug).catch(() => {});
-  }, [weaponSlug, glbUrl]);
+  }, [allItems]);
+
+  // Remove items that were unequipped
+  useEffect(() => {
+    if (!glbUrl) return;
+    const state = getCreatureState(glbUrl);
+    if (!state?.model) return;
+
+    const currentSlugs = new Set(allItems.map(i => itemSlug(i.name)));
+    for (const [socket, slug] of attachedRef.current.entries()) {
+      if (!currentSlugs.has(slug)) {
+        const nodeName = `__equipped_${socket}__`;
+        const prev = state.model.getObjectByName(nodeName);
+        if (prev) prev.removeFromParent();
+        attachedRef.current.delete(socket);
+      }
+    }
+  }, [allItems, glbUrl]);
 
   // Build a MonsterTemplate-compatible object for renderMonster
   const template: MonsterTemplate | null = useMemo(() => {
@@ -104,36 +144,55 @@ export function CharacterViewer({
     };
   }, [glbUrl, race]);
 
-  // Apply yaw from drag to the Three.js model every frame
+  // Apply yaw from drag / autoReveal to the Three.js model every frame
   const onFrame = useCallback(
     (ctx: CanvasRenderingContext2D, _dt: number, elapsed: number) => {
       if (!template) return;
       const { width, height: h } = ctx.canvas.getBoundingClientRect();
       if (width === 0 || h === 0) return;
 
-      // Sync drag yaw to the 3D model
+      // Auto-reveal rotation (only if not dragging)
+      if (revealStartRef.current > 0 && !dragRef.current.active) {
+        const revealElapsed = performance.now() - revealStartRef.current;
+        if (revealElapsed < REVEAL_DURATION_MS) {
+          // Smooth ease-out rotation
+          const t = revealElapsed / REVEAL_DURATION_MS;
+          const eased = 1 - Math.pow(1 - t, 3); // cubic ease-out
+          dragRef.current.currentYaw = DEFAULT_YAW + REVEAL_TOTAL_RAD * eased;
+        } else {
+          // Snap to front and stop
+          dragRef.current.currentYaw = DEFAULT_YAW;
+          revealStartRef.current = -1;
+        }
+      }
+
+      // Sync yaw to the 3D model
       if (glbUrl) {
         const state = getCreatureState(glbUrl);
         if (state?.model) {
           state.model.rotation.y = dragRef.current.currentYaw;
 
-          // Attach weapon once both are loaded (one-time per weapon)
-          if (weaponSlug && weaponAttachedRef.current !== weaponSlug && isItemModelReady(weaponSlug)) {
-            const itemData = getItemModel(weaponSlug);
-            if (itemData) {
-              // Remove previously attached weapon if switching
-              if (weaponAttachedRef.current) {
-                const prev = state.model.getObjectByName('__equipped_weapon__');
-                if (prev) prev.removeFromParent();
-              }
-              const clone = itemData.model.clone();
-              clone.name = '__equipped_weapon__';
-              clone.position.set(...itemData.offset);
-              clone.rotation.set(...itemData.rotation);
-              clone.scale.setScalar(itemData.scale);
-              attachToSocket(state.model, clone, itemData.socket);
-              weaponAttachedRef.current = weaponSlug;
-            }
+          // Attach equipment items as they become ready
+          for (const item of allItems) {
+            const slug = itemSlug(item.name);
+            if (!slug || attachedRef.current.get(item.socket) === slug) continue;
+            if (!isItemModelReady(slug)) continue;
+
+            const itemData = getItemModel(slug);
+            if (!itemData) continue;
+
+            // Remove previous item on this socket
+            const nodeName = `__equipped_${item.socket}__`;
+            const prev = state.model.getObjectByName(nodeName);
+            if (prev) prev.removeFromParent();
+
+            const clone = itemData.model.clone();
+            clone.name = nodeName;
+            clone.position.set(...itemData.offset);
+            clone.rotation.set(...itemData.rotation);
+            clone.scale.setScalar(itemData.scale);
+            attachToSocket(state.model, clone, item.socket);
+            attachedRef.current.set(item.socket, slug);
           }
         }
       }
@@ -142,16 +201,18 @@ export function CharacterViewer({
 
       renderMonster(ctx, template, 0, 0, width, h, {
         elapsed,
-        cellSize: 5,
+        cellSize,
         enable3D: true,
         enableGlow: true,
         enableBgFill: true,
       });
 
-      // Drag hint
-      drawDragHint(ctx, width, h, elapsed);
+      // Drag hint (not shown during autoReveal)
+      if (!autoReveal) {
+        drawDragHint(ctx, width, h, elapsed);
+      }
     },
-    [template, glbUrl, weaponSlug],
+    [template, glbUrl, allItems, cellSize, autoReveal],
   );
 
   const { canvasRef } = useCanvas({ onFrame, interactive: true });
@@ -166,6 +227,8 @@ export function CharacterViewer({
       dragRef.current.active = true;
       dragRef.current.startX = x;
       dragRef.current.startYaw = dragRef.current.currentYaw;
+      // Cancel autoReveal on user interaction
+      revealStartRef.current = -1;
       canvas.setPointerCapture(e.pointerId);
     },
     [canvasRef],
@@ -178,7 +241,6 @@ export function CharacterViewer({
       if (!canvas) return;
       const { x } = getPointerPos(e, canvas);
       const dx = x - dragRef.current.startX;
-      // Scale: full canvas width = PI rotation
       const { width } = canvas.getBoundingClientRect();
       dragRef.current.currentYaw = dragRef.current.startYaw + (dx / width) * Math.PI;
     },
@@ -204,6 +266,7 @@ export function CharacterViewer({
       h={`${height}px`}
       cursor="grab"
       userSelect="none"
+      role="img"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -236,7 +299,6 @@ function drawDragHint(
   h: number,
   elapsed: number,
 ) {
-  // Fade out after 4 seconds
   const fade = Math.max(0, 1 - elapsed / 4000);
   if (fade <= 0) return;
 
