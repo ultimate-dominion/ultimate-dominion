@@ -14,11 +14,21 @@ export function resolveCurrentBattle(
   allBattles: CombatDetails[],
   combatOutcomeTable: Record<string, TableRow>,
   lastSeenEncounterId: string | null,
+  liveEncounterId?: string | null,
 ): CombatDetails | null {
+  const hasLiveEncounter = Boolean(
+    liveEncounterId &&
+    liveEncounterId !== '0x' + '0'.repeat(64),
+  );
+
   // A battle is "active" if end===0 AND no CombatOutcome exists yet.
   const activeBattle = allBattles
     .filter(b => b.end === BigInt(0) && !combatOutcomeTable[b.encounterId])
     .pop() ?? null;
+
+  if (!hasLiveEncounter && activeBattle) {
+    return null;
+  }
 
   const latestBattle = activeBattle ?? allBattles[allBattles.length - 1];
   if (!latestBattle) return null;

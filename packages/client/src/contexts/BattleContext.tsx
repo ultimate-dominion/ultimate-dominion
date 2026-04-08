@@ -126,6 +126,7 @@ export const BattleProvider = ({
   // Reactive: re-renders when any CombatOutcome row changes
   // (fixes race condition where CombatOutcome arrives after CombatEncounter)
   const combatOutcomeTable = useGameTable('CombatOutcome');
+  const liveEncounterEntity = useGameValue('EncounterEntity', character?.id);
 
   const allBattles = useMemo(() => {
     return Object.entries(combatEncounterTable)
@@ -156,9 +157,14 @@ export const BattleProvider = ({
 
   const currentBattle = useMemo(() => {
     const lastSeenEncounterId = localStorage.getItem(BATTLE_OUTCOME_SEEN_KEY);
-    return resolveCurrentBattle(allBattles, combatOutcomeTable, lastSeenEncounterId);
+    return resolveCurrentBattle(
+      allBattles,
+      combatOutcomeTable,
+      lastSeenEncounterId,
+      (liveEncounterEntity?.encounterId as string | undefined) ?? null,
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allBattles, combatOutcomeTable, acknowledgeVersion]);
+  }, [allBattles, combatOutcomeTable, acknowledgeVersion, liveEncounterEntity?.encounterId]);
 
   // Ghost encounter safety: if an "active" battle (end=0) started more than
   // 2 minutes ago, it's stale cache data from a previous session — auto-dismiss.

@@ -38,13 +38,19 @@ describe('resolveCurrentBattle — no battles', () => {
 describe('resolveCurrentBattle — active battle', () => {
   it('returns active battle', () => {
     const battle = makeBattle('0xa', 100);
-    expect(resolveCurrentBattle([battle], {}, null)).toEqual(battle);
+    expect(resolveCurrentBattle([battle], {}, null, '0xa')).toEqual(battle);
   });
 
   it('returns active battle even when lastSeen references missing encounter', () => {
     const battle = makeBattle('0xa', 100); // end===0, no outcome → active
-    const result = resolveCurrentBattle([battle], {}, '0xmissing');
+    const result = resolveCurrentBattle([battle], {}, '0xmissing', '0xa');
     expect(result).toEqual(battle);
+  });
+
+  it('suppresses stale active battle when live encounter is already cleared', () => {
+    const battle = makeBattle('0xa', 100);
+    const result = resolveCurrentBattle([battle], {}, null, null);
+    expect(result).toBeNull();
   });
 });
 
@@ -78,7 +84,7 @@ describe('resolveCurrentBattle — stale store (indexer behind)', () => {
     const battleD = makeBattle('0xd', 400); // active: end===0
     const outcomes = makeOutcome('0xa');
 
-    const result = resolveCurrentBattle([battleA, battleD], outcomes, '0xc');
+    const result = resolveCurrentBattle([battleA, battleD], outcomes, '0xc', '0xd');
     expect(result).toEqual(battleD); // active battle still shows
   });
 
@@ -126,7 +132,7 @@ describe('resolveCurrentBattle — mixed state', () => {
     const active = makeBattle('0xb', 200); // end===0
     const outcomes = makeOutcome('0xa');
 
-    const result = resolveCurrentBattle([completed, active], outcomes, null);
+    const result = resolveCurrentBattle([completed, active], outcomes, null, '0xb');
     expect(result).toEqual(active);
   });
 
