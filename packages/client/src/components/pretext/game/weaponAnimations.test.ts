@@ -3,11 +3,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mock glbItemLoader — we test its integration with drawWeapon
 vi.mock('./glbItemLoader', () => ({
   isItemModelReady: vi.fn().mockReturnValue(false),
-  drawItemProjectile: vi.fn().mockReturnValue(false),
+  getItemDrawFn: vi.fn().mockReturnValue(null),
+  setItemRotation: vi.fn(),
   itemSlug: vi.fn((name: string) =>
     name.toLowerCase().replace(/['']/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
   ),
   loadItemModel: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Mock MonsterAsciiRenderer
+vi.mock('./MonsterAsciiRenderer', () => ({
+  renderMonster: vi.fn(),
 }));
 
 import {
@@ -16,7 +22,8 @@ import {
   WEAPON_SPEED,
   type WeaponAnimType,
 } from './weaponAnimations';
-import { isItemModelReady, drawItemProjectile, loadItemModel } from './glbItemLoader';
+import { isItemModelReady, getItemDrawFn, setItemRotation, loadItemModel } from './glbItemLoader';
+import { renderMonster } from './MonsterAsciiRenderer';
 
 // Minimal canvas mock for draw functions
 function makeCtx(): CanvasRenderingContext2D {
@@ -126,50 +133,55 @@ describe('weaponAnimations', () => {
       expect(ctx.save).toHaveBeenCalled();
     });
 
-    it('uses 3D model when item is ready and drawItemProjectile succeeds', () => {
+    it('renders ASCII projectile when item model is ready', () => {
+      const mockDrawFn = vi.fn();
       vi.mocked(isItemModelReady).mockReturnValue(true);
-      vi.mocked(drawItemProjectile).mockReturnValue(true);
+      vi.mocked(getItemDrawFn).mockReturnValue(mockDrawFn);
       const ctx = makeCtx();
       drawWeapon(ctx, 'melee', 100, 100, 400, 300, 0.5, 'Iron Axe');
-      expect(drawItemProjectile).toHaveBeenCalledWith(
-        ctx, 'iron-axe', 100, 100, 400 * 0.06, expect.any(Number),
+      // Should set rotation and call renderMonster (ASCII pipeline)
+      expect(setItemRotation).toHaveBeenCalledWith('iron-axe', expect.any(Number), expect.any(Number));
+      expect(renderMonster).toHaveBeenCalledWith(
+        ctx,
+        expect.objectContaining({ id: 'item-iron-axe', dynamic: true }),
+        expect.any(Number), expect.any(Number),
+        expect.any(Number), expect.any(Number),
+        expect.objectContaining({ cellSize: 6, enable3D: true, enableGlow: true }),
       );
-      // 2D fallback should NOT have been called (no save from 2D draw fns)
-      // The ctx.save would not be called since drawItemProjectile returned true
     });
 
-    it('falls back to 2D if drawItemProjectile returns false', () => {
+    it('falls back to 2D if getItemDrawFn returns null', () => {
       vi.mocked(isItemModelReady).mockReturnValue(true);
-      vi.mocked(drawItemProjectile).mockReturnValue(false);
+      vi.mocked(getItemDrawFn).mockReturnValue(null);
       const ctx = makeCtx();
       drawWeapon(ctx, 'ranged', 100, 100, 400, 300, 0.5, 'Hunting Bow');
-      // drawItemProjectile was attempted
-      expect(drawItemProjectile).toHaveBeenCalled();
-      // 2D fallback draws (ranged uses save/restore)
-      expect(ctx.save).toHaveBeenCalled();
+      // renderMonster should NOT be called
+      expect(renderMonster).not.toHaveBeenCalled();
+      // 2D fallback draws
+      expect(ctx.fillRect).toHaveBeenCalled();
     });
 
-    it('passes spin rotation for melee weapons', () => {
+    it('applies spin rotation for melee weapons', () => {
+      const mockDrawFn = vi.fn();
       vi.mocked(isItemModelReady).mockReturnValue(true);
-      vi.mocked(drawItemProjectile).mockReturnValue(true);
+      vi.mocked(getItemDrawFn).mockReturnValue(mockDrawFn);
       const ctx = makeCtx();
       const progress = 0.5;
       drawWeapon(ctx, 'melee', 100, 100, 400, 300, progress, 'Iron Axe');
-      // Melee rotation = progress * PI * 2.5
-      const expectedRotation = progress * Math.PI * 2.5;
-      expect(drawItemProjectile).toHaveBeenCalledWith(
-        ctx, 'iron-axe', 100, 100, expect.any(Number), expectedRotation,
-      );
+      // Melee Z rotation = progress * PI * 2.5
+      const expectedZ = progress * Math.PI * 2.5;
+      const expectedY = progress * Math.PI * 1.2;
+      expect(setItemRotation).toHaveBeenCalledWith('iron-axe', expectedZ, expectedY);
     });
 
-    it('passes zero rotation for non-melee weapons', () => {
+    it('applies minimal rotation for non-melee weapons', () => {
+      const mockDrawFn = vi.fn();
       vi.mocked(isItemModelReady).mockReturnValue(true);
-      vi.mocked(drawItemProjectile).mockReturnValue(true);
+      vi.mocked(getItemDrawFn).mockReturnValue(mockDrawFn);
       const ctx = makeCtx();
       drawWeapon(ctx, 'ranged', 100, 100, 400, 300, 0.5, 'Hunting Bow');
-      expect(drawItemProjectile).toHaveBeenCalledWith(
-        ctx, 'hunting-bow', 100, 100, expect.any(Number), 0,
-      );
+      // Ranged: z=0, y=progress*0.3
+      expect(setItemRotation).toHaveBeenCalledWith('hunting-bow', 0, 0.5 * 0.3);
     });
   });
 });
