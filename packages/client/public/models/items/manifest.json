@@ -16,7 +16,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "worn-shortbow": {
     "name": "Worn Shortbow",
@@ -35,7 +35,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "cracked-wand": {
     "name": "Cracked Wand",
@@ -54,7 +54,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "iron-axe": {
     "name": "Iron Axe",
@@ -73,7 +73,26 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
+  },
+  "hunting-bow": {
+    "name": "Hunting Bow",
+    "file": "hunting-bow.glb",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 1,
+    "socket": "hand_L.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
   },
   "apprentice-staff": {
     "name": "Apprentice Staff",
@@ -92,7 +111,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "light-mace": {
     "name": "Light Mace",
@@ -111,7 +130,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "shortbow": {
     "name": "Shortbow",
@@ -130,7 +149,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "channeling-rod": {
     "name": "Channeling Rod",
@@ -149,7 +168,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "notched-blade": {
     "name": "Notched Blade",
@@ -168,7 +187,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "warhammer": {
     "name": "Warhammer",
@@ -187,7 +206,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "longbow": {
     "name": "Longbow",
@@ -206,7 +225,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "mage-staff": {
     "name": "Mage Staff",
@@ -225,7 +244,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "dire-rat-fang": {
     "name": "Dire Rat Fang",
@@ -244,7 +263,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "sporecap-wand": {
     "name": "Sporecap Wand",
@@ -263,7 +282,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "notched-cleaver": {
     "name": "Notched Cleaver",
@@ -282,7 +301,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "crystal-shard": {
     "name": "Crystal Shard",
@@ -301,7 +320,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "gnarled-cudgel": {
     "name": "Gnarled Cudgel",
@@ -320,7 +339,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "webspinner-bow": {
     "name": "Webspinner Bow",
@@ -339,7 +358,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "bone-staff": {
     "name": "Bone Staff",
@@ -358,7 +377,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "stone-maul": {
     "name": "Stone Maul",
@@ -377,7 +396,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "darkwood-bow": {
     "name": "Darkwood Bow",
@@ -396,7 +415,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "smoldering-rod": {
     "name": "Smoldering Rod",
@@ -415,7 +434,7 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
   },
   "trollhide-cleaver": {
     "name": "Trollhide Cleaver",
@@ -434,7 +453,26 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
+  },
+  "phasefang": {
+    "name": "Phasefang",
+    "file": "phasefang.glb",
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
   },
   "drakescale-staff": {
     "name": "Drakescale Staff",
@@ -453,6 +491,329 @@
       0,
       0
     ],
-    "scale": 1.0
+    "scale": 1
+  },
+  "tattered-cloth": {
+    "name": "Tattered Cloth",
+    "file": "tattered-cloth.glb",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "worn-leather-vest": {
+    "name": "Worn Leather Vest",
+    "file": "worn-leather-vest.glb",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "rusty-chainmail": {
+    "name": "Rusty Chainmail",
+    "file": "rusty-chainmail.glb",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "padded-armor": {
+    "name": "Padded Armor",
+    "file": "padded-armor.glb",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "leather-jerkin": {
+    "name": "Leather Jerkin",
+    "file": "leather-jerkin.glb",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "apprentice-robes": {
+    "name": "Apprentice Robes",
+    "file": "apprentice-robes.glb",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "studded-leather": {
+    "name": "Studded Leather",
+    "file": "studded-leather.glb",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "scout-armor": {
+    "name": "Scout Armor",
+    "file": "scout-armor.glb",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "acolyte-vestments": {
+    "name": "Acolyte Vestments",
+    "file": "acolyte-vestments.glb",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "etched-chainmail": {
+    "name": "Etched Chainmail",
+    "file": "etched-chainmail.glb",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "ranger-leathers": {
+    "name": "Ranger Leathers",
+    "file": "ranger-leathers.glb",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "mage-robes": {
+    "name": "Mage Robes",
+    "file": "mage-robes.glb",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "spider-silk-wraps": {
+    "name": "Spider Silk Wraps",
+    "file": "spider-silk-wraps.glb",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "carved-stone-plate": {
+    "name": "Carved Stone Plate",
+    "file": "carved-stone-plate.glb",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "stalkers-vest": {
+    "name": "Stalker's Vest",
+    "file": "stalkers-vest.glb",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "scorched-scale-vest": {
+    "name": "Scorched Scale Vest",
+    "file": "scorched-scale-vest.glb",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
+  },
+  "drakes-cowl": {
+    "name": "Drake's Cowl",
+    "file": "drakes-cowl.glb",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1
   }
 }
