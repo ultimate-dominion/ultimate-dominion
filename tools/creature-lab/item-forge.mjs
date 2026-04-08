@@ -272,7 +272,7 @@ async function createRefineTask(previewTaskId) {
 }
 
 async function pollTask(taskId, label = 'task') {
-  const maxWait = 300;
+  const maxWait = 600; // 10 min — refine step can be slow
   const interval = 8;
   let waited = 0;
   process.stdout.write(`  Waiting for ${label}`);
@@ -434,6 +434,7 @@ async function forgeAll(opts = {}) {
   if (opts.type) console.log(`  Filter: ${opts.type}`);
 
   const results = { success: 0, skipped: 0, failed: 0 };
+  const failures = [];
   for (const item of filtered) {
     try {
       const result = await forgeItem(item, opts);
@@ -442,11 +443,25 @@ async function forgeAll(opts = {}) {
     } catch (e) {
       console.log(`  FAILED: ${item.name} — ${e.message}`);
       results.failed++;
-      // Continue batch on failure
+      failures.push(item);
     }
 
     // Rate limit: small pause between Meshy requests
     if (!opts.dryRun) await sleep(2000);
+  }
+
+  // Auto-retry failures once
+  if (failures.length > 0 && !opts.dryRun) {
+    console.log(`\n=== Retrying ${failures.length} failed items ===`);
+    for (const item of failures) {
+      try {
+        const result = await forgeItem(item, { ...opts, force: true });
+        if (result) { results.success++; results.failed--; }
+      } catch (e) {
+        console.log(`  RETRY FAILED: ${item.name} — ${e.message}`);
+      }
+      await sleep(2000);
+    }
   }
 
   console.log(`\n=== Batch Complete ===`);
