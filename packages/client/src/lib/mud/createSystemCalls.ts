@@ -706,6 +706,9 @@ export function createSystemCalls(
         success: txResult.status === 'success',
       };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -723,6 +726,9 @@ export function createSystemCalls(
         success: txResult.status === 'success',
       };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -843,6 +849,9 @@ export function createSystemCalls(
         success: txResult.status === 'success',
       };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -869,6 +878,9 @@ export function createSystemCalls(
         success: receipt.status !== 'reverted',
       };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -892,6 +904,9 @@ export function createSystemCalls(
       await waitForTransaction(tx);
       return { success: true };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -959,6 +974,9 @@ export function createSystemCalls(
       }
       return { success: true };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -1561,6 +1579,9 @@ export function createSystemCalls(
       const receipt = await waitForTransaction(tx);
       return { success: receipt.status === 'success' };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -1975,6 +1996,9 @@ export function createSystemCalls(
       const receipt = await waitForTransaction(tx);
       return { success: receipt.status === 'success' };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return { error: getContractError(e), success: false };
     }
   };
@@ -1999,6 +2023,9 @@ export function createSystemCalls(
       const receipt = await waitForTransaction(tx);
       return { success: receipt.status === 'success' };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,
@@ -2047,6 +2074,9 @@ export function createSystemCalls(
       const receipt = await waitForTransaction(tx);
       return { success: receipt.status === 'success' };
     } catch (e) {
+      if (reloadIfStaleChunk(e)) {
+        return { success: false, error: 'Updating game — reloading...' };
+      }
       return {
         error: getContractError(e),
         success: false,

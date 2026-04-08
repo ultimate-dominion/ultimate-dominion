@@ -1,6 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Address } from 'viem';
 
+const { mockReloadIfStaleChunk } = vi.hoisted(() => ({
+  mockReloadIfStaleChunk: vi.fn(),
+}));
+vi.mock('../../utils/errors', async () => {
+  const actual = await vi.importActual<typeof import('../../utils/errors')>('../../utils/errors');
+  return {
+    ...actual,
+    reloadIfStaleChunk: mockReloadIfStaleChunk,
+  };
+});
+
 import { createSystemCalls } from './createSystemCalls';
 import {
   AdvancedClass,
@@ -50,6 +61,8 @@ const resetMockGameTables = () => {
 
 beforeEach(() => {
   resetMockGameTables();
+  mockReloadIfStaleChunk.mockReset();
+  mockReloadIfStaleChunk.mockReturnValue(false);
 });
 
 // ── Mock Factory ────────────────────────────────────────────────────
@@ -573,6 +586,77 @@ describe('createSystemCalls — error handling', () => {
     );
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
+  });
+
+  it('endTurn reloads once on stale chunk errors', async () => {
+    const { network } = createMockNetwork();
+    const staleChunkError = new Error('Failed to fetch dynamically imported module: https://ultimatedominion.com/assets/ccip-123.js');
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__endTurn') return vi.fn().mockRejectedValue(staleChunkError);
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+    mockReloadIfStaleChunk.mockReturnValue(true);
+    const calls = createSystemCalls(network);
+    mockOwnership();
+
+    const result = await calls.endTurn(TEST_ENTITY, TEST_ENTITY, TEST_ENTITY_2, '1');
+    expect(result).toEqual({ success: false, error: 'Updating game — reloading...' });
+    expect(mockReloadIfStaleChunk).toHaveBeenCalledWith(staleChunkError);
+  });
+
+  it('removeEntityFromBoard reloads once on stale chunk errors', async () => {
+    const { network } = createMockNetwork();
+    const staleChunkError = new Error('ChunkLoadError: Loading chunk 42 failed');
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__removeEntityFromBoard') return vi.fn().mockRejectedValue(staleChunkError);
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+    mockReloadIfStaleChunk.mockReturnValue(true);
+    const calls = createSystemCalls(network);
+    mockOwnership();
+
+    const result = await calls.removeEntityFromBoard(TEST_ENTITY);
+    expect(result).toEqual({ success: false, error: 'Updating game — reloading...' });
+    expect(mockReloadIfStaleChunk).toHaveBeenCalledWith(staleChunkError);
+  });
+
+  it('buyGas reloads once on stale chunk errors', async () => {
+    const { network } = createMockNetwork();
+    const staleChunkError = new Error('Failed to fetch dynamically imported module: https://ultimatedominion.com/assets/ccip-456.js');
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__buyGas') return vi.fn().mockRejectedValue(staleChunkError);
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+    mockReloadIfStaleChunk.mockReturnValue(true);
+    const calls = createSystemCalls(network);
+    mockOwnership();
+
+    const result = await calls.buyGas(TEST_ENTITY, BigInt(100));
+    expect(result).toEqual({ success: false, error: 'Updating game — reloading...' });
+    expect(mockReloadIfStaleChunk).toHaveBeenCalledWith(staleChunkError);
+  });
+
+  it('checkCombatFragmentTriggers reloads once on stale chunk errors', async () => {
+    const { network } = createMockNetwork();
+    const staleChunkError = new Error('Failed to fetch dynamically imported module: https://ultimatedominion.com/assets/ccip-789.js');
+    network.worldContract.write = new Proxy({} as Record<string, unknown>, {
+      get: (_target, prop) => {
+        if (prop === 'UD__checkCombatFragmentTriggersForGroup') return vi.fn().mockRejectedValue(staleChunkError);
+        return vi.fn().mockResolvedValue(FAKE_TX_HASH);
+      },
+    });
+    mockReloadIfStaleChunk.mockReturnValue(true);
+    const calls = createSystemCalls(network);
+
+    const result = await calls.checkCombatFragmentTriggers([TEST_ENTITY], [TEST_ENTITY_2], 0, 0, true);
+    expect(result).toEqual({ success: false, error: 'Updating game — reloading...' });
+    expect(mockReloadIfStaleChunk).toHaveBeenCalledWith(staleChunkError);
   });
 });
 
