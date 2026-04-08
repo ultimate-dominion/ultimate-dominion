@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { AttackOutcomeType } from '../utils/types';
 
-import { buildBattleSceneSignal } from './buildBattleSceneSignal';
+import { buildBattleSceneSignal, buildBattleSceneSignals } from './buildBattleSceneSignal';
 
 const baseOutcome: AttackOutcomeType = {
   attackerDamageDelt: 0n,
@@ -43,6 +43,7 @@ describe('buildBattleSceneSignal', () => {
       detail: 'You hit Giant Spider.',
       tone: 'player',
     });
+    expect(signal.isCombo).toBe(false);
   });
 
   it('builds a readable enemy crit callout', () => {
@@ -83,6 +84,38 @@ describe('buildBattleSceneSignal', () => {
       title: 'MISS',
       detail: 'You fail to hit Giant Spider.',
       tone: 'miss',
+    });
+  });
+
+  it('splits double strikes into separate visual beats', () => {
+    const signals = buildBattleSceneSignals({
+      outcome: {
+        ...baseOutcome,
+        damagePerHit: [4n, 7n],
+        hit: [true, true],
+        miss: [false, false],
+        crit: [false, true],
+        doubleStrike: true,
+        defenderDied: true,
+      },
+      characterId: '0xattacker',
+      opponentName: 'Giant Spider',
+      weaponTypeForItem: () => 'melee',
+    });
+
+    expect(signals).toHaveLength(2);
+    expect(signals[0]).toMatchObject({
+      damage: 4,
+      didHit: true,
+      targetDied: false,
+      isCombo: true,
+    });
+    expect(signals[1]).toMatchObject({
+      damage: 7,
+      isCrit: true,
+      didHit: true,
+      targetDied: true,
+      isCombo: true,
     });
   });
 });

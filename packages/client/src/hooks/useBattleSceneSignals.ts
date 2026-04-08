@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import type { WeaponAnimType } from '../components/pretext/game/weaponAnimations';
 import type { AttackOutcomeType } from '../utils/types';
 
-import { buildBattleSceneSignal } from './buildBattleSceneSignal';
+import { buildBattleSceneSignals } from './buildBattleSceneSignal';
 
 // ── Signal types ────────────────────────────────────────────────────────
 
@@ -14,6 +14,7 @@ export type AttackSignal = {
   isPlayerAttack: boolean;
   didHit: boolean;
   targetDied: boolean;
+  isCombo: boolean;
   callout: {
     title: string;
     detail: string;
@@ -60,12 +61,23 @@ export function useBattleSceneSignals({
 }): void {
   const processedCountRef = useRef(0);
   const lastEncounterIdRef = useRef<string | null>(null);
+  const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Reset when battle changes or the outcomes array is replaced for a new encounter
   useEffect(() => {
+    pendingTimersRef.current.forEach(clearTimeout);
+    pendingTimersRef.current = [];
     processedCountRef.current = 0;
     lastEncounterIdRef.current = visibleOutcomes[0]?.encounterId ?? null;
   }, [characterId, visibleOutcomes]);
+
+  useEffect(
+    () => () => {
+      pendingTimersRef.current.forEach(clearTimeout);
+      pendingTimersRef.current = [];
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!characterId || !sceneRef.current) return;
@@ -87,14 +99,19 @@ export function useBattleSceneSignals({
     processedCountRef.current = visibleOutcomes.length;
 
     for (const outcome of newOutcomes) {
-      sceneRef.current.triggerAttack(
-        buildBattleSceneSignal({
-          outcome,
-          characterId,
-          opponentName,
-          weaponTypeForItem,
-        }),
-      );
+      const signals = buildBattleSceneSignals({
+        outcome,
+        characterId,
+        opponentName,
+        weaponTypeForItem,
+      });
+
+      signals.forEach((signal, index) => {
+        const timeoutId = setTimeout(() => {
+          sceneRef.current?.triggerAttack(signal);
+        }, index * 240);
+        pendingTimersRef.current.push(timeoutId);
+      });
     }
   }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem, opponentName]);
 }

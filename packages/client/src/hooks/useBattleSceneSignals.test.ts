@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useBattleSceneSignals, type BattleSceneHandle } from './useBattleSceneSignals';
 import type { AttackOutcomeType } from '../utils/types';
 
@@ -35,7 +35,12 @@ function makeOutcome(
 }
 
 describe('useBattleSceneSignals', () => {
-  it('emits hit metadata so misses do not animate as clean hits', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('emits hit metadata so misses do not animate as clean hits', async () => {
+    vi.useFakeTimers();
     const triggerAttack = vi.fn();
     const sceneRef = {
       current: { triggerAttack },
@@ -54,10 +59,13 @@ describe('useBattleSceneSignals', () => {
           }),
         ],
         characterId: PLAYER_ID,
+        opponentName: 'Giant Spider',
         sceneRef,
         weaponTypeForItem: () => 'melee',
       }),
     );
+
+    await vi.runAllTimersAsync();
 
     expect(triggerAttack).toHaveBeenCalledTimes(1);
     expect(triggerAttack).toHaveBeenCalledWith({
@@ -67,10 +75,17 @@ describe('useBattleSceneSignals', () => {
       isPlayerAttack: false,
       didHit: false,
       targetDied: false,
+      isCombo: false,
+      callout: {
+        title: 'DODGED',
+        detail: 'Giant Spider misses you.',
+        tone: 'enemy',
+      },
     });
   });
 
-  it('resets processed outcomes when a new encounter replaces the old one', () => {
+  it('resets processed outcomes when a new encounter replaces the old one', async () => {
+    vi.useFakeTimers();
     const triggerAttack = vi.fn();
     const sceneRef = {
       current: { triggerAttack },
@@ -81,6 +96,7 @@ describe('useBattleSceneSignals', () => {
         useBattleSceneSignals({
           visibleOutcomes,
           characterId: PLAYER_ID,
+          opponentName: 'Giant Spider',
           sceneRef,
           weaponTypeForItem: () => 'melee',
         }),
@@ -93,6 +109,7 @@ describe('useBattleSceneSignals', () => {
       },
     );
 
+    await vi.runAllTimersAsync();
     expect(triggerAttack).toHaveBeenCalledTimes(1);
 
     rerender({
@@ -105,6 +122,7 @@ describe('useBattleSceneSignals', () => {
       ],
     });
 
+    await vi.runAllTimersAsync();
     expect(triggerAttack).toHaveBeenCalledTimes(2);
     expect(triggerAttack).toHaveBeenLastCalledWith({
       weaponType: 'melee',
@@ -113,6 +131,55 @@ describe('useBattleSceneSignals', () => {
       isPlayerAttack: true,
       didHit: true,
       targetDied: true,
+      isCombo: false,
+      callout: {
+        title: '10 DAMAGE',
+        detail: 'You hit Giant Spider.',
+        tone: 'player',
+      },
     });
+  });
+
+  it('stages multi-hit outcomes into separate attack beats', async () => {
+    vi.useFakeTimers();
+    const triggerAttack = vi.fn();
+    const sceneRef = {
+      current: { triggerAttack },
+    } as React.RefObject<BattleSceneHandle | null>;
+
+    renderHook(() =>
+      useBattleSceneSignals({
+        visibleOutcomes: [
+          makeOutcome({
+            damagePerHit: [4n, 6n],
+            hit: [true, true],
+            crit: [false, true],
+            miss: [false, false],
+            doubleStrike: true,
+            defenderDied: true,
+          }),
+        ],
+        characterId: PLAYER_ID,
+        opponentName: 'Giant Spider',
+        sceneRef,
+        weaponTypeForItem: () => 'melee',
+      }),
+    );
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(triggerAttack).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      damage: 4,
+      targetDied: false,
+      isCombo: true,
+    }));
+
+    await vi.advanceTimersByTimeAsync(240);
+    expect(triggerAttack).toHaveBeenCalledTimes(2);
+    expect(triggerAttack).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      damage: 6,
+      isCrit: true,
+      targetDied: true,
+      isCombo: true,
+    }));
   });
 });

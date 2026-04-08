@@ -337,11 +337,14 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                 {opponent && currentBattle?.encounterType !== EncounterType.PvP && (
                   hasAsciiPortrait ? (
                     <Box
+                      alignItems="center"
                       bg="rgba(12,10,8,0.92)"
                       border="1px solid"
                       borderColor="rgba(90,78,60,0.45)"
                       borderRadius="md"
+                      display="flex"
                       h={{ base: '120px', sm: '144px' }}
+                      justifyContent="center"
                       maxW="240px"
                       overflow="hidden"
                       position="relative"

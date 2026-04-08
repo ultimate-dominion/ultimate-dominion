@@ -174,6 +174,7 @@ type ActiveAttack = {
   duration: number;
   damage: number;
   isCrit: boolean;
+  isCombo: boolean;
   isPlayerAttack: boolean;
   didHit: boolean;
   targetDied: boolean;
@@ -392,6 +393,7 @@ export const BattleSceneCanvas = forwardRef<
       duration,
       damage: signal.damage,
       isCrit: signal.isCrit,
+      isCombo: signal.isCombo,
       isPlayerAttack: signal.isPlayerAttack,
       didHit: signal.didHit,
       targetDied: signal.targetDied,
@@ -485,11 +487,6 @@ export const BattleSceneCanvas = forwardRef<
               }
             }
           }
-
-          state.activeCallout = {
-            ...atk.callout,
-            startTime: now,
-          };
         }
 
         // Clean up finished attacks (allow 200ms after impact for overlap)

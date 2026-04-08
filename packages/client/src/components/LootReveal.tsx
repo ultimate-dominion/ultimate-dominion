@@ -287,6 +287,7 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
                   h={{ base: '52px', sm: '60px' }}
                   justifyContent="center"
                   position="relative"
+                  textAlign="center"
                   w={{ base: '52px', sm: '60px' }}
                 >
                   {itemImage ? (

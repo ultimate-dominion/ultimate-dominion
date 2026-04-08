@@ -21,10 +21,8 @@ import SafeTypist from './SafeTypist';
 import { getBattleConsoleState } from './battleConsole';
 
 import { SHOW_Z2 } from '../lib/env';
-import { BattleCombatLog } from './pretext/game/BattleCombatLog';
 import { CombatTypewriter } from './pretext/game/CombatTypewriter';
 import { GameItemTooltip } from './pretext/game/GameItemTooltip';
-import { useCombatLogEntries } from '../hooks/useCombatLogEntries';
 import { useCombatNarrative } from '../hooks/useCombatNarrative';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -83,13 +81,6 @@ export const ActionsPanel = (): JSX.Element => {
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
     return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
   }, [opponent]);
-
-  const combatLogEntries = useCombatLogEntries({
-    visibleOutcomes,
-    dotActions,
-    characterId: character?.id,
-    opponentName: opponentDisplayName,
-  });
 
   const {
     armorTemplates,
@@ -845,11 +836,31 @@ export const ActionsPanel = (): JSX.Element => {
                             >
                               {index + 1}
                             </Box>
-                            {icon ? (
-                              <Image src={icon} boxSize="18px" flexShrink={0} />
-                            ) : item.type === 'consumable' ? (
-                              <PotionSvg size={3} theme="dark" />
-                            ) : null}
+                            <Box
+                              alignItems="center"
+                              bg="rgba(12,10,8,0.72)"
+                              border="1px solid"
+                              borderColor="rgba(120,108,92,0.35)"
+                              borderRadius="sm"
+                              display="flex"
+                              flexShrink={0}
+                              h="28px"
+                              justifyContent="center"
+                              w="28px"
+                            >
+                              {icon ? (
+                                <Image
+                                  src={icon}
+                                  boxSize="18px"
+                                  flexShrink={0}
+                                  objectFit="contain"
+                                />
+                              ) : item.type === 'consumable' ? (
+                                <Box alignItems="center" display="flex" justifyContent="center">
+                                  <PotionSvg size={3} theme="dark" />
+                                </Box>
+                              ) : null}
+                            </Box>
                             <VStack align="start" minW={0} spacing={0}>
                               <Text
                                 color="#E8DCC8"
@@ -886,21 +897,21 @@ export const ActionsPanel = (): JSX.Element => {
                           )}
                         </HStack>
                         <HStack justify="space-between" spacing={2} w="100%">
-                          <HStack spacing={1}>
+                          <HStack spacing={1.5}>
                             {matchup === 'strong' && (
                               <Text as="span" color="#8FCB6C" fontSize="2xs">▲</Text>
                             )}
                             {matchup === 'weak' && (
                               <Text as="span" color="#D89272" fontSize="2xs">▼</Text>
                             )}
-                            <Text color="#8A7E6A" fontSize="2xs" textAlign="left">
+                            <Text color="#8A7E6A" fontFamily="mono" fontSize="2xs" textAlign="left">
                               {item.type === 'consumable'
-                                ? 'Recover and reset your footing.'
+                                ? 'Quick use'
                                 : matchup === 'strong'
-                                  ? 'Favored into this target.'
+                                  ? 'Favored'
                                   : matchup === 'weak'
-                                    ? 'Poor matchup into this target.'
-                                    : 'Steady damage option.'}
+                                    ? 'Risky'
+                                    : 'Ready'}
                             </Text>
                           </HStack>
                           {item.type === 'consumable' && 'balance' in item && (
@@ -960,11 +971,6 @@ export const ActionsPanel = (): JSX.Element => {
             </HStack>
           </VStack>
         )}
-      {SHOW_Z2 && currentBattle && !battleOver && (
-        <Box px={{ base: 2, lg: 4 }} pt={2}>
-          <BattleCombatLog entries={combatLogEntries} />
-        </Box>
-      )}
       <Stack p={{ base: 2, lg: 4 }}>
         {!currentBattle && !isSpawned && (
           <SafeTypist
@@ -1025,7 +1031,7 @@ export const ActionsPanel = (): JSX.Element => {
           return null;
         })()}
 
-        {SHOW_Z2 && !autoAdventureMode && opponent && combatNarrative && (
+        {SHOW_Z2 && !autoAdventureMode && opponent && combatNarrative && battleOver && (
           <CombatTypewriter
             segments={combatNarrative.segments}
             narrativeKey={combatNarrative.key}
