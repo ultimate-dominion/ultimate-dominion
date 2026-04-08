@@ -1,95 +1,173 @@
 /**
- * ItemAsciiIcon — Displays item art with rarity-driven visual effects.
+ * ItemAsciiIcon — Displays item art tinted by rarity color.
  *
- * Shows the WebP illustration directly (already in the game's ink-on-black
- * art style) with CSS filter/glow effects per rarity tier to create clear
- * visual hierarchy. Common items look dim and worn; legendaries glow.
+ * Loads the WebP illustration (white ink on black) and applies a canvas
+ * multiply blend with the rarity color so white→rarity color, black→black.
+ * Common items render dim gray, Legendaries glow gold. Each tier is
+ * instantly recognizable.
  *
- * Fallback chain: WebP image → emoji.
+ * Fallback: emoji for items without art.
  */
 
-import { memo } from 'react';
-import { Box, Image, Text } from '@chakra-ui/react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Box, Text } from '@chakra-ui/react';
 
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
-import { getRarityColor } from '../utils/rarityHelpers';
+import { getRarityAnimation, getRarityColor } from '../utils/rarityHelpers';
 import { ItemType, Rarity } from '../utils/types';
 
 type Props = {
-  /** Item name (may include emoji prefix) */
   name: string;
-  /** ItemType enum value */
   itemType: ItemType;
-  /** Item rarity (0-5) */
   rarity?: number;
-  /** CSS size string for the icon container */
   size?: string | Record<string, string>;
-  /** Optional alt text */
   alt?: string;
 };
 
 // ---------------------------------------------------------------------------
-// Rarity visual effects — each tier should "feel" distinct at a glance
+// Rarity tint colors — tuned for white-on-black multiply blend
+// Brighter/more saturated than border colors so they read at small sizes
 // ---------------------------------------------------------------------------
-
-/** CSS filter per rarity — dims commons, enhances legendaries */
-const RARITY_FILTERS: Record<number, string> = {
-  [Rarity.Worn]:      'brightness(0.5) saturate(0.3)',
-  [Rarity.Common]:    'brightness(0.7) saturate(0.5)',
-  [Rarity.Uncommon]:  'brightness(0.9) saturate(0.8)',
-  [Rarity.Rare]:      'brightness(1.0) saturate(1.0)',
-  [Rarity.Epic]:      'brightness(1.1) saturate(1.2)',
-  [Rarity.Legendary]: 'brightness(1.2) saturate(1.3)',
+const RARITY_TINT: Record<number, string> = {
+  [Rarity.Worn]:      '#706866',   // Dim warm gray
+  [Rarity.Common]:    '#B0A890',   // Parchment
+  [Rarity.Uncommon]:  '#5CAA6A',   // Bright forest green
+  [Rarity.Rare]:      '#5A90D0',   // Bright steel blue
+  [Rarity.Epic]:      '#9A6AD8',   // Bright purple
+  [Rarity.Legendary]: '#E8A030',   // Bright gold
 };
 
-/** Drop-shadow glow per rarity — subtle to dramatic */
-const getRarityDropShadow = (rarity: number): string | undefined => {
-  const color = getRarityColor(rarity);
-  switch (rarity) {
-    case Rarity.Uncommon:
-      return `drop-shadow(0 0 3px ${color}40)`;
-    case Rarity.Rare:
-      return `drop-shadow(0 0 4px ${color}50) drop-shadow(0 0 8px ${color}25)`;
-    case Rarity.Epic:
-      return `drop-shadow(0 0 5px ${color}60) drop-shadow(0 0 12px ${color}30)`;
-    case Rarity.Legendary:
-      return `drop-shadow(0 0 6px ${color}70) drop-shadow(0 0 14px ${color}40) drop-shadow(0 0 24px ${color}20)`;
-    default:
-      return undefined;
-  }
-};
+// ---------------------------------------------------------------------------
+// Image cache
+// ---------------------------------------------------------------------------
+const imageCache = new Map<string, HTMLImageElement>();
 
-const getImageFilter = (rarity: number): string => {
-  const base = RARITY_FILTERS[rarity] ?? RARITY_FILTERS[Rarity.Common];
-  const glow = getRarityDropShadow(rarity);
-  return glow ? `${base} ${glow}` : base;
-};
+function loadImage(src: string): Promise<HTMLImageElement> {
+  const cached = imageCache.get(src);
+  if (cached) return Promise.resolve(cached);
+
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { imageCache.set(src, img); resolve(img); };
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tinted canvas renderer
+// ---------------------------------------------------------------------------
+function renderTinted(
+  canvas: HTMLCanvasElement,
+  img: HTMLImageElement,
+  tintColor: string,
+) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.floor(rect.width);
+  const h = Math.floor(rect.height);
+  if (w === 0 || h === 0) return;
+
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Draw original white-on-black image
+  ctx.drawImage(img, 0, 0, w, h);
+
+  // Multiply blend: white * color = color, black * color = black
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = tintColor;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.globalCompositeOperation = 'source-over';
+}
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+const TintedItemCanvas = memo(({
+  imageSrc,
+  rarity,
+  size,
+}: {
+  imageSrc: string;
+  rarity: number;
+  size: string | Record<string, string>;
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [loaded, setLoaded] = useState(!!imageCache.get(imageSrc));
+  const tintColor = RARITY_TINT[rarity] ?? RARITY_TINT[Rarity.Common];
+  const rarityAnimation = getRarityAnimation(rarity);
+  const rarityBorderColor = getRarityColor(rarity);
 
-const ItemAsciiIconInner = ({ name, itemType, rarity = 0, size = '40px', alt }: Props) => {
+  useEffect(() => {
+    loadImage(imageSrc)
+      .then(img => {
+        setLoaded(true);
+        if (canvasRef.current) {
+          renderTinted(canvasRef.current, img, tintColor);
+        }
+      })
+      .catch(() => {});
+  }, [imageSrc, tintColor]);
+
+  // Re-render when canvas mounts after image is already cached
+  useEffect(() => {
+    if (!loaded || !canvasRef.current) return;
+    const img = imageCache.get(imageSrc);
+    if (img) renderTinted(canvasRef.current, img, tintColor);
+  }, [loaded, imageSrc, tintColor]);
+
+  // Rarity glow filter for epic+ items
+  const glowFilter = rarity >= Rarity.Epic
+    ? `drop-shadow(0 0 ${rarity >= Rarity.Legendary ? '6px' : '4px'} ${rarityBorderColor}80)`
+    : rarity >= Rarity.Rare
+      ? `drop-shadow(0 0 3px ${rarityBorderColor}50)`
+      : undefined;
+
+  return (
+    <Box
+      boxSize={size}
+      flexShrink={0}
+      position="relative"
+      animation={rarityAnimation}
+      borderRadius="sm"
+    >
+      <canvas
+        ref={canvasRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          filter: glowFilter,
+        }}
+      />
+    </Box>
+  );
+});
+
+TintedItemCanvas.displayName = 'TintedItemCanvas';
+
+const ItemAsciiIconInner = ({ name, itemType, rarity = 0, size = '40px' }: Props) => {
   const cleanName = removeEmoji(name);
   const imageSrc = getItemImage(cleanName);
 
   if (imageSrc) {
     return (
-      <Box boxSize={size} flexShrink={0}>
-        <Image
-          src={imageSrc}
-          alt={alt ?? cleanName}
-          boxSize="100%"
-          objectFit="contain"
-          filter={getImageFilter(rarity)}
-          transition="filter 0.3s ease"
-        />
-      </Box>
+      <TintedItemCanvas
+        imageSrc={imageSrc}
+        rarity={rarity}
+        size={size}
+      />
     );
   }
 
-  // Emoji fallback for items without art
   return (
     <Text fontSize="xl" lineHeight={1}>
       {itemType === ItemType.Consumable
