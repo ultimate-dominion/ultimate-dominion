@@ -1,7 +1,7 @@
 {
   "broken-sword": {
     "name": "Broken Sword",
-    "file": null,
+    "file": "broken-sword.glb",
     "category": "weapons",
     "subtype": "sword",
     "rarity": 0,
@@ -18,11 +18,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "worn-shortbow": {
     "name": "Worn Shortbow",
-    "file": null,
+    "file": "worn-shortbow.glb",
     "category": "weapons",
     "subtype": "bow",
     "rarity": 0,
@@ -39,11 +39,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "cracked-wand": {
     "name": "Cracked Wand",
-    "file": null,
+    "file": "cracked-wand.glb",
     "category": "weapons",
     "subtype": "wand",
     "rarity": 0,
@@ -60,11 +60,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "iron-axe": {
     "name": "Iron Axe",
-    "file": null,
+    "file": "iron-axe.glb",
     "category": "weapons",
     "subtype": "axe",
     "rarity": 1,
@@ -81,7 +81,7 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "hunting-bow": {
     "name": "Hunting Bow",
@@ -106,7 +106,7 @@
   },
   "apprentice-staff": {
     "name": "Apprentice Staff",
-    "file": null,
+    "file": "apprentice-staff.glb",
     "category": "weapons",
     "subtype": "staff",
     "rarity": 1,
@@ -123,11 +123,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "light-mace": {
     "name": "Light Mace",
-    "file": null,
+    "file": "light-mace.glb",
     "category": "weapons",
     "subtype": "mace",
     "rarity": 1,
@@ -144,11 +144,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "shortbow": {
     "name": "Shortbow",
-    "file": null,
+    "file": "shortbow.glb",
     "category": "weapons",
     "subtype": "bow",
     "rarity": 1,
@@ -165,11 +165,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "channeling-rod": {
     "name": "Channeling Rod",
-    "file": null,
+    "file": "channeling-rod.glb",
     "category": "weapons",
     "subtype": "wand",
     "rarity": 1,
@@ -186,11 +186,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "notched-blade": {
     "name": "Notched Blade",
-    "file": null,
+    "file": "notched-blade.glb",
     "category": "weapons",
     "subtype": "sword",
     "rarity": 1,
@@ -207,11 +207,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "warhammer": {
     "name": "Warhammer",
-    "file": null,
+    "file": "warhammer.glb",
     "category": "weapons",
     "subtype": "mace",
     "rarity": 2,
@@ -228,11 +228,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "longbow": {
     "name": "Longbow",
-    "file": null,
+    "file": "longbow.glb",
     "category": "weapons",
     "subtype": "bow",
     "rarity": 2,
@@ -249,11 +249,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "mage-staff": {
     "name": "Mage Staff",
-    "file": null,
+    "file": "mage-staff.glb",
     "category": "weapons",
     "subtype": "staff",
     "rarity": 2,
@@ -270,11 +270,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "dire-rat-fang": {
     "name": "Dire Rat Fang",
-    "file": null,
+    "file": "dire-rat-fang.glb",
     "category": "weapons",
     "subtype": "dagger",
     "rarity": 3,
@@ -291,11 +291,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "sporecap-wand": {
     "name": "Sporecap Wand",
-    "file": null,
+    "file": "sporecap-wand.glb",
     "category": "weapons",
     "subtype": "wand",
     "rarity": 2,
@@ -312,11 +312,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "notched-cleaver": {
     "name": "Notched Cleaver",
-    "file": null,
+    "file": "notched-cleaver.glb",
     "category": "weapons",
     "subtype": "axe",
     "rarity": 2,
@@ -333,11 +333,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "crystal-shard": {
     "name": "Crystal Shard",
-    "file": null,
+    "file": "crystal-shard.glb",
     "category": "weapons",
     "subtype": "dagger",
     "rarity": 2,
@@ -354,11 +354,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "gnarled-cudgel": {
     "name": "Gnarled Cudgel",
-    "file": null,
+    "file": "gnarled-cudgel.glb",
     "category": "weapons",
     "subtype": "mace",
     "rarity": 3,
@@ -375,11 +375,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "webspinner-bow": {
     "name": "Webspinner Bow",
-    "file": null,
+    "file": "webspinner-bow.glb",
     "category": "weapons",
     "subtype": "bow",
     "rarity": 2,
@@ -396,11 +396,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "bone-staff": {
     "name": "Bone Staff",
-    "file": null,
+    "file": "bone-staff.glb",
     "category": "weapons",
     "subtype": "staff",
     "rarity": 3,
@@ -417,11 +417,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "stone-maul": {
     "name": "Stone Maul",
-    "file": null,
+    "file": "stone-maul.glb",
     "category": "weapons",
     "subtype": "mace",
     "rarity": 3,
@@ -438,11 +438,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "darkwood-bow": {
     "name": "Darkwood Bow",
-    "file": null,
+    "file": "darkwood-bow.glb",
     "category": "weapons",
     "subtype": "bow",
     "rarity": 3,
@@ -459,11 +459,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "smoldering-rod": {
     "name": "Smoldering Rod",
-    "file": null,
+    "file": "smoldering-rod.glb",
     "category": "weapons",
     "subtype": "wand",
     "rarity": 3,
@@ -480,11 +480,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "trollhide-cleaver": {
     "name": "Trollhide Cleaver",
-    "file": null,
+    "file": "trollhide-cleaver.glb",
     "category": "weapons",
     "subtype": "axe",
     "rarity": 4,
@@ -501,7 +501,7 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "phasefang": {
     "name": "Phasefang",
@@ -526,7 +526,7 @@
   },
   "drakescale-staff": {
     "name": "Drakescale Staff",
-    "file": null,
+    "file": "drakescale-staff.glb",
     "category": "weapons",
     "subtype": "staff",
     "rarity": 4,
@@ -543,7 +543,7 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "tattered-cloth": {
     "name": "Tattered Cloth",
@@ -841,7 +841,7 @@
   },
   "stalkers-vest": {
     "name": "Stalker's Vest",
-    "file": null,
+    "file": "stalkers-vest.glb",
     "category": "armor",
     "subtype": "leather",
     "rarity": 3,
@@ -858,11 +858,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "scorched-scale-vest": {
     "name": "Scorched Scale Vest",
-    "file": null,
+    "file": "scorched-scale-vest.glb",
     "category": "armor",
     "subtype": "plate",
     "rarity": 3,
@@ -879,11 +879,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "drakes-cowl": {
     "name": "Drake's Cowl",
-    "file": null,
+    "file": "drakes-cowl.glb",
     "category": "armor",
     "subtype": "cloth",
     "rarity": 3,
@@ -900,6 +900,6 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   }
 }

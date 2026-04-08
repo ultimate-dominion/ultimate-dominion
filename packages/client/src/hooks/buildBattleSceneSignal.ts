@@ -67,6 +67,7 @@ function buildSignal({
   didHit,
   targetDied,
   isCombo,
+  hitCount = 1,
   forceMiss = false,
 }: Params & {
   damage: number;
@@ -74,6 +75,7 @@ function buildSignal({
   didHit: boolean;
   targetDied: boolean;
   isCombo: boolean;
+  hitCount?: number;
   forceMiss?: boolean;
 }): AttackSignal {
   const isPlayerAttack =
@@ -100,6 +102,7 @@ function buildSignal({
     weaponType: weaponTypeForItem(outcome.itemId),
     weaponName: weaponNameForItem?.(outcome.itemId),
     damage,
+    hitCount,
     isCrit,
     isPlayerAttack,
     blocked: outcome.blocked,
@@ -111,6 +114,11 @@ function buildSignal({
   };
 }
 
+/**
+ * Build a single consolidated AttackSignal per outcome.
+ * Multi-hit combos are collapsed into one signal with total damage + hitCount.
+ * This keeps the animation layer clean: one projectile, one number, one reaction.
+ */
 export function buildBattleSceneSignals({
   outcome,
   characterId,
@@ -124,28 +132,27 @@ export function buildBattleSceneSignals({
   const misses = outcome.miss ?? [];
   const hitCount = Math.max(damagePerHit.length, hits.length, misses.length, 1);
 
-  return Array.from({ length: hitCount }, (_, index) => {
-    const damage = Number(damagePerHit[index] ?? 0n);
-    const didHit =
-      hits[index] === true ||
-      damage > 0 ||
-      (index === 0 && outcome.attackerDamageDelt > 0n);
-    const isMiss = misses[index] === true || (!didHit && damage === 0);
+  const totalDamage = sumDamage(outcome);
+  const anyHit = hits.some(Boolean) || totalDamage > 0 || outcome.attackerDamageDelt > 0n;
+  const allMiss = !anyHit && misses.some(Boolean);
+  const anyCrit = crits.some(Boolean);
 
-    return buildSignal({
+  return [
+    buildSignal({
       outcome,
       characterId,
       opponentName,
       weaponTypeForItem,
       weaponNameForItem,
-      damage,
-      isCrit: crits[index] === true,
-      didHit: !isMiss,
-      targetDied: outcome.defenderDied && index === hitCount - 1,
+      damage: totalDamage,
+      hitCount,
+      isCrit: anyCrit,
+      didHit: !allMiss,
+      targetDied: outcome.defenderDied,
       isCombo: hitCount > 1 || outcome.doubleStrike,
-      forceMiss: isMiss,
-    });
-  });
+      forceMiss: allMiss,
+    }),
+  ];
 }
 
 export function buildBattleSceneSignal(params: Params): AttackSignal {

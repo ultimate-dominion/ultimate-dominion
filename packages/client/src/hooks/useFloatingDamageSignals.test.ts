@@ -105,7 +105,8 @@ describe('useFloatingDamageSignals', () => {
 
     await vi.runAllTimersAsync();
 
-    expect(spawn).toHaveBeenNthCalledWith(1, 600, 125, 'double', 4);
-    expect(spawn).toHaveBeenNthCalledWith(2, 612, 125, 'critDouble', 9);
+    // Consolidated: one spawn with total damage (4+9=13), critDouble (combo+crit), hitCount=2
+    expect(spawn).toHaveBeenCalledTimes(1);
+    expect(spawn).toHaveBeenCalledWith(600, 125, 'critDouble', 13, 2);
   });
 });

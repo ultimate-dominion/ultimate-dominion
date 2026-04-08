@@ -363,7 +363,7 @@ async function forgeItem(item, opts = {}) {
   const outPath = path.join(GLB_DIR, `${slug}.glb`);
   if (fs.existsSync(outPath) && !opts.force) {
     console.log(`  GLB exists: ${outPath} (use --force to regenerate)`);
-    return outPath;
+    return 'SKIPPED';
   }
 
   // Generate
@@ -436,23 +436,30 @@ async function forgeAll(opts = {}) {
   const results = { success: 0, skipped: 0, failed: 0 };
   const failures = [];
   for (const item of filtered) {
+    let wasForged = false;
     try {
       const result = await forgeItem(item, opts);
-      if (result) results.success++;
-      else if (opts.dryRun) results.skipped++;
+      if (result === 'SKIPPED') { results.skipped++; }
+      else if (result) { results.success++; wasForged = true; }
+      else if (opts.dryRun) { results.skipped++; }
     } catch (e) {
       console.log(`  FAILED: ${item.name} — ${e.message}`);
       results.failed++;
       failures.push(item);
+      wasForged = true; // still count as an API attempt for cooldown
     }
 
-    // Rate limit: small pause between Meshy requests
-    if (!opts.dryRun) await sleep(2000);
+    // Rate limit: only pause after actual Meshy API calls, not skips
+    if (wasForged && !opts.dryRun) {
+      const cooldown = opts.cooldown ?? 45000;
+      console.log(`  Cooling down ${cooldown / 1000}s...`);
+      await sleep(cooldown);
+    }
   }
 
-  // Auto-retry failures once
+  // Auto-retry failures once with longer cooldown
   if (failures.length > 0 && !opts.dryRun) {
-    console.log(`\n=== Retrying ${failures.length} failed items ===`);
+    console.log(`\n=== Retrying ${failures.length} failed items (60s cooldown) ===`);
     for (const item of failures) {
       try {
         const result = await forgeItem(item, { ...opts, force: true });
@@ -460,7 +467,7 @@ async function forgeAll(opts = {}) {
       } catch (e) {
         console.log(`  RETRY FAILED: ${item.name} — ${e.message}`);
       }
-      await sleep(2000);
+      await sleep(60000);
     }
   }
 
@@ -579,6 +586,7 @@ Options:
   --dry-run     Print prompts without generating
   --force       Regenerate even if GLB exists
   --type        Filter by category (weapons or armor)
+  --cooldown N  Seconds between items (default: 45)
 `);
 }
 
@@ -610,6 +618,8 @@ async function main() {
   const force = args.includes('--force');
   const typeIdx = args.indexOf('--type');
   const type = typeIdx >= 0 ? args[typeIdx + 1] : null;
+  const cooldownIdx = args.indexOf('--cooldown');
+  const cooldown = cooldownIdx >= 0 ? parseInt(args[cooldownIdx + 1], 10) * 1000 : undefined;
 
   const cmd = args.find(a => !a.startsWith('--') && (typeIdx < 0 || args.indexOf(a) !== typeIdx + 1));
 
@@ -633,7 +643,7 @@ async function main() {
     }
 
     case 'forge-all':
-      await forgeAll({ dryRun, force, type });
+      await forgeAll({ dryRun, force, type, cooldown });
       buildManifest();
       break;
 
