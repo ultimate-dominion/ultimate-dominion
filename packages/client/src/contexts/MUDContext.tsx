@@ -38,6 +38,7 @@ import {
 import { clearCachedDelegator, setCachedDelegator } from '../lib/delegatorCache';
 
 import { useAuth } from './AuthContext';
+import { buildEmbeddedNetwork } from './buildEmbeddedNetwork';
 
 type AuthMethod = 'embedded' | 'external' | null;
 
@@ -356,21 +357,22 @@ const MUDProviderInner = ({
       return receipt;
     };
 
+    const embeddedNetwork = buildEmbeddedNetwork(
+      setupResult.network,
+      walletClient,
+      worldContract,
+      write$.asObservable().pipe(share()),
+    );
+
     const systemCalls = createSystemCalls({
-      ...setupResult.network,
+      ...embeddedNetwork,
       getEmbeddedIdentityToken,
       waitForTransaction: embeddedWaitForTransaction,
       delegatorAddress: ownerAddress,
-      worldContract,
     });
 
     setEmbeddedSetup({
-      network: {
-        ...setupResult.network,
-        walletClient,
-        worldContract,
-        write$: write$.asObservable().pipe(share()),
-      },
+      network: embeddedNetwork,
       systemCalls,
       walletAddress: ownerAddress,
     });
