@@ -3,7 +3,6 @@ import {
   Button,
   Center,
   HStack,
-  Image,
   Input,
   keyframes,
   Spinner,
@@ -35,7 +34,7 @@ import {
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import { debug } from '../utils/debug';
-import { getItemImage } from '../utils/itemImages';
+import { ItemAsciiIcon } from '../components/ItemAsciiIcon';
 import {
   type Armor,
   PowerSource,
@@ -1035,7 +1034,6 @@ const CharacterCreationInner = (): JSX.Element => {
                     {availableStarterWeapons.map(weapon => {
                       const selected = selectedStarterWeaponId === BigInt(weapon.tokenId);
                       const recommended = isRecommended(weapon, dominantStat);
-                      const weaponImage = getItemImage(weapon.name);
                       return (
                         <HStack
                           as="button"
@@ -1053,7 +1051,7 @@ const CharacterCreationInner = (): JSX.Element => {
                           onClick={() => setSelectedStarterWeaponId(BigInt(weapon.tokenId))}
                           _hover={{ bg: '#2E2820' }}
                         >
-                          {weaponImage && <Image src={weaponImage} boxSize="32px" alt={weapon.name} />}
+                          <ItemAsciiIcon name={weapon.name} itemType={weapon.itemType} rarity={weapon.rarity} size="32px" />
                           <VStack align="start" spacing={0} flex={1}>
                             <Text fontSize="14px" color="#E8DCC8" fontWeight={600}>{weapon.name}</Text>
                             <HStack spacing={2}>
@@ -1084,7 +1082,6 @@ const CharacterCreationInner = (): JSX.Element => {
                     </Text>
                     {availableStarterArmors.map(armor => {
                       const selected = selectedStarterArmorId === BigInt(armor.tokenId);
-                      const armorImage = getItemImage(armor.name);
                       return (
                         <HStack
                           as="button"
@@ -1101,7 +1098,7 @@ const CharacterCreationInner = (): JSX.Element => {
                           onClick={() => setSelectedStarterArmorId(BigInt(armor.tokenId))}
                           _hover={{ bg: '#2E2820' }}
                         >
-                          {armorImage && <Image src={armorImage} boxSize="32px" alt={armor.name} />}
+                          <ItemAsciiIcon name={armor.name} itemType={armor.itemType} rarity={armor.rarity} size="32px" />
                           <VStack align="start" spacing={0} flex={1}>
                             <Text fontSize="14px" color="#E8DCC8" fontWeight={600}>{armor.name}</Text>
                             <HStack spacing={2}>

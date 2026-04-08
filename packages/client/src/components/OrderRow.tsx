@@ -1,9 +1,8 @@
 import {
-  Avatar,
+  Box,
   Button,
   Flex,
   HStack,
-  Image,
   Text,
   Tooltip,
   VStack,
@@ -20,11 +19,10 @@ import { useTransaction } from '../hooks/useTransaction';
 import { useGameTable } from '../lib/gameStore';
 import {
   etherToFixedNumber,
-  getEmoji,
   removeEmoji,
   shortenAddress,
 } from '../utils/helpers';
-import { getItemImage } from '../utils/itemImages';
+import { ItemAsciiIcon } from './ItemAsciiIcon';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -117,24 +115,14 @@ export const OrderRow = ({
   return (
     <Flex bgColor="#1C1814" justify="space-between" w="100%">
       <Flex>
-        {getItemImage(removeEmoji(item.name)) ? (
-          <Image
-            src={getItemImage(removeEmoji(item.name))}
-            alt={removeEmoji(item.name)}
-            boxSize={{ base: '48px', sm: '64px' }}
-            objectFit="contain"
-            mr={2}
+        <Box mr={2} flexShrink={0}>
+          <ItemAsciiIcon
+            name={item.name}
+            itemType={item.itemType}
+            rarity={item.rarity}
+            size={{ base: '48px', sm: '64px' }}
           />
-        ) : (
-          <Avatar
-            borderRadius={0}
-            size={{ base: 'md', sm: 'lg' }}
-            name={' '}
-            backgroundColor="grey300"
-          >
-            {getEmoji(item.name)}
-          </Avatar>
-        )}
+        </Box>
         <VStack
           align="start"
           justify="center"

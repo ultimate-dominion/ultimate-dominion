@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   Flex,
@@ -8,7 +7,6 @@ import {
   Grid,
   GridItem,
   HStack,
-  Image,
   Input,
   Modal,
   ModalBody,
@@ -33,11 +31,10 @@ import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import {
   etherToFixedNumber,
-  getEmoji,
   getStatSymbol,
   removeEmoji,
 } from '../utils/helpers';
-import { getItemImage } from '../utils/itemImages';
+import { ItemAsciiIcon } from './ItemAsciiIcon';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -281,24 +278,14 @@ export const ShopItemRow = ({
       }}
     >
       <Flex>
-        {name && getItemImage(removeEmoji(name.toString())) ? (
-          <Image
-            src={getItemImage(removeEmoji(name.toString()))}
-            alt={removeEmoji(name.toString())}
-            boxSize={{ base: '48px', sm: '64px' }}
-            objectFit="contain"
-            mr={2}
+        <Box mr={2}>
+          <ItemAsciiIcon
+            name={name?.toString() ?? ''}
+            itemType={item.itemType}
+            rarity={item.rarity}
+            size={{ base: '48px', sm: '64px' }}
           />
-        ) : (
-          <Avatar
-            backgroundColor="transparent"
-            borderRadius={0}
-            name=" "
-            size={{ base: 'md', sm: 'lg' }}
-          >
-            {name ? getEmoji(name.toString()) : ''}
-          </Avatar>
-        )}
+        </Box>
         <VStack justify="center" ml={{ base: 0, sm: 4 }}>
           <Text
             color={rarityColor}
@@ -377,23 +364,12 @@ export const ShopItemRow = ({
               templateRows="2fr"
             >
               <GridItem colSpan={{ base: 2, sm: 1 }}>
-                {name && getItemImage(removeEmoji(name.toString())) ? (
-                  <Image
-                    src={getItemImage(removeEmoji(name.toString()))}
-                    alt={removeEmoji(name.toString())}
-                    boxSize="64px"
-                    objectFit="contain"
-                  />
-                ) : (
-                  <Avatar
-                    backgroundColor="grey300"
-                    borderRadius={0}
-                    name={' '}
-                    size="lg"
-                  >
-                    {name ? getEmoji(name.toString()) : ''}
-                  </Avatar>
-                )}
+                <ItemAsciiIcon
+                  name={name?.toString() ?? ''}
+                  itemType={item.itemType}
+                  rarity={item.rarity}
+                  size="64px"
+                />
 
                 <Text mt={{ base: 4, sm: 8 }} size="sm">
                   {item?.description || ''}

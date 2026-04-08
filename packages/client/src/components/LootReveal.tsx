@@ -1,9 +1,9 @@
-import { Box, HStack, Image, keyframes, Text, VStack } from '@chakra-ui/react';
+import { Box, HStack, keyframes, Text, VStack } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { getEmoji, removeEmoji } from '../utils/helpers';
-import { getItemImage } from '../utils/itemImages';
+import { removeEmoji } from '../utils/helpers';
+import { ItemAsciiIcon } from './ItemAsciiIcon';
 import {
   type Armor,
   type Consumable,
@@ -219,7 +219,6 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
         const rarity = item.rarity ?? 0;
         const color = RARITY_COLORS[rarity as Rarity] ?? RARITY_COLORS[Rarity.Common];
         const itemName = removeEmoji(item.name);
-        const itemImage = getItemImage(itemName);
         const isLegendary = rarity === Rarity.Legendary;
         const isEpic = rarity === Rarity.Epic;
         const isRare = rarity === Rarity.Rare;
@@ -290,26 +289,12 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
                   textAlign="center"
                   w={{ base: '52px', sm: '60px' }}
                 >
-                  {itemImage ? (
-                    <Image
-                      alt={itemName}
-                      boxSize={{ base: '44px', sm: '52px' }}
-                      filter={isLegendary
-                        ? 'drop-shadow(0 0 8px rgba(196,122,42,0.5))'
-                        : isEpic
-                          ? 'drop-shadow(0 0 6px rgba(123,74,181,0.4))'
-                          : isRare
-                            ? 'drop-shadow(0 0 4px rgba(61,111,181,0.3))'
-                            : undefined
-                      }
-                      objectFit="contain"
-                      src={itemImage}
-                    />
-                  ) : (
-                    <Text fontSize={{ base: '28px', sm: '34px' }}>
-                      {getEmoji(item.name)}
-                    </Text>
-                  )}
+                  <ItemAsciiIcon
+                    name={item.name}
+                    itemType={item.itemType}
+                    rarity={rarity}
+                    size={{ base: '44px', sm: '52px' }}
+                  />
 
                   {/* Sparkles for epic+ */}
                   {isEpic && (

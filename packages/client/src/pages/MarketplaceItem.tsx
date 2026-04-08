@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Badge,
   Box,
   Button,
@@ -7,7 +6,6 @@ import {
   FormHelperText,
   Heading,
   HStack,
-  Image,
   Input,
   InputGroup,
   InputLeftAddon,
@@ -51,8 +49,8 @@ import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { CHARACTER_CREATION_PATH, HOME_PATH, MARKETPLACE_PATH } from '../Routes';
-import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
-import { getItemImage } from '../utils/itemImages';
+import { etherToFixedNumber, removeEmoji } from '../utils/helpers';
+import { ItemAsciiIcon } from '../components/ItemAsciiIcon';
 import {
   type ArmorTemplate,
   ItemType,
@@ -460,7 +458,6 @@ export const MarketplaceItem = (): JSX.Element => {
   }
 
   const itemName = removeEmoji(selectedItem.name);
-  const itemImage = getItemImage(itemName);
   const itemRarity = selectedItem.rarity;
   const rarityColor = itemRarity !== undefined ? RARITY_COLORS[itemRarity] : undefined;
   const rarityName = itemRarity !== undefined ? RARITY_NAMES[itemRarity] : undefined;
@@ -551,28 +548,12 @@ export const MarketplaceItem = (): JSX.Element => {
             justifyContent="center"
             w={{ base: '140px', md: '160px' }}
           >
-            {itemImage ? (
-              <Image
-                src={itemImage}
-                alt={itemName}
-                boxSize={{ base: '100px', md: '120px' }}
-                objectFit="contain"
-                filter="drop-shadow(0 2px 8px rgba(0,0,0,0.4))"
-              />
-            ) : (
-              <Avatar
-                backgroundColor="transparent"
-                borderRadius={0}
-                h={{ base: '80px', md: '100px' }}
-                name={' '}
-                size="2xl"
-                w={{ base: '80px', md: '100px' }}
-              >
-                <Text fontSize={{ base: '54px', md: '68px' }}>
-                  {getEmoji(selectedItem.name)}
-                </Text>
-              </Avatar>
-            )}
+            <ItemAsciiIcon
+              name={selectedItem.name}
+              itemType={selectedItem.itemType}
+              rarity={selectedItem.rarity}
+              size={{ base: '100px', md: '120px' }}
+            />
           </Box>
 
           {/* Item Info */}
