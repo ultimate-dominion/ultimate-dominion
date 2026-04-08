@@ -11,7 +11,7 @@
  * Flow:
  *   1. loadItemManifest() — fetch manifest.json once
  *   2. loadItemModel(slug) — load GLB, cache scene + camera
- *   3. drawItemProjectile() — render item at position with rotation
+ *   3. getItemDrawFn() — MonsterTemplate-compatible draw fn for ASCII rendering
  */
 
 import { getSharedRenderer } from './glbCreatureLoader';
@@ -194,7 +194,7 @@ export async function loadItemModel(slug: string): Promise<void> {
   const THREE = await import('three');
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
 
-  // Cache shared renderer reference for sync drawItemProjectile calls
+  // Cache shared renderer reference for sync draw calls
   if (!_renderer) {
     _renderer = await getSharedRenderer();
     _rendererTHREE = THREE;
@@ -242,63 +242,50 @@ export async function loadItemModel(slug: string): Promise<void> {
   itemCache.set(slug, { loaded: true, scene, camera, model });
 }
 
-// ---- Render function for projectile drawing -------------------------------
+// ---- ASCII-compatible draw function for MonsterTemplate integration --------
 
 /**
- * Draw an item model as a projectile at (x, y) on the battle canvas.
+ * Create a MonsterTemplate-compatible draw function for an item GLB.
+ * Returns a (ctx, w, h) => void function that renders the item's 3D model
+ * onto a black canvas at (w x h) — the ASCII renderer then converts it.
  *
- * @param ctx       Battle scene canvas context
- * @param slug      Item slug (e.g. 'iron-axe')
- * @param x         Center X position on battle canvas
- * @param y         Center Y position on battle canvas
- * @param size      Display size in pixels (square)
- * @param rotation  Z rotation in radians (for spin effect)
- * @returns true if 3D model was drawn, false if not loaded (caller should use 2D fallback)
+ * The rotation is updated externally via setItemRotation() before each frame.
  */
-export function drawItemProjectile(
-  ctx: CanvasRenderingContext2D,
+export function getItemDrawFn(
   slug: string,
-  x: number,
-  y: number,
-  size: number,
-  rotation: number,
-): boolean {
+): ((ctx: CanvasRenderingContext2D, w: number, h: number) => void) | null {
   const state = itemCache.get(slug);
-  if (!state?.loaded || !state.scene || !state.camera || !state.model) {
-    // Kick off load if not started
-    if (!itemCache.has(slug)) loadItemModel(slug).catch(() => {});
-    return false;
+  if (!state?.loaded || !state.scene || !state.camera || !state.model || !_renderer) {
+    return null;
   }
 
-  // Rotate the model for spin effect
-  state.model.rotation.z = rotation;
-  state.model.rotation.y = rotation * 0.5; // slight Y rotation for depth
+  return (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    const renderer = _renderer!;
+    const THREE = _rendererTHREE!;
+    const prevSize = renderer.getSize(new THREE.Vector2());
 
-  // Render synchronously if renderer is ready (it will be if creatures loaded first)
-  if (!_renderer) return false;
+    // Render at requested dimensions with black background (ASCII pipeline expects black bg)
+    renderer.setSize(w, h);
+    renderer.setClearColor(0x000000, 1);
+    renderer.render(state.scene!, state.camera!);
 
-  const THREE = _rendererTHREE!;
-  const prevSize = _renderer.getSize(new THREE.Vector2());
+    // Stamp 3D render onto the template canvas
+    ctx.drawImage(renderer.domElement, 0, 0, w, h);
 
-  // Render at small size with transparent background
-  _renderer.setSize(ITEM_RENDER_SIZE, ITEM_RENDER_SIZE);
-  _renderer.setClearColor(0x000000, 0);
-  _renderer.render(state.scene, state.camera);
+    // Restore renderer size
+    renderer.setSize(prevSize.x, prevSize.y);
+  };
+}
 
-  // Stamp onto battle canvas
-  const half = size / 2;
-  ctx.drawImage(
-    _renderer.domElement,
-    x - half,
-    y - half,
-    size,
-    size,
-  );
-
-  // Restore renderer size
-  _renderer.setSize(prevSize.x, prevSize.y);
-
-  return true;
+/**
+ * Set the rotation of a cached item model. Call before rendering each frame
+ * so the draw function picks up the current rotation.
+ */
+export function setItemRotation(slug: string, z: number, y: number): void {
+  const state = itemCache.get(slug);
+  if (!state?.model) return;
+  state.model.rotation.z = z;
+  state.model.rotation.y = y;
 }
 
 /**

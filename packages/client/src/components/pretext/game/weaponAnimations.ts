@@ -6,10 +6,16 @@
  *   - melee (STR): spinning warhammer
  *   - ranged (AGI): arrow with fletching + motion trail
  *   - spell (INT): fire bolt with radial glow + particle trail
+ *
+ * When a 3D item model is available, the projectile renders through the
+ * ASCII pipeline (MonsterAsciiRenderer) so it matches the rest of the UI.
+ * Otherwise falls back to the original 2D canvas drawings.
  */
 
 import type { Weapon, Spell, StatRestrictions } from '../../../utils/types';
-import { drawItemProjectile, isItemModelReady, itemSlug, loadItemModel } from './glbItemLoader';
+import { getItemDrawFn, isItemModelReady, itemSlug, loadItemModel, setItemRotation } from './glbItemLoader';
+import type { MonsterTemplate } from './monsterTemplates';
+import { renderMonster } from './MonsterAsciiRenderer';
 
 // ── Weapon type classification ──────────────────────────────────────────
 
@@ -36,7 +42,41 @@ export function classifyWeapon(
   return 'melee';
 }
 
-// ── Draw functions ──────────────────────────────────────────────────────
+// ── ASCII item template cache ────────────────────────────────────────────
+// One template per item slug, reused across frames.
+
+const itemTemplateCache = new Map<string, MonsterTemplate>();
+
+function getItemTemplate(slug: string): MonsterTemplate | null {
+  const cached = itemTemplateCache.get(slug);
+  if (cached) return cached;
+
+  const drawFn = getItemDrawFn(slug);
+  if (!drawFn) return null;
+
+  const template: MonsterTemplate = {
+    id: `item-${slug}`,
+    name: slug,
+    gridWidth: 1,
+    gridHeight: 1,
+    monsterClass: 0 as const,
+    level: 1,
+    dynamic: true,
+    // Brighter settings for small projectile — needs to pop against dark battle bg
+    renderOverrides: {
+      brightnessBoost: 2.4,
+      gamma: 0.40,
+      ambient: 0.85,
+      charDensityFloor: 0.15,
+    },
+    draw: drawFn,
+  };
+
+  itemTemplateCache.set(slug, template);
+  return template;
+}
+
+// ── 2D fallback draw functions ──────────────────────────────────────────
 // All draw at (x, y) with w/h as viewport reference for proportional sizing.
 // progress: 0 → 1 over flight duration.
 
@@ -48,30 +88,17 @@ export function drawMelee(
   _h: number,
   progress: number,
 ): void {
-  const headW = w * 0.06;
-  const headH = w * 0.03;
-  const handleLen = w * 0.08;
-  const rot = progress * Math.PI * 2.5;
-
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(rot);
+  ctx.rotate(progress * Math.PI * 2.5);
 
-  // Handle
-  ctx.strokeStyle = 'rgb(140,100,60)';
-  ctx.lineWidth = w * 0.008;
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(-handleLen, 0);
-  ctx.stroke();
-
+  const sz = w * 0.03;
   // Head
-  ctx.fillStyle = 'rgb(160,160,170)';
-  ctx.fillRect(-headW / 2, -headH, headW, headH * 2);
-
-  // Edge highlight
-  ctx.fillStyle = 'rgb(200,200,210)';
-  ctx.fillRect(-headW / 2, -headH, headW * 0.3, headH * 2);
+  ctx.fillStyle = '#C4B89E';
+  ctx.fillRect(-sz, -sz * 1.5, sz * 2, sz);
+  // Handle
+  ctx.fillStyle = '#6B5D4F';
+  ctx.fillRect(-sz * 0.2, -sz * 0.5, sz * 0.4, sz * 2);
 
   ctx.restore();
 }
@@ -84,46 +111,32 @@ export function drawRanged(
   _h: number,
   progress: number,
 ): void {
-  const arrowLen = w * 0.07;
+  const sz = w * 0.025;
 
-  ctx.save();
-  ctx.translate(x, y);
-
-  // Shaft
-  ctx.strokeStyle = 'rgb(160,130,80)';
-  ctx.lineWidth = w * 0.004;
-  ctx.beginPath();
-  ctx.moveTo(-arrowLen, 0);
-  ctx.lineTo(0, 0);
-  ctx.stroke();
+  // Arrow shaft
+  ctx.fillStyle = '#C4B89E';
+  ctx.fillRect(x - sz, y - 1, sz * 2, 2);
 
   // Arrowhead
-  ctx.fillStyle = 'rgb(180,180,190)';
+  ctx.fillStyle = '#D4A54A';
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(-w * 0.015, -w * 0.008);
-  ctx.lineTo(-w * 0.015, w * 0.008);
+  ctx.moveTo(x + sz, y);
+  ctx.lineTo(x + sz - 4, y - 3);
+  ctx.lineTo(x + sz - 4, y + 3);
   ctx.closePath();
   ctx.fill();
 
   // Fletching
-  ctx.fillStyle = 'rgb(140,60,50)';
-  ctx.beginPath();
-  ctx.moveTo(-arrowLen, 0);
-  ctx.lineTo(-arrowLen + w * 0.012, -w * 0.006);
-  ctx.lineTo(-arrowLen + w * 0.012, w * 0.006);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillStyle = '#8A7E6A';
+  ctx.fillRect(x - sz, y - 2, 3, 4);
 
   // Motion trail
-  ctx.strokeStyle = `rgba(200,180,140,${0.3 * (1 - progress)})`;
-  ctx.lineWidth = w * 0.002;
-  ctx.beginPath();
-  ctx.moveTo(-arrowLen, 0);
-  ctx.lineTo(-arrowLen - w * 0.15, 0);
-  ctx.stroke();
-
-  ctx.restore();
+  const trailLen = 3;
+  for (let i = 0; i < trailLen; i++) {
+    const tx = x - sz - (i + 1) * sz * 0.5;
+    ctx.fillStyle = `rgba(196,184,158,${0.3 - i * 0.1})`;
+    ctx.fillRect(tx, y - 0.5, sz * 0.4, 1);
+  }
 }
 
 export function drawSpell(
@@ -134,17 +147,17 @@ export function drawSpell(
   _h: number,
   progress: number,
 ): void {
-  const pulseR = w * 0.015 + Math.sin(progress * 20) * w * 0.003;
+  const baseR = w * 0.012;
+  const pulse = 1 + Math.sin(progress * Math.PI * 6) * 0.3;
+  const pulseR = baseR * pulse;
 
   // Outer glow
   const grd = ctx.createRadialGradient(x, y, 0, x, y, pulseR * 3);
-  grd.addColorStop(0, 'rgba(255,120,20,0.6)');
-  grd.addColorStop(0.5, 'rgba(255,60,10,0.2)');
-  grd.addColorStop(1, 'rgba(255,30,0,0)');
+  grd.addColorStop(0, 'rgba(255,160,50,0.4)');
+  grd.addColorStop(0.5, 'rgba(255,100,20,0.15)');
+  grd.addColorStop(1, 'rgba(255,60,10,0)');
   ctx.fillStyle = grd;
-  ctx.beginPath();
-  ctx.arc(x, y, pulseR * 3, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(x - pulseR * 3, y - pulseR * 3, pulseR * 6, pulseR * 6);
 
   // Core
   ctx.fillStyle = 'rgb(255,220,120)';
@@ -177,11 +190,11 @@ const DRAW_FNS: Record<
 
 /**
  * Draw a weapon projectile at (x, y). If a 3D item model is available for
- * the given itemName, renders it through the ASCII pipeline. Otherwise falls
- * back to the original 2D canvas drawings.
+ * the given itemName, renders it through the ASCII pipeline so it matches
+ * the rest of the battle scene. Otherwise falls back to 2D canvas drawings.
  *
  * @param itemName  Optional weapon name from items.json (e.g. "Iron Axe").
- *                  When provided, kicks off GLB loading and uses 3D once ready.
+ *                  When provided, kicks off GLB loading and uses ASCII 3D once ready.
  */
 export function drawWeapon(
   ctx: CanvasRenderingContext2D,
@@ -193,13 +206,27 @@ export function drawWeapon(
   progress: number,
   itemName?: string,
 ): void {
-  // Try 3D item model first
+  // Try ASCII-rendered 3D item model first
   if (itemName) {
     const slug = itemSlug(itemName);
     if (isItemModelReady(slug)) {
-      const size = w * 0.06; // projectile display size proportional to canvas
-      const rotation = type === 'melee' ? progress * Math.PI * 2.5 : 0;
-      if (drawItemProjectile(ctx, slug, x, y, size, rotation)) return;
+      const template = getItemTemplate(slug);
+      if (template) {
+        // Update item rotation before rendering
+        const zRot = type === 'melee' ? progress * Math.PI * 2.5 : 0;
+        const yRot = type === 'melee' ? progress * Math.PI * 1.2 : progress * 0.3;
+        setItemRotation(slug, zRot, yRot);
+
+        // Render as ASCII at the projectile position
+        const size = w * 0.08;
+        renderMonster(ctx, template, x - size / 2, y - size / 2, size, size, {
+          cellSize: 6,
+          enable3D: true,
+          enableGlow: true,
+          enableBgFill: false, // transparent bg — composited over battle scene
+        });
+        return;
+      }
     } else {
       // Kick off load for next time (non-blocking)
       loadItemModel(slug).catch(() => {});
