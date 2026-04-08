@@ -1,6 +1,7 @@
 import { importJWK, jwtVerify, type JWK, type JWTPayload } from 'jose';
 import { type Address, type Hex, padHex, parseAbi } from 'viem';
 import { config } from './config.js';
+import { getCharacterId } from './chainReader.js';
 import { publicClient } from './tx.js';
 
 const DELEGATION_TABLE_ID =
@@ -19,15 +20,18 @@ const getStaticFieldAbi = parseAbi([
 ]);
 
 type EmbeddedLinkedAccount = {
+  chainType?: string;
   type?: string;
   address?: string;
+  wallet_address?: string;
+  owner_address?: string;
   chain_type?: string;
   wallet_client_type?: string;
   connector_type?: string;
 };
 
 type PrivyIdentityPayload = JWTPayload & {
-  linked_accounts?: string;
+  linked_accounts?: string | EmbeddedLinkedAccount[];
 };
 
 type AuthFailure = {
@@ -79,6 +83,10 @@ function resolveRequestedWorldAddress(requestedWorldAddress?: string): FundingAu
 function parsePrivyLinkedAccounts(payload: PrivyIdentityPayload): EmbeddedLinkedAccount[] {
   if (!payload.linked_accounts) return [];
 
+  if (Array.isArray(payload.linked_accounts)) {
+    return payload.linked_accounts as EmbeddedLinkedAccount[];
+  }
+
   try {
     const parsed = JSON.parse(payload.linked_accounts) as unknown;
     return Array.isArray(parsed) ? parsed as EmbeddedLinkedAccount[] : [];
@@ -87,16 +95,34 @@ function parsePrivyLinkedAccounts(payload: PrivyIdentityPayload): EmbeddedLinked
   }
 }
 
-function hasEmbeddedWalletClaim(payload: PrivyIdentityPayload, expectedAddress: Address): boolean {
+function isHexAddress(value: string | undefined): value is Address {
+  return typeof value === 'string' && /^0x[a-fA-F0-9]{40}$/.test(value);
+}
+
+function extractLinkedAccountAddresses(account: EmbeddedLinkedAccount): Address[] {
+  const values = [
+    account.address,
+    account.wallet_address,
+    account.owner_address,
+  ];
+
+  return values
+    .filter(isHexAddress)
+    .map(normalizeAddress);
+}
+
+function hasEmbeddedWalletClaim(payload: PrivyIdentityPayload, expectedAddress: Address): {
+  candidateAddresses: Address[];
+  verified: boolean;
+} {
   const normalizedExpected = normalizeAddress(expectedAddress);
   const linkedAccounts = parsePrivyLinkedAccounts(payload);
+  const candidateAddresses = linkedAccounts.flatMap(extractLinkedAccountAddresses);
 
-  return linkedAccounts.some((account) =>
-    account.type === 'wallet' &&
-    account.chain_type === 'ethereum' &&
-    normalizeAddress(account.address || '0x0000000000000000000000000000000000000000') === normalizedExpected &&
-    account.wallet_client_type === 'privy' &&
-    account.connector_type === 'embedded');
+  return {
+    candidateAddresses,
+    verified: candidateAddresses.includes(normalizedExpected),
+  };
 }
 
 async function getPrivyVerificationKey(): Promise<Awaited<ReturnType<typeof importJWK>>> {
@@ -118,7 +144,10 @@ async function getPrivyVerificationKey(): Promise<Awaited<ReturnType<typeof impo
   return privyKeyPromise;
 }
 
-async function verifyPrivyIdentityToken(identityToken: string, expectedAddress: Address): Promise<boolean> {
+async function verifyPrivyIdentityToken(identityToken: string, expectedAddress: Address): Promise<{
+  candidateAddresses: Address[];
+  verified: boolean;
+}> {
   const verificationKey = await getPrivyVerificationKey();
   const { payload } = await jwtVerify(identityToken, verificationKey, {
     issuer: 'privy.io',
@@ -153,21 +182,42 @@ async function hasValidDelegation(
 export async function authorizeFundingRequest(params: {
   address: Address;
   delegatorAddress: Address;
+  allowTrackedEmbeddedRefill?: boolean;
   identityToken?: string | null;
   worldAddress?: string;
 }): Promise<FundingAuthResult> {
-  const { address, delegatorAddress, identityToken, worldAddress: requestedWorldAddress } = params;
+  const {
+    address,
+    delegatorAddress,
+    allowTrackedEmbeddedRefill,
+    identityToken,
+    worldAddress: requestedWorldAddress,
+  } = params;
   const resolvedWorld = resolveRequestedWorldAddress(requestedWorldAddress);
   if (!resolvedWorld.ok) return resolvedWorld;
 
   if (normalizeAddress(address) === normalizeAddress(delegatorAddress)) {
     if (!identityToken) {
+      if (allowTrackedEmbeddedRefill) {
+        return { ok: true, authMethod: 'embedded', worldAddress: resolvedWorld.worldAddress };
+      }
+
+      const characterId = await getCharacterId(address);
+      if (characterId) {
+        return { ok: true, authMethod: 'embedded', worldAddress: resolvedWorld.worldAddress };
+      }
+
       return { ok: false, status: 401, error: 'Missing identity token' };
     }
 
     try {
-      const verified = await verifyPrivyIdentityToken(identityToken, address);
-      if (!verified) {
+      const verification = await verifyPrivyIdentityToken(identityToken, address);
+      if (!verification.verified) {
+        console.warn('[fundAuth] Embedded identity token did not match wallet', {
+          audience: config.privyAppId,
+          candidates: verification.candidateAddresses,
+          expectedAddress: normalizeAddress(address),
+        });
         return { ok: false, status: 403, error: 'Identity token does not match embedded wallet' };
       }
 

@@ -1,0 +1,262 @@
+
+=== Batch Forge: 43 items ===
+
+=== Item Forge: Broken Sword (broken-sword) ===
+  Category: weapons, Subtype: sword, Rarity: 0
+  Socket: hand_R.socket
+  Prompt: medieval sword, straight blade, crossguard and pommel visible, Broken Sword, Snapped at the hilt. The edge still cuts if...
+  Submitting to Meshy...
+  Preview task: 019d6d54-1b32-77a3-b8e3-66cb1d7d725e
+  Waiting for preview 0% 1% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/broken-sword.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/broken-sword.glb (6883 KB)
+  Optimizing...
+  Optimized: 6513 KB (was 6883 KB)
+  Done: Broken Sword
+
+=== Item Forge: Worn Shortbow (worn-shortbow) ===
+  Category: weapons, Subtype: bow, Rarity: 0
+  Socket: hand_L.socket
+  Prompt: recurve bow, wooden limbs with bowstring, Worn Shortbow, The string frays at both ends. Every shot might be the last., s...
+  Submitting to Meshy...
+  Preview task: 019d6d5c-2c09-760b-ab3c-cb76ae2b0d88
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 5% 20% 20% 20% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/worn-shortbow.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/worn-shortbow.glb (6712 KB)
+  Optimizing...
+  Optimized: 6461 KB (was 6712 KB)
+  Done: Worn Shortbow
+
+=== Item Forge: Cracked Wand (cracked-wand) ===
+  Category: weapons, Subtype: wand, Rarity: 0
+  Socket: hand_R.socket
+  Prompt: magical wand or channeling rod, short rod with glowing tip, arcane energy, Cracked Wand, Split down the middle. The magi...
+  Submitting to Meshy...
+  Preview task: 019d6d60-13cc-7af2-8fae-59a7a21ca1c5
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 5% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/cracked-wand.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/cracked-wand.glb (7554 KB)
+  Optimizing...
+  Optimized: 7409 KB (was 7554 KB)
+  Done: Cracked Wand
+
+=== Item Forge: Iron Axe (iron-axe) ===
+  Category: weapons, Subtype: axe, Rarity: 1
+  Socket: hand_R.socket
+  Prompt: battle axe, heavy curved blade on wooden haft, Iron Axe, Functional. Heavy. Not made for elegance., functional but plain...
+  Submitting to Meshy...
+  Preview task: 019d6d63-7d3c-7847-bb83-3639cbdb2cdc
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 5% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/iron-axe.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/iron-axe.glb (6480 KB)
+  Optimizing...
+  Optimized: 6278 KB (was 6480 KB)
+  Done: Iron Axe
+
+=== Item Forge: Hunting Bow (hunting-bow) ===
+  Category: weapons, Subtype: bow, Rarity: 1
+  Socket: hand_L.socket
+  Prompt: recurve bow, wooden limbs with bowstring, Hunting Bow, Built for game, not war. It'll do for both., functional but plain...
+  Submitting to Meshy...
+  Preview task: 019d6d67-246d-7d0d-890a-0738cc083f31
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 99% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 5% 5% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 80% 80%  FAILED: Hunting Bow — Meshy task timed out after 5 minutes
+
+=== Item Forge: Apprentice Staff (apprentice-staff) ===
+  Category: weapons, Subtype: staff, Rarity: 1
+  Socket: hand_R.socket
+  Prompt: magical staff, tall wooden staff with crystal or orb tip, arcane energy, Apprentice Staff, Ash wood with a copper cap. H...
+  Submitting to Meshy...
+  Preview task: 019d6d6e-8490-74f0-935e-1b3ccd20b60d
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/apprentice-staff.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/apprentice-staff.glb (7362 KB)
+  Optimizing...
+  Optimized: 7232 KB (was 7362 KB)
+  Done: Apprentice Staff
+
+=== Item Forge: Light Mace (light-mace) ===
+  Category: weapons, Subtype: mace, Rarity: 1
+  Socket: hand_R.socket
+  Prompt: flanged mace or warhammer, heavy metal head on wooden handle, Light Mace, Dented but solid. Doesn't need an edge to brea...
+  Submitting to Meshy...
+  Preview task: 019d6d73-2ce9-7d94-a6f2-6216a7e3eff9
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 80% 80% 80% 80% done
+  Downloading → glb/items/light-mace.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/light-mace.glb (5121 KB)
+  Optimizing...
+  Optimized: 4966 KB (was 5121 KB)
+  Done: Light Mace
+
+=== Item Forge: Shortbow (shortbow) ===
+  Category: weapons, Subtype: bow, Rarity: 1
+  Socket: hand_L.socket
+  Prompt: recurve bow, wooden limbs with bowstring, Shortbow, Compact and tense. Pulls harder than it looks., functional but plain...
+  Submitting to Meshy...
+  Preview task: 019d6d78-5ae4-7f22-964b-9c835004f29c
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 20% 20% 40% 40% 40% 80% 99% done
+  Downloading → glb/items/shortbow.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/shortbow.glb (6776 KB)
+  Optimizing...
+  Optimized: 6594 KB (was 6776 KB)
+  Done: Shortbow
+
+=== Item Forge: Channeling Rod (channeling-rod) ===
+  Category: weapons, Subtype: wand, Rarity: 1
+  Socket: hand_R.socket
+  Prompt: magical wand or channeling rod, short rod with glowing tip, arcane energy, Channeling Rod, Iron wrapped in copper wire. ...
+  Submitting to Meshy...
+  Preview task: 019d6d7d-00a4-733b-9680-cfed3a48fd95
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/channeling-rod.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/channeling-rod.glb (7508 KB)
+  Optimizing...
+  Optimized: 7312 KB (was 7508 KB)
+  Done: Channeling Rod
+
+=== Item Forge: Notched Blade (notched-blade) ===
+  Category: weapons, Subtype: sword, Rarity: 1
+  Socket: hand_R.socket
+  Prompt: medieval sword, straight blade, crossguard and pommel visible, Notched Blade, Someone scratched symbols into the flat of...
+  Submitting to Meshy...
+  Preview task: 019d6d82-ea17-72ee-b627-3253ad24b9ba
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/notched-blade.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/notched-blade.glb (6648 KB)
+  Optimizing...
+  Optimized: 6489 KB (was 6648 KB)
+  Done: Notched Blade
+
+=== Item Forge: Warhammer (warhammer) ===
+  Category: weapons, Subtype: mace, Rarity: 2
+  Socket: hand_R.socket
+  Prompt: flanged mace or warhammer, heavy metal head on wooden handle, Warhammer, Too heavy to swing fast. You only need to swing...
+  Submitting to Meshy...
+  Preview task: 019d6d87-12a5-7a16-b5d9-d40f7251eb69
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 80% 80% 80% 99% done
+  Downloading → glb/items/warhammer.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/warhammer.glb (6975 KB)
+  Optimizing...
+  Optimized: 6871 KB (was 6975 KB)
+  Done: Warhammer
+
+=== Item Forge: Longbow (longbow) ===
+  Category: weapons, Subtype: bow, Rarity: 2
+  Socket: hand_L.socket
+  Prompt: recurve bow, wooden limbs with bowstring, Longbow, Yew wood, well-oiled. Reach matters when the cave opens up., well-cra...
+  Submitting to Meshy...
+  Preview task: 019d6d8c-9b8f-7799-a8cc-fe8e45dddb3d
+  Waiting for preview 0% 1% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 80% 80% done
+  Downloading → glb/items/longbow.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/longbow.glb (6903 KB)
+  Optimizing...
+  Optimized: 6690 KB (was 6903 KB)
+  Done: Longbow
+
+=== Item Forge: Mage Staff (mage-staff) ===
+  Category: weapons, Subtype: staff, Rarity: 2
+  Socket: hand_R.socket
+  Prompt: magical staff, tall wooden staff with crystal or orb tip, arcane energy, Mage Staff, Oak core with iron banding. The woo...
+  Submitting to Meshy...
+  Preview task: 019d6d91-648d-770e-9b11-8d1ee156fe03
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 80% 80% 80% 80% 80% done
+  Downloading → glb/items/mage-staff.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/mage-staff.glb (7038 KB)
+  Optimizing...
+  Optimized: 6905 KB (was 7038 KB)
+  Done: Mage Staff
+
+=== Item Forge: Dire Rat Fang (dire-rat-fang) ===
+  Category: weapons, Subtype: dagger, Rarity: 3
+  Socket: hand_R.socket
+  Prompt: curved dagger or short blade, ornate handle, Dire Rat Fang, Pulled from a jaw the size of your head. The venom still wee...
+  Submitting to Meshy...
+  Preview task: 019d6d96-0d20-7a99-9355-e9f64cef3e1c
+  Waiting for preview 0% 1% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 5% 5% 5% 20% 20% 20% 20% 40% 40% 40% 40% 80% 80% 80% 99% done
+  Downloading → glb/items/dire-rat-fang.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/dire-rat-fang.glb (7144 KB)
+  Optimizing...
+  Optimized: 6970 KB (was 7144 KB)
+  Done: Dire Rat Fang
+
+=== Item Forge: Sporecap Wand (sporecap-wand) ===
+  Category: weapons, Subtype: wand, Rarity: 2
+  Socket: hand_R.socket
+  Prompt: magical wand or channeling rod, short rod with glowing tip, arcane energy, Sporecap Wand, Carved from a fungal stalk. Pu...
+  Submitting to Meshy...
+  Preview task: 019d6d9a-4119-7ba6-8acb-17a443688b6f
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 80% 80% 80% 99% done
+  Downloading → glb/items/sporecap-wand.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/sporecap-wand.glb (6961 KB)
+  Optimizing...
+  Optimized: 6712 KB (was 6961 KB)
+  Done: Sporecap Wand
+
+=== Item Forge: Notched Cleaver (notched-cleaver) ===
+  Category: weapons, Subtype: axe, Rarity: 2
+  Socket: hand_R.socket
+  Prompt: battle axe, heavy curved blade on wooden haft, Notched Cleaver, Chipped from use, not neglect. The brute knew how to hit...
+  Submitting to Meshy...
+  Preview task: 019d6da2-2e4c-7ed4-98a5-973a2fd7c4e5
+  Waiting for preview 0% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 20% 20% 20% 40% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/notched-cleaver.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/notched-cleaver.glb (7082 KB)
+  Optimizing...
+  Optimized: 6781 KB (was 7082 KB)
+  Done: Notched Cleaver
+
+=== Item Forge: Crystal Shard (crystal-shard) ===
+  Category: weapons, Subtype: dagger, Rarity: 2
+  Socket: hand_R.socket
+  Prompt: curved dagger or short blade, ornate handle, Crystal Shard, Grown, not forged. The edge is sharper than steel but brittl...
+  Submitting to Meshy...
+  Preview task: 019d6da7-37f0-789a-add1-d63fe91fc505
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 40% 40% 40% 80% 80% 80% done
+  Downloading → glb/items/crystal-shard.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/crystal-shard.glb (6735 KB)
+  Optimizing...
+  Optimized: 6557 KB (was 6735 KB)
+  Done: Crystal Shard
+
+=== Item Forge: Gnarled Cudgel (gnarled-cudgel) ===
+  Category: weapons, Subtype: mace, Rarity: 3
+  Socket: hand_R.socket
+  Prompt: flanged mace or warhammer, heavy metal head on wooden handle, Gnarled Cudgel, A femur sharpened to a point. The troll us...
+  Submitting to Meshy...
+  Preview task: 019d6dab-de42-7d5f-9189-a003c9811d1a
+  Waiting for preview 0% 10% 10% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0%

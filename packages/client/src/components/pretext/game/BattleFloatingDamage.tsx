@@ -5,7 +5,14 @@ import { useCanvas } from '../hooks/useCanvas';
 import { usePretextFonts, getFontString } from '../hooks/usePretextFonts';
 import { COLORS } from '../theme';
 
-export type DamageType = 'damage' | 'crit' | 'heal' | 'gold' | 'miss';
+export type DamageType =
+  | 'damage'
+  | 'crit'
+  | 'double'
+  | 'critDouble'
+  | 'heal'
+  | 'gold'
+  | 'miss';
 
 export type BattleFloatingDamageHandle = {
   spawn: (x: number, y: number, type: DamageType, value?: number) => void;
@@ -56,6 +63,22 @@ function getConfig(type: DamageType, value: number) {
         font: getFontString('cinzel-700', 28),
         vy: -1.8,
         scale: 1.65,
+      };
+    case 'double':
+      return {
+        text: `${value}`,
+        color: '#A8DEFF',
+        font: getFontString('cinzel-700', 24),
+        vy: -1.55,
+        scale: 1.35,
+      };
+    case 'critDouble':
+      return {
+        text: `${value}!!`,
+        color: '#F3D27A',
+        font: getFontString('cinzel-700', 34),
+        vy: -2.0,
+        scale: 1.95,
       };
     case 'heal':
       return {
@@ -142,7 +165,10 @@ export const BattleFloatingDamage = forwardRef<BattleFloatingDamageHandle>(
         n.vy += GRAVITY;
         n.opacity -= FADE_SPEED * dt;
 
-        if (n.type === 'crit' && n.scale > 1) {
+        if (
+          (n.type === 'crit' || n.type === 'double' || n.type === 'critDouble') &&
+          n.scale > 1
+        ) {
           n.scale = Math.max(1, n.scale - 0.002 * dt);
         }
 
@@ -167,9 +193,12 @@ export const BattleFloatingDamage = forwardRef<BattleFloatingDamageHandle>(
         }
 
         // Crit glow
-        if (n.type === 'crit' && n.opacity > 0.5) {
+        if (
+          (n.type === 'crit' || n.type === 'double' || n.type === 'critDouble') &&
+          n.opacity > 0.5
+        ) {
           ctx.shadowColor = n.color;
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = n.type === 'critDouble' ? 20 : 12;
           ctx.fillText(
             n.text,
             n.scale !== 1 ? 0 : n.x,

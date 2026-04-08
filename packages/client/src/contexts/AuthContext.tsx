@@ -51,6 +51,12 @@ export function resolveWalletAction(
   return 'create';
 }
 
+export async function resolveEmbeddedIdentityToken(
+  readToken: () => string | null,
+): Promise<string | null> {
+  return readToken();
+}
+
 const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
 const WORLD_ADDRESS = import.meta.env.VITE_WORLD_ADDRESS;
 
@@ -120,7 +126,10 @@ export const AuthProvider = ({
     identityTokenRef.current = identityToken;
   }, [identityToken]);
 
-  const getEmbeddedIdentityToken = useCallback(async () => identityTokenRef.current, []);
+  const getEmbeddedIdentityToken = useCallback(
+    async () => resolveEmbeddedIdentityToken(() => identityTokenRef.current),
+    [],
+  );
 
   // Detect injected wallet (MetaMask etc.)
   useEffect(() => {

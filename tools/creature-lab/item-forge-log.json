@@ -1,0 +1,178 @@
+[
+  {
+    "slug": "broken-sword",
+    "name": "Broken Sword",
+    "category": "weapons",
+    "subtype": "sword",
+    "rarity": 0,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d57-ee14-7887-baf3-03bfd937f33d",
+    "prompt": "medieval sword, straight blade, crossguard and pommel visible, Broken Sword, Snapped at the hilt. The edge still cuts if you hold it right., simple worn damaged, monochrome tones, minimal detail, disposable look, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T13:50:48.262Z"
+  },
+  {
+    "slug": "worn-shortbow",
+    "name": "Worn Shortbow",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 0,
+    "socket": "hand_L.socket",
+    "meshTaskId": "019d6d5e-9d99-7af8-820c-1e983936c6f0",
+    "prompt": "recurve bow, wooden limbs with bowstring, Worn Shortbow, The string frays at both ends. Every shot might be the last., simple worn damaged, monochrome tones, minimal detail, disposable look, amber-gold wood tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T13:55:04.203Z"
+  },
+  {
+    "slug": "cracked-wand",
+    "name": "Cracked Wand",
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 0,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d61-00ac-7b7e-9d20-81fda425dea1",
+    "prompt": "magical wand or channeling rod, short rod with glowing tip, arcane energy, Cracked Wand, Split down the middle. The magic leaks out like heat from a cracked lantern., simple worn damaged, monochrome tones, minimal detail, disposable look, blue-violet arcane glow, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T13:58:47.805Z"
+  },
+  {
+    "slug": "iron-axe",
+    "name": "Iron Axe",
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d64-ecfb-72da-a57b-54d25aeb2614",
+    "prompt": "battle axe, heavy curved blade on wooden haft, Iron Axe, Functional. Heavy. Not made for elegance., functional but plain, slight wear marks, simple construction, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:02:47.214Z"
+  },
+  {
+    "slug": "apprentice-staff",
+    "name": "Apprentice Staff",
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d6f-9212-7e92-a15d-f6e37e5618fb",
+    "prompt": "magical staff, tall wooden staff with crystal or orb tip, arcane energy, Apprentice Staff, Ash wood with a copper cap. Hums when you grip it too tight., functional but plain, slight wear marks, simple construction, blue-violet arcane glow, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:15:55.775Z"
+  },
+  {
+    "slug": "light-mace",
+    "name": "Light Mace",
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d74-615c-7dcd-814f-5e8b1e1d8925",
+    "prompt": "flanged mace or warhammer, heavy metal head on wooden handle, Light Mace, Dented but solid. Doesn't need an edge to break bones., functional but plain, slight wear marks, simple construction, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:21:35.237Z"
+  },
+  {
+    "slug": "shortbow",
+    "name": "Shortbow",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 1,
+    "socket": "hand_L.socket",
+    "meshTaskId": "019d6d7a-27fd-7243-a60c-cca03855c098",
+    "prompt": "recurve bow, wooden limbs with bowstring, Shortbow, Compact and tense. Pulls harder than it looks., functional but plain, slight wear marks, simple construction, amber-gold wood tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:26:39.847Z"
+  },
+  {
+    "slug": "channeling-rod",
+    "name": "Channeling Rod",
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d7e-ef06-71f2-8b23-64850b94f54e",
+    "prompt": "magical wand or channeling rod, short rod with glowing tip, arcane energy, Channeling Rod, Iron wrapped in copper wire. The tip glows faintly in the dark., functional but plain, slight wear marks, simple construction, blue-violet arcane glow, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:33:07.288Z"
+  },
+  {
+    "slug": "notched-blade",
+    "name": "Notched Blade",
+    "category": "weapons",
+    "subtype": "sword",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d84-1817-7219-b8f9-f6ceb40e1569",
+    "prompt": "medieval sword, straight blade, crossguard and pommel visible, Notched Blade, Someone scratched symbols into the flat of the blade. They might mean something., functional but plain, slight wear marks, simple construction, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:37:39.807Z"
+  },
+  {
+    "slug": "warhammer",
+    "name": "Warhammer",
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d88-2032-748c-97cc-8831436d9fe7",
+    "prompt": "flanged mace or warhammer, heavy metal head on wooden handle, Warhammer, Too heavy to swing fast. You only need to swing it once., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:43:42.537Z"
+  },
+  {
+    "slug": "longbow",
+    "name": "Longbow",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 2,
+    "socket": "hand_L.socket",
+    "meshTaskId": "019d6d8e-2917-73be-baaf-9b58d526cf3d",
+    "prompt": "recurve bow, wooden limbs with bowstring, Longbow, Yew wood, well-oiled. Reach matters when the cave opens up., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, amber-gold wood tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:48:56.144Z"
+  },
+  {
+    "slug": "mage-staff",
+    "name": "Mage Staff",
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d92-71d7-7726-9a20-86cd5a1ee5db",
+    "prompt": "magical staff, tall wooden staff with crystal or orb tip, arcane energy, Mage Staff, Oak core with iron banding. The wood grain follows no natural pattern., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, blue-violet arcane glow, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:54:01.442Z"
+  },
+  {
+    "slug": "dire-rat-fang",
+    "name": "Dire Rat Fang",
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d98-03ec-75f7-bce3-8b4bafef1ed8",
+    "prompt": "curved dagger or short blade, ornate handle, Dire Rat Fang, Pulled from a jaw the size of your head. The venom still weeps from the root., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T14:58:36.895Z"
+  },
+  {
+    "slug": "sporecap-wand",
+    "name": "Sporecap Wand",
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6d9d-9248-79be-8b6c-3e453b073f6c",
+    "prompt": "magical wand or channeling rod, short rod with glowing tip, arcane energy, Sporecap Wand, Carved from a fungal stalk. Pulses with a slow, living warmth., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, blue-violet arcane glow, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:07:16.372Z"
+  },
+  {
+    "slug": "notched-cleaver",
+    "name": "Notched Cleaver",
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6da4-9cec-7bb3-8410-9bd8fc997d64",
+    "prompt": "battle axe, heavy curved blade on wooden haft, Notched Cleaver, Chipped from use, not neglect. The brute knew how to hit., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:12:46.511Z"
+  },
+  {
+    "slug": "crystal-shard",
+    "name": "Crystal Shard",
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6da8-6450-7eef-934d-7de6ac5c76fc",
+    "prompt": "curved dagger or short blade, ornate handle, Crystal Shard, Grown, not forged. The edge is sharper than steel but brittle., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:17:51.206Z"
+  }
+]

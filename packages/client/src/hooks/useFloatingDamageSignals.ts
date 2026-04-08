@@ -23,15 +23,37 @@ export function useFloatingDamageSignals({
   containerHeight: number;
 }) {
   const processedCountRef = useRef(0);
+  const lastEncounterIdRef = useRef<string | null>(null);
+  const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Reset when battle changes
+  // Reset when battle changes or the outcomes array is replaced for a new encounter
   useEffect(() => {
+    pendingTimersRef.current.forEach(clearTimeout);
+    pendingTimersRef.current = [];
     processedCountRef.current = 0;
-  }, [characterId]);
+    lastEncounterIdRef.current = visibleOutcomes[0]?.encounterId ?? null;
+  }, [characterId, visibleOutcomes]);
+
+  useEffect(
+    () => () => {
+      pendingTimersRef.current.forEach(clearTimeout);
+      pendingTimersRef.current = [];
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!characterId || !damageRef.current) return;
     if (containerWidth === 0 || containerHeight === 0) return;
+
+    const currentEncounterId = visibleOutcomes[0]?.encounterId ?? null;
+    if (
+      visibleOutcomes.length < processedCountRef.current ||
+      (currentEncounterId && lastEncounterIdRef.current && currentEncounterId !== lastEncounterIdRef.current)
+    ) {
+      processedCountRef.current = 0;
+    }
+    lastEncounterIdRef.current = currentEncounterId;
 
     const newOutcomes = visibleOutcomes.slice(processedCountRef.current);
     if (newOutcomes.length === 0) return;
@@ -52,6 +74,9 @@ export function useFloatingDamageSignals({
       const crits = outcome.crit ?? [];
       const hits = outcome.hit ?? [];
       const misses = outcome.miss ?? [];
+      const isComboAttack =
+        outcome.doubleStrike ||
+        Math.max(damagePerHit.length, hits.length, misses.length, 1) > 1;
 
       // Spawn a floating number for each hit in the multi-hit array
       for (let i = 0; i < Math.max(damagePerHit.length, misses.length, 1); i++) {
@@ -64,16 +89,19 @@ export function useFloatingDamageSignals({
         const offsetX = i * 12;
         const delay = i * 120;
 
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           if (!damageRef.current) return;
 
           if (isMiss) {
             damageRef.current.spawn(baseX + offsetX, baseY, 'miss');
           } else if (isHit || dmg > 0) {
-            const type: DamageType = isCrit ? 'crit' : 'damage';
+            const type: DamageType = isCrit
+              ? (isComboAttack ? 'critDouble' : 'crit')
+              : (isComboAttack ? 'double' : 'damage');
             damageRef.current.spawn(baseX + offsetX, baseY, type, dmg);
           }
         }, delay);
+        pendingTimersRef.current.push(timeoutId);
       }
     }
   }, [visibleOutcomes, characterId, damageRef, containerWidth, containerHeight]);

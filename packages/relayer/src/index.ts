@@ -172,6 +172,12 @@ async function main() {
     const delegator = (delegatorAddress && /^0x[a-fA-F0-9]{40}$/.test(delegatorAddress))
       ? delegatorAddress
       : address;
+    const normalizedAddress = address.toLowerCase();
+    const normalizedDelegator = delegator.toLowerCase();
+    const isTrackedEmbeddedRefill =
+      fundedAddresses.has(normalizedAddress) &&
+      !playerMap.has(normalizedAddress) &&
+      normalizedDelegator === normalizedAddress;
 
     const authHeader = typeof req.headers.authorization === 'string'
       ? req.headers.authorization
@@ -183,15 +189,21 @@ async function main() {
     const authResult = await authorizeFundingRequest({
       address: address as Address,
       delegatorAddress: delegator as Address,
+      allowTrackedEmbeddedRefill: isTrackedEmbeddedRefill,
       identityToken,
       worldAddress,
     });
     if (!authResult.ok) {
+      console.warn('[fund] Authorization rejected', {
+        address,
+        delegator,
+        error: authResult.error,
+        status: authResult.status,
+        worldAddress: worldAddress || config.worldAddress,
+      });
       res.status(authResult.status).json({ error: authResult.error });
       return;
     }
-
-    const normalizedAddress = address.toLowerCase();
 
     // Already funded — check if they need emergency gas before rejecting
     if (fundedAddresses.has(normalizedAddress)) {

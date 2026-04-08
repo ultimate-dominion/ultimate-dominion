@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveWalletAction } from './AuthContext';
+import { resolveEmbeddedIdentityToken, resolveWalletAction } from './AuthContext';
 
 describe('resolveWalletAction', () => {
   it('returns "create" for a confirmed new user with no server-side wallet', () => {
@@ -27,5 +27,19 @@ describe('resolveWalletAction', () => {
   it('returns "skip" when createWallet is already in flight for a new user', () => {
     expect(resolveWalletAction(undefined, true, true)).toBe('skip');
     expect(resolveWalletAction(null, true, true)).toBe('skip');
+  });
+});
+
+describe('resolveEmbeddedIdentityToken', () => {
+  it('returns the cached token when present', async () => {
+    await expect(
+      resolveEmbeddedIdentityToken(() => 'cached-token'),
+    ).resolves.toBe('cached-token');
+  });
+
+  it('returns null when no cached token exists', async () => {
+    await expect(
+      resolveEmbeddedIdentityToken(() => null),
+    ).resolves.toBeNull();
   });
 });

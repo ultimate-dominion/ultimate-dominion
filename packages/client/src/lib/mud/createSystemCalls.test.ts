@@ -1092,6 +1092,33 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
     );
   });
 
+  it('still requests emergency funding for embedded wallets when no identity token is available', async () => {
+    const { network } = createNetworkWithGasRetry({ writeFailCount: 1 });
+    mockOwnership(TEST_WALLET);
+    delete network.delegatorAddress;
+
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'funded' }) });
+    let balanceCallCount = 0;
+    network.publicClient.getBalance = vi.fn().mockImplementation(async () => {
+      balanceCallCount++;
+      return balanceCallCount <= 1 ? BigInt(0) : BigInt(1000000000000000);
+    });
+
+    const calls = createSystemCalls({
+      ...network,
+      getEmbeddedIdentityToken: async () => null,
+    });
+    const result = await calls.rest(TEST_ENTITY);
+
+    expect(result.success).toBe(true);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://relay.test/fund',
+      expect.objectContaining({
+        headers: expect.not.objectContaining({ Authorization: expect.any(String) }),
+      }),
+    );
+  });
+
   it('fails if funding request fails', async () => {
     const { network } = createNetworkWithGasRetry({ writeFailCount: 2 });
     mockOwnership(TEST_DELEGATOR);
