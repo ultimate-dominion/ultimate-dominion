@@ -177,6 +177,132 @@ export function drawSpell(
   }
 }
 
+// ── Monster attack draw functions ───────────────────────────────────────
+// Visually distinct from player weapons — claws, fangs, dark magic.
+
+function drawMonsterMelee(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  _h: number,
+  progress: number,
+): void {
+  // Claw slash — three diagonal lines that expand on impact
+  ctx.save();
+  ctx.translate(x, y);
+  const spread = progress * Math.PI * 0.3;
+  const sz = w * 0.025;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+
+  for (let i = -1; i <= 1; i++) {
+    const angle = -Math.PI * 0.25 + i * spread;
+    ctx.strokeStyle = `rgba(200,80,60,${0.9 - Math.abs(i) * 0.2})`;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(angle) * sz * 0.3, Math.sin(angle) * sz * 0.3);
+    ctx.lineTo(Math.cos(angle) * sz * 2, Math.sin(angle) * sz * 2);
+    ctx.stroke();
+  }
+
+  // Motion trail
+  for (let i = 1; i <= 3; i++) {
+    ctx.fillStyle = `rgba(180,60,40,${0.2 - i * 0.06})`;
+    ctx.beginPath();
+    ctx.arc(-sz * i * 0.8, 0, sz * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawMonsterRanged(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  _h: number,
+  progress: number,
+): void {
+  // Fang / bone shard — jagged triangular shape
+  const sz = w * 0.02;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(progress * Math.PI * 1.5);
+
+  // Shard
+  ctx.fillStyle = '#B8A88A';
+  ctx.beginPath();
+  ctx.moveTo(sz, 0);
+  ctx.lineTo(-sz * 0.5, -sz * 0.4);
+  ctx.lineTo(-sz * 0.3, 0);
+  ctx.lineTo(-sz * 0.5, sz * 0.4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Sharp edge highlight
+  ctx.strokeStyle = '#DDD0BC';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(sz, 0);
+  ctx.lineTo(-sz * 0.5, -sz * 0.4);
+  ctx.stroke();
+
+  ctx.restore();
+
+  // Trail
+  for (let i = 1; i <= 3; i++) {
+    ctx.fillStyle = `rgba(160,140,120,${0.25 - i * 0.07})`;
+    ctx.beginPath();
+    ctx.arc(x - sz * i, y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawMonsterSpell(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  _h: number,
+  progress: number,
+): void {
+  // Dark shadow bolt — purple/green sinister magic
+  const baseR = w * 0.012;
+  const pulse = 1 + Math.sin(progress * Math.PI * 5) * 0.25;
+  const pulseR = baseR * pulse;
+
+  // Outer dark glow
+  const grd = ctx.createRadialGradient(x, y, 0, x, y, pulseR * 3);
+  grd.addColorStop(0, 'rgba(120,50,180,0.5)');
+  grd.addColorStop(0.4, 'rgba(60,30,100,0.2)');
+  grd.addColorStop(1, 'rgba(30,15,50,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(x - pulseR * 3, y - pulseR * 3, pulseR * 6, pulseR * 6);
+
+  // Core — sickly green-purple
+  ctx.fillStyle = 'rgb(140,80,200)';
+  ctx.beginPath();
+  ctx.arc(x, y, pulseR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner bright core
+  ctx.fillStyle = 'rgb(200,160,255)';
+  ctx.beginPath();
+  ctx.arc(x, y, pulseR * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shadow particles
+  for (let i = 0; i < 4; i++) {
+    const tx = x - w * 0.008 * (i + 1) + (Math.random() - 0.5) * w * 0.01;
+    const ty = y + (Math.random() - 0.5) * w * 0.012;
+    const tr = pulseR * (0.5 - i * 0.1);
+    ctx.fillStyle = `rgba(100,40,160,${0.4 - i * 0.1})`;
+    ctx.beginPath();
+    ctx.arc(tx, ty, Math.max(1, tr), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 // ── Unified draw dispatcher ─────────────────────────────────────────────
 
 const DRAW_FNS: Record<
@@ -188,13 +314,22 @@ const DRAW_FNS: Record<
   spell: drawSpell,
 };
 
+const MONSTER_DRAW_FNS: Record<
+  WeaponAnimType,
+  (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, progress: number) => void
+> = {
+  melee: drawMonsterMelee,
+  ranged: drawMonsterRanged,
+  spell: drawMonsterSpell,
+};
+
 /**
  * Draw a weapon projectile at (x, y). If a 3D item model is available for
  * the given itemName, renders it through the ASCII pipeline so it matches
  * the rest of the battle scene. Otherwise falls back to 2D canvas drawings.
  *
- * @param itemName  Optional weapon name from items.json (e.g. "Iron Axe").
- *                  When provided, kicks off GLB loading and uses ASCII 3D once ready.
+ * @param itemName        Optional weapon name from items.json (e.g. "Iron Axe").
+ * @param isMonsterAttack If true, uses monster-themed visuals (claws, fangs, dark magic).
  */
 export function drawWeapon(
   ctx: CanvasRenderingContext2D,
@@ -205,9 +340,10 @@ export function drawWeapon(
   h: number,
   progress: number,
   itemName?: string,
+  isMonsterAttack?: boolean,
 ): void {
-  // Try ASCII-rendered 3D item model first
-  if (itemName) {
+  // Try ASCII-rendered 3D item model first (player weapons only)
+  if (itemName && !isMonsterAttack) {
     const slug = itemSlug(itemName);
     if (isItemModelReady(slug)) {
       const template = getItemTemplate(slug);
@@ -233,8 +369,9 @@ export function drawWeapon(
     }
   }
 
-  // 2D fallback
-  DRAW_FNS[type](ctx, x, y, w, h, progress);
+  // 2D fallback — monster attacks use distinct visuals
+  const fns = isMonsterAttack ? MONSTER_DRAW_FNS : DRAW_FNS;
+  fns[type](ctx, x, y, w, h, progress);
 }
 
 // ── Animation speeds per weapon type (ms) ───────────────────────────────

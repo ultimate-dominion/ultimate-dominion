@@ -609,7 +609,7 @@ export const BattleSceneCanvas = forwardRef<
 
         const projX = startX + (endX - startX) * t;
         const projY = startY + (endY - startY) * t;
-        drawWeapon(ctx, weaponType, projX, projY, w, h, progress, weaponName);
+        drawWeapon(ctx, weaponType, projX, projY, w, h, progress, weaponName, !isPlayerAttack);
       }
 
       // ── Render impact effects ───────────────────────────────────────
