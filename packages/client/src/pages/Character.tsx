@@ -15,7 +15,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
@@ -66,9 +66,14 @@ import {
   type Character,
   type Consumable,
   type QuestItemTemplate,
+  Race,
   type Spell,
   type Weapon,
 } from '../utils/types';
+
+const CharacterViewer = lazy(() =>
+  import('../components/pretext/game/CharacterViewer').then(m => ({ default: m.CharacterViewer })),
+);
 
 export const CharacterPage = (): JSX.Element => {
   const { id } = useParams();
@@ -280,7 +285,12 @@ export const CharacterPage = (): JSX.Element => {
               p={6}
               position="relative"
             >
-              <HStack spacing={3} alignItems="center">
+              {character.race !== Race.None && (
+                <Suspense fallback={null}>
+                  <CharacterViewer race={character.race} height={220} />
+                </Suspense>
+              )}
+              <HStack spacing={3} alignItems="center" mt={character.race !== Race.None ? 4 : 0}>
                 <Avatar size={{ base: 'md', lg: 'lg' }} src={character.image} />
                 <VStack alignItems="start" spacing={1}>
                   <HStack spacing={2} flexWrap="wrap">
