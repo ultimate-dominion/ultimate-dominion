@@ -826,8 +826,8 @@ export const ActionsPanel = (): JSX.Element => {
                       whiteSpace="normal"
                     >
                       <VStack align="stretch" px={3} py={2} spacing={1.5} w="100%">
-                        <HStack align="start" justify="space-between" spacing={2} w="100%">
-                          <HStack align="start" spacing={2} minW={0}>
+                        <HStack align="center" justify="space-between" spacing={2} w="100%">
+                          <HStack align="center" spacing={2} minW={0}>
                             <Box
                               bg="rgba(255,255,255,0.06)"
                               border="1px solid"
@@ -837,30 +837,29 @@ export const ActionsPanel = (): JSX.Element => {
                               fontFamily="mono"
                               fontSize="2xs"
                               fontWeight={700}
+                              flexShrink={0}
                               minW="22px"
                               px={1.5}
-                              py={1}
+                              py={0.5}
                               textAlign="center"
                             >
                               {index + 1}
                             </Box>
-                            <VStack align="start" minW={0} spacing={0.5}>
-                              <HStack spacing={1.5}>
-                                {icon ? (
-                                  <Image src={icon} boxSize="18px" />
-                                ) : item.type === 'consumable' ? (
-                                  <PotionSvg size={3} theme="dark" />
-                                ) : null}
-                                <Text
-                                  color="#E8DCC8"
-                                  fontSize="sm"
-                                  fontWeight={600}
-                                  noOfLines={1}
-                                  textAlign="left"
-                                >
-                                  {removeEmoji(item.name)}
-                                </Text>
-                              </HStack>
+                            {icon ? (
+                              <Image src={icon} boxSize="18px" flexShrink={0} />
+                            ) : item.type === 'consumable' ? (
+                              <PotionSvg size={3} theme="dark" />
+                            ) : null}
+                            <VStack align="start" minW={0} spacing={0}>
+                              <Text
+                                color="#E8DCC8"
+                                fontSize="sm"
+                                fontWeight={600}
+                                noOfLines={1}
+                                textAlign="left"
+                              >
+                                {removeEmoji(item.name)}
+                              </Text>
                               <Text
                                 color={accent.eyebrowColor}
                                 fontFamily="mono"
@@ -880,6 +879,7 @@ export const ActionsPanel = (): JSX.Element => {
                               fontWeight={700}
                               letterSpacing="0.08em"
                               textTransform="uppercase"
+                              flexShrink={0}
                             >
                               {STAT_LABELS[statType]}
                             </Text>
