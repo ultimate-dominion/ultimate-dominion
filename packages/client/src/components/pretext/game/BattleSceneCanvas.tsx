@@ -13,6 +13,7 @@
  * Ported from tools/creature-lab/battle-scene.js into React + useCanvas.
  */
 
+import { Box } from '@chakra-ui/react';
 import {
   forwardRef,
   useCallback,
@@ -20,28 +21,81 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { Box } from '@chakra-ui/react';
-import { useCanvas } from '../hooks/useCanvas';
-import { renderMonster, type AnimationState } from './MonsterAsciiRenderer';
-import { MONSTER_TEMPLATES_REDUX } from './monsterTemplatesRedux';
-import { loadGLBCreature, getCreatureState } from './glbCreatureLoader';
-import { makeGLBDrawFn } from './glbCreatureLoader';
+
+import type {
+  AttackSignal,
+  BattleSceneHandle,
+} from '../../../hooks/useBattleSceneSignals';
 import { Race } from '../../../utils/types';
+import { useCanvas } from '../hooks/useCanvas';
+import { usePretextFonts } from '../hooks/usePretextFonts';
+import { COLORS, fontString } from '../theme';
+
+import { getCaveBg, renderCaveBgFlicker } from './caveBgRenderer';
+import {
+  getCreatureState,
+  loadGLBCreature,
+  makeGLBDrawFn,
+} from './glbCreatureLoader';
+import {
+  computeHitReaction,
+  drawImpact,
+  easeInQuad,
+  HIT_REACTION_IDLE,
+  IMPACT_DURATION,
+  type HitReaction,
+} from './impactEffects';
+import { renderMonster, type AnimationState } from './MonsterAsciiRenderer';
+import type { MonsterTemplate } from './monsterTemplates';
+import { MONSTER_TEMPLATES_REDUX } from './monsterTemplatesRedux';
+import {
+  drawWeapon,
+  WEAPON_SPEED,
+  type WeaponAnimType,
+} from './weaponAnimations';
 
 // Kick off GLB loading immediately when the battle scene module loads —
 // don't wait for the first encounter frame, which may be too late on slow connections.
-loadGLBCreature('/models/creatures/dire-rat.glb', 10, 7).catch(() => {/* handled inside */});
-loadGLBCreature('/models/creatures/kobold.glb', 7, 7).catch(() => {/* handled inside */});
-loadGLBCreature('/models/creatures/goblin.glb', 7, 7).catch(() => {/* handled inside */});
-loadGLBCreature('/models/creatures/skeleton.glb', 7, 7).catch(() => {/* handled inside */});
-loadGLBCreature('/models/creatures/goblin-shaman.glb', 7, 7).catch(() => {/* handled inside */});
-loadGLBCreature('/models/creatures/bugbear.glb', 7, 7).catch(() => {/* handled inside */});
+loadGLBCreature('/models/creatures/dire-rat.glb', 10, 7).catch(() => {
+  /* handled inside */
+});
+loadGLBCreature('/models/creatures/kobold.glb', 7, 7).catch(() => {
+  /* handled inside */
+});
+loadGLBCreature('/models/creatures/goblin.glb', 7, 7).catch(() => {
+  /* handled inside */
+});
+loadGLBCreature('/models/creatures/skeleton.glb', 7, 7).catch(() => {
+  /* handled inside */
+});
+loadGLBCreature('/models/creatures/goblin-shaman.glb', 7, 7).catch(() => {
+  /* handled inside */
+});
+loadGLBCreature('/models/creatures/bugbear.glb', 7, 7).catch(() => {
+  /* handled inside */
+});
 
 // Preload player character GLBs — mirrored (face right) via positive yaw, player mode
 const PLAYER_YAW = Math.PI * 0.33; // face right (opposite of monster yaw)
-loadGLBCreature('/models/creatures/human-animated.glb', 7, 7, PLAYER_YAW, -0.08, { playerMode: true }).catch(() => {});
-loadGLBCreature('/models/creatures/elf-animated.glb', 7, 7, PLAYER_YAW, -0.08, { playerMode: true }).catch(() => {});
-loadGLBCreature('/models/creatures/dwarf-animated.glb', 7, 7, PLAYER_YAW, -0.08, { playerMode: true }).catch(() => {});
+loadGLBCreature(
+  '/models/creatures/human-animated.glb',
+  7,
+  7,
+  PLAYER_YAW,
+  -0.08,
+  { playerMode: true },
+).catch(() => {});
+loadGLBCreature('/models/creatures/elf-animated.glb', 7, 7, PLAYER_YAW, -0.08, {
+  playerMode: true,
+}).catch(() => {});
+loadGLBCreature(
+  '/models/creatures/dwarf-animated.glb',
+  7,
+  7,
+  PLAYER_YAW,
+  -0.08,
+  { playerMode: true },
+).catch(() => {});
 
 // Map Race enum → GLB URL
 const RACE_GLB_URL: Record<number, string> = {
@@ -51,9 +105,14 @@ const RACE_GLB_URL: Record<number, string> = {
 };
 
 // Fallback draw for player (simple silhouette while GLB loads)
-function drawPlayerFallback(ctx: CanvasRenderingContext2D, w: number, h: number) {
+function drawPlayerFallback(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+) {
   ctx.fillStyle = 'rgb(60,55,48)';
-  const cx = w * 0.5, cy = h * 0.4;
+  const cx = w * 0.5,
+    cy = h * 0.4;
   // Head
   ctx.beginPath();
   ctx.arc(cx, cy - h * 0.15, w * 0.08, 0, Math.PI * 2);
@@ -63,7 +122,10 @@ function drawPlayerFallback(ctx: CanvasRenderingContext2D, w: number, h: number)
 }
 
 // Build player MonsterTemplate-compatible objects lazily
-const playerTemplateCache = new Map<number, ReturnType<typeof buildPlayerTemplate>>();
+const playerTemplateCache = new Map<
+  number,
+  ReturnType<typeof buildPlayerTemplate>
+>();
 function buildPlayerTemplate(race: Race) {
   const url = RACE_GLB_URL[race];
   if (!url) return null;
@@ -87,25 +149,6 @@ function getPlayerTemplate(race: Race) {
   }
   return tpl;
 }
-
-import type { MonsterTemplate } from './monsterTemplates';
-import { COLORS, FONTS, fontString } from '../theme';
-import { usePretextFonts } from '../hooks/usePretextFonts';
-import {
-  drawWeapon,
-  WEAPON_SPEED,
-  type WeaponAnimType,
-} from './weaponAnimations';
-import {
-  drawImpact,
-  easeInQuad,
-  computeHitReaction,
-  HIT_REACTION_IDLE,
-  IMPACT_DURATION,
-  type HitReaction,
-} from './impactEffects';
-import { getCaveBg, renderCaveBgFlicker, clearCaveBgCache } from './caveBgRenderer';
-import type { AttackSignal, BattleSceneHandle } from '../../../hooks/useBattleSceneSignals';
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -135,6 +178,7 @@ type ActiveAttack = {
   didHit: boolean;
   targetDied: boolean;
   impacted: boolean;
+  callout: AttackSignal['callout'];
 };
 
 type ActiveImpact = {
@@ -154,6 +198,12 @@ type SceneState = {
   playerHitStart: number;
   /** Player attack anim timestamp (-1 = idle) */
   playerAttackStart: number;
+  activeCallout: {
+    title: string;
+    detail: string;
+    tone: AttackSignal['callout']['tone'];
+    startTime: number;
+  } | null;
 };
 
 function createSceneState(): SceneState {
@@ -165,67 +215,86 @@ function createSceneState(): SceneState {
     monsterAnim: undefined,
     playerHitStart: -1,
     playerAttackStart: -1,
+    activeCallout: null,
   };
 }
 
-// ── HP bar rendering ────────────────────────────────────────────────────
+const CALLOUT_LIFETIME_MS = 2800;
 
-function drawHpBar(
+function drawSceneCallout(
   ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  barW: number,
-  barH: number,
-  current: number,
-  max: number,
-  label: string,
-  isMonster: boolean,
+  w: number,
+  h: number,
+  callout: NonNullable<SceneState['activeCallout']>,
+  now: number,
 ) {
-  const pct = max > 0 ? Math.max(0, Math.min(1, current / max)) : 0;
+  const elapsed = now - callout.startTime;
+  if (elapsed >= CALLOUT_LIFETIME_MS) return;
 
-  // Background
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.beginPath();
-  ctx.roundRect(x, y, barW, barH, 3);
-  ctx.fill();
+  const fadeIn = Math.min(1, elapsed / 180);
+  const fadeOut = Math.min(1, (CALLOUT_LIFETIME_MS - elapsed) / 420);
+  const alpha = Math.min(fadeIn, fadeOut);
+  const slide = Math.max(0, 1 - fadeIn) * 12;
 
-  // Border
-  ctx.strokeStyle = COLORS.border;
+  const tone = {
+    player: {
+      border: 'rgba(212,165,74,0.75)',
+      glow: 'rgba(212,165,74,0.18)',
+      title: COLORS.amber,
+    },
+    enemy: {
+      border: 'rgba(184,92,58,0.75)',
+      glow: 'rgba(184,92,58,0.18)',
+      title: COLORS.danger,
+    },
+    crit: {
+      border: 'rgba(232,220,200,0.85)',
+      glow: 'rgba(212,165,74,0.22)',
+      title: '#F3D27A',
+    },
+    miss: {
+      border: 'rgba(122,112,96,0.65)',
+      glow: 'rgba(122,112,96,0.18)',
+      title: COLORS.textMuted,
+    },
+  }[callout.tone];
+
+  const boxW = Math.min(w * 0.42, 320);
+  const boxH = 66;
+  const x = (w - boxW) / 2;
+  const y = h * 0.12 + slide;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  ctx.fillStyle = 'rgba(18,16,14,0.84)';
+  ctx.strokeStyle = tone.border;
   ctx.lineWidth = 1;
+  ctx.shadowColor = tone.glow;
+  ctx.shadowBlur = 18;
   ctx.beginPath();
-  ctx.roundRect(x, y, barW, barH, 3);
+  ctx.roundRect(x, y, boxW, boxH, 10);
+  ctx.fill();
+  ctx.shadowBlur = 0;
   ctx.stroke();
 
-  // Fill — green above 50%, amber 25-50%, red below 25%
-  let fillColor: string;
-  if (pct > 0.5) fillColor = COLORS.success;
-  else if (pct > 0.25) fillColor = COLORS.amber;
-  else fillColor = COLORS.danger;
+  ctx.font = fontString('mono', 10, 600);
+  ctx.fillStyle = '#8A7E6A';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('BATTLE FEED', x + boxW / 2, y + 8);
 
-  if (pct > 0) {
-    ctx.fillStyle = fillColor;
-    ctx.beginPath();
-    ctx.roundRect(x + 1, y + 1, (barW - 2) * pct, barH - 2, 2);
-    ctx.fill();
-  }
+  ctx.font = fontString('heading', 20, 700);
+  ctx.fillStyle = tone.title;
+  ctx.fillText(callout.title, x + boxW / 2, y + 24);
 
-  // Label text
-  const fontSize = Math.max(10, barH * 0.7);
-  ctx.font = fontString('ui', fontSize, 500);
-  ctx.fillStyle = COLORS.textPrimary;
-  ctx.textAlign = isMonster ? 'left' : 'right';
-  ctx.textBaseline = 'middle';
-
-  const labelX = isMonster ? x + 6 : x + barW - 6;
-  ctx.fillText(label, labelX, y + barH / 2);
-
-  // HP text
-  ctx.textAlign = isMonster ? 'right' : 'left';
-  const hpX = isMonster ? x + barW - 6 : x + 6;
-  ctx.font = fontString('mono', fontSize - 1, 400);
+  ctx.font = fontString('serif', 12, 500);
   ctx.fillStyle = COLORS.textBody;
-  ctx.fillText(`${current}/${max}`, hpX, y + barH / 2);
+  ctx.fillText(callout.detail, x + boxW / 2, y + 47);
+  ctx.restore();
 }
+
+// ── HP bar rendering ────────────────────────────────────────────────────
 
 // ── Monster name with threat weight ─────────────────────────────────────
 
@@ -286,366 +355,381 @@ function drawPlayerName(
 
 // ── Component ───────────────────────────────────────────────────────────
 
-export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>(
-  function BattleSceneCanvas(props, ref) {
-    const {
-      monsterName,
-      monsterHp,
-      monsterMaxHp,
-      monsterDefeated,
-      monsterLevel,
-      userHp,
-      userMaxHp,
-      userName,
-      userDefeated,
-      userRace,
-    } = props;
+export const BattleSceneCanvas = forwardRef<
+  BattleSceneHandle,
+  BattleSceneProps
+>(function BattleSceneCanvas(props, ref) {
+  const { monsterName, monsterDefeated, userRace } = props;
 
-    const { ready } = usePretextFonts();
-    const stateRef = useRef<SceneState>(createSceneState());
+  const { ready } = usePretextFonts();
+  const stateRef = useRef<SceneState>(createSceneState());
 
-    // Freeze props into refs for RAF access without re-renders
-    const propsRef = useRef(props);
-    propsRef.current = props;
+  // Freeze props into refs for RAF access without re-renders
+  const propsRef = useRef(props);
+  propsRef.current = props;
 
-    const template: MonsterTemplate | undefined = useMemo(
-      () => MONSTER_TEMPLATES_REDUX.find((t) => t.name === monsterName),
-      [monsterName],
-    );
+  const template: MonsterTemplate | undefined = useMemo(
+    () => MONSTER_TEMPLATES_REDUX.find(t => t.name === monsterName),
+    [monsterName],
+  );
 
-    // Player character template (race-based GLB)
-    const playerTemplate = useMemo(
-      () => userRace ? getPlayerTemplate(userRace) : null,
-      [userRace],
-    );
+  // Player character template (race-based GLB)
+  const playerTemplate = useMemo(
+    () => (userRace ? getPlayerTemplate(userRace) : null),
+    [userRace],
+  );
 
-    // ── Imperative API ──────────────────────────────────────────────────
+  // ── Imperative API ──────────────────────────────────────────────────
 
-    const triggerAttack = useCallback((signal: AttackSignal) => {
-      const state = stateRef.current;
-      const duration = WEAPON_SPEED[signal.weaponType];
+  const triggerAttack = useCallback((signal: AttackSignal) => {
+    const state = stateRef.current;
+    const duration = WEAPON_SPEED[signal.weaponType];
+    const p = propsRef.current;
+
+    state.attacks.push({
+      weaponType: signal.weaponType,
+      startTime: performance.now(),
+      duration,
+      damage: signal.damage,
+      isCrit: signal.isCrit,
+      isPlayerAttack: signal.isPlayerAttack,
+      didHit: signal.didHit,
+      targetDied: signal.targetDied,
+      impacted: false,
+      callout: signal.callout,
+    });
+
+    // Start player attack animation immediately (swing during projectile flight)
+    if (signal.isPlayerAttack && p.userRace) {
+      const playerUrl = RACE_GLB_URL[p.userRace];
+      if (playerUrl) {
+        const ps = getCreatureState(playerUrl);
+        ps?.playClip?.('attack');
+      }
+    }
+  }, []);
+
+  useImperativeHandle(ref, () => ({ triggerAttack }), [triggerAttack]);
+
+  // ── Render loop ─────────────────────────────────────────────────────
+
+  const onFrame = useCallback(
+    (ctx: CanvasRenderingContext2D, dt: number, elapsed: number) => {
+      const { width: w, height: h } = ctx.canvas.getBoundingClientRect();
+      if (w === 0 || h === 0) return;
+
       const p = propsRef.current;
+      const state = stateRef.current;
+      const now = performance.now();
 
-      state.attacks.push({
-        weaponType: signal.weaponType,
-        startTime: performance.now(),
-        duration,
-        damage: signal.damage,
-        isCrit: signal.isCrit,
-        isPlayerAttack: signal.isPlayerAttack,
-        didHit: signal.didHit,
-        targetDied: signal.targetDied,
-        impacted: false,
-      });
+      ctx.clearRect(0, 0, w, h);
 
-      if (signal.isPlayerAttack && p.userRace) {
-        const playerUrl = RACE_GLB_URL[p.userRace];
-        if (playerUrl) {
-          const ps = getCreatureState(playerUrl);
-          ps?.playClip?.('attack');
+      // ── Cave background ─────────────────────────────────────────────
+
+      const caveBg = getCaveBg(w, h);
+      ctx.drawImage(caveBg.canvas, 0, 0);
+      renderCaveBgFlicker(ctx, caveBg.cells, elapsed);
+
+      // ── Process attack animations ───────────────────────────────────
+
+      let activeProjectile: {
+        weaponType: WeaponAnimType;
+        progress: number;
+        isPlayerAttack: boolean;
+      } | null = null;
+
+      for (let i = state.attacks.length - 1; i >= 0; i--) {
+        const atk = state.attacks[i];
+        const atkElapsed = now - atk.startTime;
+        const progress = atkElapsed / atk.duration;
+
+        if (progress < 1) {
+          // Projectile in flight
+          if (!activeProjectile) {
+            activeProjectile = {
+              weaponType: atk.weaponType,
+              progress,
+              isPlayerAttack: atk.isPlayerAttack,
+            };
+          }
+        } else if (!atk.impacted) {
+          // Impact moment
+          atk.impacted = true;
+
+          if (atk.isPlayerAttack) {
+            state.playerAttackStart = now;
+            if (atk.didHit) {
+              state.impacts.push({
+                startTime: now,
+                x: w * 0.55,
+                y: h * 0.45,
+              });
+
+              if (atk.targetDied) {
+                state.monsterAnim = { action: 'death', startTime: now };
+                state.hitReactionStart = -1;
+                state.hitReaction = HIT_REACTION_IDLE;
+              } else {
+                state.hitReactionStart = now;
+                state.monsterAnim = { action: 'hit', startTime: now };
+              }
+            }
+          } else {
+            if (atk.didHit) {
+              state.playerHitStart = now;
+
+              const playerUrl = p.userRace ? RACE_GLB_URL[p.userRace] : null;
+              if (playerUrl) {
+                const ps = getCreatureState(playerUrl);
+                ps?.playClip?.(atk.targetDied ? 'death' : 'hit');
+              }
+            }
+          }
+
+          state.activeCallout = {
+            ...atk.callout,
+            startTime: now,
+          };
+        }
+
+        // Clean up finished attacks (allow 200ms after impact for overlap)
+        if (atkElapsed > atk.duration + 200) {
+          state.attacks.splice(i, 1);
         }
       }
-    }, []);
 
-    useImperativeHandle(ref, () => ({ triggerAttack }), [triggerAttack]);
+      // ── Compute hit reaction ────────────────────────────────────────
 
-    // ── Render loop ─────────────────────────────────────────────────────
-
-    const onFrame = useCallback(
-      (ctx: CanvasRenderingContext2D, dt: number, elapsed: number) => {
-        const { width: w, height: h } = ctx.canvas.getBoundingClientRect();
-        if (w === 0 || h === 0) return;
-
-        const p = propsRef.current;
-        const state = stateRef.current;
-        const now = performance.now();
-
-        ctx.clearRect(0, 0, w, h);
-
-        // ── Cave background ─────────────────────────────────────────────
-
-        const caveBg = getCaveBg(w, h);
-        ctx.drawImage(caveBg.canvas, 0, 0);
-        renderCaveBgFlicker(ctx, caveBg.cells, elapsed);
-
-        // ── Process attack animations ───────────────────────────────────
-
-        let activeProjectile: {
-          weaponType: WeaponAnimType;
-          progress: number;
-          isPlayerAttack: boolean;
-        } | null = null;
-
-        for (let i = state.attacks.length - 1; i >= 0; i--) {
-          const atk = state.attacks[i];
-          const atkElapsed = now - atk.startTime;
-          const progress = atkElapsed / atk.duration;
-
-          if (progress < 1) {
-            // Projectile in flight
-            if (!activeProjectile) {
-              activeProjectile = {
-                weaponType: atk.weaponType,
-                progress,
-                isPlayerAttack: atk.isPlayerAttack,
-              };
-            }
-          } else if (!atk.impacted) {
-            // Impact moment
-            atk.impacted = true;
-
-            if (atk.isPlayerAttack) {
-              state.playerAttackStart = now;
-              if (atk.didHit) {
-                state.impacts.push({
-                  startTime: now,
-                  x: w * 0.55,
-                  y: h * 0.45,
-                });
-
-                if (atk.targetDied) {
-                  state.monsterAnim = { action: 'death', startTime: now };
-                  state.hitReactionStart = -1;
-                  state.hitReaction = HIT_REACTION_IDLE;
-                } else {
-                  state.hitReactionStart = now;
-                  state.monsterAnim = { action: 'hit', startTime: now };
-                }
-              }
-            } else {
-              if (atk.didHit) {
-                state.playerHitStart = now;
-
-                const playerUrl = p.userRace ? RACE_GLB_URL[p.userRace] : null;
-                if (playerUrl) {
-                  const ps = getCreatureState(playerUrl);
-                  ps?.playClip?.(atk.targetDied ? 'death' : 'hit');
-                }
-              }
-            }
+      if (state.hitReactionStart > 0) {
+        const recoilElapsed = now - state.hitReactionStart;
+        state.hitReaction = computeHitReaction(recoilElapsed, w);
+        if (recoilElapsed > 500) {
+          state.hitReactionStart = -1;
+          state.hitReaction = HIT_REACTION_IDLE;
+          if (state.monsterAnim?.action === 'hit') {
+            state.monsterAnim = undefined;
           }
+        }
+      }
 
-          // Clean up finished attacks (allow 200ms after impact for overlap)
-          if (atkElapsed > atk.duration + 200) {
-            state.attacks.splice(i, 1);
+      // ── Clean old impacts ───────────────────────────────────────────
+
+      for (let i = state.impacts.length - 1; i >= 0; i--) {
+        if (now - state.impacts[i].startTime > IMPACT_DURATION) {
+          state.impacts.splice(i, 1);
+        }
+      }
+
+      // ── Render monster (right 60%) ──────────────────────────────────
+
+      const { offsetX, flash, shake } = state.hitReaction;
+      const shakeX = shake * (Math.random() - 0.5) * w * 0.01;
+      const shakeY = shake * (Math.random() - 0.5) * h * 0.01;
+
+      ctx.save();
+      ctx.translate(offsetX + shakeX, shakeY);
+
+      const monsterX = w * 0.3;
+      const monsterW = w * 0.7;
+      const monsterY = 0;
+      const monsterH = h;
+
+      if (template) {
+        renderMonster(ctx, template, monsterX, monsterY, monsterW, monsterH, {
+          elapsed: p.monsterDefeated ? 0 : elapsed,
+          cellSize: 5,
+          enable3D: true,
+          enableGlow: !p.monsterDefeated,
+          enableBgFill: true,
+          animation: state.monsterAnim,
+        });
+      }
+
+      // White flash overlay on hit
+      if (flash > 0) {
+        ctx.save();
+        ctx.globalAlpha = flash * 0.3;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(monsterX, monsterY, monsterW, monsterH);
+        ctx.restore();
+      }
+
+      // Defeated overlay
+      if (p.monsterDefeated) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(monsterX, monsterY, monsterW, monsterH);
+        ctx.restore();
+      }
+
+      ctx.restore();
+
+      // ── Render weapon projectile ────────────────────────────────────
+
+      if (activeProjectile) {
+        const { weaponType, progress, isPlayerAttack } = activeProjectile;
+        const t = easeInQuad(progress);
+
+        let startX: number, endX: number, startY: number, endY: number;
+        if (isPlayerAttack) {
+          // Player attack: fly left → right toward monster
+          startX = w * 0.05;
+          endX = w * 0.55;
+          startY = h * 0.45;
+          endY = h * 0.5;
+        } else {
+          // Counterattack: fly right → left toward player
+          startX = w * 0.6;
+          endX = w * 0.15;
+          startY = h * 0.45;
+          endY = h * 0.5;
+        }
+
+        const projX = startX + (endX - startX) * t;
+        const projY = startY + (endY - startY) * t;
+        drawWeapon(ctx, weaponType, projX, projY, w, h, progress);
+      }
+
+      // ── Render impact effects ───────────────────────────────────────
+
+      for (const impact of state.impacts) {
+        const impProgress = (now - impact.startTime) / IMPACT_DURATION;
+        drawImpact(
+          ctx,
+          impact.x + state.hitReaction.offsetX,
+          impact.y,
+          w,
+          impProgress,
+        );
+      }
+
+      // ── Render player character (left 35%) ──────────────────────────
+
+      const playerTpl = playerTemplate;
+      if (playerTpl) {
+        const playerX = 0;
+        const playerW = w * 0.35;
+        const playerY = 0;
+        const playerH = h;
+
+        // Player hit flash
+        let playerFlash = 0;
+        if (state.playerHitStart > 0) {
+          const hitElapsed = now - state.playerHitStart;
+          if (hitElapsed < 400) {
+            playerFlash = Math.max(0, 1 - hitElapsed / 400);
+          } else {
+            state.playerHitStart = -1;
           }
         }
 
-        // ── Compute hit reaction ────────────────────────────────────────
-
-        if (state.hitReactionStart > 0) {
-          const recoilElapsed = now - state.hitReactionStart;
-          state.hitReaction = computeHitReaction(recoilElapsed, w);
-          if (recoilElapsed > 500) {
-            state.hitReactionStart = -1;
-            state.hitReaction = HIT_REACTION_IDLE;
-            if (state.monsterAnim?.action === 'hit') {
-              state.monsterAnim = undefined;
-            }
-          }
+        // Reset player attack timestamp
+        if (
+          state.playerAttackStart > 0 &&
+          now - state.playerAttackStart > 800
+        ) {
+          state.playerAttackStart = -1;
         }
-
-        // ── Clean old impacts ───────────────────────────────────────────
-
-        for (let i = state.impacts.length - 1; i >= 0; i--) {
-          if (now - state.impacts[i].startTime > IMPACT_DURATION) {
-            state.impacts.splice(i, 1);
-          }
-        }
-
-        // ── Render monster (right 60%) ──────────────────────────────────
-
-        const { offsetX, flash, shake } = state.hitReaction;
-        const shakeX = shake * (Math.random() - 0.5) * w * 0.01;
-        const shakeY = shake * (Math.random() - 0.5) * h * 0.01;
 
         ctx.save();
-        ctx.translate(offsetX + shakeX, shakeY);
 
-        const monsterX = w * 0.30;
-        const monsterW = w * 0.70;
-        const monsterY = 0;
-        const monsterH = h;
-
-        if (template) {
-          renderMonster(ctx, template, monsterX, monsterY, monsterW, monsterH, {
-            elapsed: p.monsterDefeated ? 0 : elapsed,
-            cellSize: 5,
-            enable3D: true,
-            enableGlow: !p.monsterDefeated,
-            enableBgFill: true,
-            animation: state.monsterAnim,
-          });
+        // Subtle shake when player is hit
+        if (playerFlash > 0) {
+          const pShakeX = playerFlash * (Math.random() - 0.5) * w * 0.008;
+          const pShakeY = playerFlash * (Math.random() - 0.5) * h * 0.008;
+          ctx.translate(pShakeX, pShakeY);
         }
 
-        // White flash overlay on hit
-        if (flash > 0) {
-          ctx.save();
-          ctx.globalAlpha = flash * 0.3;
-          ctx.fillStyle = '#fff';
-          ctx.fillRect(monsterX, monsterY, monsterW, monsterH);
-          ctx.restore();
+        renderMonster(ctx, playerTpl, playerX, playerY, playerW, playerH, {
+          elapsed: p.userDefeated ? 0 : elapsed,
+          cellSize: 5,
+          enable3D: true,
+          enableGlow: !p.userDefeated,
+          enableBgFill: true,
+        });
+
+        // Player hit white flash
+        if (playerFlash > 0) {
+          ctx.globalAlpha = playerFlash * 0.25;
+          ctx.fillStyle = '#f44';
+          ctx.fillRect(playerX, playerY, playerW, playerH);
         }
 
         // Defeated overlay
-        if (p.monsterDefeated) {
-          ctx.save();
+        if (p.userDefeated) {
           ctx.globalAlpha = 0.5;
           ctx.fillStyle = '#000';
-          ctx.fillRect(monsterX, monsterY, monsterW, monsterH);
-          ctx.restore();
+          ctx.fillRect(playerX, playerY, playerW, playerH);
         }
 
         ctx.restore();
+      }
 
-        // ── Render weapon projectile ────────────────────────────────────
+      // ── Left vignette (edge fade — lighter when player is rendered) ─
 
-        if (activeProjectile) {
-          const { weaponType, progress, isPlayerAttack } = activeProjectile;
-          const t = easeInQuad(progress);
+      const vigGrd = ctx.createLinearGradient(
+        0,
+        0,
+        w * (playerTpl ? 0.08 : 0.3),
+        0,
+      );
+      vigGrd.addColorStop(
+        0,
+        playerTpl ? 'rgba(10,10,8,0.4)' : 'rgba(10,10,8,0.7)',
+      );
+      vigGrd.addColorStop(1, 'rgba(10,10,8,0)');
+      ctx.fillStyle = vigGrd;
+      ctx.fillRect(0, 0, w * (playerTpl ? 0.08 : 0.3), h);
 
-          let startX: number, endX: number, startY: number, endY: number;
-          if (isPlayerAttack) {
-            // Player attack: fly left → right toward monster
-            startX = w * 0.05;
-            endX = w * 0.55;
-            startY = h * 0.45;
-            endY = h * 0.50;
-          } else {
-            // Counterattack: fly right → left toward player
-            startX = w * 0.60;
-            endX = w * 0.15;
-            startY = h * 0.45;
-            endY = h * 0.50;
-          }
+      // ── HUD: Names ─────────────────────────────────────────────────
 
-          const projX = startX + (endX - startX) * t;
-          const projY = startY + (endY - startY) * t;
-          drawWeapon(ctx, weaponType, projX, projY, w, h, progress);
+      const hudPad = 12;
+
+      // Player name — top-left
+      drawPlayerName(ctx, p.userName, hudPad, hudPad, p.userDefeated);
+
+      // Monster name — top-right
+      drawMonsterName(
+        ctx,
+        p.monsterName,
+        p.monsterLevel,
+        w - hudPad,
+        hudPad,
+        p.monsterDefeated,
+      );
+
+      if (state.activeCallout) {
+        drawSceneCallout(ctx, w, h, state.activeCallout, now);
+        if (now - state.activeCallout.startTime >= CALLOUT_LIFETIME_MS) {
+          state.activeCallout = null;
         }
+      }
+    },
+    [template, playerTemplate],
+  );
 
-        // ── Render impact effects ───────────────────────────────────────
+  const { canvasRef } = useCanvas({
+    onFrame,
+    static: monsterDefeated && stateRef.current.attacks.length === 0,
+  });
 
-        for (const impact of state.impacts) {
-          const impProgress = (now - impact.startTime) / IMPACT_DURATION;
-          drawImpact(
-            ctx,
-            impact.x + state.hitReaction.offsetX,
-            impact.y,
-            w,
-            impProgress,
-          );
-        }
+  if (!ready || !template) return null;
 
-        // ── Render player character (left 35%) ──────────────────────────
-
-        const playerTpl = playerTemplate;
-        if (playerTpl) {
-          const playerX = 0;
-          const playerW = w * 0.35;
-          const playerY = 0;
-          const playerH = h;
-
-          // Player hit flash
-          let playerFlash = 0;
-          if (state.playerHitStart > 0) {
-            const hitElapsed = now - state.playerHitStart;
-            if (hitElapsed < 400) {
-              playerFlash = Math.max(0, 1 - hitElapsed / 400);
-            } else {
-              state.playerHitStart = -1;
-            }
-          }
-
-          // Reset player attack timestamp
-          if (state.playerAttackStart > 0 && now - state.playerAttackStart > 800) {
-            state.playerAttackStart = -1;
-          }
-
-          ctx.save();
-
-          // Subtle shake when player is hit
-          if (playerFlash > 0) {
-            const pShakeX = playerFlash * (Math.random() - 0.5) * w * 0.008;
-            const pShakeY = playerFlash * (Math.random() - 0.5) * h * 0.008;
-            ctx.translate(pShakeX, pShakeY);
-          }
-
-          renderMonster(ctx, playerTpl, playerX, playerY, playerW, playerH, {
-            elapsed: p.userDefeated ? 0 : elapsed,
-            cellSize: 5,
-            enable3D: true,
-            enableGlow: !p.userDefeated,
-            enableBgFill: true,
-          });
-
-          // Player hit white flash
-          if (playerFlash > 0) {
-            ctx.globalAlpha = playerFlash * 0.25;
-            ctx.fillStyle = '#f44';
-            ctx.fillRect(playerX, playerY, playerW, playerH);
-          }
-
-          // Defeated overlay
-          if (p.userDefeated) {
-            ctx.globalAlpha = 0.5;
-            ctx.fillStyle = '#000';
-            ctx.fillRect(playerX, playerY, playerW, playerH);
-          }
-
-          ctx.restore();
-        }
-
-        // ── Left vignette (edge fade — lighter when player is rendered) ─
-
-        const vigGrd = ctx.createLinearGradient(0, 0, w * (playerTpl ? 0.08 : 0.3), 0);
-        vigGrd.addColorStop(0, playerTpl ? 'rgba(10,10,8,0.4)' : 'rgba(10,10,8,0.7)');
-        vigGrd.addColorStop(1, 'rgba(10,10,8,0)');
-        ctx.fillStyle = vigGrd;
-        ctx.fillRect(0, 0, w * (playerTpl ? 0.08 : 0.3), h);
-
-        // ── HUD: Names ─────────────────────────────────────────────────
-
-        const hudPad = 12;
-
-        // Player name — top-left
-        drawPlayerName(ctx, p.userName, hudPad, hudPad, p.userDefeated);
-
-        // Monster name — top-right
-        drawMonsterName(
-          ctx,
-          p.monsterName,
-          p.monsterLevel,
-          w - hudPad,
-          hudPad,
-          p.monsterDefeated,
-        );
-      },
-      [template, playerTemplate],
-    );
-
-    const { canvasRef } = useCanvas({
-      onFrame,
-      static: monsterDefeated && stateRef.current.attacks.length === 0,
-    });
-
-    if (!ready || !template) return null;
-
-    return (
-      <Box
-        position="relative"
-        w="100%"
-        h="100%"
-        bg={COLORS.bg}
-        overflow="hidden"
-        borderRadius="md"
-        aria-label="Battle scene"
-      >
-        <canvas
-          ref={canvasRef as React.LegacyRef<HTMLCanvasElement>}
-          style={{ display: 'block', width: '100%', height: '100%' }}
-        />
-      </Box>
-    );
-  },
-);
+  return (
+    <Box
+      position="relative"
+      w="100%"
+      h="100%"
+      bg={COLORS.bg}
+      overflow="hidden"
+      borderRadius="md"
+      aria-label="Battle scene"
+    >
+      <canvas
+        ref={canvasRef as React.LegacyRef<HTMLCanvasElement>}
+        style={{ display: 'block', width: '100%', height: '100%' }}
+      />
+    </Box>
+  );
+});

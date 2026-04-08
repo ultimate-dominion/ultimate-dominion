@@ -1,5 +1,6 @@
-import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import { Box } from '@chakra-ui/react';
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+
 import { useCanvas } from '../hooks/useCanvas';
 import { usePretextFonts, getFontString } from '../hooks/usePretextFonts';
 import { COLORS } from '../theme';
@@ -27,7 +28,7 @@ type FloatingNumber = {
 
 const POOL_SIZE = 50;
 const GRAVITY = -0.03;
-const FADE_SPEED = 0.0015;
+const FADE_SPEED = 0.00055;
 
 function createPool(): FloatingNumber[] {
   return Array.from({ length: POOL_SIZE }, () => ({
@@ -54,7 +55,7 @@ function getConfig(type: DamageType, value: number) {
         color: COLORS.danger,
         font: getFontString('cinzel-700', 28),
         vy: -1.8,
-        scale: 1.5,
+        scale: 1.65,
       };
     case 'heal':
       return {
@@ -78,7 +79,7 @@ function getConfig(type: DamageType, value: number) {
         color: COLORS.textMuted,
         font: getFontString('cinzel-600', 18),
         vy: -1.0,
-        scale: 1,
+        scale: 1.05,
       };
     default:
       return {
@@ -127,58 +128,59 @@ export const BattleFloatingDamage = forwardRef<BattleFloatingDamageHandle>(
 
     useImperativeHandle(ref, () => ({ spawn }), [spawn]);
 
-    const onFrame = useCallback(
-      (ctx: CanvasRenderingContext2D, dt: number) => {
-        const { width, height } = ctx.canvas.getBoundingClientRect();
-        ctx.clearRect(0, 0, width, height);
+    const onFrame = useCallback((ctx: CanvasRenderingContext2D, dt: number) => {
+      const { width, height } = ctx.canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, width, height);
 
-        const pool = poolRef.current;
-        for (const n of pool) {
-          if (!n.active) continue;
+      const pool = poolRef.current;
+      for (const n of pool) {
+        if (!n.active) continue;
 
-          n.age += dt;
-          n.x += n.vx;
-          n.y += n.vy;
-          n.vy += GRAVITY;
-          n.opacity -= FADE_SPEED * dt;
+        n.age += dt;
+        n.x += n.vx;
+        n.y += n.vy;
+        n.vy += GRAVITY;
+        n.opacity -= FADE_SPEED * dt;
 
-          if (n.type === 'crit' && n.scale > 1) {
-            n.scale = Math.max(1, n.scale - 0.002 * dt);
-          }
-
-          if (n.opacity <= 0.01) {
-            n.active = false;
-            continue;
-          }
-
-          ctx.save();
-          ctx.globalAlpha = n.opacity;
-          ctx.font = n.font;
-          ctx.fillStyle = n.color;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-
-          if (n.scale !== 1) {
-            ctx.translate(n.x, n.y);
-            ctx.scale(n.scale, n.scale);
-            ctx.fillText(n.text, 0, 0);
-          } else {
-            ctx.fillText(n.text, n.x, n.y);
-          }
-
-          // Crit glow
-          if (n.type === 'crit' && n.opacity > 0.5) {
-            ctx.shadowColor = n.color;
-            ctx.shadowBlur = 12;
-            ctx.fillText(n.text, n.scale !== 1 ? 0 : n.x, n.scale !== 1 ? 0 : n.y);
-            ctx.shadowBlur = 0;
-          }
-
-          ctx.restore();
+        if (n.type === 'crit' && n.scale > 1) {
+          n.scale = Math.max(1, n.scale - 0.002 * dt);
         }
-      },
-      [],
-    );
+
+        if (n.opacity <= 0.01) {
+          n.active = false;
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = n.opacity;
+        ctx.font = n.font;
+        ctx.fillStyle = n.color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        if (n.scale !== 1) {
+          ctx.translate(n.x, n.y);
+          ctx.scale(n.scale, n.scale);
+          ctx.fillText(n.text, 0, 0);
+        } else {
+          ctx.fillText(n.text, n.x, n.y);
+        }
+
+        // Crit glow
+        if (n.type === 'crit' && n.opacity > 0.5) {
+          ctx.shadowColor = n.color;
+          ctx.shadowBlur = 12;
+          ctx.fillText(
+            n.text,
+            n.scale !== 1 ? 0 : n.x,
+            n.scale !== 1 ? 0 : n.y,
+          );
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.restore();
+      }
+    }, []);
 
     const { canvasRef } = useCanvas({ onFrame });
 

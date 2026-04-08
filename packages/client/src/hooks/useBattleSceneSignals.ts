@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
-import type { AttackOutcomeType } from '../utils/types';
+
 import type { WeaponAnimType } from '../components/pretext/game/weaponAnimations';
+import type { AttackOutcomeType } from '../utils/types';
+
+import { buildBattleSceneSignal } from './buildBattleSceneSignal';
 
 // ── Signal types ────────────────────────────────────────────────────────
 
@@ -11,6 +14,11 @@ export type AttackSignal = {
   isPlayerAttack: boolean;
   didHit: boolean;
   targetDied: boolean;
+  callout: {
+    title: string;
+    detail: string;
+    tone: 'player' | 'enemy' | 'crit' | 'miss';
+  };
 };
 
 export type BattleSceneHandle = {
@@ -42,12 +50,14 @@ export function useBattleSceneSignals({
   characterId,
   sceneRef,
   weaponTypeForItem,
+  opponentName,
 }: {
   visibleOutcomes: AttackOutcomeType[];
   characterId: string | undefined;
   sceneRef: React.RefObject<BattleSceneHandle | null>;
   weaponTypeForItem: (itemId: string) => WeaponAnimType;
-}) {
+  opponentName: string;
+}): void {
   const processedCountRef = useRef(0);
   const lastEncounterIdRef = useRef<string | null>(null);
 
@@ -63,7 +73,9 @@ export function useBattleSceneSignals({
     const currentEncounterId = visibleOutcomes[0]?.encounterId ?? null;
     if (
       visibleOutcomes.length < processedCountRef.current ||
-      (currentEncounterId && lastEncounterIdRef.current && currentEncounterId !== lastEncounterIdRef.current)
+      (currentEncounterId &&
+        lastEncounterIdRef.current &&
+        currentEncounterId !== lastEncounterIdRef.current)
     ) {
       processedCountRef.current = 0;
     }
@@ -75,36 +87,14 @@ export function useBattleSceneSignals({
     processedCountRef.current = visibleOutcomes.length;
 
     for (const outcome of newOutcomes) {
-      const isPlayerAttack =
-        outcome.attackerId.toLowerCase() === characterId.toLowerCase();
-
-      // Sum total damage from all hits
-      const damagePerHit = outcome.damagePerHit ?? [];
-      const totalDamage = damagePerHit.reduce(
-        (sum, d) => sum + Number(d),
-        0,
+      sceneRef.current.triggerAttack(
+        buildBattleSceneSignal({
+          outcome,
+          characterId,
+          opponentName,
+          weaponTypeForItem,
+        }),
       );
-
-      // Check if any hit was a crit
-      const crits = outcome.crit ?? [];
-      const isCrit = crits.some(Boolean);
-      const hits = outcome.hit ?? [];
-      const didHit =
-        hits.some(Boolean) ||
-        damagePerHit.some(d => d > 0n) ||
-        outcome.attackerDamageDelt > 0n;
-
-      // Determine weapon animation type from the item used
-      const weaponType = weaponTypeForItem(outcome.itemId);
-
-      sceneRef.current.triggerAttack({
-        weaponType,
-        damage: totalDamage,
-        isCrit,
-        isPlayerAttack,
-        didHit,
-        targetDied: outcome.defenderDied,
-      });
     }
-  }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem]);
+  }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem, opponentName]);
 }
