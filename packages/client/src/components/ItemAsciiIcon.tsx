@@ -1,28 +1,27 @@
 /**
- * ItemAsciiIcon — Renders item images as ASCII art via MonsterAsciiRenderer.
+ * ItemAsciiIcon — Displays item art with rarity-driven visual effects.
  *
- * Primary path: loads the item's WebP image, draws it to an offscreen canvas,
- * and feeds that through renderMonster for consistent ASCII styling.
+ * Shows the WebP illustration directly (already in the game's ink-on-black
+ * art style) with CSS filter/glow effects per rarity tier to create clear
+ * visual hierarchy. Common items look dim and worn; legendaries glow.
  *
- * Fallback chain: WebP image → silhouette template → emoji.
+ * Fallback chain: WebP image → emoji.
  */
 
-import { useCallback, useEffect, useMemo, useState, memo } from 'react';
-import { Box, Text } from '@chakra-ui/react';
+import { memo } from 'react';
+import { Box, Image, Text } from '@chakra-ui/react';
 
-import { useCanvas } from './pretext/hooks/useCanvas';
-import { renderMonster } from './pretext/game/MonsterAsciiRenderer';
-import { getItemAsciiTemplate } from './pretext/game/itemAsciiArt';
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
-import { ItemType } from '../utils/types';
+import { getRarityColor } from '../utils/rarityHelpers';
+import { ItemType, Rarity } from '../utils/types';
 
 type Props = {
   /** Item name (may include emoji prefix) */
   name: string;
   /** ItemType enum value */
   itemType: ItemType;
-  /** Item rarity (0-4) */
+  /** Item rarity (0-5) */
   rarity?: number;
   /** CSS size string for the icon container */
   size?: string | Record<string, string>;
@@ -30,152 +29,67 @@ type Props = {
   alt?: string;
 };
 
-/** Cell size for ASCII rendering — smaller = more detail */
-const CELL_SIZE = 4;
+// ---------------------------------------------------------------------------
+// Rarity visual effects — each tier should "feel" distinct at a glance
+// ---------------------------------------------------------------------------
+
+/** CSS filter per rarity — dims commons, enhances legendaries */
+const RARITY_FILTERS: Record<number, string> = {
+  [Rarity.Worn]:      'brightness(0.5) saturate(0.3)',
+  [Rarity.Common]:    'brightness(0.7) saturate(0.5)',
+  [Rarity.Uncommon]:  'brightness(0.9) saturate(0.8)',
+  [Rarity.Rare]:      'brightness(1.0) saturate(1.0)',
+  [Rarity.Epic]:      'brightness(1.1) saturate(1.2)',
+  [Rarity.Legendary]: 'brightness(1.2) saturate(1.3)',
+};
+
+/** Drop-shadow glow per rarity — subtle to dramatic */
+const getRarityDropShadow = (rarity: number): string | undefined => {
+  const color = getRarityColor(rarity);
+  switch (rarity) {
+    case Rarity.Uncommon:
+      return `drop-shadow(0 0 3px ${color}40)`;
+    case Rarity.Rare:
+      return `drop-shadow(0 0 4px ${color}50) drop-shadow(0 0 8px ${color}25)`;
+    case Rarity.Epic:
+      return `drop-shadow(0 0 5px ${color}60) drop-shadow(0 0 12px ${color}30)`;
+    case Rarity.Legendary:
+      return `drop-shadow(0 0 6px ${color}70) drop-shadow(0 0 14px ${color}40) drop-shadow(0 0 24px ${color}20)`;
+    default:
+      return undefined;
+  }
+};
+
+const getImageFilter = (rarity: number): string => {
+  const base = RARITY_FILTERS[rarity] ?? RARITY_FILTERS[Rarity.Common];
+  const glow = getRarityDropShadow(rarity);
+  return glow ? `${base} ${glow}` : base;
+};
 
 // ---------------------------------------------------------------------------
-// Image cache — load each WebP once, reuse forever
+// Component
 // ---------------------------------------------------------------------------
-const imageCache = new Map<string, HTMLImageElement>();
 
-function useItemImage(src: string | undefined) {
-  const [img, setImg] = useState<HTMLImageElement | null>(() =>
-    src ? imageCache.get(src) ?? null : null,
-  );
-
-  useEffect(() => {
-    if (!src) return;
-    const cached = imageCache.get(src);
-    if (cached) { setImg(cached); return; }
-
-    let cancelled = false;
-    const el = new window.Image();
-    el.crossOrigin = 'anonymous';
-    el.onload = () => {
-      imageCache.set(src, el);
-      if (!cancelled) setImg(el);
-    };
-    el.onerror = () => {}; // fallback handled below
-    el.src = src;
-    return () => { cancelled = true; };
-  }, [src]);
-
-  return img;
-}
-
-// ---------------------------------------------------------------------------
-// Inner canvas component — mounts fresh each time template identity changes,
-// so useCanvas's static single-render fires with the correct data.
-// ---------------------------------------------------------------------------
-const AsciiCanvas = memo(({ templateId, draw, rarity, size, renderOverrides }: {
-  templateId: string;
-  draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
-  rarity: number;
-  size: string | Record<string, string>;
-  renderOverrides?: Record<string, number>;
-}) => {
-  const template = useMemo(() => ({
-    id: templateId,
-    name: templateId,
-    gridWidth: 1,
-    gridHeight: 1,
-    monsterClass: 0,
-    level: 1,
-    dynamic: false,
-    renderOverrides,
-    draw,
-  }), [templateId, draw, renderOverrides]);
-
-  const onFrame = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
-      const { width, height } = ctx.canvas.getBoundingClientRect();
-      ctx.clearRect(0, 0, width, height);
-      renderMonster(ctx, template, 0, 0, width, height, {
-        cellSize: CELL_SIZE,
-        enable3D: false,
-        enableGlow: rarity >= 3,
-        enableBgFill: true,
-      });
-    },
-    [template, rarity],
-  );
-
-  const { canvasRef } = useCanvas({ onFrame, static: true });
-
-  return (
-    <Box boxSize={size} flexShrink={0} position="relative">
-      <canvas
-        ref={canvasRef as React.LegacyRef<HTMLCanvasElement>}
-        style={{ width: '100%', height: '100%' }}
-      />
-    </Box>
-  );
-});
-
-AsciiCanvas.displayName = 'AsciiCanvas';
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-const ItemAsciiIconInner = ({ name, itemType, rarity = 0, size = '40px' }: Props) => {
+const ItemAsciiIconInner = ({ name, itemType, rarity = 0, size = '40px', alt }: Props) => {
   const cleanName = removeEmoji(name);
   const imageSrc = getItemImage(cleanName);
-  const loadedImage = useItemImage(imageSrc);
-  const isWeaponOrArmor = itemType === ItemType.Weapon || itemType === ItemType.Armor;
 
-  // Image-based draw function (primary path)
-  const imageDraw = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-      if (!loadedImage) return;
-      ctx.drawImage(loadedImage, 0, 0, w, h);
-    },
-    [loadedImage],
-  );
-
-  // Silhouette fallback template (only when no image exists)
-  const silhouetteTemplate = useMemo(() => {
-    if (imageSrc || !isWeaponOrArmor) return null;
-    const type = itemType === ItemType.Weapon ? 'weapon' : 'armor';
-    return getItemAsciiTemplate(cleanName, type, rarity);
-  }, [imageSrc, isWeaponOrArmor, cleanName, itemType, rarity]);
-
-  // Render overrides tuned for photographic WebP sources
-  const imageOverrides = useMemo(() => ({
-    brightnessBoost: 1.6,
-    gamma: 0.5,
-    ambient: 0.65,
-    charDensityFloor: 0.06,
-  }), []);
-
-  // Primary: image-based ASCII rendering
-  if (loadedImage) {
+  if (imageSrc) {
     return (
-      <AsciiCanvas
-        key={`img-${cleanName}`}
-        templateId={`item-img-${cleanName}`}
-        draw={imageDraw}
-        rarity={rarity}
-        size={size}
-        renderOverrides={imageOverrides}
-      />
+      <Box boxSize={size} flexShrink={0}>
+        <Image
+          src={imageSrc}
+          alt={alt ?? cleanName}
+          boxSize="100%"
+          objectFit="contain"
+          filter={getImageFilter(rarity)}
+          transition="filter 0.3s ease"
+        />
+      </Box>
     );
   }
 
-  // Fallback: silhouette ASCII for weapons/armor without WebP
-  if (silhouetteTemplate) {
-    return (
-      <AsciiCanvas
-        key={`sil-${cleanName}`}
-        templateId={silhouetteTemplate.id}
-        draw={silhouetteTemplate.draw}
-        rarity={rarity}
-        size={size}
-        renderOverrides={silhouetteTemplate.renderOverrides}
-      />
-    );
-  }
-
-  // Final fallback: emoji
+  // Emoji fallback for items without art
   return (
     <Text fontSize="xl" lineHeight={1}>
       {itemType === ItemType.Consumable
