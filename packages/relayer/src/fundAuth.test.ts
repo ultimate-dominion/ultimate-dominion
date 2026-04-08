@@ -10,6 +10,7 @@ const GAME_DELEGATION =
   '0x7379554400000000000000000000000047616d6544656c65676174696f6e0000';
 
 const mockReadContract = vi.fn();
+const mockGetCharacterId = vi.fn();
 
 vi.mock('./config.js', () => ({
   config: {
@@ -24,6 +25,10 @@ vi.mock('./tx.js', () => ({
   publicClient: {
     readContract: (...args: unknown[]) => mockReadContract(...args),
   },
+}));
+
+vi.mock('./chainReader.js', () => ({
+  getCharacterId: (...args: unknown[]) => mockGetCharacterId(...args),
 }));
 
 const { authorizeFundingRequest, _resetPrivyKeyCacheForTesting } = await import('./fundAuth.js');
@@ -65,6 +70,7 @@ async function createIdentityToken(
 describe('authorizeFundingRequest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetCharacterId.mockResolvedValue(null);
     mockedConfig.allowedWorldAddresses = [TEST_WORLD.toLowerCase()];
     mockedConfig.privyAppId = 'privy-app-id';
     mockedConfig.privyVerificationKey = '';
@@ -157,6 +163,24 @@ describe('authorizeFundingRequest', () => {
       address: TEST_EMBEDDED,
       delegatorAddress: TEST_EMBEDDED,
       allowTrackedEmbeddedRefill: true,
+      worldAddress: TEST_WORLD,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      authMethod: 'embedded',
+      worldAddress: TEST_WORLD,
+    });
+  });
+
+  it('accepts embedded emergency refills without a fresh identity token when the wallet already owns a character', async () => {
+    mockGetCharacterId.mockResolvedValue(
+      '0x000000000000000000000000000000000000000000000000000000000000002a',
+    );
+
+    const result = await authorizeFundingRequest({
+      address: TEST_EMBEDDED,
+      delegatorAddress: TEST_EMBEDDED,
       worldAddress: TEST_WORLD,
     });
 

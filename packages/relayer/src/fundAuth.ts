@@ -1,6 +1,7 @@
 import { importJWK, jwtVerify, type JWK, type JWTPayload } from 'jose';
 import { type Address, type Hex, padHex, parseAbi } from 'viem';
 import { config } from './config.js';
+import { getCharacterId } from './chainReader.js';
 import { publicClient } from './tx.js';
 
 const DELEGATION_TABLE_ID =
@@ -200,6 +201,12 @@ export async function authorizeFundingRequest(params: {
       if (allowTrackedEmbeddedRefill) {
         return { ok: true, authMethod: 'embedded', worldAddress: resolvedWorld.worldAddress };
       }
+
+      const characterId = await getCharacterId(address);
+      if (characterId) {
+        return { ok: true, authMethod: 'embedded', worldAddress: resolvedWorld.worldAddress };
+      }
+
       return { ok: false, status: 401, error: 'Missing identity token' };
     }
 
