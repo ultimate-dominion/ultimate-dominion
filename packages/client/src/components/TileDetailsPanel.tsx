@@ -297,6 +297,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     characterId: character?.id,
     sceneRef: battleSceneRef,
     weaponTypeForItem,
+    opponentName: opponent?.name ?? 'the enemy',
   });
 
   const encounterTx = useTransaction({

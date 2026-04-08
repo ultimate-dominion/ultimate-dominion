@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
-import type { AttackOutcomeType } from '../utils/types';
+
 import type { WeaponAnimType } from '../components/pretext/game/weaponAnimations';
+import type { AttackOutcomeType } from '../utils/types';
+
+import { buildBattleSceneSignal } from './buildBattleSceneSignal';
 
 // ── Signal types ────────────────────────────────────────────────────────
 
@@ -9,6 +12,11 @@ export type AttackSignal = {
   damage: number;
   isCrit: boolean;
   isPlayerAttack: boolean;
+  callout: {
+    title: string;
+    detail: string;
+    tone: 'player' | 'enemy' | 'crit' | 'miss';
+  };
 };
 
 export type BattleSceneHandle = {
@@ -40,12 +48,14 @@ export function useBattleSceneSignals({
   characterId,
   sceneRef,
   weaponTypeForItem,
+  opponentName,
 }: {
   visibleOutcomes: AttackOutcomeType[];
   characterId: string | undefined;
   sceneRef: React.RefObject<BattleSceneHandle | null>;
   weaponTypeForItem: (itemId: string) => WeaponAnimType;
-}) {
+  opponentName: string;
+}): void {
   const processedCountRef = useRef(0);
 
   // Reset when battle changes
@@ -62,29 +72,14 @@ export function useBattleSceneSignals({
     processedCountRef.current = visibleOutcomes.length;
 
     for (const outcome of newOutcomes) {
-      const isPlayerAttack =
-        outcome.attackerId.toLowerCase() === characterId.toLowerCase();
-
-      // Sum total damage from all hits
-      const damagePerHit = outcome.damagePerHit ?? [];
-      const totalDamage = damagePerHit.reduce(
-        (sum, d) => sum + Number(d),
-        0,
+      sceneRef.current.triggerAttack(
+        buildBattleSceneSignal({
+          outcome,
+          characterId,
+          opponentName,
+          weaponTypeForItem,
+        }),
       );
-
-      // Check if any hit was a crit
-      const crits = outcome.crit ?? [];
-      const isCrit = crits.some(Boolean);
-
-      // Determine weapon animation type from the item used
-      const weaponType = weaponTypeForItem(outcome.itemId);
-
-      sceneRef.current.triggerAttack({
-        weaponType,
-        damage: totalDamage,
-        isCrit,
-        isPlayerAttack,
-      });
     }
-  }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem]);
+  }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem, opponentName]);
 }
