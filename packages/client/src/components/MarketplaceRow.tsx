@@ -1,10 +1,8 @@
 import {
-  Avatar,
   Box,
   Button,
   Flex,
   HStack,
-  Image,
   Text,
   Tooltip,
   VStack,
@@ -20,8 +18,8 @@ import { useMUD } from '../contexts/MUDContext';
 import { useTransaction } from '../hooks/useTransaction';
 import { useOrders } from '../contexts/OrdersContext';
 import { ITEM_PATH } from '../Routes';
-import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
-import { getItemImage } from '../utils/itemImages';
+import { etherToFixedNumber, removeEmoji } from '../utils/helpers';
+import { ItemAsciiIcon } from './ItemAsciiIcon';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -174,20 +172,14 @@ export const MarketplaceRow = ({
     >
       {/* Left: Item info */}
       <Flex flex={1} minW={0}>
-        {getItemImage(removeEmoji(name)) ? (
-          <Image
-            src={getItemImage(removeEmoji(name))}
-            alt={removeEmoji(name)}
-            boxSize={{ base: '48px', md: '64px' }}
-            objectFit="contain"
-            mr={2}
-            flexShrink={0}
+        <Box mr={2} flexShrink={0}>
+          <ItemAsciiIcon
+            name={name}
+            itemType={itemType}
+            rarity={item.rarity}
+            size={{ base: '48px', md: '64px' }}
           />
-        ) : (
-          <Avatar bgColor="#1C1814" borderRadius={0} size={{ base: 'md', md: 'lg' }} name={' '}>
-            {getEmoji(name)}
-          </Avatar>
-        )}
+        </Box>
         <VStack align="start" justify="center" ml={{ base: 2, md: 4 }} spacing={0} minW={0}>
           <Text
             color={rarityColor}

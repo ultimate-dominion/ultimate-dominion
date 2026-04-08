@@ -1,11 +1,11 @@
-import { Box, Center, HStack, Image, Text, Tooltip, VStack, useDisclosure } from '@chakra-ui/react';
+import { Box, Center, HStack, Text, Tooltip, VStack, useDisclosure } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { getStatSymbol, removeEmoji } from '../utils/helpers';
-import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
+import { ItemAsciiIcon } from './ItemAsciiIcon';
 import { getRarityColor } from '../utils/rarityHelpers';
 import { type Consumable } from '../utils/types';
 
@@ -81,8 +81,6 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
         <HStack spacing={1.5} rowGap={1.5} justify="center" flexWrap="wrap" w="100%">
           {usableConsumables.map(({ consumable, isEquipped }) => {
             const name = removeEmoji(consumable.name);
-            const imageSrc = getItemImage(name);
-            const emoji = getConsumableEmoji(name);
             const rarityColor = getRarityColor(consumable.rarity);
 
             return (
@@ -101,16 +99,12 @@ export const ConsumableQuickUse = (): JSX.Element | null => {
                     h={TILE_SIZE}
                     w={TILE_SIZE}
                   >
-                    {imageSrc ? (
-                      <Image
-                        src={imageSrc}
-                        alt={name}
-                        boxSize="28px"
-                        objectFit="contain"
-                      />
-                    ) : (
-                      <Text fontSize="lg" lineHeight={1}>{emoji}</Text>
-                    )}
+                    <ItemAsciiIcon
+                      name={consumable.name}
+                      itemType={consumable.itemType}
+                      rarity={consumable.rarity}
+                      size="28px"
+                    />
                   </Center>
                   {/* Quantity badge */}
                   <Center

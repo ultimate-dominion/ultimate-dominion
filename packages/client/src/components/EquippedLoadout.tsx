@@ -1,4 +1,4 @@
-import { Box, Center, HStack, Image, Spinner, Text, Tooltip, VStack } from '@chakra-ui/react';
+import { Box, Center, HStack, Spinner, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { useCallback, useMemo } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +9,8 @@ import { useItems } from '../contexts/ItemsContext';
 import { DurabilityBar } from './DurabilityBar';
 import { useSlotOrder } from '../hooks/useSlotOrder';
 import { SLOT_ORDER_KEY_PREFIX } from '../utils/constants';
-import { getEmoji, getStatSymbol, removeEmoji } from '../utils/helpers';
-import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
+import { getStatSymbol, removeEmoji } from '../utils/helpers';
+import { ItemAsciiIcon } from './ItemAsciiIcon';
 import { getRarityAnimation, getRarityColor } from '../utils/rarityHelpers';
 import {
   type Armor,
@@ -82,7 +82,6 @@ export const FilledSlot = ({
   const { t } = useTranslation('ui');
   const rarityColor = getRarityColor(item.rarity);
   const rarityAnimation = getRarityAnimation(item.rarity);
-  const imageSrc = getItemImage(removeEmoji(item.name));
   const canClick = onClick && !isInBattle;
 
   return (
@@ -106,20 +105,12 @@ export const FilledSlot = ({
           _hover={canClick ? { opacity: 0.8, transform: 'scale(1.05)' } : undefined}
           transition="transform 0.1s ease, opacity 0.1s ease"
         >
-          {imageSrc ? (
-            <Image
-              src={imageSrc}
-              alt={removeEmoji(item.name)}
-              boxSize="32px"
-              objectFit="contain"
-            />
-          ) : (
-            <Text fontSize="lg">
-              {item.itemType === ItemType.Consumable
-                ? getConsumableEmoji(removeEmoji(item.name))
-                : getEmoji(item.name)}
-            </Text>
-          )}
+          <ItemAsciiIcon
+            name={item.name}
+            itemType={item.itemType}
+            rarity={item.rarity}
+            size="32px"
+          />
           <Text
             color="#8A7E6A"
             fontFamily="mono"

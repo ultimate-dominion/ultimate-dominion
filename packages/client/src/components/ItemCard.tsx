@@ -1,10 +1,10 @@
-import { Box, Center, HStack, Image, keyframes, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
+import { Box, Center, HStack, keyframes, Stack, Text, Tooltip, VStack } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { getEmoji, removeEmoji } from '../utils/helpers';
-import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
+import { removeEmoji } from '../utils/helpers';
 import { getRarityAnimation, getRarityColor, getRarityGlow, getRarityName } from '../utils/rarityHelpers';
+import { ItemAsciiIcon } from './ItemAsciiIcon';
 import {
   type Armor,
   type Consumable,
@@ -239,20 +239,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           }
         >
           <Center h="100%" mr={{ base: 2, sm: 6 }}>
-            {getItemImage(removeEmoji(name)) ? (
-              <Image
-                src={getItemImage(removeEmoji(name))}
-                alt={removeEmoji(name)}
-                boxSize={{ base: '40px', lg: '56px' }}
-                objectFit="contain"
-              />
-            ) : (
-              <Text fontSize={{ base: 'xl', lg: '3xl' }}>
-                {item.itemType === ItemType.Consumable
-                  ? getConsumableEmoji(removeEmoji(name))
-                  : getEmoji(name)}
-              </Text>
-            )}
+            <ItemAsciiIcon
+              name={name}
+              itemType={item.itemType}
+              rarity={rarity}
+              size={{ base: '40px', lg: '56px' }}
+            />
           </Center>
           <VStack alignItems="start" className="data-dense" spacing={0}>
             <HStack spacing={2} mb={1}>
@@ -301,20 +293,12 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
         w="100%"
       >
         <Stack alignItems="center" h="60px" justifyContent="center" mr={8}>
-          {getItemImage(removeEmoji(item.name)) ? (
-            <Image
-              src={getItemImage(removeEmoji(item.name))}
-              alt={removeEmoji(item.name)}
-              boxSize="40px"
-              objectFit="contain"
-            />
-          ) : (
-            <Text color="#E8DCC8" fontSize="2xl">
-              {item.itemType === ItemType.Consumable
-                  ? getConsumableEmoji(removeEmoji(item.name))
-                  : getEmoji(item.name)}
-            </Text>
-          )}
+          <ItemAsciiIcon
+            name={item.name}
+            itemType={item.itemType}
+            rarity={item.rarity}
+            size="40px"
+          />
         </Stack>
         <Box>
           <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }} color={rarityColor}>
@@ -341,20 +325,12 @@ export const ItemCardSmall: React.FC<ItemCardProps> = ({
       w="100%"
     >
       <Stack alignItems="center" h="60px" justifyContent="center" mr={8}>
-        {getItemImage(removeEmoji(item.name)) ? (
-          <Image
-            src={getItemImage(removeEmoji(item.name))}
-            alt={removeEmoji(item.name)}
-            boxSize="40px"
-            objectFit="contain"
-          />
-        ) : (
-          <Text color="#E8DCC8" fontSize="2xl">
-            {item.itemType === ItemType.Consumable
-                  ? getConsumableEmoji(removeEmoji(item.name))
-                  : getEmoji(item.name)}
-          </Text>
-        )}
+        <ItemAsciiIcon
+          name={item.name}
+          itemType={item.itemType}
+          rarity={item.rarity}
+          size="40px"
+        />
       </Stack>
       <Box>
         <Text fontWeight={700} size={{ base: 'sm', sm: 'lg' }} color={rarityColor}>
