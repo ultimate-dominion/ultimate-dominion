@@ -20,18 +20,18 @@ import {
   type Weapon,
 } from '../utils/types';
 
-type SlotItem = Armor | Consumable | Spell | Weapon;
+export type SlotItem = Armor | Consumable | Spell | Weapon;
 
-const SLOT_SIZE = '44px';
+const DEFAULT_SLOT_SIZE = '44px';
 
-const EmptySlot = ({ label }: { label?: string }): JSX.Element => (
+export const EmptySlot = ({ label, size = DEFAULT_SLOT_SIZE }: { label?: string; size?: string }): JSX.Element => (
   <Tooltip hasArrow label={label ?? 'Empty slot'} placement="top">
     <Center
       border="1px dashed"
       borderColor="#3A3428"
       borderRadius="md"
-      h={SLOT_SIZE}
-      w={SLOT_SIZE}
+      h={size}
+      w={size}
       flexShrink={0}
     >
       <Text color="#3A3428" fontSize="2xs">--</Text>
@@ -64,18 +64,20 @@ const getItemTooltip = (item: SlotItem): string => {
   return name;
 };
 
-const FilledSlot = ({
+export const FilledSlot = ({
   item,
   slotNumber,
   onClick,
   isInBattle,
   characterId,
+  size = DEFAULT_SLOT_SIZE,
 }: {
   item: SlotItem;
   slotNumber: number;
   onClick?: () => void;
   isInBattle: boolean;
   characterId?: string;
+  size?: string;
 }): JSX.Element => {
   const { t } = useTranslation('ui');
   const rarityColor = getRarityColor(item.rarity);
@@ -95,8 +97,8 @@ const FilledSlot = ({
           border="2px solid"
           borderColor={rarityColor}
           borderRadius="md"
-          h={SLOT_SIZE}
-          w={SLOT_SIZE}
+          h={size}
+          w={size}
           flexShrink={0}
           cursor={canClick ? 'pointer' : 'default'}
           onClick={canClick ? onClick : undefined}

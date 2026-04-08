@@ -33,6 +33,7 @@ import { useBadges } from '../hooks/useBadges';
 import { useReactiveEntity } from '../hooks/useReactiveEntity';
 import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { BadgeIcons, BadgeShowcase } from '../components/BadgeDisplay';
+import { CharacterInspectOverlay } from '../components/CharacterInspectOverlay';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { FragmentChainProgress } from '../components/FragmentChainProgress';
@@ -60,6 +61,7 @@ import {
   decodeCharacterId,
   etherToFixedNumber,
 } from '../utils/helpers';
+import { getRarityColor } from '../utils/rarityHelpers';
 import { DARK_DIVIDER_SHADOW } from '../utils/theme';
 import {
   type Armor,
@@ -82,7 +84,14 @@ export const CharacterPage = (): JSX.Element => {
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
 
   const { isSynced } = useMUD();
-  const { character: userCharacter, refreshCharacter } = useCharacter();
+  const {
+    character: userCharacter,
+    refreshCharacter,
+    equippedArmor,
+    equippedWeapons,
+    equippedSpells,
+    equippedConsumables,
+  } = useCharacter();
   const { onOpen: onOpenChat } = useChat();
 
   const {
@@ -95,6 +104,12 @@ export const CharacterPage = (): JSX.Element => {
     isOpen: isClassModalOpen,
     onClose: onCloseClassModal,
     onOpen: onOpenClassModal,
+  } = useDisclosure();
+
+  const {
+    isOpen: isInspectOpen,
+    onClose: onCloseInspect,
+    onOpen: onOpenInspect,
   } = useDisclosure();
 
   // Reactive character data for any entity ID
@@ -286,9 +301,41 @@ export const CharacterPage = (): JSX.Element => {
               position="relative"
             >
               {character.race !== Race.None && (
-                <Suspense fallback={null}>
-                  <CharacterViewer race={character.race} height={220} weaponName={equippedWeapons[0]?.name} />
-                </Suspense>
+                <Box cursor="pointer" onClick={onOpenInspect} position="relative">
+                  <Suspense fallback={null}>
+                    <CharacterViewer
+                      race={character.race}
+                      height={220}
+                      cellSize={6}
+                      equippedItems={
+                        equippedWeapons[0]
+                          ? [{ name: equippedWeapons[0].name, socket: 'hand_R.socket' }]
+                          : undefined
+                      }
+                    />
+                  </Suspense>
+                  {/* Rarity badges for equipped items */}
+                  <HStack spacing={1.5} justify="center" mt={1}>
+                    {equippedArmor[0] && (
+                      <Box w="8px" h="8px" borderRadius="sm" bg={getRarityColor(equippedArmor[0].rarity)} />
+                    )}
+                    {[...equippedWeapons, ...equippedSpells].map((item, i) => (
+                      <Box key={i} w="8px" h="8px" borderRadius="sm" bg={getRarityColor(item.rarity)} />
+                    ))}
+                  </HStack>
+                  {/* Inspect hint */}
+                  <Text
+                    position="absolute"
+                    bottom={1}
+                    right={2}
+                    fontFamily="mono"
+                    fontSize="9px"
+                    color="#5A5040"
+                    opacity={0.7}
+                  >
+                    inspect
+                  </Text>
+                </Box>
               )}
               <HStack spacing={3} alignItems="center" mt={character.race !== Race.None ? 4 : 0}>
                 <Avatar size={{ base: 'md', lg: 'lg' }} src={character.image} />
@@ -415,6 +462,17 @@ export const CharacterPage = (): JSX.Element => {
           onClose={onCloseClassModal}
           characterId={character.id}
           onClassSelected={onClassSelected}
+        />
+      )}
+      {character && (
+        <CharacterInspectOverlay
+          isOpen={isInspectOpen}
+          onClose={onCloseInspect}
+          character={character}
+          equippedArmor={equippedArmor}
+          equippedWeapons={equippedWeapons}
+          equippedSpells={equippedSpells}
+          equippedConsumables={equippedConsumables}
         />
       )}
     </Box>

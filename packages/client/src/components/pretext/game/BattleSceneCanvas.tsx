@@ -535,6 +535,124 @@ export const BattleSceneCanvas = forwardRef<
         }
       }
 
+      // ── Clean old impacts ───────────────────────────────────────────
+
+      for (let i = state.impacts.length - 1; i >= 0; i--) {
+        if (now - state.impacts[i].startTime > IMPACT_DURATION) {
+          state.impacts.splice(i, 1);
+        }
+      }
+
+      // ── Render monster (right 60%) ──────────────────────────────────
+
+      const { offsetX, flash, shake } = state.hitReaction;
+      const shakeX = shake * (Math.random() - 0.5) * w * 0.01;
+      const shakeY = shake * (Math.random() - 0.5) * h * 0.01;
+
+      ctx.save();
+      ctx.translate(offsetX + shakeX, shakeY);
+
+      const monsterX = w * 0.3;
+      const monsterW = w * 0.7;
+      const monsterY = 0;
+      const monsterH = h;
+
+      if (template) {
+        renderMonster(ctx, template, monsterX, monsterY, monsterW, monsterH, {
+          elapsed: p.monsterDefeated ? 0 : elapsed,
+          cellSize: 5,
+          enable3D: true,
+          enableGlow: !p.monsterDefeated,
+          enableBgFill: true,
+          animation: state.monsterAnim,
+        });
+      }
+
+      // White flash overlay on hit
+      if (flash > 0) {
+        ctx.save();
+        ctx.globalAlpha = flash * 0.3;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(monsterX, monsterY, monsterW, monsterH);
+        ctx.restore();
+      }
+
+      // Defeated overlay
+      if (p.monsterDefeated) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(monsterX, monsterY, monsterW, monsterH);
+        ctx.restore();
+      }
+
+      ctx.restore();
+
+      // ── Render weapon projectile ────────────────────────────────────
+
+      if (activeProjectile) {
+        const { weaponType, weaponName, progress, isPlayerAttack } = activeProjectile;
+        const t = easeInQuad(progress);
+
+        let startX: number, endX: number, startY: number, endY: number;
+        if (isPlayerAttack) {
+          startX = w * 0.05;
+          endX = w * 0.55;
+          startY = h * 0.45;
+          endY = h * 0.5;
+        } else {
+          startX = w * 0.6;
+          endX = w * 0.15;
+          startY = h * 0.45;
+          endY = h * 0.5;
+        }
+
+        const projX = startX + (endX - startX) * t;
+        const projY = startY + (endY - startY) * t;
+        drawWeapon(ctx, weaponType, projX, projY, w, h, progress, weaponName);
+      }
+
+      // ── Render impact effects ───────────────────────────────────────
+
+      for (const impact of state.impacts) {
+        const impProgress = (now - impact.startTime) / IMPACT_DURATION;
+        drawImpact(
+          ctx,
+          impact.x + state.hitReaction.offsetX,
+          impact.y,
+          w,
+          impProgress,
+        );
+      }
+
+      // ── Render player character (left 35%) ──────────────────────────
+
+      const playerTpl = playerTemplate;
+      if (playerTpl) {
+        const playerX = 0;
+        const playerW = w * 0.35;
+        const playerY = 0;
+        const playerH = h;
+
+        // Player hit flash
+        let playerFlash = 0;
+        if (state.playerHitStart > 0) {
+          const hitElapsed = now - state.playerHitStart;
+          if (hitElapsed < 400) {
+            playerFlash = Math.max(0, 1 - hitElapsed / 400);
+          } else {
+            state.playerHitStart = -1;
+          }
+        }
+
+        // Reset player attack timestamp
+        if (
+          state.playerAttackStart > 0 &&
+          now - state.playerAttackStart > 800
+        ) {
+          state.playerAttackStart = -1;
+        }
+
         ctx.save();
 
         // Subtle shake when player is hit
