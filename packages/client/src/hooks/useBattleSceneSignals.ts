@@ -9,6 +9,8 @@ export type AttackSignal = {
   damage: number;
   isCrit: boolean;
   isPlayerAttack: boolean;
+  didHit: boolean;
+  targetDied: boolean;
 };
 
 export type BattleSceneHandle = {
@@ -47,14 +49,25 @@ export function useBattleSceneSignals({
   weaponTypeForItem: (itemId: string) => WeaponAnimType;
 }) {
   const processedCountRef = useRef(0);
+  const lastEncounterIdRef = useRef<string | null>(null);
 
-  // Reset when battle changes
+  // Reset when battle changes or the outcomes array is replaced for a new encounter
   useEffect(() => {
     processedCountRef.current = 0;
-  }, [characterId]);
+    lastEncounterIdRef.current = visibleOutcomes[0]?.encounterId ?? null;
+  }, [characterId, visibleOutcomes]);
 
   useEffect(() => {
     if (!characterId || !sceneRef.current) return;
+
+    const currentEncounterId = visibleOutcomes[0]?.encounterId ?? null;
+    if (
+      visibleOutcomes.length < processedCountRef.current ||
+      (currentEncounterId && lastEncounterIdRef.current && currentEncounterId !== lastEncounterIdRef.current)
+    ) {
+      processedCountRef.current = 0;
+    }
+    lastEncounterIdRef.current = currentEncounterId;
 
     const newOutcomes = visibleOutcomes.slice(processedCountRef.current);
     if (newOutcomes.length === 0) return;
@@ -75,6 +88,11 @@ export function useBattleSceneSignals({
       // Check if any hit was a crit
       const crits = outcome.crit ?? [];
       const isCrit = crits.some(Boolean);
+      const hits = outcome.hit ?? [];
+      const didHit =
+        hits.some(Boolean) ||
+        damagePerHit.some(d => d > 0n) ||
+        outcome.attackerDamageDelt > 0n;
 
       // Determine weapon animation type from the item used
       const weaponType = weaponTypeForItem(outcome.itemId);
@@ -84,6 +102,8 @@ export function useBattleSceneSignals({
         damage: totalDamage,
         isCrit,
         isPlayerAttack,
+        didHit,
+        targetDied: outcome.defenderDied,
       });
     }
   }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem]);

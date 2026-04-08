@@ -200,6 +200,7 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useMap();
   const {
     attackOutcomes,
+    continueToBattleOutcome,
     currentBattle,
     dotActions,
     lastestBattleOutcome,
@@ -835,6 +836,30 @@ export const TileDetailsPanel = (): JSX.Element => {
     bossSplashShownRef.current = currentBattle.encounterId;
     setShowBossSplash(true);
   }, [currentBattle, opponent]);
+
+  const autoResultsShownRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!SHOW_Z2 || autoAdventureMode || !battleOver || !currentBattle) return;
+    if (continueToBattleOutcome) return;
+    if (autoResultsShownRef.current === currentBattle.encounterId) return;
+    if (showDeathScreen) return;
+
+    const delayMs = opponentDefeated ? 1400 : 700;
+    const timer = setTimeout(() => {
+      autoResultsShownRef.current = currentBattle.encounterId;
+      onContinueToBattleOutcome(true);
+    }, delayMs);
+
+    return () => clearTimeout(timer);
+  }, [
+    autoAdventureMode,
+    battleOver,
+    continueToBattleOutcome,
+    currentBattle,
+    onContinueToBattleOutcome,
+    opponentDefeated,
+    showDeathScreen,
+  ]);
 
   if (!character) {
     return (

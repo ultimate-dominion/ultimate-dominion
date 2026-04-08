@@ -23,15 +23,26 @@ export function useFloatingDamageSignals({
   containerHeight: number;
 }) {
   const processedCountRef = useRef(0);
+  const lastEncounterIdRef = useRef<string | null>(null);
 
-  // Reset when battle changes
+  // Reset when battle changes or the outcomes array is replaced for a new encounter
   useEffect(() => {
     processedCountRef.current = 0;
-  }, [characterId]);
+    lastEncounterIdRef.current = visibleOutcomes[0]?.encounterId ?? null;
+  }, [characterId, visibleOutcomes]);
 
   useEffect(() => {
     if (!characterId || !damageRef.current) return;
     if (containerWidth === 0 || containerHeight === 0) return;
+
+    const currentEncounterId = visibleOutcomes[0]?.encounterId ?? null;
+    if (
+      visibleOutcomes.length < processedCountRef.current ||
+      (currentEncounterId && lastEncounterIdRef.current && currentEncounterId !== lastEncounterIdRef.current)
+    ) {
+      processedCountRef.current = 0;
+    }
+    lastEncounterIdRef.current = currentEncounterId;
 
     const newOutcomes = visibleOutcomes.slice(processedCountRef.current);
     if (newOutcomes.length === 0) return;

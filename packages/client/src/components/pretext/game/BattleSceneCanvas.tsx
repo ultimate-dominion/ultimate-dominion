@@ -132,6 +132,8 @@ type ActiveAttack = {
   damage: number;
   isCrit: boolean;
   isPlayerAttack: boolean;
+  didHit: boolean;
+  targetDied: boolean;
   impacted: boolean;
 };
 
@@ -331,10 +333,11 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
         damage: signal.damage,
         isCrit: signal.isCrit,
         isPlayerAttack: signal.isPlayerAttack,
+        didHit: signal.didHit,
+        targetDied: signal.targetDied,
         impacted: false,
       });
 
-      // Start player attack animation immediately (swing during projectile flight)
       if (signal.isPlayerAttack && p.userRace) {
         const playerUrl = RACE_GLB_URL[p.userRace];
         if (playerUrl) {
@@ -392,27 +395,32 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
             atk.impacted = true;
 
             if (atk.isPlayerAttack) {
-              // Player attack hits monster
-              state.hitReactionStart = now;
-              state.monsterAnim = { action: 'hit', startTime: now };
-
-              // Spawn impact effect
-              state.impacts.push({
-                startTime: now,
-                x: w * 0.55,
-                y: h * 0.45,
-              });
-
               state.playerAttackStart = now;
-            } else {
-              // Counterattack hits player
-              state.playerHitStart = now;
+              if (atk.didHit) {
+                state.impacts.push({
+                  startTime: now,
+                  x: w * 0.55,
+                  y: h * 0.45,
+                });
 
-              // Trigger player hit animation on GLB
-              const playerUrl = p.userRace ? RACE_GLB_URL[p.userRace] : null;
-              if (playerUrl) {
-                const ps = getCreatureState(playerUrl);
-                ps?.playClip?.('hit');
+                if (atk.targetDied) {
+                  state.monsterAnim = { action: 'death', startTime: now };
+                  state.hitReactionStart = -1;
+                  state.hitReaction = HIT_REACTION_IDLE;
+                } else {
+                  state.hitReactionStart = now;
+                  state.monsterAnim = { action: 'hit', startTime: now };
+                }
+              }
+            } else {
+              if (atk.didHit) {
+                state.playerHitStart = now;
+
+                const playerUrl = p.userRace ? RACE_GLB_URL[p.userRace] : null;
+                if (playerUrl) {
+                  const ps = getCreatureState(playerUrl);
+                  ps?.playClip?.(atk.targetDied ? 'death' : 'hit');
+                }
               }
             }
           }
@@ -431,7 +439,9 @@ export const BattleSceneCanvas = forwardRef<BattleSceneHandle, BattleSceneProps>
           if (recoilElapsed > 500) {
             state.hitReactionStart = -1;
             state.hitReaction = HIT_REACTION_IDLE;
-            state.monsterAnim = undefined;
+            if (state.monsterAnim?.action === 'hit') {
+              state.monsterAnim = undefined;
+            }
           }
         }
 
