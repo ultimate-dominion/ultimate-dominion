@@ -481,8 +481,8 @@ const GLOW_BLUR_BASE = 6;
 const GLOW_BLUR_MAX = 14;
 
 // v8: background fill intensity
-const BG_FILL_BRIGHTNESS = 0.30; // how bright the bg rect is relative to cell color
-const BG_FILL_ALPHA = 0.35;      // opacity of the bg rect
+const BG_FILL_BRIGHTNESS = 0.45; // how bright the bg rect is relative to cell color
+const BG_FILL_ALPHA = 0.50;      // opacity of the bg rect
 
 // ---------------------------------------------------------------------------
 // Public API

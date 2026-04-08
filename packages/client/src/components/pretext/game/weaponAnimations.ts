@@ -188,29 +188,37 @@ function drawMonsterMelee(
   _h: number,
   progress: number,
 ): void {
-  // Claw slash — three diagonal lines that expand on impact
+  // ASCII claw slash — three slash characters that spread on impact
   ctx.save();
   ctx.translate(x, y);
-  const spread = progress * Math.PI * 0.3;
-  const sz = w * 0.025;
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
+  const sz = Math.round(w * 0.028);
+  const font = `bold ${sz}px "Fira Code", monospace`;
+  const spread = progress * sz * 0.8;
+  const alpha = Math.max(0, 1 - progress * 0.3);
 
-  for (let i = -1; i <= 1; i++) {
-    const angle = -Math.PI * 0.25 + i * spread;
-    ctx.strokeStyle = `rgba(200,80,60,${0.9 - Math.abs(i) * 0.2})`;
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(angle) * sz * 0.3, Math.sin(angle) * sz * 0.3);
-    ctx.lineTo(Math.cos(angle) * sz * 2, Math.sin(angle) * sz * 2);
-    ctx.stroke();
+  const chars = ['╲', '│', '╱'];
+  const offsets = [
+    { dx: -spread, dy: -spread * 0.6 },
+    { dx: 0, dy: 0 },
+    { dx: spread, dy: -spread * 0.6 },
+  ];
+
+  for (let i = 0; i < 3; i++) {
+    ctx.font = font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(200,80,60,${alpha})`;
+    ctx.shadowColor = 'rgba(200,80,60,0.6)';
+    ctx.shadowBlur = 8;
+    ctx.fillText(chars[i], offsets[i].dx, offsets[i].dy);
   }
+  ctx.shadowBlur = 0;
 
-  // Motion trail
+  // ASCII trail
+  ctx.font = `${Math.round(sz * 0.6)}px "Fira Code", monospace`;
   for (let i = 1; i <= 3; i++) {
-    ctx.fillStyle = `rgba(180,60,40,${0.2 - i * 0.06})`;
-    ctx.beginPath();
-    ctx.arc(-sz * i * 0.8, 0, sz * 0.3, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = `rgba(180,60,40,${0.3 - i * 0.08})`;
+    ctx.fillText('·', -sz * i * 0.7, 0);
   }
   ctx.restore();
 }
@@ -223,38 +231,31 @@ function drawMonsterRanged(
   _h: number,
   progress: number,
 ): void {
-  // Fang / bone shard — jagged triangular shape
-  const sz = w * 0.02;
+  // ASCII bone shard — rotating arrow-like characters
+  const sz = Math.round(w * 0.026);
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(progress * Math.PI * 1.5);
 
-  // Shard
+  ctx.font = `bold ${sz}px "Fira Code", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   ctx.fillStyle = '#B8A88A';
-  ctx.beginPath();
-  ctx.moveTo(sz, 0);
-  ctx.lineTo(-sz * 0.5, -sz * 0.4);
-  ctx.lineTo(-sz * 0.3, 0);
-  ctx.lineTo(-sz * 0.5, sz * 0.4);
-  ctx.closePath();
-  ctx.fill();
-
-  // Sharp edge highlight
-  ctx.strokeStyle = '#DDD0BC';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(sz, 0);
-  ctx.lineTo(-sz * 0.5, -sz * 0.4);
-  ctx.stroke();
+  ctx.shadowColor = 'rgba(184,168,138,0.5)';
+  ctx.shadowBlur = 6;
+  ctx.fillText('▶▸', 0, 0);
+  ctx.shadowBlur = 0;
 
   ctx.restore();
 
-  // Trail
+  // ASCII trail
+  const trailSz = Math.round(sz * 0.5);
+  ctx.font = `${trailSz}px "Fira Code", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   for (let i = 1; i <= 3; i++) {
-    ctx.fillStyle = `rgba(160,140,120,${0.25 - i * 0.07})`;
-    ctx.beginPath();
-    ctx.arc(x - sz * i, y, 1.5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = `rgba(160,140,120,${0.3 - i * 0.08})`;
+    ctx.fillText('·', x - sz * i * 0.6, y);
   }
 }
 
@@ -266,41 +267,38 @@ function drawMonsterSpell(
   _h: number,
   progress: number,
 ): void {
-  // Dark shadow bolt — purple/green sinister magic
-  const baseR = w * 0.012;
-  const pulse = 1 + Math.sin(progress * Math.PI * 5) * 0.25;
-  const pulseR = baseR * pulse;
+  // ASCII shadow bolt — pulsing dark magic character with glow
+  const sz = Math.round(w * 0.03);
+  const pulse = 1 + Math.sin(progress * Math.PI * 5) * 0.2;
+  const pulseSz = Math.round(sz * pulse);
 
-  // Outer dark glow
-  const grd = ctx.createRadialGradient(x, y, 0, x, y, pulseR * 3);
-  grd.addColorStop(0, 'rgba(120,50,180,0.5)');
-  grd.addColorStop(0.4, 'rgba(60,30,100,0.2)');
-  grd.addColorStop(1, 'rgba(30,15,50,0)');
-  ctx.fillStyle = grd;
-  ctx.fillRect(x - pulseR * 3, y - pulseR * 3, pulseR * 6, pulseR * 6);
+  ctx.save();
+  ctx.font = `bold ${pulseSz}px "Fira Code", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
 
-  // Core — sickly green-purple
+  // Outer glow
+  ctx.shadowColor = 'rgba(140,80,200,0.7)';
+  ctx.shadowBlur = 14;
   ctx.fillStyle = 'rgb(140,80,200)';
-  ctx.beginPath();
-  ctx.arc(x, y, pulseR, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillText('◆', x, y);
 
-  // Inner bright core
+  // Bright inner core
+  ctx.shadowBlur = 0;
+  ctx.font = `bold ${Math.round(pulseSz * 0.5)}px "Fira Code", monospace`;
   ctx.fillStyle = 'rgb(200,160,255)';
-  ctx.beginPath();
-  ctx.arc(x, y, pulseR * 0.4, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillText('✦', x, y);
 
-  // Shadow particles
-  for (let i = 0; i < 4; i++) {
-    const tx = x - w * 0.008 * (i + 1) + (Math.random() - 0.5) * w * 0.01;
-    const ty = y + (Math.random() - 0.5) * w * 0.012;
-    const tr = pulseR * (0.5 - i * 0.1);
-    ctx.fillStyle = `rgba(100,40,160,${0.4 - i * 0.1})`;
-    ctx.beginPath();
-    ctx.arc(tx, ty, Math.max(1, tr), 0, Math.PI * 2);
-    ctx.fill();
+  // ASCII particle trail
+  ctx.font = `${Math.round(sz * 0.5)}px "Fira Code", monospace`;
+  ctx.shadowBlur = 0;
+  for (let i = 1; i <= 4; i++) {
+    const tx = x - sz * i * 0.5;
+    const ty = y + (i % 2 === 0 ? -2 : 2);
+    ctx.fillStyle = `rgba(100,40,160,${0.4 - i * 0.08})`;
+    ctx.fillText('·', tx, ty);
   }
+  ctx.restore();
 }
 
 // ── Unified draw dispatcher ─────────────────────────────────────────────

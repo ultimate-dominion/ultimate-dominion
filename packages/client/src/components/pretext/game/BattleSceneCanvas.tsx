@@ -630,16 +630,16 @@ export const BattleSceneCanvas = forwardRef<
       const vigGrd = ctx.createLinearGradient(
         0,
         0,
-        w * (playerTpl ? 0.08 : 0.3),
+        w * (playerTpl ? 0.06 : 0.15),
         0,
       );
       vigGrd.addColorStop(
         0,
-        playerTpl ? 'rgba(10,10,8,0.4)' : 'rgba(10,10,8,0.7)',
+        playerTpl ? 'rgba(10,10,8,0.2)' : 'rgba(10,10,8,0.4)',
       );
       vigGrd.addColorStop(1, 'rgba(10,10,8,0)');
       ctx.fillStyle = vigGrd;
-      ctx.fillRect(0, 0, w * (playerTpl ? 0.08 : 0.3), h);
+      ctx.fillRect(0, 0, w * (playerTpl ? 0.06 : 0.15), h);
 
       // ── HUD: Names ─────────────────────────────────────────────────
 
