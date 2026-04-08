@@ -361,5 +361,115 @@
     "meshTaskId": "019d6e3f-9304-7810-a1eb-763f2c500c65",
     "prompt": "metal plate armor breastplate, riveted steel plates, heavy and protective, Padded Armor, Layered cloth packed with cave straw. Crude but honest protection., functional but plain, slight wear marks, simple construction, bright steel-white with subtle gold trim, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
     "timestamp": "2026-04-08T18:03:09.195Z"
+  },
+  {
+    "slug": "leather-jerkin",
+    "name": "Leather Jerkin",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e46-ac3e-7cd4-89a1-de88cf81572f",
+    "prompt": "leather armor vest or jerkin, stitched panels, buckles and straps, Leather Jerkin, Cut from something tougher than cow. The stitching holds., functional but plain, slight wear marks, simple construction, warm brown-amber tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T18:14:54.525Z"
+  },
+  {
+    "slug": "apprentice-robes",
+    "name": "Apprentice Robes",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e53-f5c2-7fb1-a3e3-da9344268eb1",
+    "prompt": "cloth robe or vestments, flowing fabric, hooded or collared, Apprentice Robes, Faded blue with a singed hem. The last wearer learned something the hard way., functional but plain, slight wear marks, simple construction, faint blue-grey mystical tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T18:26:49.234Z"
+  },
+  {
+    "slug": "studded-leather",
+    "name": "Studded Leather",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e5b-df1c-7a7b-aef1-7f8beb719f28",
+    "prompt": "metal plate armor breastplate, riveted steel plates, heavy and protective, Studded Leather, Iron studs hammered into boiled hide. Cave-made, but sturdy., functional but plain, slight wear marks, simple construction, bright steel-white with subtle gold trim, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T18:35:59.069Z"
+  },
+  {
+    "slug": "scout-armor",
+    "name": "Scout Armor",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e66-dcc2-7522-ad0c-564d5edcae2a",
+    "prompt": "leather armor vest or jerkin, stitched panels, buckles and straps, Scout Armor, Light enough to run in. That matters down here., functional but plain, slight wear marks, simple construction, warm brown-amber tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T18:49:05.604Z"
+  },
+  {
+    "slug": "acolyte-vestments",
+    "name": "Acolyte Vestments",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e71-ff41-786c-bcda-9ee7ad319b49",
+    "prompt": "cloth robe or vestments, flowing fabric, hooded or collared, Acolyte Vestments, White once. The prayer stitched into the collar is to a god that doesn't answer., functional but plain, slight wear marks, simple construction, faint blue-grey mystical tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T18:58:22.752Z"
+  },
+  {
+    "slug": "etched-chainmail",
+    "name": "Etched Chainmail",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e7c-22bd-79b7-ad98-8afefb9ed461",
+    "prompt": "metal plate armor breastplate, riveted steel plates, heavy and protective, Etched Chainmail, Heavy and well-kept. Whoever wore it before knew what they were doing., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, bright steel-white with subtle gold trim, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T19:08:19.997Z"
+  },
+  {
+    "slug": "ranger-leathers",
+    "name": "Ranger Leathers",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e84-fefb-7e6a-9403-f41dcdbad36e",
+    "prompt": "leather armor vest or jerkin, stitched panels, buckles and straps, Ranger Leathers, Supple and dark. Made for someone who expected to be hunted., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, warm brown-amber tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T19:19:06.743Z"
+  },
+  {
+    "slug": "mage-robes",
+    "name": "Mage Robes",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e8b-d429-702c-b1f5-835f6cdaf32b",
+    "prompt": "cloth robe or vestments, flowing fabric, hooded or collared, Mage Robes, The fabric hums faintly. You can feel it when the cave goes quiet., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, faint blue-grey mystical tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T19:25:20.150Z"
+  },
+  {
+    "slug": "spider-silk-wraps",
+    "name": "Spider Silk Wraps",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e92-cb1c-729e-89f7-718fd00f42c8",
+    "prompt": "leather armor vest or jerkin, stitched panels, buckles and straps, Spider Silk Wraps, Impossibly light. The silk doesn't tear — you have to cut it., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, warm brown-amber tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T19:36:07.559Z"
+  },
+  {
+    "slug": "carved-stone-plate",
+    "name": "Carved Stone Plate",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e94-c3a7-735d-aaa4-4c5176855596",
+    "prompt": "metal plate armor breastplate, riveted steel plates, heavy and protective, Carved Stone Plate, Carved from the giant's own armor. It cracked when he fell. Still heavier than anything you've lifted., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, bright steel-white with subtle gold trim, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T19:38:00.735Z"
   }
 ]

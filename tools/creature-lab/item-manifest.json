@@ -85,7 +85,7 @@
   },
   "hunting-bow": {
     "name": "Hunting Bow",
-    "file": null,
+    "file": "hunting-bow.glb",
     "category": "weapons",
     "subtype": "bow",
     "rarity": 1,
@@ -102,7 +102,7 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "apprentice-staff": {
     "name": "Apprentice Staff",
@@ -505,7 +505,7 @@
   },
   "phasefang": {
     "name": "Phasefang",
-    "file": null,
+    "file": "phasefang.glb",
     "category": "weapons",
     "subtype": "dagger",
     "rarity": 4,
@@ -522,7 +522,7 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "drakescale-staff": {
     "name": "Drakescale Staff",
@@ -547,7 +547,7 @@
   },
   "tattered-cloth": {
     "name": "Tattered Cloth",
-    "file": null,
+    "file": "tattered-cloth.glb",
     "category": "armor",
     "subtype": "cloth",
     "rarity": 0,
@@ -564,11 +564,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "worn-leather-vest": {
     "name": "Worn Leather Vest",
-    "file": null,
+    "file": "worn-leather-vest.glb",
     "category": "armor",
     "subtype": "leather",
     "rarity": 0,
@@ -585,11 +585,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "rusty-chainmail": {
     "name": "Rusty Chainmail",
-    "file": null,
+    "file": "rusty-chainmail.glb",
     "category": "armor",
     "subtype": "plate",
     "rarity": 0,
@@ -606,11 +606,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "padded-armor": {
     "name": "Padded Armor",
-    "file": null,
+    "file": "padded-armor.glb",
     "category": "armor",
     "subtype": "plate",
     "rarity": 1,
@@ -627,11 +627,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "leather-jerkin": {
     "name": "Leather Jerkin",
-    "file": null,
+    "file": "leather-jerkin.glb",
     "category": "armor",
     "subtype": "leather",
     "rarity": 1,
@@ -648,11 +648,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "apprentice-robes": {
     "name": "Apprentice Robes",
-    "file": null,
+    "file": "apprentice-robes.glb",
     "category": "armor",
     "subtype": "cloth",
     "rarity": 1,
@@ -669,11 +669,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "studded-leather": {
     "name": "Studded Leather",
-    "file": null,
+    "file": "studded-leather.glb",
     "category": "armor",
     "subtype": "plate",
     "rarity": 1,
@@ -690,11 +690,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "scout-armor": {
     "name": "Scout Armor",
-    "file": null,
+    "file": "scout-armor.glb",
     "category": "armor",
     "subtype": "leather",
     "rarity": 1,
@@ -711,11 +711,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "acolyte-vestments": {
     "name": "Acolyte Vestments",
-    "file": null,
+    "file": "acolyte-vestments.glb",
     "category": "armor",
     "subtype": "cloth",
     "rarity": 1,
@@ -732,11 +732,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "etched-chainmail": {
     "name": "Etched Chainmail",
-    "file": null,
+    "file": "etched-chainmail.glb",
     "category": "armor",
     "subtype": "plate",
     "rarity": 2,
@@ -753,11 +753,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "ranger-leathers": {
     "name": "Ranger Leathers",
-    "file": null,
+    "file": "ranger-leathers.glb",
     "category": "armor",
     "subtype": "leather",
     "rarity": 2,
@@ -774,11 +774,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "mage-robes": {
     "name": "Mage Robes",
-    "file": null,
+    "file": "mage-robes.glb",
     "category": "armor",
     "subtype": "cloth",
     "rarity": 2,
@@ -795,11 +795,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "spider-silk-wraps": {
     "name": "Spider Silk Wraps",
-    "file": null,
+    "file": "spider-silk-wraps.glb",
     "category": "armor",
     "subtype": "leather",
     "rarity": 2,
@@ -816,11 +816,11 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "carved-stone-plate": {
     "name": "Carved Stone Plate",
-    "file": null,
+    "file": "carved-stone-plate.glb",
     "category": "armor",
     "subtype": "plate",
     "rarity": 3,
@@ -837,7 +837,7 @@
       0
     ],
     "scale": 1,
-    "generated": false
+    "generated": true
   },
   "stalkers-vest": {
     "name": "Stalker's Vest",
