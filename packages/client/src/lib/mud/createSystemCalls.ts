@@ -64,7 +64,6 @@ async function requestEmergencyFunding(
   const identityToken = isEmbeddedFunding
     ? await getEmbeddedIdentityToken?.() ?? null
     : null;
-  if (isEmbeddedFunding && !identityToken) return false;
 
   try {
     const res = await fetch(`${relayerUrl}/fund`, {

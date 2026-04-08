@@ -152,6 +152,35 @@ describe('authorizeFundingRequest', () => {
     }
   });
 
+  it('accepts tracked embedded emergency refills without a fresh identity token', async () => {
+    const result = await authorizeFundingRequest({
+      address: TEST_EMBEDDED,
+      delegatorAddress: TEST_EMBEDDED,
+      allowTrackedEmbeddedRefill: true,
+      worldAddress: TEST_WORLD,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      authMethod: 'embedded',
+      worldAddress: TEST_WORLD,
+    });
+  });
+
+  it('still rejects first-time embedded funding without an identity token', async () => {
+    const result = await authorizeFundingRequest({
+      address: TEST_EMBEDDED,
+      delegatorAddress: TEST_EMBEDDED,
+      worldAddress: TEST_WORLD,
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.status).toBe(401);
+      expect(result.error).toBe('Missing identity token');
+    }
+  });
+
   it('accepts delegated burner funding only when on-chain delegation exists', async () => {
     mockReadContract.mockResolvedValue(GAME_DELEGATION);
 

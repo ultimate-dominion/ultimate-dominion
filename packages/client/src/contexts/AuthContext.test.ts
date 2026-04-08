@@ -31,47 +31,15 @@ describe('resolveWalletAction', () => {
 });
 
 describe('resolveEmbeddedIdentityToken', () => {
-  it('returns the cached token without refreshing when present', async () => {
-    const refreshUser = async () => {
-      throw new Error('should not refresh');
-    };
-
+  it('returns the cached token when present', async () => {
     await expect(
-      resolveEmbeddedIdentityToken(() => 'cached-token', refreshUser),
+      resolveEmbeddedIdentityToken(() => 'cached-token'),
     ).resolves.toBe('cached-token');
   });
 
-  it('refreshes and returns the updated token when the cached token is missing', async () => {
-    let token: string | null = null;
-    const refreshUser = async () => {
-      token = 'refreshed-token';
-    };
-
+  it('returns null when no cached token exists', async () => {
     await expect(
-      resolveEmbeddedIdentityToken(() => token, refreshUser),
-    ).resolves.toBe('refreshed-token');
-  });
-
-  it('waits for a delayed token update after refresh', async () => {
-    let token: string | null = null;
-    const refreshUser = async () => {};
-    const waitForToken = async () => {
-      token = 'delayed-token';
-      return token;
-    };
-
-    await expect(
-      resolveEmbeddedIdentityToken(() => token, refreshUser, waitForToken),
-    ).resolves.toBe('delayed-token');
-  });
-
-  it('returns null when refresh fails', async () => {
-    const refreshUser = async () => {
-      throw new Error('refresh failed');
-    };
-
-    await expect(
-      resolveEmbeddedIdentityToken(() => null, refreshUser),
+      resolveEmbeddedIdentityToken(() => null),
     ).resolves.toBeNull();
   });
 });

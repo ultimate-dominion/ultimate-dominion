@@ -181,15 +181,25 @@ async function hasValidDelegation(
 export async function authorizeFundingRequest(params: {
   address: Address;
   delegatorAddress: Address;
+  allowTrackedEmbeddedRefill?: boolean;
   identityToken?: string | null;
   worldAddress?: string;
 }): Promise<FundingAuthResult> {
-  const { address, delegatorAddress, identityToken, worldAddress: requestedWorldAddress } = params;
+  const {
+    address,
+    delegatorAddress,
+    allowTrackedEmbeddedRefill,
+    identityToken,
+    worldAddress: requestedWorldAddress,
+  } = params;
   const resolvedWorld = resolveRequestedWorldAddress(requestedWorldAddress);
   if (!resolvedWorld.ok) return resolvedWorld;
 
   if (normalizeAddress(address) === normalizeAddress(delegatorAddress)) {
     if (!identityToken) {
+      if (allowTrackedEmbeddedRefill) {
+        return { ok: true, authMethod: 'embedded', worldAddress: resolvedWorld.worldAddress };
+      }
       return { ok: false, status: 401, error: 'Missing identity token' };
     }
 
