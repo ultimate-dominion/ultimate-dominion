@@ -1,0 +1,905 @@
+{
+  "broken-sword": {
+    "name": "Broken Sword",
+    "file": null,
+    "category": "weapons",
+    "subtype": "sword",
+    "rarity": 0,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:broken_sword",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "worn-shortbow": {
+    "name": "Worn Shortbow",
+    "file": null,
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 0,
+    "socket": "hand_L.socket",
+    "metadataUri": "weapon:worn_shortbow",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "cracked-wand": {
+    "name": "Cracked Wand",
+    "file": null,
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 0,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:cracked_wand",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "iron-axe": {
+    "name": "Iron Axe",
+    "file": null,
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:iron_axe",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "hunting-bow": {
+    "name": "Hunting Bow",
+    "file": null,
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 1,
+    "socket": "hand_L.socket",
+    "metadataUri": "weapon:hunting_bow",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "apprentice-staff": {
+    "name": "Apprentice Staff",
+    "file": null,
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:apprentice_staff",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "light-mace": {
+    "name": "Light Mace",
+    "file": null,
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:light_mace",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "shortbow": {
+    "name": "Shortbow",
+    "file": null,
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 1,
+    "socket": "hand_L.socket",
+    "metadataUri": "weapon:shortbow",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "channeling-rod": {
+    "name": "Channeling Rod",
+    "file": null,
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:channeling_rod",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "notched-blade": {
+    "name": "Notched Blade",
+    "file": null,
+    "category": "weapons",
+    "subtype": "sword",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:notched_blade",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "warhammer": {
+    "name": "Warhammer",
+    "file": null,
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:warhammer",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "longbow": {
+    "name": "Longbow",
+    "file": null,
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 2,
+    "socket": "hand_L.socket",
+    "metadataUri": "weapon:longbow",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "mage-staff": {
+    "name": "Mage Staff",
+    "file": null,
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:mage_staff",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "dire-rat-fang": {
+    "name": "Dire Rat Fang",
+    "file": null,
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:dire_rat_fang",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "sporecap-wand": {
+    "name": "Sporecap Wand",
+    "file": null,
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:sporecap_wand",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "notched-cleaver": {
+    "name": "Notched Cleaver",
+    "file": null,
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:notched_cleaver",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "crystal-shard": {
+    "name": "Crystal Shard",
+    "file": null,
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:crystal_shard",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "gnarled-cudgel": {
+    "name": "Gnarled Cudgel",
+    "file": null,
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:gnarled_cudgel",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "webspinner-bow": {
+    "name": "Webspinner Bow",
+    "file": null,
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 2,
+    "socket": "hand_L.socket",
+    "metadataUri": "weapon:webspinner_bow",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "bone-staff": {
+    "name": "Bone Staff",
+    "file": null,
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:bone_staff",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "stone-maul": {
+    "name": "Stone Maul",
+    "file": null,
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:stone_maul",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "darkwood-bow": {
+    "name": "Darkwood Bow",
+    "file": null,
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 3,
+    "socket": "hand_L.socket",
+    "metadataUri": "weapon:darkwood_bow",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "smoldering-rod": {
+    "name": "Smoldering Rod",
+    "file": null,
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:smoldering_rod",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "trollhide-cleaver": {
+    "name": "Trollhide Cleaver",
+    "file": null,
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:trollhide_cleaver",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "phasefang": {
+    "name": "Phasefang",
+    "file": null,
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:phasefang",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "drakescale-staff": {
+    "name": "Drakescale Staff",
+    "file": null,
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "metadataUri": "weapon:drakescale_staff",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "tattered-cloth": {
+    "name": "Tattered Cloth",
+    "file": null,
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "metadataUri": "armor:tattered_cloth",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "worn-leather-vest": {
+    "name": "Worn Leather Vest",
+    "file": null,
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "metadataUri": "armor:worn_leather_vest",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "rusty-chainmail": {
+    "name": "Rusty Chainmail",
+    "file": null,
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "metadataUri": "armor:rusty_chainmail",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "padded-armor": {
+    "name": "Padded Armor",
+    "file": null,
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "metadataUri": "armor:padded_armor",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "leather-jerkin": {
+    "name": "Leather Jerkin",
+    "file": null,
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "metadataUri": "armor:leather_jerkin",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "apprentice-robes": {
+    "name": "Apprentice Robes",
+    "file": null,
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "metadataUri": "armor:apprentice_robes",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "studded-leather": {
+    "name": "Studded Leather",
+    "file": null,
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "metadataUri": "armor:studded_leather",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "scout-armor": {
+    "name": "Scout Armor",
+    "file": null,
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "metadataUri": "armor:scout_armor",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "acolyte-vestments": {
+    "name": "Acolyte Vestments",
+    "file": null,
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "metadataUri": "armor:acolyte_vestments",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "etched-chainmail": {
+    "name": "Etched Chainmail",
+    "file": null,
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "metadataUri": "armor:etched_chainmail",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "ranger-leathers": {
+    "name": "Ranger Leathers",
+    "file": null,
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "metadataUri": "armor:ranger_leathers",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "mage-robes": {
+    "name": "Mage Robes",
+    "file": null,
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "metadataUri": "armor:mage_robes",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "spider-silk-wraps": {
+    "name": "Spider Silk Wraps",
+    "file": null,
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 2,
+    "socket": "chest.socket",
+    "metadataUri": "armor:spider_silk_wraps",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "carved-stone-plate": {
+    "name": "Carved Stone Plate",
+    "file": null,
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "metadataUri": "armor:carved_stone_plate",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "stalkers-vest": {
+    "name": "Stalker's Vest",
+    "file": null,
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "metadataUri": "armor:stalkers_cloak",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "scorched-scale-vest": {
+    "name": "Scorched Scale Vest",
+    "file": null,
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "metadataUri": "armor:scorched_scale_vest",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  },
+  "drakes-cowl": {
+    "name": "Drake's Cowl",
+    "file": null,
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "metadataUri": "armor:drakes_cowl",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1,
+    "generated": false
+  }
+}
