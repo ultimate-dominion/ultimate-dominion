@@ -27,7 +27,7 @@ type EmbeddedLinkedAccount = {
 };
 
 type PrivyIdentityPayload = JWTPayload & {
-  linked_accounts?: string;
+  linked_accounts?: string | EmbeddedLinkedAccount[];
 };
 
 type AuthFailure = {
@@ -79,6 +79,10 @@ function resolveRequestedWorldAddress(requestedWorldAddress?: string): FundingAu
 function parsePrivyLinkedAccounts(payload: PrivyIdentityPayload): EmbeddedLinkedAccount[] {
   if (!payload.linked_accounts) return [];
 
+  if (Array.isArray(payload.linked_accounts)) {
+    return payload.linked_accounts as EmbeddedLinkedAccount[];
+  }
+
   try {
     const parsed = JSON.parse(payload.linked_accounts) as unknown;
     return Array.isArray(parsed) ? parsed as EmbeddedLinkedAccount[] : [];
@@ -93,10 +97,8 @@ function hasEmbeddedWalletClaim(payload: PrivyIdentityPayload, expectedAddress: 
 
   return linkedAccounts.some((account) =>
     account.type === 'wallet' &&
-    account.chain_type === 'ethereum' &&
-    normalizeAddress(account.address || '0x0000000000000000000000000000000000000000') === normalizedExpected &&
-    account.wallet_client_type === 'privy' &&
-    account.connector_type === 'embedded');
+    (!account.chain_type || account.chain_type === 'ethereum') &&
+    normalizeAddress(account.address || '0x0000000000000000000000000000000000000000') === normalizedExpected);
 }
 
 async function getPrivyVerificationKey(): Promise<Awaited<ReturnType<typeof importJWK>>> {

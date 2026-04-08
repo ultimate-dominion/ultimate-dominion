@@ -35,13 +35,16 @@ const mockedConfig = config as {
   worldAddress: Address;
 };
 
-async function createIdentityToken(walletAddress: Address): Promise<string> {
+async function createIdentityToken(
+  walletAddress: Address,
+  linkedAccountsOverride?: unknown,
+): Promise<string> {
   const { privateKey, publicKey } = await generateKeyPair('ES256');
   mockedConfig.privyVerificationKey = JSON.stringify(await exportJWK(publicKey));
   _resetPrivyKeyCacheForTesting();
 
   return new SignJWT({
-    linked_accounts: JSON.stringify([
+    linked_accounts: JSON.stringify(linkedAccountsOverride ?? [
       {
         address: walletAddress,
         chain_type: 'ethereum',
@@ -71,6 +74,29 @@ describe('authorizeFundingRequest', () => {
 
   it('accepts embedded wallet funding with a valid Privy identity token', async () => {
     const identityToken = await createIdentityToken(TEST_EMBEDDED);
+
+    const result = await authorizeFundingRequest({
+      address: TEST_EMBEDDED,
+      delegatorAddress: TEST_EMBEDDED,
+      identityToken,
+      worldAddress: TEST_WORLD,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      authMethod: 'embedded',
+      worldAddress: TEST_WORLD,
+    });
+  });
+
+  it('accepts embedded wallet funding when Privy omits connector metadata', async () => {
+    const identityToken = await createIdentityToken(TEST_EMBEDDED, [
+      {
+        address: TEST_EMBEDDED,
+        chain_type: 'ethereum',
+        type: 'wallet',
+      },
+    ]);
 
     const result = await authorizeFundingRequest({
       address: TEST_EMBEDDED,
