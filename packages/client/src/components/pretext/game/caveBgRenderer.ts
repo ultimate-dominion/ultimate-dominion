@@ -85,8 +85,72 @@ function pickColor(rand: () => number): CaveColor {
   return rand() < 0.8 ? pick(STONE_COLORS, rand) : pick(MOSS_COLORS, rand);
 }
 
+// ── Structure builders ─────────────────────────────────────────────────
+
+type Formation = {
+  col: number;     // column position
+  baseWidth: number; // width at the base (ceiling/floor edge)
+  tipRow: number;   // how far the tip extends into the cave (row index)
+  baseRow: number;  // where it starts (0 for stalactites, rows-1 for stalagmites)
+};
+
+/**
+ * Build connected stalactite/stalagmite formations.
+ * Each formation is a tapered column that narrows to a point.
+ */
+function buildFormations(
+  cols: number,
+  rows: number,
+  fromTop: boolean,
+  count: number,
+  rand: () => number,
+): Formation[] {
+  const formations: Formation[] = [];
+  for (let i = 0; i < count; i++) {
+    const col = Math.floor(rand() * cols);
+    const baseWidth = 1 + Math.floor(rand() * 3); // 1-3 cells wide at base
+    const maxExtent = Math.floor(rows * (0.15 + rand() * 0.20)); // 15-35% of height
+    const tipRow = fromTop ? maxExtent : rows - 1 - maxExtent;
+    const baseRow = fromTop ? 0 : rows - 1;
+    formations.push({ col, baseWidth, tipRow, baseRow });
+  }
+  return formations;
+}
+
+/**
+ * Check if a cell (row, col) falls inside any formation and return
+ * how deep into the formation it is (0 = base/dense, 1 = tip/sparse).
+ */
+function getFormationDensity(
+  row: number,
+  col: number,
+  formations: Formation[],
+  fromTop: boolean,
+): number {
+  for (const f of formations) {
+    const length = Math.abs(f.tipRow - f.baseRow);
+    if (length === 0) continue;
+
+    const progress = fromTop
+      ? row / length           // 0 at ceiling, 1 at tip
+      : (f.baseRow - row) / length; // 0 at floor, 1 at tip
+
+    if (progress < 0 || progress > 1) continue;
+
+    // Width tapers from baseWidth at base to 1 at tip
+    const widthAtRow = f.baseWidth * (1 - progress * 0.8);
+    const halfW = widthAtRow / 2;
+    if (col >= f.col - halfW && col <= f.col + halfW) {
+      return progress; // 0 = dense base, 1 = thin tip
+    }
+  }
+  return -1; // not in any formation
+}
+
 /**
  * Generate a grid of cave background cells for the given canvas dimensions.
+ * Creates connected rock structures: stalactites from ceiling, stalagmites
+ * from floor, rough wall masses on sides, and sparse interior debris.
  *
  * @param w - Canvas width in px
  * @param h - Canvas height in px
@@ -104,87 +168,163 @@ export function generateCaveCells(
   const rows = Math.ceil(h / cellSize);
   const cells: CaveBgCell[] = [];
 
+  // Pre-generate formation structures
+  const stalCount = 4 + Math.floor(rand() * 5); // 4-8 stalactites
+  const stagCount = 3 + Math.floor(rand() * 4); // 3-6 stalagmites
+  const stalactites = buildFormations(cols, rows, true, stalCount, rand);
+  const stalagmites = buildFormations(cols, rows, false, stagCount, rand);
+
+  // Wall rock profiles — irregular depth from each side
+  const leftWall = new Float32Array(rows);
+  const rightWall = new Float32Array(rows);
+  for (let r = 0; r < rows; r++) {
+    // Layered sine waves create irregular but connected wall shapes
+    leftWall[r] = 2 + Math.sin(r * 0.3 + seed) * 1.5
+                    + Math.sin(r * 0.7 + seed * 3) * 1.0
+                    + Math.sin(r * 0.13 + seed * 7) * 2.0;
+    rightWall[r] = 2 + Math.sin(r * 0.25 + seed * 2) * 1.5
+                     + Math.sin(r * 0.6 + seed * 5) * 1.0
+                     + Math.sin(r * 0.11 + seed * 11) * 2.0;
+    leftWall[r] = Math.max(1, leftWall[r]);
+    rightWall[r] = Math.max(1, rightWall[r]);
+  }
+
+  // Ceiling and floor profiles — irregular rock mass
+  const ceiling = new Float32Array(cols);
+  const floor = new Float32Array(cols);
+  for (let c = 0; c < cols; c++) {
+    ceiling[c] = 1.5 + Math.sin(c * 0.2 + seed * 4) * 1.0
+                      + Math.sin(c * 0.5 + seed * 6) * 0.8;
+    floor[c] = 1.5 + Math.sin(c * 0.22 + seed * 8) * 1.0
+                    + Math.sin(c * 0.45 + seed * 10) * 0.8;
+    ceiling[c] = Math.max(1, ceiling[c]);
+    floor[c] = Math.max(1, floor[c]);
+  }
+
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const x = col * cellSize + cellSize / 2;
       const y = row * cellSize + cellSize / 2;
+      const rowT = row / (rows - 1 || 1);
 
-      const rowT = row / (rows - 1 || 1); // 0 = top, 1 = bottom
-      const colT = col / (cols - 1 || 1); // 0 = left, 1 = right
+      // ── Check formations ───────────────────────────────────────────
 
-      // ── Edge proximity (0 = center, 1 = edge) ──────────────────────
-      const edgeX = Math.min(colT, 1 - colT) * 2; // 0 at edges, 1 at center
-      const edgeY = Math.min(rowT, 1 - rowT) * 2;
-      const distFromEdge = Math.min(edgeX, edgeY);
-
-      // ── Stalactites (top) ──────────────────────────────────────────
-      if (rowT < 0.35) {
-        // Probability decreases with distance from ceiling
-        const stalProb = (1 - rowT / 0.35) * 0.18;
-        // Clusters: sine-based density variation across columns
-        const clusterMod = Math.sin(col * 0.7 + seed) * 0.5 + 0.5;
-        if (rand() < stalProb * (0.5 + clusterMod * 0.5)) {
-          const color = pickColor(rand);
-          const isTip = rowT > 0.20;
+      // Stalactite
+      const stalDensity = getFormationDensity(row, col, stalactites, true);
+      if (stalDensity >= 0) {
+        const color = pickColor(rand);
+        const isTip = stalDensity > 0.7;
+        const isMid = stalDensity > 0.4;
+        const char = isTip ? pick(SPIKE_CHARS, rand)
+                   : isMid ? pick(TEXTURE_CHARS, rand)
+                   : pick(ROCK_CHARS, rand);
+        // Dense at base, thinner at tip. Add noise for natural look.
+        const noise = rand() * 0.05;
+        const fillProb = 1.0 - stalDensity * 0.5; // 100% fill at base, 50% at tip
+        if (rand() < fillProb) {
           cells.push({
-            char: isTip ? pick(SPIKE_CHARS, rand) : pick(ROCK_CHARS, rand),
-            x,
-            y,
+            char,
+            x, y,
             ...color,
-            alpha: 0.12 + (1 - rowT / 0.35) * 0.14,
-            flicker: rand() < 0.03,
+            alpha: 0.18 + (1 - stalDensity) * 0.12 + noise,
+            flicker: isTip && rand() < 0.06,
           });
-          continue;
         }
+        continue;
       }
 
-      // ── Stalagmites (bottom) ───────────────────────────────────────
-      if (rowT > 0.70) {
-        const stagProb = ((rowT - 0.70) / 0.30) * 0.15;
-        const clusterMod = Math.sin(col * 0.9 + seed * 2) * 0.5 + 0.5;
-        if (rand() < stagProb * (0.5 + clusterMod * 0.5)) {
-          const color = pickColor(rand);
-          const isTip = rowT < 0.82;
+      // Stalagmite
+      const stagDensity = getFormationDensity(row, col, stalagmites, false);
+      if (stagDensity >= 0) {
+        const color = pickColor(rand);
+        const isTip = stagDensity > 0.7;
+        const isMid = stagDensity > 0.4;
+        const char = isTip ? pick(SPIKE_CHARS, rand)
+                   : isMid ? pick(TEXTURE_CHARS, rand)
+                   : pick(ROCK_CHARS, rand);
+        const noise = rand() * 0.05;
+        const fillProb = 1.0 - stagDensity * 0.5;
+        if (rand() < fillProb) {
           cells.push({
-            char: isTip ? pick(SPIKE_CHARS, rand) : pick(ROCK_CHARS, rand),
-            x,
-            y,
+            char,
+            x, y,
             ...color,
-            alpha: 0.12 + ((rowT - 0.70) / 0.30) * 0.14,
-            flicker: rand() < 0.02,
+            alpha: 0.18 + (1 - stagDensity) * 0.12 + noise,
+            flicker: isTip && rand() < 0.06,
           });
-          continue;
         }
+        continue;
       }
 
-      // ── Wall edges (left and right) ────────────────────────────────
-      if (edgeX < 0.25) {
-        const wallProb = (1 - edgeX / 0.25) * 0.12;
-        if (rand() < wallProb) {
-          const color = pickColor(rand);
-          cells.push({
-            char: pick(TEXTURE_CHARS, rand),
-            x,
-            y,
-            ...color,
-            alpha: 0.10 + (1 - edgeX / 0.25) * 0.12,
-            flicker: rand() < 0.02,
-          });
-          continue;
-        }
+      // ── Ceiling rock mass ──────────────────────────────────────────
+      if (row < ceiling[col]) {
+        const depth = 1 - row / ceiling[col]; // 1 at top, 0 at edge
+        const color = pickColor(rand);
+        cells.push({
+          char: depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand),
+          x, y,
+          ...color,
+          alpha: 0.15 + depth * 0.15,
+          flicker: rand() < 0.02,
+        });
+        continue;
+      }
+
+      // ── Floor rock mass ────────────────────────────────────────────
+      if (row > rows - 1 - floor[col]) {
+        const depth = 1 - (rows - 1 - row) / floor[col];
+        const color = pickColor(rand);
+        cells.push({
+          char: depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand),
+          x, y,
+          ...color,
+          alpha: 0.15 + depth * 0.15,
+          flicker: rand() < 0.02,
+        });
+        continue;
+      }
+
+      // ── Left wall rock mass ────────────────────────────────────────
+      if (col < leftWall[row]) {
+        const depth = 1 - col / leftWall[row];
+        const color = pickColor(rand);
+        cells.push({
+          char: depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand),
+          x, y,
+          ...color,
+          alpha: 0.12 + depth * 0.16,
+          flicker: rand() < 0.02,
+        });
+        continue;
+      }
+
+      // ── Right wall rock mass ───────────────────────────────────────
+      if (col > cols - 1 - rightWall[row]) {
+        const depth = 1 - (cols - 1 - col) / rightWall[row];
+        const color = pickColor(rand);
+        cells.push({
+          char: depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand),
+          x, y,
+          ...color,
+          alpha: 0.12 + depth * 0.16,
+          flicker: rand() < 0.02,
+        });
+        continue;
       }
 
       // ── Scattered interior debris ──────────────────────────────────
       // Very sparse in the center so as not to compete with the creature
-      const interiorProb = 0.008 + (1 - distFromEdge) * 0.012;
+      const edgeX = Math.min(col / (cols - 1 || 1), 1 - col / (cols - 1 || 1)) * 2;
+      const edgeY = Math.min(rowT, 1 - rowT) * 2;
+      const distFromEdge = Math.min(edgeX, edgeY);
+      const interiorProb = 0.006 + (1 - distFromEdge) * 0.010;
       if (rand() < interiorProb) {
         const color = pickColor(rand);
         cells.push({
           char: pick(SCATTER_CHARS, rand),
-          x,
-          y,
+          x, y,
           ...color,
-          alpha: 0.08 + rand() * 0.08,
+          alpha: 0.06 + rand() * 0.06,
           flicker: rand() < 0.04,
         });
       }
