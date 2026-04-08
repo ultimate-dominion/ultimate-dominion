@@ -292,11 +292,20 @@ export const TileDetailsPanel = (): JSX.Element => {
     return 'melee' as const;
   }, [equippedSpells, equippedWeapons]);
 
+  const weaponNameForItem = useCallback((itemId: string) => {
+    const spell = equippedSpells.find(s => s.tokenId === itemId || s.itemId === itemId);
+    if (spell) return spell.name;
+    const weapon = equippedWeapons.find(w => w.tokenId === itemId || w.itemId === itemId);
+    if (weapon) return weapon.name;
+    return undefined;
+  }, [equippedSpells, equippedWeapons]);
+
   useBattleSceneSignals({
     visibleOutcomes,
     characterId: character?.id,
     sceneRef: battleSceneRef,
     weaponTypeForItem,
+    weaponNameForItem,
     opponentName: opponent?.name ?? 'the enemy',
   });
 

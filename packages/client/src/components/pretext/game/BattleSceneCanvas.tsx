@@ -170,6 +170,7 @@ export type BattleSceneProps = {
 
 type ActiveAttack = {
   weaponType: WeaponAnimType;
+  weaponName?: string;
   startTime: number;
   duration: number;
   damage: number;
@@ -388,6 +389,7 @@ export const BattleSceneCanvas = forwardRef<
 
     state.attacks.push({
       weaponType: signal.weaponType,
+      weaponName: signal.weaponName,
       startTime: performance.now(),
       duration,
       damage: signal.damage,
@@ -434,6 +436,7 @@ export const BattleSceneCanvas = forwardRef<
 
       let activeProjectile: {
         weaponType: WeaponAnimType;
+        weaponName?: string;
         progress: number;
         isPlayerAttack: boolean;
       } | null = null;
@@ -448,6 +451,7 @@ export const BattleSceneCanvas = forwardRef<
           if (!activeProjectile) {
             activeProjectile = {
               weaponType: atk.weaponType,
+              weaponName: atk.weaponName,
               progress,
               isPlayerAttack: atk.isPlayerAttack,
             };
@@ -566,7 +570,7 @@ export const BattleSceneCanvas = forwardRef<
       // ── Render weapon projectile ────────────────────────────────────
 
       if (activeProjectile) {
-        const { weaponType, progress, isPlayerAttack } = activeProjectile;
+        const { weaponType, weaponName, progress, isPlayerAttack } = activeProjectile;
         const t = easeInQuad(progress);
 
         let startX: number, endX: number, startY: number, endY: number;
@@ -586,7 +590,7 @@ export const BattleSceneCanvas = forwardRef<
 
         const projX = startX + (endX - startX) * t;
         const projY = startY + (endY - startY) * t;
-        drawWeapon(ctx, weaponType, projX, projY, w, h, progress);
+        drawWeapon(ctx, weaponType, projX, projY, w, h, progress, weaponName);
       }
 
       // ── Render impact effects ───────────────────────────────────────

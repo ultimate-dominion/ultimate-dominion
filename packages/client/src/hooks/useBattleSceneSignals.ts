@@ -9,6 +9,8 @@ import { buildBattleSceneSignal } from './buildBattleSceneSignal';
 
 export type AttackSignal = {
   weaponType: WeaponAnimType;
+  /** Item name from items.json (e.g. "Iron Axe"). Used to load 3D projectile model. */
+  weaponName?: string;
   damage: number;
   isCrit: boolean;
   isPlayerAttack: boolean;
@@ -52,12 +54,15 @@ export function useBattleSceneSignals({
   characterId,
   sceneRef,
   weaponTypeForItem,
+  weaponNameForItem,
   opponentName,
 }: {
   visibleOutcomes: AttackOutcomeType[];
   characterId: string | undefined;
   sceneRef: React.RefObject<BattleSceneHandle | null>;
   weaponTypeForItem: (itemId: string) => WeaponAnimType;
+  /** Returns item name for 3D projectile rendering. Optional — 2D fallback if absent. */
+  weaponNameForItem?: (itemId: string) => string | undefined;
   opponentName: string;
 }): void {
   const processedCountRef = useRef(0);
@@ -82,8 +87,9 @@ export function useBattleSceneSignals({
           characterId,
           opponentName,
           weaponTypeForItem,
+          weaponNameForItem,
         }),
       );
     }
-  }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem, opponentName]);
+  }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem, weaponNameForItem, opponentName]);
 }

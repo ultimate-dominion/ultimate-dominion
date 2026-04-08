@@ -17,7 +17,7 @@
 let _sharedRenderer: import('three').WebGLRenderer | null = null;
 let _rendererReady = false;
 
-async function getSharedRenderer(): Promise<import('three').WebGLRenderer> {
+export async function getSharedRenderer(): Promise<import('three').WebGLRenderer> {
   if (_sharedRenderer && _rendererReady) return _sharedRenderer;
 
   console.log('[glbCreatureLoader] creating shared WebGL renderer');

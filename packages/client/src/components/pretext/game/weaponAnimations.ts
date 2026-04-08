@@ -9,6 +9,7 @@
  */
 
 import type { Weapon, Spell, StatRestrictions } from '../../../utils/types';
+import { drawItemProjectile, isItemModelReady, itemSlug, loadItemModel } from './glbItemLoader';
 
 // ── Weapon type classification ──────────────────────────────────────────
 
@@ -174,6 +175,14 @@ const DRAW_FNS: Record<
   spell: drawSpell,
 };
 
+/**
+ * Draw a weapon projectile at (x, y). If a 3D item model is available for
+ * the given itemName, renders it through the ASCII pipeline. Otherwise falls
+ * back to the original 2D canvas drawings.
+ *
+ * @param itemName  Optional weapon name from items.json (e.g. "Iron Axe").
+ *                  When provided, kicks off GLB loading and uses 3D once ready.
+ */
 export function drawWeapon(
   ctx: CanvasRenderingContext2D,
   type: WeaponAnimType,
@@ -182,7 +191,22 @@ export function drawWeapon(
   w: number,
   h: number,
   progress: number,
+  itemName?: string,
 ): void {
+  // Try 3D item model first
+  if (itemName) {
+    const slug = itemSlug(itemName);
+    if (isItemModelReady(slug)) {
+      const size = w * 0.06; // projectile display size proportional to canvas
+      const rotation = type === 'melee' ? progress * Math.PI * 2.5 : 0;
+      if (drawItemProjectile(ctx, slug, x, y, size, rotation)) return;
+    } else {
+      // Kick off load for next time (non-blocking)
+      loadItemModel(slug).catch(() => {});
+    }
+  }
+
+  // 2D fallback
   DRAW_FNS[type](ctx, x, y, w, h, progress);
 }
 
