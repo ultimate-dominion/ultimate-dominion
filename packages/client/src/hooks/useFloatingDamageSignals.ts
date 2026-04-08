@@ -61,47 +61,34 @@ export function useFloatingDamageSignals({
     processedCountRef.current = visibleOutcomes.length;
 
     for (const outcome of newOutcomes) {
+      if (!damageRef.current) break;
+
       const isPlayerAttack =
         outcome.attackerId.toLowerCase() === characterId.toLowerCase();
 
       // Player attacks land on right (monster area), counterattacks land on left (player area)
       const baseX = isPlayerAttack
-        ? containerWidth * (0.6 + Math.random() * 0.2) // 60-80% for monster side
-        : containerWidth * (0.2 + Math.random() * 0.2); // 20-40% for player side
-      const baseY = containerHeight * (0.25 + Math.random() * 0.25); // 25-50% vertically
+        ? containerWidth * (0.6 + Math.random() * 0.2)
+        : containerWidth * (0.2 + Math.random() * 0.2);
+      const baseY = containerHeight * (0.25 + Math.random() * 0.25);
 
       const damagePerHit = outcome.damagePerHit ?? [];
       const crits = outcome.crit ?? [];
-      const hits = outcome.hit ?? [];
       const misses = outcome.miss ?? [];
-      const isComboAttack =
-        outcome.doubleStrike ||
-        Math.max(damagePerHit.length, hits.length, misses.length, 1) > 1;
+      const hitCount = Math.max(damagePerHit.length, misses.length, 1);
+      const totalDamage = damagePerHit.reduce((sum, d) => sum + Number(d), 0);
+      const anyMiss = misses.some(Boolean) && totalDamage === 0;
+      const anyCrit = crits.some(Boolean);
+      const isCombo = hitCount > 1 || outcome.doubleStrike;
 
-      // Spawn a floating number for each hit in the multi-hit array
-      for (let i = 0; i < Math.max(damagePerHit.length, misses.length, 1); i++) {
-        const isMiss = misses[i] === true;
-        const isCrit = crits[i] === true;
-        const isHit = hits[i] === true;
-        const dmg = Number(damagePerHit[i] ?? 0n);
-
-        // Stagger multiple hits slightly
-        const offsetX = i * 12;
-        const delay = i * 120;
-
-        const timeoutId = setTimeout(() => {
-          if (!damageRef.current) return;
-
-          if (isMiss) {
-            damageRef.current.spawn(baseX + offsetX, baseY, 'miss');
-          } else if (isHit || dmg > 0) {
-            const type: DamageType = isCrit
-              ? (isComboAttack ? 'critDouble' : 'crit')
-              : (isComboAttack ? 'double' : 'damage');
-            damageRef.current.spawn(baseX + offsetX, baseY, type, dmg);
-          }
-        }, delay);
-        pendingTimersRef.current.push(timeoutId);
+      // ONE floating number per outcome — total damage, not per-hit
+      if (anyMiss) {
+        damageRef.current.spawn(baseX, baseY, 'miss');
+      } else if (totalDamage > 0) {
+        const type: DamageType = anyCrit
+          ? (isCombo ? 'critDouble' : 'crit')
+          : (isCombo ? 'double' : 'damage');
+        damageRef.current.spawn(baseX, baseY, type, totalDamage, isCombo ? hitCount : undefined);
       }
     }
   }, [visibleOutcomes, characterId, damageRef, containerWidth, containerHeight]);

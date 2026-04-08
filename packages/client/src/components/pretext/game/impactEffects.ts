@@ -84,8 +84,21 @@ export type HitReaction = {
 
 export const HIT_REACTION_IDLE: HitReaction = { offsetX: 0, flash: 0, shake: 0 };
 
-/** Duration of the recoil recovery animation (ms) */
-const RECOIL_DURATION = 500;
+/** Reaction tier → duration (ms) */
+export const REACTION_DURATION: Record<HitReactionTier, number> = {
+  hit: 300,
+  stagger: 400,
+  critical: 500,
+};
+
+export type HitReactionTier = 'hit' | 'stagger' | 'critical';
+
+/** Tier → recoil/flash/shake multipliers */
+const TIER_SCALE: Record<HitReactionTier, { recoil: number; flash: number; shake: number; flashColor: string }> = {
+  hit:      { recoil: 0.03, flash: 0.15, shake: 0.005, flashColor: '#fff' },
+  stagger:  { recoil: 0.05, flash: 0.25, shake: 0.010, flashColor: '#fff' },
+  critical: { recoil: 0.06, flash: 0.30, shake: 0.015, flashColor: '#f44' },
+};
 
 /**
  * Compute hit reaction state from elapsed time since impact.
@@ -93,15 +106,22 @@ const RECOIL_DURATION = 500;
  *
  * @param elapsed ms since impact moment
  * @param w viewport width (for proportional recoil distance)
+ * @param tier reaction intensity tier
  */
-export function computeHitReaction(elapsed: number, w: number): HitReaction {
-  if (elapsed >= RECOIL_DURATION) return HIT_REACTION_IDLE;
+export function computeHitReaction(
+  elapsed: number,
+  w: number,
+  tier: HitReactionTier = 'hit',
+): HitReaction {
+  const duration = REACTION_DURATION[tier];
+  if (elapsed >= duration) return HIT_REACTION_IDLE;
 
-  const p = elapsed / RECOIL_DURATION;
+  const scale = TIER_SCALE[tier];
+  const p = elapsed / duration;
   return {
-    offsetX: w * 0.03 * (1 - easeOutCubic(p)),
-    flash: Math.max(0, 1 - p * 3),
-    shake: (1 - p) * 0.5,
+    offsetX: w * scale.recoil * (1 - easeOutCubic(p)),
+    flash: Math.max(0, scale.flash * (1 - p * 3)),
+    shake: (1 - p) * scale.shake * w,
   };
 }
 

@@ -43,6 +43,7 @@ import {
   easeInQuad,
   HIT_REACTION_IDLE,
   IMPACT_DURATION,
+  REACTION_DURATION,
   type HitReaction,
 } from './impactEffects';
 import { renderMonster, type AnimationState } from './MonsterAsciiRenderer';
@@ -174,6 +175,7 @@ type ActiveAttack = {
   startTime: number;
   duration: number;
   damage: number;
+  hitCount: number;
   isCrit: boolean;
   isCombo: boolean;
   isPlayerAttack: boolean;
@@ -182,7 +184,6 @@ type ActiveAttack = {
   didHit: boolean;
   targetDied: boolean;
   impacted: boolean;
-  callout: AttackSignal['callout'];
 };
 
 type ActiveImpact = {
@@ -196,18 +197,14 @@ type SceneState = {
   impacts: ActiveImpact[];
   hitReaction: HitReaction;
   hitReactionStart: number;
+  /** Hit reaction tier for current recoil */
+  hitReactionTier: 'hit' | 'stagger' | 'critical';
   /** Monster animation state for the renderer */
   monsterAnim: AnimationState | undefined;
   /** Player hit flash timestamp (-1 = idle) */
   playerHitStart: number;
   /** Player attack anim timestamp (-1 = idle) */
   playerAttackStart: number;
-  activeCallout: {
-    title: string;
-    detail: string;
-    tone: AttackSignal['callout']['tone'];
-    startTime: number;
-  } | null;
 };
 
 function createSceneState(): SceneState {
@@ -216,87 +213,14 @@ function createSceneState(): SceneState {
     impacts: [],
     hitReaction: HIT_REACTION_IDLE,
     hitReactionStart: -1,
+    hitReactionTier: 'hit',
     monsterAnim: undefined,
     playerHitStart: -1,
     playerAttackStart: -1,
-    activeCallout: null,
   };
 }
 
-const CALLOUT_LIFETIME_MS = 2800;
-
-function drawSceneCallout(
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  callout: NonNullable<SceneState['activeCallout']>,
-  now: number,
-) {
-  const elapsed = now - callout.startTime;
-  if (elapsed >= CALLOUT_LIFETIME_MS) return;
-
-  const fadeIn = Math.min(1, elapsed / 180);
-  const fadeOut = Math.min(1, (CALLOUT_LIFETIME_MS - elapsed) / 420);
-  const alpha = Math.min(fadeIn, fadeOut);
-  const slide = Math.max(0, 1 - fadeIn) * 12;
-
-  const tone = {
-    player: {
-      border: 'rgba(212,165,74,0.75)',
-      glow: 'rgba(212,165,74,0.18)',
-      title: COLORS.amber,
-    },
-    enemy: {
-      border: 'rgba(184,92,58,0.75)',
-      glow: 'rgba(184,92,58,0.18)',
-      title: COLORS.danger,
-    },
-    crit: {
-      border: 'rgba(232,220,200,0.85)',
-      glow: 'rgba(212,165,74,0.22)',
-      title: '#F3D27A',
-    },
-    miss: {
-      border: 'rgba(122,112,96,0.65)',
-      glow: 'rgba(122,112,96,0.18)',
-      title: COLORS.textMuted,
-    },
-  }[callout.tone];
-
-  const boxW = Math.min(w * 0.42, 320);
-  const boxH = 66;
-  const x = (w - boxW) / 2;
-  const y = h * 0.12 + slide;
-
-  ctx.save();
-  ctx.globalAlpha = alpha;
-
-  ctx.fillStyle = 'rgba(18,16,14,0.84)';
-  ctx.strokeStyle = tone.border;
-  ctx.lineWidth = 1;
-  ctx.shadowColor = tone.glow;
-  ctx.shadowBlur = 18;
-  ctx.beginPath();
-  ctx.roundRect(x, y, boxW, boxH, 10);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.stroke();
-
-  ctx.font = fontString('mono', 10, 600);
-  ctx.fillStyle = '#8A7E6A';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillText('BATTLE FEED', x + boxW / 2, y + 8);
-
-  ctx.font = fontString('heading', 20, 700);
-  ctx.fillStyle = tone.title;
-  ctx.fillText(callout.title, x + boxW / 2, y + 24);
-
-  ctx.font = fontString('serif', 12, 500);
-  ctx.fillStyle = COLORS.textBody;
-  ctx.fillText(callout.detail, x + boxW / 2, y + 47);
-  ctx.restore();
-}
+// Callout box removed — damage displayed via BattleFloatingDamage overlay only
 
 // ── HP bar rendering ────────────────────────────────────────────────────
 
@@ -396,6 +320,7 @@ export const BattleSceneCanvas = forwardRef<
       startTime: performance.now(),
       duration,
       damage: signal.damage,
+      hitCount: signal.hitCount,
       isCrit: signal.isCrit,
       isCombo: signal.isCombo,
       isPlayerAttack: signal.isPlayerAttack,
@@ -404,7 +329,6 @@ export const BattleSceneCanvas = forwardRef<
       didHit: signal.didHit,
       targetDied: signal.targetDied,
       impacted: false,
-      callout: signal.callout,
     });
 
     // Start player attack animation immediately (swing during projectile flight)
@@ -493,7 +417,25 @@ export const BattleSceneCanvas = forwardRef<
                 state.hitReaction = HIT_REACTION_IDLE;
               } else {
                 state.hitReactionStart = now;
+                // Tier: critical > stagger (combo) > hit
+                state.hitReactionTier = atk.isCrit
+                  ? 'critical'
+                  : atk.hitCount > 1
+                    ? 'stagger'
+                    : 'hit';
                 state.monsterAnim = { action: defenderClip, startTime: now };
+              }
+
+              // Spawn extra impact sparks for combos/crits
+              if (atk.didHit && !atk.dodged && (atk.hitCount > 1 || atk.isCrit)) {
+                const sparkCount = Math.min(atk.hitCount, 5);
+                for (let s = 0; s < sparkCount; s++) {
+                  state.impacts.push({
+                    startTime: now + s * 40,
+                    x: w * 0.55 + (Math.random() - 0.5) * w * 0.06,
+                    y: h * 0.45 + (Math.random() - 0.5) * h * 0.08,
+                  });
+                }
               }
           } else {
             // Counterattack hits player
@@ -508,11 +450,6 @@ export const BattleSceneCanvas = forwardRef<
               ps?.playClip?.(atk.targetDied ? 'death' : defenderClip);
             }
           }
-
-          state.activeCallout = {
-            ...atk.callout,
-            startTime: now,
-          };
         }
 
         // Clean up finished attacks (allow 200ms after impact for overlap)
@@ -525,8 +462,9 @@ export const BattleSceneCanvas = forwardRef<
 
       if (state.hitReactionStart > 0) {
         const recoilElapsed = now - state.hitReactionStart;
-        state.hitReaction = computeHitReaction(recoilElapsed, w);
-        if (recoilElapsed > 500) {
+        state.hitReaction = computeHitReaction(recoilElapsed, w, state.hitReactionTier);
+        const tierDuration = REACTION_DURATION[state.hitReactionTier];
+        if (recoilElapsed > tierDuration) {
           state.hitReactionStart = -1;
           state.hitReaction = HIT_REACTION_IDLE;
           if (state.monsterAnim?.action === 'hit') {
@@ -720,12 +658,7 @@ export const BattleSceneCanvas = forwardRef<
         p.monsterDefeated,
       );
 
-      if (state.activeCallout) {
-        drawSceneCallout(ctx, w, h, state.activeCallout, now);
-        if (now - state.activeCallout.startTime >= CALLOUT_LIFETIME_MS) {
-          state.activeCallout = null;
-        }
-      }
+      // Callout box removed — damage shown via BattleFloatingDamage overlay
     },
     [template, playerTemplate],
   );

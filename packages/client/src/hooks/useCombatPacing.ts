@@ -48,6 +48,17 @@ export function useCombatPacing({
     );
   }, [attackOutcomes, characterId, maxTurn]);
 
+  // Check if the player's attack this turn killed the defender — suppress counterattack
+  const playerKilledDefender = useMemo(() => {
+    if (!characterId || maxTurn === 0n) return false;
+    return attackOutcomes.some(
+      outcome =>
+        outcome.currentTurn === maxTurn &&
+        outcome.attackerId.toLowerCase() === characterId.toLowerCase() &&
+        outcome.defenderDied,
+    );
+  }, [attackOutcomes, characterId, maxTurn]);
+
   useEffect(() => {
     if (!isInBattle || maxTurn === 0n) return;
     if (maxTurn <= lastRevealedTurn.current) return;
@@ -55,6 +66,14 @@ export function useCombatPacing({
     if (!counterattackForTurn) {
       lastRevealedTurn.current = maxTurn;
       setHiddenTurn(null);
+      return;
+    }
+
+    // If player killed the defender, suppress counterattack entirely
+    // The data exists in the TX but the monster is dead — don't animate a ghost attack
+    if (playerKilledDefender) {
+      lastRevealedTurn.current = maxTurn;
+      setHiddenTurn(maxTurn); // hide it permanently
       return;
     }
 
@@ -74,7 +93,7 @@ export function useCombatPacing({
       if (delayTimeout.current) clearTimeout(delayTimeout.current);
       if (safetyTimeout.current) clearTimeout(safetyTimeout.current);
     };
-  }, [counterattackForTurn, isInBattle, maxTurn]);
+  }, [counterattackForTurn, isInBattle, maxTurn, playerKilledDefender]);
 
   const visibleOutcomes = useMemo(() => {
     if (hiddenTurn === null || !characterId) return attackOutcomes;

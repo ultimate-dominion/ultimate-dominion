@@ -12,6 +12,8 @@ export type AttackSignal = {
   /** Item name from items.json (e.g. "Iron Axe"). Used to load 3D projectile model. */
   weaponName?: string;
   damage: number;
+  /** Number of individual hits in this attack (multi-hit combos). */
+  hitCount: number;
   isCrit: boolean;
   isPlayerAttack: boolean;
   /** Defender blocked the attack (reduced damage, block animation) */
@@ -116,12 +118,10 @@ export function useBattleSceneSignals({
         weaponNameForItem,
       });
 
-      signals.forEach((signal, index) => {
-        const timeoutId = setTimeout(() => {
-          sceneRef.current?.triggerAttack(signal);
-        }, index * 240);
-        pendingTimersRef.current.push(timeoutId);
-      });
+      // One consolidated signal per outcome — fire immediately, no stagger
+      for (const signal of signals) {
+        sceneRef.current?.triggerAttack(signal);
+      }
     }
   }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem, weaponNameForItem, opponentName]);
 }

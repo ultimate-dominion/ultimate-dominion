@@ -15,7 +15,7 @@ export type DamageType =
   | 'miss';
 
 export type BattleFloatingDamageHandle = {
-  spawn: (x: number, y: number, type: DamageType, value?: number) => void;
+  spawn: (x: number, y: number, type: DamageType, value?: number, hitCount?: number) => void;
 };
 
 type FloatingNumber = {
@@ -126,15 +126,17 @@ export const BattleFloatingDamage = forwardRef<BattleFloatingDamageHandle>(
     const { ready } = usePretextFonts();
 
     const spawn = useCallback(
-      (x: number, y: number, type: DamageType, value?: number) => {
+      (x: number, y: number, type: DamageType, value?: number, hitCount?: number) => {
         const pool = poolRef.current;
         const idx = nextIndexRef.current % POOL_SIZE;
         nextIndexRef.current++;
 
         const config = getConfig(type, value ?? 0);
+        // Add combo hit count suffix: "42 x7"
+        const text = hitCount && hitCount > 1 ? `${config.text} x${hitCount}` : config.text;
         const n = pool[idx];
         n.active = true;
-        n.text = config.text;
+        n.text = text;
         n.x = x;
         n.y = y;
         n.vx = (Math.random() - 0.5) * 0.6;

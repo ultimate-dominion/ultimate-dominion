@@ -104,7 +104,7 @@ describe('buildBattleSceneSignal', () => {
 
   it('sets dodged flag from miss array', () => {
     const signal = buildBattleSceneSignal({
-      outcome: { ...baseOutcome, miss: [true], damagePerHit: [0n] },
+      outcome: { ...baseOutcome, miss: [true], hit: [false], damagePerHit: [0n] },
       characterId: '0xattacker',
       opponentName: 'Giant Spider',
       weaponTypeForItem: () => 'melee',
@@ -152,7 +152,7 @@ describe('buildBattleSceneSignal', () => {
 
   // ── Double strike / combo ─────────────────────────────────────────
 
-  it('splits double strikes into separate visual beats', () => {
+  it('consolidates double strikes into single signal with total damage', () => {
     const signals = buildBattleSceneSignals({
       outcome: {
         ...baseOutcome,
@@ -168,19 +168,69 @@ describe('buildBattleSceneSignal', () => {
       weaponTypeForItem: () => 'melee',
     });
 
-    expect(signals).toHaveLength(2);
+    expect(signals).toHaveLength(1);
     expect(signals[0]).toMatchObject({
-      damage: 4,
-      didHit: true,
-      targetDied: false,
-      isCombo: true,
-    });
-    expect(signals[1]).toMatchObject({
-      damage: 7,
-      isCrit: true,
+      damage: 11, // 4 + 7 total
+      hitCount: 2,
+      isCrit: true, // any crit in combo
       didHit: true,
       targetDied: true,
       isCombo: true,
     });
+  });
+
+  it('consolidates multi-hit combos into one signal', () => {
+    const signals = buildBattleSceneSignals({
+      outcome: {
+        ...baseOutcome,
+        damagePerHit: [11n, 12n, 12n, 6n, 6n, 1n, 4n],
+        hit: [true, true, true, true, true, true, true],
+        miss: [false, false, false, false, false, false, false],
+        crit: [false, false, false, false, false, false, false],
+        attackerDamageDelt: 52n,
+      },
+      characterId: '0xattacker',
+      opponentName: 'Hook Horror',
+      weaponTypeForItem: () => 'melee',
+    });
+
+    expect(signals).toHaveLength(1);
+    expect(signals[0]).toMatchObject({
+      damage: 52,
+      hitCount: 7,
+      isCombo: true,
+      isCrit: false,
+    });
+  });
+
+  it('returns hitCount=1 for single-hit attacks', () => {
+    const signal = buildBattleSceneSignal({
+      outcome: baseOutcome,
+      characterId: '0xattacker',
+      opponentName: 'Giant Spider',
+      weaponTypeForItem: () => 'melee',
+    });
+
+    expect(signal.hitCount).toBe(1);
+    expect(signal.isCombo).toBe(false);
+  });
+
+  it('all-miss multi-hit still returns one signal', () => {
+    const signals = buildBattleSceneSignals({
+      outcome: {
+        ...baseOutcome,
+        damagePerHit: [0n, 0n],
+        hit: [false, false],
+        miss: [true, true],
+        crit: [false, false],
+      },
+      characterId: '0xattacker',
+      opponentName: 'Giant Spider',
+      weaponTypeForItem: () => 'melee',
+    });
+
+    expect(signals).toHaveLength(1);
+    expect(signals[0].dodged).toBe(true);
+    expect(signals[0].damage).toBe(0);
   });
 });
