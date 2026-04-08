@@ -17,10 +17,12 @@ import { useCanvas, getPointerPos } from '../hooks/useCanvas';
 import { COLORS, fontString } from '../theme';
 
 import {
+  attachToSocket,
   getCreatureState,
   loadGLBCreature,
   makeGLBDrawFn,
 } from './glbCreatureLoader';
+import { loadItemModel, isItemModelReady, itemSlug, getItemModel } from './glbItemLoader';
 import { renderMonster } from './MonsterAsciiRenderer';
 import type { MonsterTemplate } from './monsterTemplates';
 
@@ -48,9 +50,12 @@ type DragState = {
 export function CharacterViewer({
   race,
   height = 280,
+  weaponName,
 }: {
   race: Race;
   height?: number;
+  /** Equipped weapon name from items.json — loads 3D model onto hand socket */
+  weaponName?: string;
 }) {
   const glbUrl = RACE_GLB_URL[race];
   const dragRef = useRef<DragState>({
@@ -65,6 +70,24 @@ export function CharacterViewer({
     if (!glbUrl) return;
     loadGLBCreature(glbUrl, 7, 7, DEFAULT_YAW, -0.08, { playerMode: true }).catch(() => {});
   }, [glbUrl]);
+
+  // Load + attach equipped weapon to character's hand socket
+  const weaponSlug = weaponName ? itemSlug(weaponName) : null;
+  const weaponAttachedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!weaponSlug) {
+      // Weapon un-equipped — remove attached model
+      if (weaponAttachedRef.current && glbUrl) {
+        const state = getCreatureState(glbUrl);
+        const prev = state?.model?.getObjectByName('__equipped_weapon__');
+        if (prev) prev.removeFromParent();
+        weaponAttachedRef.current = null;
+      }
+      return;
+    }
+    loadItemModel(weaponSlug).catch(() => {});
+  }, [weaponSlug, glbUrl]);
 
   // Build a MonsterTemplate-compatible object for renderMonster
   const template: MonsterTemplate | null = useMemo(() => {
@@ -93,6 +116,25 @@ export function CharacterViewer({
         const state = getCreatureState(glbUrl);
         if (state?.model) {
           state.model.rotation.y = dragRef.current.currentYaw;
+
+          // Attach weapon once both are loaded (one-time per weapon)
+          if (weaponSlug && weaponAttachedRef.current !== weaponSlug && isItemModelReady(weaponSlug)) {
+            const itemData = getItemModel(weaponSlug);
+            if (itemData) {
+              // Remove previously attached weapon if switching
+              if (weaponAttachedRef.current) {
+                const prev = state.model.getObjectByName('__equipped_weapon__');
+                if (prev) prev.removeFromParent();
+              }
+              const clone = itemData.model.clone();
+              clone.name = '__equipped_weapon__';
+              clone.position.set(...itemData.offset);
+              clone.rotation.set(...itemData.rotation);
+              clone.scale.setScalar(itemData.scale);
+              attachToSocket(state.model, clone, itemData.socket);
+              weaponAttachedRef.current = weaponSlug;
+            }
+          }
         }
       }
 
@@ -109,7 +151,7 @@ export function CharacterViewer({
       // Drag hint
       drawDragHint(ctx, width, h, elapsed);
     },
-    [template, glbUrl],
+    [template, glbUrl, weaponSlug],
   );
 
   const { canvasRef } = useCanvas({ onFrame, interactive: true });

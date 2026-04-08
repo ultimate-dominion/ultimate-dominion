@@ -309,6 +309,30 @@ export function isItemModelReady(slug: string): boolean {
 }
 
 /**
+ * Get a loaded item's Three.js model for bone-socket attachment.
+ * Returns null if not loaded yet. Caller should clone() before attaching
+ * to avoid mutating the cached model.
+ */
+export function getItemModel(slug: string): {
+  model: import('three').Object3D;
+  socket: string;
+  offset: [number, number, number];
+  rotation: [number, number, number];
+  scale: number;
+} | null {
+  const state = itemCache.get(slug);
+  if (!state?.loaded || !state.model) return null;
+  const entry = manifest?.[slug];
+  return {
+    model: state.model,
+    socket: entry?.socket ?? 'hand_R.socket',
+    offset: entry?.offset ?? [0, 0, 0],
+    rotation: entry?.rotation ?? [0, 0, 0],
+    scale: entry?.scale ?? 1.0,
+  };
+}
+
+/**
  * Slugify an item name to match manifest keys.
  * Must match item-forge.mjs slugify().
  */

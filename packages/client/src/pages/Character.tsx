@@ -287,7 +287,7 @@ export const CharacterPage = (): JSX.Element => {
             >
               {character.race !== Race.None && (
                 <Suspense fallback={null}>
-                  <CharacterViewer race={character.race} height={220} />
+                  <CharacterViewer race={character.race} height={220} weaponName={equippedWeapons[0]?.name} />
                 </Suspense>
               )}
               <HStack spacing={3} alignItems="center" mt={character.race !== Race.None ? 4 : 0}>
