@@ -35,7 +35,7 @@ type FloatingNumber = {
 
 const POOL_SIZE = 50;
 const GRAVITY = -0.03;
-const FADE_SPEED = 0.00055;
+const FADE_SPEED = 0.0013;
 
 function createPool(): FloatingNumber[] {
   return Array.from({ length: POOL_SIZE }, () => ({
@@ -58,27 +58,27 @@ function getConfig(type: DamageType, value: number) {
   switch (type) {
     case 'crit':
       return {
-        text: `${value}!`,
+        text: `CRIT ${value}`,
         color: COLORS.danger,
-        font: getFontString('cinzel-700', 28),
+        font: getFontString('cinzel-700', 26),
         vy: -1.8,
-        scale: 1.65,
+        scale: 1.5,
       };
     case 'double':
       return {
         text: `${value}`,
         color: '#A8DEFF',
-        font: getFontString('cinzel-700', 24),
+        font: getFontString('cinzel-700', 22),
         vy: -1.55,
-        scale: 1.35,
+        scale: 1.25,
       };
     case 'critDouble':
       return {
-        text: `${value}!!`,
+        text: `CRIT ${value}`,
         color: '#F3D27A',
-        font: getFontString('cinzel-700', 34),
+        font: getFontString('cinzel-700', 28),
         vy: -2.0,
-        scale: 1.95,
+        scale: 1.7,
       };
     case 'heal':
       return {
