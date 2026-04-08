@@ -8,6 +8,8 @@ type Params = {
   characterId: string;
   opponentName: string;
   weaponTypeForItem: (itemId: string) => WeaponAnimType;
+  /** Returns the item name (e.g. "Iron Axe") for 3D projectile loading. Optional. */
+  weaponNameForItem?: (itemId: string) => string | undefined;
 };
 
 function sumDamage(outcome: AttackOutcomeType) {
@@ -59,6 +61,7 @@ function buildSignal({
   characterId,
   opponentName,
   weaponTypeForItem,
+  weaponNameForItem,
   damage,
   isCrit,
   didHit,
@@ -95,9 +98,12 @@ function buildSignal({
 
   return {
     weaponType: weaponTypeForItem(outcome.itemId),
+    weaponName: weaponNameForItem?.(outcome.itemId),
     damage,
     isCrit,
     isPlayerAttack,
+    blocked: outcome.blocked,
+    dodged: (normalizedOutcome.miss ?? []).some(Boolean) || outcome.spellDodged,
     didHit,
     targetDied,
     isCombo,
@@ -110,6 +116,7 @@ export function buildBattleSceneSignals({
   characterId,
   opponentName,
   weaponTypeForItem,
+  weaponNameForItem,
 }: Params): AttackSignal[] {
   const damagePerHit = outcome.damagePerHit ?? [];
   const hits = outcome.hit ?? [];
@@ -130,6 +137,7 @@ export function buildBattleSceneSignals({
       characterId,
       opponentName,
       weaponTypeForItem,
+      weaponNameForItem,
       damage,
       isCrit: crits[index] === true,
       didHit: !isMiss,

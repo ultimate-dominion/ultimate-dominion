@@ -497,6 +497,8 @@ export type AnimAction =
   | 'fangs'       // Basilisk Fangs — physical lunge + bite
   | 'gaze'        // Petrifying Gaze — eyes charge + magic wave
   | 'hit'         // Taking damage — recoil + flash
+  | 'block'       // Defender blocks — reduced damage
+  | 'dodge'       // Defender dodges — no damage
   | 'death'       // Dying — collapse + dissolve
   | 'enrage';     // Low HP — faster, redder, meaner
 
@@ -527,6 +529,8 @@ const ACTION_DURATION: Record<AnimAction, number> = {
   fangs: 900,
   gaze: 1200,
   hit: 500,
+  block: 400,
+  dodge: 350,
   death: 2000,
   enrage: 800,
 };

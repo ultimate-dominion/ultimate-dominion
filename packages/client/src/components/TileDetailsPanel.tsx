@@ -56,6 +56,7 @@ import { BattleDeathScreen } from './pretext/game/BattleDeathScreen';
 import { TextDissolve } from './pretext/game/TextDissolve';
 import { ThreatWeightedName } from './pretext/game/ThreatWeightedName';
 import { classifyWeapon } from './pretext/game/weaponAnimations';
+import { loadItemManifest, loadItemModel, itemSlug } from './pretext/game/glbItemLoader';
 import { useBattleSceneSignals, type BattleSceneHandle } from '../hooks/useBattleSceneSignals';
 import {
   ADVANCED_CLASS_COLORS,
@@ -293,13 +294,33 @@ export const TileDetailsPanel = (): JSX.Element => {
     return 'melee' as const;
   }, [equippedSpells, equippedWeapons]);
 
+  const weaponNameForItem = useCallback((itemId: string) => {
+    const spell = equippedSpells.find(s => s.tokenId === itemId || s.itemId === itemId);
+    if (spell) return spell.name;
+    const weapon = equippedWeapons.find(w => w.tokenId === itemId || w.itemId === itemId);
+    if (weapon) return weapon.name;
+    return undefined;
+  }, [equippedSpells, equippedWeapons]);
+
   useBattleSceneSignals({
     visibleOutcomes,
     characterId: character?.id,
     sceneRef: battleSceneRef,
     weaponTypeForItem,
+    weaponNameForItem,
     opponentName: opponent?.name ?? 'the enemy',
   });
+
+  // Preload 3D item models for equipped weapons so they're ready before first attack
+  useEffect(() => {
+    const slugs = [...equippedWeapons, ...equippedSpells]
+      .map((w) => itemSlug(w.name))
+      .filter(Boolean);
+    if (slugs.length === 0) return;
+    loadItemManifest().then(() => {
+      slugs.forEach((s) => loadItemModel(s).catch(() => {}));
+    }).catch(() => {});
+  }, [equippedWeapons, equippedSpells]);
 
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
