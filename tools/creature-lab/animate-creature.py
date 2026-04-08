@@ -103,7 +103,13 @@ def set_bone_keyframe(bone, frame, channel, value):
 def create_action(armature, name, start_sec, end_sec):
     """Create a new NLA action and make it active."""
     action = bpy.data.actions.new(name=name)
-    armature.animation_data_ensure()
+    # Blender 5.x renamed animation_data_ensure → animation_data_create
+    if hasattr(armature, 'animation_data_ensure'):
+        armature.animation_data_ensure()
+    elif hasattr(armature, 'animation_data_create'):
+        armature.animation_data_create()
+    elif not armature.animation_data:
+        armature.animation_data_create()
     armature.animation_data.action = action
 
     # Set frame range

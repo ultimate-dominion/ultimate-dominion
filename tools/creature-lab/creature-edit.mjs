@@ -160,6 +160,27 @@ const BONE_MAPS = {
     'Tail1':          'tail_02',
     'Tail2':          'tail_03',
   },
+  // UniRig outputs generic bone_N names. This map is for the giant-spider
+  // skeleton produced by UniRig (4 legs, spine chain, head).
+  'spider-unirig': {
+    'bone_3':  'hips',
+    'bone_4':  'spine',
+    'bone_5':  'spine_1',
+    'bone_6':  'spine_2',
+    'bone_7':  'spine_3',
+    'bone_8':  'spine_4',
+    'bone_9':  'chest',
+    'bone_10': 'head',
+    'bone_12': 'leg_front_L',
+    'bone_13': 'leg_front_L_lower',
+    'bone_14': 'foot_front_L',
+    'bone_16': 'leg_front_R',
+    'bone_17': 'leg_front_R_lower',
+    'bone_18': 'foot_front_R',
+    'bone_20': 'leg_back_L',
+    'bone_21': 'leg_back_L_lower',
+    'bone_22': 'foot_back_L',
+  },
 };
 
 // ── Commands ─────────────────────────────────────────────────────────────
