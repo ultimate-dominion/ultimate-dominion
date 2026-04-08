@@ -8,9 +8,12 @@ import {
 } from './helpers';
 import {
   AdvancedClass,
+  ArmorType,
   type Character,
   getDominantStatClass,
   type Metadata,
+  PowerSource,
+  Race,
   type WorldStatusEffect,
 } from './types';
 
@@ -53,6 +56,11 @@ export function buildCharacter(
     level: BigInt(0),
     maxHp: BigInt(0),
     strength: BigInt(0),
+    powerSource: PowerSource.None,
+    race: Race.None,
+    startingArmor: ArmorType.None,
+    advancedClass: AdvancedClass.None,
+    hasSelectedAdvancedClass: false,
   };
 
   const baseStatsRaw = characterData.baseStats as string | undefined;
@@ -129,12 +137,15 @@ export function buildCharacter(
     locked: Boolean(characterData.locked),
     maxHp: toBigInt(statsData.maxHp),
     owner: characterData.owner as string,
+    powerSource: decodedBaseStats.powerSource ?? PowerSource.None,
     position: {
       zoneId: toNumber((positionData as any).zoneId),
       x: toNumber((positionData as any).x),
       y: toNumber((positionData as any).y),
     },
     pvpCooldownTimer: toBigInt(pvpTimer),
+    race: decodedBaseStats.race ?? Race.None,
+    startingArmor: decodedBaseStats.startingArmor ?? ArmorType.None,
     strength: toBigInt(statsData.strength),
     tokenId: characterData.tokenId?.toString() ?? '0',
     worldStatusEffects,
