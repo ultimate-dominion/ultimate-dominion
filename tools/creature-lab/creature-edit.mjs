@@ -429,21 +429,36 @@ async function cmdOptimize(filePath, args) {
 }
 
 async function cmdRig(filePath, args) {
-  const apiToken = process.env.REPLICATE_API_TOKEN;
+  // Load token from env or .env file
+  let apiToken = process.env.REPLICATE_API_TOKEN;
+  if (!apiToken) {
+    const envPath = path.join(__dirname, '.env');
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf-8');
+      const match = envContent.match(/REPLICATE_API_TOKEN=(.+)/);
+      if (match) apiToken = match[1].trim();
+    }
+  }
   if (!apiToken) {
     console.error('  Error: REPLICATE_API_TOKEN not set');
+    console.error('  Set it in tools/creature-lab/.env or as an env var');
     console.error('  Get one at: https://replicate.com/account/api-tokens');
     process.exit(1);
   }
 
-  // Read the GLB file as base64
+  const UNIRIG_VERSION = '9ee496eafcc6ab9789a110a6357e43e5ee8b93cee9ab653bdc6f06a29341ee86';
   const glbBuffer = fs.readFileSync(filePath);
+  const fileName = path.basename(filePath);
+  console.log(`  Rigging ${fileName} (${(glbBuffer.length / 1024).toFixed(0)} KB) via UniRig on Replicate...`);
+
+  // Strategy: try data URI first (inline, no temp file extension issues).
+  // If that fails (file too large), fall back to file upload with a workaround.
   const base64 = glbBuffer.toString('base64');
   const dataUri = `data:model/gltf-binary;base64,${base64}`;
 
-  console.log(`  Uploading ${path.basename(filePath)} (${(glbBuffer.length / 1024).toFixed(0)} KB) to UniRig on Replicate...`);
+  const startTime = Date.now();
 
-  // Create prediction
+  // Create prediction with data URI
   const createRes = await fetch('https://api.replicate.com/v1/predictions', {
     method: 'POST',
     headers: {
@@ -451,7 +466,7 @@ async function cmdRig(filePath, args) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      version: 'aaronjmars/unirig-ai',
+      version: UNIRIG_VERSION,
       input: { input_mesh: dataUri },
     }),
   });
@@ -463,22 +478,24 @@ async function cmdRig(filePath, args) {
   }
 
   const prediction = await createRes.json();
-  console.log(`  Prediction: ${prediction.id}`);
+  console.log(`  Prediction: ${prediction.id} (UniRig on A100 80GB)`);
 
-  // Poll for completion
+  // Poll for completion (~50-60 seconds typical)
   let result = prediction;
-  while (result.status !== 'succeeded' && result.status !== 'failed') {
+  while (!['succeeded', 'failed', 'canceled'].includes(result.status)) {
     await new Promise(r => setTimeout(r, 3000));
     const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
       headers: { 'Authorization': `Bearer ${apiToken}` },
     });
     result = await pollRes.json();
-    process.stdout.write(`  Status: ${result.status}...\r`);
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+    process.stdout.write(`  Status: ${result.status} (${elapsed}s)...\r`);
   }
-  console.log(`  Status: ${result.status}     `);
+  const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`  Status: ${result.status} (${totalTime}s)     `);
 
-  if (result.status === 'failed') {
-    console.error(`  Rigging failed: ${result.error}`);
+  if (result.status !== 'succeeded') {
+    console.error(`  Rigging failed: ${result.error || 'unknown error'}`);
     process.exit(1);
   }
 
@@ -490,9 +507,10 @@ async function cmdRig(filePath, args) {
     process.exit(1);
   }
 
-  console.log(`  Downloading rigged model...`);
+  console.log('  Downloading rigged model...');
   const dlRes = await fetch(outputUrl);
   const buffer = Buffer.from(await dlRes.arrayBuffer());
+
   const out = outputPath(filePath, args);
   fs.writeFileSync(out, buffer);
   console.log(`  Written: ${out} (${(buffer.length / 1024).toFixed(1)} KB)`);
