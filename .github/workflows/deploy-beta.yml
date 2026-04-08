@@ -45,8 +45,6 @@ jobs:
           --forgeScriptOptions="--slow"
           --profile=base-mainnet
           --worldAddress $WORLD_ADDRESS
-          --rpc $RPC_URL
-          --privateKey $PRIVATE_KEY
 
       - name: Ensure cross-namespace access grants
         working-directory: packages/contracts
