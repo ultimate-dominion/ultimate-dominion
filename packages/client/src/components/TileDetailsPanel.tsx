@@ -171,9 +171,11 @@ export const TileDetailsPanel = (): JSX.Element => {
   } = useMap();
   const {
     attackOutcomes,
+    continueToBattleOutcome,
     currentBattle,
     dotActions,
     lastestBattleOutcome,
+    onContinueToBattleOutcome,
     opponent,
     statusEffectActions,
     userCharacterForBattleRendering,
@@ -269,6 +271,18 @@ export const TileDetailsPanel = (): JSX.Element => {
       setPendingOpponent(null);
     }
   }, [currentBattle, opponent, userCharacterForBattleRendering, isWaitingForBattle]);
+
+  const battleResolved = Boolean(
+    currentBattle &&
+    lastestBattleOutcome &&
+    currentBattle.encounterId === lastestBattleOutcome.encounterId,
+  );
+
+  useEffect(() => {
+    if (!pendingOpponent || !battleResolved) return;
+    setIsWaitingForBattle(false);
+    setPendingOpponent(null);
+  }, [battleResolved, pendingOpponent]);
 
   // Safety timeout — clear if battle never starts (10s)
   useEffect(() => {
@@ -712,9 +726,29 @@ export const TileDetailsPanel = (): JSX.Element => {
     isInBattle: !!currentBattle,
   });
 
-  const battleOver = currentBattle?.encounterId === lastestBattleOutcome?.encounterId;
+  const battleOver = battleResolved;
   const opponentDefeated = opponentDisplayedHp <= 0n && battleOver;
   const userDefeated = userDisplayedHp <= 0n && battleOver;
+
+  const autoResultsShownRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (autoAdventureMode || !battleOver || !currentBattle) return;
+    if (continueToBattleOutcome) return;
+    if (autoResultsShownRef.current === currentBattle.encounterId) return;
+
+    const timer = setTimeout(() => {
+      autoResultsShownRef.current = currentBattle.encounterId;
+      onContinueToBattleOutcome(true);
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [
+    autoAdventureMode,
+    battleOver,
+    continueToBattleOutcome,
+    currentBattle,
+    onContinueToBattleOutcome,
+  ]);
 
   if (!character) {
     return (
@@ -979,7 +1013,15 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (isWaitingForBattle || encounterTx.isLoading || pendingOpponent || (!autoAdventureMode && currentBattle && (!opponent || !userCharacterForBattleRendering) && currentBattle.encounterId !== lastestBattleOutcome?.encounterId)) {
+  if (
+    isWaitingForBattle ||
+    encounterTx.isLoading ||
+    (pendingOpponent && !battleResolved) ||
+    (!autoAdventureMode &&
+      currentBattle &&
+      (!opponent || !userCharacterForBattleRendering) &&
+      currentBattle.encounterId !== lastestBattleOutcome?.encounterId)
+  ) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
         <style>

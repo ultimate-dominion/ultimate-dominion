@@ -73,6 +73,7 @@ const mockCreateEncounter = vi.fn().mockResolvedValue({ success: true, error: nu
 const mockRest = vi.fn().mockResolvedValue({ success: true, error: null });
 const mockRefreshCharacter = vi.fn().mockResolvedValue(undefined);
 const mockEncounterExecute = vi.fn();
+const mockOnContinueToBattleOutcome = vi.fn();
 const mockRestExecute = vi.fn();
 const mockRenderError = vi.fn();
 const mockRenderSuccess = vi.fn();
@@ -211,12 +212,15 @@ function setDefaults() {
   mockRenderWarning.mockReset();
   mockValidateTileMonsters.mockReset();
   mockGetTableValue.mockReset();
+  mockOnContinueToBattleOutcome.mockReset();
 
   battleState = {
     attackOutcomes: [],
+    continueToBattleOutcome: false,
     currentBattle: null,
     dotActions: [],
     lastestBattleOutcome: null,
+    onContinueToBattleOutcome: mockOnContinueToBattleOutcome,
     opponent: null,
     statusEffectActions: [],
     userCharacterForBattleRendering: null,
@@ -482,6 +486,29 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
 
     // Loading screen should be gone — battle view should render (manual mode shows full battle UI)
     expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
+  });
+
+  it('manual battle: resolved encounter clears transition state even before battle actors hydrate', async () => {
+    movementState.autoAdventureMode = false;
+
+    const { rerender } = render(<TileDetailsPanel />);
+
+    const monsterButton = screen.getByText('Dire Rat').closest('button');
+    await act(async () => {
+      fireEvent.click(monsterButton!);
+    });
+
+    expect(screen.getByText('Fighting Dire Rat')).toBeTruthy();
+
+    battleState.currentBattle = normalBattle;
+    battleState.lastestBattleOutcome = winOutcome;
+
+    await act(async () => {
+      rerender(<TileDetailsPanel />);
+    });
+
+    expect(screen.queryByText('Fighting Dire Rat')).toBeNull();
+    expect(mockOnContinueToBattleOutcome).not.toHaveBeenCalled();
   });
 });
 
