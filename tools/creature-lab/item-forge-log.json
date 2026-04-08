@@ -174,5 +174,192 @@
     "meshTaskId": "019d6da8-6450-7eef-934d-7de6ac5c76fc",
     "prompt": "curved dagger or short blade, ornate handle, Crystal Shard, Grown, not forged. The edge is sharper than steel but brittle., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
     "timestamp": "2026-04-08T15:17:51.206Z"
+  },
+  {
+    "slug": "gnarled-cudgel",
+    "name": "Gnarled Cudgel",
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6dad-0bae-7db5-aa30-6d7ba1201920",
+    "prompt": "flanged mace or warhammer, heavy metal head on wooden handle, Gnarled Cudgel, A femur sharpened to a point. The troll used it on everything., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:23:38.031Z"
+  },
+  {
+    "slug": "webspinner-bow",
+    "name": "Webspinner Bow",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 2,
+    "socket": "hand_L.socket",
+    "meshTaskId": "019d6db2-b6e9-7096-a794-218cd91af32a",
+    "prompt": "recurve bow, wooden limbs with bowstring, Webspinner Bow, Strung with spider silk. The arrows fly silent., well-crafted, single muted color accent, visible craftsmanship, slight metallic sheen, amber-gold wood tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:29:24.449Z"
+  },
+  {
+    "slug": "bone-staff",
+    "name": "Bone Staff",
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6db7-e0c0-72b5-993b-20d77e515c54",
+    "prompt": "magical staff, tall wooden staff with crystal or orb tip, arcane energy, Bone Staff, Cold to the touch. The marrow inside is black and still., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, blue-violet arcane glow, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:33:23.854Z"
+  },
+  {
+    "slug": "stone-maul",
+    "name": "Stone Maul",
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6dbb-6707-7341-9c19-e4b36b79e314",
+    "prompt": "flanged mace or warhammer, heavy metal head on wooden handle, Stone Maul, A stone column broken from the cave wall. The giant called it a weapon., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:38:29.662Z"
+  },
+  {
+    "slug": "darkwood-bow",
+    "name": "Darkwood Bow",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 3,
+    "socket": "hand_L.socket",
+    "meshTaskId": "019d6dc0-94db-7ccc-9d45-fcce38f0bf88",
+    "prompt": "recurve bow, wooden limbs with bowstring, Darkwood Bow, The wood is so dark it drinks the torchlight. Silent to draw., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, amber-gold wood tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:44:33.643Z"
+  },
+  {
+    "slug": "smoldering-rod",
+    "name": "Smoldering Rod",
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6dc5-9f24-7dc0-88f2-b7a2b5db5706",
+    "prompt": "magical wand or channeling rod, short rod with glowing tip, arcane energy, Smoldering Rod, The tip glows like a dying ember. It never goes out., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, blue-violet arcane glow, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:49:30.409Z"
+  },
+  {
+    "slug": "trollhide-cleaver",
+    "name": "Trollhide Cleaver",
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6dca-c81e-772d-b1c2-9a15d023e52c",
+    "prompt": "battle axe, heavy curved blade on wooden haft, Trollhide Cleaver, The blade is wrapped in troll hide that refuses to rot. Cuts deeper the harder you swing., epic quality, dual-color accents, exaggerated proportions, ornate flourishes, energy wisps, glowing elements, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T15:55:56.216Z"
+  },
+  {
+    "slug": "drakescale-staff",
+    "name": "Drakescale Staff",
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6dd2-23c5-78dc-af13-16c746022b1a",
+    "prompt": "magical staff, tall wooden staff with crystal or orb tip, arcane energy, Drakescale Staff, Scaled in drake hide with a core of compressed flame. The air warps around it., epic quality, dual-color accents, exaggerated proportions, ornate flourishes, energy wisps, glowing elements, blue-violet arcane glow, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T16:02:21.539Z"
+  },
+  {
+    "slug": "stalkers-vest",
+    "name": "Stalker's Vest",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e09-8642-717f-bbad-59eba950fe90",
+    "prompt": "leather armor vest or jerkin, stitched panels, buckles and straps, Stalker's Vest, The edges seem to blur in dim light. You feel less visible wearing it., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, warm brown-amber tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T17:03:25.302Z"
+  },
+  {
+    "slug": "scorched-scale-vest",
+    "name": "Scorched Scale Vest",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e10-2871-72bb-8715-3dab0334f899",
+    "prompt": "metal plate armor breastplate, riveted steel plates, heavy and protective, Scorched Scale Vest, Peeled from something that breathed fire. The scales are still warm., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, bright steel-white with subtle gold trim, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T17:12:03.564Z"
+  },
+  {
+    "slug": "drakes-cowl",
+    "name": "Drake's Cowl",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 3,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e16-df03-7bcf-a4cb-17a0e570ccde",
+    "prompt": "cloth robe or vestments, flowing fabric, hooded or collared, Drake's Cowl, Stitched from drake membrane. The cowl whispers when you channel through it., ornate detailed, visible runes and engravings, color accent at 60% saturation, rare quality, faint blue-grey mystical tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T17:18:57.004Z"
+  },
+  {
+    "slug": "hunting-bow",
+    "name": "Hunting Bow",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 1,
+    "socket": "hand_L.socket",
+    "meshTaskId": "019d6e1d-e32f-704f-858f-762050131771",
+    "prompt": "recurve bow, wooden limbs with bowstring, Hunting Bow, Built for game, not war. It'll do for both., functional but plain, slight wear marks, simple construction, amber-gold wood tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T17:23:51.268Z"
+  },
+  {
+    "slug": "phasefang",
+    "name": "Phasefang",
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "meshTaskId": "019d6e20-8a74-7149-a134-4a6f18e6d242",
+    "prompt": "curved dagger or short blade, ornate handle, Phasefang, Shimmers at the edges like a heat mirage. Strikes from angles that shouldn't exist., epic quality, dual-color accents, exaggerated proportions, ornate flourishes, energy wisps, glowing elements, warm steel-grey metallic tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T17:29:14.005Z"
+  },
+  {
+    "slug": "tattered-cloth",
+    "name": "Tattered Cloth",
+    "category": "armor",
+    "subtype": "cloth",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e28-81a2-76e9-acfb-9709934c79ac",
+    "prompt": "cloth robe or vestments, flowing fabric, hooded or collared, Tattered Cloth, Stitched together from whatever was at hand. Better than nothing., simple worn damaged, monochrome tones, minimal detail, disposable look, faint blue-grey mystical tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T17:39:52.955Z"
+  },
+  {
+    "slug": "worn-leather-vest",
+    "name": "Worn Leather Vest",
+    "category": "armor",
+    "subtype": "leather",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e31-9dc0-73e7-93fa-68ac1338d5a1",
+    "prompt": "leather armor vest or jerkin, stitched panels, buckles and straps, Worn Leather Vest, Cracked and stiff. Somebody died wearing this., simple worn damaged, monochrome tones, minimal detail, disposable look, warm brown-amber tones, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T17:47:55.770Z"
+  },
+  {
+    "slug": "rusty-chainmail",
+    "name": "Rusty Chainmail",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 0,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e38-59ce-7394-a7e6-493cfd210247",
+    "prompt": "metal plate armor breastplate, riveted steel plates, heavy and protective, Rusty Chainmail, Half the links are missing. Still stops a bite., simple worn damaged, monochrome tones, minimal detail, disposable look, bright steel-white with subtle gold trim, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T17:54:01.045Z"
+  },
+  {
+    "slug": "padded-armor",
+    "name": "Padded Armor",
+    "category": "armor",
+    "subtype": "plate",
+    "rarity": 1,
+    "socket": "chest.socket",
+    "meshTaskId": "019d6e3f-9304-7810-a1eb-763f2c500c65",
+    "prompt": "metal plate armor breastplate, riveted steel plates, heavy and protective, Padded Armor, Layered cloth packed with cave straw. Crude but honest protection., functional but plain, slight wear marks, simple construction, bright steel-white with subtle gold trim, dark fantasy, medieval, rough weathered, battle-worn, game item, isolated on pure black background, single object centered, no character no hands, lowpoly game-ready, clear silhouette",
+    "timestamp": "2026-04-08T18:03:09.195Z"
   }
 ]

@@ -259,4 +259,323 @@
   Preview task: 019d6dab-de42-7d5f-9189-a003c9811d1a
   Waiting for preview 0% 10% 10% 30% 30% 30% 30% 30% 30% done
   Refining with PBR textures...
-  Waiting for texture pass 0% 0% 0% 0%
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 20% 20% 20% 20% 20% 20% 20% 40% 40% 40% 80% 80% 80% 80% 80% 99% done
+  Downloading → glb/items/gnarled-cudgel.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/gnarled-cudgel.glb (7540 KB)
+  Optimizing...
+  Optimized: 7400 KB (was 7540 KB)
+  Done: Gnarled Cudgel
+
+=== Item Forge: Webspinner Bow (webspinner-bow) ===
+  Category: weapons, Subtype: bow, Rarity: 2
+  Socket: hand_L.socket
+  Prompt: recurve bow, wooden limbs with bowstring, Webspinner Bow, Strung with spider silk. The arrows fly silent., well-crafted,...
+  Submitting to Meshy...
+  Preview task: 019d6db1-28ef-7a32-a598-f9499f1b360b
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 80% 80% 80% 80% 99% done
+  Downloading → glb/items/webspinner-bow.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/webspinner-bow.glb (7327 KB)
+  Optimizing...
+  Optimized: 7111 KB (was 7327 KB)
+  Done: Webspinner Bow
+
+=== Item Forge: Bone Staff (bone-staff) ===
+  Category: weapons, Subtype: staff, Rarity: 3
+  Socket: hand_R.socket
+  Prompt: magical staff, tall wooden staff with crystal or orb tip, arcane energy, Bone Staff, Cold to the touch. The marrow insid...
+  Submitting to Meshy...
+  Preview task: 019d6db6-7246-7032-ab47-86a5aa55bbc2
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 40% 80% 80% 80% done
+  Downloading → glb/items/bone-staff.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/bone-staff.glb (8360 KB)
+  Optimizing...
+  Optimized: 8153 KB (was 8360 KB)
+  Done: Bone Staff
+
+=== Item Forge: Stone Maul (stone-maul) ===
+  Category: weapons, Subtype: mace, Rarity: 3
+  Socket: hand_R.socket
+  Prompt: flanged mace or warhammer, heavy metal head on wooden handle, Stone Maul, A stone column broken from the cave wall. The ...
+  Submitting to Meshy...
+  Preview task: 019d6dba-194a-7172-a6fa-c9061eb4386e
+  Waiting for preview 0% 10% 10% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 5% 20% 20% 20% 20% 20% 20% 40% 40% 40% 80% 80% 80% 80% done
+  Downloading → glb/items/stone-maul.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/stone-maul.glb (6732 KB)
+  Optimizing...
+  Optimized: 6601 KB (was 6732 KB)
+  Done: Stone Maul
+
+=== Item Forge: Darkwood Bow (darkwood-bow) ===
+  Category: weapons, Subtype: bow, Rarity: 3
+  Socket: hand_L.socket
+  Prompt: recurve bow, wooden limbs with bowstring, Darkwood Bow, The wood is so dark it drinks the torchlight. Silent to draw., o...
+  Submitting to Meshy...
+  Preview task: 019d6dbe-c3f7-728d-8e9d-7aed331061b7
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 20% 20% 20% 20% 20% 40% 40% 40% 80% 80% 80% 80% 99% done
+  Downloading → glb/items/darkwood-bow.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/darkwood-bow.glb (7198 KB)
+  Optimizing...
+  Optimized: 6924 KB (was 7198 KB)
+  Done: Darkwood Bow
+
+=== Item Forge: Smoldering Rod (smoldering-rod) ===
+  Category: weapons, Subtype: wand, Rarity: 3
+  Socket: hand_R.socket
+  Prompt: magical wand or channeling rod, short rod with glowing tip, arcane energy, Smoldering Rod, The tip glows like a dying em...
+  Submitting to Meshy...
+  Preview task: 019d6dc4-519f-738a-81b5-5e72fe3373ea
+  Waiting for preview 0% 10% 10% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 20% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 80% 99% done
+  Downloading → glb/items/smoldering-rod.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/smoldering-rod.glb (8274 KB)
+  Optimizing...
+  Optimized: 8162 KB (was 8274 KB)
+  Done: Smoldering Rod
+
+=== Item Forge: Trollhide Cleaver (trollhide-cleaver) ===
+  Category: weapons, Subtype: axe, Rarity: 4
+  Socket: hand_R.socket
+  Prompt: battle axe, heavy curved blade on wooden haft, Trollhide Cleaver, The blade is wrapped in troll hide that refuses to rot...
+  Submitting to Meshy...
+  Preview task: 019d6dc8-d8e3-75aa-bf8c-6c3291567a3f
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 20% 20% 20% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 40% 40% 80% 80% done
+  Downloading → glb/items/trollhide-cleaver.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/trollhide-cleaver.glb (7215 KB)
+  Optimizing...
+  Optimized: 6954 KB (was 7215 KB)
+  Done: Trollhide Cleaver
+
+=== Item Forge: Phasefang (phasefang) ===
+  Category: weapons, Subtype: dagger, Rarity: 4
+  Socket: hand_R.socket
+  Prompt: curved dagger or short blade, ornate handle, Phasefang, Shimmers at the edges like a heat mirage. Strikes from angles th...
+  Submitting to Meshy...
+  Preview task: 019d6dce-bca8-7857-a489-705d04a8a4c8
+  Waiting for preview 0% 1% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0%
+  FAILED: Phasefang — Meshy task failed: Internal server error.
+
+=== Item Forge: Drakescale Staff (drakescale-staff) ===
+  Category: weapons, Subtype: staff, Rarity: 4
+  Socket: hand_R.socket
+  Prompt: magical staff, tall wooden staff with crystal or orb tip, arcane energy, Drakescale Staff, Scaled in drake hide with a c...
+  Submitting to Meshy...
+  Preview task: 019d6dd0-7623-75da-855c-a81a67719244
+  Waiting for preview 0% 1% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 5% 5% 5% 5% 20% 20% 20% 20% 20% 20% 40% 40% 40% 80% 80% 99% done
+  Downloading → glb/items/drakescale-staff.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/drakescale-staff.glb (8560 KB)
+  Optimizing...
+  Optimized: 8363 KB (was 8560 KB)
+  Done: Drakescale Staff
+
+=== Item Forge: Tattered Cloth (tattered-cloth) ===
+  Category: armor, Subtype: cloth, Rarity: 0
+  Socket: chest.socket
+  Prompt: cloth robe or vestments, flowing fabric, hooded or collared, Tattered Cloth, Stitched together from whatever was at hand...
+  Submitting to Meshy...
+  Preview task: 019d6dd4-9dc7-7a70-9464-e21568ac4142
+  Waiting for preview 0% 1% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0%
+  FAILED: Tattered Cloth — Meshy task failed: Internal server error.
+
+=== Item Forge: Worn Leather Vest (worn-leather-vest) ===
+  Category: armor, Subtype: leather, Rarity: 0
+  Socket: chest.socket
+  Prompt: leather armor vest or jerkin, stitched panels, buckles and straps, Worn Leather Vest, Cracked and stiff. Somebody died w...
+  Submitting to Meshy...
+  Preview task: 019d6dd7-9670-7ada-b2ff-6b30a1aa8c55
+  Waiting for preview 0% 1% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0%
+  FAILED: Worn Leather Vest — Meshy task failed: Internal server error.
+
+=== Item Forge: Rusty Chainmail (rusty-chainmail) ===
+  Category: armor, Subtype: plate, Rarity: 0
+  Socket: chest.socket
+  Prompt: metal plate armor breastplate, riveted steel plates, heavy and protective, Rusty Chainmail, Half the links are missing. ...
+  Submitting to Meshy...
+  Preview task: 019d6ddc-9277-71d6-8191-59c1b1fe43d8
+  Waiting for preview 0% 1% 10% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 5%
+  FAILED: Rusty Chainmail — Meshy task failed: Internal server error.
+
+=== Item Forge: Padded Armor (padded-armor) ===
+  Category: armor, Subtype: plate, Rarity: 1
+  Socket: chest.socket
+  Prompt: metal plate armor breastplate, riveted steel plates, heavy and protective, Padded Armor, Layered cloth packed with cave ...
+  Submitting to Meshy...
+  Preview task: 019d6ddf-6a5d-7891-ae52-64cc348995bf
+  Waiting for preview 0% 1% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0%
+  FAILED: Padded Armor — Meshy task failed: Internal server error.
+
+=== Item Forge: Leather Jerkin (leather-jerkin) ===
+  Category: armor, Subtype: leather, Rarity: 1
+  Socket: chest.socket
+  Prompt: leather armor vest or jerkin, stitched panels, buckles and straps, Leather Jerkin, Cut from something tougher than cow. ...
+  Submitting to Meshy...
+  Preview task: 019d6de2-a517-7de1-86db-8c8da17699ec
+  Waiting for preview 0% 1% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0%
+  FAILED: Leather Jerkin — Meshy task failed: Internal server error.
+
+=== Item Forge: Apprentice Robes (apprentice-robes) ===
+  Category: armor, Subtype: cloth, Rarity: 1
+  Socket: chest.socket
+  Prompt: cloth robe or vestments, flowing fabric, hooded or collared, Apprentice Robes, Faded blue with a singed hem. The last we...
+  Submitting to Meshy...
+  Preview task: 019d6de7-6046-7064-9b71-49d02ad3d7b9
+  Waiting for preview 0% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30%
+  FAILED: Apprentice Robes — Meshy task failed: Internal server error.
+
+=== Item Forge: Studded Leather (studded-leather) ===
+  Category: armor, Subtype: plate, Rarity: 1
+  Socket: chest.socket
+  Prompt: metal plate armor breastplate, riveted steel plates, heavy and protective, Studded Leather, Iron studs hammered into boi...
+  Submitting to Meshy...
+  Preview task: 019d6de8-ef25-7a6e-a9e1-6e0dd28aeaea
+  Waiting for preview 0% 1% 1% 1% 1% 1% 1% 1% 1% 1% 1% 1% 1% 1% 1%
+  FAILED: Studded Leather — Meshy task failed: The server is busy. Please try again later.
+
+=== Item Forge: Scout Armor (scout-armor) ===
+  Category: armor, Subtype: leather, Rarity: 1
+  Socket: chest.socket
+  Prompt: leather armor vest or jerkin, stitched panels, buckles and straps, Scout Armor, Light enough to run in. That matters dow...
+  Submitting to Meshy...
+  Preview task: 019d6dea-ebf5-7032-a878-354a94d1e37b
+  Waiting for preview 0% 10% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0%
+  FAILED: Scout Armor — Meshy task failed: Internal server error.
+
+=== Item Forge: Acolyte Vestments (acolyte-vestments) ===
+  Category: armor, Subtype: cloth, Rarity: 1
+  Socket: chest.socket
+  Prompt: cloth robe or vestments, flowing fabric, hooded or collared, Acolyte Vestments, White once. The prayer stitched into the...
+  Submitting to Meshy...
+  Preview task: 019d6ded-850d-75e7-b0bb-d7dbb40035a1
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30%  FAILED: Acolyte Vestments — Meshy task timed out after 5 minutes
+
+=== Item Forge: Etched Chainmail (etched-chainmail) ===
+  Category: armor, Subtype: plate, Rarity: 2
+  Socket: chest.socket
+  Prompt: metal plate armor breastplate, riveted steel plates, heavy and protective, Etched Chainmail, Heavy and well-kept. Whoeve...
+  Submitting to Meshy...
+  Preview task: 019d6df2-5b13-721e-af5b-e1e58846c387
+  Waiting for preview 0% 10% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0%
+  FAILED: Etched Chainmail — Meshy task failed: Internal server error.
+
+=== Item Forge: Ranger Leathers (ranger-leathers) ===
+  Category: armor, Subtype: leather, Rarity: 2
+  Socket: chest.socket
+  Prompt: leather armor vest or jerkin, stitched panels, buckles and straps, Ranger Leathers, Supple and dark. Made for someone wh...
+  Submitting to Meshy...
+  Preview task: 019d6df7-59f5-77a2-9ec3-b08548edd3d6
+  Waiting for preview 0% 1% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0%
+  FAILED: Ranger Leathers — Meshy task failed: Internal server error.
+
+=== Item Forge: Mage Robes (mage-robes) ===
+  Category: armor, Subtype: cloth, Rarity: 2
+  Socket: chest.socket
+  Prompt: cloth robe or vestments, flowing fabric, hooded or collared, Mage Robes, The fabric hums faintly. You can feel it when t...
+  Submitting to Meshy...
+  Preview task: 019d6dfa-5546-77ea-870a-7de3e59fb810
+  Waiting for preview 0% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 99% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 5%
+  FAILED: Mage Robes — Meshy task failed: Internal server error.
+
+=== Item Forge: Spider Silk Wraps (spider-silk-wraps) ===
+  Category: armor, Subtype: leather, Rarity: 2
+  Socket: chest.socket
+  Prompt: leather armor vest or jerkin, stitched panels, buckles and straps, Spider Silk Wraps, Impossibly light. The silk doesn't...
+  Submitting to Meshy...
+  Preview task: 019d6dfe-f670-7f08-b3a6-23a04d142344
+  Waiting for preview 1% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0%
+  FAILED: Spider Silk Wraps — Meshy task failed: Internal server error.
+
+=== Item Forge: Carved Stone Plate (carved-stone-plate) ===
+  Category: armor, Subtype: plate, Rarity: 3
+  Socket: chest.socket
+  Prompt: metal plate armor breastplate, riveted steel plates, heavy and protective, Carved Stone Plate, Carved from the giant's o...
+  Submitting to Meshy...
+  Preview task: 019d6e01-f36c-794d-8f76-622a6ddc7470
+  Waiting for preview 0% 10% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 5%
+  FAILED: Carved Stone Plate — Meshy task failed: Internal server error.
+
+=== Item Forge: Stalker's Vest (stalkers-vest) ===
+  Category: armor, Subtype: leather, Rarity: 3
+  Socket: chest.socket
+  Prompt: leather armor vest or jerkin, stitched panels, buckles and straps, Stalker's Vest, The edges seem to blur in dim light. ...
+  Submitting to Meshy...
+  Preview task: 019d6e05-d1e2-7802-b134-a316a539647a
+  Waiting for preview 0% 1% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 5% 5% 5% 5% 5% 5% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 40% 80% 80% 80% 100% done
+  Downloading → glb/items/stalkers-vest.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/stalkers-vest.glb (7889 KB)
+  Optimizing...
+  Optimized: 7497 KB (was 7889 KB)
+  Done: Stalker's Vest
+
+=== Item Forge: Scorched Scale Vest (scorched-scale-vest) ===
+  Category: armor, Subtype: plate, Rarity: 3
+  Socket: chest.socket
+  Prompt: metal plate armor breastplate, riveted steel plates, heavy and protective, Scorched Scale Vest, Peeled from something th...
+  Submitting to Meshy...
+  Preview task: 019d6e0c-84b4-7bf2-b681-c420dbd85ccd
+  Waiting for preview 1% 10% 10% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 5% 5% 5% 5% 5% 20% 20% 20% 20% 20% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 40% 80% 80% 80% 99% done
+  Downloading → glb/items/scorched-scale-vest.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/scorched-scale-vest.glb (9424 KB)
+  Optimizing...
+  Optimized: 9046 KB (was 9424 KB)
+  Done: Scorched Scale Vest
+
+=== Item Forge: Drake's Cowl (drakes-cowl) ===
+  Category: armor, Subtype: cloth, Rarity: 3
+  Socket: chest.socket
+  Prompt: cloth robe or vestments, flowing fabric, hooded or collared, Drake's Cowl, Stitched from drake membrane. The cowl whispe...
+  Submitting to Meshy...
+  Preview task: 019d6e14-6d2b-7b3c-952c-f84d5ce90941
+  Waiting for preview 0% 10% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% 30% done
+  Refining with PBR textures...
+  Waiting for texture pass 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 0% 5% 5% 20% 20% 20% 20% 20% 20% 20% 20% 40% 40% 80% 80% 80% 80% 80% 80% done
+  Downloading → glb/items/drakes-cowl.glb
+  Saved: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/glb/items/drakes-cowl.glb (8693 KB)
+  Optimizing...
+  Optimized: 8444 KB (was 8693 KB)
+  Done: Drake's Cowl
+
+=== Batch Complete ===
+  Success: 27, Skipped: 0, Failed: 16
+
+Manifest written: /Users/michaelorourke/ultimate-dominion/.claude/worktrees/creature-studio/tools/creature-lab/item-manifest.json
+  27/43 items have GLBs
