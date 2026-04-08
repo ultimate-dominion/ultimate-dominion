@@ -1,1 +1,458 @@
-{}
+{
+  "broken-sword": {
+    "name": "Broken Sword",
+    "file": "broken-sword.glb",
+    "category": "weapons",
+    "subtype": "sword",
+    "rarity": 0,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "worn-shortbow": {
+    "name": "Worn Shortbow",
+    "file": "worn-shortbow.glb",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 0,
+    "socket": "hand_L.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "cracked-wand": {
+    "name": "Cracked Wand",
+    "file": "cracked-wand.glb",
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 0,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "iron-axe": {
+    "name": "Iron Axe",
+    "file": "iron-axe.glb",
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "apprentice-staff": {
+    "name": "Apprentice Staff",
+    "file": "apprentice-staff.glb",
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "light-mace": {
+    "name": "Light Mace",
+    "file": "light-mace.glb",
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "shortbow": {
+    "name": "Shortbow",
+    "file": "shortbow.glb",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 1,
+    "socket": "hand_L.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "channeling-rod": {
+    "name": "Channeling Rod",
+    "file": "channeling-rod.glb",
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "notched-blade": {
+    "name": "Notched Blade",
+    "file": "notched-blade.glb",
+    "category": "weapons",
+    "subtype": "sword",
+    "rarity": 1,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "warhammer": {
+    "name": "Warhammer",
+    "file": "warhammer.glb",
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "longbow": {
+    "name": "Longbow",
+    "file": "longbow.glb",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 2,
+    "socket": "hand_L.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "mage-staff": {
+    "name": "Mage Staff",
+    "file": "mage-staff.glb",
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "dire-rat-fang": {
+    "name": "Dire Rat Fang",
+    "file": "dire-rat-fang.glb",
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "sporecap-wand": {
+    "name": "Sporecap Wand",
+    "file": "sporecap-wand.glb",
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "notched-cleaver": {
+    "name": "Notched Cleaver",
+    "file": "notched-cleaver.glb",
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "crystal-shard": {
+    "name": "Crystal Shard",
+    "file": "crystal-shard.glb",
+    "category": "weapons",
+    "subtype": "dagger",
+    "rarity": 2,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "gnarled-cudgel": {
+    "name": "Gnarled Cudgel",
+    "file": "gnarled-cudgel.glb",
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "webspinner-bow": {
+    "name": "Webspinner Bow",
+    "file": "webspinner-bow.glb",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 2,
+    "socket": "hand_L.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "bone-staff": {
+    "name": "Bone Staff",
+    "file": "bone-staff.glb",
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "stone-maul": {
+    "name": "Stone Maul",
+    "file": "stone-maul.glb",
+    "category": "weapons",
+    "subtype": "mace",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "darkwood-bow": {
+    "name": "Darkwood Bow",
+    "file": "darkwood-bow.glb",
+    "category": "weapons",
+    "subtype": "bow",
+    "rarity": 3,
+    "socket": "hand_L.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "smoldering-rod": {
+    "name": "Smoldering Rod",
+    "file": "smoldering-rod.glb",
+    "category": "weapons",
+    "subtype": "wand",
+    "rarity": 3,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "trollhide-cleaver": {
+    "name": "Trollhide Cleaver",
+    "file": "trollhide-cleaver.glb",
+    "category": "weapons",
+    "subtype": "axe",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  },
+  "drakescale-staff": {
+    "name": "Drakescale Staff",
+    "file": "drakescale-staff.glb",
+    "category": "weapons",
+    "subtype": "staff",
+    "rarity": 4,
+    "socket": "hand_R.socket",
+    "offset": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.0
+  }
+}
