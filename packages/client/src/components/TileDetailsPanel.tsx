@@ -291,8 +291,11 @@ export const TileDetailsPanel = (): JSX.Element => {
     if (spell) return classifyWeapon(spell, true);
     const weapon = equippedWeapons.find(w => w.tokenId === itemId || w.itemId === itemId);
     if (weapon) return classifyWeapon(weapon, false);
+    // Monster counterattack — use opponent's class for animation style
+    if (opponent?.entityClass === StatsClasses.Intelligence) return 'spell' as const;
+    if (opponent?.entityClass === StatsClasses.Agility) return 'ranged' as const;
     return 'melee' as const;
-  }, [equippedSpells, equippedWeapons]);
+  }, [equippedSpells, equippedWeapons, opponent?.entityClass]);
 
   const weaponNameForItem = useCallback((itemId: string) => {
     const spell = equippedSpells.find(s => s.tokenId === itemId || s.itemId === itemId);
