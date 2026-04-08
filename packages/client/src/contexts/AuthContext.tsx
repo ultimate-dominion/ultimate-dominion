@@ -20,6 +20,7 @@ import {
   useIdentityToken,
   useLoginWithOAuth,
   usePrivy,
+  useUser,
   useWallets,
 } from '@privy-io/react-auth';
 
@@ -49,6 +50,28 @@ export function resolveWalletAction(
   // otherwise trigger createWallet() and orphan their original wallet/character.
   if (!isConfirmedNewUser) return 'skip';
   return 'create';
+}
+
+export async function resolveEmbeddedIdentityToken(
+  readToken: () => string | null,
+  refreshUser?: () => Promise<unknown>,
+  waitForToken?: () => Promise<string | null>,
+): Promise<string | null> {
+  const current = readToken();
+  if (current) return current;
+  if (!refreshUser) return null;
+
+  try {
+    await refreshUser();
+  } catch (error) {
+    console.warn('[Auth] Failed to refresh embedded identity token:', error);
+    return null;
+  }
+
+  const refreshed = readToken();
+  if (refreshed) return refreshed;
+
+  return waitForToken ? await waitForToken() : null;
 }
 
 const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
@@ -90,6 +113,7 @@ export const AuthProvider = ({
   const { ready, authenticated, user, logout } = usePrivy();
   const { wallets } = useWallets();
   const { identityToken } = useIdentityToken();
+  const { refreshUser } = useUser();
   const { createWallet } = useCreateWallet();
   const isCreatingWallet = useRef(false);
   const [isConfirmedNewUser, setIsConfirmedNewUser] = useState(false);
@@ -115,12 +139,51 @@ export const AuthProvider = ({
   const newUserFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initAddressRef = useRef<string | null>(null);
   const identityTokenRef = useRef<string | null>(identityToken);
+  const identityTokenWaitersRef =
+    useRef<Array<(token: string | null) => void>>([]);
 
   useEffect(() => {
     identityTokenRef.current = identityToken;
+    if (identityTokenWaitersRef.current.length > 0) {
+      const waiters = [...identityTokenWaitersRef.current];
+      identityTokenWaitersRef.current = [];
+      waiters.forEach(resolve => resolve(identityToken));
+    }
   }, [identityToken]);
 
-  const getEmbeddedIdentityToken = useCallback(async () => identityTokenRef.current, []);
+  const waitForEmbeddedIdentityToken = useCallback(
+    () => new Promise<string | null>((resolve) => {
+      const timeout = setTimeout(() => {
+        identityTokenWaitersRef.current = identityTokenWaitersRef.current.filter(
+          waiter => waiter !== finish,
+        );
+        resolve(identityTokenRef.current);
+      }, 1_000);
+
+      const finish = (token: string | null) => {
+        clearTimeout(timeout);
+        resolve(token);
+      };
+
+      identityTokenWaitersRef.current.push(finish);
+    }),
+    [],
+  );
+
+  const getEmbeddedIdentityToken = useCallback(
+    async () => {
+      const token = await resolveEmbeddedIdentityToken(
+        () => identityTokenRef.current,
+        refreshUser,
+        waitForEmbeddedIdentityToken,
+      );
+      if (!token) {
+        console.warn('[Auth] Embedded identity token unavailable for relayer auth');
+      }
+      return token;
+    },
+    [refreshUser, waitForEmbeddedIdentityToken],
+  );
 
   // Detect injected wallet (MetaMask etc.)
   useEffect(() => {
@@ -348,18 +411,21 @@ export const AuthProvider = ({
   // Relayer handles dedup (skips if already funded + balance sufficient).
   // Re-registers every 10 min to survive relayer redeploys wiping tracking state.
   useEffect(() => {
-    if (!embeddedAddress || !RELAYER_URL || !identityToken) return;
+    if (!embeddedAddress || !RELAYER_URL) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     const callFund = async (): Promise<boolean> => {
       try {
+        const embeddedIdentityToken = await getEmbeddedIdentityToken();
+        if (!embeddedIdentityToken) return false;
+
         const res = await fetch(`${RELAYER_URL}/fund`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${identityToken}`,
+            Authorization: `Bearer ${embeddedIdentityToken}`,
           },
           body: JSON.stringify({
             address: embeddedAddress,
@@ -404,7 +470,7 @@ export const AuthProvider = ({
       timers.forEach(t => clearTimeout(t));
       clearInterval(reRegInterval);
     };
-  }, [embeddedAddress, identityToken]);
+  }, [embeddedAddress, getEmbeddedIdentityToken]);
 
   const connectWithGoogle = useCallback(async () => {
     // If already authenticated via Privy (e.g. returning from OAuth redirect),

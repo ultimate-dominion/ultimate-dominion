@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveWalletAction } from './AuthContext';
+import { resolveEmbeddedIdentityToken, resolveWalletAction } from './AuthContext';
 
 describe('resolveWalletAction', () => {
   it('returns "create" for a confirmed new user with no server-side wallet', () => {
@@ -27,5 +27,51 @@ describe('resolveWalletAction', () => {
   it('returns "skip" when createWallet is already in flight for a new user', () => {
     expect(resolveWalletAction(undefined, true, true)).toBe('skip');
     expect(resolveWalletAction(null, true, true)).toBe('skip');
+  });
+});
+
+describe('resolveEmbeddedIdentityToken', () => {
+  it('returns the cached token without refreshing when present', async () => {
+    const refreshUser = async () => {
+      throw new Error('should not refresh');
+    };
+
+    await expect(
+      resolveEmbeddedIdentityToken(() => 'cached-token', refreshUser),
+    ).resolves.toBe('cached-token');
+  });
+
+  it('refreshes and returns the updated token when the cached token is missing', async () => {
+    let token: string | null = null;
+    const refreshUser = async () => {
+      token = 'refreshed-token';
+    };
+
+    await expect(
+      resolveEmbeddedIdentityToken(() => token, refreshUser),
+    ).resolves.toBe('refreshed-token');
+  });
+
+  it('waits for a delayed token update after refresh', async () => {
+    let token: string | null = null;
+    const refreshUser = async () => {};
+    const waitForToken = async () => {
+      token = 'delayed-token';
+      return token;
+    };
+
+    await expect(
+      resolveEmbeddedIdentityToken(() => token, refreshUser, waitForToken),
+    ).resolves.toBe('delayed-token');
+  });
+
+  it('returns null when refresh fails', async () => {
+    const refreshUser = async () => {
+      throw new Error('refresh failed');
+    };
+
+    await expect(
+      resolveEmbeddedIdentityToken(() => null, refreshUser),
+    ).resolves.toBeNull();
   });
 });
