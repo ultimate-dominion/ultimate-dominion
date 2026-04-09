@@ -360,7 +360,7 @@ export function drawWeapon(
         // Render as ASCII at the projectile position
         const size = w * 0.08;
         renderMonster(ctx, template, x - size / 2, y - size / 2, size, size, {
-          cellSize: 6,
+          cellSize: 3,
           enable3D: true,
           enableGlow: true,
           enableBgFill: false, // transparent bg — composited over battle scene
