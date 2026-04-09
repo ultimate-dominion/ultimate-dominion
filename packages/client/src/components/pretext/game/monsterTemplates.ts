@@ -39,6 +39,8 @@ export type MonsterTemplate = {
   };
   /** Visual size relative to viewport (0-1). 1 = fills viewport, 0.3 = tiny. */
   displayScale?: number;
+  /** Attack visual intensity: 1=minor, 2=moderate, 3=heavy/boss. Scales projectile size, particles, shake. */
+  threatTier?: 1 | 2 | 3;
   /** If true, skip template cache — draw function is animated (e.g. GLB creature) */
   dynamic?: boolean;
   /** Draw silhouette on a pre-filled black canvas at (w x h) pixels */

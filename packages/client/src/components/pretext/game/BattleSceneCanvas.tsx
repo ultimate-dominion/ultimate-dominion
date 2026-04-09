@@ -556,7 +556,10 @@ export const BattleSceneCanvas = forwardRef<
 
         const projX = startX + (endX - startX) * t;
         const projY = startY + (endY - startY) * t;
-        drawWeapon(ctx, weaponType, projX, projY, w, h, progress, weaponName, !isPlayerAttack);
+        // threatScale: tier 1→1.0, tier 2→1.5, tier 3→2.2
+        const tier = template?.threatTier ?? 1;
+        const threatScale = tier === 3 ? 2.2 : tier === 2 ? 1.5 : 1.0;
+        drawWeapon(ctx, weaponType, projX, projY, w, h, progress, weaponName, !isPlayerAttack, threatScale);
       }
 
       // ── Render impact effects ───────────────────────────────────────
@@ -605,10 +608,12 @@ export const BattleSceneCanvas = forwardRef<
 
         ctx.save();
 
-        // Subtle shake when player is hit
+        // Shake when player is hit — amplified by monster threat tier
         if (playerFlash > 0) {
-          const pShakeX = playerFlash * (Math.random() - 0.5) * w * 0.008;
-          const pShakeY = playerFlash * (Math.random() - 0.5) * h * 0.008;
+          const tier = template?.threatTier ?? 1;
+          const shakeAmp = tier === 3 ? 0.020 : tier === 2 ? 0.013 : 0.008;
+          const pShakeX = playerFlash * (Math.random() - 0.5) * w * shakeAmp;
+          const pShakeY = playerFlash * (Math.random() - 0.5) * h * shakeAmp;
           ctx.translate(pShakeX, pShakeY);
         }
 
