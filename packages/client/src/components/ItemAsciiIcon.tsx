@@ -1,13 +1,15 @@
 /**
- * ItemAsciiIcon — Posterized pixel art icons with rarity-driven detail.
+ * ItemAsciiIcon — Posterized pixel art with max-pool downsampling.
+ *
+ * The secret sauce: max-pooling instead of bilinear averaging when
+ * downsampling. For each output pixel, we take the BRIGHTEST source
+ * pixel in that block — so thin white features (sword blades, bow
+ * strings, staff details) survive instead of getting averaged into mud.
  *
  * Higher rarity = smaller pixels + more tonal levels.
- * Worn/Common: 2-color (black + tint) — bold and crude.
- * Uncommon/Rare: 3-color (black + dark shade + bright) — depth emerges.
- * Epic/Legendary: 4-color (black + shadow + mid + highlight) — rich detail.
- *
- * Posterization prevents the muddy-gradient problem that multiply blend
- * creates on downsampled images. Every pixel snaps to a defined tone.
+ * Worn/Common: 2-color (black + tint) — bold, crude.
+ * Uncommon/Rare: 3-color (black + dark + bright) — depth emerges.
+ * Epic/Legendary: 4-color (black + shadow + mid + highlight) — crisp.
  *
  * Fallback: emoji for items without art.
  */
@@ -41,9 +43,7 @@ const RARITY_PIXEL_SIZE: Record<number, number> = {
 };
 
 // ---------------------------------------------------------------------------
-// Rarity → tonal palette (posterization levels)
-// Each entry is [threshold, [r, g, b, a]] — pixels above threshold get that color.
-// Evaluated top-to-bottom; first match wins. Below all thresholds → black.
+// Tonal palette per rarity
 // ---------------------------------------------------------------------------
 type TonalLevel = { threshold: number; color: [number, number, number, number] };
 
@@ -62,43 +62,36 @@ function buildPalette(rarity: number, tintHex: string): TonalLevel[] {
   switch (rarity) {
     case Rarity.Worn:
     case Rarity.Common:
-      // 2-color: black + full tint
       return [
-        { threshold: 80, color: [r, g, b, 255] },
+        { threshold: 60, color: [r, g, b, 255] },
       ];
 
     case Rarity.Uncommon:
     case Rarity.Rare:
-      // 3-color: black + dark shade + bright
       return [
-        { threshold: 160, color: [r, g, b, 255] },
-        { threshold: 60,  color: [Math.floor(r * 0.45), Math.floor(g * 0.45), Math.floor(b * 0.45), 255] },
+        { threshold: 150, color: [r, g, b, 255] },
+        { threshold: 40,  color: [Math.floor(r * 0.4), Math.floor(g * 0.4), Math.floor(b * 0.4), 255] },
       ];
 
     case Rarity.Epic:
-      // 4-color: black + shadow + mid + highlight
       return [
-        { threshold: 200, color: [Math.min(255, Math.floor(r * 1.3)), Math.min(255, Math.floor(g * 1.3)), Math.min(255, Math.floor(b * 1.3)), 255] },
-        { threshold: 120, color: [r, g, b, 255] },
-        { threshold: 50,  color: [Math.floor(r * 0.35), Math.floor(g * 0.35), Math.floor(b * 0.35), 255] },
+        { threshold: 190, color: [Math.min(255, Math.floor(r * 1.3)), Math.min(255, Math.floor(g * 1.3)), Math.min(255, Math.floor(b * 1.3)), 255] },
+        { threshold: 100, color: [r, g, b, 255] },
+        { threshold: 35,  color: [Math.floor(r * 0.35), Math.floor(g * 0.35), Math.floor(b * 0.35), 255] },
       ];
 
     case Rarity.Legendary:
-      // 4-color + brighter highlight for that legendary glow
       return [
-        { threshold: 180, color: [Math.min(255, Math.floor(r * 1.5)), Math.min(255, Math.floor(g * 1.4)), Math.min(255, Math.floor(b * 1.1)), 255] },
-        { threshold: 110, color: [r, g, b, 255] },
-        { threshold: 45,  color: [Math.floor(r * 0.4), Math.floor(g * 0.4), Math.floor(b * 0.4), 255] },
+        { threshold: 170, color: [Math.min(255, Math.floor(r * 1.5)), Math.min(255, Math.floor(g * 1.4)), Math.min(255, Math.floor(b * 1.1)), 255] },
+        { threshold: 90,  color: [r, g, b, 255] },
+        { threshold: 30,  color: [Math.floor(r * 0.4), Math.floor(g * 0.4), Math.floor(b * 0.4), 255] },
       ];
 
     default:
-      return [{ threshold: 80, color: [r, g, b, 255] }];
+      return [{ threshold: 60, color: [r, g, b, 255] }];
   }
 }
 
-// ---------------------------------------------------------------------------
-// Rarity tint hex values
-// ---------------------------------------------------------------------------
 const RARITY_TINT: Record<number, string> = {
   [Rarity.Worn]:      '#706866',
   [Rarity.Common]:    '#B0A890',
@@ -109,9 +102,10 @@ const RARITY_TINT: Record<number, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Image cache
+// Image cache — stores both the element and its full-res pixel data
 // ---------------------------------------------------------------------------
 const imageCache = new Map<string, HTMLImageElement>();
+const pixelDataCache = new Map<string, { data: Uint8ClampedArray; w: number; h: number }>();
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   const cached = imageCache.get(src);
@@ -126,80 +120,113 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+/** Extract full-res pixel data from source image (cached). */
+function getSourcePixels(img: HTMLImageElement, src: string): { data: Uint8ClampedArray; w: number; h: number } {
+  const cached = pixelDataCache.get(src);
+  if (cached) return cached;
+
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  const ctx = c.getContext('2d')!;
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, c.width, c.height);
+  const result = { data: imageData.data, w: c.width, h: c.height };
+  pixelDataCache.set(src, result);
+  return result;
+}
+
 // ---------------------------------------------------------------------------
-// Posterized pixel renderer
+// Max-pool downsampler + posterizer
 // ---------------------------------------------------------------------------
-function renderPosterized(
+function renderMaxPooled(
   canvas: HTMLCanvasElement,
   img: HTMLImageElement,
+  src: string,
   rarity: number,
   pixelSize: number,
 ) {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  const w = Math.floor(rect.width);
-  const h = Math.floor(rect.height);
-  if (w === 0 || h === 0) return;
+  const displayW = Math.floor(rect.width);
+  const displayH = Math.floor(rect.height);
+  if (displayW === 0 || displayH === 0) return;
 
   const tintHex = RARITY_TINT[rarity] ?? RARITY_TINT[Rarity.Common];
   const palette = buildPalette(rarity, tintHex);
 
-  // Grid resolution
-  const gridW = Math.max(4, Math.floor(w / pixelSize));
-  const gridH = Math.max(4, Math.floor(h / pixelSize));
+  const gridW = Math.max(4, Math.floor(displayW / pixelSize));
+  const gridH = Math.max(4, Math.floor(displayH / pixelSize));
 
-  // Step 1: Downsample source to tiny canvas
-  const tiny = document.createElement('canvas');
-  tiny.width = gridW;
-  tiny.height = gridH;
-  const tinyCtx = tiny.getContext('2d');
-  if (!tinyCtx) return;
+  // Get full-res source pixel data
+  const source = getSourcePixels(img, src);
+  const srcW = source.w;
+  const srcH = source.h;
+  const srcData = source.data;
 
-  tinyCtx.imageSmoothingEnabled = true;
-  tinyCtx.imageSmoothingQuality = 'medium';
-  tinyCtx.drawImage(img, 0, 0, gridW, gridH);
+  // Build max-pooled + posterized grid
+  const grid = document.createElement('canvas');
+  grid.width = gridW;
+  grid.height = gridH;
+  const gridCtx = grid.getContext('2d')!;
+  const output = gridCtx.createImageData(gridW, gridH);
+  const out = output.data;
 
-  // Step 2: Posterize — snap each pixel to palette based on brightness
-  const imageData = tinyCtx.getImageData(0, 0, gridW, gridH);
-  const data = imageData.data;
+  const blockW = srcW / gridW;
+  const blockH = srcH / gridH;
 
-  for (let i = 0; i < data.length; i += 4) {
-    // Luminance from the white-on-black source
-    const brightness = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+  for (let gy = 0; gy < gridH; gy++) {
+    for (let gx = 0; gx < gridW; gx++) {
+      // Find max brightness in this block of the source image
+      const srcX0 = Math.floor(gx * blockW);
+      const srcY0 = Math.floor(gy * blockH);
+      const srcX1 = Math.min(srcW, Math.floor((gx + 1) * blockW));
+      const srcY1 = Math.min(srcH, Math.floor((gy + 1) * blockH));
 
-    // Find matching palette level (highest threshold first)
-    let matched = false;
-    for (const level of palette) {
-      if (brightness >= level.threshold) {
-        data[i]     = level.color[0];
-        data[i + 1] = level.color[1];
-        data[i + 2] = level.color[2];
-        data[i + 3] = level.color[3];
-        matched = true;
-        break;
+      let maxBrightness = 0;
+
+      // Sample every Nth pixel for performance (stride of 2-4 for large blocks)
+      const stride = blockW > 40 ? 4 : blockW > 20 ? 2 : 1;
+
+      for (let sy = srcY0; sy < srcY1; sy += stride) {
+        for (let sx = srcX0; sx < srcX1; sx += stride) {
+          const si = (sy * srcW + sx) * 4;
+          const brightness = srcData[si] * 0.299 + srcData[si + 1] * 0.587 + srcData[si + 2] * 0.114;
+          if (brightness > maxBrightness) maxBrightness = brightness;
+        }
       }
-    }
 
-    if (!matched) {
-      // Below all thresholds → black
-      data[i] = 0;
-      data[i + 1] = 0;
-      data[i + 2] = 0;
-      data[i + 3] = 255;
+      // Posterize: map max brightness to palette
+      const oi = (gy * gridW + gx) * 4;
+      let matched = false;
+      for (const level of palette) {
+        if (maxBrightness >= level.threshold) {
+          out[oi]     = level.color[0];
+          out[oi + 1] = level.color[1];
+          out[oi + 2] = level.color[2];
+          out[oi + 3] = level.color[3];
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) {
+        out[oi] = 0;
+        out[oi + 1] = 0;
+        out[oi + 2] = 0;
+        out[oi + 3] = 255;
+      }
     }
   }
 
-  tinyCtx.putImageData(imageData, 0, 0);
+  gridCtx.putImageData(output, 0, 0);
 
-  // Step 3: Scale up with nearest-neighbor
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
+  // Scale up with nearest-neighbor
+  canvas.width = displayW * dpr;
+  canvas.height = displayH * dpr;
+  const ctx = canvas.getContext('2d')!;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(tiny, 0, 0, w, h);
+  ctx.drawImage(grid, 0, 0, displayW, displayH);
 }
 
 // ---------------------------------------------------------------------------
@@ -225,7 +252,7 @@ const TintedItemCanvas = memo(({
       .then(img => {
         setLoaded(true);
         if (canvasRef.current) {
-          renderPosterized(canvasRef.current, img, rarity, pixelSize);
+          renderMaxPooled(canvasRef.current, img, imageSrc, rarity, pixelSize);
         }
       })
       .catch(() => {});
@@ -234,7 +261,7 @@ const TintedItemCanvas = memo(({
   useEffect(() => {
     if (!loaded || !canvasRef.current) return;
     const img = imageCache.get(imageSrc);
-    if (img) renderPosterized(canvasRef.current, img, rarity, pixelSize);
+    if (img) renderMaxPooled(canvasRef.current, img, imageSrc, rarity, pixelSize);
   }, [loaded, imageSrc, rarity, pixelSize]);
 
   const glowFilter = rarity >= Rarity.Epic
