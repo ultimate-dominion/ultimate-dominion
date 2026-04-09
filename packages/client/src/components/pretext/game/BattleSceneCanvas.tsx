@@ -551,17 +551,9 @@ export const BattleSceneCanvas = forwardRef<
       }
 
       // ── Render impact effects ───────────────────────────────────────
+      // TODO: replace drawImpact with ASCII-style impact effect
+      // Impact state is still tracked (state.impacts) for future use.
 
-      for (const impact of state.impacts) {
-        const impProgress = (now - impact.startTime) / IMPACT_DURATION;
-        drawImpact(
-          ctx,
-          impact.x + state.hitReaction.offsetX,
-          impact.y,
-          w,
-          impProgress,
-        );
-      }
 
       // ── Render player character (left 35%) ──────────────────────────
 
