@@ -70,7 +70,7 @@ function getConfig(type: DamageType, value: number) {
       };
     case 'double':
       return {
-        text: `${value}`,
+        text: `DOUBLE ${value}`,
         color: '#A8DEFF',
         font: getFontString('cinzel-700', 22),
         vy: -1.55,
