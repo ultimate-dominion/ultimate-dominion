@@ -188,7 +188,7 @@ function getTemplateImage(template: MonsterTemplate): TemplateData {
 
 const CONTOUR_BLACK_THRESHOLD = 8;
 const CONTOUR_BOOST = 2.2;
-const TEMPLATE_BRIGHTNESS_BOOST = 1.8;
+const TEMPLATE_BRIGHTNESS_BOOST = 2.5;
 
 // ---------------------------------------------------------------------------
 // Procedural noise
@@ -473,7 +473,7 @@ function getWeight(level: number, isBoss: boolean, brightness: number): number {
 
 const DEPTH_LAYERS = 3;
 const DEPTH_OFFSET = 1.5;
-const GAMMA = 0.50;
+const GAMMA = 0.38;
 
 // v8: glow threshold — cells brighter than this get canvas shadowBlur
 const GLOW_LUM_THRESHOLD = 0.72;
@@ -481,8 +481,8 @@ const GLOW_BLUR_BASE = 6;
 const GLOW_BLUR_MAX = 14;
 
 // v8: background fill intensity
-const BG_FILL_BRIGHTNESS = 0.45; // how bright the bg rect is relative to cell color
-const BG_FILL_ALPHA = 0.50;      // opacity of the bg rect
+const BG_FILL_BRIGHTNESS = 0.60; // how bright the bg rect is relative to cell color
+const BG_FILL_ALPHA = 0.65;      // opacity of the bg rect
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -710,7 +710,7 @@ export function renderMonster(
   // Per-template rendering overrides (dark creatures stay dark, etc.)
   const ovr = template.renderOverrides;
   const tplGamma = ovr?.gamma ?? GAMMA;
-  const tplAmbient = ovr?.ambient ?? 0.70;
+  const tplAmbient = ovr?.ambient ?? 0.85;
   const tplCharFloor = ovr?.charDensityFloor ?? 0.30;
 
   // -----------------------------------------------------------------------
@@ -784,11 +784,12 @@ export function renderMonster(
     const atm = template.atmosphere;
     const glowCX = centerX + renderW / 2;
     const glowCY = centerY + renderH * 0.42;
-    const glowR = Math.max(renderW, renderH) * 0.65;
+    const glowR = Math.max(renderW, renderH) * 0.85;
+    const boostI = atm.intensity * 2.5;
     const grad = ctx.createRadialGradient(glowCX, glowCY, 0, glowCX, glowCY, glowR);
-    grad.addColorStop(0, `rgba(${atm.r},${atm.g},${atm.b},${atm.intensity})`);
-    grad.addColorStop(0.35, `rgba(${atm.r},${atm.g},${atm.b},${atm.intensity * 0.5})`);
-    grad.addColorStop(0.7, `rgba(${atm.r},${atm.g},${atm.b},${atm.intensity * 0.15})`);
+    grad.addColorStop(0, `rgba(${atm.r},${atm.g},${atm.b},${Math.min(1, boostI)})`);
+    grad.addColorStop(0.35, `rgba(${atm.r},${atm.g},${atm.b},${Math.min(1, boostI * 0.5)})`);
+    grad.addColorStop(0.7, `rgba(${atm.r},${atm.g},${atm.b},${Math.min(1, boostI * 0.15)})`);
     grad.addColorStop(1, `rgba(${atm.r},${atm.g},${atm.b},0)`);
     ctx.save();
     ctx.globalAlpha = alpha;
