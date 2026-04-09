@@ -10,6 +10,10 @@ export type DamageType =
   | 'crit'
   | 'double'
   | 'critDouble'
+  | 'enemyDamage'
+  | 'enemyCrit'
+  | 'blocked'
+  | 'dodged'
   | 'heal'
   | 'gold'
   | 'miss';
@@ -96,6 +100,38 @@ function getConfig(type: DamageType, value: number) {
         vy: -0.8,
         scale: 1,
       };
+    case 'enemyDamage':
+      return {
+        text: `${value}`,
+        color: '#D4CCC0',
+        font: getFontString('firaCode-600', 20),
+        vy: -1.4,
+        scale: 1,
+      };
+    case 'enemyCrit':
+      return {
+        text: `CRIT ${value}`,
+        color: '#D98030',
+        font: getFontString('cinzel-700', 24),
+        vy: -1.7,
+        scale: 1.4,
+      };
+    case 'blocked':
+      return {
+        text: `BLOCKED ${value}`,
+        color: '#5AAFAF',
+        font: getFontString('cinzel-700', 20),
+        vy: -1.3,
+        scale: 1.15,
+      };
+    case 'dodged':
+      return {
+        text: 'DODGED',
+        color: COLORS.textMuted,
+        font: getFontString('cinzel-600', 18),
+        vy: -1.0,
+        scale: 1.05,
+      };
     case 'miss':
       return {
         text: 'MISS',
@@ -168,7 +204,8 @@ export const BattleFloatingDamage = forwardRef<BattleFloatingDamageHandle>(
         n.opacity -= FADE_SPEED * dt;
 
         if (
-          (n.type === 'crit' || n.type === 'double' || n.type === 'critDouble') &&
+          (n.type === 'crit' || n.type === 'double' || n.type === 'critDouble' ||
+           n.type === 'enemyCrit' || n.type === 'blocked') &&
           n.scale > 1
         ) {
           n.scale = Math.max(1, n.scale - 0.002 * dt);
@@ -196,7 +233,8 @@ export const BattleFloatingDamage = forwardRef<BattleFloatingDamageHandle>(
 
         // Crit glow
         if (
-          (n.type === 'crit' || n.type === 'double' || n.type === 'critDouble') &&
+          (n.type === 'crit' || n.type === 'double' || n.type === 'critDouble' ||
+           n.type === 'enemyCrit' || n.type === 'blocked') &&
           n.opacity > 0.5
         ) {
           ctx.shadowColor = n.color;

@@ -66,12 +66,22 @@ export function useFloatingDamageSignals({
       const isCombo = hitCount > 1 || outcome.doubleStrike;
 
       // ONE floating number per outcome — total damage, not per-hit
+      // Color-coded: red = player damage, white = enemy damage, teal = blocked, gray = miss/dodge
       if (anyMiss) {
-        damageRef.current.spawn(baseX, baseY, 'miss');
+        damageRef.current.spawn(baseX, baseY, outcome.spellDodged ? 'dodged' : 'miss');
       } else if (totalDamage > 0) {
-        const type: DamageType = anyCrit
-          ? (isCombo ? 'critDouble' : 'crit')
-          : (isCombo ? 'double' : 'damage');
+        let type: DamageType;
+        if (!isPlayerAttack && outcome.blocked) {
+          // Player blocked an incoming attack — positive feedback
+          type = 'blocked';
+        } else if (isPlayerAttack) {
+          type = anyCrit
+            ? (isCombo ? 'critDouble' : 'crit')
+            : (isCombo ? 'double' : 'damage');
+        } else {
+          // Enemy damage on player — neutral/white color family
+          type = anyCrit ? 'enemyCrit' : 'enemyDamage';
+        }
         damageRef.current.spawn(baseX, baseY, type, totalDamage, isCombo ? hitCount : undefined);
       }
     }
