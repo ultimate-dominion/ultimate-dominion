@@ -189,6 +189,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     refreshCharacter,
   } = useCharacter();
   const {
+    currentZoneName,
     inSafetyZone,
     isSpawned,
     monstersOnTile,
@@ -1610,7 +1611,7 @@ export const TileDetailsPanel = (): JSX.Element => {
                 textAlign="center"
                 textShadow="0 0 20px rgba(168, 222, 255, 0.4), 0 0 40px rgba(168, 222, 255, 0.15)"
               >
-                {t('tile.exploreDarkCave')}
+                {t('tile.exploreZone', { zoneName: currentZoneName })}
               </Text>
               <Text
                 color="#5A5040"

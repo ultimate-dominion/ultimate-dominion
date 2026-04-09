@@ -2,7 +2,7 @@
 pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
-import {MobsByLevel, MobsByZoneLevel, BossSpawnConfig, ZoneBossConfig, ZoneMapConfig} from "@codegen/index.sol";
+import {MobsByZoneLevel, ZoneBossConfig, ZoneMapConfig} from "@codegen/index.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
 import {IMobSystem, IWorldBossSystem} from "@world/IWorld.sol";
 import {LibChunks} from "../libraries/LibChunks.sol";
@@ -51,13 +51,8 @@ contract MapSpawnSystem is System {
             }
         }
 
-        // Try zone-scoped mob pool first, fall back to global MobsByLevel
+        // Zone-scoped mob pool only — no global fallback to prevent cross-zone leakage
         uint256[] memory availableMonsters = _getAvailableMonsters(zoneId, startLevel, endLevel);
-
-        if (availableMonsters.length == 0) {
-            // Fallback: try global MobsByLevel (backward compat for Z1 before backfill)
-            availableMonsters = _getAvailableMonstersGlobal(startLevel, endLevel);
-        }
 
         if (availableMonsters.length == 0) revert NoMonsters();
 
@@ -77,15 +72,10 @@ contract MapSpawnSystem is System {
             );
         }
 
-        // Boss spawn check — per-zone config, falls back to global singleton
+        // Boss spawn check — zone-scoped only, no global fallback to prevent cross-zone leakage
         {
             uint256 bossMobId = ZoneBossConfig.getBossMobId(zoneId);
             uint256 chance = ZoneBossConfig.getSpawnChanceBp(zoneId);
-            if (bossMobId == 0) {
-                // Fallback to legacy singleton BossSpawnConfig
-                bossMobId = BossSpawnConfig.getBossMobId();
-                chance = BossSpawnConfig.getSpawnChanceBp();
-            }
             if (bossMobId != 0 && chance > 0) {
                 uint256 bossRoll = uint256(keccak256(abi.encodePacked(block.prevrandao, x, y, "boss"))) % 10000;
                 if (bossRoll < chance) {
@@ -112,24 +102,6 @@ contract MapSpawnSystem is System {
         uint256 idx = 0;
         for (uint256 i = startLevel; i < endLevel; i++) {
             uint256[] memory mobIds = MobsByZoneLevel.getMobIds(zoneId, i);
-            for (uint256 j = 0; j < mobIds.length; j++) {
-                monsters[idx] = mobIds[j];
-                idx++;
-            }
-        }
-        return monsters;
-    }
-
-    function _getAvailableMonstersGlobal(uint8 startLevel, uint8 endLevel) internal view returns (uint256[] memory) {
-        uint256 numOfMobs = 0;
-        for (uint256 i = startLevel; i < endLevel; i++) {
-            numOfMobs += MobsByLevel.lengthMobIds(i);
-        }
-
-        uint256[] memory monsters = new uint256[](numOfMobs);
-        uint256 idx = 0;
-        for (uint256 i = startLevel; i < endLevel; i++) {
-            uint256[] memory mobIds = MobsByLevel.getMobIds(i);
             for (uint256 j = 0; j < mobIds.length; j++) {
                 monsters[idx] = mobIds[j];
                 idx++;

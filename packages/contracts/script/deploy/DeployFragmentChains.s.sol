@@ -23,8 +23,7 @@ import {FragmentType, FragmentTriggerType} from "@codegen/common.sol";
  *   XV  (TheBakersStand)      - 3 steps: npc -> combat -> tile
  *   XVI (TheLightsBelow)      - 3 steps: tile -> tile -> npc
  *
- * Tile coordinates use placeholder values (100-200 range) for Z2 map.
- * Update after Z2 map is finalized.
+ * Tile coordinates use Z2 grid: x 0-9, y 100-109 (zone origin 0,100).
  *
  * Prerequisites:
  * - World must be deployed with FragmentChainStep, NpcDialogue, Position tables
@@ -93,7 +92,7 @@ contract DeployFragmentChains is Script {
             FragmentType.FirstLight,
             0,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(105, 110),
+            _tileTrigger(1, 101),
             "A pale light seeps through the ridgeline. You feel the wind for the first time since the cave."
         );
 
@@ -112,7 +111,7 @@ contract DeployFragmentChains is Script {
             FragmentType.TheBladesEdge,
             0,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(120, 115),
+            _tileTrigger(3, 102),
             "A broken blade juts from the rock face, still humming with old purpose."
         );
 
@@ -130,12 +129,12 @@ contract DeployFragmentChains is Script {
             FragmentType.TheBladesEdge,
             2,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(130, 120),
+            _tileTrigger(5, 104),
             "At the cliff's edge, the wind carries the ring of steel. The blade remembers."
         );
 
         // Place NPC
-        Position.set(bladesmithId, 125, 118);
+        Position.set(bladesmithId, 4, 103);
         NpcDialogue.set(
             bladesmithId,
             FragmentType.TheBladesEdge,
@@ -156,7 +155,7 @@ contract DeployFragmentChains is Script {
             FragmentType.DividedGround,
             0,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(140, 105),
+            _tileTrigger(6, 101),
             unicode"The earth is split here \u2014 not by quake, but by something deliberate. The halves don't match."
         );
 
@@ -164,7 +163,7 @@ contract DeployFragmentChains is Script {
             FragmentType.DividedGround,
             1,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(145, 110),
+            _tileTrigger(7, 103),
             "Carved markers line both sides of the divide. Names you can't read, in a script that predates the kingdom."
         );
 
@@ -172,7 +171,7 @@ contract DeployFragmentChains is Script {
             FragmentType.DividedGround,
             2,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(150, 115),
+            _tileTrigger(8, 105),
             "At the narrowest point, someone built a bridge. It was never finished."
         );
 
@@ -188,7 +187,7 @@ contract DeployFragmentChains is Script {
             FragmentType.TheDirectors,
             0,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(160, 130),
+            _tileTrigger(2, 106),
             "Brass instruments hang from the dead trees, swaying in the wind. They play a melody no one composed."
         );
 
@@ -196,7 +195,7 @@ contract DeployFragmentChains is Script {
             FragmentType.TheDirectors,
             1,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(165, 135),
+            _tileTrigger(3, 107),
             "A conductor's podium stands at the clearing's center. The baton is missing, but the music continues."
         );
 
@@ -212,7 +211,7 @@ contract DeployFragmentChains is Script {
             FragmentType.TheStormsMemory,
             0,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(110, 140),
+            _tileTrigger(4, 106),
             "Lightning scars pattern the stone in perfect spirals. This storm remembered where it struck."
         );
 
@@ -228,7 +227,7 @@ contract DeployFragmentChains is Script {
             FragmentType.TheStormsMemory,
             2,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(115, 150),
+            _tileTrigger(5, 108),
             "Where the echo fell, the spirals realign. The storm's memory is complete."
         );
 
@@ -244,7 +243,7 @@ contract DeployFragmentChains is Script {
             FragmentType.WhatGrows,
             0,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(170, 105),
+            _tileTrigger(8, 101),
             unicode"Luminous fungi carpet the overhang. They pulse in rhythm \u2014 not with your heartbeat, but with something deeper."
         );
 
@@ -252,7 +251,7 @@ contract DeployFragmentChains is Script {
             FragmentType.WhatGrows,
             1,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(175, 110),
+            _tileTrigger(9, 103),
             "The fungi form a trail. Where it leads, the rock is warm to the touch."
         );
 
@@ -260,7 +259,7 @@ contract DeployFragmentChains is Script {
             FragmentType.WhatGrows,
             2,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(180, 115),
+            _tileTrigger(9, 105),
             "A garden in full bloom, fed by no sun. Whatever grows here chose to."
         );
 
@@ -297,12 +296,12 @@ contract DeployFragmentChains is Script {
             FragmentType.TheBakersStand,
             2,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(155, 145),
+            _tileTrigger(7, 108),
             "The stand still smells of fresh bread. A sign reads: 'Open tomorrow.' It always does."
         );
 
         // Place NPC
-        Position.set(bakerId, 150, 140);
+        Position.set(bakerId, 6, 107);
         NpcDialogue.set(
             bakerId,
             FragmentType.TheBakersStand,
@@ -326,7 +325,7 @@ contract DeployFragmentChains is Script {
             FragmentType.TheLightsBelow,
             0,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(185, 140),
+            _tileTrigger(1, 107),
             unicode"Through a crack in the stone, lights drift upward \u2014 soft, patient, impossibly deep."
         );
 
@@ -335,7 +334,7 @@ contract DeployFragmentChains is Script {
             FragmentType.TheLightsBelow,
             1,
             FragmentTriggerType.TileVisit,
-            _tileTrigger(190, 145),
+            _tileTrigger(2, 108),
             "The lights respond to your presence. They gather, forming shapes that almost resolve into faces."
         );
 
@@ -349,7 +348,7 @@ contract DeployFragmentChains is Script {
         );
 
         // Place NPC
-        Position.set(watcherId, 195, 150);
+        Position.set(watcherId, 3, 109);
         NpcDialogue.set(
             watcherId,
             FragmentType.TheLightsBelow,

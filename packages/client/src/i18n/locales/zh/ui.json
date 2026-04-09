@@ -717,6 +717,7 @@
     "noMonstersArea": "此区域没有怪物",
     "noPlayersArea": "此区域没有玩家",
     "exploreDarkCave": "探索暗黑洞穴",
+    "exploreZone": "探索{{zoneName}}",
     "useCompass": "使用罗盘移动",
     "fireCracklesNear": "附近有篝火在燃烧。你可以在此休息。",
     "restByFire": "在篝火旁休息",
