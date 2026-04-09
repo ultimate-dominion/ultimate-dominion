@@ -275,7 +275,7 @@ export function CharacterInspectOverlay({
                 <CharacterViewer
                   race={character.race}
                   height={280}
-                  cellSize={4}
+                  cellSize={5}
                   autoReveal
                   equippedItems={viewerEquipment}
                 />
