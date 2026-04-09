@@ -146,7 +146,7 @@ describe('weaponAnimations', () => {
         expect.objectContaining({ id: 'item-iron-axe', dynamic: true }),
         expect.any(Number), expect.any(Number),
         expect.any(Number), expect.any(Number),
-        expect.objectContaining({ cellSize: 3, enable3D: true, enableGlow: true }),
+        expect.objectContaining({ cellSize: 4, enable3D: true, enableGlow: true }),
       );
     });
 

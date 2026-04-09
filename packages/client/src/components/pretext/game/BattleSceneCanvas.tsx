@@ -498,7 +498,7 @@ export const BattleSceneCanvas = forwardRef<
       if (template) {
         renderMonster(ctx, template, monsterX, monsterY, monsterW, monsterH, {
           elapsed: p.monsterDefeated ? 0 : elapsed,
-          cellSize: 3,
+          cellSize: 4,
           enable3D: true,
           enableGlow: !p.monsterDefeated,
           enableBgFill: true,
@@ -594,7 +594,7 @@ export const BattleSceneCanvas = forwardRef<
 
         renderMonster(ctx, playerTpl, playerX, playerY, playerW, playerH, {
           elapsed: p.userDefeated ? 0 : elapsed,
-          cellSize: 3,
+          cellSize: 4,
           enable3D: true,
           enableGlow: !p.userDefeated,
           enableBgFill: true,
