@@ -1,15 +1,18 @@
 /**
- * ItemAsciiIcon — Posterized pixel art with max-pool downsampling.
+ * ItemAsciiIcon — Threshold-Dilate-Downsample pixel art icons.
  *
- * The secret sauce: max-pooling instead of bilinear averaging when
- * downsampling. For each output pixel, we take the BRIGHTEST source
- * pixel in that block — so thin white features (sword blades, bow
- * strings, staff details) survive instead of getting averaged into mud.
+ * Pipeline (runs once per image, cached):
+ * 1. Otsu threshold at full resolution → binary (ink ON / OFF)
+ * 2. Morphological dilation (3x3 cross) → thickens thin features
+ * 3. Block coverage downsample → count ON pixels per grid cell
+ * 4. Posterize coverage to rarity tonal palette → crisp pixel art
  *
- * Higher rarity = smaller pixels + more tonal levels.
- * Worn/Common: 2-color (black + tint) — bold, crude.
- * Uncommon/Rare: 3-color (black + dark + bright) — depth emerges.
- * Epic/Legendary: 4-color (black + shadow + mid + highlight) — crisp.
+ * Why this works: binarizing at 1008px preserves features that bilinear
+ * averaging destroys. A 1px sword blade is ON at full res, dilation makes
+ * it 3px wide, and it survives the 80:1 block average. Max-pooling picked
+ * up noise; averaging lost detail; this approach does neither.
+ *
+ * Rarity controls both pixel size AND tonal depth.
  *
  * Fallback: emoji for items without art.
  */
@@ -45,7 +48,7 @@ const RARITY_PIXEL_SIZE: Record<number, number> = {
 // ---------------------------------------------------------------------------
 // Tonal palette per rarity
 // ---------------------------------------------------------------------------
-type TonalLevel = { threshold: number; color: [number, number, number, number] };
+type TonalLevel = { minCoverage: number; color: [number, number, number, number] };
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -62,33 +65,37 @@ function buildPalette(rarity: number, tintHex: string): TonalLevel[] {
   switch (rarity) {
     case Rarity.Worn:
     case Rarity.Common:
+      // 2-color: black + full tint. Any cell with >8% ink coverage lights up.
       return [
-        { threshold: 60, color: [r, g, b, 255] },
+        { minCoverage: 0.08, color: [r, g, b, 255] },
       ];
 
     case Rarity.Uncommon:
     case Rarity.Rare:
+      // 3-color: black + dark shade + bright
       return [
-        { threshold: 150, color: [r, g, b, 255] },
-        { threshold: 40,  color: [Math.floor(r * 0.4), Math.floor(g * 0.4), Math.floor(b * 0.4), 255] },
+        { minCoverage: 0.50, color: [r, g, b, 255] },
+        { minCoverage: 0.08, color: [Math.floor(r * 0.45), Math.floor(g * 0.45), Math.floor(b * 0.45), 255] },
       ];
 
     case Rarity.Epic:
+      // 4-color: black + shadow + mid + highlight
       return [
-        { threshold: 190, color: [Math.min(255, Math.floor(r * 1.3)), Math.min(255, Math.floor(g * 1.3)), Math.min(255, Math.floor(b * 1.3)), 255] },
-        { threshold: 100, color: [r, g, b, 255] },
-        { threshold: 35,  color: [Math.floor(r * 0.35), Math.floor(g * 0.35), Math.floor(b * 0.35), 255] },
+        { minCoverage: 0.65, color: [Math.min(255, Math.floor(r * 1.3)), Math.min(255, Math.floor(g * 1.3)), Math.min(255, Math.floor(b * 1.3)), 255] },
+        { minCoverage: 0.30, color: [r, g, b, 255] },
+        { minCoverage: 0.06, color: [Math.floor(r * 0.35), Math.floor(g * 0.35), Math.floor(b * 0.35), 255] },
       ];
 
     case Rarity.Legendary:
+      // 4-color with hotter highlights
       return [
-        { threshold: 170, color: [Math.min(255, Math.floor(r * 1.5)), Math.min(255, Math.floor(g * 1.4)), Math.min(255, Math.floor(b * 1.1)), 255] },
-        { threshold: 90,  color: [r, g, b, 255] },
-        { threshold: 30,  color: [Math.floor(r * 0.4), Math.floor(g * 0.4), Math.floor(b * 0.4), 255] },
+        { minCoverage: 0.60, color: [Math.min(255, Math.floor(r * 1.5)), Math.min(255, Math.floor(g * 1.4)), Math.min(255, Math.floor(b * 1.1)), 255] },
+        { minCoverage: 0.25, color: [r, g, b, 255] },
+        { minCoverage: 0.05, color: [Math.floor(r * 0.4), Math.floor(g * 0.4), Math.floor(b * 0.4), 255] },
       ];
 
     default:
-      return [{ threshold: 60, color: [r, g, b, 255] }];
+      return [{ minCoverage: 0.08, color: [r, g, b, 255] }];
   }
 }
 
@@ -102,10 +109,10 @@ const RARITY_TINT: Record<number, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Image cache — stores both the element and its full-res pixel data
+// Image + binary mask cache
 // ---------------------------------------------------------------------------
 const imageCache = new Map<string, HTMLImageElement>();
-const pixelDataCache = new Map<string, { data: Uint8ClampedArray; w: number; h: number }>();
+const binaryCache = new Map<string, { mask: Uint8Array; w: number; h: number }>();
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   const cached = imageCache.get(src);
@@ -120,26 +127,104 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Extract full-res pixel data from source image (cached). */
-function getSourcePixels(img: HTMLImageElement, src: string): { data: Uint8ClampedArray; w: number; h: number } {
-  const cached = pixelDataCache.get(src);
+// ---------------------------------------------------------------------------
+// Otsu threshold — finds optimal binary split for white-on-black ink
+// ---------------------------------------------------------------------------
+function otsuThreshold(data: Uint8ClampedArray, pixelCount: number): number {
+  // Build brightness histogram
+  const histogram = new Uint32Array(256);
+  for (let i = 0; i < data.length; i += 4) {
+    const brightness = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+    histogram[brightness]++;
+  }
+
+  // Find threshold that maximizes inter-class variance
+  let bestThreshold = 0;
+  let bestVariance = 0;
+  let sumTotal = 0;
+  for (let i = 0; i < 256; i++) sumTotal += i * histogram[i];
+
+  let sumBg = 0;
+  let weightBg = 0;
+
+  for (let t = 0; t < 256; t++) {
+    weightBg += histogram[t];
+    if (weightBg === 0) continue;
+    const weightFg = pixelCount - weightBg;
+    if (weightFg === 0) break;
+
+    sumBg += t * histogram[t];
+    const meanBg = sumBg / weightBg;
+    const meanFg = (sumTotal - sumBg) / weightFg;
+    const variance = weightBg * weightFg * (meanBg - meanFg) * (meanBg - meanFg);
+
+    if (variance > bestVariance) {
+      bestVariance = variance;
+      bestThreshold = t;
+    }
+  }
+
+  return bestThreshold;
+}
+
+// ---------------------------------------------------------------------------
+// Build dilated binary mask from source image (cached per src)
+// ---------------------------------------------------------------------------
+function getBinaryMask(img: HTMLImageElement, src: string): { mask: Uint8Array; w: number; h: number } {
+  const cached = binaryCache.get(src);
   if (cached) return cached;
 
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+
+  // Extract pixel data
   const c = document.createElement('canvas');
-  c.width = img.naturalWidth;
-  c.height = img.naturalHeight;
+  c.width = w;
+  c.height = h;
   const ctx = c.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
-  const imageData = ctx.getImageData(0, 0, c.width, c.height);
-  const result = { data: imageData.data, w: c.width, h: c.height };
-  pixelDataCache.set(src, result);
+  const imageData = ctx.getImageData(0, 0, w, h);
+  const data = imageData.data;
+
+  // Otsu threshold → binary
+  const threshold = otsuThreshold(data, w * h);
+  const binary = new Uint8Array(w * h);
+  for (let i = 0; i < binary.length; i++) {
+    const brightness = data[i * 4] * 0.299 + data[i * 4 + 1] * 0.587 + data[i * 4 + 2] * 0.114;
+    binary[i] = brightness > threshold ? 1 : 0;
+  }
+
+  // Morphological dilation with 3x3 cross structuring element
+  // This thickens thin features by 1px in each cardinal direction
+  const dilated = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = y * w + x;
+      if (binary[idx] === 1) {
+        dilated[idx] = 1;
+        continue;
+      }
+      // Check 3x3 cross neighbors
+      if (
+        (x > 0 && binary[idx - 1] === 1) ||
+        (x < w - 1 && binary[idx + 1] === 1) ||
+        (y > 0 && binary[idx - w] === 1) ||
+        (y < h - 1 && binary[idx + w] === 1)
+      ) {
+        dilated[idx] = 1;
+      }
+    }
+  }
+
+  const result = { mask: dilated, w, h };
+  binaryCache.set(src, result);
   return result;
 }
 
 // ---------------------------------------------------------------------------
-// Max-pool downsampler + posterizer
+// Coverage-ratio downsampler + posterizer
 // ---------------------------------------------------------------------------
-function renderMaxPooled(
+function renderCoverage(
   canvas: HTMLCanvasElement,
   img: HTMLImageElement,
   src: string,
@@ -158,13 +243,13 @@ function renderMaxPooled(
   const gridW = Math.max(4, Math.floor(displayW / pixelSize));
   const gridH = Math.max(4, Math.floor(displayH / pixelSize));
 
-  // Get full-res source pixel data
-  const source = getSourcePixels(img, src);
-  const srcW = source.w;
-  const srcH = source.h;
-  const srcData = source.data;
+  // Get pre-computed dilated binary mask
+  const { mask, w: srcW, h: srcH } = getBinaryMask(img, src);
 
-  // Build max-pooled + posterized grid
+  const blockW = srcW / gridW;
+  const blockH = srcH / gridH;
+
+  // Build posterized grid from coverage ratios
   const grid = document.createElement('canvas');
   grid.width = gridW;
   grid.height = gridH;
@@ -172,35 +257,34 @@ function renderMaxPooled(
   const output = gridCtx.createImageData(gridW, gridH);
   const out = output.data;
 
-  const blockW = srcW / gridW;
-  const blockH = srcH / gridH;
-
   for (let gy = 0; gy < gridH; gy++) {
     for (let gx = 0; gx < gridW; gx++) {
-      // Find max brightness in this block of the source image
       const srcX0 = Math.floor(gx * blockW);
       const srcY0 = Math.floor(gy * blockH);
       const srcX1 = Math.min(srcW, Math.floor((gx + 1) * blockW));
       const srcY1 = Math.min(srcH, Math.floor((gy + 1) * blockH));
 
-      let maxBrightness = 0;
+      // Count ON pixels in this block
+      let onCount = 0;
+      let totalCount = 0;
 
-      // Sample every Nth pixel for performance (stride of 2-4 for large blocks)
-      const stride = blockW > 40 ? 4 : blockW > 20 ? 2 : 1;
+      // Stride for performance on large blocks
+      const stride = blockW > 40 ? 3 : blockW > 20 ? 2 : 1;
 
       for (let sy = srcY0; sy < srcY1; sy += stride) {
         for (let sx = srcX0; sx < srcX1; sx += stride) {
-          const si = (sy * srcW + sx) * 4;
-          const brightness = srcData[si] * 0.299 + srcData[si + 1] * 0.587 + srcData[si + 2] * 0.114;
-          if (brightness > maxBrightness) maxBrightness = brightness;
+          totalCount++;
+          if (mask[sy * srcW + sx] === 1) onCount++;
         }
       }
 
-      // Posterize: map max brightness to palette
+      const coverage = totalCount > 0 ? onCount / totalCount : 0;
+
+      // Map coverage to palette (highest coverage threshold first)
       const oi = (gy * gridW + gx) * 4;
       let matched = false;
       for (const level of palette) {
-        if (maxBrightness >= level.threshold) {
+        if (coverage >= level.minCoverage) {
           out[oi]     = level.color[0];
           out[oi + 1] = level.color[1];
           out[oi + 2] = level.color[2];
@@ -252,7 +336,7 @@ const TintedItemCanvas = memo(({
       .then(img => {
         setLoaded(true);
         if (canvasRef.current) {
-          renderMaxPooled(canvasRef.current, img, imageSrc, rarity, pixelSize);
+          renderCoverage(canvasRef.current, img, imageSrc, rarity, pixelSize);
         }
       })
       .catch(() => {});
@@ -261,7 +345,7 @@ const TintedItemCanvas = memo(({
   useEffect(() => {
     if (!loaded || !canvasRef.current) return;
     const img = imageCache.get(imageSrc);
-    if (img) renderMaxPooled(canvasRef.current, img, imageSrc, rarity, pixelSize);
+    if (img) renderCoverage(canvasRef.current, img, imageSrc, rarity, pixelSize);
   }, [loaded, imageSrc, rarity, pixelSize]);
 
   const glowFilter = rarity >= Rarity.Epic
