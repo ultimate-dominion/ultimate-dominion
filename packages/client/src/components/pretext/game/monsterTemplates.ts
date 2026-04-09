@@ -37,6 +37,8 @@ export type MonsterTemplate = {
     /** Minimum luminance for character selection. Default 0.30. Dark creatures: 0.10-0.20 */
     charDensityFloor?: number;
   };
+  /** Visual size relative to viewport (0-1). 1 = fills viewport, 0.3 = tiny. */
+  displayScale?: number;
   /** If true, skip template cache — draw function is animated (e.g. GLB creature) */
   dynamic?: boolean;
   /** Draw silhouette on a pre-filled black canvas at (w x h) pixels */
