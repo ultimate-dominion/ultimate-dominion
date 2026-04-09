@@ -59,44 +59,15 @@ function hexToRgb(hex: string): [number, number, number] {
   ];
 }
 
-function buildPalette(rarity: number, tintHex: string): TonalLevel[] {
+function buildPalette(_rarity: number, tintHex: string): TonalLevel[] {
   const [r, g, b] = hexToRgb(tintHex);
 
-  switch (rarity) {
-    case Rarity.Worn:
-    case Rarity.Common:
-      // 2-color: black + full tint. Any cell with >8% ink coverage lights up.
-      return [
-        { minCoverage: 0.08, color: [r, g, b, 255] },
-      ];
-
-    case Rarity.Uncommon:
-    case Rarity.Rare:
-      // 3-color: black + dark shade + bright
-      return [
-        { minCoverage: 0.50, color: [r, g, b, 255] },
-        { minCoverage: 0.08, color: [Math.floor(r * 0.45), Math.floor(g * 0.45), Math.floor(b * 0.45), 255] },
-      ];
-
-    case Rarity.Epic:
-      // 4-color: black + shadow + mid + highlight
-      return [
-        { minCoverage: 0.65, color: [Math.min(255, Math.floor(r * 1.3)), Math.min(255, Math.floor(g * 1.3)), Math.min(255, Math.floor(b * 1.3)), 255] },
-        { minCoverage: 0.30, color: [r, g, b, 255] },
-        { minCoverage: 0.06, color: [Math.floor(r * 0.35), Math.floor(g * 0.35), Math.floor(b * 0.35), 255] },
-      ];
-
-    case Rarity.Legendary:
-      // 4-color with hotter highlights
-      return [
-        { minCoverage: 0.60, color: [Math.min(255, Math.floor(r * 1.5)), Math.min(255, Math.floor(g * 1.4)), Math.min(255, Math.floor(b * 1.1)), 255] },
-        { minCoverage: 0.25, color: [r, g, b, 255] },
-        { minCoverage: 0.05, color: [Math.floor(r * 0.4), Math.floor(g * 0.4), Math.floor(b * 0.4), 255] },
-      ];
-
-    default:
-      return [{ minCoverage: 0.08, color: [r, g, b, 255] }];
-  }
+  // Bold 2-color for all rarities: black + full tint.
+  // Detail comes from pixel resolution (8px→3px), not more tones.
+  // Multi-tone palettes looked muddy on sparse white-on-black ink art.
+  return [
+    { minCoverage: 0.08, color: [r, g, b, 255] },
+  ];
 }
 
 const RARITY_TINT: Record<number, string> = {
