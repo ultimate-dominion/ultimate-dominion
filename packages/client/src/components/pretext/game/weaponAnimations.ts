@@ -147,34 +147,39 @@ export function drawSpell(
   _h: number,
   progress: number,
 ): void {
-  const baseR = w * 0.012;
-  const pulse = 1 + Math.sin(progress * Math.PI * 6) * 0.3;
-  const pulseR = baseR * pulse;
+  // ASCII fire bolt — pulsing flame rune with subtle glow
+  const sz = Math.round(w * 0.028);
+  const pulse = 1 + Math.sin(progress * Math.PI * 6) * 0.15;
+  const pulseSz = Math.round(sz * pulse);
+  const alpha = Math.max(0, 1 - progress * 0.15);
 
-  // Outer glow
-  const grd = ctx.createRadialGradient(x, y, 0, x, y, pulseR * 3);
-  grd.addColorStop(0, 'rgba(255,160,50,0.4)');
-  grd.addColorStop(0.5, 'rgba(255,100,20,0.15)');
-  grd.addColorStop(1, 'rgba(255,60,10,0)');
-  ctx.fillStyle = grd;
-  ctx.fillRect(x - pulseR * 3, y - pulseR * 3, pulseR * 6, pulseR * 6);
+  ctx.save();
+  ctx.font = `bold ${pulseSz}px "Fira Code", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
 
-  // Core
-  ctx.fillStyle = 'rgb(255,220,120)';
-  ctx.beginPath();
-  ctx.arc(x, y, pulseR, 0, Math.PI * 2);
-  ctx.fill();
+  // Main fire rune — tight shadow keeps ASCII crisp
+  ctx.shadowColor = 'rgba(255,140,40,0.5)';
+  ctx.shadowBlur = 5;
+  ctx.fillStyle = `rgba(255,180,60,${alpha})`;
+  ctx.fillText('◆', x, y);
+  ctx.shadowBlur = 0;
 
-  // Trail particles
-  for (let i = 0; i < 5; i++) {
-    const tx = x - w * 0.01 * (i + 1) + (Math.random() - 0.5) * w * 0.01;
-    const ty = y + (Math.random() - 0.5) * w * 0.015;
-    const tr = pulseR * (0.6 - i * 0.1);
-    ctx.fillStyle = `rgba(255,${100 - i * 15},${20 - i * 4},${0.5 - i * 0.1})`;
-    ctx.beginPath();
-    ctx.arc(tx, ty, Math.max(1, tr), 0, Math.PI * 2);
-    ctx.fill();
+  // Bright inner core
+  ctx.font = `${Math.round(pulseSz * 0.45)}px "Fira Code", monospace`;
+  ctx.fillStyle = `rgba(255,230,150,${alpha})`;
+  ctx.fillText('*', x, y);
+
+  // ASCII trail — embers that fade
+  ctx.font = `${Math.round(sz * 0.5)}px "Fira Code", monospace`;
+  const trailChars = ['◇', '·', '·', '.'];
+  for (let i = 0; i < trailChars.length; i++) {
+    const tx = x - sz * (i + 1) * 0.5;
+    const ty = y + (i % 2 === 0 ? -2 : 2);
+    ctx.fillStyle = `rgba(255,${120 - i * 20},${30 - i * 6},${(0.5 - i * 0.1) * alpha})`;
+    ctx.fillText(trailChars[i], tx, ty);
   }
+  ctx.restore();
 }
 
 // ── Monster attack draw functions ───────────────────────────────────────
@@ -267,36 +272,37 @@ function drawMonsterSpell(
   _h: number,
   progress: number,
 ): void {
-  // ASCII shadow bolt — pulsing dark magic character with glow
-  const sz = Math.round(w * 0.03);
-  const pulse = 1 + Math.sin(progress * Math.PI * 5) * 0.2;
+  // ASCII shadow bolt — crisp dark rune with subtle glow
+  const sz = Math.round(w * 0.028);
+  const pulse = 1 + Math.sin(progress * Math.PI * 5) * 0.15;
   const pulseSz = Math.round(sz * pulse);
+  const alpha = Math.max(0, 1 - progress * 0.2);
 
   ctx.save();
   ctx.font = `bold ${pulseSz}px "Fira Code", monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Outer glow
-  ctx.shadowColor = 'rgba(140,80,200,0.7)';
-  ctx.shadowBlur = 14;
-  ctx.fillStyle = 'rgb(140,80,200)';
+  // Main rune — tight shadow keeps the ASCII crisp
+  ctx.shadowColor = 'rgba(140,80,200,0.4)';
+  ctx.shadowBlur = 5;
+  ctx.fillStyle = `rgba(160,100,220,${alpha})`;
   ctx.fillText('◆', x, y);
-
-  // Bright inner core
   ctx.shadowBlur = 0;
-  ctx.font = `bold ${Math.round(pulseSz * 0.5)}px "Fira Code", monospace`;
-  ctx.fillStyle = 'rgb(200,160,255)';
-  ctx.fillText('✦', x, y);
 
-  // ASCII particle trail
+  // Inner sigil
+  ctx.font = `${Math.round(pulseSz * 0.45)}px "Fira Code", monospace`;
+  ctx.fillStyle = `rgba(200,160,255,${alpha})`;
+  ctx.fillText('*', x, y);
+
+  // ASCII particle trail — dark runes that fade
   ctx.font = `${Math.round(sz * 0.5)}px "Fira Code", monospace`;
-  ctx.shadowBlur = 0;
-  for (let i = 1; i <= 4; i++) {
-    const tx = x - sz * i * 0.5;
+  const trailChars = ['◇', '·', '·', '.'];
+  for (let i = 0; i < trailChars.length; i++) {
+    const tx = x - sz * (i + 1) * 0.5;
     const ty = y + (i % 2 === 0 ? -2 : 2);
-    ctx.fillStyle = `rgba(100,40,160,${0.4 - i * 0.08})`;
-    ctx.fillText('·', tx, ty);
+    ctx.fillStyle = `rgba(120,60,180,${(0.4 - i * 0.08) * alpha})`;
+    ctx.fillText(trailChars[i], tx, ty);
   }
   ctx.restore();
 }
