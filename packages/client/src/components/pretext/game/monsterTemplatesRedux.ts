@@ -2240,6 +2240,7 @@ export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
   { id: 'redux-goblin', name: 'Goblin', gridWidth: 7, gridHeight: 7, dynamic: true, monsterClass: 0, level: 3, atmosphere: { r: 96, g: 120, b: 48, intensity: 0.16 },
     draw: makeGLBDrawFn('/models/creatures/goblin.glb', 7, 7, drawGoblinRedux) },
   { id: 'redux-giant-spider', name: 'Giant Spider', gridWidth: 10, gridHeight: 12, dynamic: true, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.22 },
+    renderOverrides: { gamma: 0.52, ambient: 0.70, brightnessBoost: 2.2, charDensityFloor: 0.10 },
     draw: makeGLBDrawFn('/models/creatures/giant-spider.glb', 10, 12, drawPhaseSpiderRedux) },
   { id: 'redux-skeleton', name: 'Skeleton', gridWidth: 7, gridHeight: 7, dynamic: true, monsterClass: 0, level: 5, atmosphere: { r: 96, g: 156, b: 70, intensity: 0.18 },
     draw: makeGLBDrawFn('/models/creatures/skeleton.glb', 7, 7, drawSkeletonRedux) },
@@ -2251,6 +2252,6 @@ export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
   { id: 'redux-carrion-crawler', name: 'Carrion Crawler', gridWidth: 10, gridHeight: 13, monsterClass: 1, level: 9, atmosphere: { r: 144, g: 168, b: 208, intensity: 0.20 }, draw: drawCarrionCrawlerRedux },
   { id: 'redux-hook-horror', name: 'Hook Horror', gridWidth: 14, gridHeight: 12, dynamic: true, monsterClass: 2, level: 10, atmosphere: { r: 136, g: 82, b: 178, intensity: 0.18 },
     draw: makeGLBDrawFn('/models/creatures/hook-horror.glb', 14, 12, drawDuskDrakeRedux) },
-  { id: 'redux-basilisk', name: 'Basilisk', gridWidth: 26, gridHeight: 9, dynamic: true, monsterClass: 0, level: 12, isBoss: true, atmosphere: { r: 52, g: 86, b: 36, intensity: 0.16 }, renderOverrides: { gamma: 0.72, ambient: 0.45, brightnessBoost: 1.15, charDensityFloor: 0.14 },
+  { id: 'redux-basilisk', name: 'Basilisk', gridWidth: 26, gridHeight: 9, dynamic: true, monsterClass: 0, level: 12, isBoss: true, atmosphere: { r: 52, g: 86, b: 36, intensity: 0.16 }, renderOverrides: { gamma: 0.52, ambient: 0.60, brightnessBoost: 1.7, charDensityFloor: 0.10 },
     draw: makeGLBDrawFn('/models/creatures/basilisk.glb', 26, 9, drawBasiliskRedux) },
 ];
