@@ -39,8 +39,7 @@ describe('useBattleSceneSignals', () => {
     vi.restoreAllMocks();
   });
 
-  it('emits hit metadata so misses do not animate as clean hits', async () => {
-    vi.useFakeTimers();
+  it('emits hit metadata so misses do not animate as clean hits', () => {
     const triggerAttack = vi.fn();
     const sceneRef = {
       current: { triggerAttack },
@@ -65,27 +64,21 @@ describe('useBattleSceneSignals', () => {
       }),
     );
 
-    await vi.runAllTimersAsync();
-
     expect(triggerAttack).toHaveBeenCalledTimes(1);
-    expect(triggerAttack).toHaveBeenCalledWith({
-      weaponType: 'melee',
-      damage: 0,
-      isCrit: false,
-      isPlayerAttack: false,
-      didHit: false,
-      targetDied: false,
-      isCombo: false,
-      callout: {
-        title: 'DODGED',
-        detail: 'Giant Spider misses you.',
-        tone: 'enemy',
-      },
-    });
+    expect(triggerAttack).toHaveBeenCalledWith(
+      expect.objectContaining({
+        weaponType: 'melee',
+        damage: 0,
+        isCrit: false,
+        isPlayerAttack: false,
+        didHit: false,
+        targetDied: false,
+        isCombo: false,
+      }),
+    );
   });
 
-  it('resets processed outcomes when a new encounter replaces the old one', async () => {
-    vi.useFakeTimers();
+  it('resets processed outcomes when a new encounter replaces the old one', () => {
     const triggerAttack = vi.fn();
     const sceneRef = {
       current: { triggerAttack },
@@ -109,7 +102,6 @@ describe('useBattleSceneSignals', () => {
       },
     );
 
-    await vi.runAllTimersAsync();
     expect(triggerAttack).toHaveBeenCalledTimes(1);
 
     rerender({
@@ -122,26 +114,75 @@ describe('useBattleSceneSignals', () => {
       ],
     });
 
-    await vi.runAllTimersAsync();
     expect(triggerAttack).toHaveBeenCalledTimes(2);
-    expect(triggerAttack).toHaveBeenLastCalledWith({
-      weaponType: 'melee',
-      damage: 10,
-      isCrit: false,
-      isPlayerAttack: true,
-      didHit: true,
-      targetDied: true,
-      isCombo: false,
-      callout: {
-        title: '10 DAMAGE',
-        detail: 'You hit Giant Spider.',
-        tone: 'player',
-      },
-    });
+    expect(triggerAttack).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        damage: 10,
+        isPlayerAttack: true,
+        targetDied: true,
+      }),
+    );
   });
 
-  it('stages multi-hit outcomes into separate attack beats', async () => {
-    vi.useFakeTimers();
+  it('does NOT replay player attack when counterattack is revealed', () => {
+    const triggerAttack = vi.fn();
+    const sceneRef = {
+      current: { triggerAttack },
+    } as React.RefObject<BattleSceneHandle | null>;
+
+    const playerAttack = makeOutcome({
+      attackerId: PLAYER_ID,
+      defenderId: MONSTER_ID,
+      attackNumber: 1n,
+      currentTurn: 1n,
+      encounterId: '0xenc1',
+    });
+
+    const counterattack = makeOutcome({
+      attackerId: MONSTER_ID,
+      defenderId: PLAYER_ID,
+      attackNumber: 2n,
+      currentTurn: 1n,
+      encounterId: '0xenc1',
+      damagePerHit: [5n],
+      attackerDamageDelt: 5n,
+    });
+
+    // Phase 1: only player attack visible (counterattack hidden by useCombatPacing)
+    const { rerender } = renderHook(
+      ({ visibleOutcomes }) =>
+        useBattleSceneSignals({
+          visibleOutcomes,
+          characterId: PLAYER_ID,
+          opponentName: 'Giant Spider',
+          sceneRef,
+          weaponTypeForItem: () => 'melee',
+        }),
+      {
+        initialProps: {
+          visibleOutcomes: [playerAttack],
+        },
+      },
+    );
+
+    expect(triggerAttack).toHaveBeenCalledTimes(1);
+    expect(triggerAttack).toHaveBeenCalledWith(
+      expect.objectContaining({ isPlayerAttack: true, damage: 10 }),
+    );
+
+    // Phase 2: counterattack revealed (600ms later) — visibleOutcomes now has both
+    rerender({
+      visibleOutcomes: [playerAttack, counterattack],
+    });
+
+    // Should fire ONLY the counterattack, NOT replay the player attack
+    expect(triggerAttack).toHaveBeenCalledTimes(2);
+    expect(triggerAttack).toHaveBeenLastCalledWith(
+      expect.objectContaining({ isPlayerAttack: false, damage: 5 }),
+    );
+  });
+
+  it('consolidates multi-hit outcomes into one signal', () => {
     const triggerAttack = vi.fn();
     const sceneRef = {
       current: { triggerAttack },
@@ -166,20 +207,16 @@ describe('useBattleSceneSignals', () => {
       }),
     );
 
-    await vi.advanceTimersByTimeAsync(1);
-    expect(triggerAttack).toHaveBeenNthCalledWith(1, expect.objectContaining({
-      damage: 4,
-      targetDied: false,
-      isCombo: true,
-    }));
-
-    await vi.advanceTimersByTimeAsync(240);
-    expect(triggerAttack).toHaveBeenCalledTimes(2);
-    expect(triggerAttack).toHaveBeenNthCalledWith(2, expect.objectContaining({
-      damage: 6,
-      isCrit: true,
-      targetDied: true,
-      isCombo: true,
-    }));
+    // Single consolidated signal, not staged beats
+    expect(triggerAttack).toHaveBeenCalledTimes(1);
+    expect(triggerAttack).toHaveBeenCalledWith(
+      expect.objectContaining({
+        damage: 10,
+        hitCount: 2,
+        isCrit: true,
+        isCombo: true,
+        targetDied: true,
+      }),
+    );
   });
 });

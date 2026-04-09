@@ -70,46 +70,38 @@ export function useBattleSceneSignals({
   weaponNameForItem?: (itemId: string) => string | undefined;
   opponentName: string;
 }): void {
-  const processedCountRef = useRef(0);
+  /** Set of outcome keys already signaled — survives counterattack reveal without replaying. */
+  const signaledKeysRef = useRef<Set<string>>(new Set());
   const lastEncounterIdRef = useRef<string | null>(null);
   const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Reset when battle changes or the outcomes array is replaced for a new encounter
+  // Reset only on character or encounter change — NOT on counterattack reveal
   useEffect(() => {
-    pendingTimersRef.current.forEach(clearTimeout);
-    pendingTimersRef.current = [];
-    processedCountRef.current = 0;
-    lastEncounterIdRef.current = visibleOutcomes[0]?.encounterId ?? null;
-  }, [characterId, visibleOutcomes]);
-
-  useEffect(
-    () => () => {
+    return () => {
       pendingTimersRef.current.forEach(clearTimeout);
       pendingTimersRef.current = [];
-    },
-    [],
-  );
+    };
+  }, []);
 
   useEffect(() => {
     if (!characterId || !sceneRef.current) return;
 
     const currentEncounterId = visibleOutcomes[0]?.encounterId ?? null;
     if (
-      visibleOutcomes.length < processedCountRef.current ||
-      (currentEncounterId &&
-        lastEncounterIdRef.current &&
-        currentEncounterId !== lastEncounterIdRef.current)
+      currentEncounterId &&
+      lastEncounterIdRef.current &&
+      currentEncounterId !== lastEncounterIdRef.current
     ) {
-      processedCountRef.current = 0;
+      signaledKeysRef.current.clear();
     }
     lastEncounterIdRef.current = currentEncounterId;
 
-    const newOutcomes = visibleOutcomes.slice(processedCountRef.current);
-    if (newOutcomes.length === 0) return;
+    for (const outcome of visibleOutcomes) {
+      // Unique key per outcome: encounterId + turn + attackNumber + attackerId
+      const key = `${outcome.encounterId}:${outcome.currentTurn}:${outcome.attackNumber}:${outcome.attackerId}`;
+      if (signaledKeysRef.current.has(key)) continue;
+      signaledKeysRef.current.add(key);
 
-    processedCountRef.current = visibleOutcomes.length;
-
-    for (const outcome of newOutcomes) {
       const signals = buildBattleSceneSignals({
         outcome,
         characterId,
@@ -118,7 +110,6 @@ export function useBattleSceneSignals({
         weaponNameForItem,
       });
 
-      // One consolidated signal per outcome — fire immediately, no stagger
       for (const signal of signals) {
         sceneRef.current?.triggerAttack(signal);
       }
