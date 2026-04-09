@@ -58,7 +58,7 @@ type DragState = {
 export function CharacterViewer({
   race,
   height = 280,
-  cellSize = 4,
+  cellSize = 5,
   autoReveal = false,
   equippedItems,
   // Legacy single-weapon prop (use equippedItems instead)

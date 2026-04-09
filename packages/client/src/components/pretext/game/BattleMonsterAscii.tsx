@@ -31,7 +31,7 @@ export function BattleMonsterAscii({
       ctx.clearRect(0, 0, width, height);
       renderMonster(ctx, template, 0, 0, width, height, {
         elapsed: defeated ? 0 : elapsed,
-        cellSize: 4,
+        cellSize: 5,
         enable3D: false,
         enableGlow: !defeated,
         enableBgFill: true,

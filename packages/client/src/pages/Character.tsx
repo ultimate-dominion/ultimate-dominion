@@ -306,7 +306,7 @@ export const CharacterPage = (): JSX.Element => {
                     <CharacterViewer
                       race={character.race}
                       height={220}
-                      cellSize={4}
+                      cellSize={6}
                       equippedItems={
                         equippedWeapons[0]
                           ? [{ name: equippedWeapons[0].name, socket: 'hand_R.socket' }]
