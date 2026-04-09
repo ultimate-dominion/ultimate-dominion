@@ -30,16 +30,16 @@ const SPIKE_CHARS = ['|', '/', '\\', 'V', 'v', '^', 'A'];
 type CaveColor = { r: number; g: number; b: number };
 
 const STONE_COLORS: CaveColor[] = [
-  { r: 92, g: 78, b: 58 },   // dark brown stone
-  { r: 105, g: 88, b: 65 },  // medium brown
-  { r: 80, g: 72, b: 58 },   // cool gray-brown
-  { r: 98, g: 85, b: 65 },   // warm gray
-  { r: 70, g: 60, b: 48 },   // deep shadow stone
+  { r: 130, g: 112, b: 85 },  // warm brown stone
+  { r: 145, g: 125, b: 95 },  // medium brown
+  { r: 115, g: 105, b: 88 },  // cool gray-brown
+  { r: 138, g: 120, b: 95 },  // warm gray
+  { r: 105, g: 92, b: 72 },   // shadow stone
 ];
 
 const MOSS_COLORS: CaveColor[] = [
-  { r: 45, g: 62, b: 38 },   // dark moss
-  { r: 52, g: 68, b: 42 },   // damp green
+  { r: 72, g: 92, b: 58 },   // moss
+  { r: 80, g: 100, b: 62 },  // damp green
 ];
 
 // ── Seeded PRNG (deterministic per-scene) ───────────────────────────────
@@ -108,8 +108,8 @@ function buildFormations(
   const formations: Formation[] = [];
   for (let i = 0; i < count; i++) {
     const col = Math.floor(rand() * cols);
-    const baseWidth = 1 + Math.floor(rand() * 3); // 1-3 cells wide at base
-    const maxExtent = Math.floor(rows * (0.15 + rand() * 0.20)); // 15-35% of height
+    const baseWidth = 2 + Math.floor(rand() * 4); // 2-5 cells wide at base
+    const maxExtent = Math.floor(rows * (0.20 + rand() * 0.30)); // 20-50% of height
     const tipRow = fromTop ? maxExtent : rows - 1 - maxExtent;
     const baseRow = fromTop ? 0 : rows - 1;
     formations.push({ col, baseWidth, tipRow, baseRow });
@@ -168,37 +168,51 @@ export function generateCaveCells(
   const rows = Math.ceil(h / cellSize);
   const cells: CaveBgCell[] = [];
 
-  // Pre-generate formation structures
-  const stalCount = 4 + Math.floor(rand() * 5); // 4-8 stalactites
-  const stagCount = 3 + Math.floor(rand() * 4); // 3-6 stalagmites
+  // Pre-generate formation structures — dense cave with lots of formations
+  const stalCount = 8 + Math.floor(rand() * 6); // 8-13 stalactites
+  const stagCount = 6 + Math.floor(rand() * 5); // 6-10 stalagmites
   const stalactites = buildFormations(cols, rows, true, stalCount, rand);
   const stalagmites = buildFormations(cols, rows, false, stagCount, rand);
 
-  // Wall rock profiles — irregular depth from each side
+  // Wall rock profiles — thick irregular rock masses from each side
   const leftWall = new Float32Array(rows);
   const rightWall = new Float32Array(rows);
   for (let r = 0; r < rows; r++) {
     // Layered sine waves create irregular but connected wall shapes
-    leftWall[r] = 2 + Math.sin(r * 0.3 + seed) * 1.5
-                    + Math.sin(r * 0.7 + seed * 3) * 1.0
-                    + Math.sin(r * 0.13 + seed * 7) * 2.0;
-    rightWall[r] = 2 + Math.sin(r * 0.25 + seed * 2) * 1.5
-                     + Math.sin(r * 0.6 + seed * 5) * 1.0
-                     + Math.sin(r * 0.11 + seed * 11) * 2.0;
-    leftWall[r] = Math.max(1, leftWall[r]);
-    rightWall[r] = Math.max(1, rightWall[r]);
+    leftWall[r] = 4 + Math.sin(r * 0.3 + seed) * 2.5
+                    + Math.sin(r * 0.7 + seed * 3) * 1.5
+                    + Math.sin(r * 0.13 + seed * 7) * 3.0;
+    rightWall[r] = 4 + Math.sin(r * 0.25 + seed * 2) * 2.5
+                     + Math.sin(r * 0.6 + seed * 5) * 1.5
+                     + Math.sin(r * 0.11 + seed * 11) * 3.0;
+    leftWall[r] = Math.max(2, leftWall[r]);
+    rightWall[r] = Math.max(2, rightWall[r]);
   }
 
-  // Ceiling and floor profiles — irregular rock mass
+  // Ceiling and floor profiles — thick rock mass
   const ceiling = new Float32Array(cols);
   const floor = new Float32Array(cols);
   for (let c = 0; c < cols; c++) {
-    ceiling[c] = 1.5 + Math.sin(c * 0.2 + seed * 4) * 1.0
-                      + Math.sin(c * 0.5 + seed * 6) * 0.8;
-    floor[c] = 1.5 + Math.sin(c * 0.22 + seed * 8) * 1.0
-                    + Math.sin(c * 0.45 + seed * 10) * 0.8;
-    ceiling[c] = Math.max(1, ceiling[c]);
-    floor[c] = Math.max(1, floor[c]);
+    ceiling[c] = 3.0 + Math.sin(c * 0.2 + seed * 4) * 2.0
+                      + Math.sin(c * 0.5 + seed * 6) * 1.5
+                      + Math.sin(c * 0.12 + seed * 13) * 1.0;
+    floor[c] = 3.0 + Math.sin(c * 0.22 + seed * 8) * 2.0
+                    + Math.sin(c * 0.45 + seed * 10) * 1.5
+                    + Math.sin(c * 0.14 + seed * 15) * 1.0;
+    ceiling[c] = Math.max(2, ceiling[c]);
+    floor[c] = Math.max(2, floor[c]);
+  }
+
+  // Boulder clusters — random rock piles scattered in the mid-ground
+  type Boulder = { cx: number; cy: number; radius: number };
+  const boulders: Boulder[] = [];
+  const boulderCount = 3 + Math.floor(rand() * 4); // 3-6 boulder clusters
+  for (let i = 0; i < boulderCount; i++) {
+    boulders.push({
+      cx: Math.floor(cols * (0.15 + rand() * 0.70)),
+      cy: Math.floor(rows * (0.25 + rand() * 0.50)),
+      radius: 2 + Math.floor(rand() * 3),
+    });
   }
 
   for (let row = 0; row < rows; row++) {
@@ -226,7 +240,7 @@ export function generateCaveCells(
             char,
             x, y,
             ...color,
-            alpha: 0.18 + (1 - stalDensity) * 0.12 + noise,
+            alpha: 0.35 + (1 - stalDensity) * 0.20 + noise,
             flicker: isTip && rand() < 0.06,
           });
         }
@@ -249,7 +263,7 @@ export function generateCaveCells(
             char,
             x, y,
             ...color,
-            alpha: 0.18 + (1 - stagDensity) * 0.12 + noise,
+            alpha: 0.35 + (1 - stagDensity) * 0.20 + noise,
             flicker: isTip && rand() < 0.06,
           });
         }
@@ -264,7 +278,7 @@ export function generateCaveCells(
           char: depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand),
           x, y,
           ...color,
-          alpha: 0.15 + depth * 0.15,
+          alpha: 0.30 + depth * 0.25,
           flicker: rand() < 0.02,
         });
         continue;
@@ -278,7 +292,7 @@ export function generateCaveCells(
           char: depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand),
           x, y,
           ...color,
-          alpha: 0.15 + depth * 0.15,
+          alpha: 0.30 + depth * 0.25,
           flicker: rand() < 0.02,
         });
         continue;
@@ -292,7 +306,7 @@ export function generateCaveCells(
           char: depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand),
           x, y,
           ...color,
-          alpha: 0.12 + depth * 0.16,
+          alpha: 0.25 + depth * 0.25,
           flicker: rand() < 0.02,
         });
         continue;
@@ -306,25 +320,48 @@ export function generateCaveCells(
           char: depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand),
           x, y,
           ...color,
-          alpha: 0.12 + depth * 0.16,
+          alpha: 0.25 + depth * 0.25,
           flicker: rand() < 0.02,
         });
         continue;
       }
 
+      // ── Boulder clusters ─────────────────────────────────────────
+      let inBoulder = false;
+      for (const b of boulders) {
+        const dx = col - b.cx;
+        const dy = row - b.cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= b.radius) {
+          const depth = 1 - dist / b.radius; // 1 at center, 0 at edge
+          const color = pickColor(rand);
+          const char = depth > 0.5 ? pick(ROCK_CHARS, rand) : pick(TEXTURE_CHARS, rand);
+          cells.push({
+            char,
+            x, y,
+            ...color,
+            alpha: 0.15 + depth * 0.20,
+            flicker: depth < 0.3 && rand() < 0.04,
+          });
+          inBoulder = true;
+          break;
+        }
+      }
+      if (inBoulder) continue;
+
       // ── Scattered interior debris ──────────────────────────────────
-      // Very sparse in the center so as not to compete with the creature
+      // Sparse in the center so as not to compete with the creature
       const edgeX = Math.min(col / (cols - 1 || 1), 1 - col / (cols - 1 || 1)) * 2;
       const edgeY = Math.min(rowT, 1 - rowT) * 2;
       const distFromEdge = Math.min(edgeX, edgeY);
-      const interiorProb = 0.006 + (1 - distFromEdge) * 0.010;
+      const interiorProb = 0.015 + (1 - distFromEdge) * 0.025;
       if (rand() < interiorProb) {
         const color = pickColor(rand);
         cells.push({
           char: pick(SCATTER_CHARS, rand),
           x, y,
           ...color,
-          alpha: 0.06 + rand() * 0.06,
+          alpha: 0.12 + rand() * 0.10,
           flicker: rand() < 0.04,
         });
       }
