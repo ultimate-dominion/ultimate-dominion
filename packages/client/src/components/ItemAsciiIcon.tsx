@@ -3,22 +3,30 @@
  *
  * Same pipeline that makes creatures look incredible: GLB → toon shade →
  * area-averaged color sampling → edge detection → half-block interior →
- * rim lighting → glow. Just renders to a smaller canvas and caches it.
+ * rim lighting → glow. Rendered at oversized resolution then compressed.
  *
- * For items without GLB models, falls back to WebP → canvas → same renderer.
+ * Epic+ items with GLB models animate: slow Y-axis rotation re-rendered
+ * every ~250ms for a living 3D-in-ASCII feel.
+ *
+ * For items without GLB models, falls back to WebP → same renderer.
  * For items without any art, falls back to emoji.
- *
- * Rarity controls cellSize: Worn=8px crude → Epic=3px crisp detail.
  */
 
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Text } from '@chakra-ui/react';
 
 import { getEmoji, removeEmoji } from '../utils/helpers';
 import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
 import { getRarityAnimation, getRarityColor } from '../utils/rarityHelpers';
 import { ItemType, Rarity } from '../utils/types';
-import { itemSlug, loadItemModel, getItemDrawFn, isItemModelReady, loadItemManifest } from './pretext/game/glbItemLoader';
+import {
+  itemSlug,
+  loadItemModel,
+  getItemDrawFn,
+  isItemModelReady,
+  loadItemManifest,
+  setItemRotation,
+} from './pretext/game/glbItemLoader';
 import { renderMonster } from './pretext/game/MonsterAsciiRenderer';
 import type { MonsterTemplate } from './pretext/game/monsterTemplates';
 
@@ -31,7 +39,7 @@ type Props = {
 };
 
 // ---------------------------------------------------------------------------
-// Rarity → cellSize (same concept as battle scene, smaller = more detail)
+// Rarity → cellSize
 // ---------------------------------------------------------------------------
 const RARITY_CELL_SIZE: Record<number, number> = {
   [Rarity.Worn]:      5,
@@ -42,8 +50,7 @@ const RARITY_CELL_SIZE: Record<number, number> = {
   [Rarity.Legendary]: 3,
 };
 
-// Render at larger size then display smaller — packs more ASCII detail.
-// Higher rarity = larger render canvas = denser detail when compressed.
+// Render at larger size then display smaller for density.
 const RARITY_RENDER_SCALE: Record<number, number> = {
   [Rarity.Worn]:      2,
   [Rarity.Common]:    2,
@@ -54,7 +61,7 @@ const RARITY_RENDER_SCALE: Record<number, number> = {
 };
 
 // ---------------------------------------------------------------------------
-// Rarity tint RGB for the draw function
+// Rarity tint RGB for WebP fallback draw function
 // ---------------------------------------------------------------------------
 const RARITY_TINT_RGB: Record<number, [number, number, number]> = {
   [Rarity.Worn]:      [112, 104, 102],
@@ -66,12 +73,11 @@ const RARITY_TINT_RGB: Record<number, [number, number, number]> = {
 };
 
 // ---------------------------------------------------------------------------
-// Cached rendered icon canvases
+// Caches
 // ---------------------------------------------------------------------------
 const iconCache = new Map<string, HTMLCanvasElement>();
 const renderPromises = new Map<string, Promise<HTMLCanvasElement | null>>();
 
-// WebP image cache
 const imageCache = new Map<string, HTMLImageElement>();
 function loadWebPImage(src: string): Promise<HTMLImageElement> {
   const cached = imageCache.get(src);
@@ -85,18 +91,12 @@ function loadWebPImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/**
- * Build a draw function that renders a WebP image tinted with rarity color.
- * Used as fallback when no GLB model exists.
- */
 function makeWebPDrawFn(
   img: HTMLImageElement,
   tint: [number, number, number],
 ): (ctx: CanvasRenderingContext2D, w: number, h: number) => void {
   return (ctx, w, h) => {
-    // Draw image
     ctx.drawImage(img, 0, 0, w, h);
-    // Multiply blend with rarity color
     ctx.globalCompositeOperation = 'multiply';
     ctx.fillStyle = `rgb(${tint[0]}, ${tint[1]}, ${tint[2]})`;
     ctx.fillRect(0, 0, w, h);
@@ -104,7 +104,36 @@ function makeWebPDrawFn(
   };
 }
 
-/** Render an item icon using the MonsterAsciiRenderer and cache the result. */
+// ---------------------------------------------------------------------------
+// Template builder (shared between static and animated paths)
+// ---------------------------------------------------------------------------
+function buildItemTemplate(
+  slug: string,
+  cleanName: string,
+  rarity: number,
+  drawFn: (ctx: CanvasRenderingContext2D, w: number, h: number) => void,
+): MonsterTemplate {
+  return {
+    id: `item-icon:${slug}:${rarity}`,
+    name: cleanName,
+    gridWidth: 1,
+    gridHeight: 1,
+    monsterClass: 0,
+    level: 1,
+    dynamic: true,
+    renderOverrides: {
+      gamma: 0.35,
+      ambient: 0.95,
+      brightnessBoost: 2.5,
+      charDensityFloor: 0.15,
+    },
+    draw: drawFn,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Static render (cached, for Worn–Rare or WebP fallback)
+// ---------------------------------------------------------------------------
 async function renderItemIcon(
   name: string,
   rarity: number,
@@ -114,7 +143,6 @@ async function renderItemIcon(
   const cached = iconCache.get(cacheKey);
   if (cached) return cached;
 
-  // Deduplicate concurrent renders
   const inflight = renderPromises.get(cacheKey);
   if (inflight) return inflight;
 
@@ -140,7 +168,6 @@ async function _renderItemIconInner(
 
   let drawFn: ((ctx: CanvasRenderingContext2D, w: number, h: number) => void) | null = null;
 
-  // Try GLB model first
   const manifest = await loadItemManifest();
   if (manifest[slug]) {
     await loadItemModel(slug);
@@ -149,39 +176,18 @@ async function _renderItemIconInner(
     }
   }
 
-  // Fall back to WebP
   if (!drawFn) {
     const webpSrc = getItemImage(cleanName);
     if (webpSrc) {
       const img = await loadWebPImage(webpSrc).catch(() => null);
-      if (img) {
-        drawFn = makeWebPDrawFn(img, tint);
-      }
+      if (img) drawFn = makeWebPDrawFn(img, tint);
     }
   }
 
   if (!drawFn) return null;
 
-  // Create a MonsterTemplate that wraps the item's draw function.
-  // renderOverrides tuned for small icon rendering (brighter than battle defaults).
-  const template: MonsterTemplate = {
-    id: `item-icon:${slug}:${rarity}`,
-    name: cleanName,
-    gridWidth: 1,
-    gridHeight: 1,
-    monsterClass: 0,
-    level: 1,
-    dynamic: true,
-    renderOverrides: {
-      gamma: 0.35,             // aggressive lift — small icons need brightness
-      ambient: 0.95,           // near-full ambient — no dark shadows at icon size
-      brightnessBoost: 2.5,    // strong boost for template stage
-      charDensityFloor: 0.15,  // show characters in dimmer regions
-    },
-    draw: drawFn,
-  };
+  const template = buildItemTemplate(slug, cleanName, rarity, drawFn);
 
-  // Render at larger size for more ASCII detail, displayed smaller via CSS
   const canvas = document.createElement('canvas');
   canvas.width = renderSize;
   canvas.height = renderSize;
@@ -190,7 +196,7 @@ async function _renderItemIconInner(
   renderMonster(ctx, template, 0, 0, renderSize, renderSize, {
     cellSize,
     enable3D: false,
-    enableBgFill: true,       // fill cell backgrounds for solid body regions
+    enableBgFill: true,
     enableHalfBlock: true,
     enableGlow: rarity >= Rarity.Rare,
     elapsed: 0,
@@ -202,9 +208,12 @@ async function _renderItemIconInner(
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Animated component for Epic+ GLB items — slow rotation
 // ---------------------------------------------------------------------------
-const ItemIconCanvas = memo(({
+const ANIM_INTERVAL = 250; // ms between re-renders
+const ROTATION_SPEED = 0.003; // radians per ms — full turn in ~2s
+
+const AnimatedItemIcon = memo(({
   name,
   rarity,
   size,
@@ -214,43 +223,94 @@ const ItemIconCanvas = memo(({
   size: string | Record<string, string>;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [iconCanvas, setIconCanvas] = useState<HTMLCanvasElement | null>(null);
-  const rarityAnimation = getRarityAnimation(rarity);
+  const animRef = useRef<number>(0);
+  const readyRef = useRef(false);
+  const slugRef = useRef('');
+  const templateRef = useRef<MonsterTemplate | null>(null);
+
+  const displaySize = typeof size === 'string' ? parseInt(size, 10) || 48 : 48;
+  const cellSize = RARITY_CELL_SIZE[rarity] ?? 3;
+  const renderScale = RARITY_RENDER_SCALE[rarity] ?? 4;
+  const renderSize = displaySize * renderScale;
   const rarityBorderColor = getRarityColor(rarity);
 
-  // Parse display size from size prop (handle string like "40px")
-  const displaySize = typeof size === 'string' ? parseInt(size, 10) || 48 : 48;
+  const cleanName = removeEmoji(name);
+  const slug = itemSlug(cleanName);
 
+  // Load GLB model on mount
   useEffect(() => {
     let cancelled = false;
-    renderItemIcon(name, rarity, displaySize).then(result => {
-      if (!cancelled && result) setIconCanvas(result);
-    });
+    slugRef.current = slug;
+
+    async function init() {
+      const manifest = await loadItemManifest();
+      if (cancelled || !manifest[slug]) return;
+      await loadItemModel(slug);
+      if (cancelled || !isItemModelReady(slug)) return;
+
+      const drawFn = getItemDrawFn(slug);
+      if (!drawFn) return;
+
+      templateRef.current = buildItemTemplate(slug, cleanName, rarity, drawFn);
+      readyRef.current = true;
+    }
+
+    init();
     return () => { cancelled = true; };
-  }, [name, rarity, displaySize]);
+  }, [slug, cleanName, rarity]);
 
-  // Paint cached icon canvas onto visible canvas (rendered large, displayed small via CSS)
-  useEffect(() => {
-    if (!iconCanvas || !canvasRef.current) return;
+  // Animation loop — re-render with slow rotation every ANIM_INTERVAL
+  const renderFrame = useCallback(() => {
+    if (!readyRef.current || !canvasRef.current || !templateRef.current) return;
+
+    const now = performance.now();
+    const yRotation = now * ROTATION_SPEED;
+
+    // Rotate the GLB model
+    setItemRotation(slugRef.current, 0, yRotation);
+
     const canvas = canvasRef.current;
-    canvas.width = iconCanvas.width;
-    canvas.height = iconCanvas.height;
+    canvas.width = renderSize;
+    canvas.height = renderSize;
     const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(iconCanvas, 0, 0);
-  }, [iconCanvas]);
+    ctx.clearRect(0, 0, renderSize, renderSize);
 
-  const glowFilter = rarity >= Rarity.Epic
-    ? `drop-shadow(0 0 ${rarity >= Rarity.Legendary ? '6px' : '4px'} ${rarityBorderColor}80)`
-    : rarity >= Rarity.Rare
-      ? `drop-shadow(0 0 3px ${rarityBorderColor}50)`
-      : undefined;
+    renderMonster(ctx, templateRef.current, 0, 0, renderSize, renderSize, {
+      cellSize,
+      enable3D: false,
+      enableBgFill: true,
+      enableHalfBlock: true,
+      enableGlow: true,
+      elapsed: now,
+      alpha: 1,
+    });
+  }, [renderSize, cellSize]);
+
+  useEffect(() => {
+    let lastRender = 0;
+    let frameId: number;
+
+    function tick() {
+      const now = performance.now();
+      if (now - lastRender >= ANIM_INTERVAL) {
+        renderFrame();
+        lastRender = now;
+      }
+      frameId = requestAnimationFrame(tick);
+    }
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [renderFrame]);
+
+  const glowFilter = `drop-shadow(0 0 ${rarity >= Rarity.Legendary ? '6px' : '4px'} ${rarityBorderColor}80)`;
 
   return (
     <Box
       boxSize={size}
       flexShrink={0}
       position="relative"
-      animation={rarityAnimation}
+      animation={getRarityAnimation(rarity)}
       borderRadius="sm"
     >
       <canvas
@@ -265,20 +325,84 @@ const ItemIconCanvas = memo(({
   );
 });
 
-ItemIconCanvas.displayName = 'ItemIconCanvas';
+AnimatedItemIcon.displayName = 'AnimatedItemIcon';
 
+// ---------------------------------------------------------------------------
+// Static component (Worn–Rare, or no GLB)
+// ---------------------------------------------------------------------------
+const StaticItemIcon = memo(({
+  name,
+  rarity,
+  size,
+}: {
+  name: string;
+  rarity: number;
+  size: string | Record<string, string>;
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [iconCanvas, setIconCanvas] = useState<HTMLCanvasElement | null>(null);
+  const rarityBorderColor = getRarityColor(rarity);
+
+  const displaySize = typeof size === 'string' ? parseInt(size, 10) || 48 : 48;
+
+  useEffect(() => {
+    let cancelled = false;
+    renderItemIcon(name, rarity, displaySize).then(result => {
+      if (!cancelled && result) setIconCanvas(result);
+    });
+    return () => { cancelled = true; };
+  }, [name, rarity, displaySize]);
+
+  useEffect(() => {
+    if (!iconCanvas || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    canvas.width = iconCanvas.width;
+    canvas.height = iconCanvas.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(iconCanvas, 0, 0);
+  }, [iconCanvas]);
+
+  const glowFilter = rarity >= Rarity.Epic
+    ? `drop-shadow(0 0 4px ${rarityBorderColor}80)`
+    : rarity >= Rarity.Rare
+      ? `drop-shadow(0 0 3px ${rarityBorderColor}50)`
+      : undefined;
+
+  return (
+    <Box
+      boxSize={size}
+      flexShrink={0}
+      position="relative"
+      animation={getRarityAnimation(rarity)}
+      borderRadius="sm"
+    >
+      <canvas
+        ref={canvasRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          filter: glowFilter,
+        }}
+      />
+    </Box>
+  );
+});
+
+StaticItemIcon.displayName = 'StaticItemIcon';
+
+// ---------------------------------------------------------------------------
+// Entry point — routes to animated or static based on rarity
+// ---------------------------------------------------------------------------
 const ItemAsciiIconInner = ({ name, itemType, rarity = 0, size = '40px' }: Props) => {
   const cleanName = removeEmoji(name);
   const imageSrc = getItemImage(cleanName);
 
   if (itemType === ItemType.Weapon || itemType === ItemType.Armor || imageSrc) {
-    return (
-      <ItemIconCanvas
-        name={name}
-        rarity={rarity}
-        size={size}
-      />
-    );
+    // Epic+ items with potential GLB models get the animated treatment
+    if (rarity >= Rarity.Epic) {
+      return <AnimatedItemIcon name={name} rarity={rarity} size={size} />;
+    }
+    return <StaticItemIcon name={name} rarity={rarity} size={size} />;
   }
 
   return (
