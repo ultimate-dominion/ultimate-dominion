@@ -1,16 +1,14 @@
 /**
- * ItemAsciiIcon — GLB-first pixelated item icons.
+ * ItemAsciiIcon — Items rendered through the MonsterAsciiRenderer.
  *
- * Primary path: render the item's 3D model (GLB) to an offscreen canvas,
- * then run through threshold-dilate-downsample for crisp pixel art.
- * Fallback: WebP illustration (same pipeline).
+ * Same pipeline that makes creatures look incredible: GLB → toon shade →
+ * area-averaged color sampling → edge detection → half-block interior →
+ * rim lighting → glow. Just renders to a smaller canvas and caches it.
  *
- * The GLB models have solid geometry that downsamples perfectly — no thin
- * ink lines, no artistic noise, just the weapon's actual shape. This is
- * the same 3D model used in combat and (eventually) equipped on characters.
+ * For items without GLB models, falls back to WebP → canvas → same renderer.
+ * For items without any art, falls back to emoji.
  *
- * Rarity controls pixel resolution: Worn=8px crude → Epic/Legendary=3px crisp.
- * Rarity color applied via posterized coverage mapping.
+ * Rarity controls cellSize: Worn=8px crude → Epic=3px crisp detail.
  */
 
 import { memo, useEffect, useRef, useState } from 'react';
@@ -20,7 +18,9 @@ import { getEmoji, removeEmoji } from '../utils/helpers';
 import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
 import { getRarityAnimation, getRarityColor } from '../utils/rarityHelpers';
 import { ItemType, Rarity } from '../utils/types';
-import { itemSlug, renderItemIconCanvas } from './pretext/game/glbItemLoader';
+import { itemSlug, loadItemModel, getItemDrawFn, isItemModelReady, loadItemManifest } from './pretext/game/glbItemLoader';
+import { renderMonster } from './pretext/game/MonsterAsciiRenderer';
+import type { MonsterTemplate } from './pretext/game/monsterTemplates';
 
 type Props = {
   name: string;
@@ -31,10 +31,10 @@ type Props = {
 };
 
 // ---------------------------------------------------------------------------
-// Rarity → pixel block size
+// Rarity → cellSize (same concept as battle scene, smaller = more detail)
 // ---------------------------------------------------------------------------
-const RARITY_PIXEL_SIZE: Record<number, number> = {
-  [Rarity.Worn]:      8,
+const RARITY_CELL_SIZE: Record<number, number> = {
+  [Rarity.Worn]:      7,
   [Rarity.Common]:    6,
   [Rarity.Uncommon]:  5,
   [Rarity.Rare]:      4,
@@ -43,39 +43,28 @@ const RARITY_PIXEL_SIZE: Record<number, number> = {
 };
 
 // ---------------------------------------------------------------------------
-// Rarity tint colors
+// Rarity tint RGB for the draw function
 // ---------------------------------------------------------------------------
-const RARITY_TINT: Record<number, string> = {
-  [Rarity.Worn]:      '#706866',
-  [Rarity.Common]:    '#B0A890',
-  [Rarity.Uncommon]:  '#5CAA6A',
-  [Rarity.Rare]:      '#5A90D0',
-  [Rarity.Epic]:      '#9A6AD8',
-  [Rarity.Legendary]: '#E8A030',
+const RARITY_TINT_RGB: Record<number, [number, number, number]> = {
+  [Rarity.Worn]:      [112, 104, 102],
+  [Rarity.Common]:    [176, 168, 144],
+  [Rarity.Uncommon]:  [92, 170, 106],
+  [Rarity.Rare]:      [90, 144, 208],
+  [Rarity.Epic]:      [154, 106, 216],
+  [Rarity.Legendary]: [232, 160, 48],
 };
 
-function hexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace('#', '');
-  return [
-    parseInt(h.slice(0, 2), 16),
-    parseInt(h.slice(2, 4), 16),
-    parseInt(h.slice(4, 6), 16),
-  ];
-}
-
 // ---------------------------------------------------------------------------
-// Image source types — GLB canvas or WebP HTMLImageElement
+// Cached rendered icon canvases
 // ---------------------------------------------------------------------------
-type ImageSource =
-  | { type: 'canvas'; canvas: HTMLCanvasElement }
-  | { type: 'image'; img: HTMLImageElement };
+const iconCache = new Map<string, HTMLCanvasElement>();
+const renderPromises = new Map<string, Promise<HTMLCanvasElement | null>>();
 
+// WebP image cache
 const imageCache = new Map<string, HTMLImageElement>();
-
 function loadWebPImage(src: string): Promise<HTMLImageElement> {
   const cached = imageCache.get(src);
   if (cached) return Promise.resolve(cached);
-
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.crossOrigin = 'anonymous';
@@ -85,178 +74,113 @@ function loadWebPImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Binary mask cache (works for both canvas and image sources)
-// ---------------------------------------------------------------------------
-const binaryCache = new Map<string, { mask: Uint8Array; w: number; h: number }>();
-
-function otsuThreshold(data: Uint8ClampedArray, pixelCount: number): number {
-  const histogram = new Uint32Array(256);
-  for (let i = 0; i < data.length; i += 4) {
-    const brightness = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-    histogram[brightness]++;
-  }
-
-  let bestThreshold = 0;
-  let bestVariance = 0;
-  let sumTotal = 0;
-  for (let i = 0; i < 256; i++) sumTotal += i * histogram[i];
-
-  let sumBg = 0;
-  let weightBg = 0;
-
-  for (let t = 0; t < 256; t++) {
-    weightBg += histogram[t];
-    if (weightBg === 0) continue;
-    const weightFg = pixelCount - weightBg;
-    if (weightFg === 0) break;
-
-    sumBg += t * histogram[t];
-    const meanBg = sumBg / weightBg;
-    const meanFg = (sumTotal - sumBg) / weightFg;
-    const variance = weightBg * weightFg * (meanBg - meanFg) * (meanBg - meanFg);
-
-    if (variance > bestVariance) {
-      bestVariance = variance;
-      bestThreshold = t;
-    }
-  }
-
-  return bestThreshold;
+/**
+ * Build a draw function that renders a WebP image tinted with rarity color.
+ * Used as fallback when no GLB model exists.
+ */
+function makeWebPDrawFn(
+  img: HTMLImageElement,
+  tint: [number, number, number],
+): (ctx: CanvasRenderingContext2D, w: number, h: number) => void {
+  return (ctx, w, h) => {
+    // Draw image
+    ctx.drawImage(img, 0, 0, w, h);
+    // Multiply blend with rarity color
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = `rgb(${tint[0]}, ${tint[1]}, ${tint[2]})`;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+  };
 }
 
-function getBinaryMask(source: ImageSource, cacheKey: string): { mask: Uint8Array; w: number; h: number } {
-  const cached = binaryCache.get(cacheKey);
+/** Render an item icon using the MonsterAsciiRenderer and cache the result. */
+async function renderItemIcon(
+  name: string,
+  rarity: number,
+  displaySize: number,
+): Promise<HTMLCanvasElement | null> {
+  const cacheKey = `${name}:${rarity}:${displaySize}`;
+  const cached = iconCache.get(cacheKey);
   if (cached) return cached;
 
-  let w: number, h: number, data: Uint8ClampedArray;
+  // Deduplicate concurrent renders
+  const inflight = renderPromises.get(cacheKey);
+  if (inflight) return inflight;
 
-  if (source.type === 'canvas') {
-    w = source.canvas.width;
-    h = source.canvas.height;
-    const ctx = source.canvas.getContext('2d')!;
-    data = ctx.getImageData(0, 0, w, h).data;
-  } else {
-    w = source.img.naturalWidth;
-    h = source.img.naturalHeight;
-    const c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    const ctx = c.getContext('2d')!;
-    ctx.drawImage(source.img, 0, 0);
-    data = ctx.getImageData(0, 0, w, h).data;
-  }
-
-  // Otsu threshold → binary
-  const threshold = otsuThreshold(data, w * h);
-  const binary = new Uint8Array(w * h);
-  for (let i = 0; i < binary.length; i++) {
-    const brightness = data[i * 4] * 0.299 + data[i * 4 + 1] * 0.587 + data[i * 4 + 2] * 0.114;
-    binary[i] = brightness > threshold ? 1 : 0;
-  }
-
-  // Morphological dilation with 3x3 cross
-  const dilated = new Uint8Array(w * h);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const idx = y * w + x;
-      if (binary[idx] === 1) {
-        dilated[idx] = 1;
-        continue;
-      }
-      if (
-        (x > 0 && binary[idx - 1] === 1) ||
-        (x < w - 1 && binary[idx + 1] === 1) ||
-        (y > 0 && binary[idx - w] === 1) ||
-        (y < h - 1 && binary[idx + w] === 1)
-      ) {
-        dilated[idx] = 1;
-      }
-    }
-  }
-
-  const result = { mask: dilated, w, h };
-  binaryCache.set(cacheKey, result);
+  const promise = _renderItemIconInner(name, rarity, displaySize, cacheKey);
+  renderPromises.set(cacheKey, promise);
+  const result = await promise;
+  renderPromises.delete(cacheKey);
   return result;
 }
 
-// ---------------------------------------------------------------------------
-// Coverage-ratio downsampler + rarity tint
-// ---------------------------------------------------------------------------
-function renderCoverage(
-  canvas: HTMLCanvasElement,
-  source: ImageSource,
-  cacheKey: string,
+async function _renderItemIconInner(
+  name: string,
   rarity: number,
-  pixelSize: number,
-) {
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const displayW = Math.floor(rect.width);
-  const displayH = Math.floor(rect.height);
-  if (displayW === 0 || displayH === 0) return;
+  displaySize: number,
+  cacheKey: string,
+): Promise<HTMLCanvasElement | null> {
+  const cleanName = removeEmoji(name);
+  const slug = itemSlug(cleanName);
+  const tint = RARITY_TINT_RGB[rarity] ?? RARITY_TINT_RGB[Rarity.Common];
+  const cellSize = RARITY_CELL_SIZE[rarity] ?? RARITY_CELL_SIZE[Rarity.Common];
 
-  const tintHex = RARITY_TINT[rarity] ?? RARITY_TINT[Rarity.Common];
-  const [r, g, b] = hexToRgb(tintHex);
+  let drawFn: ((ctx: CanvasRenderingContext2D, w: number, h: number) => void) | null = null;
 
-  const gridW = Math.max(4, Math.floor(displayW / pixelSize));
-  const gridH = Math.max(4, Math.floor(displayH / pixelSize));
+  // Try GLB model first
+  const manifest = await loadItemManifest();
+  if (manifest[slug]) {
+    await loadItemModel(slug);
+    if (isItemModelReady(slug)) {
+      drawFn = getItemDrawFn(slug);
+    }
+  }
 
-  const { mask, w: srcW, h: srcH } = getBinaryMask(source, cacheKey);
-
-  const blockW = srcW / gridW;
-  const blockH = srcH / gridH;
-
-  const grid = document.createElement('canvas');
-  grid.width = gridW;
-  grid.height = gridH;
-  const gridCtx = grid.getContext('2d')!;
-  const output = gridCtx.createImageData(gridW, gridH);
-  const out = output.data;
-
-  for (let gy = 0; gy < gridH; gy++) {
-    for (let gx = 0; gx < gridW; gx++) {
-      const srcX0 = Math.floor(gx * blockW);
-      const srcY0 = Math.floor(gy * blockH);
-      const srcX1 = Math.min(srcW, Math.floor((gx + 1) * blockW));
-      const srcY1 = Math.min(srcH, Math.floor((gy + 1) * blockH));
-
-      let onCount = 0;
-      let totalCount = 0;
-      const stride = blockW > 40 ? 3 : blockW > 20 ? 2 : 1;
-
-      for (let sy = srcY0; sy < srcY1; sy += stride) {
-        for (let sx = srcX0; sx < srcX1; sx += stride) {
-          totalCount++;
-          if (mask[sy * srcW + sx] === 1) onCount++;
-        }
-      }
-
-      const coverage = totalCount > 0 ? onCount / totalCount : 0;
-      const oi = (gy * gridW + gx) * 4;
-
-      if (coverage >= 0.08) {
-        out[oi]     = r;
-        out[oi + 1] = g;
-        out[oi + 2] = b;
-        out[oi + 3] = 255;
-      } else {
-        out[oi] = 0;
-        out[oi + 1] = 0;
-        out[oi + 2] = 0;
-        out[oi + 3] = 255;
+  // Fall back to WebP
+  if (!drawFn) {
+    const webpSrc = getItemImage(cleanName);
+    if (webpSrc) {
+      const img = await loadWebPImage(webpSrc).catch(() => null);
+      if (img) {
+        drawFn = makeWebPDrawFn(img, tint);
       }
     }
   }
 
-  gridCtx.putImageData(output, 0, 0);
+  if (!drawFn) return null;
 
-  canvas.width = displayW * dpr;
-  canvas.height = displayH * dpr;
+  // Create a MonsterTemplate that wraps the item's draw function
+  const template: MonsterTemplate = {
+    id: `item-icon:${slug}:${rarity}`,
+    name: cleanName,
+    gridWidth: 1,
+    gridHeight: 1,
+    monsterClass: 0,
+    level: 1,
+    dynamic: true, // GLB models need fresh render each time
+    draw: drawFn,
+  };
+
+  // Render using MonsterAsciiRenderer onto an offscreen canvas
+  const dpr = window.devicePixelRatio || 1;
+  const canvas = document.createElement('canvas');
+  canvas.width = displaySize * dpr;
+  canvas.height = displaySize * dpr;
   const ctx = canvas.getContext('2d')!;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(grid, 0, 0, displayW, displayH);
+
+  renderMonster(ctx, template, 0, 0, displaySize, displaySize, {
+    cellSize,
+    enable3D: false,     // static icon, no animation
+    enableBgFill: false, // black background handled by parent
+    enableHalfBlock: true,
+    enableGlow: rarity >= Rarity.Rare,
+    elapsed: 0,
+    alpha: 1,
+  });
+
+  iconCache.set(cacheKey, canvas);
+  return canvas;
 }
 
 // ---------------------------------------------------------------------------
@@ -272,48 +196,32 @@ const ItemIconCanvas = memo(({
   size: string | Record<string, string>;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [source, setSource] = useState<ImageSource | null>(null);
-  const [cacheKey, setCacheKey] = useState<string>('');
-  const pixelSize = RARITY_PIXEL_SIZE[rarity] ?? RARITY_PIXEL_SIZE[Rarity.Common];
+  const [iconCanvas, setIconCanvas] = useState<HTMLCanvasElement | null>(null);
   const rarityAnimation = getRarityAnimation(rarity);
   const rarityBorderColor = getRarityColor(rarity);
 
-  const cleanName = removeEmoji(name);
-  const slug = itemSlug(cleanName);
+  // Parse display size from size prop (handle string like "40px")
+  const displaySize = typeof size === 'string' ? parseInt(size, 10) || 48 : 48;
 
-  // Load source: try GLB first, fall back to WebP
   useEffect(() => {
     let cancelled = false;
-
-    async function loadSource() {
-      // Try GLB model
-      const glbCanvas = await renderItemIconCanvas(slug).catch(() => null);
-      if (!cancelled && glbCanvas) {
-        setSource({ type: 'canvas', canvas: glbCanvas });
-        setCacheKey(`glb:${slug}`);
-        return;
-      }
-
-      // Fall back to WebP
-      const webpSrc = getItemImage(cleanName);
-      if (webpSrc) {
-        const img = await loadWebPImage(webpSrc).catch(() => null);
-        if (!cancelled && img) {
-          setSource({ type: 'image', img });
-          setCacheKey(`webp:${webpSrc}`);
-        }
-      }
-    }
-
-    loadSource();
+    renderItemIcon(name, rarity, displaySize).then(result => {
+      if (!cancelled && result) setIconCanvas(result);
+    });
     return () => { cancelled = true; };
-  }, [slug, cleanName]);
+  }, [name, rarity, displaySize]);
 
-  // Render when source is ready or params change
+  // Paint cached icon canvas onto our visible canvas
   useEffect(() => {
-    if (!source || !canvasRef.current || !cacheKey) return;
-    renderCoverage(canvasRef.current, source, cacheKey, rarity, pixelSize);
-  }, [source, cacheKey, rarity, pixelSize]);
+    if (!iconCanvas || !canvasRef.current) return;
+    const dpr = window.devicePixelRatio || 1;
+    const canvas = canvasRef.current;
+    canvas.width = displaySize * dpr;
+    canvas.height = displaySize * dpr;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(iconCanvas, 0, 0);
+  }, [iconCanvas, displaySize]);
 
   const glowFilter = rarity >= Rarity.Epic
     ? `drop-shadow(0 0 ${rarity >= Rarity.Legendary ? '6px' : '4px'} ${rarityBorderColor}80)`
@@ -334,7 +242,6 @@ const ItemIconCanvas = memo(({
         style={{
           width: '100%',
           height: '100%',
-          imageRendering: 'pixelated',
           filter: glowFilter,
         }}
       />
@@ -348,8 +255,6 @@ const ItemAsciiIconInner = ({ name, itemType, rarity = 0, size = '40px' }: Props
   const cleanName = removeEmoji(name);
   const imageSrc = getItemImage(cleanName);
 
-  // Use GLB+threshold pipeline for weapons and armor that might have 3D models.
-  // Consumables and quest items without models fall back to WebP or emoji.
   if (itemType === ItemType.Weapon || itemType === ItemType.Armor || imageSrc) {
     return (
       <ItemIconCanvas
