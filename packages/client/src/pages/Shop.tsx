@@ -27,6 +27,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
 import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { etherToFixedNumber } from '../utils/helpers';
+import { preloadItemImages } from '../utils/itemImages';
 import { useAllowance } from '../contexts/AllowanceContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
@@ -321,6 +322,10 @@ export const Shop = (): JSX.Element => {
 
     setSellable(sellableInventory);
     setBuyable(buyableStock);
+
+    // Preload images for all shop items before components mount
+    const allNames = [...sellableInventory, ...buyableStock].map(e => e.item.name);
+    if (allNames.length > 0) preloadItemImages(allNames);
   }, [
     armorTemplates,
     consumableTemplates,

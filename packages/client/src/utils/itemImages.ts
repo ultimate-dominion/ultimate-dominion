@@ -321,3 +321,20 @@ export const getItemImage = (name: string): string | undefined => {
 export const getConsumableEmoji = (name: string): string => {
   return CONSUMABLE_EMOJIS[name] || '\uD83D\uDCE6';
 };
+
+/**
+ * Preload item images into the browser cache.
+ * Call when item data arrives (inventory, shop, marketplace)
+ * to start fetching before components mount.
+ */
+const preloadedUrls = new Set<string>();
+
+export const preloadItemImages = (itemNames: string[]): void => {
+  for (const name of itemNames) {
+    const src = getItemImage(name);
+    if (!src || preloadedUrls.has(src)) continue;
+    preloadedUrls.add(src);
+    const img = new window.Image();
+    img.src = src;
+  }
+};

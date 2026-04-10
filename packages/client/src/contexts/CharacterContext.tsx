@@ -46,6 +46,7 @@ import type {
   WorldStatusEffect,
 } from '../utils/types';
 
+import { preloadItemImages } from '../utils/itemImages';
 import { useItems } from './ItemsContext';
 import { useMUD } from './MUDContext';
 
@@ -480,6 +481,15 @@ const CharacterProviderInner = ({
   const equippedWeapons = useMemo(() =>
     equippedWeaponIds.map(id => inventoryWeapons.find(w => w.tokenId === id.toString())).filter(Boolean) as Weapon[],
     [equippedWeaponIds, inventoryWeapons]);
+
+  // Preload item images as soon as inventory is known
+  useEffect(() => {
+    const names = [
+      ...inventoryArmor, ...inventoryWeapons,
+      ...inventorySpells, ...inventoryConsumables,
+    ].map(i => i.name);
+    if (names.length > 0) preloadItemImages(names);
+  }, [inventoryArmor, inventoryWeapons, inventorySpells, inventoryConsumables]);
 
   // ============================================================
   // refreshCharacter: no-op — all data is now reactive via useMemo

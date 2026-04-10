@@ -63,11 +63,19 @@ function renderTinted(
   canvas: HTMLCanvasElement,
   img: HTMLImageElement,
   tintColor: string,
+  sizePx?: number,
 ) {
   const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const w = Math.floor(rect.width);
-  const h = Math.floor(rect.height);
+  // Use provided size to avoid getBoundingClientRect layout thrash
+  let w: number, h: number;
+  if (sizePx && sizePx > 0) {
+    w = sizePx;
+    h = sizePx;
+  } else {
+    const rect = canvas.getBoundingClientRect();
+    w = Math.floor(rect.width);
+    h = Math.floor(rect.height);
+  }
   if (w === 0 || h === 0) return;
 
   canvas.width = w * dpr;
@@ -92,6 +100,13 @@ function renderTinted(
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+// Parse pixel size from string prop (e.g. '40px' → 40)
+function parsePxSize(size: string | Record<string, string>): number | undefined {
+  if (typeof size !== 'string') return undefined;
+  const m = size.match(/^(\d+)px$/);
+  return m ? parseInt(m[1], 10) : undefined;
+}
+
 const TintedItemCanvas = memo(({
   imageSrc,
   rarity,
@@ -106,24 +121,25 @@ const TintedItemCanvas = memo(({
   const tintColor = RARITY_TINT[rarity] ?? RARITY_TINT[Rarity.Common];
   const rarityAnimation = getRarityAnimation(rarity);
   const rarityBorderColor = getRarityColor(rarity);
+  const pxSize = parsePxSize(size);
 
   useEffect(() => {
     loadImage(imageSrc)
       .then(img => {
         setLoaded(true);
         if (canvasRef.current) {
-          renderTinted(canvasRef.current, img, tintColor);
+          renderTinted(canvasRef.current, img, tintColor, pxSize);
         }
       })
       .catch(() => {});
-  }, [imageSrc, tintColor]);
+  }, [imageSrc, tintColor, pxSize]);
 
   // Re-render when canvas mounts after image is already cached
   useEffect(() => {
     if (!loaded || !canvasRef.current) return;
     const img = imageCache.get(imageSrc);
-    if (img) renderTinted(canvasRef.current, img, tintColor);
-  }, [loaded, imageSrc, tintColor]);
+    if (img) renderTinted(canvasRef.current, img, tintColor, pxSize);
+  }, [loaded, imageSrc, tintColor, pxSize]);
 
   // Rarity glow filter for epic+ items
   const glowFilter = rarity >= Rarity.Epic
