@@ -326,7 +326,7 @@ contract DeployClassSpells is Script {
 
         // supply=0 (minted on class selection), dropChance=0, price=0
         return world.UD__createItem(
-            ItemType.Weapon,
+            ItemType.Spell,
             0,    // supply
             0,    // dropChance
             0,    // price

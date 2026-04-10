@@ -390,7 +390,7 @@ contract DeployClassSpellsL15 is Script {
 
         // supply=0 (minted at level up), dropChance=0, price=0
         return world.UD__createItem(
-            ItemType.Weapon,
+            ItemType.Spell,
             0,    // supply
             0,    // dropChance
             0,    // price
