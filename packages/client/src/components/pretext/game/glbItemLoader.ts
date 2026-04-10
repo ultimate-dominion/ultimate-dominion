@@ -326,3 +326,90 @@ export function getItemModel(slug: string): {
 export function itemSlug(name: string): string {
   return name.toLowerCase().replace(/['']/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
+
+// ---- Icon rendering (for ItemAsciiIcon) ------------------------------------
+
+const ICON_RENDER_SIZE = 512;
+const iconCanvasCache = new Map<string, HTMLCanvasElement>();
+const iconRenderPromises = new Map<string, Promise<HTMLCanvasElement | null>>();
+
+/**
+ * Render a GLB item model to a cached offscreen canvas for icon use.
+ *
+ * Returns a 512x512 canvas with the 3D model rendered in toon shading
+ * on a black background — front-facing, static, orthographic.
+ *
+ * The canvas is cached per slug. The ItemAsciiIcon component feeds this
+ * into the threshold-dilate-downsample pipeline for pixel art rendering.
+ *
+ * Returns null if the model isn't in the manifest or fails to load.
+ */
+export async function renderItemIconCanvas(slug: string): Promise<HTMLCanvasElement | null> {
+  // Return cached
+  const cached = iconCanvasCache.get(slug);
+  if (cached) return cached;
+
+  // Deduplicate concurrent requests
+  const inflight = iconRenderPromises.get(slug);
+  if (inflight) return inflight;
+
+  const promise = _renderItemIconCanvasInner(slug);
+  iconRenderPromises.set(slug, promise);
+  const result = await promise;
+  iconRenderPromises.delete(slug);
+  return result;
+}
+
+async function _renderItemIconCanvasInner(slug: string): Promise<HTMLCanvasElement | null> {
+  // Ensure manifest + model are loaded
+  const m = await loadItemManifest();
+  if (!m[slug]) return null;
+
+  await loadItemModel(slug);
+  const state = itemCache.get(slug);
+  if (!state?.loaded || !state.scene || !state.camera || !state.model) return null;
+
+  // Ensure renderer is ready
+  if (!_renderer) {
+    const { getSharedRenderer: getRenderer } = await import('./glbCreatureLoader');
+    _renderer = await getRenderer();
+    _rendererTHREE = await import('three');
+  }
+
+  const renderer = _renderer!;
+  const THREE = _rendererTHREE!;
+  const prevSize = renderer.getSize(new THREE.Vector2());
+
+  // Set a good icon pose — slight 3/4 angle for depth
+  state.model.rotation.set(0, Math.PI * 0.15, 0);
+
+  // Render with black background at high resolution
+  renderer.setSize(ICON_RENDER_SIZE, ICON_RENDER_SIZE);
+  renderer.setClearColor(0x000000, 1);
+  renderer.render(state.scene, state.camera);
+
+  // Stamp to persistent offscreen canvas
+  const iconCanvas = document.createElement('canvas');
+  iconCanvas.width = ICON_RENDER_SIZE;
+  iconCanvas.height = ICON_RENDER_SIZE;
+  const iconCtx = iconCanvas.getContext('2d')!;
+  iconCtx.drawImage(renderer.domElement, 0, 0, ICON_RENDER_SIZE, ICON_RENDER_SIZE);
+
+  // Restore renderer
+  renderer.setSize(prevSize.x, prevSize.y);
+
+  // Reset model rotation so battle scene isn't affected
+  state.model.rotation.set(0, 0, 0);
+
+  iconCanvasCache.set(slug, iconCanvas);
+  return iconCanvas;
+}
+
+/**
+ * Check if a GLB model exists in the manifest for this item slug.
+ * Does NOT trigger loading — just checks if manifest has the entry.
+ */
+export async function hasItemModel(slug: string): Promise<boolean> {
+  const m = await loadItemManifest();
+  return !!m[slug];
+}

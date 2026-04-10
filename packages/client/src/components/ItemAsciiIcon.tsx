@@ -1,20 +1,16 @@
 /**
- * ItemAsciiIcon — Threshold-Dilate-Downsample pixel art icons.
+ * ItemAsciiIcon — GLB-first pixelated item icons.
  *
- * Pipeline (runs once per image, cached):
- * 1. Otsu threshold at full resolution → binary (ink ON / OFF)
- * 2. Morphological dilation (3x3 cross) → thickens thin features
- * 3. Block coverage downsample → count ON pixels per grid cell
- * 4. Posterize coverage to rarity tonal palette → crisp pixel art
+ * Primary path: render the item's 3D model (GLB) to an offscreen canvas,
+ * then run through threshold-dilate-downsample for crisp pixel art.
+ * Fallback: WebP illustration (same pipeline).
  *
- * Why this works: binarizing at 1008px preserves features that bilinear
- * averaging destroys. A 1px sword blade is ON at full res, dilation makes
- * it 3px wide, and it survives the 80:1 block average. Max-pooling picked
- * up noise; averaging lost detail; this approach does neither.
+ * The GLB models have solid geometry that downsamples perfectly — no thin
+ * ink lines, no artistic noise, just the weapon's actual shape. This is
+ * the same 3D model used in combat and (eventually) equipped on characters.
  *
- * Rarity controls both pixel size AND tonal depth.
- *
- * Fallback: emoji for items without art.
+ * Rarity controls pixel resolution: Worn=8px crude → Epic/Legendary=3px crisp.
+ * Rarity color applied via posterized coverage mapping.
  */
 
 import { memo, useEffect, useRef, useState } from 'react';
@@ -24,6 +20,7 @@ import { getEmoji, removeEmoji } from '../utils/helpers';
 import { getConsumableEmoji, getItemImage } from '../utils/itemImages';
 import { getRarityAnimation, getRarityColor } from '../utils/rarityHelpers';
 import { ItemType, Rarity } from '../utils/types';
+import { itemSlug, renderItemIconCanvas } from './pretext/game/glbItemLoader';
 
 type Props = {
   name: string;
@@ -46,9 +43,16 @@ const RARITY_PIXEL_SIZE: Record<number, number> = {
 };
 
 // ---------------------------------------------------------------------------
-// Tonal palette per rarity
+// Rarity tint colors
 // ---------------------------------------------------------------------------
-type TonalLevel = { minCoverage: number; color: [number, number, number, number] };
+const RARITY_TINT: Record<number, string> = {
+  [Rarity.Worn]:      '#706866',
+  [Rarity.Common]:    '#B0A890',
+  [Rarity.Uncommon]:  '#5CAA6A',
+  [Rarity.Rare]:      '#5A90D0',
+  [Rarity.Epic]:      '#9A6AD8',
+  [Rarity.Legendary]: '#E8A030',
+};
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -59,33 +63,16 @@ function hexToRgb(hex: string): [number, number, number] {
   ];
 }
 
-function buildPalette(_rarity: number, tintHex: string): TonalLevel[] {
-  const [r, g, b] = hexToRgb(tintHex);
-
-  // Bold 2-color for all rarities: black + full tint.
-  // Detail comes from pixel resolution (8px→3px), not more tones.
-  // Multi-tone palettes looked muddy on sparse white-on-black ink art.
-  return [
-    { minCoverage: 0.08, color: [r, g, b, 255] },
-  ];
-}
-
-const RARITY_TINT: Record<number, string> = {
-  [Rarity.Worn]:      '#706866',
-  [Rarity.Common]:    '#B0A890',
-  [Rarity.Uncommon]:  '#5CAA6A',
-  [Rarity.Rare]:      '#5A90D0',
-  [Rarity.Epic]:      '#9A6AD8',
-  [Rarity.Legendary]: '#E8A030',
-};
-
 // ---------------------------------------------------------------------------
-// Image + binary mask cache
+// Image source types — GLB canvas or WebP HTMLImageElement
 // ---------------------------------------------------------------------------
+type ImageSource =
+  | { type: 'canvas'; canvas: HTMLCanvasElement }
+  | { type: 'image'; img: HTMLImageElement };
+
 const imageCache = new Map<string, HTMLImageElement>();
-const binaryCache = new Map<string, { mask: Uint8Array; w: number; h: number }>();
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+function loadWebPImage(src: string): Promise<HTMLImageElement> {
   const cached = imageCache.get(src);
   if (cached) return Promise.resolve(cached);
 
@@ -99,17 +86,17 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 // ---------------------------------------------------------------------------
-// Otsu threshold — finds optimal binary split for white-on-black ink
+// Binary mask cache (works for both canvas and image sources)
 // ---------------------------------------------------------------------------
+const binaryCache = new Map<string, { mask: Uint8Array; w: number; h: number }>();
+
 function otsuThreshold(data: Uint8ClampedArray, pixelCount: number): number {
-  // Build brightness histogram
   const histogram = new Uint32Array(256);
   for (let i = 0; i < data.length; i += 4) {
     const brightness = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
     histogram[brightness]++;
   }
 
-  // Find threshold that maximizes inter-class variance
   let bestThreshold = 0;
   let bestVariance = 0;
   let sumTotal = 0;
@@ -138,24 +125,27 @@ function otsuThreshold(data: Uint8ClampedArray, pixelCount: number): number {
   return bestThreshold;
 }
 
-// ---------------------------------------------------------------------------
-// Build dilated binary mask from source image (cached per src)
-// ---------------------------------------------------------------------------
-function getBinaryMask(img: HTMLImageElement, src: string): { mask: Uint8Array; w: number; h: number } {
-  const cached = binaryCache.get(src);
+function getBinaryMask(source: ImageSource, cacheKey: string): { mask: Uint8Array; w: number; h: number } {
+  const cached = binaryCache.get(cacheKey);
   if (cached) return cached;
 
-  const w = img.naturalWidth;
-  const h = img.naturalHeight;
+  let w: number, h: number, data: Uint8ClampedArray;
 
-  // Extract pixel data
-  const c = document.createElement('canvas');
-  c.width = w;
-  c.height = h;
-  const ctx = c.getContext('2d')!;
-  ctx.drawImage(img, 0, 0);
-  const imageData = ctx.getImageData(0, 0, w, h);
-  const data = imageData.data;
+  if (source.type === 'canvas') {
+    w = source.canvas.width;
+    h = source.canvas.height;
+    const ctx = source.canvas.getContext('2d')!;
+    data = ctx.getImageData(0, 0, w, h).data;
+  } else {
+    w = source.img.naturalWidth;
+    h = source.img.naturalHeight;
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext('2d')!;
+    ctx.drawImage(source.img, 0, 0);
+    data = ctx.getImageData(0, 0, w, h).data;
+  }
 
   // Otsu threshold → binary
   const threshold = otsuThreshold(data, w * h);
@@ -165,8 +155,7 @@ function getBinaryMask(img: HTMLImageElement, src: string): { mask: Uint8Array; 
     binary[i] = brightness > threshold ? 1 : 0;
   }
 
-  // Morphological dilation with 3x3 cross structuring element
-  // This thickens thin features by 1px in each cardinal direction
+  // Morphological dilation with 3x3 cross
   const dilated = new Uint8Array(w * h);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -175,7 +164,6 @@ function getBinaryMask(img: HTMLImageElement, src: string): { mask: Uint8Array; 
         dilated[idx] = 1;
         continue;
       }
-      // Check 3x3 cross neighbors
       if (
         (x > 0 && binary[idx - 1] === 1) ||
         (x < w - 1 && binary[idx + 1] === 1) ||
@@ -188,17 +176,17 @@ function getBinaryMask(img: HTMLImageElement, src: string): { mask: Uint8Array; 
   }
 
   const result = { mask: dilated, w, h };
-  binaryCache.set(src, result);
+  binaryCache.set(cacheKey, result);
   return result;
 }
 
 // ---------------------------------------------------------------------------
-// Coverage-ratio downsampler + posterizer
+// Coverage-ratio downsampler + rarity tint
 // ---------------------------------------------------------------------------
 function renderCoverage(
   canvas: HTMLCanvasElement,
-  img: HTMLImageElement,
-  src: string,
+  source: ImageSource,
+  cacheKey: string,
   rarity: number,
   pixelSize: number,
 ) {
@@ -209,18 +197,16 @@ function renderCoverage(
   if (displayW === 0 || displayH === 0) return;
 
   const tintHex = RARITY_TINT[rarity] ?? RARITY_TINT[Rarity.Common];
-  const palette = buildPalette(rarity, tintHex);
+  const [r, g, b] = hexToRgb(tintHex);
 
   const gridW = Math.max(4, Math.floor(displayW / pixelSize));
   const gridH = Math.max(4, Math.floor(displayH / pixelSize));
 
-  // Get pre-computed dilated binary mask
-  const { mask, w: srcW, h: srcH } = getBinaryMask(img, src);
+  const { mask, w: srcW, h: srcH } = getBinaryMask(source, cacheKey);
 
   const blockW = srcW / gridW;
   const blockH = srcH / gridH;
 
-  // Build posterized grid from coverage ratios
   const grid = document.createElement('canvas');
   grid.width = gridW;
   grid.height = gridH;
@@ -235,11 +221,8 @@ function renderCoverage(
       const srcX1 = Math.min(srcW, Math.floor((gx + 1) * blockW));
       const srcY1 = Math.min(srcH, Math.floor((gy + 1) * blockH));
 
-      // Count ON pixels in this block
       let onCount = 0;
       let totalCount = 0;
-
-      // Stride for performance on large blocks
       const stride = blockW > 40 ? 3 : blockW > 20 ? 2 : 1;
 
       for (let sy = srcY0; sy < srcY1; sy += stride) {
@@ -250,21 +233,14 @@ function renderCoverage(
       }
 
       const coverage = totalCount > 0 ? onCount / totalCount : 0;
-
-      // Map coverage to palette (highest coverage threshold first)
       const oi = (gy * gridW + gx) * 4;
-      let matched = false;
-      for (const level of palette) {
-        if (coverage >= level.minCoverage) {
-          out[oi]     = level.color[0];
-          out[oi + 1] = level.color[1];
-          out[oi + 2] = level.color[2];
-          out[oi + 3] = level.color[3];
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) {
+
+      if (coverage >= 0.08) {
+        out[oi]     = r;
+        out[oi + 1] = g;
+        out[oi + 2] = b;
+        out[oi + 3] = 255;
+      } else {
         out[oi] = 0;
         out[oi + 1] = 0;
         out[oi + 2] = 0;
@@ -275,7 +251,6 @@ function renderCoverage(
 
   gridCtx.putImageData(output, 0, 0);
 
-  // Scale up with nearest-neighbor
   canvas.width = displayW * dpr;
   canvas.height = displayH * dpr;
   const ctx = canvas.getContext('2d')!;
@@ -287,37 +262,58 @@ function renderCoverage(
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const TintedItemCanvas = memo(({
-  imageSrc,
+const ItemIconCanvas = memo(({
+  name,
   rarity,
   size,
 }: {
-  imageSrc: string;
+  name: string;
   rarity: number;
   size: string | Record<string, string>;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [loaded, setLoaded] = useState(!!imageCache.get(imageSrc));
+  const [source, setSource] = useState<ImageSource | null>(null);
+  const [cacheKey, setCacheKey] = useState<string>('');
   const pixelSize = RARITY_PIXEL_SIZE[rarity] ?? RARITY_PIXEL_SIZE[Rarity.Common];
   const rarityAnimation = getRarityAnimation(rarity);
   const rarityBorderColor = getRarityColor(rarity);
 
-  useEffect(() => {
-    loadImage(imageSrc)
-      .then(img => {
-        setLoaded(true);
-        if (canvasRef.current) {
-          renderCoverage(canvasRef.current, img, imageSrc, rarity, pixelSize);
-        }
-      })
-      .catch(() => {});
-  }, [imageSrc, rarity, pixelSize]);
+  const cleanName = removeEmoji(name);
+  const slug = itemSlug(cleanName);
 
+  // Load source: try GLB first, fall back to WebP
   useEffect(() => {
-    if (!loaded || !canvasRef.current) return;
-    const img = imageCache.get(imageSrc);
-    if (img) renderCoverage(canvasRef.current, img, imageSrc, rarity, pixelSize);
-  }, [loaded, imageSrc, rarity, pixelSize]);
+    let cancelled = false;
+
+    async function loadSource() {
+      // Try GLB model
+      const glbCanvas = await renderItemIconCanvas(slug).catch(() => null);
+      if (!cancelled && glbCanvas) {
+        setSource({ type: 'canvas', canvas: glbCanvas });
+        setCacheKey(`glb:${slug}`);
+        return;
+      }
+
+      // Fall back to WebP
+      const webpSrc = getItemImage(cleanName);
+      if (webpSrc) {
+        const img = await loadWebPImage(webpSrc).catch(() => null);
+        if (!cancelled && img) {
+          setSource({ type: 'image', img });
+          setCacheKey(`webp:${webpSrc}`);
+        }
+      }
+    }
+
+    loadSource();
+    return () => { cancelled = true; };
+  }, [slug, cleanName]);
+
+  // Render when source is ready or params change
+  useEffect(() => {
+    if (!source || !canvasRef.current || !cacheKey) return;
+    renderCoverage(canvasRef.current, source, cacheKey, rarity, pixelSize);
+  }, [source, cacheKey, rarity, pixelSize]);
 
   const glowFilter = rarity >= Rarity.Epic
     ? `drop-shadow(0 0 ${rarity >= Rarity.Legendary ? '6px' : '4px'} ${rarityBorderColor}80)`
@@ -346,16 +342,18 @@ const TintedItemCanvas = memo(({
   );
 });
 
-TintedItemCanvas.displayName = 'TintedItemCanvas';
+ItemIconCanvas.displayName = 'ItemIconCanvas';
 
 const ItemAsciiIconInner = ({ name, itemType, rarity = 0, size = '40px' }: Props) => {
   const cleanName = removeEmoji(name);
   const imageSrc = getItemImage(cleanName);
 
-  if (imageSrc) {
+  // Use GLB+threshold pipeline for weapons and armor that might have 3D models.
+  // Consumables and quest items without models fall back to WebP or emoji.
+  if (itemType === ItemType.Weapon || itemType === ItemType.Armor || imageSrc) {
     return (
-      <TintedItemCanvas
-        imageSrc={imageSrc}
+      <ItemIconCanvas
+        name={name}
         rarity={rarity}
         size={size}
       />
