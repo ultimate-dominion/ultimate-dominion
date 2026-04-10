@@ -502,17 +502,19 @@
         // Advance time, loop
         clipTimes[clipName] = (clipTimes[clipName] + dt) % duration;
 
-        // Seek mixer to this clip's time
+        // Seek mixer to this clip's time — order matters:
+        // 1. Stop all + reset mixer to t=0 FIRST
+        // 2. THEN reset+play action (so _startTime = mixer.time = 0)
+        // 3. THEN advance to seekTime
+        const seekTime = clipTimes[clipName];
         Object.values(actions).forEach(a => a.stop());
         model.position.copy(restPos);
+        mixer.setTime(0);
         const action = actions[clipName];
         action.reset();
         action.loop = THREE.LoopOnce;
         action.clampWhenFinished = true;
-        action.play();
-        action.time = clipTimes[clipName];
-        mixer.setTime(0); // reset mixer time
-        mixer.update(action.time); // apply pose at exact time
+        mixer.update(seekTime);
 
         // Lab render
         const lc = clipCanvases[clipName].lab;

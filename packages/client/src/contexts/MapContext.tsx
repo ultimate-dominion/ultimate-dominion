@@ -48,6 +48,10 @@ import { useMUD } from './MUDContext';
 const NPC_METADATA_MAP: Record<string, { name: string; interaction: NpcInteraction }> = {
   'npc:vel_morrow': { name: 'Vel Morrow', interaction: 'respec' },
   'npc:edric_thorne': { name: 'Edric Thorne', interaction: 'guild' },
+  'worldobj:camp_journal': { name: 'Camp Journal', interaction: 'examine' },
+  'worldobj:shrine_inscriptions': { name: 'Shrine Inscriptions', interaction: 'examine' },
+  'worldobj:edric_at_shrine': { name: 'Edric at Shrine', interaction: 'examine' },
+  'worldobj:summit_stone': { name: 'Summit Stone', interaction: 'examine' },
 };
 
 const SHOP_MOB_ID_TO_NAME: Record<string, string> = {
@@ -577,6 +581,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const posData = positionTable[entity];
         const x = toNumber(posData?.x ?? 0);
         const y = toNumber(posData?.y ?? 0);
+        const zoneId = toNumber((posData as any)?.zoneId ?? 0);
         const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
         const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
         const mobData = mobsTable[mobKey];
@@ -588,7 +593,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           mobId: mobId.toString(),
           name: npcMeta.name,
           interaction: npcMeta.interaction,
-          position: { x, y },
+          position: { zoneId, x, y },
           metadataUri,
         };
       });
@@ -599,8 +604,10 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   }, [allNpcEntities, positionTable, mobsTable, isSynced, renderError]);
 
   const zonedNpcs = useMemo(() => {
-    return allNpcs.filter(n => isInZone(n.position.x, n.position.y, currentZone));
-  }, [allNpcs, currentZone]);
+    return allNpcs.filter(n =>
+      entityInZone(n.entityId, currentZone, positionTableV2, positionTableV1, toNumber),
+    );
+  }, [allNpcs, currentZone, positionTableV2, positionTableV1]);
 
   const npcsOnTile = useMemo(() => {
     if (!position || (position.x === 0 && position.y === 0)) return [];

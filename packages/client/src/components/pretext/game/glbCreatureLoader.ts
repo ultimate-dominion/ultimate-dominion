@@ -40,13 +40,13 @@ export async function getSharedRenderer(): Promise<import('three').WebGLRenderer
 
 async function makeToonGradient(THREE: typeof import('three')) {
   const gradData = new Uint8Array([
-     8,   6,   5, 255,
-    32,  28,  24, 255,
-    72,  66,  60, 255,
-   118, 108, 100, 255,
-   168, 155, 142, 255,
-   210, 198, 184, 255,
-   245, 235, 222, 255,
+    40,  36,  32, 255,   // shadow — lifted from near-black
+    72,  65,  58, 255,
+   110, 100,  92, 255,
+   150, 138, 128, 255,
+   190, 178, 165, 255,
+   225, 215, 200, 255,
+   250, 242, 230, 255,
   ]);
   const gradMap = new THREE.DataTexture(gradData, 7, 1);
   gradMap.minFilter = THREE.NearestFilter;
@@ -233,13 +233,13 @@ export async function loadGLBCreature(
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0, 0, 0);
 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
   keyLight.position.set(1.5, 2.0, 3.0);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xffffff, 0.25);
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
   fillLight.position.set(-1.2, -0.5, 1.5);
   scene.add(fillLight);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.10));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.40));
 
   const model = gltf.scene;
   fitModel(model, THREE);

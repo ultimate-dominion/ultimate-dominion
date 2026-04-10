@@ -717,6 +717,7 @@
     "noMonstersArea": "このエリアにモンスターはいません",
     "noPlayersArea": "このエリアにプレイヤーはいません",
     "exploreDarkCave": "暗黒の洞窟を探索せよ",
+    "exploreZone": "{{zoneName}}を探索せよ",
     "useCompass": "コンパスで移動してください",
     "fireCracklesNear": "近くで焚き火が燃えています。休めます。",
     "restByFire": "焚き火で休む",

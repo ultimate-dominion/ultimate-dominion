@@ -130,15 +130,18 @@ const playerTemplateCache = new Map<
 function buildPlayerTemplate(race: Race) {
   const url = RACE_GLB_URL[race];
   if (!url) return null;
+  // Dwarf is stocky (wider, shorter), Elf is lean (narrower, taller), Human is balanced
+  const gridW = race === Race.Dwarf ? 7 : race === Race.Elf ? 6 : 7;
+  const gridH = race === Race.Dwarf ? 6 : race === Race.Elf ? 8 : 7;
   return {
     id: `player-${Race[race]?.toLowerCase() ?? 'unknown'}`,
     name: Race[race] ?? 'Adventurer',
-    gridWidth: 7,
-    gridHeight: 7,
+    gridWidth: gridW,
+    gridHeight: gridH,
     monsterClass: 0 as const,
     level: 1,
     dynamic: true,
-    draw: makeGLBDrawFn(url, 7, 7, drawPlayerFallback, PLAYER_YAW),
+    draw: makeGLBDrawFn(url, gridW, gridH, drawPlayerFallback, PLAYER_YAW),
   };
 }
 
@@ -490,10 +493,16 @@ export const BattleSceneCanvas = forwardRef<
       ctx.save();
       ctx.translate(offsetX + shakeX, shakeY);
 
-      const monsterX = w * 0.3;
-      const monsterW = w * 0.7;
-      const monsterY = 0;
-      const monsterH = h;
+      const monsterViewX = w * 0.3;
+      const monsterViewW = w * 0.7;
+      const monsterViewH = h;
+
+      // Scale monster within viewport based on displayScale
+      const mScale = template?.displayScale ?? 1;
+      const monsterW = monsterViewW * mScale;
+      const monsterH = monsterViewH * mScale;
+      const monsterX = monsterViewX + (monsterViewW - monsterW) / 2; // center
+      const monsterY = monsterViewH - monsterH; // bottom-align (ground plane)
 
       if (template) {
         renderMonster(ctx, template, monsterX, monsterY, monsterW, monsterH, {
@@ -547,30 +556,36 @@ export const BattleSceneCanvas = forwardRef<
 
         const projX = startX + (endX - startX) * t;
         const projY = startY + (endY - startY) * t;
-        drawWeapon(ctx, weaponType, projX, projY, w, h, progress, weaponName, !isPlayerAttack);
+        // threatScale: tier 1→1.0, tier 2→1.5, tier 3→2.2
+        const tier = template?.threatTier ?? 1;
+        const threatScale = tier === 3 ? 2.2 : tier === 2 ? 1.5 : 1.0;
+        drawWeapon(ctx, weaponType, projX, projY, w, h, progress, weaponName, !isPlayerAttack, threatScale);
       }
 
       // ── Render impact effects ───────────────────────────────────────
+      // TODO: replace drawImpact with ASCII-style impact effect
+      // Impact state is still tracked (state.impacts) for future use.
 
-      for (const impact of state.impacts) {
-        const impProgress = (now - impact.startTime) / IMPACT_DURATION;
-        drawImpact(
-          ctx,
-          impact.x + state.hitReaction.offsetX,
-          impact.y,
-          w,
-          impProgress,
-        );
-      }
 
       // ── Render player character (left 35%) ──────────────────────────
 
       const playerTpl = playerTemplate;
       if (playerTpl) {
-        const playerX = 0;
-        const playerW = w * 0.35;
-        const playerY = 0;
-        const playerH = h;
+        const playerViewW = w * 0.35;
+        const playerViewH = h;
+
+        // Race-based player scale: Dwarf < Elf < Human
+        const raceScale = p.userRace === Race.Dwarf ? 0.65
+          : p.userRace === Race.Elf ? 0.78
+          : 0.85; // Human / default
+        // Subtle growth vs stronger monsters (player feels more powerful at higher levels)
+        const levelBoost = Math.min((template?.level ?? 1) * 0.012, 0.15);
+        const pScale = Math.min(raceScale + levelBoost, 1.0);
+
+        const playerW = playerViewW * pScale;
+        const playerH = playerViewH * pScale;
+        const playerX = playerViewW - playerW; // right-align (facing monster)
+        const playerY = playerViewH - playerH; // bottom-align (ground plane)
 
         // Player hit flash
         let playerFlash = 0;
@@ -593,10 +608,12 @@ export const BattleSceneCanvas = forwardRef<
 
         ctx.save();
 
-        // Subtle shake when player is hit
+        // Shake when player is hit — amplified by monster threat tier
         if (playerFlash > 0) {
-          const pShakeX = playerFlash * (Math.random() - 0.5) * w * 0.008;
-          const pShakeY = playerFlash * (Math.random() - 0.5) * h * 0.008;
+          const tier = template?.threatTier ?? 1;
+          const shakeAmp = tier === 3 ? 0.020 : tier === 2 ? 0.013 : 0.008;
+          const pShakeX = playerFlash * (Math.random() - 0.5) * w * shakeAmp;
+          const pShakeY = playerFlash * (Math.random() - 0.5) * h * shakeAmp;
           ctx.translate(pShakeX, pShakeY);
         }
 

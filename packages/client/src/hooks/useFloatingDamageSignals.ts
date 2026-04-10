@@ -22,25 +22,9 @@ export function useFloatingDamageSignals({
   containerWidth: number;
   containerHeight: number;
 }) {
-  const processedCountRef = useRef(0);
+  /** Set of outcome keys already spawned — survives counterattack reveal without replaying. */
+  const spawnedKeysRef = useRef<Set<string>>(new Set());
   const lastEncounterIdRef = useRef<string | null>(null);
-  const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  // Reset when battle changes or the outcomes array is replaced for a new encounter
-  useEffect(() => {
-    pendingTimersRef.current.forEach(clearTimeout);
-    pendingTimersRef.current = [];
-    processedCountRef.current = 0;
-    lastEncounterIdRef.current = visibleOutcomes[0]?.encounterId ?? null;
-  }, [characterId, visibleOutcomes]);
-
-  useEffect(
-    () => () => {
-      pendingTimersRef.current.forEach(clearTimeout);
-      pendingTimersRef.current = [];
-    },
-    [],
-  );
 
   useEffect(() => {
     if (!characterId || !damageRef.current) return;
@@ -48,19 +32,19 @@ export function useFloatingDamageSignals({
 
     const currentEncounterId = visibleOutcomes[0]?.encounterId ?? null;
     if (
-      visibleOutcomes.length < processedCountRef.current ||
-      (currentEncounterId && lastEncounterIdRef.current && currentEncounterId !== lastEncounterIdRef.current)
+      currentEncounterId &&
+      lastEncounterIdRef.current &&
+      currentEncounterId !== lastEncounterIdRef.current
     ) {
-      processedCountRef.current = 0;
+      spawnedKeysRef.current.clear();
     }
     lastEncounterIdRef.current = currentEncounterId;
 
-    const newOutcomes = visibleOutcomes.slice(processedCountRef.current);
-    if (newOutcomes.length === 0) return;
-
-    processedCountRef.current = visibleOutcomes.length;
-
-    for (const outcome of newOutcomes) {
+    for (const outcome of visibleOutcomes) {
+      // Unique key per outcome: encounterId + turn + attackNumber + attackerId
+      const key = `${outcome.encounterId}:${outcome.currentTurn}:${outcome.attackNumber}:${outcome.attackerId}`;
+      if (spawnedKeysRef.current.has(key)) continue;
+      spawnedKeysRef.current.add(key);
       if (!damageRef.current) break;
 
       const isPlayerAttack =
@@ -82,12 +66,22 @@ export function useFloatingDamageSignals({
       const isCombo = hitCount > 1 || outcome.doubleStrike;
 
       // ONE floating number per outcome — total damage, not per-hit
+      // Color-coded: red = player damage, white = enemy damage, teal = blocked, gray = miss/dodge
       if (anyMiss) {
-        damageRef.current.spawn(baseX, baseY, 'miss');
+        damageRef.current.spawn(baseX, baseY, outcome.spellDodged ? 'dodged' : 'miss');
       } else if (totalDamage > 0) {
-        const type: DamageType = anyCrit
-          ? (isCombo ? 'critDouble' : 'crit')
-          : (isCombo ? 'double' : 'damage');
+        let type: DamageType;
+        if (!isPlayerAttack && outcome.blocked) {
+          // Player blocked an incoming attack — positive feedback
+          type = 'blocked';
+        } else if (isPlayerAttack) {
+          type = anyCrit
+            ? (isCombo ? 'critDouble' : 'crit')
+            : (isCombo ? 'double' : 'damage');
+        } else {
+          // Enemy damage on player — neutral/white color family
+          type = anyCrit ? 'enemyCrit' : 'enemyDamage';
+        }
         damageRef.current.spawn(baseX, baseY, type, totalDamage, isCombo ? hitCount : undefined);
       }
     }

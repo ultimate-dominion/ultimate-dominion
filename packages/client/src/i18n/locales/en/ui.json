@@ -717,6 +717,7 @@
     "noMonstersArea": "No monsters in this area",
     "noPlayersArea": "No players in this area",
     "exploreDarkCave": "Explore the Dark Cave",
+    "exploreZone": "Explore the {{zoneName}}",
     "useCompass": "Use the compass to move",
     "fireCracklesNear": "A fire crackles nearby. You could rest here.",
     "restByFire": "Rest by the Fire",
