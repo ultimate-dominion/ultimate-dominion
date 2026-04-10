@@ -149,7 +149,8 @@ async function _renderItemIconInner(
 
   if (!drawFn) return null;
 
-  // Create a MonsterTemplate that wraps the item's draw function
+  // Create a MonsterTemplate that wraps the item's draw function.
+  // renderOverrides tuned for small icon rendering (brighter than battle defaults).
   const template: MonsterTemplate = {
     id: `item-icon:${slug}:${rarity}`,
     name: cleanName,
@@ -157,7 +158,13 @@ async function _renderItemIconInner(
     gridHeight: 1,
     monsterClass: 0,
     level: 1,
-    dynamic: true, // GLB models need fresh render each time
+    dynamic: true,
+    renderOverrides: {
+      gamma: 0.35,             // aggressive lift — small icons need brightness
+      ambient: 0.95,           // near-full ambient — no dark shadows at icon size
+      brightnessBoost: 2.5,    // strong boost for template stage
+      charDensityFloor: 0.15,  // show characters in dimmer regions
+    },
     draw: drawFn,
   };
 
@@ -171,8 +178,8 @@ async function _renderItemIconInner(
 
   renderMonster(ctx, template, 0, 0, displaySize, displaySize, {
     cellSize,
-    enable3D: false,     // static icon, no animation
-    enableBgFill: false, // black background handled by parent
+    enable3D: false,
+    enableBgFill: true,       // fill cell backgrounds for solid body regions
     enableHalfBlock: true,
     enableGlow: rarity >= Rarity.Rare,
     elapsed: 0,

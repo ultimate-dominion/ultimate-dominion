@@ -213,11 +213,14 @@ export async function loadItemModel(slug: string): Promise<void> {
   const scene = new THREE.Scene();
   scene.background = null; // transparent — composited onto battle scene
 
-  // Lighting (simpler than creatures — single key + ambient)
-  const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+  // Lighting — bright enough for ASCII sampling at small icon sizes
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
   keyLight.position.set(1.5, 2.0, 3.0);
   scene.add(keyLight);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+  const fillLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  fillLight.position.set(-1.5, 0.5, 2.0);
+  scene.add(fillLight);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
   const model = gltf.scene;
 
