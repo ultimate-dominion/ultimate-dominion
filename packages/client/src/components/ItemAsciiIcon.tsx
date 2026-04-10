@@ -34,12 +34,23 @@ type Props = {
 // Rarity → cellSize (same concept as battle scene, smaller = more detail)
 // ---------------------------------------------------------------------------
 const RARITY_CELL_SIZE: Record<number, number> = {
-  [Rarity.Worn]:      7,
-  [Rarity.Common]:    6,
-  [Rarity.Uncommon]:  5,
-  [Rarity.Rare]:      4,
+  [Rarity.Worn]:      5,
+  [Rarity.Common]:    4,
+  [Rarity.Uncommon]:  3,
+  [Rarity.Rare]:      3,
   [Rarity.Epic]:      3,
   [Rarity.Legendary]: 3,
+};
+
+// Render at larger size then display smaller — packs more ASCII detail.
+// Higher rarity = larger render canvas = denser detail when compressed.
+const RARITY_RENDER_SCALE: Record<number, number> = {
+  [Rarity.Worn]:      2,
+  [Rarity.Common]:    2,
+  [Rarity.Uncommon]:  3,
+  [Rarity.Rare]:      3,
+  [Rarity.Epic]:      4,
+  [Rarity.Legendary]: 4,
 };
 
 // ---------------------------------------------------------------------------
@@ -124,6 +135,8 @@ async function _renderItemIconInner(
   const slug = itemSlug(cleanName);
   const tint = RARITY_TINT_RGB[rarity] ?? RARITY_TINT_RGB[Rarity.Common];
   const cellSize = RARITY_CELL_SIZE[rarity] ?? RARITY_CELL_SIZE[Rarity.Common];
+  const renderScale = RARITY_RENDER_SCALE[rarity] ?? 2;
+  const renderSize = displaySize * renderScale;
 
   let drawFn: ((ctx: CanvasRenderingContext2D, w: number, h: number) => void) | null = null;
 
@@ -168,15 +181,13 @@ async function _renderItemIconInner(
     draw: drawFn,
   };
 
-  // Render using MonsterAsciiRenderer onto an offscreen canvas
-  const dpr = window.devicePixelRatio || 1;
+  // Render at larger size for more ASCII detail, displayed smaller via CSS
   const canvas = document.createElement('canvas');
-  canvas.width = displaySize * dpr;
-  canvas.height = displaySize * dpr;
+  canvas.width = renderSize;
+  canvas.height = renderSize;
   const ctx = canvas.getContext('2d')!;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  renderMonster(ctx, template, 0, 0, displaySize, displaySize, {
+  renderMonster(ctx, template, 0, 0, renderSize, renderSize, {
     cellSize,
     enable3D: false,
     enableBgFill: true,       // fill cell backgrounds for solid body regions
@@ -218,17 +229,15 @@ const ItemIconCanvas = memo(({
     return () => { cancelled = true; };
   }, [name, rarity, displaySize]);
 
-  // Paint cached icon canvas onto our visible canvas
+  // Paint cached icon canvas onto visible canvas (rendered large, displayed small via CSS)
   useEffect(() => {
     if (!iconCanvas || !canvasRef.current) return;
-    const dpr = window.devicePixelRatio || 1;
     const canvas = canvasRef.current;
-    canvas.width = displaySize * dpr;
-    canvas.height = displaySize * dpr;
+    canvas.width = iconCanvas.width;
+    canvas.height = iconCanvas.height;
     const ctx = canvas.getContext('2d')!;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(iconCanvas, 0, 0);
-  }, [iconCanvas, displaySize]);
+  }, [iconCanvas]);
 
   const glowFilter = rarity >= Rarity.Epic
     ? `drop-shadow(0 0 ${rarity >= Rarity.Legendary ? '6px' : '4px'} ${rarityBorderColor}80)`
