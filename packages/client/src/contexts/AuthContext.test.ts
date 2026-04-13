@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { resolveEmbeddedIdentityToken, resolveWalletAction } from './AuthContext';
+
+import {
+  resolveEmbeddedIdentityToken,
+  resolveWalletAction,
+} from './AuthContext';
 
 describe('resolveWalletAction', () => {
   it('returns "create" for a confirmed new user with no server-side wallet', () => {
@@ -38,8 +42,15 @@ describe('resolveEmbeddedIdentityToken', () => {
   });
 
   it('returns null when no cached token exists', async () => {
+    await expect(resolveEmbeddedIdentityToken(() => null)).resolves.toBeNull();
+  });
+
+  it('falls back to the active access token getter when the cached token is not ready', async () => {
     await expect(
-      resolveEmbeddedIdentityToken(() => null),
-    ).resolves.toBeNull();
+      resolveEmbeddedIdentityToken(
+        () => null,
+        async () => 'fresh-access-token',
+      ),
+    ).resolves.toBe('fresh-access-token');
   });
 });

@@ -20,6 +20,7 @@ import {
   useIdentityToken,
   useLoginWithOAuth,
   usePrivy,
+  useToken,
   useWallets,
 } from '@privy-io/react-auth';
 
@@ -53,8 +54,11 @@ export function resolveWalletAction(
 
 export async function resolveEmbeddedIdentityToken(
   readToken: () => string | null,
+  readAccessToken?: () => Promise<string | null>,
 ): Promise<string | null> {
-  return readToken();
+  const token = readToken();
+  if (token) return token;
+  return readAccessToken ? readAccessToken() : null;
 }
 
 const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
@@ -94,6 +98,7 @@ export const AuthProvider = ({
   const { ready, authenticated, user, logout } = usePrivy();
   const { wallets } = useWallets();
   const { identityToken } = useIdentityToken();
+  const { getAccessToken } = useToken();
   const { createWallet } = useCreateWallet();
   const isCreatingWallet = useRef(false);
   const [isConfirmedNewUser, setIsConfirmedNewUser] = useState(false);
@@ -128,8 +133,12 @@ export const AuthProvider = ({
   }, [identityToken]);
 
   const getEmbeddedIdentityToken = useCallback(
-    async () => resolveEmbeddedIdentityToken(() => identityTokenRef.current),
-    [],
+    async () =>
+      resolveEmbeddedIdentityToken(
+        () => identityTokenRef.current,
+        getAccessToken,
+      ),
+    [getAccessToken],
   );
   const embeddedIdentityTokenReady = Boolean(identityToken);
 
@@ -413,18 +422,26 @@ export const AuthProvider = ({
   // Relayer handles dedup (skips if already funded + balance sufficient).
   // Re-registers every 10 min to survive relayer redeploys wiping tracking state.
   useEffect(() => {
-    if (!embeddedAddress || !RELAYER_URL || !identityToken) return;
+    if (!embeddedAddress || !RELAYER_URL) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     const callFund = async (): Promise<boolean> => {
       try {
+        const token = await getEmbeddedIdentityToken();
+        if (!token) {
+          console.info(
+            '[Gas] Embedded fund skipped until identity token is ready',
+          );
+          return false;
+        }
+
         const res = await fetch(`${RELAYER_URL}/fund`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${identityToken}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             address: embeddedAddress,
@@ -469,7 +486,7 @@ export const AuthProvider = ({
       timers.forEach(t => clearTimeout(t));
       clearInterval(reRegInterval);
     };
-  }, [embeddedAddress, identityToken]);
+  }, [embeddedAddress, getEmbeddedIdentityToken]);
 
   const connectWithGoogle = useCallback(async () => {
     // If already authenticated via Privy (e.g. returning from OAuth redirect),
