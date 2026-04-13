@@ -285,9 +285,7 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
     }
 
     const desired: TrackKey = { zone: currentZone, battle: battleMode };
-    if (keyEq(activeTrack, desired)) {
-      return;
-    }
+    if (keyEq(activeTrack, desired)) return;
 
     const prev = activeTrack;
 
