@@ -55,7 +55,9 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   const { currentBattle } = useBattle();
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    return localStorage.getItem(SOUND_ENABLED_KEY) === 'true';
+    const stored = localStorage.getItem(SOUND_ENABLED_KEY) === 'true';
+    console.log('[SoundContext] mount — stored soundEnabled:', stored, 'zone:', currentZone, 'isAuth:', isAuthenticated);
+    return stored;
   });
 
   // True while a fight is live OR while lingering after a fight just ended.
@@ -94,11 +96,16 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
     }
 
     if (!cache[resolvedZone]) {
+      console.log('[SoundContext] creating Howl', { src, zone: resolvedZone, battle });
       cache[resolvedZone] = new Howl({
         src: [src],
         loop: true,
         volume: 0,
         preload: true,
+        onload: () => console.log('[SoundContext] Howl loaded', src),
+        onloaderror: (_id, err) => console.error('[SoundContext] Howl load error', src, err),
+        onplayerror: (_id, err) => console.error('[SoundContext] Howl play error', src, err),
+        onplay: () => console.log('[SoundContext] Howl playing', src),
       });
     }
     return cache[resolvedZone];
@@ -106,12 +113,19 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
 
   // Auto-enable sound when user authenticates (once per session).
   useEffect(() => {
+    console.log('[SoundContext] auto-enable check', {
+      isAuthenticated,
+      soundEnabled,
+      autoStarted: autoStartedRef.current,
+      sessionFlag: sessionStorage.getItem(SOUND_AUTO_STARTED_KEY),
+    });
     if (
       isAuthenticated &&
       !soundEnabled &&
       !autoStartedRef.current &&
       sessionStorage.getItem(SOUND_AUTO_STARTED_KEY) !== '1'
     ) {
+      console.log('[SoundContext] auto-enabling sound');
       autoStartedRef.current = true;
       sessionStorage.setItem(SOUND_AUTO_STARTED_KEY, '1');
       setSoundEnabled(true);
@@ -130,14 +144,20 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
 
     const unlock = () => {
       const ctx = Howler.ctx;
+      console.log('[SoundContext] unlock gesture', { ctxState: ctx?.state, active: activeTrackRef.current });
       if (ctx && ctx.state !== 'running') {
-        ctx.resume().catch(() => {});
+        ctx.resume().then(() => {
+          console.log('[SoundContext] ctx resumed, new state:', Howler.ctx?.state);
+        }).catch((err) => {
+          console.error('[SoundContext] ctx resume failed', err);
+        });
       }
       const active = activeTrackRef.current;
       if (active) {
         const cache = active.battle ? battleHowlsRef.current : ambientHowlsRef.current;
         const howl = cache[active.zone];
         if (howl && !howl.playing()) {
+          console.log('[SoundContext] unlock: nudging active Howl back on');
           howl.play();
         }
       }
@@ -175,6 +195,13 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   // Main playback effect — crossfades between the correct track for the
   // (zone, battleMode) tuple. Picks crossfade duration based on transition type.
   useEffect(() => {
+    console.log('[SoundContext] playback effect', {
+      soundEnabled,
+      currentZone,
+      battleMode,
+      ctxState: Howler.ctx?.state,
+      active: activeTrackRef.current,
+    });
     if (!soundEnabled) {
       for (const howl of Object.values(ambientHowlsRef.current)) howl.stop();
       for (const howl of Object.values(battleHowlsRef.current)) howl.stop();
@@ -183,7 +210,10 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
     }
 
     const desired: TrackKey = { zone: currentZone, battle: battleMode };
-    if (keyEq(activeTrackRef.current, desired)) return;
+    if (keyEq(activeTrackRef.current, desired)) {
+      console.log('[SoundContext] playback effect — already on desired track, no-op');
+      return;
+    }
 
     const prev = activeTrackRef.current;
 
@@ -210,13 +240,13 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
     const nextHowl = getHowl(desired.zone, desired.battle);
     if (nextHowl) {
       const toVol = desired.battle ? BATTLE_VOLUME : AMBIENT_VOLUME;
+      console.log('[SoundContext] play()', { desired, fadeMs, toVol, ctxState: Howler.ctx?.state });
       nextHowl.volume(0);
       nextHowl.play();
       nextHowl.fade(0, toVol, fadeMs);
       activeTrackRef.current = desired;
     } else {
-      // No track for this zone — go silent but remember what we wanted so the
-      // next change still fires a transition.
+      console.warn('[SoundContext] no Howl returned for', desired);
       activeTrackRef.current = desired;
     }
   }, [soundEnabled, currentZone, battleMode, getHowl]);
