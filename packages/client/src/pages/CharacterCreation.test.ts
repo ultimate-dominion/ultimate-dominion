@@ -1,13 +1,13 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { getFundingGate } from './CharacterCreation';
+import { getFundingGate } from './characterCreationFunding';
 
 describe('getFundingGate', () => {
   // --- Embedded (Google auth) path ---
 
-  it('blocks embedded users with 0 balance (awaitingFunding)', () => {
+  it('does not block embedded users with 0 balance', () => {
     const result = getFundingGate('embedded', true, '0');
-    expect(result.awaitingFunding).toBe(true);
+    expect(result.awaitingFunding).toBe(false);
     expect(result.needsFunding).toBe(false);
   });
 

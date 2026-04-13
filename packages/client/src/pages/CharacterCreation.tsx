@@ -35,6 +35,7 @@ import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import { debug } from '../utils/debug';
 import { ItemAsciiIcon } from '../components/ItemAsciiIcon';
+import { getFundingGate } from './characterCreationFunding';
 import {
   type Armor,
   PowerSource,
@@ -62,23 +63,6 @@ const torchGlow = keyframes`
     box-shadow: 0 0 16px rgba(200,122,42,0.5), inset 0 0 12px rgba(200,122,42,0.15);
   }
 `;
-
-/**
- * Determines whether character creation should be blocked pending wallet funding.
- * - External (MetaMask): user must manually deposit → show "Fund Your Session"
- * - Embedded (Google auth): relayer funds automatically → show loading spinner
- */
-export function getFundingGate(
-  authMethod: 'embedded' | 'external' | null,
-  burnerBalanceFetched: boolean,
-  burnerBalance: string,
-): { needsFunding: boolean; awaitingFunding: boolean } {
-  const zeroBalance = burnerBalanceFetched && burnerBalance === '0';
-  return {
-    needsFunding: authMethod === 'external' && zeroBalance,
-    awaitingFunding: authMethod === 'embedded' && zeroBalance,
-  };
-}
 
 // Must match MAX_STAT_ROLLS in contracts/constants.sol
 const MAX_STAT_ROLLS = 4; // 1 initial roll + 3 re-rolls
