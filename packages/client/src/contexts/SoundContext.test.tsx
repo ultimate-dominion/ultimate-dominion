@@ -3,12 +3,20 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SoundProvider, useGameAudio } from './SoundContext';
 
-// Mock howler — we don't want actual audio in tests
+// Track mock Howl instances for assertions
+const mockPlay = vi.fn();
+const mockStop = vi.fn();
+const mockFade = vi.fn();
+const mockUnload = vi.fn();
+const mockVolume = vi.fn();
+
 vi.mock('howler', () => {
   const mockHowl = vi.fn().mockImplementation(() => ({
-    play: vi.fn(),
-    stop: vi.fn(),
-    unload: vi.fn(),
+    play: mockPlay,
+    stop: mockStop,
+    fade: mockFade,
+    unload: mockUnload,
+    volume: mockVolume,
   }));
   return { Howl: mockHowl };
 });
@@ -17,6 +25,12 @@ vi.mock('howler', () => {
 const mockUseAuth = vi.fn().mockReturnValue({ isAuthenticated: false });
 vi.mock('./AuthContext', () => ({
   useAuth: () => mockUseAuth(),
+}));
+
+// Mock useMap — default to zone 1
+const mockUseMap = vi.fn().mockReturnValue({ currentZone: 1 });
+vi.mock('./MapContext', () => ({
+  useMap: () => mockUseMap(),
 }));
 
 const TestConsumer = () => {
@@ -44,6 +58,8 @@ describe('SoundContext', () => {
     localStorage.clear();
     sessionStorage.clear();
     mockUseAuth.mockReturnValue({ isAuthenticated: false });
+    mockUseMap.mockReturnValue({ currentZone: 1 });
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -77,7 +93,7 @@ describe('SoundContext', () => {
     expect(screen.getByTestId('status').textContent).toBe('on');
   });
 
-  it('creates Howl instance when sound is enabled', async () => {
+  it('creates Howl for current zone when sound is enabled', async () => {
     const { Howl } = await import('howler');
     renderWithProvider();
 
@@ -86,10 +102,64 @@ describe('SoundContext', () => {
 
     expect(Howl).toHaveBeenCalledWith(
       expect.objectContaining({
-        src: ['/audio/cave-melody.ogg'],
+        src: ['/audio/dark-cave-mix.ogg'],
         loop: true,
       }),
     );
+  });
+
+  it('creates Howl for zone 2 when in Windy Peaks', async () => {
+    mockUseMap.mockReturnValue({ currentZone: 2 });
+    const { Howl } = await import('howler');
+    renderWithProvider();
+
+    fireEvent.click(screen.getByText('toggle'));
+
+    expect(Howl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        src: ['/audio/windy-peaks-mix.ogg'],
+        loop: true,
+      }),
+    );
+  });
+
+  it('crossfades when zone changes while sound is on', async () => {
+    const { Howl } = await import('howler');
+    localStorage.setItem('ud:sound-enabled', 'true');
+    const { rerender } = renderWithProvider();
+
+    // Zone 1 playing — should have called play
+    expect(mockPlay).toHaveBeenCalled();
+
+    // Change to zone 2
+    mockUseMap.mockReturnValue({ currentZone: 2 });
+    rerender(
+      <ChakraProvider>
+        <SoundProvider>
+          <TestConsumer />
+        </SoundProvider>
+      </ChakraProvider>,
+    );
+
+    // Should fade out old and fade in new
+    expect(mockFade).toHaveBeenCalled();
+    // New Howl created for zone 2
+    expect(Howl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        src: ['/audio/windy-peaks-mix.ogg'],
+      }),
+    );
+  });
+
+  it('stops all tracks when sound is disabled', () => {
+    localStorage.setItem('ud:sound-enabled', 'true');
+    renderWithProvider();
+
+    expect(mockPlay).toHaveBeenCalled();
+
+    // Disable sound
+    fireEvent.click(screen.getByText('toggle'));
+    expect(mockStop).toHaveBeenCalled();
   });
 
   it('auto-enables sound on authentication', () => {
@@ -118,7 +188,6 @@ describe('SoundContext', () => {
     localStorage.setItem('ud:sound-enabled', 'true');
     mockUseAuth.mockReturnValue({ isAuthenticated: true });
     renderWithProvider();
-    // Sound already on from localStorage — auto-start shouldn't interfere
     expect(screen.getByTestId('status').textContent).toBe('on');
   });
 
