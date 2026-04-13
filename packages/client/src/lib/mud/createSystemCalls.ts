@@ -44,6 +44,23 @@ import { SetupNetworkResult } from './setupNetwork';
 type FundingResult = 'funded' | 'has_funds' | false;
 type IdentityTokenGetter = () => Promise<string | null> | string | null;
 
+async function waitForEmbeddedIdentityToken(
+  getEmbeddedIdentityToken: IdentityTokenGetter | undefined,
+): Promise<string | null> {
+  if (!getEmbeddedIdentityToken) return null;
+
+  const configuredTimeoutMs = Number(import.meta.env.VITE_EMERGENCY_FUNDING_IDENTITY_WAIT_MS);
+  const timeoutMs = Number.isFinite(configuredTimeoutMs) ? configuredTimeoutMs : 10_000;
+  const startedAt = Date.now();
+
+  while (true) {
+    const token = await getEmbeddedIdentityToken();
+    if (token) return token;
+    if (timeoutMs <= 0 || Date.now() - startedAt >= timeoutMs) return null;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+}
+
 async function requestEmergencyFunding(
   address: string,
   options: {
@@ -62,8 +79,13 @@ async function requestEmergencyFunding(
     delegatorAddress.toLowerCase() === address.toLowerCase();
 
   const identityToken = isEmbeddedFunding
-    ? await getEmbeddedIdentityToken?.() ?? null
+    ? await waitForEmbeddedIdentityToken(getEmbeddedIdentityToken)
     : null;
+
+  if (isEmbeddedFunding && !identityToken) {
+    console.warn('[GAS_RETRY] Embedded wallet funding skipped: identity token unavailable');
+    return false;
+  }
 
   try {
     const res = await fetch(`${relayerUrl}/fund`, {
