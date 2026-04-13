@@ -31,11 +31,11 @@ import {
   isDelegated,
   revokeDelegation,
 } from '../lib/mud/delegation';
+import { NetworkResult, SystemCallsResult } from '../lib/mud/setup';
 import {
-  NetworkResult,
-  SystemCallsResult,
-} from '../lib/mud/setup';
-import { clearCachedDelegator, setCachedDelegator } from '../lib/delegatorCache';
+  clearCachedDelegator,
+  setCachedDelegator,
+} from '../lib/delegatorCache';
 
 import { useAuth } from './AuthContext';
 import { buildEmbeddedNetwork } from './buildEmbeddedNetwork';
@@ -76,24 +76,45 @@ type Props = {
 };
 
 // --- Loading stubs for non-blocking render ---
-const notReady = async () => ({ success: false as const, error: 'Game not ready' });
+const notReady = async () => ({
+  success: false as const,
+  error: 'Game not ready',
+});
 const LOADING_SYSTEM_CALLS: SystemCallsResult = {
-  autoAdventure: notReady, buy: notReady, buyGas: notReady,
-  cancelOrder: notReady, checkCombatFragmentTriggers: notReady,
-  chooseRace: notReady, choosePowerSource: notReady,
-  claimFragment: notReady, triggerFragment: notReady,
-  createEncounter: notReady, createOrder: notReady,
+  autoAdventure: notReady,
+  buy: notReady,
+  buyGas: notReady,
+  cancelOrder: notReady,
+  checkCombatFragmentTriggers: notReady,
+  chooseRace: notReady,
+  choosePowerSource: notReady,
+  claimFragment: notReady,
+  triggerFragment: notReady,
+  createEncounter: notReady,
+  createOrder: notReady,
   endShopEncounter: notReady,
-  endWorldEncounter: notReady, endTurn: notReady,
-  enterGame: notReady, equipItems: notReady, fleePvp: notReady,
-  fulfillOrder: notReady, autoFight: notReady,
-  levelCharacter: notReady, mintCharacter: notReady,
-  move: notReady, removeEntityFromBoard: notReady,
-  rest: notReady, restock: notReady,
-  rollBaseStats: notReady, rollStats: notReady,
-  selectAdvancedClass: notReady, sell: notReady, sellBatch: notReady,
-  spawn: notReady, unequipItem: notReady,
-  updateTokenUri: notReady, useWorldConsumableItem: notReady,
+  endWorldEncounter: notReady,
+  endTurn: notReady,
+  enterGame: notReady,
+  equipItems: notReady,
+  fleePvp: notReady,
+  fulfillOrder: notReady,
+  autoFight: notReady,
+  levelCharacter: notReady,
+  mintCharacter: notReady,
+  move: notReady,
+  removeEntityFromBoard: notReady,
+  rest: notReady,
+  restock: notReady,
+  rollBaseStats: notReady,
+  rollStats: notReady,
+  selectAdvancedClass: notReady,
+  sell: notReady,
+  sellBatch: notReady,
+  spawn: notReady,
+  unequipItem: notReady,
+  updateTokenUri: notReady,
+  useWorldConsumableItem: notReady,
   validateTileMonsters: async () => {},
 } as unknown as SystemCallsResult;
 
@@ -102,8 +123,12 @@ const LOADING_NETWORK = {
   publicClient: null as any,
   walletClient: null as any,
   worldContract: { address: ZERO_ADDRESS } as any,
-  waitForTransaction: async () => { throw new Error('Not ready'); },
-  write$: { pipe: () => ({ subscribe: () => ({ unsubscribe: () => {} }) }) } as any,
+  waitForTransaction: async () => {
+    throw new Error('Not ready');
+  },
+  write$: {
+    pipe: () => ({ subscribe: () => ({ unsubscribe: () => {} }) }),
+  } as any,
 } as NetworkResult;
 
 const LOADING_CONTEXT_VALUE: MUDContextType = {
@@ -141,12 +166,24 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
       .catch(err => {
         if (!cancelled) setSetupError(err);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [setupPromise]);
 
   if (setupError) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white', flexDirection: 'column', gap: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          color: 'white',
+          flexDirection: 'column',
+          gap: '1rem',
+        }}
+      >
         <p>Failed to initialize game</p>
         <p style={{ fontSize: '1rem', opacity: 0.7 }}>{setupError.message}</p>
       </div>
@@ -161,7 +198,9 @@ export const MUDProvider = ({ children, setupPromise }: Props): JSX.Element => {
     );
   }
 
-  return <MUDProviderInner setupResult={setupResult}>{children}</MUDProviderInner>;
+  return (
+    <MUDProviderInner setupResult={setupResult}>{children}</MUDProviderInner>
+  );
 };
 
 // Inner component: setupResult is always defined, so all hooks run unconditionally.
@@ -174,6 +213,7 @@ const MUDProviderInner = ({
 }): JSX.Element => {
   const {
     authMethod,
+    embeddedIdentityTokenReady,
     embeddedWalletClient,
     getEmbeddedIdentityToken,
     ownerAddress,
@@ -247,12 +287,19 @@ const MUDProviderInner = ({
     // external/burner path in setupNetwork.ts / createBurner.ts.
     const walletClient = (embeddedWalletClient as any)
       .extend(transactionQueue())
-      .extend(writeObserver({ onWrite: (write: ContractWrite) => write$.next(write) }));
+      .extend(
+        writeObserver({
+          onWrite: (write: ContractWrite) => write$.next(write),
+        }),
+      );
 
     const rawWorldContract = getContract({
       address: setupResult.network.worldContract.address,
       abi: IWorldAbi,
-      client: { public: setupResult.network.publicClient, wallet: walletClient },
+      client: {
+        public: setupResult.network.publicClient,
+        wallet: walletClient,
+      },
     });
 
     // Gas override proxy: injects fixed gas for functions with variable costs
@@ -262,7 +309,13 @@ const MUDProviderInner = ({
       get(target, prop) {
         if (prop === 'write') {
           return new Proxy(target.write, {
-            get(writeTarget: Record<string, (...args: unknown[]) => Promise<unknown>>, fnName: string) {
+            get(
+              writeTarget: Record<
+                string,
+                (...args: unknown[]) => Promise<unknown>
+              >,
+              fnName: string,
+            ) {
               const fixedGas = FIXED_GAS[fnName];
               if (!fixedGas) return writeTarget[fnName];
               const origFn = writeTarget[fnName];
@@ -272,7 +325,11 @@ const MUDProviderInner = ({
                 // but don't override if the caller already set gas explicitly
                 // (e.g. move retries use MOVE_GAS_LIMIT = 8M).
                 const lastArg = args[args.length - 1];
-                if (lastArg && typeof lastArg === 'object' && !Array.isArray(lastArg)) {
+                if (
+                  lastArg &&
+                  typeof lastArg === 'object' &&
+                  !Array.isArray(lastArg)
+                ) {
                   const opts = lastArg as Record<string, unknown>;
                   if (opts.gas === undefined) {
                     opts.gas = fixedGas;
@@ -295,20 +352,28 @@ const MUDProviderInner = ({
     // the external path in setupNetwork.ts).
     const embeddedWaitForTransaction = async (tx: Hex) => {
       const maxRetries = 3;
-      let receipt: Awaited<ReturnType<typeof setupResult.network.publicClient.waitForTransactionReceipt>> | undefined;
+      let receipt:
+        | Awaited<
+            ReturnType<
+              typeof setupResult.network.publicClient.waitForTransactionReceipt
+            >
+          >
+        | undefined;
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          receipt = await setupResult.network.publicClient.waitForTransactionReceipt({
-            hash: tx,
-            pollingInterval: 250,
-            timeout: 30_000,
-          });
+          receipt =
+            await setupResult.network.publicClient.waitForTransactionReceipt({
+              hash: tx,
+              pollingInterval: 250,
+              timeout: 30_000,
+            });
           break;
         } catch (e) {
           const isReceiptNotFound =
             e instanceof Error &&
-            (e.message.includes('could not be found') || e.message.includes('timed out'));
+            (e.message.includes('could not be found') ||
+              e.message.includes('timed out'));
           if (isReceiptNotFound && attempt < maxRetries - 1) {
             console.warn(
               `[TX][EMBEDDED] waitForTransaction retry ${attempt + 1}/${maxRetries} for ${tx}: ${(e as Error).message.slice(0, 100)}`,
@@ -321,19 +386,31 @@ const MUDProviderInner = ({
       }
 
       if (!receipt) {
-        throw new Error(`Failed to get receipt for ${tx} after ${maxRetries} attempts`);
+        throw new Error(
+          `Failed to get receipt for ${tx} after ${maxRetries} attempts`,
+        );
       }
 
       if (receipt.status === 'success') {
-        await applyReceiptToStore(receipt, setupResult.network.publicClient, setupResult.network.worldContract.address as Hex);
+        await applyReceiptToStore(
+          receipt,
+          setupResult.network.publicClient,
+          setupResult.network.worldContract.address as Hex,
+        );
       }
 
       if (receipt.status === 'reverted') {
-        console.error(`[TX][RECEIPT] REVERTED on-chain tx=${tx} gasUsed=${receipt.gasUsed}`);
+        console.error(
+          `[TX][RECEIPT] REVERTED on-chain tx=${tx} gasUsed=${receipt.gasUsed}`,
+        );
 
         try {
-          const txData = await setupResult.network.publicClient.getTransaction({ hash: tx });
-          console.error(`[TX][REVERT-DEBUG] from=${txData.from} to=${txData.to} input=${txData.input.slice(0, 10)}... block=${receipt.blockNumber}`);
+          const txData = await setupResult.network.publicClient.getTransaction({
+            hash: tx,
+          });
+          console.error(
+            `[TX][REVERT-DEBUG] from=${txData.from} to=${txData.to} input=${txData.input.slice(0, 10)}... block=${receipt.blockNumber}`,
+          );
 
           await setupResult.network.publicClient.call({
             account: txData.from,
@@ -341,17 +418,25 @@ const MUDProviderInner = ({
             data: txData.input,
             blockNumber: receipt.blockNumber,
           });
-          console.warn('[TX][REVERT-DEBUG] Replay succeeded — revert was state-dependent');
+          console.warn(
+            '[TX][REVERT-DEBUG] Replay succeeded — revert was state-dependent',
+          );
         } catch (revertErr: unknown) {
-          const errMsg = revertErr instanceof Error ? revertErr.message : String(revertErr);
+          const errMsg =
+            revertErr instanceof Error ? revertErr.message : String(revertErr);
           const hexMatch = errMsg.match(/data:\s*(0x[0-9a-fA-F]+)/);
           if (hexMatch) {
             console.error(`[TX][REVERT-REASON] ${hexMatch[1]}`);
           }
-          console.error('[TX][REVERT-DEBUG] Replay error:', errMsg.slice(0, 500));
+          console.error(
+            '[TX][REVERT-DEBUG] Replay error:',
+            errMsg.slice(0, 500),
+          );
         }
       } else {
-        console.info(`[TX][RECEIPT] confirmed tx=${tx} block=${receipt.blockNumber}`);
+        console.info(
+          `[TX][RECEIPT] confirmed tx=${tx} block=${receipt.blockNumber}`,
+        );
       }
 
       return receipt;
@@ -445,8 +530,13 @@ const MUDProviderInner = ({
     ] as const;
 
     try {
-      const delegatorPadded = padHex(externalWalletClient.account.address, { size: 32 });
-      const delegateePadded = padHex(setupResult.network.walletClient.account.address, { size: 32 });
+      const delegatorPadded = padHex(externalWalletClient.account.address, {
+        size: 32,
+      });
+      const delegateePadded = padHex(
+        setupResult.network.walletClient.account.address,
+        { size: 32 },
+      );
 
       console.info('[MUD][checkDelegation] Reading on-chain delegation', {
         delegator: externalWalletClient.account.address,
@@ -454,26 +544,32 @@ const MUDProviderInner = ({
         worldAddress: setupResult.network.worldContract.address,
       });
 
-      const delegationControlId = await setupResult.network.publicClient.readContract({
-        address: setupResult.network.worldContract.address as Hex,
-        abi: GSF_ABI,
-        functionName: 'getStaticField',
-        args: [
-          DELEGATION_TABLE_ID,
-          [delegatorPadded, delegateePadded],
-          0,
-          '0x0020000000000000000000000000000000000000000000000000000000000000' as Hex,
-        ],
-      });
+      const delegationControlId =
+        await setupResult.network.publicClient.readContract({
+          address: setupResult.network.worldContract.address as Hex,
+          abi: GSF_ABI,
+          functionName: 'getStaticField',
+          args: [
+            DELEGATION_TABLE_ID,
+            [delegatorPadded, delegateePadded],
+            0,
+            '0x0020000000000000000000000000000000000000000000000000000000000000' as Hex,
+          ],
+        });
 
-      const result = isDelegated({ delegationControlId } as { delegationControlId: Hex });
+      const result = isDelegated({ delegationControlId } as {
+        delegationControlId: Hex;
+      });
       console.info('[MUD][checkDelegation] Result', {
         delegationControlId,
         isDelegated: result,
       });
       return result;
     } catch (err) {
-      console.error('[MUD][checkDelegation] Failed to read delegation from chain:', err);
+      console.error(
+        '[MUD][checkDelegation] Failed to read delegation from chain:',
+        err,
+      );
       return false;
     }
   }, [externalWalletClient, setupResult.network]);
@@ -485,95 +581,138 @@ const MUDProviderInner = ({
   const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
   const WORLD_ADDRESS = import.meta.env.VITE_WORLD_ADDRESS;
 
-  const callRelayerFund = useCallback(async (
-    burnerAddress: string,
-    delegatorAddress: string,
-  ): Promise<boolean> => {
-    if (!RELAYER_URL) return false;
-    try {
-      const isEmbeddedRegistration =
-        authMethod === 'embedded' &&
-        burnerAddress.toLowerCase() === delegatorAddress.toLowerCase();
-      const identityToken = isEmbeddedRegistration
-        ? await getEmbeddedIdentityToken()
-        : null;
-      if (isEmbeddedRegistration && !identityToken) return false;
+  const callRelayerFund = useCallback(
+    async (
+      burnerAddress: string,
+      delegatorAddress: string,
+    ): Promise<boolean> => {
+      if (!RELAYER_URL) return false;
+      try {
+        const isEmbeddedRegistration =
+          authMethod === 'embedded' &&
+          burnerAddress.toLowerCase() === delegatorAddress.toLowerCase();
+        const identityToken = isEmbeddedRegistration
+          ? await getEmbeddedIdentityToken()
+          : null;
+        if (isEmbeddedRegistration && !identityToken) {
+          console.info(
+            '[Gas] Embedded fund skipped until identity token is ready',
+          );
+          return false;
+        }
 
-      const res = await fetch(`${RELAYER_URL}/fund`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(identityToken ? { Authorization: `Bearer ${identityToken}` } : {}),
-        },
-        body: JSON.stringify({
-          address: burnerAddress,
-          delegatorAddress,
-          worldAddress: WORLD_ADDRESS,
-        }),
-      });
-      const data = await res.json();
-      console.info('[Gas] MetaMask fund response:', data.status);
-      return res.ok;
-    } catch (err) {
-      console.warn('[Gas] MetaMask funding failed:', err);
-      return false;
-    }
-  }, [RELAYER_URL, WORLD_ADDRESS, authMethod, getEmbeddedIdentityToken]);
+        const res = await fetch(`${RELAYER_URL}/fund`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(identityToken
+              ? { Authorization: `Bearer ${identityToken}` }
+              : {}),
+          },
+          body: JSON.stringify({
+            address: burnerAddress,
+            delegatorAddress,
+            worldAddress: WORLD_ADDRESS,
+          }),
+        });
+        const data = await res.json();
+        console.info('[Gas] MetaMask fund response:', data.status);
+        return res.ok;
+      } catch (err) {
+        console.warn('[Gas] MetaMask funding failed:', err);
+        return false;
+      }
+    },
+    [
+      RELAYER_URL,
+      WORLD_ADDRESS,
+      authMethod,
+      embeddedIdentityTokenReady,
+      getEmbeddedIdentityToken,
+    ],
+  );
 
-  const registerBurnerWithRelayer = useCallback(async (
-    burnerAddress: string,
-    delegatorAddress: string,
-  ) => {
-    const delays = [0, 5_000, 10_000, 20_000];
-    for (let i = 0; i < delays.length; i++) {
-      if (i > 0) await new Promise<void>(r => setTimeout(r, delays[i]));
-      const ok = await callRelayerFund(burnerAddress, delegatorAddress);
-      if (ok) return;
-    }
-  }, [callRelayerFund]);
+  const registerBurnerWithRelayer = useCallback(
+    async (burnerAddress: string, delegatorAddress: string) => {
+      const delays = [0, 5_000, 10_000, 20_000];
+      for (let i = 0; i < delays.length; i++) {
+        if (i > 0) await new Promise<void>(r => setTimeout(r, delays[i]));
+        const ok = await callRelayerFund(burnerAddress, delegatorAddress);
+        if (ok) return;
+      }
+    },
+    [callRelayerFund],
+  );
 
-  const getBurner = useCallback(async (forceCreate?: boolean) => {
-    if (!(externalWalletClient && setupResult.network)) {
-      console.warn('[MUD][getBurner] Missing wallet or network');
-      return;
-    }
+  const getBurner = useCallback(
+    async (forceCreate?: boolean) => {
+      if (!(externalWalletClient && setupResult.network)) {
+        console.warn('[MUD][getBurner] Missing wallet or network');
+        return;
+      }
 
-    if (burner) {
-      console.info('[MUD][getBurner] Burner already exists, skipping creation');
-      return;
-    }
+      if (burner) {
+        console.info(
+          '[MUD][getBurner] Burner already exists, skipping creation',
+        );
+        return;
+      }
 
-    // forceCreate skips the on-chain delegation check — used by DelegationButton
-    // right after registerDelegation succeeds (the TX is already confirmed).
-    let hasDelegation = forceCreate || false;
-    if (!forceCreate) {
-      console.info('[MUD][getBurner] Checking delegation on-chain...');
-      hasDelegation = await checkDelegation();
-      console.info('[MUD][getBurner] Delegation check result:', hasDelegation);
-    } else {
-      console.info('[MUD][getBurner] Force-creating burner (delegation just confirmed)');
-    }
+      // forceCreate skips the on-chain delegation check — used by DelegationButton
+      // right after registerDelegation succeeds (the TX is already confirmed).
+      let hasDelegation = forceCreate || false;
+      if (!forceCreate) {
+        console.info('[MUD][getBurner] Checking delegation on-chain...');
+        hasDelegation = await checkDelegation();
+        console.info(
+          '[MUD][getBurner] Delegation check result:',
+          hasDelegation,
+        );
+      } else {
+        console.info(
+          '[MUD][getBurner] Force-creating burner (delegation just confirmed)',
+        );
+      }
 
-    if (hasDelegation) {
-      console.info('[MUD][getBurner] Creating burner for delegator:', externalWalletClient.account.address);
-      burnerCreated.current = true;
-      const newBurner = createBurner(setupResult.network, externalWalletClient.account.address);
-      setBurner(newBurner);
+      if (hasDelegation) {
+        console.info(
+          '[MUD][getBurner] Creating burner for delegator:',
+          externalWalletClient.account.address,
+        );
+        burnerCreated.current = true;
+        const newBurner = createBurner(
+          setupResult.network,
+          externalWalletClient.account.address,
+        );
+        setBurner(newBurner);
 
-      // Cache delegator address for fast-path on refresh
-      setCachedDelegator(setupResult.network.worldContract.address, externalWalletClient.account.address);
+        // Cache delegator address for fast-path on refresh
+        setCachedDelegator(
+          setupResult.network.worldContract.address,
+          externalWalletClient.account.address,
+        );
 
-      // Register burner→delegator with relayer for gas monitoring.
-      // Retry + periodic re-registration handled by a dedicated effect below.
-      registerBurnerWithRelayer(
-        newBurner.walletClient.account.address,
-        externalWalletClient.account.address,
-      );
-    } else {
-      console.warn('[MUD][getBurner] No delegation found — burner NOT created');
-    }
-    setIsSynced(true);
-  }, [burner, checkDelegation, externalWalletClient, registerBurnerWithRelayer, setupResult]);
+        // Register burner→delegator with relayer for gas monitoring.
+        // Retry + periodic re-registration handled by a dedicated effect below.
+        registerBurnerWithRelayer(
+          newBurner.walletClient.account.address,
+          externalWalletClient.account.address,
+        );
+      } else {
+        console.warn(
+          '[MUD][getBurner] No delegation found — burner NOT created',
+        );
+      }
+      setIsSynced(true);
+    },
+    [
+      burner,
+      checkDelegation,
+      externalWalletClient,
+      registerBurnerWithRelayer,
+      setupResult,
+    ],
+  );
 
   // Auto-check delegation on mount for external path
   useEffect(() => {
@@ -605,6 +744,7 @@ const MUDProviderInner = ({
   useEffect(() => {
     if (authMethod !== 'embedded') return;
     if (!embeddedSetup) return;
+    if (!embeddedIdentityTokenReady) return;
 
     const addr = embeddedSetup.walletAddress;
 
@@ -617,7 +757,7 @@ const MUDProviderInner = ({
     }, 600_000);
 
     return () => clearInterval(interval);
-  }, [authMethod, callRelayerFund, embeddedSetup]);
+  }, [authMethod, callRelayerFund, embeddedIdentityTokenReady, embeddedSetup]);
 
   // =============================================
   // Burner balance polling (shared, works for both paths)
@@ -650,13 +790,29 @@ const MUDProviderInner = ({
     const pollMs = burnerBalance === '0' ? 2000 : 15000;
 
     let interval: ReturnType<typeof setInterval> | null = null;
-    const start = () => { if (!interval) interval = setInterval(getBurnerBalance, pollMs); };
-    const stop = () => { if (interval) { clearInterval(interval); interval = null; } };
-    const onVisibility = () => { if (document.hidden) stop(); else { getBurnerBalance(); start(); } };
+    const start = () => {
+      if (!interval) interval = setInterval(getBurnerBalance, pollMs);
+    };
+    const stop = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else {
+        getBurnerBalance();
+        start();
+      }
+    };
 
     if (!document.hidden) start();
     document.addEventListener('visibilitychange', onVisibility);
-    return () => { stop(); document.removeEventListener('visibilitychange', onVisibility); };
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [activeWalletAddress, burnerBalance, getBurnerBalance]);
 
   // =============================================
@@ -709,7 +865,7 @@ const MUDProviderInner = ({
 
     // Helper to create a delegator entity string (matches the Zustand keyBytes format)
     const makeDelegatorEntity = (addr: Address): string =>
-      ('0x' + addr.slice(2).toLowerCase().padStart(64, '0'));
+      '0x' + addr.slice(2).toLowerCase().padStart(64, '0');
 
     // EMBEDDED PATH
     if (authMethod === 'embedded' && embeddedSetup) {

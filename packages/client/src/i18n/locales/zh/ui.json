@@ -571,10 +571,16 @@
       "loadingText": "觉醒中...",
       "warning": "请选择种族和力量源泉。"
     },
+    "name": {
+      "heading": "What Are You Called?",
+      "submitButton": "I Am {{name}}",
+      "preparingAccount": "Preparing account..."
+    },
     "stats": {
       "heading": "洞穴考验你",
       "racePrefix": "种族: {{name}}",
       "powerPrefix": "力量: {{name}}",
+      "rawHint": "No blood, no oath. Just what fate gives you.",
       "rollButton": "投掷属性",
       "rerollButton": "重新投掷",
       "noRerolls": "无剩余重投次数",
@@ -582,7 +588,22 @@
       "rollingText": "投掷中...",
       "continueButton": "接受命运",
       "buildIndicator": "当前流派: ",
-      "buildDominant": "{{stat}}特化"
+      "buildDominant": "{{stat}}特化",
+      "raceLockedWarning": "Your blood is chosen. The dice are quiet now."
+    },
+    "racePhase": {
+      "heading": "What Blood Runs Through You?",
+      "hint": "Choose around the shape fate gave you.",
+      "submitButton": "I Am {{race}}",
+      "submitButtonDefault": "Choose your blood",
+      "loadingText": "Binding..."
+    },
+    "powerPhase": {
+      "heading": "Where Does Your Power Come From?",
+      "hint": "This choice opens the path you may become.",
+      "submitButton": "I Follow {{power}}",
+      "submitButtonDefault": "Choose your power",
+      "loadingText": "Listening..."
     },
     "equipment": {
       "heading": "武装自己",

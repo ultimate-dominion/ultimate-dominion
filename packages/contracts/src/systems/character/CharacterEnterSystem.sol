@@ -15,7 +15,7 @@ import {
     StatRestrictionsData,
     Items
 } from "@codegen/index.sol";
-import {ArmorType, ItemType} from "@codegen/common.sol";
+import {ArmorType, ItemType, PowerSource, Race} from "@codegen/common.sol";
 import {Owners as ERC721Owners} from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/Owners.sol";
 import {WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_TABLE} from "@latticexyz/store/src/storeResourceTypes.sol";
@@ -27,7 +27,10 @@ import {
     InvalidStarterItem,
     InvalidItemType,
     InsufficientStat,
-    InvalidArmorType
+    InvalidArmorType,
+    MustChooseRaceFirst,
+    MustChoosePowerSourceFirst,
+    MustRollStatsFirst
 } from "../../Errors.sol";
 import {GoldLib} from "../../libraries/GoldLib.sol";
 import {Owners} from "@erc1155/tables/Owners.sol";
@@ -53,11 +56,7 @@ contract CharacterEnterSystem is System {
         Owners.setBalance(tableId, player, itemId, bal + amount);
     }
 
-    function enterGame(
-        bytes32 characterId,
-        uint256 starterWeaponId,
-        uint256 starterArmorId
-    ) external {
+    function enterGame(bytes32 characterId, uint256 starterWeaponId, uint256 starterArmorId) external {
         PauseLib.requireNotPaused();
         // Inline owner + validity checks (avoids modifier overhead)
         if (Characters.getOwner(characterId) != _msgSender()) revert Unauthorized();
@@ -71,6 +70,9 @@ contract CharacterEnterSystem is System {
         if (charData.locked) revert CharacterLocked();
 
         StatsData memory tempStats = Stats.get(characterId);
+        if (tempStats.maxHp <= 0) revert MustRollStatsFirst();
+        if (tempStats.race == Race.None) revert MustChooseRaceFirst();
+        if (tempStats.powerSource == PowerSource.None) revert MustChoosePowerSourceFirst();
 
         if (!StarterItemPool.getIsStarter(starterWeaponId)) revert InvalidStarterItem();
         if (!StarterItemPool.getIsStarter(starterArmorId)) revert InvalidStarterItem();
@@ -124,7 +126,9 @@ contract CharacterEnterSystem is System {
         uint256[] memory cAmts = StarterConsumables.getAmounts();
         for (uint256 i; i < cIds.length;) {
             _mintItem(itemsTableId, playerAddress, cIds[i], cAmts[i]);
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
 
         CharacterEquipment.pushEquippedWeapons(characterId, starterWeaponId);

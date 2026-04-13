@@ -3,14 +3,7 @@ pragma solidity >=0.8.24;
 
 import {System} from "@latticexyz/world/src/System.sol";
 import {SystemSwitch} from "@latticexyz/world-modules/src/utils/SystemSwitch.sol";
-import {
-    Characters,
-    CharactersData,
-    Stats,
-    StatsData,
-    ClassMultipliers,
-    StatRollCount
-} from "@codegen/index.sol";
+import {Characters, CharactersData, Stats, StatsData, ClassMultipliers, StatRollCount} from "@codegen/index.sol";
 import {Race, PowerSource, ArmorType, AdvancedClass, RngRequestType} from "@codegen/common.sol";
 import {IWorld} from "@world/IWorld.sol";
 import {IRngSystem} from "../interfaces/IRngSystem.sol";
@@ -29,8 +22,6 @@ import {
     RequiresLevel10,
     AdvancedClassAlreadySet,
     InvalidAdvancedClass,
-    MustChooseRaceFirst,
-    MustChoosePowerSourceFirst,
     MaxStatRollsExceeded
 } from "../Errors.sol";
 import {MAX_STAT_ROLLS} from "../../constants.sol";
@@ -144,13 +135,11 @@ contract ImplicitClassSystem is System {
      * @notice Roll base stats for a character using RNG
      * @param userRandomNumber User-provided random seed
      * @param characterId The character to roll stats for
-     * @dev Requires race and power source to be selected first. Armor is chosen via enterGame.
+     * @dev Race bonuses are applied if race has already been selected. Armor is chosen via enterGame.
      */
     function rollBaseStats(bytes32 userRandomNumber, bytes32 characterId) public payable onlyOwner(characterId) {
         PauseLib.requireNotPaused();
         if (Characters.getLocked(characterId)) revert CharacterLocked();
-        if (Stats.getRace(characterId) == Race.None) revert MustChooseRaceFirst();
-        if (Stats.getPowerSource(characterId) == PowerSource.None) revert MustChoosePowerSourceFirst();
 
         // Enforce re-roll limit (MAX_STAT_ROLLS total rolls allowed)
         uint32 currentRolls = StatRollCount.getRollCount(characterId);
@@ -351,13 +340,11 @@ contract ImplicitClassSystem is System {
      * @return crit Critical damage multiplier (basis points)
      * @return maxHp Max HP multiplier (basis points)
      */
-    function getClassMultipliers(bytes32 characterId) public view returns (
-        uint256 physical,
-        uint256 spell,
-        uint256 healing,
-        uint256 crit,
-        uint256 maxHp
-    ) {
+    function getClassMultipliers(bytes32 characterId)
+        public
+        view
+        returns (uint256 physical, uint256 spell, uint256 healing, uint256 crit, uint256 maxHp)
+    {
         return (
             ClassMultipliers.getPhysicalDamageMultiplier(characterId),
             ClassMultipliers.getSpellDamageMultiplier(characterId),

@@ -9,8 +9,11 @@ import {
     CharactersData,
     CharacterOwner,
     NameExists,
-    Counters
+    Counters,
+    Stats,
+    StatsData
 } from "../../src/codegen/index.sol";
+import {Race, PowerSource} from "../../src/codegen/common.sol";
 import {IWorld} from "../../src/codegen/world/IWorld.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
@@ -22,25 +25,30 @@ contract CharacterCoreTest is SetUp {
     address player;
     bytes32 characterId;
 
+    function _prepareForEnterGame(bytes32 preparedCharacterId) internal {
+        StatsData memory stats = Stats.get(preparedCharacterId);
+        stats.strength = 7;
+        stats.agility = 6;
+        stats.intelligence = 6;
+        stats.maxHp = 18;
+        stats.race = Race.Human;
+        stats.powerSource = PowerSource.Physical;
+        Stats.set(preparedCharacterId, stats);
+    }
+
     function setUp() public override {
         super.setUp();
 
         // Deploy and register CharacterCore
         characterCore = new CharacterCore();
-        ResourceId characterCoreId = WorldResourceIdLib.encode({
-            typeId: RESOURCE_SYSTEM,
-            namespace: "UD",
-            name: "CharacterCore"
-        });
+        ResourceId characterCoreId =
+            WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CharacterCore"});
         world.registerSystem(characterCoreId, characterCore, true);
 
         // Deploy and register CharacterEnterSystem
         characterEnterSystem = new CharacterEnterSystem();
-        ResourceId characterEnterId = WorldResourceIdLib.encode({
-            typeId: RESOURCE_SYSTEM,
-            namespace: "UD",
-            name: "CharEnterSys"
-        });
+        ResourceId characterEnterId =
+            WorldResourceIdLib.encode({typeId: RESOURCE_SYSTEM, namespace: "UD", name: "CharEnterSys"});
         world.registerSystem(characterEnterId, characterEnterSystem, true);
 
         // Create test player
@@ -83,6 +91,7 @@ contract CharacterCoreTest is SetUp {
         bytes32 name = bytes32(uint256(uint160(bytes20("TestCharacter"))));
         string memory tokenUri = "https://example.com/character/1";
         characterId = characterCore.mintCharacter(player, name, tokenUri);
+        _prepareForEnterGame(characterId);
 
         // Enter game
         characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
@@ -133,6 +142,7 @@ contract CharacterCoreTest is SetUp {
         bytes32 name = bytes32(uint256(uint160(bytes20("TestCharacter"))));
         string memory tokenUri = "https://example.com/character/1";
         characterId = characterCore.mintCharacter(player, name, tokenUri);
+        _prepareForEnterGame(characterId);
 
         // Enter game first time
         characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);

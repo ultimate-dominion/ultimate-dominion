@@ -23,7 +23,7 @@ import {
     StatRestrictionsData,
     ShopsData
 } from "@codegen/index.sol";
-import {Classes, MobType, ItemType, EffectType, ArmorType} from "@codegen/common.sol";
+import {Classes, MobType, ItemType, EffectType, ArmorType, Race, PowerSource} from "@codegen/common.sol";
 import {_itemsSystemId, _lootManagerSystemId, _mobSystemId} from "../src/utils.sol";
 import {MonsterStats, StarterItems} from "@interfaces/Structs.sol";
 import {ResourceId, WorldResourceIdLib, WorldResourceIdInstance} from "@latticexyz/world/src/WorldResourceId.sol";
@@ -71,7 +71,8 @@ contract SetUp is Test {
         vm.label(address(worldAddress), "World");
         StoreSwitch.setStoreAddress(worldAddress);
         lootManagerAddress = Systems.getSystem(_lootManagerSystemId("UD"));
-        string memory starterItemsJson = vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/zones/dark_cave/items.json")));
+        string memory starterItemsJson =
+            vm.readFile(string(abi.encodePacked(vm.projectRoot(), "/zones/dark_cave/items.json")));
         bytes memory parsedJson = vm.parseJson(starterItemsJson);
         StarterItems memory _starterItems = abi.decode(parsedJson, (StarterItems));
 
@@ -207,6 +208,8 @@ contract SetUp is Test {
         bobCharacterId = world.UD__mintCharacter(bob, bytes32("bob"), "setup_char_uri_bob/");
 
         world.UD__rollStats(alicesRandomness, bobCharacterId, Classes.Mage);
+        world.UD__chooseRace(bobCharacterId, Race.Human);
+        world.UD__choosePowerSource(bobCharacterId, PowerSource.Physical);
         world.UD__enterGame(bobCharacterId, newWeaponId, newArmorId);
         vm.stopPrank();
     }

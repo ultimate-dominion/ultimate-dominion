@@ -3,15 +3,10 @@ pragma solidity >=0.8.24;
 
 import {SetUp} from "./SetUp.sol";
 import {ImplicitClassSystem} from "../src/systems/ImplicitClassSystem.sol";
-import {
-    Characters,
-    CharactersData,
-    Stats,
-    StatsData,
-    ClassMultipliers
-} from "../src/codegen/index.sol";
+import {Characters, CharactersData, Stats, StatsData, ClassMultipliers, StatRollCount} from "../src/codegen/index.sol";
 import {Classes, Race, PowerSource, ArmorType, AdvancedClass} from "../src/codegen/common.sol";
 import {IWorld} from "../src/codegen/world/IWorld.sol";
+import {RaceAlreadySet, PowerSourceAlreadySet} from "../src/Errors.sol";
 import "forge-std/console.sol";
 
 contract ImplicitClassSystemTest is SetUp {
@@ -47,7 +42,7 @@ contract ImplicitClassSystemTest is SetUp {
         bool hasCleric = false;
         bool hasSorcerer = false;
 
-        for (uint i = 0; i < 9; i++) {
+        for (uint256 i = 0; i < 9; i++) {
             if (classes[i] == AdvancedClass.Warrior) hasWarrior = true;
             if (classes[i] == AdvancedClass.Paladin) hasPaladin = true;
             if (classes[i] == AdvancedClass.Ranger) hasRanger = true;
@@ -211,5 +206,75 @@ contract ImplicitClassSystemTest is SetUp {
 
         assertEq(physical, 1050, "Rogue should have 105% physical damage");
         assertEq(crit, 1200, "Rogue should have 120% crit damage");
+    }
+
+    function testRollBaseStatsBeforeRaceAndPowerSource() public {
+        address newPlayer = address(0xBEEF);
+        vm.startPrank(newPlayer);
+        bytes32 newCharacterId = world.UD__mintCharacter(newPlayer, bytes32("RawRoll"), "test_uri");
+
+        world.UD__rollBaseStats(bytes32(uint256(1001)), newCharacterId);
+
+        StatsData memory stats = Stats.get(newCharacterId);
+        assertEq(uint256(stats.race), uint256(Race.None), "race should stay unset");
+        assertEq(uint256(stats.powerSource), uint256(PowerSource.None), "power source should stay unset");
+        assertEq(stats.maxHp, 18, "raw roll should use base hp");
+        assertEq(stats.strength + stats.agility + stats.intelligence, 19, "raw stats should be balanced");
+        assertEq(StatRollCount.getRollCount(newCharacterId), 1, "roll count should increment");
+
+        vm.stopPrank();
+    }
+
+    function testChooseRaceAfterRollAddsBonuses() public {
+        address newPlayer = address(0xBEEF2);
+        vm.startPrank(newPlayer);
+        bytes32 newCharacterId = world.UD__mintCharacter(newPlayer, bytes32("RaceRoll"), "test_uri");
+        world.UD__rollBaseStats(bytes32(uint256(1002)), newCharacterId);
+
+        StatsData memory beforeRace = Stats.get(newCharacterId);
+        world.UD__chooseRace(newCharacterId, Race.Dwarf);
+        StatsData memory afterRace = Stats.get(newCharacterId);
+
+        assertEq(uint256(afterRace.race), uint256(Race.Dwarf), "race should be set");
+        assertEq(afterRace.strength, beforeRace.strength + 2, "dwarf strength bonus");
+        assertEq(afterRace.agility, beforeRace.agility - 1, "dwarf agility penalty");
+        assertEq(afterRace.intelligence, beforeRace.intelligence, "dwarf intelligence unchanged");
+        assertEq(afterRace.maxHp, beforeRace.maxHp + 1, "dwarf hp bonus");
+
+        vm.stopPrank();
+    }
+
+    function testRerollBeforeRaceStaysRaw() public {
+        address newPlayer = address(0xBEEF3);
+        vm.startPrank(newPlayer);
+        bytes32 newCharacterId = world.UD__mintCharacter(newPlayer, bytes32("Reroll"), "test_uri");
+
+        world.UD__rollBaseStats(bytes32(uint256(1003)), newCharacterId);
+        world.UD__rollBaseStats(bytes32(uint256(1004)), newCharacterId);
+
+        StatsData memory stats = Stats.get(newCharacterId);
+        assertEq(uint256(stats.race), uint256(Race.None), "race should stay unset");
+        assertEq(uint256(stats.powerSource), uint256(PowerSource.None), "power source should stay unset");
+        assertEq(stats.maxHp, 18, "reroll should stay raw");
+        assertEq(stats.strength + stats.agility + stats.intelligence, 19, "reroll should stay balanced");
+        assertEq(StatRollCount.getRollCount(newCharacterId), 2, "roll count should increment twice");
+
+        vm.stopPrank();
+    }
+
+    function testCannotChooseRaceOrPowerSourceTwice() public {
+        address newPlayer = address(0xBEEF4);
+        vm.startPrank(newPlayer);
+        bytes32 newCharacterId = world.UD__mintCharacter(newPlayer, bytes32("NoTwice"), "test_uri");
+
+        world.UD__chooseRace(newCharacterId, Race.Human);
+        vm.expectRevert(RaceAlreadySet.selector);
+        world.UD__chooseRace(newCharacterId, Race.Elf);
+
+        world.UD__choosePowerSource(newCharacterId, PowerSource.Physical);
+        vm.expectRevert(PowerSourceAlreadySet.selector);
+        world.UD__choosePowerSource(newCharacterId, PowerSource.Divine);
+
+        vm.stopPrank();
     }
 }

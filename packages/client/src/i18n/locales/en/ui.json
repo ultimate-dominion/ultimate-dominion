@@ -571,10 +571,16 @@
       "loadingText": "Awakening...",
       "warning": "Choose a race and power source."
     },
+    "name": {
+      "heading": "What Are You Called?",
+      "submitButton": "I Am {{name}}",
+      "preparingAccount": "Preparing account..."
+    },
     "stats": {
       "heading": "The Cave Tests You",
       "racePrefix": "Race: {{name}}",
       "powerPrefix": "Power: {{name}}",
+      "rawHint": "No blood, no oath. Just what fate gives you.",
       "rollButton": "Roll Stats",
       "rerollButton": "Re-Roll Stats",
       "noRerolls": "No re-rolls remaining",
@@ -582,7 +588,22 @@
       "rollingText": "Rolling...",
       "continueButton": "Accept My Fate",
       "buildIndicator": "Current build: ",
-      "buildDominant": "{{stat}}-dominant"
+      "buildDominant": "{{stat}}-dominant",
+      "raceLockedWarning": "Your blood is chosen. The dice are quiet now."
+    },
+    "racePhase": {
+      "heading": "What Blood Runs Through You?",
+      "hint": "Choose around the shape fate gave you.",
+      "submitButton": "I Am {{race}}",
+      "submitButtonDefault": "Choose your blood",
+      "loadingText": "Binding..."
+    },
+    "powerPhase": {
+      "heading": "Where Does Your Power Come From?",
+      "hint": "This choice opens the path you may become.",
+      "submitButton": "I Follow {{power}}",
+      "submitButtonDefault": "Choose your power",
+      "loadingText": "Listening..."
     },
     "equipment": {
       "heading": "Arm Yourself",
