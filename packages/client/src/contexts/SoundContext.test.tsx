@@ -9,7 +9,9 @@ const mockStop = vi.fn();
 const mockFade = vi.fn();
 const mockUnload = vi.fn();
 const mockVolume = vi.fn();
+const mockPlaying = vi.fn().mockReturnValue(false);
 const mockResume = vi.fn().mockResolvedValue(undefined);
+let mockCtxState: 'running' | 'suspended' = 'suspended';
 
 vi.mock('howler', () => {
   const mockHowl = vi.fn().mockImplementation(() => ({
@@ -18,10 +20,11 @@ vi.mock('howler', () => {
     fade: mockFade,
     unload: mockUnload,
     volume: mockVolume,
+    playing: mockPlaying,
   }));
   const mockHowler = {
     get ctx() {
-      return { state: 'suspended', resume: mockResume } as unknown as AudioContext;
+      return { state: mockCtxState, resume: mockResume } as unknown as AudioContext;
     },
   };
   return { Howl: mockHowl, Howler: mockHowler };
@@ -82,6 +85,8 @@ describe('SoundContext', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: false });
     mockUseMap.mockReturnValue({ currentZone: 1 });
     mockUseBattle.mockReturnValue({ currentBattle: null });
+    mockPlaying.mockReturnValue(false);
+    mockCtxState = 'suspended';
     vi.clearAllMocks();
     vi.useRealTimers();
   });
@@ -210,6 +215,27 @@ describe('SoundContext', () => {
       renderWithProvider();
       window.dispatchEvent(new Event('pointerdown'));
       expect(mockResume).not.toHaveBeenCalled();
+    });
+
+    it('resumes the audio context synchronously inside toggleSound', () => {
+      renderWithProvider();
+      expect(mockResume).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByText('toggle'));
+      expect(mockResume).toHaveBeenCalled();
+    });
+
+    it('replays the active Howl on unlock gesture if it was queued silently', async () => {
+      localStorage.setItem('ud:sound-enabled', 'true');
+      renderWithProvider();
+      // Initial play was called during mount
+      const initialPlayCalls = mockPlay.mock.calls.length;
+      // Simulate the Howl being queued but not actually playing
+      mockPlaying.mockReturnValue(false);
+
+      window.dispatchEvent(new Event('pointerdown'));
+
+      // Should have called play again to flush the queue
+      expect(mockPlay.mock.calls.length).toBeGreaterThan(initialPlayCalls);
     });
   });
 
