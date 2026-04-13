@@ -43,8 +43,8 @@ export const App = (): JSX.Element => {
     <Router>
       <QueueProvider>
         <MapProvider>
-          <SoundProvider>
-            <BattleProvider>
+          <BattleProvider>
+            <SoundProvider>
               <ChatProvider>
                 <MovementProvider>
                   <FragmentProvider>
@@ -54,8 +54,8 @@ export const App = (): JSX.Element => {
                   </FragmentProvider>
                 </MovementProvider>
               </ChatProvider>
-            </BattleProvider>
-          </SoundProvider>
+            </SoundProvider>
+          </BattleProvider>
         </MapProvider>
       </QueueProvider>
     </Router>
