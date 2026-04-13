@@ -34,6 +34,22 @@ const BATTLE_AUDIO: Record<number, string> = {
 
 type TrackKey = { zone: number; battle: boolean };
 
+// Module-scoped audio state — survives React provider remounts.
+// MUDProvider swaps its internal component type when setupPromise resolves,
+// which unmounts the entire SoundProvider subtree and would otherwise destroy
+// Howls mid-load, leaving audio silent after a hard refresh.
+const ambientHowls: Record<number, Howl> = {};
+const battleHowls: Record<number, Howl> = {};
+let activeTrack: TrackKey | null = null;
+const missingZoneWarned: Set<string> = new Set();
+
+export const __resetSoundForTests = (): void => {
+  for (const key of Object.keys(ambientHowls)) delete ambientHowls[Number(key)];
+  for (const key of Object.keys(battleHowls)) delete battleHowls[Number(key)];
+  activeTrack = null;
+  missingZoneWarned.clear();
+};
+
 type SoundContextValue = {
   soundEnabled: boolean;
   toggleSound: () => void;
@@ -49,15 +65,44 @@ export const useGameAudio = () => useContext(SoundContext);
 const keyEq = (a: TrackKey | null, b: TrackKey | null) =>
   a !== null && b !== null && a.zone === b.zone && a.battle === b.battle;
 
+const getHowl = (zoneId: number, battle: boolean): Howl | null => {
+  const map = battle ? BATTLE_AUDIO : ZONE_AUDIO;
+  const cache = battle ? battleHowls : ambientHowls;
+  let src = map[zoneId];
+  let resolvedZone = zoneId;
+
+  if (!src) {
+    const warnKey = `${battle ? 'battle' : 'ambient'}:${zoneId}`;
+    if (!missingZoneWarned.has(warnKey)) {
+      missingZoneWarned.add(warnKey);
+      console.warn(
+        `[SoundContext] No ${battle ? 'battle' : 'ambient'} track for zone ${zoneId}; falling back to zone 1`,
+      );
+    }
+    // Fall back to zone 1 rather than going silent — any track beats none.
+    src = map[1];
+    resolvedZone = 1;
+    if (!src) return null;
+  }
+
+  if (!cache[resolvedZone]) {
+    cache[resolvedZone] = new Howl({
+      src: [src],
+      loop: true,
+      volume: 0,
+      preload: true,
+    });
+  }
+  return cache[resolvedZone];
+};
+
 export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const { isAuthenticated } = useAuth();
   const { currentZone } = useMap();
   const { currentBattle } = useBattle();
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    const stored = localStorage.getItem(SOUND_ENABLED_KEY) === 'true';
-    console.log('[SoundContext] mount — stored soundEnabled:', stored, 'zone:', currentZone, 'isAuth:', isAuthenticated);
-    return stored;
+    return localStorage.getItem(SOUND_ENABLED_KEY) === 'true';
   });
 
   // True while a fight is live OR while lingering after a fight just ended.
@@ -65,67 +110,19 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   // when the player loads the page mid-combat.
   const [battleMode, setBattleMode] = useState(() => currentBattle !== null);
 
-  const ambientHowlsRef = useRef<Record<number, Howl>>({});
-  const battleHowlsRef = useRef<Record<number, Howl>>({});
-  const activeTrackRef = useRef<TrackKey | null>(null);
   const lingerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoStartedRef = useRef(false);
 
   const inCombat = currentBattle !== null;
 
-  const missingZoneWarnedRef = useRef<Set<string>>(new Set());
-
-  const getHowl = useCallback((zoneId: number, battle: boolean): Howl | null => {
-    const map = battle ? BATTLE_AUDIO : ZONE_AUDIO;
-    const cache = battle ? battleHowlsRef.current : ambientHowlsRef.current;
-    let src = map[zoneId];
-    let resolvedZone = zoneId;
-
-    if (!src) {
-      const warnKey = `${battle ? 'battle' : 'ambient'}:${zoneId}`;
-      if (!missingZoneWarnedRef.current.has(warnKey)) {
-        missingZoneWarnedRef.current.add(warnKey);
-        console.warn(
-          `[SoundContext] No ${battle ? 'battle' : 'ambient'} track for zone ${zoneId}; falling back to zone 1`,
-        );
-      }
-      // Fall back to zone 1 rather than going silent — any track beats none.
-      src = map[1];
-      resolvedZone = 1;
-      if (!src) return null;
-    }
-
-    if (!cache[resolvedZone]) {
-      console.log('[SoundContext] creating Howl', { src, zone: resolvedZone, battle });
-      cache[resolvedZone] = new Howl({
-        src: [src],
-        loop: true,
-        volume: 0,
-        preload: true,
-        onload: () => console.log('[SoundContext] Howl loaded', src),
-        onloaderror: (_id, err) => console.error('[SoundContext] Howl load error', src, err),
-        onplayerror: (_id, err) => console.error('[SoundContext] Howl play error', src, err),
-        onplay: () => console.log('[SoundContext] Howl playing', src),
-      });
-    }
-    return cache[resolvedZone];
-  }, []);
-
   // Auto-enable sound when user authenticates (once per session).
   useEffect(() => {
-    console.log('[SoundContext] auto-enable check', {
-      isAuthenticated,
-      soundEnabled,
-      autoStarted: autoStartedRef.current,
-      sessionFlag: sessionStorage.getItem(SOUND_AUTO_STARTED_KEY),
-    });
     if (
       isAuthenticated &&
       !soundEnabled &&
       !autoStartedRef.current &&
       sessionStorage.getItem(SOUND_AUTO_STARTED_KEY) !== '1'
     ) {
-      console.log('[SoundContext] auto-enabling sound');
       autoStartedRef.current = true;
       sessionStorage.setItem(SOUND_AUTO_STARTED_KEY, '1');
       setSoundEnabled(true);
@@ -134,30 +131,20 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   }, [isAuthenticated, soundEnabled]);
 
   // Autoplay unlock: browsers suspend the audio context until a user gesture.
-  // Register listeners unconditionally when sound is enabled — Howler.ctx may
-  // not exist yet when this effect first runs (it's lazy-initialized on the
-  // first Howl construction), so we can't early-bail on ctx state. Howler has
-  // its own auto-unlock but in practice it doesn't always flush queued plays
-  // reliably, so we also nudge the active Howl back on.
+  // Howler has its own auto-unlock but in practice it doesn't always flush
+  // queued plays reliably, so we also nudge the active Howl back on.
   useEffect(() => {
     if (!soundEnabled) return;
 
     const unlock = () => {
       const ctx = Howler.ctx;
-      console.log('[SoundContext] unlock gesture', { ctxState: ctx?.state, active: activeTrackRef.current });
       if (ctx && ctx.state !== 'running') {
-        ctx.resume().then(() => {
-          console.log('[SoundContext] ctx resumed, new state:', Howler.ctx?.state);
-        }).catch((err) => {
-          console.error('[SoundContext] ctx resume failed', err);
-        });
+        ctx.resume().catch(() => {});
       }
-      const active = activeTrackRef.current;
-      if (active) {
-        const cache = active.battle ? battleHowlsRef.current : ambientHowlsRef.current;
-        const howl = cache[active.zone];
+      if (activeTrack) {
+        const cache = activeTrack.battle ? battleHowls : ambientHowls;
+        const howl = cache[activeTrack.zone];
         if (howl && !howl.playing()) {
-          console.log('[SoundContext] unlock: nudging active Howl back on');
           howl.play();
         }
       }
@@ -195,27 +182,19 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   // Main playback effect — crossfades between the correct track for the
   // (zone, battleMode) tuple. Picks crossfade duration based on transition type.
   useEffect(() => {
-    console.log('[SoundContext] playback effect', {
-      soundEnabled,
-      currentZone,
-      battleMode,
-      ctxState: Howler.ctx?.state,
-      active: activeTrackRef.current,
-    });
     if (!soundEnabled) {
-      for (const howl of Object.values(ambientHowlsRef.current)) howl.stop();
-      for (const howl of Object.values(battleHowlsRef.current)) howl.stop();
-      activeTrackRef.current = null;
+      for (const howl of Object.values(ambientHowls)) howl.stop();
+      for (const howl of Object.values(battleHowls)) howl.stop();
+      activeTrack = null;
       return;
     }
 
     const desired: TrackKey = { zone: currentZone, battle: battleMode };
-    if (keyEq(activeTrackRef.current, desired)) {
-      console.log('[SoundContext] playback effect — already on desired track, no-op');
+    if (keyEq(activeTrack, desired)) {
       return;
     }
 
-    const prev = activeTrackRef.current;
+    const prev = activeTrack;
 
     // Pick crossfade timing from the transition type.
     let fadeMs = ZONE_CROSSFADE_MS;
@@ -225,12 +204,12 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
     }
 
     if (prev) {
-      const prevHowl = (prev.battle ? battleHowlsRef.current : ambientHowlsRef.current)[prev.zone];
+      const prevHowl = (prev.battle ? battleHowls : ambientHowls)[prev.zone];
       if (prevHowl) {
         const fromVol = prev.battle ? BATTLE_VOLUME : AMBIENT_VOLUME;
         prevHowl.fade(fromVol, 0, fadeMs);
         setTimeout(() => {
-          if (!keyEq(activeTrackRef.current, prev)) {
+          if (!keyEq(activeTrack, prev)) {
             prevHowl.stop();
           }
         }, fadeMs + 50);
@@ -240,29 +219,24 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
     const nextHowl = getHowl(desired.zone, desired.battle);
     if (nextHowl) {
       const toVol = desired.battle ? BATTLE_VOLUME : AMBIENT_VOLUME;
-      console.log('[SoundContext] play()', { desired, fadeMs, toVol, ctxState: Howler.ctx?.state });
       nextHowl.volume(0);
       nextHowl.play();
       nextHowl.fade(0, toVol, fadeMs);
-      activeTrackRef.current = desired;
+      activeTrack = desired;
     } else {
-      console.warn('[SoundContext] no Howl returned for', desired);
-      activeTrackRef.current = desired;
+      activeTrack = desired;
     }
-  }, [soundEnabled, currentZone, battleMode, getHowl]);
+  }, [soundEnabled, currentZone, battleMode]);
 
-  // Cleanup on unmount.
+  // Cleanup on unmount — only the linger timer needs cleanup. The module-level
+  // Howl cache intentionally survives remounts so audio keeps playing through
+  // parent provider swaps.
   useEffect(() => {
     return () => {
       if (lingerTimerRef.current) {
         clearTimeout(lingerTimerRef.current);
         lingerTimerRef.current = null;
       }
-      for (const howl of Object.values(ambientHowlsRef.current)) howl.unload();
-      for (const howl of Object.values(battleHowlsRef.current)) howl.unload();
-      ambientHowlsRef.current = {};
-      battleHowlsRef.current = {};
-      activeTrackRef.current = null;
     };
   }, []);
 
