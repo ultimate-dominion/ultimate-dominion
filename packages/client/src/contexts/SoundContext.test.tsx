@@ -23,6 +23,8 @@ vi.mock('howler', () => {
     playing: mockPlaying,
   }));
   const mockHowler = {
+    _muted: false,
+    volume: vi.fn().mockReturnValue(1),
     get ctx() {
       return { state: mockCtxState, resume: mockResume } as unknown as AudioContext;
     },
