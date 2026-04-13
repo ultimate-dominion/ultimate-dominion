@@ -277,4 +277,42 @@ contract ImplicitClassSystemTest is SetUp {
 
         vm.stopPrank();
     }
+
+    function testNewOnboardingHappyPathEntersGame() public {
+        address newPlayer = address(0xBEEF5);
+        vm.startPrank(newPlayer);
+        bytes32 newCharacterId = world.UD__mintCharacter(newPlayer, bytes32("NewFlow"), "test_uri");
+
+        world.UD__rollBaseStats(bytes32(uint256(1005)), newCharacterId);
+        world.UD__chooseRace(newCharacterId, Race.Human);
+        world.UD__choosePowerSource(newCharacterId, PowerSource.Physical);
+        world.UD__enterGame(newCharacterId, newWeaponId, newArmorId);
+
+        CharactersData memory characterData = Characters.get(newCharacterId);
+        StatsData memory stats = Stats.get(newCharacterId);
+        assertTrue(characterData.locked, "character should be locked after entering");
+        assertEq(uint256(stats.race), uint256(Race.Human), "race should be preserved");
+        assertEq(uint256(stats.powerSource), uint256(PowerSource.Physical), "power source should be preserved");
+        assertEq(stats.level, 1, "character should start at level 1");
+        assertEq(stats.currentHp, stats.maxHp, "character should start at full hp");
+
+        vm.stopPrank();
+    }
+
+    function testRaceBonusDoesNotDoubleApplyAfterRaceSelectedReroll() public {
+        address newPlayer = address(0xBEEF6);
+        vm.startPrank(newPlayer);
+        bytes32 newCharacterId = world.UD__mintCharacter(newPlayer, bytes32("NoDouble"), "test_uri");
+
+        world.UD__rollBaseStats(bytes32(uint256(1006)), newCharacterId);
+        world.UD__chooseRace(newCharacterId, Race.Human);
+        world.UD__rollBaseStats(bytes32(uint256(1007)), newCharacterId);
+
+        StatsData memory stats = Stats.get(newCharacterId);
+        assertEq(uint256(stats.race), uint256(Race.Human), "race should be preserved");
+        assertEq(stats.strength + stats.agility + stats.intelligence, 22, "human bonus should apply once");
+        assertEq(stats.maxHp, 18, "human does not change hp");
+
+        vm.stopPrank();
+    }
 }

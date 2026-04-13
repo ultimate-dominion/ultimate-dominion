@@ -15,6 +15,7 @@ import {
 } from "../../src/codegen/index.sol";
 import {Race, PowerSource} from "../../src/codegen/common.sol";
 import {IWorld} from "../../src/codegen/world/IWorld.sol";
+import {MustChoosePowerSourceFirst, MustChooseRaceFirst, MustRollStatsFirst} from "../../src/Errors.sol";
 import {ResourceId, WorldResourceIdLib} from "@latticexyz/world/src/WorldResourceId.sol";
 import {RESOURCE_SYSTEM} from "@latticexyz/world/src/worldResourceTypes.sol";
 import "forge-std/console.sol";
@@ -149,6 +150,52 @@ contract CharacterCoreTest is SetUp {
 
         // Try to enter game again
         vm.expectRevert();
+        characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
+
+        vm.stopPrank();
+    }
+
+    function testRevertEnterGameWithoutRolledStats() public {
+        bytes32 name = "NoStats";
+        characterId = characterCore.mintCharacter(player, name, "https://example.com/character/no-stats");
+
+        vm.expectRevert(MustRollStatsFirst.selector);
+        characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
+
+        vm.stopPrank();
+    }
+
+    function testRevertEnterGameWithoutRace() public {
+        bytes32 name = "NoRace";
+        characterId = characterCore.mintCharacter(player, name, "https://example.com/character/no-race");
+
+        StatsData memory stats = Stats.get(characterId);
+        stats.strength = 7;
+        stats.agility = 6;
+        stats.intelligence = 6;
+        stats.maxHp = 18;
+        stats.powerSource = PowerSource.Physical;
+        Stats.set(characterId, stats);
+
+        vm.expectRevert(MustChooseRaceFirst.selector);
+        characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
+
+        vm.stopPrank();
+    }
+
+    function testRevertEnterGameWithoutPowerSource() public {
+        bytes32 name = "NoPower";
+        characterId = characterCore.mintCharacter(player, name, "https://example.com/character/no-power");
+
+        StatsData memory stats = Stats.get(characterId);
+        stats.strength = 7;
+        stats.agility = 6;
+        stats.intelligence = 6;
+        stats.maxHp = 18;
+        stats.race = Race.Human;
+        Stats.set(characterId, stats);
+
+        vm.expectRevert(MustChoosePowerSourceFirst.selector);
         characterEnterSystem.enterGame(characterId, newWeaponId, newArmorId);
 
         vm.stopPrank();

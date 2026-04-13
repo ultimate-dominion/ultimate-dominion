@@ -572,15 +572,15 @@
       "warning": "종족과 힘의 원천을 선택하세요."
     },
     "name": {
-      "heading": "What Are You Called?",
-      "submitButton": "I Am {{name}}",
-      "preparingAccount": "Preparing account..."
+      "heading": "당신은 무엇이라 불리는가?",
+      "submitButton": "나는 {{name}}",
+      "preparingAccount": "계정 준비 중..."
     },
     "stats": {
       "heading": "동굴이 시험한다",
       "racePrefix": "종족: {{name}}",
       "powerPrefix": "힘: {{name}}",
-      "rawHint": "No blood, no oath. Just what fate gives you.",
+      "rawHint": "혈통도 맹세도 없다. 운명이 주는 것뿐.",
       "rollButton": "스탯 굴리기",
       "rerollButton": "스탯 다시 굴리기",
       "noRerolls": "재굴림 횟수 소진",
@@ -589,21 +589,21 @@
       "continueButton": "운명을 받아들이다",
       "buildIndicator": "현재 빌드: ",
       "buildDominant": "{{stat}} 특화",
-      "raceLockedWarning": "Your blood is chosen. The dice are quiet now."
+      "raceLockedWarning": "혈통이 정해졌다. 이제 주사위는 잠잠하다."
     },
     "racePhase": {
-      "heading": "What Blood Runs Through You?",
-      "hint": "Choose around the shape fate gave you.",
-      "submitButton": "I Am {{race}}",
-      "submitButtonDefault": "Choose your blood",
-      "loadingText": "Binding..."
+      "heading": "당신 안에는 어떤 피가 흐르는가?",
+      "hint": "운명이 빚은 모습에 맞춰 선택하라.",
+      "submitButton": "나는 {{race}}",
+      "submitButtonDefault": "혈통 선택",
+      "loadingText": "결속 중..."
     },
     "powerPhase": {
-      "heading": "Where Does Your Power Come From?",
-      "hint": "This choice opens the path you may become.",
-      "submitButton": "I Follow {{power}}",
-      "submitButtonDefault": "Choose your power",
-      "loadingText": "Listening..."
+      "heading": "당신의 힘은 어디에서 오는가?",
+      "hint": "이 선택이 앞으로 될 수 있는 길을 연다.",
+      "submitButton": "나는 {{power}}을 따른다",
+      "submitButtonDefault": "힘의 원천 선택",
+      "loadingText": "귀 기울이는 중..."
     },
     "equipment": {
       "heading": "무장하라",

@@ -8,7 +8,7 @@ How to deploy every component of Ultimate Dominion, from contracts to infrastruc
 
 | Environment | Chain | Chain ID | World Address | Branch | Client URL |
 |-------------|-------|----------|---------------|--------|------------|
-| **Local** | Anvil | 31337 | Auto-generated | Any | `http://localhost:3000` |
+| **Local** | Anvil (legacy/manual only) | 31337 | Auto-generated | Any | `http://localhost:3000` |
 | **Beta** | Base Mainnet | 8453 | `0xDc34AC3b06fa0ed899696A72B7706369864E5678` | `dev` | `https://beta.ultimatedominion.com` |
 | **Production** | Base Mainnet | 8453 | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `main` | `https://ultimatedominion.com` |
 
@@ -36,6 +36,8 @@ All four Railway services live in the same Railway project (`sweet-quietude`). T
 | `.env.mainnet` | Production (Base Mainnet, production world) |
 
 Scripts source the correct `.env` file automatically. Forge admin scripts require manual sourcing: `source .env.testnet && forge script ...`
+
+**Validation rule:** Do not use local Anvil as the default UD test gate. The normal path is compile locally, deploy/test on beta, then promote only after beta is verified. Local Anvil is a legacy/manual dev tool for isolated experiments only.
 
 ---
 
@@ -555,6 +557,8 @@ Feature branch → PR to dev → CI + Smoke → Merge to dev
 | `DEPLOYER_PRIVATE_KEY` | deploy-beta.yml |
 
 ### Local Test Commands
+
+UD's default validation does **not** run against local Anvil. Compile locally, then use beta fork/smoke/manual playtests for chain behavior.
 
 ```bash
 # Client tests

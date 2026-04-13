@@ -572,15 +572,15 @@
       "warning": "種族と力の源を選んでください。"
     },
     "name": {
-      "heading": "What Are You Called?",
-      "submitButton": "I Am {{name}}",
-      "preparingAccount": "Preparing account..."
+      "heading": "汝は何と呼ばれるか?",
+      "submitButton": "我は{{name}}",
+      "preparingAccount": "アカウント準備中..."
     },
     "stats": {
       "heading": "洞窟が試す",
       "racePrefix": "種族: {{name}}",
       "powerPrefix": "力: {{name}}",
-      "rawHint": "No blood, no oath. Just what fate gives you.",
+      "rawHint": "血も誓いもない。ただ運命が与えるものだけ。",
       "rollButton": "ステータスを振る",
       "rerollButton": "ステータスを振り直す",
       "noRerolls": "振り直し回数なし",
@@ -589,21 +589,21 @@
       "continueButton": "運命を受け入れる",
       "buildIndicator": "現在のビルド: ",
       "buildDominant": "{{stat}}特化",
-      "raceLockedWarning": "Your blood is chosen. The dice are quiet now."
+      "raceLockedWarning": "血は選ばれた。もうダイスは静かだ。"
     },
     "racePhase": {
-      "heading": "What Blood Runs Through You?",
-      "hint": "Choose around the shape fate gave you.",
-      "submitButton": "I Am {{race}}",
-      "submitButtonDefault": "Choose your blood",
-      "loadingText": "Binding..."
+      "heading": "汝にはどんな血が流れる?",
+      "hint": "運命が与えた姿に合わせて選べ。",
+      "submitButton": "我は{{race}}",
+      "submitButtonDefault": "血統を選ぶ",
+      "loadingText": "結びつけ中..."
     },
     "powerPhase": {
-      "heading": "Where Does Your Power Come From?",
-      "hint": "This choice opens the path you may become.",
-      "submitButton": "I Follow {{power}}",
-      "submitButtonDefault": "Choose your power",
-      "loadingText": "Listening..."
+      "heading": "汝の力はどこから来る?",
+      "hint": "この選択が、やがて進む道を開く。",
+      "submitButton": "我は{{power}}に従う",
+      "submitButtonDefault": "力の源を選ぶ",
+      "loadingText": "耳を澄ませている..."
     },
     "equipment": {
       "heading": "武装せよ",

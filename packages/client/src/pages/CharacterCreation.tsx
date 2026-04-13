@@ -14,9 +14,10 @@ import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { zeroAddress, zeroHash } from 'viem';
-import { useAuth } from '../contexts/AuthContext';
 
+import { ItemAsciiIcon } from '../components/ItemAsciiIcon';
 import { PolygonalCard } from '../components/PolygonalCard';
+import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
@@ -34,9 +35,9 @@ import {
 import { GAME_BOARD_PATH, HOME_PATH } from '../Routes';
 import { API_URL } from '../utils/constants';
 import { debug } from '../utils/debug';
-import { ItemAsciiIcon } from '../components/ItemAsciiIcon';
-import { getFundingGate } from './characterCreationFunding';
 import { type Armor, PowerSource, Race, type Weapon } from '../utils/types';
+
+import { getFundingGate } from './characterCreationFunding';
 
 /** Race a promise against a timeout. Rejects with a user-friendly message. */
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -162,15 +163,10 @@ const POWER_SOURCE_INFO: Record<
 
 // Wrapper component that checks if store data is ready
 export const CharacterCreation = (): JSX.Element => {
-  const { isSynced } = useMUD();
   const config = useGameConfig('UltimateDominionConfig');
 
   // If config data isn't ready, show loading
   if (!config) {
-    console.info(
-      '[CharacterCreation] Wrapper: config not ready, isSynced:',
-      isSynced,
-    );
     return (
       <Center h="100vh">
         <Spinner size="xl" />
@@ -189,11 +185,14 @@ type CreationPhase =
   | 'equipment'
   | 'celebration';
 
+const isRaceSelected = (race?: Race | null): boolean =>
+  race != null && Number(race) !== Number(Race.None);
+
+const isPowerSourceSelected = (powerSource?: PowerSource | null): boolean =>
+  powerSource != null && Number(powerSource) !== Number(PowerSource.None);
+
 const CharacterCreationInner = (): JSX.Element => {
   const { t } = useTranslation('ui');
-  useEffect(() => {
-    console.info('[CharacterCreation] Inner component mounted');
-  }, []);
   const navigate = useNavigate();
   const { renderError, renderWarning } = useToast();
   const {
@@ -224,6 +223,7 @@ const CharacterCreationInner = (): JSX.Element => {
   const { character } = useCharacter();
   // Ref tracks live character state for rollback checks after tx completes
   const characterRef = useRef(character);
+  const phaseHeadingRef = useRef<HTMLParagraphElement | null>(null);
   characterRef.current = character;
   const { file: avatar, onUpload } = useUploadFile({
     fileName: 'characterAvatar',
@@ -269,6 +269,10 @@ const CharacterCreationInner = (): JSX.Element => {
   // Celebration screen
   const [showCelebration, setShowCelebration] = useState(false);
 
+  useEffect(() => {
+    phaseHeadingRef.current?.focus();
+  }, [phase]);
+
   const raceTx = useTransaction({
     actionName: 'choose race',
     maxAttempts: 3,
@@ -297,16 +301,6 @@ const CharacterCreationInner = (): JSX.Element => {
   // Derive starter items reactively from store query (re-computes when records arrive)
   const { availableStarterWeapons, availableStarterArmors } = useMemo(() => {
     const starterPoolEntries = Object.entries(starterItemPoolTable);
-    console.info(
-      '[StarterItems] StarterItemPool entries:',
-      starterPoolEntries.length,
-      'isLoadingTemplates:',
-      isLoadingItemTemplates,
-      'weapons:',
-      weaponTemplates.length,
-      'armors:',
-      armorTemplates.length,
-    );
     if (starterPoolEntries.length === 0 || isLoadingItemTemplates) {
       return {
         availableStarterWeapons: [] as Weapon[],
@@ -322,14 +316,6 @@ const CharacterCreationInner = (): JSX.Element => {
 
       const itemId = decodeUint256FromKey(keyBytes);
       const itemIdStr = itemId.toString();
-      console.info(
-        '[StarterItems] Checking itemId:',
-        itemIdStr,
-        'weaponMatch:',
-        weaponTemplates.some(w => w.tokenId === itemIdStr),
-        'armorMatch:',
-        armorTemplates.some(a => a.tokenId === itemIdStr),
-      );
 
       const weapon = weaponTemplates.find(w => w.tokenId === itemIdStr);
       if (weapon) {
@@ -501,7 +487,7 @@ const CharacterCreationInner = (): JSX.Element => {
       // already reflects the receipt — don't revert.
       if (!result?.success) {
         const current = characterRef.current;
-        if (!current?.race) {
+        if (!isRaceSelected(current?.race)) {
           setSelectedRace(Race.None);
         }
         return;
@@ -530,7 +516,7 @@ const CharacterCreationInner = (): JSX.Element => {
 
       if (!result?.success) {
         const current = characterRef.current;
-        if (!current?.powerSource) {
+        if (!isPowerSourceSelected(current?.powerSource)) {
           setSelectedPowerSource(PowerSource.None);
         }
         return;
@@ -543,7 +529,7 @@ const CharacterCreationInner = (): JSX.Element => {
 
   const onRollStats = useCallback(async () => {
     if (!delegatorAddress || !character) return;
-    if (character.race) {
+    if (isRaceSelected(character.race)) {
       renderWarning(t('characterCreation.stats.raceLockedWarning'));
       return;
     }
@@ -584,12 +570,12 @@ const CharacterCreationInner = (): JSX.Element => {
       return;
     }
 
-    if (!character.race) {
+    if (!isRaceSelected(character.race)) {
       setPhase('race');
       return;
     }
 
-    if (!character.powerSource) {
+    if (!isPowerSourceSelected(character.powerSource)) {
       setPhase('powerSource');
       return;
     }
@@ -692,8 +678,8 @@ const CharacterCreationInner = (): JSX.Element => {
 
     if (character) {
       const hasStats = character.maxHp !== BigInt(0);
-      const hasRace = Boolean(character.race);
-      const hasPowerSource = Boolean(character.powerSource);
+      const hasRace = isRaceSelected(character.race);
+      const hasPowerSource = isPowerSourceSelected(character.powerSource);
 
       if (hasRace) setSelectedRace(character.race);
       if (hasPowerSource) setSelectedPowerSource(character.powerSource);
@@ -732,7 +718,6 @@ const CharacterCreationInner = (): JSX.Element => {
   // Only block on sync — items load in background and are needed at the
   // equipment phase, not for identity/stats phases
   if (!isSynced) {
-    console.info('[CharacterCreation] Blocked on sync');
     return (
       <Center h="100vh">
         <Spinner size="xl" />
@@ -866,6 +851,8 @@ const CharacterCreationInner = (): JSX.Element => {
                 onSubmit={onCreateCharacter}
               >
                 <Text
+                  ref={phaseHeadingRef}
+                  tabIndex={-1}
                   fontFamily="'Cinzel', serif"
                   fontSize="22px"
                   color="#D4A54A"
@@ -916,6 +903,8 @@ const CharacterCreationInner = (): JSX.Element => {
             <>
               <VStack spacing={1}>
                 <Text
+                  ref={phaseHeadingRef}
+                  tabIndex={-1}
                   fontFamily="'Cinzel', serif"
                   fontSize="22px"
                   color="#D4A54A"
@@ -1043,6 +1032,8 @@ const CharacterCreationInner = (): JSX.Element => {
             <>
               <VStack spacing={1}>
                 <Text
+                  ref={phaseHeadingRef}
+                  tabIndex={-1}
                   fontFamily="'Cinzel', serif"
                   fontSize="22px"
                   color="#D4A54A"
@@ -1054,7 +1045,15 @@ const CharacterCreationInner = (): JSX.Element => {
                   {t('characterCreation.racePhase.hint')}
                 </Text>
               </VStack>
-              <HStack spacing={3} w="100%" justify="center" align="stretch">
+              <HStack
+                role="radiogroup"
+                aria-label={t('characterCreation.racePhase.heading')}
+                spacing={3}
+                w="100%"
+                justify="center"
+                align="stretch"
+                flexDirection={{ base: 'column', sm: 'row' }}
+              >
                 {[Race.Human, Race.Elf, Race.Dwarf].map(race => {
                   const info = RACE_INFO[race];
                   const selected = selectedRace === race;
@@ -1067,6 +1066,10 @@ const CharacterCreationInner = (): JSX.Element => {
                   return (
                     <VStack
                       as="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={`${t(info.nameKey)}: ${t(info.descKey)}`}
+                      aria-disabled={raceTx.isLoading || embeddedPreparing}
                       key={race}
                       type="button"
                       bg={selected ? '#2E2820' : 'transparent'}
@@ -1159,6 +1162,8 @@ const CharacterCreationInner = (): JSX.Element => {
             <>
               <VStack spacing={1}>
                 <Text
+                  ref={phaseHeadingRef}
+                  tabIndex={-1}
                   fontFamily="'Cinzel', serif"
                   fontSize="22px"
                   color="#D4A54A"
@@ -1170,7 +1175,15 @@ const CharacterCreationInner = (): JSX.Element => {
                   {t('characterCreation.powerPhase.hint')}
                 </Text>
               </VStack>
-              <HStack spacing={3} w="100%" justify="center" align="stretch">
+              <HStack
+                role="radiogroup"
+                aria-label={t('characterCreation.powerPhase.heading')}
+                spacing={3}
+                w="100%"
+                justify="center"
+                align="stretch"
+                flexDirection={{ base: 'column', sm: 'row' }}
+              >
                 {[
                   PowerSource.Divine,
                   PowerSource.Weave,
@@ -1181,6 +1194,12 @@ const CharacterCreationInner = (): JSX.Element => {
                   return (
                     <VStack
                       as="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={`${t(info.nameKey)}: ${t(info.descKey)}`}
+                      aria-disabled={
+                        powerSourceTx.isLoading || embeddedPreparing
+                      }
                       key={ps}
                       type="button"
                       bg={selected ? '#2E2820' : 'transparent'}
@@ -1274,6 +1293,8 @@ const CharacterCreationInner = (): JSX.Element => {
           {phase === 'equipment' && character && (
             <>
               <Text
+                ref={phaseHeadingRef}
+                tabIndex={-1}
                 fontFamily="'Cinzel', serif"
                 fontSize="22px"
                 color="#D4A54A"

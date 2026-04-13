@@ -721,8 +721,6 @@
         "error InvalidPowerSource()",
         "error InvalidRace()",
         "error MaxStatRollsExceeded()",
-        "error MustChoosePowerSourceFirst()",
-        "error MustChooseRaceFirst()",
         "error PowerSourceAlreadySet()",
         "error RaceAlreadySet()",
         "error RequiresLevel10()",
@@ -753,8 +751,6 @@
         "error InvalidPowerSource()",
         "error InvalidRace()",
         "error MaxStatRollsExceeded()",
-        "error MustChoosePowerSourceFirst()",
-        "error MustChooseRaceFirst()",
         "error PowerSourceAlreadySet()",
         "error RaceAlreadySet()",
         "error RequiresLevel10()",
@@ -1503,6 +1499,9 @@
         "error InvalidArmorType()",
         "error InvalidItemType()",
         "error InvalidStarterItem()",
+        "error MustChoosePowerSourceFirst()",
+        "error MustChooseRaceFirst()",
+        "error MustRollStatsFirst()",
         "error Unauthorized()",
         "function enterGame(bytes32 characterId, uint256 starterWeaponId, uint256 starterArmorId)"
       ],
@@ -1514,6 +1513,9 @@
         "error InvalidArmorType()",
         "error InvalidItemType()",
         "error InvalidStarterItem()",
+        "error MustChoosePowerSourceFirst()",
+        "error MustChooseRaceFirst()",
+        "error MustRollStatsFirst()",
         "error Unauthorized()",
         "function UD__enterGame(bytes32 characterId, uint256 starterWeaponId, uint256 starterArmorId)"
       ]
@@ -1840,5 +1842,5 @@
       ]
     }
   ],
-  "createdAt": 1774966023276
+  "createdAt": 1776094272481
 }
