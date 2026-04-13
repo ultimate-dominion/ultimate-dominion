@@ -40,25 +40,25 @@ import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
 
 export const App = (): JSX.Element => {
   return (
-    <SoundProvider>
     <Router>
       <QueueProvider>
         <MapProvider>
-          <BattleProvider>
-            <ChatProvider>
-              <MovementProvider>
-                <FragmentProvider>
-                  <GoldMerchantProvider>
-                    <AppInner />
-                  </GoldMerchantProvider>
-                </FragmentProvider>
-              </MovementProvider>
-            </ChatProvider>
-          </BattleProvider>
+          <SoundProvider>
+            <BattleProvider>
+              <ChatProvider>
+                <MovementProvider>
+                  <FragmentProvider>
+                    <GoldMerchantProvider>
+                      <AppInner />
+                    </GoldMerchantProvider>
+                  </FragmentProvider>
+                </MovementProvider>
+              </ChatProvider>
+            </BattleProvider>
+          </SoundProvider>
         </MapProvider>
       </QueueProvider>
     </Router>
-    </SoundProvider>
   );
 };
 
