@@ -7,3 +7,7 @@ packages/blog/
 docs/
 scripts/
 .git/
+.claude/
+.temper/
+tools/
+HANDOFF_*.md
