@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { SoundProvider, useGameAudio } from './SoundContext';
+import { SoundProvider, useGameAudio, __resetSoundForTests } from './SoundContext';
 
 // Track mock Howl instances for assertions
 const mockPlay = vi.fn();
@@ -82,6 +82,7 @@ describe('SoundContext', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+    __resetSoundForTests();
     mockUseAuth.mockReturnValue({ isAuthenticated: false });
     mockUseMap.mockReturnValue({ currentZone: 1 });
     mockUseBattle.mockReturnValue({ currentBattle: null });
