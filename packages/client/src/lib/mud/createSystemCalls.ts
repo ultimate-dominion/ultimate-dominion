@@ -38,6 +38,7 @@ import {
 import {
   getTableValue,
   markEvictedRows,
+  markReceiptRows,
   useGameStore,
   type BatchUpdate,
 } from '../gameStore';
@@ -438,25 +439,57 @@ export function createSystemCalls({
     return !ee?.died && sp?.spawned !== false;
   };
 
-  const buildGhostEvictionUpdates = (
-    monsterId: string,
-  ): [BatchUpdate, BatchUpdate] => [
-    {
-      type: 'set',
-      table: 'Spawned',
-      keyBytes: monsterId,
-      data: { spawned: false },
-    },
-    {
-      type: 'set',
-      table: 'EncounterEntity',
-      keyBytes: monsterId,
-      data: {
-        ...(getTableValue('EncounterEntity', monsterId) ?? {}),
-        died: true,
+  const buildGhostEvictionUpdates = (monsterId: string): BatchUpdate[] => {
+    const existingPosition = getTableValue('Position', monsterId);
+    const existingPositionV2 = getTableValue('PositionV2', monsterId);
+    const existingStats = getTableValue('Stats', monsterId);
+
+    const updates: BatchUpdate[] = [
+      {
+        type: 'set',
+        table: 'Spawned',
+        keyBytes: monsterId,
+        data: { spawned: false },
       },
-    },
-  ];
+      {
+        type: 'set',
+        table: 'EncounterEntity',
+        keyBytes: monsterId,
+        data: {
+          ...(getTableValue('EncounterEntity', monsterId) ?? {}),
+          died: true,
+        },
+      },
+      {
+        type: 'set',
+        table: 'Position',
+        keyBytes: monsterId,
+        data: { ...(existingPosition ?? {}), x: 0, y: 0 },
+      },
+      {
+        type: 'set',
+        table: 'PositionV2',
+        keyBytes: monsterId,
+        data: {
+          ...(existingPositionV2 ?? {}),
+          zoneId: existingPositionV2?.zoneId ?? 0,
+          x: 0,
+          y: 0,
+        },
+      },
+    ];
+
+    if (existingStats) {
+      updates.push({
+        type: 'set',
+        table: 'Stats',
+        keyBytes: monsterId,
+        data: { ...existingStats, currentHp: '0' },
+      });
+    }
+
+    return updates;
+  };
 
   // Mark confirmed ghost monsters as dead/despawned in the local store so they
   // disappear immediately without blanking out the rest of the tile.
@@ -570,20 +603,25 @@ export function createSystemCalls({
       // Total static data: 36 bytes = 72 hex chars + '0x' prefix = 74 chars
       // If record is empty or too short, monster has no PositionV2 data.
       if (staticData === '0x' || staticData.length < 74) return null;
+      const zoneId = BigInt(staticData.slice(0, 66) as Hex).toString();
       const x = parseInt(staticData.slice(66, 70), 16);
       const y = parseInt(staticData.slice(70, 74), 16);
-      const position = { x, y };
-      // Sync to both Position and PositionV2 tables in the store
+      const position = { zoneId, x, y };
       const currentPosition = getTableValue('PositionV2', monsterId) as
-        | { x?: number; y?: number }
+        | { zoneId?: string | number | bigint; x?: number; y?: number }
         | undefined;
       if (
+        String(currentPosition?.zoneId ?? '') !== zoneId ||
         Number(currentPosition?.x) !== position.x ||
         Number(currentPosition?.y) !== position.y
       ) {
         useGameStore.getState().setRow('PositionV2', monsterId, position);
+        markReceiptRows(
+          [{ table: 'PositionV2', keyBytes: monsterId }],
+          useGameStore.getState().currentBlock + 1,
+        );
       }
-      return position;
+      return { x, y };
     } catch (error) {
       console.warn(
         `[position] Failed to sync monster ${monsterId.slice(0, 10)} from chain`,

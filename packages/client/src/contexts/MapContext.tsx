@@ -506,6 +506,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     const result = zonedMonsters.filter(
       m =>
         m.isSpawned &&
+        !m.inBattle &&
         Number(m.currentHp) > 0 &&
         m.position.x === position.x &&
         m.position.y === position.y,

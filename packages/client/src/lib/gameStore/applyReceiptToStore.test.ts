@@ -87,6 +87,7 @@ const testTableLabel = 'Paused';
 
 // Stats table for splice tests
 const statsTableId = '0x7462554400000000000000000000000053746174730000000000000000000000' as Hex;
+const positionV2TableId = '0x74625544000000000000000000000000506f736974696f6e5632000000000000' as Hex;
 
 vi.mock('contracts/mud.config', () => {
   const tables = {
@@ -118,6 +119,17 @@ vi.mock('contracts/mud.config', () => {
         startingArmor: { type: 'uint8', internalType: 'ArmorType' },
         advancedClass: { type: 'uint8', internalType: 'AdvancedClass' },
         hasSelectedAdvancedClass: { type: 'bool', internalType: 'bool' },
+      },
+    },
+    UD__PositionV2: {
+      label: 'PositionV2',
+      tableId: '0x74625544000000000000000000000000506f736974696f6e5632000000000000',
+      key: ['entity'],
+      schema: {
+        entity: { type: 'bytes32', internalType: 'bytes32' },
+        zoneId: { type: 'uint256', internalType: 'uint256' },
+        x: { type: 'uint16', internalType: 'uint16' },
+        y: { type: 'uint16', internalType: 'uint16' },
       },
     },
   };
@@ -451,7 +463,7 @@ describe('applyReceiptToStore — splice integration', () => {
     expect(batchArg[0].data.maxHp).toBe('100');
   });
 
-  it('falls back to RPC when row not in store', async () => {
+  it('queues deferred RPC when a partial static splice has no store row', async () => {
     const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
 
     const newHpHex = '0x' + (75n).toString(16).padStart(64, '0');
@@ -604,7 +616,7 @@ describe('applyReceiptToStore — splice integration', () => {
     expect(mockMarkReceiptRows).not.toHaveBeenCalled();
   });
 
-  it('SpliceDynamicData still uses RPC fallback', async () => {
+  it('SpliceDynamicData queues deferred RPC only when a block-pinned client is available', async () => {
     const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
     const keyBytes = '0x' + keyTuple[0].slice(2);
 
@@ -621,6 +633,26 @@ describe('applyReceiptToStore — splice integration', () => {
 
     // No batch applied (dynamic splice with no RPC client)
     expect(mockApplyBatch).not.toHaveBeenCalled();
+  });
+
+  it('decodes full static splice for a missing PositionV2 row without RPC', async () => {
+    const keyTuple: Hex[] = ['0x000000000000000000000000000000000000000000000000000000000000002a'];
+    const keyBytes = '0x' + keyTuple[0].slice(2);
+    const zoneId = '02'.padStart(64, '0');
+    const spliceData = `0x${zoneId}00030004` as Hex;
+    const log = encodeSpliceStaticLog(positionV2TableId, keyTuple, 0, spliceData);
+    const receipt = makeReceipt([log], 100n);
+    const mockPublicClient = {
+      readContract: vi.fn(),
+    } as unknown as PublicClient;
+
+    await applyReceiptToStore(receipt, mockPublicClient, '0x0000000000000000000000000000000000000001' as Hex);
+
+    expect(mockPublicClient.readContract).not.toHaveBeenCalled();
+    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    expect(mockApplyBatch).toHaveBeenCalledWith([
+      { type: 'set', table: 'PositionV2', keyBytes, data: { zoneId: '2', x: 3, y: 4 } },
+    ]);
   });
 
   it('deferred splice skips rows protected by a newer receipt block', async () => {
@@ -701,20 +733,13 @@ describe('applyReceiptToStore — splice integration', () => {
     expect(deferredBatch[0].table).toBe('Stats');
   });
 
-  it('deferred splice falls back to latest when block-pinned read fails', async () => {
+  it('deferred splice does not fall back to latest when block-pinned read fails', async () => {
     const keyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
     const spliceLog = encodeSpliceDynamicLog(statsTableId, keyTuple);
     const receipt = makeReceipt([spliceLog], 100n);
 
-    // First call (block-pinned) rejects, second call (latest fallback) resolves
     const mockPublicClient = {
-      readContract: vi.fn()
-        .mockRejectedValueOnce(new Error('block not found'))
-        .mockResolvedValueOnce([
-          '0x00' as Hex,
-          '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
-          '0x00' as Hex,
-        ]),
+      readContract: vi.fn().mockRejectedValueOnce(new Error('block not found')),
     } as unknown as PublicClient;
 
     const worldAddress = '0x0000000000000000000000000000000000000001' as Hex;
@@ -724,18 +749,11 @@ describe('applyReceiptToStore — splice integration', () => {
     // Flush promise chain
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // readContract called twice: block-pinned (failed) + latest (fallback)
-    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(2);
-    // First call has blockNumber
+    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(1);
     expect(mockPublicClient.readContract).toHaveBeenNthCalledWith(1,
       expect.objectContaining({ blockNumber: 100n }),
     );
-    // Second call has no blockNumber (latest)
-    expect(mockPublicClient.readContract).toHaveBeenNthCalledWith(2,
-      expect.not.objectContaining({ blockNumber: expect.anything() }),
-    );
-    // Deferred splice should have been applied via fallback
-    expect(mockApplyBatch).toHaveBeenCalledTimes(1);
+    expect(mockApplyBatch).not.toHaveBeenCalled();
   });
 
   it('skips block-pinned read after first failure (no repeated 400s)', async () => {
@@ -759,17 +777,16 @@ describe('applyReceiptToStore — splice integration', () => {
     await applyReceiptToStore(receipt1, mockPublicClient, worldAddress);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // 2 calls: block-pinned (failed) + latest (fallback)
-    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(2);
+    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(1);
 
-    // Second tx: should skip block-pinned entirely, go straight to latest
+    // Second tx: should skip deferred RPC entirely.
     vi.clearAllMocks();
     mockApplyBatch.mockClear();
     const keyTuple2: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000002'];
     const spliceLog2 = encodeSpliceDynamicLog(statsTableId, keyTuple2);
     const receipt2 = makeReceipt([spliceLog2], 101n);
 
-    // Reset readContract mock — should only be called once (latest only)
+    // Reset readContract mock — it should not be called while block-pinned reads are disabled.
     (mockPublicClient.readContract as ReturnType<typeof vi.fn>).mockResolvedValue([
       '0x00' as Hex,
       '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
@@ -779,11 +796,7 @@ describe('applyReceiptToStore — splice integration', () => {
     await applyReceiptToStore(receipt2, mockPublicClient, worldAddress);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // Only 1 call: straight to latest, no block-pinned attempt
-    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(1);
-    expect(mockPublicClient.readContract).toHaveBeenCalledWith(
-      expect.not.objectContaining({ blockNumber: expect.anything() }),
-    );
+    expect(mockPublicClient.readContract).not.toHaveBeenCalled();
   });
 
   it('SpliceStaticData uses pending SetRecord data when row is not in store', async () => {

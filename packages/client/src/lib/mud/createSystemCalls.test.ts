@@ -14,11 +14,15 @@ import {
 // ── Mocks ───────────────────────────────────────────────────────────
 
 const mockSetRow = vi.fn();
+const mockMarkEvictedRows = vi.fn();
+const mockMarkReceiptRows = vi.fn();
 vi.mock('../gameStore', () => ({
   getTableValue: vi.fn(),
-  markEvictedRows: vi.fn(),
+  markEvictedRows: (...args: unknown[]) => mockMarkEvictedRows(...args),
+  markReceiptRows: (...args: unknown[]) => mockMarkReceiptRows(...args),
   useGameStore: {
     getState: () => ({
+      currentBlock: 100,
       setRow: mockSetRow,
     }),
   },
@@ -442,6 +446,7 @@ describe('createSystemCalls — ownership validation', () => {
 describe('createSystemCalls — encounter guards', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedGetTableValue.mockReturnValue(undefined);
   });
 
   it('endTurn skips chain call when CombatEncounter already ended', async () => {
@@ -1298,37 +1303,90 @@ describe('createSystemCalls — gas retry on insufficient funds', () => {
 // ── Suite: validateTileMonsters (Proactive Ghost Validation) ─────────
 
 describe('createSystemCalls — validateTileMonsters', () => {
+  const ZERO_HASH = '0x' + '00'.repeat(32);
+  const SPAWNED_TABLE_ID = '0x74625544000000000000000000000000537061776e6564000000000000000000';
+  const ENCOUNTER_ENTITY_TABLE_ID = '0x74625544000000000000000000000000456e636f756e746572456e7469747900';
+  const POSITION_V2_TABLE_ID = '0x74625544000000000000000000000000506f736974696f6e5632000000000000';
+
+  const makeSpawnedRecord = (spawned: boolean) =>
+    [spawned ? '0x01' : '0x00', '0x' + '00'.repeat(32), '0x'] as const;
+
+  const makeEncounterRecord = (
+    encounterId: string = ZERO_HASH,
+    died = false,
+  ) => [`0x${encounterId.slice(2)}${died ? '01' : '00'}`, '0x' + '00'.repeat(32), '0x'] as const;
+
+  const makePositionV2Record = (zoneId: number, x: number, y: number) =>
+    [`0x${zoneId.toString(16).padStart(64, '0')}${x.toString(16).padStart(4, '0')}${y.toString(16).padStart(4, '0')}`, '0x' + '00'.repeat(32), '0x'] as const;
+
+  const mockValidationReads = (
+    states: Record<string, {
+      encounterId?: string;
+      died?: boolean;
+      spawned?: boolean;
+      position?: { zoneId?: number; x: number; y: number };
+    }>,
+  ) => vi.fn().mockImplementation(async ({ args }: { args: [string, string[]] }) => {
+    const [tableId, [entityId]] = args;
+    const state = states[entityId];
+    if (!state) throw new Error(`Unexpected entity ${entityId}`);
+    if (tableId === SPAWNED_TABLE_ID) return makeSpawnedRecord(state.spawned ?? true);
+    if (tableId === ENCOUNTER_ENTITY_TABLE_ID) {
+      return makeEncounterRecord(state.encounterId ?? ZERO_HASH, state.died ?? false);
+    }
+    if (tableId === POSITION_V2_TABLE_ID) {
+      const pos = state.position ?? { zoneId: 1, x: 0, y: 0 };
+      return makePositionV2Record(pos.zoneId ?? 1, pos.x, pos.y);
+    }
+    throw new Error(`Unexpected table ${tableId}`);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedGetTableValue.mockReturnValue(undefined);
   });
 
   it('evicts monsters whose on-chain Spawned is false', async () => {
     const { network } = createMockNetwork();
-    // Each monster validation reads Spawned and EncounterEntity.
-    // First monster: spawned=true, no encounter. Second monster: spawned=false, no encounter.
-    network.publicClient.readContract = vi.fn()
-      .mockResolvedValueOnce(['0x01', '0x' + '00'.repeat(32), '0x'])
-      .mockResolvedValueOnce(['0x' + '00'.repeat(32), '0x' + '00'.repeat(32), '0x'])
-      .mockResolvedValueOnce(['0x00', '0x' + '00'.repeat(32), '0x'])
-      .mockResolvedValueOnce(['0x' + '00'.repeat(32), '0x' + '00'.repeat(32), '0x']);
-
-    const calls = createSystemCalls(network);
     const MONSTER_A = '0x0000000000000000000000000000000000000000000000000000000000000aaa';
     const MONSTER_B = '0x0000000000000000000000000000000000000000000000000000000000000bbb';
+    network.publicClient.readContract = mockValidationReads({
+      [MONSTER_A]: { spawned: true },
+      [MONSTER_B]: { spawned: false },
+    });
+    mockedGetTableValue.mockImplementation((table: string, entity: string) => {
+      if (entity !== MONSTER_B) return undefined;
+      if (table === 'Position') return { x: 3, y: 5 } as ReturnType<typeof getTableValue>;
+      if (table === 'PositionV2') return { zoneId: '2', x: 3, y: 5 } as ReturnType<typeof getTableValue>;
+      if (table === 'Stats') return { currentHp: '12', maxHp: '12' } as ReturnType<typeof getTableValue>;
+      return undefined;
+    });
 
+    const calls = createSystemCalls(network);
     await calls.validateTileMonsters([MONSTER_A, MONSTER_B]);
 
     // Only MONSTER_B (dead) should be evicted
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', MONSTER_B, { spawned: false });
     expect(mockSetRow).toHaveBeenCalledWith('EncounterEntity', MONSTER_B, expect.objectContaining({ died: true }));
+    expect(mockSetRow).toHaveBeenCalledWith('Position', MONSTER_B, { x: 0, y: 0 });
+    expect(mockSetRow).toHaveBeenCalledWith('PositionV2', MONSTER_B, { zoneId: '2', x: 0, y: 0 });
+    expect(mockSetRow).toHaveBeenCalledWith('Stats', MONSTER_B, { currentHp: '0', maxHp: '12' });
+    expect(mockMarkEvictedRows).toHaveBeenCalledWith(expect.arrayContaining([
+      { table: 'Spawned', keyBytes: MONSTER_B },
+      { table: 'EncounterEntity', keyBytes: MONSTER_B },
+      { table: 'Position', keyBytes: MONSTER_B },
+      { table: 'PositionV2', keyBytes: MONSTER_B },
+      { table: 'Stats', keyBytes: MONSTER_B },
+    ]));
     // MONSTER_A (alive) should NOT be evicted
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', MONSTER_A, expect.anything());
   });
 
   it('does nothing when all monsters are alive', async () => {
     const { network } = createMockNetwork();
-    network.publicClient.readContract = vi.fn()
-      .mockResolvedValue(['0x01', '0x' + '00'.repeat(32), '0x']);
+    network.publicClient.readContract = mockValidationReads({
+      [TEST_MONSTER]: { spawned: true },
+    });
 
     const calls = createSystemCalls(network);
     await calls.validateTileMonsters([TEST_MONSTER]);
@@ -1362,10 +1420,22 @@ describe('createSystemCalls — validateTileMonsters', () => {
     const MONSTER_A = '0x0000000000000000000000000000000000000000000000000000000000000aaa';
     const MONSTER_B = '0x0000000000000000000000000000000000000000000000000000000000000bbb';
 
-    // First call returns dead, second fails
-    network.publicClient.readContract = vi.fn()
-      .mockResolvedValueOnce(['0x00', '0x' + '00'.repeat(32), '0x'])
-      .mockRejectedValueOnce(new Error('RPC timeout'));
+    network.publicClient.readContract = vi.fn().mockImplementation(async ({ args }: {
+      args: [string, string[]];
+    }) => {
+      const [tableId, [entityId]] = args;
+      if (entityId === MONSTER_B && tableId === SPAWNED_TABLE_ID) {
+        throw new Error('RPC timeout');
+      }
+      if (entityId === MONSTER_A) {
+        if (tableId === SPAWNED_TABLE_ID) return makeSpawnedRecord(false);
+        if (tableId === ENCOUNTER_ENTITY_TABLE_ID) return makeEncounterRecord();
+      }
+      if (entityId === MONSTER_B && tableId === ENCOUNTER_ENTITY_TABLE_ID) {
+        return makeEncounterRecord();
+      }
+      throw new Error(`Unexpected read ${tableId} ${entityId}`);
+    });
 
     const calls = createSystemCalls(network);
     await calls.validateTileMonsters([MONSTER_A, MONSTER_B]);
@@ -1374,5 +1444,27 @@ describe('createSystemCalls — validateTileMonsters', () => {
     expect(mockSetRow).toHaveBeenCalledWith('Spawned', MONSTER_A, { spawned: false });
     // MONSTER_B (RPC failed) should NOT be evicted (benefit of the doubt)
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', MONSTER_B, expect.anything());
+  });
+
+  it('syncs off-tile monster PositionV2 with zoneId and protects the corrected row', async () => {
+    const { network } = createMockNetwork();
+    const OFF_TILE_MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000ddd';
+    network.publicClient.readContract = mockValidationReads({
+      [OFF_TILE_MONSTER]: { spawned: true, position: { zoneId: 2, x: 1, y: 4 } },
+    });
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([OFF_TILE_MONSTER], { x: 1, y: 3 });
+
+    expect(mockSetRow).toHaveBeenCalledWith('PositionV2', OFF_TILE_MONSTER, {
+      zoneId: '2',
+      x: 1,
+      y: 4,
+    });
+    expect(mockMarkReceiptRows).toHaveBeenCalledWith(
+      [{ table: 'PositionV2', keyBytes: OFF_TILE_MONSTER }],
+      101,
+    );
+    expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', OFF_TILE_MONSTER, { spawned: false });
   });
 });
