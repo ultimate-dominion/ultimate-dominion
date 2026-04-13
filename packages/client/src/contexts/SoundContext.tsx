@@ -120,23 +120,32 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   }, [isAuthenticated, soundEnabled]);
 
   // Autoplay unlock: browsers suspend the audio context until a user gesture.
-  // Auto-enabling sound on auth doesn't count as a gesture — without this, the
-  // first ambient track queues silently and never plays until the player clicks
-  // something. Resume on the next pointer/key/touch event, once.
+  // Register listeners unconditionally when sound is enabled — Howler.ctx may
+  // not exist yet when this effect first runs (it's lazy-initialized on the
+  // first Howl construction), so we can't early-bail on ctx state. Howler has
+  // its own auto-unlock but in practice it doesn't always flush queued plays
+  // reliably, so we also nudge the active Howl back on.
   useEffect(() => {
     if (!soundEnabled) return;
-    const ctx = Howler.ctx;
-    if (!ctx || ctx.state === 'running') return;
 
     const unlock = () => {
-      Howler.ctx?.resume().catch(() => {});
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('keydown', unlock);
-      window.removeEventListener('touchstart', unlock);
+      const ctx = Howler.ctx;
+      if (ctx && ctx.state !== 'running') {
+        ctx.resume().catch(() => {});
+      }
+      const active = activeTrackRef.current;
+      if (active) {
+        const cache = active.battle ? battleHowlsRef.current : ambientHowlsRef.current;
+        const howl = cache[active.zone];
+        if (howl && !howl.playing()) {
+          howl.play();
+        }
+      }
     };
-    window.addEventListener('pointerdown', unlock, { once: false });
-    window.addEventListener('keydown', unlock, { once: false });
-    window.addEventListener('touchstart', unlock, { once: false });
+
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    window.addEventListener('touchstart', unlock);
     return () => {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
@@ -228,6 +237,13 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   }, []);
 
   const toggleSound = useCallback(() => {
+    // Resume the audio context synchronously here — the click handler is a
+    // user gesture, so the browser will honor resume(). Doing it inside the
+    // subsequent playback useEffect happens one microtask later, which some
+    // browsers treat as outside the gesture window and refuse to unlock.
+    if (Howler.ctx && Howler.ctx.state !== 'running') {
+      Howler.ctx.resume().catch(() => {});
+    }
     setSoundEnabled((prev) => {
       const next = !prev;
       localStorage.setItem(SOUND_ENABLED_KEY, String(next));
