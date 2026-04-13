@@ -213,6 +213,15 @@ export async function authorizeFundingRequest(params: {
     try {
       const verification = await verifyPrivyIdentityToken(identityToken, address);
       if (!verification.verified) {
+        // If the JWT is valid but linked_accounts is empty, the wallet was just created
+        // and hasn't propagated to the identity token yet. Allow funding for new users —
+        // the JWT signature already proves they authenticated with Privy.
+        if (verification.candidateAddresses.length === 0) {
+          console.info('[fundAuth] Identity token has no linked wallets — new user grace period', {
+            expectedAddress: normalizeAddress(address),
+          });
+          return { ok: true, authMethod: 'embedded', worldAddress: resolvedWorld.worldAddress };
+        }
         console.warn('[fundAuth] Embedded identity token did not match wallet', {
           audience: config.privyAppId,
           candidates: verification.candidateAddresses,

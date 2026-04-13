@@ -222,6 +222,23 @@ describe('authorizeFundingRequest', () => {
     expect(mockReadContract).toHaveBeenCalledTimes(1);
   });
 
+  it('accepts embedded wallet funding with valid JWT but empty linked_accounts (new user grace period)', async () => {
+    const identityToken = await createIdentityToken(TEST_EMBEDDED, []);
+
+    const result = await authorizeFundingRequest({
+      address: TEST_EMBEDDED,
+      delegatorAddress: TEST_EMBEDDED,
+      identityToken,
+      worldAddress: TEST_WORLD,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      authMethod: 'embedded',
+      worldAddress: TEST_WORLD,
+    });
+  });
+
   it('rejects delegated burner funding when the request world is not allowed', async () => {
     const result = await authorizeFundingRequest({
       address: TEST_BURNER,
