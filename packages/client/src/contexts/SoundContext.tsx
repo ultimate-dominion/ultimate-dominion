@@ -42,6 +42,7 @@ const ambientHowls: Record<number, Howl> = {};
 const battleHowls: Record<number, Howl> = {};
 let activeTrack: TrackKey | null = null;
 const missingZoneWarned: Set<string> = new Set();
+let mountCounter = 0;
 
 export const __resetSoundForTests = (): void => {
   for (const key of Object.keys(ambientHowls)) delete ambientHowls[Number(key)];
@@ -86,12 +87,19 @@ const getHowl = (zoneId: number, battle: boolean): Howl | null => {
   }
 
   if (!cache[resolvedZone]) {
+    console.log('[SoundContext] creating Howl', { src, zone: resolvedZone, battle, ctxState: Howler.ctx?.state });
     cache[resolvedZone] = new Howl({
       src: [src],
       loop: true,
       volume: 0,
       preload: true,
+      onload: () => console.log('[SoundContext] onload', src),
+      onloaderror: (_id, err) => console.error('[SoundContext] onloaderror', src, err),
+      onplay: () => console.log('[SoundContext] onplay', src, { vol: cache[resolvedZone].volume(), playing: cache[resolvedZone].playing(), ctxState: Howler.ctx?.state }),
+      onplayerror: (_id, err) => console.error('[SoundContext] onplayerror', src, err),
     });
+  } else {
+    console.log('[SoundContext] reusing cached Howl', { src, zone: resolvedZone, battle });
   }
   return cache[resolvedZone];
 };
@@ -102,7 +110,18 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   const { currentBattle } = useBattle();
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    return localStorage.getItem(SOUND_ENABLED_KEY) === 'true';
+    const stored = localStorage.getItem(SOUND_ENABLED_KEY) === 'true';
+    mountCounter += 1;
+    console.log('[SoundContext] mount #' + mountCounter, {
+      stored,
+      zone: currentZone,
+      isAuth: isAuthenticated,
+      activeTrack,
+      ctxState: Howler.ctx?.state,
+      ambientCached: Object.keys(ambientHowls),
+      battleCached: Object.keys(battleHowls),
+    });
+    return stored;
   });
 
   // True while a fight is live OR while lingering after a fight just ended.
@@ -138,13 +157,15 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
 
     const unlock = () => {
       const ctx = Howler.ctx;
+      console.log('[SoundContext] unlock gesture', { ctxState: ctx?.state, activeTrack });
       if (ctx && ctx.state !== 'running') {
-        ctx.resume().catch(() => {});
+        ctx.resume().then(() => console.log('[SoundContext] ctx resumed →', Howler.ctx?.state)).catch((err) => console.error('[SoundContext] ctx.resume failed', err));
       }
       if (activeTrack) {
         const cache = activeTrack.battle ? battleHowls : ambientHowls;
         const howl = cache[activeTrack.zone];
         if (howl && !howl.playing()) {
+          console.log('[SoundContext] unlock: nudging Howl back on', { vol: howl.volume() });
           howl.play();
         }
       }
@@ -182,7 +203,15 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   // Main playback effect — crossfades between the correct track for the
   // (zone, battleMode) tuple. Picks crossfade duration based on transition type.
   useEffect(() => {
+    console.log('[SoundContext] playback effect', {
+      soundEnabled,
+      currentZone,
+      battleMode,
+      activeTrack,
+      ctxState: Howler.ctx?.state,
+    });
     if (!soundEnabled) {
+      console.log('[SoundContext] disabling — stopping all Howls');
       for (const howl of Object.values(ambientHowls)) howl.stop();
       for (const howl of Object.values(battleHowls)) howl.stop();
       activeTrack = null;
@@ -191,6 +220,7 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
 
     const desired: TrackKey = { zone: currentZone, battle: battleMode };
     if (keyEq(activeTrack, desired)) {
+      console.log('[SoundContext] keyEq match — no-op, current Howl continues');
       return;
     }
 
@@ -219,10 +249,29 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
     const nextHowl = getHowl(desired.zone, desired.battle);
     if (nextHowl) {
       const toVol = desired.battle ? BATTLE_VOLUME : AMBIENT_VOLUME;
+      console.log('[SoundContext] play()', { desired, fadeMs, toVol, ctxState: Howler.ctx?.state });
       nextHowl.volume(0);
       nextHowl.play();
       nextHowl.fade(0, toVol, fadeMs);
       activeTrack = desired;
+
+      // Post-play diagnostics — catches "Howler says playing but audio is silent".
+      setTimeout(() => {
+        console.log('[SoundContext] +500ms post-play', {
+          playing: nextHowl.playing(),
+          vol: nextHowl.volume(),
+          ctxState: Howler.ctx?.state,
+          howlerMuted: (Howler as unknown as { _muted: boolean })._muted,
+          howlerVolume: Howler.volume(),
+        });
+      }, 500);
+      setTimeout(() => {
+        console.log('[SoundContext] +3000ms post-play', {
+          playing: nextHowl.playing(),
+          vol: nextHowl.volume(),
+          ctxState: Howler.ctx?.state,
+        });
+      }, 3000);
     } else {
       activeTrack = desired;
     }
