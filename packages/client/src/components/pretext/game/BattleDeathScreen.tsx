@@ -65,12 +65,15 @@ export function BattleDeathScreen({
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
   const firedRef = useRef(false);
+  const sfxFiredRef = useRef(false);
 
   const lines = buildLines(characterName, monsterName, zoneName, level);
   const linesRef = useRef(lines);
   linesRef.current = lines;
 
   useEffect(() => {
+    if (sfxFiredRef.current) return;
+    sfxFiredRef.current = true;
     playSfx('player-death');
   }, [playSfx]);
 

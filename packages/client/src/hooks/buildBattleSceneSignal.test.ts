@@ -102,7 +102,7 @@ describe('buildBattleSceneSignal', () => {
     expect(signal.callout.detail).toContain('through a block');
   });
 
-  it('sets dodged flag from miss array', () => {
+  it('keeps normal misses separate from dodges', () => {
     const signal = buildBattleSceneSignal({
       outcome: { ...baseOutcome, miss: [true], hit: [false], damagePerHit: [0n] },
       characterId: '0xattacker',
@@ -110,7 +110,7 @@ describe('buildBattleSceneSignal', () => {
       weaponTypeForItem: () => 'melee',
     });
 
-    expect(signal.dodged).toBe(true);
+    expect(signal.dodged).toBe(false);
     expect(signal.blocked).toBe(false);
   });
 
@@ -230,7 +230,7 @@ describe('buildBattleSceneSignal', () => {
     });
 
     expect(signals).toHaveLength(1);
-    expect(signals[0].dodged).toBe(true);
+    expect(signals[0].dodged).toBe(false);
     expect(signals[0].damage).toBe(0);
   });
 });
