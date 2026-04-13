@@ -341,5 +341,53 @@ describe('SoundContext', () => {
       fireEvent.click(screen.getByText('toggle'));
       expect(mockStop).toHaveBeenCalled();
     });
+
+    it('resumes the battle track (not ambient) when sound is re-enabled mid-battle', async () => {
+      const { Howl } = await import('howler');
+      localStorage.setItem('ud:sound-enabled', 'true');
+      mockUseBattle.mockReturnValue({ currentBattle: makeBattle() });
+      renderWithProvider();
+
+      // Combat is live — battle track should already exist
+      expect(Howl).toHaveBeenCalledWith(
+        expect.objectContaining({ src: ['/audio/battle-dark-cave-mix.ogg'] }),
+      );
+
+      // Mute while still in combat
+      fireEvent.click(screen.getByText('toggle'));
+      expect(mockStop).toHaveBeenCalled();
+
+      // Clear call history so we can see what happens on re-enable
+      mockPlay.mockClear();
+
+      // Re-enable
+      fireEvent.click(screen.getByText('toggle'));
+
+      // Battle track should be playing again, not ambient
+      expect(mockPlay).toHaveBeenCalled();
+      // No new ambient Howl should have been created for this zone
+      const ambientCallsAfterRemute = (
+        Howl as unknown as ReturnType<typeof vi.fn>
+      ).mock.calls.filter((c) => (c[0] as { src: string[] }).src[0] === '/audio/dark-cave-mix.ogg');
+      // Zero ambient Howls — we were never ambient in this test
+      expect(ambientCallsAfterRemute.length).toBe(0);
+    });
+
+    it('falls back to zone 1 battle track for an unknown zone during combat', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { Howl } = await import('howler');
+      mockUseMap.mockReturnValue({ currentZone: 99 });
+      localStorage.setItem('ud:sound-enabled', 'true');
+      mockUseBattle.mockReturnValue({ currentBattle: makeBattle() });
+      renderWithProvider();
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('No battle track for zone 99'),
+      );
+      expect(Howl).toHaveBeenCalledWith(
+        expect.objectContaining({ src: ['/audio/battle-dark-cave-mix.ogg'] }),
+      );
+      warnSpy.mockRestore();
+    });
   });
 });

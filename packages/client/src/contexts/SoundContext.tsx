@@ -59,7 +59,9 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
   });
 
   // True while a fight is live OR while lingering after a fight just ended.
-  const [battleMode, setBattleMode] = useState(false);
+  // Initialize from currentBattle so we don't flash ambient music for one tick
+  // when the player loads the page mid-combat.
+  const [battleMode, setBattleMode] = useState(() => currentBattle !== null);
 
   const ambientHowlsRef = useRef<Record<number, Howl>>({});
   const battleHowlsRef = useRef<Record<number, Howl>>({});
@@ -69,21 +71,37 @@ export const SoundProvider = ({ children }: { children: React.ReactNode }): JSX.
 
   const inCombat = currentBattle !== null;
 
+  const missingZoneWarnedRef = useRef<Set<string>>(new Set());
+
   const getHowl = useCallback((zoneId: number, battle: boolean): Howl | null => {
     const map = battle ? BATTLE_AUDIO : ZONE_AUDIO;
     const cache = battle ? battleHowlsRef.current : ambientHowlsRef.current;
-    const src = map[zoneId];
-    if (!src) return null;
+    let src = map[zoneId];
+    let resolvedZone = zoneId;
 
-    if (!cache[zoneId]) {
-      cache[zoneId] = new Howl({
+    if (!src) {
+      const warnKey = `${battle ? 'battle' : 'ambient'}:${zoneId}`;
+      if (!missingZoneWarnedRef.current.has(warnKey)) {
+        missingZoneWarnedRef.current.add(warnKey);
+        console.warn(
+          `[SoundContext] No ${battle ? 'battle' : 'ambient'} track for zone ${zoneId}; falling back to zone 1`,
+        );
+      }
+      // Fall back to zone 1 rather than going silent — any track beats none.
+      src = map[1];
+      resolvedZone = 1;
+      if (!src) return null;
+    }
+
+    if (!cache[resolvedZone]) {
+      cache[resolvedZone] = new Howl({
         src: [src],
         loop: true,
         volume: 0,
         preload: true,
       });
     }
-    return cache[zoneId];
+    return cache[resolvedZone];
   }, []);
 
   // Auto-enable sound when user authenticates (once per session).
