@@ -25,7 +25,7 @@ import {Systems} from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import {ResourceAccess} from "@latticexyz/world/src/codegen/tables/ResourceAccess.sol";
 import {IWorld} from "@codegen/world/IWorld.sol";
 import {IWorldErrors} from "@latticexyz/world/src/IWorldErrors.sol";
-import {Shops, GasStationConfig} from "@codegen/index.sol";
+import {Shops, GasStationConfig, UltimateDominionConfig} from "@codegen/index.sol";
 import {Classes} from "@codegen/common.sol";
 import {Balances as ERC20Balances} from "@latticexyz/world-modules/src/modules/tokens/tables/Balances.sol";
 import {_balancesTableId} from "@latticexyz/world-modules/src/modules/erc20-puppet/utils.sol";
@@ -108,10 +108,10 @@ contract PostDeploySmoke is Test {
         // Core game systems
         _assertSystemRegistered("MapSystem", "MapSystem");
         _assertSystemRegistered("MapSpawnSystem", "MapSpawnSystem");
-        _assertSystemRegistered("MapRemovalSyste", "MapRemovalSystem");
+        _assertSystemRegistered("MapRemovalSys", "MapRemovalSystem");
         _assertSystemRegistered("ShopSystem", "ShopSystem");
-        _assertSystemRegistered("EncounterSystem", "EncounterSystem");
-        _assertSystemRegistered("EncounterResolv", "EncounterResolveSystem");
+        _assertSystemRegistered("EncounterSys", "EncounterSystem");
+        _assertSystemRegistered("EncounterResSys", "EncounterResolveSystem");
         _assertSystemRegistered("CombatSystem", "CombatSystem");
         _assertSystemRegistered("PvESystem", "PvESystem");
         _assertSystemRegistered("PvPSystem", "PvPSystem");
@@ -122,11 +122,11 @@ contract PostDeploySmoke is Test {
         _assertSystemRegistered("CharEnterSys", "CharacterEnterSystem");
         _assertSystemRegistered("StatSystem", "StatSystem");
         _assertSystemRegistered("FragmentSystem", "FragmentSystem");
-        _assertSystemRegistered("FragmentCombatS", "FragmentCombatSystem");
+        _assertSystemRegistered("FragCombatSys", "FragmentCombatSystem");
         _assertSystemRegistered("GasStationSys", "GasStationSystem");
         _assertSystemRegistered("EquipmentSystem", "EquipmentSystem");
         _assertSystemRegistered("ImplicitClassSys", "ImplicitClassSystem");
-        _assertSystemRegistered("WorldActionSyste", "WorldActionSystem");
+        _assertSystemRegistered("WorldActionSys", "WorldActionSystem");
         _assertSystemRegistered("ItemsSystem", "ItemsSystem");
         _assertSystemRegistered("ItemCreationSys", "ItemCreationSystem");
         _assertSystemRegistered("MarketplaceSys", "MarketplaceSystem");
@@ -506,8 +506,7 @@ contract PostDeploySmoke is Test {
     function test_goldTokenReachable() public {
         console.log("=== Layer 6a: Gold Token Reachable ===");
 
-        // Verify getGoldToken returns a valid address
-        address goldToken = world.UD__getGoldToken();
+        address goldToken = UltimateDominionConfig.getGoldToken();
         assertNotEq(goldToken, address(0), "Gold token address is zero");
         console.log("  Gold token:", goldToken);
 
@@ -524,7 +523,7 @@ contract PostDeploySmoke is Test {
     function test_characterTokenReachable() public {
         console.log("=== Layer 6b: Character Token Reachable ===");
 
-        address charToken = world.UD__getCharacterToken();
+        address charToken = UltimateDominionConfig.getCharacterToken();
         assertNotEq(charToken, address(0), "Character token address is zero");
         console.log("  Character token:", charToken);
 
@@ -540,7 +539,7 @@ contract PostDeploySmoke is Test {
     function test_itemsContractReachable() public {
         console.log("=== Layer 6c: Items Contract Reachable ===");
 
-        address itemsContract = world.UD__getItemsContract();
+        address itemsContract = UltimateDominionConfig.getItems();
         assertNotEq(itemsContract, address(0), "Items contract address is zero");
         console.log("  Items contract:", itemsContract);
 
