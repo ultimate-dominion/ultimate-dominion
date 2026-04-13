@@ -4,7 +4,7 @@ type TileMonster = {
   id: string;
   isSpawned: boolean;
   inBattle?: boolean;
-  currentHp: string | number;
+  currentHp: string | number | bigint;
   position: { x: number; y: number };
 };
 
