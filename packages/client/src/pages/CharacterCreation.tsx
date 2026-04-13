@@ -195,12 +195,7 @@ const CharacterCreationInner = (): JSX.Element => {
   const { t } = useTranslation('ui');
   const navigate = useNavigate();
   const { renderError, renderWarning } = useToast();
-  const {
-    authMethod,
-    embeddedIdentityTokenReady,
-    isAuthenticated: isConnected,
-    isConnecting,
-  } = useAuth();
+  const { authMethod, isAuthenticated: isConnected, isConnecting } = useAuth();
   const {
     burnerBalance,
     burnerBalanceFetched,
@@ -624,22 +619,14 @@ const CharacterCreationInner = (): JSX.Element => {
   ]);
 
   const baseDisabled = !character || !delegatorAddress || isCreating;
-  const embeddedPreparing =
-    authMethod === 'embedded' &&
-    (!embeddedIdentityTokenReady ||
-      !burnerBalanceFetched ||
-      burnerBalance === '0');
+  const nameDisabled = !delegatorAddress || isCreating;
   const isStatsDisabled =
     baseDisabled ||
-    embeddedPreparing ||
     rollStatsTx.isLoading ||
     raceTx.isLoading ||
     powerSourceTx.isLoading;
   const isEnterGameDisabled =
-    baseDisabled ||
-    embeddedPreparing ||
-    enterGameTx.isLoading ||
-    rollStatsTx.isLoading;
+    baseDisabled || enterGameTx.isLoading || rollStatsTx.isLoading;
 
   // Calculate dominant stat for display
   const dominantStat = useMemo(() => {
@@ -873,7 +860,7 @@ const CharacterCreationInner = (): JSX.Element => {
                   onChange={e =>
                     setName(e.target.value.replace(/[^a-zA-Z0-9 _-]/g, ''))
                   }
-                  isDisabled={isCreating || embeddedPreparing}
+                  isDisabled={nameDisabled}
                   _focus={{ borderColor: '#C87A2A' }}
                   _placeholder={{ color: '#8A7E6A' }}
                 />
@@ -882,13 +869,9 @@ const CharacterCreationInner = (): JSX.Element => {
                   variant="amber"
                   w="100%"
                   size="lg"
-                  isDisabled={!name || awaitingFunding || embeddedPreparing}
-                  isLoading={isCreating || embeddedPreparing}
-                  loadingText={
-                    embeddedPreparing
-                      ? t('characterCreation.name.preparingAccount')
-                      : t('characterCreation.identity.loadingText')
-                  }
+                  isDisabled={!name || nameDisabled || awaitingFunding}
+                  isLoading={isCreating}
+                  loadingText={t('characterCreation.identity.loadingText')}
                 >
                   {t('characterCreation.name.submitButton', {
                     name: name || '...',
@@ -1069,31 +1052,23 @@ const CharacterCreationInner = (): JSX.Element => {
                       role="radio"
                       aria-checked={selected}
                       aria-label={`${t(info.nameKey)}: ${t(info.descKey)}`}
-                      aria-disabled={raceTx.isLoading || embeddedPreparing}
+                      aria-disabled={raceTx.isLoading}
                       key={race}
                       type="button"
                       bg={selected ? '#2E2820' : 'transparent'}
                       border="2px solid"
                       borderColor={selected ? '#C87A2A' : '#3A3228'}
                       borderRadius="8px"
-                      cursor={
-                        raceTx.isLoading || embeddedPreparing
-                          ? 'not-allowed'
-                          : 'pointer'
-                      }
+                      cursor={raceTx.isLoading ? 'not-allowed' : 'pointer'}
                       p={4}
                       spacing={2}
                       flex={1}
                       minH="190px"
                       transition="all 0.3s"
-                      onClick={() =>
-                        !raceTx.isLoading &&
-                        !embeddedPreparing &&
-                        setSelectedRace(race)
-                      }
-                      opacity={raceTx.isLoading || embeddedPreparing ? 0.6 : 1}
+                      onClick={() => !raceTx.isLoading && setSelectedRace(race)}
+                      opacity={raceTx.isLoading ? 0.6 : 1}
                       _hover={
-                        !raceTx.isLoading && !embeddedPreparing
+                        !raceTx.isLoading
                           ? {
                               bg: '#2E2820',
                               borderColor: 'rgba(200,122,42,0.5)',
@@ -1136,16 +1111,10 @@ const CharacterCreationInner = (): JSX.Element => {
                 w="100%"
                 size="lg"
                 isDisabled={
-                  selectedRace === Race.None ||
-                  raceTx.isLoading ||
-                  embeddedPreparing
+                  baseDisabled || selectedRace === Race.None || raceTx.isLoading
                 }
-                isLoading={raceTx.isLoading || embeddedPreparing}
-                loadingText={
-                  embeddedPreparing
-                    ? t('characterCreation.name.preparingAccount')
-                    : t('characterCreation.racePhase.loadingText')
-                }
+                isLoading={raceTx.isLoading}
+                loadingText={t('characterCreation.racePhase.loadingText')}
                 onClick={() => onChooseRace(selectedRace)}
               >
                 {selectedRace === Race.None
@@ -1197,9 +1166,7 @@ const CharacterCreationInner = (): JSX.Element => {
                       role="radio"
                       aria-checked={selected}
                       aria-label={`${t(info.nameKey)}: ${t(info.descKey)}`}
-                      aria-disabled={
-                        powerSourceTx.isLoading || embeddedPreparing
-                      }
+                      aria-disabled={powerSourceTx.isLoading}
                       key={ps}
                       type="button"
                       bg={selected ? '#2E2820' : 'transparent'}
@@ -1207,9 +1174,7 @@ const CharacterCreationInner = (): JSX.Element => {
                       borderColor={selected ? '#C87A2A' : '#3A3228'}
                       borderRadius="8px"
                       cursor={
-                        powerSourceTx.isLoading || embeddedPreparing
-                          ? 'not-allowed'
-                          : 'pointer'
+                        powerSourceTx.isLoading ? 'not-allowed' : 'pointer'
                       }
                       p={4}
                       spacing={2}
@@ -1217,15 +1182,11 @@ const CharacterCreationInner = (): JSX.Element => {
                       minH="170px"
                       transition="all 0.3s"
                       onClick={() =>
-                        !powerSourceTx.isLoading &&
-                        !embeddedPreparing &&
-                        setSelectedPowerSource(ps)
+                        !powerSourceTx.isLoading && setSelectedPowerSource(ps)
                       }
-                      opacity={
-                        powerSourceTx.isLoading || embeddedPreparing ? 0.6 : 1
-                      }
+                      opacity={powerSourceTx.isLoading ? 0.6 : 1}
                       _hover={
-                        !powerSourceTx.isLoading && !embeddedPreparing
+                        !powerSourceTx.isLoading
                           ? {
                               bg: '#2E2820',
                               borderColor: 'rgba(200,122,42,0.5)',
@@ -1268,16 +1229,12 @@ const CharacterCreationInner = (): JSX.Element => {
                 w="100%"
                 size="lg"
                 isDisabled={
+                  baseDisabled ||
                   selectedPowerSource === PowerSource.None ||
-                  powerSourceTx.isLoading ||
-                  embeddedPreparing
+                  powerSourceTx.isLoading
                 }
-                isLoading={powerSourceTx.isLoading || embeddedPreparing}
-                loadingText={
-                  embeddedPreparing
-                    ? t('characterCreation.name.preparingAccount')
-                    : t('characterCreation.powerPhase.loadingText')
-                }
+                isLoading={powerSourceTx.isLoading}
+                loadingText={t('characterCreation.powerPhase.loadingText')}
                 onClick={() => onChoosePowerSource(selectedPowerSource)}
               >
                 {selectedPowerSource === PowerSource.None
