@@ -73,6 +73,7 @@ Domain-specific rules live in `.claude/rules/`. Claude auto-loads these based on
 - Local verification means the code builds successfully unless a task explicitly requires stronger local checks.
 - Default shipping path for code changes: verify local build, deploy to beta on `dev`, then run the relevant integration tests there before calling the change ready.
 - UD does not use local Anvil as the default validation path. Some legacy package scripts still mention `127.0.0.1:8545`; do not reach for those during normal work. Read `docs/operations/DEPLOY_RUNBOOK.md`, compile locally, then validate chain behavior on beta via fork/smoke/manual beta playtests.
+- For beta deploys, follow `docs/operations/DEPLOY_RUNBOOK.md#beta-ci-path-standard`: compile locally, push to `dev`, run `deploy-beta.yml`, and treat a failure after `mud deploy` as “beta mutated but not validated” until the smoke gate passes.
 - Commit after each logical unit with conventional commits.
 - Do not sweep unrelated files into a commit.
 - Do not push without approval.

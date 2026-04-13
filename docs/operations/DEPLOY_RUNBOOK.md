@@ -43,6 +43,27 @@ Scripts source the correct `.env` file automatically. Forge admin scripts requir
 
 ## 2. Contract Deployment
 
+### Beta CI Path (Standard)
+
+Use the GitHub Action for normal beta deploys. Do not run the legacy local Anvil test path as a gate.
+
+1. Compile locally: `pnpm --filter contracts run build`
+2. Commit the logical change set.
+3. Push the branch/commit to `dev`.
+4. Run `.github/workflows/deploy-beta.yml` with `run_zone_loader=false` unless this is a fresh world.
+5. Let the workflow finish. It runs, in order:
+   - `pnpm --filter contracts build`
+   - `mud deploy --profile=base-mainnet --worldAddress $BETA_WORLD_ADDRESS`
+   - `EnsureAccess.s.sol` with `FOUNDRY_PROFILE=script`
+   - optional zone loader for fresh worlds only
+   - fork-mode `PostDeploySmoke` against beta
+6. If the workflow fails after `mud deploy`, assume beta has been mutated but is not validated. Fix the failing deploy helper, smoke test, or beta state, then rerun the beta workflow.
+7. Classify smoke failures before changing code:
+   - Access grant failures usually belong in `script/EnsureAccess.s.sol`.
+   - `World_AccessDenied` from a smoke-only view call is often a smoke-test issue; prefer direct table reads for admin/fork checks.
+   - Missing system names must be checked against `mud.config.ts` / `.mud/local/systems.json`.
+   - Zero economic balances may be real beta state, not a contract deploy bug; repair with the documented admin script instead of weakening the gate.
+
 ### Upgrade Deploy (Normal Case)
 
 This is the standard deployment path. It upgrades existing system contracts in-place while preserving all player data.
