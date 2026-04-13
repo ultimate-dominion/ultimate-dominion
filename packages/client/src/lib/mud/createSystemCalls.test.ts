@@ -1382,6 +1382,26 @@ describe('createSystemCalls — validateTileMonsters', () => {
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', MONSTER_A, expect.anything());
   });
 
+  it('evicts missing local Position rows with zero defaults', async () => {
+    const { network } = createMockNetwork();
+    const MONSTER = '0x0000000000000000000000000000000000000000000000000000000000000ccc';
+    network.publicClient.readContract = mockValidationReads({
+      [MONSTER]: { spawned: false },
+    });
+    mockedGetTableValue.mockReturnValue(undefined);
+
+    const calls = createSystemCalls(network);
+    await calls.validateTileMonsters([MONSTER]);
+
+    expect(mockSetRow).toHaveBeenCalledWith('Position', MONSTER, { x: 0, y: 0 });
+    expect(mockSetRow).toHaveBeenCalledWith('PositionV2', MONSTER, { zoneId: 0, x: 0, y: 0 });
+    expect(mockSetRow).not.toHaveBeenCalledWith('Stats', MONSTER, expect.anything());
+    expect(mockMarkEvictedRows).toHaveBeenCalledWith(expect.arrayContaining([
+      { table: 'Position', keyBytes: MONSTER },
+      { table: 'PositionV2', keyBytes: MONSTER },
+    ]));
+  });
+
   it('does nothing when all monsters are alive', async () => {
     const { network } = createMockNetwork();
     network.publicClient.readContract = mockValidationReads({
@@ -1463,7 +1483,7 @@ describe('createSystemCalls — validateTileMonsters', () => {
     });
     expect(mockMarkReceiptRows).toHaveBeenCalledWith(
       [{ table: 'PositionV2', keyBytes: OFF_TILE_MONSTER }],
-      101,
+      201,
     );
     expect(mockSetRow).not.toHaveBeenCalledWith('Spawned', OFF_TILE_MONSTER, { spawned: false });
   });

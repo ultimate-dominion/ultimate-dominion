@@ -756,7 +756,7 @@ describe('applyReceiptToStore — splice integration', () => {
     expect(mockApplyBatch).not.toHaveBeenCalled();
   });
 
-  it('skips block-pinned read after first failure (no repeated 400s)', async () => {
+  it('backs off block-pinned reads after failure and retries later', async () => {
     // First tx: block-pinned fails → flag set to false
     const keyTuple1: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000001'];
     const spliceLog1 = encodeSpliceDynamicLog(statsTableId, keyTuple1);
@@ -779,24 +779,38 @@ describe('applyReceiptToStore — splice integration', () => {
 
     expect(mockPublicClient.readContract).toHaveBeenCalledTimes(1);
 
-    // Second tx: should skip deferred RPC entirely.
+    // Next three txs: should skip deferred RPC entirely.
     vi.clearAllMocks();
     mockApplyBatch.mockClear();
-    const keyTuple2: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000002'];
-    const spliceLog2 = encodeSpliceDynamicLog(statsTableId, keyTuple2);
-    const receipt2 = makeReceipt([spliceLog2], 101n);
 
-    // Reset readContract mock — it should not be called while block-pinned reads are disabled.
     (mockPublicClient.readContract as ReturnType<typeof vi.fn>).mockResolvedValue([
       '0x00' as Hex,
       '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex,
       '0x00' as Hex,
     ]);
 
-    await applyReceiptToStore(receipt2, mockPublicClient, worldAddress);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    for (let i = 0; i < 3; i++) {
+      const keyTuple: Hex[] = [`0x${(i + 2).toString(16).padStart(64, '0')}` as Hex];
+      const spliceLog = encodeSpliceDynamicLog(statsTableId, keyTuple);
+      const receipt = makeReceipt([spliceLog], BigInt(101 + i));
+
+      await applyReceiptToStore(receipt, mockPublicClient, worldAddress);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
 
     expect(mockPublicClient.readContract).not.toHaveBeenCalled();
+
+    const retryKeyTuple: Hex[] = ['0x0000000000000000000000000000000000000000000000000000000000000005'];
+    const retryLog = encodeSpliceDynamicLog(statsTableId, retryKeyTuple);
+    const retryReceipt = makeReceipt([retryLog], 104n);
+
+    await applyReceiptToStore(retryReceipt, mockPublicClient, worldAddress);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(mockPublicClient.readContract).toHaveBeenCalledTimes(1);
+    expect(mockPublicClient.readContract).toHaveBeenCalledWith(
+      expect.objectContaining({ blockNumber: 104n }),
+    );
   });
 
   it('SpliceStaticData uses pending SetRecord data when row is not in store', async () => {

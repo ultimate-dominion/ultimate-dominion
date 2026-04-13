@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { decodeMobInstancePosition } from '../utils/helpers';
 import { entityInZone, resolveEntityPositionData } from './mapPosition';
+import { getMonstersOnTile } from './mapSelectors';
 
 describe('MapContext position resolution', () => {
   it('prefers legacy Position rows for monster placement when both tables exist', () => {
@@ -76,5 +77,26 @@ describe('MapContext position resolution', () => {
     const monsterId = '0x000000050000000000000000000000000000000000000000000012f700010003';
 
     expect(decodeMobInstancePosition(monsterId)).toEqual({ x: 1, y: 3 });
+  });
+
+  it('excludes in-battle monsters from tile actions', () => {
+    const monsters = [
+      {
+        id: 'fightable',
+        isSpawned: true,
+        inBattle: false,
+        currentHp: '10',
+        position: { x: 2, y: 3 },
+      },
+      {
+        id: 'busy',
+        isSpawned: true,
+        inBattle: true,
+        currentHp: '10',
+        position: { x: 2, y: 3 },
+      },
+    ];
+
+    expect(getMonstersOnTile(monsters, { x: 2, y: 3 }).map(m => m.id)).toEqual(['fightable']);
   });
 });

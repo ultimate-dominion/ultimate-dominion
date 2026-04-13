@@ -615,10 +615,15 @@ export function createSystemCalls({
         Number(currentPosition?.x) !== position.x ||
         Number(currentPosition?.y) !== position.y
       ) {
-        useGameStore.getState().setRow('PositionV2', monsterId, position);
+        const store = useGameStore.getState();
+        store.setRow('PositionV2', monsterId, position);
+        const fallbackProtectionBlock = store.currentBlock + 1;
+        const chainProtectionBlock = await publicClient.getBlockNumber()
+          .then(block => Number(block) + 1)
+          .catch(() => fallbackProtectionBlock);
         markReceiptRows(
           [{ table: 'PositionV2', keyBytes: monsterId }],
-          useGameStore.getState().currentBlock + 1,
+          Math.max(fallbackProtectionBlock, chainProtectionBlock),
         );
       }
       return { x, y };

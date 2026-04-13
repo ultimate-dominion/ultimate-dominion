@@ -41,6 +41,7 @@ import {
 } from '../utils/types';
 
 import { useCharacter } from './CharacterContext';
+import { getMonstersOnTile } from './mapSelectors';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
 
@@ -502,16 +503,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   }, [allCharacters, currentZone, positionTableV2, positionTableV1]);
 
   const monstersOnTile = useMemo(() => {
-    if (!position || (position.x === 0 && position.y === 0)) return [];
-    const result = zonedMonsters.filter(
-      m =>
-        m.isSpawned &&
-        !m.inBattle &&
-        Number(m.currentHp) > 0 &&
-        m.position.x === position.x &&
-        m.position.y === position.y,
-    );
-    return result;
+    return getMonstersOnTile(zonedMonsters, position);
   }, [zonedMonsters, position]);
 
   const playerLevel = character?.level ? Number(character.level) : 1;

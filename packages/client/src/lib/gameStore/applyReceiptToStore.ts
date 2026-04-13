@@ -89,10 +89,13 @@ function hasAllStaticFields(layout: ReturnType<typeof buildStaticFieldLayout>, r
 // historical calls, do not fall back to `latest` for receipt splices — `latest`
 // can be pre-TX on Base and reintroduce stale monster positions.
 let _blockPinnedReadSupported = true;
+let _blockPinnedRetryCountdown = 0;
+const BLOCK_PINNED_RETRY_AFTER_SKIPS = 3;
 
 /** Exposed for testing. */
 export function __resetBlockPinnedFlag(): void {
   _blockPinnedReadSupported = true;
+  _blockPinnedRetryCountdown = 0;
 }
 
 async function resolveSpliceEvents(
@@ -105,6 +108,14 @@ async function resolveSpliceEvents(
   const unique = new Map<string, (typeof spliceReads)[0]>();
   for (const r of spliceReads) {
     unique.set(`${r.table.label}:${r.keyBytes}`, r);
+  }
+
+  if (!_blockPinnedReadSupported) {
+    if (_blockPinnedRetryCountdown > 0) {
+      _blockPinnedRetryCountdown -= 1;
+      return [];
+    }
+    _blockPinnedReadSupported = true;
   }
 
   const readRecord = async ({ table, keyTuple, keyBytes }: (typeof spliceReads)[0]) => {
@@ -126,6 +137,7 @@ async function resolveSpliceEvents(
         });
     } catch {
       _blockPinnedReadSupported = false;
+      _blockPinnedRetryCountdown = BLOCK_PINNED_RETRY_AFTER_SKIPS;
       return null;
     }
 
