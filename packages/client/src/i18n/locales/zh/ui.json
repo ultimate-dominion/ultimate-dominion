@@ -571,10 +571,16 @@
       "loadingText": "觉醒中...",
       "warning": "请选择种族和力量源泉。"
     },
+    "name": {
+      "heading": "你叫什么名字?",
+      "submitButton": "我是{{name}}",
+      "preparingAccount": "正在准备账户..."
+    },
     "stats": {
       "heading": "洞穴考验你",
       "racePrefix": "种族: {{name}}",
       "powerPrefix": "力量: {{name}}",
+      "rawHint": "没有血脉，没有誓言。只有命运赐予你的样子。",
       "rollButton": "投掷属性",
       "rerollButton": "重新投掷",
       "noRerolls": "无剩余重投次数",
@@ -582,7 +588,22 @@
       "rollingText": "投掷中...",
       "continueButton": "接受命运",
       "buildIndicator": "当前流派: ",
-      "buildDominant": "{{stat}}特化"
+      "buildDominant": "{{stat}}特化",
+      "raceLockedWarning": "血脉已定。骰子已经安静。"
+    },
+    "racePhase": {
+      "heading": "你体内流着怎样的血?",
+      "hint": "顺着命运赐予你的形貌做出选择。",
+      "submitButton": "我是{{race}}",
+      "submitButtonDefault": "选择血脉",
+      "loadingText": "缔结中..."
+    },
+    "powerPhase": {
+      "heading": "你的力量从何而来?",
+      "hint": "这个选择会开启你未来可能成为的道路。",
+      "submitButton": "我追随{{power}}",
+      "submitButtonDefault": "选择力量来源",
+      "loadingText": "聆听中..."
     },
     "equipment": {
       "heading": "武装自己",

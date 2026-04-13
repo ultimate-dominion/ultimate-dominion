@@ -18,7 +18,7 @@ const SNAPSHOT_EXCLUDE_TABLES = new Set([
 
 // Tables processed in the first pass to build the dead entity set.
 // Skipped in the main loop — their filtered data is added during first pass.
-const FIRST_PASS_TABLES = new Set(['Position', 'Spawned']);
+const FIRST_PASS_TABLES = new Set(['Position', 'PositionV2', 'Spawned']);
 
 const ZERO_BYTES32 = '0x' + '0'.repeat(64);
 
@@ -170,7 +170,7 @@ async function buildSnapshot(syncHandle: SyncHandle): Promise<string> {
     }
   }
 
-  // Step 1b: Build dead entity set from Position and Spawned tables.
+  // Step 1b: Build dead entity set from Position, PositionV2, and Spawned tables.
   // Dead mobs have position (0,0) AND spawned=false. We collect keys from
   // both tables so we can exclude dead entities from Stats, MobStats, etc.
   const deadEntityKeys = new Set<string>();
@@ -197,6 +197,31 @@ async function buildSnapshot(syncHandle: SyncHandle): Promise<string> {
       }
     } catch (err) {
       console.error('[snapshot] Error querying Position:', (err as Error).message);
+    }
+  }
+
+  // PositionV2 — entities at zone-relative (0,0) are despawned (unless they're characters)
+  const positionV2Table = syncHandle.tableNameMap.get('PositionV2');
+  if (positionV2Table) {
+    try {
+      const posRows = await sql.unsafe(
+        `SELECT * FROM "${mudSchema}"."${positionV2Table}"`
+      );
+      const posData: Record<string, Record<string, unknown>> = {};
+      for (const row of posRows) {
+        const keyBytes = extractKeyBytes(row as Record<string, unknown>);
+        const serialized = serializeRow(row as Record<string, unknown>);
+        if (serialized.x === 0 && serialized.y === 0 && !characterEntityKeys.has(keyBytes)) {
+          deadEntityKeys.add(keyBytes);
+        } else {
+          posData[keyBytes] = serialized;
+        }
+      }
+      if (Object.keys(posData).length > 0) {
+        snapshot['PositionV2'] = posData;
+      }
+    } catch (err) {
+      console.error('[snapshot] Error querying PositionV2:', (err as Error).message);
     }
   }
 

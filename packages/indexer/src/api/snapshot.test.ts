@@ -41,6 +41,7 @@ function makeSyncHandle(overrides?: Partial<SyncHandle>): SyncHandle {
     tables: new Map(),
     tableNameMap: new Map([
       ['Position', 'ud__position'],
+      ['PositionV2', 'ud__position_v2'],
       ['Spawned', 'ud__spawned'],
       ['Characters', 'ud__characters'],
       ['Stats', 'ud__stats'],
@@ -49,6 +50,7 @@ function makeSyncHandle(overrides?: Partial<SyncHandle>): SyncHandle {
       ['GoldBalances', 'gold__balances'],
       // Reverse mappings (should be skipped)
       ['ud__position', 'ud__position'],
+      ['ud__position_v2', 'ud__position_v2'],
       ['ud__spawned', 'ud__spawned'],
       ['ud__characters', 'ud__characters'],
       ['ud__stats', 'ud__stats'],
@@ -63,12 +65,14 @@ function makeSyncHandle(overrides?: Partial<SyncHandle>): SyncHandle {
 // Helper to set up sql.unsafe mock responses in the expected query order:
 // 1. Characters table (for character key set — queried first now)
 // 2. Position table
-// 3. Spawned table
-// 4+ Remaining tables in tableNameMap iteration order
+// 3. PositionV2 table
+// 4. Spawned table
+// 5+ Remaining tables in tableNameMap iteration order
 type MockRows = Record<string, unknown>[];
 
 function mockDbQueries(opts: {
   position?: MockRows;
+  positionV2?: MockRows;
   spawned?: MockRows;
   characters?: MockRows;
   stats?: MockRows;
@@ -82,6 +86,8 @@ function mockDbQueries(opts: {
   mockSql.mockResolvedValueOnce((opts.characters ?? []) as any);
   // Step 1b: Position
   mockSql.mockResolvedValueOnce((opts.position ?? []) as any);
+  // Step 1b: PositionV2
+  mockSql.mockResolvedValueOnce((opts.positionV2 ?? []) as any);
   // Step 1c: Spawned
   mockSql.mockResolvedValueOnce((opts.spawned ?? []) as any);
 
@@ -218,11 +224,13 @@ describe('GET /snapshot', () => {
     const handle = makeSyncHandle({
       tableNameMap: new Map([
         ['Position', 'ud__position'],
+        ['PositionV2', 'ud__position_v2'],
         ['Spawned', 'ud__spawned'],
         ['Characters', 'ud__characters'],
         ['EncounterEntity', 'ud__encounter_entity'],
         // Reverse
         ['ud__position', 'ud__position'],
+        ['ud__position_v2', 'ud__position_v2'],
         ['ud__spawned', 'ud__spawned'],
         ['ud__characters', 'ud__characters'],
         ['ud__encounter_entity', 'ud__encounter_entity'],
@@ -233,6 +241,8 @@ describe('GET /snapshot', () => {
     // Characters (key set)
     mockSql.mockResolvedValueOnce([] as any);
     // Position
+    mockSql.mockResolvedValueOnce([] as any);
+    // PositionV2
     mockSql.mockResolvedValueOnce([] as any);
     // Spawned
     mockSql.mockResolvedValueOnce([] as any);
@@ -256,10 +266,12 @@ describe('GET /snapshot', () => {
     const handle = makeSyncHandle({
       tableNameMap: new Map([
         ['Position', 'ud__position'],
+        ['PositionV2', 'ud__position_v2'],
         ['Spawned', 'ud__spawned'],
         ['Characters', 'ud__characters'],
         ['CombatEncounter', 'ud__combat_encounter'],
         ['ud__position', 'ud__position'],
+        ['ud__position_v2', 'ud__position_v2'],
         ['ud__spawned', 'ud__spawned'],
         ['ud__characters', 'ud__characters'],
         ['ud__combat_encounter', 'ud__combat_encounter'],
@@ -269,6 +281,7 @@ describe('GET /snapshot', () => {
     const mockSql = vi.mocked(sql.unsafe);
     mockSql.mockResolvedValueOnce([] as any); // Characters key set
     mockSql.mockResolvedValueOnce([] as any); // Position
+    mockSql.mockResolvedValueOnce([] as any); // PositionV2
     mockSql.mockResolvedValueOnce([] as any); // Spawned
     mockSql.mockResolvedValueOnce([] as any); // Characters main
     mockSql.mockResolvedValueOnce([
@@ -288,11 +301,13 @@ describe('GET /snapshot', () => {
     const handle = makeSyncHandle({
       tableNameMap: new Map([
         ['Position', 'ud__position'],
+        ['PositionV2', 'ud__position_v2'],
         ['Spawned', 'ud__spawned'],
         ['Characters', 'ud__characters'],
         ['ActionOutcome', 'ud__action_outcome'],
         ['CombatOutcome', 'ud__combat_outcome'],
         ['ud__position', 'ud__position'],
+        ['ud__position_v2', 'ud__position_v2'],
         ['ud__spawned', 'ud__spawned'],
         ['ud__characters', 'ud__characters'],
         ['ud__action_outcome', 'ud__action_outcome'],
@@ -303,6 +318,7 @@ describe('GET /snapshot', () => {
     const mockSql = vi.mocked(sql.unsafe);
     mockSql.mockResolvedValueOnce([] as any); // Characters key set
     mockSql.mockResolvedValueOnce([] as any); // Position
+    mockSql.mockResolvedValueOnce([] as any); // PositionV2
     mockSql.mockResolvedValueOnce([] as any); // Spawned
     mockSql.mockResolvedValueOnce([] as any); // Characters main
 
@@ -311,8 +327,8 @@ describe('GET /snapshot', () => {
     const res = await request(app).get('/snapshot');
 
     expect(res.status).toBe(200);
-    // Only 4 sql calls: Characters key set, Position, Spawned, Characters main
-    expect(mockSql).toHaveBeenCalledTimes(4);
+    // Only 5 sql calls: Characters key set, Position, PositionV2, Spawned, Characters main
+    expect(mockSql).toHaveBeenCalledTimes(5);
   });
 
   it('filters Position (0,0) and Spawned false from their own tables', async () => {
@@ -337,6 +353,36 @@ describe('GET /snapshot', () => {
     // Dead entity excluded from Position and Spawned
     expect(res.body.tables.Position?.['0xdead']).toBeUndefined();
     expect(res.body.tables.Spawned?.['0xdead']).toBeUndefined();
+  });
+
+  it('filters PositionV2 (0,0) and marks the entity dead for dependent tables', async () => {
+    const deadMobKey = '0x00000001_dead_mob';
+    const aliveMobKey = '0x00000001_alive_mob';
+
+    mockDbQueries({
+      positionV2: [
+        { __key_bytes: aliveMobKey, zone_id: 1, x: 5, y: 3 },
+        { __key_bytes: deadMobKey, zone_id: 1, x: 0, y: 0 },
+      ],
+      spawned: [
+        // Stale spawned row from indexer — PositionV2 should still mark dead.
+        { __key_bytes: deadMobKey, spawned: true },
+        { __key_bytes: aliveMobKey, spawned: true },
+      ],
+      stats: [
+        { __key_bytes: deadMobKey, level: 3, current_hp: 5 },
+        { __key_bytes: aliveMobKey, level: 5, current_hp: 10 },
+      ],
+    });
+
+    const app = createApp(makeSyncHandle());
+    const res = await request(app).get('/snapshot');
+
+    expect(res.status).toBe(200);
+    expect(res.body.tables.PositionV2[aliveMobKey]).toEqual({ zone_id: 1, x: 5, y: 3 });
+    expect(res.body.tables.PositionV2?.[deadMobKey]).toBeUndefined();
+    expect(res.body.tables.Stats?.[deadMobKey]).toBeUndefined();
+    expect(res.body.tables.Stats[aliveMobKey]).toEqual({ level: 5, current_hp: 10 });
   });
 
   it('preserves character Position at (0,0) — spawn point is valid', async () => {
@@ -381,6 +427,8 @@ describe('GET /snapshot', () => {
     // Characters key set errors
     mockSql.mockRejectedValueOnce(new Error('connection refused'));
     // Position errors
+    mockSql.mockRejectedValueOnce(new Error('connection refused'));
+    // PositionV2 errors
     mockSql.mockRejectedValueOnce(new Error('connection refused'));
     // Spawned errors
     mockSql.mockRejectedValueOnce(new Error('connection refused'));

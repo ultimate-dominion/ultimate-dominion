@@ -52,19 +52,28 @@ contract EnsureAccessSystem is System {
 
     function _ensureGoldAccess(address worldAddress) internal {
         ResourceId goldNs = WorldResourceIdLib.encodeNamespace(GOLD_NAMESPACE);
-        ResourceAccess.set(goldNs, _sys("CharEnterSys"), true);
-        ResourceAccess.set(goldNs, _sys("LootManagerSyste"), true);
-        ResourceAccess.set(goldNs, _sys("GasStationSys"), true);
-        ResourceAccess.set(goldNs, _sys("ShopSystem"), true);
-        ResourceAccess.set(goldNs, _sys("PveRewardSystem"), true);
-        ResourceAccess.set(goldNs, _sys("PvpRewardSystem"), true);
-        ResourceAccess.set(goldNs, _sys("PvPSystem"), true);
-        ResourceAccess.set(goldNs, _sys("MarketplaceSys"), true);
+        ResourceId goldBalances = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "Balances");
+        ResourceId goldTotalSupply = WorldResourceIdLib.encode(RESOURCE_TABLE, GOLD_NAMESPACE, "TotalSupply");
+
+        _grantGoldAccess(goldNs, worldAddress);
+        _grantGoldAccess(goldBalances, worldAddress);
+        _grantGoldAccess(goldTotalSupply, worldAddress);
+    }
+
+    function _grantGoldAccess(ResourceId target, address worldAddress) internal {
+        ResourceAccess.set(target, _sys("CharEnterSys"), true);
+        ResourceAccess.set(target, _sys("LootManagerSyste"), true);
+        ResourceAccess.set(target, _sys("GasStationSys"), true);
+        ResourceAccess.set(target, _sys("ShopSystem"), true);
+        ResourceAccess.set(target, _sys("PveRewardSystem"), true);
+        ResourceAccess.set(target, _sys("PvpRewardSystem"), true);
+        ResourceAccess.set(target, _sys("PvPSystem"), true);
+        ResourceAccess.set(target, _sys("MarketplaceSys"), true);
         // Phase 3-5: DurabilitySystem (repair), RespecSystem (respec), GuildSystem (treasury)
-        ResourceAccess.set(goldNs, _sys("DurabilitySys"), true);
-        ResourceAccess.set(goldNs, _sys("RespecSystem"), true);
-        ResourceAccess.set(goldNs, _sys("GuildSystem"), true);
-        ResourceAccess.set(goldNs, worldAddress, true);
+        ResourceAccess.set(target, _sys("DurabilitySys"), true);
+        ResourceAccess.set(target, _sys("RespecSystem"), true);
+        ResourceAccess.set(target, _sys("GuildSystem"), true);
+        ResourceAccess.set(target, worldAddress, true);
     }
 
     function _ensureItemsAccess(address worldAddress) internal {

@@ -1,49 +1,53 @@
 /**
- * Fix ghost monster entities in the indexer.
+ * Beta-only ghost monster repair for the indexer database.
  *
- * Problem: ~213 monster entities show spawned=true in the indexer but are
- * actually dead on-chain (Spawned=false, Position=(0,0), EncounterEntity.died=true).
- * The client renders them on the map but attacks fail with InvalidCombatEntity.
+ * This mirrors chain-verified monster state into decoded Postgres tables and
+ * mud.records. It defaults to dry-run and refuses to run against non-beta worlds.
  *
- * Approach:
- * 1. Get all entities with spawned=true from the indexer
- * 2. Exclude characters (they have entries in the Characters table)
- * 3. Get entities listed in EntitiesAtPosition (these are legit live monsters)
- * 4. The difference = ghost candidates
- * 5. Verify each ghost on-chain (Spawned table)
- * 6. For confirmed ghosts: update Spawned, Position, Stats, EncounterEntity
- *    in both decoded and raw tables
+ * Required env:
+ *   DATABASE_URL or DATABASE_PUBLIC_URL
+ *   WORLD_ADDRESS
+ *   RPC_URL, RPC_HTTP_URL, or MONITOR_BASE_NODE_URL
  *
  * Usage:
- *   DATABASE_PUBLIC_URL=postgresql://... npx tsx scripts/fix-ghost-monsters.ts
- *
- * Or with Railway env:
- *   DATABASE_PUBLIC_URL=$(railway variables --service Postgres --json | jq -r .DATABASE_PUBLIC_URL) \
- *   npx tsx scripts/fix-ghost-monsters.ts
+ *   pnpm --filter @ud/indexer exec tsx scripts/fix-ghost-monsters.ts
+ *   pnpm --filter @ud/indexer exec tsx scripts/fix-ghost-monsters.ts --apply
  */
 
-import postgres from 'postgres';
-import { createPublicClient, http, type Hex, pad, toHex } from 'viem';
+import postgres, { type Sql } from 'postgres';
+import { createPublicClient, http, type Hex } from 'viem';
 import { base } from 'viem/chains';
 
-// --- Config ---
-const WORLD = '0x99d01939F58B965E6E84a1D167E710Abdf5764b0' as const;
-const RPC_URL = process.env.RPC_URL || 'https://base-mainnet.g.alchemy.com/v2/uXm8ZFNQVb8YQausdDqGA';
-const DB_URL = process.env.DATABASE_PUBLIC_URL
-  || 'postgresql://postgres:LyiHVtbzDZzJWgcTDdeNpuJnkYbukpXl@mainline.proxy.rlwy.net:24965/railway';
-const DECODED_SCHEMA = WORLD.toLowerCase();
-const DRY_RUN = process.argv.includes('--dry-run');
+const BETA_WORLD = '0xDc34AC3b06fa0ed899696A72B7706369864E5678';
+const WORLD = process.env.WORLD_ADDRESS as Hex | undefined;
+const RPC_URL = process.env.RPC_URL || process.env.RPC_HTTP_URL || process.env.MONITOR_BASE_NODE_URL;
+const RPC_TOKEN = process.env.MONITOR_BASE_NODE_TOKEN;
+const DB_URL = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
+const APPLY = process.argv.includes('--apply');
 
-// MUD table IDs (bytes32)
+const ZERO_BYTES32 = '0x' + '0'.repeat(64);
+const ZERO_LENGTHS = Buffer.alloc(32, 0);
+const EMPTY = Buffer.alloc(0);
+
 const TABLE_IDS = {
-  Spawned:         '0x74625544000000000000000000000000537061776e6564000000000000000000' as Hex,
-  Position:        '0x74625544000000000000000000000000506f736974696f6e0000000000000000' as Hex,
-  Stats:           '0x74625544000000000000000000000000537461747300000000000000000000000' as Hex,
+  Spawned: '0x74625544000000000000000000000000537061776e6564000000000000000000' as Hex,
+  Position: '0x74625544000000000000000000000000506f736974696f6e0000000000000000' as Hex,
+  PositionV2: '0x74625544000000000000000000000000506f736974696f6e5632000000000000' as Hex,
   EncounterEntity: '0x74625544000000000000000000000000456e636f756e746572456e7469747900' as Hex,
 };
 
+const TABLE_NAMES = {
+  Spawned: 'ud__spawned',
+  Position: 'ud__position',
+  PositionV2: 'ud__position_v2',
+  EncounterEntity: 'ud__encounter_entity',
+  Characters: 'ud__characters',
+};
+
 const getRecordAbi = [{
-  name: 'getRecord', type: 'function', stateMutability: 'view',
+  name: 'getRecord',
+  type: 'function',
+  stateMutability: 'view',
   inputs: [
     { name: 'tableId', type: 'bytes32' },
     { name: 'keyTuple', type: 'bytes32[]' },
@@ -55,261 +59,336 @@ const getRecordAbi = [{
   ],
 }] as const;
 
-// --- Main ---
-async function main() {
-  const sql = postgres(DB_URL, { max: 5 });
-  const client = createPublicClient({ chain: base, transport: http(RPC_URL) });
+type StoreRecord = {
+  staticData: Hex;
+  encodedLengths: Hex;
+  dynamicData: Hex;
+};
 
-  if (DRY_RUN) console.log('=== DRY RUN — no changes will be written ===\n');
+type ChainState = {
+  spawned: boolean;
+  position: { x: number; y: number };
+  positionV2: { zoneId: bigint; x: number; y: number };
+  encounter: { encounterId: Hex; died: boolean; pvpTimer: bigint };
+  records: {
+    spawned: StoreRecord;
+    position: StoreRecord;
+    positionV2: StoreRecord;
+    encounter: StoreRecord;
+  };
+};
 
-  // Step 1: Get all spawned entities from the indexer
-  console.log('Loading indexer state...');
-  const spawnedRows = await sql.unsafe(
-    `SELECT __key_bytes, spawned FROM "${DECODED_SCHEMA}"."ud__spawned" WHERE spawned = true`,
-  );
-  console.log(`  Spawned=true: ${spawnedRows.length} entities`);
-
-  // Step 2: Get characters (to exclude)
-  const charRows = await sql.unsafe(
-    `SELECT __key_bytes FROM "${DECODED_SCHEMA}"."ud__characters"`,
-  );
-  const charKeys = new Set(charRows.map((r: any) => (r.__key_bytes as Buffer).toString('hex')));
-  console.log(`  Characters: ${charKeys.size}`);
-
-  // Step 3: Get all entities listed in EntitiesAtPosition
-  const eapRows = await sql.unsafe(
-    `SELECT entities FROM "${DECODED_SCHEMA}"."ud__entities_at_positi"`,
-  );
-  const eapEntities = new Set<string>();
-  for (const row of eapRows) {
-    const entities = typeof row.entities === 'string' ? JSON.parse(row.entities) : row.entities;
-    const list = entities?.json || entities || [];
-    for (const e of list) {
-      // Normalize: remove 0x prefix, lowercase
-      eapEntities.add(e.replace(/^0x/, '').toLowerCase());
-    }
+function requireEnv() {
+  if (!WORLD) throw new Error('WORLD_ADDRESS is required');
+  if (!RPC_URL) throw new Error('RPC_URL, RPC_HTTP_URL, or MONITOR_BASE_NODE_URL is required');
+  if (!DB_URL) throw new Error('DATABASE_URL or DATABASE_PUBLIC_URL is required');
+  if (WORLD.toLowerCase() !== BETA_WORLD.toLowerCase()) {
+    throw new Error(`Refusing to run ghost repair against non-beta world: ${WORLD}`);
   }
-  console.log(`  Entities in EAP: ${eapEntities.size}`);
-
-  // Step 4: Find ghost candidates (spawned=true, not character, not in EAP)
-  const ghosts: Buffer[] = [];
-  for (const row of spawnedRows) {
-    const keyBuf = row.__key_bytes as Buffer;
-    const keyHex = keyBuf.toString('hex').toLowerCase();
-    if (charKeys.has(keyHex)) continue;
-    if (eapEntities.has(keyHex)) continue;
-    ghosts.push(keyBuf);
-  }
-  console.log(`\nGhost candidates: ${ghosts.length}`);
-
-  if (ghosts.length === 0) {
-    console.log('No ghosts found. Nothing to fix.');
-    await sql.end();
-    return;
-  }
-
-  // Step 5: Verify on-chain — check Spawned for each ghost
-  console.log('\nVerifying on-chain Spawned state...');
-  let confirmedDead = 0;
-  let confirmedAlive = 0;
-  let checkErrors = 0;
-  const deadGhosts: Buffer[] = [];
-
-  for (let i = 0; i < ghosts.length; i++) {
-    const keyHex = ('0x' + ghosts[i].toString('hex')) as Hex;
-
-    try {
-      const [staticData] = await client.readContract({
-        address: WORLD,
-        abi: getRecordAbi,
-        functionName: 'getRecord',
-        args: [TABLE_IDS.Spawned, [keyHex]],
-      }) as [Hex, Hex, Hex];
-
-      // Spawned static data is 1 byte: 0x01 = true, 0x00 = false
-      const spawned = staticData !== '0x' && staticData !== '0x00';
-
-      if (!spawned) {
-        confirmedDead++;
-        deadGhosts.push(ghosts[i]);
-      } else {
-        confirmedAlive++;
-        if (confirmedAlive <= 5) {
-          console.log(`  ALIVE on-chain (unexpected): ${keyHex.slice(0, 24)}...`);
-        }
-      }
-    } catch (err: any) {
-      checkErrors++;
-      if (checkErrors <= 3) {
-        console.error(`  Error checking ${keyHex.slice(0, 24)}...: ${(err.message || '').slice(0, 80)}`);
-      }
-    }
-
-    // Rate limit
-    if (i % 10 === 9) await new Promise(r => setTimeout(r, 100));
-
-    // Progress
-    if ((i + 1) % 50 === 0) {
-      console.log(`  Checked ${i + 1}/${ghosts.length} (${confirmedDead} dead, ${confirmedAlive} alive, ${checkErrors} errors)`);
-    }
-  }
-
-  console.log(`\nVerification complete:`);
-  console.log(`  Confirmed dead: ${confirmedDead}`);
-  console.log(`  Confirmed alive: ${confirmedAlive}`);
-  console.log(`  Errors: ${checkErrors}`);
-
-  if (deadGhosts.length === 0) {
-    console.log('\nNo dead ghosts to fix.');
-    await sql.end();
-    return;
-  }
-
-  if (DRY_RUN) {
-    console.log(`\nDRY RUN: Would fix ${deadGhosts.length} ghost entities.`);
-    await sql.end();
-    return;
-  }
-
-  // Step 6: Fix dead ghosts in the indexer
-  console.log(`\nFixing ${deadGhosts.length} dead ghost entities...`);
-  const blockNumber = await client.getBlockNumber();
-  let fixed = 0;
-
-  for (const keyBuf of deadGhosts) {
-    const keyHex = ('0x' + keyBuf.toString('hex')) as Hex;
-
-    try {
-      // Read on-chain records for all tables to get true state
-      const [spawnedStatic] = await client.readContract({
-        address: WORLD, abi: getRecordAbi, functionName: 'getRecord',
-        args: [TABLE_IDS.Spawned, [keyHex]],
-      }) as [Hex, Hex, Hex];
-
-      const [positionStatic] = await client.readContract({
-        address: WORLD, abi: getRecordAbi, functionName: 'getRecord',
-        args: [TABLE_IDS.Position, [keyHex]],
-      }) as [Hex, Hex, Hex];
-
-      const [encounterStatic, encounterEncodedLengths, encounterDynamic] = await client.readContract({
-        address: WORLD, abi: getRecordAbi, functionName: 'getRecord',
-        args: [TABLE_IDS.EncounterEntity, [keyHex]],
-      }) as [Hex, Hex, Hex];
-
-      // Update decoded tables
-
-      // Spawned: set spawned=false
-      await sql.unsafe(
-        `UPDATE "${DECODED_SCHEMA}"."ud__spawned"
-         SET spawned = false, "__last_updated_block_number" = $1
-         WHERE __key_bytes = $2`,
-        [blockNumber.toString(), keyBuf],
-      );
-
-      // Position: set x=0, y=0 (on-chain value)
-      const posX = positionStatic.length >= 6 ? parseInt(positionStatic.slice(2, 6), 16) : 0;
-      const posY = positionStatic.length >= 10 ? parseInt(positionStatic.slice(6, 10), 16) : 0;
-      await sql.unsafe(
-        `UPDATE "${DECODED_SCHEMA}"."ud__position"
-         SET x = $1, y = $2, "__last_updated_block_number" = $3
-         WHERE __key_bytes = $4`,
-        [posX, posY, blockNumber.toString(), keyBuf],
-      );
-
-      // EncounterEntity: update died=true, clear encounterId
-      // Static: encounterId (32 bytes) + died (1 byte) + pvpTimer (32 bytes) = 65 bytes static
-      const died = encounterStatic.length >= 68 && encounterStatic.slice(66, 68) === '01';
-      const encounterId = encounterStatic.length >= 66
-        ? Buffer.from(encounterStatic.slice(2, 66), 'hex')
-        : Buffer.alloc(32, 0);
-      // Parse applied_status_effects from dynamic data (JSON array of bytes32)
-      const appliedStatusEffects = encounterDynamic === '0x' || encounterDynamic.length <= 2
-        ? '{"json":[]}'
-        : JSON.stringify({ json: (() => {
-            const raw = encounterDynamic.slice(2);
-            const arr: string[] = [];
-            for (let j = 0; j < raw.length; j += 64) arr.push('0x' + raw.slice(j, j + 64));
-            return arr;
-          })() });
-      await sql.unsafe(
-        `UPDATE "${DECODED_SCHEMA}"."ud__encounter_entity"
-         SET died = $1, encounter_id = $2, "__last_updated_block_number" = $3
-         WHERE __key_bytes = $4`,
-        [died, encounterId, blockNumber.toString(), keyBuf],
-      ).then(async (result) => {
-        if (result.count === 0) {
-          // Row doesn't exist — insert it with applied_status_effects
-          await sql.unsafe(
-            `INSERT INTO "${DECODED_SCHEMA}"."ud__encounter_entity"
-             (encounter_entity_id, encounter_id, died, pvp_timer, applied_status_effects, __key_bytes, "__last_updated_block_number")
-             VALUES ($1, $2, $3, 0, $4, $5, $6)`,
-            [keyBuf, encounterId, died, appliedStatusEffects, keyBuf, blockNumber.toString()],
-          );
-        }
-      });
-
-      // Update raw records for Spawned table
-      const spawnedTableIdBuf = Buffer.from(TABLE_IDS.Spawned.slice(2), 'hex');
-      const spawnedStaticBuf = spawnedStatic === '0x' ? Buffer.alloc(1, 0) : Buffer.from(spawnedStatic.slice(2), 'hex');
-      await sql`
-        UPDATE mud.records
-        SET static_data = ${spawnedStaticBuf},
-            block_number = ${blockNumber.toString()}
-        WHERE table_id = ${spawnedTableIdBuf}
-          AND key_bytes = ${keyBuf}
-      `;
-
-      // Update raw records for Position table
-      const positionTableIdBuf = Buffer.from(TABLE_IDS.Position.slice(2), 'hex');
-      const positionStaticBuf = positionStatic === '0x' ? Buffer.alloc(4, 0) : Buffer.from(positionStatic.slice(2), 'hex');
-      await sql`
-        UPDATE mud.records
-        SET static_data = ${positionStaticBuf},
-            block_number = ${blockNumber.toString()}
-        WHERE table_id = ${positionTableIdBuf}
-          AND key_bytes = ${keyBuf}
-      `;
-
-      // Update raw records for EncounterEntity table
-      const encounterTableIdBuf = Buffer.from(TABLE_IDS.EncounterEntity.slice(2), 'hex');
-      const encounterStaticBuf = encounterStatic === '0x' ? Buffer.alloc(0) : Buffer.from(encounterStatic.slice(2), 'hex');
-      const encounterEncodedLengthsBuf = Buffer.from(encounterEncodedLengths.slice(2), 'hex');
-      const encounterDynamicBuf = encounterDynamic === '0x' ? Buffer.alloc(0) : Buffer.from(encounterDynamic.slice(2), 'hex');
-      await sql`
-        UPDATE mud.records
-        SET static_data = ${encounterStaticBuf},
-            encoded_lengths = ${encounterEncodedLengthsBuf},
-            dynamic_data = ${encounterDynamicBuf},
-            block_number = ${blockNumber.toString()}
-        WHERE table_id = ${encounterTableIdBuf}
-          AND key_bytes = ${keyBuf}
-      `;
-
-      fixed++;
-      if (fixed % 25 === 0) {
-        console.log(`  Fixed ${fixed}/${deadGhosts.length}...`);
-      }
-    } catch (err: any) {
-      console.error(`  Error fixing ${keyHex.slice(0, 24)}...: ${(err.message || '').slice(0, 100)}`);
-    }
-
-    // Rate limit RPC calls
-    await new Promise(r => setTimeout(r, 50));
-  }
-
-  console.log(`\nFixed ${fixed}/${deadGhosts.length} ghost entities.`);
-
-  // Verify
-  const verifyCount = await sql.unsafe(
-    `SELECT COUNT(*) as cnt FROM "${DECODED_SCHEMA}"."ud__spawned" WHERE spawned = true`,
-  );
-  console.log(`\nPost-fix spawned=true count: ${verifyCount[0].cnt}`);
-
-  await sql.end();
-  console.log('Done.');
 }
 
-main().catch((e) => {
-  console.error(e);
+function hexToBuffer(hex: Hex, fallbackBytes = 0): Buffer {
+  if (hex === '0x') return Buffer.alloc(fallbackBytes, 0);
+  return Buffer.from(hex.slice(2), 'hex');
+}
+
+function tableIdBuffer(tableId: Hex): Buffer {
+  return Buffer.from(tableId.slice(2), 'hex');
+}
+
+function keyToHex(keyBuf: Buffer): Hex {
+  return ('0x' + keyBuf.toString('hex')) as Hex;
+}
+
+function isZeroHex(hex: Hex): boolean {
+  return hex === '0x' || /^0x0*$/.test(hex);
+}
+
+function parseSpawned(staticData: Hex): boolean {
+  return !isZeroHex(staticData);
+}
+
+function parsePosition(staticData: Hex): { x: number; y: number } {
+  const raw = staticData.slice(2).padEnd(8, '0');
+  return {
+    x: Number.parseInt(raw.slice(0, 4), 16),
+    y: Number.parseInt(raw.slice(4, 8), 16),
+  };
+}
+
+function parsePositionV2(staticData: Hex): { zoneId: bigint; x: number; y: number } {
+  const raw = staticData.slice(2).padEnd(72, '0');
+  return {
+    zoneId: BigInt('0x' + raw.slice(0, 64)),
+    x: Number.parseInt(raw.slice(64, 68), 16),
+    y: Number.parseInt(raw.slice(68, 72), 16),
+  };
+}
+
+function parseEncounter(staticData: Hex): { encounterId: Hex; died: boolean; pvpTimer: bigint } {
+  const raw = staticData.slice(2).padEnd(130, '0');
+  return {
+    encounterId: ('0x' + raw.slice(0, 64)) as Hex,
+    died: raw.slice(64, 66) === '01',
+    pvpTimer: BigInt('0x' + raw.slice(66, 130)),
+  };
+}
+
+function isClearedPosition(position: { x: number; y: number }): boolean {
+  return position.x === 0 && position.y === 0;
+}
+
+function isGhost(state: ChainState): boolean {
+  return !state.spawned || isClearedPosition(state.positionV2) || state.encounter.died;
+}
+
+async function tableExists(sql: Sql, schema: string, table: string): Promise<boolean> {
+  const rows = await sql`
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = ${schema}
+      AND table_name = ${table}
+    LIMIT 1
+  `;
+  return rows.length > 0;
+}
+
+async function readRecord(
+  client: ReturnType<typeof createPublicClient>,
+  tableId: Hex,
+  keyHex: Hex,
+): Promise<StoreRecord> {
+  const [staticData, encodedLengths, dynamicData] = await client.readContract({
+    address: WORLD!,
+    abi: getRecordAbi,
+    functionName: 'getRecord',
+    args: [tableId, [keyHex]],
+  }) as [Hex, Hex, Hex];
+
+  return { staticData, encodedLengths, dynamicData };
+}
+
+async function readChainState(
+  client: ReturnType<typeof createPublicClient>,
+  keyHex: Hex,
+): Promise<ChainState> {
+  const [spawnedRecord, positionRecord, positionV2Record, encounterRecord] = await Promise.all([
+    readRecord(client, TABLE_IDS.Spawned, keyHex),
+    readRecord(client, TABLE_IDS.Position, keyHex),
+    readRecord(client, TABLE_IDS.PositionV2, keyHex),
+    readRecord(client, TABLE_IDS.EncounterEntity, keyHex),
+  ]);
+
+  return {
+    spawned: parseSpawned(spawnedRecord.staticData),
+    position: parsePosition(positionRecord.staticData),
+    positionV2: parsePositionV2(positionV2Record.staticData),
+    encounter: parseEncounter(encounterRecord.staticData),
+    records: {
+      spawned: spawnedRecord,
+      position: positionRecord,
+      positionV2: positionV2Record,
+      encounter: encounterRecord,
+    },
+  };
+}
+
+async function getSpawnedMonsterCandidates(sql: Sql, schema: string): Promise<Buffer[]> {
+  const [hasSpawned, hasCharacters] = await Promise.all([
+    tableExists(sql, schema, TABLE_NAMES.Spawned),
+    tableExists(sql, schema, TABLE_NAMES.Characters),
+  ]);
+
+  if (!hasSpawned) throw new Error(`Missing decoded table ${schema}.${TABLE_NAMES.Spawned}`);
+
+  const spawnedRows = await sql.unsafe(
+    `SELECT __key_bytes FROM "${schema}"."${TABLE_NAMES.Spawned}" WHERE spawned = true`,
+  );
+
+  const characterKeys = new Set<string>();
+  if (hasCharacters) {
+    const characterRows = await sql.unsafe(
+      `SELECT __key_bytes FROM "${schema}"."${TABLE_NAMES.Characters}"`,
+    );
+    for (const row of characterRows) {
+      characterKeys.add((row.__key_bytes as Buffer).toString('hex').toLowerCase());
+    }
+  }
+
+  const candidates: Buffer[] = [];
+  for (const row of spawnedRows) {
+    const keyBuf = row.__key_bytes as Buffer;
+    if (characterKeys.has(keyBuf.toString('hex').toLowerCase())) continue;
+    candidates.push(keyBuf);
+  }
+
+  console.log(`  Spawned=true rows: ${spawnedRows.length}`);
+  console.log(`  Characters excluded: ${characterKeys.size}`);
+  console.log(`  Monster candidates: ${candidates.length}`);
+
+  return candidates;
+}
+
+async function applyDecodedUpdates(sql: Sql, schema: string, keyBuf: Buffer, state: ChainState, blockNumber: bigint) {
+  const block = blockNumber.toString();
+
+  if (await tableExists(sql, schema, TABLE_NAMES.Spawned)) {
+    await sql.unsafe(
+      `UPDATE "${schema}"."${TABLE_NAMES.Spawned}"
+       SET spawned = $1, "__last_updated_block_number" = $2
+       WHERE __key_bytes = $3`,
+      [state.spawned, block, keyBuf],
+    );
+  }
+
+  if (await tableExists(sql, schema, TABLE_NAMES.Position)) {
+    await sql.unsafe(
+      `UPDATE "${schema}"."${TABLE_NAMES.Position}"
+       SET x = $1, y = $2, "__last_updated_block_number" = $3
+       WHERE __key_bytes = $4`,
+      [state.position.x, state.position.y, block, keyBuf],
+    );
+  }
+
+  if (await tableExists(sql, schema, TABLE_NAMES.PositionV2)) {
+    await sql.unsafe(
+      `UPDATE "${schema}"."${TABLE_NAMES.PositionV2}"
+       SET zone_id = $1, x = $2, y = $3, "__last_updated_block_number" = $4
+       WHERE __key_bytes = $5`,
+      [state.positionV2.zoneId.toString(), state.positionV2.x, state.positionV2.y, block, keyBuf],
+    );
+  }
+
+  if (await tableExists(sql, schema, TABLE_NAMES.EncounterEntity)) {
+    await sql.unsafe(
+      `UPDATE "${schema}"."${TABLE_NAMES.EncounterEntity}"
+       SET encounter_id = $1, died = $2, pvp_timer = $3, "__last_updated_block_number" = $4
+       WHERE __key_bytes = $5`,
+      [
+        hexToBuffer(state.encounter.encounterId as Hex, 32),
+        state.encounter.died,
+        state.encounter.pvpTimer.toString(),
+        block,
+        keyBuf,
+      ],
+    );
+  }
+}
+
+async function applyRawRecordUpdates(sql: Sql, keyBuf: Buffer, state: ChainState, blockNumber: bigint) {
+  const block = blockNumber.toString();
+
+  await sql`
+    UPDATE mud.records
+    SET static_data = ${hexToBuffer(state.records.spawned.staticData, 1)},
+        block_number = ${block}
+    WHERE table_id = ${tableIdBuffer(TABLE_IDS.Spawned)}
+      AND key_bytes = ${keyBuf}
+  `;
+
+  await sql`
+    UPDATE mud.records
+    SET static_data = ${hexToBuffer(state.records.position.staticData, 4)},
+        block_number = ${block}
+    WHERE table_id = ${tableIdBuffer(TABLE_IDS.Position)}
+      AND key_bytes = ${keyBuf}
+  `;
+
+  await sql`
+    UPDATE mud.records
+    SET static_data = ${hexToBuffer(state.records.positionV2.staticData, 36)},
+        block_number = ${block}
+    WHERE table_id = ${tableIdBuffer(TABLE_IDS.PositionV2)}
+      AND key_bytes = ${keyBuf}
+  `;
+
+  await sql`
+    UPDATE mud.records
+    SET static_data = ${hexToBuffer(state.records.encounter.staticData)},
+        encoded_lengths = ${state.records.encounter.encodedLengths === '0x'
+          ? ZERO_LENGTHS
+          : hexToBuffer(state.records.encounter.encodedLengths, 32)},
+        dynamic_data = ${state.records.encounter.dynamicData === '0x'
+          ? EMPTY
+          : hexToBuffer(state.records.encounter.dynamicData)},
+        block_number = ${block}
+    WHERE table_id = ${tableIdBuffer(TABLE_IDS.EncounterEntity)}
+      AND key_bytes = ${keyBuf}
+  `;
+}
+
+async function main() {
+  requireEnv();
+
+  const schema = WORLD!.toLowerCase();
+  const sql = postgres(DB_URL!, { max: 5 });
+  const client = createPublicClient({
+    chain: base,
+    transport: http(RPC_URL!, RPC_TOKEN
+      ? { fetchOptions: { headers: { Authorization: `Bearer ${RPC_TOKEN}` } } }
+      : undefined),
+  });
+
+  console.log(`[ghost-repair] World: ${WORLD}`);
+  console.log(`[ghost-repair] Schema: ${schema}`);
+  console.log(`[ghost-repair] Mode: ${APPLY ? 'APPLY' : 'DRY RUN'}`);
+
+  try {
+    const candidates = await getSpawnedMonsterCandidates(sql, schema);
+    const ghosts: Array<{ keyBuf: Buffer; state: ChainState }> = [];
+    let checked = 0;
+    let errors = 0;
+
+    for (const keyBuf of candidates) {
+      const keyHex = keyToHex(keyBuf);
+      try {
+        const state = await readChainState(client, keyHex);
+        if (isGhost(state)) ghosts.push({ keyBuf, state });
+      } catch (err) {
+        errors++;
+        if (errors <= 5) {
+          console.error(`  Error reading ${keyHex}: ${(err as Error).message.slice(0, 140)}`);
+        }
+      }
+
+      checked++;
+      if (checked % 50 === 0) {
+        console.log(`  Checked ${checked}/${candidates.length}; ghosts=${ghosts.length}; errors=${errors}`);
+      }
+    }
+
+    console.log(`\n[ghost-repair] Chain-verified ghost rows: ${ghosts.length}`);
+    console.log(`[ghost-repair] RPC errors: ${errors}`);
+
+    for (const { keyBuf, state } of ghosts.slice(0, 20)) {
+      console.log(
+        `  ${keyToHex(keyBuf)} spawned=${state.spawned} positionV2=(${state.positionV2.zoneId},${state.positionV2.x},${state.positionV2.y}) died=${state.encounter.died}`,
+      );
+    }
+    if (ghosts.length > 20) console.log(`  ... ${ghosts.length - 20} more`);
+
+    if (!APPLY) {
+      console.log('\n[ghost-repair] Dry run only. Re-run with --apply to write beta indexer rows.');
+      return;
+    }
+
+    const blockNumber = await client.getBlockNumber();
+    let fixed = 0;
+
+    for (const { keyBuf, state } of ghosts) {
+      await applyDecodedUpdates(sql, schema, keyBuf, state, blockNumber);
+      await applyRawRecordUpdates(sql, keyBuf, state, blockNumber);
+      fixed++;
+      if (fixed % 25 === 0) console.log(`  Fixed ${fixed}/${ghosts.length}`);
+    }
+
+    console.log(`\n[ghost-repair] Fixed ${fixed}/${ghosts.length} ghost rows at block ${blockNumber}.`);
+  } finally {
+    await sql.end();
+  }
+}
+
+main().catch((err) => {
+  console.error(err);
   process.exit(1);
 });

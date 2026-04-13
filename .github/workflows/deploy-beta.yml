@@ -52,6 +52,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           RPC_URL: ${{ secrets.BASE_RPC_URL }}
           WORLD_ADDRESS: ${{ secrets.BETA_WORLD_ADDRESS }}
+          FOUNDRY_PROFILE: script
         run: >
           forge script script/EnsureAccess.s.sol
           --tc EnsureAccess
@@ -59,6 +60,7 @@ jobs:
           --rpc-url $RPC_URL
           --private-key $PRIVATE_KEY
           --broadcast
+          --slow
 
       - name: Run zone loader
         if: ${{ inputs.run_zone_loader }}

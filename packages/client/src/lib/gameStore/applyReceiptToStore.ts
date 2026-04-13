@@ -78,18 +78,24 @@ function serializeRecord(record: Record<string, unknown>): TableRow {
   return result;
 }
 
+function hasAllStaticFields(layout: ReturnType<typeof buildStaticFieldLayout>, row: TableRow): boolean {
+  return layout.every(field => Object.prototype.hasOwnProperty.call(row, field.fieldName));
+}
+
 // ---------------------------------------------------------------------------
 // Async splice resolution: read full records from chain → returns updates
 // ---------------------------------------------------------------------------
-// Module-level flag: block-pinned eth_call fails on Base RPCs (flashblocks
-// aren't available for historical queries). Disabled by default on Base to
-// avoid spamming 400 errors across all transports — concurrent splice reads
-// race past the flag before the first failure can turn it off.
-let _blockPinnedReadSupported = false;
+// Module-level flag: try block-pinned eth_call first. If the RPC cannot serve
+// historical calls, do not fall back to `latest` for receipt splices — `latest`
+// can be pre-TX on Base and reintroduce stale monster positions.
+let _blockPinnedReadSupported = true;
+let _blockPinnedRetryCountdown = 0;
+const BLOCK_PINNED_RETRY_AFTER_SKIPS = 3;
 
 /** Exposed for testing. */
 export function __resetBlockPinnedFlag(): void {
   _blockPinnedReadSupported = true;
+  _blockPinnedRetryCountdown = 0;
 }
 
 async function resolveSpliceEvents(
@@ -104,50 +110,36 @@ async function resolveSpliceEvents(
     unique.set(`${r.table.label}:${r.keyBytes}`, r);
   }
 
+  if (!_blockPinnedReadSupported) {
+    if (_blockPinnedRetryCountdown > 0) {
+      _blockPinnedRetryCountdown -= 1;
+      return [];
+    }
+    _blockPinnedReadSupported = true;
+  }
+
   const readRecord = async ({ table, keyTuple, keyBytes }: (typeof spliceReads)[0]) => {
     let staticData: Hex, encodedLengths: Hex, dynamicData: Hex;
 
-    if (_blockPinnedReadSupported) {
-      try {
-        // Pin to receipt block to get post-tx state, not stale RPC `latest`
-        [staticData, encodedLengths, dynamicData] =
-          await publicClient.readContract({
-            address: worldAddress,
-            abi: getRecordAbi,
-            functionName: 'getRecord',
-            args: [table.tableId as Hex, [...keyTuple]],
-            blockNumber,
-          });
-
-        // Block-pinned read succeeded — use this data
-        const record = logToRecord({
-          table: table as { schema: typeof table.schema; key: typeof table.key },
-          log: {
-            args: {
-              tableId: table.tableId as Hex,
-              keyTuple: [...keyTuple],
-              staticData,
-              encodedLengths,
-              dynamicData,
-            },
-          },
-        });
-        return { table: table.label, keyBytes, data: serializeRecord(record as Record<string, unknown>) };
-      } catch {
-        // RPC doesn't support eth_call at this block (Base flashblocks).
-        // Disable for all future calls to avoid spamming 400s.
-        _blockPinnedReadSupported = false;
-      }
+    if (!_blockPinnedReadSupported) {
+      return null;
     }
 
-    // Fallback to `latest` — WS at same block (>= check) corrects any staleness
-    [staticData, encodedLengths, dynamicData] =
-      await publicClient.readContract({
-        address: worldAddress,
-        abi: getRecordAbi,
-        functionName: 'getRecord',
-        args: [table.tableId as Hex, [...keyTuple]],
-      });
+    try {
+      // Pin to receipt block to get post-tx state, not stale RPC `latest`.
+      [staticData, encodedLengths, dynamicData] =
+        await publicClient.readContract({
+          address: worldAddress,
+          abi: getRecordAbi,
+          functionName: 'getRecord',
+          args: [table.tableId as Hex, [...keyTuple]],
+          blockNumber,
+        });
+    } catch {
+      _blockPinnedReadSupported = false;
+      _blockPinnedRetryCountdown = BLOCK_PINNED_RETRY_AFTER_SKIPS;
+      return null;
+    }
 
     const record = logToRecord({
       table: table as { schema: typeof table.schema; key: typeof table.key },
@@ -161,9 +153,7 @@ async function resolveSpliceEvents(
         },
       },
     });
-
-    const serialized = serializeRecord(record as Record<string, unknown>);
-    return { table: table.label, keyBytes, data: serialized };
+    return { table: table.label, keyBytes, data: serializeRecord(record as Record<string, unknown>) };
   };
 
   const entries = [...unique.values()];
@@ -172,7 +162,9 @@ async function resolveSpliceEvents(
   const batch: BatchUpdate[] = [];
   for (const r of results) {
     if (r.status === 'fulfilled') {
-      batch.push({ type: 'set', table: r.value.table, keyBytes: r.value.keyBytes, data: r.value.data });
+      if (r.value) {
+        batch.push({ type: 'set', table: r.value.table, keyBytes: r.value.keyBytes, data: r.value.data });
+      }
     } else {
       console.warn('[TX][RECEIPT] Splice read failed:', r.reason);
     }
@@ -303,10 +295,11 @@ export async function applyReceiptToStore(
         const existingRow = useGameStore.getState().tables[table.label]?.[keyBytes]
           ?? pendingRecords.get(`${table.label}:${keyBytes}`);
 
+        const layout = buildStaticFieldLayout(
+          table as { tableId: string; key: readonly string[]; schema: Record<string, { type: string; internalType: string }> },
+        );
+
         if (existingRow) {
-          const layout = buildStaticFieldLayout(
-            table as { tableId: string; key: readonly string[]; schema: Record<string, { type: string; internalType: string }> },
-          );
           const merged = applySplice(layout, existingRow, Number(start), data);
 
           if (merged) {
@@ -320,9 +313,16 @@ export async function applyReceiptToStore(
             skippedSplice++;
           }
         } else {
-          // Row not in store yet and no pending SetRecord — fall back to RPC
-          spliceReads.push({ table, keyTuple, keyBytes });
-          skippedSplice++;
+          const merged = applySplice(layout, {}, Number(start), data);
+          if (merged && hasAllStaticFields(layout, merged)) {
+            batch.push({ type: 'set', table: table.label, keyBytes, data: merged });
+            pendingRecords.set(`${table.label}:${keyBytes}`, merged);
+            spliceSyncCount++;
+          } else {
+            // Row not in store and this splice doesn't contain the full static row.
+            spliceReads.push({ table, keyTuple, keyBytes });
+            skippedSplice++;
+          }
         }
       }
     }
@@ -367,10 +367,9 @@ export async function applyReceiptToStore(
   // Step 3: Fire-and-forget splice resolution for deferred events (SpliceDynamicData,
   // SpliceStaticData that couldn't be sync-decoded). Applied when RPC resolves.
   //
-  // getRecord is pinned to the receipt's block number, so it returns post-tx state.
-  // The only guard needed is cross-receipt races: skip rows protected by a newer receipt.
-  // Same-row overlap with the immediate batch is safe — the block-pinned read returns
-  // the full post-tx state (including dynamic fields the immediate batch couldn't decode).
+  // getRecord is pinned to the receipt's block number, so it returns post-tx
+  // state. If the RPC rejects block-pinned reads, we skip the deferred splice
+  // instead of falling back to `latest`, which can be pre-TX on Base.
   if (spliceReads.length > 0 && publicClient && worldAddress) {
     const receiptBlock = Number(receipt.blockNumber);
     resolveSpliceEvents(spliceReads, publicClient, worldAddress, receipt.blockNumber)

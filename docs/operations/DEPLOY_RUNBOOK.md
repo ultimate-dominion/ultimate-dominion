@@ -8,7 +8,7 @@ How to deploy every component of Ultimate Dominion, from contracts to infrastruc
 
 | Environment | Chain | Chain ID | World Address | Branch | Client URL |
 |-------------|-------|----------|---------------|--------|------------|
-| **Local** | Anvil | 31337 | Auto-generated | Any | `http://localhost:3000` |
+| **Local** | Anvil (legacy/manual only) | 31337 | Auto-generated | Any | `http://localhost:3000` |
 | **Beta** | Base Mainnet | 8453 | `0xDc34AC3b06fa0ed899696A72B7706369864E5678` | `dev` | `https://beta.ultimatedominion.com` |
 | **Production** | Base Mainnet | 8453 | `0x99d01939F58B965E6E84a1D167E710Abdf5764b0` | `main` | `https://ultimatedominion.com` |
 
@@ -37,9 +37,32 @@ All four Railway services live in the same Railway project (`sweet-quietude`). T
 
 Scripts source the correct `.env` file automatically. Forge admin scripts require manual sourcing: `source .env.testnet && forge script ...`
 
+**Validation rule:** Do not use local Anvil as the default UD test gate. The normal path is compile locally, deploy/test on beta, then promote only after beta is verified. Local Anvil is a legacy/manual dev tool for isolated experiments only.
+
 ---
 
 ## 2. Contract Deployment
+
+### Beta CI Path (Standard)
+
+Use the GitHub Action for normal beta deploys. Do not run the legacy local Anvil test path as a gate.
+
+1. Compile locally: `pnpm --filter contracts run build`
+2. Commit the logical change set.
+3. Push the branch/commit to `dev`.
+4. Run `.github/workflows/deploy-beta.yml` with `run_zone_loader=false` unless this is a fresh world.
+5. Let the workflow finish. It runs, in order:
+   - `pnpm --filter contracts build`
+   - `mud deploy --profile=base-mainnet --worldAddress $BETA_WORLD_ADDRESS`
+   - `EnsureAccess.s.sol` with `FOUNDRY_PROFILE=script`
+   - optional zone loader for fresh worlds only
+   - fork-mode `PostDeploySmoke` against beta
+6. If the workflow fails after `mud deploy`, assume beta has been mutated but is not validated. Fix the failing deploy helper, smoke test, or beta state, then rerun the beta workflow.
+7. Classify smoke failures before changing code:
+   - Access grant failures usually belong in `script/EnsureAccess.s.sol`.
+   - `World_AccessDenied` from a smoke-only view call is often a smoke-test issue; prefer direct table reads for admin/fork checks.
+   - Missing system names must be checked against `mud.config.ts` / `.mud/local/systems.json`.
+   - Zero economic balances may be real beta state, not a contract deploy bug; repair with the documented admin script instead of weakening the gate.
 
 ### Upgrade Deploy (Normal Case)
 
@@ -555,6 +578,8 @@ Feature branch → PR to dev → CI + Smoke → Merge to dev
 | `DEPLOYER_PRIVATE_KEY` | deploy-beta.yml |
 
 ### Local Test Commands
+
+UD's default validation does **not** run against local Anvil. Compile locally, then use beta fork/smoke/manual playtests for chain behavior.
 
 ```bash
 # Client tests

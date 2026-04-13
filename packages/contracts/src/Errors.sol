@@ -30,6 +30,7 @@ error InsufficientStat();
 error InvalidItemType();
 error MustChooseRaceFirst();
 error MustChoosePowerSourceFirst();
+error MustRollStatsFirst();
 error MaxStatRollsExceeded();
 error CharacterDead();
 

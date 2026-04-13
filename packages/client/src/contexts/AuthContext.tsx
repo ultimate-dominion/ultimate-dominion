@@ -20,6 +20,7 @@ import {
   useIdentityToken,
   useLoginWithOAuth,
   usePrivy,
+  useToken,
   useWallets,
 } from '@privy-io/react-auth';
 
@@ -53,8 +54,11 @@ export function resolveWalletAction(
 
 export async function resolveEmbeddedIdentityToken(
   readToken: () => string | null,
+  readAccessToken?: () => Promise<string | null>,
 ): Promise<string | null> {
-  return readToken();
+  const token = readToken();
+  if (token) return token;
+  return readAccessToken ? readAccessToken() : null;
 }
 
 const RELAYER_URL = import.meta.env.VITE_RELAYER_URL;
@@ -71,6 +75,7 @@ type AuthContextType = {
   hasInjectedWallet: boolean;
   isAuthenticated: boolean;
   isConnecting: boolean;
+  embeddedIdentityTokenReady: boolean;
   getEmbeddedIdentityToken: () => Promise<string | null>;
   ownerAddress: Address | null;
   signedInEmail: string | null;
@@ -85,10 +90,7 @@ export const AuthProvider = ({
   children: ReactNode;
 }): JSX.Element => {
   // --- External wallet (MetaMask via wagmi) ---
-  const {
-    isConnected: wagmiConnected,
-    address: wagmiAddress,
-  } = useAccount();
+  const { isConnected: wagmiConnected, address: wagmiAddress } = useAccount();
   const { data: wagmiWalletClient } = useWalletClient();
   const { disconnect: wagmiDisconnect } = useDisconnect();
 
@@ -96,15 +98,19 @@ export const AuthProvider = ({
   const { ready, authenticated, user, logout } = usePrivy();
   const { wallets } = useWallets();
   const { identityToken } = useIdentityToken();
+  const { getAccessToken } = useToken();
   const { createWallet } = useCreateWallet();
   const isCreatingWallet = useRef(false);
   const [isConfirmedNewUser, setIsConfirmedNewUser] = useState(false);
   const { initOAuth } = useLoginWithOAuth({
     onComplete: ({ user: privyUser, isNewUser }) => {
-      console.info('[Auth] OAuth complete:', { email: privyUser?.google?.email, isNewUser });
+      console.info('[Auth] OAuth complete:', {
+        email: privyUser?.google?.email,
+        isNewUser,
+      });
       setIsConfirmedNewUser(!!isNewUser);
     },
-    onError: (error) => {
+    onError: error => {
       console.error('[Auth] OAuth error:', error);
       setIsConnecting(false);
     },
@@ -127,9 +133,14 @@ export const AuthProvider = ({
   }, [identityToken]);
 
   const getEmbeddedIdentityToken = useCallback(
-    async () => resolveEmbeddedIdentityToken(() => identityTokenRef.current),
-    [],
+    async () =>
+      resolveEmbeddedIdentityToken(
+        () => identityTokenRef.current,
+        getAccessToken,
+      ),
+    [getAccessToken],
   );
+  const embeddedIdentityTokenReady = Boolean(identityToken);
 
   // Detect injected wallet (MetaMask etc.)
   useEffect(() => {
@@ -142,7 +153,13 @@ export const AuthProvider = ({
   // Initialize Privy embedded wallet when available
   useEffect(() => {
     const serverWalletAddress = user?.wallet?.address?.toLowerCase();
-    console.info('[Auth] Wallet init effect:', { ready, authenticated, walletsCount: wallets.length, walletTypes: wallets.map(w => w.walletClientType), serverWallet: serverWalletAddress });
+    console.info('[Auth] Wallet init effect:', {
+      ready,
+      authenticated,
+      walletsCount: wallets.length,
+      walletTypes: wallets.map(w => w.walletClientType),
+      serverWallet: serverWalletAddress,
+    });
     if (!ready || !authenticated) {
       if (ready) setIsConnecting(false);
       return;
@@ -152,25 +169,45 @@ export const AuthProvider = ({
     // For existing users, only accept the wallet matching the server-side address.
     // This prevents using a newly-created duplicate if recovery is still in progress.
     const privyWallet = serverWalletAddress
-      ? wallets.find(w => w.walletClientType === 'privy' && w.address.toLowerCase() === serverWalletAddress)
+      ? wallets.find(
+          w =>
+            w.walletClientType === 'privy' &&
+            w.address.toLowerCase() === serverWalletAddress,
+        )
       : wallets.find(w => w.walletClientType === 'privy');
 
     // Log if there's a mismatched privy wallet (indicates recovery issue)
     if (!privyWallet && serverWalletAddress) {
       const anyPrivyWallet = wallets.find(w => w.walletClientType === 'privy');
       if (anyPrivyWallet) {
-        console.warn('[Auth] Wallet mismatch — server expects', serverWalletAddress, 'but got', anyPrivyWallet.address, '(ignoring mismatched wallet, waiting for recovery)');
+        console.warn(
+          '[Auth] Wallet mismatch — server expects',
+          serverWalletAddress,
+          'but got',
+          anyPrivyWallet.address,
+          '(ignoring mismatched wallet, waiting for recovery)',
+        );
       }
     }
 
     if (!privyWallet) {
-      const action = resolveWalletAction(user?.wallet, isCreatingWallet.current, isConfirmedNewUser);
+      const action = resolveWalletAction(
+        user?.wallet,
+        isCreatingWallet.current,
+        isConfirmedNewUser,
+      );
       if (action === 'wait') {
-        console.info('[Auth] User already has wallet on server, waiting for recovery...', { serverWallet: serverWalletAddress });
+        console.info(
+          '[Auth] User already has wallet on server, waiting for recovery...',
+          { serverWallet: serverWalletAddress },
+        );
         // Start a recovery timeout — if wallet doesn't appear in 15s, mark failed
         if (!recoveryTimerRef.current && !walletRecoveryFailed) {
           recoveryTimerRef.current = setTimeout(() => {
-            console.error('[Auth] Wallet recovery timed out after 15s. Server wallet:', serverWalletAddress);
+            console.error(
+              '[Auth] Wallet recovery timed out after 15s. Server wallet:',
+              serverWalletAddress,
+            );
             setWalletRecoveryFailed(true);
             setIsConnecting(false);
           }, 15_000);
@@ -181,9 +218,15 @@ export const AuthProvider = ({
         // Fallback: on mobile redirect flows, onComplete may not fire so
         // isConfirmedNewUser stays false. If authenticated with no server
         // wallet after 3s, treat as new user and create wallet anyway.
-        if (!user?.wallet && !newUserFallbackRef.current && !isCreatingWallet.current) {
+        if (
+          !user?.wallet &&
+          !newUserFallbackRef.current &&
+          !isCreatingWallet.current
+        ) {
           newUserFallbackRef.current = setTimeout(() => {
-            console.info('[Auth] New-user fallback: onComplete did not fire, forcing wallet creation');
+            console.info(
+              '[Auth] New-user fallback: onComplete did not fire, forcing wallet creation',
+            );
             setIsConfirmedNewUser(true);
           }, 3_000);
         }
@@ -195,11 +238,20 @@ export const AuthProvider = ({
         newUserFallbackRef.current = null;
       }
       isCreatingWallet.current = true;
-      console.info('[Auth] New user with no wallet — creating one...', { walletTypes: wallets.map(w => w.walletClientType) });
+      console.info('[Auth] New user with no wallet — creating one...', {
+        walletTypes: wallets.map(w => w.walletClientType),
+      });
       createWallet()
         .then(w => console.info('[Auth] Wallet created:', w.address))
-        .catch(err => console.warn('[Auth] createWallet failed (may already exist):', err.message))
-        .finally(() => { isCreatingWallet.current = false; });
+        .catch(err =>
+          console.warn(
+            '[Auth] createWallet failed (may already exist):',
+            err.message,
+          ),
+        )
+        .finally(() => {
+          isCreatingWallet.current = false;
+        });
       return;
     }
 
@@ -255,7 +307,10 @@ export const AuthProvider = ({
         ]);
 
         let rpcId = 0;
-        const fetchRpc = async (url: string, args: { method: string; params?: unknown[] }) => {
+        const fetchRpc = async (
+          url: string,
+          args: { method: string; params?: unknown[] },
+        ) => {
           const res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -277,7 +332,10 @@ export const AuthProvider = ({
         };
 
         // Try Base node first, fall back to Alchemy on network errors
-        const gameRpcRequest = async (args: { method: string; params?: unknown[] }) => {
+        const gameRpcRequest = async (args: {
+          method: string;
+          params?: unknown[];
+        }) => {
           for (let i = 0; i < gameRpcUrls.length; i++) {
             try {
               return await fetchRpc(gameRpcUrls[i], args);
@@ -286,7 +344,10 @@ export const AuthProvider = ({
               // (not contract reverts, which are legitimate and should propagate).
               if (i === gameRpcUrls.length - 1) throw err;
               const msg = (err as Error)?.message ?? '';
-              const isNetworkError = /fetch|network|timeout|econnrefused|econnreset|socket|abort/i.test(msg);
+              const isNetworkError =
+                /fetch|network|timeout|econnrefused|econnreset|socket|abort/i.test(
+                  msg,
+                );
               if (!isNetworkError) throw err;
             }
           }
@@ -309,7 +370,10 @@ export const AuthProvider = ({
             // Route everything through game RPCs except signing/wallet methods.
             // Privy's proxy (base-mainnet.rpc.privy.systems) adds latency and
             // mangles reverts — only use it for MPC signing.
-            if (gameRpcUrls.length > 0 && !PRIVY_ONLY_METHODS.has(args.method)) {
+            if (
+              gameRpcUrls.length > 0 &&
+              !PRIVY_ONLY_METHODS.has(args.method)
+            ) {
               return gameRpcRequest(args);
             }
             return provider.request(args);
@@ -331,14 +395,13 @@ export const AuthProvider = ({
 
         // Track first-time sign-ups (wallet just created = new user)
         if (isConfirmedNewUser) {
-          import('../utils/analytics').then(({ trackSignUp }) => trackSignUp('google'));
+          import('../utils/analytics').then(({ trackSignUp }) =>
+            trackSignUp('google'),
+          );
         }
 
         // Extract email
-        const email =
-          user?.google?.email ||
-          user?.email?.address ||
-          null;
+        const email = user?.google?.email || user?.email?.address || null;
         setSignedInEmail(email);
 
         console.info('[Auth] Privy wallet initialized:', privyWallet.address);
@@ -350,25 +413,35 @@ export const AuthProvider = ({
     };
 
     init();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [ready, authenticated, wallets, user, isConfirmedNewUser]);
 
   // Gas funding — call /fund with retry + periodic re-registration.
   // Relayer handles dedup (skips if already funded + balance sufficient).
   // Re-registers every 10 min to survive relayer redeploys wiping tracking state.
   useEffect(() => {
-    if (!embeddedAddress || !RELAYER_URL || !identityToken) return;
+    if (!embeddedAddress || !RELAYER_URL) return;
 
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     const callFund = async (): Promise<boolean> => {
       try {
+        const token = await getEmbeddedIdentityToken();
+        if (!token) {
+          console.info(
+            '[Gas] Embedded fund skipped until identity token is ready',
+          );
+          return false;
+        }
+
         const res = await fetch(`${RELAYER_URL}/fund`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${identityToken}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             address: embeddedAddress,
@@ -413,7 +486,7 @@ export const AuthProvider = ({
       timers.forEach(t => clearTimeout(t));
       clearInterval(reRegInterval);
     };
-  }, [embeddedAddress, identityToken]);
+  }, [embeddedAddress, getEmbeddedIdentityToken]);
 
   const connectWithGoogle = useCallback(async () => {
     // If already authenticated via Privy (e.g. returning from OAuth redirect),
@@ -428,7 +501,9 @@ export const AuthProvider = ({
     } catch (e: any) {
       // "already logged in" means the redirect auth completed — not an error
       if (e?.message?.includes('already logged in')) {
-        console.info('[Auth] OAuth redirect completed, waiting for wallet init');
+        console.info(
+          '[Auth] OAuth redirect completed, waiting for wallet init',
+        );
         return;
       }
       console.error('[AuthContext] Google sign-in failed:', e);
@@ -452,8 +527,14 @@ export const AuthProvider = ({
       setEmbeddedAddress(null);
       setSignedInEmail(null);
       setWalletRecoveryFailed(false);
-      if (recoveryTimerRef.current) { clearTimeout(recoveryTimerRef.current); recoveryTimerRef.current = null; }
-      if (newUserFallbackRef.current) { clearTimeout(newUserFallbackRef.current); newUserFallbackRef.current = null; }
+      if (recoveryTimerRef.current) {
+        clearTimeout(recoveryTimerRef.current);
+        recoveryTimerRef.current = null;
+      }
+      if (newUserFallbackRef.current) {
+        clearTimeout(newUserFallbackRef.current);
+        newUserFallbackRef.current = null;
+      }
       initAddressRef.current = null;
       isCreatingWallet.current = false;
       setIsConfirmedNewUser(false);
@@ -471,7 +552,9 @@ export const AuthProvider = ({
     sessionStorage.setItem(key, '1');
 
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const indexerUrl = (import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api').replace(/\/api\/?$/, '');
+    const indexerUrl = (
+      import.meta.env.VITE_INDEXER_API_URL || 'http://localhost:3001/api'
+    ).replace(/\/api\/?$/, '');
 
     // Add to Resend audience + welcome email
     fetch(`${apiUrl}/api/signup`, {
@@ -484,7 +567,10 @@ export const AuthProvider = ({
     fetch(`${indexerUrl}/api/queue/player/email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ wallet: embeddedAddress.toLowerCase(), email: signedInEmail }),
+      body: JSON.stringify({
+        wallet: embeddedAddress.toLowerCase(),
+        email: signedInEmail,
+      }),
     }).catch(() => {});
   }, [signedInEmail, embeddedAddress]);
 
@@ -508,6 +594,7 @@ export const AuthProvider = ({
         hasInjectedWallet,
         isAuthenticated: true,
         isConnecting: false,
+        embeddedIdentityTokenReady,
         getEmbeddedIdentityToken,
         ownerAddress: embeddedAddress,
         signedInEmail,
@@ -528,6 +615,7 @@ export const AuthProvider = ({
         hasInjectedWallet,
         isAuthenticated: true,
         isConnecting: !walletRecoveryFailed,
+        embeddedIdentityTokenReady,
         getEmbeddedIdentityToken,
         ownerAddress: null,
         signedInEmail: null,
@@ -546,6 +634,7 @@ export const AuthProvider = ({
         hasInjectedWallet,
         isAuthenticated: true,
         isConnecting: false,
+        embeddedIdentityTokenReady: false,
         getEmbeddedIdentityToken,
         ownerAddress: wagmiAddress,
         signedInEmail: null,
@@ -563,6 +652,7 @@ export const AuthProvider = ({
       hasInjectedWallet,
       isAuthenticated: false,
       isConnecting,
+      embeddedIdentityTokenReady: false,
       getEmbeddedIdentityToken,
       ownerAddress: null,
       signedInEmail: null,
@@ -573,6 +663,7 @@ export const AuthProvider = ({
     connectWithGoogle,
     disconnect,
     embeddedAddress,
+    embeddedIdentityTokenReady,
     embeddedWalletClient,
     getEmbeddedIdentityToken,
     hasInjectedWallet,
