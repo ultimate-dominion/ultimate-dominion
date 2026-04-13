@@ -2,6 +2,7 @@ import { Box, HStack, keyframes, Text, VStack } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useGameAudio } from '../contexts/SoundContext';
 import { removeEmoji } from '../utils/helpers';
 import { ItemAsciiIcon } from './ItemAsciiIcon';
 import {
@@ -174,21 +175,32 @@ const getRevealDelay = (index: number): number => {
 
 export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) => {
   const { t } = useTranslation('ui');
+  const { duckMusic, playSfx } = useGameAudio();
   const [revealedCount, setRevealedCount] = useState(0);
 
   useEffect(() => {
+    setRevealedCount(0);
     if (items.length === 0) return;
 
     // Reveal items one by one
     const timers: ReturnType<typeof setTimeout>[] = [];
-    items.forEach((_, i) => {
+    items.forEach((item, i) => {
       timers.push(
-        setTimeout(() => setRevealedCount(i + 1), getRevealDelay(i)),
+        setTimeout(() => {
+          setRevealedCount(i + 1);
+          const rarity = item.rarity ?? Rarity.Common;
+          if (rarity >= Rarity.Epic) {
+            playSfx('loot-epic');
+            duckMusic(3000);
+          } else if (rarity === Rarity.Rare) {
+            playSfx('loot-rare');
+          }
+        }, getRevealDelay(i)),
       );
     });
 
     return () => timers.forEach(clearTimeout);
-  }, [items]);
+  }, [items, playSfx, duckMusic]);
 
   if (items.length === 0) return null;
 

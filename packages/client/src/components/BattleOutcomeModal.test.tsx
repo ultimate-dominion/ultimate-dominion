@@ -15,6 +15,7 @@ let mockCurrentBattle: any = null;
 
 const mockRefreshCharacter = vi.fn().mockResolvedValue(undefined);
 const mockOnContinueToBattleOutcome = vi.fn();
+const mockPlaySfx = vi.fn();
 
 // --- vi.mock declarations ---
 
@@ -44,6 +45,15 @@ vi.mock('../contexts/ItemsContext', () => ({
     isLoading: false,
     spellTemplates: [],
     weaponTemplates: [],
+  }),
+}));
+
+vi.mock('../contexts/SoundContext', () => ({
+  useGameAudio: () => ({
+    soundEnabled: true,
+    toggleSound: vi.fn(),
+    playSfx: mockPlaySfx,
+    duckMusic: vi.fn(),
   }),
 }));
 
@@ -166,6 +176,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
     mockCurrentBattle = null;
     mockRefreshCharacter.mockClear();
     mockOnContinueToBattleOutcome.mockClear();
+    mockPlaySfx.mockClear();
     localStorage.clear();
   });
 
@@ -245,6 +256,54 @@ describe('BattleOutcomeModal — max level behavior', () => {
     const portrait = screen.getByTestId('battle-monster-ascii');
     expect(portrait.getAttribute('data-name')).toBe('Skeleton');
     expect(portrait.getAttribute('data-defeated')).toBe('false');
+  });
+
+  it('plays battle-win SFX for elite PvE victories only', () => {
+    mockCharacter = makeCharacter({ level: 5n, experience: 5000n });
+    mockOpponent = { name: 'Skeleton', isElite: true };
+    mockCurrentBattle = { encounterType: 1, currentTurn: 1n, maxTurns: 2n };
+
+    render(
+      <BattleOutcomeModal
+        isOpen={true}
+        onClose={vi.fn()}
+        battleOutcome={makeWinOutcome() as any}
+      />,
+    );
+
+    expect(mockPlaySfx).toHaveBeenCalledWith('battle-win');
+  });
+
+  it('does not play battle-win SFX for normal PvE victories', () => {
+    mockCharacter = makeCharacter({ level: 5n, experience: 5000n });
+    mockOpponent = { name: 'Skeleton', isElite: false };
+    mockCurrentBattle = { encounterType: 1, currentTurn: 1n, maxTurns: 2n };
+
+    render(
+      <BattleOutcomeModal
+        isOpen={true}
+        onClose={vi.fn()}
+        battleOutcome={makeWinOutcome() as any}
+      />,
+    );
+
+    expect(mockPlaySfx).not.toHaveBeenCalledWith('battle-win');
+  });
+
+  it('plays battle-win SFX for boss PvE victories', () => {
+    mockCharacter = makeCharacter({ level: 5n, experience: 5000n });
+    mockOpponent = { name: 'Skeleton King', hasBossAI: true };
+    mockCurrentBattle = { encounterType: 1, currentTurn: 1n, maxTurns: 2n };
+
+    render(
+      <BattleOutcomeModal
+        isOpen={true}
+        onClose={vi.fn()}
+        battleOutcome={makeWinOutcome() as any}
+      />,
+    );
+
+    expect(mockPlaySfx).toHaveBeenCalledWith('battle-win');
   });
 
   // --- Happy path: non-maxed character with enough XP ---

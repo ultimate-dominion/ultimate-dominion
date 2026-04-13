@@ -3,7 +3,9 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +24,7 @@ import {
 import { useCharacter } from './CharacterContext';
 import { useMap } from './MapContext';
 import { useMUD } from './MUDContext';
+import { useGameAudio } from './SoundContext';
 
 export type FragmentStatus = {
   fragmentType: number;
@@ -69,8 +72,10 @@ export const FragmentProvider = ({
   } = useMUD();
   const { character } = useCharacter();
   const { position } = useMap();
+  const { playSfx } = useGameAudio();
 
   const claimTx = useTransaction({ actionName: 'claim fragment', showSuccessToast: false });
+  const previousPendingEchoRef = useRef<FragmentStatus | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   // Optimistic: track recently claimed fragment types so pendingEcho clears
   // immediately without waiting for the store splice event.
@@ -148,6 +153,13 @@ export const FragmentProvider = ({
     ) ?? null;
   }, [fragments, position, claimedTypes]);
 
+  useEffect(() => {
+    if (pendingEcho && !previousPendingEchoRef.current) {
+      playSfx('fragment-trigger');
+    }
+    previousPendingEchoRef.current = pendingEcho;
+  }, [pendingEcho, playSfx]);
+
   const claimFragment = useCallback(
     async (fragmentType: number) => {
       if (!character) return;
@@ -163,13 +175,14 @@ export const FragmentProvider = ({
       });
 
       if (result !== undefined) {
+        playSfx('fragment-claim');
         renderSuccess(`Fragment claimed: ${tn(`${fragmentType}.name`)}`);
 
         setClaimedTypes(prev => new Set(prev).add(fragmentType));
         setRefreshKey(k => k + 1);
       }
     },
-    [character, claimFragmentCall, claimTx, renderSuccess, tn],
+    [character, claimFragmentCall, claimTx, playSfx, renderSuccess, tn],
   );
 
   const refreshFragments = useCallback(() => {

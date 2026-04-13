@@ -12,16 +12,30 @@ const mockVolume = vi.fn();
 const mockPlaying = vi.fn().mockReturnValue(false);
 const mockResume = vi.fn().mockResolvedValue(undefined);
 let mockCtxState: 'running' | 'suspended' = 'suspended';
+const mockHowlInstances: Array<{
+  options: { src: string[]; loop?: boolean; volume?: number; preload?: boolean };
+  play: ReturnType<typeof vi.fn>;
+  stop: ReturnType<typeof vi.fn>;
+  fade: ReturnType<typeof vi.fn>;
+  unload: ReturnType<typeof vi.fn>;
+  volume: ReturnType<typeof vi.fn>;
+  playing: ReturnType<typeof vi.fn>;
+}> = [];
 
 vi.mock('howler', () => {
-  const mockHowl = vi.fn().mockImplementation(() => ({
-    play: mockPlay,
-    stop: mockStop,
-    fade: mockFade,
-    unload: mockUnload,
-    volume: mockVolume,
-    playing: mockPlaying,
-  }));
+  const mockHowl = vi.fn().mockImplementation((options) => {
+    const instance = {
+      options,
+      play: vi.fn((...args) => mockPlay(...args)),
+      stop: vi.fn((...args) => mockStop(...args)),
+      fade: vi.fn((...args) => mockFade(...args)),
+      unload: vi.fn((...args) => mockUnload(...args)),
+      volume: vi.fn((...args) => mockVolume(...args)),
+      playing: vi.fn((...args) => mockPlaying(...args)),
+    };
+    mockHowlInstances.push(instance);
+    return instance;
+  });
   const mockHowler = {
     _muted: false,
     volume: vi.fn().mockReturnValue(1),
@@ -51,11 +65,14 @@ vi.mock('./BattleContext', () => ({
 }));
 
 const TestConsumer = () => {
-  const { soundEnabled, toggleSound } = useGameAudio();
+  const { duckMusic, playSfx, soundEnabled, toggleSound } = useGameAudio();
   return (
     <div>
       <span data-testid="status">{soundEnabled ? 'on' : 'off'}</span>
       <button onClick={toggleSound}>toggle</button>
+      <button onClick={() => playSfx('battle-hit-sword')}>play sword</button>
+      <button onClick={() => playSfx('battle-miss')}>play placeholder</button>
+      <button onClick={() => duckMusic(4000)}>duck</button>
     </div>
   );
 };
@@ -89,6 +106,7 @@ describe('SoundContext', () => {
     mockUseMap.mockReturnValue({ currentZone: 1 });
     mockUseBattle.mockReturnValue({ currentBattle: null });
     mockPlaying.mockReturnValue(false);
+    mockHowlInstances.length = 0;
     mockCtxState = 'suspended';
     vi.clearAllMocks();
     vi.useRealTimers();
@@ -417,6 +435,76 @@ describe('SoundContext', () => {
         expect.objectContaining({ src: ['/audio/battle-dark-cave-mix.ogg'] }),
       );
       warnSpy.mockRestore();
+    });
+  });
+
+  describe('sfx playback', () => {
+    it('preloads SFX Howls on mount regardless of sound state', async () => {
+      const { Howl } = await import('howler');
+      renderWithProvider();
+
+      expect(Howl).toHaveBeenCalledWith(
+        expect.objectContaining({
+          src: ['/audio/sfx/battle/battle-hit-sword.ogg'],
+          loop: false,
+          preload: true,
+        }),
+      );
+      expect(Howl).not.toHaveBeenCalledWith(
+        expect.objectContaining({ src: ['/audio/sfx/battle/battle-miss.ogg'] }),
+      );
+    });
+
+    it('plays a requested SFX when sound is enabled', () => {
+      localStorage.setItem('ud:sound-enabled', 'true');
+      renderWithProvider();
+      mockPlay.mockClear();
+
+      fireEvent.click(screen.getByText('play sword'));
+
+      const sword = mockHowlInstances.find(
+        instance => instance.options.src[0] === '/audio/sfx/battle/battle-hit-sword.ogg',
+      );
+      expect(sword?.volume).toHaveBeenCalledWith(0.55);
+      expect(sword?.play).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not play SFX when sound is disabled', () => {
+      renderWithProvider();
+      mockPlay.mockClear();
+
+      fireEvent.click(screen.getByText('play sword'));
+
+      expect(mockPlay).not.toHaveBeenCalled();
+    });
+
+    it('silently ignores placeholder SFX keys with no manifest entry', () => {
+      localStorage.setItem('ud:sound-enabled', 'true');
+      renderWithProvider();
+      mockPlay.mockClear();
+
+      fireEvent.click(screen.getByText('play placeholder'));
+
+      expect(mockPlay).not.toHaveBeenCalled();
+    });
+
+    it('ducks the active music track then restores it', () => {
+      vi.useFakeTimers();
+      localStorage.setItem('ud:sound-enabled', 'true');
+      renderWithProvider();
+
+      const ambient = mockHowlInstances.find(
+        instance => instance.options.src[0] === '/audio/dark-cave-mix.ogg',
+      );
+
+      fireEvent.click(screen.getByText('duck'));
+      expect(ambient?.fade).toHaveBeenCalledWith(0.25, 0.125, 300);
+
+      act(() => {
+        vi.advanceTimersByTime(3200);
+      });
+
+      expect(ambient?.fade).toHaveBeenCalledWith(0.125, 0.25, 800);
     });
   });
 });

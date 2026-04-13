@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import type { WeaponAnimType } from '../components/pretext/game/weaponAnimations';
+import { useGameAudio, type SfxKey } from '../contexts/SoundContext';
 import type { AttackOutcomeType } from '../utils/types';
 
 import { buildBattleSceneSignals } from './buildBattleSceneSignal';
@@ -32,6 +33,28 @@ export type AttackSignal = {
 
 export type BattleSceneHandle = {
   triggerAttack: (signal: AttackSignal) => void;
+};
+
+const HEAVY_WEAPON_RE = /\b(hammer|mace|maul|club)\b/i;
+
+export const getAttackSfxKey = (signal: AttackSignal): SfxKey => {
+  if (signal.isPlayerAttack && signal.targetDied) return 'battle-kill';
+  if (signal.isPlayerAttack && signal.isCrit) return 'battle-crit';
+
+  if (signal.isPlayerAttack && signal.didHit) {
+    if (signal.weaponType === 'ranged') return 'battle-hit-arrow';
+    if (signal.weaponType === 'spell') return 'battle-hit-magic';
+    if (signal.weaponName && HEAVY_WEAPON_RE.test(signal.weaponName)) {
+      return 'battle-hit-hammer';
+    }
+    return 'battle-hit-sword';
+  }
+
+  if (signal.isPlayerAttack && signal.dodged) return 'battle-dodge';
+  if (signal.isPlayerAttack && !signal.didHit) return 'battle-miss';
+  if (!signal.isPlayerAttack && signal.didHit) return 'battle-take-damage';
+
+  return 'battle-miss';
 };
 
 // ── Hook ────────────────────────────────────────────────────────────────
@@ -70,6 +93,7 @@ export function useBattleSceneSignals({
   weaponNameForItem?: (itemId: string) => string | undefined;
   opponentName: string;
 }): void {
+  const { playSfx } = useGameAudio();
   /** Set of outcome keys already signaled — survives counterattack reveal without replaying. */
   const signaledKeysRef = useRef<Set<string>>(new Set());
   const lastEncounterIdRef = useRef<string | null>(null);
@@ -111,8 +135,17 @@ export function useBattleSceneSignals({
       });
 
       for (const signal of signals) {
+        playSfx(getAttackSfxKey(signal));
         sceneRef.current?.triggerAttack(signal);
       }
     }
-  }, [visibleOutcomes, characterId, sceneRef, weaponTypeForItem, weaponNameForItem, opponentName]);
+  }, [
+    visibleOutcomes,
+    characterId,
+    sceneRef,
+    weaponTypeForItem,
+    weaponNameForItem,
+    opponentName,
+    playSfx,
+  ]);
 }

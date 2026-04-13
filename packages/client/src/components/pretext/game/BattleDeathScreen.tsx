@@ -14,6 +14,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { Box } from '@chakra-ui/react';
+import { useGameAudio } from '../../../contexts/SoundContext';
 import { useCanvas } from '../hooks/useCanvas';
 import { usePretextFonts } from '../hooks/usePretextFonts';
 import { COLORS, fontString } from '../theme';
@@ -60,6 +61,7 @@ export function BattleDeathScreen({
   onComplete: () => void;
 }) {
   const { ready } = usePretextFonts();
+  const { playSfx } = useGameAudio();
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
   const firedRef = useRef(false);
@@ -67,6 +69,10 @@ export function BattleDeathScreen({
   const lines = buildLines(characterName, monsterName, zoneName, level);
   const linesRef = useRef(lines);
   linesRef.current = lines;
+
+  useEffect(() => {
+    playSfx('player-death');
+  }, [playSfx]);
 
   // Auto-complete after delay
   useEffect(() => {

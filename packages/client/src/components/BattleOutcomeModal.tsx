@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
+import { useGameAudio } from '../contexts/SoundContext';
 import { useToast } from '../hooks/useToast';
 import { BATTLE_OUTCOME_SEEN_KEY, MAX_LEVEL } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
@@ -39,14 +40,13 @@ import {
   type Weapon,
 } from '../utils/types';
 
-import { ItemCard } from './ItemCard';
 import { getItemImage } from '../utils/itemImages';
 import { getMonsterImage } from '../utils/monsterImages';
 import { LootReveal } from './LootReveal';
 import { ShareButton } from './ShareButton';
 import { ItemEquipModal } from './ItemEquipModal';
-import { LevelUpBanner } from './LevelUpBanner';
 import { PolygonalCard } from './PolygonalCard';
+import { LevelUpBanner } from './LevelUpBanner';
 import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
 import { MONSTER_TEMPLATES_REDUX } from './pretext/game/monsterTemplatesRedux';
 
@@ -63,6 +63,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
 }): JSX.Element => {
   const { t } = useTranslation('ui');
   const { renderError } = useToast();
+  const { playSfx } = useGameAudio();
   const { armorTemplates, consumableTemplates, spellTemplates, weaponTemplates } = useItems();
   const {
     character,
@@ -73,6 +74,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     refreshCharacter,
   } = useCharacter();
   const { currentBattle, onContinueToBattleOutcome, opponent } = useBattle();
+  const { goldDropped, playerFled, winner } = battleOutcome;
 
   const opponentDisplayName = useMemo(() => {
     if (!opponent) return t('battle.aMonster');
@@ -95,6 +97,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   >(null);
   const [initialLevel] = useState(() => character?.level);
   const [initialExperience] = useState(() => character?.experience);
+  const battleWinSfxRef = useRef<string | null>(null);
 
   const hasLeveledUp = useMemo(
     () =>
@@ -256,11 +259,35 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
     return currentBattle.maxTurns === currentBattle.currentTurn;
   }, [currentBattle]);
 
+  useEffect(() => {
+    if (!isOpen || !character || !opponent || !currentBattle) return;
+    if (battleWinSfxRef.current === battleOutcome.encounterId) return;
+    if (winner !== character.id || battleDraw || playerFled) return;
+    if (currentBattle.encounterType !== EncounterType.PvE) return;
+    if (hasLeveledUp || justBecameEligible) return;
+
+    const monster = opponent as Monster;
+    if (!monster.isElite && !monster.hasBossAI) return;
+
+    battleWinSfxRef.current = battleOutcome.encounterId;
+    playSfx('battle-win');
+  }, [
+    battleDraw,
+    battleOutcome.encounterId,
+    character,
+    currentBattle,
+    hasLeveledUp,
+    isOpen,
+    justBecameEligible,
+    opponent,
+    playSfx,
+    playerFled,
+    winner,
+  ]);
+
   if (!character) {
     return <Box />;
   }
-
-  const { expDropped, goldDropped, playerFled, winner } = battleOutcome;
 
   if (playerFled) {
     return (

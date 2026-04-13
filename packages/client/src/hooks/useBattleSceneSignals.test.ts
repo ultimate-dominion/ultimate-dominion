@@ -1,10 +1,25 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useBattleSceneSignals, type BattleSceneHandle } from './useBattleSceneSignals';
+import {
+  getAttackSfxKey,
+  useBattleSceneSignals,
+  type AttackSignal,
+  type BattleSceneHandle,
+} from './useBattleSceneSignals';
 import type { AttackOutcomeType } from '../utils/types';
 
 const PLAYER_ID = '0xplayer';
 const MONSTER_ID = '0xmonster';
+const mockPlaySfx = vi.fn();
+
+vi.mock('../contexts/SoundContext', () => ({
+  useGameAudio: () => ({
+    soundEnabled: true,
+    toggleSound: vi.fn(),
+    playSfx: mockPlaySfx,
+    duckMusic: vi.fn(),
+  }),
+}));
 
 function makeOutcome(
   overrides: Partial<AttackOutcomeType> = {},
@@ -36,6 +51,7 @@ function makeOutcome(
 
 describe('useBattleSceneSignals', () => {
   afterEach(() => {
+    mockPlaySfx.mockClear();
     vi.restoreAllMocks();
   });
 
@@ -65,6 +81,7 @@ describe('useBattleSceneSignals', () => {
     );
 
     expect(triggerAttack).toHaveBeenCalledTimes(1);
+    expect(mockPlaySfx).toHaveBeenCalledWith('battle-miss');
     expect(triggerAttack).toHaveBeenCalledWith(
       expect.objectContaining({
         weaponType: 'melee',
@@ -166,6 +183,7 @@ describe('useBattleSceneSignals', () => {
     );
 
     expect(triggerAttack).toHaveBeenCalledTimes(1);
+    expect(mockPlaySfx).toHaveBeenCalledWith('battle-hit-sword');
     expect(triggerAttack).toHaveBeenCalledWith(
       expect.objectContaining({ isPlayerAttack: true, damage: 10 }),
     );
@@ -209,6 +227,7 @@ describe('useBattleSceneSignals', () => {
 
     // Single consolidated signal, not staged beats
     expect(triggerAttack).toHaveBeenCalledTimes(1);
+    expect(mockPlaySfx).toHaveBeenCalledTimes(1);
     expect(triggerAttack).toHaveBeenCalledWith(
       expect.objectContaining({
         damage: 10,
@@ -217,6 +236,48 @@ describe('useBattleSceneSignals', () => {
         isCombo: true,
         targetDied: true,
       }),
+    );
+  });
+});
+
+describe('getAttackSfxKey', () => {
+  const makeSignal = (overrides: Partial<AttackSignal> = {}): AttackSignal => ({
+    weaponType: 'melee',
+    weaponName: 'Iron Sword',
+    damage: 10,
+    hitCount: 1,
+    isCrit: false,
+    isPlayerAttack: true,
+    blocked: false,
+    dodged: false,
+    didHit: true,
+    targetDied: false,
+    isCombo: false,
+    callout: {
+      title: '10 DAMAGE',
+      detail: 'You hit Giant Spider.',
+      tone: 'player',
+    },
+    ...overrides,
+  });
+
+  it('routes weapon flavor to sword, hammer, arrow, and magic hit SFX', () => {
+    expect(getAttackSfxKey(makeSignal({ weaponName: 'Iron Sword' }))).toBe('battle-hit-sword');
+    expect(getAttackSfxKey(makeSignal({ weaponName: 'War Hammer' }))).toBe('battle-hit-hammer');
+    expect(getAttackSfxKey(makeSignal({ weaponType: 'ranged' }))).toBe('battle-hit-arrow');
+    expect(getAttackSfxKey(makeSignal({ weaponType: 'spell' }))).toBe('battle-hit-magic');
+  });
+
+  it('prioritizes kill over crit and crit over hit', () => {
+    expect(getAttackSfxKey(makeSignal({ targetDied: true, isCrit: true }))).toBe('battle-kill');
+    expect(getAttackSfxKey(makeSignal({ isCrit: true }))).toBe('battle-crit');
+  });
+
+  it('routes miss, dodge, and enemy damage placeholders', () => {
+    expect(getAttackSfxKey(makeSignal({ didHit: false }))).toBe('battle-miss');
+    expect(getAttackSfxKey(makeSignal({ didHit: false, dodged: true }))).toBe('battle-dodge');
+    expect(getAttackSfxKey(makeSignal({ isPlayerAttack: false, didHit: true }))).toBe(
+      'battle-take-damage',
     );
   });
 });

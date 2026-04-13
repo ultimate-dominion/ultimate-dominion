@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useGameAudio } from '../contexts/SoundContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
 import { getTableValue } from '../lib/gameStore';
@@ -57,6 +58,7 @@ export const LevelingPanel = ({
     systemCalls: { levelCharacter },
   } = useMUD();
   const { refreshCharacter } = useCharacter();
+  const { duckMusic, playSfx } = useGameAudio();
 
   const levelTx = useTransaction({ actionName: 'level up', showSuccessToast: false });
 
@@ -242,6 +244,9 @@ export const LevelingPanel = ({
     });
 
     if (result !== undefined) {
+      playSfx('level-up');
+      duckMusic(4000);
+
       // Poll Zustand store until level reflects the change
       const prevLevel = character.level;
       const newLevel = Number(character.level) + 1;
@@ -288,6 +293,8 @@ export const LevelingPanel = ({
     newIntelligence,
     newStrength,
     onLevelComplete,
+    playSfx,
+    duckMusic,
     refreshCharacter,
     renderSuccess,
     renderWarning,

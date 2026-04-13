@@ -106,7 +106,7 @@ function buildSignal({
     isCrit,
     isPlayerAttack,
     blocked: outcome.blocked,
-    dodged: (normalizedOutcome.miss ?? []).some(Boolean) || outcome.spellDodged,
+    dodged: outcome.spellDodged,
     didHit,
     targetDied,
     isCombo,
