@@ -177,7 +177,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [x] Eliminate jank, stutters, and failed txs ✓ Auto-retry on reverts (`6ef6b5bd`, `acf453ba`), movement cooldown tracking (`145dbfb1`, `394664db`), move mutex (`52869919`), Alchemy Flashblocks (200ms blocks)
 - [x] Fire-and-forget gameplay actions ✓ (`6b100929`) — removed simulateContract blocking
 - [x] Optimistic progress bars ✓ (`01b17c94`) — asymptotic deceleration on all transactions
-- [x] Ghost encounter hardening ✓ click-time stale-target validation plus authoritative combat bootstrap prevent stale cached PvE state from reviving battles; movement display sync now cleans/protects stale monster rows (`0b61f384`, `b0f87e60`, `4242f24f`)
+- [x] Ghost encounter hardening ✓ click-time stale-target validation plus authoritative combat bootstrap prevent stale cached PvE state from reviving battles; movement display sync now cleans/protects stale monster rows (`0b61f384`, `b0f87e60`, `4242f24f`, `a5e1d931`)
 
 **Chat**
 - [x] Show usernames in chat ✓ Class-colored character names (`bb442d1e`)
