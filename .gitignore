@@ -40,6 +40,9 @@ local/
 SESSION.md
 .DS_Store
 
+# Temper per-invocation artifacts
+.temper/runs/
+
 # Confidential business docs (moved to ~/Documents/ultimate-dominion/)
 docs/MONETIZATION_RESEARCH.md
 docs/GO_TO_MARKET.md
