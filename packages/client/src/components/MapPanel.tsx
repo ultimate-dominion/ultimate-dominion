@@ -27,6 +27,7 @@ import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
 import { useGameConfig } from '../lib/gameStore';
 import { SHOW_Z2 } from '../lib/env';
+import { canUseDarkCaveExit, DARK_CAVE_EXIT_TILE } from '../utils/zoneExit';
 import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
 import { WAITING_ROOM_PATH } from '../Routes';
 import { CaptchaGate } from './CaptchaGate';
@@ -46,9 +47,6 @@ const SAFE_ZONE_BY_ZONE: Record<number, { topLeft: { x: number; y: number }; bot
 };
 
 const MAP_SIZE = 10;
-
-/** Zone exit tile — north-center of Dark Cave */
-const EXIT_TILE = { x: 5, y: 9 };
 
 const bossGlow = keyframes`
   0%, 100% { box-shadow: 0 0 6px rgba(184, 58, 42, 0.3), inset 0 0 3px rgba(184, 58, 42, 0.08); }
@@ -122,15 +120,14 @@ export const MapPanel = (): JSX.Element => {
   const playerLevel = character?.level ? Number(character.level) : 1;
 
   const isAtZoneExit = useMemo(() => {
-    return (
-      SHOW_Z2 &&
-      !!character?.hasSelectedAdvancedClass &&
-      currentZone === 1 &&
-      displayPosition?.x === EXIT_TILE.x &&
-      displayPosition?.y === EXIT_TILE.y &&
-      !autoAdventureMode
-    );
-  }, [character?.hasSelectedAdvancedClass, currentZone, displayPosition, autoAdventureMode]);
+    return canUseDarkCaveExit({
+      autoAdventureMode,
+      currentZone,
+      displayPosition,
+      level: character?.level,
+      showZ2: SHOW_Z2,
+    });
+  }, [autoAdventureMode, character?.level, currentZone, displayPosition]);
 
   const adjacentTiles = useMemo(() => {
     if (!position || !displayPosition) return null;
@@ -312,8 +309,8 @@ export const MapPanel = (): JSX.Element => {
                 worldBosses={worldBosses}
                 safeZone={SAFE_ZONE_BY_ZONE[currentZone] ?? null}
                 exitTile={
-                  character?.hasSelectedAdvancedClass && currentZone === 1
-                    ? EXIT_TILE
+                  SHOW_Z2 && Number(character?.level ?? 1) >= 10 && currentZone === 1
+                    ? DARK_CAVE_EXIT_TILE
                     : null
                 }
                 isSpawned={isSpawned}
@@ -482,10 +479,10 @@ export const MapPanel = (): JSX.Element => {
 
                   {/* Zone exit tile — glowing portal at north-center */}
                   {SHOW_Z2 &&
-                    character?.hasSelectedAdvancedClass &&
+                    Number(character?.level ?? 1) >= 10 &&
                     currentZone === 1 &&
-                    col === EXIT_TILE.x &&
-                    row === EXIT_TILE.y && (
+                    col === DARK_CAVE_EXIT_TILE.x &&
+                    row === DARK_CAVE_EXIT_TILE.y && (
                       <Box
                         position="absolute"
                         inset={0}

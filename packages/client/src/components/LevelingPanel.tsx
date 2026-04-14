@@ -49,7 +49,7 @@ export const LevelingPanel = ({
   canLevel: boolean;
   character: Character;
   compact?: boolean;
-  onLevelComplete?: () => void;
+  onLevelComplete?: (newLevel: number) => void;
 }): JSX.Element => {
   const { renderSuccess, renderWarning } = useToast();
   const { t } = useTranslation('ui');
@@ -266,7 +266,7 @@ export const LevelingPanel = ({
       });
 
       if (onLevelComplete) {
-        onLevelComplete();
+        onLevelComplete(newLevel);
       } else {
         if (newLevel === 5) {
           const bonusMsg: Record<number, string> = {

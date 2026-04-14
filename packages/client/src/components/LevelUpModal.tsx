@@ -98,7 +98,7 @@ const LEVEL_BACKGROUNDS: Record<number, string> = {
 type LevelUpModalProps = {
   character: Character;
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (completedLevel?: number) => void;
 };
 
 export const LevelUpModal = ({
@@ -136,14 +136,19 @@ export const LevelUpModal = ({
     setPhase('allocate');
   };
 
-  const handleLevelComplete = () => {
+  const handleLevelComplete = (completedLevel: number) => {
+    setTargetLevel(completedLevel);
     setPhase('narrative');
+  };
+
+  const handleClose = () => {
+    onClose(targetLevel || undefined);
   };
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       size={{ base: 'full', md: 'xl' }}
       isCentered
       motionPreset="none"
@@ -749,7 +754,7 @@ export const LevelUpModal = ({
           {phase === 'narrative' && (
             <VStack spacing={3}>
               <Button
-                onClick={onClose}
+                onClick={handleClose}
                 variant="gold"
                 size="md"
               >
