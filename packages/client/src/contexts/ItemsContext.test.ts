@@ -6,20 +6,58 @@ import { SPELL_CATALOG, isSpellTokenURI, spellEffectNameFromURI } from './ItemsC
 // ---------------------------------------------------------------------------
 
 describe('SPELL_CATALOG', () => {
+  // L10 effect names deployed via dark_cave/spells.json — must match
+  // deploy-spell-items.ts SPELLS[].l10EffectName exactly or the client
+  // fallback will show raw IDs to players.
+  const L10_EFFECTS = [
+    'battle_cry',
+    'divine_shield',
+    'hunters_mark',
+    'shadowstep',
+    'entangle',
+    'soul_drain_curse',
+    'arcane_blast_damage',
+    'arcane_surge_damage',
+    'blessing',
+  ];
+  // L15 effect names deployed via windy_peaks/spells.json — must match
+  // deploy-spell-items.ts SPELLS[].l15EffectName exactly.
+  const L15_EFFECTS = [
+    'warcry',
+    'judgment',
+    'volley',
+    'backstab',
+    'regrowth',
+    'blight',
+    'meteor',
+    'mana_burn',
+    'smite',
+  ];
+
   it('contains all 9 L10 class spells', () => {
-    const expectedEffectNames = [
-      'battle_cry',
-      'divine_shield',
-      'hunters_mark',
-      'shadowstep',
-      'entangle',
-      'soul_drain_curse',
-      'arcane_blast_damage',
-      'arcane_surge_damage',
-      'blessing',
-    ];
-    for (const name of expectedEffectNames) {
+    for (const name of L10_EFFECTS) {
       expect(SPELL_CATALOG).toHaveProperty(name);
+      expect(SPELL_CATALOG[name].minLevel).toBe(10n);
+    }
+  });
+
+  it('contains all 9 L15 class spells', () => {
+    for (const name of L15_EFFECTS) {
+      expect(SPELL_CATALOG).toHaveProperty(name);
+      expect(SPELL_CATALOG[name].minLevel).toBe(15n);
+    }
+  });
+
+  it('has exactly 18 entries (9 L10 + 9 L15)', () => {
+    expect(Object.keys(SPELL_CATALOG)).toHaveLength(18);
+  });
+
+  it('catalog covers every effect name in deploy-spell-items SPELLS', () => {
+    // If this test fails, deploy-spell-items.ts added/renamed an effect and
+    // the catalog wasn't updated — the UI will render "Spell #<id>" instead
+    // of the real name. Keep the two lists in lockstep.
+    for (const name of [...L10_EFFECTS, ...L15_EFFECTS]) {
+      expect(SPELL_CATALOG[name]).toBeDefined();
     }
   });
 
@@ -38,17 +76,41 @@ describe('SPELL_CATALOG', () => {
     expect(entry.maxDamage).toBe(10n);
   });
 
-  it('utility spells have 0 damage', () => {
+  it('Backstab L15 has correct damage', () => {
+    const entry = SPELL_CATALOG['backstab'];
+    expect(entry.name).toBe('Backstab');
+    expect(entry.minDamage).toBe(10n);
+    expect(entry.maxDamage).toBe(18n);
+    expect(entry.minLevel).toBe(15n);
+  });
+
+  it('Meteor L15 has correct damage', () => {
+    const entry = SPELL_CATALOG['meteor'];
+    expect(entry.name).toBe('Meteor');
+    expect(entry.minDamage).toBe(8n);
+    expect(entry.maxDamage).toBe(16n);
+    expect(entry.minLevel).toBe(15n);
+  });
+
+  it('L10 utility spells have 0 damage', () => {
     expect(SPELL_CATALOG['divine_shield'].minDamage).toBe(0n);
     expect(SPELL_CATALOG['divine_shield'].maxDamage).toBe(0n);
     expect(SPELL_CATALOG['blessing'].minDamage).toBe(0n);
     expect(SPELL_CATALOG['blessing'].maxDamage).toBe(0n);
   });
 
-  it('all entries have minLevel 10', () => {
-    for (const entry of Object.values(SPELL_CATALOG)) {
-      expect(entry.minLevel).toBe(10n);
-    }
+  it('L15 utility spell Regrowth has 0 damage', () => {
+    expect(SPELL_CATALOG['regrowth'].minDamage).toBe(0n);
+    expect(SPELL_CATALOG['regrowth'].maxDamage).toBe(0n);
+  });
+
+  it('returns undefined for unknown effect names (miss behavior)', () => {
+    // Callers rely on ?? fallbacks when the effect name isn't in the
+    // catalog (new spell deployed without a client update). Make sure
+    // that a miss returns undefined rather than, say, a shared default
+    // that would masquerade as real data.
+    expect(SPELL_CATALOG['not_a_real_spell']).toBeUndefined();
+    expect(SPELL_CATALOG['']).toBeUndefined();
   });
 });
 
