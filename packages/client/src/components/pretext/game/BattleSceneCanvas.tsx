@@ -33,6 +33,7 @@ import { COLORS, fontString } from '../theme';
 
 import { getCaveBg, renderCaveBgFlicker } from './caveBgRenderer';
 import {
+  asGLBDrawFn,
   getCreatureState,
   loadGLBCreature,
   makeGLBDrawFn,
@@ -55,48 +56,24 @@ import {
   type WeaponAnimType,
 } from './weaponAnimations';
 
-// Kick off GLB loading immediately when the battle scene module loads —
-// don't wait for the first encounter frame, which may be too late on slow connections.
-loadGLBCreature('/models/creatures/dire-rat.glb', 10, 7).catch(() => {
-  /* handled inside */
-});
-loadGLBCreature('/models/creatures/kobold.glb', 7, 7).catch(() => {
-  /* handled inside */
-});
-loadGLBCreature('/models/creatures/goblin.glb', 7, 7).catch(() => {
-  /* handled inside */
-});
-loadGLBCreature('/models/creatures/skeleton.glb', 7, 7).catch(() => {
-  /* handled inside */
-});
-loadGLBCreature('/models/creatures/goblin-shaman.glb', 7, 7).catch(() => {
-  /* handled inside */
-});
-loadGLBCreature('/models/creatures/bugbear.glb', 7, 7).catch(() => {
-  /* handled inside */
-});
+// Player GLB yaw — positive so player faces right (opposite of monster yaw)
+const PLAYER_YAW = Math.PI * 0.33;
 
-// Preload player character GLBs — mirrored (face right) via positive yaw, player mode
-const PLAYER_YAW = Math.PI * 0.33; // face right (opposite of monster yaw)
-loadGLBCreature(
-  '/models/creatures/human-animated.glb',
-  7,
-  7,
-  PLAYER_YAW,
-  -0.08,
-  { playerMode: true },
-).catch(() => {});
-loadGLBCreature('/models/creatures/elf-animated.glb', 7, 7, PLAYER_YAW, -0.08, {
-  playerMode: true,
-}).catch(() => {});
-loadGLBCreature(
-  '/models/creatures/dwarf-animated.glb',
-  7,
-  7,
-  PLAYER_YAW,
-  -0.08,
-  { playerMode: true },
-).catch(() => {});
+// Kick off GLB loading immediately when the battle scene module loads so we
+// never hit a blank battle canvas while an encounter begins. Monster URLs are
+// derived from the live redux templates; player URLs come from RACE_GLB_URL.
+// Previously this list was hand-maintained and drifted out of sync — any
+// monster added without a matching preload entry fell through to the
+// fallback draw (the "old spider" bug).
+const monsterPreloadSeen = new Set<string>();
+for (const tpl of MONSTER_TEMPLATES_REDUX) {
+  const glb = asGLBDrawFn(tpl.draw);
+  if (!glb || monsterPreloadSeen.has(glb.glbUrl)) continue;
+  monsterPreloadSeen.add(glb.glbUrl);
+  loadGLBCreature(glb.glbUrl, glb.glbGridW, glb.glbGridH, glb.glbYaw).catch(() => {
+    /* handled inside */
+  });
+}
 
 // Map Race enum → GLB URL
 const RACE_GLB_URL: Record<number, string> = {
@@ -104,6 +81,16 @@ const RACE_GLB_URL: Record<number, string> = {
   [Race.Elf]: '/models/creatures/elf-animated.glb',
   [Race.Dwarf]: '/models/creatures/dwarf-animated.glb',
 };
+
+// Player GLBs need `playerMode: true` so the shared loader disables its
+// auto-attack loop (player attacks are driven by combat signals, not a timer).
+for (const playerUrl of Object.values(RACE_GLB_URL)) {
+  loadGLBCreature(playerUrl, 7, 7, PLAYER_YAW, -0.08, {
+    playerMode: true,
+  }).catch(() => {
+    /* handled inside */
+  });
+}
 
 // Fallback draw for player (simple silhouette while GLB loads)
 function drawPlayerFallback(
@@ -223,6 +210,23 @@ function createSceneState(): SceneState {
   };
 }
 
+/**
+ * Click-to-reset: drop any in-flight attacks belonging to the same side
+ * (player or monster) so a fast clicker never ends up with overlapping
+ * projectiles or a stuck GLB clip. Exported so the behavior can be unit
+ * tested without mounting the canvas.
+ */
+export function spliceSameSideAttacks(
+  attacks: ActiveAttack[],
+  isPlayerAttack: boolean,
+): void {
+  for (let i = attacks.length - 1; i >= 0; i--) {
+    if (attacks[i].isPlayerAttack === isPlayerAttack) {
+      attacks.splice(i, 1);
+    }
+  }
+}
+
 // Callout box removed — damage displayed via BattleFloatingDamage overlay only
 
 // ── HP bar rendering ────────────────────────────────────────────────────
@@ -310,17 +314,28 @@ export const BattleSceneCanvas = forwardRef<
     [userRace],
   );
 
+  // Freeze the monster template into a ref so triggerAttack (memoized with
+  // [] deps) can always read the *current* template without re-creating the
+  // imperative handle every render.
+  const templateRef = useRef(template);
+  templateRef.current = template;
+
   // ── Imperative API ──────────────────────────────────────────────────
 
   const triggerAttack = useCallback((signal: AttackSignal) => {
     const state = stateRef.current;
     const duration = WEAPON_SPEED[signal.weaponType];
     const p = propsRef.current;
+    const now = performance.now();
+
+    // Click-to-reset: a fast clicker or a back-to-back counterattack should
+    // start from a clean slate — drop any in-flight same-side attacks first.
+    spliceSameSideAttacks(state.attacks, signal.isPlayerAttack);
 
     state.attacks.push({
       weaponType: signal.weaponType,
       weaponName: signal.weaponName,
-      startTime: performance.now(),
+      startTime: now,
       duration,
       damage: signal.damage,
       hitCount: signal.hitCount,
@@ -334,12 +349,36 @@ export const BattleSceneCanvas = forwardRef<
       impacted: false,
     });
 
-    // Start player attack animation immediately (swing during projectile flight)
-    if (signal.isPlayerAttack && p.userRace) {
-      const playerUrl = RACE_GLB_URL[p.userRace];
-      if (playerUrl) {
-        const ps = getCreatureState(playerUrl);
-        ps?.playClip?.('attack');
+    if (signal.isPlayerAttack) {
+      // Start player attack animation immediately (swing during projectile flight)
+      if (p.userRace) {
+        const playerUrl = RACE_GLB_URL[p.userRace];
+        if (playerUrl) {
+          const ps = getCreatureState(playerUrl);
+          ps?.playClip?.('attack');
+        }
+      }
+    } else {
+      // Monster counterattack: play the monster's attack clip so the ASCII
+      // sampler shows the GLB in its strike pose during projectile flight.
+      // Without this the monster just sat in idle while the projectile flew
+      // left — making it feel like "neither character is attacking".
+      const tpl = templateRef.current;
+      const glb = tpl ? asGLBDrawFn(tpl.draw) : null;
+      if (glb) {
+        const cs = getCreatureState(glb.glbUrl);
+        cs?.playClip?.('attack');
+      } else {
+        // ASCII-only monster: drive the strike pose via computeAnimParams.
+        // `durationOverride` keeps the ASCII strike in sync with the current
+        // weapon's projectile speed (melee 600, spell 500, ranged 400) so the
+        // strike phase peaks at the moment of impact instead of hardcoding
+        // 600ms across all weapon types.
+        state.monsterAnim = {
+          action: 'attack',
+          startTime: now,
+          durationOverride: duration,
+        };
       }
     }
   }, []);
@@ -473,6 +512,21 @@ export const BattleSceneCanvas = forwardRef<
           if (state.monsterAnim?.action === 'hit') {
             state.monsterAnim = undefined;
           }
+        }
+      }
+
+      // ── Clear finished ASCII attack anim ────────────────────────────
+      // For ASCII-only monster counterattacks we set monsterAnim='attack'
+      // in triggerAttack. Once the strike has resolved, snap back to idle
+      // so computeAnimParams short-circuits instead of running its switch
+      // case every frame with settled base values. triggerAttack always
+      // sets durationOverride, so the fallback (matching melee 600ms) is
+      // purely defensive.
+      if (state.monsterAnim?.action === 'attack') {
+        const attackElapsed = now - state.monsterAnim.startTime;
+        const attackDuration = state.monsterAnim.durationOverride ?? 600;
+        if (attackElapsed > attackDuration) {
+          state.monsterAnim = undefined;
         }
       }
 

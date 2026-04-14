@@ -164,7 +164,9 @@ function applyItemToonMaterials(
         color: baseColor,
         map: albedoMap,
         gradientMap: gradMap,
-        emissive: emissiveIntensity > 0 ? baseColor.clone() : undefined,
+        // Three warns when emissive is undefined while emissiveIntensity is set.
+        // Default to pure black so zero-intensity items stay unlit.
+        emissive: emissiveIntensity > 0 ? baseColor.clone() : new THREE.Color(0x000000),
         emissiveIntensity,
       });
       mat.dispose();
