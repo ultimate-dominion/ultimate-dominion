@@ -20,6 +20,7 @@ import {
   useGameStore,
   useGameTable,
 } from '../lib/gameStore';
+import { SPELL_CATALOG } from '../data/spellsManifest';
 import { fetchMetadataFromUri, isTextOnlyUri, uriToHttp } from '../utils/helpers';
 import {
   type ArmorTemplate,
@@ -31,36 +32,8 @@ import {
   type WeaponTemplate,
 } from '../utils/types';
 
-/**
- * Client-side spell catalog — fallback display data for spells deployed as
- * ItemType.Weapon (0) because the contract's ItemCreationSystem has no Spell
- * branch (SpellStats is never written on createItem). Maps effectName
- * extracted from the "spell:<effectName>" tokenURI to display values.
- *
- * Damage values mirror zones/{dark_cave,windy_peaks}/spells.json.
- */
-export const SPELL_CATALOG: Record<string, { name: string; minDamage: bigint; maxDamage: bigint; minLevel: bigint }> = {
-  // L10 — dark_cave/spells.json
-  battle_cry:           { name: 'Battle Cry',       minDamage: 5n,  maxDamage: 10n, minLevel: 10n },
-  divine_shield:        { name: 'Divine Shield',    minDamage: 0n,  maxDamage: 0n,  minLevel: 10n },
-  hunters_mark:         { name: 'Marked Shot',      minDamage: 4n,  maxDamage: 8n,  minLevel: 10n },
-  shadowstep:           { name: 'Expose Weakness',  minDamage: 4n,  maxDamage: 8n,  minLevel: 10n },
-  entangle:             { name: 'Entangle',         minDamage: 3n,  maxDamage: 6n,  minLevel: 10n },
-  soul_drain_curse:     { name: 'Soul Drain',       minDamage: 4n,  maxDamage: 8n,  minLevel: 10n },
-  arcane_blast_damage:  { name: 'Arcane Blast',     minDamage: 5n,  maxDamage: 10n, minLevel: 10n },
-  arcane_surge_damage:  { name: 'Arcane Infusion',  minDamage: 3n,  maxDamage: 6n,  minLevel: 10n },
-  blessing:             { name: 'Blessing',         minDamage: 0n,  maxDamage: 0n,  minLevel: 10n },
-  // L15 — windy_peaks/spells.json
-  warcry:               { name: 'Warcry',           minDamage: 8n,  maxDamage: 14n, minLevel: 15n },
-  judgment:             { name: 'Judgment',         minDamage: 6n,  maxDamage: 12n, minLevel: 15n },
-  volley:               { name: 'Volley',           minDamage: 7n,  maxDamage: 14n, minLevel: 15n },
-  backstab:             { name: 'Backstab',         minDamage: 10n, maxDamage: 18n, minLevel: 15n },
-  regrowth:             { name: 'Regrowth',         minDamage: 0n,  maxDamage: 0n,  minLevel: 15n },
-  blight:               { name: 'Blight',           minDamage: 5n,  maxDamage: 10n, minLevel: 15n },
-  meteor:               { name: 'Meteor',           minDamage: 8n,  maxDamage: 16n, minLevel: 15n },
-  mana_burn:            { name: 'Mana Burn',        minDamage: 5n,  maxDamage: 10n, minLevel: 15n },
-  smite:                { name: 'Smite',            minDamage: 5n,  maxDamage: 10n, minLevel: 15n },
-};
+// Re-export so existing callers (and the test file) can still import from here.
+export { SPELL_CATALOG };
 
 /** Returns true when a tokenURI marks an item as a spell (e.g. "spell:arcane_surge_damage"). */
 export const isSpellTokenURI = (tokenURI: string): boolean => tokenURI.startsWith('spell:');

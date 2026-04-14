@@ -24,6 +24,11 @@ import {
 import { privateKeyToAccount } from 'viem/accounts';
 import { base, foundry } from 'viem/chains';
 
+// Single source of truth for spell list + damage values — also drives the
+// client's SPELL_CATALOG fallback in ItemsContext.tsx. Edit there to add or
+// rename a class spell; both the deploy script and the UI update in lockstep.
+import { SPELLS_MANIFEST } from '../../../client/src/data/spellsManifest';
+
 // ---------------------------------------------------------------------------
 // Effect ID computation — matches deploy-spell-config.ts
 // ---------------------------------------------------------------------------
@@ -35,7 +40,7 @@ function effectId(name: string): Hex {
 }
 
 // ---------------------------------------------------------------------------
-// Spell item definitions — class -> L10 + L15 effect names
+// Spell item definitions — derived from the shared SPELLS_MANIFEST
 // ---------------------------------------------------------------------------
 
 interface SpellDef {
@@ -44,17 +49,11 @@ interface SpellDef {
   l15EffectName: string;
 }
 
-const SPELLS: SpellDef[] = [
-  { className: 'Warrior',  l10EffectName: 'battle_cry',          l15EffectName: 'warcry' },
-  { className: 'Paladin',  l10EffectName: 'divine_shield',       l15EffectName: 'judgment' },
-  { className: 'Ranger',   l10EffectName: 'hunters_mark',        l15EffectName: 'volley' },
-  { className: 'Rogue',    l10EffectName: 'shadowstep',          l15EffectName: 'backstab' },
-  { className: 'Druid',    l10EffectName: 'entangle',            l15EffectName: 'regrowth' },
-  { className: 'Warlock',  l10EffectName: 'soul_drain_curse',    l15EffectName: 'blight' },
-  { className: 'Wizard',   l10EffectName: 'arcane_blast_damage', l15EffectName: 'meteor' },
-  { className: 'Sorcerer', l10EffectName: 'arcane_surge_damage', l15EffectName: 'mana_burn' },
-  { className: 'Cleric',   l10EffectName: 'blessing',            l15EffectName: 'smite' },
-];
+const SPELLS: SpellDef[] = SPELLS_MANIFEST.map((entry) => ({
+  className: entry.className,
+  l10EffectName: entry.l10.effectName,
+  l15EffectName: entry.l15.effectName,
+}));
 
 // ---------------------------------------------------------------------------
 // ABI for adminCreateItem

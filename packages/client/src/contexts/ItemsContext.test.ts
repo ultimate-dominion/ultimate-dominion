@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { SPELLS_MANIFEST } from '../data/spellsManifest';
 import { SPELL_CATALOG, isSpellTokenURI, spellEffectNameFromURI } from './ItemsContext';
 
 // ---------------------------------------------------------------------------
@@ -6,59 +7,50 @@ import { SPELL_CATALOG, isSpellTokenURI, spellEffectNameFromURI } from './ItemsC
 // ---------------------------------------------------------------------------
 
 describe('SPELL_CATALOG', () => {
-  // L10 effect names deployed via dark_cave/spells.json — must match
-  // deploy-spell-items.ts SPELLS[].l10EffectName exactly or the client
-  // fallback will show raw IDs to players.
-  const L10_EFFECTS = [
-    'battle_cry',
-    'divine_shield',
-    'hunters_mark',
-    'shadowstep',
-    'entangle',
-    'soul_drain_curse',
-    'arcane_blast_damage',
-    'arcane_surge_damage',
-    'blessing',
-  ];
-  // L15 effect names deployed via windy_peaks/spells.json — must match
-  // deploy-spell-items.ts SPELLS[].l15EffectName exactly.
-  const L15_EFFECTS = [
-    'warcry',
-    'judgment',
-    'volley',
-    'backstab',
-    'regrowth',
-    'blight',
-    'meteor',
-    'mana_burn',
-    'smite',
-  ];
+  // The manifest is the single source of truth for both the deploy script
+  // (packages/contracts/scripts/admin/deploy-spell-items.ts) and the client
+  // catalog. Deriving the expected effect names here means the test moves
+  // in lockstep with the deploy script automatically — no manual edits to
+  // keep two lists in sync.
+  const L10_EFFECTS = SPELLS_MANIFEST.map((s) => s.l10.effectName);
+  const L15_EFFECTS = SPELLS_MANIFEST.map((s) => s.l15.effectName);
 
-  it('contains all 9 L10 class spells', () => {
+  it('contains every L10 class spell from the manifest', () => {
+    expect(L10_EFFECTS).toHaveLength(9);
     for (const name of L10_EFFECTS) {
       expect(SPELL_CATALOG).toHaveProperty(name);
       expect(SPELL_CATALOG[name].minLevel).toBe(10n);
     }
   });
 
-  it('contains all 9 L15 class spells', () => {
+  it('contains every L15 class spell from the manifest', () => {
+    expect(L15_EFFECTS).toHaveLength(9);
     for (const name of L15_EFFECTS) {
       expect(SPELL_CATALOG).toHaveProperty(name);
       expect(SPELL_CATALOG[name].minLevel).toBe(15n);
     }
   });
 
-  it('has exactly 18 entries (9 L10 + 9 L15)', () => {
-    expect(Object.keys(SPELL_CATALOG)).toHaveLength(18);
+  it('has exactly 2x manifest entries (one per tier)', () => {
+    expect(Object.keys(SPELL_CATALOG)).toHaveLength(SPELLS_MANIFEST.length * 2);
   });
 
-  it('catalog covers every effect name in deploy-spell-items SPELLS', () => {
-    // If this test fails, deploy-spell-items.ts added/renamed an effect and
-    // the catalog wasn't updated — the UI will render "Spell #<id>" instead
-    // of the real name. Keep the two lists in lockstep.
-    for (const name of [...L10_EFFECTS, ...L15_EFFECTS]) {
-      expect(SPELL_CATALOG[name]).toBeDefined();
+  it('catalog names and damage match the manifest exactly', () => {
+    for (const entry of SPELLS_MANIFEST) {
+      const l10 = SPELL_CATALOG[entry.l10.effectName];
+      expect(l10.name).toBe(entry.l10.displayName);
+      expect(l10.minDamage).toBe(entry.l10.minDamage);
+      expect(l10.maxDamage).toBe(entry.l10.maxDamage);
+      const l15 = SPELL_CATALOG[entry.l15.effectName];
+      expect(l15.name).toBe(entry.l15.displayName);
+      expect(l15.minDamage).toBe(entry.l15.minDamage);
+      expect(l15.maxDamage).toBe(entry.l15.maxDamage);
     }
+  });
+
+  it('effect names are unique across all tiers (no collisions)', () => {
+    const all = [...L10_EFFECTS, ...L15_EFFECTS];
+    expect(new Set(all).size).toBe(all.length);
   });
 
   it('Arcane Infusion has correct display name and damage', () => {
