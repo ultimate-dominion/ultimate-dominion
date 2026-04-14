@@ -189,13 +189,17 @@ export const GameBoard = (): JSX.Element => {
     if (!character) return;
     const currentLevel = Number(character.level);
     if (lastSeenLevelRef.current === null) {
-      // First render — store current level without triggering animation
       lastSeenLevelRef.current = currentLevel;
       return;
     }
-    if (currentLevel > lastSeenLevelRef.current && !isLevelUpModalOpen && !isBattleOutcomeModalOpen) {
-      lastSeenLevelRef.current = currentLevel;
-      setTimeout(() => onOpenLevelUpModal(), 300);
+    // Preserve the level-up signal when a blocking modal is open so the
+    // watcher re-fires after the modal closes. Only advance the ref when
+    // we fire the modal or observe no increase.
+    if (currentLevel > lastSeenLevelRef.current) {
+      if (!isLevelUpModalOpen && !isBattleOutcomeModalOpen) {
+        lastSeenLevelRef.current = currentLevel;
+        setTimeout(() => onOpenLevelUpModal(), 300);
+      }
     } else {
       lastSeenLevelRef.current = currentLevel;
     }
