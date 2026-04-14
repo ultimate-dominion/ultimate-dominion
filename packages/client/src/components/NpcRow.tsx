@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaUser, FaSearch } from 'react-icons/fa';
 
 import { useNpcFlavor } from '../hooks/useNpcFlavor';
+import { GUILD_PATH, RESPEC_PATH } from '../Routes';
 import type { NpcInteraction } from '../utils/types';
 
 const ROW_HEIGHT = { base: 5, md: 8 };
@@ -53,9 +54,9 @@ export const NpcRow = ({
 
   const onInteract = useCallback(() => {
     if (interaction === 'respec') {
-      navigate('/character?tab=respec');
+      navigate(RESPEC_PATH);
     } else if (interaction === 'guild') {
-      navigate('/guild');
+      navigate(GUILD_PATH);
     } else if (interaction === 'dialogue' || interaction === 'examine') {
       onOpenDialogue(entityId, npcName, metadataUri);
     }

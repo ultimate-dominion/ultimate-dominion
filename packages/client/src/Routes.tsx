@@ -72,6 +72,9 @@ const MarketplaceItem = lazyWithReload(() =>
 const Shop = lazyWithReload(() =>
   import('./pages/Shop').then(m => ({ default: m.Shop })),
 );
+const Respec = lazyWithReload(() =>
+  import('./pages/Respec').then(m => ({ default: m.Respec })),
+);
 const Welcome = lazyWithReload(() =>
   import('./pages/Welcome').then(m => ({ default: m.Welcome })),
 );
@@ -119,6 +122,7 @@ export const PRIVACY_PATH = '/privacy';
 export const TERMS_PATH = '/terms';
 export const FAQ_PATH = '/faq';
 export const GUILD_PATH = '/guild';
+export const RESPEC_PATH = '/respec';
 export const PRETEXT_LAB_PATH = '/pretext-lab';
 export const BLOG_URL = 'https://ultimatedominion.com/blog';
 export const TAVERN_URL = 'https://tavern.ultimatedominion.com';
@@ -146,6 +150,7 @@ const AppRoutes: React.FC = () => {
           <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
           <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
           {SHOW_Z2 && <Route path={GUILD_PATH} element={<Guild />} />}
+          {SHOW_Z2 && <Route path={RESPEC_PATH} element={<Respec />} />}
           {SHOW_Z2 && <Route path={PRETEXT_LAB_PATH} element={<PretextLab />} />}
           <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
           <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />

@@ -38,7 +38,6 @@ import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
 import { FragmentChainProgress } from '../components/FragmentChainProgress';
 import { FragmentCollection } from '../components/FragmentCollection';
-import { RespecPanel } from '../components/RespecPanel';
 import { ItemCard } from '../components/ItemCard';
 import { ItemConsumeModal } from '../components/ItemConsumeModal';
 import { ItemEquipModal } from '../components/ItemEquipModal';
@@ -395,17 +394,6 @@ export const CharacterPage = (): JSX.Element => {
           >
             <ItemsPanel character={character} />
           </GridItem>
-          {isOwner && SHOW_Z2 && (
-            <GridItem
-              colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
-              colStart={{ base: 1, sm: 1, md: 1, lg: 1, xl: 1 }}
-              order={{ base: 5, lg: 5 }}
-            >
-              <PolygonalCard clipPath="none" p={6}>
-                <RespecPanel />
-              </PolygonalCard>
-            </GridItem>
-          )}
           {SHOW_Z2 && (
             <GridItem
               colSpan={{ base: 1, sm: 1, md: 1, lg: 3, xl: 3 }}
