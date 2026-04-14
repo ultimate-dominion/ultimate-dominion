@@ -114,8 +114,12 @@ async function main() {
   console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
   console.log(`Items: ${SPELLS.length * 2} (${SPELLS.length} L10 + ${SPELLS.length} L15)\n`);
 
-  // ItemType.Spell = 2, supply = 0, dropChance = 0, price = 0, rarity = 1
-  const ITEM_TYPE_SPELL = 2;
+  // ItemType.Weapon = 0 — we deploy spells as weapons until the contract's
+  // ItemCreationSystem.createItem() gains a Spell branch. Today Spell items
+  // would write nothing to SpellStats and CombatSystem._executeMagicAction
+  // would revert with InvalidMagicItemType. The client categorizes these
+  // via the "spell:<effectName>" tokenURI prefix (see ItemsContext.tsx).
+  const ITEM_TYPE_WEAPON = 0;
   const SUPPLY = 0n;
   const DROP_CHANCE = 0n;
   const PRICE = 0n;
@@ -156,7 +160,7 @@ async function main() {
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__adminCreateItem',
-      args: [ITEM_TYPE_SPELL, SUPPLY, DROP_CHANCE, PRICE, RARITY, l10Stats, l10MetadataUri],
+      args: [ITEM_TYPE_WEAPON, SUPPLY, DROP_CHANCE, PRICE, RARITY, l10Stats, l10MetadataUri],
       account: account,
     });
 
@@ -164,7 +168,7 @@ async function main() {
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__adminCreateItem',
-      args: [ITEM_TYPE_SPELL, SUPPLY, DROP_CHANCE, PRICE, RARITY, l10Stats, l10MetadataUri],
+      args: [ITEM_TYPE_WEAPON, SUPPLY, DROP_CHANCE, PRICE, RARITY, l10Stats, l10MetadataUri],
       nonce: nonce++,
     });
     console.log(`  L10 "${spell.l10EffectName}" -> itemId=${l10ItemId} tx=${l10Hash}`);
@@ -178,7 +182,7 @@ async function main() {
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__adminCreateItem',
-      args: [ITEM_TYPE_SPELL, SUPPLY, DROP_CHANCE, PRICE, RARITY, l15Stats, l15MetadataUri],
+      args: [ITEM_TYPE_WEAPON, SUPPLY, DROP_CHANCE, PRICE, RARITY, l15Stats, l15MetadataUri],
       account: account,
     });
 
@@ -186,7 +190,7 @@ async function main() {
       address: worldAddress,
       abi: worldAbi,
       functionName: 'UD__adminCreateItem',
-      args: [ITEM_TYPE_SPELL, SUPPLY, DROP_CHANCE, PRICE, RARITY, l15Stats, l15MetadataUri],
+      args: [ITEM_TYPE_WEAPON, SUPPLY, DROP_CHANCE, PRICE, RARITY, l15Stats, l15MetadataUri],
       nonce: nonce++,
     });
     console.log(`  L15 "${spell.l15EffectName}" -> itemId=${l15ItemId} tx=${l15Hash}`);
