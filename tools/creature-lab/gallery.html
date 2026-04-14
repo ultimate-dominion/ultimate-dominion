@@ -58,28 +58,20 @@
     import { createThreeRenderer } from './three-bridge.js';
     import { loadGLBCreature } from './glb-loader.js';
 
-    const CREATURES = [
-      // Z1
-      { slug: 'dire-rat',        name: 'Dire Rat',        zone: 1, level: 1,  gridW: 10, gridH: 7,  glb: 'glb/dire-rat-animated.glb' },
-      { slug: 'kobold',          name: 'Kobold',          zone: 1, level: 2,  gridW: 7,  gridH: 7,  glb: 'glb/kobold-animated.glb' },
-      { slug: 'goblin',          name: 'Goblin',          zone: 1, level: 3,  gridW: 7,  gridH: 7,  glb: 'glb/goblin-animated.glb' },
-      { slug: 'giant-spider',    name: 'Giant Spider',    zone: 1, level: 4,  gridW: 10, gridH: 12, canvas: true },
-      { slug: 'skeleton-creature', name: 'Skeleton',      zone: 1, level: 5,  gridW: 7,  gridH: 7,  glb: 'glb/skeleton-animated.glb' },
-      { slug: 'goblin-shaman',   name: 'Goblin Shaman',   zone: 1, level: 6,  gridW: 7,  gridH: 7,  glb: 'glb/goblin-shaman-animated.glb' },
-      { slug: 'gelatinous-ooze', name: 'Gelatinous Ooze', zone: 1, level: 7,  gridW: 10, gridH: 14, canvas: true },
-      { slug: 'bugbear',         name: 'Bugbear',         zone: 1, level: 8,  gridW: 7,  gridH: 7,  glb: 'glb/bugbear-animated.glb' },
-      { slug: 'carrion-crawler', name: 'Carrion Crawler', zone: 1, level: 9,  gridW: 10, gridH: 13, canvas: true },
-      { slug: 'hook-horror',     name: 'Hook Horror',     zone: 1, level: 10, gridW: 14, gridH: 12, glb: 'glb/hook-horror-animated.glb' },
-      { slug: 'basilisk',        name: 'Basilisk',        zone: 1, level: 12, gridW: 26, gridH: 9,  glb: 'glb/basilisk-animated.glb', isBoss: true },
-      // Z2
-      { slug: 'harpy',           name: 'Harpy',           zone: 2, level: 12, gridW: 10, gridH: 10, glb: 'glb/harpy-animated.glb' },
-      { slug: 'ogre',            name: 'Ogre',            zone: 2, level: 13, gridW: 10, gridH: 12, glb: 'glb/ogre-animated.glb' },
-      { slug: 'orc',             name: 'Orc',             zone: 2, level: 15, gridW: 7,  gridH: 7,  glb: 'glb/orc-animated.glb' },
-      { slug: 'orc-shaman',      name: 'Orc Shaman',      zone: 2, level: 16, gridW: 7,  gridH: 7,  glb: 'glb/orc-shaman-animated.glb' },
-      { slug: 'troll',           name: 'Troll',           zone: 2, level: 17, gridW: 10, gridH: 12, glb: 'glb/troll-animated.glb' },
-      { slug: 'griffon',         name: 'Griffon',         zone: 2, level: 18, gridW: 12, gridH: 10, glb: 'glb/griffon-animated.glb' },
-      { slug: 'korraths-warden', name: "Korrath's Warden", zone: 2, level: 20, gridW: 16, gridH: 14, glb: 'glb/korraths-warden-animated.glb', isBoss: true },
-    ];
+    // Loaded from ./creatures.json (canonical source, symlinked to packages/client/src/.../creatures.json)
+    const creaturesJson = await fetch('./creatures.json').then((r) => r.json());
+    const CREATURES = creaturesJson
+      .filter((c) => c.category === 'monster')
+      .map((c) => ({
+        slug: c.slug,
+        name: c.name,
+        zone: c.zone,
+        level: c.level,
+        gridW: c.gridWidth,
+        gridH: c.gridHeight,
+        glb: c.render === 'glb' ? `glb/${c.slug}-animated.glb` : null,
+        isBoss: c.isBoss,
+      }));
 
     const RENDER_SIZE = 320;
     const DISPLAY_W = 160;

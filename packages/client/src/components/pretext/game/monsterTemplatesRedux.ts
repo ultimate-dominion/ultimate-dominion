@@ -1,5 +1,23 @@
 import type { MonsterTemplate } from './monsterTemplates';
 import { makeGLBDrawFn } from './glbCreatureLoader';
+import creaturesData from './creatures.json';
+
+type CreatureEntry = {
+  slug: string;
+  name: string;
+  category: 'monster' | 'pc';
+  zone?: number;
+  level: number;
+  gridWidth: number;
+  gridHeight: number;
+  render: 'glb' | 'canvas';
+  isBoss?: boolean;
+  atmosphere: { r: number; g: number; b: number; intensity: number };
+  status?: string;
+  ref?: string;
+};
+
+const CREATURES = creaturesData as CreatureEntry[];
 
 function fillEllipse(
   ctx: CanvasRenderingContext2D,
@@ -2329,30 +2347,83 @@ function drawBasiliskRedux(ctx: CanvasRenderingContext2D, w: number, h: number) 
   highlight(ctx, w * 0.40, h * 0.34, w * 0.06, 'rgb(214,224,166)', 0.16);
 }
 
-export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = [
-  // ── Zone 1: Dark Cave (Levels 1-12) ──
-  // displayScale controls visual size relative to viewport (0-1). Progressive: tiny rat → massive basilisk.
-  { id: 'redux-dire-rat', name: 'Dire Rat', gridWidth: 6, gridHeight: 4, displayScale: 0.35, threatTier: 1, dynamic: true, monsterClass: 1, level: 1, atmosphere: { r: 140, g: 110, b: 70, intensity: 0.16 },
-    draw: makeGLBDrawFn('/models/creatures/dire-rat.glb', 6, 4, drawDireRatRedux) },
-  { id: 'redux-kobold', name: 'Kobold', gridWidth: 7, gridHeight: 6, displayScale: 0.45, threatTier: 1, dynamic: true, monsterClass: 2, level: 2, atmosphere: { r: 160, g: 120, b: 50, intensity: 0.16 },
-    draw: makeGLBDrawFn('/models/creatures/kobold.glb', 7, 6, drawKoboldRedux) },
-  { id: 'redux-goblin', name: 'Goblin', gridWidth: 8, gridHeight: 7, displayScale: 0.50, threatTier: 1, dynamic: true, monsterClass: 0, level: 3, atmosphere: { r: 96, g: 120, b: 48, intensity: 0.16 },
-    draw: makeGLBDrawFn('/models/creatures/goblin.glb', 8, 7, drawGoblinRedux) },
-  { id: 'redux-giant-spider', name: 'Giant Spider', gridWidth: 10, gridHeight: 10, displayScale: 0.60, threatTier: 1, dynamic: true, monsterClass: 2, level: 4, atmosphere: { r: 72, g: 164, b: 226, intensity: 0.22 },
+// Per-creature gameplay/render metadata that isn't in creatures.json.
+// creatures.json owns: slug, name, level, gridWidth, gridHeight, atmosphere, isBoss.
+// This map owns: monsterClass, displayScale, threatTier, dynamic, renderOverrides,
+// and the draw function (which needs grid dims from creatures.json at build time).
+//
+// To add a creature to the redux roster: add it to creatures.json AND add an entry here.
+type ReduxMeta = Pick<MonsterTemplate, 'monsterClass' | 'displayScale' | 'threatTier' | 'dynamic' | 'renderOverrides'> & {
+  draw: (gridW: number, gridH: number) => MonsterTemplate['draw'];
+};
+
+const REDUX_META: Record<string, ReduxMeta> = {
+  'dire-rat': {
+    monsterClass: 1, displayScale: 0.35, threatTier: 1, dynamic: true,
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/dire-rat.glb', gw, gh, drawDireRatRedux),
+  },
+  'kobold': {
+    monsterClass: 2, displayScale: 0.45, threatTier: 1, dynamic: true,
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/kobold.glb', gw, gh, drawKoboldRedux),
+  },
+  'goblin': {
+    monsterClass: 0, displayScale: 0.50, threatTier: 1, dynamic: true,
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/goblin.glb', gw, gh, drawGoblinRedux),
+  },
+  'giant-spider': {
+    monsterClass: 2, displayScale: 0.60, threatTier: 1, dynamic: true,
     renderOverrides: { gamma: 0.52, ambient: 0.70, brightnessBoost: 2.2, charDensityFloor: 0.10 },
-    draw: makeGLBDrawFn('/models/creatures/giant-spider.glb', 10, 10, drawPhaseSpiderRedux) },
-  { id: 'redux-skeleton', name: 'Skeleton', gridWidth: 7, gridHeight: 10, displayScale: 0.55, threatTier: 2, dynamic: true, monsterClass: 0, level: 5, atmosphere: { r: 96, g: 156, b: 70, intensity: 0.18 },
-    draw: makeGLBDrawFn('/models/creatures/skeleton.glb', 7, 10, drawSkeletonRedux) },
-  { id: 'redux-goblin-shaman', name: 'Goblin Shaman', gridWidth: 8, gridHeight: 9, displayScale: 0.58, threatTier: 2, dynamic: true, monsterClass: 1, level: 6, atmosphere: { r: 106, g: 70, b: 164, intensity: 0.18 },
-    draw: makeGLBDrawFn('/models/creatures/goblin-shaman.glb', 8, 9, drawGoblinShamanRedux) },
-  { id: 'redux-gelatinous-ooze', name: 'Gelatinous Ooze', gridWidth: 11, gridHeight: 14, displayScale: 0.70, threatTier: 2, monsterClass: 2, level: 7, atmosphere: { r: 66, g: 182, b: 56, intensity: 0.18 }, draw: drawGelatinousOozeRedux },
-  { id: 'redux-bugbear', name: 'Bugbear', gridWidth: 10, gridHeight: 12, displayScale: 0.75, threatTier: 2, dynamic: true, monsterClass: 0, level: 8, atmosphere: { r: 172, g: 138, b: 72, intensity: 0.16 },
-    draw: makeGLBDrawFn('/models/creatures/bugbear.glb', 10, 12, drawBugbearRedux) },
-  { id: 'redux-carrion-crawler', name: 'Carrion Crawler', gridWidth: 12, gridHeight: 13, displayScale: 0.80, threatTier: 3, dynamic: true, monsterClass: 1, level: 9, atmosphere: { r: 144, g: 168, b: 208, intensity: 0.20 },
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/giant-spider.glb', gw, gh, drawPhaseSpiderRedux),
+  },
+  'skeleton': {
+    monsterClass: 0, displayScale: 0.55, threatTier: 2, dynamic: true,
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/skeleton.glb', gw, gh, drawSkeletonRedux),
+  },
+  'goblin-shaman': {
+    monsterClass: 1, displayScale: 0.58, threatTier: 2, dynamic: true,
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/goblin-shaman.glb', gw, gh, drawGoblinShamanRedux),
+  },
+  'gelatinous-ooze': {
+    monsterClass: 2, displayScale: 0.70, threatTier: 2,
+    draw: () => drawGelatinousOozeRedux,
+  },
+  'bugbear': {
+    monsterClass: 0, displayScale: 0.75, threatTier: 2, dynamic: true,
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/bugbear.glb', gw, gh, drawBugbearRedux),
+  },
+  'carrion-crawler': {
+    monsterClass: 1, displayScale: 0.80, threatTier: 3, dynamic: true,
     renderOverrides: { gamma: 0.52, ambient: 0.70, brightnessBoost: 2.0, charDensityFloor: 0.10 },
-    draw: drawCarrionCrawlerRedux },
-  { id: 'redux-hook-horror', name: 'Hook Horror', gridWidth: 14, gridHeight: 14, displayScale: 0.85, threatTier: 3, dynamic: true, monsterClass: 2, level: 10, atmosphere: { r: 136, g: 82, b: 178, intensity: 0.18 },
-    draw: makeGLBDrawFn('/models/creatures/hook-horror.glb', 14, 14, drawDuskDrakeRedux) },
-  { id: 'redux-basilisk', name: 'Basilisk', gridWidth: 18, gridHeight: 18, displayScale: 1.0, threatTier: 3, dynamic: true, monsterClass: 0, level: 12, isBoss: true, atmosphere: { r: 52, g: 86, b: 36, intensity: 0.16 }, renderOverrides: { gamma: 0.52, ambient: 0.60, brightnessBoost: 1.7, charDensityFloor: 0.10 },
-    draw: makeGLBDrawFn('/models/creatures/basilisk.glb', 18, 18, drawBasiliskRedux) },
-];
+    draw: () => drawCarrionCrawlerRedux,
+  },
+  'hook-horror': {
+    monsterClass: 2, displayScale: 0.85, threatTier: 3, dynamic: true,
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/hook-horror.glb', gw, gh, drawDuskDrakeRedux),
+  },
+  'basilisk': {
+    monsterClass: 0, displayScale: 1.0, threatTier: 3, dynamic: true,
+    renderOverrides: { gamma: 0.52, ambient: 0.60, brightnessBoost: 1.7, charDensityFloor: 0.10 },
+    draw: (gw, gh) => makeGLBDrawFn('/models/creatures/basilisk.glb', gw, gh, drawBasiliskRedux),
+  },
+};
+
+export const MONSTER_TEMPLATES_REDUX: MonsterTemplate[] = CREATURES
+  .filter((c) => REDUX_META[c.slug])
+  .map((c) => {
+    const meta = REDUX_META[c.slug];
+    return {
+      id: `redux-${c.slug}`,
+      name: c.name,
+      gridWidth: c.gridWidth,
+      gridHeight: c.gridHeight,
+      level: c.level,
+      atmosphere: c.atmosphere,
+      ...(c.isBoss ? { isBoss: true } : {}),
+      monsterClass: meta.monsterClass,
+      displayScale: meta.displayScale,
+      threatTier: meta.threatTier,
+      ...(meta.dynamic ? { dynamic: true } : {}),
+      ...(meta.renderOverrides ? { renderOverrides: meta.renderOverrides } : {}),
+      draw: meta.draw(c.gridWidth, c.gridHeight),
+    };
+  });
