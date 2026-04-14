@@ -159,7 +159,21 @@ Split-screen: player inventory (left) vs shopkeeper inventory (right).
 - Buy: pay gold (with markup), receive items
 - Sell: trade items (with markdown), receive gold
 - Requires ERC20/ERC1155 allowance approval
+- Repair equipment (`RepairShopPanel`) — available at any equipment shop. Z1 items currently skip repair (`maxDurability = 0`) until the Z1 durability rollout.
 - "Exit Shop" button returns to game board
+
+---
+
+## Respec (Stat Redistribution)
+
+**Route**: `/respec`
+
+- Accessed by interacting with **Vel Morrow**, the Combat Trainer in Windy Peaks (Z2, tile `2,3`). Not available on the character page.
+- Two actions:
+  - **Redistribute Stats**: move existing STR/AGI/INT within the same total pool. Cost = `STAT_RESPEC_BASE_COST + level * RESPEC_COST_PER_LEVEL` (see `constants.sol`).
+  - **Full Reset**: resets class, level, and all equipment. Costs `FULL_RESPEC_MULTIPLIER ×` the stat respec cost.
+- Blocked during combat (`CannotRespecInCombat` guard).
+- Gated behind the `SHOW_Z2` feature flag.
 
 ---
 
@@ -229,6 +243,7 @@ Split-screen: player inventory (left) vs shopkeeper inventory (right).
 | `/marketplace` | Yes | Yes | Yes |
 | `/marketplace/items/*` | Yes | Yes | Yes |
 | `/shops/:shopId` | Yes | Yes | Yes + active encounter |
+| `/respec` | Yes | Yes | Yes (gated by `SHOW_Z2`) |
 
 ---
 

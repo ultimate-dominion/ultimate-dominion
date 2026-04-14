@@ -85,8 +85,9 @@ Repair cost: **flat per-rarity rate per durability point** (not % of item price)
 ## Repair System
 
 ### Where
-- Any NPC shop that sells equipment
-- Future: dedicated Blacksmith NPC with better rates
+- Any NPC shop that sells equipment — both **Tal** (Z1 Dark Cave, `9,9`) and **Tal Carden** (Z2 Windy Peaks, `9,9`). The `RepairShopPanel` is mounted unconditionally on `/shops/:shopId`.
+- Future: dedicated Blacksmith NPC with better rates.
+- **Current state**: `RepairShopPanel.tsx` skips items with `maxDurability === 0`. Z1 items have not had durability initialized on-chain yet, so the panel at Z1 Tal is currently inert for Z1 gear. When Z1 durability is activated, the same UI lights up automatically.
 
 ### Cost Formula
 ```
