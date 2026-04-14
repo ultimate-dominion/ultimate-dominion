@@ -24,11 +24,18 @@ function runLevelWatcher(
     // First render — initialise ref without triggering animation
     return currentLevel;
   }
-  // Preserve the signal while a modal blocks so a later re-run can still fire.
-  // Only advance the ref when we actually fire the modal or level did not
-  // increase.
+  // Rules mirror GameBoard.tsx watcher exactly:
+  //   1. no increase → advance ref
+  //   2. increase, LevelUpModal already open → advance ref (another code
+  //      path, e.g. BattleOutcomeModal close handler, already fired it —
+  //      do not re-fire when it closes)
+  //   3. increase, BattleOutcomeModal blocking → leave ref behind
+  //   4. increase, nothing blocking → fire and advance ref
   if (currentLevel > lastSeenLevel) {
-    if (!isLevelUpModalOpen && !isBattleOutcomeModalOpen) {
+    if (isLevelUpModalOpen) {
+      return currentLevel;
+    }
+    if (!isBattleOutcomeModalOpen) {
       onOpenLevelUpModal();
       return currentLevel;
     }
@@ -98,24 +105,67 @@ describe('GameBoard level-up watcher logic', () => {
     expect(nextRef).toBe(5);
   });
 
-  it('preserves lastSeenLevel when LevelUpModal blocks — ref does NOT advance', () => {
+  it('advances ref when LevelUpModal is already open (no re-fire on close)', () => {
+    // Rule 2: another code path (typically the BattleOutcomeModal close
+    // handler) opened LevelUpModal for this level gain. The watcher must
+    // advance the ref so it does NOT re-fire when the user dismisses the
+    // modal and the effect re-runs with both flags off.
     const onOpen = vi.fn();
     const nextRef = runLevelWatcher(6, 5, true, false, onOpen);
     expect(onOpen).not.toHaveBeenCalled();
-    expect(nextRef).toBe(5);
+    expect(nextRef).toBe(6);
   });
 
-  it('fires on re-run after BattleOutcomeModal closes (end-to-end battle-block sequence)', () => {
+  it('fires on re-run after BattleOutcomeModal closes (watcher-only path)', () => {
+    // Scenario B: player hits max level (canLevel=false after gain), so
+    // BattleOutcomeModal close handler does NOT fire LevelUpModal. The
+    // watcher must fire it on the next re-run.
     const onOpen = vi.fn();
-    // Step 1: player levels up mid-battle, BattleOutcomeModal is open.
     let ref: number | null = 5;
+    // Step 1: mid-battle, level goes up, BattleOutcomeModal blocking.
     ref = runLevelWatcher(6, ref, false, true, onOpen);
     expect(onOpen).not.toHaveBeenCalled();
-    expect(ref).toBe(5); // ref preserved
-    // Step 2: BattleOutcomeModal closes, useEffect re-runs with same level.
+    expect(ref).toBe(5);
+    // Step 2: BattleOutcomeModal closes WITHOUT firing LevelUpModal.
     ref = runLevelWatcher(6, ref, false, false, onOpen);
     expect(onOpen).toHaveBeenCalledOnce();
-    expect(ref).toBe(6); // ref finally advances
+    expect(ref).toBe(6);
+  });
+
+  it('does not re-fire after BattleOutcomeModal close handler opens LevelUpModal', () => {
+    // Scenario A: the common path — BattleOutcomeModal close handler
+    // calls onOpenLevelUpModal externally. The watcher must NOT schedule
+    // a second fire when the user dismisses the modal.
+    const onOpen = vi.fn();
+    let ref: number | null = 5;
+    // Step 1: mid-battle, level goes up, BattleOutcomeModal blocking.
+    ref = runLevelWatcher(6, ref, false, true, onOpen);
+    expect(ref).toBe(5);
+    // Step 2: BattleOutcomeModal close handler fires LevelUpModal.
+    // The effect re-runs with isLevelUpModalOpen=true — rule 2 advances
+    // the ref even though the watcher itself did not fire.
+    ref = runLevelWatcher(6, ref, true, false, onOpen);
+    expect(onOpen).not.toHaveBeenCalled();
+    expect(ref).toBe(6);
+    // Step 3: user dismisses LevelUpModal. Both flags are false, but
+    // the ref is already at 6 so `6 > 6` is false — no re-fire.
+    ref = runLevelWatcher(6, ref, false, false, onOpen);
+    expect(onOpen).not.toHaveBeenCalled();
+    expect(ref).toBe(6);
+  });
+
+  it('fires exactly once across a two-level gain (5 → 7)', () => {
+    // Edge case: jumping two levels at once (e.g., delayed XP grant).
+    // The modal shows level 7 — firing twice would be bad UX.
+    const onOpen = vi.fn();
+    let ref: number | null = 5;
+    ref = runLevelWatcher(7, ref, false, false, onOpen);
+    expect(onOpen).toHaveBeenCalledOnce();
+    expect(ref).toBe(7);
+    // Re-run (no state change): no second fire.
+    ref = runLevelWatcher(7, ref, true, false, onOpen);
+    expect(onOpen).toHaveBeenCalledOnce();
+    expect(ref).toBe(7);
   });
 
   it('fires even when player is NOT going through BattleOutcomeModal', () => {

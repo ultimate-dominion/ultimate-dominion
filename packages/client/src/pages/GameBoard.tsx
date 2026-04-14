@@ -185,6 +185,15 @@ export const GameBoard = (): JSX.Element => {
 
   // Level-up watcher: show LevelUpModal whenever the character gains a level,
   // regardless of whether they went through BattleOutcomeModal.
+  //
+  // Ref-advance rules (one fire per gain, never re-fires after user dismiss):
+  //   1. level unchanged/decreased → advance ref
+  //   2. level up, LevelUpModal already open (BattleOutcomeModal close handler
+  //      beat us to it) → advance ref so we don't re-fire when it closes
+  //   3. level up, BattleOutcomeModal blocking → LEAVE ref behind. If the
+  //      close handler fires LevelUpModal we'll advance via rule 2 on the
+  //      next re-run; if it doesn't, we'll fire ourselves via rule 4
+  //   4. level up, nothing blocking → fire, advance ref
   useEffect(() => {
     if (!character) return;
     const currentLevel = Number(character.level);
@@ -192,14 +201,14 @@ export const GameBoard = (): JSX.Element => {
       lastSeenLevelRef.current = currentLevel;
       return;
     }
-    // Preserve the level-up signal when a blocking modal is open so the
-    // watcher re-fires after the modal closes. Only advance the ref when
-    // we fire the modal or observe no increase.
     if (currentLevel > lastSeenLevelRef.current) {
-      if (!isLevelUpModalOpen && !isBattleOutcomeModalOpen) {
+      if (isLevelUpModalOpen) {
+        lastSeenLevelRef.current = currentLevel;
+      } else if (!isBattleOutcomeModalOpen) {
         lastSeenLevelRef.current = currentLevel;
         setTimeout(() => onOpenLevelUpModal(), 300);
       }
+      // else: battle modal blocking — leave ref behind for next pass
     } else {
       lastSeenLevelRef.current = currentLevel;
     }
