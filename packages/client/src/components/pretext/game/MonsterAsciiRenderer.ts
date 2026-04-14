@@ -494,6 +494,7 @@ const BG_FILL_ALPHA = 0.65;      // opacity of the bg rect
 
 export type AnimAction =
   | 'idle'
+  | 'attack'      // Generic 3-phase attack (windup → strike → recover) for ASCII-only monsters
   | 'fangs'       // Basilisk Fangs — physical lunge + bite
   | 'gaze'        // Petrifying Gaze — eyes charge + magic wave
   | 'hit'         // Taking damage — recoil + flash
@@ -506,6 +507,13 @@ export type AnimationState = {
   action: AnimAction;
   /** Timestamp (ms) when the action started */
   startTime: number;
+  /**
+   * Optional per-signal duration override. Used by the battle scene to sync
+   * the ASCII `'attack'` pose with the current weapon's projectile speed
+   * (melee 600ms, spell 500ms, ranged 400ms) so the strike phase peaks at
+   * the moment of impact. Falls back to `ACTION_DURATION[action]` if unset.
+   */
+  durationOverride?: number;
 };
 
 /** Easing: fast start, slow finish */
@@ -526,6 +534,9 @@ function easeOutBack(t: number): number {
 /** Duration of each action in ms */
 const ACTION_DURATION: Record<AnimAction, number> = {
   idle: Infinity,
+  // 600ms matches WEAPON_SPEED.melee so the ASCII strike pose peaks right as
+  // the projectile reaches the defender.
+  attack: 600,
   fangs: 900,
   gaze: 1200,
   hit: 500,
@@ -549,7 +560,7 @@ type AnimParams = {
   shake: number;
 };
 
-function computeAnimParams(anim: AnimationState | undefined, elapsed: number): AnimParams {
+export function computeAnimParams(anim: AnimationState | undefined, elapsed: number): AnimParams {
   const base: AnimParams = {
     translateX: 0, translateY: 0, scale: 1,
     colorShiftR: 0, colorShiftG: 0, colorShiftB: 0,
@@ -558,10 +569,39 @@ function computeAnimParams(anim: AnimationState | undefined, elapsed: number): A
   if (!anim || anim.action === 'idle') return base;
 
   const dt = elapsed - anim.startTime;
-  const duration = ACTION_DURATION[anim.action];
+  const duration = anim.durationOverride ?? ACTION_DURATION[anim.action];
   const t = Math.min(1, dt / duration); // 0..1 progress
 
   switch (anim.action) {
+    case 'attack': {
+      // Three-phase generic attack for ASCII-only monsters. Monsters sit on
+      // the right of the canvas and face LEFT toward the player, so "windup"
+      // is pulling back to +X and "strike" is lunging toward -X.
+      //   0.00-0.25 windup  — pull back (+X), crouch, faint red charge
+      //   0.25-0.55 strike  — lunge toward the player (-X), scale up, shake
+      //   0.55-1.00 recover — settle back to idle
+      if (t < 0.25) {
+        const p = easeInOutCubic(t / 0.25);
+        base.translateX = 6 * p;          // pull back (away from player)
+        base.translateY = 2 * p;
+        base.scale = 1 - 0.02 * p;
+        base.colorShiftR = Math.floor(20 * p);
+      } else if (t < 0.55) {
+        const p = easeOutBack((t - 0.25) / 0.30);
+        base.translateX = 6 - 28 * p;     // lunge toward player (-X)
+        base.translateY = 2 - 6 * p;
+        base.scale = 0.98 + 0.10 * p;
+        base.colorShiftR = Math.floor(20 + 40 * p);
+        base.shake = (1 - (t - 0.25) / 0.30) * 3;
+      } else {
+        const p = easeOutCubic((t - 0.55) / 0.45);
+        base.translateX = -22 * (1 - p);
+        base.translateY = -4 * (1 - p);
+        base.scale = 1.08 - 0.08 * p;
+        base.colorShiftR = Math.floor(60 * (1 - p));
+      }
+      break;
+    }
     case 'fangs': {
       // Phase 1 (0-0.25): tense — pull back slightly, crouch
       // Phase 2 (0.25-0.55): lunge — snap forward fast

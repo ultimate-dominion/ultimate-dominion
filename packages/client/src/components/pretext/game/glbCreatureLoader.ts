@@ -286,7 +286,21 @@ export async function loadGLBCreature(
 
   function playClip(name: string, fadeTime = 0.15) {
     const next = actions[name];
-    if (!next || next === currentAction) return;
+    if (!next) return;
+
+    // Back-to-back LoopOnce clips (e.g. two attacks in quick succession) need
+    // to restart from frame 0, otherwise the second call is a silent no-op
+    // because `next === currentAction`. Re-seat the action time and replay
+    // without re-registering a finish listener — the original listener is
+    // still alive and will self-remove on the next finish event.
+    if (next === currentAction) {
+      if (next.loop === THREE.LoopOnce) {
+        next.reset();
+        next.play();
+      }
+      return;
+    }
+
     if (currentAction) currentAction.crossFadeTo(next, fadeTime, false);
     if (next.loop === THREE.LoopOnce) next.reset();
     next.play();
@@ -336,6 +350,18 @@ export async function loadGLBCreature(
 }
 
 /**
+ * Draw function that also carries the source GLB URL as a property, so the
+ * battle scene can look the creature up (e.g. to trigger `playClip('attack')`
+ * on a monster counterattack) without wiring the URL through every call site.
+ */
+export type GLBDrawFn = ((ctx: CanvasRenderingContext2D, w: number, h: number) => void) & {
+  glbUrl: string;
+  glbGridW: number;
+  glbGridH: number;
+  glbYaw?: number;
+};
+
+/**
  * Create a MonsterTemplate-compatible draw function for a GLB creature.
  * Kicks off async loading on first call; uses fallbackDraw until ready.
  *
@@ -349,10 +375,14 @@ export function makeGLBDrawFn(
   gridH: number,
   fallbackDraw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void,
   yaw?: number,
-): (ctx: CanvasRenderingContext2D, w: number, h: number) => void {
+): GLBDrawFn {
   let loadStarted = false;
 
-  return function drawGLBCreature(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const drawFn = function drawGLBCreature(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+  ) {
     const state = creatureCache.get(url);
 
     if (state?.loaded && state.drawFn) {
@@ -369,5 +399,24 @@ export function makeGLBDrawFn(
         console.error('[glbCreatureLoader] FAILED to load', url, err);
       });
     }
-  };
+  } as GLBDrawFn;
+
+  drawFn.glbUrl = url;
+  drawFn.glbGridW = gridW;
+  drawFn.glbGridH = gridH;
+  drawFn.glbYaw = yaw;
+  return drawFn;
+}
+
+/**
+ * Narrow a plain draw fn to `GLBDrawFn` if it carries the `glbUrl` property.
+ * Returns null for procedural (non-GLB) draw fns like `drawGelatinousOozeRedux`.
+ */
+export function asGLBDrawFn(
+  draw: ((ctx: CanvasRenderingContext2D, w: number, h: number) => void) | undefined,
+): GLBDrawFn | null {
+  if (!draw) return null;
+  const candidate = draw as Partial<GLBDrawFn>;
+  if (typeof candidate.glbUrl === 'string') return draw as GLBDrawFn;
+  return null;
 }
