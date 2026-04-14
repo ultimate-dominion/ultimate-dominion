@@ -1,6 +1,7 @@
 import { Text, VStack } from '@chakra-ui/react';
-import React, { Component, ReactNode, Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import React, { Component, ReactNode, Suspense, useEffect } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import { BootScreen } from './components/BootScreen';
 import { SHOW_Z2 } from './lib/env';
 
 // Auto-reload on stale chunk after deploy. If a lazy import fails (old chunk
@@ -132,11 +133,27 @@ const ExternalRedirect = ({ to }: { to: string }) => {
   return null;
 };
 
-const RoutesFallback = () => (
-  <VStack justify="center" h="100%">
-    <Text>Loading...</Text>
-  </VStack>
-);
+// Suspense fallback for AppRoutes. On /game-board we render the full dark
+// BootScreen (position:fixed, zIndex 9999) so the one-render-tick where
+// React.lazy throws-to-Suspense on first encounter is visually identical to
+// the AppInner boot gate — no flash to the orange app shell with "Loading...".
+// Other routes fall through to the in-grid VStack.
+const RoutesFallback = () => {
+  const { pathname } = useLocation();
+  if (pathname === GAME_BOARD_PATH) {
+    return (
+      <BootScreen
+        body="Rebuilding the world state..."
+        eyebrow="Entering The Realm"
+      />
+    );
+  }
+  return (
+    <VStack justify="center" h="100%">
+      <Text>Loading...</Text>
+    </VStack>
+  );
+};
 
 const AppRoutes: React.FC = () => {
   return (
