@@ -13,16 +13,18 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatEther } from 'viem';
+import { parseEther } from 'viem';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { etherToFixedNumber } from '../utils/helpers';
 
-const STAT_RESPEC_BASE_COST = 50n;
-const RESPEC_COST_PER_LEVEL = 10n;
+const STAT_RESPEC_BASE_COST = parseEther('50');
+const RESPEC_COST_PER_LEVEL = parseEther('10');
+const FULL_RESPEC_MULTIPLIER = 10n;
 
 const StatRow = ({
   label,
@@ -112,7 +114,7 @@ export const RespecPanel = (): JSX.Element | null => {
 
   const fullRespecCost = useMemo(() => {
     if (!character) return 0n;
-    return goldCost * 5n;
+    return goldCost * FULL_RESPEC_MULTIPLIER;
   }, [goldCost, character]);
 
   const handleStatRespec = useCallback(async () => {
@@ -196,7 +198,7 @@ export const RespecPanel = (): JSX.Element | null => {
           {t('respec.remaining', { remaining })}
         </Text>
         <Text color="#8A7E6A" fontSize="xs">
-          {t('respec.cost', { cost: formatEther(goldCost) })}
+          {t('respec.cost', { cost: etherToFixedNumber(goldCost, 0) })}
         </Text>
       </HStack>
 
@@ -216,7 +218,7 @@ export const RespecPanel = (): JSX.Element | null => {
 
       <VStack spacing={2} w="100%">
         <Text color="#8A7E6A" fontSize="xs" textAlign="center">
-          {t('respec.fullRespecInfo', { cost: formatEther(fullRespecCost) })}
+          {t('respec.fullRespecInfo', { cost: etherToFixedNumber(fullRespecCost, 0) })}
         </Text>
         <Button
           colorScheme="red"
