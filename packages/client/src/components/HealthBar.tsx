@@ -90,21 +90,23 @@ export const HealthBar = ({
           {currentHpWithFloor.toString()}/{maxHp.toString()}
         </Text>
       </HStack>
-      {statusEffects && statusEffects[0] && (
-        <HStack mt={0.5} w="100%">
-          {statusEffects.slice(0, 3).map(statusEffect => (
-            <Badge
-              bgColor={STATUS_EFFECT_COLOR_MAPPING[statusEffect] ?? 'red'}
-              color="white"
-              fontSize="2xs"
-              key={`status-effect-display-${statusEffect}`}
-              size="xs"
-            >
-              {statusEffect}
-            </Badge>
-          ))}
-        </HStack>
-      )}
+      {/* Always render the badges row with a fixed minH so the HealthBar's
+          total height is constant whether or not status effects are present.
+          Without this, applying the first status effect mid-battle grew the
+          HUD and visibly shifted the whole battle scene down. */}
+      <HStack mt={0.5} minH="14px" w="100%">
+        {statusEffects?.slice(0, 3).map(statusEffect => (
+          <Badge
+            bgColor={STATUS_EFFECT_COLOR_MAPPING[statusEffect] ?? 'red'}
+            color="white"
+            fontSize="2xs"
+            key={`status-effect-display-${statusEffect}`}
+            size="xs"
+          >
+            {statusEffect}
+          </Badge>
+        ))}
+      </HStack>
     </VStack>
   );
 };

@@ -937,10 +937,24 @@ export const TileDetailsPanel = (): JSX.Element => {
     // ── SHOW_Z2: Cinematic single-canvas battle scene ───────────────────
     if (SHOW_Z2) {
       return (
-        <Box ref={battleContainerRef} h={{ base: 'auto', lg: '100%' }} position="relative">
+        <Box
+          ref={battleContainerRef}
+          display="flex"
+          flexDirection="column"
+          h={{ base: 'auto', lg: '100%' }}
+          position="relative"
+        >
           <BattleFloatingDamage ref={floatingDamageRef} />
-          {/* Battle scene canvas — monster + weapon projectiles + impacts */}
-          <Box h={{ base: '240px', lg: 'calc(100% - 80px)' }} minH="200px" position="relative">
+          {/* Battle scene canvas — monster + weapon projectiles + impacts.
+              flex=1 so it fills whatever vertical space the HUD doesn't use,
+              avoiding the old calc(100% - 80px) / variable HUD mismatch that
+              caused a visible snap-down when the HUD grew. */}
+          <Box
+            flex={{ base: 'none', lg: '1' }}
+            h={{ base: '240px', lg: 'auto' }}
+            minH={{ base: '200px', lg: '200px' }}
+            position="relative"
+          >
             <BattleSceneCanvas
               ref={battleSceneRef}
               monsterName={opponent.name}
@@ -955,16 +969,20 @@ export const TileDetailsPanel = (): JSX.Element => {
               userRace={userCharacterForBattleRendering.race}
             />
           </Box>
-          {/* Battle HUD — player left, opponent right */}
+          {/* Battle HUD — player left, opponent right.
+              flex=none so it never steals space from the canvas, combined
+              with HealthBar reserving its badges row so total height is
+              constant whether or not status effects are active. */}
           <HStack
+            align="start"
             bg="rgba(18,16,14,0.95)"
-            borderTop="1px solid"
             borderColor="rgba(58,50,40,0.6)"
+            borderTop="1px solid"
+            flex="none"
+            justify="space-between"
             px={4}
             py={1.5}
             spacing={4}
-            align="start"
-            justify="space-between"
           >
             {/* Player side (left) */}
             <VStack align="start" spacing={0.5} flex={1}>
