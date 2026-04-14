@@ -557,7 +557,17 @@
     "become": "Become a {{name}}",
     "notNow": "Not now",
     "chosenMessage": "You have walked the Dark Cave and survived.\nYour path is chosen. The world will remember.",
-    "shareText": "Became a {{name}} in Ultimate Dominion. Level 10 achieved."
+    "shareText": "Became a {{name}} in Ultimate Dominion. Level 10 achieved.",
+    "none": "",
+    "paladin": "Paladin",
+    "sorcerer": "Sorcerer",
+    "warrior": "Warrior",
+    "druid": "Druid",
+    "warlock": "Warlock",
+    "ranger": "Ranger",
+    "cleric": "Cleric",
+    "wizard": "Wizard",
+    "rogue": "Rogue"
   },
   "characterCreation": {
     "pageTitle": "Create Character | Ultimate Dominion",
@@ -892,18 +902,6 @@
     "rare": "Rare",
     "epic": "Epic",
     "legendary": "Legendary"
-  },
-  "advancedClass": {
-    "none": "",
-    "paladin": "Paladin",
-    "sorcerer": "Sorcerer",
-    "warrior": "Warrior",
-    "druid": "Druid",
-    "warlock": "Warlock",
-    "ranger": "Ranger",
-    "cleric": "Cleric",
-    "wizard": "Wizard",
-    "rogue": "Rogue"
   },
   "boss": {
     "spawn": "A {{name}} has appeared at ({{x}}, {{y}})!",

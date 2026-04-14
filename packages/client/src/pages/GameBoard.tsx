@@ -90,6 +90,7 @@ export const GameBoard = (): JSX.Element => {
   const [showCaveReaction, setShowCaveReaction] = useState(false);
   const [classJustSelected, setClassJustSelected] = useState(false);
   const classPromptedThisSessionRef = useRef<string | null>(null);
+  const lastSeenLevelRef = useRef<number | null>(null);
 
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const location = useLocation();
@@ -181,6 +182,24 @@ export const GameBoard = (): JSX.Element => {
       }
     }
   }, [character, isBattleOutcomeModalOpen, isClassModalOpen, isLevelUpModalOpen, onOpenClassModal, worldContract.address]);
+
+  // Level-up watcher: show LevelUpModal whenever the character gains a level,
+  // regardless of whether they went through BattleOutcomeModal.
+  useEffect(() => {
+    if (!character) return;
+    const currentLevel = Number(character.level);
+    if (lastSeenLevelRef.current === null) {
+      // First render — store current level without triggering animation
+      lastSeenLevelRef.current = currentLevel;
+      return;
+    }
+    if (currentLevel > lastSeenLevelRef.current && !isLevelUpModalOpen && !isBattleOutcomeModalOpen) {
+      lastSeenLevelRef.current = currentLevel;
+      setTimeout(() => onOpenLevelUpModal(), 300);
+    } else {
+      lastSeenLevelRef.current = currentLevel;
+    }
+  }, [character, character?.level, isBattleOutcomeModalOpen, isLevelUpModalOpen, onOpenLevelUpModal]);
 
   // Wire zone transition overlay from MovementContext
   useEffect(() => {
@@ -395,8 +414,8 @@ export const GameBoard = (): JSX.Element => {
         gap={0}
         overflow="hidden"
       >
-        {SHOW_Z2 && <BattleWorldTicker />}
-        {SHOW_Z2 && <CurrentObjectiveHud />}
+        {SHOW_Z2 && !currentBattle && <BattleWorldTicker />}
+        {SHOW_Z2 && !currentBattle && <CurrentObjectiveHud />}
         <Box
           flex={!isDesktop && currentBattle ? 'none' : '1'}
           minH={0}

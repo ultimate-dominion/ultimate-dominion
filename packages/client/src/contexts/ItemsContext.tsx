@@ -31,6 +31,30 @@ import {
   type WeaponTemplate,
 } from '../utils/types';
 
+/**
+ * Client-side spell catalog — fallback display data for spells deployed as
+ * ItemType.Weapon (0) before the contract was corrected to use ItemType.Spell (2).
+ * Maps effectName (extracted from "spell:<effectName>" tokenURI) to display values.
+ */
+export const SPELL_CATALOG: Record<string, { name: string; minDamage: bigint; maxDamage: bigint; minLevel: bigint }> = {
+  battle_cry:           { name: 'Battle Cry',       minDamage: 5n,  maxDamage: 10n, minLevel: 10n },
+  divine_shield:        { name: 'Divine Shield',    minDamage: 0n,  maxDamage: 0n,  minLevel: 10n },
+  hunters_mark:         { name: 'Marked Shot',      minDamage: 4n,  maxDamage: 8n,  minLevel: 10n },
+  shadowstep:           { name: 'Expose Weakness',  minDamage: 4n,  maxDamage: 8n,  minLevel: 10n },
+  entangle:             { name: 'Entangle',          minDamage: 3n,  maxDamage: 6n,  minLevel: 10n },
+  soul_drain_curse:     { name: 'Soul Drain',        minDamage: 4n,  maxDamage: 8n,  minLevel: 10n },
+  arcane_blast_damage:  { name: 'Arcane Blast',      minDamage: 5n,  maxDamage: 10n, minLevel: 10n },
+  arcane_surge_damage:  { name: 'Arcane Infusion',   minDamage: 3n,  maxDamage: 6n,  minLevel: 10n },
+  blessing:             { name: 'Blessing',           minDamage: 0n,  maxDamage: 0n,  minLevel: 10n },
+};
+
+/** Returns true when a tokenURI marks an item as a spell (e.g. "spell:arcane_surge_damage"). */
+export const isSpellTokenURI = (tokenURI: string): boolean => tokenURI.startsWith('spell:');
+
+/** Extracts the effectName from a spell tokenURI, or null for non-spell URIs. */
+export const spellEffectNameFromURI = (tokenURI: string): string | null =>
+  isSpellTokenURI(tokenURI) ? tokenURI.slice('spell:'.length) : null;
+
 const erc1155UriAbi = [{
   name: 'uri',
   type: 'function',
@@ -242,20 +266,31 @@ export const ItemsProvider = ({
           const keyBytes = encodeUint256Key(spellId);
 
           const spellRow = spellStatsTable[keyBytes];
+          const weaponStatsTable = getTableEntries('WeaponStats');
+          const weaponRow = weaponStatsTable[keyBytes];
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
           const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
 
+          // Extract effectName from "spell:<effectName>" tokenURI for catalog lookup
+          const effectName = tokenURI.startsWith('spell:') ? tokenURI.slice('spell:'.length) : null;
+          const catalog = effectName ? SPELL_CATALOG[effectName] : null;
+
+          // Effects: prefer SpellStats, fall back to WeaponStats (spells deployed as weapons)
           const effects = Array.isArray(spellRow?.effects)
             ? (spellRow.effects as string[])
-            : [];
+            : Array.isArray(weaponRow?.effects)
+              ? (weaponRow.effects as string[])
+              : [];
 
-          let metadata = { name: `Spell #${spellId}`, description: '', image: '' };
+          let metadata = { name: catalog?.name ?? `Spell #${spellId}`, description: '', image: '' };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
             if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
-              metadata = await fetchMetadataFromUri(tokenURI || fullUri);
+              const fetched = await fetchMetadataFromUri(tokenURI || fullUri);
+              // Prefer catalog name over effect-name-parsed display name
+              metadata = { ...fetched, name: catalog?.name ?? fetched.name };
             } else {
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
@@ -263,14 +298,19 @@ export const ItemsProvider = ({
             console.warn(`[ItemsContext] Failed to fetch metadata for spell ${spellId}:`, e);
           }
 
+          // Damage: prefer SpellStats, fall back to catalog (spells deployed pre-fix)
+          const minDamage = spellRow?.minDamage != null ? toBigInt(spellRow.minDamage) : (catalog?.minDamage ?? 0n);
+          const maxDamage = spellRow?.maxDamage != null ? toBigInt(spellRow.maxDamage) : (catalog?.maxDamage ?? 0n);
+          const minLevel = spellRow?.minLevel != null ? toBigInt(spellRow.minLevel) : (catalog?.minLevel ?? 10n);
+
           return {
             ...metadata,
             effects,
             itemId: spellId.toString(),
-            itemType: toNumber(itemRow?.itemType) as ItemType,
-            maxDamage: toBigInt(spellRow?.maxDamage),
-            minDamage: toBigInt(spellRow?.minDamage),
-            minLevel: toBigInt(spellRow?.minLevel),
+            itemType: ItemType.Spell,
+            maxDamage,
+            minDamage,
+            minLevel,
             price: toBigInt(itemRow?.price),
             rarity: toNumber(itemRow?.rarity) as Rarity,
             statRestrictions: {
@@ -447,17 +487,26 @@ export const ItemsProvider = ({
           }
         }
 
+        // Identify spell items by tokenURI "spell:" prefix, even when deployed as
+        // ItemType.Weapon (a deploy-spell-items.ts bug pre-2026-04-14).
+        const tokenURITableForCategorization = getTableEntries('ItemsURIStorage');
+        const isSpellItemId = (itemId: bigint): boolean => {
+          const key = encodeUint256Key(itemId);
+          const uri = String(tokenURITableForCategorization[key]?.uri ?? uriOverrides?.[key] ?? '');
+          return uri.startsWith('spell:');
+        };
+
         const armorIds = allItemIds
           .filter(({ itemType }) => itemType === ItemType.Armor)
           .map(({ itemId }) => itemId);
         const weaponIds = allItemIds
-          .filter(({ itemType }) => itemType === ItemType.Weapon)
+          .filter(({ itemType, itemId }) => itemType === ItemType.Weapon && !isSpellItemId(itemId))
           .map(({ itemId }) => itemId);
         const consumableIds = allItemIds
           .filter(({ itemType }) => itemType === ItemType.Consumable)
           .map(({ itemId }) => itemId);
         const spellIds = allItemIds
-          .filter(({ itemType }) => itemType === ItemType.Spell)
+          .filter(({ itemType, itemId }) => itemType === ItemType.Spell || (itemType === ItemType.Weapon && isSpellItemId(itemId)))
           .map(({ itemId }) => itemId);
         const questItemIds = allItemIds
           .filter(({ itemType }) => itemType === ItemType.QuestItem)
