@@ -6,7 +6,7 @@ import {
   useBreakpointValue,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GiScrollUnfurled } from 'react-icons/gi';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
@@ -94,6 +94,25 @@ const AppInner = (): JSX.Element => {
   } = useGoldMerchant();
   const gameStoreHydrated = useGameStore((s) => s.hydrated);
 
+  // Preload the GameBoard chunk in parallel with MUD setup + gameStore hydration.
+  // Without this, the AppInner gate can release (ready+synced+hydrated) while the
+  // lazy GameBoard chunk is still downloading, causing AppRoutes' inner Suspense
+  // to paint the orange shell + "Loading..." VStack before GameBoard renders.
+  // React.lazy's factory in Routes.tsx hits the same module URL, so once it's
+  // cached here, Suspense resolves synchronously and never fires.
+  const [gameBoardChunkLoaded, setGameBoardChunkLoaded] = useState(false);
+  useEffect(() => {
+    if (pathname !== GAME_BOARD_PATH) return;
+    if (gameBoardChunkLoaded) return;
+    let cancelled = false;
+    import('./pages/GameBoard').then(() => {
+      if (!cancelled) setGameBoardChunkLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, gameBoardChunkLoaded]);
+
   // Activate GasStation auto-swap hook
   useGasStation();
 
@@ -148,15 +167,15 @@ const AppInner = (): JSX.Element => {
     }
   }, [isDesktop, onOpenFeed, pathname]);
 
-  // Hold the dark boot screen through MUD setup, wallet sync, AND gameStore
-  // snapshot hydration. `ready`/`isSynced` only cover MUD wallet path init —
-  // GameBoard will still render its empty/partial layout until the network
-  // snapshot lands, causing a CLS snap-down as the character sidebar mounts.
-  // Gating on `gameStoreHydrated` keeps refresh a single visual state instead
-  // of a three-step flash (dark → orange shell → game).
+  // Hold the dark boot screen through MUD setup, wallet sync, gameStore
+  // snapshot hydration, AND GameBoard lazy-chunk download. Dropping any one
+  // of these produces a visible flash on refresh: `ready`/`isSynced` cover
+  // MUD wallet init, `gameStoreHydrated` covers the network snapshot, and
+  // `gameBoardChunkLoaded` covers the Suspense window inside AppRoutes where
+  // the lazy chunk is still downloading.
   if (
     pathname === GAME_BOARD_PATH &&
-    (!ready || !isSynced || !gameStoreHydrated)
+    (!ready || !isSynced || !gameStoreHydrated || !gameBoardChunkLoaded)
   ) {
     return (
       <BootScreen
