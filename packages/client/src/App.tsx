@@ -36,6 +36,7 @@ import { QueueProvider } from './contexts/QueueContext';
 import { SoundProvider } from './contexts/SoundContext';
 import { useGasStation } from './hooks/useGasStation';
 import { OnboardingStage, useOnboardingStage } from './hooks/useOnboardingStage';
+import { useGameStore } from './lib/gameStore';
 import AppRoutes, {
   CHARACTER_CREATION_PATH,
   GAME_BOARD_PATH,
@@ -91,6 +92,7 @@ const AppInner = (): JSX.Element => {
     isOpen: isGoldMerchantOpen,
     onClose: onCloseGoldMerchant,
   } = useGoldMerchant();
+  const gameStoreHydrated = useGameStore((s) => s.hydrated);
 
   // Activate GasStation auto-swap hook
   useGasStation();
@@ -146,14 +148,16 @@ const AppInner = (): JSX.Element => {
     }
   }, [isDesktop, onOpenFeed, pathname]);
 
-  // Hold the dark boot screen all the way through MUD setup + wallet sync on
-  // the game board path. Without this gate, as soon as the AppRoot JS chunk
-  // finished loading the root Suspense fallback unmounted and AppInner would
-  // paint its orange shell with a footer "Loading..." state, then snap the
-  // content down once game data hydrated. Keeping BootScreen mounted until
-  // `ready && isSynced` makes refresh a single visual state instead of a
-  // three-step flash (dark → orange shell → game).
-  if (pathname === GAME_BOARD_PATH && (!ready || !isSynced)) {
+  // Hold the dark boot screen through MUD setup, wallet sync, AND gameStore
+  // snapshot hydration. `ready`/`isSynced` only cover MUD wallet path init —
+  // GameBoard will still render its empty/partial layout until the network
+  // snapshot lands, causing a CLS snap-down as the character sidebar mounts.
+  // Gating on `gameStoreHydrated` keeps refresh a single visual state instead
+  // of a three-step flash (dark → orange shell → game).
+  if (
+    pathname === GAME_BOARD_PATH &&
+    (!ready || !isSynced || !gameStoreHydrated)
+  ) {
     return (
       <BootScreen
         body="Rebuilding the world state..."
