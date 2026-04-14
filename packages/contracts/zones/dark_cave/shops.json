@@ -1,7 +1,7 @@
 {
   "shops": [
     {
-      "name": "Grizzled Merchant",
+      "name": "Tal",
       "location": [9, 9],
       "gold": 2000000000000000000000,
       "maxGold": 2000000000000000000000,
