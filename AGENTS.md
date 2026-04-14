@@ -7,9 +7,10 @@ This file is the shared workflow for Codex and Claude in this repo. Keep `CLAUDE
 ### Must Read
 
 1. `SESSION.md` in the main checkout root
-2. `CLAUDE.md`
-3. `git worktree list`
-4. `git status -sb`
+2. `docs/direction/CURRENT.md` — auto-generated live working memory (focus, active threads, pivots, open questions). Regenerated every `/handoff`. Trust this over older memory files when they conflict.
+3. `CLAUDE.md`
+4. `git worktree list`
+5. `git status -sb`
 
 If any required file or command output is missing, say so before starting implementation work.
 
