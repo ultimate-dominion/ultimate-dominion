@@ -17,6 +17,7 @@ import { useTransaction } from '../hooks/useTransaction';
 import type { TransactionProgress } from '../hooks/useTransactionProgress';
 import { SHOW_Z2 } from '../lib/env';
 import { GAME_BOARD_PATH } from '../Routes';
+import { canUseDarkCaveExit } from '../utils/zoneExit';
 
 import { useBattle } from './BattleContext';
 import { useCharacter } from './CharacterContext';
@@ -178,14 +179,14 @@ export const MovementProvider = ({
       ) {
         // Zone exit: at exit tile pressing north
         if (
-          SHOW_Z2 &&
           direction === 'up' &&
-          displayPosition &&
-          displayPosition.x === 5 &&
-          displayPosition.y === 9 &&
-          character.hasSelectedAdvancedClass &&
-          currentZone === 1 &&
-          !autoAdventureMode
+          canUseDarkCaveExit({
+            autoAdventureMode,
+            currentZone,
+            displayPosition,
+            level: character.level,
+            showZ2: SHOW_Z2,
+          })
         ) {
           setIsZoneExitPromptOpen(true);
         }

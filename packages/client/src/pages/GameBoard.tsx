@@ -15,7 +15,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Trans, useTranslation } from 'react-i18next';
 import { GiPerson } from 'react-icons/gi';
@@ -89,6 +89,7 @@ export const GameBoard = (): JSX.Element => {
   const [showZoneTransition, setShowZoneTransition] = useState(false);
   const [showCaveReaction, setShowCaveReaction] = useState(false);
   const [classJustSelected, setClassJustSelected] = useState(false);
+  const classPromptedThisSessionRef = useRef<string | null>(null);
 
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const location = useLocation();
@@ -122,14 +123,15 @@ export const GameBoard = (): JSX.Element => {
     return BigInt(character.experience) >= nextLevelXpRequirement;
   }, [character, nextLevelXpRequirement]);
 
-  const handleLevelUpClose = useCallback(() => {
+  const handleLevelUpClose = useCallback((completedLevel?: number) => {
     onCloseLevelUpModal();
+    const levelForUnlock = completedLevel ?? Number(character?.level ?? 0);
 
     // L10: chain to advanced class selection
     if (
       SHOW_Z2 &&
       character &&
-      Number(character.level) >= 10 &&
+      levelForUnlock >= 10 &&
       !character.hasSelectedAdvancedClass
     ) {
       setTimeout(() => onOpenClassModal(), 500);
@@ -138,7 +140,7 @@ export const GameBoard = (): JSX.Element => {
 
     // L5: map reveal
     const key = `map-reveal-seen-${worldContract.address}-${character?.id}`;
-    if (character && Number(character.level) >= 5 && !localStorage.getItem(key)) {
+    if (character && levelForUnlock >= 5 && !localStorage.getItem(key)) {
       setTimeout(() => setShowMapReveal(true), 500);
     }
   }, [character, onCloseLevelUpModal, onOpenClassModal, worldContract.address]);
@@ -172,9 +174,9 @@ export const GameBoard = (): JSX.Element => {
       !isBattleOutcomeModalOpen &&
       !isLevelUpModalOpen
     ) {
-      const key = `class-modal-prompted-${worldContract.address}-${character.id}`;
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, 'true');
+      const key = `${worldContract.address}-${character.id}`;
+      if (classPromptedThisSessionRef.current !== key) {
+        classPromptedThisSessionRef.current = key;
         setTimeout(() => onOpenClassModal(), 1000);
       }
     }
