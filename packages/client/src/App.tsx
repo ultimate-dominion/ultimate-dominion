@@ -11,6 +11,7 @@ import { GiScrollUnfurled } from 'react-icons/gi';
 import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 
 import { BetaBanner } from './components/BetaBanner';
+import { BootScreen } from './components/BootScreen';
 import { ChatPanel } from './components/ChatPanel';
 import { DiscordButton } from './components/DiscordButton';
 import { FeedbackButton } from './components/FeedbackButton';
@@ -35,7 +36,11 @@ import { QueueProvider } from './contexts/QueueContext';
 import { SoundProvider } from './contexts/SoundContext';
 import { useGasStation } from './hooks/useGasStation';
 import { OnboardingStage, useOnboardingStage } from './hooks/useOnboardingStage';
-import AppRoutes, { CHARACTER_CREATION_PATH, HOME_PATH } from './Routes';
+import AppRoutes, {
+  CHARACTER_CREATION_PATH,
+  GAME_BOARD_PATH,
+  HOME_PATH,
+} from './Routes';
 import { IS_CHAT_BOX_OPEN_KEY } from './utils/constants';
 
 export const App = (): JSX.Element => {
@@ -77,6 +82,7 @@ const AppInner = (): JSX.Element => {
     isWalletDetailsModalOpen,
     onCloseWalletDetailsModal,
     onOpenWalletDetailsModal,
+    ready,
   } = useMUD();
   const { isOpen: isFeedOpen, onOpen: onOpenFeed, unreadCount } = useChat();
   const { character } = useCharacter();
@@ -139,6 +145,22 @@ const AppInner = (): JSX.Element => {
       onOpenFeed();
     }
   }, [isDesktop, onOpenFeed, pathname]);
+
+  // Hold the dark boot screen all the way through MUD setup + wallet sync on
+  // the game board path. Without this gate, as soon as the AppRoot JS chunk
+  // finished loading the root Suspense fallback unmounted and AppInner would
+  // paint its orange shell with a footer "Loading..." state, then snap the
+  // content down once game data hydrated. Keeping BootScreen mounted until
+  // `ready && isSynced` makes refresh a single visual state instead of a
+  // three-step flash (dark → orange shell → game).
+  if (pathname === GAME_BOARD_PATH && (!ready || !isSynced)) {
+    return (
+      <BootScreen
+        body="Rebuilding the world state..."
+        eyebrow="Entering The Realm"
+      />
+    );
+  }
 
   return (
     <Grid
