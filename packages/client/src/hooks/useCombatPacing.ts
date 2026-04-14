@@ -5,6 +5,15 @@ const COUNTERATTACK_DELAY_MS = 600;
 const FINISHER_DELAY_MS = 700;
 const SAFETY_TIMEOUT_MS = 1500;
 
+// `hiddenTurn` is derived SYNCHRONOUSLY during render from `revealedTurn` +
+// `maxTurn` rather than set inside a useEffect. If we stored the hide state
+// via useEffect, Render 1 would briefly return the full unfiltered list —
+// and sibling effects (useBattleSceneSignals) would fire the counterattack
+// signal during Render 1's commit phase, before Render 2 could filter it
+// out. The result: the monster counterattack animation played at the same
+// instant as the player attack, erasing the 600 ms delay. Render-time
+// derivation guarantees the counterattack is filtered out on the very first
+// render after `attackOutcomes` updates.
 export function useCombatPacing({
   attackOutcomes,
   characterId,
@@ -20,12 +29,11 @@ export function useCombatPacing({
   pendingCounterattackDamage: bigint;
   pendingTurn: bigint | null;
 } {
-  const lastRevealedTurn = useRef<bigint>(0n);
   const lastResolvedTurn = useRef<bigint>(0n);
   const delayTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finisherTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const safetyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [hiddenTurn, setHiddenTurn] = useState<bigint | null>(null);
+  const [revealedTurn, setRevealedTurn] = useState<bigint>(0n);
   const [finisherTurn, setFinisherTurn] = useState<bigint | null>(null);
 
   const maxTurn = useMemo(() => {
@@ -48,7 +56,9 @@ export function useCombatPacing({
     );
   }, [attackOutcomes, characterId, maxTurn]);
 
-  // Check if the player's attack this turn killed the defender — suppress counterattack
+  // Check if the player's attack this turn killed the defender — suppress
+  // counterattack entirely (the data exists in the TX but the monster is
+  // dead; don't animate a ghost attack).
   const playerKilledDefender = useMemo(() => {
     if (!characterId || maxTurn === 0n) return false;
     return attackOutcomes.some(
@@ -59,41 +69,35 @@ export function useCombatPacing({
     );
   }, [attackOutcomes, characterId, maxTurn]);
 
+  // Synchronously decide whether the counterattack should be hidden on this
+  // render. This happens during render (memo, not effect), so Render 1 sees
+  // the filtered list — no flash of "both attacks fire at once".
+  const hiddenTurn: bigint | null = useMemo(() => {
+    if (!isInBattle || !counterattackForTurn) return null;
+    if (playerKilledDefender) return maxTurn; // permanent hide
+    if (revealedTurn >= maxTurn) return null;
+    return maxTurn;
+  }, [counterattackForTurn, isInBattle, maxTurn, playerKilledDefender, revealedTurn]);
+
+  // Schedule the reveal timer. Only runs when there's actually a hidden
+  // counterattack pending (and it isn't a permanent-hide from a kill).
   useEffect(() => {
-    if (!isInBattle || maxTurn === 0n) return;
-    if (maxTurn <= lastRevealedTurn.current) return;
-
-    if (!counterattackForTurn) {
-      lastRevealedTurn.current = maxTurn;
-      setHiddenTurn(null);
-      return;
-    }
-
-    // If player killed the defender, suppress counterattack entirely
-    // The data exists in the TX but the monster is dead — don't animate a ghost attack
-    if (playerKilledDefender) {
-      lastRevealedTurn.current = maxTurn;
-      setHiddenTurn(maxTurn); // hide it permanently
-      return;
-    }
-
-    setHiddenTurn(maxTurn);
+    if (!isInBattle || !counterattackForTurn || playerKilledDefender) return;
+    if (revealedTurn >= maxTurn) return;
 
     delayTimeout.current = setTimeout(() => {
-      lastRevealedTurn.current = maxTurn;
-      setHiddenTurn(null);
+      setRevealedTurn(maxTurn);
     }, COUNTERATTACK_DELAY_MS);
 
     safetyTimeout.current = setTimeout(() => {
-      lastRevealedTurn.current = maxTurn;
-      setHiddenTurn(null);
+      setRevealedTurn(maxTurn);
     }, SAFETY_TIMEOUT_MS);
 
     return () => {
       if (delayTimeout.current) clearTimeout(delayTimeout.current);
       if (safetyTimeout.current) clearTimeout(safetyTimeout.current);
     };
-  }, [counterattackForTurn, isInBattle, maxTurn, playerKilledDefender]);
+  }, [counterattackForTurn, isInBattle, maxTurn, playerKilledDefender, revealedTurn]);
 
   const visibleOutcomes = useMemo(() => {
     if (hiddenTurn === null || !characterId) return attackOutcomes;
@@ -144,9 +148,8 @@ export function useCombatPacing({
 
   useEffect(() => {
     if (!isInBattle) {
-      lastRevealedTurn.current = 0n;
       lastResolvedTurn.current = 0n;
-      setHiddenTurn(null);
+      setRevealedTurn(0n);
       setFinisherTurn(null);
       if (delayTimeout.current) clearTimeout(delayTimeout.current);
       if (finisherTimeout.current) clearTimeout(finisherTimeout.current);
@@ -162,9 +165,9 @@ export function useCombatPacing({
     };
   }, []);
 
-  const isCounterattackPending = hiddenTurn !== null;
+  const isCounterattackPending = hiddenTurn !== null && !playerKilledDefender;
   const isBattleResolutionPending =
-    hiddenTurn !== null || finisherTurn !== null;
+    isCounterattackPending || finisherTurn !== null;
 
   const pendingCounterattackDamage = useMemo(() => {
     if (!isCounterattackPending || !counterattackForTurn) return 0n;
@@ -176,6 +179,6 @@ export function useCombatPacing({
     isCounterattackPending,
     isBattleResolutionPending,
     pendingCounterattackDamage,
-    pendingTurn: hiddenTurn,
+    pendingTurn: isCounterattackPending ? hiddenTurn : null,
   };
 }
