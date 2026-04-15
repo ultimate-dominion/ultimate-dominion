@@ -139,7 +139,7 @@ export const Header = (): JSX.Element => {
   );
 
   return (
-    <>
+    <Box w="100%">
     {IS_BETA && (
       <Box
         bg="#C87A2A"
@@ -448,6 +448,6 @@ export const Header = (): JSX.Element => {
         </Drawer>
       </GridItem>
     </Grid>
-    </>
+    </Box>
   );
 };

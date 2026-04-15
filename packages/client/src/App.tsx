@@ -37,6 +37,7 @@ import { SoundProvider } from './contexts/SoundContext';
 import { useGasStation } from './hooks/useGasStation';
 import { OnboardingStage, useOnboardingStage } from './hooks/useOnboardingStage';
 import { useGameStore } from './lib/gameStore';
+import { APP_GRID_TEMPLATE_ROWS } from './App.gridRows';
 import AppRoutes, {
   CHARACTER_CREATION_PATH,
   GAME_BOARD_PATH,
@@ -189,7 +190,7 @@ const AppInner = (): JSX.Element => {
     <Grid
       minHeight="100vh"
       templateColumns="100%"
-      templateRows="auto 1fr auto"
+      templateRows={APP_GRID_TEMPLATE_ROWS}
       w="100%"
     >
       <BetaBanner />

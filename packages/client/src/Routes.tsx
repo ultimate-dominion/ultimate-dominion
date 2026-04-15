@@ -1,4 +1,4 @@
-import { Text, VStack } from '@chakra-ui/react';
+import { Box, Text, VStack } from '@chakra-ui/react';
 import React, { Component, ReactNode, Suspense, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { BootScreen } from './components/BootScreen';
@@ -133,12 +133,12 @@ const ExternalRedirect = ({ to }: { to: string }) => {
   return null;
 };
 
-// Suspense fallback for AppRoutes. On /game-board we render the full dark
-// BootScreen (position:fixed, zIndex 9999) so the one-render-tick where
-// React.lazy throws-to-Suspense on first encounter is visually identical to
-// the AppInner boot gate — no flash to the orange app shell with "Loading...".
-// Other routes fall through to the in-grid VStack.
-const RoutesFallback = () => {
+// Suspense fallback for AppRoutes. /game-board gets the full-screen BootScreen
+// overlay (position:fixed, zIndex 9999) so the lazy-chunk window is visually
+// identical to the AppInner boot gate. Every other route gets a dark in-place
+// loader that fills the AppRoutes grid cell — matching the body #12100E so no
+// orange app-shell surface is ever exposed during Suspense.
+export const RoutesFallback = () => {
   const { pathname } = useLocation();
   if (pathname === GAME_BOARD_PATH) {
     return (
@@ -149,9 +149,20 @@ const RoutesFallback = () => {
     );
   }
   return (
-    <VStack justify="center" h="100%">
-      <Text>Loading...</Text>
-    </VStack>
+    <Box
+      bg="#12100E"
+      minH="50vh"
+      w="100%"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <VStack spacing={3}>
+        <Text color="#8A7E6A" fontFamily="Cinzel, serif" fontSize="sm" letterSpacing="0.15em" textTransform="uppercase">
+          Loading
+        </Text>
+      </VStack>
+    </Box>
   );
 };
 
