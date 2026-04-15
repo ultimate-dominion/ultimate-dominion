@@ -4,14 +4,14 @@
 working memory for this project — what is actively being shipped, where
 every thread stands, what changed recently. Agents (Claude, Codex, and
 any other) should treat this as ground truth for "where are we right
-now". Regenerated: `2026-04-15T00:29:19+00:00`.
+now". Regenerated: `2026-04-15T22:21:41+00:00`.
 
 When this file conflicts with older docs, trust this one.
 
 ---
 ## Focus
 
-Latest activity clusters around 2026-04-14 with 5+ features merged to `dev` simultaneously: audio/SFX (50 tests passing), zone unlock decoupling (L10 independent of class state), creatures.json single source of truth (basilisk fixed 26×9 → 18×18), respec relocation to /respec page, movement monster display hardening (164 ghost rows cleared from beta DB). Vercel auto-deploys from dev. **Critical blocker:** SpellStats table is empty — spells created without stats. Railway indexer redeploy pending after failed 413 error.
+Latest activity clusters around 2026-04-14 with 5+ features merged simultaneously to `dev`: audio/SFX (50 tests passing), zone unlock decoupling (L10 independent of class state), creatures.json single source of truth (basilisk fixed 26×9 → 18×18), respec relocation to /respec page, movement monster display hardening (164 ghost rows cleared from beta DB), BootScreen flash fixes (2026-04-15). Vercel auto-deploys from dev. **Critical blocker:** SpellStats table is empty — spells created without stats. Railway indexer redeploy pending after failed 413 error.
 
 ## Active threads
 
@@ -19,9 +19,11 @@ Latest activity clusters around 2026-04-14 with 5+ features merged to `dev` simu
 
 - **[deploy] Movement monster display + Railway indexer** — last touched 2026-04-14. Beta DB repaired (164 ghost rows cleared), code on dev `2986663f`. Indexer deploy failed with 413 Payload Too Large on latest attempt. Next: redeploy `2986663f` to Railway indexer-beta-us with explicit Dockerfile config, verify snapshot clears stale positions.
 
-- **[beta-audio] Audio/SFX + zone unlock** — last touched 2026-04-14. 50 tests passing, merged to dev (`92ca5564`/`573a7ad1`), music ducking + SFX live, zone exit unlocks at L10. Next: verify audio and unlock on beta, then push to production.
+- **[shipped] Audio/SFX + zone unlock** — last touched 2026-04-14. 50 tests passing, merged to dev (`92ca5564`/`573a7ad1`), music ducking + SFX live, zone exit unlocks at L10. Next: verify audio and unlock on beta, then push to production.
 
-- **[visual] creatures.json refactor** — last touched 2026-04-14. Grid dims extracted to shared source; all Z1 creatures aligned; basilisk 26×9 → 18×18. Committed as `1ed203ad`. Next: verify basilisk and other creatures render correctly on beta (user reported pixelated spider).
+- **[shipped] creatures.json refactor** — last touched 2026-04-14. Grid dims extracted to shared source; all Z1 creatures aligned; basilisk 26×9 → 18×18. Committed as `1ed203ad`. Next: verify basilisk and other creatures render correctly on beta (user reported pixelated spider).
+
+- **[shipped] BootScreen flash + HUD snap** — last touched 2026-04-15. Orange flash eliminated via pathname-aware Suspense fallback; HUD snap eliminated via stable HealthBar height + flex column. Pushed as `24fd3f6a`. Next: monitor beta for visual regressions.
 
 - **[prod] Battle results hotfix** — last touched 2026-04-08. Code ready `b13e4346`. Next: push to GitHub so Vercel auto-deploys prod.
 
@@ -29,9 +31,9 @@ Latest activity clusters around 2026-04-14 with 5+ features merged to `dev` simu
 
 - **[beta-z2] Onboarding spawn speed** — last touched 2026-04-13. Spawn not in fixed-gas map, fires async after navigation. Next: add UD__spawn to fixed-gas (2-4M), fire during post-enterGame celebration, gate nav on spawn receipt.
 
-- **[visual] Item ASCII icons** — last touched 2026-04-10. Oversample+compress approach working on Epic+ items. Next: expand to all item views (marketplace, tooltips, shop).
-
 ## Recent pivots (last 14 days)
+
+- **2026-04-15** — BootScreen flash eliminated by making RoutesFallback pathname-aware; Battle HUD snap eliminated by reserving HealthBar badges row unconditionally. (reason: user reported visual jank from Suspense fallback and status effect rendering)
 
 - **2026-04-14** — Worktree hygiene system built and deployed globally (wt-audit.sh, wt-done.sh, wt-enforce.sh hooks). Enforces branch discipline, prevents cross-contamination, auto-heals SESSION.md. (reason: prior sessions had orphan branches and manual cleanup burden)
 
