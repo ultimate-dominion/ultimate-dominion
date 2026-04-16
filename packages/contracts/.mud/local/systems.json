@@ -1427,7 +1427,6 @@
         "error InEncounter()",
         "error NotSpawned()",
         "error OnlyCharacters()",
-        "error PrerequisiteZoneIncomplete()",
         "error Unauthorized()",
         "error ZoneLevelTooLow()",
         "error ZoneNotConfigured()",
@@ -1440,7 +1439,6 @@
         "error InEncounter()",
         "error NotSpawned()",
         "error OnlyCharacters()",
-        "error PrerequisiteZoneIncomplete()",
         "error Unauthorized()",
         "error ZoneLevelTooLow()",
         "error ZoneNotConfigured()",
@@ -1842,5 +1840,5 @@
       ]
     }
   ],
-  "createdAt": 1776094272481
+  "createdAt": 1776368085666
 }
