@@ -559,8 +559,14 @@ export const BattleSceneCanvas = forwardRef<
       const monsterY = monsterViewH - monsterH; // bottom-align (ground plane)
 
       if (template) {
+        // `now` (absolute performance.now()) matches the base of
+        // state.monsterAnim.startTime set by triggerAttack. Passing the
+        // RAF-relative `elapsed` instead produced a huge negative dt inside
+        // computeAnimParams → `case 'hit'` translated the monster thousands
+        // of pixels off-canvas for the full 300-500ms reaction window,
+        // reading as a black flash in the arena on every player hit.
         renderMonster(ctx, template, monsterX, monsterY, monsterW, monsterH, {
-          elapsed: p.monsterDefeated ? 0 : elapsed,
+          elapsed: p.monsterDefeated ? 0 : now,
           cellSize: 5,
           enable3D: true,
           enableGlow: !p.monsterDefeated,

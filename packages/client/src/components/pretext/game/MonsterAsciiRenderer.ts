@@ -570,7 +570,13 @@ export function computeAnimParams(anim: AnimationState | undefined, elapsed: num
 
   const dt = elapsed - anim.startTime;
   const duration = anim.durationOverride ?? ACTION_DURATION[anim.action];
-  const t = Math.min(1, dt / duration); // 0..1 progress
+  // Clamp to [0, 1]. Math.min alone lets a negative dt fall through (if a
+  // caller passes `elapsed` from a different time base than `startTime`),
+  // which cascades into absurd translateX/scale values — rendered as the
+  // monster being hurled thousands of pixels off-canvas for the whole
+  // reaction window. Clamp to 0 on the low end so mismatched time bases
+  // fail safe (render as pre-animation idle) instead of breaking the scene.
+  const t = Math.max(0, Math.min(1, dt / duration));
 
   switch (anim.action) {
     case 'attack': {

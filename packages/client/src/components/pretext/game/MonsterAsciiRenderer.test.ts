@@ -80,4 +80,70 @@ describe('computeAnimParams', () => {
       expect(Math.abs(justBefore.translateX - justAfter.translateX)).toBeLessThan(2);
     });
   });
+
+  describe("action: 'hit' — per-hit black flash regression", () => {
+    // The Carrion Crawler black-flash bug: BattleSceneCanvas set
+    // anim.startTime to absolute performance.now() but forwarded the
+    // RAF-relative `elapsed` into computeAnimParams. dt = relative - absolute
+    // was a huge negative number; t stayed negative (Math.min only clamped
+    // the upper bound); translateX = -12 * easeOutCubic(t/0.15) became a
+    // huge POSITIVE value, translating the monster thousands of pixels
+    // off-canvas for the full 500ms hit reaction. Player saw the arena
+    // flash black on every hit.
+    //
+    // These tests lock in that translateX / scale stay bounded for every
+    // sample in the 'hit' window, and that a mismatched time base fails
+    // safe (returns base params) instead of producing absurd offsets.
+
+    it('keeps translateX bounded across the entire hit window', () => {
+      // Sweep the full 500ms hit anim at 10ms steps. Max intended
+      // translateX magnitude is 12 (from case 'hit' in computeAnimParams).
+      // A generous bound of 20 flags any regression that reintroduces the
+      // off-canvas translation without being brittle to small tuning.
+      for (let dt = 0; dt <= 500; dt += 10) {
+        const anim: AnimationState = { action: 'hit', startTime: 0 };
+        const params = computeAnimParams(anim, dt);
+        expect(Math.abs(params.translateX)).toBeLessThan(20);
+        expect(params.scale).toBeGreaterThan(0.9);
+        expect(params.scale).toBeLessThan(1.1);
+      }
+    });
+
+    it('fails safe when elapsed is less than startTime (time-base mismatch)', () => {
+      // Reproduces the original bug: absolute startTime, much smaller
+      // relative elapsed. Pre-fix this returned translateX in the
+      // thousands; the defensive clamp in computeAnimParams now returns
+      // base params (as if the anim hasn't started).
+      const absoluteStart = 1_500_000; // roughly performance.now() scale
+      const relativeElapsed = 5_000;    // roughly canvas-mount RAF elapsed
+      const anim: AnimationState = { action: 'hit', startTime: absoluteStart };
+      const params = computeAnimParams(anim, relativeElapsed);
+      // Use toBeCloseTo rather than toBe because `-12 * 0 = -0` in JS and
+      // toBe's Object.is check distinguishes -0 from 0.
+      expect(params.translateX).toBeCloseTo(0, 10);
+      expect(params.translateY).toBeCloseTo(0, 10);
+      expect(params.scale).toBeCloseTo(1, 10);
+      expect(params.shake).toBeCloseTo(0, 10);
+    });
+
+    it('death animation also stays bounded under time-base mismatch', () => {
+      // Same mismatch as above but for the death clip (2000ms, triggered on
+      // the killing blow). Pre-fix this produced a dissolve=huge-negative
+      // and translateY thousands of pixels down.
+      const anim: AnimationState = { action: 'death', startTime: 1_500_000 };
+      const params = computeAnimParams(anim, 5_000);
+      expect(params.translateY).toBeCloseTo(0, 10);
+      expect(params.dissolve).toBeCloseTo(0, 10);
+      expect(params.scale).toBeCloseTo(1, 10);
+    });
+
+    it('peak hit translateX is negative (monster recoils toward -X)', () => {
+      // Sanity check that the intended behavior still fires when time
+      // bases match. Peak recoil is near t=0.15 (elapsed ~75ms).
+      const anim: AnimationState = { action: 'hit', startTime: 0 };
+      const params = computeAnimParams(anim, 75);
+      expect(params.translateX).toBeLessThan(0);
+      expect(params.translateX).toBeGreaterThan(-15);
+    });
+  });
 });
