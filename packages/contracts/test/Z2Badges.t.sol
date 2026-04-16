@@ -33,8 +33,7 @@ import {
 } from "../constants.sol";
 import {
     AlreadyInZone,
-    ZoneLevelTooLow,
-    PrerequisiteZoneIncomplete
+    ZoneLevelTooLow
 } from "../src/Errors.sol";
 
 contract Test_Z2Badges is Test {
@@ -62,9 +61,10 @@ contract Test_Z2Badges is Test {
         ZoneConfig.set(ZONE_DARK_CAVE, EARLY_GAME_CAP, BADGE_ZONE_CONQUEROR_BASE);
         ZoneConfig.set(ZONE_WINDY_PEAKS, MAX_LEVEL, BADGE_ZONE_CONQUEROR_BASE + 1);
 
-        // Configure zone maps
+        // Configure zone maps — Windy Peaks minLevel is 10 (lowered from 11
+        // by SetWindyPeaksMinLevel.s.sol; matches on-chain state).
         ZoneMapConfig.set(ZONE_DARK_CAVE, 10, 10, 0, 0, 1);
-        ZoneMapConfig.set(ZONE_WINDY_PEAKS, 10, 10, 0, 0, 11);
+        ZoneMapConfig.set(ZONE_WINDY_PEAKS, 10, 10, 0, 0, 10);
 
         vm.stopPrank();
     }
@@ -246,7 +246,7 @@ contract Test_Z2Badges is Test {
         address alice = _getUser();
         bytes32 charId = _createCharacter(alice);
 
-        _setLevel(charId, 5); // Need 11 for WP
+        _setLevel(charId, 5); // Need 10 for WP
         vm.startPrank(deployer);
         _spawnCharacter(charId);
         _completeDarkCave(charId);
@@ -257,19 +257,25 @@ contract Test_Z2Badges is Test {
         world.UD__transitionZone(charId, ZONE_WINDY_PEAKS);
     }
 
-    function test_transition_revertsIfPrereqIncomplete() public {
+    /// @notice Regression: a L10 character whose CharacterZoneCompletion[DC]=false
+    ///         (e.g. hit L10 before the completion system deployed) must still
+    ///         be able to enter Windy Peaks. Level is the only gate.
+    function test_transition_succeedsAtMinLevelWithoutDarkCaveCompletion() public {
         address alice = _getUser();
         bytes32 charId = _createCharacter(alice);
 
-        _setLevel(charId, 11);
+        _setLevel(charId, 10);
         vm.startPrank(deployer);
         _spawnCharacter(charId);
         vm.stopPrank();
         // Deliberately NOT completing Dark Cave
 
+        assertFalse(CharacterZoneCompletion.getCompleted(charId, ZONE_DARK_CAVE));
+
         vm.prank(alice);
-        vm.expectRevert(PrerequisiteZoneIncomplete.selector);
         world.UD__transitionZone(charId, ZONE_WINDY_PEAKS);
+
+        assertEq(CharacterZone.getZoneId(charId), ZONE_WINDY_PEAKS);
     }
 
     function test_transition_revertsIfAlreadyInZone() public {

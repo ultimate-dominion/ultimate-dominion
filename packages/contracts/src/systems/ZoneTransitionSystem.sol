@@ -7,7 +7,6 @@ import {IWorld} from "@world/IWorld.sol";
 import {
     Characters,
     CharacterZone,
-    CharacterZoneCompletion,
     ZoneEntitiesAtPos,
     EncounterEntity,
     PositionV2,
@@ -28,7 +27,6 @@ import {
     InEncounter,
     NotSpawned,
     OnlyCharacters,
-    PrerequisiteZoneIncomplete,
     Unauthorized,
     ZoneLevelTooLow,
     ZoneNotConfigured
@@ -64,17 +62,11 @@ contract ZoneTransitionSystem is System {
         uint256 currentZoneId = _getCharacterZone(entityId);
         if (currentZoneId == targetZoneId) revert AlreadyInZone();
 
-        // --- Prerequisite check ---
-        // For zones beyond Dark Cave, require completion of the previous zone.
-        // Zone 1 (Dark Cave) has no prerequisites.
-        // Zone N requires zone N-1 completion.
-        // Future: could read dependencies from a config table for non-linear graphs.
-        if (targetZoneId > ZONE_DARK_CAVE) {
-            uint256 prereqZoneId = targetZoneId - 1;
-            if (!CharacterZoneCompletion.getCompleted(entityId, prereqZoneId)) {
-                revert PrerequisiteZoneIncomplete();
-            }
-        }
+        // Prior-zone completion is intentionally NOT a gate here.
+        // ZoneMapConfig.minLevel is the authoritative entry bar (Windy Peaks = L10).
+        // The CharacterZoneCompletion flag is set inside _checkZoneCompletion on
+        // level-up, so any character that pre-dates that deploy keeps the flag
+        // at false despite meeting the level bar — gating on it strands them.
 
         // --- Execute transition ---
         // 1. Remove from current tile
