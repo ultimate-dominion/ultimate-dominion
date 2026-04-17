@@ -1,6 +1,6 @@
 # Active Work — Ultimate Dominion
 
-Updated: 2026-04-16 (orange shell flash + ticker fix shipped to beta; direction refreshed)
+Updated: 2026-04-17 (WP quest HUD + dragon + fragment echo fixes shipped to beta; prereq gate deployed)
 
 ## Pending
 1. **SpellStats migration** — critical blocker. Add `ItemType.Spell` branch to `ItemCreationSystem.createItem()`, flip deploy script to `ITEM_TYPE_SPELL = 2`. Research complete.
