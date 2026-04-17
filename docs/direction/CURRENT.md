@@ -4,20 +4,22 @@
 working memory for this project — what is actively being shipped, where
 every thread stands, what changed recently. Agents (Claude, Codex, and
 any other) should treat this as ground truth for "where are we right
-now". Regenerated: `2026-04-16T16:42:14+00:00`.
+now". Regenerated: `2026-04-17T20:32:56+00:00`.
 
 When this file conflicts with older docs, trust this one.
 
 ---
 ## Focus
 
-Visual polish cluster shipped to beta 2026-04-15 to 2026-04-16 (BootScreen Suspense fallback, battle HUD snap fix, orange shell flash on all routes eliminated via Header Box wrapper). Audio/SFX integration, zone unlock decoupling, and creatures.json refactor all merged 2026-04-14. **Critical blocker:** SpellStats table is empty — spells created without stats since ItemCreationSystem.createItem() has no Spell branch. Blocking spell viability in combat and production deploy window.
+**Windy Peaks quest HUD + creature visibility shipped to beta 2026-04-17.** Three client bugs fixed (dragon off-map, fragment lookup encoding, echo icon) and contract prereq gate removed from ZoneTransitionSystem. Vercel auto-deploying from `dev`. Visual polish cluster (orange flash, HUD alignment, item ticker) merged through 2026-04-16. **Critical blocker:** SpellStats table empty — spells created without stats since ItemCreationSystem.createItem() has no Spell branch. Blocking prod deploy window.
 
 ## Active threads
 
 - **[critical] SpellStats table empty** — last touched 2026-04-16. Spells created without stats; ItemCreationSystem.createItem() has no Spell branch. Needs: (1) add ItemType.Spell branch to createItem() writing to SpellStats, (2) migrate historical items (1-9, 214/232-257, 551-559). Next: implement branch + migration script, deploy to beta, test.
 
-- **[shipped] Visual polish (BootScreen + HUD + orange shell)** — last touched 2026-04-16 (`f0dc23e6`). Orange flash eliminated via Header Box wrapper + pathname-aware RoutesFallback (`ea785a4f`). Battle HUD snap fixed via stable HealthBar height + flex column (`24fd3f6a`). Item ticker removed. Vercel auto-deployed to beta. Next: verify on beta, no regressions.
+- **[shipped] Windy Peaks quest HUD + dragon + fragment echo** — last touched 2026-04-17 (`d880474f`). Fixed 3 bugs: dragon coords (PositionV2 vs legacy Position math), fragment key encoding (decimal vs hex in encodeCompositeKey), echo icon missing from map. Contract fix (`abe5a30a`) drops prereq gate from ZoneTransitionSystem. Next: verify on beta, test quest pickup + HUD display + creature rendering.
+
+- **[shipped] Visual polish (orange flash + HUD + ticker)** — last touched 2026-04-16 (`f0dc23e6`). Orange shell flash eliminated via Header Box wrapper + pathname-aware RoutesFallback. Battle HUD snap fixed via stable HealthBar height + flex column. Item ticker removed. Next: verify on beta, no regressions.
 
 - **[shipped] Audio/SFX integration** — last touched 2026-04-14 (`92ca5564`). 50 tests passing, 13 OGG assets, merged to dev. Music ducking + SFX hooked on all surfaces (battle/loot/level/fragments). Next: verify audio and SFX playback on beta.
 
@@ -31,22 +33,19 @@ Visual polish cluster shipped to beta 2026-04-15 to 2026-04-16 (BootScreen Suspe
 
 ## Recent pivots (last 14 days)
 
-- **2026-04-16** — Orange shell flash eliminated by wrapping Header Fragment in single Box (was leaking 2 children to Grid) + fixing App.gridRows template + making RoutesFallback dark/pathname-aware. Item ticker removed from GameBoard.
-
-- **2026-04-15** — BootScreen flash eliminated by making RoutesFallback pathname-aware (renders full-screen BootScreen on /game-board during React.lazy Suspense). Battle HUD snap eliminated by reserving HealthBar badges row unconditionally (minH="14px") and making battle container flex column.
-
-- **2026-04-14** — Audio SFX fully integrated (13 OGG assets, 50 tests, all surfaces hooked). Creatures.json extracted as single source of truth for game and lab (all Z1 creatures had divergent grid dims). Respec relocated from Character modal to dedicated /respec page hosted by Vel Morrow. Zone exit unlock decoupled from advanced class state.
-
-- **2026-04-13** — Embedded wallet gas funding token path fixed (fetch identity token actively). Movement monster display sync hardened (concurrent Promise.all + positionIsCleared guard).
+- **2026-04-17** — Windy Peaks quest HUD shipped. Fixed dragon off-map (PositionV2 coords already zone-relative, don't subtract offset). Fixed fragment chain lookups (decimal string was being hex-encoded, need toString(16)). Fragment echo icon was dead code, now rendering.
+- **2026-04-16** — Orange shell flash eliminated by wrapping Header Fragment in single Box (was leaking 2 children to Grid) + making RoutesFallback dark/pathname-aware. Item ticker removed from GameBoard.
+- **2026-04-15** — Battle HUD snap eliminated by reserving HealthBar badges row unconditionally (minH="14px") and making battle container flex column.
+- **2026-04-14** — Audio SFX fully integrated (13 OGG assets, 50 tests, all surfaces hooked). Creatures.json extracted as single source of truth for game and lab (all Z1 creatures had divergent grid dims). Respec relocated from Character modal to dedicated /respec page. Zone exit unlock decoupled from advanced class state.
 
 ## Blocked / waiting
 
 - SpellStats population — needs ItemType.Spell branch implementation + migration
 - Railway indexer deploy — `2986663f` failed with 413, awaits explicit Dockerfile redeploy
 - Production battle hotfix — `b13e4346` ready to push
-- Basilisk visual verification — user reported pixelated spider in Victory screen
+- Basilisk visual verification — user reported pixelated in Victory screen; verify post-creatures.json alignment
 
 ## Open questions
 
-- **Basilisk display on beta** — missing asset, rendering path bug, or stale Vercel build serving old dims?
+- **Basilisk display on beta** — is the 18×18 alignment now rendering correctly, or still pixelated/missing?
 - **Spawn speed perception vs reality** — is spawn actually slower, or just feels slower because it fires async after UI navigation?
