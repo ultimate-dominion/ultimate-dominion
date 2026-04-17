@@ -34,6 +34,7 @@ import { CaptchaGate } from './CaptchaGate';
 import { ChatPanel } from './ChatPanel';
 import { OnlineLink } from './OnlineRoster';
 import { PolygonalCard } from './PolygonalCard';
+import { FragmentEchoTile } from './FragmentEchoOverlay';
 import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
 import { CompassArrowSvg, CompassRoseOrnamentSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
@@ -405,6 +406,8 @@ export const MapPanel = (): JSX.Element => {
                       transform="translateX(-30%)"
                     />
                   )}
+
+                  <FragmentEchoTile x={col} y={row} tileSize={30} />
 
                   {allShops.map((shop, index) => {
                     const isShopHere = shop.position.x === col && shop.position.y === row;

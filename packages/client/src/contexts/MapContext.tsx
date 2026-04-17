@@ -212,11 +212,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const worldBossTable = useGameTable('WorldBossV2');
   const mobsTable = useGameTable('Mobs');
 
-  // Player's position from the store (canonical — no optimistic updates)
-  // Try PositionV2 first (zone-relative coords deployed via beta contract leak),
-  // fall back to legacy Position table for unaffected characters.
+  // Player's position from the store (canonical — no optimistic updates).
+  // PositionV2 stores zone-RELATIVE coords (0-9); legacy Position stores
+  // zone-absolute coords (offset by ZONE_ORIGINS). Prefer V2 when present.
   const posDataV2 = useGameValue('PositionV2', character?.id);
   const posDataV1 = useGameValue('Position', character?.id);
+  const posIsV2 = posDataV2 != null;
   const posData = posDataV2 ?? posDataV1;
   const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
 
@@ -238,11 +239,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     }
   }, [currentZone]);
 
-  // Display position — raw coords converted to zone-relative (0-9)
+  // Display position — raw coords converted to zone-relative (0-9).
+  // V2 coords are already zone-relative, V1 coords need origin subtraction.
   const displayPosition = useMemo(() => {
     if (!position) return null;
+    if (posIsV2) return position;
     return toDisplayPosition(position, currentZone);
-  }, [position, currentZone]);
+  }, [position, currentZone, posIsV2]);
 
   const inSafetyZone = useMemo(() => {
     if (!displayPosition) return false;

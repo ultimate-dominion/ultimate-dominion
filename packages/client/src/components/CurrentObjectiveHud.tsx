@@ -26,7 +26,9 @@ export const CurrentObjectiveHud = (): JSX.Element | null => {
     let completedCount = 0;
 
     const chains = Z2_FRAGMENT_TYPES.map(type => {
-      const key = encodeCompositeKey(character.id, type.toString());
+      // FragmentType is a uint8 stored as hex in the composite key — pass hex,
+      // not a decimal string (decimal "10" would encode as 0x10 = 16, not 0x0a).
+      const key = encodeCompositeKey(character.id, type.toString(16));
       const data = chainTable[key];
       const totalSteps = Number(data?.totalSteps ?? 0);
       const completed = data?.completed === true;

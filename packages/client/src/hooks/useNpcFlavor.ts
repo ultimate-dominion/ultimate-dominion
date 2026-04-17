@@ -35,7 +35,9 @@ export function useNpcFlavor(metadataUri: string): { title: string; flavor: stri
     // Check each chain this NPC has flavor for, in order
     for (const fragTypeStr of Object.keys(structure.chains)) {
       const fragType = Number(fragTypeStr);
-      const key = encodeCompositeKey(character.id, fragType.toString());
+      // FragmentType key is hex-encoded uint8 — pass hex, not decimal
+      // (decimal "10" would encode as 0x10 = 16, not 0x0a).
+      const key = encodeCompositeKey(character.id, fragType.toString(16));
       const data = chainTable[key];
 
       if (!data) continue;

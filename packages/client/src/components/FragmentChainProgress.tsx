@@ -72,7 +72,9 @@ export const FragmentChainProgress = (): JSX.Element | null => {
     if (!character?.id) return [];
 
     return Z2_FRAGMENT_TYPES.map(type => {
-      const key = encodeCompositeKey(character.id, type.toString());
+      // FragmentType key is hex-encoded uint8 — pass hex, not decimal
+      // (decimal "10" would encode as 0x10 = 16, not 0x0a).
+      const key = encodeCompositeKey(character.id, type.toString(16));
       const data = chainTable[key];
       return {
         fragmentType: type,
