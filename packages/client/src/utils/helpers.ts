@@ -7,6 +7,7 @@ import {
   sliceHex,
 } from 'viem';
 
+import i18n from '../i18n';
 import {
   AdvancedClass,
   ArmorType,
@@ -16,7 +17,6 @@ import {
   PowerSource,
   Race,
 } from '../utils/types';
-import i18n from '../i18n';
 
 export const etherToFixedNumber = (
   value: bigint | string,
@@ -106,9 +106,12 @@ export const decodeBaseStats = (statsBytes: string): EntityStats => {
     // Implicit class system fields
     powerSource: (characterBaseStats.powerSource as number) ?? PowerSource.None,
     race: (characterBaseStats.race as number) ?? Race.None,
-    startingArmor: (characterBaseStats.startingArmor as number) ?? ArmorType.None,
-    advancedClass: (characterBaseStats.advancedClass as number) ?? AdvancedClass.None,
-    hasSelectedAdvancedClass: characterBaseStats.hasSelectedAdvancedClass ?? false,
+    startingArmor:
+      (characterBaseStats.startingArmor as number) ?? ArmorType.None,
+    advancedClass:
+      (characterBaseStats.advancedClass as number) ?? AdvancedClass.None,
+    hasSelectedAdvancedClass:
+      characterBaseStats.hasSelectedAdvancedClass ?? false,
   };
 };
 
@@ -163,7 +166,9 @@ export const mobEntityMatchesPosition = (
   if (!position) return false;
 
   try {
-    const encodedPosition = decodeMobInstancePosition(monsterId as `0x${string}`);
+    const encodedPosition = decodeMobInstancePosition(
+      monsterId as `0x${string}`,
+    );
     return encodedPosition.x === position.x && encodedPosition.y === position.y;
   } catch {
     // Fail open for unexpected ids so we do not hide valid entities on decode issues.
@@ -232,7 +237,8 @@ const MONSTER_URI_ALIASES: Record<string, string> = {
   'monster:peakfire_wraith': 'monster:manticore',
 };
 
-const normalizeTextUri = (uri: string): string => MONSTER_URI_ALIASES[uri] ?? uri;
+const normalizeTextUri = (uri: string): string =>
+  MONSTER_URI_ALIASES[uri] ?? uri;
 
 /**
  * Parse a text-only URI (e.g., "monster:training_dummy", "text:Hero") into a display name
@@ -254,7 +260,17 @@ export const parseTextUri = (uri: string): string => {
 export const isTextOnlyUri = (uri: string): boolean => {
   if (!uri) return false;
   const protocol = uri.split(':')[0].toLowerCase();
-  return ['text', 'monster', 'item', 'armor', 'weapon', 'spell', 'consumable', 'accessory', 'quest'].includes(protocol);
+  return [
+    'text',
+    'monster',
+    'item',
+    'armor',
+    'weapon',
+    'spell',
+    'consumable',
+    'accessory',
+    'quest',
+  ].includes(protocol);
 };
 
 const METADATA_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
@@ -277,7 +293,10 @@ const getCachedMetadata = (uri: string): Metadata | null => {
 
 const setCachedMetadata = (uri: string, data: Metadata): void => {
   try {
-    localStorage.setItem('metadata:' + uri, JSON.stringify({ data, ts: Date.now() }));
+    localStorage.setItem(
+      'metadata:' + uri,
+      JSON.stringify({ data, ts: Date.now() }),
+    );
   } catch {
     // localStorage full or unavailable — ignore
   }
@@ -289,7 +308,6 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
     return {
       name: '',
       description: '',
-      image: '',
     };
   }
 
@@ -303,7 +321,6 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
         ns: 'items',
         defaultValue: i18n.t(uri, { ns: 'items', defaultValue: '' }),
       }),
-      image: '',
     };
   }
 
@@ -323,7 +340,10 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
       console.log(`Development mode: Fetching from local API at ${localUrl}`);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), METADATA_FETCH_TIMEOUT_MS);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        METADATA_FETCH_TIMEOUT_MS,
+      );
       let res: Response;
       try {
         res = await fetch(localUrl, { signal: controller.signal });
@@ -333,17 +353,11 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
       if (!res.ok) {
         throw new Error(`Failed to fetch from local API: ${localUrl}`);
       }
-      const metadata = await res.json();
-      metadata.name = metadata.name || '';
-      metadata.description = metadata.description || '';
-
-      // If image is local, properly format it for local access
-      if (metadata.image && metadata.image.includes('local-')) {
-        const imgFilename = metadata.image.split('/').pop();
-        metadata.image = `${apiUrl}/files/${imgFilename}`;
-      } else {
-        metadata.image = uriToHttp(metadata.image)[0] || '';
-      }
+      const rawMetadata = await res.json();
+      const metadata: Metadata = {
+        name: rawMetadata.name || '',
+        description: rawMetadata.description || '',
+      };
 
       setCachedMetadata(uri, metadata);
       return metadata;
@@ -361,7 +375,6 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
     return {
       name: '',
       description: '',
-      image: '',
     };
   }
 
@@ -370,7 +383,10 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
 
   for (const url of urls.slice(0, MAX_GATEWAY_ATTEMPTS)) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), METADATA_FETCH_TIMEOUT_MS);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      METADATA_FETCH_TIMEOUT_MS,
+    );
     try {
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
@@ -380,10 +396,11 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
         continue;
       }
 
-      const metadata = await res.json();
-      metadata.name = metadata.name || '';
-      metadata.description = metadata.description || '';
-      metadata.image = uriToHttp(metadata.image)[0] || '';
+      const rawMetadata = await res.json();
+      const metadata: Metadata = {
+        name: rawMetadata.name || '',
+        description: rawMetadata.description || '',
+      };
 
       setCachedMetadata(uri, metadata);
       return metadata;
@@ -395,8 +412,12 @@ export const fetchMetadataFromUri = async (uri: string): Promise<Metadata> => {
     }
   }
 
-  console.warn('[fetchMetadataFromUri] All gateways failed for', uri, lastError);
-  return { name: '', description: '', image: '' };
+  console.warn(
+    '[fetchMetadataFromUri] All gateways failed for',
+    uri,
+    lastError,
+  );
+  return { name: '', description: '' };
 };
 
 const IPFS_GATEWAYS = [
@@ -432,7 +453,9 @@ export const uriToHttp = (uri: string): string[] => {
         if (!hash) return [];
         // Guard: if the "hash" is actually an HTTP URL, use it directly
         if (hash.startsWith('http://') || hash.startsWith('https://')) {
-          return [hash.startsWith('http://') ? 'https' + hash.substring(4) : hash];
+          return [
+            hash.startsWith('http://') ? 'https' + hash.substring(4) : hash,
+          ];
         }
         return IPFS_GATEWAYS.map(gateway => `${gateway}/ipfs/${hash}`);
       }

@@ -15,6 +15,7 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 ### 1.1 Core Gameplay (Must Work)
 
 **Authentication & Onboarding**
+
 - [x] Google sign-in (Privy embedded wallet) ✓ Wallet created invisibly on sign-in
 - [x] MetaMask / external wallet support ✓ "Connect Wallet" button, delegation fallback
 - [x] Session persistence ✓ Privy auto-persists, auto-reconnect on refresh
@@ -24,10 +25,12 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] Auth edge cases ✓ Stale session clearing (`6ecda63f`), wrong-account detection (`2e5cba03`), auto-navigate after sign-in (`c3cf4115`), logout no longer blocks on despawn failure (`60817b93`)
 
 **Gasless Transactions (Onboarding Blocker)**
+
 - [x] Gas onboarding system designed ✓ GasStationSystem (Gold→ETH swap for level 3+), gas station funds new users + tops up low balances
 - [x] Gasless transactions implementation ✓ GasStation funded, EIP-7702 with 2x gas buffer (`f413df64`)
 
 **Combat & Progression**
+
 - [x] PvE combat working ✓ Full combat loop with loot drops, auto-retry on reverts (`6ef6b5bd`)
 - [x] HP/damage scaling by level ✓ Weapon scalingStat (STR/AGI/INT)
 - [x] Combat rebalance ✓ AGI/INT scaling, class multipliers, combat triangle (`014d0ae6`), stat growth rebalance (`82699a7e`)
@@ -36,9 +39,11 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [ ] Edge case testing (disconnects, timeouts during combat)
 
 **Survivability**
+
 - [x] Free healing mechanic ✓ `rest()` action heals to full HP at campfire (`112344c5`)
 
 **Economy & Shop**
+
 - [x] Buy/sell flow ✓ Fixed ERC1155 approval, shop encounter bugs (`1754b8b8`, `bc589ab7`, `dd714f7f`), optimistic updates (`8c41cf3c`)
 - [x] Shop inventory and pricing ✓ Uncommon gear + consumables, updated prices (`92a520da`), 6 combat consumables added (`e6114fe5`)
 - [x] Shop UI/UX ✓ Leave Shop button (`498b93bd`), friendly sell errors, Tal narrative intro (`bf411a69`)
@@ -47,14 +52,16 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] Gold withdrawal design ✓ MetaMask/external wallet users can transfer directly; embedded wallet users cannot withdraw (by design)
 
 **Narrative & Lore**
+
 - [x] "Fragments" story arc ✓ 8-part story arc complete
 - [x] FragmentSystem.sol ✓ ERC721 minting on claim
 - [x] Lore fragment triggers ✓ Client-side post-combat triggers (`def60c83`), spawn, shop, PvP, locations
 - [x] Badge system ✓ Adventurer badge at level 3, gates chat access
 - [x] Fragment UX ✓ Modal closing fix (`8135c37f`), XP on claim + cinematic (`f9f42a60`), echo row colors (`ffea6c23`)
-- [ ] Fragment artwork (placeholders acceptable for beta, but flag to players)
+- [x] Text-first fragment presentation ✓ Number, title, state, and prose render without artwork
 
 **UI/UX (Already Complete)**
+
 - [x] Full 6-phase UI/UX overhaul ✓
 - [x] Torchlit dungeon dark theme ✓ (`b7bf197f`)
 - [x] Mobile responsiveness ✓ Mobile game board overhaul (`1b9b01e6`), compass rose navigation
@@ -67,6 +74,7 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 ### 1.2 Deployment
 
 **Smart Contracts**
+
 - [x] Deploy MUD World to Base Mainnet Beta ✓ World: `0xDd8692cf4C0A20569D8e78D9015d1e44D5E0b662`
 - [x] Run MinimalPostDeploy (ERC20 Gold, ERC721 Characters, ERC1155 Items, core config) ✓
 - [x] Load zone data via zone-loader ✓ Dark Cave zone loaded
@@ -77,14 +85,16 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [ ] Configure badge token and fragment NFTs on beta
 
 **API Server**
+
 - [x] Deploy API to Vercel ✓
 - [x] Configure environment variables ✓
-- [x] IPFS for character metadata ✓ Upload endpoints working, CID returns fixed (`f8eea4f7`)
+- [x] IPFS for character metadata ✓ Text metadata JSON pinning
 - [x] CORS for production domain ✓ CORS_ORIGINS env var
 - [x] API rate limiting ✓ express-rate-limit: 100 req/15min
 - [ ] Set up health check monitoring (/health endpoint)
 
 **Client**
+
 - [x] Build client for production ✓
 - [x] Deploy to Vercel (vercel.json SPA rewrite configured) ✓
 - [x] Configure production .env (CHAIN_ID, RPC URLs, API_URL, PRIVY_APP_ID) ✓
@@ -93,6 +103,7 @@ Get the game playable with real users. Rough edges acceptable — the goal is re
 - [x] Code splitting and lazy loading ✓ Route code-splitting (`adb1d835`), lazy-load Push Protocol
 
 **Infrastructure**
+
 - [x] RPC provider ✓ Alchemy with Flashblocks (200ms preconfirmations)
 - [x] Custom indexer ✓ Replaced RECS with custom indexer + Zustand store (`8383fbbb`), Railway deployment
 - [x] DNS: beta.ultimatedominion.com → Vercel ✓
@@ -108,7 +119,7 @@ Run through every core flow before inviting players:
 
 - [x] Sign in with Google (embedded wallet) — full flow ✓
 - [x] Sign in with MetaMask (external wallet) — delegation flow ✓
-- [x] Create character (metadata upload to IPFS, mint tx) ✓
+- [x] Create character (text metadata pin, mint tx) ✓
 - [x] Enter game, move on map ✓ (movement reliability extensively fixed)
 - [x] Fight a monster, win/lose ✓
 - [x] Visit shop, buy/sell items ✓
@@ -122,6 +133,7 @@ Run through every core flow before inviting players:
 ### 1.4 Community & GTM (Beta)
 
 **Before First Public Post**
+
 - [x] SEO: react-helmet-async, robots.txt, sitemap.xml, OG tags ✓ (`119c4afa`)
 - [x] Player guide site live at /guide ✓ 13 pages, full JSON-LD, OG tags
 - [x] Landing page with game description ✓ Torchlit dungeon theme (`b7bf197f`), welcome page refresh (`6c470bfb`)
@@ -130,21 +142,25 @@ Run through every core flow before inviting players:
 - [x] Set `sourcemap: false` in `vite.config.ts` for production ✓ Already configured
 
 **Community Channels**
+
 - [x] Discourse forum live at tavern.ultimatedominion.com ✓ `/tavern` redirect, setup runbook, changelog automation
 - [ ] Create X/Twitter account, pre-write first 5 posts (see GO_TO_MARKET.md)
 - [ ] Create Farcaster/Warpcast account
 
 **Directory Listings**
+
 - [ ] PBBG.com + Discourse forum
 - [ ] BrowserMMORPG.com
 - [ ] MUD directories (MUD Connector, MudVerse, MudListings, Top Mud Sites)
 
 **First Outreach**
+
 - [ ] Post on r/MUD — developer introduction
 - [ ] Post in MUD Coders Guild Slack
 - [ ] Share in Lattice/MUD Discord
 
 **Beta Testing Program**
+
 - [x] Define beta feedback channels ✓ Tavern (Discourse) at tavern.ultimatedominion.com, linked in main nav
 - [ ] Create beta tester onboarding guide
 - [ ] Target: 10-25 active beta testers
@@ -158,7 +174,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 ### 2.1 Security Review (Gate for Mainnet)
 
 - [~] Smart contract audit (external or internal review) — full security review in progress
-- [x] Access control verification ✓ 6 admin systems locked, _requireSystemOrAdmin() on critical systems
+- [x] Access control verification ✓ 6 admin systems locked, \_requireSystemOrAdmin() on critical systems
 - [x] Reentrancy protection ✓ PvpRewardSystem double-claim fix, ShopSystem nonReentrant
 - [x] Integer overflow/underflow checks ✓ CombatMath clamping, division-by-zero guards, MapRemovalSystem counter underflow guard (`60817b93`)
 - [x] Input validation ✓ Negative stat validation, HP clamping, entity ownership validation (`479ff421`)
@@ -174,43 +190,51 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 ### 2.2 Playtest Feedback (Must Fix)
 
 **Transaction Reliability**
+
 - [x] Eliminate jank, stutters, and failed txs ✓ Auto-retry on reverts (`6ef6b5bd`, `acf453ba`), movement cooldown tracking (`145dbfb1`, `394664db`), move mutex (`52869919`), Alchemy Flashblocks (200ms blocks)
 - [x] Fire-and-forget gameplay actions ✓ (`6b100929`) — removed simulateContract blocking
 - [x] Optimistic progress bars ✓ (`01b17c94`) — asymptotic deceleration on all transactions
 - [x] Ghost encounter hardening ✓ click-time stale-target validation plus authoritative combat bootstrap prevent stale cached PvE state from reviving battles; movement display sync now cleans/protects stale monster rows (`0b61f384`, `b0f87e60`, `4242f24f`, `a5e1d931`, `10db5e03`)
 
 **Chat**
+
 - [x] Show usernames in chat ✓ Class-colored character names (`bb442d1e`)
 - [x] Broadcast item finds to chat ✓ Rare item drop announcements + rare-only marketplace (`f6187148`)
 
 **Player Hooks & Engagement**
+
 - [x] Item discovery emphasis ✓ Rarity color palette + animated glow (`46b0fd9b`), sort loot by rarity (`01b17c94`), breathing animation on Uncommon+
 - [ ] Leaderboard position updates — notify players of rank changes
 
 **Marketplace**
+
 - [x] Marketplace working end-to-end ✓ Access grants (`fdb25190`), await receipts (`e7496147`), redesigned layout (`cf82490c`), sell action (`f7223baf`)
 - [x] Navigation to marketplace/leaderboard prominent ✓ Persistent header nav bar (`00de29fb`)
 
 ### 2.3 Game Balance (Incorporate Beta Feedback)
 
 **PvP Balance**
+
 - [x] PvP bug fixes ✓ Missing currentHp, incomplete getItemEffects, HP validation (`fe65eb35`)
 - [ ] Comprehensive PvP balance testing (all class matchups)
 - [ ] Anti-cheat considerations (transaction ordering, bot detection)
 
 **Economy & Gold**
+
 - [x] Gas onboarding system ✓ GasStationSystem, gas station (relayer), OutOfResourcesModal
 - [ ] Gold sink/faucet balance (verify gold isn't inflating or deflating)
 - [ ] Shop pricing vs monster rewards (progression feel)
 - [ ] Marketplace fee structure
 
 **Item Drops**
+
 - [x] Review drop rates for all monsters ✓ Beta rates: starters 60%, common 50%, uncommon 40%, rare 25%
 - [x] Balance loot tables by level/zone ✓ Staggered weapon/armor stat gates, consumable distribution per combat triangle
 - [x] On-chain drop multipliers ✓ (`ec1f19f5`) — admin-tunable per-zone
 - [ ] Rare item drop rate tuning (post-beta feedback)
 
 **Stats & Leveling**
+
 - [x] Stat growth rebalance ✓ Combat triangle for levels 1-10 (`82699a7e`)
 - [x] Class stat multipliers ✓ AGI/INT scaling, class multipliers (`014d0ae6`)
 - [x] Early level stat points ✓ 2 stat points for levels 1-10 (`12e5f476`)
@@ -219,6 +243,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Level cap and endgame balance
 
 **V3 Balance Patch**
+
 - [x] BalancePatchV3 forge script — deployed to beta, 101 txs confirmed (2026-03-11). Fixes: OldMonsterStats decode, direct table writes for Basilisk + SpellScaling
 - [ ] V3 balance patch verification tests (dedicated test file — run against beta fork)
 - [ ] Shop inventory update — add new V3 items (Trollhide Cleaver, Phasefang, Drakescale Staff, Drake's Cowl) to Tal's buyable list (separate script)
@@ -228,6 +253,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 ### 2.4 Mainnet Deployment
 
 **Smart Contracts**
+
 - [x] Deploy MUD World to Base mainnet ✓ World: `0x99d01939F58B965E6E84a1D167E710Abdf5764b0`
 - [x] Run MinimalPostDeploy with production config ✓
 - [x] Load zone data via zone-loader ✓
@@ -238,12 +264,14 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Deploy latest contract changes to production (beta is ahead of prod)
 
 **Live Operations Tooling**
+
 - [x] AdminTuningSystem ✓ `adminUpdateItemStats()`, `adminSetWeaponScaling()`, `adminSetClassMultipliers()` (`088ad960`)
 - [x] Item stats sync script ✓ `item-sync.ts` — compare on-chain vs JSON, push updates (`4603f3ec`)
 - [x] Test AdminTuning on beta ✓ 65 items synced successfully
 - [x] Document live update runbook ✓ `deploy-guide.md` — three tiers (data tuning, content additions, system logic)
 
 **Infrastructure**
+
 - [x] Production RPC provider ✓ Alchemy with Flashblocks (dedicated, not public node)
 - [x] Custom indexer for Base mainnet ✓ Railway (sweet-quietude)
 - [x] DNS: ultimatedominion.com → Vercel ✓
@@ -253,6 +281,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Uptime monitoring for API and client
 
 **Client**
+
 - [x] Production build deployed to Vercel ✓
 - [x] Production .env verified ✓
 - [x] Privy embedded wallet configured for production domain
@@ -261,12 +290,14 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 ### 2.5 GTM (Mainnet Launch)
 
 **Content & SEO**
+
 - [x] Player guide site ✓ 13 pages at /guide with JSON-LD and OG tags
 - [ ] Submit sitemap to Google Search Console
 - [ ] Create press kit — screenshots, GIFs, trailer, logo, fact sheet
 - [ ] Write first Medium article
 
 **Distribution Push**
+
 - [ ] Apply for Base Builder Grants
 - [ ] Start #ScreenshotSaturday on X/Twitter
 - [ ] Set up IndieDB and itch.io game pages
@@ -275,6 +306,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 - [ ] Post on r/IndieGaming, r/playmygame
 
 **Launch Mechanics**
+
 - [x] Queue/invite system implementation ✓ Code complete, deployed, working on beta
 - [~] Human verification system (Cloudflare Turnstile) — code complete (`CaptchaGate.tsx` + indexer `captcha.ts`), needs Turnstile site keys set on Railway + Vercel
 - [ ] DEX liquidity setup for $GOLD token (see ECONOMICS.md)
@@ -285,7 +317,7 @@ Only after beta is stable, feedback is incorporated, and security is verified.
 
 ### 2.6 Mainnet Smoke Test
 
-Same as beta smoke test, but on mainnet with real assets:
+Same as beta smoke test, but on mainnet:
 
 - [ ] Sign in with Google — full flow
 - [ ] Sign in with MetaMask — delegation flow
@@ -343,7 +375,6 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 - [ ] Guild system (`mud deploy` — new system + tables)
 - [ ] Advanced class abilities (`mud deploy` — combat system changes)
 - [ ] Seasonal events and limited-time content
-- [ ] Fragment artwork (replace placeholders with final art)
 
 ### 3.5 Retention & Re-engagement
 
@@ -368,17 +399,20 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 ## Summary: What's Left for Production Launch
 
 ### Blocking (must do)
+
 - [ ] Deploy latest contract changes to production (beta is ahead of prod)
 - [ ] Wipe indexer DB and re-sync from scratch with new production world
 - [ ] Production smoke test (Section 2.6) — planned for contract deploy day
 - [ ] Add DEX liquidity for $GOLD token — planned for contract deploy day
 
 ### In Progress
+
 - [~] Smart contract security review — full audit in progress
 - [~] Economic exploit review (gold duplication, inflation) — in progress
 - [~] Cloudflare Turnstile — code done, needs site keys on Railway + Vercel
 
 ### Recently Completed
+
 - [x] PvP end-to-end validation ✓
 - [x] Queue/invite system ✓
 - [x] Gold Merchant (Stripe Checkout) ✓
@@ -389,14 +423,15 @@ New zones, items, and monsters can be added live via AdminTuning + zone loader w
 - [x] Ghost encounter bootstrap fix on beta branch ✓ stale cached `CombatEncounter` rows no longer boot as authoritative UI state, and client no longer force-ends encounters (`b0f87e60`)
 
 ### Should Do
+
 - [ ] Verify contracts on Basescan
 - [ ] Switch Stripe to live keys (`sk_live_`) for production
 - [ ] Set launch config on production world (`maxPlayers`, `sessionTimeout`, `founderWindowEnd`)
 
 ### Nice to Have (can do post-launch)
+
 - [ ] WalletConnect verification on production
 - [ ] Uptime monitoring
-- [ ] Fragment artwork
 - [ ] Leaderboard position notifications
 
 ---

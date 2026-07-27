@@ -1,6 +1,7 @@
 import { Box, Text, VStack } from '@chakra-ui/react';
 import React, { Component, ReactNode, Suspense, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
+
 import { BootScreen } from './components/BootScreen';
 import { SHOW_Z2 } from './lib/env';
 
@@ -56,7 +57,9 @@ const CharacterPage = lazyWithReload(() =>
   import('./pages/Character').then(m => ({ default: m.CharacterPage })),
 );
 const CharacterCreation = lazyWithReload(() =>
-  import('./pages/CharacterCreation').then(m => ({ default: m.CharacterCreation })),
+  import('./pages/CharacterCreation').then(m => ({
+    default: m.CharacterCreation,
+  })),
 );
 const GameBoard = lazyWithReload(() =>
   import('./pages/GameBoard').then(m => ({ default: m.GameBoard })),
@@ -103,10 +106,6 @@ const ClassPage = lazyWithReload(() =>
 const Guild = lazyWithReload(() =>
   import('./pages/Guild').then(m => ({ default: m.Guild })),
 );
-const PretextLab = lazyWithReload(() =>
-  import('./pages/PretextLab').then(m => ({ default: m.PretextLab })),
-);
-
 export const HOME_PATH = '/';
 export const MANIFESTO_PATH = '/manifesto';
 export const CHARACTER_CREATION_PATH = '/character-creation';
@@ -124,12 +123,13 @@ export const TERMS_PATH = '/terms';
 export const FAQ_PATH = '/faq';
 export const GUILD_PATH = '/guild';
 export const RESPEC_PATH = '/respec';
-export const PRETEXT_LAB_PATH = '/pretext-lab';
 export const BLOG_URL = 'https://ultimatedominion.com/blog';
 export const TAVERN_URL = 'https://tavern.ultimatedominion.com';
 
-const ExternalRedirect = ({ to }: { to: string }) => {
-  useEffect(() => { window.location.href = to; }, [to]);
+const ExternalRedirect = ({ to }: { to: string }): null => {
+  useEffect(() => {
+    window.location.href = to;
+  }, [to]);
   return null;
 };
 
@@ -138,7 +138,7 @@ const ExternalRedirect = ({ to }: { to: string }) => {
 // identical to the AppInner boot gate. Every other route gets a dark in-place
 // loader that fills the AppRoutes grid cell — matching the body #12100E so no
 // orange app-shell surface is ever exposed during Suspense.
-export const RoutesFallback = () => {
+export const RoutesFallback = (): JSX.Element => {
   const { pathname } = useLocation();
   if (pathname === GAME_BOARD_PATH) {
     return (
@@ -158,7 +158,13 @@ export const RoutesFallback = () => {
       justifyContent="center"
     >
       <VStack spacing={3}>
-        <Text color="#8A7E6A" fontFamily="Cinzel, serif" fontSize="sm" letterSpacing="0.15em" textTransform="uppercase">
+        <Text
+          color="#8A7E6A"
+          fontFamily="Cinzel, serif"
+          fontSize="sm"
+          letterSpacing="0.15em"
+          textTransform="uppercase"
+        >
           Loading
         </Text>
       </VStack>
@@ -173,23 +179,31 @@ const AppRoutes: React.FC = () => {
         <Routes>
           <Route path={HOME_PATH} element={<Welcome />} />
           <Route path={MANIFESTO_PATH} element={<Manifesto />} />
-          <Route path={CHARACTER_CREATION_PATH} element={<CharacterCreation />} />
+          <Route
+            path={CHARACTER_CREATION_PATH}
+            element={<CharacterCreation />}
+          />
           <Route path={GAME_BOARD_PATH} element={<GameBoard />} />
           <Route path={CHARACTERS_PATH + '/:id'} element={<CharacterPage />} />
           <Route path={LEADERBOARD_PATH} element={<Leaderboard />} />
           {SHOW_Z2 && <Route path={GUILD_PATH} element={<Guild />} />}
           {SHOW_Z2 && <Route path={RESPEC_PATH} element={<Respec />} />}
-          {SHOW_Z2 && <Route path={PRETEXT_LAB_PATH} element={<PretextLab />} />}
           <Route path={MARKETPLACE_PATH} element={<Marketplace />} />
           <Route path={ITEM_PATH + '/:itemId'} element={<MarketplaceItem />} />
           <Route path={SHOP_PATH + '/:shopId'} element={<Shop />} />
           <Route path={GUIDE_PATH} element={<Guide />} />
-          <Route path={CLASS_PAGE_PATH + '/:className'} element={<ClassPage />} />
+          <Route
+            path={CLASS_PAGE_PATH + '/:className'}
+            element={<ClassPage />}
+          />
           <Route path={WAITING_ROOM_PATH} element={<WaitingRoom />} />
           <Route path={PRIVACY_PATH} element={<Privacy />} />
           <Route path={TERMS_PATH} element={<Terms />} />
           <Route path={FAQ_PATH} element={<FAQ />} />
-          <Route path="/tavern" element={<ExternalRedirect to={TAVERN_URL} />} />
+          <Route
+            path="/tavern"
+            element={<ExternalRedirect to={TAVERN_URL} />}
+          />
         </Routes>
       </Suspense>
     </ChunkErrorBoundary>

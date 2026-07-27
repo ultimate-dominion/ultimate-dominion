@@ -1,9 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
-  Image,
   keyframes,
   Modal,
   ModalBody,
@@ -14,11 +11,15 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { type FragmentStatus } from '../contexts/FragmentContext';
-import { getFragmentColor, getFragmentImage } from '../utils/fragmentImages';
-import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
 import { SHOW_Z2 } from '../lib/env';
+import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
+import { FRAGMENT_COLOR } from '../utils/fragmentStyle';
+
+import { FragmentMark } from './EntityMark';
 import { GameLoreReader } from './pretext/game/GameLoreReader';
 
 /* ──────────────────────── Animations ──────────────────────── */
@@ -57,8 +58,7 @@ export const FragmentReadModal = ({
   onClose,
 }: FragmentReadModalProps): JSX.Element => {
   const { t } = useTranslation('ui');
-  const color = getFragmentColor(fragment.name);
-  const imageSrc = getFragmentImage(fragment.name);
+  const color = FRAGMENT_COLOR;
   const modalSize = useBreakpointValue({ base: 'full', md: '2xl' });
 
   // Stagger content reveal when modal opens
@@ -115,112 +115,66 @@ export const FragmentReadModal = ({
           },
         }}
       >
-        <ModalBody p={0} overflowY="auto"
+        <ModalBody
+          p={0}
+          overflowY="auto"
           css={{
             '&::-webkit-scrollbar': { width: '4px' },
             '&::-webkit-scrollbar-track': { background: 'transparent' },
-            '&::-webkit-scrollbar-thumb': { background: `${color}30`, borderRadius: '2px' },
+            '&::-webkit-scrollbar-thumb': {
+              background: `${color}30`,
+              borderRadius: '2px',
+            },
           }}
         >
           <VStack spacing={0} align="stretch">
-            {/* ── Hero artwork ── */}
-            {imageSrc ? (
+            <Box
+              h={{ base: '180px', md: '200px' }}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              bg={`${color}08`}
+              position="relative"
+              animation={
+                showContent ? `${artReveal} 0.6s ease-out forwards` : undefined
+              }
+              opacity={showContent ? 1 : 0}
+            >
+              <FragmentMark
+                boxSize="72px"
+                index={fragment.fragmentType}
+                title={fragment.name}
+              />
               <Box
-                position="relative"
-                opacity={showContent ? 1 : 0}
-                animation={showContent ? `${artReveal} 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards` : undefined}
-              >
-                <Image
-                  src={imageSrc}
-                  alt={fragment.name}
-                  w="100%"
-                  maxH={{ base: '50vh', md: '420px' }}
-                  objectFit="contain"
-                  bg="#0A0908"
-                />
-                {/* Bottom gradient fade into content */}
-                <Box
-                  position="absolute"
-                  bottom={0}
-                  left={0}
-                  right={0}
-                  h="80px"
-                  bgGradient="linear(to-t, #1C1814, transparent)"
-                />
-                {/* Glow border along bottom edge of image */}
-                <Box
-                  position="absolute"
-                  bottom={0}
-                  left={0}
-                  right={0}
-                  h="2px"
-                  bg={`${color}50`}
-                  animation={`${glowPulse(color)} 4s ease-in-out infinite`}
-                />
-                {/* CLAIMED badge */}
-                <Box
-                  position="absolute"
-                  top={3}
-                  right={3}
-                  bg={`${color}20`}
-                  border="1px solid"
-                  borderColor={`${color}50`}
-                  px={2.5}
-                  py={0.5}
-                  borderRadius="sm"
-                >
-                  <Text fontSize="xs" fontWeight="bold" color={color} letterSpacing="wider">
-                    {t('fragmentRead.claimed')}
-                  </Text>
-                </Box>
-              </Box>
-            ) : (
-              /* Placeholder when no art exists */
+                position="absolute"
+                bottom={0}
+                left={0}
+                right={0}
+                h="2px"
+                bg={`${color}50`}
+                animation={`${glowPulse(color)} 4s ease-in-out infinite`}
+              />
               <Box
-                h={{ base: '30vh', md: '200px' }}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                bg={`${color}08`}
-                position="relative"
-                animation={showContent ? `${artReveal} 0.6s ease-out forwards` : undefined}
-                opacity={showContent ? 1 : 0}
+                position="absolute"
+                top={3}
+                right={3}
+                bg={`${color}20`}
+                border="1px solid"
+                borderColor={`${color}50`}
+                px={2.5}
+                py={0.5}
+                borderRadius="sm"
               >
                 <Text
-                  color={`${color}60`}
-                  fontSize="sm"
-                  fontFamily="'Cinzel', serif"
-                  letterSpacing="widest"
-                  textTransform="uppercase"
+                  fontSize="xs"
+                  fontWeight="bold"
+                  color={color}
+                  letterSpacing="wider"
                 >
-                  {t('fragmentRead.fragmentOf', { num: getRomanNumeral(fragment.fragmentType), total: getRomanNumeral(TOTAL_FRAGMENTS) })}
+                  {t('fragmentRead.claimed')}
                 </Text>
-                <Box
-                  position="absolute"
-                  bottom={0}
-                  left={0}
-                  right={0}
-                  h="2px"
-                  bg={`${color}50`}
-                  animation={`${glowPulse(color)} 4s ease-in-out infinite`}
-                />
-                <Box
-                  position="absolute"
-                  top={3}
-                  right={3}
-                  bg={`${color}20`}
-                  border="1px solid"
-                  borderColor={`${color}50`}
-                  px={2.5}
-                  py={0.5}
-                  borderRadius="sm"
-                >
-                  <Text fontSize="xs" fontWeight="bold" color={color} letterSpacing="wider">
-                    {t('fragmentRead.claimed')}
-                  </Text>
-                </Box>
               </Box>
-            )}
+            </Box>
 
             {/* ── Text content ── */}
             <VStack
@@ -230,7 +184,11 @@ export const FragmentReadModal = ({
               pt={4}
               pb={6}
               opacity={showContent ? 1 : 0}
-              animation={showContent ? `${fadeIn} 0.6s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
+              animation={
+                showContent
+                  ? `${fadeIn} 0.6s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both`
+                  : undefined
+              }
             >
               {/* Fragment number */}
               <Text
@@ -241,7 +199,10 @@ export const FragmentReadModal = ({
                 letterSpacing="widest"
                 textTransform="uppercase"
               >
-                {t('fragmentRead.fragmentOf', { num: getRomanNumeral(fragment.fragmentType), total: getRomanNumeral(TOTAL_FRAGMENTS) })}
+                {t('fragmentRead.fragmentOf', {
+                  num: getRomanNumeral(fragment.fragmentType),
+                  total: getRomanNumeral(TOTAL_FRAGMENTS),
+                })}
               </Text>
 
               {/* Title with glow */}
@@ -258,33 +219,28 @@ export const FragmentReadModal = ({
               </Text>
 
               {/* Thin decorative divider */}
-              <Box
-                mx="auto"
-                w="60px"
-                h="1px"
-                bg={`${color}30`}
-              />
+              <Box mx="auto" w="60px" h="1px" bg={`${color}30`} />
 
               {/* Narrative text */}
               {SHOW_Z2 ? (
                 <GameLoreReader text={fragment.narrative} accentColor={color} />
               ) : (
-              <Text
-                fontSize={{ base: 'sm', md: 'md' }}
-                lineHeight="1.85"
-                whiteSpace="pre-line"
-                color="#C4B89E"
-                fontStyle="italic"
-                px={{ base: 0, md: 2 }}
-                sx={{
-                  '& em, & i': {
-                    color,
-                    fontStyle: 'italic',
-                  },
-                }}
-              >
-                {fragment.narrative}
-              </Text>
+                <Text
+                  fontSize={{ base: 'sm', md: 'md' }}
+                  lineHeight="1.85"
+                  whiteSpace="pre-line"
+                  color="#C4B89E"
+                  fontStyle="italic"
+                  px={{ base: 0, md: 2 }}
+                  sx={{
+                    '& em, & i': {
+                      color,
+                      fontStyle: 'italic',
+                    },
+                  }}
+                >
+                  {fragment.narrative}
+                </Text>
               )}
 
               {/* Claim metadata */}
@@ -293,7 +249,9 @@ export const FragmentReadModal = ({
                   {t('fragmentRead.claimedDate', { date: claimedDate })}
                 </Text>
                 <Text fontSize="xs" color="#5A5147" fontFamily="mono">
-                  {t('fragmentRead.tokenId', { id: fragment.tokenId.toString() })}
+                  {t('fragmentRead.tokenId', {
+                    id: fragment.tokenId.toString(),
+                  })}
                 </Text>
               </VStack>
             </VStack>

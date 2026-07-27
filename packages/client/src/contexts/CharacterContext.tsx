@@ -46,7 +46,6 @@ import type {
   WorldStatusEffect,
 } from '../utils/types';
 
-import { preloadItemImages } from '../utils/itemImages';
 import { useItems } from './ItemsContext';
 import { useMUD } from './MUDContext';
 
@@ -108,7 +107,9 @@ const CharacterProviderInner = ({
   // resolves immediately from snapshot cache, before auth chain completes.
   const cachedDelegatorAddress = useMemo(() => {
     if (liveDelegatorAddress) return null;
-    return getCachedDelegator(import.meta.env.VITE_WORLD_ADDRESS || '') as Address | null;
+    return getCachedDelegator(
+      import.meta.env.VITE_WORLD_ADDRESS || '',
+    ) as Address | null;
   }, [liveDelegatorAddress]);
 
   const delegatorAddress = liveDelegatorAddress ?? cachedDelegatorAddress;
@@ -154,8 +155,12 @@ const CharacterProviderInner = ({
   const goldData = useGameValue('GoldBalances', ownerAddressKey);
 
   // CharactersTokenURI is keyed by tokenId (uint256)
-  const tokenIdStr = characterEntry ? String(characterEntry.data.tokenId) : undefined;
-  const tokenIdKey = tokenIdStr ? encodeUint256Key(BigInt(tokenIdStr)) : undefined;
+  const tokenIdStr = characterEntry
+    ? String(characterEntry.data.tokenId)
+    : undefined;
+  const tokenIdKey = tokenIdStr
+    ? encodeUint256Key(BigInt(tokenIdStr))
+    : undefined;
   const tokenURIData = useGameValue('CharactersTokenURI', tokenIdKey);
 
   // ============================================================
@@ -169,7 +174,9 @@ const CharacterProviderInner = ({
   // Diagnostic: log encounter state changes
   const prevInBattle = useRef(inBattle);
   if (prevInBattle.current !== inBattle) {
-    console.log(`[CharCtx] inBattle: ${prevInBattle.current} → ${inBattle} (encounterId: ${encounterId.slice(0, 10)}...)`);
+    console.log(
+      `[CharCtx] inBattle: ${prevInBattle.current} → ${inBattle} (encounterId: ${encounterId.slice(0, 10)}...)`,
+    );
     prevInBattle.current = inBattle;
   }
 
@@ -222,7 +229,9 @@ const CharacterProviderInner = ({
       ? (appliedRaw as string[])
       : [];
 
-    const decodedEffects = appliedStatusEffects.map(decodeAppliedStatusEffectId);
+    const decodedEffects = appliedStatusEffects.map(
+      decodeAppliedStatusEffectId,
+    );
 
     return decodedEffects
       .map(effect => {
@@ -262,7 +271,8 @@ const CharacterProviderInner = ({
     if (!characterKeyBytes) return undefined;
     for (const [key, data] of Object.entries(worldEncounterTable)) {
       if (
-        String(data.character).toLowerCase() === characterKeyBytes.toLowerCase() &&
+        String(data.character).toLowerCase() ===
+          characterKeyBytes.toLowerCase() &&
         toBigInt(data.end) === BigInt(0)
       ) {
         return { encounterId: key, ...data };
@@ -277,8 +287,6 @@ const CharacterProviderInner = ({
 
   const [metadataName, setMetadataName] = useState('');
   const [metadataDescription, setMetadataDescription] = useState('');
-  const [metadataImage, setMetadataImage] = useState('');
-  const [metadataFetched, setMetadataFetched] = useState(false);
 
   // Fetch character metadata whenever the tokenURI changes
   useEffect(() => {
@@ -289,7 +297,7 @@ const CharacterProviderInner = ({
 
     (async () => {
       try {
-        let fetched = { name: '', description: '', image: '' };
+        let fetched = { name: '', description: '' };
         if (isTextOnlyUri(metadataURI)) {
           fetched = await fetchMetadataFromUri(metadataURI);
         } else if (!metadataURI.startsWith('test') && metadataURI.length > 10) {
@@ -303,18 +311,18 @@ const CharacterProviderInner = ({
         if (!cancelled) {
           setMetadataName(fetched.name);
           setMetadataDescription(fetched.description);
-          setMetadataImage(fetched.image);
-          setMetadataFetched(true);
         }
       } catch (error) {
-        console.warn('[CharacterProvider] Failed to fetch character metadata:', error);
-        if (!cancelled) {
-          setMetadataFetched(true);
-        }
+        console.warn(
+          '[CharacterProvider] Failed to fetch character metadata:',
+          error,
+        );
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [tokenURIData]);
 
   // ============================================================
@@ -364,15 +372,18 @@ const CharacterProviderInner = ({
       maxHp: toBigInt(statsData?.maxHp),
       strength: toBigInt(statsData?.strength),
       race: (toNumber(statsData?.race) as Race) ?? Race.None,
-      powerSource: (toNumber(statsData?.powerSource) as PowerSource) ?? PowerSource.None,
-      startingArmor: (toNumber(statsData?.startingArmor) as ArmorType) ?? ArmorType.None,
-      advancedClass: (toNumber(statsData?.advancedClass) as AdvancedClass) ?? AdvancedClass.None,
+      powerSource:
+        (toNumber(statsData?.powerSource) as PowerSource) ?? PowerSource.None,
+      startingArmor:
+        (toNumber(statsData?.startingArmor) as ArmorType) ?? ArmorType.None,
+      advancedClass:
+        (toNumber(statsData?.advancedClass) as AdvancedClass) ??
+        AdvancedClass.None,
       hasSelectedAdvancedClass: Boolean(statsData?.hasSelectedAdvancedClass),
 
       // Metadata fields
       name: decodedName || metadataName,
       description: metadataDescription,
-      image: metadataImage,
     };
   }, [
     characterEntry,
@@ -383,10 +394,8 @@ const CharacterProviderInner = ({
     worldEncounterEntry,
     worldStatusEffects,
     statsData,
-    metadataFetched,
     metadataName,
     metadataDescription,
-    metadataImage,
   ]);
 
   // ============================================================
@@ -396,7 +405,7 @@ const CharacterProviderInner = ({
   const itemsOwnersTable = useGameTable('ItemsOwners');
 
   const characterOwnerKey = useMemo(
-    () => character ? encodeAddressKey(character.owner) : undefined,
+    () => (character ? encodeAddressKey(character.owner) : undefined),
     [character],
   );
 
@@ -404,9 +413,17 @@ const CharacterProviderInner = ({
     if (!character || !characterOwnerKey) return [];
     return armorTemplates
       .map(armor => {
-        const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(armor.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          characterOwnerKey,
+          encodeUint256Key(BigInt(armor.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
-        return { ...armor, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Armor;
+        return {
+          ...armor,
+          balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+          itemId: compositeKey as any,
+          owner: character.owner,
+        } as Armor;
       })
       .filter(a => a.balance !== BigInt(0));
   }, [armorTemplates, itemsOwnersTable, characterOwnerKey, character]);
@@ -415,9 +432,17 @@ const CharacterProviderInner = ({
     if (!character || !characterOwnerKey) return [];
     return consumableTemplates
       .map(consumable => {
-        const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(consumable.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          characterOwnerKey,
+          encodeUint256Key(BigInt(consumable.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
-        return { ...consumable, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Consumable;
+        return {
+          ...consumable,
+          balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+          itemId: compositeKey as any,
+          owner: character.owner,
+        } as Consumable;
       })
       .filter(c => c.balance !== BigInt(0));
   }, [consumableTemplates, itemsOwnersTable, characterOwnerKey, character]);
@@ -426,9 +451,17 @@ const CharacterProviderInner = ({
     if (!character || !characterOwnerKey) return [];
     return spellTemplates
       .map(spell => {
-        const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(spell.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          characterOwnerKey,
+          encodeUint256Key(BigInt(spell.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
-        return { ...spell, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Spell;
+        return {
+          ...spell,
+          balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+          itemId: compositeKey as any,
+          owner: character.owner,
+        } as Spell;
       })
       .filter(s => s.balance !== BigInt(0));
   }, [spellTemplates, itemsOwnersTable, characterOwnerKey, character]);
@@ -437,9 +470,17 @@ const CharacterProviderInner = ({
     if (!character || !characterOwnerKey) return [];
     return weaponTemplates
       .map(weapon => {
-        const compositeKey = encodeCompositeKey(characterOwnerKey, encodeUint256Key(BigInt(weapon.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          characterOwnerKey,
+          encodeUint256Key(BigInt(weapon.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
-        return { ...weapon, balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0), itemId: compositeKey as any, owner: character.owner } as Weapon;
+        return {
+          ...weapon,
+          balance: itemOwner ? toBigInt(itemOwner.balance) : BigInt(0),
+          itemId: compositeKey as any,
+          owner: character.owner,
+        } as Weapon;
       })
       .filter(w => w.balance !== BigInt(0));
   }, [weaponTemplates, itemsOwnersTable, characterOwnerKey, character]);
@@ -466,30 +507,37 @@ const CharacterProviderInner = ({
   }, [equipmentData?.equippedWeapons]);
 
   // Equipped items derived from inventory + equipment IDs
-  const equippedArmor = useMemo(() =>
-    equippedArmorIds.map(id => inventoryArmor.find(a => a.tokenId === id.toString())).filter(Boolean) as Armor[],
-    [equippedArmorIds, inventoryArmor]);
+  const equippedArmor = useMemo(
+    () =>
+      equippedArmorIds
+        .map(id => inventoryArmor.find(a => a.tokenId === id.toString()))
+        .filter(Boolean) as Armor[],
+    [equippedArmorIds, inventoryArmor],
+  );
 
-  const equippedConsumables = useMemo(() =>
-    equippedConsumableIds.map(id => inventoryConsumables.find(c => c.tokenId === id.toString())).filter(Boolean) as Consumable[],
-    [equippedConsumableIds, inventoryConsumables]);
+  const equippedConsumables = useMemo(
+    () =>
+      equippedConsumableIds
+        .map(id => inventoryConsumables.find(c => c.tokenId === id.toString()))
+        .filter(Boolean) as Consumable[],
+    [equippedConsumableIds, inventoryConsumables],
+  );
 
-  const equippedSpells = useMemo(() =>
-    equippedSpellIds.map(id => inventorySpells.find(s => s.tokenId === id.toString())).filter(Boolean) as Spell[],
-    [equippedSpellIds, inventorySpells]);
+  const equippedSpells = useMemo(
+    () =>
+      equippedSpellIds
+        .map(id => inventorySpells.find(s => s.tokenId === id.toString()))
+        .filter(Boolean) as Spell[],
+    [equippedSpellIds, inventorySpells],
+  );
 
-  const equippedWeapons = useMemo(() =>
-    equippedWeaponIds.map(id => inventoryWeapons.find(w => w.tokenId === id.toString())).filter(Boolean) as Weapon[],
-    [equippedWeaponIds, inventoryWeapons]);
-
-  // Preload item images as soon as inventory is known
-  useEffect(() => {
-    const names = [
-      ...inventoryArmor, ...inventoryWeapons,
-      ...inventorySpells, ...inventoryConsumables,
-    ].map(i => i.name);
-    if (names.length > 0) preloadItemImages(names);
-  }, [inventoryArmor, inventoryWeapons, inventorySpells, inventoryConsumables]);
+  const equippedWeapons = useMemo(
+    () =>
+      equippedWeaponIds
+        .map(id => inventoryWeapons.find(w => w.tokenId === id.toString()))
+        .filter(Boolean) as Weapon[],
+    [equippedWeaponIds, inventoryWeapons],
+  );
 
   // ============================================================
   // refreshCharacter: no-op — all data is now reactive via useMemo
@@ -502,9 +550,15 @@ const CharacterProviderInner = ({
   // rebuilds from store synchronously. Kept as no-ops for backward compat.
   // ============================================================
 
-  const optimisticEquip = useCallback((_item: Armor | Spell | Weapon) => {}, []);
+  const optimisticEquip = useCallback(
+    (_item: Armor | Spell | Weapon) => {},
+    [],
+  );
 
-  const optimisticUnequip = useCallback((_tokenId: string, _itemType: ItemType) => {}, []);
+  const optimisticUnequip = useCallback(
+    (_tokenId: string, _itemType: ItemType) => {},
+    [],
+  );
 
   const isMoveEquipped = useMemo(() => {
     // Equipment data hasn't loaded from store yet — assume equipped
@@ -519,36 +573,39 @@ const CharacterProviderInner = ({
   void publicClient;
   void worldContract;
 
-  const contextValue = useMemo(() => ({
-    character,
-    equippedArmor,
-    equippedConsumables,
-    equippedSpells,
-    equippedWeapons,
-    inventoryArmor,
-    inventoryConsumables,
-    inventorySpells,
-    inventoryWeapons,
-    isMoveEquipped,
-    isRefreshing: false,
-    optimisticEquip,
-    optimisticUnequip,
-    refreshCharacter,
-  }), [
-    character,
-    equippedArmor,
-    equippedConsumables,
-    equippedSpells,
-    equippedWeapons,
-    inventoryArmor,
-    inventoryConsumables,
-    inventorySpells,
-    inventoryWeapons,
-    isMoveEquipped,
-    optimisticEquip,
-    optimisticUnequip,
-    refreshCharacter,
-  ]);
+  const contextValue = useMemo(
+    () => ({
+      character,
+      equippedArmor,
+      equippedConsumables,
+      equippedSpells,
+      equippedWeapons,
+      inventoryArmor,
+      inventoryConsumables,
+      inventorySpells,
+      inventoryWeapons,
+      isMoveEquipped,
+      isRefreshing: false,
+      optimisticEquip,
+      optimisticUnequip,
+      refreshCharacter,
+    }),
+    [
+      character,
+      equippedArmor,
+      equippedConsumables,
+      equippedSpells,
+      equippedWeapons,
+      inventoryArmor,
+      inventoryConsumables,
+      inventorySpells,
+      inventoryWeapons,
+      isMoveEquipped,
+      optimisticEquip,
+      optimisticUnequip,
+      refreshCharacter,
+    ],
+  );
 
   return (
     <CharacterContext.Provider value={contextValue}>

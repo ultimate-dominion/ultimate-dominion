@@ -130,9 +130,6 @@
     "title": "キャラクター編集",
     "namePlaceholder": "名前",
     "nameRequired": "名前は必須です",
-    "uploadAvatar": "アバター画像をアップロード",
-    "uploading": "アップロード中...",
-    "avatarRequired": "アバターは必須です",
     "bioPlaceholder": "自己紹介",
     "bioRequired": "自己紹介は必須です",
     "updating": "更新中...",
@@ -261,7 +258,6 @@
     "blog": "ブログ"
   },
   "share": {
-    "shareWithImage": "画像付きで共有",
     "shareAria": "共有",
     "copied": "コピーしました！",
     "copyText": "テキストをコピー",
@@ -649,7 +645,6 @@
     "errors": {
       "walletInitializing": "ウォレット初期化中 — しばらくしてから再試行してください。",
       "nameRequired": "名前を入力してください。",
-      "avatarUploadFailed": "キャラクターアバターのアップロードに失敗しました。",
       "invalidMetadataUrl": "サーバーから無効なメタデータURLが返されました。",
       "creationFailed": "キャラクター作成に失敗しました。"
     }

@@ -13,33 +13,33 @@ function make(isPlayer: boolean, tag: string): MinimalAttack {
 describe('spliceSameSideAttacks', () => {
   it('drops a single in-flight player attack when a new player attack arrives', () => {
     const attacks = [make(true, 'a')];
-    spliceSameSideAttacks(attacks as never, true);
+    spliceSameSideAttacks(attacks, true);
     expect(attacks).toHaveLength(0);
   });
 
   it('drops multiple in-flight player attacks when a new player attack arrives', () => {
     const attacks = [make(true, 'a'), make(true, 'b'), make(true, 'c')];
-    spliceSameSideAttacks(attacks as never, true);
+    spliceSameSideAttacks(attacks, true);
     expect(attacks).toHaveLength(0);
   });
 
   it('leaves monster counterattacks alone when splicing for a player attack', () => {
     const attacks = [make(true, 'old-player'), make(false, 'monster-counter')];
-    spliceSameSideAttacks(attacks as never, true);
+    spliceSameSideAttacks(attacks, true);
     expect(attacks).toHaveLength(1);
     expect((attacks[0] as MinimalAttack).tag).toBe('monster-counter');
   });
 
   it('leaves player attacks alone when splicing for a monster counterattack', () => {
     const attacks = [make(true, 'player'), make(false, 'old-counter')];
-    spliceSameSideAttacks(attacks as never, false);
+    spliceSameSideAttacks(attacks, false);
     expect(attacks).toHaveLength(1);
     expect((attacks[0] as MinimalAttack).tag).toBe('player');
   });
 
   it('is a no-op on an empty queue', () => {
     const attacks: MinimalAttack[] = [];
-    expect(() => spliceSameSideAttacks(attacks as never, true)).not.toThrow();
+    expect(() => spliceSameSideAttacks(attacks, true)).not.toThrow();
     expect(attacks).toHaveLength(0);
   });
 
@@ -55,7 +55,7 @@ describe('spliceSameSideAttacks', () => {
       make(false, 'm2'),
       make(true, 'p3'),
     ];
-    spliceSameSideAttacks(attacks as never, true);
+    spliceSameSideAttacks(attacks, true);
     expect(attacks).toHaveLength(2);
     expect((attacks[0] as MinimalAttack).tag).toBe('m1');
     expect((attacks[1] as MinimalAttack).tag).toBe('m2');

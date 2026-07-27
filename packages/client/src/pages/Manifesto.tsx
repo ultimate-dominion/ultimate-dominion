@@ -1,15 +1,10 @@
-import { Box, Button, Heading, keyframes, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { HOME_PATH } from '../Routes';
 import { LocaleHead } from '../components/LocaleHead';
-
-const dragonPulse = keyframes`
-  0%, 100% { opacity: 0.03; }
-  50% { opacity: 0.045; }
-`;
+import { HOME_PATH } from '../Routes';
 
 export const Manifesto = (): JSX.Element => {
   const navigate = useNavigate();
@@ -22,14 +17,17 @@ export const Manifesto = (): JSX.Element => {
         <meta name="description" content={t('manifesto.metaDescription')} />
         <link rel="canonical" href="https://ultimatedominion.com/manifesto" />
         <meta property="og:title" content={t('manifesto.ogTitle')} />
-        <meta property="og:description" content={t('manifesto.ogDescription')} />
-        <meta property="og:url" content="https://ultimatedominion.com/manifesto" />
+        <meta
+          property="og:description"
+          content={t('manifesto.ogDescription')}
+        />
+        <meta
+          property="og:url"
+          content="https://ultimatedominion.com/manifesto"
+        />
       </Helmet>
       <LocaleHead path="/manifesto" />
-      <Box
-        border="0.5px solid #3A3228"
-        position="relative"
-      >
+      <Box border="0.5px solid #3A3228" position="relative">
         {/* Warm glow behind dragon */}
         <Box
           background="radial-gradient(ellipse at center, rgba(200,122,42,0.035) 0%, transparent 65%)"
@@ -40,23 +38,6 @@ export const Manifesto = (): JSX.Element => {
           top="50%"
           transform="translate(-50%, -50%)"
           width="80%"
-          zIndex={0}
-        />
-        {/* Dragon watermark */}
-        <Box
-          animation={`${dragonPulse} 6s ease-in-out infinite`}
-          backgroundImage="url(/images/ud-dragon.svg)"
-          backgroundPosition="center"
-          backgroundRepeat="no-repeat"
-          backgroundSize="contain"
-          height="60%"
-          left="50%"
-          opacity={0.03}
-          pointerEvents="none"
-          position="absolute"
-          top="50%"
-          transform="translate(-50%, -50%)"
-          width="60%"
           zIndex={0}
         />
         <VStack
@@ -74,10 +55,7 @@ export const Manifesto = (): JSX.Element => {
             {t('manifesto.title')}
           </Heading>
           <VStack fontWeight={500} maxW="750px" spacing={6} textAlign="center">
-            <Text
-              fontStyle="italic"
-              size={{ base: 'xs', sm: 'sm', md: 'md' }}
-            >
+            <Text fontStyle="italic" size={{ base: 'xs', sm: 'sm', md: 'md' }}>
               {t('manifesto.opening')}
             </Text>
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
@@ -89,10 +67,7 @@ export const Manifesto = (): JSX.Element => {
             <Text size={{ base: 'xs', sm: 'sm', md: 'md' }}>
               {t('manifesto.p3')}
             </Text>
-            <Text
-              fontWeight={600}
-              size={{ base: 'xs', sm: 'sm', md: 'md' }}
-            >
+            <Text fontWeight={600} size={{ base: 'xs', sm: 'sm', md: 'md' }}>
               {t('manifesto.closing')}
             </Text>
           </VStack>

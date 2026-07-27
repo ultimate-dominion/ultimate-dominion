@@ -1,6 +1,12 @@
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ChakraProvider } from '@chakra-ui/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  waitFor,
+} from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { ShareButton } from './ShareButton';
 
@@ -27,12 +33,11 @@ describe('ShareButton', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('falls back to X intent when canvas is unavailable', async () => {
+  it('falls back to X intent when native share is unavailable', async () => {
     render(<ShareButton text="Slew the Basilisk" />, { wrapper });
     const buttons = screen.getAllByRole('button');
     fireEvent.click(buttons[0]);
 
-    // Canvas fails in jsdom → falls back to window.open X intent
     await waitFor(() => {
       expect(openSpy).toHaveBeenCalledTimes(1);
     });
@@ -44,7 +49,10 @@ describe('ShareButton', () => {
 
   it('includes share params in fallback URL', async () => {
     render(
-      <ShareButton text="Test" shareParams={{ type: 'kill', monster: 'Basilisk' }} />,
+      <ShareButton
+        text="Test"
+        shareParams={{ type: 'kill', monster: 'Basilisk' }}
+      />,
       { wrapper },
     );
     const buttons = screen.getAllByRole('button');

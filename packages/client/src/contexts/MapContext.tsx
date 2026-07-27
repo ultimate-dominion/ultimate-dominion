@@ -9,9 +9,10 @@ import {
   useState,
 } from 'react';
 import { zeroHash } from 'viem';
-import { loadZoneManifest } from '../utils/itemImages';
-import { loadMonsterManifest } from '../utils/monsterImages';
 
+import { getCachedMetadata } from '../hooks/useCharacterMetadata';
+import { useToast } from '../hooks/useToast';
+import { useTransaction } from '../hooks/useTransaction';
 import {
   encodeAddressKey,
   encodeUint256Key,
@@ -22,14 +23,8 @@ import {
   useGameTable,
   useGameValue,
 } from '../lib/gameStore';
-import { getCachedMetadata } from '../hooks/useCharacterMetadata';
-import { useToast } from '../hooks/useToast';
-import { useTransaction } from '../hooks/useTransaction';
-import { useQueue } from './QueueContext';
-import {
-  decodeMobInstanceId,
-} from '../utils/helpers';
 import { buildCharacter } from '../utils/buildCharacter';
+import { decodeMobInstanceId } from '../utils/helpers';
 import {
   type Character,
   type Monster,
@@ -44,14 +39,24 @@ import { useCharacter } from './CharacterContext';
 import { getMonstersOnTile } from './mapSelectors';
 import { useMonsters } from './MonstersContext';
 import { useMUD } from './MUDContext';
+import { useQueue } from './QueueContext';
 
 /** Map NPC metadataUri prefix to interaction type and display name */
-const NPC_METADATA_MAP: Record<string, { name: string; interaction: NpcInteraction }> = {
+const NPC_METADATA_MAP: Record<
+  string,
+  { name: string; interaction: NpcInteraction }
+> = {
   'npc:vel_morrow': { name: 'Vel Morrow', interaction: 'respec' },
   'npc:edric_thorne': { name: 'Edric Thorne', interaction: 'guild' },
   'worldobj:camp_journal': { name: 'Camp Journal', interaction: 'examine' },
-  'worldobj:shrine_inscriptions': { name: 'Shrine Inscriptions', interaction: 'examine' },
-  'worldobj:edric_at_shrine': { name: 'Edric at Shrine', interaction: 'examine' },
+  'worldobj:shrine_inscriptions': {
+    name: 'Shrine Inscriptions',
+    interaction: 'examine',
+  },
+  'worldobj:edric_at_shrine': {
+    name: 'Edric at Shrine',
+    interaction: 'examine',
+  },
   'worldobj:summit_stone': { name: 'Summit Stone', interaction: 'examine' },
 };
 
@@ -82,16 +87,28 @@ const ZONE_NAMES: Record<number, string> = {
 };
 
 /** Convert raw on-chain position to display (0-9) coords for the current zone */
-function toDisplayPosition(raw: { x: number; y: number }, zoneId: number): { x: number; y: number } {
+function toDisplayPosition(
+  raw: { x: number; y: number },
+  zoneId: number,
+): { x: number; y: number } {
   const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
   return { x: raw.x - origin.x, y: raw.y - origin.y };
 }
 
 /** Check if a raw position falls within a zone's coordinate bounds */
-function isInZone(rawX: number, rawY: number, zoneId: number, gridSize = 10): boolean {
+function isInZone(
+  rawX: number,
+  rawY: number,
+  zoneId: number,
+  gridSize = 10,
+): boolean {
   const origin = ZONE_ORIGINS[zoneId] ?? { x: 0, y: 0 };
-  return rawX >= origin.x && rawX < origin.x + gridSize
-    && rawY >= origin.y && rawY < origin.y + gridSize;
+  return (
+    rawX >= origin.x &&
+    rawX < origin.x + gridSize &&
+    rawY >= origin.y &&
+    rawY < origin.y + gridSize
+  );
 }
 
 /**
@@ -219,7 +236,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const posDataV1 = useGameValue('Position', character?.id);
   const posIsV2 = posDataV2 != null;
   const posData = posDataV2 ?? posDataV1;
-  const position = posData ? { x: toNumber(posData.x), y: toNumber(posData.y) } : null;
+  const position = posData
+    ? { x: toNumber(posData.x), y: toNumber(posData.y) }
+    : null;
 
   // Zone awareness — read CharacterZone table (0 or unset = zone 1)
   const characterZoneData = useGameValue('CharacterZone', character?.id);
@@ -228,16 +247,6 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     return zoneId === 0 ? 1 : zoneId;
   }, [characterZoneData]);
   const currentZoneName = ZONE_NAMES[currentZone] ?? `Zone ${currentZone}`;
-
-  // Preload art manifests when zone changes (CDN fallback for missing local art)
-  const ZONE_SLUGS: Record<number, string> = { 1: 'dark_cave', 2: 'windy_peaks' };
-  useEffect(() => {
-    const slug = ZONE_SLUGS[currentZone];
-    if (slug) {
-      loadZoneManifest(slug);
-      loadMonsterManifest(slug);
-    }
-  }, [currentZone]);
 
   // Display position — raw coords converted to zone-relative (0-9).
   // V2 coords are already zone-relative, V1 coords need origin subtraction.
@@ -272,20 +281,27 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   // Filtered entity lists computed from reactive tables
   const allShopEntities = useMemo(() => {
-    return Object.keys(positionTable).filter(key =>
-      spawnedTable[key] && shopsTable[key] && !charactersTable[key]
+    return Object.keys(positionTable).filter(
+      key => spawnedTable[key] && shopsTable[key] && !charactersTable[key],
     );
   }, [positionTable, spawnedTable, shopsTable, charactersTable]);
 
   const allMonsterEntities = useMemo(() => {
-    return Object.keys(spawnedTable).filter(key =>
-      spawnedTable[key]?.spawned &&
-      statsTable[key] &&
-      !charactersTable[key] &&
-      positionTable[key] &&
-      !encounterEntityTable[key]?.died
+    return Object.keys(spawnedTable).filter(
+      key =>
+        spawnedTable[key]?.spawned &&
+        statsTable[key] &&
+        !charactersTable[key] &&
+        positionTable[key] &&
+        !encounterEntityTable[key]?.died,
     );
-  }, [spawnedTable, statsTable, charactersTable, positionTable, encounterEntityTable]);
+  }, [
+    spawnedTable,
+    statsTable,
+    charactersTable,
+    positionTable,
+    encounterEntityTable,
+  ]);
 
   const allCharacterEntities = useMemo(() => {
     return Object.keys(charactersTable).filter(key => statsTable[key]);
@@ -312,7 +328,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const effectsData = worldStatusEffectsTable[entity];
 
         // Metadata from module-level cache (sync, returns null if not yet fetched)
-        const tokenURI = tokenURITable[tokenIdKey]?.tokenURI as string | undefined;
+        const tokenURI = tokenURITable[tokenIdKey]?.tokenURI as
+          | string
+          | undefined;
         const metadata = getCachedMetadata(tokenURI);
 
         return buildCharacter(
@@ -329,9 +347,16 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       })
       .filter((c): c is Character => c !== null && Boolean(c.locked));
   }, [
-    allCharacterEntities, charactersTable, statsTable, goldBalancesTable,
-    encounterEntityTable, positionTable, spawnedTable,
-    tokenURITable, worldStatusEffectsTable, isSynced,
+    allCharacterEntities,
+    charactersTable,
+    statsTable,
+    goldBalancesTable,
+    encounterEntityTable,
+    positionTable,
+    spawnedTable,
+    tokenURITable,
+    worldStatusEffectsTable,
+    isSynced,
   ]);
 
   // Background metadata fetch — triggers IPFS fetches for uncached metadata
@@ -341,7 +366,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       const characterData = charactersTable[entity];
       if (!characterData) return;
       const tokenIdKey = encodeUint256Key(toBigInt(characterData.tokenId));
-      const tokenURI = tokenURITable[tokenIdKey]?.tokenURI as string | undefined;
+      const tokenURI = tokenURITable[tokenIdKey]?.tokenURI as
+        | string
+        | undefined;
       if (tokenURI) getCachedMetadata(tokenURI); // triggers fetch if not cached
     });
   }, [allCharacterEntities, charactersTable, tokenURITable, isSynced]);
@@ -379,18 +406,22 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
         // Use spawned stats (includes ±10% variance and 1.3x elite boost)
         // instead of template stats for accurate color coding and stat display
-        const spawnedStrength = statsData?.strength != null
-          ? toBigInt(statsData.strength)
-          : monsterTemplate?.strength ?? BigInt(0);
-        const spawnedAgility = statsData?.agility != null
-          ? toBigInt(statsData.agility)
-          : monsterTemplate?.agility ?? BigInt(0);
-        const spawnedIntelligence = statsData?.intelligence != null
-          ? toBigInt(statsData.intelligence)
-          : monsterTemplate?.intelligence ?? BigInt(0);
-        const spawnedMaxHp = statsData?.maxHp != null
-          ? toBigInt(statsData.maxHp)
-          : monsterTemplate?.hitPoints ?? BigInt(0);
+        const spawnedStrength =
+          statsData?.strength != null
+            ? toBigInt(statsData.strength)
+            : monsterTemplate?.strength ?? BigInt(0);
+        const spawnedAgility =
+          statsData?.agility != null
+            ? toBigInt(statsData.agility)
+            : monsterTemplate?.agility ?? BigInt(0);
+        const spawnedIntelligence =
+          statsData?.intelligence != null
+            ? toBigInt(statsData.intelligence)
+            : monsterTemplate?.intelligence ?? BigInt(0);
+        const spawnedMaxHp =
+          statsData?.maxHp != null
+            ? toBigInt(statsData.maxHp)
+            : monsterTemplate?.hitPoints ?? BigInt(0);
 
         return {
           ...monsterTemplate,
@@ -411,8 +442,15 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
       return [];
     }
   }, [
-    allMonsterEntities, encounterEntityTable, statsTable, spawnedTable,
-    positionTable, mobStatsTable, monsterTemplates, isSynced, renderError,
+    allMonsterEntities,
+    encounterEntityTable,
+    statsTable,
+    spawnedTable,
+    positionTable,
+    mobStatsTable,
+    monsterTemplates,
+    isSynced,
+    renderError,
   ]);
 
   // ============================================================
@@ -423,7 +461,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
     try {
       const _shops: Shop[] = allShopEntities.map(entity => {
-        const positionEntityData = getTableValue('PositionV2', entity) ?? getTableValue('Position', entity);
+        const positionEntityData =
+          getTableValue('PositionV2', entity) ??
+          getTableValue('Position', entity);
         const shopData = getTableValue('Shops', entity);
 
         if (!positionEntityData || !shopData) {
@@ -439,10 +479,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
           'Unknown Shop';
 
         const buyableItems = Array.isArray(shopData.buyableItems)
-          ? (shopData.buyableItems as unknown[]).map(item => item?.toString() ?? '')
+          ? (shopData.buyableItems as unknown[]).map(
+              item => item?.toString() ?? '',
+            )
           : [];
         const sellableItems = Array.isArray(shopData.sellableItems)
-          ? (shopData.sellableItems as unknown[]).map(item => item?.toString() ?? '')
+          ? (shopData.sellableItems as unknown[]).map(
+              item => item?.toString() ?? '',
+            )
           : [];
         const stock = Array.isArray(shopData.stock)
           ? (shopData.stock as unknown[]).map(v => toBigInt(v))
@@ -488,20 +532,38 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // Zone 2 entities whose zone-relative coords overlap with Zone 1's range.
   const zonedMonsters = useMemo(() => {
     return allMonsters.filter(m =>
-      entityInZone(m.id, currentZone, positionTableV2, positionTableV1, toNumber),
+      entityInZone(
+        m.id,
+        currentZone,
+        positionTableV2,
+        positionTableV1,
+        toNumber,
+      ),
     );
   }, [allMonsters, currentZone, positionTableV2, positionTableV1]);
 
   const zonedShops = useMemo(() => {
     return allShops.filter(s =>
-      entityInZone(s.shopId, currentZone, positionTableV2, positionTableV1, toNumber),
+      entityInZone(
+        s.shopId,
+        currentZone,
+        positionTableV2,
+        positionTableV1,
+        toNumber,
+      ),
     );
   }, [allShops, currentZone, positionTableV2, positionTableV1]);
 
   const zonedCharacters = useMemo(() => {
     return allCharacters.filter((c: any) => {
       if (!c.position) return false;
-      return entityInZone(c.id, currentZone, positionTableV2, positionTableV1, toNumber);
+      return entityInZone(
+        c.id,
+        currentZone,
+        positionTableV2,
+        positionTableV1,
+        toNumber,
+      );
     });
   }, [allCharacters, currentZone, positionTableV2, positionTableV1]);
 
@@ -558,7 +620,8 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   const allNpcEntities = useMemo(() => {
     return Object.keys(positionTable).filter(key => {
       if (!spawnedTable[key]) return false;
-      if (shopsTable[key] || charactersTable[key] || statsTable[key]) return false;
+      if (shopsTable[key] || charactersTable[key] || statsTable[key])
+        return false;
       try {
         const { mobId } = decodeMobInstanceId(key as `0x${string}`);
         const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
@@ -568,7 +631,14 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         return false;
       }
     });
-  }, [positionTable, spawnedTable, shopsTable, charactersTable, statsTable, mobsTable]);
+  }, [
+    positionTable,
+    spawnedTable,
+    shopsTable,
+    charactersTable,
+    statsTable,
+    mobsTable,
+  ]);
 
   const allNpcs = useMemo((): Npc[] => {
     if (!isSynced) return [];
@@ -581,8 +651,12 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         const { mobId } = decodeMobInstanceId(entity as `0x${string}`);
         const mobKey = `0x${BigInt(mobId).toString(16).padStart(64, '0')}`;
         const mobData = mobsTable[mobKey];
-        const metadataUri = typeof mobData?.mobMetadata === 'string' ? mobData.mobMetadata : '';
-        const npcMeta = NPC_METADATA_MAP[metadataUri] ?? { name: `NPC #${mobId}`, interaction: 'dialogue' as const };
+        const metadataUri =
+          typeof mobData?.mobMetadata === 'string' ? mobData.mobMetadata : '';
+        const npcMeta = NPC_METADATA_MAP[metadataUri] ?? {
+          name: `NPC #${mobId}`,
+          interaction: 'dialogue' as const,
+        };
 
         return {
           entityId: entity,
@@ -601,7 +675,13 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
 
   const zonedNpcs = useMemo(() => {
     return allNpcs.filter(n =>
-      entityInZone(n.entityId, currentZone, positionTableV2, positionTableV1, toNumber),
+      entityInZone(
+        n.entityId,
+        currentZone,
+        positionTableV2,
+        positionTableV1,
+        toNumber,
+      ),
     );
   }, [allNpcs, currentZone, positionTableV2, positionTableV1]);
 
@@ -616,21 +696,37 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
   // on-chain. Prevents "No enemies here" errors by evicting ghosts before the
   // player clicks Fight. Fires once per tile and once per snapshot hydration
   // (hydrateVersion changes after reconnect, ensuring stale data is rechecked).
-  const storeHydrated = useGameStore((state) => state.hydrated);
-  const hydrateVersion = useGameStore((state) => state.hydrateVersion);
+  const storeHydrated = useGameStore(state => state.hydrated);
+  const hydrateVersion = useGameStore(state => state.hydrateVersion);
   const prevTileRef = useRef<string>('');
   const validateInFlightRef = useRef(false);
   useEffect(() => {
-    const tileKey = storeHydrated && position
-      ? `${hydrateVersion}:${position.x},${position.y}`
-      : '';
-    if (!tileKey || tileKey === prevTileRef.current || monstersOnTile.length === 0) return;
+    const tileKey =
+      storeHydrated && position
+        ? `${hydrateVersion}:${position.x},${position.y}`
+        : '';
+    if (
+      !tileKey ||
+      tileKey === prevTileRef.current ||
+      monstersOnTile.length === 0
+    )
+      return;
     if (validateInFlightRef.current) return;
     prevTileRef.current = tileKey;
     validateInFlightRef.current = true;
-    validateTileMonsters(monstersOnTile.map(m => m.id), position ?? undefined)
-      .finally(() => { validateInFlightRef.current = false; });
-  }, [storeHydrated, hydrateVersion, position, monstersOnTile, validateTileMonsters]);
+    validateTileMonsters(
+      monstersOnTile.map(m => m.id),
+      position ?? undefined,
+    ).finally(() => {
+      validateInFlightRef.current = false;
+    });
+  }, [
+    storeHydrated,
+    hydrateVersion,
+    position,
+    monstersOnTile,
+    validateTileMonsters,
+  ]);
 
   // Clear spawn waiting state when Spawned value updates from store sync
   useEffect(() => {
@@ -663,7 +759,9 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     };
 
     const events = ['mousedown', 'keydown', 'touchstart', 'wheel'] as const;
-    events.forEach((e) => window.addEventListener(e, resetActivity, { passive: true }));
+    events.forEach(e =>
+      window.addEventListener(e, resetActivity, { passive: true }),
+    );
 
     const interval = setInterval(async () => {
       if (despawning) return;
@@ -671,7 +769,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
         despawning = true;
         console.log('[MapContext] Session idle timeout — despawning character');
         clearInterval(interval);
-        events.forEach((e) => window.removeEventListener(e, resetActivity));
+        events.forEach(e => window.removeEventListener(e, resetActivity));
         try {
           await removeEntityFromBoard(character.id);
         } catch (e) {
@@ -682,7 +780,7 @@ export const MapProvider = ({ children }: MapProviderProps): JSX.Element => {
     }, IDLE_CHECK_INTERVAL_MS);
 
     return () => {
-      events.forEach((e) => window.removeEventListener(e, resetActivity));
+      events.forEach(e => window.removeEventListener(e, resetActivity));
       clearInterval(interval);
     };
   }, [isSpawned, character, removeEntityFromBoard]);

@@ -1,32 +1,24 @@
-import { Box, HStack, IconProps, Text, Tooltip, useBreakpointValue } from '@chakra-ui/react';
+import { HStack, Text, TextProps, Tooltip } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
 
 import {
   ADVANCED_CLASS_COLORS,
   ADVANCED_CLASS_NAMES,
   AdvancedClass,
+  CLASS_COLORS,
   StatsClasses,
 } from '../utils/types';
-
-import { MageSvg, RogueSvg, WarriorSvg } from './SVGs';
-
-const ICON_SIZE = {
-  desktop: {
-    mage: undefined,
-    rogue: undefined,
-    warrior: undefined,
-  },
-  mobile: {
-    mage: 3,
-    rogue: 4,
-    warrior: 3,
-  },
-};
 
 const CLASS_LABEL_KEYS: Record<StatsClasses, string> = {
   [StatsClasses.Intelligence]: 'classSymbol.intelligence',
   [StatsClasses.Agility]: 'classSymbol.agility',
   [StatsClasses.Strength]: 'classSymbol.strength',
+};
+
+const CLASS_CODES: Record<StatsClasses, string> = {
+  [StatsClasses.Intelligence]: 'INT',
+  [StatsClasses.Agility]: 'AGI',
+  [StatsClasses.Strength]: 'STR',
 };
 
 export const ClassSymbol = ({
@@ -40,33 +32,14 @@ export const ClassSymbol = ({
   entityClass: StatsClasses;
   responsive?: boolean;
   theme?: 'light' | 'dark';
-} & IconProps): JSX.Element => {
+} & TextProps): JSX.Element => {
   const { t } = useTranslation('ui');
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
-
   const classLabel = t(CLASS_LABEL_KEYS[entityClass]) ?? '';
-  const hasAdvancedClass = advancedClass != null && advancedClass !== AdvancedClass.None;
+  const hasAdvancedClass =
+    advancedClass != null && advancedClass !== AdvancedClass.None;
   const tooltipLabel = hasAdvancedClass
     ? `${ADVANCED_CLASS_NAMES[advancedClass]} (${classLabel})`
     : classLabel;
-
-  const SvgComponent =
-    entityClass === StatsClasses.Intelligence
-      ? MageSvg
-      : entityClass === StatsClasses.Agility
-        ? RogueSvg
-        : entityClass === StatsClasses.Strength
-          ? WarriorSvg
-          : null;
-
-  if (!SvgComponent) return <Box />;
-
-  const sizeKey =
-    entityClass === StatsClasses.Intelligence
-      ? 'mage'
-      : entityClass === StatsClasses.Agility
-        ? 'rogue'
-        : 'warrior';
 
   return (
     <Tooltip
@@ -76,12 +49,25 @@ export const ClassSymbol = ({
       label={tooltipLabel}
       shouldWrapChildren
     >
-      <HStack spacing={1}>
-        <SvgComponent
-          size={ICON_SIZE[!isDesktop && responsive ? 'mobile' : 'desktop'][sizeKey]}
-          theme={theme}
+      <HStack
+        opacity={theme === 'dark' ? 0.85 : 1}
+        spacing={responsive ? 0.5 : 1}
+      >
+        <Text
+          border="1px solid"
+          borderColor={CLASS_COLORS[entityClass]}
+          color={CLASS_COLORS[entityClass]}
+          fontFamily="'Fira Code', monospace"
+          fontSize="2xs"
+          fontWeight={800}
+          letterSpacing="0.08em"
+          lineHeight={1}
+          px={1.5}
+          py={1}
           {...props}
-        />
+        >
+          {CLASS_CODES[entityClass]}
+        </Text>
         {hasAdvancedClass && (
           <Text
             color={ADVANCED_CLASS_COLORS[advancedClass]}

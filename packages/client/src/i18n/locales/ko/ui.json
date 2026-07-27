@@ -130,9 +130,6 @@
     "title": "캐릭터 수정",
     "namePlaceholder": "이름",
     "nameRequired": "이름을 입력해야 합니다",
-    "uploadAvatar": "아바타 이미지 업로드",
-    "uploading": "업로드 중...",
-    "avatarRequired": "아바타를 설정해야 합니다",
     "bioPlaceholder": "자기소개",
     "bioRequired": "자기소개를 입력해야 합니다",
     "updating": "업데이트 중...",
@@ -261,7 +258,6 @@
     "blog": "블로그"
   },
   "share": {
-    "shareWithImage": "이미지와 함께 공유",
     "shareAria": "공유",
     "copied": "복사 완료!",
     "copyText": "텍스트 복사",
@@ -649,7 +645,6 @@
     "errors": {
       "walletInitializing": "지갑 초기화 중 — 잠시 후 다시 시도하세요.",
       "nameRequired": "이름을 입력하세요.",
-      "avatarUploadFailed": "캐릭터 아바타 업로드 중 문제가 발생했습니다.",
       "invalidMetadataUrl": "서버에서 유효하지 않은 메타데이터 URL이 반환되었습니다.",
       "creationFailed": "캐릭터 생성에 실패했습니다."
     }

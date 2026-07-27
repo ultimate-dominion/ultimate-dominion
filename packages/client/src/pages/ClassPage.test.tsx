@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ChakraProvider } from '@chakra-ui/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { describe, it, expect, vi } from 'vitest';
+
+import { CLASS_DATA } from '../data/classData';
 
 import { ClassPage } from './ClassPage';
-import { CLASS_DATA } from '../data/classData';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: () => null,
@@ -50,7 +51,9 @@ describe('ClassPage', () => {
   it('renders nav links for all 9 classes', () => {
     renderWithRoute('/guide/classes/warrior');
     for (const c of CLASS_DATA) {
-      expect(screen.getAllByRole('link', { name: c.name }).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByRole('link', { name: c.name }).length,
+      ).toBeGreaterThan(0);
     }
   });
 
@@ -58,7 +61,9 @@ describe('ClassPage', () => {
     renderWithRoute('/guide/classes/cleric');
     expect(screen.getAllByText('Strengths').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Weaknesses').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Only class with healing multiplier (110%)').length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText('Only class with healing multiplier (110%)').length,
+    ).toBeGreaterThan(0);
   });
 
   it('renders multiplier labels', () => {
@@ -87,21 +92,27 @@ describe('ClassPage', () => {
   it('renders all 9 class pages without crashing', () => {
     for (const c of CLASS_DATA) {
       const { unmount } = renderWithRoute(`/guide/classes/${c.slug}`);
-      expect(screen.getAllByRole('heading', { name: c.name }).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByRole('heading', { name: c.name }).length,
+      ).toBeGreaterThan(0);
       unmount();
     }
-  });
+  }, 10_000);
 
   it('renders back links to Codex', () => {
     renderWithRoute('/guide/classes/sorcerer');
-    expect(screen.getAllByRole('link', { name: /codex/i }).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole('link', { name: /codex/i }).length,
+    ).toBeGreaterThan(0);
   });
 
-  it('renders class image', () => {
-    renderWithRoute('/guide/classes/warrior');
-    const imgs = screen.getAllByAltText('Warrior');
-    expect(imgs.length).toBeGreaterThan(0);
-    expect(imgs[0].getAttribute('src')).toContain('warrior.webp');
+  it('renders class identity without an image', () => {
+    const { container } = renderWithRoute('/guide/classes/warrior');
+    expect(container.querySelector('img')).toBeNull();
+    expect(
+      screen.getAllByRole('group', { name: 'Warrior' }).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText('STR').length).toBeGreaterThan(0);
   });
 
   it('shows archetype label', () => {

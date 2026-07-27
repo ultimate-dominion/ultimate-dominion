@@ -21,14 +21,14 @@ Operational playbook for the first 3 months — phased rollout, player cap, invi
 
 ## Phased Approach
 
-| Phase | Duration | Players | Focus |
-|-------|----------|---------|-------|
-| **Phase 0: Pre-launch** | Week -4 to 0 | 0 | Deploy token, seed DEX liquidity, build hype |
-| **Phase 1: Observation** | Week 1–2 | 10 cap | Pure observation, test economy, founders only |
-| **Phase 2: Early economy** | Week 3–4 | 20 cap | Marketplace starts forming, invite system live |
-| **Phase 3: Expand** | Week 5–8 | 50 cap | Real economy emerging, queue growing |
-| **Phase 4: Public launch** | Month 2+ | 100+ cap | Scale based on economic indicators, not time |
-| **Phase 5: Growth** | Month 3+ | 250+ | Remove cap or keep soft limit |
+| Phase                      | Duration     | Players  | Focus                                          |
+| -------------------------- | ------------ | -------- | ---------------------------------------------- |
+| **Phase 0: Pre-launch**    | Week -4 to 0 | 0        | Deploy token, seed DEX liquidity, build hype   |
+| **Phase 1: Observation**   | Week 1–2     | 10 cap   | Pure observation, test economy, founders only  |
+| **Phase 2: Early economy** | Week 3–4     | 20 cap   | Marketplace starts forming, invite system live |
+| **Phase 3: Expand**        | Week 5–8     | 50 cap   | Real economy emerging, queue growing           |
+| **Phase 4: Public launch** | Month 2+     | 100+ cap | Scale based on economic indicators, not time   |
+| **Phase 5: Growth**        | Month 3+     | 250+     | Remove cap or keep soft limit                  |
 
 ---
 
@@ -46,27 +46,30 @@ Check active player count
 ```
 
 **Benefits:**
+
 - Controlled gold creation rate
 - Testable economics at small scale
 - Creates artificial scarcity/FOMO
 - Prevents server overload
 
 **Queue creates:**
+
 - Anticipation and demand
 - Social proof ("500 people waiting")
 - Speculation (people buy gold while waiting)
 
 ### Scaling the Cap
 
-| Phase | Player Cap | Expected Daily Gold | Notes |
-|-------|------------|---------------------|-------|
-| 1 | 10 | ~4,000 | Pure observation, know every player |
-| 2 | 20 | ~8,000 | Marketplace forming, invite system live |
-| 3 | 50 | ~20,000 | Real economy, queue is growing |
-| 4 | 100 | ~40,000 | Scale on economic indicators |
-| 5 | 250+ | ~100,000+ | Remove cap or keep soft limit |
+| Phase | Player Cap | Expected Daily Gold | Notes                                   |
+| ----- | ---------- | ------------------- | --------------------------------------- |
+| 1     | 10         | ~4,000              | Pure observation, know every player     |
+| 2     | 20         | ~8,000              | Marketplace forming, invite system live |
+| 3     | 50         | ~20,000             | Real economy, queue is growing          |
+| 4     | 100        | ~40,000             | Scale on economic indicators            |
+| 5     | 250+       | ~100,000+           | Remove cap or keep soft limit           |
 
 **Increase cap when:**
+
 - Sinks are absorbing creation
 - Marketplace is active
 - No major exploits found
@@ -94,11 +97,11 @@ Player A is in the game, reaches Level 3
 
 Codes are earned through gameplay, not given at signup:
 
-| Milestone | Codes Earned |
-|-----------|-------------|
-| Reach Level 3 | 1 code |
-| Reach Level 10 | 1 code |
-| Reach Level 20 | 1 code |
+| Milestone                                         | Codes Earned |
+| ------------------------------------------------- | ------------ |
+| Reach Level 3                                     | 1 code       |
+| Reach Level 10                                    | 1 code       |
+| Reach Level 20                                    | 1 code       |
 | Each successful activation (invitee hits Level 5) | 1 bonus code |
 
 A dedicated player who invites real players generates ~5–6 codes over weeks. A casual player gets 1–2. Nobody gets unlimited.
@@ -106,6 +109,7 @@ A dedicated player who invites real players generates ~5–6 codes over weeks. A
 ### Activation Threshold
 
 The invitee must reach **Level 5** before the referrer gets credit:
+
 - Level 5 requires real engagement — combat, maybe a shop visit, real time invested
 - Fast enough that the referrer gets feedback within a day or two
 - Slow enough that alts require actual effort
@@ -114,13 +118,14 @@ The invitee must reach **Level 5** before the referrer gets credit:
 
 **Referrer rewards:**
 
-| Activations | Reward |
-|-------------|--------|
-| 1 | 100 gold + "Recruiter" title |
-| 3 | 100 gold + "Herald" title |
-| 5 | 100 gold + exclusive cosmetic + "Kingmaker" title |
+| Activations | Reward                                            |
+| ----------- | ------------------------------------------------- |
+| 1           | 100 gold + "Recruiter" title                      |
+| 3           | 100 gold + "Herald" title                         |
+| 5           | 100 gold + exclusive cosmetic + "Kingmaker" title |
 
 **Invitee rewards:**
+
 - Queue priority (near-front, not absolute front)
 - 50 gold starting bonus (enough for a health potion, not enough to distort economy)
 
@@ -150,6 +155,7 @@ The queue should not be a dead screen. It should create FOMO and drive invite sh
 ```
 
 **Key design decisions:**
+
 - Live feed shows what's happening in-game (creates urgency to get in)
 - Invite codes displayed right when frustration is highest (maximizes conversion)
 - Queue position + player count visible (social proof)
@@ -158,6 +164,7 @@ The queue should not be a dead screen. It should create FOMO and drive invite sh
 ### Queue-Skip Mechanics
 
 When invitee B uses player A's code:
+
 - B joins queue at position #3 (near front, not absolute front)
 - If A is still in queue, A moves up 5 positions
 - If A is in-game and later disconnects, A gets priority re-entry
@@ -168,13 +175,13 @@ Both sides benefit from every invite.
 
 At 10–20 players, abuse doesn't scale. The cap itself is the anti-abuse mechanism.
 
-| Scenario | Impact | Response |
-|----------|--------|----------|
-| Player makes 3 email alts for codes | Each alt needs Level 3 (~3+ hours each). At 10 players, you notice. | Let it slide. They're playing 3x. |
-| Player sells invite codes on Twitter | Buyer still waits for cap slot. Seller gets credit only if buyer hits Level 5. | This is marketing. Encourage it. |
-| Player invites bots | Bots need Level 5 for activation. At 10–20 players, bot behavior is visible. | Manual ban if needed. You're watching everything. |
-| Two players trade invites to boost | Each gets 1 bonus code and 100 gold. Total impact: 200 gold. | Irrelevant at any scale. |
-| Someone builds an invite farming ring | Needs 5+ real accounts all reaching Level 5. That's half the server at 10-player cap. | Physically impossible to do quietly. |
+| Scenario                              | Impact                                                                                | Response                                          |
+| ------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Player makes 3 email alts for codes   | Each alt needs Level 3 (~3+ hours each). At 10 players, you notice.                   | Let it slide. They're playing 3x.                 |
+| Player sells invite codes on Twitter  | Buyer still waits for cap slot. Seller gets credit only if buyer hits Level 5.        | This is marketing. Encourage it.                  |
+| Player invites bots                   | Bots need Level 5 for activation. At 10–20 players, bot behavior is visible.          | Manual ban if needed. You're watching everything. |
+| Two players trade invites to boost    | Each gets 1 bonus code and 100 gold. Total impact: 200 gold.                          | Irrelevant at any scale.                          |
+| Someone builds an invite farming ring | Needs 5+ real accounts all reaching Level 5. That's half the server at 10-player cap. | Physically impossible to do quietly.              |
 
 **Key insight:** By the time you're at 100+ players and abuse could actually matter, you'll have data on patterns to watch for and can tighten the system.
 
@@ -236,18 +243,19 @@ To enter queue:
     └── Holds [Game NFT]
 ```
 
-| Method | Sybil Resistance | UX | Notes |
-|--------|------------------|-----|-------|
-| CAPTCHA | Low-Medium | Annoying | Bots can solve cheaply |
-| Worldcoin | Very High | Decent | Orb = 1 human, 1 account |
-| Gitcoin Passport | High | Decent | Score based on web3 activity |
-| Wallet age + balance | Medium | Seamless | Old wallet + stake required |
+| Method               | Sybil Resistance | UX       | Notes                        |
+| -------------------- | ---------------- | -------- | ---------------------------- |
+| CAPTCHA              | Low-Medium       | Annoying | Bots can solve cheaply       |
+| Worldcoin            | Very High        | Decent   | Orb = 1 human, 1 account     |
+| Gitcoin Passport     | High             | Decent   | Score based on web3 activity |
+| Wallet age + balance | Medium           | Seamless | Old wallet + stake required  |
 
 ### Periodic In-Game Verification
 
 Prevent players from running bots after entering:
 
 **Game-themed challenges (recommended):**
+
 ```
 Every 30-60 minutes (randomized):
     ↓
@@ -259,6 +267,7 @@ Every 30-60 minutes (randomized):
 ```
 
 **Why game-themed:**
+
 - Less immersion-breaking than standard CAPTCHA
 - Feels like part of game
 - Can gamify it: "+10 XP for correct answer"
@@ -266,22 +275,22 @@ Every 30-60 minutes (randomized):
 **Trust decay system:**
 
 | Trust Level | Check Frequency |
-|-------------|-----------------|
-| New | Every 20 min |
-| Verified | Every 45 min |
-| Trusted | Every 90 min |
-| Veteran | Every 3 hours |
+| ----------- | --------------- |
+| New         | Every 20 min    |
+| Verified    | Every 45 min    |
+| Trusted     | Every 90 min    |
+| Veteran     | Every 3 hours   |
 
 Trust builds by passing checks, drops if failed.
 
 ### Anti-Gaming Measures
 
-| Exploit | Prevention |
-|---------|------------|
-| Self-referral (alts) | Different IP/device fingerprint or Worldcoin |
-| Mass bot referrals | Level requirement, verification checks |
-| Slot squatting | Session timeout kicks idle players (10 min) `[IMPLEMENTED]` |
-| Alt accounts | Wallet age/stake requirements |
+| Exploit              | Prevention                                                  |
+| -------------------- | ----------------------------------------------------------- |
+| Self-referral (alts) | Different IP/device fingerprint or Worldcoin                |
+| Mass bot referrals   | Level requirement, verification checks                      |
+| Slot squatting       | Session timeout kicks idle players (10 min) `[IMPLEMENTED]` |
+| Alt accounts         | Wallet age/stake requirements                               |
 
 ---
 
@@ -294,19 +303,20 @@ Trust builds by passing checks, drops if failed.
 
 ### What's Planned `[PLANNED]`
 
-| Benefit | Description | Status |
-|---------|-------------|--------|
-| **Founder badge** | Visible next to name | `[IMPLEMENTED]` |
-| **Express queue** | Skip the line (near-instant access) | `[PLANNED]` |
-| **Reduced checks** | Verify every 3 hours instead of 30 min | `[PLANNED]` |
-| **Exclusive title** | "Founding Adventurer" | `[PLANNED]` |
-| **Unique cosmetic** | Cape, aura, or pet | `[PLANNED]` |
-| **Founders-only chat** | Private channel | `[PLANNED]` |
-| **Input on decisions** | Polls, feedback priority | `[PLANNED]` |
+| Benefit                | Description                            | Status          |
+| ---------------------- | -------------------------------------- | --------------- |
+| **Founder badge**      | Visible next to name                   | `[IMPLEMENTED]` |
+| **Express queue**      | Skip the line (near-instant access)    | `[PLANNED]`     |
+| **Reduced checks**     | Verify every 3 hours instead of 30 min | `[PLANNED]`     |
+| **Exclusive title**    | "Founding Adventurer"                  | `[PLANNED]`     |
+| **Unique cosmetic**    | Cape, aura, or pet                     | `[PLANNED]`     |
+| **Founders-only chat** | Private channel                        | `[PLANNED]`     |
+| **Input on decisions** | Polls, feedback priority               | `[PLANNED]`     |
 
 ### Qualification
 
 **Founder status requires:**
+
 - Played during first 60 days (soft launch period)
 - Reached Level 10 OR played 20+ hours
 - Passed at least 10 verification checks
@@ -315,10 +325,10 @@ Trust builds by passing checks, drops if failed.
 
 ### Simple Two-Tier System
 
-| Tier | Who | Queue Access |
-|------|-----|--------------|
-| **Founders** | First 60 days + Level 10+ | Express (instant) |
-| **Everyone else** | All verified players | Normal queue |
+| Tier              | Who                       | Queue Access      |
+| ----------------- | ------------------------- | ----------------- |
+| **Founders**      | First 60 days + Level 10+ | Express (instant) |
+| **Everyone else** | All verified players      | Normal queue      |
 
 No complex scoring. Early = priority. Forever.
 
@@ -332,43 +342,43 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 
 ### Shareable Moments
 
-| Moment | Emotion | Share Impulse |
-|--------|---------|---------------|
-| Legendary drop | Excitement | "LOOK WHAT I GOT" |
-| Level milestone | Pride | "Finally hit Level 10" |
-| PvP victory | Dominance | "Get rekt" |
-| Big sale | Validation | "Made $200 today" |
-| Rare achievement | Status | "First to kill X" |
-| Character creation | Identity | "Meet my character" |
-| Leaderboard rank | Competition | "I'm top 10" |
+| Moment             | Emotion     | Share Impulse          |
+| ------------------ | ----------- | ---------------------- |
+| Legendary drop     | Excitement  | "LOOK WHAT I GOT"      |
+| Level milestone    | Pride       | "Finally hit Level 10" |
+| PvP victory        | Dominance   | "Get rekt"             |
+| Big sale           | Validation  | "Made $200 today"      |
+| Rare achievement   | Status      | "First to kill X"      |
+| Character creation | Identity    | "Meet my character"    |
+| Leaderboard rank   | Competition | "I'm top 10"           |
 
 ### Key Design Principles
 
-1. **Auto-generate beautiful images** — Don't make players screenshot
-2. **One-tap sharing** — Pre-filled tweet + image + game link
+1. **Make the result legible in text** — The achievement, stats, and rarity should carry the moment
+2. **One-tap sharing** — Pre-filled post + game link
 3. **Include social proof** — "Only 0.3% have this", "Top 3% of players"
 4. **Show real value** — "$47.50 USD" next to gold amounts
-5. **Include branding** — Every shared image has game logo/link
+5. **Include branding** — Every shared post names the game and includes a link
 
 ### Passive Virality Features
 
-| Feature | How It Spreads |
-|---------|----------------|
-| Public profiles | Linkable, Google-indexable |
-| Leaderboards | Players share rankings |
-| Activity feed | "X just found a Legendary" |
-| Kill feed | PvP drama visible to all |
-| Marketplace history | Big sales create FOMO |
-| World firsts | Permanent fame |
+| Feature             | How It Spreads             |
+| ------------------- | -------------------------- |
+| Public profiles     | Linkable, Google-indexable |
+| Leaderboards        | Players share rankings     |
+| Activity feed       | "X just found a Legendary" |
+| Kill feed           | PvP drama visible to all   |
+| Marketplace history | Big sales create FOMO      |
+| World firsts        | Permanent fame             |
 
 ### In-Game Social Proof (The Flex Economy)
 
-| Feature | Effect |
-|---------|--------|
-| Titles | "Dragonslayer" above name |
-| Badges | Achievement icons visible |
-| Cosmetics | Rare skins others see |
-| Mount/Pet | "How'd you get that?" |
+| Feature            | Effect                    |
+| ------------------ | ------------------------- |
+| Titles             | "Dragonslayer" above name |
+| Badges             | Achievement icons visible |
+| Cosmetics          | Rare skins others see     |
+| Mount/Pet          | "How'd you get that?"     |
 | Leaderboard frames | Top 10 get special border |
 
 ---
@@ -381,8 +391,6 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 ┌─────────────────────────────────┐
 │  LEGENDARY DROP                 │
 │                                 │
-│  [Item image]                   │
-│                                 │
 │  BLADE OF THE VOID              │
 │  +45 STR | +20 AGI              │
 │  Drop Rate: 0.01%               │
@@ -390,7 +398,7 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 │  Found by: CryptoKnight.eth     │
 │  Zone: Dark Cave                │
 │                                 │
-│  [Share to X]  [Copy Image]     │
+│  [Share to X]  [Copy Text]      │
 └─────────────────────────────────┘
 ```
 
@@ -400,7 +408,7 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 ┌─────────────────────────────────┐
 │  LEVEL 10                       │
 │                                 │
-│  [Character portrait]           │
+│  [CK]  CRYPTOKNIGHT             │
 │                                 │
 │  CryptoKnight.eth               │
 │  Warrior | 12 hours played      │
@@ -420,7 +428,7 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 ┌─────────────────────────────────┐
 │  VICTORY                        │
 │                                 │
-│  [Your char]  VS  [Their char]  │
+│  [CK]         VS          [DD]  │
 │                                 │
 │  CryptoKnight    DeathDealer    │
 │  Lvl 8           Lvl 9         │
@@ -438,8 +446,7 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 ┌─────────────────────────────────┐
 │  SOLD                           │
 │                                 │
-│  [Item image]                   │
-│  Shadowsteel Armor              │
+│  ARM  SHADOWSTEEL ARMOR         │
 │                                 │
 │  Sold for: 5,000 GOLD           │
 │  ~ $47.50 USD                   │
@@ -456,9 +463,7 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 ┌─────────────────────────────────┐
 │  ACHIEVEMENT UNLOCKED           │
 │                                 │
-│  [Achievement icon]             │
-│                                 │
-│  DRAGON SLAYER                  │
+│  ACH  DRAGON SLAYER             │
 │  "Defeat the Elder Dragon"      │
 │                                 │
 │  Only 0.3% of players have this │
@@ -471,9 +476,7 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 
 ```
 ┌─────────────────────────────────┐
-│  [Full character art]           │
-│                                 │
-│  CRYPTOKNIGHT                   │
+│  [CK]  CRYPTOKNIGHT             │
 │  Level 10 Warrior | Founder     │
 │                                 │
 │  18 STR   12 AGI                │
@@ -488,23 +491,23 @@ No explicit "recruit your friends" prompts beyond the invite system. Instead: **
 
 ### Technical Implementation
 
-**Image Generation:**
+**Text Share Generation:**
+
 ```
 Player triggers share
     ↓
-Client sends data to API
+Client builds a concise result summary
     ↓
-API generates image (Canvas/Sharp/Puppeteer)
+Native share sheet or X intent opens
     ↓
-Returns image URL
-    ↓
-Player shares image + link
+Player shares text + game link
 ```
 
 **Open Graph Tags:**
+
 ```html
 <meta property="og:title" content="CryptoKnight | Level 10 Warrior" />
-<meta property="og:image" content="https://ultimatedominion.com/cards/0x123.png" />
+<meta property="og:image" content="https://ultimatedominion.com/og-image.png" />
 <meta property="og:description" content="Top 3% player | 247 kills" />
 ```
 
@@ -517,7 +520,7 @@ Card auto-appears (don't make them find it)
     ↓
 One tap: "Share to X"
     ↓
-Pre-written tweet + image + game link
+Pre-written post + game link
     ↓
 Posted
 
@@ -526,13 +529,13 @@ Total friction: 1 tap + confirm
 
 ### Metrics to Track
 
-| Metric | What It Tells You |
-|--------|-------------------|
-| Share button clicks | Interest in sharing |
-| Shares completed | Actual viral actions |
-| Clicks from shared links | Viral reach |
-| Sign-ups from shares | Conversion |
-| Which moments shared most | What to emphasize |
+| Metric                    | What It Tells You    |
+| ------------------------- | -------------------- |
+| Share button clicks       | Interest in sharing  |
+| Shares completed          | Actual viral actions |
+| Clicks from shared links  | Viral reach          |
+| Sign-ups from shares      | Conversion           |
+| Which moments shared most | What to emphasize    |
 
 ---
 
@@ -571,4 +574,4 @@ Sustainable economy
 
 ---
 
-*Last updated: March 9, 2026*
+_Last updated: March 9, 2026_

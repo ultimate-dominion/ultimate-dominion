@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   Flex,
@@ -40,10 +39,12 @@ import {
 import { GiTwoCoins } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
+
+import { CharacterMark } from '../components/EntityMark';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
-import { useCharacter } from '../contexts/CharacterContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
@@ -119,7 +120,6 @@ type GuildEntry = {
 type MemberEntry = {
   characterId: string;
   characterName: string;
-  characterImage?: string;
   role: number;
   joinedAt: number;
 };
@@ -127,7 +127,6 @@ type MemberEntry = {
 type ApplicationEntry = {
   characterId: string;
   characterName: string;
-  characterImage?: string;
   appliedAt: number;
 };
 
@@ -285,7 +284,9 @@ const WithdrawTreasuryModal: React.FC<WithdrawModalProps> = ({
         <ModalBody px={{ base: 6, sm: 8 }}>
           <VStack gap={4}>
             <Text color="#8A7E6A" fontSize="sm">
-              {t('guild.withdrawModal.available', { amount: Number(formatEther(maxAmount)).toLocaleString() })}
+              {t('guild.withdrawModal.available', {
+                amount: Number(formatEther(maxAmount)).toLocaleString(),
+              })}
             </Text>
             <FormControl>
               <Input
@@ -363,7 +364,8 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
 
   // Read active buff slots
   const buffSlots = useMemo(() => {
-    const slots: { slotIndex: number; buffType: number; active: boolean }[] = [];
+    const slots: { slotIndex: number; buffType: number; active: boolean }[] =
+      [];
     for (let i = 0; i < 3; i++) {
       slots.push({ slotIndex: i, buffType: BUFF_NONE, active: false });
     }
@@ -387,7 +389,9 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
   // Active buff types (for duplicate check in UI)
   const activeBuffTypes = useMemo(() => {
     return new Set(
-      buffSlots.filter(s => s.active && s.buffType !== BUFF_NONE).map(s => s.buffType),
+      buffSlots
+        .filter(s => s.active && s.buffType !== BUFF_NONE)
+        .map(s => s.buffType),
     );
   }, [buffSlots]);
 
@@ -400,7 +404,11 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
     async (slotIndex: number, buffType: number) => {
       setIsSettingBuff(true);
       try {
-        const result = await systemCalls.setGuildBuff(characterId, slotIndex, buffType);
+        const result = await systemCalls.setGuildBuff(
+          characterId,
+          slotIndex,
+          buffType,
+        );
         if (result?.error) renderError(result.error);
       } catch (e: any) {
         renderError(e?.message ?? 'Failed to set buff');
@@ -415,7 +423,10 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
     async (slotIndex: number) => {
       setIsSettingBuff(true);
       try {
-        const result = await systemCalls.removeGuildBuff(characterId, slotIndex);
+        const result = await systemCalls.removeGuildBuff(
+          characterId,
+          slotIndex,
+        );
         if (result?.error) renderError(result.error);
       } catch (e: any) {
         renderError(e?.message ?? 'Failed to remove buff');
@@ -483,7 +494,7 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
 
       {/* Buff Slots */}
       <VStack spacing={2} w="100%">
-        {buffSlots.slice(0, guildLevel).map((slot) => (
+        {buffSlots.slice(0, guildLevel).map(slot => (
           <HStack
             key={slot.slotIndex}
             bg={
@@ -538,10 +549,18 @@ const GuildBuffPanel: React.FC<GuildBuffPanelProps> = ({
                 </Text>
                 {isLeader && (
                   <HStack spacing={1}>
-                    {[BUFF_STRENGTH, BUFF_AGILITY, BUFF_INTELLIGENCE, BUFF_RESILIENCE]
+                    {[
+                      BUFF_STRENGTH,
+                      BUFF_AGILITY,
+                      BUFF_INTELLIGENCE,
+                      BUFF_RESILIENCE,
+                    ]
                       .filter(bt => !activeBuffTypes.has(bt))
                       .map(bt => (
-                        <Tooltip key={bt} label={`${BUFF_LABELS[bt]} (${BUFF_STATS[bt]})`}>
+                        <Tooltip
+                          key={bt}
+                          label={`${BUFF_LABELS[bt]} (${BUFF_STATS[bt]})`}
+                        >
                           <Button
                             aria-label={BUFF_LABELS[bt]}
                             color={BUFF_COLORS[bt]}
@@ -602,23 +621,13 @@ const GuildDirectory: React.FC<GuildDirectoryProps> = ({
   const [pageLimit, setPageLimit] = useState(1);
 
   const pagedGuilds = useMemo(
-    () =>
-      guilds.slice(
-        (page - 1) * MEMBERS_PER_PAGE,
-        page * MEMBERS_PER_PAGE,
-      ),
+    () => guilds.slice((page - 1) * MEMBERS_PER_PAGE, page * MEMBERS_PER_PAGE),
     [guilds, page],
   );
 
   return (
     <VStack spacing={4} w="100%">
-      <Flex
-        align="center"
-        justify="space-between"
-        px={4}
-        pt={2}
-        w="100%"
-      >
+      <Flex align="center" justify="space-between" px={4} pt={2} w="100%">
         <Text color="#8A7E6A" fontSize="sm">
           {t('guild.directory.count', { count: guilds.length })}
         </Text>
@@ -656,13 +665,17 @@ const GuildDirectory: React.FC<GuildDirectoryProps> = ({
                   </HStack>
                   <HStack spacing={3}>
                     <Text color="#6A6050" fontSize="xs">
-                      {t('guild.directory.members', { count: guild.memberCount })}
+                      {t('guild.directory.members', {
+                        count: guild.memberCount,
+                      })}
                     </Text>
                     <Text
                       color={guild.isOpen ? '#6AAF6A' : '#AF6A6A'}
                       fontSize="xs"
                     >
-                      {guild.isOpen ? t('guild.directory.open') : t('guild.directory.closed')}
+                      {guild.isOpen
+                        ? t('guild.directory.open')
+                        : t('guild.directory.closed')}
                     </Text>
                   </HStack>
                 </VStack>
@@ -755,8 +768,14 @@ const MemberRow: React.FC<MemberRowProps> = ({
         : '#6A6050';
 
   return (
-    <HStack px={4} py={3} spacing={3} w="100%" _hover={{ bg: 'rgba(196,184,158,0.06)' }}>
-      <Avatar size="xs" src={member.characterImage} />
+    <HStack
+      px={4}
+      py={3}
+      spacing={3}
+      w="100%"
+      _hover={{ bg: 'rgba(196,184,158,0.06)' }}
+    >
+      <CharacterMark boxSize="24px" name={member.characterName} />
       <Text
         as="a"
         color="#E8DCC8"
@@ -783,7 +802,11 @@ const MemberRow: React.FC<MemberRowProps> = ({
       {isLeader && member.role !== ROLE_LEADER && (
         <HStack spacing={1}>
           {member.role === ROLE_MEMBER && onPromote && (
-            <Tooltip hasArrow label={t('guild.tooltips.promote')} placement="top">
+            <Tooltip
+              hasArrow
+              label={t('guild.tooltips.promote')}
+              placement="top"
+            >
               <Button
                 onClick={() => onPromote(member.characterId)}
                 size="xs"
@@ -794,7 +817,11 @@ const MemberRow: React.FC<MemberRowProps> = ({
             </Tooltip>
           )}
           {member.role === ROLE_OFFICER && onDemote && (
-            <Tooltip hasArrow label={t('guild.tooltips.demote')} placement="top">
+            <Tooltip
+              hasArrow
+              label={t('guild.tooltips.demote')}
+              placement="top"
+            >
               <Button
                 onClick={() => onDemote(member.characterId)}
                 size="xs"
@@ -855,7 +882,11 @@ export const Guild = (): JSX.Element => {
   const memberData = useGameValue('GuildMember', memberKey);
   const myGuildId = memberData?.guildId as string | undefined;
   const myRole = memberData ? toNumber(memberData.role) : ROLE_MEMBER;
-  const isInGuild = !!myGuildId && myGuildId !== '0' && myGuildId !== '0x0000000000000000000000000000000000000000000000000000000000000000';
+  const isInGuild =
+    !!myGuildId &&
+    myGuildId !== '0' &&
+    myGuildId !==
+      '0x0000000000000000000000000000000000000000000000000000000000000000';
 
   // My guild data
   const guildKey = isInGuild ? encodeBytes32Key(myGuildId) : undefined;
@@ -939,7 +970,6 @@ export const Guild = (): JSX.Element => {
         return {
           characterId: charId,
           characterName: char?.name ?? 'Unknown',
-          characterImage: char?.image,
           role: toNumber(data.role),
           joinedAt: toNumber(data.joinedAt),
         };
@@ -959,7 +989,6 @@ export const Guild = (): JSX.Element => {
         return {
           characterId: charId,
           characterName: char?.name ?? 'Unknown',
-          characterImage: char?.image,
           appliedAt: toNumber(data.appliedAt),
         };
       })
@@ -990,7 +1019,13 @@ export const Guild = (): JSX.Element => {
       if (!characterId) return;
       setIsCreating(true);
       try {
-        await systemCalls.createGuild(characterId, name, tag, isOpen, description);
+        await systemCalls.createGuild(
+          characterId,
+          name,
+          tag,
+          isOpen,
+          description,
+        );
         onCloseCreate();
       } finally {
         setIsCreating(false);
@@ -1136,7 +1171,12 @@ export const Guild = (): JSX.Element => {
               w="100%"
             >
               <GiTwoCoins color="#C8A96E" size={18} />
-              <Text color="#C8A96E" fontFamily="mono" fontSize="lg" fontWeight={700}>
+              <Text
+                color="#C8A96E"
+                fontFamily="mono"
+                fontSize="lg"
+                fontWeight={700}
+              >
                 {Number(
                   formatEther(toBigInt(myGuildData?.treasury)),
                 ).toLocaleString()}
@@ -1225,7 +1265,9 @@ export const Guild = (): JSX.Element => {
                 w="100%"
               >
                 <Text color="#C8A96E" fontSize="sm" fontWeight={700}>
-                  {t('guild.pendingApplications', { count: applications.length })}
+                  {t('guild.pendingApplications', {
+                    count: applications.length,
+                  })}
                 </Text>
                 {applications.map(app => (
                   <HStack
@@ -1234,7 +1276,7 @@ export const Guild = (): JSX.Element => {
                     w="100%"
                   >
                     <HStack spacing={2}>
-                      <Avatar size="xs" src={app.characterImage} />
+                      <CharacterMark boxSize="24px" name={app.characterName} />
                       <Text color="#E8DCC8" fontSize="sm">
                         {app.characterName}
                       </Text>
@@ -1247,11 +1289,7 @@ export const Guild = (): JSX.Element => {
                       >
                         {t('guild.approve')}
                       </Button>
-                      <Button
-                        colorScheme="red"
-                        size="xs"
-                        variant="outline"
-                      >
+                      <Button colorScheme="red" size="xs" variant="outline">
                         {t('guild.reject')}
                       </Button>
                     </HStack>
@@ -1315,7 +1353,9 @@ export const Guild = (): JSX.Element => {
 
             <HStack
               my={3}
-              visibility={members.length > MEMBERS_PER_PAGE ? 'visible' : 'hidden'}
+              visibility={
+                members.length > MEMBERS_PER_PAGE ? 'visible' : 'hidden'
+              }
             >
               <Pagination
                 length={members.length}

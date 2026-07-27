@@ -1,11 +1,9 @@
 import { hexToString, zeroHash } from 'viem';
 
 import { getTableValue, toBigInt, toNumber } from '../lib/gameStore';
+
 import { STATUS_EFFECT_NAME_MAPPING } from './constants';
-import {
-  decodeAppliedStatusEffectId,
-  decodeBaseStats,
-} from './helpers';
+import { decodeAppliedStatusEffectId, decodeBaseStats } from './helpers';
 import {
   AdvancedClass,
   ArmorType,
@@ -36,9 +34,7 @@ export function buildCharacter(
   metadata: Metadata | null,
   effectsData: Record<string, unknown> | undefined,
 ): Character {
-  const externalGoldBalance = goldData
-    ? toBigInt(goldData.value)
-    : BigInt(0);
+  const externalGoldBalance = goldData ? toBigInt(goldData.value) : BigInt(0);
 
   const encounterId = encounterData?.encounterId ?? zeroHash;
   const pvpTimer = encounterData?.pvpTimer ?? BigInt(0);
@@ -87,12 +83,11 @@ export function buildCharacter(
 
       if (!effectStats || !validity) return null;
 
-      const timestampEnd = toBigInt(effect.timestamp) + toBigInt(validity.validTime);
-      const isActive =
-        timestampEnd > BigInt(Date.now()) / BigInt(1000);
+      const timestampEnd =
+        toBigInt(effect.timestamp) + toBigInt(validity.validTime);
+      const isActive = timestampEnd > BigInt(Date.now()) / BigInt(1000);
 
-      const name =
-        STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
+      const name = STATUS_EFFECT_NAME_MAPPING[paddedEffectId] ?? 'unknown';
 
       return {
         active: isActive,
@@ -108,16 +103,20 @@ export function buildCharacter(
     })
     .filter((effect): effect is WorldStatusEffect => effect !== null);
 
-  const metadataFallback = metadata ?? { name: '', description: '', image: '' };
+  const metadataFallback = metadata ?? { name: '', description: '' };
 
   // On-chain name is authoritative; IPFS metadata name is a fallback
-  const onChainName = hexToString(characterData.name as `0x${string}`, { size: 32 });
+  const onChainName = hexToString(characterData.name as `0x${string}`, {
+    size: 32,
+  });
   const name = onChainName || metadataFallback.name;
 
   return {
     ...metadataFallback,
     name,
-    advancedClass: (toNumber(statsData.advancedClass) as AdvancedClass) ?? AdvancedClass.None,
+    advancedClass:
+      (toNumber(statsData.advancedClass) as AdvancedClass) ??
+      AdvancedClass.None,
     agility: toBigInt(statsData.agility),
     baseStats: decodedBaseStats as any,
     currentHp: toBigInt(statsData.currentHp),

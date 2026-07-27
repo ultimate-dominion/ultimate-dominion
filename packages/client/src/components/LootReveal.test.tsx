@@ -36,7 +36,6 @@ const makeLoot = (rarity: Rarity) => ({
   balance: 1n,
   description: '',
   hpModifier: 0n,
-  image: '',
   intModifier: 0n,
   itemId: '0xitem',
   itemType: ItemType.Armor,

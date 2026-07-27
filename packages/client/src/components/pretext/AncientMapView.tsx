@@ -1,5 +1,6 @@
-import { useCallback, useRef, useEffect } from 'react';
 import { Box } from '@chakra-ui/react';
+import { useCallback, useRef, useEffect } from 'react';
+
 import { useCanvas, getPointerPos } from './hooks/useCanvas';
 import { COLORS } from './theme';
 import {
@@ -13,8 +14,6 @@ import {
   frayingIntensity,
   getZoneAt,
   getRumoredZoneNear,
-  type ZoneRegion,
-  type RumoredZone,
 } from './worldMapLayout';
 
 // ---------------------------------------------------------------------------
@@ -31,17 +30,11 @@ export type WorldMapProps = {
   onZoneClick?: (zoneId: number) => void;
 };
 
-// Default: both implemented zones discovered (for pretext-lab standalone)
-const DEFAULT_VISIBILITY: Record<number, ZoneVisibility> = { 1: 'discovered', 2: 'discovered' };
-
-// Dragon piece image — reuse the same one from GameAncientMap
-let _dragonImg: HTMLImageElement | null = null;
-let _dragonLoaded = false;
-if (typeof window !== 'undefined') {
-  _dragonImg = new Image();
-  _dragonImg.onload = () => { _dragonLoaded = true; };
-  _dragonImg.src = '/images/ud-dragon.svg';
-}
+// Default: both implemented zones discovered.
+const DEFAULT_VISIBILITY: Record<number, ZoneVisibility> = {
+  1: 'discovered',
+  2: 'discovered',
+};
 
 // ---------------------------------------------------------------------------
 // Reveal animation tracking
@@ -62,9 +55,10 @@ export function AncientMapView({
   zoneVisibility = DEFAULT_VISIBILITY,
   currentZone = 1,
   onZoneClick,
-}: WorldMapProps) {
+}: WorldMapProps): JSX.Element {
   const hoverRef = useRef<{ row: number; col: number } | null>(null);
-  const prevVisibilityRef = useRef<Record<number, ZoneVisibility>>(zoneVisibility);
+  const prevVisibilityRef =
+    useRef<Record<number, ZoneVisibility>>(zoneVisibility);
   const revealAnimRef = useRef<Map<number, number>>(new Map()); // zoneId → timestamp
 
   // Detect visibility changes for reveal animation
@@ -129,10 +123,13 @@ export function AncientMapView({
           // Fraying overlay — edge cells become void regardless
           if (frayIntensity > 0.8) {
             // Pure Fraying — writhing void chars
-            const frayIdx = Math.floor(Math.abs(r * 7 + c * 13) + elapsed / 3000) % FRAYING_CHARS.length;
+            const frayIdx =
+              Math.floor(Math.abs(r * 7 + c * 13) + elapsed / 3000) %
+              FRAYING_CHARS.length;
             ctx.font = `300 ${cellW}px Fira Code`;
             ctx.fillStyle = '#2E2820';
-            ctx.globalAlpha = 0.08 + Math.sin((r + c + elapsed / 5000) * 0.4) * 0.03;
+            ctx.globalAlpha =
+              0.08 + Math.sin((r + c + elapsed / 5000) * 0.4) * 0.03;
             ctx.fillText(FRAYING_CHARS[frayIdx], cx, cy);
             ctx.globalAlpha = 1;
             continue;
@@ -147,7 +144,9 @@ export function AncientMapView({
           // Base alpha by visibility state
           let alpha: number;
           if (cellVis === 'discovered') {
-            alpha = isHovered ? 0.9 : 0.5 + Math.sin((r + c + elapsed / 2500) * 0.5) * 0.08;
+            alpha = isHovered
+              ? 0.9
+              : 0.5 + Math.sin((r + c + elapsed / 2500) * 0.5) * 0.08;
           } else if (cellVis === 'rumored') {
             alpha = 0.08 + Math.sin((r + c + elapsed / 4000) * 0.3) * 0.03;
           } else {
@@ -156,7 +155,7 @@ export function AncientMapView({
 
           // Fraying blend — fade terrain near edges
           if (frayIntensity > 0) {
-            alpha *= (1 - frayIntensity);
+            alpha *= 1 - frayIntensity;
           }
 
           // Reveal animation — override alpha during transition
@@ -231,40 +230,33 @@ export function AncientMapView({
         ctx.font = `italic 400 ${nameFontSize}px Cormorant Garamond`;
         ctx.fillStyle = COLORS.textMuted;
         ctx.textAlign = 'center';
-        ctx.globalAlpha = 0.18 + Math.sin(elapsed / 3000 + rz.position.row * 0.5) * 0.06;
+        ctx.globalAlpha =
+          0.18 + Math.sin(elapsed / 3000 + rz.position.row * 0.5) * 0.06;
         ctx.fillText(rz.name + ' ?', rx, ry);
         ctx.globalAlpha = 1;
       }
 
       // ---------------------------------------------------------------
-      // Pass 4: Player marker — dragon at current zone
+      // Pass 4: Player marker at current zone
       // ---------------------------------------------------------------
-      const currentZoneRegion = ZONE_REGIONS.find(z => z.zoneId === currentZone);
+      const currentZoneRegion = ZONE_REGIONS.find(
+        z => z.zoneId === currentZone,
+      );
       if (currentZoneRegion) {
-        const px = offsetX + currentZoneRegion.labelPosition.col * cellW + cellW / 2;
-        const py = offsetY + currentZoneRegion.labelPosition.row * cellH - cellH * 2.5;
+        const px =
+          offsetX + currentZoneRegion.labelPosition.col * cellW + cellW / 2;
+        const py =
+          offsetY + currentZoneRegion.labelPosition.row * cellH - cellH * 2.5;
 
-        if (_dragonLoaded && _dragonImg) {
-          const dragonH = cellH * 2.5;
-          const dragonW = dragonH * (_dragonImg.naturalWidth / _dragonImg.naturalHeight);
-          ctx.shadowColor = COLORS.amber;
-          ctx.shadowBlur = 6 + Math.sin(elapsed / 600) * 3;
-          ctx.globalAlpha = 0.9;
-          ctx.drawImage(_dragonImg, px - dragonW / 2, py - dragonH / 2, dragonW, dragonH);
-          ctx.shadowBlur = 0;
-          ctx.globalAlpha = 1;
-        } else {
-          // Fallback pulsing diamond
-          ctx.fillStyle = COLORS.amber;
-          ctx.shadowColor = COLORS.amber;
-          ctx.shadowBlur = 6 + Math.sin(elapsed / 600) * 3;
-          ctx.globalAlpha = 0.9;
-          ctx.font = `700 ${cellW * 1.5}px Fira Code`;
-          ctx.textAlign = 'center';
-          ctx.fillText('◆', px, py);
-          ctx.shadowBlur = 0;
-          ctx.globalAlpha = 1;
-        }
+        ctx.fillStyle = COLORS.amber;
+        ctx.shadowColor = COLORS.amber;
+        ctx.shadowBlur = 6 + Math.sin(elapsed / 600) * 3;
+        ctx.globalAlpha = 0.9;
+        ctx.font = `700 ${cellW * 1.5}px Fira Code`;
+        ctx.textAlign = 'center';
+        ctx.fillText('@', px, py);
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
       }
 
       // ---------------------------------------------------------------
@@ -291,7 +283,13 @@ export function AncientMapView({
       // ---------------------------------------------------------------
       // Pass 6: Hover info bar
       // ---------------------------------------------------------------
-      if (hover && hover.row >= 0 && hover.row < MAP_ROWS && hover.col >= 0 && hover.col < MAP_COLS) {
+      if (
+        hover &&
+        hover.row >= 0 &&
+        hover.row < MAP_ROWS &&
+        hover.col >= 0 &&
+        hover.col < MAP_COLS
+      ) {
         const zone = getZoneAt(hover.row, hover.col);
         const rumored = getRumoredZoneNear(hover.row, hover.col);
         let label = '';
@@ -317,7 +315,11 @@ export function AncientMapView({
           ctx.fillStyle = COLORS.textMuted;
           ctx.textAlign = 'left';
           ctx.globalAlpha = 0.7;
-          ctx.fillText(label, offsetX + 4, offsetY + gridH + Math.max(10, cellH * 0.8));
+          ctx.fillText(
+            label,
+            offsetX + 4,
+            offsetY + gridH + Math.max(10, cellH * 0.8),
+          );
           ctx.globalAlpha = 1;
         }
       }
@@ -346,29 +348,35 @@ export function AncientMapView({
     };
   }, [canvasRef]);
 
-  const handleMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    updateCellDims();
-    const pos = getPointerPos(e, canvas);
-    const { cellW, cellH, offsetX, offsetY } = cellDims.current;
-    const col = Math.floor((pos.x - offsetX) / cellW);
-    const row = Math.floor((pos.y - offsetY) / cellH);
-    hoverRef.current = { row, col };
-  }, [canvasRef, updateCellDims]);
+  const handleMove = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      updateCellDims();
+      const pos = getPointerPos(e, canvas);
+      const { cellW, cellH, offsetX, offsetY } = cellDims.current;
+      const col = Math.floor((pos.x - offsetX) / cellW);
+      const row = Math.floor((pos.y - offsetY) / cellH);
+      hoverRef.current = { row, col };
+    },
+    [canvasRef, updateCellDims],
+  );
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    if (!onZoneClick) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    updateCellDims();
-    const pos = getPointerPos(e, canvas);
-    const { cellW, cellH, offsetX, offsetY } = cellDims.current;
-    const col = Math.floor((pos.x - offsetX) / cellW);
-    const row = Math.floor((pos.y - offsetY) / cellH);
-    const zone = getZoneAt(row, col);
-    if (zone) onZoneClick(zone.zoneId);
-  }, [canvasRef, onZoneClick, updateCellDims]);
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (!onZoneClick) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      updateCellDims();
+      const pos = getPointerPos(e, canvas);
+      const { cellW, cellH, offsetX, offsetY } = cellDims.current;
+      const col = Math.floor((pos.x - offsetX) / cellW);
+      const row = Math.floor((pos.y - offsetY) / cellH);
+      const zone = getZoneAt(row, col);
+      if (zone) onZoneClick(zone.zoneId);
+    },
+    [canvasRef, onZoneClick, updateCellDims],
+  );
 
   const handleLeave = useCallback(() => {
     hoverRef.current = null;
@@ -378,7 +386,10 @@ export function AncientMapView({
     <Box position="relative" w="100%" h="100%">
       <Box
         position="absolute"
-        top={0} left={0} right={0} bottom={0}
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
         bg={COLORS.bg}
         borderRadius="md"
         overflow="hidden"
@@ -389,7 +400,12 @@ export function AncientMapView({
           onTouchMove={handleMove}
           onClick={handleClick}
           onMouseLeave={handleLeave}
-          style={{ display: 'block', width: '100%', height: '100%', cursor: 'crosshair' }}
+          style={{
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            cursor: 'crosshair',
+          }}
           aria-label="World map"
         />
       </Box>

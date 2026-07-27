@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   Flex,
@@ -16,18 +15,15 @@ import {
   Stack,
   Text,
   Tooltip,
-  useBreakpointValue,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { BsThreeDotsVertical } from 'react-icons/bs';
-import { IoIosWarning, IoMdInformationCircleOutline } from 'react-icons/io';
+import { IoIosWarning } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 import { zeroHash } from 'viem';
-
-import { getTableValue, toBigInt } from '../lib/gameStore';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
@@ -36,32 +32,40 @@ import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useBattleHpAnimation } from '../hooks/useBattleHpAnimation';
+
+import { BattleSceneCanvas } from './pretext/game/BattleSceneCanvas';
+import {
+  BattleBossSplash,
+  hasBossSplashBeenSeen,
+} from './pretext/game/BattleBossSplash';
+import { BattleDeathScreen } from './pretext/game/BattleDeathScreen';
+import { TextDissolve } from './pretext/game/TextDissolve';
+import { ThreatWeightedName } from './pretext/game/ThreatWeightedName';
+import { classifyAttack } from '../utils/attackPresentation';
+import {
+  useBattleSceneSignals,
+  type BattleSceneHandle,
+} from '../hooks/useBattleSceneSignals';
 import { useCombatPacing } from '../hooks/useCombatPacing';
-import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
+import { useFloatingDamageSignals } from '../hooks/useFloatingDamageSignals';
+import {
+  OnboardingStage,
+  useOnboardingStage,
+} from '../hooks/useOnboardingStage';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { SHOW_Z2 } from '../lib/env';
+import { getTableValue, toBigInt } from '../lib/gameStore';
 import {
   CURRENT_BATTLE_OPPONENT_TURN_KEY,
   CURRENT_BATTLE_USER_TURN_KEY,
 } from '../utils/constants';
-import { etherToFixedNumber, getEmoji, removeEmoji } from '../utils/helpers';
-import { getMonsterImage } from '../utils/monsterImages';
-import { SHOW_Z2 } from '../lib/env';
-import { useFloatingDamageSignals } from '../hooks/useFloatingDamageSignals';
-import { BattleFloatingDamage, type BattleFloatingDamageHandle } from './pretext/game/BattleFloatingDamage';
-import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
-import { BattleSceneCanvas } from './pretext/game/BattleSceneCanvas';
-import { BattleBossSplash, hasBossSplashBeenSeen } from './pretext/game/BattleBossSplash';
-import { BattleDeathScreen } from './pretext/game/BattleDeathScreen';
-import { TextDissolve } from './pretext/game/TextDissolve';
-import { ThreatWeightedName } from './pretext/game/ThreatWeightedName';
-import { classifyWeapon } from './pretext/game/weaponAnimations';
-import { loadItemManifest, loadItemModel, itemSlug } from './pretext/game/glbItemLoader';
-import { useBattleSceneSignals, type BattleSceneHandle } from '../hooks/useBattleSceneSignals';
+import { getRomanNumeral } from '../utils/fragmentNarratives';
+import { etherToFixedNumber } from '../utils/helpers';
+import { getThreatColor } from '../utils/threatAssessment';
 import {
   ADVANCED_CLASS_COLORS,
   ADVANCED_CLASS_I18N_KEYS,
-  ADVANCED_CLASS_NAMES,
   AdvancedClass,
   type Character,
   EncounterType,
@@ -70,15 +74,17 @@ import {
   type WeaponTemplate,
 } from '../utils/types';
 
-import { getRomanNumeral } from '../utils/fragmentNarratives';
-import { getThreatColor } from '../utils/threatAssessment';
-
 import { ClassSymbol } from './ClassSymbol';
+import { CharacterMark, MonsterMark } from './EntityMark';
 import { FragmentClaimModal } from './FragmentClaimModal';
 import { HealthBar } from './HealthBar';
 import { InfoModal } from './InfoModal';
 import { NpcDialogueModal } from './NpcDialogueModal';
 import { NpcRow } from './NpcRow';
+import {
+  BattleFloatingDamage,
+  type BattleFloatingDamageHandle,
+} from './pretext/game/BattleFloatingDamage';
 import { ShopRow } from './ShopRow';
 
 const ROW_HEIGHT = { base: 10, md: 8 };
@@ -98,8 +104,10 @@ const pickWeaponForMonster = (
   // Which stat modifier should be highest to counter this monster?
   // vs Warrior(STR) → use INT weapon, vs Rogue(AGI) → use STR weapon, vs Mage(INT) → use AGI weapon
   const counterStat: 'intModifier' | 'strModifier' | 'agiModifier' =
-    monsterClass === StatsClasses.Strength ? 'intModifier'
-      : monsterClass === StatsClasses.Agility ? 'strModifier'
+    monsterClass === StatsClasses.Strength
+      ? 'intModifier'
+      : monsterClass === StatsClasses.Agility
+        ? 'strModifier'
         : 'agiModifier';
 
   // Find weapon where the counter stat modifier is the highest modifier
@@ -126,7 +134,6 @@ const REST_FLAVOR_COUNT = 5;
 export const TileDetailsPanel = (): JSX.Element => {
   const { t } = useTranslation('ui');
   const { t: tn } = useTranslation('narrative');
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const {
     isOpen: isSafetyZoneInfoModalOpen,
     onClose: onCloseSafetyZoneInfoModal,
@@ -148,11 +155,18 @@ export const TileDetailsPanel = (): JSX.Element => {
     onOpen: onOpenNpcDialogue,
   } = useDisclosure();
 
-  const [dialogueNpc, setDialogueNpc] = useState<{ id: string; name: string; metadataUri: string } | null>(null);
-  const handleOpenNpcDialogue = useCallback((npcId: string, npcName: string, metadataUri: string) => {
-    setDialogueNpc({ id: npcId, name: npcName, metadataUri });
-    onOpenNpcDialogue();
-  }, [onOpenNpcDialogue]);
+  const [dialogueNpc, setDialogueNpc] = useState<{
+    id: string;
+    name: string;
+    metadataUri: string;
+  } | null>(null);
+  const handleOpenNpcDialogue = useCallback(
+    (npcId: string, npcName: string, metadataUri: string) => {
+      setDialogueNpc({ id: npcId, name: npcName, metadataUri });
+      onOpenNpcDialogue();
+    },
+    [onOpenNpcDialogue],
+  );
   const handleCloseNpcDialogue = useCallback(() => {
     onCloseNpcDialogue();
     setDialogueNpc(null);
@@ -192,7 +206,6 @@ export const TileDetailsPanel = (): JSX.Element => {
     currentZoneName,
     inSafetyZone,
     isSpawned,
-    monstersOnTile,
     npcsOnTile,
     otherCharactersOnTile,
     position,
@@ -211,7 +224,7 @@ export const TileDetailsPanel = (): JSX.Element => {
     statusEffectActions,
     userCharacterForBattleRendering,
   } = useBattle();
-  const { autoAdventureMode, isRefreshing } = useMovement();
+  const { autoAdventureMode } = useMovement();
   const stage = useOnboardingStage();
 
   const MONSTER_COLLAPSE_LIMIT = 3;
@@ -231,7 +244,10 @@ export const TileDetailsPanel = (): JSX.Element => {
       // Elites always surface first
       if (a.isElite !== b.isElite) return a.isElite ? -1 : 1;
       // Then by closeness to player level
-      return Math.abs(Number(a.level) - playerLevel) - Math.abs(Number(b.level) - playerLevel);
+      return (
+        Math.abs(Number(a.level) - playerLevel) -
+        Math.abs(Number(b.level) - playerLevel)
+      );
     });
   }, [visibleMonstersOnTile, character?.level]);
 
@@ -263,7 +279,10 @@ export const TileDetailsPanel = (): JSX.Element => {
   // Floating damage numbers overlay
   const floatingDamageRef = useRef<BattleFloatingDamageHandle>(null);
   const battleContainerRef = useRef<HTMLDivElement>(null);
-  const [battleContainerSize, setBattleContainerSize] = useState({ w: 0, h: 0 });
+  const [battleContainerSize, setBattleContainerSize] = useState({
+    w: 0,
+    h: 0,
+  });
 
   useEffect(() => {
     const el = battleContainerRef.current;
@@ -287,24 +306,40 @@ export const TileDetailsPanel = (): JSX.Element => {
   // BattleSceneCanvas signals (SHOW_Z2 only)
   const battleSceneRef = useRef<BattleSceneHandle>(null);
 
-  const weaponTypeForItem = useCallback((itemId: string) => {
-    const spell = equippedSpells.find(s => s.tokenId === itemId || s.itemId === itemId);
-    if (spell) return classifyWeapon(spell, true);
-    const weapon = equippedWeapons.find(w => w.tokenId === itemId || w.itemId === itemId);
-    if (weapon) return classifyWeapon(weapon, false);
-    // Monster counterattack — use opponent's class for animation style
-    if (opponent?.entityClass === StatsClasses.Intelligence) return 'spell' as const;
-    if (opponent?.entityClass === StatsClasses.Agility) return 'ranged' as const;
-    return 'melee' as const;
-  }, [equippedSpells, equippedWeapons, opponent?.entityClass]);
+  const weaponTypeForItem = useCallback(
+    (itemId: string) => {
+      const spell = equippedSpells.find(
+        s => s.tokenId === itemId || s.itemId === itemId,
+      );
+      if (spell) return classifyAttack(spell, true);
+      const weapon = equippedWeapons.find(
+        w => w.tokenId === itemId || w.itemId === itemId,
+      );
+      if (weapon) return classifyAttack(weapon, false);
+      // Monster counterattack — use opponent's class for animation style
+      if (opponent?.entityClass === StatsClasses.Intelligence)
+        return 'spell' as const;
+      if (opponent?.entityClass === StatsClasses.Agility)
+        return 'ranged' as const;
+      return 'melee' as const;
+    },
+    [equippedSpells, equippedWeapons, opponent?.entityClass],
+  );
 
-  const weaponNameForItem = useCallback((itemId: string) => {
-    const spell = equippedSpells.find(s => s.tokenId === itemId || s.itemId === itemId);
-    if (spell) return spell.name;
-    const weapon = equippedWeapons.find(w => w.tokenId === itemId || w.itemId === itemId);
-    if (weapon) return weapon.name;
-    return undefined;
-  }, [equippedSpells, equippedWeapons]);
+  const weaponNameForItem = useCallback(
+    (itemId: string) => {
+      const spell = equippedSpells.find(
+        s => s.tokenId === itemId || s.itemId === itemId,
+      );
+      if (spell) return spell.name;
+      const weapon = equippedWeapons.find(
+        w => w.tokenId === itemId || w.itemId === itemId,
+      );
+      if (weapon) return weapon.name;
+      return undefined;
+    },
+    [equippedSpells, equippedWeapons],
+  );
 
   useBattleSceneSignals({
     visibleOutcomes,
@@ -314,17 +349,6 @@ export const TileDetailsPanel = (): JSX.Element => {
     weaponNameForItem,
     opponentName: opponent?.name ?? 'the enemy',
   });
-
-  // Preload 3D item models for equipped weapons so they're ready before first attack
-  useEffect(() => {
-    const slugs = [...equippedWeapons, ...equippedSpells]
-      .map((w) => itemSlug(w.name))
-      .filter(Boolean);
-    if (slugs.length === 0) return;
-    loadItemManifest().then(() => {
-      slugs.forEach((s) => loadItemModel(s).catch(() => {}));
-    }).catch(() => {});
-  }, [equippedWeapons, equippedSpells]);
 
   const encounterTx = useTransaction({
     actionName: 'initiate battle',
@@ -351,34 +375,56 @@ export const TileDetailsPanel = (): JSX.Element => {
   }, [character, rest, restTx, renderSuccess, tn]);
 
   const [isWaitingForBattle, setIsWaitingForBattle] = useState(false);
-  const [pendingOpponent, setPendingOpponent] = useState<{ name: string; image?: string } | null>(null);
+  const [pendingOpponent, setPendingOpponent] = useState<{
+    name: string;
+  } | null>(null);
 
-  const validateCombatTarget = useCallback(async (monsterId: string) => {
-    if (!position) return false;
+  const validateCombatTarget = useCallback(
+    async (monsterId: string) => {
+      if (!position) return false;
 
-    await validateTileMonsters([monsterId], position);
+      await validateTileMonsters([monsterId], position);
 
-    const ee = getTableValue('EncounterEntity', monsterId) as { died?: boolean; encounterId?: string } | undefined;
-    const sp = getTableValue('Spawned', monsterId) as { spawned?: boolean } | undefined;
-    const localPos = (getTableValue('PositionV2', monsterId) ?? getTableValue('Position', monsterId)) as
-      | { x?: unknown; y?: unknown }
-      | undefined;
+      const ee = getTableValue('EncounterEntity', monsterId) as
+        | { died?: boolean; encounterId?: string }
+        | undefined;
+      const sp = getTableValue('Spawned', monsterId) as
+        | { spawned?: boolean }
+        | undefined;
+      const localPos = (getTableValue('PositionV2', monsterId) ??
+        getTableValue('Position', monsterId)) as
+        | { x?: unknown; y?: unknown }
+        | undefined;
 
-    if (ee?.died || sp?.spawned === false) return false;
-    if (ee?.encounterId && ee.encounterId !== zeroHash) return false;
-    if (!localPos) return false;
+      if (ee?.died || sp?.spawned === false) return false;
+      if (ee?.encounterId && ee.encounterId !== zeroHash) return false;
+      if (!localPos) return false;
 
-    return Number(localPos.x) === position.x && Number(localPos.y) === position.y;
-  }, [position, validateTileMonsters]);
+      return (
+        Number(localPos.x) === position.x && Number(localPos.y) === position.y
+      );
+    },
+    [position, validateTileMonsters],
+  );
 
   // Clear waiting state when ALL battle data is ready (not just currentBattle)
   // Battle view requires: currentBattle + opponent + userCharacterForBattleRendering
   useEffect(() => {
-    if (currentBattle && opponent && userCharacterForBattleRendering && isWaitingForBattle) {
+    if (
+      currentBattle &&
+      opponent &&
+      userCharacterForBattleRendering &&
+      isWaitingForBattle
+    ) {
       setIsWaitingForBattle(false);
       setPendingOpponent(null);
     }
-  }, [currentBattle, opponent, userCharacterForBattleRendering, isWaitingForBattle]);
+  }, [
+    currentBattle,
+    opponent,
+    userCharacterForBattleRendering,
+    isWaitingForBattle,
+  ]);
 
   // Safety timeout — clear if battle never starts (10s)
   useEffect(() => {
@@ -478,7 +524,7 @@ export const TileDetailsPanel = (): JSX.Element => {
       if (encounterType === EncounterType.PvE) {
         // Re-check on-chain state right before sending the combat tx so stale
         // tile data gets evicted instead of producing a revert.
-        if (!await validateCombatTarget(opponent.id)) {
+        if (!(await validateCombatTarget(opponent.id))) {
           renderWarning('No enemies here — try moving to another tile.');
           return;
         }
@@ -488,8 +534,14 @@ export const TileDetailsPanel = (): JSX.Element => {
       if (autoAdventureMode && encounterType === EncounterType.PvE) {
         // Auto-select weapon based on combat triangle (STR > AGI > INT > STR)
         const monster = opponent as Monster;
-        const allWeapons = [...equippedWeapons, ...equippedSpells] as WeaponTemplate[];
-        const counterResult = pickWeaponForMonster(monster.entityClass, allWeapons);
+        const allWeapons = [
+          ...equippedWeapons,
+          ...equippedSpells,
+        ] as WeaponTemplate[];
+        const counterResult = pickWeaponForMonster(
+          monster.entityClass,
+          allWeapons,
+        );
         const bestWeapon = counterResult ?? allWeapons[0];
 
         console.info('[autoFight] DEBUG', {
@@ -497,8 +549,12 @@ export const TileDetailsPanel = (): JSX.Element => {
           monsterName: monster.name,
           monsterId: monster.id,
           characterId: character.id,
-          counterWeapon: counterResult ? { tokenId: counterResult.tokenId, name: counterResult.name } : 'NONE (using fallback)',
-          selectedWeapon: bestWeapon ? { tokenId: bestWeapon.tokenId, name: bestWeapon.name } : 'NONE',
+          counterWeapon: counterResult
+            ? { tokenId: counterResult.tokenId, name: counterResult.name }
+            : 'NONE (using fallback)',
+          selectedWeapon: bestWeapon
+            ? { tokenId: bestWeapon.tokenId, name: bestWeapon.name }
+            : 'NONE',
           allWeaponsCount: allWeapons.length,
           equippedWeaponsCount: equippedWeapons.length,
           equippedSpellsCount: equippedSpells.length,
@@ -510,7 +566,6 @@ export const TileDetailsPanel = (): JSX.Element => {
 
         setPendingOpponent({
           name: opponent.name,
-          image: getMonsterImage(opponent.name),
         });
 
         const result = await encounterTx.execute(async () => {
@@ -529,7 +584,11 @@ export const TileDetailsPanel = (): JSX.Element => {
         if (result !== undefined) {
           refreshCharacter();
           import('../utils/analytics').then(({ trackCombatStarted }) =>
-            trackCombatStarted(opponent.name, Number(opponent.level ?? 1n), Number(character.level)),
+            trackCombatStarted(
+              opponent.name,
+              Number(opponent.level ?? 1n),
+              Number(character.level),
+            ),
           );
         }
         return;
@@ -546,9 +605,6 @@ export const TileDetailsPanel = (): JSX.Element => {
       setIsWaitingForBattle(true);
       setPendingOpponent({
         name: opponent.name,
-        image: encounterType === EncounterType.PvE
-          ? getMonsterImage(opponent.name)
-          : (opponent as Character).image,
       });
 
       const result = await encounterTx.execute(async () => {
@@ -565,11 +621,18 @@ export const TileDetailsPanel = (): JSX.Element => {
         refreshCharacter();
         if (encounterType === EncounterType.PvE) {
           import('../utils/analytics').then(({ trackCombatStarted }) =>
-            trackCombatStarted(opponent.name, Number(opponent.level ?? 1n), Number(character.level)),
+            trackCombatStarted(
+              opponent.name,
+              Number(opponent.level ?? 1n),
+              Number(character.level),
+            ),
           );
         } else {
           import('../utils/analytics').then(({ trackPvpStarted }) =>
-            trackPvpStarted(Number(opponent.level ?? 1n), Number(character.level)),
+            trackPvpStarted(
+              Number(opponent.level ?? 1n),
+              Number(character.level),
+            ),
           );
         }
         // Don't clear isWaitingForBattle — effect clears when currentBattle arrives
@@ -689,7 +752,11 @@ export const TileDetailsPanel = (): JSX.Element => {
     intModifier: bigint;
     strModifier: bigint;
   } = useMemo(() => {
-    const zero = { agiModifier: BigInt(0), intModifier: BigInt(0), strModifier: BigInt(0) };
+    const zero = {
+      agiModifier: BigInt(0),
+      intModifier: BigInt(0),
+      strModifier: BigInt(0),
+    };
     if (!opponent) return zero;
 
     const activeOpponentEffects = statusEffectActions.filter(
@@ -758,11 +825,16 @@ export const TileDetailsPanel = (): JSX.Element => {
     intModifier: bigint;
     strModifier: bigint;
   } = useMemo(() => {
-    const zero = { agiModifier: BigInt(0), intModifier: BigInt(0), strModifier: BigInt(0) };
+    const zero = {
+      agiModifier: BigInt(0),
+      intModifier: BigInt(0),
+      strModifier: BigInt(0),
+    };
     if (!userCharacterForBattleRendering) return zero;
 
     const activeUserEffects = statusEffectActions.filter(
-      action => action.active && action.victimId === userCharacterForBattleRendering.id,
+      action =>
+        action.active && action.victimId === userCharacterForBattleRendering.id,
     );
     if (activeUserEffects.length === 0) return zero;
 
@@ -784,35 +856,37 @@ export const TileDetailsPanel = (): JSX.Element => {
   // Find latest DoT data for each entity in the current battle
   const latestUserDot = useMemo(() => {
     if (!userCharacterForBattleRendering) return null;
-    return dotActions
-      .filter(
-        d =>
-          d.entityId.toLowerCase() ===
-          userCharacterForBattleRendering.id.toLowerCase(),
-      )
-      .sort((a, b) => (a.turnNumber > b.turnNumber ? 1 : -1))
-      .pop() ?? null;
+    return (
+      dotActions
+        .filter(
+          d =>
+            d.entityId.toLowerCase() ===
+            userCharacterForBattleRendering.id.toLowerCase(),
+        )
+        .sort((a, b) => (a.turnNumber > b.turnNumber ? 1 : -1))
+        .pop() ?? null
+    );
   }, [dotActions, userCharacterForBattleRendering]);
 
   const latestOpponentDot = useMemo(() => {
     if (!opponent) return null;
-    return dotActions
-      .filter(
-        d => d.entityId.toLowerCase() === opponent.id.toLowerCase(),
-      )
-      .sort((a, b) => (a.turnNumber > b.turnNumber ? 1 : -1))
-      .pop() ?? null;
+    return (
+      dotActions
+        .filter(d => d.entityId.toLowerCase() === opponent.id.toLowerCase())
+        .sort((a, b) => (a.turnNumber > b.turnNumber ? 1 : -1))
+        .pop() ?? null
+    );
   }, [dotActions, opponent]);
 
-  const {
-    displayedHp: userDisplayedHp,
-    isDotTicking: isUserDotTicking,
-  } = useBattleHpAnimation({
-    actualHp: (userCharacterForBattleRendering?.currentHp ?? 0n) + pendingCounterattackDamage,
-    dotDamage: latestUserDot?.totalDamage ?? 0n,
-    dotTurnNumber: latestUserDot?.turnNumber ?? 0n,
-    isInBattle: !!currentBattle,
-  });
+  const { displayedHp: userDisplayedHp, isDotTicking: isUserDotTicking } =
+    useBattleHpAnimation({
+      actualHp:
+        (userCharacterForBattleRendering?.currentHp ?? 0n) +
+        pendingCounterattackDamage,
+      dotDamage: latestUserDot?.totalDamage ?? 0n,
+      dotTurnNumber: latestUserDot?.turnNumber ?? 0n,
+      isInBattle: !!currentBattle,
+    });
 
   const {
     displayedHp: opponentDisplayedHp,
@@ -824,7 +898,8 @@ export const TileDetailsPanel = (): JSX.Element => {
     isInBattle: !!currentBattle,
   });
 
-  const battleResolved = currentBattle?.encounterId === lastestBattleOutcome?.encounterId;
+  const battleResolved =
+    currentBattle?.encounterId === lastestBattleOutcome?.encounterId;
   const battleOver = Boolean(battleResolved && !isBattleResolutionPending);
   const opponentDefeated = opponentDisplayedHp <= 0n && battleOver;
   const userDefeated = userDisplayedHp <= 0n && battleOver;
@@ -933,7 +1008,12 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (currentBattle && opponent && userCharacterForBattleRendering && !autoAdventureMode) {
+  if (
+    currentBattle &&
+    opponent &&
+    userCharacterForBattleRendering &&
+    !autoAdventureMode
+  ) {
     // ── SHOW_Z2: Cinematic single-canvas battle scene ───────────────────
     if (SHOW_Z2) {
       return (
@@ -994,14 +1074,41 @@ export const TileDetailsPanel = (): JSX.Element => {
                 w="100%"
               />
               <HStack spacing={2}>
-                {([
-                  { label: 'AGI', color: '#5A8A3E', base: userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier, mod: activeUserBattleEffectModifications.agiModifier },
-                  { label: 'INT', color: '#4A7AB5', base: userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier, mod: activeUserBattleEffectModifications.intModifier },
-                  { label: 'STR', color: '#B85C3A', base: userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier, mod: activeUserBattleEffectModifications.strModifier },
-                ] as const).map(({ label, color, base, mod }) => (
+                {(
+                  [
+                    {
+                      label: 'AGI',
+                      color: '#5A8A3E',
+                      base:
+                        userCharacterForBattleRendering.agility -
+                        expiredUserEffectModifications.agiModifier,
+                      mod: activeUserBattleEffectModifications.agiModifier,
+                    },
+                    {
+                      label: 'INT',
+                      color: '#4A7AB5',
+                      base:
+                        userCharacterForBattleRendering.intelligence -
+                        expiredUserEffectModifications.intModifier,
+                      mod: activeUserBattleEffectModifications.intModifier,
+                    },
+                    {
+                      label: 'STR',
+                      color: '#B85C3A',
+                      base:
+                        userCharacterForBattleRendering.strength -
+                        expiredUserEffectModifications.strModifier,
+                      mod: activeUserBattleEffectModifications.strModifier,
+                    },
+                  ] as const
+                ).map(({ label, color, base, mod }) => (
                   <HStack key={label} spacing={0.5}>
-                    <Text size="2xs" color={color} fontWeight={600}>{label}</Text>
-                    <Text fontFamily="mono" size="2xs">{(base + mod).toString()}</Text>
+                    <Text size="2xs" color={color} fontWeight={600}>
+                      {label}
+                    </Text>
+                    <Text fontFamily="mono" size="2xs">
+                      {(base + mod).toString()}
+                    </Text>
                   </HStack>
                 ))}
               </HStack>
@@ -1018,18 +1125,45 @@ export const TileDetailsPanel = (): JSX.Element => {
                 w="100%"
               />
               <HStack spacing={2}>
-                {([
-                  { label: 'AGI', color: '#5A8A3E', stat: opponent.agility, expiredMod: expiredOpponentEffectModifications.agiModifier, activeMod: activeBattleEffectModifications.agiModifier },
-                  { label: 'INT', color: '#4A7AB5', stat: opponent.intelligence, expiredMod: expiredOpponentEffectModifications.intModifier, activeMod: activeBattleEffectModifications.intModifier },
-                  { label: 'STR', color: '#B85C3A', stat: opponent.strength, expiredMod: expiredOpponentEffectModifications.strModifier, activeMod: activeBattleEffectModifications.strModifier },
-                ] as const).map(({ label, color, stat, expiredMod, activeMod }) => {
+                {(
+                  [
+                    {
+                      label: 'AGI',
+                      color: '#5A8A3E',
+                      stat: opponent.agility,
+                      expiredMod:
+                        expiredOpponentEffectModifications.agiModifier,
+                      activeMod: activeBattleEffectModifications.agiModifier,
+                    },
+                    {
+                      label: 'INT',
+                      color: '#4A7AB5',
+                      stat: opponent.intelligence,
+                      expiredMod:
+                        expiredOpponentEffectModifications.intModifier,
+                      activeMod: activeBattleEffectModifications.intModifier,
+                    },
+                    {
+                      label: 'STR',
+                      color: '#B85C3A',
+                      stat: opponent.strength,
+                      expiredMod:
+                        expiredOpponentEffectModifications.strModifier,
+                      activeMod: activeBattleEffectModifications.strModifier,
+                    },
+                  ] as const
+                ).map(({ label, color, stat, expiredMod, activeMod }) => {
                   if (!stat) return null;
                   const base = stat - expiredMod;
                   const effective = base + activeMod;
                   return (
                     <HStack key={label} spacing={0.5}>
-                      <Text size="2xs" color={color} fontWeight={600}>{label}</Text>
-                      <Text fontFamily="mono" size="2xs">{effective.toString()}</Text>
+                      <Text size="2xs" color={color} fontWeight={600}>
+                        {label}
+                      </Text>
+                      <Text fontFamily="mono" size="2xs">
+                        {effective.toString()}
+                      </Text>
                     </HStack>
                   );
                 })}
@@ -1072,7 +1206,11 @@ export const TileDetailsPanel = (): JSX.Element => {
 
     // ── Legacy 50/50 split battle view ──────────────────────────────────
     return (
-      <Box ref={battleContainerRef} h={{ base: 'auto', lg: '100%' }} position="relative">
+      <Box
+        ref={battleContainerRef}
+        h={{ base: 'auto', lg: '100%' }}
+        position="relative"
+      >
         <style>
           {`
           @keyframes flicker {
@@ -1111,20 +1249,21 @@ export const TileDetailsPanel = (): JSX.Element => {
                 mt={{ base: 2, lg: 6 }}
                 spacing={{ base: 2, lg: 0 }}
               >
-                <Avatar
+                <CharacterMark
                   animation={isUserHit ? 'flicker .7s infinite' : 'none'}
-                  filter={userDefeated ? 'grayscale(100%)' : undefined}
+                  boxSize={{ base: '24px', lg: '40px' }}
                   mb={{ base: 0, lg: 2 }}
+                  name={userCharacterForBattleRendering.name}
                   opacity={userDefeated ? 0.4 : isUserHit ? 0 : 1}
-                  size={{ base: '2xs', lg: 'md' }}
-                  src={userCharacterForBattleRendering.image}
                 />
                 <HStack>
                   <Text fontWeight={700} size={{ base: 'sm', lg: 'lg' }}>
                     {userCharacterForBattleRendering.name}
                   </Text>
                   <ClassSymbol
-                    advancedClass={userCharacterForBattleRendering.advancedClass}
+                    advancedClass={
+                      userCharacterForBattleRendering.advancedClass
+                    }
                     entityClass={userCharacterForBattleRendering.entityClass}
                     mb={1}
                     theme="dark"
@@ -1145,66 +1284,114 @@ export const TileDetailsPanel = (): JSX.Element => {
                 )}
 
                 <Box mt={2} w="100%">
-                  <Box backgroundColor="rgba(196,184,158,0.08)" boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)" h="1px" w="100%" />
-                  <HStack justifyContent="center" spacing={{ base: 3, lg: 4 }} px={2} py={1} w="100%">
-                    {([
-                      { label: 'AGI', color: '#5A8A3E', base: userCharacterForBattleRendering.agility - expiredUserEffectModifications.agiModifier, mod: activeUserBattleEffectModifications.agiModifier },
-                      { label: 'INT', color: '#4A7AB5', base: userCharacterForBattleRendering.intelligence - expiredUserEffectModifications.intModifier, mod: activeUserBattleEffectModifications.intModifier },
-                      { label: 'STR', color: '#B85C3A', base: userCharacterForBattleRendering.strength - expiredUserEffectModifications.strModifier, mod: activeUserBattleEffectModifications.strModifier },
-                    ] as const).map(({ label, color, base, mod }) => {
+                  <Box
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                    h="1px"
+                    w="100%"
+                  />
+                  <HStack
+                    justifyContent="center"
+                    spacing={{ base: 3, lg: 4 }}
+                    px={2}
+                    py={1}
+                    w="100%"
+                  >
+                    {(
+                      [
+                        {
+                          label: 'AGI',
+                          color: '#5A8A3E',
+                          base:
+                            userCharacterForBattleRendering.agility -
+                            expiredUserEffectModifications.agiModifier,
+                          mod: activeUserBattleEffectModifications.agiModifier,
+                        },
+                        {
+                          label: 'INT',
+                          color: '#4A7AB5',
+                          base:
+                            userCharacterForBattleRendering.intelligence -
+                            expiredUserEffectModifications.intModifier,
+                          mod: activeUserBattleEffectModifications.intModifier,
+                        },
+                        {
+                          label: 'STR',
+                          color: '#B85C3A',
+                          base:
+                            userCharacterForBattleRendering.strength -
+                            expiredUserEffectModifications.strModifier,
+                          mod: activeUserBattleEffectModifications.strModifier,
+                        },
+                      ] as const
+                    ).map(({ label, color, base, mod }) => {
                       const effective = base + mod;
                       return (
                         <HStack key={label} spacing={1}>
-                          <Text size={{ base: '2xs', lg: 'xs' }} color={color} fontWeight={600}>{label}</Text>
-                          <Text fontFamily="mono" size={{ base: '2xs', lg: 'xs' }}>
-                            {effective.toString()}{mod > 0n && <Text as="span" color="cyan.300">{` (+${mod.toString()})`}</Text>}{mod < 0n && <Text as="span" color="orange.300">{` (${mod.toString()})`}</Text>}
+                          <Text
+                            size={{ base: '2xs', lg: 'xs' }}
+                            color={color}
+                            fontWeight={600}
+                          >
+                            {label}
+                          </Text>
+                          <Text
+                            fontFamily="mono"
+                            size={{ base: '2xs', lg: 'xs' }}
+                          >
+                            {effective.toString()}
+                            {mod > 0n && (
+                              <Text
+                                as="span"
+                                color="cyan.300"
+                              >{` (+${mod.toString()})`}</Text>
+                            )}
+                            {mod < 0n && (
+                              <Text
+                                as="span"
+                                color="orange.300"
+                              >{` (${mod.toString()})`}</Text>
+                            )}
                           </Text>
                         </HStack>
                       );
                     })}
                   </HStack>
-                  <Box backgroundColor="rgba(196,184,158,0.08)" boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)" h="1px" w="100%" />
+                  <Box
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                    h="1px"
+                    w="100%"
+                  />
                 </Box>
               </VStack>
             </VStack>
 
             <VStack w="50%" position="relative" minH={{ lg: '280px' }}>
-              {/* ASCII monster backdrop — fills the monster's half */}
-              {isDesktop && currentBattle.encounterType === EncounterType.PvE && (
-                <BattleMonsterAscii
-                  monsterName={opponent.name}
-                  defeated={opponentDefeated}
-                  hit={isMonsterHit}
-                />
-              )}
               {currentBattle.encounterType === EncounterType.PvE ? (
-                <VStack mt={{ base: 2, lg: 6 }} spacing={0} position="relative" zIndex={2}>
-                  {!isDesktop && (
-                    <Avatar
-                      animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
-                      bgColor="grey300"
-                      boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                      filter={opponentDefeated ? 'grayscale(100%)' : undefined}
-                      mb={1}
-                      opacity={opponentDefeated ? 0.4 : isMonsterHit ? 0 : 1}
-                      size="2xs"
-                      src={getMonsterImage(opponent.name)}
-                      name={opponent.name}
-                    >
-                      {!getMonsterImage(opponent.name) && (
-                        <Text
-                          animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
-                          fontSize="42px"
-                        >
-                          {getEmoji(opponent.name)}
-                        </Text>
-                      )}
-                    </Avatar>
-                  )}
+                <VStack
+                  mt={{ base: 2, lg: 6 }}
+                  spacing={0}
+                  position="relative"
+                  zIndex={2}
+                >
+                  <MonsterMark
+                    animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
+                    boxSize={{ base: '24px', lg: '40px' }}
+                    mb={1}
+                    name={opponent.name}
+                    opacity={opponentDefeated ? 0.4 : isMonsterHit ? 0 : 1}
+                  />
                   <HStack>
                     {SHOW_Z2 ? (
                       <ThreatWeightedName
-                        name={opponentDefeated ? t('tile.opponentDefeated', { name: opponent.name }) : opponent.name}
+                        name={
+                          opponentDefeated
+                            ? t('tile.opponentDefeated', {
+                                name: opponent.name,
+                              })
+                            : opponent.name
+                        }
                         threat={Number(opponent.level)}
                         defeated={opponentDefeated}
                         fontSize={{ base: 'sm', lg: 'lg' }}
@@ -1215,7 +1402,9 @@ export const TileDetailsPanel = (): JSX.Element => {
                         size={{ base: 'sm', lg: 'lg' }}
                         color={opponentDefeated ? 'red.400' : undefined}
                       >
-                        {opponentDefeated ? t('tile.opponentDefeated', { name: opponent.name }) : opponent.name}
+                        {opponentDefeated
+                          ? t('tile.opponentDefeated', { name: opponent.name })
+                          : opponent.name}
                       </Text>
                     )}
                     <ClassSymbol
@@ -1233,13 +1422,12 @@ export const TileDetailsPanel = (): JSX.Element => {
                   mt={{ base: 2, lg: 6 }}
                   spacing={0}
                 >
-                  <Avatar
+                  <CharacterMark
                     animation={isMonsterHit ? 'flicker .7s infinite' : 'none'}
-                    filter={opponentDefeated ? 'grayscale(100%)' : undefined}
+                    boxSize={{ base: '24px', lg: '40px' }}
                     mb={{ base: 1, lg: 2 }}
+                    name={opponent.name}
                     opacity={opponentDefeated ? 0.4 : isMonsterHit ? 0 : 1}
-                    size={{ base: '2xs', lg: 'md' }}
-                    src={opponent.image}
                   />
                   <HStack>
                     <Text
@@ -1247,7 +1435,9 @@ export const TileDetailsPanel = (): JSX.Element => {
                       size={{ base: 'sm', lg: 'lg' }}
                       color={opponentDefeated ? 'red.400' : undefined}
                     >
-                      {opponentDefeated ? t('tile.opponentDefeated', { name: opponent.name }) : opponent.name}
+                      {opponentDefeated
+                        ? t('tile.opponentDefeated', { name: opponent.name })
+                        : opponent.name}
                     </Text>
                     <ClassSymbol
                       advancedClass={(opponent as Character).advancedClass}
@@ -1272,27 +1462,90 @@ export const TileDetailsPanel = (): JSX.Element => {
                 )}
 
                 <Box mt={2} w="100%">
-                  <Box backgroundColor="rgba(196,184,158,0.08)" boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)" h="1px" w="100%" />
-                  <HStack justifyContent="center" spacing={{ base: 3, lg: 4 }} px={2} py={1} w="100%">
-                    {([
-                      { label: 'AGI', color: '#5A8A3E', stat: opponent.agility, expiredMod: expiredOpponentEffectModifications.agiModifier, activeMod: activeBattleEffectModifications.agiModifier },
-                      { label: 'INT', color: '#4A7AB5', stat: opponent.intelligence, expiredMod: expiredOpponentEffectModifications.intModifier, activeMod: activeBattleEffectModifications.intModifier },
-                      { label: 'STR', color: '#B85C3A', stat: opponent.strength, expiredMod: expiredOpponentEffectModifications.strModifier, activeMod: activeBattleEffectModifications.strModifier },
-                    ] as const).map(({ label, color, stat, expiredMod, activeMod }) => {
+                  <Box
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                    h="1px"
+                    w="100%"
+                  />
+                  <HStack
+                    justifyContent="center"
+                    spacing={{ base: 3, lg: 4 }}
+                    px={2}
+                    py={1}
+                    w="100%"
+                  >
+                    {(
+                      [
+                        {
+                          label: 'AGI',
+                          color: '#5A8A3E',
+                          stat: opponent.agility,
+                          expiredMod:
+                            expiredOpponentEffectModifications.agiModifier,
+                          activeMod:
+                            activeBattleEffectModifications.agiModifier,
+                        },
+                        {
+                          label: 'INT',
+                          color: '#4A7AB5',
+                          stat: opponent.intelligence,
+                          expiredMod:
+                            expiredOpponentEffectModifications.intModifier,
+                          activeMod:
+                            activeBattleEffectModifications.intModifier,
+                        },
+                        {
+                          label: 'STR',
+                          color: '#B85C3A',
+                          stat: opponent.strength,
+                          expiredMod:
+                            expiredOpponentEffectModifications.strModifier,
+                          activeMod:
+                            activeBattleEffectModifications.strModifier,
+                        },
+                      ] as const
+                    ).map(({ label, color, stat, expiredMod, activeMod }) => {
                       if (!stat) return null;
                       const base = stat - expiredMod;
                       const effective = base + activeMod;
                       return (
                         <HStack key={label} spacing={1}>
-                          <Text size={{ base: '2xs', lg: 'xs' }} color={color} fontWeight={600}>{label}</Text>
-                          <Text fontFamily="mono" size={{ base: '2xs', lg: 'xs' }}>
-                            {effective.toString()}{activeMod > 0n && <Text as="span" color="cyan.300">{` (+${activeMod.toString()})`}</Text>}{activeMod < 0n && <Text as="span" color="orange.300">{` (${activeMod.toString()})`}</Text>}
+                          <Text
+                            size={{ base: '2xs', lg: 'xs' }}
+                            color={color}
+                            fontWeight={600}
+                          >
+                            {label}
+                          </Text>
+                          <Text
+                            fontFamily="mono"
+                            size={{ base: '2xs', lg: 'xs' }}
+                          >
+                            {effective.toString()}
+                            {activeMod > 0n && (
+                              <Text
+                                as="span"
+                                color="cyan.300"
+                              >{` (+${activeMod.toString()})`}</Text>
+                            )}
+                            {activeMod < 0n && (
+                              <Text
+                                as="span"
+                                color="orange.300"
+                              >{` (${activeMod.toString()})`}</Text>
+                            )}
                           </Text>
                         </HStack>
                       );
                     })}
                   </HStack>
-                  <Box backgroundColor="rgba(196,184,158,0.08)" boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)" h="1px" w="100%" />
+                  <Box
+                    backgroundColor="rgba(196,184,158,0.08)"
+                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                    h="1px"
+                    w="100%"
+                  />
                 </Box>
               </VStack>
             </VStack>
@@ -1302,7 +1555,15 @@ export const TileDetailsPanel = (): JSX.Element => {
     );
   }
 
-  if (isWaitingForBattle || encounterTx.isLoading || pendingOpponent || (!autoAdventureMode && currentBattle && (!opponent || !userCharacterForBattleRendering) && currentBattle.encounterId !== lastestBattleOutcome?.encounterId)) {
+  if (
+    isWaitingForBattle ||
+    encounterTx.isLoading ||
+    pendingOpponent ||
+    (!autoAdventureMode &&
+      currentBattle &&
+      (!opponent || !userCharacterForBattleRendering) &&
+      currentBattle.encounterId !== lastestBattleOutcome?.encounterId)
+  ) {
     return (
       <Box h="100%" bg="gray.900" position="relative" overflow="hidden">
         <style>
@@ -1325,15 +1586,17 @@ export const TileDetailsPanel = (): JSX.Element => {
           bottom={0}
           bg="linear-gradient(180deg, rgba(200,30,30,0.15) 0%, transparent 40%, transparent 60%, rgba(200,30,30,0.15) 100%)"
         />
-        <VStack h="100%" justifyContent="center" spacing={5} position="relative">
-          {pendingOpponent?.image && (
-            <Avatar
-              size={{ base: 'lg', lg: 'xl' }}
-              src={pendingOpponent.image}
+        <VStack
+          h="100%"
+          justifyContent="center"
+          spacing={5}
+          position="relative"
+        >
+          {pendingOpponent && (
+            <MonsterMark
+              boxSize={{ base: '56px', lg: '72px' }}
               name={pendingOpponent.name}
               animation="slideIn 0.3s ease-out"
-              border="3px solid"
-              borderColor="red.600"
             />
           )}
           <Text
@@ -1344,7 +1607,9 @@ export const TileDetailsPanel = (): JSX.Element => {
             size={{ base: 'md', lg: 'xl' }}
             textTransform="uppercase"
           >
-            {pendingOpponent ? t('combat.fighting', { name: pendingOpponent.name }) : t('combat.initiatingBattle')}
+            {pendingOpponent
+              ? t('combat.fighting', { name: pendingOpponent.name })
+              : t('combat.initiatingBattle')}
           </Text>
           <Spinner color="red.400" size="lg" thickness="3px" speed="0.8s" />
         </VStack>
@@ -1353,7 +1618,10 @@ export const TileDetailsPanel = (): JSX.Element => {
   }
 
   return (
-    <Box h={{ base: 'calc(100% - 36px)', md: 'calc(100% - 46px)' }} position="relative">
+    <Box
+      h={{ base: 'calc(100% - 36px)', md: 'calc(100% - 46px)' }}
+      position="relative"
+    >
       <HStack bgColor="blue500" h={{ base: '36px', md: '46px' }}>
         <Grid
           alignItems="center"
@@ -1370,14 +1638,14 @@ export const TileDetailsPanel = (): JSX.Element => {
           )}
           {!isHomeTile && (
             <GridItem colSpan={2}>
-              <Heading size="sm">
-                {t('tile.monsters')}
-              </Heading>
+              <Heading size="sm">{t('tile.monsters')}</Heading>
             </GridItem>
           )}
           <GridItem colSpan={2}>
             <Heading size="sm">
-              {shopsOnTile.length > 0 && !isHomeTile ? t('tile.shopsAndPlayers') : t('tile.players')}
+              {shopsOnTile.length > 0 && !isHomeTile
+                ? t('tile.shopsAndPlayers')
+                : t('tile.players')}
             </Heading>
           </GridItem>
         </Grid>
@@ -1415,54 +1683,54 @@ export const TileDetailsPanel = (): JSX.Element => {
                 </Text>
               )}
               {isHomeTile && !character.inBattle && (
-                  <VStack
-                    bg="rgba(0, 0, 0, 0.45)"
-                    borderRadius="md"
-                    mt={3}
-                    px={3}
-                    py={2}
-                    spacing={1}
-                  >
-                    {character.currentHp > BigInt(0) &&
-                    character.currentHp < character.maxHp ? (
-                      <>
-                        <Text
-                          color="orange.300"
-                          fontFamily="mono"
-                          fontSize="xs"
-                          fontStyle="italic"
-                          textAlign="center"
-                        >
-                          {t('tile.fireCracklesNear')}
-                        </Text>
-                        <Button
-                          alignSelf="center"
-                          isDisabled={restTx.isLoading}
-                          isLoading={restTx.isLoading}
-                          loadingText={t('tile.restingByFire')}
-                          onClick={onRest}
-                          size="xs"
-                          variant="outline"
-                          color="orange.200"
-                          borderColor="orange.400"
-                          _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
-                        >
-                          {t('tile.restByFire')}
-                        </Button>
-                      </>
-                    ) : (
+                <VStack
+                  bg="rgba(0, 0, 0, 0.45)"
+                  borderRadius="md"
+                  mt={3}
+                  px={3}
+                  py={2}
+                  spacing={1}
+                >
+                  {character.currentHp > BigInt(0) &&
+                  character.currentHp < character.maxHp ? (
+                    <>
                       <Text
-                        color="green.300"
+                        color="orange.300"
                         fontFamily="mono"
                         fontSize="xs"
                         fontStyle="italic"
                         textAlign="center"
                       >
-                        {t('tile.fullyRested')}
+                        {t('tile.fireCracklesNear')}
                       </Text>
-                    )}
-                  </VStack>
-                )}
+                      <Button
+                        alignSelf="center"
+                        isDisabled={restTx.isLoading}
+                        isLoading={restTx.isLoading}
+                        loadingText={t('tile.restingByFire')}
+                        onClick={onRest}
+                        size="xs"
+                        variant="outline"
+                        color="orange.200"
+                        borderColor="orange.400"
+                        _hover={{ bg: 'orange.900', borderColor: 'orange.300' }}
+                      >
+                        {t('tile.restByFire')}
+                      </Button>
+                    </>
+                  ) : (
+                    <Text
+                      color="green.300"
+                      fontFamily="mono"
+                      fontSize="xs"
+                      fontStyle="italic"
+                      textAlign="center"
+                    >
+                      {t('tile.fullyRested')}
+                    </Text>
+                  )}
+                </VStack>
+              )}
             </VStack>
             <Box
               backgroundColor="rgba(196,184,158,0.08)"
@@ -1611,41 +1879,42 @@ export const TileDetailsPanel = (): JSX.Element => {
             h="6px"
             w="100%"
           />
-          {stage >= OnboardingStage.FIRST_STEPS && stage < OnboardingStage.FIRST_BLOOD && visibleMonstersOnTile.length === 0 && (
-            <VStack
-              align="center"
-              justify="center"
-              py={8}
-              px={4}
-              spacing={2}
-            >
-              <Text
-                animation={`${explorePulse} 3s ease-in-out infinite`}
-                color="#A8DEFF"
-                fontFamily="Cinzel, serif"
-                fontSize={{ base: 'md', lg: 'lg' }}
-                fontWeight={600}
-                letterSpacing="0.1em"
-                textAlign="center"
-                textShadow="0 0 20px rgba(168, 222, 255, 0.4), 0 0 40px rgba(168, 222, 255, 0.15)"
-              >
-                {t('tile.exploreZone', { zoneName: currentZoneName })}
-              </Text>
-              <Text
-                color="#5A5040"
-                fontSize="2xs"
-                letterSpacing="0.15em"
-                textTransform="uppercase"
-              >
-                {t('tile.useCompass')}
-              </Text>
-            </VStack>
-          )}
+          {stage >= OnboardingStage.FIRST_STEPS &&
+            stage < OnboardingStage.FIRST_BLOOD &&
+            visibleMonstersOnTile.length === 0 && (
+              <VStack align="center" justify="center" py={8} px={4} spacing={2}>
+                <Text
+                  animation={`${explorePulse} 3s ease-in-out infinite`}
+                  color="#A8DEFF"
+                  fontFamily="Cinzel, serif"
+                  fontSize={{ base: 'md', lg: 'lg' }}
+                  fontWeight={600}
+                  letterSpacing="0.1em"
+                  textAlign="center"
+                  textShadow="0 0 20px rgba(168, 222, 255, 0.4), 0 0 40px rgba(168, 222, 255, 0.15)"
+                >
+                  {t('tile.exploreZone', { zoneName: currentZoneName })}
+                </Text>
+                <Text
+                  color="#5A5040"
+                  fontSize="2xs"
+                  letterSpacing="0.15em"
+                  textTransform="uppercase"
+                >
+                  {t('tile.useCompass')}
+                </Text>
+              </VStack>
+            )}
           {stage >= OnboardingStage.ESTABLISHED && (
             <>
               <HStack h={ROW_HEIGHT} justifyContent="end" px={4}>
-                <Text size={{ base: '3xs', sm: '2xs', md: 'xs' }} textAlign="right">
-                  {inSafetyZone ? t('tile.theAlcove') : t('tile.theWindingDark')}
+                <Text
+                  size={{ base: '3xs', sm: '2xs', md: 'xs' }}
+                  textAlign="right"
+                >
+                  {inSafetyZone
+                    ? t('tile.theAlcove')
+                    : t('tile.theWindingDark')}
                 </Text>
               </HStack>
               <Box
@@ -1688,8 +1957,14 @@ export const TileDetailsPanel = (): JSX.Element => {
             ))}
           {/* Dead world boss respawn timer — shows on the boss's spawn tile */}
           {worldBosses
-            .filter(b => !b.isAlive && b.lastKilledAt > 0 && position
-              && b.spawnX === position.x && b.spawnY === position.y)
+            .filter(
+              b =>
+                !b.isAlive &&
+                b.lastKilledAt > 0 &&
+                position &&
+                b.spawnX === position.x &&
+                b.spawnY === position.y,
+            )
             .map(boss => {
               const respawnAt = boss.lastKilledAt + boss.respawnSeconds;
               const now = Math.floor(Date.now() / 1000);
@@ -1704,9 +1979,15 @@ export const TileDetailsPanel = (): JSX.Element => {
                   spacing={3}
                   opacity={0.6}
                 >
-                  <Text color="#8A7E6A" size={{ base: '2xs', md: 'sm' }} fontStyle="italic">
+                  <Text
+                    color="#8A7E6A"
+                    size={{ base: '2xs', md: 'sm' }}
+                    fontStyle="italic"
+                  >
                     {remaining > 0
-                      ? t('tile.worldBossReturns', { time: `${minutes}m ${seconds.toString().padStart(2, '0')}s` })
+                      ? t('tile.worldBossReturns', {
+                          time: `${minutes}m ${seconds.toString().padStart(2, '0')}s`,
+                        })
                       : t('tile.worldBossStirring')}
                   </Text>
                 </HStack>
@@ -1762,7 +2043,14 @@ export const TileDetailsPanel = (): JSX.Element => {
             i18nKey="tile.noMovesBody"
             ns="ui"
             components={{
-              link: <Text as={Link} color="blue" to={`/characters/${character?.id}`} _hover={{ textDecoration: 'underline' }} />,
+              link: (
+                <Text
+                  as={Link}
+                  color="blue"
+                  to={`/characters/${character?.id}`}
+                  _hover={{ textDecoration: 'underline' }}
+                />
+              ),
             }}
           />
         </VStack>
@@ -1806,7 +2094,6 @@ export const TileDetailsPanel = (): JSX.Element => {
   );
 };
 
-
 const OpponentRow = ({
   encounterType,
   opponent,
@@ -1816,13 +2103,20 @@ const OpponentRow = ({
 }: {
   encounterType: EncounterType;
   opponent: Character | Monster;
-  playerStats: { strength: bigint; agility: bigint; intelligence: bigint; level: bigint; maxHp: bigint };
+  playerStats: {
+    strength: bigint;
+    agility: bigint;
+    intelligence: bigint;
+    level: bigint;
+    maxHp: bigint;
+  };
   onClick: () => void;
   isWorldBoss?: boolean;
 }) => {
   const { t } = useTranslation('ui');
   const { inBattle, level, name } = opponent;
-  const isElite = encounterType === EncounterType.PvE && (opponent as Monster).isElite;
+  const isElite =
+    encounterType === EncounterType.PvE && (opponent as Monster).isElite;
   const navigate = useNavigate();
 
   const inCooldown = useMemo(() => {
@@ -1876,16 +2170,24 @@ const OpponentRow = ({
           label={(opponent as Monster).description || ''}
           placement="top"
           hasArrow
-          isDisabled={encounterType !== EncounterType.PvE || !(opponent as Monster).description}
+          isDisabled={
+            encounterType !== EncounterType.PvE ||
+            !(opponent as Monster).description
+          }
           shouldWrapChildren
         >
           <HStack justifyContent="start" spacing={4}>
-            {(encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image) && (
-              <Avatar
-                filter={disableRow ? 'grayscale(100%)' : 'none'}
-                size={{ base: '2xs', md: 'xs' }}
-                src={encounterType === EncounterType.PvE ? getMonsterImage(name) : opponent.image}
+            {encounterType === EncounterType.PvE ? (
+              <MonsterMark
+                boxSize={{ base: '24px', md: '28px' }}
                 name={name}
+                opacity={disableRow ? 0.45 : 1}
+              />
+            ) : (
+              <CharacterMark
+                boxSize={{ base: '24px', md: '28px' }}
+                name={name}
+                opacity={disableRow ? 0.45 : 1}
               />
             )}
             <Text
@@ -1894,7 +2196,12 @@ const OpponentRow = ({
               fontWeight={isWorldBoss ? 700 : undefined}
               size={{ base: '2xs', sm: '2xs', md: 'sm', lg: 'md' }}
             >
-              {isWorldBoss ? `${t('tile.bossPrefix')} \u2022 ` : isElite ? '★ ' : ''}{name}
+              {isWorldBoss
+                ? `${t('tile.bossPrefix')} \u2022 `
+                : isElite
+                  ? '★ '
+                  : ''}
+              {name}
             </Text>
           </HStack>
         </Tooltip>
@@ -1907,12 +2214,18 @@ const OpponentRow = ({
               (opponent as Character).advancedClass != null &&
               (opponent as Character).advancedClass !== AdvancedClass.None && (
                 <Text
-                  color={ADVANCED_CLASS_COLORS[(opponent as Character).advancedClass]}
+                  color={
+                    ADVANCED_CLASS_COLORS[(opponent as Character).advancedClass]
+                  }
                   fontFamily="'Fira Code', monospace"
                   fontSize="2xs"
                   fontWeight={700}
                 >
-                  {t(ADVANCED_CLASS_I18N_KEYS[(opponent as Character).advancedClass])}
+                  {t(
+                    ADVANCED_CLASS_I18N_KEYS[
+                      (opponent as Character).advancedClass
+                    ],
+                  )}
                 </Text>
               )}
           </HStack>
@@ -1967,11 +2280,6 @@ const explorePulse = keyframes`
 const echoPulse = keyframes`
   0%, 100% { filter: brightness(0.8); }
   50%      { filter: brightness(1.3); }
-`;
-
-const movementHintPulse = keyframes`
-  0%, 100% { filter: brightness(0.85); }
-  50%      { filter: brightness(1.2); }
 `;
 
 const FragmentEchoRow = ({

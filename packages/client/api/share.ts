@@ -3,8 +3,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const GAME_URL = 'https://ultimatedominion.com';
 
 const RARITY_NAMES: Record<string, string> = {
-  '0': 'Worn', '1': 'Common', '2': 'Uncommon',
-  '3': 'Rare', '4': 'Epic', '5': 'Legendary',
+  '0': 'Worn',
+  '1': 'Common',
+  '2': 'Uncommon',
+  '3': 'Rare',
+  '4': 'Epic',
+  '5': 'Legendary',
 };
 
 function getTitle(params: URLSearchParams): string {
@@ -67,7 +71,11 @@ function getDescription(params: URLSearchParams): string {
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
@@ -76,7 +84,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
   const title = escapeHtml(getTitle(params));
   const description = escapeHtml(getDescription(params));
-  const ogImageUrl = `${GAME_URL}/api/og?${params.toString()}`;
+  const ogImageUrl = `${GAME_URL}/og-image.png`;
 
   const html = `<!DOCTYPE html>
 <html>

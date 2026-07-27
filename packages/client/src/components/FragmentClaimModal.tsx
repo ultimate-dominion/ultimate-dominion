@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
-  Image,
   keyframes,
   Modal,
   ModalBody,
@@ -13,15 +11,17 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-import SafeTypist from './SafeTypist';
-import { ShareButton } from './ShareButton';
-
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments, type FragmentStatus } from '../contexts/FragmentContext';
-import { getFragmentColor, getFragmentImage } from '../utils/fragmentImages';
 import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
+import { FRAGMENT_COLOR } from '../utils/fragmentStyle';
+
+import { FragmentMark } from './EntityMark';
+import SafeTypist from './SafeTypist';
+import { ShareButton } from './ShareButton';
 
 /* ──────────────────────── Animations ──────────────────────── */
 
@@ -68,8 +68,7 @@ export const FragmentClaimModal = ({
   const { claimFragment, isClaiming, fragments } = useFragments();
   const { refreshCharacter } = useCharacter();
   const [isClaimed, setIsClaimed] = useState(false);
-  const color = getFragmentColor(fragment.name);
-  const imageSrc = getFragmentImage(fragment.name);
+  const color = FRAGMENT_COLOR;
   const modalSize = useBreakpointValue({ base: 'full', md: '2xl' });
 
   // Stagger content reveal
@@ -95,7 +94,9 @@ export const FragmentClaimModal = ({
   };
 
   const claimedCount = isClaimed
-    ? fragments.filter(f => f.claimed || f.fragmentType === fragment.fragmentType).length
+    ? fragments.filter(
+        f => f.claimed || f.fragmentType === fragment.fragmentType,
+      ).length
     : fragments.filter(f => f.claimed).length;
   const isAllCollected = claimedCount >= TOTAL_FRAGMENTS;
 
@@ -135,81 +136,50 @@ export const FragmentClaimModal = ({
           },
         }}
       >
-        <ModalBody p={0} overflowY="auto"
+        <ModalBody
+          p={0}
+          overflowY="auto"
           css={{
             '&::-webkit-scrollbar': { width: '4px' },
             '&::-webkit-scrollbar-track': { background: 'transparent' },
-            '&::-webkit-scrollbar-thumb': { background: `${color}30`, borderRadius: '2px' },
+            '&::-webkit-scrollbar-thumb': {
+              background: `${color}30`,
+              borderRadius: '2px',
+            },
           }}
         >
           <VStack spacing={0} align="stretch">
-            {/* ── Hero image (pre-claim only) ── */}
+            {/* ── Fragment identity (pre-claim only) ── */}
             {!isClaimed && (
-              imageSrc ? (
+              <Box
+                h={{ base: '180px', md: '200px' }}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bg={`${color}08`}
+                position="relative"
+                opacity={showContent ? 1 : 0}
+                animation={
+                  showContent
+                    ? `${artReveal} 0.8s ease-out forwards`
+                    : undefined
+                }
+              >
+                <FragmentMark
+                  boxSize="72px"
+                  index={fragment.fragmentType}
+                  title={fragment.name}
+                />
                 <Box
-                  position="relative"
-                  opacity={showContent ? 1 : 0}
-                  animation={showContent ? `${artReveal} 1s cubic-bezier(0.16, 1, 0.3, 1) forwards` : undefined}
-                >
-                  <Image
-                    src={imageSrc}
-                    alt={fragment.name}
-                    w="100%"
-                    maxH={{ base: '50vh', md: '420px' }}
-                    objectFit="contain"
-                    bg="#0A0908"
-                  />
-                  {/* Bottom fade */}
-                  <Box
-                    position="absolute"
-                    bottom={0}
-                    left={0}
-                    right={0}
-                    h="100px"
-                    bgGradient="linear(to-t, #1C1814, transparent)"
-                  />
-                  {/* Glowing edge */}
-                  <Box
-                    position="absolute"
-                    bottom={0}
-                    left={0}
-                    right={0}
-                    h="2px"
-                    bg={`${color}50`}
-                    animation={`${glowPulse(color)} 4s ease-in-out infinite`}
-                  />
-                </Box>
-              ) : (
-                <Box
-                  h={{ base: '30vh', md: '200px' }}
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  bg={`${color}08`}
-                  position="relative"
-                  opacity={showContent ? 1 : 0}
-                  animation={showContent ? `${artReveal} 0.8s ease-out forwards` : undefined}
-                >
-                  <Text
-                    color={`${color}50`}
-                    fontSize="sm"
-                    fontFamily="'Cinzel', serif"
-                    letterSpacing="widest"
-                    textTransform="uppercase"
-                  >
-                    Fragment {getRomanNumeral(fragment.fragmentType)}
-                  </Text>
-                  <Box
-                    position="absolute"
-                    bottom={0}
-                    left={0}
-                    right={0}
-                    h="2px"
-                    bg={`${color}50`}
-                    animation={`${glowPulse(color)} 4s ease-in-out infinite`}
-                  />
-                </Box>
-              )
+                  position="absolute"
+                  bottom={0}
+                  left={0}
+                  right={0}
+                  h="2px"
+                  bg={`${color}50`}
+                  animation={`${glowPulse(color)} 4s ease-in-out infinite`}
+                />
+              </Box>
             )}
 
             {/* ── Text content ── */}
@@ -220,7 +190,11 @@ export const FragmentClaimModal = ({
               pt={isClaimed ? 8 : 4}
               pb={4}
               opacity={showContent ? 1 : 0}
-              animation={showContent ? `${fadeUp} 0.6s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
+              animation={
+                showContent
+                  ? `${fadeUp} 0.6s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both`
+                  : undefined
+              }
             >
               {/* Fragment number */}
               <Text
@@ -231,7 +205,10 @@ export const FragmentClaimModal = ({
                 letterSpacing="widest"
                 textTransform="uppercase"
               >
-                {t('fragment.fragmentOf', { num: getRomanNumeral(fragment.fragmentType), total: getRomanNumeral(TOTAL_FRAGMENTS) })}
+                {t('fragment.fragmentOf', {
+                  num: getRomanNumeral(fragment.fragmentType),
+                  total: getRomanNumeral(TOTAL_FRAGMENTS),
+                })}
               </Text>
 
               {/* Title */}
@@ -265,9 +242,7 @@ export const FragmentClaimModal = ({
                   <Box mx="auto" w="60px" h="1px" bg={`${color}30`} />
 
                   {/* Narrative with typewriter */}
-                  <Box
-                    px={{ base: 0, md: 2 }}
-                  >
+                  <Box px={{ base: 0, md: 2 }}>
                     <SafeTypist
                       avgTypingDelay={25}
                       cursor={{ show: false }}
@@ -323,7 +298,10 @@ export const FragmentClaimModal = ({
                     textAlign="center"
                     fontFamily="mono"
                   >
-                    {t('fragment.discoveredAt', { x: fragment.triggerTileX, y: fragment.triggerTileY })}
+                    {t('fragment.discoveredAt', {
+                      x: fragment.triggerTileX,
+                      y: fragment.triggerTileY,
+                    })}
                   </Text>
                 </>
               )}
@@ -366,13 +344,15 @@ export const FragmentClaimModal = ({
           ) : (
             <VStack spacing={3}>
               <ShareButton
-                text={t('fragment.shareText', { num: getRomanNumeral(fragment.fragmentType), name: fragment.name })}
+                text={t('fragment.shareText', {
+                  num: getRomanNumeral(fragment.fragmentType),
+                  name: fragment.name,
+                })}
                 shareParams={{
                   type: 'fragment',
                   name: fragment.name,
                   num: fragment.fragmentType.toString(),
                 }}
-                imageSrc={imageSrc}
                 colorAccent={color}
               />
               <Button

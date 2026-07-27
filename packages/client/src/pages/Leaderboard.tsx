@@ -1,41 +1,39 @@
 import {
-  Avatar,
   Box,
   Button,
-  Center,
   Flex,
   Heading,
   HStack,
   Input,
   InputGroup,
   InputLeftElement,
-  Spinner,
   Stack,
   Text,
   Tooltip,
-  useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
 import FuzzySearch from 'fuzzy-search';
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { FaSearch, FaSortAmountDown, FaSortAmountUp, FaMedal, FaCrosshairs } from 'react-icons/fa';
+import {
+  FaSearch,
+  FaSortAmountDown,
+  FaSortAmountUp,
+  FaMedal,
+  FaCrosshairs,
+} from 'react-icons/fa';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatEther } from 'viem';
-import { SHOW_Z2 } from '../lib/env';
+
+import { CharacterMark } from '../components/EntityMark';
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { LocaleHead } from '../components/LocaleHead';
 import { Pagination } from '../components/Pagination';
 import { PolygonalCard } from '../components/PolygonalCard';
-import {
-  LeaderboardIconSvg,
-  MageSvg,
-  RogueSvg,
-  WarriorSvg,
-} from '../components/SVGs';
 import { useAuth } from '../contexts/AuthContext';
 import { useMap } from '../contexts/MapContext';
+import { SHOW_Z2 } from '../lib/env';
 import { useGameTable, useGameValue, toNumber } from '../lib/gameStore';
 import { CHARACTERS_PATH, HOME_PATH } from '../Routes';
 import { Character, StatsClasses } from '../utils/types';
@@ -47,7 +45,6 @@ type LeaderboardTab = 'rankings' | 'raceToMax' | 'pvpRankings';
 type ZoneCompletionEntry = {
   characterId: string;
   characterName: string;
-  characterImage?: string;
   completedAt: number;
   rank: number;
   hasBadge: boolean;
@@ -56,7 +53,6 @@ type ZoneCompletionEntry = {
 type PvpRankingEntry = {
   characterId: string;
   characterName: string;
-  characterImage?: string;
   elo: number;
   wins: number;
   losses: number;
@@ -65,7 +61,6 @@ type PvpRankingEntry = {
 
 export const Leaderboard = (): JSX.Element => {
   const { t } = useTranslation('ui');
-  const isSmallScreen = useBreakpointValue({ base: true, lg: false });
   const navigate = useNavigate();
   const { isAuthenticated: isConnected, isConnecting } = useAuth();
   const { allCharacters } = useMap();
@@ -88,15 +83,16 @@ export const Leaderboard = (): JSX.Element => {
     if (!zoneCompletionTable) return [];
 
     return Object.entries(zoneCompletionTable)
-      .map(([keyBytes, data]) => {
+      .map(([, data]) => {
         if (!data.completed) return null;
 
-        const character = allCharacters.find(c => c.id === (data.characterId as string));
+        const character = allCharacters.find(
+          c => c.id === (data.characterId as string),
+        );
 
         return {
           characterId: data.characterId as string,
           characterName: character?.name ?? 'Unknown',
-          characterImage: character?.image,
           completedAt: Number(data.completedAt),
           rank: Number(data.rank),
           hasBadge: Number(data.rank) <= 10,
@@ -121,7 +117,6 @@ export const Leaderboard = (): JSX.Element => {
         return {
           characterId: charId,
           characterName: character?.name ?? 'Unknown',
-          characterImage: character?.image,
           elo: toNumber(data.elo),
           wins,
           losses,
@@ -240,16 +235,36 @@ export const Leaderboard = (): JSX.Element => {
     <PolygonalCard clipPath="polygon(0% 0%, 50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, 0% 100%)">
       <Helmet>
         <title>{t('leaderboard.pageTitle')}</title>
-        <meta name="description" content={t('leaderboard.metaDescription', { ns: 'pages' })} />
+        <meta
+          name="description"
+          content={t('leaderboard.metaDescription', { ns: 'pages' })}
+        />
         <link rel="canonical" href="https://ultimatedominion.com/leaderboard" />
-        <meta property="og:title" content={t('leaderboard.ogTitle', { ns: 'pages' })} />
-        <meta property="og:description" content={t('leaderboard.ogDescription', { ns: 'pages' })} />
-        <meta property="og:url" content="https://ultimatedominion.com/leaderboard" />
+        <meta
+          property="og:title"
+          content={t('leaderboard.ogTitle', { ns: 'pages' })}
+        />
+        <meta
+          property="og:description"
+          content={t('leaderboard.ogDescription', { ns: 'pages' })}
+        />
+        <meta
+          property="og:url"
+          content="https://ultimatedominion.com/leaderboard"
+        />
       </Helmet>
       <LocaleHead path="/leaderboard" />
       <VStack>
         <HStack bgColor="blue500" h="66px" px="20px" width="100%">
-          <LeaderboardIconSvg />
+          <Text
+            color="#D4A54A"
+            fontFamily="mono"
+            fontSize="xs"
+            fontWeight={700}
+            letterSpacing="0.16em"
+          >
+            RANK
+          </Text>
           <Heading color="white">{t('leaderboard.heading')}</Heading>
         </HStack>
 
@@ -267,7 +282,9 @@ export const Leaderboard = (): JSX.Element => {
           <Button
             bgColor={tab === 'raceToMax' ? 'grey500' : undefined}
             color={tab === 'raceToMax' ? 'white' : undefined}
-            leftIcon={<FaMedal color={tab === 'raceToMax' ? '#D4A54A' : undefined} />}
+            leftIcon={
+              <FaMedal color={tab === 'raceToMax' ? '#D4A54A' : undefined} />
+            }
             onClick={() => setTab('raceToMax')}
             size="sm"
             variant="white"
@@ -278,7 +295,11 @@ export const Leaderboard = (): JSX.Element => {
             <Button
               bgColor={tab === 'pvpRankings' ? 'grey500' : undefined}
               color={tab === 'pvpRankings' ? 'white' : undefined}
-              leftIcon={<FaCrosshairs color={tab === 'pvpRankings' ? '#E85D5D' : undefined} />}
+              leftIcon={
+                <FaCrosshairs
+                  color={tab === 'pvpRankings' ? '#E85D5D' : undefined}
+                />
+              }
               onClick={() => setTab('pvpRankings')}
               size="sm"
               variant="white"
@@ -288,231 +309,223 @@ export const Leaderboard = (): JSX.Element => {
           )}
         </HStack>
 
-        {tab === 'rankings' && <><Stack
-          direction={{ base: 'column', md: 'row' }}
-          mb={8}
-          my={4}
-          px={3}
-          spacing={{ base: 4, md: 8 }}
-          w="100%"
-        >
-          <InputGroup>
-            <InputLeftElement h="100%" pointerEvents="none">
-              <FaSearch />
-            </InputLeftElement>
-            <Input
-              onChange={e => setQuery(e.target.value)}
-              placeholder={t('leaderboard.search')}
-              value={query}
-            />
-          </InputGroup>
-          <HStack px={{ base: 0, sm: 3 }}>
-            <Button
-              bgColor={filter == 'All' ? 'grey500' : undefined}
-              color={filter == 'All' ? 'white' : undefined}
-              onClick={() => setFilter('All')}
-              size="sm"
-              variant="white"
+        {tab === 'rankings' && (
+          <>
+            <Stack
+              direction={{ base: 'column', md: 'row' }}
+              mb={8}
+              my={4}
+              px={3}
+              spacing={{ base: 4, md: 8 }}
+              w="100%"
             >
-              {t('leaderboard.filterAll')}
-            </Button>
-            <Button
-              leftIcon={
-                isSmallScreen ? undefined : (
-                  <WarriorSvg
-                    theme={filter === StatsClasses.Strength ? 'light' : 'dark'}
-                  />
-                )
-              }
-              bgColor={filter === StatsClasses.Strength ? 'grey500' : undefined}
-              color={filter === StatsClasses.Strength ? 'white' : undefined}
-              onClick={() => setFilter(StatsClasses.Strength)}
-              size="sm"
-              variant="white"
-            >
-              {!isSmallScreen ? (
-                t('leaderboard.filterStrength')
-              ) : (
-                <WarriorSvg
-                  theme={filter === StatsClasses.Strength ? 'light' : 'dark'}
+              <InputGroup>
+                <InputLeftElement h="100%" pointerEvents="none">
+                  <FaSearch />
+                </InputLeftElement>
+                <Input
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder={t('leaderboard.search')}
+                  value={query}
                 />
-              )}
-            </Button>
-            <Button
-              leftIcon={
-                isSmallScreen ? undefined : (
-                  <RogueSvg
-                    theme={filter === StatsClasses.Agility ? 'light' : 'dark'}
-                  />
-                )
-              }
-              bgColor={filter === StatsClasses.Agility ? 'grey500' : undefined}
-              color={filter === StatsClasses.Agility ? 'white' : undefined}
-              onClick={() => setFilter(StatsClasses.Agility)}
-              size="sm"
-              variant="white"
-            >
-              {!isSmallScreen ? (
-                t('leaderboard.filterAgility')
-              ) : (
-                <RogueSvg
-                  theme={filter === StatsClasses.Agility ? 'light' : 'dark'}
-                />
-              )}
-            </Button>
-            <Button
-              leftIcon={
-                isSmallScreen ? undefined : (
-                  <MageSvg
-                    theme={filter === StatsClasses.Intelligence ? 'light' : 'dark'}
-                  />
-                )
-              }
-              bgColor={filter === StatsClasses.Intelligence ? 'grey500' : undefined}
-              color={filter === StatsClasses.Intelligence ? 'white' : undefined}
-              onClick={() => setFilter(StatsClasses.Intelligence)}
-              size="sm"
-              variant="white"
-            >
-              {!isSmallScreen ? (
-                t('leaderboard.filterIntelligence')
-              ) : (
-                <MageSvg
-                  theme={filter === StatsClasses.Intelligence ? 'light' : 'dark'}
-                />
-              )}
-            </Button>
-          </HStack>
-        </Stack>
-        <Flex alignItems="center" justify="space-between" w="100%">
-          <Text pl={4} color="#565555" fontWeight={400} size="sm">
-            {t('leaderboard.playerCount', { count: allCharacters.length })}
-          </Text>
-          <HStack>
-            <HStack
-              w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}
-            >
-              <Button
-                color="#565555"
-                display={{ base: 'none', lg: 'flex' }}
-                fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
-                onClick={() =>
-                  setSort({
-                    sorted: 'byStats',
-                    reversed: !sort.reversed,
-                  })
-                }
-                p={1}
-                size={{ base: '2xs', lg: 'sm' }}
-                variant="unstyled"
-                w="100%"
-              >
-                <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                  {t('leaderboard.sortStats')}
-                </Text>
-                {sort.sorted == 'byStats' && sort.reversed && (
-                  <FaSortAmountUp />
-                )}
-                {sort.sorted == 'byStats' && !sort.reversed && (
-                  <FaSortAmountDown />
-                )}
-                {sort.sorted != 'byStats' && <FaSortAmountDown color="grey" />}
-              </Button>
-              <Button
-                color="#565555"
-                display="flex"
-                fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
-                onClick={() =>
-                  setSort({
-                    sorted: 'byLevel',
-                    reversed: !sort.reversed,
-                  })
-                }
-                p={1}
-                size={{ base: '2xs', lg: 'sm' }}
-                variant="unstyled"
-                w="100%"
-              >
-                <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                  {t('leaderboard.sortLevel')}
-                </Text>
-                {sort.sorted == 'byLevel' && sort.reversed && (
-                  <FaSortAmountUp />
-                )}
-                {sort.sorted == 'byLevel' && !sort.reversed && (
-                  <FaSortAmountDown />
-                )}
-                {sort.sorted != 'byLevel' && <FaSortAmountDown color="grey" />}
-              </Button>
-              <Button
-                color="#565555"
-                display="flex"
-                fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
-                onClick={() =>
-                  setSort({
-                    sorted: 'byGold',
-                    reversed: !sort.reversed,
-                  })
-                }
-                p={1}
-                size={{ base: '2xs', lg: 'sm' }}
-                variant="unstyled"
-                w="100%"
-              >
-                <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
-                  {t('leaderboard.sortGold')}
-                </Text>
-                {sort.sorted == 'byGold' && sort.reversed && <FaSortAmountUp />}
-                {sort.sorted == 'byGold' && !sort.reversed && (
-                  <FaSortAmountDown />
-                )}
-                {sort.sorted != 'byGold' && <FaSortAmountDown color="grey" />}
-              </Button>
-            </HStack>
-            <Box display={{ base: 'none', md: 'block' }} w="80px" />
-          </HStack>
-        </Flex>
-
-        <VStack overflowX="auto" spacing={0} w="100%">
-          <Box
-            bgColor="rgba(196,184,158,0.08)"
-            boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-            h="5px"
-            w="100%"
-          />
-          {entries.length > 0 ? (
-            [...entries].map(function (entry, i) {
-              return (
-                <Box key={`leaderboard-row-${i}`} w="100%">
-                  <LeaderboardRow
-                    top3={i == 0 || i == 1 || i == 2}
-                    index={i}
-                    character={entry}
-                  />
-                  <Box
-                    bg="rgba(196,184,158,0.08)"
-                    boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
-                    h="1px"
+              </InputGroup>
+              <HStack px={{ base: 0, sm: 3 }}>
+                <Button
+                  bgColor={filter == 'All' ? 'grey500' : undefined}
+                  color={filter == 'All' ? 'white' : undefined}
+                  onClick={() => setFilter('All')}
+                  size="sm"
+                  variant="white"
+                >
+                  {t('leaderboard.filterAll')}
+                </Button>
+                <Button
+                  bgColor={
+                    filter === StatsClasses.Strength ? 'grey500' : undefined
+                  }
+                  color={filter === StatsClasses.Strength ? 'white' : undefined}
+                  onClick={() => setFilter(StatsClasses.Strength)}
+                  size="sm"
+                  variant="white"
+                >
+                  <Text display={{ base: 'none', lg: 'block' }}>
+                    {t('leaderboard.filterStrength')}
+                  </Text>
+                  <Text display={{ base: 'block', lg: 'none' }}>STR</Text>
+                </Button>
+                <Button
+                  bgColor={
+                    filter === StatsClasses.Agility ? 'grey500' : undefined
+                  }
+                  color={filter === StatsClasses.Agility ? 'white' : undefined}
+                  onClick={() => setFilter(StatsClasses.Agility)}
+                  size="sm"
+                  variant="white"
+                >
+                  <Text display={{ base: 'none', lg: 'block' }}>
+                    {t('leaderboard.filterAgility')}
+                  </Text>
+                  <Text display={{ base: 'block', lg: 'none' }}>AGI</Text>
+                </Button>
+                <Button
+                  bgColor={
+                    filter === StatsClasses.Intelligence ? 'grey500' : undefined
+                  }
+                  color={
+                    filter === StatsClasses.Intelligence ? 'white' : undefined
+                  }
+                  onClick={() => setFilter(StatsClasses.Intelligence)}
+                  size="sm"
+                  variant="white"
+                >
+                  <Text display={{ base: 'none', lg: 'block' }}>
+                    {t('leaderboard.filterIntelligence')}
+                  </Text>
+                  <Text display={{ base: 'block', lg: 'none' }}>INT</Text>
+                </Button>
+              </HStack>
+            </Stack>
+            <Flex alignItems="center" justify="space-between" w="100%">
+              <Text pl={4} color="#565555" fontWeight={400} size="sm">
+                {t('leaderboard.playerCount', { count: allCharacters.length })}
+              </Text>
+              <HStack>
+                <HStack
+                  w={{ base: '130px', sm: '215px', md: '300px', lg: '450px' }}
+                >
+                  <Button
+                    color="#565555"
+                    display={{ base: 'none', lg: 'flex' }}
+                    fontWeight={sort.sorted == 'byStats' ? 'bold' : 'normal'}
+                    onClick={() =>
+                      setSort({
+                        sorted: 'byStats',
+                        reversed: !sort.reversed,
+                      })
+                    }
+                    p={1}
+                    size={{ base: '2xs', lg: 'sm' }}
+                    variant="unstyled"
                     w="100%"
-                  />
-                </Box>
-              );
-            })
-          ) : (
-            <Text mt={12}>{t('leaderboard.noPlayers')}</Text>
-          )}
-        </VStack>
-        <HStack my={5} visibility={entries.length > 0 ? 'visible' : 'hidden'}>
-          <Pagination
-            length={length}
-            page={page}
-            pageLimit={pageLimit}
-            perPage={PLAYERS_PER_PAGE}
-            setPage={setPage}
-            setPageLimit={setPageLimit}
-          />
-        </HStack>
-        </>}
+                  >
+                    <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                      {t('leaderboard.sortStats')}
+                    </Text>
+                    {sort.sorted == 'byStats' && sort.reversed && (
+                      <FaSortAmountUp />
+                    )}
+                    {sort.sorted == 'byStats' && !sort.reversed && (
+                      <FaSortAmountDown />
+                    )}
+                    {sort.sorted != 'byStats' && (
+                      <FaSortAmountDown color="grey" />
+                    )}
+                  </Button>
+                  <Button
+                    color="#565555"
+                    display="flex"
+                    fontWeight={sort.sorted == 'byLevel' ? 'bold' : 'normal'}
+                    onClick={() =>
+                      setSort({
+                        sorted: 'byLevel',
+                        reversed: !sort.reversed,
+                      })
+                    }
+                    p={1}
+                    size={{ base: '2xs', lg: 'sm' }}
+                    variant="unstyled"
+                    w="100%"
+                  >
+                    <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                      {t('leaderboard.sortLevel')}
+                    </Text>
+                    {sort.sorted == 'byLevel' && sort.reversed && (
+                      <FaSortAmountUp />
+                    )}
+                    {sort.sorted == 'byLevel' && !sort.reversed && (
+                      <FaSortAmountDown />
+                    )}
+                    {sort.sorted != 'byLevel' && (
+                      <FaSortAmountDown color="grey" />
+                    )}
+                  </Button>
+                  <Button
+                    color="#565555"
+                    display="flex"
+                    fontWeight={sort.sorted == 'byGold' ? 'bold' : 'normal'}
+                    onClick={() =>
+                      setSort({
+                        sorted: 'byGold',
+                        reversed: !sort.reversed,
+                      })
+                    }
+                    p={1}
+                    size={{ base: '2xs', lg: 'sm' }}
+                    variant="unstyled"
+                    w="100%"
+                  >
+                    <Text mr={2} size={{ base: '2xs', sm: 'xs' }}>
+                      {t('leaderboard.sortGold')}
+                    </Text>
+                    {sort.sorted == 'byGold' && sort.reversed && (
+                      <FaSortAmountUp />
+                    )}
+                    {sort.sorted == 'byGold' && !sort.reversed && (
+                      <FaSortAmountDown />
+                    )}
+                    {sort.sorted != 'byGold' && (
+                      <FaSortAmountDown color="grey" />
+                    )}
+                  </Button>
+                </HStack>
+                <Box display={{ base: 'none', md: 'block' }} w="80px" />
+              </HStack>
+            </Flex>
+
+            <VStack overflowX="auto" spacing={0} w="100%">
+              <Box
+                bgColor="rgba(196,184,158,0.08)"
+                boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                h="5px"
+                w="100%"
+              />
+              {entries.length > 0 ? (
+                [...entries].map(function (entry, i) {
+                  return (
+                    <Box key={`leaderboard-row-${i}`} w="100%">
+                      <LeaderboardRow
+                        top3={i == 0 || i == 1 || i == 2}
+                        index={i}
+                        character={entry}
+                      />
+                      <Box
+                        bg="rgba(196,184,158,0.08)"
+                        boxShadow="0 1px 0 rgba(196,184,158,0.08), 0 -1px 0 rgba(0,0,0,0.3)"
+                        h="1px"
+                        w="100%"
+                      />
+                    </Box>
+                  );
+                })
+              ) : (
+                <Text mt={12}>{t('leaderboard.noPlayers')}</Text>
+              )}
+            </VStack>
+            <HStack
+              my={5}
+              visibility={entries.length > 0 ? 'visible' : 'hidden'}
+            >
+              <Pagination
+                length={length}
+                page={page}
+                pageLimit={pageLimit}
+                perPage={PLAYERS_PER_PAGE}
+                setPage={setPage}
+                setPageLimit={setPageLimit}
+              />
+            </HStack>
+          </>
+        )}
 
         {tab === 'raceToMax' && (
           <VStack px={3} py={4} spacing={3} w="100%">
@@ -528,7 +541,7 @@ export const Leaderboard = (): JSX.Element => {
                 w="100%"
               />
               {zoneCompletions.length > 0 ? (
-                zoneCompletions.map((entry) => (
+                zoneCompletions.map(entry => (
                   <Box key={`zone-${entry.characterId}`} w="100%">
                     <HStack
                       as={RouterLink}
@@ -549,19 +562,21 @@ export const Leaderboard = (): JSX.Element => {
                         #{entry.rank}
                       </Text>
                       {entry.hasBadge && (
-                        <Tooltip hasArrow label={t('leaderboard.zoneConqueror')} placement="top">
+                        <Tooltip
+                          hasArrow
+                          label={t('leaderboard.zoneConqueror')}
+                          placement="top"
+                        >
                           <span>
                             <FaMedal color="#D4A54A" size={14} />
                           </span>
                         </Tooltip>
                       )}
-                      <Avatar size="xs" src={entry.characterImage} />
-                      <Text
-                        color="#E8DCC8"
-                        flex={1}
-                        fontWeight={600}
-                        size="sm"
-                      >
+                      <CharacterMark
+                        boxSize="24px"
+                        name={entry.characterName}
+                      />
+                      <Text color="#E8DCC8" flex={1} fontWeight={600} size="sm">
                         {entry.characterName}
                       </Text>
                       <Text
@@ -570,7 +585,9 @@ export const Leaderboard = (): JSX.Element => {
                         fontFamily="mono"
                         size="xs"
                       >
-                        {new Date(entry.completedAt * 1000).toLocaleDateString()}
+                        {new Date(
+                          entry.completedAt * 1000,
+                        ).toLocaleDateString()}
                       </Text>
                     </HStack>
                     <Box
@@ -597,7 +614,9 @@ export const Leaderboard = (): JSX.Element => {
             {/* In-progress characters */}
             {zoneCompletions.length > 0 && zoneCompletions.length < 10 && (
               <Text color="#5A5040" mt={2} size="xs" textAlign="center">
-                {t('leaderboard.badgesRemaining', { count: 10 - zoneCompletions.length })}
+                {t('leaderboard.badgesRemaining', {
+                  count: 10 - zoneCompletions.length,
+                })}
               </Text>
             )}
           </VStack>
@@ -619,7 +638,9 @@ export const Leaderboard = (): JSX.Element => {
               >
                 <FaCrosshairs color="#E85D5D" size={14} />
                 <Text color="#E85D5D" fontSize="sm" fontWeight={600}>
-                  {t('leaderboard.season', { number: toNumber(pvpSeasonData.season) })}
+                  {t('leaderboard.season', {
+                    number: toNumber(pvpSeasonData.season),
+                  })}
                 </Text>
                 {pvpSeasonData.name && (
                   <Text color="#8A7E6A" fontSize="xs">
@@ -706,7 +727,10 @@ export const Leaderboard = (): JSX.Element => {
                         >
                           #{rank}
                         </Text>
-                        <Avatar size="xs" src={entry.characterImage} />
+                        <CharacterMark
+                          boxSize="24px"
+                          name={entry.characterName}
+                        />
                         <Text
                           color="#E8DCC8"
                           flex={1}
@@ -778,7 +802,9 @@ export const Leaderboard = (): JSX.Element => {
 
             <HStack
               my={3}
-              visibility={pvpRankings.length > PLAYERS_PER_PAGE ? 'visible' : 'hidden'}
+              visibility={
+                pvpRankings.length > PLAYERS_PER_PAGE ? 'visible' : 'hidden'
+              }
             >
               <Pagination
                 length={pvpRankings.length}

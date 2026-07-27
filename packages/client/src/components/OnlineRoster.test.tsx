@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { OnlineLink } from './OnlineRoster';
 import {
   AdvancedClass,
   ArmorType,
@@ -11,6 +10,8 @@ import {
   type Character,
 } from '../utils/types';
 
+import { OnlineLink } from './OnlineRoster';
+
 // --- Mock player factory ---
 
 function makeCharacter(overrides: Partial<Character> = {}): Character {
@@ -18,7 +19,6 @@ function makeCharacter(overrides: Partial<Character> = {}): Character {
     id: `0x${Math.random().toString(16).slice(2, 10)}`,
     name: 'TestPlayer',
     description: '',
-    image: '',
     owner: '0xotherowner',
     tokenId: '1',
     locked: true,
@@ -78,11 +78,38 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, values?: Record<string, string | number>) => {
+      const translations: Record<string, string> = {
+        'roster.cooldown': 'Cooldown',
+        'roster.inBattle': 'In Battle',
+        'roster.noPlayersFound': 'No players found',
+        'roster.online': 'Online',
+        'roster.playerOnline': `${values?.count} Player Online`,
+        'roster.playersOnline': `${values?.count} Players Online`,
+        'roster.safe': 'Safe',
+        'roster.searchPlayers': 'Search players...',
+        'roster.shopping': 'Shopping',
+        'roster.tile': `Tile ${values?.label}`,
+        'roster.you': 'You',
+        'roster.lv': `Lv${values?.level}`,
+      };
+
+      return translations[key] ?? key;
+    },
+  }),
+}));
+
 vi.mock('@chakra-ui/react', async () => {
-  const actual = await vi.importActual<typeof import('@chakra-ui/react')>('@chakra-ui/react');
+  const actual =
+    await vi.importActual<typeof import('@chakra-ui/react')>(
+      '@chakra-ui/react',
+    );
   return {
     ...actual,
-    useBreakpointValue: (values: Record<string, unknown>) => values.base ?? values.lg,
+    useBreakpointValue: (values: Record<string, unknown>) =>
+      values.base ?? values.lg,
   };
 });
 
@@ -215,7 +242,11 @@ describe('OnlineRoster', () => {
       // Set cooldown to current time (within 30s window)
       const now = BigInt(Math.floor(Date.now() / 1000));
       mapState.allCharacters = [
-        makeCharacter({ name: 'CoolingDown', owner: '0xother', pvpCooldownTimer: now }),
+        makeCharacter({
+          name: 'CoolingDown',
+          owner: '0xother',
+          pvpCooldownTimer: now,
+        }),
       ];
 
       render(<OnlineLink />);
@@ -226,7 +257,12 @@ describe('OnlineRoster', () => {
 
     it('shows no status badge for idle players', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'Chilling', owner: '0xother', inBattle: false, pvpCooldownTimer: 0n }),
+        makeCharacter({
+          name: 'Chilling',
+          owner: '0xother',
+          inBattle: false,
+          pvpCooldownTimer: 0n,
+        }),
       ];
 
       render(<OnlineLink />);
@@ -258,7 +294,11 @@ describe('OnlineRoster', () => {
 
     it('shows tile position', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'Positioned', owner: '0xother', position: { zoneId: 1, x: 7, y: 2 } }),
+        makeCharacter({
+          name: 'Positioned',
+          owner: '0xother',
+          position: { zoneId: 1, x: 7, y: 2 },
+        }),
       ];
 
       render(<OnlineLink />);
@@ -269,7 +309,11 @@ describe('OnlineRoster', () => {
 
     it('shows Safe tag for players in safe zone', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'SafePlayer', owner: '0xother', position: { zoneId: 1, x: 2, y: 3 } }),
+        makeCharacter({
+          name: 'SafePlayer',
+          owner: '0xother',
+          position: { zoneId: 1, x: 2, y: 3 },
+        }),
       ];
 
       render(<OnlineLink />);
@@ -280,7 +324,11 @@ describe('OnlineRoster', () => {
 
     it('does not show Safe tag for players outside safe zone', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'DangerPlayer', owner: '0xother', position: { zoneId: 1, x: 7, y: 8 } }),
+        makeCharacter({
+          name: 'DangerPlayer',
+          owner: '0xother',
+          position: { zoneId: 1, x: 7, y: 8 },
+        }),
       ];
 
       render(<OnlineLink />);
@@ -321,18 +369,30 @@ describe('OnlineRoster', () => {
       render(<OnlineLink />);
       fireEvent.click(screen.getByText('1 Player Online'));
 
-      expect(screen.getByText('25')).toBeTruthy();
-      expect(screen.getByText('18')).toBeTruthy();
-      expect(screen.getByText('12')).toBeTruthy();
+      expect(screen.getByText('STR 25')).toBeTruthy();
+      expect(screen.getByText('AGI 18')).toBeTruthy();
+      expect(screen.getByText('INT 12')).toBeTruthy();
     });
   });
 
   describe('Filter tabs', () => {
     it('filters by stat class', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'StrWarrior', owner: '0xother1', entityClass: StatsClasses.Strength }),
-        makeCharacter({ name: 'AgiRanger', owner: '0xother2', entityClass: StatsClasses.Agility }),
-        makeCharacter({ name: 'IntWizard', owner: '0xother3', entityClass: StatsClasses.Intelligence }),
+        makeCharacter({
+          name: 'StrWarrior',
+          owner: '0xother1',
+          entityClass: StatsClasses.Strength,
+        }),
+        makeCharacter({
+          name: 'AgiRanger',
+          owner: '0xother2',
+          entityClass: StatsClasses.Agility,
+        }),
+        makeCharacter({
+          name: 'IntWizard',
+          owner: '0xother3',
+          entityClass: StatsClasses.Intelligence,
+        }),
       ];
 
       render(<OnlineLink />);
@@ -349,8 +409,16 @@ describe('OnlineRoster', () => {
 
     it('shows all players when All filter is selected', () => {
       mapState.allCharacters = [
-        makeCharacter({ name: 'StrWarrior', owner: '0xother1', entityClass: StatsClasses.Strength }),
-        makeCharacter({ name: 'AgiRanger', owner: '0xother2', entityClass: StatsClasses.Agility }),
+        makeCharacter({
+          name: 'StrWarrior',
+          owner: '0xother1',
+          entityClass: StatsClasses.Strength,
+        }),
+        makeCharacter({
+          name: 'AgiRanger',
+          owner: '0xother2',
+          entityClass: StatsClasses.Agility,
+        }),
       ];
 
       render(<OnlineLink />);

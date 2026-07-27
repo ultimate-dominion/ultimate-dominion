@@ -26,20 +26,22 @@ Everything in this phase is pen-and-paper / doc work. No code yet. Get the desig
 Every zone has a distinct identity reflected in all names. Names escalate in quality and mystique as zones progress.
 
 ### Naming Escalation by Zone
-| Zone | Tone | Weapon Examples | Armor Examples | Monster Examples |
-|------|------|-----------------|----------------|------------------|
-| 1 (Dark Cave) | Rough, scrappy, improvised | Broken Sword, Iron Axe, Bone Staff | Tattered Cloth, Worn Leather, Rusty Chainmail | Cave Rat, Fungal Crawler |
-| 2 (Windy Peaks) | Weathered, hardy, forged | Galeforged Blade, Peakstone Hammer, Stormwood Bow | Mountaineer's Plate, Windsworn Leather, Peakclimber Robes | Ridge Stalker, Storm Harpy |
-| 3 (Mystic Grove) | Natural, enchanted, ancient | Thornweave Staff, Moonpetal Blade, Briarvine Bow | Living Bark Plate, Duskbloom Robes, Feythread Cloak | Elderwood Sentinel, Mossback Troll |
-| 4+ (Later zones) | Mythic, divine, corrupted | Names reference gods, wounds, or faction relics | Named armor sets, legendary origins | Named creatures from lore bible |
+
+| Zone             | Tone                        | Weapon Examples                                   | Armor Examples                                            | Monster Examples                   |
+| ---------------- | --------------------------- | ------------------------------------------------- | --------------------------------------------------------- | ---------------------------------- |
+| 1 (Dark Cave)    | Rough, scrappy, improvised  | Broken Sword, Iron Axe, Bone Staff                | Tattered Cloth, Worn Leather, Rusty Chainmail             | Cave Rat, Fungal Crawler           |
+| 2 (Windy Peaks)  | Weathered, hardy, forged    | Galeforged Blade, Peakstone Hammer, Stormwood Bow | Mountaineer's Plate, Windsworn Leather, Peakclimber Robes | Ridge Stalker, Storm Harpy         |
+| 3 (Mystic Grove) | Natural, enchanted, ancient | Thornweave Staff, Moonpetal Blade, Briarvine Bow  | Living Bark Plate, Duskbloom Robes, Feythread Cloak       | Elderwood Sentinel, Mossback Troll |
+| 4+ (Later zones) | Mythic, divine, corrupted   | Names reference gods, wounds, or faction relics   | Named armor sets, legendary origins                       | Named creatures from lore bible    |
 
 ### Naming Rules
+
 - [ ] Item names reflect the zone's environment and materials (cave=rough minerals, peaks=wind/stone, grove=flora/fey)
-- [ ] **Common (Rarity 0)**: Descriptive, utilitarian — *what it is* (Iron Sword, Padded Vest)
-- [ ] **Uncommon (Rarity 1)**: Slightly better craft — *a step above basic* (Reinforced Blade, Sturdy Leather)
-- [ ] **Rare (Rarity 2)**: Environmental flavor — *where it's from* (Galeforged Blade, Ridgeline Bow)
-- [ ] **Epic (Rarity 3)**: Evocative, unique identity — *what it does/means* (Stormcaller, Voidtouched Mantle)
-- [ ] **Legendary (Rarity 4)**: Named, storied — *who made it or what happened* (Vel's Last Arrow, The Unbroken Wall)
+- [ ] **Common (Rarity 0)**: Descriptive, utilitarian — _what it is_ (Iron Sword, Padded Vest)
+- [ ] **Uncommon (Rarity 1)**: Slightly better craft — _a step above basic_ (Reinforced Blade, Sturdy Leather)
+- [ ] **Rare (Rarity 2)**: Environmental flavor — _where it's from_ (Galeforged Blade, Ridgeline Bow)
+- [ ] **Epic (Rarity 3)**: Evocative, unique identity — _what it does/means_ (Stormcaller, Voidtouched Mantle)
+- [ ] **Legendary (Rarity 4)**: Named, storied — _who made it or what happened_ (Vel's Last Arrow, The Unbroken Wall)
 - [ ] Monster names use zone-specific fauna/creatures, not generic fantasy (no "Goblin", "Skeleton")
 - [ ] Monster weapon names are thematic attacks, not equipment (Razor Talons, Gale Screech, Thorn Lash)
 - [ ] Consumable names escalate: Zone 1 = "potion", Zone 2 = "draught/elixir", Zone 3 = "essence/tincture"
@@ -79,15 +81,17 @@ Every zone has a distinct identity reflected in all names. Names escalate in qua
 ## 1.5 Items — Weapons
 
 ### Rarity Tiers (code: uint256 rarity 0-4)
-| Rarity | Code | Zone Placement | Drop Rate Target | Purpose |
-|--------|------|----------------|-------------------|---------|
-| Common | 0 | Entry zone / shop stock | 60-75% | Baseline, purchasable safety net |
-| Uncommon | 1 | Early zone | 50-65% | First small upgrade |
-| Rare | 2 | Mid zone | 35-50% | Meaningful upgrade, build options |
-| Epic | 3 | Late zone | 20-35% | Build-defining, hybrid options |
-| Legendary | 4 | Zone boss / endzone | 10-20% | Aspirational, carries into next zone |
+
+| Rarity    | Code | Zone Placement          | Drop Rate Target | Purpose                              |
+| --------- | ---- | ----------------------- | ---------------- | ------------------------------------ |
+| Common    | 0    | Entry zone / shop stock | 60-75%           | Baseline, purchasable safety net     |
+| Uncommon  | 1    | Early zone              | 50-65%           | First small upgrade                  |
+| Rare      | 2    | Mid zone                | 35-50%           | Meaningful upgrade, build options    |
+| Epic      | 3    | Late zone               | 20-35%           | Build-defining, hybrid options       |
+| Legendary | 4    | Zone boss / endzone     | 10-20%           | Aspirational, carries into next zone |
 
 ### Player Weapons (5 tiers)
+
 - [ ] **Common (Rarity 0)** — 3 weapons (STR/AGI/INT), available in shop
 - [ ] **Uncommon (Rarity 1)** — 3 weapons (STR/AGI/INT), early drops
 - [ ] **Rare (Rarity 2)** — 3-4 weapons (pure stat + 1 hybrid)
@@ -109,6 +113,7 @@ Every zone has a distinct identity reflected in all names. Names escalate in qua
 - [ ] At least one weapon per rarity tier for each primary stat (STR/AGI/INT)
 
 ### Monster Weapons
+
 - [ ] One per monster (10 total)
 - [ ] dropChance: 0, price: 0
 - [ ] Damage range appropriate for monster level
@@ -117,6 +122,7 @@ Every zone has a distinct identity reflected in all names. Names escalate in qua
 ## 1.6 Items — Armor
 
 ### Player Armor (5 tiers)
+
 - [ ] **Common (Rarity 0)** — 3 armor (Plate/Leather/Cloth), available in shop
 - [ ] **Uncommon (Rarity 1)** — 3 armor (Plate/Leather/Cloth), early drops
 - [ ] **Rare (Rarity 2)** — 3-4 armor (one per type + hybrid)
@@ -156,14 +162,16 @@ Every zone has a distinct identity reflected in all names. Names escalate in qua
 Each zone unlocks new abilities for all 9 advanced classes, tied to the level milestones in that zone. Abilities are learned from the zone's mentor NPC and purchased with gold.
 
 ### Ability Schedule (from Lore Bible)
-| Zone | Levels | Ability Milestone(s) | Gold Cost |
-|------|--------|----------------------|-----------|
-| 1 (Dark Cave) | 1-10 | Class selection at Lv10 (no abilities yet) | — |
-| 2 (Windy Peaks) | 11-20 | **Lv15**: 1st ability (9 total, one per class) | 600-750g |
-| 3 (Mystic Grove) | 21-30 | **Lv20**: 2nd ability, **Lv25**: 3rd ability (18 total) | 2,000g / 5,000g |
-| 4+ | 31-40 | **Lv30**: Ultimate ability (9 total) | 12,000-15,000g |
+
+| Zone             | Levels | Ability Milestone(s)                                    | Gold Cost       |
+| ---------------- | ------ | ------------------------------------------------------- | --------------- |
+| 1 (Dark Cave)    | 1-10   | Class selection at Lv10 (no abilities yet)              | —               |
+| 2 (Windy Peaks)  | 11-20  | **Lv15**: 1st ability (9 total, one per class)          | 600-750g        |
+| 3 (Mystic Grove) | 21-30  | **Lv20**: 2nd ability, **Lv25**: 3rd ability (18 total) | 2,000g / 5,000g |
+| 4+               | 31-40  | **Lv30**: Ultimate ability (9 total)                    | 12,000-15,000g  |
 
 ### Per-Zone Ability Checklist
+
 - [ ] Which level milestone(s) fall in this zone's range?
 - [ ] 1 or 2 new abilities designed per class (9 or 18 total)
 - [ ] Each ability has:
@@ -184,6 +192,7 @@ Each zone unlocks new abilities for all 9 advanced classes, tied to the level mi
 Every zone introduces at least one new gameplay mechanic to keep the game feeling fresh.
 
 ### Design Principles
+
 - Feature feels **native to the zone** — motivated by environment, lore, or monsters
 - **Simple to learn**, deep enough to master
 - Creates **new player stories** — emergent moments worth talking about
@@ -192,6 +201,7 @@ Every zone introduces at least one new gameplay mechanic to keep the game feelin
 ### Feature Ideas (pick 1-2 per zone, or invent new ones)
 
 **Combat & Encounters**
+
 - [ ] Elite/Boss monsters — rare, powerful variants with unique loot and mechanics
 - [ ] Multiplayer boss fights — cooperative encounters requiring 2+ players
 - [ ] PvP arena — structured 1v1 or team PvP with rankings
@@ -199,6 +209,7 @@ Every zone introduces at least one new gameplay mechanic to keep the game feelin
 - [ ] Environmental hazards — terrain effects during combat (wind knockback, falling rocks, poison fog)
 
 **Exploration & Quests**
+
 - [ ] Solo quests — objectives while exploring (rescue NPC, clear infestation, find lost item)
 - [ ] Bounty board — rotating kill/collection tasks with bonus rewards
 - [ ] Hidden areas — secret tiles unlocked by puzzles or conditions
@@ -206,30 +217,34 @@ Every zone introduces at least one new gameplay mechanic to keep the game feelin
 - [ ] Exploration objectives — discover all points of interest for zone completion reward
 
 **Social & Economy**
+
 - [ ] Player trading — direct item/gold exchange at shop locations
 - [ ] Faction missions — Covenant vs Unbound objectives advancing faction war
 - [ ] Crafting — combine vendor trash + materials into useful items
 - [ ] Gambling/risk encounters — stake gold or items for better rewards
 
 **Progression & Rewards**
+
 - [ ] Zone mastery — bonus rewards for zone completion under specific conditions
 - [ ] Class-specific challenges — unique objectives per class with exclusive rewards
 - [ ] Achievement system — tracked accomplishments with rewards
 - [ ] Leaderboards — per-zone rankings (fastest clear, most kills, lowest deaths)
 
 ### Feature Checklist
+
 - [ ] Feature(s) chosen for this zone (1-2)
 - [ ] Feature is thematically motivated by the zone's environment/lore
 - [ ] Feature has clear player-facing rules (how to start, what to do, what you get)
 - [ ] Feature doesn't break existing progression (optional enhancement, not gate)
 
 ### Planned Feature Roadmap
-| Zone | Feature(s) | Status |
-|------|-----------|--------|
-| 1 (Dark Cave) | Core game loop (combat, loot, shop, fragments) | Shipped |
-| 2 (Windy Peaks) | *TBD* | Design |
-| 3 (Mystic Grove) | *TBD* | Design |
-| 4+ | *TBD* | Design |
+
+| Zone             | Feature(s)                                     | Status  |
+| ---------------- | ---------------------------------------------- | ------- |
+| 1 (Dark Cave)    | Core game loop (combat, loot, shop, fragments) | Shipped |
+| 2 (Windy Peaks)  | _TBD_                                          | Design  |
+| 3 (Mystic Grove) | _TBD_                                          | Design  |
+| 4+               | _TBD_                                          | Design  |
 
 ## 1.10 Staggering & Loot Table Balance
 
@@ -336,9 +351,9 @@ Every zone introduces at least one new gameplay mechanic to keep the game feelin
 
 ---
 
-# Phase 2: Art & Visual Assets
+# Phase 2: Text-First Presentation
 
-Zone identity isn't just data — it's visual. Every zone should look and feel distinct.
+Zone identity comes from language, color, typography, sound, and gameplay state. New content must not require images, portraits, sprites, or 3D models.
 
 ## 2.1 Zone Theming
 
@@ -346,41 +361,37 @@ Zone identity isn't just data — it's visual. Every zone should look and feel d
   - Dark Cave: dark grays, purples, amber torchlight
   - Windy Peaks: slate blue, snow white, storm gray
   - Mystic Grove: deep green, gold, bioluminescent teal
-- [ ] **Map tileset** — ground, walls, obstacles, transitions match zone environment
-- [ ] **Background art** or atmosphere effect for the game board
+- [ ] **Map notation** — landmarks, hazards, shops, and transitions have readable text/symbol states
+- [ ] **Atmosphere** — CSS color, typography, motion, and sound reinforce the zone
 - [ ] **UI skin** — how does the zone's theme affect panels, buttons, cards?
 
-## 2.2 Item Art
+## 2.2 Item Presentation
 
-- [ ] **Weapon icons** — at minimum one icon per rarity tier (5 total), ideally per item
-- [ ] **Armor icons** — at minimum one per armor type per tier
-- [ ] **Consumable icons** — healing potions, buffs, utility items
-- [ ] **Vendor trash icons** — can be generic per zone or per item
+- [ ] Every item renders from name, type, stats, description, and rarity
+- [ ] Type marks remain consistent (`WPN`, `ARM`, `SPL`, `USE`, `QST`)
 - [ ] Rarity tier visual treatment (border glow, color coding):
   - Common: gray/white border
   - Uncommon: green border
   - Rare: blue border
   - Epic: purple border
   - Legendary: gold/orange border + glow effect
-- [ ] Icons uploaded and `metadataUri` fields populated in items.json
+- [ ] Unknown/new item names render without a client registry update
 
-## 2.3 Monster Art
+## 2.3 Monster Presentation
 
-- [ ] **Monster portraits/sprites** — one per monster (10 total)
-- [ ] Art matches flavor descriptions from §1.4
-- [ ] Elite variant visual treatment (if elite monsters are a zone feature)
-- [ ] Art uploaded and `metadataUri` fields populated in monsters.json
+- [ ] Every monster renders from name, level, class, stats, and encounter state
+- [ ] Elite/boss states have clear text, border, and color treatment
+- [ ] Unknown/new monster names render without a client registry update
 
-## 2.4 NPC Art
+## 2.4 NPC Presentation
 
-- [ ] **Mentor NPC portrait** (for dialogue/training screens)
-- [ ] **Shop NPC portrait** (for shop interaction)
-- [ ] Supporting NPC art (if applicable)
+- [ ] Mentor, shop, and supporting NPCs have distinct names, roles, and dialogue
+- [ ] Interaction state is clear without a portrait
 
-## 2.5 Fragment Art
+## 2.5 Fragment Presentation
 
-- [ ] Fragment card art or border design (consistent with zone theme)
-- [ ] Impression tile visual on the map
+- [ ] Fragment number, title, discovery state, and prose are readable on mobile
+- [ ] Impression tiles use a consistent text/symbol state on the map
 
 ---
 
@@ -400,7 +411,7 @@ Convert the design into actual zone data files matching Dark Cave format.
 - [ ] Monster names are unique across ALL zones
 - [ ] Effect IDs are unique (new bytes32 hashes)
 - [ ] **Naming conventions (§1.2) verified** — all names match zone identity
-- [ ] `metadataUri` fields populated with IPFS/HTTP links to art assets (§2)
+- [ ] `metadataUri` fields are valid when required; no image field is needed by the client
 
 ## 3.2 Data Validation
 
@@ -409,7 +420,7 @@ Convert the design into actual zone data files matching Dark Cave format.
 - [ ] Every weapon's effects array references valid effect IDs from effects.json
 - [ ] Shop inventory references valid item names
 - [ ] Stat requirements are integers, not floats
-- [ ] Prices are in correct denomination (gold uses 18 decimals: "5" = 5 * 10^18)
+- [ ] Prices are in correct denomination (gold uses 18 decimals: "5" = 5 \* 10^18)
 - [ ] No negative stats or negative prices
 
 ---
@@ -525,15 +536,15 @@ Update the frontend to support the new zone.
 
 - [ ] Zone appears on world map / zone selection (if zone selector exists)
 - [ ] Zone-specific **color scheme** applied (from §2.1)
-- [ ] Zone-specific **background/atmosphere** rendering
+- [ ] Zone-specific color, typography, and sound treatment
 - [ ] Zone transition UX works (entering from previous zone)
 
 ## 6.2 Content Display
 
 - [ ] New items render correctly (names, descriptions, stats, **rarity colors**)
-- [ ] New item **icons/images** display (from §2.2)
-- [ ] New monsters render correctly with **art/portraits** (from §2.3)
-- [ ] New shop NPC accessible with **portrait** (from §2.4)
+- [ ] New item type marks and rarity states display without name-specific mappings
+- [ ] New monsters render correctly from semantic data (from §2.3)
+- [ ] New shop NPC is readable and accessible without a portrait (from §2.4)
 - [ ] New status effects display correctly in combat
 - [ ] New fragment UI works (trigger → echo → claim → display)
 
@@ -644,7 +655,7 @@ Coordinate the zone launch externally.
 ## 9.1 Community Communications
 
 - [ ] **Teaser announcement** (1-2 weeks before) — hint at the zone without full reveal
-  - [ ] Twitter/X thread with zone concept art or lore teaser
+  - [ ] Twitter/X thread with a lore teaser
   - [ ] Forum post on Discourse (patch notes category)
   - [ ] Email to mailing list (via Resend) with teaser
 - [ ] **Launch announcement** (day of)
@@ -656,12 +667,11 @@ Coordinate the zone launch externally.
   - [ ] Forum post: new monsters, items, abilities overview (spoiler-tagged)
   - [ ] Tips for each class in the new zone
 
-## 9.2 Content Assets for Comms
+## 9.2 Launch Copy
 
-- [ ] Screenshots of the new zone (map, combat, shop, items)
-- [ ] Zone banner/header image for social media
 - [ ] Short description for link previews (Twitter cards, OG tags)
 - [ ] Key feature highlights (1-3 bullet points for announcements)
+- [ ] Short excerpts for the map, combat, shop, and item announcements
 
 ## 9.3 Website Updates
 
@@ -703,57 +713,57 @@ Update all docs to stay in sync.
 
 ## Scaling Targets
 
-| Zone | Levels | Stat Pts/Zone | HP/Zone | Buff Size | Heal Top | Monster HP Range | Monster Stat Range |
-|------|--------|---------------|---------|-----------|----------|------------------|--------------------|
-| 1 (Dark Cave) | 1-10 | +10 | +20 | +5 | 75 | 10-48 | 11-44 total |
-| 2 (Windy Peaks) | 11-20 | +5 | +10 | +8 | 120 | 45-100 | 36-62 total |
-| 3 (Mystic Grove) | 21-30 | +5 | +10 | +12 | 180 | 80-160 | 55-85 total |
-| 4+ | 31-40 | +5 | +10 | +16 | 250 | 130-220 | 75-110 total |
+| Zone             | Levels | Stat Pts/Zone | HP/Zone | Buff Size | Heal Top | Monster HP Range | Monster Stat Range |
+| ---------------- | ------ | ------------- | ------- | --------- | -------- | ---------------- | ------------------ |
+| 1 (Dark Cave)    | 1-10   | +10           | +20     | +5        | 75       | 10-48            | 11-44 total        |
+| 2 (Windy Peaks)  | 11-20  | +5            | +10     | +8        | 120      | 45-100           | 36-62 total        |
+| 3 (Mystic Grove) | 21-30  | +5            | +10     | +12       | 180      | 80-160           | 55-85 total        |
+| 4+               | 31-40  | +5            | +10     | +16       | 250      | 130-220          | 75-110 total       |
 
 ## Rarity Tiers
 
-| Rarity | Code | Drop Rate | Price Multiplier | Naming Style |
-|--------|------|-----------|------------------|--------------|
-| Common | 0 | 60-75% | 1x | Descriptive, utilitarian |
-| Uncommon | 1 | 50-65% | 1.5-2x | Slightly better craft |
-| Rare | 2 | 35-50% | 3-5x | Environmental flavor |
-| Epic | 3 | 20-35% | 8-12x | Evocative, unique identity |
-| Legendary | 4 | 10-20% | 15-25x | Named, storied |
+| Rarity    | Code | Drop Rate | Price Multiplier | Naming Style               |
+| --------- | ---- | --------- | ---------------- | -------------------------- |
+| Common    | 0    | 60-75%    | 1x               | Descriptive, utilitarian   |
+| Uncommon  | 1    | 50-65%    | 1.5-2x           | Slightly better craft      |
+| Rare      | 2    | 35-50%    | 3-5x             | Environmental flavor       |
+| Epic      | 3    | 20-35%    | 8-12x            | Evocative, unique identity |
+| Legendary | 4    | 10-20%    | 15-25x           | Named, storied             |
 
 ## Ability Gold Sinks
 
-| Level | Ability Tier | Gold Cost | Zone |
-|-------|-------------|-----------|------|
-| 10 | Class selection | Free | Zone 1 |
-| 15 | 1st ability | 600-750g | Zone 2 |
-| 20 | 2nd ability | 2,000g | Zone 3 |
-| 25 | 3rd ability | 5,000g | Zone 3 |
-| 30 | Ultimate | 12,000-15,000g | Zone 4 |
+| Level | Ability Tier    | Gold Cost      | Zone   |
+| ----- | --------------- | -------------- | ------ |
+| 10    | Class selection | Free           | Zone 1 |
+| 15    | 1st ability     | 600-750g       | Zone 2 |
+| 20    | 2nd ability     | 2,000g         | Zone 3 |
+| 25    | 3rd ability     | 5,000g         | Zone 3 |
+| 30    | Ultimate        | 12,000-15,000g | Zone 4 |
 
 ## Known Hardcoded References (must fix for multi-zone)
 
 ### Contracts
-| File | What | Fix |
-|------|------|-----|
-| `MapSpawnSystem.sol` | Spawns from `(0,0)`, two distance bands | Zone-aware spawn config |
-| `constants.sol:21` | `ZONE_DARK_CAVE = 1` only | Add new zone IDs |
-| `constants.sol:77-79` | Fragment mob IDs hardcoded to Dark Cave | Parameterize per zone |
-| Items table | Rarity is uint256, current range 0-3 | Extend to 0-4 |
+
+| File                  | What                                    | Fix                     |
+| --------------------- | --------------------------------------- | ----------------------- |
+| `MapSpawnSystem.sol`  | Spawns from `(0,0)`, two distance bands | Zone-aware spawn config |
+| `constants.sol:21`    | `ZONE_DARK_CAVE = 1` only               | Add new zone IDs        |
+| `constants.sol:77-79` | Fragment mob IDs hardcoded to Dark Cave | Parameterize per zone   |
+| Items table           | Rarity is uint256, current range 0-3    | Extend to 0-4           |
 
 ### Client
-| File | What | Fix |
-|------|------|-----|
-| `MapPanel.tsx:160` | "Dark Cave" zone name hardcoded | Dynamic from context |
-| `MapPanel.tsx:36` | `MAP_SIZE = 10` hardcoded | Zone-configurable |
-| `MapPanel.tsx:31-34` | `SAFE_ZONE_AREA` hardcoded `{0,4,4,0}` | Zone-configurable |
-| `MapContext.tsx:44` | `SHOP_MOB_ID_TO_NAME` 4 shops hardcoded | Fetch from chain or extend |
-| `MapContext.tsx:154` | Safe zone check `x<5 && y<5` | Zone-configurable bounds |
-| `ActionsPanel.tsx:36-67` | `MONSTER_MOVE_MAPPING` mobId 1-30 | Fetch from chain or extend for new monsters |
-| `fragmentNarratives.ts` | `TOTAL_FRAGMENTS = 8`, all Dark Cave lore | Per-zone fragment sets |
-| `itemImages.ts` | 20 item names → image paths | Add new zone items |
-| `monsterImages.ts` | 10 monster names → image paths | Add new zone monsters |
-| `constants.ts:56-104` | `STATUS_EFFECT_NAME_MAPPING` 20 effects | Extend with new zone effects |
+
+| File                     | What                                      | Fix                                         |
+| ------------------------ | ----------------------------------------- | ------------------------------------------- |
+| `MapPanel.tsx:160`       | "Dark Cave" zone name hardcoded           | Dynamic from context                        |
+| `MapPanel.tsx:36`        | `MAP_SIZE = 10` hardcoded                 | Zone-configurable                           |
+| `MapPanel.tsx:31-34`     | `SAFE_ZONE_AREA` hardcoded `{0,4,4,0}`    | Zone-configurable                           |
+| `MapContext.tsx:44`      | `SHOP_MOB_ID_TO_NAME` 4 shops hardcoded   | Fetch from chain or extend                  |
+| `MapContext.tsx:154`     | Safe zone check `x<5 && y<5`              | Zone-configurable bounds                    |
+| `ActionsPanel.tsx:36-67` | `MONSTER_MOVE_MAPPING` mobId 1-30         | Fetch from chain or extend for new monsters |
+| `fragmentNarratives.ts`  | `TOTAL_FRAGMENTS = 8`, all Dark Cave lore | Per-zone fragment sets                      |
+| `constants.ts:56-104`    | `STATUS_EFFECT_NAME_MAPPING` 20 effects   | Extend with new zone effects                |
 
 ---
 
-*Last updated: March 9, 2026*
+_Last updated: July 27, 2026_

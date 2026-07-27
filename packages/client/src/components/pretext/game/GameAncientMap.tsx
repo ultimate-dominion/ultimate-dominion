@@ -1,8 +1,15 @@
-import { useCallback, useRef, useMemo, useEffect } from 'react';
 import { Box } from '@chakra-ui/react';
+import { useCallback, useRef, useMemo, useEffect } from 'react';
+
+import type {
+  Character,
+  Monster,
+  Npc,
+  Shop,
+  WorldBoss,
+} from '../../../utils/types';
 import { useCanvas } from '../hooks/useCanvas';
 import { COLORS } from '../theme';
-import type { Character, Monster, Npc, Shop, WorldBoss } from '../../../utils/types';
 
 type Props = {
   /** 10x10 grid size */
@@ -20,7 +27,10 @@ type Props = {
   /** World bosses */
   worldBosses: WorldBoss[];
   /** Safe zone boundary — col/row ranges (display coords) */
-  safeZone: { topLeft: { x: number; y: number }; bottomRight: { x: number; y: number } } | null;
+  safeZone: {
+    topLeft: { x: number; y: number };
+    bottomRight: { x: number; y: number };
+  } | null;
   /** Zone exit tile (display coords) */
   exitTile: { x: number; y: number } | null;
   /** Whether player is spawned */
@@ -32,9 +42,20 @@ type Props = {
 };
 
 // Terrain character sets per zone
-const ZONE_TERRAIN: Record<number, { chars: string[]; color: string; weight: number }> = {
-  1: { chars: ['#', '%', '@', '&', '*', '.', ','], color: '#3A3228', weight: 400 },  // Dark Cave
-  2: { chars: ['^', 'M', 'A', 'W', 'N', '.', ','], color: '#5A5248', weight: 400 },  // Windy Peaks
+const ZONE_TERRAIN: Record<
+  number,
+  { chars: string[]; color: string; weight: number }
+> = {
+  1: {
+    chars: ['#', '%', '@', '&', '*', '.', ','],
+    color: '#3A3228',
+    weight: 400,
+  }, // Dark Cave
+  2: {
+    chars: ['^', 'M', 'A', 'W', 'N', '.', ','],
+    color: '#5A5248',
+    weight: 400,
+  }, // Windy Peaks
 };
 
 const SAFE_ZONE_CHARS = ['.', ',', '_', '-', "'"];
@@ -44,15 +65,6 @@ const SAFE_ZONE_COLOR = '#3A3020';
 const SHOP_CHAR = '$';
 const NPC_CHAR = '?';
 const EXIT_CHAR = 'O';
-
-// Dragon piece image — loaded once at module level
-let _dragonImg: HTMLImageElement | null = null;
-let _dragonLoaded = false;
-if (typeof window !== 'undefined') {
-  _dragonImg = new Image();
-  _dragonImg.onload = () => { _dragonLoaded = true; };
-  _dragonImg.src = '/images/ud-dragon.svg';
-}
 
 // Fog of war characters — dense, mysterious glyphs that writhe in the dark
 const FOG_CHARS = ['░', '▒', '▓', '█', '╬', '╫', '╪', '┼', '╳', '◊', '∷', '≈'];
@@ -79,7 +91,9 @@ function loadVisitedTiles(zone: number): Set<string> {
 function saveVisitedTiles(zone: number, tiles: Set<string>): void {
   try {
     localStorage.setItem(fogStorageKey(zone), JSON.stringify([...tiles]));
-  } catch { /* quota exceeded — fog state is cosmetic, ignore */ }
+  } catch {
+    /* quota exceeded — fog state is cosmetic, ignore */
+  }
 }
 
 /**
@@ -100,7 +114,7 @@ export function GameAncientMap({
   isSpawned,
   currentZone,
   delegatorAddress,
-}: Props) {
+}: Props): JSX.Element {
   const hoverRef = useRef<{ col: number; row: number } | null>(null);
 
   // Fog of war state — persistent across sessions
@@ -125,8 +139,10 @@ export function GameAncientMap({
     // Current tile + orthogonal neighbors (diamond shape = 1 tile away)
     const tilesToReveal = [
       { x, y },
-      { x: x - 1, y }, { x: x + 1, y },
-      { x, y: y - 1 }, { x, y: y + 1 },
+      { x: x - 1, y },
+      { x: x + 1, y },
+      { x, y: y - 1 },
+      { x, y: y + 1 },
     ];
 
     for (const t of tilesToReveal) {
@@ -146,11 +162,29 @@ export function GameAncientMap({
 
   // Pre-compute entity positions as a lookup map: "col,row" -> entity info
   const entityMap = useMemo(() => {
-    const map: Record<string, { monsters: number; players: number; shops: boolean; npcs: boolean; boss: WorldBoss | null; isExit: boolean }> = {};
+    const map: Record<
+      string,
+      {
+        monsters: number;
+        players: number;
+        shops: boolean;
+        npcs: boolean;
+        boss: WorldBoss | null;
+        isExit: boolean;
+      }
+    > = {};
 
     const getKey = (x: number, y: number) => `${x},${y}`;
     const ensure = (key: string) => {
-      if (!map[key]) map[key] = { monsters: 0, players: 0, shops: false, npcs: false, boss: null, isExit: false };
+      if (!map[key])
+        map[key] = {
+          monsters: 0,
+          players: 0,
+          shops: false,
+          npcs: false,
+          boss: null,
+          isExit: false,
+        };
       return map[key];
     };
 
@@ -162,7 +196,10 @@ export function GameAncientMap({
     }
 
     for (const c of allCharacters) {
-      if (c.isSpawned && c.owner.toLowerCase() !== delegatorAddress?.toLowerCase()) {
+      if (
+        c.isSpawned &&
+        c.owner.toLowerCase() !== delegatorAddress?.toLowerCase()
+      ) {
         const key = getKey(c.position.x, c.position.y);
         ensure(key).players++;
       }
@@ -191,7 +228,15 @@ export function GameAncientMap({
     }
 
     return map;
-  }, [allMonsters, allCharacters, allShops, allNpcs, worldBosses, exitTile, delegatorAddress]);
+  }, [
+    allMonsters,
+    allCharacters,
+    allShops,
+    allNpcs,
+    worldBosses,
+    exitTile,
+    delegatorAddress,
+  ]);
 
   const onFrame = useCallback(
     (ctx: CanvasRenderingContext2D, _dt: number, elapsed: number) => {
@@ -228,21 +273,31 @@ export function GameAncientMap({
 
           const tileKey = `${col},${displayRow}`;
           const isVisited = visited.has(tileKey);
-          const isPlayerTile = displayPosition && displayPosition.x === col && displayPosition.y === displayRow;
+          const isPlayerTile =
+            displayPosition &&
+            displayPosition.x === col &&
+            displayPosition.y === displayRow;
           const entityKey = tileKey;
           const entities = entityMap[entityKey];
-          const isHovered = hoverRef.current?.col === col && hoverRef.current?.row === row;
+          const isHovered =
+            hoverRef.current?.col === col && hoverRef.current?.row === row;
 
           // Safe zone check
-          const inSafeZone = safeZone &&
-            col >= safeZone.topLeft.x && col <= safeZone.bottomRight.x &&
-            displayRow >= safeZone.bottomRight.y && displayRow <= safeZone.topLeft.y;
+          const inSafeZone =
+            safeZone &&
+            col >= safeZone.topLeft.x &&
+            col <= safeZone.bottomRight.x &&
+            displayRow >= safeZone.bottomRight.y &&
+            displayRow <= safeZone.topLeft.y;
 
           // --- FOG OF WAR: unvisited tiles ---
           if (!isVisited && !isPlayerTile) {
             // Dense dark fog — writhing glyphs
-            const fogSeed = Math.abs(displayRow * 7 + col * 13 + currentZone * 5);
-            const fogCharIdx = Math.floor(fogSeed + elapsed / 2000) % FOG_CHARS.length;
+            const fogSeed = Math.abs(
+              displayRow * 7 + col * 13 + currentZone * 5,
+            );
+            const fogCharIdx =
+              Math.floor(fogSeed + elapsed / 2000) % FOG_CHARS.length;
             const fogChar = FOG_CHARS[fogCharIdx];
 
             // Very subtle grid line
@@ -254,7 +309,8 @@ export function GameAncientMap({
             // Fog character — dark, slowly shifting
             ctx.font = `400 ${fontSize}px Fira Code`;
             ctx.fillStyle = FOG_COLOR;
-            ctx.globalAlpha = 0.15 + Math.sin((fogSeed + elapsed / 4000) * 0.5) * 0.05;
+            ctx.globalAlpha =
+              0.15 + Math.sin((fogSeed + elapsed / 4000) * 0.5) * 0.05;
             ctx.fillText(fogChar, cx, cy);
 
             ctx.globalAlpha = 1;
@@ -304,20 +360,14 @@ export function GameAncientMap({
 
           // --- Entity rendering (priority order) ---
 
-          // Player position — UD dragon piece
+          // Player position
           if (isPlayerTile && isSpawned) {
-            if (_dragonLoaded && _dragonImg) {
-              const dragonH = cellSize * 0.85;
-              const dragonW = dragonH * (_dragonImg.naturalWidth / _dragonImg.naturalHeight);
-              ctx.shadowColor = COLORS.amber;
-              ctx.shadowBlur = 6 + Math.sin(elapsed / 600) * 3;
-              ctx.drawImage(_dragonImg, cx - dragonW / 2, cy - dragonH / 2, dragonW, dragonH);
-              ctx.shadowBlur = 0;
-            } else {
-              ctx.font = `700 ${fontSize + 2}px Fira Code`;
-              ctx.fillStyle = COLORS.amber;
-              ctx.fillText('@', cx, cy);
-            }
+            ctx.font = `700 ${fontSize + 2}px Fira Code`;
+            ctx.fillStyle = COLORS.amber;
+            ctx.shadowColor = COLORS.amber;
+            ctx.shadowBlur = 6 + Math.sin(elapsed / 600) * 3;
+            ctx.fillText('@', cx, cy);
+            ctx.shadowBlur = 0;
             continue;
           }
 
@@ -347,7 +397,8 @@ export function GameAncientMap({
             ctx.fillStyle = '#B4C6D4';
             ctx.shadowColor = '#B4C6D4';
             ctx.shadowBlur = 4 + Math.sin(elapsed / 800) * 4;
-            ctx.globalAlpha = (0.5 + Math.sin(elapsed / 1200) * 0.3) * revealAlpha;
+            ctx.globalAlpha =
+              (0.5 + Math.sin(elapsed / 1200) * 0.3) * revealAlpha;
             ctx.fillText(EXIT_CHAR, cx, cy);
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
@@ -355,16 +406,22 @@ export function GameAncientMap({
           }
 
           // Terrain fill — deterministic character based on position
-          const charIndex = Math.abs((displayRow * 7 + col * 13 + currentZone * 3) % terrain.chars.length);
+          const charIndex = Math.abs(
+            (displayRow * 7 + col * 13 + currentZone * 3) %
+              terrain.chars.length,
+          );
           const terrainChar = inSafeZone
             ? SAFE_ZONE_CHARS[charIndex % SAFE_ZONE_CHARS.length]
             : terrain.chars[charIndex];
 
           ctx.font = `${terrain.weight} ${fontSize - 1}px Cormorant Garamond`;
           ctx.fillStyle = inSafeZone ? SAFE_ZONE_COLOR : terrain.color;
-          ctx.globalAlpha = (isHovered
-            ? 0.8
-            : 0.2 + Math.sin((displayRow + col + elapsed / 3000) * 0.7) * 0.08) * revealAlpha;
+          ctx.globalAlpha =
+            (isHovered
+              ? 0.8
+              : 0.2 +
+                Math.sin((displayRow + col + elapsed / 3000) * 0.7) * 0.08) *
+            revealAlpha;
           ctx.fillText(terrainChar, cx, cy);
           ctx.globalAlpha = 1;
         }
@@ -373,7 +430,7 @@ export function GameAncientMap({
       // Safe zone border overlay
       if (safeZone) {
         const tlCol = safeZone.topLeft.x;
-        const tlRow = gridSize - 1 - safeZone.topLeft.y;  // display y → grid row
+        const tlRow = gridSize - 1 - safeZone.topLeft.y; // display y → grid row
         const brCol = safeZone.bottomRight.x;
         const brRow = gridSize - 1 - safeZone.bottomRight.y;
 
@@ -399,7 +456,7 @@ export function GameAncientMap({
 
           // Check each edge for fog adjacency
           const neighbors = [
-            { dx: 0, dy: 1, edge: 'top' },    // tile above (displayRow+1)
+            { dx: 0, dy: 1, edge: 'top' }, // tile above (displayRow+1)
             { dx: 0, dy: -1, edge: 'bottom' }, // tile below (displayRow-1)
             { dx: -1, dy: 0, edge: 'left' },
             { dx: 1, dy: 0, edge: 'right' },
@@ -416,7 +473,8 @@ export function GameAncientMap({
             const cellY = offsetY + row * cellSize;
             ctx.strokeStyle = COLORS.amber;
             ctx.lineWidth = 1;
-            ctx.globalAlpha = 0.15 + Math.sin(elapsed / 3000 + col * 0.5 + row * 0.3) * 0.05;
+            ctx.globalAlpha =
+              0.15 + Math.sin(elapsed / 3000 + col * 0.5 + row * 0.3) * 0.05;
 
             ctx.beginPath();
             if (n.edge === 'top') {
@@ -438,10 +496,15 @@ export function GameAncientMap({
       }
       ctx.restore();
 
-
       // Hover tooltip
       const hover = hoverRef.current;
-      if (hover && hover.col >= 0 && hover.col < gridSize && hover.row >= 0 && hover.row < gridSize) {
+      if (
+        hover &&
+        hover.col >= 0 &&
+        hover.col < gridSize &&
+        hover.row >= 0 &&
+        hover.row < gridSize
+      ) {
         const displayRow = gridSize - 1 - hover.row;
         const key = `${hover.col},${displayRow}`;
         const isHoverVisited = visited.has(key);
@@ -512,7 +575,12 @@ export function GameAncientMap({
         onMouseMove={handleMove}
         onTouchMove={handleMove}
         onMouseLeave={handleLeave}
-        style={{ display: 'block', width: '100%', height: '100%', cursor: 'crosshair' }}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: '100%',
+          cursor: 'crosshair',
+        }}
         aria-label="ASCII dungeon map"
       />
     </Box>

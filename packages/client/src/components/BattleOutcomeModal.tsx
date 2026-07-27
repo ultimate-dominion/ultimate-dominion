@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   Divider,
-  Image,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -15,17 +14,16 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { zeroAddress, zeroHash } from 'viem';
-
 import { useTranslation } from 'react-i18next';
+import { zeroAddress, zeroHash } from 'viem';
 
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useGameAudio } from '../contexts/SoundContext';
 import { useToast } from '../hooks/useToast';
+import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { BATTLE_OUTCOME_SEEN_KEY, MAX_LEVEL } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
 import {
@@ -40,15 +38,12 @@ import {
   type Weapon,
 } from '../utils/types';
 
-import { getItemImage } from '../utils/itemImages';
-import { getMonsterImage } from '../utils/monsterImages';
-import { LootReveal } from './LootReveal';
-import { ShareButton } from './ShareButton';
+import { MonsterMark } from './EntityMark';
 import { ItemEquipModal } from './ItemEquipModal';
-import { PolygonalCard } from './PolygonalCard';
 import { LevelUpBanner } from './LevelUpBanner';
-import { BattleMonsterAscii } from './pretext/game/BattleMonsterAscii';
-import { MONSTER_TEMPLATES_REDUX } from './pretext/game/monsterTemplatesRedux';
+import { LootReveal } from './LootReveal';
+import { PolygonalCard } from './PolygonalCard';
+import { ShareButton } from './ShareButton';
 
 type BattleOutcomeModalProps = {
   isOpen: boolean;
@@ -64,7 +59,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const { t } = useTranslation('ui');
   const { renderError } = useToast();
   const { playSfx } = useGameAudio();
-  const { armorTemplates, consumableTemplates, spellTemplates, weaponTemplates } = useItems();
+  const {
+    armorTemplates,
+    consumableTemplates,
+    spellTemplates,
+    weaponTemplates,
+  } = useItems();
   const {
     character,
     equippedArmor,
@@ -79,13 +79,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const opponentDisplayName = useMemo(() => {
     if (!opponent) return t('battle.aMonster');
     const isElite = 'isElite' in opponent && (opponent as Monster).isElite;
-    return isElite ? t('battle.elitePrefix', { name: opponent.name }) : opponent.name;
+    return isElite
+      ? t('battle.elitePrefix', { name: opponent.name })
+      : opponent.name;
   }, [opponent, t]);
-
-  const hasAsciiPortrait = useMemo(() => {
-    if (!opponent) return false;
-    return MONSTER_TEMPLATES_REDUX.some(template => template.name === opponent.name);
-  }, [opponent]);
 
   const [armor, setArmor] = useState<Armor[]>([]);
   const [consumables, setConsumables] = useState<Consumable[]>([]);
@@ -131,9 +128,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
 
   const nextLevelRow = useGameValue(
     'Levels',
-    character
-      ? encodeUint256Key(BigInt(character.level))
-      : undefined,
+    character ? encodeUint256Key(BigInt(character.level)) : undefined,
   );
   const nextLevelXpRequirement = toBigInt(nextLevelRow?.experience);
 
@@ -149,8 +144,10 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
   const justBecameEligible = useMemo(() => {
     if (!character || initialExperience == null) return false;
     if (Number(character.level) >= MAX_LEVEL) return false;
-    return initialExperience < nextLevelXpRequirement &&
-      BigInt(character.experience) >= nextLevelXpRequirement;
+    return (
+      initialExperience < nextLevelXpRequirement &&
+      BigInt(character.experience) >= nextLevelXpRequirement
+    );
   }, [character, initialExperience, nextLevelXpRequirement]);
 
   const fetchLootedItems = useCallback(
@@ -205,15 +202,18 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
         setSpells(_spells);
         setWeapons(_weapons);
       } catch (e) {
-        renderError(
-          (e as Error)?.message ?? t('battle.fetchFailed'),
-          e,
-        );
+        renderError((e as Error)?.message ?? t('battle.fetchFailed'), e);
       } finally {
         setIsLoadingItems(false);
       }
     },
-    [armorTemplates, consumableTemplates, renderError, spellTemplates, weaponTemplates],
+    [
+      armorTemplates,
+      consumableTemplates,
+      renderError,
+      spellTemplates,
+      weaponTemplates,
+    ],
   );
 
   useEffect(() => {
@@ -238,13 +238,20 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
       outcome = battleOutcome.winner === character.id ? 'win' : 'flee';
     } else if (battleOutcome.winner === character.id) {
       outcome = 'win';
-    } else if (currentBattle && currentBattle.maxTurns === currentBattle.currentTurn) {
+    } else if (
+      currentBattle &&
+      currentBattle.maxTurns === currentBattle.currentTurn
+    ) {
       outcome = 'draw';
     } else {
       outcome = 'loss';
     }
     import('../utils/analytics').then(({ trackCombatOutcome }) =>
-      trackCombatOutcome(outcome, isPvp ? 'pvp' : 'pve', Number(character.level)),
+      trackCombatOutcome(
+        outcome,
+        isPvp ? 'pvp' : 'pve',
+        Number(character.level),
+      ),
     );
   }, [isOpen, battleOutcome, character, currentBattle]);
 
@@ -309,7 +316,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
               {winner === character.id ? (
                 <Text>
                   {t('battle.earnedGold')}{' '}
-                  <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
+                  <Text
+                    as="span"
+                    color="gold"
+                    fontFamily="mono"
+                    fontWeight="bold"
+                  >
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
                   {t('battle.gold')}
@@ -317,7 +329,12 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
               ) : (
                 <Text>
                   {t('battle.fleeingCost')}{' '}
-                  <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
+                  <Text
+                    as="span"
+                    color="gold"
+                    fontFamily="mono"
+                    fontWeight="bold"
+                  >
                     {etherToFixedNumber(goldDropped)}
                   </Text>{' '}
                   {t('battle.carriedGold')}
@@ -350,9 +367,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
           <ModalBody px={{ base: 6, sm: 8 }} textAlign="center">
             {battleDraw ? (
               <VStack alignItems="center" pb={4} spacing={4}>
-                <Text>
-                  {t('battle.drawMessage')}
-                </Text>
+                <Text>{t('battle.drawMessage')}</Text>
               </VStack>
             ) : (
               <VStack alignItems="center" pb={4} spacing={4}>
@@ -361,73 +376,73 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     ? t('battle.youDefeated', { name: opponentDisplayName })
                     : t('battle.youWereKilled', { name: opponentDisplayName })}
                 </Text>
-                {opponent && currentBattle?.encounterType !== EncounterType.PvP && (
-                  hasAsciiPortrait ? (
-                    <Box
-                      alignItems="center"
-                      bg="rgba(12,10,8,0.92)"
-                      border="1px solid"
-                      borderColor="rgba(90,78,60,0.45)"
-                      borderRadius="md"
-                      display="flex"
-                      h={{ base: '120px', sm: '144px' }}
-                      justifyContent="center"
-                      maxW="240px"
-                      overflow="hidden"
-                      position="relative"
-                      w="100%"
-                    >
-                      <BattleMonsterAscii
-                        defeated={winner !== character.id}
-                        monsterName={opponent.name}
-                      />
-                    </Box>
-                  ) : getMonsterImage(opponent.name) ? (
-                    <Image
-                      src={getMonsterImage(opponent.name)}
-                      alt={opponent.name}
-                      boxSize={{ base: '100px', sm: '120px' }}
-                      objectFit="contain"
+                {opponent &&
+                  currentBattle?.encounterType !== EncounterType.PvP && (
+                    <MonsterMark
+                      boxSize={{ base: '72px', sm: '88px' }}
+                      name={opponent.name}
                       opacity={winner === character.id ? 1 : 0.4}
-                      filter={winner !== character.id ? 'grayscale(0.6)' : undefined}
                     />
-                  ) : null
-                )}
+                  )}
                 {winner !== character.id && goldDropped > 0n && (
                   <Text>
                     {t('battle.lostGold')}{' '}
-                    <Text as="span" color="gold" fontFamily="mono" fontWeight="bold">
+                    <Text
+                      as="span"
+                      color="gold"
+                      fontFamily="mono"
+                      fontWeight="bold"
+                    >
                       {etherToFixedNumber(goldDropped)}
                     </Text>{' '}
                     {t('battle.carriedGold')}
                   </Text>
                 )}
                 {winner !== character.id && (
-                  <Text>
-                    {t('battle.deathMessage')}
-                  </Text>
+                  <Text>{t('battle.deathMessage')}</Text>
                 )}
                 {winner === character.id && !battleDraw && (
                   <ShareButton
                     text={
                       currentBattle?.encounterType === EncounterType.PvP
-                        ? t('battle.pvpShareText', { name: opponentDisplayName })
-                        : t('battle.pveShareText', { name: opponentDisplayName })
+                        ? t('battle.pvpShareText', {
+                            name: opponentDisplayName,
+                          })
+                        : t('battle.pveShareText', {
+                            name: opponentDisplayName,
+                          })
                     }
                     shareParams={{
-                      type: currentBattle?.encounterType === EncounterType.PvP ? 'pvp' : 'kill',
+                      type:
+                        currentBattle?.encounterType === EncounterType.PvP
+                          ? 'pvp'
+                          : 'kill',
                       ...(currentBattle?.encounterType === EncounterType.PvP
                         ? { winner: character.name, loser: opponentDisplayName }
-                        : { monster: opponentDisplayName, player: character.name, level: character.level.toString() }),
+                        : {
+                            monster: opponentDisplayName,
+                            player: character.name,
+                            level: character.level.toString(),
+                          }),
                     }}
-                    imageSrc={currentBattle?.encounterType !== EncounterType.PvP && opponent ? getMonsterImage(opponent.name) : undefined}
-                    colorAccent={currentBattle?.encounterType === EncounterType.PvP ? '#B85C3A' : '#6B8E6B'}
+                    colorAccent={
+                      currentBattle?.encounterType === EncounterType.PvP
+                        ? '#B85C3A'
+                        : '#6B8E6B'
+                    }
                   />
                 )}
                 {/* Level-up banner — only on victory when this battle triggered eligibility */}
-                {winner === character.id && (hasLeveledUp || justBecameEligible) && (
-                  <LevelUpBanner level={canLevel ? BigInt(character.level) + 1n : character.level} />
-                )}
+                {winner === character.id &&
+                  (hasLeveledUp || justBecameEligible) && (
+                    <LevelUpBanner
+                      level={
+                        canLevel
+                          ? BigInt(character.level) + 1n
+                          : character.level
+                      }
+                    />
+                  )}
                 {/* Inline LevelingPanel removed — all levels use the full LevelUpModal */}
                 {(hasLeveledUp || justBecameEligible || canLevel) &&
                   winner === character.id &&
@@ -441,7 +456,7 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                     {winner === character.id && sortedLoot.length > 0 && (
                       <LootReveal
                         items={sortedLoot}
-                        onItemClick={(item) => {
+                        onItemClick={item => {
                           const isEquipped = [
                             ...equippedArmor,
                             ...equippedConsumables,
@@ -458,19 +473,31 @@ export const BattleOutcomeModal: React.FC<BattleOutcomeModalProps> = ({
                         }}
                       />
                     )}
-                    {winner === character.id && sortedLoot.length > 0 && (sortedLoot[0].rarity ?? 0) >= Rarity.Uncommon && (
-                      <ShareButton
-                        text={t('battle.itemShareText', { rarity: sortedLoot[0].rarity !== undefined ? t(RARITY_I18N_KEYS[sortedLoot[0].rarity]) + ' ' : '', name: sortedLoot[0].name })}
-                        shareParams={{
-                          type: 'drop',
-                          item: sortedLoot[0].name,
-                          rarity: (sortedLoot[0].rarity ?? 0).toString(),
-                          player: character.name,
-                        }}
-                        imageSrc={getItemImage(sortedLoot[0].name)}
-                        colorAccent={sortedLoot[0].rarity !== undefined ? ('#C4A54A') : '#8A7E6A'}
-                      />
-                    )}
+                    {winner === character.id &&
+                      sortedLoot.length > 0 &&
+                      (sortedLoot[0].rarity ?? 0) >= Rarity.Uncommon && (
+                        <ShareButton
+                          text={t('battle.itemShareText', {
+                            rarity:
+                              sortedLoot[0].rarity !== undefined
+                                ? t(RARITY_I18N_KEYS[sortedLoot[0].rarity]) +
+                                  ' '
+                                : '',
+                            name: sortedLoot[0].name,
+                          })}
+                          shareParams={{
+                            type: 'drop',
+                            item: sortedLoot[0].name,
+                            rarity: (sortedLoot[0].rarity ?? 0).toString(),
+                            player: character.name,
+                          }}
+                          colorAccent={
+                            sortedLoot[0].rarity !== undefined
+                              ? '#C4A54A'
+                              : '#8A7E6A'
+                          }
+                        />
+                      )}
                   </>
                 )}
               </VStack>

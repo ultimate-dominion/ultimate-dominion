@@ -1,4 +1,4 @@
-import { render, screen, act, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, act, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { TileDetailsPanel } from './TileDetailsPanel';
@@ -17,14 +17,12 @@ const defaultCharacter = {
   agility: 10n,
   intelligence: 10n,
   advancedClass: 0,
-  image: '',
 };
 
 const testMonster = {
   id: '0xmonster1',
   name: 'Dire Rat',
   description: 'A big rat',
-  image: '',
   mobId: '1',
   level: 3n,
   currentHp: 30n,
@@ -56,20 +54,10 @@ const normalBattle = {
   currentTurnTimer: 0n,
 };
 
-const winOutcome = {
-  attackers: ['0xplayer'],
-  defenders: ['0xmonster1'],
-  encounterId: '0xenc1',
-  endTime: 100n,
-  expDropped: 50n,
-  goldDropped: 1000000000000000000n,
-  itemsDropped: [],
-  playerFled: false,
-  winner: '0xplayer',
-};
-
 const mockAutoFight = vi.fn().mockResolvedValue({ success: true, error: null });
-const mockCreateEncounter = vi.fn().mockResolvedValue({ success: true, error: null });
+const mockCreateEncounter = vi
+  .fn()
+  .mockResolvedValue({ success: true, error: null });
 const mockRest = vi.fn().mockResolvedValue({ success: true, error: null });
 const mockRefreshCharacter = vi.fn().mockResolvedValue(undefined);
 const mockEncounterExecute = vi.fn();
@@ -151,18 +139,15 @@ vi.mock('../hooks/useToast', () => ({
 }));
 
 vi.mock('react-router-dom', () => ({
-  Link: ({ children, ...props }: { children: React.ReactNode; to: string }) =>
-    <a {...props}>{children}</a>,
+  Link: ({ children, ...props }: { children: React.ReactNode; to: string }) => (
+    <a {...props}>{children}</a>
+  ),
   useNavigate: () => vi.fn(),
 }));
 
 vi.mock('../lib/gameStore', () => ({
   getTableValue: (...args: unknown[]) => mockGetTableValue(...args),
   toBigInt: (v: unknown) => BigInt(v as number),
-}));
-
-vi.mock('../utils/monsterImages', () => ({
-  getMonsterImage: (name: string) => name === 'Dire Rat' ? '/rat.png' : null,
 }));
 
 vi.mock('../utils/helpers', () => ({
@@ -174,6 +159,28 @@ vi.mock('../utils/helpers', () => ({
 vi.mock('../utils/fragmentNarratives', () => ({
   getRomanNumeral: () => 'I',
 }));
+
+vi.mock('react-i18next', async () => {
+  const actual =
+    await vi.importActual<typeof import('react-i18next')>('react-i18next');
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string, values?: Record<string, unknown>) => {
+        if (key === 'combat.fighting') return `Fighting ${values?.name}`;
+        if (key === 'combat.initiatingBattle') return 'Initiating battle';
+        if (key === 'tile.moreMonsters') {
+          const count = Number(values?.count ?? 0);
+          return count === 1
+            ? '1 more monster...'
+            : `${count} more monsters...`;
+        }
+        if (key === 'combat.showFewer') return 'Show fewer';
+        return key;
+      },
+    }),
+  };
+});
 
 vi.mock('../hooks/useNpcFlavor', () => ({
   useNpcFlavor: () => ({ title: '', flavor: '' }),
@@ -188,7 +195,14 @@ vi.mock('./FragmentClaimModal', () => ({
 }));
 
 vi.mock('./NpcDialogueModal', () => ({
-  NpcDialogueModal: ({ npcName, npcId, metadataUri }: { npcName: string; npcId: string; metadataUri: string }) => (
+  NpcDialogueModal: ({
+    npcName,
+    npcId,
+  }: {
+    npcName: string;
+    npcId: string;
+    metadataUri: string;
+  }) => (
     <div data-testid="npc-dialogue-modal">
       <span data-testid="dialogue-npc-name">{npcName}</span>
       <span data-testid="dialogue-npc-id">{npcId}</span>
@@ -200,6 +214,19 @@ vi.mock('./HealthBar', () => ({
   HealthBar: () => <div data-testid="health-bar" />,
 }));
 
+vi.mock('./pretext/hooks/usePretextFonts', () => ({
+  usePretextFonts: () => true,
+}));
+
+vi.stubGlobal(
+  'ResizeObserver',
+  class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+);
+
 vi.mock('./InfoModal', () => ({
   InfoModal: () => null,
 }));
@@ -209,10 +236,14 @@ vi.mock('./ShopRow', () => ({
 }));
 
 vi.mock('@chakra-ui/react', async () => {
-  const actual = await vi.importActual<typeof import('@chakra-ui/react')>('@chakra-ui/react');
+  const actual =
+    await vi.importActual<typeof import('@chakra-ui/react')>(
+      '@chakra-ui/react',
+    );
   return {
     ...actual,
-    useBreakpointValue: (values: Record<string, unknown>) => values.base ?? values.lg,
+    useBreakpointValue: (values: Record<string, unknown>) =>
+      values.base ?? values.lg,
   };
 });
 
@@ -243,7 +274,16 @@ function setDefaults() {
   characterState = {
     character: defaultCharacter,
     equippedSpells: [],
-    equippedWeapons: [{ tokenId: '0xweapon1', name: 'Short Sword', strModifier: 10n, agiModifier: 0n, intModifier: 0n, maxDamage: 10n }],
+    equippedWeapons: [
+      {
+        tokenId: '0xweapon1',
+        name: 'Short Sword',
+        strModifier: 10n,
+        agiModifier: 0n,
+        intModifier: 0n,
+        maxDamage: 10n,
+      },
+    ],
     isMoveEquipped: true,
     isRefreshing: false,
     refreshCharacter: mockRefreshCharacter,
@@ -281,12 +321,19 @@ function setDefaults() {
   };
 
   mockValidateTileMonsters.mockResolvedValue(undefined);
-  mockGetTableValue.mockReturnValue(null);
+  mockGetTableValue.mockImplementation((table: string, entityId: string) => {
+    if (entityId !== testMonster.id) return null;
+    if (table === 'Spawned') return { spawned: true };
+    if (table === 'PositionV2' || table === 'Position') return { x: 1, y: 1 };
+    return null;
+  });
 
   // Default: execute calls the callback and returns result (success path)
-  mockEncounterExecute.mockImplementation(async (fn: () => Promise<unknown>) => {
-    return await fn();
-  });
+  mockEncounterExecute.mockImplementation(
+    async (fn: () => Promise<unknown>) => {
+      return await fn();
+    },
+  );
   mockRestExecute.mockImplementation(async (fn: () => Promise<unknown>) => {
     return await fn();
   });
@@ -312,9 +359,12 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
   it('shows loading screen while TX is in flight, clears when TX completes', async () => {
     // Make execute hang (never resolve) to simulate in-flight TX
     let resolveExecute!: (value: unknown) => void;
-    mockEncounterExecute.mockImplementation(() => new Promise(resolve => {
-      resolveExecute = resolve;
-    }));
+    mockEncounterExecute.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          resolveExecute = resolve;
+        }),
+    );
 
     render(<TileDetailsPanel />);
 
@@ -322,7 +372,7 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
     expect(monsterButton).toBeTruthy();
 
     // Click starts the TX — loading screen should show while TX is in flight
-    act(() => {
+    await act(async () => {
       fireEvent.click(monsterButton!);
     });
 
@@ -361,7 +411,7 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
     render(<TileDetailsPanel />);
 
     const monsterButton = screen.getByText('Dire Rat').closest('button');
-    act(() => {
+    await act(async () => {
       fireEvent.click(monsterButton!);
     });
 
@@ -417,8 +467,25 @@ describe('TileDetailsPanel — Loading Screen Timing', () => {
 
     // Battle data arrives — manual mode clears isWaitingForBattle and pendingOpponent immediately
     battleState.currentBattle = normalBattle;
-    battleState.opponent = { ...testMonster, currentHp: 20n, maxHp: 30n, strength: 5n, agility: 5n, intelligence: 5n, entityClass: 0, worldStatusEffects: [] };
-    battleState.userCharacterForBattleRendering = { ...defaultCharacter, currentHp: 45n, maxHp: 100n, strength: 10n, agility: 10n, intelligence: 10n, worldStatusEffects: [] };
+    battleState.opponent = {
+      ...testMonster,
+      currentHp: 20n,
+      maxHp: 30n,
+      strength: 5n,
+      agility: 5n,
+      intelligence: 5n,
+      entityClass: 0,
+      worldStatusEffects: [],
+    };
+    battleState.userCharacterForBattleRendering = {
+      ...defaultCharacter,
+      currentHp: 45n,
+      maxHp: 100n,
+      strength: 10n,
+      agility: 10n,
+      intelligence: 10n,
+      worldStatusEffects: [],
+    };
 
     await act(async () => {
       rerender(<TileDetailsPanel />);
@@ -451,7 +518,8 @@ describe('TileDetailsPanel — Combat Target Validation', () => {
     mockGetTableValue.mockImplementation((table: string, entityId: string) => {
       if (entityId !== testMonster.id) return null;
       if (table === 'EncounterEntity') return ghosted ? { died: true } : null;
-      if (table === 'Spawned') return ghosted ? { spawned: false } : { spawned: true };
+      if (table === 'Spawned')
+        return ghosted ? { spawned: false } : { spawned: true };
       return null;
     });
 
@@ -461,10 +529,15 @@ describe('TileDetailsPanel — Combat Target Validation', () => {
       fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
     });
 
-    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id]);
+    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id], {
+      x: 1,
+      y: 1,
+    });
     expect(mockEncounterExecute).not.toHaveBeenCalled();
     expect(mockCreateEncounter).not.toHaveBeenCalled();
-    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
+    expect(mockRenderWarning).toHaveBeenCalledWith(
+      'No enemies here — try moving to another tile.',
+    );
   });
 
   it('blocks auto-fight when click-time validation evicts the monster', async () => {
@@ -476,7 +549,8 @@ describe('TileDetailsPanel — Combat Target Validation', () => {
     mockGetTableValue.mockImplementation((table: string, entityId: string) => {
       if (entityId !== testMonster.id) return null;
       if (table === 'EncounterEntity') return ghosted ? { died: true } : null;
-      if (table === 'Spawned') return ghosted ? { spawned: false } : { spawned: true };
+      if (table === 'Spawned')
+        return ghosted ? { spawned: false } : { spawned: true };
       return null;
     });
 
@@ -486,10 +560,15 @@ describe('TileDetailsPanel — Combat Target Validation', () => {
       fireEvent.click(screen.getByText('Dire Rat').closest('button')!);
     });
 
-    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id]);
+    expect(mockValidateTileMonsters).toHaveBeenCalledWith([testMonster.id], {
+      x: 1,
+      y: 1,
+    });
     expect(mockEncounterExecute).not.toHaveBeenCalled();
     expect(mockAutoFight).not.toHaveBeenCalled();
-    expect(mockRenderWarning).toHaveBeenCalledWith('No enemies here — try moving to another tile.');
+    expect(mockRenderWarning).toHaveBeenCalledWith(
+      'No enemies here — try moving to another tile.',
+    );
   });
 });
 
@@ -588,7 +667,13 @@ describe('TileDetailsPanel — Monster Collapse', () => {
     const buttons = screen.getAllByRole('button');
     const monsterNames = buttons
       .map(b => b.textContent)
-      .filter(t => t && ['Elite Rat', 'Close Rat', 'Mid Rat', 'Far Rat'].some(n => t.includes(n)));
+      .filter(
+        t =>
+          t &&
+          ['Elite Rat', 'Close Rat', 'Mid Rat', 'Far Rat'].some(n =>
+            t.includes(n),
+          ),
+      );
 
     expect(monsterNames[0]).toContain('Elite Rat');
     expect(monsterNames[1]).toContain('Close Rat');
@@ -607,14 +692,16 @@ describe('TileDetailsPanel — NPC Dialogue Wiring', () => {
   });
 
   it('clicking a dialogue NPC opens NpcDialogueModal with correct props', async () => {
-    mapState.npcsOnTile = [{
-      entityId: '0xvel123',
-      mobId: '25',
-      name: 'Vel Morrow',
-      interaction: 'dialogue',
-      position: { x: 1, y: 1 },
-      metadataUri: 'npc:vel_morrow',
-    }];
+    mapState.npcsOnTile = [
+      {
+        entityId: '0xvel123',
+        mobId: '25',
+        name: 'Vel Morrow',
+        interaction: 'dialogue',
+        position: { x: 1, y: 1 },
+        metadataUri: 'npc:vel_morrow',
+      },
+    ];
     mapState.monstersOnTile = [];
     mapState.visibleMonstersOnTile = [];
 
@@ -628,19 +715,23 @@ describe('TileDetailsPanel — NPC Dialogue Wiring', () => {
     });
 
     expect(screen.getByTestId('npc-dialogue-modal')).toBeTruthy();
-    expect(screen.getByTestId('dialogue-npc-name').textContent).toBe('Vel Morrow');
+    expect(screen.getByTestId('dialogue-npc-name').textContent).toBe(
+      'Vel Morrow',
+    );
     expect(screen.getByTestId('dialogue-npc-id').textContent).toBe('0xvel123');
   });
 
   it('clicking an examine NPC opens NpcDialogueModal', async () => {
-    mapState.npcsOnTile = [{
-      entityId: '0xjournal456',
-      mobId: '30',
-      name: 'Camp Journal',
-      interaction: 'examine',
-      position: { x: 1, y: 1 },
-      metadataUri: 'worldobj:camp_journal',
-    }];
+    mapState.npcsOnTile = [
+      {
+        entityId: '0xjournal456',
+        mobId: '30',
+        name: 'Camp Journal',
+        interaction: 'examine',
+        position: { x: 1, y: 1 },
+        metadataUri: 'worldobj:camp_journal',
+      },
+    ];
     mapState.monstersOnTile = [];
     mapState.visibleMonstersOnTile = [];
 
@@ -654,18 +745,22 @@ describe('TileDetailsPanel — NPC Dialogue Wiring', () => {
     });
 
     expect(screen.getByTestId('npc-dialogue-modal')).toBeTruthy();
-    expect(screen.getByTestId('dialogue-npc-name').textContent).toBe('Camp Journal');
+    expect(screen.getByTestId('dialogue-npc-name').textContent).toBe(
+      'Camp Journal',
+    );
   });
 
   it('clicking a respec NPC does NOT open dialogue modal', async () => {
-    mapState.npcsOnTile = [{
-      entityId: '0xvel123',
-      mobId: '25',
-      name: 'Vel Morrow',
-      interaction: 'respec',
-      position: { x: 1, y: 1 },
-      metadataUri: 'npc:vel_morrow',
-    }];
+    mapState.npcsOnTile = [
+      {
+        entityId: '0xvel123',
+        mobId: '25',
+        name: 'Vel Morrow',
+        interaction: 'respec',
+        position: { x: 1, y: 1 },
+        metadataUri: 'npc:vel_morrow',
+      },
+    ];
     mapState.monstersOnTile = [];
     mapState.visibleMonstersOnTile = [];
 

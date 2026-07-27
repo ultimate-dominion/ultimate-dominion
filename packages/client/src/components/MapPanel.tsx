@@ -14,37 +14,48 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaGlobeAmericas, FaMap, FaStoreAlt, FaUser, FaSkullCrossbones } from 'react-icons/fa';
-
-
 import { useTranslation } from 'react-i18next';
+import {
+  FaGlobeAmericas,
+  FaMap,
+  FaStoreAlt,
+  FaUser,
+  FaSkullCrossbones,
+} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMap } from '../contexts/MapContext';
 import { useMovement } from '../contexts/MovementContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
-import { useGameConfig } from '../lib/gameStore';
+import {
+  OnboardingStage,
+  useOnboardingStage,
+} from '../hooks/useOnboardingStage';
 import { SHOW_Z2 } from '../lib/env';
-import { canUseDarkCaveExit, DARK_CAVE_EXIT_TILE } from '../utils/zoneExit';
-import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
+import { useGameConfig } from '../lib/gameStore';
 import { WAITING_ROOM_PATH } from '../Routes';
+import { canUseDarkCaveExit, DARK_CAVE_EXIT_TILE } from '../utils/zoneExit';
+
 import { CaptchaGate } from './CaptchaGate';
 import { ChatPanel } from './ChatPanel';
+import { FragmentEchoTile } from './FragmentEchoOverlay';
 import { OnlineLink } from './OnlineRoster';
 import { PolygonalCard } from './PolygonalCard';
-import { FragmentEchoTile } from './FragmentEchoOverlay';
-import { CharacterPieceSvg } from './SVGs/CharacterPieceSvg';
+import { AncientMapView } from './pretext/AncientMapView';
+import { GameAncientMap } from './pretext/game/GameAncientMap';
 import { CompassArrowSvg, CompassRoseOrnamentSvg } from './SVGs/CompassRoseSvg';
 import { TileNumberSvg } from './SVGs/TileNumberSvg';
-import { GameAncientMap } from './pretext/game/GameAncientMap';
-import { AncientMapView } from './pretext/AncientMapView';
 
 /** Safe zone boundaries per zone (display coords, top-down grid) */
-const SAFE_ZONE_BY_ZONE: Record<number, { topLeft: { x: number; y: number }; bottomRight: { x: number; y: number } }> = {
-  1: { topLeft: { x: 0, y: 4 }, bottomRight: { x: 4, y: 0 } },   // Z1: x<5 AND y<5
-  2: { topLeft: { x: 0, y: 2 }, bottomRight: { x: 9, y: 0 } },   // Z2: y<3 (full width)
+const SAFE_ZONE_BY_ZONE: Record<
+  number,
+  { topLeft: { x: number; y: number }; bottomRight: { x: number; y: number } }
+> = {
+  1: { topLeft: { x: 0, y: 4 }, bottomRight: { x: 4, y: 0 } }, // Z1: x<5 AND y<5
+  2: { topLeft: { x: 0, y: 2 }, bottomRight: { x: 9, y: 0 } }, // Z2: y<3 (full width)
 };
 
 const MAP_SIZE = 10;
@@ -83,15 +94,60 @@ const COMPASS_DIRECTIONS: {
   gridRow: number;
   gridCol: number;
 }[] = [
-  { label: 'N', direction: 'up', rotate: '0deg', dx: 0, dy: 1, gridRow: 1, gridCol: 2 },
-  { label: 'W', direction: 'left', rotate: '-90deg', dx: -1, dy: 0, gridRow: 2, gridCol: 1 },
-  { label: 'E', direction: 'right', rotate: '90deg', dx: 1, dy: 0, gridRow: 2, gridCol: 3 },
-  { label: 'S', direction: 'down', rotate: '180deg', dx: 0, dy: -1, gridRow: 3, gridCol: 2 },
+  {
+    label: 'N',
+    direction: 'up',
+    rotate: '0deg',
+    dx: 0,
+    dy: 1,
+    gridRow: 1,
+    gridCol: 2,
+  },
+  {
+    label: 'W',
+    direction: 'left',
+    rotate: '-90deg',
+    dx: -1,
+    dy: 0,
+    gridRow: 2,
+    gridCol: 1,
+  },
+  {
+    label: 'E',
+    direction: 'right',
+    rotate: '90deg',
+    dx: 1,
+    dy: 0,
+    gridRow: 2,
+    gridCol: 3,
+  },
+  {
+    label: 'S',
+    direction: 'down',
+    rotate: '180deg',
+    dx: 0,
+    dy: -1,
+    gridRow: 3,
+    gridCol: 2,
+  },
 ];
 
 export const MapPanel = (): JSX.Element => {
   const { t } = useTranslation('ui');
-  const { allCharacters, allMonsters, allNpcs, allShops, currentZone, currentZoneName, displayPosition, isSpawned, isSpawning, onSpawn, position, worldBosses } = useMap();
+  const {
+    allCharacters,
+    allMonsters,
+    allNpcs,
+    allShops,
+    currentZone,
+    currentZoneName,
+    displayPosition,
+    isSpawned,
+    isSpawning,
+    onSpawn,
+    position,
+    worldBosses,
+  } = useMap();
   const { character } = useCharacter();
   const { currentBattle } = useBattle();
   const { autoAdventureMode, isRefreshing, onMove } = useMovement();
@@ -116,7 +172,9 @@ export const MapPanel = (): JSX.Element => {
   }, [allCharacters]);
 
   const configValue = useGameConfig('UltimateDominionConfig');
-  const maxPlayers = configValue?.maxPlayers ? BigInt(configValue.maxPlayers as string) : BigInt(0);
+  const maxPlayers = configValue?.maxPlayers
+    ? BigInt(configValue.maxPlayers as string)
+    : BigInt(0);
 
   const playerLevel = character?.level ? Number(character.level) : 1;
 
@@ -167,7 +225,14 @@ export const MapPanel = (): JSX.Element => {
     }
 
     return result;
-  }, [allMonsters, allCharacters, delegatorAddress, position, displayPosition, playerLevel]);
+  }, [
+    allMonsters,
+    allCharacters,
+    delegatorAddress,
+    position,
+    displayPosition,
+    playerLevel,
+  ]);
 
   return (
     <Stack alignItems="center" className="data-dense" h="100%">
@@ -190,42 +255,43 @@ export const MapPanel = (): JSX.Element => {
             {isMapFull && queueStatus === 'idle' && !showCaptcha && (
               <>
                 <Text color="red" fontWeight={500} size="sm">
-                  {t('map.serverFull', { current: currentPlayersSpawned, max: Number(maxPlayers) })}
+                  {t('map.serverFull', {
+                    current: currentPlayersSpawned,
+                    max: Number(maxPlayers),
+                  })}
                 </Text>
-                <Button
-                  onClick={() => setShowCaptcha(true)}
-                  size="sm"
-                >
+                <Button onClick={() => setShowCaptcha(true)} size="sm">
                   {t('map.joinQueue')}
                 </Button>
               </>
             )}
             {isMapFull && queueStatus === 'idle' && showCaptcha && (
               <CaptchaGate
-                isLoading={queueStatus === 'joining' as any}
-                onVerified={async (token) => {
+                isLoading={queueStatus === ('joining' as any)}
+                onVerified={async token => {
                   await joinQueue(token);
                   navigate(WAITING_ROOM_PATH);
                 }}
               />
             )}
-            {isMapFull && (queueStatus === 'waiting' || queueStatus === 'joining') && (
-              <>
-                <Text color="#D4A54A" fontWeight={500} size="sm">
-                  {t('map.queuePosition', { position: queuePosition })}
-                </Text>
-                <Text color="#8A7E6A" size="xs">
-                  {t('map.waitTime', { minutes: estimatedWaitMinutes })}
-                </Text>
-                <Button
-                  onClick={() => navigate(WAITING_ROOM_PATH)}
-                  size="sm"
-                  variant="outline"
-                >
-                  {t('map.viewWaitingRoom')}
-                </Button>
-              </>
-            )}
+            {isMapFull &&
+              (queueStatus === 'waiting' || queueStatus === 'joining') && (
+                <>
+                  <Text color="#D4A54A" fontWeight={500} size="sm">
+                    {t('map.queuePosition', { position: queuePosition })}
+                  </Text>
+                  <Text color="#8A7E6A" size="xs">
+                    {t('map.waitTime', { minutes: estimatedWaitMinutes })}
+                  </Text>
+                  <Button
+                    onClick={() => navigate(WAITING_ROOM_PATH)}
+                    size="sm"
+                    variant="outline"
+                  >
+                    {t('map.viewWaitingRoom')}
+                  </Button>
+                </>
+              )}
             {isMapFull && queueStatus === 'ready' && (
               <>
                 <Text color="green.300" fontWeight={700} size="sm">
@@ -267,7 +333,12 @@ export const MapPanel = (): JSX.Element => {
       </Box>
 
       {/* Map grid */}
-      <Box order={{ base: 1, lg: 1 }} w="100%" h={{ base: '300px', lg: '35%' }} flexShrink={0}>
+      <Box
+        order={{ base: 1, lg: 1 }}
+        w="100%"
+        h={{ base: '300px', lg: '35%' }}
+        flexShrink={0}
+      >
         <PolygonalCard clipPath="none">
           <HStack
             bgColor="blue500"
@@ -276,9 +347,7 @@ export const MapPanel = (): JSX.Element => {
             width="100%"
             justifyContent="space-between"
           >
-            <Heading size="sm">
-              {currentZoneName}
-            </Heading>
+            <Heading size="sm">{currentZoneName}</Heading>
             {SHOW_Z2 && (
               <IconButton
                 aria-label="Show world map"
@@ -310,7 +379,9 @@ export const MapPanel = (): JSX.Element => {
                 worldBosses={worldBosses}
                 safeZone={SAFE_ZONE_BY_ZONE[currentZone] ?? null}
                 exitTile={
-                  SHOW_Z2 && Number(character?.level ?? 1) >= 10 && currentZone === 1
+                  SHOW_Z2 &&
+                  Number(character?.level ?? 1) >= 10 &&
+                  currentZone === 1
                     ? DARK_CAVE_EXIT_TILE
                     : null
                 }
@@ -320,204 +391,239 @@ export const MapPanel = (): JSX.Element => {
               />
             </Box>
           ) : (
-          <Box
-            aspectRatio="1/1"
-            border="0.5px solid"
-            borderColor="grey500"
-            display="grid"
-            gridTemplateColumns={stage >= OnboardingStage.VETERAN ? 'repeat(10, 1fr)' : 'repeat(5, 1fr)'}
-            gridTemplateRows={stage >= OnboardingStage.VETERAN ? 'repeat(10, 1fr)' : 'repeat(5, 1fr)'}
-            maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
-            maxW="100%"
-            m="0 auto"
-            mt={1}
-          >
-            {[...Array(stage >= OnboardingStage.VETERAN ? 100 : 25)].map((_, i) => {
-              const gridSize = stage >= OnboardingStage.VETERAN ? MAP_SIZE : 5;
-              const row = (gridSize - 1) - Math.floor(i / gridSize);
-              const col = i % gridSize;
-              const currentTile = displayPosition?.x === col && displayPosition?.y === row;
+            <Box
+              aspectRatio="1/1"
+              border="0.5px solid"
+              borderColor="grey500"
+              display="grid"
+              gridTemplateColumns={
+                stage >= OnboardingStage.VETERAN
+                  ? 'repeat(10, 1fr)'
+                  : 'repeat(5, 1fr)'
+              }
+              gridTemplateRows={
+                stage >= OnboardingStage.VETERAN
+                  ? 'repeat(10, 1fr)'
+                  : 'repeat(5, 1fr)'
+              }
+              maxH={{ base: 'calc(100% - 56px)', md: 'calc(100% - 68px)' }}
+              maxW="100%"
+              m="0 auto"
+              mt={1}
+            >
+              {[...Array(stage >= OnboardingStage.VETERAN ? 100 : 25)].map(
+                (_, i) => {
+                  const gridSize =
+                    stage >= OnboardingStage.VETERAN ? MAP_SIZE : 5;
+                  const row = gridSize - 1 - Math.floor(i / gridSize);
+                  const col = i % gridSize;
+                  const currentTile =
+                    displayPosition?.x === col && displayPosition?.y === row;
 
-              const safeZone = SAFE_ZONE_BY_ZONE[currentZone];
-              const showSafeZone = !!safeZone;
-              const hasSafeZoneTopBorder = showSafeZone &&
-                row === safeZone.topLeft.y &&
-                col >= safeZone.topLeft.x &&
-                col <= safeZone.bottomRight.x;
+                  const safeZone = SAFE_ZONE_BY_ZONE[currentZone];
+                  const showSafeZone = !!safeZone;
+                  const hasSafeZoneTopBorder =
+                    showSafeZone &&
+                    row === safeZone.topLeft.y &&
+                    col >= safeZone.topLeft.x &&
+                    col <= safeZone.bottomRight.x;
 
-              const hasSafeZoneRightBorder = showSafeZone &&
-                col === safeZone.bottomRight.x &&
-                row >= safeZone.bottomRight.y &&
-                row <= safeZone.topLeft.y;
+                  const hasSafeZoneRightBorder =
+                    showSafeZone &&
+                    col === safeZone.bottomRight.x &&
+                    row >= safeZone.bottomRight.y &&
+                    row <= safeZone.topLeft.y;
 
-              const hasSafeZoneBottomBorder = showSafeZone &&
-                row === safeZone.bottomRight.y &&
-                col >= safeZone.topLeft.x &&
-                col <= safeZone.bottomRight.x;
+                  const hasSafeZoneBottomBorder =
+                    showSafeZone &&
+                    row === safeZone.bottomRight.y &&
+                    col >= safeZone.topLeft.x &&
+                    col <= safeZone.bottomRight.x;
 
-              const hasSafeZoneLeftBorder = showSafeZone &&
-                row >= safeZone.bottomRight.y &&
-                row <= safeZone.topLeft.y &&
-                col === safeZone.topLeft.x;
+                  const hasSafeZoneLeftBorder =
+                    showSafeZone &&
+                    row >= safeZone.bottomRight.y &&
+                    row <= safeZone.topLeft.y &&
+                    col === safeZone.topLeft.x;
 
-              const isInSafeArea = showSafeZone &&
-                col >= safeZone.topLeft.x && col <= safeZone.bottomRight.x &&
-                row >= safeZone.bottomRight.y && row <= safeZone.topLeft.y;
+                  const isInSafeArea =
+                    showSafeZone &&
+                    col >= safeZone.topLeft.x &&
+                    col <= safeZone.bottomRight.x &&
+                    row >= safeZone.bottomRight.y &&
+                    row <= safeZone.topLeft.y;
 
-              return (
-                <VStack
-                  bgColor={
-                    isInSafeArea
-                      ? 'rgba(200,122,42,0.06)'
-                      : 'transparent'
-                  }
-                  borderBottom={
-                    hasSafeZoneBottomBorder ? '1.5px solid' : '0.5px solid'
-                  }
-                  borderBottomColor={
-                    hasSafeZoneBottomBorder ? '#C87A2A' : 'grey500'
-                  }
-                  borderLeft={
-                    hasSafeZoneLeftBorder ? '1.5px solid' : '0.5px solid'
-                  }
-                  borderLeftColor={hasSafeZoneLeftBorder ? '#C87A2A' : 'grey500'}
-                  borderRight={
-                    hasSafeZoneRightBorder ? '1.5px solid' : '0.5px solid'
-                  }
-                  borderRightColor={
-                    hasSafeZoneRightBorder ? '#C87A2A' : 'grey500'
-                  }
-                  borderTop={
-                    hasSafeZoneTopBorder ? '1.5px solid' : '0.5px solid'
-                  }
-                  borderTopColor={hasSafeZoneTopBorder ? '#C87A2A' : 'grey500'}
-                  justifyContent="center"
-                  key={`map-tile${i}`}
-                  position="relative"
-                >
-                  {(col === 0 || row === 0) && (
-                    <TileNumberSvg number={col || row} />
-                  )}
+                  return (
+                    <VStack
+                      bgColor={
+                        isInSafeArea ? 'rgba(200,122,42,0.06)' : 'transparent'
+                      }
+                      borderBottom={
+                        hasSafeZoneBottomBorder ? '1.5px solid' : '0.5px solid'
+                      }
+                      borderBottomColor={
+                        hasSafeZoneBottomBorder ? '#C87A2A' : 'grey500'
+                      }
+                      borderLeft={
+                        hasSafeZoneLeftBorder ? '1.5px solid' : '0.5px solid'
+                      }
+                      borderLeftColor={
+                        hasSafeZoneLeftBorder ? '#C87A2A' : 'grey500'
+                      }
+                      borderRight={
+                        hasSafeZoneRightBorder ? '1.5px solid' : '0.5px solid'
+                      }
+                      borderRightColor={
+                        hasSafeZoneRightBorder ? '#C87A2A' : 'grey500'
+                      }
+                      borderTop={
+                        hasSafeZoneTopBorder ? '1.5px solid' : '0.5px solid'
+                      }
+                      borderTopColor={
+                        hasSafeZoneTopBorder ? '#C87A2A' : 'grey500'
+                      }
+                      justifyContent="center"
+                      key={`map-tile${i}`}
+                      position="relative"
+                    >
+                      {(col === 0 || row === 0) && (
+                        <TileNumberSvg number={col || row} />
+                      )}
 
-                  {currentTile && isSpawned && (
-                    <CharacterPieceSvg
-                      position="absolute"
-                      left="50%"
-                      transform="translateX(-30%)"
-                    />
-                  )}
-
-                  <FragmentEchoTile x={col} y={row} tileSize={30} />
-
-                  {allShops.map((shop, index) => {
-                    const isShopHere = shop.position.x === col && shop.position.y === row;
-
-                    return (
-                      isShopHere && (
-                        <VStack
-                          key={`shop-${index}`}
+                      {currentTile && isSpawned && (
+                        <Text
+                          aria-label={t('map.currentPosition', 'Your position')}
+                          color="#E8DCC8"
+                          fontFamily="mono"
+                          fontSize="16px"
+                          fontWeight={900}
                           left="50%"
+                          lineHeight={1}
                           position="absolute"
                           transform="translateX(-50%)"
                         >
-                          <FaStoreAlt size={14} />
-                        </VStack>
-                      )
-                    );
-                  })}
+                          @
+                        </Text>
+                      )}
 
-                  {allNpcs.map((npc, index) => {
-                    const isNpcHere = npc.position.x === col && npc.position.y === row;
+                      <FragmentEchoTile x={col} y={row} tileSize={30} />
 
-                    return (
-                      isNpcHere && (
-                        <VStack
-                          key={`npc-${index}`}
-                          left="50%"
-                          position="absolute"
-                          transform="translateX(-50%)"
-                        >
-                          <FaUser size={14} color={npc.interaction === 'respec' ? '#e07c4f' : '#4fc3f7'} />
-                        </VStack>
-                      )
-                    );
-                  })}
+                      {allShops.map((shop, index) => {
+                        const isShopHere =
+                          shop.position.x === col && shop.position.y === row;
 
-                  {/* World boss spawn tile */}
-                  {worldBosses.map((boss) => {
-                    const isBossHere = boss.spawnX === col && boss.spawnY === row;
+                        return (
+                          isShopHere && (
+                            <VStack
+                              key={`shop-${index}`}
+                              left="50%"
+                              position="absolute"
+                              transform="translateX(-50%)"
+                            >
+                              <FaStoreAlt size={14} />
+                            </VStack>
+                          )
+                        );
+                      })}
 
-                    if (!isBossHere) return null;
+                      {allNpcs.map((npc, index) => {
+                        const isNpcHere =
+                          npc.position.x === col && npc.position.y === row;
 
-                    return boss.isAlive ? (
-                      <Box
-                        key={`boss-${boss.bossId}`}
-                        position="absolute"
-                        inset={0}
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        bg="radial-gradient(circle, rgba(184,58,42,0.15) 0%, transparent 70%)"
-                        animation={`${bossGlow} 3s ease-in-out infinite`}
-                        borderRadius="sm"
-                        pointerEvents="none"
-                      >
-                        <FaSkullCrossbones size={12} color="#B83A2A" />
-                      </Box>
-                    ) : (
-                      <Box
-                        key={`boss-dead-${boss.bossId}`}
-                        position="absolute"
-                        inset={0}
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        animation={`${bossFade} 4s ease-in-out infinite`}
-                        pointerEvents="none"
-                      >
-                        <FaSkullCrossbones size={10} color="#3A3228" />
-                      </Box>
-                    );
-                  })}
+                        return (
+                          isNpcHere && (
+                            <VStack
+                              key={`npc-${index}`}
+                              left="50%"
+                              position="absolute"
+                              transform="translateX(-50%)"
+                            >
+                              <FaUser
+                                size={14}
+                                color={
+                                  npc.interaction === 'respec'
+                                    ? '#e07c4f'
+                                    : '#4fc3f7'
+                                }
+                              />
+                            </VStack>
+                          )
+                        );
+                      })}
 
-                  {/* Zone exit tile — glowing portal at north-center */}
-                  {SHOW_Z2 &&
-                    Number(character?.level ?? 1) >= 10 &&
-                    currentZone === 1 &&
-                    col === DARK_CAVE_EXIT_TILE.x &&
-                    row === DARK_CAVE_EXIT_TILE.y && (
-                      <Box
-                        position="absolute"
-                        inset={0}
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        bg="radial-gradient(circle, rgba(180,198,212,0.12) 0%, transparent 70%)"
-                        animation={`${exitTileGlow} 3s ease-in-out infinite`}
-                        borderRadius="sm"
-                        pointerEvents="none"
-                      >
-                        <Box
-                          w="6px"
-                          h="6px"
-                          borderRadius="full"
-                          bg="rgba(180, 198, 212, 0.7)"
-                          boxShadow="0 0 8px rgba(180, 198, 212, 0.6)"
-                          animation={`${exitTilePulse} 2s ease-in-out infinite`}
-                        />
-                      </Box>
-                    )}
-                </VStack>
-              );
-            })}
-          </Box>
+                      {/* World boss spawn tile */}
+                      {worldBosses.map(boss => {
+                        const isBossHere =
+                          boss.spawnX === col && boss.spawnY === row;
+
+                        if (!isBossHere) return null;
+
+                        return boss.isAlive ? (
+                          <Box
+                            key={`boss-${boss.bossId}`}
+                            position="absolute"
+                            inset={0}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            bg="radial-gradient(circle, rgba(184,58,42,0.15) 0%, transparent 70%)"
+                            animation={`${bossGlow} 3s ease-in-out infinite`}
+                            borderRadius="sm"
+                            pointerEvents="none"
+                          >
+                            <FaSkullCrossbones size={12} color="#B83A2A" />
+                          </Box>
+                        ) : (
+                          <Box
+                            key={`boss-dead-${boss.bossId}`}
+                            position="absolute"
+                            inset={0}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            animation={`${bossFade} 4s ease-in-out infinite`}
+                            pointerEvents="none"
+                          >
+                            <FaSkullCrossbones size={10} color="#3A3228" />
+                          </Box>
+                        );
+                      })}
+
+                      {/* Zone exit tile — glowing portal at north-center */}
+                      {SHOW_Z2 &&
+                        Number(character?.level ?? 1) >= 10 &&
+                        currentZone === 1 &&
+                        col === DARK_CAVE_EXIT_TILE.x &&
+                        row === DARK_CAVE_EXIT_TILE.y && (
+                          <Box
+                            position="absolute"
+                            inset={0}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            bg="radial-gradient(circle, rgba(180,198,212,0.12) 0%, transparent 70%)"
+                            animation={`${exitTileGlow} 3s ease-in-out infinite`}
+                            borderRadius="sm"
+                            pointerEvents="none"
+                          >
+                            <Box
+                              w="6px"
+                              h="6px"
+                              borderRadius="full"
+                              bg="rgba(180, 198, 212, 0.7)"
+                              boxShadow="0 0 8px rgba(180, 198, 212, 0.6)"
+                              animation={`${exitTilePulse} 2s ease-in-out infinite`}
+                            />
+                          </Box>
+                        )}
+                    </VStack>
+                  );
+                },
+              )}
+            </Box>
           )}
           {stage >= OnboardingStage.SETTLING_IN && (
-            <HStack
-              justifyContent="end"
-              mt={0.5}
-              px={{ base: 1, sm: 2 }}
-            >
+            <HStack justifyContent="end" mt={0.5} px={{ base: 1, sm: 2 }}>
               <OnlineLink />
             </HStack>
           )}
@@ -545,12 +651,7 @@ export const MapPanel = (): JSX.Element => {
           onClick={() => setShowWorldMap(false)}
           cursor="pointer"
         >
-          <HStack
-            px={6}
-            py={3}
-            justifyContent="space-between"
-            flexShrink={0}
-          >
+          <HStack px={6} py={3} justifyContent="space-between" flexShrink={0}>
             <Heading size="md" color="textHeading" fontFamily="heading">
               The World
             </Heading>
@@ -566,7 +667,10 @@ export const MapPanel = (): JSX.Element => {
           </HStack>
           <Box flex={1} position="relative" mx={4} mb={4}>
             <AncientMapView
-              zoneVisibility={{ 1: 'discovered', 2: currentZone >= 2 ? 'discovered' : 'rumored' }}
+              zoneVisibility={{
+                1: 'discovered',
+                2: currentZone >= 2 ? 'discovered' : 'rumored',
+              }}
               currentZone={currentZone}
               onZoneClick={() => setShowWorldMap(false)}
             />
@@ -576,7 +680,6 @@ export const MapPanel = (): JSX.Element => {
     </Stack>
   );
 };
-
 
 const compassPulse = keyframes`
   0%, 100% { opacity: 0.7; transform: scale(1); }
@@ -589,7 +692,12 @@ const exitCompassGlow = keyframes`
 `;
 
 const WASD_MAP: Record<string, string> = { N: 'W', W: 'A', S: 'S', E: 'D' };
-const ARROW_MAP: Record<string, string> = { N: '\u2191', W: '\u2190', S: '\u2193', E: '\u2192' };
+const ARROW_MAP: Record<string, string> = {
+  N: '\u2191',
+  W: '\u2190',
+  S: '\u2193',
+  E: '\u2192',
+};
 
 const COMPASS_COLLAPSED_KEY = 'ud_compass_collapsed';
 const COMPASS_PULSE_SEEN_KEY = 'ud_compass_pulse_seen';
@@ -659,7 +767,11 @@ const NavigationCompass = ({
                 isDisabled={!info}
                 label={
                   info
-                    ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
+                    ? t('map.tileInfo', {
+                        dir: label,
+                        monsters: info.monsters,
+                        players: info.players,
+                      })
                     : ''
                 }
                 placement="top"
@@ -669,7 +781,12 @@ const NavigationCompass = ({
                   aria-label={t('map.moveDirection', { dir: label })}
                   icon={
                     <HStack spacing={0.5}>
-                      <Text color="#8A7E6A" fontSize="2xs" fontWeight={700} lineHeight={1}>
+                      <Text
+                        color="#8A7E6A"
+                        fontSize="2xs"
+                        fontWeight={700}
+                        lineHeight={1}
+                      >
                         {label}
                       </Text>
                       <Box transform={`rotate(${rotate})`} lineHeight={0}>
@@ -698,7 +815,8 @@ const NavigationCompass = ({
               fontWeight={700}
               ml={1}
             >
-              {displayPosition?.x ?? position.x},{displayPosition?.y ?? position.y}
+              {displayPosition?.x ?? position.x},
+              {displayPosition?.y ?? position.y}
             </Text>
           )}
         </HStack>
@@ -747,98 +865,117 @@ const NavigationCompass = ({
             borderRadius="50%"
             bg="radial-gradient(circle, rgba(212, 165, 74, 0.1) 0%, transparent 70%)"
           />
-          <CompassRoseOrnamentSvg
-            boxSize="130px"
-            opacity={0.65}
-          />
+          <CompassRoseOrnamentSvg boxSize="130px" opacity={0.65} />
         </Box>
 
         {/* Direction buttons */}
-        {COMPASS_DIRECTIONS.map(({ label, direction, rotate, gridRow, gridCol }) => {
-          const info = adjacentTiles?.[label] ?? null;
-          const rawOob = adjacentTiles ? adjacentTiles[label] === null : false;
-          const isExitArrow = isAtZoneExit && direction === 'up';
-          const isOob = isExitArrow ? false : rawOob;
-          const isActive = !isDisabled && !isOob;
+        {COMPASS_DIRECTIONS.map(
+          ({ label, direction, rotate, gridRow, gridCol }) => {
+            const info = adjacentTiles?.[label] ?? null;
+            const rawOob = adjacentTiles
+              ? adjacentTiles[label] === null
+              : false;
+            const isExitArrow = isAtZoneExit && direction === 'up';
+            const isOob = isExitArrow ? false : rawOob;
+            const isActive = !isDisabled && !isOob;
 
-          return (
-            <GridItem
-              key={label}
-              gridRow={gridRow}
-              gridColumn={gridCol}
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              position="relative"
-              zIndex={1}
-            >
-              <Tooltip
-                hasArrow
-                isDisabled={!info && !isExitArrow}
-                label={
-                  isExitArrow
-                    ? t('map.zoneExit', 'Venture north...')
-                    : info
-                      ? t('map.tileInfo', { dir: label, monsters: info.monsters, players: info.players })
-                      : ''
-                }
-                placement="top"
-                shouldWrapChildren
+            return (
+              <GridItem
+                key={label}
+                gridRow={gridRow}
+                gridColumn={gridCol}
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
+                position="relative"
+                zIndex={1}
               >
-                <IconButton
-                  aria-label={isExitArrow ? t('map.zoneExit', 'Venture north...') : t('map.moveDirection', { dir: label })}
-                  icon={
-                    <VStack spacing={0}>
-                      <Text
-                        color={isExitArrow ? '#B4C6D4' : '#D4A54A'}
-                        fontSize="2xs"
-                        fontWeight={700}
-                        lineHeight={1}
-                        mb={-0.5}
-                        textShadow={isExitArrow ? '0 0 8px rgba(180, 198, 212, 0.6)' : undefined}
-                      >
-                        {label}
-                      </Text>
-                      <Box
-                        transform={`rotate(${rotate})`}
-                        lineHeight={0}
-                        filter={isExitArrow ? 'hue-rotate(180deg) saturate(0.5) brightness(1.4)' : undefined}
-                        transition="filter 0.3s"
-                      >
-                        <CompassArrowSvg boxSize={arrowSize} />
-                      </Box>
-                    </VStack>
-                  }
-                  isDisabled={isDisabled || isOob}
-                  onClick={() => onMove(direction)}
-                  h={btnSize}
-                  w={btnSize}
-                  minW={0}
-                  variant="ghost"
-                  size="xs"
-                  animation={
+                <Tooltip
+                  hasArrow
+                  isDisabled={!info && !isExitArrow}
+                  label={
                     isExitArrow
-                      ? `${exitCompassGlow} 2.5s ease-in-out infinite`
-                      : showPulse && stage < OnboardingStage.SETTLING_IN && isActive
-                        ? `${compassPulse} 2s ease-in-out infinite`
-                        : undefined
+                      ? t('map.zoneExit', 'Venture north...')
+                      : info
+                        ? t('map.tileInfo', {
+                            dir: label,
+                            monsters: info.monsters,
+                            players: info.players,
+                          })
+                        : ''
                   }
-                  bg={isExitArrow ? 'rgba(180, 198, 212, 0.06)' : undefined}
-                  borderRadius="md"
-                  opacity={isDisabled || isOob ? 0.2 : 1}
-                  _hover={
-                    isDisabled
-                      ? {}
-                      : isExitArrow
-                        ? { bg: 'rgba(180, 198, 212, 0.2)' }
-                        : { bg: 'rgba(200,122,42,0.25)' }
-                  }
-                />
-              </Tooltip>
-            </GridItem>
-          );
-        })}
+                  placement="top"
+                  shouldWrapChildren
+                >
+                  <IconButton
+                    aria-label={
+                      isExitArrow
+                        ? t('map.zoneExit', 'Venture north...')
+                        : t('map.moveDirection', { dir: label })
+                    }
+                    icon={
+                      <VStack spacing={0}>
+                        <Text
+                          color={isExitArrow ? '#B4C6D4' : '#D4A54A'}
+                          fontSize="2xs"
+                          fontWeight={700}
+                          lineHeight={1}
+                          mb={-0.5}
+                          textShadow={
+                            isExitArrow
+                              ? '0 0 8px rgba(180, 198, 212, 0.6)'
+                              : undefined
+                          }
+                        >
+                          {label}
+                        </Text>
+                        <Box
+                          transform={`rotate(${rotate})`}
+                          lineHeight={0}
+                          filter={
+                            isExitArrow
+                              ? 'hue-rotate(180deg) saturate(0.5) brightness(1.4)'
+                              : undefined
+                          }
+                          transition="filter 0.3s"
+                        >
+                          <CompassArrowSvg boxSize={arrowSize} />
+                        </Box>
+                      </VStack>
+                    }
+                    isDisabled={isDisabled || isOob}
+                    onClick={() => onMove(direction)}
+                    h={btnSize}
+                    w={btnSize}
+                    minW={0}
+                    variant="ghost"
+                    size="xs"
+                    animation={
+                      isExitArrow
+                        ? `${exitCompassGlow} 2.5s ease-in-out infinite`
+                        : showPulse &&
+                            stage < OnboardingStage.SETTLING_IN &&
+                            isActive
+                          ? `${compassPulse} 2s ease-in-out infinite`
+                          : undefined
+                    }
+                    bg={isExitArrow ? 'rgba(180, 198, 212, 0.06)' : undefined}
+                    borderRadius="md"
+                    opacity={isDisabled || isOob ? 0.2 : 1}
+                    _hover={
+                      isDisabled
+                        ? {}
+                        : isExitArrow
+                          ? { bg: 'rgba(180, 198, 212, 0.2)' }
+                          : { bg: 'rgba(200,122,42,0.25)' }
+                    }
+                  />
+                </Tooltip>
+              </GridItem>
+            );
+          },
+        )}
 
         {/* Center — coords */}
         <GridItem
@@ -858,7 +995,8 @@ const NavigationCompass = ({
               lineHeight={1}
               textAlign="center"
             >
-              {displayPosition?.x ?? position.x},{displayPosition?.y ?? position.y}
+              {displayPosition?.x ?? position.x},
+              {displayPosition?.y ?? position.y}
             </Text>
           )}
         </GridItem>

@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   Card,
@@ -15,27 +14,26 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { IoChatbubble } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  encodeAddressKey,
-  encodeCompositeKey,
-  encodeUint256Key,
-  toBigInt,
-  useGameTable,
-  useGameValue,
-} from '../lib/gameStore';
-import { useBadges } from '../hooks/useBadges';
-import { useReactiveEntity } from '../hooks/useReactiveEntity';
+
 import { AdvancedClassModal } from '../components/AdvancedClassModal';
 import { BadgeIcons, BadgeShowcase } from '../components/BadgeDisplay';
 import { CharacterInspectOverlay } from '../components/CharacterInspectOverlay';
 import { ClassSymbol } from '../components/ClassSymbol';
 import { EditCharacterModal } from '../components/EditCharacterModal';
+import { CharacterMark } from '../components/EntityMark';
 import { FragmentChainProgress } from '../components/FragmentChainProgress';
 import { FragmentCollection } from '../components/FragmentCollection';
 import { ItemCard } from '../components/ItemCard';
@@ -44,36 +42,44 @@ import { ItemEquipModal } from '../components/ItemEquipModal';
 import { Level } from '../components/Level';
 import { LevelingPanel } from '../components/LevelingPanel';
 import { PolygonalCard } from '../components/PolygonalCard';
+import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useChat } from '../contexts/ChatContext';
 import { useItems } from '../contexts/ItemsContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
+import { useBadges } from '../hooks/useBadges';
+import { useReactiveEntity } from '../hooks/useReactiveEntity';
 import { SHOW_Z2 } from '../lib/env';
+import {
+  encodeAddressKey,
+  encodeCompositeKey,
+  encodeUint256Key,
+  toBigInt,
+  useGameTable,
+  useGameValue,
+} from '../lib/gameStore';
 import { HOME_PATH } from '../Routes';
 import {
   MAX_EQUIPPED_ARMOR,
   MAX_EQUIPPED_WEAPONS,
   MAX_LEVEL,
 } from '../utils/constants';
-import {
-  decodeCharacterId,
-  etherToFixedNumber,
-} from '../utils/helpers';
+import { decodeCharacterId, etherToFixedNumber } from '../utils/helpers';
 import { getRarityColor } from '../utils/rarityHelpers';
 import { DARK_DIVIDER_SHADOW } from '../utils/theme';
 import {
   type Armor,
   type Character,
   type Consumable,
-  type QuestItemTemplate,
   Race,
   type Spell,
   type Weapon,
 } from '../utils/types';
 
 const CharacterViewer = lazy(() =>
-  import('../components/pretext/game/CharacterViewer').then(m => ({ default: m.CharacterViewer })),
+  import('../components/pretext/game/CharacterViewer').then(m => ({
+    default: m.CharacterViewer,
+  })),
 );
 
 export const CharacterPage = (): JSX.Element => {
@@ -201,7 +207,11 @@ export const CharacterPage = (): JSX.Element => {
   return (
     <Box>
       <Helmet>
-        <title>{character ? `${character.name} | Ultimate Dominion` : 'Character | Ultimate Dominion'}</title>
+        <title>
+          {character
+            ? `${character.name} | Ultimate Dominion`
+            : 'Character | Ultimate Dominion'}
+        </title>
       </Helmet>
       {character ? (
         <Grid
@@ -253,12 +263,14 @@ export const CharacterPage = (): JSX.Element => {
                         <Text
                           as="span"
                           color={
-                            BigInt(character.experience) >= nextLevelXpRequirement
+                            BigInt(character.experience) >=
+                            nextLevelXpRequirement
                               ? 'green'
                               : 'black'
                           }
                           fontWeight={
-                            BigInt(character.experience) >= nextLevelXpRequirement
+                            BigInt(character.experience) >=
+                            nextLevelXpRequirement
                               ? 'bold'
                               : 'normal'
                           }
@@ -277,7 +289,6 @@ export const CharacterPage = (): JSX.Element => {
                 maxed={maxed}
                 mt={10}
               />
-
             </PolygonalCard>
           </GridItem>
           <GridItem
@@ -300,7 +311,11 @@ export const CharacterPage = (): JSX.Element => {
               position="relative"
             >
               {character.race !== Race.None && (
-                <Box cursor="pointer" onClick={onOpenInspect} position="relative">
+                <Box
+                  cursor="pointer"
+                  onClick={onOpenInspect}
+                  position="relative"
+                >
                   <Suspense fallback={null}>
                     <CharacterViewer
                       race={character.race}
@@ -308,7 +323,12 @@ export const CharacterPage = (): JSX.Element => {
                       cellSize={6}
                       equippedItems={
                         equippedWeapons[0]
-                          ? [{ name: equippedWeapons[0].name, socket: 'hand_R.socket' }]
+                          ? [
+                              {
+                                name: equippedWeapons[0].name,
+                                socket: 'hand_R.socket',
+                              },
+                            ]
                           : undefined
                       }
                     />
@@ -316,10 +336,21 @@ export const CharacterPage = (): JSX.Element => {
                   {/* Rarity badges for equipped items */}
                   <HStack spacing={1.5} justify="center" mt={1}>
                     {equippedArmor[0] && (
-                      <Box w="8px" h="8px" borderRadius="sm" bg={getRarityColor(equippedArmor[0].rarity)} />
+                      <Box
+                        w="8px"
+                        h="8px"
+                        borderRadius="sm"
+                        bg={getRarityColor(equippedArmor[0].rarity)}
+                      />
                     )}
                     {[...equippedWeapons, ...equippedSpells].map((item, i) => (
-                      <Box key={i} w="8px" h="8px" borderRadius="sm" bg={getRarityColor(item.rarity)} />
+                      <Box
+                        key={i}
+                        w="8px"
+                        h="8px"
+                        borderRadius="sm"
+                        bg={getRarityColor(item.rarity)}
+                      />
                     ))}
                   </HStack>
                   {/* Inspect hint */}
@@ -336,24 +367,46 @@ export const CharacterPage = (): JSX.Element => {
                   </Text>
                 </Box>
               )}
-              <HStack spacing={3} alignItems="center" mt={character.race !== Race.None ? 4 : 0}>
-                <Avatar size={{ base: 'md', lg: 'lg' }} src={character.image} />
+              <HStack
+                spacing={3}
+                alignItems="center"
+                mt={character.race !== Race.None ? 4 : 0}
+              >
+                <CharacterMark
+                  boxSize={{ base: '40px', lg: '48px' }}
+                  name={character.name}
+                />
                 <VStack alignItems="start" spacing={1}>
                   <HStack spacing={2} flexWrap="wrap">
                     <Text fontWeight={700} size={{ base: 'lg', sm: 'xl' }}>
                       {character.name}
                     </Text>
-                    <ClassSymbol advancedClass={character.advancedClass} entityClass={character.entityClass} />
+                    <ClassSymbol
+                      advancedClass={character.advancedClass}
+                      entityClass={character.entityClass}
+                    />
                   </HStack>
                   <BadgeIcons badges={badges} />
                 </VStack>
-                {isOwner && Number(character.level) >= 10 && !character.hasSelectedAdvancedClass && (
-                  <Button size="xs" variant="outline" colorScheme="blue" onClick={onOpenClassModal}>
-                    Choose Class
-                  </Button>
-                )}
+                {isOwner &&
+                  Number(character.level) >= 10 &&
+                  !character.hasSelectedAdvancedClass && (
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      colorScheme="blue"
+                      onClick={onOpenClassModal}
+                    >
+                      Choose Class
+                    </Button>
+                  )}
               </HStack>
-              <Text fontWeight={500} mt={6} mb={badges.length > 0 ? 4 : 12} size={{ base: 'sm', sm: 'md' }}>
+              <Text
+                fontWeight={500}
+                mt={6}
+                mb={badges.length > 0 ? 4 : 12}
+                size={{ base: 'sm', sm: 'md' }}
+              >
                 {character.description}
               </Text>
               {badges.length > 0 && (
@@ -521,13 +574,19 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
   }, [equipmentData?.equippedConsumables]);
 
   // Build inventory lists synchronously from reactive tables
-  const ownerKey = useMemo(() => encodeAddressKey(character.owner), [character.owner]);
+  const ownerKey = useMemo(
+    () => encodeAddressKey(character.owner),
+    [character.owner],
+  );
 
   const inventoryArmor = useMemo(() => {
     if (isLoadingItemTemplates) return [];
     return armorTemplates
       .map(armor => {
-        const compositeKey = encodeCompositeKey(ownerKey, encodeUint256Key(BigInt(armor.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          ownerKey,
+          encodeUint256Key(BigInt(armor.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
         return {
           ...armor,
@@ -542,13 +601,22 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         if (rarityDiff !== 0) return rarityDiff;
         return Number(b.armorModifier - a.armorModifier);
       });
-  }, [armorTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
+  }, [
+    armorTemplates,
+    itemsOwnersTable,
+    ownerKey,
+    character.owner,
+    isLoadingItemTemplates,
+  ]);
 
   const inventoryConsumables = useMemo(() => {
     if (isLoadingItemTemplates) return [];
     return consumableTemplates
       .map(consumable => {
-        const compositeKey = encodeCompositeKey(ownerKey, encodeUint256Key(BigInt(consumable.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          ownerKey,
+          encodeUint256Key(BigInt(consumable.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
         return {
           ...consumable,
@@ -563,13 +631,22 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         if (rarityDiff !== 0) return rarityDiff;
         return Number(b.hpRestoreAmount - a.hpRestoreAmount);
       });
-  }, [consumableTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
+  }, [
+    consumableTemplates,
+    itemsOwnersTable,
+    ownerKey,
+    character.owner,
+    isLoadingItemTemplates,
+  ]);
 
   const inventorySpells = useMemo(() => {
     if (isLoadingItemTemplates) return [];
     return spellTemplates
       .map(spell => {
-        const compositeKey = encodeCompositeKey(ownerKey, encodeUint256Key(BigInt(spell.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          ownerKey,
+          encodeUint256Key(BigInt(spell.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
         return {
           ...spell,
@@ -584,13 +661,22 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         if (rarityDiff !== 0) return rarityDiff;
         return Number(b.maxDamage - a.maxDamage);
       });
-  }, [spellTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
+  }, [
+    spellTemplates,
+    itemsOwnersTable,
+    ownerKey,
+    character.owner,
+    isLoadingItemTemplates,
+  ]);
 
   const inventoryWeapons = useMemo(() => {
     if (isLoadingItemTemplates) return [];
     return weaponTemplates
       .map(weapon => {
-        const compositeKey = encodeCompositeKey(ownerKey, encodeUint256Key(BigInt(weapon.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          ownerKey,
+          encodeUint256Key(BigInt(weapon.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
         return {
           ...weapon,
@@ -605,13 +691,22 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         if (rarityDiff !== 0) return rarityDiff;
         return Number(b.maxDamage - a.maxDamage);
       });
-  }, [weaponTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
+  }, [
+    weaponTemplates,
+    itemsOwnersTable,
+    ownerKey,
+    character.owner,
+    isLoadingItemTemplates,
+  ]);
 
   const inventoryQuestItems = useMemo(() => {
     if (isLoadingItemTemplates || questItemTemplates.length === 0) return [];
     return questItemTemplates
       .map(qi => {
-        const compositeKey = encodeCompositeKey(ownerKey, encodeUint256Key(BigInt(qi.tokenId)));
+        const compositeKey = encodeCompositeKey(
+          ownerKey,
+          encodeUint256Key(BigInt(qi.tokenId)),
+        );
         const itemOwner = itemsOwnersTable[compositeKey];
         return {
           ...qi,
@@ -622,23 +717,28 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       })
       .filter(qi => qi.balance !== BigInt(0))
       .sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0));
-  }, [questItemTemplates, itemsOwnersTable, ownerKey, character.owner, isLoadingItemTemplates]);
+  }, [
+    questItemTemplates,
+    itemsOwnersTable,
+    ownerKey,
+    character.owner,
+    isLoadingItemTemplates,
+  ]);
 
   // Equipped items derived from inventory + equipment IDs — fully synchronous
-  const equippedArmor = useMemo(() =>
-    equippedArmorIds.map(id => inventoryArmor.find(a => a.tokenId === id.toString())).filter(Boolean) as Armor[],
-    [equippedArmorIds, inventoryArmor]);
-
-  const equippedSpells = useMemo(() =>
-    equippedSpellIds.map(id => inventorySpells.find(s => s.tokenId === id.toString())).filter(Boolean) as Spell[],
-    [equippedSpellIds, inventorySpells]);
-
-  const equippedWeapons = useMemo(() =>
-    equippedWeaponIds.map(id => inventoryWeapons.find(w => w.tokenId === id.toString())).filter(Boolean) as Weapon[],
-    [equippedWeaponIds, inventoryWeapons]);
+  const equippedArmor = useMemo(
+    () =>
+      equippedArmorIds
+        .map(id => inventoryArmor.find(a => a.tokenId === id.toString()))
+        .filter(Boolean) as Armor[],
+    [equippedArmorIds, inventoryArmor],
+  );
 
   const maxArmorEquipped = equippedArmorIds.length === MAX_EQUIPPED_ARMOR;
-  const totalMoveSlots = equippedWeaponIds.length + equippedSpellIds.length + equippedConsumableIds.length;
+  const totalMoveSlots =
+    equippedWeaponIds.length +
+    equippedSpellIds.length +
+    equippedConsumableIds.length;
   const maxWeaponsEquipped = totalMoveSlots >= MAX_EQUIPPED_WEAPONS;
 
   const armorInInventory = useMemo(() => {
@@ -649,13 +749,21 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
       .toString();
   }, [inventoryArmor]);
 
-  const weaponsInInventory = useMemo(() =>
-    inventoryWeapons.reduce((acc, item) => acc + item.balance, BigInt(0)).toString(),
-    [inventoryWeapons]);
+  const weaponsInInventory = useMemo(
+    () =>
+      inventoryWeapons
+        .reduce((acc, item) => acc + item.balance, BigInt(0))
+        .toString(),
+    [inventoryWeapons],
+  );
 
-  const spellsInInventory = useMemo(() =>
-    inventorySpells.reduce((acc, item) => acc + item.balance, BigInt(0)).toString(),
-    [inventorySpells]);
+  const spellsInInventory = useMemo(
+    () =>
+      inventorySpells
+        .reduce((acc, item) => acc + item.balance, BigInt(0))
+        .toString(),
+    [inventorySpells],
+  );
 
   const consumablesInInventory = useMemo(() => {
     return inventoryConsumables
@@ -694,9 +802,22 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         </Text>
       </HStack>
       <PolygonalCard clipPath="none" p={6}>
-        <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 0 }} size="lg">
+        <Text
+          fontFamily="heading"
+          fontWeight="bold"
+          color="#E8DCC8"
+          mt={{ base: 8, lg: 0 }}
+          size="lg"
+        >
           Armor ({armorInInventory})
-          <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
+          <Text
+            as="span"
+            fontFamily="body"
+            fontWeight={400}
+            size="sm"
+            color="#8A7E6A"
+            ml={2}
+          >
             {equippedArmor.length}/{MAX_EQUIPPED_ARMOR} equipped
           </Text>
         </Text>
@@ -711,7 +832,11 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryArmor.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noArmor')}</Text>}
+          {inventoryArmor.length === 0 && (
+            <Text color="#8A7E6A" fontStyle="italic" size="sm">
+              {t('inventory.noArmor')}
+            </Text>
+          )}
           {inventoryArmor.map((ar, i) => {
             const isEquipped = equippedArmorIds.includes(BigInt(ar.tokenId));
             return (
@@ -729,9 +854,22 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           })}
         </Grid>
         <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
-        <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+        <Text
+          fontFamily="heading"
+          fontWeight="bold"
+          color="#E8DCC8"
+          mt={{ base: 8, lg: 12 }}
+          size="lg"
+        >
           Weapons ({weaponsInInventory})
-          <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
+          <Text
+            as="span"
+            fontFamily="body"
+            fontWeight={400}
+            size="sm"
+            color="#8A7E6A"
+            ml={2}
+          >
             {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} action slots used
           </Text>
         </Text>
@@ -748,11 +886,13 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryWeapons.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noWeapons')}</Text>}
+          {inventoryWeapons.length === 0 && (
+            <Text color="#8A7E6A" fontStyle="italic" size="sm">
+              {t('inventory.noWeapons')}
+            </Text>
+          )}
           {inventoryWeapons.map((item, i) => {
-            const isEquipped = equippedWeaponIds.includes(
-              BigInt(item.tokenId),
-            );
+            const isEquipped = equippedWeaponIds.includes(BigInt(item.tokenId));
             return (
               <GridItem key={i}>
                 <ItemCard
@@ -768,7 +908,13 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           })}
         </Grid>
         <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
-        <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+        <Text
+          fontFamily="heading"
+          fontWeight="bold"
+          color="#E8DCC8"
+          mt={{ base: 8, lg: 12 }}
+          size="lg"
+        >
           Spells ({spellsInInventory})
         </Text>
         <Grid
@@ -781,11 +927,13 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventorySpells.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noSpells')}</Text>}
+          {inventorySpells.length === 0 && (
+            <Text color="#8A7E6A" fontStyle="italic" size="sm">
+              {t('inventory.noSpells')}
+            </Text>
+          )}
           {inventorySpells.map((item, i) => {
-            const isEquipped = equippedSpellIds.includes(
-              BigInt(item.tokenId),
-            );
+            const isEquipped = equippedSpellIds.includes(BigInt(item.tokenId));
             return (
               <GridItem key={i}>
                 <ItemCard
@@ -801,10 +949,24 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           })}
         </Grid>
         <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
-        <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+        <Text
+          fontFamily="heading"
+          fontWeight="bold"
+          color="#E8DCC8"
+          mt={{ base: 8, lg: 12 }}
+          size="lg"
+        >
           Consumables ({consumablesInInventory})
-          <Text as="span" fontFamily="body" fontWeight={400} size="sm" color="#8A7E6A" ml={2}>
-            {equippedConsumableIds.length} equipped — {totalMoveSlots}/{MAX_EQUIPPED_WEAPONS} action slots used
+          <Text
+            as="span"
+            fontFamily="body"
+            fontWeight={400}
+            size="sm"
+            color="#8A7E6A"
+            ml={2}
+          >
+            {equippedConsumableIds.length} equipped — {totalMoveSlots}/
+            {MAX_EQUIPPED_WEAPONS} action slots used
           </Text>
         </Text>
         <Grid
@@ -817,7 +979,11 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
           gap={2}
           mt={4}
         >
-          {inventoryConsumables.length === 0 && <Text color="#8A7E6A" fontStyle="italic" size="sm">{t('inventory.noConsumables')}</Text>}
+          {inventoryConsumables.length === 0 && (
+            <Text color="#8A7E6A" fontStyle="italic" size="sm">
+              {t('inventory.noConsumables')}
+            </Text>
+          )}
           {inventoryConsumables.map((consumable, i) => {
             const isEquipped = equippedConsumableIds.includes(
               BigInt(consumable.tokenId),
@@ -838,8 +1004,18 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
         </Grid>
         {SHOW_Z2 && inventoryQuestItems.length > 0 && (
           <>
-            <Box h="1px" boxShadow={DARK_DIVIDER_SHADOW} my={{ base: 4, lg: 6 }} />
-            <Text fontFamily="heading" fontWeight="bold" color="#E8DCC8" mt={{ base: 8, lg: 12 }} size="lg">
+            <Box
+              h="1px"
+              boxShadow={DARK_DIVIDER_SHADOW}
+              my={{ base: 4, lg: 6 }}
+            />
+            <Text
+              fontFamily="heading"
+              fontWeight="bold"
+              color="#E8DCC8"
+              mt={{ base: 8, lg: 12 }}
+              size="lg"
+            >
               Quest Items ({inventoryQuestItems.length})
             </Text>
             <Grid
@@ -865,7 +1041,13 @@ const ItemsPanel = ({ character }: { character: Character }): JSX.Element => {
                       {qi.name}
                     </Text>
                     {qi.description && (
-                      <Text fontSize="xs" color="#8A7E6A" mt={1} fontStyle="italic" noOfLines={3}>
+                      <Text
+                        fontSize="xs"
+                        color="#8A7E6A"
+                        mt={1}
+                        fontStyle="italic"
+                        noOfLines={3}
+                      >
                         {qi.description}
                       </Text>
                     )}

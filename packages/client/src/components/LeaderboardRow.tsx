@@ -1,12 +1,4 @@
-import {
-  Avatar,
-  Box,
-  Button,
-  Flex,
-  HStack,
-  Text,
-  VStack,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +7,7 @@ import { etherToFixedNumber } from '../utils/helpers';
 import { type Character } from '../utils/types';
 
 import { ClassSymbol } from './ClassSymbol';
+import { CharacterMark } from './EntityMark';
 import { ForwardCaretSvg } from './SVGs/ForwardCaretSvg';
 
 export const LeaderboardRow = ({
@@ -24,7 +17,6 @@ export const LeaderboardRow = ({
     entityClass,
     externalGoldBalance,
     id,
-    image,
     intelligence,
     level,
     maxHp,
@@ -79,11 +71,7 @@ export const LeaderboardRow = ({
           >
             {index + 1}
           </Text>
-          <Avatar
-            borderRadius="100%"
-            size={{ base: 'sm', md: 'md' }}
-            src={image}
-          />
+          <CharacterMark boxSize={{ base: '32px', md: '40px' }} name={name} />
         </HStack>
         <VStack
           align="start"
@@ -100,7 +88,12 @@ export const LeaderboardRow = ({
             >
               {name}
             </Text>
-            <ClassSymbol advancedClass={advancedClass} entityClass={entityClass} responsive theme="dark" />
+            <ClassSymbol
+              advancedClass={advancedClass}
+              entityClass={entityClass}
+              responsive
+              theme="dark"
+            />
           </HStack>
           <Text
             color="#8A7E6A"
@@ -108,7 +101,12 @@ export const LeaderboardRow = ({
             fontWeight={500}
             size={{ base: '2xs', lg: 'md' }}
           >
-            {t('leaderboardRow.statsSummary', { hp: maxHp.toString(), str: strength.toString(), agi: agility.toString(), int: intelligence.toString() })}
+            {t('leaderboardRow.statsSummary', {
+              hp: maxHp.toString(),
+              str: strength.toString(),
+              agi: agility.toString(),
+              int: intelligence.toString(),
+            })}
           </Text>
         </VStack>
       </Flex>

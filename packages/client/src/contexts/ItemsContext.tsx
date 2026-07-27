@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { usePublicClient } from 'wagmi';
 
+import { SPELL_CATALOG } from '../data/spellsManifest';
 import { useToast } from '../hooks/useToast';
 import {
   encodeBytes32Key,
@@ -20,8 +21,11 @@ import {
   useGameStore,
   useGameTable,
 } from '../lib/gameStore';
-import { SPELL_CATALOG } from '../data/spellsManifest';
-import { fetchMetadataFromUri, isTextOnlyUri, uriToHttp } from '../utils/helpers';
+import {
+  fetchMetadataFromUri,
+  isTextOnlyUri,
+  uriToHttp,
+} from '../utils/helpers';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -36,19 +40,22 @@ import {
 export { SPELL_CATALOG };
 
 /** Returns true when a tokenURI marks an item as a spell (e.g. "spell:arcane_surge_damage"). */
-export const isSpellTokenURI = (tokenURI: string): boolean => tokenURI.startsWith('spell:');
+export const isSpellTokenURI = (tokenURI: string): boolean =>
+  tokenURI.startsWith('spell:');
 
 /** Extracts the effectName from a spell tokenURI, or null for non-spell URIs. */
 export const spellEffectNameFromURI = (tokenURI: string): string | null =>
   isSpellTokenURI(tokenURI) ? tokenURI.slice('spell:'.length) : null;
 
-const erc1155UriAbi = [{
-  name: 'uri',
-  type: 'function',
-  stateMutability: 'view',
-  inputs: [{ name: 'tokenId', type: 'uint256' }],
-  outputs: [{ name: '', type: 'string' }],
-}] as const;
+const erc1155UriAbi = [
+  {
+    name: 'uri',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    outputs: [{ name: '', type: 'string' }],
+  },
+] as const;
 
 type ItemsContextType = {
   armorTemplates: ArmorTemplate[];
@@ -76,37 +83,46 @@ export const ItemsProvider = ({
   const { renderError } = useToast();
 
   const [armorTemplates, setArmorTemplates] = useState<ArmorTemplate[]>([]);
-  const [consumableTemplates, setConsumableTemplates] = useState<ConsumableTemplate[]>([]);
-  const [questItemTemplates, setQuestItemTemplates] = useState<QuestItemTemplate[]>([]);
+  const [consumableTemplates, setConsumableTemplates] = useState<
+    ConsumableTemplate[]
+  >([]);
+  const [questItemTemplates, setQuestItemTemplates] = useState<
+    QuestItemTemplate[]
+  >([]);
   const [spellTemplates, setSpellTemplates] = useState<SpellTemplate[]>([]);
   const [weaponTemplates, setWeaponTemplates] = useState<WeaponTemplate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Reactive table subscriptions — re-runs the effect when item data arrives
   const itemsTable = useGameTable('Items');
-  const hydrated = useGameStore((s) => s.hydrated);
+  const hydrated = useGameStore(s => s.hydrated);
   const baseURIRow = useGameConfig('ItemsMetadataURI');
   const configRow = useGameConfig('UltimateDominionConfig');
   const publicClient = usePublicClient();
 
   const fetchAllArmor = useCallback(
-    async (armorIds: bigint[], uriOverrides?: Record<string, string>): Promise<ArmorTemplate[]> => {
+    async (
+      armorIds: bigint[],
+      uriOverrides?: Record<string, string>,
+    ): Promise<ArmorTemplate[]> => {
       const armorStatsTable = getTableEntries('ArmorStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
       const results = await Promise.allSettled(
-        armorIds.map(async (armorId) => {
+        armorIds.map(async armorId => {
           const keyBytes = encodeUint256Key(armorId);
 
           const armorRow = armorStatsTable[keyBytes];
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
+          const tokenURI = String(
+            tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '',
+          );
 
-          let metadata = { name: `Armor #${armorId}`, description: '', image: '' };
+          let metadata = { name: `Armor #${armorId}`, description: '' };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
             if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
@@ -115,7 +131,10 @@ export const ItemsProvider = ({
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
           } catch (e) {
-            console.warn(`[ItemsContext] Failed to fetch metadata for armor ${armorId}:`, e);
+            console.warn(
+              `[ItemsContext] Failed to fetch metadata for armor ${armorId}:`,
+              e,
+            );
           }
 
           return {
@@ -139,14 +158,20 @@ export const ItemsProvider = ({
         }),
       );
       return results
-        .filter((r): r is PromiseFulfilledResult<ArmorTemplate> => r.status === 'fulfilled')
+        .filter(
+          (r): r is PromiseFulfilledResult<ArmorTemplate> =>
+            r.status === 'fulfilled',
+        )
         .map(r => r.value);
     },
     [baseURIRow, itemsTable],
   );
 
   const fetchAllConsumables = useCallback(
-    async (consumableIds: bigint[], uriOverrides?: Record<string, string>): Promise<ConsumableTemplate[]> => {
+    async (
+      consumableIds: bigint[],
+      uriOverrides?: Record<string, string>,
+    ): Promise<ConsumableTemplate[]> => {
       const consumableStatsTable = getTableEntries('ConsumableStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const statusEffectStatsTable = getTableEntries('StatusEffectStats');
@@ -155,14 +180,16 @@ export const ItemsProvider = ({
       const baseURI = String(baseURIRow?.uri ?? '');
 
       const results = await Promise.allSettled(
-        consumableIds.map(async (consumableId) => {
+        consumableIds.map(async consumableId => {
           const keyBytes = encodeUint256Key(consumableId);
 
           const consumableRow = consumableStatsTable[keyBytes];
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
+          const tokenURI = String(
+            tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '',
+          );
 
           // effects is a bytes32[] stored as string[]
           const effects = Array.isArray(consumableRow?.effects)
@@ -170,14 +197,14 @@ export const ItemsProvider = ({
             : [];
 
           const statusEffectStats = effects
-            .map((effectId) => {
+            .map(effectId => {
               const effectKey = encodeBytes32Key(effectId);
               return statusEffectStatsTable[effectKey];
             })
             .filter(Boolean);
 
           const statusEffectValidities = effects
-            .map((effectId) => {
+            .map(effectId => {
               const effectKey = encodeBytes32Key(effectId);
               return statusEffectValidityTable[effectKey];
             })
@@ -185,7 +212,10 @@ export const ItemsProvider = ({
 
           const hpRestoreAmount = toBigInt(consumableRow?.maxDamage) * -1n;
 
-          let metadata = { name: `Consumable #${consumableId}`, description: '', image: '' };
+          let metadata = {
+            name: `Consumable #${consumableId}`,
+            description: '',
+          };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
             if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
@@ -194,7 +224,10 @@ export const ItemsProvider = ({
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
           } catch (e) {
-            console.warn(`[ItemsContext] Failed to fetch metadata for consumable ${consumableId}:`, e);
+            console.warn(
+              `[ItemsContext] Failed to fetch metadata for consumable ${consumableId}:`,
+              e,
+            );
           }
 
           return {
@@ -235,21 +268,27 @@ export const ItemsProvider = ({
         }),
       );
       return results
-        .filter((r): r is PromiseFulfilledResult<ConsumableTemplate> => r.status === 'fulfilled')
+        .filter(
+          (r): r is PromiseFulfilledResult<ConsumableTemplate> =>
+            r.status === 'fulfilled',
+        )
         .map(r => r.value);
     },
     [baseURIRow, itemsTable],
   );
 
   const fetchAllSpells = useCallback(
-    async (spellIds: bigint[], uriOverrides?: Record<string, string>): Promise<SpellTemplate[]> => {
+    async (
+      spellIds: bigint[],
+      uriOverrides?: Record<string, string>,
+    ): Promise<SpellTemplate[]> => {
       const spellStatsTable = getTableEntries('SpellStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
       const results = await Promise.allSettled(
-        spellIds.map(async (spellId) => {
+        spellIds.map(async spellId => {
           const keyBytes = encodeUint256Key(spellId);
 
           const spellRow = spellStatsTable[keyBytes];
@@ -258,10 +297,14 @@ export const ItemsProvider = ({
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
+          const tokenURI = String(
+            tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '',
+          );
 
           // Extract effectName from "spell:<effectName>" tokenURI for catalog lookup
-          const effectName = tokenURI.startsWith('spell:') ? tokenURI.slice('spell:'.length) : null;
+          const effectName = tokenURI.startsWith('spell:')
+            ? tokenURI.slice('spell:'.length)
+            : null;
           const catalog = effectName ? SPELL_CATALOG[effectName] : null;
 
           // Effects: prefer SpellStats, fall back to WeaponStats (spells deployed as weapons)
@@ -271,7 +314,10 @@ export const ItemsProvider = ({
               ? (weaponRow.effects as string[])
               : [];
 
-          let metadata = { name: catalog?.name ?? `Spell #${spellId}`, description: '', image: '' };
+          let metadata = {
+            name: catalog?.name ?? `Spell #${spellId}`,
+            description: '',
+          };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
             if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
@@ -282,13 +328,25 @@ export const ItemsProvider = ({
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
           } catch (e) {
-            console.warn(`[ItemsContext] Failed to fetch metadata for spell ${spellId}:`, e);
+            console.warn(
+              `[ItemsContext] Failed to fetch metadata for spell ${spellId}:`,
+              e,
+            );
           }
 
           // Damage: prefer SpellStats, fall back to catalog (spells deployed pre-fix)
-          const minDamage = spellRow?.minDamage != null ? toBigInt(spellRow.minDamage) : (catalog?.minDamage ?? 0n);
-          const maxDamage = spellRow?.maxDamage != null ? toBigInt(spellRow.maxDamage) : (catalog?.maxDamage ?? 0n);
-          const minLevel = spellRow?.minLevel != null ? toBigInt(spellRow.minLevel) : (catalog?.minLevel ?? 10n);
+          const minDamage =
+            spellRow?.minDamage != null
+              ? toBigInt(spellRow.minDamage)
+              : catalog?.minDamage ?? 0n;
+          const maxDamage =
+            spellRow?.maxDamage != null
+              ? toBigInt(spellRow.maxDamage)
+              : catalog?.maxDamage ?? 0n;
+          const minLevel =
+            spellRow?.minLevel != null
+              ? toBigInt(spellRow.minLevel)
+              : catalog?.minLevel ?? 10n;
 
           return {
             ...metadata,
@@ -310,34 +368,42 @@ export const ItemsProvider = ({
         }),
       );
       return results
-        .filter((r): r is PromiseFulfilledResult<SpellTemplate> => r.status === 'fulfilled')
+        .filter(
+          (r): r is PromiseFulfilledResult<SpellTemplate> =>
+            r.status === 'fulfilled',
+        )
         .map(r => r.value);
     },
     [baseURIRow, itemsTable],
   );
 
   const fetchAllWeapons = useCallback(
-    async (weaponIds: bigint[], uriOverrides?: Record<string, string>): Promise<WeaponTemplate[]> => {
+    async (
+      weaponIds: bigint[],
+      uriOverrides?: Record<string, string>,
+    ): Promise<WeaponTemplate[]> => {
       const weaponStatsTable = getTableEntries('WeaponStats');
       const statRestrictionsTable = getTableEntries('StatRestrictions');
       const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
       const results = await Promise.allSettled(
-        weaponIds.map(async (weaponId) => {
+        weaponIds.map(async weaponId => {
           const keyBytes = encodeUint256Key(weaponId);
 
           const weaponRow = weaponStatsTable[keyBytes];
           const restrictionsRow = statRestrictionsTable[keyBytes];
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
+          const tokenURI = String(
+            tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '',
+          );
 
           const effects = Array.isArray(weaponRow?.effects)
             ? (weaponRow.effects as string[])
             : [];
 
-          let metadata = { name: `Weapon #${weaponId}`, description: '', image: '' };
+          let metadata = { name: `Weapon #${weaponId}`, description: '' };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
             if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
@@ -346,7 +412,10 @@ export const ItemsProvider = ({
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
           } catch (e) {
-            console.warn(`[ItemsContext] Failed to fetch metadata for weapon ${weaponId}:`, e);
+            console.warn(
+              `[ItemsContext] Failed to fetch metadata for weapon ${weaponId}:`,
+              e,
+            );
           }
 
           return {
@@ -372,25 +441,33 @@ export const ItemsProvider = ({
         }),
       );
       return results
-        .filter((r): r is PromiseFulfilledResult<WeaponTemplate> => r.status === 'fulfilled')
+        .filter(
+          (r): r is PromiseFulfilledResult<WeaponTemplate> =>
+            r.status === 'fulfilled',
+        )
         .map(r => r.value);
     },
     [baseURIRow, itemsTable],
   );
 
   const fetchAllQuestItems = useCallback(
-    async (questItemIds: bigint[], uriOverrides?: Record<string, string>): Promise<QuestItemTemplate[]> => {
+    async (
+      questItemIds: bigint[],
+      uriOverrides?: Record<string, string>,
+    ): Promise<QuestItemTemplate[]> => {
       const tokenURITable = getTableEntries('ItemsURIStorage');
       const baseURI = String(baseURIRow?.uri ?? '');
 
       const results = await Promise.allSettled(
-        questItemIds.map(async (itemId) => {
+        questItemIds.map(async itemId => {
           const keyBytes = encodeUint256Key(itemId);
           const itemRow = itemsTable[keyBytes];
           const tokenURIRow = tokenURITable[keyBytes];
-          const tokenURI = String(tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '');
+          const tokenURI = String(
+            tokenURIRow?.uri ?? uriOverrides?.[keyBytes] ?? '',
+          );
 
-          let metadata = { name: `Quest Item #${itemId}`, description: '', image: '' };
+          let metadata = { name: `Quest Item #${itemId}`, description: '' };
           try {
             const fullUri = `${baseURI}${tokenURI}`;
             if (isTextOnlyUri(tokenURI) || isTextOnlyUri(fullUri)) {
@@ -398,7 +475,9 @@ export const ItemsProvider = ({
             } else {
               metadata = await fetchMetadataFromUri(uriToHttp(fullUri)[0]);
             }
-          } catch { /* use fallback name */ }
+          } catch {
+            /* use fallback name */
+          }
 
           return {
             ...metadata,
@@ -409,7 +488,10 @@ export const ItemsProvider = ({
         }),
       );
       return results
-        .filter((r): r is PromiseFulfilledResult<QuestItemTemplate> => r.status === 'fulfilled')
+        .filter(
+          (r): r is PromiseFulfilledResult<QuestItemTemplate> =>
+            r.status === 'fulfilled',
+        )
         .map(r => r.value);
     },
     [baseURIRow, itemsTable],
@@ -418,7 +500,12 @@ export const ItemsProvider = ({
   useEffect(() => {
     let cancelled = false;
     const itemEntryCount = Object.keys(itemsTable).length;
-    console.info('[ItemsContext] effect fired — hydrated:', hydrated, 'items:', itemEntryCount);
+    console.info(
+      '[ItemsContext] effect fired — hydrated:',
+      hydrated,
+      'items:',
+      itemEntryCount,
+    );
 
     (async () => {
       if (!hydrated) return;
@@ -429,23 +516,31 @@ export const ItemsProvider = ({
       }
 
       try {
-        const allItemIds = Object.entries(itemsTable).map(([keyBytes, itemRow]) => {
-          // keyBytes is a 32-byte uint256 — decode back to bigint
-          const clean = keyBytes.startsWith('0x') ? keyBytes.slice(2) : keyBytes;
-          const itemId = BigInt('0x' + clean.slice(0, 64));
-          return {
-            itemType: toNumber(itemRow.itemType),
-            itemId,
-          };
-        });
+        const allItemIds = Object.entries(itemsTable).map(
+          ([keyBytes, itemRow]) => {
+            // keyBytes is a 32-byte uint256 — decode back to bigint
+            const clean = keyBytes.startsWith('0x')
+              ? keyBytes.slice(2)
+              : keyBytes;
+            const itemId = BigInt('0x' + clean.slice(0, 64));
+            return {
+              itemType: toNumber(itemRow.itemType),
+              itemId,
+            };
+          },
+        );
 
         // Fallback: read URIs directly from chain if ItemsURIStorage is empty
         // (MUD's syncToPostgres doesn't sync tables with only dynamic fields)
         let uriOverrides: Record<string, string> | undefined;
-        const tokenURITableSize = Object.keys(getTableEntries('ItemsURIStorage')).length;
+        const tokenURITableSize = Object.keys(
+          getTableEntries('ItemsURIStorage'),
+        ).length;
         if (tokenURITableSize === 0 && publicClient && configRow?.items) {
           try {
-            console.info('[ItemsContext] ItemsURIStorage empty, reading URIs from chain...');
+            console.info(
+              '[ItemsContext] ItemsURIStorage empty, reading URIs from chain...',
+            );
             const itemsAddress = configRow.items as `0x${string}`;
             const baseURI = String(baseURIRow?.uri ?? '');
             const results = await publicClient.multicall({
@@ -468,7 +563,9 @@ export const ItemsProvider = ({
                 uriOverrides[keyBytes] = uri;
               }
             }
-            console.info(`[ItemsContext] Read ${Object.keys(uriOverrides).length} URIs from chain`);
+            console.info(
+              `[ItemsContext] Read ${Object.keys(uriOverrides).length} URIs from chain`,
+            );
           } catch (e) {
             console.warn('[ItemsContext] Failed to read URIs from chain:', e);
           }
@@ -476,10 +573,15 @@ export const ItemsProvider = ({
 
         // Identify spell items by tokenURI "spell:" prefix, even when deployed as
         // ItemType.Weapon (a deploy-spell-items.ts bug pre-2026-04-14).
-        const tokenURITableForCategorization = getTableEntries('ItemsURIStorage');
+        const tokenURITableForCategorization =
+          getTableEntries('ItemsURIStorage');
         const isSpellItemId = (itemId: bigint): boolean => {
           const key = encodeUint256Key(itemId);
-          const uri = String(tokenURITableForCategorization[key]?.uri ?? uriOverrides?.[key] ?? '');
+          const uri = String(
+            tokenURITableForCategorization[key]?.uri ??
+              uriOverrides?.[key] ??
+              '',
+          );
           return uri.startsWith('spell:');
         };
 
@@ -487,13 +589,20 @@ export const ItemsProvider = ({
           .filter(({ itemType }) => itemType === ItemType.Armor)
           .map(({ itemId }) => itemId);
         const weaponIds = allItemIds
-          .filter(({ itemType, itemId }) => itemType === ItemType.Weapon && !isSpellItemId(itemId))
+          .filter(
+            ({ itemType, itemId }) =>
+              itemType === ItemType.Weapon && !isSpellItemId(itemId),
+          )
           .map(({ itemId }) => itemId);
         const consumableIds = allItemIds
           .filter(({ itemType }) => itemType === ItemType.Consumable)
           .map(({ itemId }) => itemId);
         const spellIds = allItemIds
-          .filter(({ itemType, itemId }) => itemType === ItemType.Spell || (itemType === ItemType.Weapon && isSpellItemId(itemId)))
+          .filter(
+            ({ itemType, itemId }) =>
+              itemType === ItemType.Spell ||
+              (itemType === ItemType.Weapon && isSpellItemId(itemId)),
+          )
           .map(({ itemId }) => itemId);
         const questItemIds = allItemIds
           .filter(({ itemType }) => itemType === ItemType.QuestItem)
@@ -503,22 +612,47 @@ export const ItemsProvider = ({
         // This prevents one slow IPFS fetch from leaving ALL template arrays empty.
         await Promise.allSettled([
           fetchAllArmor(armorIds, uriOverrides)
-            .then(result => { if (!cancelled) setArmorTemplates(result); })
-            .catch(e => console.error('[ItemsContext] Error fetching armor:', e)),
+            .then(result => {
+              if (!cancelled) setArmorTemplates(result);
+            })
+            .catch(e =>
+              console.error('[ItemsContext] Error fetching armor:', e),
+            ),
           fetchAllWeapons(weaponIds, uriOverrides)
-            .then(result => { if (!cancelled) setWeaponTemplates(result); })
-            .catch(e => console.error('[ItemsContext] Error fetching weapons:', e)),
+            .then(result => {
+              if (!cancelled) setWeaponTemplates(result);
+            })
+            .catch(e =>
+              console.error('[ItemsContext] Error fetching weapons:', e),
+            ),
           fetchAllConsumables(consumableIds, uriOverrides)
-            .then(result => { if (!cancelled) setConsumableTemplates(result); })
-            .catch(e => console.error('[ItemsContext] Error fetching consumables:', e)),
+            .then(result => {
+              if (!cancelled) setConsumableTemplates(result);
+            })
+            .catch(e =>
+              console.error('[ItemsContext] Error fetching consumables:', e),
+            ),
           fetchAllSpells(spellIds, uriOverrides)
-            .then(result => { if (!cancelled) setSpellTemplates(result); })
-            .catch(e => console.error('[ItemsContext] Error fetching spells:', e)),
-          ...(questItemIds.length > 0 ? [
-            fetchAllQuestItems(questItemIds, uriOverrides)
-              .then(result => { if (!cancelled) setQuestItemTemplates(result); })
-              .catch(e => console.error('[ItemsContext] Error fetching quest items:', e)),
-          ] : []),
+            .then(result => {
+              if (!cancelled) setSpellTemplates(result);
+            })
+            .catch(e =>
+              console.error('[ItemsContext] Error fetching spells:', e),
+            ),
+          ...(questItemIds.length > 0
+            ? [
+                fetchAllQuestItems(questItemIds, uriOverrides)
+                  .then(result => {
+                    if (!cancelled) setQuestItemTemplates(result);
+                  })
+                  .catch(e =>
+                    console.error(
+                      '[ItemsContext] Error fetching quest items:',
+                      e,
+                    ),
+                  ),
+              ]
+            : []),
         ]);
       } catch (e) {
         if (!cancelled) {
@@ -532,7 +666,9 @@ export const ItemsProvider = ({
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [
     baseURIRow,
     configRow,
@@ -547,14 +683,24 @@ export const ItemsProvider = ({
     renderError,
   ]);
 
-  const contextValue = useMemo(() => ({
-    armorTemplates,
-    consumableTemplates,
-    isLoading,
-    questItemTemplates,
-    spellTemplates,
-    weaponTemplates,
-  }), [armorTemplates, consumableTemplates, isLoading, questItemTemplates, spellTemplates, weaponTemplates]);
+  const contextValue = useMemo(
+    () => ({
+      armorTemplates,
+      consumableTemplates,
+      isLoading,
+      questItemTemplates,
+      spellTemplates,
+      weaponTemplates,
+    }),
+    [
+      armorTemplates,
+      consumableTemplates,
+      isLoading,
+      questItemTemplates,
+      spellTemplates,
+      weaponTemplates,
+    ],
+  );
 
   return (
     <ItemsContext.Provider value={contextValue}>

@@ -1599,54 +1599,25 @@
   </table>
 
 
-  <!-- ═══ 12b. IMAGE TREATMENT ═══ -->
-  <h3>Image Treatment</h3>
+  <!-- ═══ 12b. TEXT-FIRST IDENTITY ═══ -->
+  <h3>Text-First Identity</h3>
 
   <p>
-    All game images (items, monsters, portraits) are currently <strong style="color:var(--text-primary);">black and white source art</strong>.
-    The CSS applies a subtle warm filter via <code>.game-image</code>:
-  </p>
-
-  <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:16px 20px; margin:16px 0; font-family:'Fira Code',monospace; font-size:13px; color:var(--text-primary);">
-    filter: sepia(0.15) brightness(0.95);
-  </div>
-
-  <p>
-    This gives the B&amp;W art a faint parchment-warm tone, but the images remain essentially grayscale. This is a deliberate aesthetic choice — it:
+    Gameplay content uses compact text marks, names, type labels, stats,
+    rarity, borders, and state labels. Items, monsters, characters, classes,
+    fragments, and quests do not require content art or asset registries.
   </p>
 
   <ul style="margin:12px 0 24px 24px; line-height:2;">
-    <li>Keeps the focus on <strong style="color:var(--text-primary);">text and gameplay data</strong>, not flashy art</li>
-    <li>Evokes old <strong style="color:var(--text-primary);">woodcut / engraving</strong> illustration style (medieval feel)</li>
-    <li>Makes rarity border colors and stat overlays <strong style="color:var(--text-primary);">pop by contrast</strong></li>
-    <li>Avoids the "mobile gacha" look of hyper-saturated item art</li>
+    <li>Use a short semantic code such as <code>WPN</code>, <code>ARM</code>, <code>STR</code>, or a two-letter name mark.</li>
+    <li>Let typography and spacing establish hierarchy before adding ornament.</li>
+    <li>Use rarity color, HP bars, motion, and sound for fast gameplay feedback.</li>
+    <li>Every new entity must remain readable on mobile without a bespoke asset.</li>
   </ul>
 
-  <div class="compare">
-    <div class="compare-panel">
-      <div class="compare-label">Current — B&amp;W + Sepia Filter</div>
-      <div style="background:var(--bg-input); border-radius:8px; padding:24px; text-align:center;">
-        <div style="width:100px; height:100px; margin:0 auto; background:linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 50%, #5a5a5a 100%); border-radius:8px; filter:sepia(0.15) brightness(0.95); border:2px solid #3d6fb5;"></div>
-        <p style="font-family:'Cinzel',serif; font-size:13px; color:var(--text-primary); margin-top:8px;">Moonlit Halberd</p>
-        <p style="font-size:12px; color:#3d6fb5;">Rare</p>
-      </div>
-      <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Subdued, lets rarity color do the talking</p>
-    </div>
-    <div class="compare-panel">
-      <div class="compare-label">If Colorized — More Vivid</div>
-      <div style="background:var(--bg-input); border-radius:8px; padding:24px; text-align:center;">
-        <div style="width:100px; height:100px; margin:0 auto; background:linear-gradient(135deg, #6a7a9a 0%, #3a4a6a 50%, #8a9ab0 100%); border-radius:8px; border:2px solid #3d6fb5;"></div>
-        <p style="font-family:'Cinzel',serif; font-size:13px; color:var(--text-primary); margin-top:8px;">Moonlit Halberd</p>
-        <p style="font-size:12px; color:#3d6fb5;">Rare</p>
-      </div>
-      <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">More eye-catching but competes with UI signals</p>
-    </div>
-  </div>
-
   <div class="note">
-    <strong>Consideration:</strong> If images ever move to color art, the sepia filter should be revisited — it would muddy real colors.
-    For B&amp;W source art, the current filter is appropriate. An alternative to explore: slightly increasing the sepia
-    (<code>sepia(0.25)</code>) to make the warm tint more noticeable, giving images more of a "aged parchment illustration" feel.
+    <strong>Canonical rule:</strong> See <code>docs/TEXT_FIRST_UI.md</code>
+    before adding or revising gameplay presentation.
   </div>
 
 

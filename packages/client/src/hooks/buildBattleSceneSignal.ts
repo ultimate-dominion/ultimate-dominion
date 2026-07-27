@@ -1,4 +1,4 @@
-import type { WeaponAnimType } from '../components/pretext/game/weaponAnimations';
+import type { AttackPresentation } from '../utils/attackPresentation';
 import type { AttackOutcomeType } from '../utils/types';
 
 import type { AttackSignal } from './useBattleSceneSignals';
@@ -7,7 +7,7 @@ type Params = {
   outcome: AttackOutcomeType;
   characterId: string;
   opponentName: string;
-  weaponTypeForItem: (itemId: string) => WeaponAnimType;
+  weaponTypeForItem: (itemId: string) => AttackPresentation;
   /** Returns the item name (e.g. "Iron Axe") for 3D projectile loading. Optional. */
   weaponNameForItem?: (itemId: string) => string | undefined;
 };
@@ -133,7 +133,8 @@ export function buildBattleSceneSignals({
   const hitCount = Math.max(damagePerHit.length, hits.length, misses.length, 1);
 
   const totalDamage = sumDamage(outcome);
-  const anyHit = hits.some(Boolean) || totalDamage > 0 || outcome.attackerDamageDelt > 0n;
+  const anyHit =
+    hits.some(Boolean) || totalDamage > 0 || outcome.attackerDamageDelt > 0n;
   const allMiss = !anyHit && misses.some(Boolean);
   const anyCrit = crits.some(Boolean);
 
