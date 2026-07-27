@@ -147,7 +147,7 @@ export const ClassPage = (): JSX.Element => {
           })}
         />
       </Helmet>
-      <LocaleHead path={`/guide/classes/${classData.slug}`} />
+      <LocaleHead path={`/classes/${classData.slug}`} />
 
       {/* Class-colored radial glow */}
       <Box
