@@ -77,7 +77,7 @@ export const LandingPage = (): JSX.Element => {
             mt={{ base: 14, sm: 20 }}
             position="relative"
             px={{ base: 2, sm: 14, md: 18 }}
-            spacing={{ base: 10, md: 14 }}
+            spacing={{ base: 6, sm: 10, md: 14 }}
             zIndex={2}
           >
             <VStack spacing={{ base: 4, md: 5 }}>
@@ -100,7 +100,7 @@ export const LandingPage = (): JSX.Element => {
               />
             </VStack>
 
-            <Box position="relative" w="100%">
+            <Box order={{ base: 3, md: 2 }} position="relative" w="100%">
               {/* Invisible spacer — reserves final text height */}
               <VStack
                 fontWeight={500}
@@ -179,6 +179,7 @@ export const LandingPage = (): JSX.Element => {
               letterSpacing="0.3em"
               px={{ base: 10, sm: 12 }}
               py={3}
+              order={{ base: 2, md: 3 }}
               textAlign="center"
               textDecoration="none"
               textTransform="uppercase"
@@ -195,6 +196,7 @@ export const LandingPage = (): JSX.Element => {
             <HStack
               fontFamily="'Cinzel', serif"
               fontSize={{ base: '13px', sm: '15px' }}
+              order={4}
               spacing={3}
             >
               <Link
