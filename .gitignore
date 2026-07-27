@@ -43,6 +43,9 @@ SESSION.md
 # Temper per-invocation artifacts
 .temper/runs/
 
+# Retained local output from the retired artwork pipeline
+scripts/generate-art/
+
 # Confidential business docs (moved to ~/Documents/ultimate-dominion/)
 docs/MONETIZATION_RESEARCH.md
 docs/GO_TO_MARKET.md
