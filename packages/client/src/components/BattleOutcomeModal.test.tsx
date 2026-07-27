@@ -1,5 +1,5 @@
-import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { BattleOutcomeModal } from './BattleOutcomeModal';
@@ -98,25 +98,21 @@ vi.mock('./LevelUpBanner', () => ({
   ),
 }));
 
-vi.mock('./pretext/game/BattleMonsterAscii', () => ({
-  BattleMonsterAscii: (props: any) => (
-    <div
-      data-defeated={String(Boolean(props.defeated))}
-      data-name={props.monsterName}
-      data-testid="battle-monster-ascii"
-    />
+vi.mock('./PolygonalCard', () => ({
+  PolygonalCard: ({ children, ...props }: any) => (
+    <div {...props}>{children}</div>
   ),
 }));
 
-vi.mock('./PolygonalCard', () => ({
-  PolygonalCard: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-}));
-
 vi.mock('@chakra-ui/react', async () => {
-  const actual = await vi.importActual<typeof import('@chakra-ui/react')>('@chakra-ui/react');
+  const actual =
+    await vi.importActual<typeof import('@chakra-ui/react')>(
+      '@chakra-ui/react',
+    );
   return {
     ...actual,
-    useBreakpointValue: (values: Record<string, unknown>) => values.base ?? values.lg,
+    useBreakpointValue: (values: Record<string, unknown>) =>
+      values.base ?? values.lg,
   };
 });
 
@@ -138,7 +134,6 @@ function makeCharacter(overrides: Record<string, any> = {}) {
     advancedClass: 0,
     entityClass: 0,
     hasSelectedAdvancedClass: false,
-    image: '',
     externalGoldBalance: 0n,
     worldStatusEffects: [],
     ...overrides,
@@ -240,7 +235,7 @@ describe('BattleOutcomeModal — max level behavior', () => {
     expect(screen.queryByTestId('level-up-banner')).toBeNull();
   });
 
-  it('renders ascii monster art in the PvE victory modal', () => {
+  it('renders a text-only monster mark in the PvE victory modal', () => {
     mockCharacter = makeCharacter({ level: 5n, experience: 5000n });
     mockOpponent = { name: 'Skeleton' };
     mockCurrentBattle = { encounterType: 1, currentTurn: 1n, maxTurns: 2n };
@@ -253,9 +248,8 @@ describe('BattleOutcomeModal — max level behavior', () => {
       />,
     );
 
-    const portrait = screen.getByTestId('battle-monster-ascii');
-    expect(portrait.getAttribute('data-name')).toBe('Skeleton');
-    expect(portrait.getAttribute('data-defeated')).toBe('false');
+    expect(screen.getByRole('group', { name: 'Skeleton' })).toBeTruthy();
+    expect(screen.getByText('FOE')).toBeTruthy();
   });
 
   it('plays battle-win SFX for elite PvE victories only', () => {

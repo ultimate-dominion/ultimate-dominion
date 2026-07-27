@@ -1,41 +1,39 @@
 import {
-  Avatar,
   Box,
   Button,
   Divider,
   HStack,
   Spinner,
   Text,
-  Tooltip,
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react';
-
-import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { useMemo, useState } from 'react';
-import { GiTwoCoins } from 'react-icons/gi';
-import {
-  IoIosArrowForward,
-  IoMdInformationCircleOutline,
-} from 'react-icons/io';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { GiTwoCoins } from 'react-icons/gi';
+import { IoIosArrowForward } from 'react-icons/io';
+import { useNavigate } from 'react-router-dom';
+
 import { useBattle } from '../contexts/BattleContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useFragments } from '../contexts/FragmentContext';
 import { useGoldMerchant } from '../contexts/GoldMerchantContext';
+import { useNearbyRanks } from '../hooks/useNearbyRanks';
+import {
+  OnboardingStage,
+  useOnboardingStage,
+} from '../hooks/useOnboardingStage';
+import { useGameValue, encodeUint256Key, toBigInt } from '../lib/gameStore';
 import { MAX_LEVEL } from '../utils/constants';
 import { etherToFixedNumber } from '../utils/helpers';
 
-import { useNearbyRanks } from '../hooks/useNearbyRanks';
-import { OnboardingStage, useOnboardingStage } from '../hooks/useOnboardingStage';
-
 import { ClassSymbol } from './ClassSymbol';
+import { CharacterMark } from './EntityMark';
 import { EquippedLoadout } from './EquippedLoadout';
 import { HealthBar } from './HealthBar';
+import { Level } from './Level';
 import { LevelUpModal } from './LevelUpModal';
 import { MiniLeaderboard } from './MiniLeaderboard';
-import { Level } from './Level';
 
 export const StatsPanel = (): JSX.Element => {
   const navigate = useNavigate();
@@ -46,7 +44,13 @@ export const StatsPanel = (): JSX.Element => {
   const { onOpen: onOpenGoldMerchant } = useGoldMerchant();
 
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const { nearby, isLoading: nearbyLoading, rankBy, dataRankBy, setRankBy } = useNearbyRanks();
+  const {
+    nearby,
+    isLoading: nearbyLoading,
+    rankBy,
+    dataRankBy,
+    setRankBy,
+  } = useNearbyRanks();
   const stage = useOnboardingStage();
   const [isLevelUpOpen, setIsLevelUpOpen] = useState(false);
 
@@ -65,9 +69,7 @@ export const StatsPanel = (): JSX.Element => {
 
   const nextLevelRow = useGameValue(
     'Levels',
-    character
-      ? encodeUint256Key(BigInt(character.level))
-      : undefined,
+    character ? encodeUint256Key(BigInt(character.level)) : undefined,
   );
   const nextLevelXpRequirement = toBigInt(nextLevelRow?.experience);
 
@@ -138,7 +140,6 @@ export const StatsPanel = (): JSX.Element => {
     currentHp,
     experience,
     externalGoldBalance,
-    image,
     intelligence,
     name,
     strength,
@@ -162,7 +163,7 @@ export const StatsPanel = (): JSX.Element => {
           _hover={{ cursor: 'pointer', textDecoration: 'underline' }}
         >
           <HStack>
-            <Avatar size="sm" src={image} />
+            <CharacterMark name={name} boxSize="32px" />
             <Text fontWeight={700} ml={2} size="lg">
               {name}
             </Text>
@@ -200,26 +201,35 @@ export const StatsPanel = (): JSX.Element => {
               <Text color="#5A8A3E" fontFamily="mono" size="sm">
                 AGI{' '}
                 <Text as="span" color="#E8DCC8" fontWeight={700}>
-                  {(agility - expiredEffectModifications.agiModifier).toString()}
+                  {(
+                    agility - expiredEffectModifications.agiModifier
+                  ).toString()}
                 </Text>
               </Text>
-              <Text color="#5A5040" size="sm">·</Text>
+              <Text color="#5A5040" size="sm">
+                ·
+              </Text>
               <Text color="#4A7AB5" fontFamily="mono" size="sm">
                 INT{' '}
                 <Text as="span" color="#E8DCC8" fontWeight={700}>
-                  {(intelligence - expiredEffectModifications.intModifier).toString()}
+                  {(
+                    intelligence - expiredEffectModifications.intModifier
+                  ).toString()}
                 </Text>
               </Text>
-              <Text color="#5A5040" size="sm">·</Text>
+              <Text color="#5A5040" size="sm">
+                ·
+              </Text>
               <Text color="#B85C3A" fontFamily="mono" size="sm">
                 STR{' '}
                 <Text as="span" color="#E8DCC8" fontWeight={700}>
-                  {(strength - expiredEffectModifications.strModifier).toString()}
+                  {(
+                    strength - expiredEffectModifications.strModifier
+                  ).toString()}
                 </Text>
               </Text>
             </HStack>
           )}
-
         </VStack>
       )}
 
@@ -234,7 +244,9 @@ export const StatsPanel = (): JSX.Element => {
               maxed={maxed}
             />
             <HStack justifyContent="space-between" mt={1}>
-              <Text color="#8A7E6A" fontWeight={600} size="xs">{t('stats.xp')}</Text>
+              <Text color="#8A7E6A" fontWeight={600} size="xs">
+                {t('stats.xp')}
+              </Text>
               <Text fontFamily="mono" fontWeight={700} size="xs">
                 {maxed ? (
                   <Text as="span" color="green">
@@ -245,7 +257,9 @@ export const StatsPanel = (): JSX.Element => {
                     <Text
                       as="span"
                       color={
-                        BigInt(experience) >= nextLevelXpRequirement ? 'green' : undefined
+                        BigInt(experience) >= nextLevelXpRequirement
+                          ? 'green'
+                          : undefined
                       }
                     >
                       {experience.toString()}
@@ -307,8 +321,6 @@ export const StatsPanel = (): JSX.Element => {
         </>
       )}
 
-
-
       {isDesktop && stage >= OnboardingStage.FIRST_BLOOD && (
         <>
           {/* Fragment progress dots */}
@@ -346,12 +358,23 @@ export const StatsPanel = (): JSX.Element => {
             <>
               <Divider borderColor="grey300" />
               <Box w="100%">
-                <MiniLeaderboard nearby={nearby} isLoading={nearbyLoading} rankBy={rankBy} dataRankBy={dataRankBy} setRankBy={setRankBy} />
+                <MiniLeaderboard
+                  nearby={nearby}
+                  isLoading={nearbyLoading}
+                  rankBy={rankBy}
+                  dataRankBy={dataRankBy}
+                  setRankBy={setRankBy}
+                />
               </Box>
             </>
           )}
         </>
       )}
+      <LevelUpModal
+        character={character}
+        isOpen={isLevelUpOpen}
+        onClose={() => setIsLevelUpOpen(false)}
+      />
     </VStack>
   );
 };

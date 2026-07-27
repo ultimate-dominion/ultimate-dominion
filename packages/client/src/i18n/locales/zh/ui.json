@@ -130,9 +130,6 @@
     "title": "编辑角色",
     "namePlaceholder": "名称",
     "nameRequired": "名称为必填项",
-    "uploadAvatar": "上传头像",
-    "uploading": "上传中...",
-    "avatarRequired": "头像为必填项",
     "bioPlaceholder": "简介",
     "bioRequired": "简介为必填项",
     "updating": "更新中...",
@@ -261,7 +258,6 @@
     "blog": "博客"
   },
   "share": {
-    "shareWithImage": "附图分享",
     "shareAria": "分享",
     "copied": "已复制！",
     "copyText": "复制文本",
@@ -649,7 +645,6 @@
     "errors": {
       "walletInitializing": "钱包初始化中 — 请稍后再试。",
       "nameRequired": "请输入名字。",
-      "avatarUploadFailed": "角色头像上传出错。",
       "invalidMetadataUrl": "服务器返回了无效的元数据URL。",
       "creationFailed": "角色创建失败。"
     }

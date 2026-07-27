@@ -2,7 +2,6 @@ import {
   Box,
   Grid,
   GridItem,
-  Image,
   keyframes,
   Text,
   Tooltip,
@@ -11,7 +10,6 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaCheck, FaLock } from 'react-icons/fa';
 
 /* Scale + opacity only — both GPU-composited for 60fps.
    The actual glow lives on a ::before pseudo with a fixed box-shadow;
@@ -25,11 +23,7 @@ const glowPulse = keyframes`
   50%      { opacity: 1;   transform: scale(1.08); }
 `;
 
-import {
-  useFragments,
-  type FragmentStatus,
-} from '../contexts/FragmentContext';
-import { getFragmentImage } from '../utils/fragmentImages';
+import { useFragments, type FragmentStatus } from '../contexts/FragmentContext';
 import { getRomanNumeral, TOTAL_FRAGMENTS } from '../utils/fragmentNarratives';
 
 import { FragmentClaimModal } from './FragmentClaimModal';
@@ -72,13 +66,13 @@ export const FragmentCollection = (): JSX.Element => {
       <PolygonalCard clipPath="none" p={6}>
         <VStack align="stretch" spacing={4}>
           <Text fontWeight="bold" size="lg">
-            {t('fragmentCollection.title', { claimed: claimedCount, total: TOTAL_FRAGMENTS })}
+            {t('fragmentCollection.title', {
+              claimed: claimedCount,
+              total: TOTAL_FRAGMENTS,
+            })}
           </Text>
 
-          <Grid
-            templateColumns="repeat(4, 1fr)"
-            gap={3}
-          >
+          <Grid templateColumns="repeat(4, 1fr)" gap={3}>
             {fragments.map(fragment => (
               <GridItem key={fragment.fragmentType}>
                 <FragmentTile
@@ -95,16 +89,18 @@ export const FragmentCollection = (): JSX.Element => {
         </VStack>
       </PolygonalCard>
 
-      {selectedFragment && selectedFragment.triggered && !selectedFragment.claimed && (
-        <FragmentClaimModal
-          fragment={selectedFragment}
-          isOpen={isClaimOpen}
-          onClose={() => {
-            onCloseClaim();
-            setSelectedFragment(null);
-          }}
-        />
-      )}
+      {selectedFragment &&
+        selectedFragment.triggered &&
+        !selectedFragment.claimed && (
+          <FragmentClaimModal
+            fragment={selectedFragment}
+            isOpen={isClaimOpen}
+            onClose={() => {
+              onCloseClaim();
+              setSelectedFragment(null);
+            }}
+          />
+        )}
 
       {selectedFragment && selectedFragment.claimed && (
         <FragmentReadModal
@@ -125,12 +121,14 @@ type FragmentTileProps = {
   onClick: () => void;
 };
 
-const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => {
+const FragmentTile = ({
+  fragment,
+  onClick,
+}: FragmentTileProps): JSX.Element => {
   const { t } = useTranslation('ui');
   const isClaimed = fragment.claimed;
   const isTriggered = fragment.triggered;
   const isClickable = isClaimed || isTriggered;
-  const imageSrc = getFragmentImage(fragment.name);
 
   const tooltipLabel = isClaimed
     ? `${fragment.name} - ${t('fragmentCollection.clickToRead')}`
@@ -179,107 +177,49 @@ const FragmentTile = ({ fragment, onClick }: FragmentTileProps): JSX.Element => 
         }
         position="relative"
         overflow="visible"
-        bg={isClaimed ? 'transparent' : isTriggered ? 'rgba(168, 222, 255, 0.06)' : '#1a1816'}
-        css={isTriggered && !isClaimed ? {
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            inset: '-4px',
-            borderRadius: 'inherit',
-            boxShadow: '0 0 14px 6px rgba(168, 222, 255, 0.5), 0 0 30px 12px rgba(168, 222, 255, 0.25), 0 0 50px 20px rgba(168, 222, 255, 0.1)',
-            animation: `${glowPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`,
-            pointerEvents: 'none',
-            zIndex: -1,
-          },
-        } : undefined}
+        bg={
+          isClaimed
+            ? 'transparent'
+            : isTriggered
+              ? 'rgba(168, 222, 255, 0.06)'
+              : '#1a1816'
+        }
+        css={
+          isTriggered && !isClaimed
+            ? {
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  inset: '-4px',
+                  borderRadius: 'inherit',
+                  boxShadow:
+                    '0 0 14px 6px rgba(168, 222, 255, 0.5), 0 0 30px 12px rgba(168, 222, 255, 0.25), 0 0 50px 20px rgba(168, 222, 255, 0.1)',
+                  animation: `${glowPulse} 3s cubic-bezier(0.4, 0, 0.6, 1) infinite`,
+                  pointerEvents: 'none',
+                  zIndex: -1,
+                },
+              }
+            : undefined
+        }
       >
-        {/* Claimed: show fragment artwork */}
-        {isClaimed && imageSrc ? (
-          <>
-            <Image
-              src={imageSrc}
-              alt={fragment.name}
-              position="absolute"
-              inset={0}
-              w="100%"
-              h="100%"
-              objectFit="cover"
-              borderRadius="md"
-            />
-            {/* Gradient overlay for legibility */}
-            <Box
-              position="absolute"
-              inset={0}
-              bgGradient="linear(to-t, blackAlpha.700, transparent 50%)"
-              borderRadius="md"
-            />
-            {/* Roman numeral label */}
-            <Text
-              position="absolute"
-              bottom={1}
-              fontSize="xs"
-              fontWeight="bold"
-              color="#A8DEFF"
-              textShadow="0 1px 3px rgba(0,0,0,0.8)"
-              zIndex={1}
-            >
-              {getRomanNumeral(fragment.fragmentType)}
-            </Text>
-            {/* Claimed check */}
-            <Box
-              position="absolute"
-              top={1}
-              right={1}
-              color="#A8DEFF"
-              bg="blackAlpha.600"
-              borderRadius="full"
-              p="3px"
-              lineHeight={1}
-              zIndex={1}
-            >
-              <FaCheck size={10} />
-            </Box>
-          </>
-        ) : isClaimed ? (
-          /* Claimed but no image (fallback) */
-          <>
-            <Box color="#A8DEFF" mb={1}>
-              <FaCheck size={20} />
-            </Box>
-            <Text fontSize="xs" color="#A8DEFF" fontWeight="bold">
-              {getRomanNumeral(fragment.fragmentType)}
-            </Text>
-          </>
-        ) : isTriggered ? (
-          <>
-            <Box color="#A8DEFF" mb={1}>
-              <Text
-                fontSize="xl"
-                fontWeight="bold"
-                textShadow="0 0 10px rgba(168, 222, 255, 0.8), 0 0 20px rgba(168, 222, 255, 0.4)"
-              >
-                !
-              </Text>
-            </Box>
-            <Text
-              fontSize="xs"
-              color="#A8DEFF"
-              fontWeight="bold"
-              textShadow="0 0 6px rgba(168, 222, 255, 0.5)"
-            >
-              {getRomanNumeral(fragment.fragmentType)}
-            </Text>
-          </>
-        ) : (
-          <>
-            <Box color="gray.600" mb={1} opacity={0.5}>
-              <FaLock size={14} />
-            </Box>
-            <Text fontSize="xs" color="gray.600">
-              {getRomanNumeral(fragment.fragmentType)}
-            </Text>
-          </>
-        )}
+        <Text
+          color={isClaimed || isTriggered ? '#A8DEFF' : 'gray.600'}
+          fontFamily="'Cinzel', serif"
+          fontSize={{ base: 'xl', md: '2xl' }}
+          fontWeight="bold"
+        >
+          {getRomanNumeral(fragment.fragmentType)}
+        </Text>
+        <Text
+          color={isClaimed || isTriggered ? '#A8DEFF' : 'gray.600'}
+          fontFamily="'Fira Code', monospace"
+          fontSize="8px"
+          fontWeight="bold"
+          letterSpacing="wider"
+          mt={1}
+        >
+          {isClaimed ? 'CLAIMED' : isTriggered ? 'FOUND' : 'LOCKED'}
+        </Text>
       </Box>
     </Tooltip>
   );

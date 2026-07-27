@@ -20,14 +20,6 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import {
-  encodeAddressKey,
-  encodeCompositeKey,
-  encodeUint256Key,
-  getTableValue,
-  useGameConfig,
-  useGameTable,
-} from '../lib/gameStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +27,9 @@ import { FaCheckCircle } from 'react-icons/fa';
 import { IoIosArrowBack } from 'react-icons/io';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Address, parseEther } from 'viem';
+
 import { InfoModal } from '../components/InfoModal';
+import { ItemAsciiIcon } from '../components/ItemAsciiIcon';
 import { MarketplaceAllowanceModal } from '../components/MarketplaceAllowanceModal';
 import { OrderRow } from '../components/OrderRow';
 import { Pagination } from '../components/Pagination';
@@ -48,15 +42,25 @@ import { useMUD } from '../contexts/MUDContext';
 import { useOrders } from '../contexts/OrdersContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
-import { CHARACTER_CREATION_PATH, HOME_PATH, MARKETPLACE_PATH } from '../Routes';
+import {
+  encodeAddressKey,
+  encodeCompositeKey,
+  encodeUint256Key,
+  getTableValue,
+  useGameConfig,
+  useGameTable,
+} from '../lib/gameStore';
+import {
+  CHARACTER_CREATION_PATH,
+  HOME_PATH,
+  MARKETPLACE_PATH,
+} from '../Routes';
 import { etherToFixedNumber, removeEmoji } from '../utils/helpers';
-import { ItemAsciiIcon } from '../components/ItemAsciiIcon';
 import {
   type ArmorTemplate,
   ItemType,
   MarketplaceFilter,
   OrderType,
-  Rarity,
   RARITY_COLORS,
   RARITY_NAMES,
   type SpellTemplate,
@@ -272,9 +276,15 @@ export const MarketplaceItem = (): JSX.Element => {
       }
 
       // Allowance check
-      if (orderType === OrderType.Buying && goldMarketplaceAllowance < parseEther(orderPrice)) {
+      if (
+        orderType === OrderType.Buying &&
+        goldMarketplaceAllowance < parseEther(orderPrice)
+      ) {
         if (authMethod === 'embedded') {
-          const ok = await ensureGoldAllowance(SystemToAllow.Marketplace, parseEther(orderPrice));
+          const ok = await ensureGoldAllowance(
+            SystemToAllow.Marketplace,
+            parseEther(orderPrice),
+          );
           if (!ok) return;
         } else {
           onOpenAllowanceModal();
@@ -298,9 +308,7 @@ export const MarketplaceItem = (): JSX.Element => {
               ? parseEther(orderPrice)
               : BigInt('1'),
           identifier:
-            orderType === OrderType.Selling
-              ? 0n
-              : BigInt(selectedItem.tokenId),
+            orderType === OrderType.Selling ? 0n : BigInt(selectedItem.tokenId),
           recipient: userCharacter.owner as Address,
           token: (orderType === OrderType.Selling
             ? goldTokenAddress
@@ -316,9 +324,7 @@ export const MarketplaceItem = (): JSX.Element => {
               ? parseEther(orderPrice)
               : BigInt('1'),
           identifier:
-            orderType === OrderType.Buying
-              ? 0n
-              : BigInt(selectedItem.tokenId),
+            orderType === OrderType.Buying ? 0n : BigInt(selectedItem.tokenId),
           token: (orderType === OrderType.Buying
             ? goldTokenAddress
             : itemsAddress) as Address,
@@ -459,8 +465,10 @@ export const MarketplaceItem = (): JSX.Element => {
 
   const itemName = removeEmoji(selectedItem.name);
   const itemRarity = selectedItem.rarity;
-  const rarityColor = itemRarity !== undefined ? RARITY_COLORS[itemRarity] : undefined;
-  const rarityName = itemRarity !== undefined ? RARITY_NAMES[itemRarity] : undefined;
+  const rarityColor =
+    itemRarity !== undefined ? RARITY_COLORS[itemRarity] : undefined;
+  const rarityName =
+    itemRarity !== undefined ? RARITY_NAMES[itemRarity] : undefined;
   const itemTypeLabel =
     selectedItem.itemType === ItemType.Weapon
       ? 'Weapon'
@@ -471,35 +479,78 @@ export const MarketplaceItem = (): JSX.Element => {
           : 'Consumable';
 
   // Build stat entries, filtering out zeros for cleaner display
-  const statEntries: { label: string; value: string; isPositive: boolean }[] = [];
+  const statEntries: { label: string; value: string; isPositive: boolean }[] =
+    [];
   if (selectedItem.itemType !== ItemType.Spell) {
     const typed = selectedItem as ArmorTemplate | WeaponTemplate;
     if (Number(typed.strModifier) !== 0)
-      statEntries.push({ label: 'STR', value: `${Number(typed.strModifier) >= 0 ? '+' : ''}${typed.strModifier}`, isPositive: Number(typed.strModifier) > 0 });
+      statEntries.push({
+        label: 'STR',
+        value: `${Number(typed.strModifier) >= 0 ? '+' : ''}${typed.strModifier}`,
+        isPositive: Number(typed.strModifier) > 0,
+      });
     if (Number(typed.agiModifier) !== 0)
-      statEntries.push({ label: 'AGI', value: `${Number(typed.agiModifier) >= 0 ? '+' : ''}${typed.agiModifier}`, isPositive: Number(typed.agiModifier) > 0 });
+      statEntries.push({
+        label: 'AGI',
+        value: `${Number(typed.agiModifier) >= 0 ? '+' : ''}${typed.agiModifier}`,
+        isPositive: Number(typed.agiModifier) > 0,
+      });
     if (Number(typed.intModifier) !== 0)
-      statEntries.push({ label: 'INT', value: `${Number(typed.intModifier) >= 0 ? '+' : ''}${typed.intModifier}`, isPositive: Number(typed.intModifier) > 0 });
+      statEntries.push({
+        label: 'INT',
+        value: `${Number(typed.intModifier) >= 0 ? '+' : ''}${typed.intModifier}`,
+        isPositive: Number(typed.intModifier) > 0,
+      });
     if (Number(typed.hpModifier) !== 0)
-      statEntries.push({ label: 'HP', value: `${Number(typed.hpModifier) >= 0 ? '+' : ''}${typed.hpModifier}`, isPositive: Number(typed.hpModifier) > 0 });
+      statEntries.push({
+        label: 'HP',
+        value: `${Number(typed.hpModifier) >= 0 ? '+' : ''}${typed.hpModifier}`,
+        isPositive: Number(typed.hpModifier) > 0,
+      });
   }
-  if (selectedItem.itemType === ItemType.Armor && Number((selectedItem as ArmorTemplate).armorModifier) !== 0)
-    statEntries.push({ label: 'Armor', value: `+${(selectedItem as ArmorTemplate).armorModifier}`, isPositive: true });
-  if (selectedItem.itemType !== ItemType.Armor && selectedItem.itemType !== ItemType.Consumable) {
+  if (
+    selectedItem.itemType === ItemType.Armor &&
+    Number((selectedItem as ArmorTemplate).armorModifier) !== 0
+  )
+    statEntries.push({
+      label: 'Armor',
+      value: `+${(selectedItem as ArmorTemplate).armorModifier}`,
+      isPositive: true,
+    });
+  if (
+    selectedItem.itemType !== ItemType.Armor &&
+    selectedItem.itemType !== ItemType.Consumable
+  ) {
     const typed = selectedItem as SpellTemplate | WeaponTemplate;
-    statEntries.push({ label: 'Damage', value: `${typed.minDamage}–${typed.maxDamage}`, isPositive: true });
+    statEntries.push({
+      label: 'Damage',
+      value: `${typed.minDamage}–${typed.maxDamage}`,
+      isPositive: true,
+    });
   }
 
   // Build requirement entries, filtering out zeros
   const reqEntries: { label: string; value: string }[] = [];
   if (Number(selectedItem.minLevel) > 0)
-    reqEntries.push({ label: 'Level', value: selectedItem.minLevel.toString() });
+    reqEntries.push({
+      label: 'Level',
+      value: selectedItem.minLevel.toString(),
+    });
   if (Number(selectedItem.statRestrictions.minStrength) > 0)
-    reqEntries.push({ label: 'STR', value: selectedItem.statRestrictions.minStrength.toString() });
+    reqEntries.push({
+      label: 'STR',
+      value: selectedItem.statRestrictions.minStrength.toString(),
+    });
   if (Number(selectedItem.statRestrictions.minAgility) > 0)
-    reqEntries.push({ label: 'AGI', value: selectedItem.statRestrictions.minAgility.toString() });
+    reqEntries.push({
+      label: 'AGI',
+      value: selectedItem.statRestrictions.minAgility.toString(),
+    });
   if (Number(selectedItem.statRestrictions.minIntelligence) > 0)
-    reqEntries.push({ label: 'INT', value: selectedItem.statRestrictions.minIntelligence.toString() });
+    reqEntries.push({
+      label: 'INT',
+      value: selectedItem.statRestrictions.minIntelligence.toString(),
+    });
 
   const lowestPrice = lowestPrices[selectedItem.tokenId.toString()];
   const highestOffer = highestOffers[selectedItem.tokenId.toString()];
@@ -534,14 +585,18 @@ export const MarketplaceItem = (): JSX.Element => {
           spacing={{ base: 4, md: 8 }}
           w="100%"
         >
-          {/* Item Image */}
+          {/* Item identity */}
           <Box
             alignItems="center"
             bg="rgba(196,184,158,0.04)"
             border="1px solid"
             borderColor={rarityColor ?? '#3A3228'}
             borderRadius="12px"
-            boxShadow={rarityColor ? `0 0 20px ${rarityColor}15, inset 0 0 30px rgba(0,0,0,0.3)` : 'inset 0 0 30px rgba(0,0,0,0.3)'}
+            boxShadow={
+              rarityColor
+                ? `0 0 20px ${rarityColor}15, inset 0 0 30px rgba(0,0,0,0.3)`
+                : 'inset 0 0 30px rgba(0,0,0,0.3)'
+            }
             display="flex"
             flexShrink={0}
             h={{ base: '140px', md: '160px' }}
@@ -566,7 +621,11 @@ export const MarketplaceItem = (): JSX.Element => {
               {itemName}
             </Heading>
 
-            <HStack spacing={3} flexWrap="wrap" justify={{ base: 'center', md: 'start' }}>
+            <HStack
+              spacing={3}
+              flexWrap="wrap"
+              justify={{ base: 'center', md: 'start' }}
+            >
               {rarityName && (
                 <Badge
                   bg={`${rarityColor}20`}
@@ -584,7 +643,9 @@ export const MarketplaceItem = (): JSX.Element => {
                   {rarityName}
                 </Badge>
               )}
-              <Text color="#8A7E6A" size="sm">{itemTypeLabel}</Text>
+              <Text color="#8A7E6A" size="sm">
+                {itemTypeLabel}
+              </Text>
               {Number(userItemBalance) > 0 && (
                 <Text color="#5A8A3E" size="sm" fontWeight={600}>
                   Owned: {userItemBalance}
@@ -593,14 +654,25 @@ export const MarketplaceItem = (): JSX.Element => {
             </HStack>
 
             {selectedItem.description && (
-              <Text color="#8A7E6A" size="sm" mt={1} maxW="500px" textAlign={{ base: 'center', md: 'start' }}>
+              <Text
+                color="#8A7E6A"
+                size="sm"
+                mt={1}
+                maxW="500px"
+                textAlign={{ base: 'center', md: 'start' }}
+              >
                 {selectedItem.description}
               </Text>
             )}
 
             {/* Inline stat chips */}
             {statEntries.length > 0 && (
-              <HStack spacing={2} mt={2} flexWrap="wrap" justify={{ base: 'center', md: 'start' }}>
+              <HStack
+                spacing={2}
+                mt={2}
+                flexWrap="wrap"
+                justify={{ base: 'center', md: 'start' }}
+              >
                 {statEntries.map(stat => (
                   <Box
                     key={stat.label}
@@ -611,7 +683,9 @@ export const MarketplaceItem = (): JSX.Element => {
                     py={1}
                   >
                     <Text size="sm">
-                      <Text as="span" color="#8A7E6A">{stat.label} </Text>
+                      <Text as="span" color="#8A7E6A">
+                        {stat.label}{' '}
+                      </Text>
                       <Text
                         as="span"
                         color={stat.isPositive ? '#5A8A3E' : '#B83A2A'}
@@ -628,10 +702,22 @@ export const MarketplaceItem = (): JSX.Element => {
 
             {/* Requirement chips */}
             {reqEntries.length > 0 && (
-              <HStack spacing={2} mt={1} flexWrap="wrap" justify={{ base: 'center', md: 'start' }}>
-                <Text color="#8A7E6A" size="xs">Requires:</Text>
+              <HStack
+                spacing={2}
+                mt={1}
+                flexWrap="wrap"
+                justify={{ base: 'center', md: 'start' }}
+              >
+                <Text color="#8A7E6A" size="xs">
+                  Requires:
+                </Text>
                 {reqEntries.map(req => (
-                  <Text key={req.label} size="xs" color="#C87A2A" fontFamily="'Fira Code', monospace">
+                  <Text
+                    key={req.label}
+                    size="xs"
+                    color="#C87A2A"
+                    fontFamily="'Fira Code', monospace"
+                  >
                     {req.label} {req.value}
                   </Text>
                 ))}
@@ -646,23 +732,36 @@ export const MarketplaceItem = (): JSX.Element => {
             flexShrink={0}
             spacing={1}
           >
-            <Text color="#8A7E6A" size="xs" textTransform="uppercase" letterSpacing="1px">
+            <Text
+              color="#8A7E6A"
+              size="xs"
+              textTransform="uppercase"
+              letterSpacing="1px"
+            >
               Your Balance
             </Text>
-            <Text color="yellow" fontFamily="'Fira Code', monospace" fontWeight={700} fontSize="20px">
+            <Text
+              color="yellow"
+              fontFamily="'Fira Code', monospace"
+              fontWeight={700}
+              fontSize="20px"
+            >
               {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
             </Text>
           </VStack>
         </Stack>
 
         {/* Gold balance — mobile only */}
-        <HStack
-          display={{ base: 'flex', lg: 'none' }}
-          justify="center"
-          pb={2}
-        >
-          <Text color="#8A7E6A" size="sm">Balance: </Text>
-          <Text color="yellow" fontFamily="'Fira Code', monospace" fontWeight={600} size="sm">
+        <HStack display={{ base: 'flex', lg: 'none' }} justify="center" pb={2}>
+          <Text color="#8A7E6A" size="sm">
+            Balance:{' '}
+          </Text>
+          <Text
+            color="yellow"
+            fontFamily="'Fira Code', monospace"
+            fontWeight={600}
+            size="sm"
+          >
             {etherToFixedNumber(userCharacter.externalGoldBalance)} $GOLD
           </Text>
         </HStack>
@@ -684,9 +783,18 @@ export const MarketplaceItem = (): JSX.Element => {
           w="100%"
         >
           {/* Market price context */}
-          <HStack spacing={6} flexWrap="wrap" justify={{ base: 'center', lg: 'start' }}>
+          <HStack
+            spacing={6}
+            flexWrap="wrap"
+            justify={{ base: 'center', lg: 'start' }}
+          >
             <VStack spacing={0} align={{ base: 'center', lg: 'start' }}>
-              <Text color="#8A7E6A" size="xs" textTransform="uppercase" letterSpacing="0.5px">
+              <Text
+                color="#8A7E6A"
+                size="xs"
+                textTransform="uppercase"
+                letterSpacing="0.5px"
+              >
                 Lowest Price
               </Text>
               <Text
@@ -704,7 +812,12 @@ export const MarketplaceItem = (): JSX.Element => {
               w="1px"
             />
             <VStack spacing={0} align={{ base: 'center', lg: 'start' }}>
-              <Text color="#8A7E6A" size="xs" textTransform="uppercase" letterSpacing="0.5px">
+              <Text
+                color="#8A7E6A"
+                size="xs"
+                textTransform="uppercase"
+                letterSpacing="0.5px"
+              >
                 Best Offer
               </Text>
               <Text
@@ -712,7 +825,9 @@ export const MarketplaceItem = (): JSX.Element => {
                 fontFamily="'Fira Code', monospace"
                 fontWeight={600}
               >
-                {highestOffer ? `${etherToFixedNumber(highestOffer)} $GOLD` : '—'}
+                {highestOffer
+                  ? `${etherToFixedNumber(highestOffer)} $GOLD`
+                  : '—'}
               </Text>
             </VStack>
           </HStack>
@@ -785,7 +900,7 @@ export const MarketplaceItem = (): JSX.Element => {
 
             {/* Buy flow */}
             {orderType === OrderType.Buying &&
-              ((userCharacter.externalGoldBalance) === BigInt(0) ? (
+              (userCharacter.externalGoldBalance === BigInt(0) ? (
                 <Text size="sm" color="#8A7E6A" textAlign="center">
                   You don&apos;t have any $GOLD to place an offer.
                 </Text>
@@ -921,7 +1036,10 @@ export const MarketplaceItem = (): JSX.Element => {
             h="4px"
             w="100%"
           />
-          <TabList justifyContent={{ base: 'center', lg: 'start' }} px={{ base: 0, md: 4 }}>
+          <TabList
+            justifyContent={{ base: 'center', lg: 'start' }}
+            px={{ base: 0, md: 4 }}
+          >
             <Tab
               fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
               onClick={() => setTabIndex(0)}
@@ -1008,23 +1126,24 @@ export const MarketplaceItem = (): JSX.Element => {
                     <Text color="#8A7E6A" textAlign="center">
                       No one is selling this item yet.
                     </Text>
-                    {Number(userItemBalance) > 0 && orderType !== OrderType.Selling && (
-                      <Text
-                        as="span"
-                        color="#C87A2A"
-                        cursor="pointer"
-                        size="sm"
-                        onClick={() => {
-                          const newSearchParams = new URLSearchParams();
-                          newSearchParams.set('orderType', OrderType.Selling);
-                          navigate(`?${newSearchParams}`);
-                          setOrderType(OrderType.Selling);
-                        }}
-                        _hover={{ textDecoration: 'underline' }}
-                      >
-                        Be the first to list yours
-                      </Text>
-                    )}
+                    {Number(userItemBalance) > 0 &&
+                      orderType !== OrderType.Selling && (
+                        <Text
+                          as="span"
+                          color="#C87A2A"
+                          cursor="pointer"
+                          size="sm"
+                          onClick={() => {
+                            const newSearchParams = new URLSearchParams();
+                            newSearchParams.set('orderType', OrderType.Selling);
+                            navigate(`?${newSearchParams}`);
+                            setOrderType(OrderType.Selling);
+                          }}
+                          _hover={{ textDecoration: 'underline' }}
+                        >
+                          Be the first to list yours
+                        </Text>
+                      )}
                   </VStack>
                 )}
               </Stack>
@@ -1120,7 +1239,11 @@ export const MarketplaceItem = (): JSX.Element => {
               mt={{ base: 0, lg: 5 }}
               mb={5}
               visibility={
-                (tabIndex === 0 ? forSaleItems.length : tabIndex === 1 ? goldOfferItems.length : myListings.length) > 0
+                (tabIndex === 0
+                  ? forSaleItems.length
+                  : tabIndex === 1
+                    ? goldOfferItems.length
+                    : myListings.length) > 0
                   ? 'visible'
                   : 'hidden'
               }

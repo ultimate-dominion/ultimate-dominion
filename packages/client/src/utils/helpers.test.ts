@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import {
   fetchMetadataFromUri,
   METADATA_FETCH_TIMEOUT_MS,
@@ -11,9 +12,15 @@ const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => { store[key] = value; },
-    removeItem: (key: string) => { delete store[key]; },
-    clear: () => { store = {}; },
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
   };
 })();
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
@@ -38,7 +45,7 @@ describe('fetchMetadataFromUri', () => {
 
   it('returns empty metadata for empty URI', async () => {
     const result = await fetchMetadataFromUri('');
-    expect(result).toEqual({ name: '', description: '', image: '' });
+    expect(result).toEqual({ name: '', description: '' });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -58,7 +65,7 @@ describe('fetchMetadataFromUri', () => {
   });
 
   it('returns valid metadata on successful fetch', async () => {
-    const metadata = { name: 'Iron Sword', description: 'A sturdy blade', image: 'ipfs://QmTest' };
+    const metadata = { name: 'Iron Sword', description: 'A sturdy blade' };
     fetchSpy.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(metadata),
@@ -82,7 +89,9 @@ describe('fetchMetadataFromUri', () => {
       return new Promise((_resolve, reject) => {
         if (options?.signal) {
           options.signal.addEventListener('abort', () => {
-            reject(new DOMException('The operation was aborted.', 'AbortError'));
+            reject(
+              new DOMException('The operation was aborted.', 'AbortError'),
+            );
           });
         }
       });
@@ -98,13 +107,13 @@ describe('fetchMetadataFromUri', () => {
     const result = await promise;
 
     // All gateways failed — should return default empty metadata
-    expect(result).toEqual({ name: '', description: '', image: '' });
+    expect(result).toEqual({ name: '', description: '' });
     // Should have tried max 3 IPFS gateways (capped from 6)
     expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it('falls back to next gateway when first times out, second succeeds', async () => {
-    const metadata = { name: 'Shield', description: 'Blocks attacks', image: '' };
+    const metadata = { name: 'Shield', description: 'Blocks attacks' };
     let callCount = 0;
 
     fetchSpy.mockImplementation((_url: string, options?: RequestInit) => {
@@ -114,7 +123,9 @@ describe('fetchMetadataFromUri', () => {
         return new Promise((_resolve, reject) => {
           if (options?.signal) {
             options.signal.addEventListener('abort', () => {
-              reject(new DOMException('The operation was aborted.', 'AbortError'));
+              reject(
+                new DOMException('The operation was aborted.', 'AbortError'),
+              );
             });
           }
         });
@@ -141,7 +152,7 @@ describe('fetchMetadataFromUri', () => {
 
     const result = await fetchMetadataFromUri('ipfs://QmAllFail');
 
-    expect(result).toEqual({ name: '', description: '', image: '' });
+    expect(result).toEqual({ name: '', description: '' });
     expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
@@ -150,12 +161,12 @@ describe('fetchMetadataFromUri', () => {
 
     const result = await fetchMetadataFromUri('ipfs://QmServerError');
 
-    expect(result).toEqual({ name: '', description: '', image: '' });
+    expect(result).toEqual({ name: '', description: '' });
     expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it('uses cache for repeated calls', async () => {
-    const metadata = { name: 'Cached Item', description: 'From cache', image: '' };
+    const metadata = { name: 'Cached Item', description: 'From cache' };
     fetchSpy.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(metadata),

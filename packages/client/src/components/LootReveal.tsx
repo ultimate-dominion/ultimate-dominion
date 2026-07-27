@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 import { useGameAudio } from '../contexts/SoundContext';
 import { removeEmoji } from '../utils/helpers';
-import { ItemAsciiIcon } from './ItemAsciiIcon';
 import {
   type Armor,
   type Consumable,
@@ -15,6 +14,8 @@ import {
   type Spell,
   type Weapon,
 } from '../utils/types';
+
+import { ItemAsciiIcon } from './ItemAsciiIcon';
 
 type LootItem = Armor | Consumable | Spell | Weapon;
 
@@ -173,7 +174,10 @@ const getRevealDelay = (index: number): number => {
 
 // --- Component ---
 
-export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) => {
+export const LootReveal: React.FC<LootRevealProps> = ({
+  items,
+  onItemClick,
+}) => {
   const { t } = useTranslation('ui');
   const { duckMusic, playSfx } = useGameAudio();
   const [revealedCount, setRevealedCount] = useState(0);
@@ -222,18 +226,20 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
         />
       )}
 
-      <Text fontWeight="bold" zIndex={1}>{t('loot.title')}</Text>
+      <Text fontWeight="bold" zIndex={1}>
+        {t('loot.title')}
+      </Text>
 
       {items.map((item, index) => {
         const isRevealed = index < revealedCount;
         if (!isRevealed) return null;
 
         const rarity = item.rarity ?? 0;
-        const color = RARITY_COLORS[rarity as Rarity] ?? RARITY_COLORS[Rarity.Common];
+        const color =
+          RARITY_COLORS[rarity as Rarity] ?? RARITY_COLORS[Rarity.Common];
         const itemName = removeEmoji(item.name);
         const isLegendary = rarity === Rarity.Legendary;
         const isEpic = rarity === Rarity.Epic;
-        const isRare = rarity === Rarity.Rare;
         const isSpecial = rarity >= Rarity.Uncommon;
 
         return (
@@ -246,10 +252,14 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
             position="relative"
             w="100%"
             zIndex={1}
-            _hover={onItemClick ? {
-              transform: 'scale(1.01)',
-              transition: 'transform 0.15s',
-            } : undefined}
+            _hover={
+              onItemClick
+                ? {
+                    transform: 'scale(1.01)',
+                    transition: 'transform 0.15s',
+                  }
+                : undefined
+            }
           >
             {/* Legendary light beams */}
             {isLegendary && (
@@ -268,12 +278,15 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
 
             {/* Card container */}
             <Box
-              animation={isSpecial ? getIdleAnimation(rarity as Rarity) : undefined}
-              bg={isLegendary
-                ? `linear-gradient(135deg, rgba(196,122,42,0.12) 0%, rgba(20,18,15,0.95) 40%, rgba(196,122,42,0.08) 100%)`
-                : isEpic
-                  ? `linear-gradient(135deg, rgba(123,74,181,0.08) 0%, rgba(20,18,15,0.95) 50%, rgba(123,74,181,0.05) 100%)`
-                  : '#1C1814'
+              animation={
+                isSpecial ? getIdleAnimation(rarity as Rarity) : undefined
+              }
+              bg={
+                isLegendary
+                  ? `linear-gradient(135deg, rgba(196,122,42,0.12) 0%, rgba(20,18,15,0.95) 40%, rgba(196,122,42,0.08) 100%)`
+                  : isEpic
+                    ? `linear-gradient(135deg, rgba(123,74,181,0.08) 0%, rgba(20,18,15,0.95) 50%, rgba(123,74,181,0.05) 100%)`
+                    : '#1C1814'
               }
               border="1px solid"
               borderColor={isSpecial ? `${color}50` : '#3A3228'}
@@ -284,14 +297,15 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
               py={3}
             >
               <HStack spacing={3} align="center">
-                {/* Item image */}
+                {/* Item identity */}
                 <Box
                   alignItems="center"
-                  bg={isLegendary
-                    ? `radial-gradient(circle, ${color}18 0%, transparent 70%)`
-                    : isEpic
-                      ? `radial-gradient(circle, ${color}12 0%, transparent 70%)`
-                      : 'transparent'
+                  bg={
+                    isLegendary
+                      ? `radial-gradient(circle, ${color}18 0%, transparent 70%)`
+                      : isEpic
+                        ? `radial-gradient(circle, ${color}12 0%, transparent 70%)`
+                        : 'transparent'
                   }
                   display="flex"
                   flexShrink={0}
@@ -360,17 +374,24 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
                       fontWeight={700}
                       letterSpacing="0.5px"
                       lineHeight={1.2}
-                      sx={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                      sx={{
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
                     >
                       {itemName}
                     </Text>
                   ) : (
                     <Text
                       color={rarity >= Rarity.Uncommon ? color : '#E8DCC8'}
-                      fontFamily={rarity >= Rarity.Rare ? "'Cinzel', serif" : undefined}
+                      fontFamily={
+                        rarity >= Rarity.Rare ? "'Cinzel', serif" : undefined
+                      }
                       fontSize={{ base: 'sm', sm: 'md' }}
                       fontWeight={rarity >= Rarity.Rare ? 700 : 600}
-                      letterSpacing={rarity >= Rarity.Rare ? '0.3px' : undefined}
+                      letterSpacing={
+                        rarity >= Rarity.Rare ? '0.3px' : undefined
+                      }
                       lineHeight={1.2}
                     >
                       {itemName}
@@ -404,17 +425,24 @@ export const LootReveal: React.FC<LootRevealProps> = ({ items, onItemClick }) =>
 // --- Stat line sub-component ---
 
 const LootStatLine: React.FC<{ item: LootItem }> = ({ item }) => {
-  if (item.itemType === ItemType.Spell || item.itemType === ItemType.Consumable) {
+  if (
+    item.itemType === ItemType.Spell ||
+    item.itemType === ItemType.Consumable
+  ) {
     return null;
   }
 
   const typed = item as Armor | Weapon;
   const stats: { label: string; val: number }[] = [];
 
-  if (Number(typed.strModifier) !== 0) stats.push({ label: 'STR', val: Number(typed.strModifier) });
-  if (Number(typed.agiModifier) !== 0) stats.push({ label: 'AGI', val: Number(typed.agiModifier) });
-  if (Number(typed.intModifier) !== 0) stats.push({ label: 'INT', val: Number(typed.intModifier) });
-  if (Number(typed.hpModifier) !== 0) stats.push({ label: 'HP', val: Number(typed.hpModifier) });
+  if (Number(typed.strModifier) !== 0)
+    stats.push({ label: 'STR', val: Number(typed.strModifier) });
+  if (Number(typed.agiModifier) !== 0)
+    stats.push({ label: 'AGI', val: Number(typed.agiModifier) });
+  if (Number(typed.intModifier) !== 0)
+    stats.push({ label: 'INT', val: Number(typed.intModifier) });
+  if (Number(typed.hpModifier) !== 0)
+    stats.push({ label: 'HP', val: Number(typed.hpModifier) });
 
   if (stats.length === 0) return null;
 
@@ -428,8 +456,13 @@ const LootStatLine: React.FC<{ item: LootItem }> = ({ item }) => {
           fontSize={{ base: '2xs', sm: 'xs' }}
         >
           {s.label}{' '}
-          <Text as="span" color={s.val > 0 ? '#5A8A3E' : '#B83A2A'} fontWeight={600}>
-            {s.val > 0 ? '+' : ''}{s.val}
+          <Text
+            as="span"
+            color={s.val > 0 ? '#5A8A3E' : '#B83A2A'}
+            fontWeight={600}
+          >
+            {s.val > 0 ? '+' : ''}
+            {s.val}
           </Text>
         </Text>
       ))}

@@ -1,11 +1,8 @@
 import {
-  Avatar,
   Box,
   Button,
-  Center,
   FormControl,
   FormHelperText,
-  HStack,
   Input,
   Modal,
   ModalBody,
@@ -25,7 +22,6 @@ import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
-import { useUploadFile } from '../hooks/useUploadFile';
 import { API_URL } from '../utils/constants';
 import { type Character } from '../utils/types';
 
@@ -39,14 +35,12 @@ type EditCharacterModalProps = Character & {
 export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   description,
   id,
-  image,
   isOpen,
   name,
   onClose,
-  tokenId,
 }): JSX.Element => {
   const { t } = useTranslation('ui');
-  const { renderError, renderSuccess, renderWarning } = useToast();
+  const { renderError, renderWarning } = useToast();
 
   const {
     delegatorAddress,
@@ -59,42 +53,15 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
 
   const [showError, setShowError] = useState(false);
 
-  const {
-    file: avatar,
-    setFile: setAvatar,
-    onUpload,
-    isUploading,
-  } = useUploadFile({ fileName: 'characterAvatar' });
-
   useEffect(() => {
-    setAvatar(null);
     setNewDescription(description);
     setNewName(name);
-  }, [description, isOpen, name, setAvatar]);
+  }, [description, isOpen, name]);
 
   // Reset showError state when any of the form fields change
   useEffect(() => {
     setShowError(false);
-  }, [avatar, description, name]);
-
-  const onUploadAvatar = useCallback(() => {
-    const input = document.getElementById('avatarInput');
-
-    if (input) {
-      input.click();
-    }
-  }, []);
-
-  const UploadedAvatar = useMemo(() => {
-    return (
-      <Center>
-        <Avatar
-          size={{ base: 'lg', sm: 'xl' }}
-          src={avatar ? URL.createObjectURL(avatar) : image}
-        />
-      </Center>
-    );
-  }, [avatar, image]);
+  }, [newDescription, newName]);
 
   const updateTx = useTransaction({
     actionName: 'update character',
@@ -114,28 +81,16 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
           throw new Error('Missing delegation.');
         }
 
-        if (!((avatar || image) && newDescription && newName)) {
+        if (!(newDescription && newName)) {
           setShowError(true);
           renderWarning(t('editCharacter.missingFields'));
           return;
         }
 
-        const avatarCid = await onUpload();
-        if (!avatarCid && !image)
-          throw new Error(
-            'Something went wrong uploading your character avatar.',
-          );
         const characterMetadata = {
-          name: name,
-          description: description,
-          image: avatarCid ? `ipfs://${avatarCid}` : image,
+          name: newName,
+          description: newDescription,
         };
-        characterMetadata.name = newName || characterMetadata.name;
-        characterMetadata.description =
-          newDescription || characterMetadata.description;
-        characterMetadata.image = avatarCid
-          ? `ipfs://${avatarCid}`
-          : characterMetadata.image;
 
         const res = await fetch(
           `${API_URL}/api/uploadMetadata?name=characterMetadata.json`,
@@ -185,28 +140,22 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
       }
     },
     [
-      avatar,
       delegatorAddress,
-      description,
       id,
-      image,
-      name,
       newDescription,
       newName,
       onClose,
-      onUpload,
       refreshCharacter,
       renderError,
       renderWarning,
-      tokenId,
       updateTokenUri,
       updateTx,
     ],
   );
 
   const hasChanged = useMemo(() => {
-    return name !== newName || description !== newDescription || avatar;
-  }, [avatar, description, name, newDescription, newName]);
+    return name !== newName || description !== newDescription;
+  }, [description, name, newDescription, newName]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -220,52 +169,21 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
         <Box as="form" onSubmit={onEditCharacter}>
           <ModalBody px={{ base: 6, sm: 8 }}>
             <VStack gap={5}>
-              <HStack w="100%" gap={5}>
-                {UploadedAvatar}
-                <VStack w="100%">
-                  <FormControl isInvalid={showError && !newName}>
-                    <Input
-                      isDisabled={isUpdating}
-                      onChange={e => setNewName(e.target.value)}
-                      placeholder={t('editCharacter.namePlaceholder')}
-                      type="text"
-                      value={newName}
-                      maxLength={15}
-                    />
-                    {showError && !newName && (
-                      <FormHelperText color="red">
-                        {t('editCharacter.nameRequired')}
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                  <FormControl isInvalid={showError && !(avatar || image)}>
-                    <Input
-                      accept=".png, .jpg, .jpeg, .webp, .svg, .gif"
-                      id="avatarInput"
-                      isDisabled={isUpdating}
-                      onChange={e => setAvatar(e.target.files?.[0] ?? null)}
-                      style={{ display: 'none' }}
-                      type="file"
-                    />
-                    <Button
-                      alignSelf="start"
-                      isDisabled={isUpdating}
-                      isLoading={isUploading}
-                      loadingText={t('editCharacter.uploading')}
-                      onClick={onUploadAvatar}
-                      size={{ base: 'xs', sm: 'sm' }}
-                      type="button"
-                    >
-                      {t('editCharacter.uploadAvatar')}
-                    </Button>
-                    {showError && !(avatar || image) && (
-                      <FormHelperText color="red">
-                        {t('editCharacter.avatarRequired')}
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </VStack>
-              </HStack>
+              <FormControl isInvalid={showError && !newName}>
+                <Input
+                  isDisabled={isUpdating}
+                  onChange={e => setNewName(e.target.value)}
+                  placeholder={t('editCharacter.namePlaceholder')}
+                  type="text"
+                  value={newName}
+                  maxLength={15}
+                />
+                {showError && !newName && (
+                  <FormHelperText color="red">
+                    {t('editCharacter.nameRequired')}
+                  </FormHelperText>
+                )}
+              </FormControl>
               <FormControl isInvalid={showError && !newDescription}>
                 <Textarea
                   height="200px"
@@ -275,7 +193,9 @@ export const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                   value={newDescription}
                 />
                 {showError && !newDescription && (
-                  <FormHelperText color="red">{t('editCharacter.bioRequired')}</FormHelperText>
+                  <FormHelperText color="red">
+                    {t('editCharacter.bioRequired')}
+                  </FormHelperText>
                 )}
               </FormControl>
             </VStack>

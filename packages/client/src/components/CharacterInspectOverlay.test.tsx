@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { render, screen } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 
 // Polyfill matchMedia for happy-dom (Chakra's Show component needs it)
 beforeAll(() => {
@@ -19,9 +19,18 @@ beforeAll(() => {
   });
 });
 
+import {
+  ItemType,
+  Race,
+  Rarity,
+  StatsClasses,
+  PowerSource,
+  ArmorType,
+  AdvancedClass,
+} from '../utils/types';
+import type { Character, Armor, Weapon } from '../utils/types';
+
 import { CharacterInspectOverlay } from './CharacterInspectOverlay';
-import { ItemType, Race, Rarity, StatsClasses, PowerSource, ArmorType, AdvancedClass } from '../utils/types';
-import type { Character, Armor, Weapon, Spell, Consumable } from '../utils/types';
 
 // Mock CharacterViewer — Three.js doesn't work in happy-dom
 vi.mock('./pretext/game/CharacterViewer', () => ({
@@ -41,10 +50,14 @@ vi.mock('./ItemConsumeModal', () => ({
 // Mock EquippedLoadout slot components
 vi.mock('./EquippedLoadout', () => ({
   FilledSlot: ({ item, size }: { item: { name: string }; size?: string }) => (
-    <div data-testid={`filled-slot-${item.name}`} data-size={size}>{item.name}</div>
+    <div data-testid={`filled-slot-${item.name}`} data-size={size}>
+      {item.name}
+    </div>
   ),
   EmptySlot: ({ label, size }: { label?: string; size?: string }) => (
-    <div data-testid={`empty-slot-${label}`} data-size={size}>{label}</div>
+    <div data-testid={`empty-slot-${label}`} data-size={size}>
+      {label}
+    </div>
   ),
 }));
 
@@ -80,13 +93,11 @@ const mockCharacter: Character = {
   worldStatusEffects: [],
   name: 'TestHero',
   description: '',
-  image: '',
 } as Character;
 
 const mockWeapon: Weapon = {
   name: 'Iron Axe',
   description: 'A sturdy axe',
-  image: '',
   itemType: ItemType.Weapon,
   rarity: Rarity.Uncommon,
   minLevel: BigInt(1),
@@ -101,13 +112,16 @@ const mockWeapon: Weapon = {
   intModifier: BigInt(0),
   hpModifier: BigInt(0),
   effects: [],
-  statRestrictions: { minStrength: BigInt(5), minAgility: BigInt(0), minIntelligence: BigInt(0) },
+  statRestrictions: {
+    minStrength: BigInt(5),
+    minAgility: BigInt(0),
+    minIntelligence: BigInt(0),
+  },
 } as unknown as Weapon;
 
 const mockArmor: Armor = {
   name: 'Leather Vest',
   description: 'Basic armor',
-  image: '',
   itemType: ItemType.Armor,
   rarity: Rarity.Common,
   minLevel: BigInt(1),
@@ -120,10 +134,16 @@ const mockArmor: Armor = {
   agiModifier: BigInt(0),
   intModifier: BigInt(0),
   hpModifier: BigInt(5),
-  statRestrictions: { minStrength: BigInt(0), minAgility: BigInt(0), minIntelligence: BigInt(0) },
+  statRestrictions: {
+    minStrength: BigInt(0),
+    minAgility: BigInt(0),
+    minIntelligence: BigInt(0),
+  },
 } as unknown as Armor;
 
-function renderOverlay(props: Partial<React.ComponentProps<typeof CharacterInspectOverlay>> = {}) {
+function renderOverlay(
+  props: Partial<React.ComponentProps<typeof CharacterInspectOverlay>> = {},
+) {
   return render(
     <ChakraProvider>
       <CharacterInspectOverlay
@@ -162,12 +182,16 @@ describe('CharacterInspectOverlay', () => {
 
   it('renders filled slot for equipped weapon', () => {
     renderOverlay({ equippedWeapons: [mockWeapon] });
-    expect(screen.getAllByTestId('filled-slot-Iron Axe').length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByTestId('filled-slot-Iron Axe').length,
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it('renders filled slot for equipped armor', () => {
     renderOverlay({ equippedArmor: [mockArmor] });
-    expect(screen.getAllByTestId('filled-slot-Leather Vest').length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByTestId('filled-slot-Leather Vest').length,
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it('shows Battle Readiness label', () => {
@@ -185,7 +209,10 @@ describe('CharacterInspectOverlay', () => {
   });
 
   it('includes equipment bonuses in combat rating', () => {
-    renderOverlay({ equippedWeapons: [mockWeapon], equippedArmor: [mockArmor] });
+    renderOverlay({
+      equippedWeapons: [mockWeapon],
+      equippedArmor: [mockArmor],
+    });
     // Base: 15+10+5 = 30, Weapon: STR+3, Armor: ARM+2 + STR+1
     // Total: 30 + 3 + 2 + 1 = 36
     const ratingElements = screen.getAllByText('36');

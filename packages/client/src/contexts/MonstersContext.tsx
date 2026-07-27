@@ -6,8 +6,8 @@ import {
   useState,
 } from 'react';
 
-import { useGameTable, decodeUint256FromKey, toNumber } from '../lib/gameStore';
 import { useToast } from '../hooks/useToast';
+import { useGameTable, decodeUint256FromKey, toNumber } from '../lib/gameStore';
 import {
   decodeMonsterStats,
   fetchMetadataFromUri,
@@ -55,15 +55,16 @@ export const MonstersProvider = ({
           monsterEntries.map(async ([keyBytes, row]) => {
             const mobId = decodeUint256FromKey(keyBytes, 0);
 
-            const metadataURI = typeof row.mobMetadata === 'string' ? row.mobMetadata : '';
-            const mobStatsBytes = typeof row.mobStats === 'string' ? row.mobStats : '0x';
+            const metadataURI =
+              typeof row.mobMetadata === 'string' ? row.mobMetadata : '';
+            const mobStatsBytes =
+              typeof row.mobStats === 'string' ? row.mobStats : '0x';
 
             const monsterStats = decodeMonsterStats(mobStatsBytes);
 
             let fetchedMetadata = {
               name: `Monster #${mobId}`,
               description: '',
-              image: '',
             };
             try {
               if (metadataURI && metadataURI.trim() !== '') {

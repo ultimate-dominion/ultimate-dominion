@@ -1,12 +1,21 @@
-import { render, screen, act, fireEvent, cleanup } from '@testing-library/react';
+import {
+  render,
+  screen,
+  act,
+  fireEvent,
+  cleanup,
+} from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { MarketplaceRow } from './MarketplaceRow';
 import { ItemType, OrderType, Rarity, TokenType } from '../utils/types';
+
+import { MarketplaceRow } from './MarketplaceRow';
 
 // --- Mock state ---
 
-const mockFulfillOrder = vi.fn().mockResolvedValue({ success: true, error: null });
+const mockFulfillOrder = vi
+  .fn()
+  .mockResolvedValue({ success: true, error: null });
 const mockRefreshCharacter = vi.fn();
 const mockRefreshOrders = vi.fn();
 const mockNavigate = vi.fn();
@@ -53,10 +62,6 @@ vi.mock('../hooks/useTransaction', () => ({
   }),
 }));
 
-vi.mock('../utils/itemImages', () => ({
-  getItemImage: () => null,
-}));
-
 vi.mock('../utils/helpers', () => ({
   etherToFixedNumber: (val: bigint) => (Number(val) / 1e18).toFixed(2),
   getEmoji: () => '',
@@ -68,10 +73,14 @@ vi.mock('./SVGs/ForwardCaretSvg', () => ({
 }));
 
 vi.mock('@chakra-ui/react', async () => {
-  const actual = await vi.importActual<typeof import('@chakra-ui/react')>('@chakra-ui/react');
+  const actual =
+    await vi.importActual<typeof import('@chakra-ui/react')>(
+      '@chakra-ui/react',
+    );
   return {
     ...actual,
-    useBreakpointValue: (values: Record<string, unknown>) => values.base ?? values.lg,
+    useBreakpointValue: (values: Record<string, unknown>) =>
+      values.base ?? values.lg,
   };
 });
 
@@ -79,7 +88,6 @@ const baseItem = {
   tokenId: '0x1',
   name: 'Iron Sword',
   description: 'A sturdy blade',
-  image: '',
   minLevel: 1n,
   rarity: Rarity.Common,
   itemType: ItemType.Weapon as const,

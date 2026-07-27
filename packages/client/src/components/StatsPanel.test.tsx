@@ -1,5 +1,5 @@
-import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { StatsPanel } from './StatsPanel';
@@ -27,6 +27,12 @@ vi.mock('../contexts/CharacterContext', () => ({
     equippedArmor: [],
     equippedSpells: [],
     equippedWeapons: [],
+  }),
+}));
+
+vi.mock('../contexts/BattleContext', () => ({
+  useBattle: () => ({
+    currentBattle: null,
   }),
 }));
 
@@ -77,6 +83,23 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
 }));
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'level.max': 'MAX',
+        'stats.fragments': 'Fragments',
+        'stats.getGold': 'Get Gold',
+        'stats.gold': 'Gold',
+        'stats.levelUpButton': 'Level Up!',
+        'stats.xp': 'XP',
+      };
+
+      return translations[key] ?? key;
+    },
+  }),
+}));
+
 vi.mock('../utils/helpers', () => ({
   etherToFixedNumber: (val: bigint) => (Number(val) / 1e18).toFixed(2),
 }));
@@ -110,10 +133,14 @@ vi.mock('./MiniLeaderboard', () => ({
 }));
 
 vi.mock('@chakra-ui/react', async () => {
-  const actual = await vi.importActual<typeof import('@chakra-ui/react')>('@chakra-ui/react');
+  const actual =
+    await vi.importActual<typeof import('@chakra-ui/react')>(
+      '@chakra-ui/react',
+    );
   return {
     ...actual,
-    useBreakpointValue: (values: Record<string, unknown>) => values.base ?? values.lg,
+    useBreakpointValue: (values: Record<string, unknown>) =>
+      values.base ?? values.lg,
   };
 });
 
@@ -135,7 +162,6 @@ function makeCharacter(overrides: Record<string, any> = {}) {
     advancedClass: 0,
     entityClass: 0,
     hasSelectedAdvancedClass: false,
-    image: '',
     externalGoldBalance: 0n,
     worldStatusEffects: [],
     ...overrides,
@@ -283,7 +309,7 @@ describe('StatsPanel — max level behavior', () => {
   });
 
   it('level 19 is NOT maxed (below MAX_LEVEL = 20)', () => {
-    mockCharacter = makeCharacter({ level: 19n, experience: 70000n });
+    mockCharacter = makeCharacter({ level: 19n, experience: 85000n });
 
     const nextLevelKey = '0x' + '13'.padStart(64, '0');
     const currentLevelKey = '0x' + '12'.padStart(64, '0');

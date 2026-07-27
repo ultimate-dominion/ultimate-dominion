@@ -1,4 +1,10 @@
-import { render, screen, act, fireEvent, cleanup } from '@testing-library/react';
+import {
+  render,
+  screen,
+  act,
+  fireEvent,
+  cleanup,
+} from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { ActionsPanel } from './ActionsPanel';
@@ -83,9 +89,33 @@ vi.mock('../contexts/MapContext', () => ({
   useMap: () => mapState,
 }));
 
+vi.mock('../contexts/FragmentContext', () => ({
+  useFragments: () => ({ fragments: [] }),
+}));
+
+vi.mock('react-i18next', async () => {
+  const actual =
+    await vi.importActual<typeof import('react-i18next')>('react-i18next');
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string, values?: Record<string, unknown>) => {
+        if (key === 'combat.noMonstersHere') {
+          return 'No monsters here. Try another tile.';
+        }
+        if (key === 'combat.considerPotion') return 'Consider using a potion.';
+        if (key === 'combat.closeToDeath') return 'You are close to death.';
+        if (key === 'battle.elitePrefix') return `Elite ${values?.name}`;
+        return key;
+      },
+    }),
+  };
+});
+
 vi.mock('react-router-dom', () => ({
-  Link: ({ children, ...props }: { children: React.ReactNode; to: string }) =>
-    <a {...props}>{children}</a>,
+  Link: ({ children, ...props }: { children: React.ReactNode; to: string }) => (
+    <a {...props}>{children}</a>
+  ),
 }));
 
 vi.mock('./SafeTypist', () => ({
@@ -99,13 +129,25 @@ vi.mock('./ConsumableQuickUse', () => ({
 
 vi.mock('./ItemCard', () => ({
   ItemCard: ({ name, onClick }: { name: string; onClick?: () => void }) => (
-    <div data-testid={`item-card-${name}`} onClick={onClick}>{name}</div>
+    <div data-testid={`item-card-${name}`} onClick={onClick}>
+      {name}
+    </div>
   ),
 }));
 
 vi.mock('./ItemEquipModal', () => ({
-  ItemEquipModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
-    isOpen ? <div data-testid="item-equip-modal"><button onClick={onClose}>Close</button></div> : null,
+  ItemEquipModal: ({
+    isOpen,
+    onClose,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+  }) =>
+    isOpen ? (
+      <div data-testid="item-equip-modal">
+        <button onClick={onClose}>Close</button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('./SVGs/PotionSvg', () => ({
@@ -113,16 +155,16 @@ vi.mock('./SVGs/PotionSvg', () => ({
 }));
 
 vi.mock('@chakra-ui/react', async () => {
-  const actual = await vi.importActual<typeof import('@chakra-ui/react')>('@chakra-ui/react');
+  const actual =
+    await vi.importActual<typeof import('@chakra-ui/react')>(
+      '@chakra-ui/react',
+    );
   return {
     ...actual,
-    useBreakpointValue: (values: Record<string, unknown>) => values.base ?? values.lg,
+    useBreakpointValue: (values: Record<string, unknown>) =>
+      values.base ?? values.lg,
   };
 });
-
-vi.mock('../utils/itemImages', () => ({
-  getItemImage: () => null,
-}));
 
 vi.mock('../utils/helpers', () => ({
   etherToFixedNumber: (val: bigint) => (Number(val) / 1e18).toFixed(2),
@@ -253,7 +295,9 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
 
     render(<ActionsPanel />);
 
-    expect(screen.getByText('No monsters here. Try another tile.')).toBeTruthy();
+    expect(
+      screen.getByText('No monsters here. Try another tile.'),
+    ).toBeTruthy();
     expect(screen.queryByText('Defeated Dire Rat!')).toBeNull();
     expect(screen.queryByText('Defeated by Dire Rat.')).toBeNull();
   });
@@ -283,9 +327,15 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     // Simulate second battle result arriving
     mockOnContinueToBattleOutcome.mockClear();
     battleState.currentBattle = { ...normalBattle, encounterId: '0xenc2' };
-    battleState.lastestBattleOutcome = { ...winOutcome, encounterId: '0xenc2', expDropped: 99n };
+    battleState.lastestBattleOutcome = {
+      ...winOutcome,
+      encounterId: '0xenc2',
+      expDropped: 99n,
+    };
 
-    act(() => { rerender(<ActionsPanel />); });
+    act(() => {
+      rerender(<ActionsPanel />);
+    });
 
     // Both results should be visible
     expect(screen.getAllByText('Defeated Dire Rat!')).toHaveLength(2);
@@ -341,7 +391,9 @@ describe('ActionsPanel — Auto Adventure Inline Results', () => {
     // Results should show
     expect(screen.getByText('Defeated Dire Rat!')).toBeTruthy();
     // The idle guidance stays visible while inline results are appended below it.
-    expect(screen.getByText('No monsters here. Try another tile.')).toBeTruthy();
+    expect(
+      screen.getByText('No monsters here. Try another tile.'),
+    ).toBeTruthy();
   });
 });
 
@@ -358,7 +410,11 @@ describe('ActionsPanel — Low HP Warning', () => {
   });
 
   it('shows low HP warning when HP is at 40% in auto adventure mode', () => {
-    characterState.character = { ...defaultCharacter, currentHp: 40n, maxHp: 100n };
+    characterState.character = {
+      ...defaultCharacter,
+      currentHp: 40n,
+      maxHp: 100n,
+    };
 
     render(<ActionsPanel />);
 
@@ -368,7 +424,11 @@ describe('ActionsPanel — Low HP Warning', () => {
   });
 
   it('shows critical HP warning when HP is at 20% in auto adventure mode', () => {
-    characterState.character = { ...defaultCharacter, currentHp: 20n, maxHp: 100n };
+    characterState.character = {
+      ...defaultCharacter,
+      currentHp: 20n,
+      maxHp: 100n,
+    };
 
     render(<ActionsPanel />);
 
@@ -378,7 +438,11 @@ describe('ActionsPanel — Low HP Warning', () => {
   });
 
   it('does not show warning when HP is above 40%', () => {
-    characterState.character = { ...defaultCharacter, currentHp: 50n, maxHp: 100n };
+    characterState.character = {
+      ...defaultCharacter,
+      currentHp: 50n,
+      maxHp: 100n,
+    };
 
     render(<ActionsPanel />);
 
@@ -388,7 +452,11 @@ describe('ActionsPanel — Low HP Warning', () => {
 
   it('does not show warning when auto adventure mode is off', () => {
     movementState.autoAdventureMode = false;
-    characterState.character = { ...defaultCharacter, currentHp: 10n, maxHp: 100n };
+    characterState.character = {
+      ...defaultCharacter,
+      currentHp: 10n,
+      maxHp: 100n,
+    };
 
     render(<ActionsPanel />);
 
@@ -397,7 +465,11 @@ describe('ActionsPanel — Low HP Warning', () => {
   });
 
   it('shows critical warning at exactly 20% threshold', () => {
-    characterState.character = { ...defaultCharacter, currentHp: 20n, maxHp: 100n };
+    characterState.character = {
+      ...defaultCharacter,
+      currentHp: 20n,
+      maxHp: 100n,
+    };
 
     render(<ActionsPanel />);
 
@@ -405,7 +477,11 @@ describe('ActionsPanel — Low HP Warning', () => {
   });
 
   it('shows low warning at exactly 40% threshold', () => {
-    characterState.character = { ...defaultCharacter, currentHp: 40n, maxHp: 100n };
+    characterState.character = {
+      ...defaultCharacter,
+      currentHp: 40n,
+      maxHp: 100n,
+    };
 
     render(<ActionsPanel />);
 
@@ -414,7 +490,11 @@ describe('ActionsPanel — Low HP Warning', () => {
   });
 
   it('shows warning between inline results and controls', () => {
-    characterState.character = { ...defaultCharacter, currentHp: 30n, maxHp: 100n };
+    characterState.character = {
+      ...defaultCharacter,
+      currentHp: 30n,
+      maxHp: 100n,
+    };
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
 
@@ -440,7 +520,12 @@ describe('ActionsPanel — Elite Mob Display', () => {
   });
 
   it('shows "Elite" prefix in auto adventure inline results for elite mobs', () => {
-    battleState.opponent = { id: '0xmonster', name: 'Dire Rat', mobId: '1', isElite: true };
+    battleState.opponent = {
+      id: '0xmonster',
+      name: 'Dire Rat',
+      mobId: '1',
+      isElite: true,
+    };
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = winOutcome;
 
@@ -460,7 +545,12 @@ describe('ActionsPanel — Elite Mob Display', () => {
   });
 
   it('shows "Elite" prefix in defeat text for elite mobs', () => {
-    battleState.opponent = { id: '0xmonster', name: 'Dire Rat', mobId: '1', isElite: true };
+    battleState.opponent = {
+      id: '0xmonster',
+      name: 'Dire Rat',
+      mobId: '1',
+      isElite: true,
+    };
     battleState.currentBattle = normalBattle;
     battleState.lastestBattleOutcome = lossOutcome;
 

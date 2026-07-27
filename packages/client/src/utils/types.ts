@@ -97,15 +97,15 @@ export enum ArmorType {
 
 export enum AdvancedClass {
   None,
-  Paladin,   // STR + Divine
-  Sorcerer,  // STR + Weave
-  Warrior,   // STR + Physical
-  Druid,     // AGI + Divine
-  Warlock,   // AGI + Weave
-  Ranger,    // AGI + Physical
-  Cleric,    // INT + Divine
-  Wizard,    // INT + Weave
-  Rogue,     // INT + Physical
+  Paladin, // STR + Divine
+  Sorcerer, // STR + Weave
+  Warrior, // STR + Physical
+  Druid, // AGI + Divine
+  Warlock, // AGI + Weave
+  Ranger, // AGI + Physical
+  Cleric, // INT + Divine
+  Wizard, // INT + Weave
+  Rogue, // INT + Physical
 }
 
 export enum Rarity {
@@ -118,11 +118,11 @@ export enum Rarity {
 }
 
 export const RARITY_COLORS: Record<Rarity, string> = {
-  [Rarity.Worn]: '#8a8a8a',      // Muted gray
-  [Rarity.Common]: '#C4B89E',    // Parchment (legible on dark bg)
-  [Rarity.Uncommon]: '#3d8a4e',  // Forest green
-  [Rarity.Rare]: '#3d6fb5',      // Steel blue
-  [Rarity.Epic]: '#7b4ab5',      // Dusty purple
+  [Rarity.Worn]: '#8a8a8a', // Muted gray
+  [Rarity.Common]: '#C4B89E', // Parchment (legible on dark bg)
+  [Rarity.Uncommon]: '#3d8a4e', // Forest green
+  [Rarity.Rare]: '#3d6fb5', // Steel blue
+  [Rarity.Epic]: '#7b4ab5', // Dusty purple
   [Rarity.Legendary]: '#c47a2a', // Aged gold/amber
 };
 
@@ -146,8 +146,8 @@ export const RARITY_I18N_KEYS: Record<Rarity, string> = {
 };
 
 export const CLASS_COLORS: Record<StatsClasses, string> = {
-  [StatsClasses.Strength]: '#B85C3A',     // warm copper
-  [StatsClasses.Agility]: '#5A8A3E',      // forest green
+  [StatsClasses.Strength]: '#B85C3A', // warm copper
+  [StatsClasses.Agility]: '#5A8A3E', // forest green
   [StatsClasses.Intelligence]: '#4A7AB5', // steel blue
 };
 
@@ -180,15 +180,15 @@ export const ADVANCED_CLASS_I18N_KEYS: Record<AdvancedClass, string> = {
 
 export const ADVANCED_CLASS_COLORS: Record<AdvancedClass, string> = {
   [AdvancedClass.None]: '#8A7E6A',
-  [AdvancedClass.Paladin]: '#D4A54A',    // gold
-  [AdvancedClass.Sorcerer]: '#C8872A',   // amber
-  [AdvancedClass.Warrior]: '#B85C3A',    // copper
-  [AdvancedClass.Druid]: '#5A8A3E',      // green
-  [AdvancedClass.Warlock]: '#7B4AB5',    // purple
-  [AdvancedClass.Ranger]: '#3A9A8A',     // teal
-  [AdvancedClass.Cleric]: '#C4B89E',     // parchment
-  [AdvancedClass.Wizard]: '#4A7AB5',     // blue
-  [AdvancedClass.Rogue]: '#6A6A6A',      // shadow-grey
+  [AdvancedClass.Paladin]: '#D4A54A', // gold
+  [AdvancedClass.Sorcerer]: '#C8872A', // amber
+  [AdvancedClass.Warrior]: '#B85C3A', // copper
+  [AdvancedClass.Druid]: '#5A8A3E', // green
+  [AdvancedClass.Warlock]: '#7B4AB5', // purple
+  [AdvancedClass.Ranger]: '#3A9A8A', // teal
+  [AdvancedClass.Cleric]: '#C4B89E', // parchment
+  [AdvancedClass.Wizard]: '#4A7AB5', // blue
+  [AdvancedClass.Rogue]: '#6A6A6A', // shadow-grey
 };
 
 export enum SystemToAllow {
@@ -352,7 +352,6 @@ export type CombatDetails = {
 
 export type Metadata = {
   description: string;
-  image: string;
   name: string;
 };
 

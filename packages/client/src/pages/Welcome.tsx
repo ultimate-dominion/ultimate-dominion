@@ -11,19 +11,29 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
-import SafeTypist from '../components/SafeTypist';
+import {
+  Link as RouterLink,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
 import { LocaleHead } from '../components/LocaleHead';
+import SafeTypist from '../components/SafeTypist';
 import { SoundToggle } from '../components/SoundToggle';
-import { getCachedDelegator } from '../lib/delegatorCache';
 import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useQueue } from '../contexts/QueueContext';
+import { getCachedDelegator } from '../lib/delegatorCache';
 import { useGameStore } from '../lib/gameStore/store';
-import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, GUIDE_PATH, MANIFESTO_PATH, WAITING_ROOM_PATH } from '../Routes';
+import {
+  CHARACTER_CREATION_PATH,
+  GAME_BOARD_PATH,
+  GUIDE_PATH,
+  MANIFESTO_PATH,
+  WAITING_ROOM_PATH,
+} from '../Routes';
 
 const torchGlow = keyframes`
   0%, 100% {
@@ -34,22 +44,22 @@ const torchGlow = keyframes`
   }
 `;
 
-const dragonPulse = keyframes`
-  0%, 100% { opacity: 0.03; }
-  50% { opacity: 0.045; }
-`;
-
 export const Welcome = (): JSX.Element => {
   const { t } = useTranslation('pages');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const { authMethod, isAuthenticated, isConnecting, walletRecoveryFailed, disconnect } = useAuth();
+  const {
+    authMethod,
+    isAuthenticated,
+    isConnecting,
+    walletRecoveryFailed,
+    disconnect,
+  } = useAuth();
   const { delegatorAddress, isSynced } = useMUD();
   const { character, isRefreshing } = useCharacter();
   const { isMapFull, statsLoaded } = useQueue();
-  const hydrated = useGameStore((s) => s.hydrated);
-
+  const hydrated = useGameStore(s => s.hydrated);
 
   // Capture invite code from URL params
   useEffect(() => {
@@ -88,7 +98,17 @@ export const Welcome = (): JSX.Element => {
     } else {
       navigate(CHARACTER_CREATION_PATH);
     }
-  }, [authMethod, character?.locked, delegatorAddress, hydrated, isAuthenticated, isMapFull, isRefreshing, navigate, statsLoaded]);
+  }, [
+    authMethod,
+    character?.locked,
+    delegatorAddress,
+    hydrated,
+    isAuthenticated,
+    isMapFull,
+    isRefreshing,
+    navigate,
+    statsLoaded,
+  ]);
 
   // Auto-open delegation modal for external wallets that haven't delegated yet.
   // Only when user explicitly clicked Enter (isOpen is already true), not on page load.
@@ -127,10 +147,10 @@ export const Welcome = (): JSX.Element => {
   // Blank while: (a) Privy still connecting (timeout = safety net if Privy hangs),
   // or (b) auth done but MUD still syncing (no timeout — MUDProvider error screen
   // handles setup failures, and getBurner always resolves isSynced).
-  const showBlank = !isOpen && (
-    (!connectTimeout && isConnecting && !isAuthenticated) ||
-    (isAuthenticated && !isSynced)
-  );
+  const showBlank =
+    !isOpen &&
+    ((!connectTimeout && isConnecting && !isAuthenticated) ||
+      (isAuthenticated && !isSynced));
   if (showBlank) {
     return <Box />;
   }
@@ -167,7 +187,9 @@ export const Welcome = (): JSX.Element => {
           variant="outline"
           color="#C4B89E"
           borderColor="rgba(196, 184, 158, 0.3)"
-          onClick={() => { disconnect(); }}
+          onClick={() => {
+            disconnect();
+          }}
           size="sm"
           _hover={{ borderColor: '#C4B89E' }}
         >
@@ -178,20 +200,7 @@ export const Welcome = (): JSX.Element => {
   }
 
   return (
-    <Box
-      border="6px solid #3A3228"
-      p={1.5}
-      _after={{
-        content: '""',
-        position: 'fixed',
-        inset: 0,
-        opacity: 0.05,
-        mixBlendMode: 'overlay',
-        pointerEvents: 'none',
-        zIndex: 1,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-      }}
-    >
+    <Box border="6px solid #3A3228" p={1.5}>
       <Helmet>
         <title>{t('welcome.metaTitle')}</title>
         <meta name="description" content={t('welcome.metaDescription')} />
@@ -208,7 +217,8 @@ export const Welcome = (): JSX.Element => {
           content: '""',
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(10,8,6,0.6) 100%)',
+          background:
+            'radial-gradient(ellipse at center, transparent 0%, rgba(10,8,6,0.6) 100%)',
           pointerEvents: 'none',
           zIndex: 1,
         }}
@@ -225,23 +235,6 @@ export const Welcome = (): JSX.Element => {
           width="80%"
           zIndex={0}
         />
-        {/* Dragon watermark — subtle pulse like firelight */}
-        <Box
-          animation={`${dragonPulse} 6s ease-in-out infinite`}
-          backgroundImage="url(/images/ud-dragon.svg)"
-          backgroundPosition="center"
-          backgroundRepeat="no-repeat"
-          backgroundSize="contain"
-          height="60%"
-          left="50%"
-          pointerEvents="none"
-          position="absolute"
-          top="50%"
-          transform="translate(-50%, -50%)"
-          width="60%"
-          zIndex={0}
-        />
-
         <VStack
           justifyContent="center"
           mb={16}
@@ -297,11 +290,23 @@ export const Welcome = (): JSX.Element => {
             </VStack>
             {/* Typing animation overlaid at exact same position */}
             <Box position="absolute" top={0} left={0} right={0}>
-              <VStack fontWeight={500} maxW="850px" mx="auto" spacing={6} textAlign="center">
+              <VStack
+                fontWeight={500}
+                maxW="850px"
+                mx="auto"
+                spacing={6}
+                textAlign="center"
+              >
                 <SafeTypist
                   avgTypingDelay={35}
                   stdTypingDelay={20}
-                  cursor={{ show: true, blink: true, element: '\u258C', hideWhenDone: true, hideWhenDoneDelay: 500 }}
+                  cursor={{
+                    show: true,
+                    blink: true,
+                    element: '\u258C',
+                    hideWhenDone: true,
+                    hideWhenDoneDelay: 500,
+                  }}
                 >
                   <Text size={{ base: 'sm', sm: 'md', md: 'lg' }}>
                     {t('intro.p1')}
@@ -350,7 +355,9 @@ export const Welcome = (): JSX.Element => {
             >
               {t('welcome.manifesto')}
             </Link>
-            <Text color="#3A3228" userSelect="none">|</Text>
+            <Text color="#3A3228" userSelect="none">
+              |
+            </Text>
             <Link
               as={RouterLink}
               color="#8A7E6A"
@@ -359,7 +366,9 @@ export const Welcome = (): JSX.Element => {
             >
               {t('welcome.guide')}
             </Link>
-            <Text color="#3A3228" userSelect="none">|</Text>
+            <Text color="#3A3228" userSelect="none">
+              |
+            </Text>
             <Link
               color="#8A7E6A"
               href="https://tavern.ultimatedominion.com"
@@ -368,7 +377,9 @@ export const Welcome = (): JSX.Element => {
             >
               {t('welcome.tavern')}
             </Link>
-            <Text color="#3A3228" userSelect="none">|</Text>
+            <Text color="#3A3228" userSelect="none">
+              |
+            </Text>
             <Link
               color="#8A7E6A"
               href="https://x.com/DominionMMO"

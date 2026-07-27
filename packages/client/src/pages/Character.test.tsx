@@ -1,5 +1,5 @@
-import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { CharacterPage } from './Character';
@@ -22,6 +22,7 @@ vi.mock('../contexts/CharacterContext', () => ({
     character: mockCharacter,
     refreshCharacter: mockRefreshCharacter,
     equippedArmor: [],
+    equippedConsumables: [],
     equippedSpells: [],
     equippedWeapons: [],
   }),
@@ -51,6 +52,7 @@ vi.mock('../contexts/ItemsContext', () => ({
     armorTemplates: [],
     consumableTemplates: [],
     isLoading: false,
+    questItemTemplates: [],
     spellTemplates: [],
     weaponTemplates: [],
   }),
@@ -83,7 +85,9 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Helmet: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock('../utils/helpers', () => ({
@@ -138,22 +142,25 @@ vi.mock('../components/Level', () => ({
 
 vi.mock('../components/LevelingPanel', () => ({
   LevelingPanel: (props: any) => (
-    <div
-      data-testid="leveling-panel"
-      data-can-level={String(props.canLevel)}
-    />
+    <div data-testid="leveling-panel" data-can-level={String(props.canLevel)} />
   ),
 }));
 
 vi.mock('../components/PolygonalCard', () => ({
-  PolygonalCard: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  PolygonalCard: ({ children, ...props }: any) => (
+    <div {...props}>{children}</div>
+  ),
 }));
 
 vi.mock('@chakra-ui/react', async () => {
-  const actual = await vi.importActual<typeof import('@chakra-ui/react')>('@chakra-ui/react');
+  const actual =
+    await vi.importActual<typeof import('@chakra-ui/react')>(
+      '@chakra-ui/react',
+    );
   return {
     ...actual,
-    useBreakpointValue: (values: Record<string, unknown>) => values.base ?? values.lg,
+    useBreakpointValue: (values: Record<string, unknown>) =>
+      values.base ?? values.lg,
   };
 });
 
@@ -175,7 +182,6 @@ function makeCharacter(overrides: Record<string, any> = {}) {
     advancedClass: 0,
     entityClass: 0,
     hasSelectedAdvancedClass: false,
-    image: '',
     externalGoldBalance: 0n,
     inBattle: false,
     isSpawned: true,
@@ -359,7 +365,7 @@ describe('CharacterPage — max level behavior', () => {
   });
 
   it('level 19 is NOT maxed (below MAX_LEVEL = 20)', () => {
-    mockCharacter = makeCharacter({ level: 19n, experience: 70000n });
+    mockCharacter = makeCharacter({ level: 19n, experience: 85000n });
 
     const nextLevelKey = '0x' + '13'.padStart(64, '0');
     const currentLevelKey = '0x' + '12'.padStart(64, '0');

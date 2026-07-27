@@ -11,18 +11,19 @@ export const DARK_DIVIDER_SHADOW =
 
 export const globalStyles = css`
   body {
-    background: #12100E;
-    color: #C4B89E;
-    font-family: 'Cormorant Garamond', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Inter', Georgia, serif;
+    background: #12100e;
+    color: #c4b89e;
+    font-family: 'Cormorant Garamond', 'Noto Sans KR', 'Noto Sans JP',
+      'Noto Sans SC', 'Inter', Georgia, serif;
     font-size: 1.15rem;
   }
 
-  .game-image {
-    filter: sepia(0.15) brightness(0.95);
-  }
-
   .data-dense {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
   }
 
   /* Custom scrollbar */
@@ -31,20 +32,20 @@ export const globalStyles = css`
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #14120F;
+    background: #14120f;
   }
   ::-webkit-scrollbar-thumb {
-    background: #3A3228;
+    background: #3a3228;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #4A4238;
+    background: #4a4238;
   }
 
   /* Firefox scrollbar */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #3A3228 #14120F;
+    scrollbar-color: #3a3228 #14120f;
   }
 `;
 
@@ -444,7 +445,11 @@ const Tooltip = {
 };
 
 export const theme = extendTheme({
-  config: { initialColorMode: 'dark', useSystemColorMode: false, disableTransitionOnChange: false },
+  config: {
+    initialColorMode: 'dark',
+    useSystemColorMode: false,
+    disableTransitionOnChange: false,
+  },
   fonts: {
     body: `'Cormorant Garamond', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Inter', Georgia, serif`,
     heading: `'Cinzel', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Inter', serif`,
@@ -458,15 +463,15 @@ export const theme = extendTheme({
     red: '#B83A2A',
 
     // Legacy aliases — remap old names to Torchlit palette
-    blue300: '#E8A840',   // was #1633B6 — now hover glow
-    blue400: '#C87A2A',   // was #0A2187 — now action amber
-    blue500: '#1C1814',   // was #0C1539 — now card bg
-    blue600: '#14120F',   // was #131832 — now input bg
-    grey100: '#2E2820',   // was #D0D0D0 — now hover surface
-    grey200: '#8A7E6A',   // was #A8ADB2 — now muted text
-    grey300: '#1C1814',   // was #A2A9B0 — now card bg
-    grey400: '#24201A',   // was #7E848A — now panel bg
-    grey500: '#3A3228',   // was #3D4247 — now border
+    blue300: '#E8A840', // was #1633B6 — now hover glow
+    blue400: '#C87A2A', // was #0A2187 — now action amber
+    blue500: '#1C1814', // was #0C1539 — now card bg
+    blue600: '#14120F', // was #131832 — now input bg
+    grey100: '#2E2820', // was #D0D0D0 — now hover surface
+    grey200: '#8A7E6A', // was #A8ADB2 — now muted text
+    grey300: '#1C1814', // was #A2A9B0 — now card bg
+    grey400: '#24201A', // was #7E848A — now panel bg
+    grey500: '#3A3228', // was #3D4247 — now border
 
     // Rarity colors
     rarityWorn: '#8a8a8a',

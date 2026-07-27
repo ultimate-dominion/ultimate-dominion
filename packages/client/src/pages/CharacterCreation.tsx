@@ -23,7 +23,6 @@ import { useItems } from '../contexts/ItemsContext';
 import { useMUD } from '../contexts/MUDContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
-import { useUploadFile } from '../hooks/useUploadFile';
 import {
   decodeUint256FromKey,
   encodeBytes32Key,
@@ -95,32 +94,32 @@ const RACE_INFO: Record<
   {
     nameKey: string;
     descKey: string;
-    icon: string;
+    code: string;
     bonuses: { hp: number; str: number; agi: number; int: number };
   }
 > = {
   [Race.Human]: {
     nameKey: 'characterCreation.race.human',
     descKey: 'characterCreation.race.humanDesc',
-    icon: '🧑',
+    code: 'HUM',
     bonuses: { hp: 0, str: 1, agi: 1, int: 1 },
   },
   [Race.Elf]: {
     nameKey: 'characterCreation.race.elf',
     descKey: 'characterCreation.race.elfDesc',
-    icon: '🧝',
+    code: 'ELF',
     bonuses: { hp: -1, str: -1, agi: 2, int: 1 },
   },
   [Race.Dwarf]: {
     nameKey: 'characterCreation.race.dwarf',
     descKey: 'characterCreation.race.dwarfDesc',
-    icon: '🧔',
+    code: 'DWF',
     bonuses: { hp: 1, str: 2, agi: -1, int: 0 },
   },
   [Race.None]: {
     nameKey: '',
     descKey: '',
-    icon: '',
+    code: '',
     bonuses: { hp: 0, str: 0, agi: 0, int: 0 },
   },
 };
@@ -131,32 +130,32 @@ const POWER_SOURCE_INFO: Record<
   {
     nameKey: string;
     descKey: string;
-    icon: string;
+    code: string;
     playstyleKey: string;
   }
 > = {
   [PowerSource.Divine]: {
     nameKey: 'characterCreation.powerSource.divine',
     descKey: 'characterCreation.powerSource.divineDesc',
-    icon: '✨',
+    code: 'DIV',
     playstyleKey: 'characterCreation.powerSource.divinePlay',
   },
   [PowerSource.Weave]: {
     nameKey: 'characterCreation.powerSource.weave',
     descKey: 'characterCreation.powerSource.weaveDesc',
-    icon: '🔮',
+    code: 'WEV',
     playstyleKey: 'characterCreation.powerSource.weavePlay',
   },
   [PowerSource.Physical]: {
     nameKey: 'characterCreation.powerSource.physical',
     descKey: 'characterCreation.powerSource.physicalDesc',
-    icon: '⚔️',
+    code: 'PHY',
     playstyleKey: 'characterCreation.powerSource.physicalPlay',
   },
   [PowerSource.None]: {
     nameKey: '',
     descKey: '',
-    icon: '',
+    code: '',
     playstyleKey: '',
   },
 };
@@ -220,10 +219,6 @@ const CharacterCreationInner = (): JSX.Element => {
   const characterRef = useRef(character);
   const phaseHeadingRef = useRef<HTMLParagraphElement | null>(null);
   characterRef.current = character;
-  const { file: avatar, onUpload } = useUploadFile({
-    fileName: 'characterAvatar',
-  });
-
   const [name, setName] = useState('');
   // Reactive query: re-renders when StarterItemPool records arrive via store sync
   const starterItemPoolTable = useGameTable('StarterItemPool');
@@ -366,20 +361,9 @@ const CharacterCreationInner = (): JSX.Element => {
         // Auto-generate description from name
         const description = `A mysterious figure known as ${name.trim()}.`;
 
-        let image = `https://effigy.im/a/${delegatorAddress}.svg`;
-
-        if (avatar) {
-          const avatarCid = await onUpload();
-          if (!avatarCid)
-            throw new Error(t('characterCreation.errors.avatarUploadFailed'));
-
-          image = `ipfs://${avatarCid}`;
-        }
-
         const characterMetadata = {
           name: name.trim(),
           description,
-          image,
         };
 
         const uploadUrl = `${API_URL}/api/uploadMetadata?name=characterMetadata.json`;
@@ -448,16 +432,7 @@ const CharacterCreationInner = (): JSX.Element => {
         setIsCreating(false);
       }
     },
-    [
-      avatar,
-      delegatorAddress,
-      mintCharacter,
-      name,
-      onUpload,
-      renderError,
-      renderWarning,
-      t,
-    ],
+    [delegatorAddress, mintCharacter, name, renderError, renderWarning, t],
   );
 
   // === Implicit Class System Callbacks ===
@@ -1076,7 +1051,15 @@ const CharacterCreationInner = (): JSX.Element => {
                           : {}
                       }
                     >
-                      <Text fontSize="28px">{info.icon}</Text>
+                      <Text
+                        color="#C87A2A"
+                        fontFamily="mono"
+                        fontSize="13px"
+                        fontWeight={700}
+                        letterSpacing="0.16em"
+                      >
+                        {info.code}
+                      </Text>
                       <Text
                         fontFamily="'Cinzel', serif"
                         fontSize="14px"
@@ -1194,7 +1177,15 @@ const CharacterCreationInner = (): JSX.Element => {
                           : {}
                       }
                     >
-                      <Text fontSize="28px">{info.icon}</Text>
+                      <Text
+                        color="#C87A2A"
+                        fontFamily="mono"
+                        fontSize="13px"
+                        fontWeight={700}
+                        letterSpacing="0.16em"
+                      >
+                        {info.code}
+                      </Text>
                       <Text
                         fontFamily="'Cinzel', serif"
                         fontSize="14px"

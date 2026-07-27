@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Drawer,
   DrawerBody,
@@ -16,19 +15,20 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IoSearch } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 
 import { useMap } from '../contexts/MapContext';
 import { useMUD } from '../contexts/MUDContext';
 import {
   ADVANCED_CLASS_COLORS,
   ADVANCED_CLASS_NAMES,
-  AdvancedClass,
   type Character,
   StatsClasses,
 } from '../utils/types';
+
+import { CharacterMark } from './EntityMark';
 
 // ── Constants ──
 
@@ -61,13 +61,10 @@ function getPlayerStatus(character: Character): {
   label: string;
   color: string;
 } | null {
-  if (
-    !(character as any).worldEncounter &&
-    character.inBattle
-  ) {
+  if (!character.worldEncounter && character.inBattle) {
     return { label: 'roster.inBattle', color: '#B83A2A' };
   }
-  if ((character as any).worldEncounter) {
+  if (character.worldEncounter) {
     return { label: 'roster.shopping', color: '#EFD31C' };
   }
   const cooldownTimer = character.pvpCooldownTimer;
@@ -89,7 +86,7 @@ export const OnlineLink = (): JSX.Element => {
   const { t } = useTranslation('ui');
 
   const spawnedPlayers = useMemo(
-    () => allCharacters.filter((c) => c.isSpawned),
+    () => allCharacters.filter(c => c.isSpawned),
     [allCharacters],
   );
 
@@ -152,7 +149,9 @@ export const OnlineLink = (): JSX.Element => {
             },
           }}
         >
-          {count === 1 ? t('roster.playerOnline', { count }) : t('roster.playersOnline', { count })}
+          {count === 1
+            ? t('roster.playerOnline', { count })
+            : t('roster.playersOnline', { count })}
         </Text>
       </HStack>
 
@@ -183,8 +182,7 @@ const OnlineRosterDrawer = ({
 
   // Sort by level desc, keep current player in list
   const sortedPlayers = useMemo(() => {
-    return [...players]
-      .sort((a, b) => Number(b.level) - Number(a.level));
+    return [...players].sort((a, b) => Number(b.level) - Number(a.level));
   }, [players]);
 
   // Apply filter + search
@@ -192,14 +190,12 @@ const OnlineRosterDrawer = ({
     let result = sortedPlayers;
 
     if (filter !== 'all') {
-      result = result.filter(
-        (c) => STAT_TYPE_MAP[c.entityClass] === filter,
-      );
+      result = result.filter(c => STAT_TYPE_MAP[c.entityClass] === filter);
     }
 
     if (search.trim()) {
       const q = search.toLowerCase().trim();
-      result = result.filter((c) => c.name.toLowerCase().includes(q));
+      result = result.filter(c => c.name.toLowerCase().includes(q));
     }
 
     return result;
@@ -211,7 +207,7 @@ const OnlineRosterDrawer = ({
   }, [sortedPlayers]);
 
   const getRank = (playerId: string): number => {
-    const entry = rankedPlayers.find((r) => r.player.id === playerId);
+    const entry = rankedPlayers.find(r => r.player.id === playerId);
     return entry?.rank ?? 0;
   };
 
@@ -301,7 +297,7 @@ const OnlineRosterDrawer = ({
 
             {/* Filter tabs */}
             <HStack spacing={0.5}>
-              {FILTER_TABS.map((tab) => (
+              {FILTER_TABS.map(tab => (
                 <Box
                   key={tab.value}
                   as="button"
@@ -349,7 +345,7 @@ const OnlineRosterDrawer = ({
               isCurrentPlayer={isCurrentPlayer}
             />
           ) : (
-            filteredPlayers.map((p) => (
+            filteredPlayers.map(p => (
               <PlayerRow
                 key={p.id}
                 character={p}
@@ -361,12 +357,7 @@ const OnlineRosterDrawer = ({
           )}
 
           {filteredPlayers.length === 0 && (
-            <Text
-              color="#5A5248"
-              fontSize="13px"
-              textAlign="center"
-              py={8}
-            >
+            <Text color="#5A5248" fontSize="13px" textAlign="center" py={8}>
               {t('roster.noPlayersFound')}
             </Text>
           )}
@@ -386,7 +377,7 @@ const OnlineRosterDrawer = ({
             <Input
               placeholder={t('roster.searchPlayers')}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
               bg="#14120F"
               border="1px solid rgba(196,184,158,0.08)"
               borderRadius="6px"
@@ -449,12 +440,7 @@ const GroupedPlayerList = ({
 
         return (
           <Box key={label} mb={0.5}>
-            <HStack
-              px={5}
-              pt={2}
-              pb={1}
-              spacing={2}
-            >
+            <HStack px={5} pt={2} pb={1} spacing={2}>
               <Text
                 fontFamily="mono"
                 fontSize="10px"
@@ -469,7 +455,7 @@ const GroupedPlayerList = ({
               </Text>
               <Box flex={1} h="1px" bg="rgba(196,184,158,0.08)" />
             </HStack>
-            {list.map((p) => (
+            {list.map(p => (
               <PlayerRow
                 key={p.id}
                 character={p}
@@ -512,7 +498,7 @@ const PlayerRow = ({
   const isDense = mode === 'dense';
 
   const py = isDense ? 1 : isExpanded ? 3 : 2;
-  const avatarSize = isDense ? '2xs' : isExpanded ? 'sm' : 'xs';
+  const markSize = isDense ? '24px' : isExpanded ? '32px' : '28px';
 
   return (
     <HStack
@@ -536,11 +522,9 @@ const PlayerRow = ({
         },
       }}
     >
-      {/* Avatar */}
-      <Avatar
+      <CharacterMark
         name={character.name}
-        src={character.image || undefined}
-        size={avatarSize}
+        boxSize={markSize}
         borderRadius="6px"
         border={`1.5px solid ${classColor}30`}
         bg="#24201A"
@@ -590,11 +574,7 @@ const PlayerRow = ({
         </HStack>
 
         <HStack spacing={2}>
-          <Text
-            fontSize="11.5px"
-            fontWeight={500}
-            color={classColor}
-          >
+          <Text fontSize="11.5px" fontWeight={500} color={classColor}>
             {className}
           </Text>
           <Text color="#5A5248" fontSize="8px">
@@ -614,9 +594,21 @@ const PlayerRow = ({
         {/* Expanded: stat pips */}
         {isExpanded && (
           <HStack spacing={1.5} mt={1}>
-            <StatPip label="STR" value={Number(character.strength)} color={STAT_COLORS.str} />
-            <StatPip label="AGI" value={Number(character.agility)} color={STAT_COLORS.agi} />
-            <StatPip label="INT" value={Number(character.intelligence)} color={STAT_COLORS.int} />
+            <StatPip
+              label="STR"
+              value={Number(character.strength)}
+              color={STAT_COLORS.str}
+            />
+            <StatPip
+              label="AGI"
+              value={Number(character.agility)}
+              color={STAT_COLORS.agi}
+            />
+            <StatPip
+              label="INT"
+              value={Number(character.intelligence)}
+              color={STAT_COLORS.int}
+            />
           </HStack>
         )}
       </VStack>
@@ -663,6 +655,8 @@ const StatPip = ({
 }) => (
   <HStack spacing={1} fontFamily="mono" fontSize="9.5px" color={color}>
     <Box w="4px" h="10px" borderRadius="1px" bg={color} opacity={0.7} />
-    <Text>{value}</Text>
+    <Text>
+      {label} {value}
+    </Text>
   </HStack>
 );

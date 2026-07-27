@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -12,11 +10,14 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GiCrossedSwords } from 'react-icons/gi';
-import SafeTypist from './SafeTypist';
 
 import { type Character } from '../utils/types';
+
 import { LevelingPanel } from './LevelingPanel';
+import SafeTypist from './SafeTypist';
 import { ShareButton } from './ShareButton';
 
 /* ──────────────────────── Animations ──────────────────────── */
@@ -79,20 +80,6 @@ const lightSeep = keyframes`
   100% { opacity: 0.6; height: 40px; }
 `;
 
-/* ──────────────────────── Level Background Art ──────────────────────── */
-
-const LEVEL_BACKGROUNDS: Record<number, string> = {
-  2: '/images/levelup/level-2.png',
-  3: '/images/levelup/level-3.png',
-  4: '/images/levelup/level-4.png',
-  5: '/images/levelup/level-5.png',
-  6: '/images/levelup/level-6.png',
-  7: '/images/levelup/level-7.png',
-  8: '/images/levelup/level-8.png',
-  9: '/images/levelup/level-9.png',
-  10: '/images/levelup/level-10.png',
-};
-
 /* ──────────────────────── Component ──────────────────────── */
 
 type LevelUpModalProps = {
@@ -108,18 +95,21 @@ export const LevelUpModal = ({
 }: LevelUpModalProps): JSX.Element => {
   const { t } = useTranslation('ui');
   const { t: tn } = useTranslation('narrative');
-  const [phase, setPhase] = useState<'celebrate' | 'allocate' | 'narrative'>('celebrate');
+  const [phase, setPhase] = useState<'celebrate' | 'allocate' | 'narrative'>(
+    'celebrate',
+  );
   const [showContent, setShowContent] = useState(false);
   // Capture target level when modal opens — character.level updates after TX
   // but we need the level they're reaching, not the post-refresh level
   const [targetLevel, setTargetLevel] = useState(0);
 
-  const levelKey = tn(`levelUp.${targetLevel}.title`, { defaultValue: '' }) ? `${targetLevel}` : 'default';
+  const levelKey = tn(`levelUp.${targetLevel}.title`, { defaultValue: '' })
+    ? `${targetLevel}`
+    : 'default';
   const narrative = {
     title: tn(`levelUp.${levelKey}.title`),
     text: tn(`levelUp.${levelKey}.text`),
   };
-  const backgroundImage = LEVEL_BACKGROUNDS[targetLevel];
 
   useEffect(() => {
     if (isOpen) {
@@ -182,24 +172,6 @@ export const LevelUpModal = ({
           },
         }}
       >
-        {/* Background art layer — one image, styled per phase */}
-        {backgroundImage && (
-          <Box
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundImage={`url(${backgroundImage})`}
-            backgroundSize="cover"
-            backgroundPosition={phase === 'narrative' ? 'center bottom' : 'center'}
-            backgroundRepeat="no-repeat"
-            opacity={phase === 'allocate' ? 0.06 : phase === 'narrative' ? 0.25 : 0.15}
-            filter={phase === 'allocate' ? 'blur(4px)' : 'none'}
-            transition="opacity 0.6s ease, filter 0.6s ease, background-position 0.8s ease"
-            pointerEvents="none"
-          />
-        )}
         {/* Radial gradient overlay for text readability — softer on narrative */}
         <Box
           position="absolute"
@@ -207,9 +179,11 @@ export const LevelUpModal = ({
           left={0}
           right={0}
           bottom={0}
-          bg={phase === 'narrative'
-            ? 'radial-gradient(ellipse at center, rgba(28, 24, 20, 0.4) 0%, transparent 70%)'
-            : 'radial-gradient(ellipse at center, rgba(28, 24, 20, 0.7) 0%, transparent 70%)'}
+          bg={
+            phase === 'narrative'
+              ? 'radial-gradient(ellipse at center, rgba(28, 24, 20, 0.4) 0%, transparent 70%)'
+              : 'radial-gradient(ellipse at center, rgba(28, 24, 20, 0.7) 0%, transparent 70%)'
+          }
           transition="background 0.6s ease"
           pointerEvents="none"
         />
@@ -225,7 +199,11 @@ export const LevelUpModal = ({
             >
               {/* Level number — big hero moment */}
               <Box
-                animation={showContent ? `${levelReveal} 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards` : undefined}
+                animation={
+                  showContent
+                    ? `${levelReveal} 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards`
+                    : undefined
+                }
                 opacity={0}
               >
                 <Text
@@ -259,7 +237,9 @@ export const LevelUpModal = ({
                 borderRadius="full"
                 background="linear-gradient(90deg, transparent, #D4A54A, transparent)"
                 backgroundSize="200% 100%"
-                animation={showContent ? `${shimmer} 3s ease-in-out infinite` : undefined}
+                animation={
+                  showContent ? `${shimmer} 3s ease-in-out infinite` : undefined
+                }
                 opacity={showContent ? 1 : 0}
                 css={{
                   animation: showContent
@@ -277,7 +257,11 @@ export const LevelUpModal = ({
                 color="#8A7E6A"
                 maxW="360px"
                 opacity={showContent ? 1 : 0}
-                animation={showContent ? `${fadeUp} 0.6s 0.7s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
+                animation={
+                  showContent
+                    ? `${fadeUp} 0.6s 0.7s cubic-bezier(0.16, 1, 0.3, 1) both`
+                    : undefined
+                }
               >
                 {narrative.title}
               </Text>
@@ -289,7 +273,11 @@ export const LevelUpModal = ({
                 fontFamily="mono"
                 color="#D4A54A"
                 opacity={showContent ? 1 : 0}
-                animation={showContent ? `${fadeUp} 0.6s 1s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
+                animation={
+                  showContent
+                    ? `${fadeUp} 0.6s 1s cubic-bezier(0.16, 1, 0.3, 1) both`
+                    : undefined
+                }
               >
                 {t('levelUp.abilityPoint')}
               </Text>
@@ -337,7 +325,11 @@ export const LevelUpModal = ({
                   borderRadius="16px"
                   bg="radial-gradient(circle, rgba(106, 138, 176, 0.15) 0%, transparent 70%)"
                 />
-                <Box color="#6A8AB0" zIndex={1} filter="drop-shadow(0 0 12px rgba(106, 138, 176, 0.5))">
+                <Box
+                  color="#6A8AB0"
+                  zIndex={1}
+                  filter="drop-shadow(0 0 12px rgba(106, 138, 176, 0.5))"
+                >
                   <GiCrossedSwords size={48} />
                 </Box>
               </Box>
@@ -378,7 +370,14 @@ export const LevelUpModal = ({
                 >
                   {tn('milestone.3.text')}
                 </Text>
-                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                <Box
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  right={0}
+                  px={{ base: 5, md: 7 }}
+                  py={6}
+                >
                   <SafeTypist
                     avgTypingDelay={50}
                     cursor={{ show: false }}
@@ -476,7 +475,14 @@ export const LevelUpModal = ({
                 >
                   {tn('milestone.5.text')}
                 </Text>
-                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                <Box
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  right={0}
+                  px={{ base: 5, md: 7 }}
+                  py={6}
+                >
                   <SafeTypist
                     avgTypingDelay={50}
                     cursor={{ show: false }}
@@ -581,7 +587,14 @@ export const LevelUpModal = ({
                 >
                   {narrative.text}
                 </Text>
-                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                <Box
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  right={0}
+                  px={{ base: 5, md: 7 }}
+                  py={6}
+                >
                   <SafeTypist
                     avgTypingDelay={50}
                     cursor={{ show: false }}
@@ -625,7 +638,10 @@ export const LevelUpModal = ({
                 animation={`${badgeReveal} 1s cubic-bezier(0.16, 1, 0.3, 1) forwards, ${spellPulse} 3s ease-in-out 1s infinite`}
                 opacity={0}
               >
-                <Text fontSize="3xl" filter="drop-shadow(0 0 12px rgba(160, 120, 220, 0.5))">
+                <Text
+                  fontSize="3xl"
+                  filter="drop-shadow(0 0 12px rgba(160, 120, 220, 0.5))"
+                >
                   ✦
                 </Text>
               </Box>
@@ -663,7 +679,14 @@ export const LevelUpModal = ({
                 >
                   {narrative.text}
                 </Text>
-                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
+                <Box
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  right={0}
+                  px={{ base: 5, md: 7 }}
+                  py={6}
+                >
                   <SafeTypist
                     avgTypingDelay={50}
                     cursor={{ show: false }}
@@ -687,56 +710,67 @@ export const LevelUpModal = ({
             </VStack>
           )}
 
-          {phase === 'narrative' && targetLevel !== 3 && targetLevel !== 5 && targetLevel !== 10 && targetLevel !== 15 && (
-            /* ── Generic narrative for other levels ── */
-            <VStack
-              spacing={6}
-              py={{ base: 12, md: 16 }}
-              px={{ base: 6, md: 10 }}
-              align="center"
-            >
-              <Box mx="auto" w="60px" h="1px" bg="rgba(212, 165, 74, 0.3)" />
-
-              <Box
-                maxW="420px"
-                bg="rgba(28, 24, 20, 0.85)"
-                borderRadius="md"
-                border="1px solid rgba(196, 184, 158, 0.06)"
-                px={{ base: 5, md: 7 }}
-                py={6}
-                position="relative"
+          {phase === 'narrative' &&
+            targetLevel !== 3 &&
+            targetLevel !== 5 &&
+            targetLevel !== 10 &&
+            targetLevel !== 15 && (
+              /* ── Generic narrative for other levels ── */
+              <VStack
+                spacing={6}
+                py={{ base: 12, md: 16 }}
+                px={{ base: 6, md: 10 }}
+                align="center"
               >
-                <Text
-                  fontSize={{ base: 'sm', md: 'md' }}
-                  lineHeight="1.85"
-                  visibility="hidden"
-                  aria-hidden="true"
-                  whiteSpace="pre-line"
+                <Box mx="auto" w="60px" h="1px" bg="rgba(212, 165, 74, 0.3)" />
+
+                <Box
+                  maxW="420px"
+                  bg="rgba(28, 24, 20, 0.85)"
+                  borderRadius="md"
+                  border="1px solid rgba(196, 184, 158, 0.06)"
+                  px={{ base: 5, md: 7 }}
+                  py={6}
+                  position="relative"
                 >
-                  {narrative.text}
-                </Text>
-                <Box position="absolute" top={0} left={0} right={0} px={{ base: 5, md: 7 }} py={6}>
-                  <SafeTypist
-                    avgTypingDelay={50}
-                    cursor={{ show: false }}
-                    stdTypingDelay={25}
+                  <Text
+                    fontSize={{ base: 'sm', md: 'md' }}
+                    lineHeight="1.85"
+                    visibility="hidden"
+                    aria-hidden="true"
+                    whiteSpace="pre-line"
                   >
-                    <Text
-                      fontSize={{ base: 'sm', md: 'md' }}
-                      lineHeight="1.85"
-                      color="#D4C8B0"
-                      fontStyle="italic"
-                      textAlign="center"
-                      whiteSpace="pre-line"
-                      textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                    {narrative.text}
+                  </Text>
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    right={0}
+                    px={{ base: 5, md: 7 }}
+                    py={6}
+                  >
+                    <SafeTypist
+                      avgTypingDelay={50}
+                      cursor={{ show: false }}
+                      stdTypingDelay={25}
                     >
-                      {narrative.text}
-                    </Text>
-                  </SafeTypist>
+                      <Text
+                        fontSize={{ base: 'sm', md: 'md' }}
+                        lineHeight="1.85"
+                        color="#D4C8B0"
+                        fontStyle="italic"
+                        textAlign="center"
+                        whiteSpace="pre-line"
+                        textShadow="0 1px 2px rgba(0, 0, 0, 0.3)"
+                      >
+                        {narrative.text}
+                      </Text>
+                    </SafeTypist>
+                  </Box>
                 </Box>
-              </Box>
-            </VStack>
-          )}
+              </VStack>
+            )}
         </ModalBody>
 
         <ModalFooter justifyContent="center" pb={8} position="relative">
@@ -746,18 +780,18 @@ export const LevelUpModal = ({
               variant="gold"
               size="md"
               opacity={showContent ? 1 : 0}
-              animation={showContent ? `${fadeUp} 0.6s 1.3s cubic-bezier(0.16, 1, 0.3, 1) both` : undefined}
+              animation={
+                showContent
+                  ? `${fadeUp} 0.6s 1.3s cubic-bezier(0.16, 1, 0.3, 1) both`
+                  : undefined
+              }
             >
               {t('levelUp.allocateStats')}
             </Button>
           )}
           {phase === 'narrative' && (
             <VStack spacing={3}>
-              <Button
-                onClick={handleClose}
-                variant="gold"
-                size="md"
-              >
+              <Button onClick={handleClose} variant="gold" size="md">
                 {t('common.continue')}
               </Button>
               <ShareButton
@@ -767,7 +801,6 @@ export const LevelUpModal = ({
                   level: targetLevel.toString(),
                   player: character.name,
                 }}
-                imageSrc={backgroundImage}
                 colorAccent="#D4A54A"
               />
             </VStack>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
-import type { WeaponAnimType } from '../components/pretext/game/weaponAnimations';
 import { useGameAudio, type SfxKey } from '../contexts/SoundContext';
+import type { AttackPresentation } from '../utils/attackPresentation';
 import type { AttackOutcomeType } from '../utils/types';
 
 import { buildBattleSceneSignals } from './buildBattleSceneSignal';
@@ -9,8 +9,8 @@ import { buildBattleSceneSignals } from './buildBattleSceneSignal';
 // ── Signal types ────────────────────────────────────────────────────────
 
 export type AttackSignal = {
-  weaponType: WeaponAnimType;
-  /** Item name from items.json (e.g. "Iron Axe"). Used to load 3D projectile model. */
+  weaponType: AttackPresentation;
+  /** Item name from items.json (e.g. "Iron Axe"). Used for semantic attack feedback. */
   weaponName?: string;
   damage: number;
   /** Number of individual hits in this attack (multi-hit combos). */
@@ -88,7 +88,7 @@ export function useBattleSceneSignals({
   visibleOutcomes: AttackOutcomeType[];
   characterId: string | undefined;
   sceneRef: React.RefObject<BattleSceneHandle | null>;
-  weaponTypeForItem: (itemId: string) => WeaponAnimType;
+  weaponTypeForItem: (itemId: string) => AttackPresentation;
   /** Returns item name for 3D projectile rendering. Optional — 2D fallback if absent. */
   weaponNameForItem?: (itemId: string) => string | undefined;
   opponentName: string;

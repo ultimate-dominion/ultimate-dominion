@@ -130,9 +130,6 @@
     "title": "Edit Character",
     "namePlaceholder": "Name",
     "nameRequired": "Name is required",
-    "uploadAvatar": "Upload Avatar Image",
-    "uploading": "Uploading...",
-    "avatarRequired": "Avatar is required",
     "bioPlaceholder": "Bio",
     "bioRequired": "Bio is required",
     "updating": "Updating...",
@@ -261,7 +258,6 @@
     "blog": "Blog"
   },
   "share": {
-    "shareWithImage": "Share with image",
     "shareAria": "Share",
     "copied": "Copied!",
     "copyText": "Copy text",
@@ -659,7 +655,6 @@
     "errors": {
       "walletInitializing": "Wallet still initializing — please wait a moment and try again.",
       "nameRequired": "Name is required.",
-      "avatarUploadFailed": "Something went wrong uploading your character avatar.",
       "invalidMetadataUrl": "Invalid metadata URL returned from the server.",
       "creationFailed": "Failed to create character."
     }

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { buildCharacter } from './buildCharacter';
 import { ArmorType, PowerSource, Race } from './types';
 
@@ -59,7 +60,7 @@ describe('buildCharacter', () => {
       undefined,
       { zoneId: 0, x: 1, y: 2 },
       { spawned: true },
-      { name: '', description: '', image: '' },
+      { name: '', description: '' },
       undefined,
     );
 

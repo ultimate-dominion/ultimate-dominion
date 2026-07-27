@@ -15,22 +15,22 @@ import { useTranslation } from 'react-i18next';
 import { GiTwoCoins } from 'react-icons/gi';
 import { IoNavigate } from 'react-icons/io5';
 import { useNavigate, useParams } from 'react-router-dom';
+
 import { PolygonalCard } from '../components/PolygonalCard';
 import { RepairShopPanel } from '../components/RepairShopPanel';
 import { ShopHalf } from '../components/ShopHalf';
 import { ShopSvg } from '../components/SVGs/ShopSvg';
+import { useAllowance } from '../contexts/AllowanceContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useCharacter } from '../contexts/CharacterContext';
 import { useGoldMerchant } from '../contexts/GoldMerchantContext';
 import { useItems } from '../contexts/ItemsContext';
 import { useMap } from '../contexts/MapContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useMUD } from '../contexts/MUDContext';
-import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
-import { etherToFixedNumber } from '../utils/helpers';
-import { preloadItemImages } from '../utils/itemImages';
-import { useAllowance } from '../contexts/AllowanceContext';
 import { useToast } from '../hooks/useToast';
 import { useTransaction } from '../hooks/useTransaction';
+import { CHARACTER_CREATION_PATH, GAME_BOARD_PATH, HOME_PATH } from '../Routes';
+import { etherToFixedNumber } from '../utils/helpers';
 import {
   type ArmorTemplate,
   type ConsumableTemplate,
@@ -55,7 +55,10 @@ export const Shop = (): JSX.Element => {
   } = useMUD();
   const { ensureItemsAllowance, itemsShopAllowance } = useAllowance();
   const { renderSuccess } = useToast();
-  const sellAllTx = useTransaction({ actionName: 'sellAll', showSuccessToast: false });
+  const sellAllTx = useTransaction({
+    actionName: 'sellAll',
+    showSuccessToast: false,
+  });
   const {
     armorTemplates,
     consumableTemplates,
@@ -85,7 +88,9 @@ export const Shop = (): JSX.Element => {
     // Call endShopEncounter to properly end the encounter on-chain.
     // Fragment II trigger for Tal's shop is handled on-chain by ShopSystem.
     if (userCharacter?.worldEncounter?.encounterId) {
-      endShopEncounter(userCharacter.worldEncounter.encounterId).catch(() => {});
+      endShopEncounter(userCharacter.worldEncounter.encounterId).catch(
+        () => {},
+      );
     }
 
     // Navigate immediately — keep fromShop fallback so GameBoard doesn't
@@ -118,14 +123,22 @@ export const Shop = (): JSX.Element => {
   // Clear optimistic gold adjustment when the reactive data catches up
   const prevGoldRef = useRef(userCharacter?.externalGoldBalance);
   useEffect(() => {
-    if (userCharacter && prevGoldRef.current !== userCharacter.externalGoldBalance) {
+    if (
+      userCharacter &&
+      prevGoldRef.current !== userCharacter.externalGoldBalance
+    ) {
       prevGoldRef.current = userCharacter.externalGoldBalance;
       setGoldAdjustment(0n);
     }
   }, [userCharacter?.externalGoldBalance]);
 
   const onTradeComplete = useCallback(
-    (tokenId: string, amount: number, goldDelta: bigint, orderType: OrderType) => {
+    (
+      tokenId: string,
+      amount: number,
+      goldDelta: bigint,
+      orderType: OrderType,
+    ) => {
       if (orderType === OrderType.Selling) {
         setGoldAdjustment(prev => prev + goldDelta);
         setSellable(prev =>
@@ -197,7 +210,8 @@ export const Shop = (): JSX.Element => {
     if (result !== undefined) {
       let totalGold = 0n;
       for (const entry of toSell) {
-        totalGold += entry.balance! * ((entry.item.price * shop.priceMarkdown) / 10_000n);
+        totalGold +=
+          entry.balance! * ((entry.item.price * shop.priceMarkdown) / 10_000n);
       }
       setGoldAdjustment(prev => prev + totalGold);
       setSellable(prev =>
@@ -287,19 +301,18 @@ export const Shop = (): JSX.Element => {
       ...equippedWeapons,
     ];
 
-    const sellableInventory = items
-      .map(item => {
-        const isEquipped = equippedItems.some(
-          equippedItem => equippedItem.tokenId === item.tokenId,
-        );
-        return {
-          balance: item.balance,
-          index: item.tokenId,
-          isEquipped,
-          item: item,
-          stock: null,
-        };
-      });
+    const sellableInventory = items.map(item => {
+      const isEquipped = equippedItems.some(
+        equippedItem => equippedItem.tokenId === item.tokenId,
+      );
+      return {
+        balance: item.balance,
+        index: item.tokenId,
+        isEquipped,
+        item: item,
+        stock: null,
+      };
+    });
 
     const buyableStock = [
       ...armorTemplates,
@@ -322,10 +335,6 @@ export const Shop = (): JSX.Element => {
 
     setSellable(sellableInventory);
     setBuyable(buyableStock);
-
-    // Preload images for all shop items before components mount
-    const allNames = [...sellableInventory, ...buyableStock].map(e => e.item.name);
-    if (allNames.length > 0) preloadItemImages(allNames);
   }, [
     armorTemplates,
     consumableTemplates,
@@ -375,7 +384,9 @@ export const Shop = (): JSX.Element => {
       </Helmet>
       <HStack bgColor="#1C1814" color="#E8DCC8" h="68px" px={6}>
         <ShopSvg />
-        <Heading size={{ base: 'sm', md: 'md' }}>{shop.name}&apos;s Shop</Heading>
+        <Heading size={{ base: 'sm', md: 'md' }}>
+          {shop.name}&apos;s Shop
+        </Heading>
         <Spacer />
         <HStack spacing={4}>
           <HStack spacing={1}>
@@ -461,7 +472,10 @@ export const Shop = (): JSX.Element => {
               fontWeight={700}
               size={{ base: 'lg', md: 'xl' }}
             >
-              {etherToFixedNumber(BigInt(userCharacter.externalGoldBalance) + goldAdjustment)} $GOLD
+              {etherToFixedNumber(
+                BigInt(userCharacter.externalGoldBalance) + goldAdjustment,
+              )}{' '}
+              $GOLD
             </Text>
             <Button
               leftIcon={<GiTwoCoins />}
