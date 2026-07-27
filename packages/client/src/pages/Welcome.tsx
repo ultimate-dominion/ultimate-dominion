@@ -241,7 +241,7 @@ export const Welcome = (): JSX.Element => {
           mt={{ base: 14, sm: 20 }}
           position="relative"
           px={{ base: 2, sm: 14, md: 18 }}
-          spacing={{ base: 14, md: 18 }}
+          spacing={{ base: 6, sm: 10, md: 18 }}
           zIndex={2}
         >
           <VStack spacing={{ base: 4, md: 5 }}>
@@ -264,7 +264,7 @@ export const Welcome = (): JSX.Element => {
             />
           </VStack>
 
-          <Box position="relative" w="100%">
+          <Box order={{ base: 3, md: 2 }} position="relative" w="100%">
             {/* Invisible spacer — reserves final text height */}
             <VStack
               fontWeight={500}
@@ -328,7 +328,7 @@ export const Welcome = (): JSX.Element => {
             </Box>
           </Box>
 
-          <VStack spacing={3}>
+          <VStack order={{ base: 2, md: 3 }} spacing={3}>
             <Button
               animation={`${torchGlow} 4s ease-in-out infinite`}
               color="#12100E"
@@ -345,6 +345,7 @@ export const Welcome = (): JSX.Element => {
           <HStack
             fontFamily="'Cinzel', serif"
             fontSize={{ base: '13px', sm: '15px' }}
+            order={4}
             spacing={3}
           >
             <Link
