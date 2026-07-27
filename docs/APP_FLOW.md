@@ -81,15 +81,15 @@ Web3Provider (wagmi + RainbowKit)
 
 **Route**: `/character-creation`
 
-Two-panel layout. Left panel: mint character (name, avatar, bio). Right panel: 4-step implicit class wizard.
+Two-panel layout. Left panel: mint character (name and bio). Right panel: 4-step implicit class wizard.
 
 ### Step 1: Choose Race
 
-| Race | STR | AGI | INT | HP |
-|------|-----|-----|-----|----|
-| Human | +1 | +1 | +1 | — |
-| Dwarf | +2 | -1 | — | +1 |
-| Elf | -1 | +2 | +1 | -1 |
+| Race  | STR | AGI | INT | HP  |
+| ----- | --- | --- | --- | --- |
+| Human | +1  | +1  | +1  | —   |
+| Dwarf | +2  | -1  | —   | +1  |
+| Elf   | -1  | +2  | +1  | -1  |
 
 ### Step 2: Choose Power Source
 
@@ -203,7 +203,7 @@ Split-screen: player inventory (left) vs shopkeeper inventory (right).
 - Gold balance (external + escrow)
 - XP/Level progress bar + "Level Up" button
 - Advanced class selection at Level 10
-- Avatar, name, bio, class, badges (Adventurer badge at Level 3)
+- Text identity mark, name, bio, class, badges (Adventurer badge at Level 3)
 - Items inventory (tabs: Armor, Weapons & Spells, Consumables)
 - Fragment collection grid
 - Viewable by any authenticated player
@@ -214,7 +214,7 @@ Split-screen: player inventory (left) vs shopkeeper inventory (right).
 
 **Route**: `/leaderboard`
 
-- All characters listed with avatar, name, class, level, stats, gold
+- All characters listed with text identity mark, name, class, level, stats, gold
 - Search, class filter, sort (stats/level/gold)
 - Top 3 highlighted
 - Click row → navigate to character page
@@ -233,37 +233,37 @@ Split-screen: player inventory (left) vs shopkeeper inventory (right).
 
 ## Route Map
 
-| Route | Auth | Delegation | Locked Character |
-|-------|:----:|:----------:|:----------------:|
-| `/` | No | No | No |
-| `/character-creation` | Yes | Yes | No (redirects if yes) |
-| `/game-board` | Yes | Yes | Yes |
-| `/characters/:id` | Yes | No | No |
-| `/leaderboard` | Yes | No | No |
-| `/marketplace` | Yes | Yes | Yes |
-| `/marketplace/items/*` | Yes | Yes | Yes |
-| `/shops/:shopId` | Yes | Yes | Yes + active encounter |
-| `/respec` | Yes | Yes | Yes (gated by `SHOW_Z2`) |
+| Route                  | Auth | Delegation |     Locked Character     |
+| ---------------------- | :--: | :--------: | :----------------------: |
+| `/`                    |  No  |     No     |            No            |
+| `/character-creation`  | Yes  |    Yes     |  No (redirects if yes)   |
+| `/game-board`          | Yes  |    Yes     |           Yes            |
+| `/characters/:id`      | Yes  |     No     |            No            |
+| `/leaderboard`         | Yes  |     No     |            No            |
+| `/marketplace`         | Yes  |    Yes     |           Yes            |
+| `/marketplace/items/*` | Yes  |    Yes     |           Yes            |
+| `/shops/:shopId`       | Yes  |    Yes     |  Yes + active encounter  |
+| `/respec`              | Yes  |    Yes     | Yes (gated by `SHOW_Z2`) |
 
 ---
 
 ## Context Reference
 
-| Context | Purpose |
-|---------|---------|
-| AuthContext | Dual-path auth state, Privy OAuth, wallet clients |
-| MUDContext | Blockchain sync, burner wallet, delegation, system calls |
-| CharacterContext | Current character data, inventory, equipment |
-| BattleContext | Active combat, attack outcomes, turn management |
-| MapContext | World map, entity positions, spawn state |
-| MovementContext | Arrow key / button movement, blocking |
-| FragmentContext | Lore fragment discovery, claiming, tracking |
-| ItemsContext | Item templates from MUD tables |
-| MonstersContext | Monster templates from MUD tables |
-| OrdersContext | Marketplace orders, prices |
-| ChatContext | Chat box state, input focus |
-| AllowanceContext | ERC20/ERC1155 allowances |
+| Context          | Purpose                                                  |
+| ---------------- | -------------------------------------------------------- |
+| AuthContext      | Dual-path auth state, Privy OAuth, wallet clients        |
+| MUDContext       | Blockchain sync, burner wallet, delegation, system calls |
+| CharacterContext | Current character data, inventory, equipment             |
+| BattleContext    | Active combat, attack outcomes, turn management          |
+| MapContext       | World map, entity positions, spawn state                 |
+| MovementContext  | Arrow key / button movement, blocking                    |
+| FragmentContext  | Lore fragment discovery, claiming, tracking              |
+| ItemsContext     | Item templates from MUD tables                           |
+| MonstersContext  | Monster templates from MUD tables                        |
+| OrdersContext    | Marketplace orders, prices                               |
+| ChatContext      | Chat box state, input focus                              |
+| AllowanceContext | ERC20/ERC1155 allowances                                 |
 
 ---
 
-*Last updated: March 9, 2026*
+_Last updated: March 9, 2026_
