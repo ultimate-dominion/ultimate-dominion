@@ -354,7 +354,7 @@ export const Tavern = (): JSX.Element => {
                 description={t('tavern.classesDesc')}
                 subtitle={t('tavern.classesSubtitle')}
                 title={t('tavern.classesTitle')}
-                to="/guide/classes/warrior"
+                to="/classes/warrior"
               />
             </GridItem>
             <GridItem>
